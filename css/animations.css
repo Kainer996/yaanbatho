@@ -1,0 +1,539 @@
+/* Yaan Batho - Advanced Animations */
+/* Inspired by ui.aceternity.com, animista.net, brittanychiang.com */
+
+/* ============================================
+   SCROLL-TRIGGERED ANIMATIONS (GSAP-powered)
+   ============================================ */
+
+/* Fade-in from below with stagger (for project cards) */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(60px);
+}
+
+.fade-in-up.visible {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Text reveal animation (for headings) */
+.reveal-text {
+    position: relative;
+    overflow: hidden;
+}
+
+.reveal-text::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    transform-origin: left;
+    animation: revealText 1.2s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+@keyframes revealText {
+    to {
+        transform: scaleX(0);
+        transform-origin: right;
+    }
+}
+
+/* ============================================
+   PARALLAX EFFECT
+   ============================================ */
+
+.parallax-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.parallax-layer {
+    will-change: transform;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ============================================
+   HERO ANIMATIONS
+   ============================================ */
+
+/* Typewriter effect for tagline */
+.typewriter {
+    display: inline-block;
+    overflow: hidden;
+    border-right: 3px solid var(--accent-red);
+    white-space: nowrap;
+    animation: 
+        typing 3.5s steps(40, end) forwards,
+        blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: var(--accent-red); }
+}
+
+/* Floating particles in hero */
+.particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    animation: float linear infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(100vh) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) translateX(100px);
+        opacity: 0;
+    }
+}
+
+/* Stagger particle animation timings */
+.particle:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; }
+.particle:nth-child(2) { left: 20%; animation-duration: 12s; animation-delay: 2s; }
+.particle:nth-child(3) { left: 30%; animation-duration: 10s; animation-delay: 4s; }
+.particle:nth-child(4) { left: 40%; animation-duration: 15s; animation-delay: 1s; }
+.particle:nth-child(5) { left: 50%; animation-duration: 11s; animation-delay: 3s; }
+.particle:nth-child(6) { left: 60%; animation-duration: 14s; animation-delay: 5s; }
+.particle:nth-child(7) { left: 70%; animation-duration: 9s; animation-delay: 2.5s; }
+.particle:nth-child(8) { left: 80%; animation-duration: 13s; animation-delay: 4.5s; }
+.particle:nth-child(9) { left: 90%; animation-duration: 16s; animation-delay: 1.5s; }
+.particle:nth-child(10) { left: 95%; animation-duration: 12s; animation-delay: 3.5s; }
+
+/* ============================================
+   GLASS MORPHISM NAVBAR (scroll effect)
+   ============================================ */
+
+header {
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+header.scrolled {
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+header.scrolled::after {
+    opacity: 0.8;
+}
+
+/* ============================================
+   CARD HOVER ANIMATIONS
+   ============================================ */
+
+/* Animated gradient glow on hover */
+.card {
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle,
+        rgba(255, 0, 64, 0.15) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+.card:hover::after {
+    opacity: 1;
+    animation: rotateGlow 3s linear infinite;
+}
+
+@keyframes rotateGlow {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Card lift with smooth shadow transition */
+.card {
+    transition: 
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.4s ease,
+        border-color 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-12px) scale(1.02);
+}
+
+/* ============================================
+   STATS COUNTER SECTION
+   ============================================ */
+
+.stats-section {
+    padding: 80px 20px;
+    background: linear-gradient(135deg, rgba(17, 17, 17, 0.8), rgba(10, 10, 10, 0.9));
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.03),
+        transparent
+    );
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stat-item.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.stat-number {
+    font-size: clamp(40px, 6vw, 60px);
+    font-family: var(--font-heading);
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFFFFF 0%, var(--accent-red) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    display: block;
+    position: relative;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: rgba(237, 237, 237, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+}
+
+/* ============================================
+   MAGNETIC CURSOR EFFECT
+   ============================================ */
+
+.magnetic {
+    position: relative;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.magnetic:hover {
+    z-index: 10;
+}
+
+/* Custom cursor */
+.custom-cursor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-red);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+    mix-blend-mode: difference;
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.6);
+}
+
+.custom-cursor.active {
+    opacity: 1;
+}
+
+.custom-cursor.hover {
+    transform: scale(2);
+    background: rgba(255, 0, 64, 0.2);
+}
+
+.custom-cursor-follower {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.15s ease;
+    opacity: 0;
+    box-shadow: 0 0 15px rgba(255, 0, 64, 0.8);
+}
+
+.custom-cursor-follower.active {
+    opacity: 1;
+}
+
+/* ============================================
+   PAGE TRANSITION / LOADING ANIMATION
+   ============================================ */
+
+.page-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.page-transition.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.page-transition-content {
+    text-align: center;
+}
+
+.loader {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--accent-red);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+    box-shadow: 0 0 30px rgba(255, 0, 64, 0.3);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: rgba(237, 237, 237, 0.6);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   SCROLL PROGRESS BAR
+   ============================================ */
+
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-red), #FF6B9D);
+    z-index: 9999;
+    transition: width 0.1s ease;
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.8);
+}
+
+/* ============================================
+   SMOOTH REVEAL ANIMATIONS (on scroll)
+   ============================================ */
+
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reveal-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger delays for multiple elements */
+.reveal-on-scroll:nth-child(1) { transition-delay: 0.1s; }
+.reveal-on-scroll:nth-child(2) { transition-delay: 0.2s; }
+.reveal-on-scroll:nth-child(3) { transition-delay: 0.3s; }
+.reveal-on-scroll:nth-child(4) { transition-delay: 0.4s; }
+.reveal-on-scroll:nth-child(5) { transition-delay: 0.5s; }
+.reveal-on-scroll:nth-child(6) { transition-delay: 0.6s; }
+
+/* ============================================
+   HOVER TILT EFFECT (for cards)
+   ============================================ */
+
+.tilt-card {
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.tilt-card:hover {
+    transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
+}
+
+/* ============================================
+   GRADIENT TEXT ANIMATION
+   ============================================ */
+
+.animated-gradient-text {
+    background: linear-gradient(
+        90deg,
+        #FFFFFF 0%,
+        var(--accent-red) 50%,
+        #FFFFFF 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s linear infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% center;
+    }
+    100% {
+        background-position: 200% center;
+    }
+}
+
+/* ============================================
+   BOUNCE ARROW (for CTAs)
+   ============================================ */
+
+.bounce-arrow {
+    display: inline-block;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Disable complex animations on mobile for performance */
+    .custom-cursor,
+    .custom-cursor-follower {
+        display: none !important;
+    }
+    
+    .particle {
+        animation-duration: 20s !important; /* Slower on mobile */
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .tilt-card:hover {
+        transform: none;
+    }
+}
+
+/* ============================================
+   PREFERS REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

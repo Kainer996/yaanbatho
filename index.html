@@ -84,6 +84,7 @@
     </script>
     
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
     <header>
@@ -101,32 +102,57 @@
     </header>
 
     <main>
-        <section class="hero" style="background: url('images/hero-banner.png') center/cover no-repeat; min-height: 70vh; display: flex; align-items: center; position: relative;">
-            <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,10,0.3), rgba(10,10,10,0.85));"></div>
+        <section class="hero parallax-container" style="background: url('images/hero-banner.png') center/cover no-repeat; min-height: 70vh; display: flex; align-items: center; position: relative;">
+            <div class="parallax-layer" style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,10,0.3), rgba(10,10,10,0.85));"></div>
             <div class="container" style="position: relative; z-index: 1;">
-                <div class="badge">
+                <div class="badge reveal-on-scroll">
                     <span>✨</span>
                     <span>Building the future</span>
                 </div>
-                <h1>Yaan Batho</h1>
-                <p class="tagline">Universe Builder · AI, Automation & Creative Technology</p>
-                <p style="max-width: 600px; margin: 1rem auto; opacity: 0.85; font-size: 1.1rem;">I build autonomous AI systems, interactive worlds, and creative media. From trading bots to space sitcoms — if it can be imagined, it can be built.</p>
-                <div class="cta-group">
-                    <a href="projects.html" class="btn btn-primary">View Projects →</a>
-                    <a href="contact.html" class="btn btn-secondary">Work With Me</a>
+                <h1 class="reveal-on-scroll">Yaan Batho</h1>
+                <p class="tagline reveal-on-scroll">
+                    <span class="typewriter-text" style="border-right: 3px solid var(--accent-red); padding-right: 5px;">Universe Builder · AI, Automation & Creative Technology</span>
+                </p>
+                <p class="reveal-on-scroll" style="max-width: 600px; margin: 1rem auto; opacity: 0.85; font-size: 1.1rem;">I build autonomous AI systems, interactive worlds, and creative media. From trading bots to space sitcoms — if it can be imagined, it can be built.</p>
+                <div class="cta-group reveal-on-scroll">
+                    <a href="projects.html" class="btn btn-primary magnetic">View Projects <span class="bounce-arrow">→</span></a>
+                    <a href="contact.html" class="btn btn-secondary magnetic">Work With Me</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number">10+</span>
+                        <span class="stat-label">Projects Built</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">Live Products</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">AI Agents Running</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Passion Driven</span>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section id="projects">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header reveal-on-scroll">
                     <h2>Featured Projects</h2>
                     <a href="projects.html" class="view-all">View all →</a>
                 </div>
                 
                 <div class="grid">
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image" style="padding: 0; background: #000;">
                             <video 
                                 src="videos/friend-shaped.mp4" 
@@ -152,7 +178,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">ROBOTIQUE</div>
                         <div class="card-content">
                             <h3>Robotique</h3>
@@ -170,7 +196,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">ORION'S BARREL</div>
                         <div class="card-content">
                             <h3>Orion's Barrel</h3>
@@ -188,7 +214,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">CHIFFTOWN</div>
                         <div class="card-content">
                             <h3>Chifftown / Chifly</h3>
@@ -206,7 +232,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">GOOD NEWS 24</div>
                         <div class="card-content">
                             <h3>Good News 24</h3>
@@ -224,7 +250,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">AI TRADING</div>
                         <div class="card-content">
                             <h3>Autonomous Trading System</h3>
@@ -242,7 +268,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">MINI DIGGERZ</div>
                         <div class="card-content">
                             <h3>Mini Diggerz</h3>
@@ -257,7 +283,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">PUN REEL ENGINE</div>
                         <div class="card-content">
                             <h3>Pun Reel Engine</h3>
@@ -273,7 +299,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card tilt-card">
                         <div class="card-image">ROBOTIQUE AI</div>
                         <div class="card-content">
                             <h3>Robotique AI Companion</h3>
@@ -294,10 +320,10 @@
 
         <section>
             <div class="container">
-                <div class="cta-box">
-                    <h2>Let's Build Together</h2>
+                <div class="cta-box reveal-on-scroll">
+                    <h2 class="animated-gradient-text">Let's Build Together</h2>
                     <p>Interested in collaboration or have a project in mind? Let's connect and create something extraordinary.</p>
-                    <a href="contact.html" class="btn btn-primary">Start a Conversation →</a>
+                    <a href="contact.html" class="btn btn-primary magnetic">Start a Conversation <span class="bounce-arrow">→</span></a>
                 </div>
             </div>
         </section>
@@ -331,5 +357,6 @@
     </footer>
 
     <script src="js/main.js"></script>
+    <script src="js/animations.js"></script>
 </body>
 </html>
