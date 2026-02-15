@@ -528,6 +528,45 @@ h3 {
     line-height: 1.5;
 }
 
+/* Clickable project cards */
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.card-link .card {
+    cursor: pointer;
+}
+
+.card-link .card::after {
+    content: "Visit →";
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    background: rgba(255, 0, 64, 0.1);
+    color: var(--accent-red);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.card-link .card:hover::after {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .tags {
     display: flex;
     flex-wrap: wrap;
