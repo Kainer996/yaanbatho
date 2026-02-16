@@ -1118,7 +1118,7 @@ footer::before {
     }
 }
 
-/* Disable overlays on mobile - causes black rectangle glitch */
+/* Disable overlays and parallax on mobile - causes visual glitches */
 @media (max-width: 768px) {
     body::before,
     body::after {
@@ -1127,17 +1127,32 @@ footer::before {
     
     .hero.parallax-container {
         background-attachment: scroll !important;
+        min-height: auto !important;
     }
     
-    /* Remove gap between sections */
+    .parallax-layer {
+        position: absolute !important;
+        inset: 0 !important;
+    }
+    
+    /* Kill all section gaps and animated backgrounds on mobile */
     section {
         margin: 0 !important;
-        padding-top: 40px !important;
-        padding-bottom: 40px !important;
     }
     
     section:nth-child(even):not(.hero) {
         background: none !important;
+    }
+    
+    .stats-section::before {
+        display: none !important;
+    }
+    
+    /* Ensure no gap between hero and next section */
+    .hero + .stats-section,
+    .hero + section {
+        margin-top: 0 !important;
+        border-top: none !important;
     }
 }
 
