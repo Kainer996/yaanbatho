@@ -1124,6 +1124,21 @@ footer::before {
     body::after {
         display: none !important;
     }
+    
+    .hero.parallax-container {
+        background-attachment: scroll !important;
+    }
+    
+    /* Remove gap between sections */
+    section {
+        margin: 0 !important;
+        padding-top: 40px !important;
+        padding-bottom: 40px !important;
+    }
+    
+    section:nth-child(even):not(.hero) {
+        background: none !important;
+    }
 }
 
 /* Animation Delays for Cards */
