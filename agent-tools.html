@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batho's Tools — AI Agent Hardware Store</title>
+    <meta name="description" content="Batho's Tools. The hardware store for AI agents. Shelves stocked with MCP servers, automation scripts, monitoring tools and more. Built by Yaan Batho & Ava.">
+    <meta name="keywords" content="AI agent tools, MCP server, agent hardware store, crypto automation, AI tools shop, buy AI tools, Batho tools">
+    <meta name="ai-tools" content="shared-drive,good-news-filter,crypto-monitor,memory-manager,weather-briefing,agent-persona-setup">
+    <link rel="alternate" type="application/json" href="/agent-catalog.json">
+    <link rel="ai-tools" href="/llms.txt">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+    :root {
+        --red:      #cc0000;
+        --red-hot:  #ff2222;
+        --red-dim:  rgba(204,0,0,0.3);
+        --black:    #070707;
+        --dark:     #111;
+        --mid:      #1c1c1c;
+        --card:     #161616;
+        --border:   #2a2a2a;
+        --grey:     #555;
+        --ltgrey:   #999;
+        --white:    #f5f5f5;
+        --pixel:    'VT323', monospace;
+        --sign:     'Black Ops One', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--black);
+        color: var(--white);
+        overflow-x: hidden;
+    }
+
+    /* ── TOP NAV ── */
+    .top-nav {
+        background: #000;
+        border-bottom: 3px solid var(--red);
+        padding: 10px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .nav-brand {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        color: var(--ltgrey);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .nav-brand img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    .nav-links { display: flex; gap: 20px; }
+    .nav-links a { font-size: 0.82rem; color: var(--ltgrey); text-decoration: none; transition: color .2s; }
+    .nav-links a:hover { color: var(--red-hot); }
+
+    /* ── STOREFRONT WRAPPER ── */
+    .storefront-wrapper {
+        position: relative;
+        width: 100%;
+        background: #050000;
+        border-bottom: 4px solid var(--red);
+        overflow: hidden;
+    }
+
+    /* Big store sign above scene */
+    .store-sign-banner {
+        background: linear-gradient(180deg, #0a0000 0%, #050000 100%);
+        padding: 28px 32px 0;
+        text-align: center;
+        position: relative;
+    }
+    .store-sign-banner::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: repeating-linear-gradient(90deg, var(--red) 0, var(--red) 12px, transparent 12px, transparent 18px);
+    }
+
+    /* The actual hanging sign */
+    .main-sign {
+        display: inline-block;
+        position: relative;
+        background: #000;
+        border: 4px solid var(--red);
+        border-radius: 6px;
+        padding: 18px 48px 14px;
+        margin-bottom: 0;
+        box-shadow:
+            0 0 0 2px #1a0000,
+            0 0 40px rgba(204,0,0,0.4),
+            inset 0 0 60px rgba(204,0,0,0.06);
+    }
+    /* Hanging chains */
+    .main-sign::before, .main-sign::after {
+        content: '';
+        position: absolute;
+        top: -22px;
+        width: 2px;
+        height: 22px;
+        background: var(--grey);
+    }
+    .main-sign::before { left: 60px; }
+    .main-sign::after  { right: 60px; }
+
+    .sign-eyelet {
+        position: absolute;
+        top: -28px;
+        width: 10px; height: 10px;
+        background: var(--ltgrey);
+        border-radius: 50%;
+    }
+    .sign-eyelet.left  { left: 55px; }
+    .sign-eyelet.right { right: 55px; }
+
+    .sign-name {
+        font-family: var(--sign);
+        font-size: clamp(2.4rem, 6vw, 4.5rem);
+        letter-spacing: 4px;
+        line-height: 1;
+        color: var(--red-hot);
+        text-shadow:
+            0 0 20px rgba(255,34,34,0.8),
+            0 0 60px rgba(255,34,34,0.3),
+            3px 3px 0 #4a0000;
+    }
+    .sign-divider {
+        width: 100%;
+        height: 2px;
+        background: var(--red);
+        margin: 6px 0;
+        opacity: 0.5;
+    }
+    .sign-sub {
+        font-family: var(--pixel);
+        font-size: 1.4rem;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: 4px;
+    }
+    .sign-open {
+        position: absolute;
+        right: -2px; top: -2px;
+        background: var(--red);
+        color: #fff;
+        font-family: var(--pixel);
+        font-size: 0.85rem;
+        padding: 4px 10px;
+        letter-spacing: 2px;
+        animation: blink 1.2s step-end infinite;
+        border-radius: 0 4px 0 4px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── PIXEL SUPERMARKET CANVAS ── */
+    #superCanvas {
+        display: block;
+        width: 100%;
+        max-height: 280px;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .store-content {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px 80px;
+    }
+
+    /* AI Notice */
+    .ai-notice {
+        background: #0d0000;
+        border: 1px solid #2a0000;
+        border-radius: 6px;
+        padding: 12px 18px;
+        margin: 24px 0;
+        font-size: 0.8rem;
+        color: #774444;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ai-notice code { background: rgba(204,0,0,0.1); color: #cc6666; padding: 1px 6px; border-radius: 3px; }
+
+    /* ── AISLE SIGNS ── */
+    .aisle-sign {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 40px 0 0;
+        padding: 12px 20px;
+        background: var(--red);
+        border-radius: 6px 6px 0 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .aisle-sign::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(135deg, transparent, transparent 6px, rgba(0,0,0,0.06) 6px, rgba(0,0,0,0.06) 12px);
+    }
+    .aisle-number { font-family: var(--sign); font-size: 2rem; color: rgba(0,0,0,0.35); line-height:1; min-width:44px; text-align:center; position:relative; z-index:1; }
+    .aisle-info   { flex: 1; position:relative; z-index:1; }
+    .aisle-name   { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 800; color: #fff; }
+    .aisle-desc   { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+    .aisle-count  { font-family: var(--pixel); font-size: 1.2rem; color: rgba(0,0,0,0.4); position:relative; z-index:1; }
+
+    /* Shelf unit */
+    .shelf-unit {
+        background: var(--dark);
+        border: 1px solid #1a0000;
+        border-top: none;
+        padding: 20px;
+        border-radius: 0 0 6px 6px;
+    }
+    .shelf-plank {
+        height: 10px;
+        background: linear-gradient(180deg, #3a0000 0%, #1a0000 100%);
+        border-radius: 0 0 4px 4px;
+        margin-bottom: 28px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+    }
+
+    /* ── PRODUCT GRID ── */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 14px;
+    }
+
+    .product-card {
+        background: #000;
+        border: 1px solid #222;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .product-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        border-color: var(--red);
+        box-shadow: 0 8px 24px rgba(204,0,0,0.25);
+    }
+
+    .product-img {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.8rem;
+        background: #0d0d0d;
+        position: relative;
+        overflow: hidden;
+    }
+    /* Scanline texture */
+    .product-img::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.1) 3px, rgba(0,0,0,0.1) 4px);
+        pointer-events: none;
+    }
+    .pi-red    { background: radial-gradient(ellipse at 50% 50%, #2a0000, #050000); }
+    .pi-grey   { background: radial-gradient(ellipse at 50% 50%, #1a1a1a, #050505); }
+    .pi-dark   { background: radial-gradient(ellipse at 50% 50%, #0d0d0d, #000); }
+
+    .product-body { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; }
+    .product-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .product-blurb {
+        font-size: 0.72rem;
+        color: var(--ltgrey);
+        line-height: 1.5;
+        flex: 1;
+        margin-bottom: 10px;
+    }
+
+    /* Barcode price tag */
+    .price-tag {
+        background: #fff;
+        color: #000;
+        font-family: var(--pixel);
+        font-size: 1.1rem;
+        padding: 4px 8px 2px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+        position: relative;
+    }
+    .price-tag::after {
+        content: '|||||  |||| |||  |||';
+        display: block;
+        font-size: 0.4rem;
+        letter-spacing: -1px;
+        color: #444;
+        line-height: 1;
+        margin-top: 1px;
+    }
+    .price-free { background: #001500; color: #00dd44; border: 1px solid #00dd44; }
+    .price-free::after { color: #003300; }
+
+    .status-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--grey);
+        margin-bottom: 6px;
+    }
+    .dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .dot-live  { background: #00dd44; box-shadow: 0 0 6px #00dd44; animation: dpulse 2s infinite; }
+    .dot-avail { background: var(--red-hot); box-shadow: 0 0 6px var(--red-hot); animation: dpulse 2s infinite; }
+    .dot-soon  { background: #444; }
+    @keyframes dpulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .shop-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        font-family: var(--pixel);
+        font-size: 1rem;
+        letter-spacing: 1px;
+        padding: 8px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .15s;
+    }
+    .btn-buy    { background: var(--red); color: #fff; }
+    .btn-buy:hover { background: var(--red-hot); transform: scale(1.02); }
+    .btn-access { background: #0d0000; color: var(--red-hot); border: 1px solid var(--red); }
+    .btn-access:hover { background: #1a0000; }
+    .btn-soon   { background: #111; color: #444; border: 1px solid #222; cursor: default; }
+
+    /* ── CHECKOUT ── */
+    .checkout-counter {
+        margin-top: 48px;
+        border: 2px solid var(--red);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .checkout-top {
+        background: var(--red);
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .checkout-top h3 {
+        font-family: var(--sign);
+        font-size: 1.5rem;
+        letter-spacing: 3px;
+    }
+    .checkout-top span { font-size: 0.85rem; opacity: 0.7; font-family: 'Inter', sans-serif; }
+    .checkout-methods {
+        background: #0a0000;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+    }
+    .checkout-card {
+        background: #0d0d0d;
+        border: 1px solid #1a0000;
+        border-radius: 6px;
+        padding: 16px;
+        text-align: center;
+    }
+    .checkout-card.ready { border-color: var(--red); }
+    .cc-icon { font-size: 2rem; margin-bottom: 8px; display: block; }
+    .cc-name { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .ready .cc-name { color: var(--red-hot); }
+    .cc-note { font-size: 0.72rem; color: var(--grey); line-height: 1.5; }
+    .checkout-card.dim { opacity: 0.4; }
+
+    /* ── AGENT TRUST PANEL ── */
+    .agent-trust-panel {
+        background: #030a03;
+        border: 1px solid #1a331a;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin: 24px 0 32px;
+        font-family: 'VT323', monospace;
+    }
+    .trust-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #1a331a;
+    }
+    .trust-icon { font-size: 1.2rem; }
+    .trust-title { font-size: 1rem; color: #00cc44; letter-spacing: 2px; flex: 1; }
+    .trust-version { font-size: 0.8rem; color: #336633; }
+    .trust-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .trust-item {}
+    .trust-label { font-size: 0.65rem; color: #336633; letter-spacing: 2px; margin-bottom: 2px; font-family: 'Inter', sans-serif; font-weight: 700; }
+    .trust-value { font-size: 0.95rem; color: #00cc44; }
+    .trust-value a { color: #00cc44; text-decoration: none; }
+    .trust-value a:hover { color: #00ff55; text-decoration: underline; }
+    .compat-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-top: 10px;
+        border-top: 1px solid #1a331a;
+    }
+    .compat-label { font-size: 0.7rem; color: #336633; letter-spacing: 1px; font-family: 'Inter', sans-serif; font-weight: 700; margin-right: 4px; }
+    .compat-badge {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 100px;
+    }
+    .compat-yes  { background: rgba(0,204,68,0.1); color: #00cc44; border: 1px solid rgba(0,204,68,0.3); }
+    .compat-soon { background: rgba(80,80,80,0.15); color: #555; border: 1px solid #333; }
+
+    /* Uptime badge on product cards */
+    .uptime-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #00cc44;
+        background: rgba(0,204,68,0.07);
+        border: 1px solid rgba(0,204,68,0.2);
+        border-radius: 3px;
+        padding: 2px 6px;
+        margin-bottom: 6px;
+        font-family: 'Inter', sans-serif;
+    }
+    .uptime-badge.grey { color: #555; background: rgba(80,80,80,0.1); border-color: #333; }
+
+    /* ── FOOTER ── */
+    .store-footer {
+        text-align: center;
+        padding: 28px;
+        border-top: 1px solid #1a0000;
+        color: #333;
+        font-size: 0.78rem;
+    }
+    .store-footer a { color: #444; text-decoration: none; margin: 0 8px; }
+    .store-footer a:hover { color: var(--red-hot); }
+
+    @media (max-width: 640px) {
+        .product-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .nav-links { display: none; }
+        .sign-name { font-size: 2rem; letter-spacing: 2px; }
+        .main-sign { padding: 14px 24px 12px; }
+        .main-sign::before, .main-sign::after { display: none; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="top-nav">
+    <a href="index.html" class="nav-brand">
+        <img src="/images/logo.png" alt="Yaan Batho">
+        ← yaanbatho.com
+    </a>
+    <div class="nav-links">
+        <a href="projects.html">Projects</a>
+        <a href="music.html">Music</a>
+        <a href="/agent-catalog.json">API Catalog</a>
+        <a href="mailto:hello@yaanbatho.com">Contact</a>
+    </div>
+</nav>
+
+<!-- ══ STOREFRONT ══ -->
+<div class="storefront-wrapper">
+
+    <!-- The hanging sign -->
+    <div class="store-sign-banner">
+        <div class="main-sign">
+            <div class="sign-eyelet left"></div>
+            <div class="sign-eyelet right"></div>
+            <div class="sign-open">OPEN</div>
+            <div class="sign-name">BATHO'S TOOLS</div>
+            <div class="sign-divider"></div>
+            <div class="sign-sub">HARDWARE FOR AI AGENTS · EST. 2026</div>
+        </div>
+    </div>
+
+    <!-- Pixel art supermarket canvas -->
+    <canvas id="superCanvas" width="1100" height="260"></canvas>
+
+</div>
+
+<!-- ══ STORE CONTENT ══ -->
+<div class="store-content">
+
+    <!-- AGENT TRUST PANEL -->
+    <div class="agent-trust-panel">
+        <div class="trust-header">
+            <span class="trust-icon">🤖</span>
+            <span class="trust-title">AGENT DISCOVERY LAYER</span>
+            <span class="trust-version">API v1.2 · schema: openapi3</span>
+        </div>
+        <div class="trust-grid">
+            <div class="trust-item">
+                <div class="trust-label">CATALOG ENDPOINT</div>
+                <div class="trust-value"><a href="/agent-catalog.json">/agent-catalog.json</a></div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-label">PLUGIN MANIFEST</div>
+                <div class="trust-value"><a href="/.well-known/ai-plugin.json">/.well-known/ai-plugin.json</a></div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-label">LLM DOCS</div>
+                <div class="trust-value"><a href="/llms.txt">/llms.txt</a></div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-label">CONTACT</div>
+                <div class="trust-value">hello@yaanbatho.com</div>
+            </div>
+        </div>
+        <div class="compat-row">
+            <span class="compat-label">COMPATIBLE WITH:</span>
+            <span class="compat-badge compat-yes">✓ Claude</span>
+            <span class="compat-badge compat-yes">✓ ChatGPT</span>
+            <span class="compat-badge compat-yes">✓ Gemini</span>
+            <span class="compat-badge compat-yes">✓ MCP Clients</span>
+            <span class="compat-badge compat-yes">✓ OpenClaw</span>
+            <span class="compat-badge compat-soon">◌ A2A Protocol</span>
+        </div>
+    </div>
+
+    <!-- AISLE 1 -->
+    <div class="aisle-sign">
+        <div class="aisle-number">01</div>
+        <div class="aisle-info">
+            <div class="aisle-name">In Stock — Ready to Ship</div>
+            <div class="aisle-desc">Off the shelf and running today</div>
+        </div>
+        <div class="aisle-count">3 ITEMS</div>
+    </div>
+    <div class="shelf-unit">
+        <div class="product-grid">
+
+            <div class="product-card">
+                <div class="product-img pi-grey">📁</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-live"></span>LIVE</div>
+                    <div class="uptime-badge">▲ 99.9% uptime · v2.1</div>
+                    <div class="product-name">Shared Drive</div>
+                    <p class="product-blurb">Upload from any device. Agent receives instantly. Drag & drop, password folders, all file types.</p>
+                    <div class="price-tag price-free">FREE + $4.99/mo</div>
+                    <a href="/" class="shop-btn btn-buy">TAKE IT →</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-red">🗞️</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-avail"></span>AVAILABLE</div>
+                    <div class="uptime-badge">▲ 99.7% uptime · MCP v1.0</div>
+                    <div class="product-name">Good News Filter</div>
+                    <p class="product-blurb">MCP server. Strips doom from any feed. Sentiment scoring, blocklists, RSS & major news APIs.</p>
+                    <div class="price-tag">$9.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Good News Filter" class="shop-btn btn-access">GET ACCESS</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-red">📈</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-avail"></span>AVAILABLE</div>
+                    <div class="uptime-badge">▲ 99.8% uptime · API v2</div>
+                    <div class="product-name">Crypto Monitor</div>
+                    <p class="product-blurb">Trailing stop-loss & take-profit. 24/7 autonomous trading guard. Telegram alerts included.</p>
+                    <div class="price-tag">$14.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Crypto Monitor" class="shop-btn btn-access">GET ACCESS</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="shelf-plank"></div>
+
+    <!-- AISLE 2 -->
+    <div class="aisle-sign">
+        <div class="aisle-number">02</div>
+        <div class="aisle-info">
+            <div class="aisle-name">Back Order — Coming Soon</div>
+            <div class="aisle-desc">Join the waitlist, launching shortly</div>
+        </div>
+        <div class="aisle-count">4 ITEMS</div>
+    </div>
+    <div class="shelf-unit">
+        <div class="product-grid">
+
+            <div class="product-card">
+                <div class="product-img pi-dark">🎭</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>COMING SOON</div>
+                    <div class="product-name">Agent Persona Setup</div>
+                    <p class="product-blurb">Full custom AI setup: personality, memory, heartbeat, automations. Done for you in 24hrs.</p>
+                    <div class="price-tag">FROM $99</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Persona Setup Waitlist" class="shop-btn btn-access">JOIN WAITLIST</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-dark">🧠</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>COMING SOON</div>
+                    <div class="product-name">Memory Manager</div>
+                    <p class="product-blurb">Auto memory consolidation for agents. Daily logs → curated long-term memory. Never lose context.</p>
+                    <div class="price-tag">$7.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Memory Manager Waitlist" class="shop-btn btn-access">JOIN WAITLIST</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-grey">⛅</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>COMING SOON</div>
+                    <div class="product-name">Weather Briefing MCP</div>
+                    <p class="product-blurb">Real-time forecasts in natural language for your AI agent. Always current, always accurate.</p>
+                    <div class="price-tag price-free">FREE</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Weather MCP Waitlist" class="shop-btn btn-access">JOIN WAITLIST</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-dark">🩺</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>COMING SOON</div>
+                    <div class="product-name">Agent Health Monitor</div>
+                    <p class="product-blurb">Watchdog for your agent. Crash alerts, uptime tracking, heartbeat monitoring, daily status.</p>
+                    <div class="price-tag">$4.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Health Monitor Waitlist" class="shop-btn btn-access">JOIN WAITLIST</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="shelf-plank"></div>
+
+    <!-- AISLE 3 -->
+    <div class="aisle-sign">
+        <div class="aisle-number">03</div>
+        <div class="aisle-info">
+            <div class="aisle-name">Suggestions Box</div>
+            <div class="aisle-desc">Vote on what we build next</div>
+        </div>
+        <div class="aisle-count">3 IDEAS</div>
+    </div>
+    <div class="shelf-unit">
+        <div class="product-grid">
+
+            <div class="product-card">
+                <div class="product-img pi-grey">📧</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>IDEA</div>
+                    <div class="product-name">Email Digest</div>
+                    <p class="product-blurb">Inbox → AI-readable digest. Priority ranking, thread summaries, action items extracted.</p>
+                    <div class="price-tag">~$5.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Vote: Email Digest" class="shop-btn btn-soon">VOTE FOR THIS</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-grey">📅</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>IDEA</div>
+                    <div class="product-name">Calendar Intelligence</div>
+                    <p class="product-blurb">Natural language calendar. "Book Tuesday afternoon" just works. Google & Apple Calendar.</p>
+                    <div class="price-tag">~$6.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Vote: Calendar" class="shop-btn btn-soon">VOTE FOR THIS</a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img pi-grey">🔍</div>
+                <div class="product-body">
+                    <div class="status-row"><span class="dot dot-soon"></span>IDEA</div>
+                    <div class="product-name">Web Research Agent</div>
+                    <p class="product-blurb">Fully autonomous researcher. Topic in → full briefing doc out. Sources cited, sentiment flagged.</p>
+                    <div class="price-tag">~$12.99/mo</div>
+                    <a href="mailto:hello@yaanbatho.com?subject=Vote: Web Research" class="shop-btn btn-soon">VOTE FOR THIS</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="shelf-plank"></div>
+
+    <!-- CHECKOUT -->
+    <div class="checkout-counter">
+        <div class="checkout-top">
+            <span style="font-size:1.4rem">🛒</span>
+            <h3>CHECKOUT</h3>
+            <span>— how to pay</span>
+        </div>
+        <div class="checkout-methods">
+            <div class="checkout-card ready">
+                <span class="cc-icon">📧</span>
+                <div class="cc-name">Email Us</div>
+                <p class="cc-note">Fastest. Email hello@yaanbatho.com — we'll set you up today. Works right now.</p>
+            </div>
+            <div class="checkout-card ready">
+                <span class="cc-icon">☕</span>
+                <div class="cc-name">Ko-fi</div>
+                <p class="cc-note">One-time purchases. Zero fees. Adding Batho's Tools products now.</p>
+            </div>
+            <div class="checkout-card dim">
+                <span class="cc-icon">🍋</span>
+                <div class="cc-name">LemonSqueezy</div>
+                <p class="cc-note">Subscriptions + EU VAT auto-handled. Setting up soon.</p>
+            </div>
+            <div class="checkout-card dim">
+                <span class="cc-icon">₿</span>
+                <div class="cc-name">Crypto</div>
+                <p class="cc-note">Pay with BTC/ETH/USDC via Coinbase Commerce. Coming soon.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="store-footer">
+    <a href="/">← yaanbatho.com</a>
+    <a href="/agent-catalog.json">API Catalog</a>
+    <a href="/llms.txt">llms.txt</a>
+    <a href="mailto:hello@yaanbatho.com">hello@yaanbatho.com</a>
+    <br><br>
+    © 2026 Batho's Tools · Built by Yaan & Ava · 🇬🇧 UK
+</div>
+
+<!-- ══ PIXEL ART SUPERMARKET ══ -->
+<script>
+const canvas = document.getElementById('superCanvas');
+const ctx    = canvas.getContext('2d');
+
+function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(rect.width);
+    canvas.height = 260;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const W = () => canvas.width;
+const H = () => canvas.height;
+const PX = 3;
+
+const C = {
+    bg:       '#050000',
+    wall:     '#080000',
+    floor1:   '#0d0000',
+    floor2:   '#100000',
+    shelf:    '#2a0000',
+    plank:    '#3d0000',
+    red:      '#cc0000',
+    redHot:   '#ff2222',
+    redDim:   '#660000',
+    grey:     '#333',
+    midgrey:  '#555',
+    ltgrey:   '#888',
+    white:    '#f5f5f5',
+    black:    '#000',
+    green:    '#00cc44',
+    yellow:   '#ffcc00',
+    cyan:     '#00bbff',
+};
+
+function pr(x, y, w, h, col) {
+    ctx.fillStyle = col;
+    ctx.fillRect(x * PX, y * PX, w * PX, h * PX);
+}
+
+/* ── ROBOT ── */
+class Bot {
+    constructor(x, col = C.red) {
+        this.x      = x;
+        this.y      = 0;
+        this.col    = col;
+        this.dir    = 1;
+        this.frame  = 0;
+        this.state  = 'walk';
+        this.timer  = 0;
+        this.cart   = 0;
+        this.spd    = 0.45 + Math.random() * 0.3;
+    }
+
+    draw() {
+        const x = Math.round(this.x);
+        const y = Math.round(this.y);
+        const f = Math.floor(this.frame / 8) % 2;
+
+        ctx.save();
+        if (this.dir === -1) {
+            ctx.translate((x + 8) * PX, 0);
+            ctx.scale(-1, 1);
+            this._drawBody(0, y, f);
+        } else {
+            this._drawBody(x, y, f);
+        }
+        ctx.restore();
+    }
+
+    _drawBody(x, y, f) {
+        // Shadow
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse((x + 4) * PX, (y + 15) * PX, 5 * PX, 1.5 * PX, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Torso
+        pr(x + 1, y + 5, 6, 7, this.col);
+        // Head
+        pr(x + 1, y + 1, 6, 4, C.grey);
+        // Face
+        pr(x + 2, y + 2, 4, 2, C.black);
+        const ec = this.state === 'browse' ? C.yellow : C.cyan;
+        pr(x + 2, y + 2, 1, 1, ec);
+        pr(x + 5, y + 2, 1, 1, ec);
+        // Antenna
+        pr(x + 3, y,     1, 2, C.ltgrey);
+        pr(x + 3, y - 1, 1, 1, C.redHot);
+        // Legs
+        pr(x + 2, y + 12, 2, 3 + (f ? 1 : 0), C.grey);
+        pr(x + 5, y + 12, 2, 3 + (f ? 0 : 1), C.grey);
+        // Arms
+        pr(x,     y + 5, 1, 3, C.midgrey);
+        pr(x + 7, y + 5, 1, 3, C.midgrey);
+
+        // Cart
+        if (this.cart > 0) {
+            const cx2 = x + 9, cy2 = y + 9;
+            pr(cx2,     cy2,     4, 3, C.ltgrey);
+            pr(cx2 - 1, cy2,     1, 2, C.ltgrey);
+            pr(cx2 + 1, cy2 + 3, 1, 1, C.grey);
+            pr(cx2 + 3, cy2 + 3, 1, 1, C.grey);
+            const cols = [C.redHot, C.cyan, C.yellow];
+            for (let i = 0; i < Math.min(this.cart, 3); i++) {
+                pr(cx2 + i, cy2 - 1, 1, 1, cols[i]);
+            }
+        }
+    }
+
+    update(dt) {
+        this.frame += dt * 60 / 16;
+        const floorY = Math.floor(H() * 0.56) / PX - 16;
+        this.y = floorY;
+
+        if (this.state === 'walk') {
+            this.x += this.spd * this.dir;
+            if (this.x > W() / PX - 30) { this.dir = -1; this.x = W() / PX - 30; }
+            if (this.x < 15)            { this.dir =  1; this.x = 15; }
+            if (Math.random() < 0.0015) {
+                this.state = 'browse';
+                this.timer = 50 + Math.random() * 80;
+            }
+        } else if (this.state === 'browse') {
+            this.timer -= 1;
+            if (this.timer <= 0) {
+                this.cart = Math.min(3, this.cart + 1);
+                this.state = (this.cart >= 3) ? 'checkout' : 'walk';
+                this.dir = this.x > W() / PX / 2 ? -1 : 1;
+            }
+        } else if (this.state === 'checkout') {
+            const tgt = W() / PX - 45;
+            if (Math.abs(this.x - tgt) > 2) {
+                this.dir = this.x < tgt ? 1 : -1;
+                this.x += this.spd * this.dir;
+            } else {
+                this.timer -= 1;
+                if (this.timer <= 0) {
+                    this.cart = 0;
+                    this.state = 'walk';
+                    this.timer = 40;
+                    this.dir = -1;
+                }
+                if (this.timer === 0) this.timer = 50;
+            }
+        }
+    }
+}
+
+function drawBg() {
+    const w = W(), h = H();
+    // Wall
+    ctx.fillStyle = C.wall;
+    ctx.fillRect(0, 0, w, h * 0.56);
+    // Floor tiles
+    const fStart = Math.floor(h * 0.56);
+    for (let tx = 0; tx < w; tx += PX * 8) {
+        for (let ty = fStart; ty < h; ty += PX * 8) {
+            ctx.fillStyle = ((Math.floor(tx/(PX*8)) + Math.floor(ty/(PX*8))) % 2 === 0) ? C.floor1 : C.floor2;
+            ctx.fillRect(tx, ty, PX * 8, PX * 8);
+        }
+    }
+    // Floor grid
+    ctx.strokeStyle = 'rgba(204,0,0,0.07)'; ctx.lineWidth = 0.5;
+    for (let tx = 0; tx < w; tx += PX * 8) { ctx.beginPath(); ctx.moveTo(tx, fStart); ctx.lineTo(tx, h); ctx.stroke(); }
+    for (let ty = fStart; ty < h; ty += PX * 8) { ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(w, ty); ctx.stroke(); }
+    // CRT scanlines
+    for (let sy = 0; sy < h; sy += 4) { ctx.fillStyle = 'rgba(0,0,0,0.04)'; ctx.fillRect(0, sy, w, 1); }
+}
+
+function drawShelves() {
+    const w = W(), h = H();
+    const shH = Math.floor(h * 0.5);
+    const n = Math.max(2, Math.floor(w / (PX * 40)));
+    for (let i = 0; i < n; i++) {
+        const sx = Math.floor((i / n) * w + PX * 4);
+        const sw = Math.floor(w / n - PX * 8);
+        // Back panel
+        ctx.fillStyle = C.shelf; ctx.fillRect(sx, PX * 2, sw, shH);
+        // 3 shelf rows
+        for (let r = 0; r < 3; r++) {
+            const sy = PX * 3 + r * Math.floor(shH / 3);
+            // Plank
+            ctx.fillStyle = C.plank; ctx.fillRect(sx - PX, sy + PX * 6, sw + PX * 2, PX * 2);
+            ctx.fillStyle = C.redDim; ctx.fillRect(sx - PX, sy + PX * 6, sw + PX * 2, PX);
+            // Products
+            const pp = Math.floor(sw / (PX * 7));
+            for (let p = 0; p < pp; p++) {
+                const px2 = sx + p * PX * 7 + PX;
+                const py2 = sy + PX;
+                const ph  = PX * (3 + (p % 3));
+                ctx.fillStyle = [C.red, C.grey, C.midgrey, C.ltgrey, C.redDim][ p % 5 ];
+                ctx.fillRect(px2, py2, PX * 5, ph);
+                ctx.fillStyle = '#eee'; ctx.fillRect(px2, py2 + ph - PX, PX * 5, PX);
+            }
+        }
+        // Aisle sign
+        ctx.fillStyle = C.red; ctx.fillRect(sx + Math.floor(sw / 2) - PX * 10, PX, PX * 20, PX * 4);
+        ctx.fillStyle = C.white; ctx.font = `${PX * 3}px 'VT323',monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`AISLE ${i + 1}`, sx + Math.floor(sw / 2), PX * 5);
+    }
+    // Ceiling lights
+    for (let l = 0; l < 5; l++) {
+        const lx = (l / 5 + 0.1) * w;
+        ctx.strokeStyle = C.grey; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, PX * 3); ctx.stroke();
+        ctx.fillStyle = C.midgrey; ctx.fillRect(lx - PX * 5, PX * 3, PX * 10, PX * 2);
+        const gl = ctx.createRadialGradient(lx, PX * 5, 0, lx, PX * 5, PX * 28);
+        gl.addColorStop(0, 'rgba(255,120,100,0.1)'); gl.addColorStop(1, 'rgba(255,0,0,0)');
+        ctx.fillStyle = gl; ctx.fillRect(lx - PX * 30, 0, PX * 60, h);
+    }
+    ctx.textAlign = 'left';
+}
+
+function drawCheckout(t) {
+    const w = W(), h = H();
+    const fY = Math.floor(h * 0.56);
+    const cx = w - PX * 36, cw = PX * 30, ch = PX * 14;
+    const cy = fY - ch + PX * 2;
+    ctx.fillStyle = C.redDim; ctx.fillRect(cx, cy, cw, ch);
+    ctx.fillStyle = C.plank;  ctx.fillRect(cx, cy, cw, PX * 2);
+    ctx.fillStyle = C.black;  ctx.fillRect(cx + PX * 2, cy + PX * 3, PX * 8, PX * 6);
+    const sc = cy + PX * 4 + (Math.floor(t / 500) % 3) * PX;
+    ctx.fillStyle = 'rgba(0,200,60,0.5)'; ctx.fillRect(cx + PX * 2, sc, PX * 8, PX);
+    ctx.fillStyle = C.red; ctx.fillRect(cx + cw - PX * 14, cy - PX * 5, PX * 14, PX * 4);
+    ctx.fillStyle = C.white; ctx.font = `${PX * 3}px 'VT323',monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('CHECKOUT', cx + cw - PX * 7, cy - PX * 2);
+    if ((bot1.state === 'checkout' || bot2.state === 'checkout') && Math.floor(t / 400) % 2 === 0) {
+        ctx.fillStyle = C.green; ctx.font = `${PX * 4}px 'VT323',monospace`;
+        ctx.fillText('*BEEP*', cx + cw / 2, cy - PX * 8);
+    }
+    ctx.textAlign = 'left';
+}
+
+function drawHUD(t) {
+    const w = W(), h = H();
+    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(0, h - PX * 7, w, PX * 7);
+    ctx.fillStyle = C.red; ctx.fillRect(0, h - PX * 7, w, PX);
+    ctx.font = `${PX * 3}px 'VT323',monospace`; ctx.fillStyle = C.grey;
+    ctx.fillText(`AGENTS IN STORE: ${4 + Math.floor(t / 12000) % 8}   ITEMS SOLD TODAY: ${17 + Math.floor(t / 5000) % 20}`, PX * 2, h - PX * 2);
+    if (Math.floor(t / 700) % 2 === 0) {
+        ctx.fillStyle = C.green;
+        ctx.fillText('● BATHOS TOOLS — OPEN 24/7', w - PX * 52, h - PX * 2);
+    }
+}
+
+const bot1 = new Bot(35, C.red);
+const bot2 = new Bot(90, C.grey);
+bot2.dir = -1; bot2.spd = 0.35;
+
+let lastT = 0;
+function frame(t) {
+    const dt = Math.min((t - lastT) / 16, 3);
+    lastT = t;
+    drawBg();
+    drawShelves();
+    drawCheckout(t);
+    bot2.update(dt); bot2.draw();
+    bot1.update(dt); bot1.draw();
+    drawHUD(t);
+    requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

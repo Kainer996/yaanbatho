@@ -1,15 +1,17 @@
 # robots.txt for yaanbatho.com
+# Last updated: 2026-03-09
+
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://yaanbatho.com/sitemap.xml
-
-# AI/LLM Crawlers
+# ── AI / LLM Crawlers (all explicitly welcome) ──
 User-agent: GPTBot
 Allow: /
 
 User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: CCBot
@@ -21,6 +23,49 @@ Allow: /
 User-agent: Claude-Web
 Allow: /
 
+User-agent: ClaudeBot
+Allow: /
+
 User-agent: Google-Extended
 Allow: /
 
+User-agent: Googlebot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: ia_archiver
+Allow: /
+
+# ── AI Discovery Files ──
+# All agents are welcome to fetch:
+# https://yaanbatho.com/llms.txt
+# https://yaanbatho.com/agent-catalog.json
+# https://yaanbatho.com/.well-known/ai-plugin.json
+# https://yaanbatho.com/.well-known/agent.json
+# https://yaanbatho.com/.well-known/mcp.json
+
+# ── Sitemaps ──
+Sitemap: https://yaanbatho.com/sitemap.xml

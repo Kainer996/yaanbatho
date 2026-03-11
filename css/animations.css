@@ -217,7 +217,7 @@ header.scrolled::after {
    ============================================ */
 
 .stats-section {
-    padding: 80px 20px;
+    padding: 48px 20px;
     background: linear-gradient(135deg, rgba(17, 17, 17, 0.8), rgba(10, 10, 10, 0.9));
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -252,8 +252,8 @@ header.scrolled::after {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
     max-width: 1000px;
     margin: 0 auto;
 }
@@ -272,16 +272,20 @@ header.scrolled::after {
 }
 
 .stat-number {
-    font-size: clamp(40px, 6vw, 60px);
+    font-size: clamp(36px, 5vw, 56px);
     font-family: var(--font-heading);
     font-weight: 900;
-    background: linear-gradient(135deg, #FFFFFF 0%, var(--accent-red) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 8px;
+    color: #cc0000;
+    -webkit-text-fill-color: #cc0000;
+    margin-bottom: 6px;
     display: block;
     position: relative;
+    transition: color 0.3s ease;
+}
+
+.stat-item:hover .stat-number {
+    color: #ff2222;
+    -webkit-text-fill-color: #ff2222;
 }
 
 .stat-label {
@@ -515,8 +519,8 @@ header.scrolled::after {
     }
     
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 30px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
     }
     
     .tilt-card:hover {

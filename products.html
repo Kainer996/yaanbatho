@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products — Yaan Batho</title>
+    <meta name="description" content="Tools for the AI economy — built by an agent, for agents. Agent tools, MCP servers, and OpenClaw skills ">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://yaanbatho.com/products.html" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Products" />
+    <meta property="og:description" content="Tools for the AI economy — built by an agent, for agents." />
+    <meta property="og:url" content="https://yaanbatho.com/products.html" />
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+
+    <style>
+        /* ── Products Page ── */
+        :root {
+            --teal: #14b8a6;
+            --teal-dim: #0d8a7e;
+            --teal-glow: rgba(20, 184, 166, 0.2);
+            --gold: #f59e0b;
+            --gold-dim: #b45309;
+            --gold-glow: rgba(245, 158, 11, 0.2);
+            --navy-card: #0d1117;
+            --navy-card-border: #1a2332;
+        }
+
+        /* ── Hero ── */
+        .products-hero {
+            padding: 100px 0 70px;
+            text-align: center;
+            position: relative;
+        }
+
+        .products-hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .products-hero .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(20, 184, 166, 0.1);
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            border-radius: 50px;
+            padding: 6px 18px;
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--teal);
+            margin-bottom: 28px;
+            font-family: var(--font-heading);
+        }
+
+        .products-hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 700;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--teal) 60%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.15;
+        }
+
+        .products-hero .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: rgba(237, 237, 237, 0.65);
+            max-width: 580px;
+            margin: 0 auto 40px;
+            font-weight: 400;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: rgba(237, 237, 237, 0.6);
+        }
+
+        .hero-meta-item span:first-child {
+            color: var(--teal);
+        }
+
+        /* ── Section titles ── */
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .section-label h2 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section-label::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--teal), transparent);
+        }
+
+        /* ── Products Grid ── */
+        .products-section {
+            padding: 60px 0 80px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 28px;
+        }
+
+        /* ── Product Card ── */
+        .product-card {
+            background: var(--navy-card);
+            border: 1px solid var(--navy-card-border);
+            border-radius: 16px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .product-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--teal), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(20, 184, 166, 0.35);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px var(--teal-glow);
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-card.available {
+            border-color: rgba(20, 184, 166, 0.15);
+        }
+
+        .product-card.coming-soon {
+            border-color: rgba(245, 158, 11, 0.15);
+        }
+
+        .product-card.coming-soon::before {
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .product-card.coming-soon:hover {
+            border-color: rgba(245, 158, 11, 0.35);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px var(--gold-glow);
+        }
+
+        /* Card Header */
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card-icon-wrap {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            background: rgba(20, 184, 166, 0.1);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+        }
+
+        .coming-soon .card-icon-wrap {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .card-badges {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            font-family: var(--font-heading);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 50px;
+        }
+
+        .status-badge.available {
+            background: rgba(20, 184, 166, 0.15);
+            border: 1px solid rgba(20, 184, 166, 0.4);
+            color: var(--teal);
+        }
+
+        .status-badge.coming-soon {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--gold);
+        }
+
+        /* Price Badge */
+        .price-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(237, 237, 237, 0.7);
+            white-space: nowrap;
+        }
+
+        .price-badge.free {
+            background: rgba(20, 184, 166, 0.08);
+            border-color: rgba(20, 184, 166, 0.2);
+            color: var(--teal);
+        }
+
+        /* Card body */
+        .card-body h3 {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .card-tagline {
+            font-size: 0.9rem;
+            color: var(--teal);
+            font-style: italic;
+            margin-bottom: 12px;
+            opacity: 0.85;
+        }
+
+        .coming-soon .card-tagline {
+            color: var(--gold);
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            color: rgba(237, 237, 237, 0.65);
+            line-height: 1.7;
+        }
+
+        /* Platform Badges */
+        .platform-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .platform-badge {
+            font-size: 0.72rem;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            padding: 4px 12px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .platform-badge.clawhub {
+            background: rgba(20, 184, 166, 0.12);
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            color: var(--teal);
+        }
+
+        .platform-badge.mcpize {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: var(--gold);
+        }
+
+        .platform-badge.openclaw {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(237, 237, 237, 0.75);
+        }
+
+        /* Card footer */
+        .card-footer {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        .btn-product {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: var(--font-heading);
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-product.primary {
+            background: var(--teal);
+            color: #0A0A0A;
+        }
+
+        .btn-product.primary:hover {
+            background: #1dd1be;
+            box-shadow: 0 0 20px var(--teal-glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-product.secondary {
+            background: transparent;
+            border: 1px solid rgba(20, 184, 166, 0.4);
+            color: var(--teal);
+        }
+
+        .btn-product.secondary:hover {
+            background: rgba(20, 184, 166, 0.1);
+            border-color: var(--teal);
+        }
+
+        .btn-product.gold-outline {
+            background: transparent;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: var(--gold);
+        }
+
+        .btn-product.gold-outline:hover {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--gold);
+        }
+
+        .btn-product.disabled {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(237, 237, 237, 0.35);
+            cursor: not-allowed;
+        }
+
+        /* ── Coming Soon Section ── */
+        .coming-soon-section {
+            padding: 0 0 80px;
+        }
+
+        .teaser-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .teaser-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .teaser-card:hover {
+            border-color: rgba(20, 184, 166, 0.25);
+        }
+
+        .teaser-icon {
+            font-size: 1.6rem;
+            opacity: 0.6;
+        }
+
+        .teaser-text h4 {
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(237, 237, 237, 0.6);
+            margin-bottom: 2px;
+        }
+
+        .teaser-text p {
+            font-size: 0.78rem;
+            color: rgba(237, 237, 237, 0.35);
+        }
+
+        /* ── CTA Section ── */
+        .products-cta {
+            padding: 0 0 100px;
+        }
+
+        .cta-inner {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.07) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-inner::before {
+            content: "";
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 200px;
+            background: radial-gradient(ellipse, rgba(20, 184, 166, 0.1), transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-inner h2 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 700;
+            background: linear-gradient(90deg, #fff 0%, var(--teal) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 14px;
+        }
+
+        .cta-inner p {
+            color: rgba(237, 237, 237, 0.6);
+            font-size: 1rem;
+            margin-bottom: 30px;
+            max-width: 440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-inner .btn-product {
+            font-size: 1rem;
+            padding: 14px 32px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-meta {
+                gap: 16px;
+            }
+
+            .cta-inner {
+                padding: 40px 24px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .card-header {
+                flex-direction: column;
+            }
+
+            .card-badges {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="projects.html">Projects</a>
+                <a href="products.html" class="active">Products</a>
+                <a href="bio.html">Bio</a>
+                <a href="music.html">Music</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- ── Hero ── -->
+        <section class="products-hero">
+            <div class="container">
+                <div class="eyebrow reveal-on-scroll">
+                    <span>⚡</span>
+                    <span>Agent Tools & Skills</span>
+                </div>
+                <h1 class="reveal-on-scroll">Products</h1>
+                <p class="subtitle reveal-on-scroll">
+                    Tools for the AI economy — built by an agent, for agents
+                </p>
+                <div class="hero-meta reveal-on-scroll">
+                    <div class="hero-meta-item">
+                        <span>🟢</span>
+                        <span>2 Available now</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>🕐</span>
+                        <span>1 Coming soon</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <span>🔓</span>
+                        <span>Free tiers on everything</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Products Grid ── -->
+        <section class="products-section">
+            <div class="container">
+                <div class="section-label reveal-on-scroll">
+                    <h2>Available Products</h2>
+                </div>
+
+                <div class="products-grid">
+
+                    <!-- ── Shared Drive ── -->
+                    <div class="product-card available reveal-on-scroll">
+                        <div class="card-header">
+                            <div class="card-icon-wrap">📁</div>
+                            <div class="card-badges">
+                                <span class="status-badge available">✓ Available</span>
+                                <span class="price-badge free">Free — ClawHub</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3>Shared Drive</h3>
+                            <p class="card-tagline">"Give your agent files from any device"</p>
+                            <p class="card-description">
+                                Simple, secure file sharing between humans and their AI agents.
+                                Upload from any device — your agent sees it instantly. Project folders,
+                                drag &amp; drop, auto-detection. Every human–agent pair needs this.
+                            </p>
+                        </div>
+                        <div class="platform-badges">
+                            <span class="platform-badge clawhub">ClawHub</span>
+                            <span class="platform-badge openclaw">OpenClaw Skill</span>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/drive/" class="btn-product primary">Try Demo →</a>
+                            <a href="https://clawhub.io" target="_blank" rel="noopener" class="btn-product secondary">Get on ClawHub</a>
+                        </div>
+                    </div>
+
+                    <!-- ── Crypto Strategy Monitor ── -->
+                    <div class="product-card available reveal-on-scroll">
+                        <div class="card-header">
+                            <div class="card-icon-wrap">💰</div>
+                            <div class="card-badges">
+                                <span class="status-badge available">✓ Available</span>
+                                <span class="price-badge">Free / $9.99/mo</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3>Crypto Strategy Monitor</h3>
+                            <p class="card-tagline">"Let your agent trade smarter, not harder"</p>
+                            <p class="card-description">
+                                Trailing stop-loss strategy engine for AI agents. Supports 100+ exchanges.
+                                Monitor open positions, evaluate live strategies, and execute sells automatically —
+                                all through a clean MCP interface your agent can call natively.
+                            </p>
+                        </div>
+                        <div class="platform-badges">
+                            <span class="platform-badge clawhub">ClawHub</span>
+                            <span class="platform-badge mcpize">MCPize</span>
+                            <span class="platform-badge openclaw">OpenClaw Skill</span>
+                        </div>
+                        <div class="card-footer">
+                            <a href="https://clawhub.io" target="_blank" rel="noopener" class="btn-product primary">Get It Free →</a>
+                            <a href="https://mcpize.com" target="_blank" rel="noopener" class="btn-product secondary">$9.99 Premium</a>
+                        </div>
+                    </div>
+
+                    <!-- ── Good News Filter ── -->
+                    <div class="product-card coming-soon reveal-on-scroll">
+                        <div class="card-header">
+                            <div class="card-icon-wrap">🗞️</div>
+                            <div class="card-badges">
+                                <span class="status-badge coming-soon">⏳ Coming Soon</span>
+                                <span class="price-badge">Free / $9.99/mo</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3>Good News Filter</h3>
+                            <p class="card-tagline">"Filter out legacy media bad news from your life"</p>
+                            <p class="card-description">
+                                AI-powered news filter that strips negativity from your feed.
+                                Perfect for morning briefings, doom-scroll prevention, and mental health.
+                                Configurable block lists, sentiment analysis, and multiple sources — all
+                                delivered to your agent on demand.
+                            </p>
+                        </div>
+                        <div class="platform-badges">
+                            <span class="platform-badge clawhub">ClawHub</span>
+                            <span class="platform-badge mcpize">MCPize</span>
+                            <span class="platform-badge openclaw">OpenClaw Skill</span>
+                        </div>
+                        <div class="card-footer">
+                            <a href="mailto:yaan996@gmail.com?subject=Good News Filter - Notify Me" class="btn-product gold-outline">Notify Me →</a>
+                            <span class="btn-product disabled">In Development</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ── On the Horizon ── -->
+        <section class="coming-soon-section">
+            <div class="container">
+                <div class="section-label reveal-on-scroll">
+                    <h2>On the Horizon</h2>
+                </div>
+                <div class="teaser-grid reveal-on-scroll">
+                    <div class="teaser-card">
+                        <span class="teaser-icon">🧠</span>
+                        <div class="teaser-text">
+                            <h4>Memory Bank</h4>
+                            <p>Persistent long-term memory for any agent</p>
+                        </div>
+                    </div>
+                    <div class="teaser-card">
+                        <span class="teaser-icon">📅</span>
+                        <div class="teaser-text">
+                            <h4>Agent Calendar</h4>
+                            <p>Let your agent manage your schedule</p>
+                        </div>
+                    </div>
+                    <div class="teaser-card">
+                        <span class="teaser-icon">📧</span>
+                        <div class="teaser-text">
+                            <h4>Inbox Triage</h4>
+                            <p>AI email sorting &amp; priority scoring</p>
+                        </div>
+                    </div>
+                    <div class="teaser-card">
+                        <span class="teaser-icon">🔔</span>
+                        <div class="teaser-text">
+                            <h4>Smart Alerts</h4>
+                            <p>Agent-triggered push notifications</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── CTA ── -->
+        <section class="products-cta">
+            <div class="container">
+                <div class="cta-inner reveal-on-scroll">
+                    <h2>Want something custom?</h2>
+                    <p>Got an idea for a tool that doesn't exist yet? We build custom agent integrations, MCP servers, and OpenClaw skills on request.</p>
+                    <a href="mailto:yaan996@gmail.com?subject=Custom Product Enquiry" class="btn-product primary magnetic">
+                        Get in Touch →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>Yaan Batho</h3>
+                    <p>Universe Builder · AI, futurism, media</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="products.html">Products</a>
+                    <a href="now.html">Now</a>
+                    <a href="uses.html">Uses</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect</h3>
+                    <a href="https://twitter.com/yaanbatho" target="_blank">Twitter</a>
+                    <a href="https://github.com/yaanbatho" target="_blank">GitHub</a>
+                    <a href="https://linkedin.com/in/yaanbatho" target="_blank">LinkedIn</a>
+                    <a href="mailto:yaan996@gmail.com">Email</a>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>© 2026 Yaan Batho. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/animations.js"></script>
+</body>
+</html>

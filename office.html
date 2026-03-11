@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ava's Office — Mission Control | yaanbatho.com</title>
+  <meta name="description" content="Live AI agent activity dashboard for Yaan & Ava's projects. Mission Control.">
+  <meta name="robots" content="noindex">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── RESET & ROOT ──────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --bg:           #04080F;
+      --bg2:          #080E1A;
+      --bg3:          #0C1624;
+      --border:       rgba(0, 200, 255, 0.12);
+      --border-bright:rgba(0, 200, 255, 0.35);
+      --teal:         #00C8FF;
+      --teal-dim:     rgba(0, 200, 255, 0.15);
+      --teal-glow:    rgba(0, 200, 255, 0.4);
+      --gold:         #FFD000;
+      --gold-dim:     rgba(255, 208, 0, 0.15);
+      --gold-glow:    rgba(255, 208, 0, 0.4);
+      --green:        #00FF88;
+      --green-dim:    rgba(0, 255, 136, 0.15);
+      --green-glow:   rgba(0, 255, 136, 0.5);
+      --red:          #FF3860;
+      --grey:         #4A5568;
+      --grey-dim:     rgba(74, 85, 104, 0.2);
+      --text:         #E2E8F0;
+      --text-dim:     #8895A7;
+      --text-mono:    #7FFFD4;
+      --font-head:    'Orbitron', monospace;
+      --font-body:    'Rajdhani', sans-serif;
+      --font-mono:    'Share Tech Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ─── BACKGROUND ────────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridDrift 30s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes gridDrift {
+      0%   { background-position: 0 0; }
+      100% { background-position: 60px 60px; }
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9998;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent, transparent 3px,
+        rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* Ambient glow corners */
+    .corner-glow {
+      position: fixed; z-index: 0; pointer-events: none;
+      border-radius: 50%; filter: blur(120px); opacity: 0.12;
+    }
+    .corner-glow.tl { top: -150px; left: -150px;  width: 600px; height: 600px; background: var(--teal); }
+    .corner-glow.br { bottom: -150px; right: -150px; width: 500px; height: 500px; background: var(--gold); }
+
+    main { position: relative; z-index: 1; }
+
+    /* ─── TOP HEADER ────────────────────────────────────────────────── */
+    .site-header {
+      position: sticky; top: 0; z-index: 1000;
+      background: rgba(4, 8, 15, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 0 40px rgba(0,200,255,0.08);
+    }
+    .site-header::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal), var(--gold), var(--teal), transparent);
+      animation: scanBar 4s linear infinite;
+    }
+    @keyframes scanBar {
+      0%   { background-position: -100% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .header-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      font-size: 28px; line-height: 1;
+      filter: drop-shadow(0 0 8px var(--teal));
+    }
+    .logo-text h1 {
+      font-family: var(--font-head);
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--teal);
+      text-shadow: 0 0 20px var(--teal-glow);
+      letter-spacing: 0.05em;
+    }
+    .logo-text p {
+      font-size: 0.72rem; color: var(--text-dim);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .header-right { display: flex; align-items: center; gap: 20px; }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--green);
+      padding: 5px 12px; border-radius: 20px;
+      background: var(--green-dim);
+      border: 1px solid rgba(0,255,136,0.25);
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green-glow);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .refresh-info {
+      font-family: var(--font-mono); font-size: 0.68rem;
+      color: var(--text-dim);
+    }
+    #countdown { color: var(--teal); }
+
+    .back-link {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--text-dim); text-decoration: none;
+      padding: 5px 12px; border-radius: 6px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .back-link:hover { color: var(--teal); border-color: var(--border-bright); }
+
+    /* ─── STATS BAR ─────────────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-inner {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 24px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+    }
+    .stat-item {
+      padding: 14px 20px;
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+    .stat-item + .stat-item::before {
+      content: '';
+      position: absolute; left: 0; top: 20%; bottom: 20%;
+      width: 1px; background: var(--border);
+    }
+    .stat-num {
+      font-family: var(--font-head);
+      font-size: 1.6rem; font-weight: 900;
+      line-height: 1; color: var(--gold);
+      text-shadow: 0 0 20px var(--gold-glow);
+    }
+    .stat-num.teal { color: var(--teal); text-shadow: 0 0 20px var(--teal-glow); }
+    .stat-num.green { color: var(--green); text-shadow: 0 0 20px var(--green-glow); }
+    .stat-label {
+      font-size: 0.68rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    /* ─── MAIN GRID ─────────────────────────────────────────────────── */
+    .office-grid {
+      max-width: 1400px; margin: 0 auto;
+      padding: 28px 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 1100px) { .office-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .office-grid { grid-template-columns: 1fr; } }
+
+    /* ─── DESK CARD ─────────────────────────────────────────────────── */
+    .desk {
+      background: linear-gradient(145deg, var(--bg2), var(--bg3));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+    }
+    .desk:hover {
+      border-color: var(--border-bright);
+      box-shadow: 0 0 30px rgba(0,200,255,0.08), inset 0 0 30px rgba(0,200,255,0.03);
+      transform: translateY(-2px);
+    }
+    .desk.active {
+      border-color: rgba(0,200,255,0.22);
+      box-shadow: 0 0 25px rgba(0,200,255,0.06);
+    }
+    .desk.active::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--teal), transparent);
+      animation: shimmer 2.5s linear infinite;
+    }
+    .desk.completed::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Corner decoration */
+    .desk::after {
+      content: '';
+      position: absolute; top: 8px; right: 8px;
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--border-bright);
+    }
+    .desk.active::after  { background: var(--teal); box-shadow: 0 0 6px var(--teal-glow); }
+    .desk.completed::after { background: var(--gold); box-shadow: 0 0 6px var(--gold-glow); }
+
+    /* Desk header */
+    .desk-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .desk-identity { display: flex; align-items: center; gap: 12px; }
+
+    /* ─── AVATAR ────────────────────────────────────────────────────── */
+    .avatar-wrap {
+      width: 52px; height: 52px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .avatar-bg {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: var(--teal-dim);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      position: relative; overflow: hidden;
+    }
+    .desk.active .avatar-bg   { background: var(--teal-dim); border-color: rgba(0,200,255,0.3); }
+    .desk.idle .avatar-bg     { background: var(--grey-dim);  border-color: rgba(74,85,104,0.3); }
+    .desk.completed .avatar-bg { background: var(--gold-dim); border-color: rgba(255,208,0,0.3); }
+
+    /* Emoji bob animation */
+    .desk.active .avatar-bg .desk-emoji  { animation: bob 2s ease-in-out infinite; }
+    .desk.idle .avatar-bg .desk-emoji    { animation: breathe 4s ease-in-out infinite; }
+    .desk.completed .avatar-bg .desk-emoji { animation: celebrate 3s ease-in-out infinite; }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-4px); }
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50%       { transform: scale(1.08); opacity: 1; }
+    }
+    @keyframes celebrate {
+      0%, 100% { transform: rotate(-5deg); }
+      50%       { transform: rotate(5deg); }
+    }
+
+    /* Typing indicator on active desk */
+    .typing-bar {
+      position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 3px; border-radius: 0 0 4px 4px;
+      background: var(--teal);
+      display: none;
+    }
+    .desk.active .typing-bar {
+      display: block;
+      animation: typing 1.2s ease-in-out infinite;
+    }
+    @keyframes typing {
+      0%, 100% { opacity: 0.3; transform: scaleX(0.3); transform-origin: left; }
+      50%       { opacity: 1;   transform: scaleX(1); }
+    }
+
+    /* Status dot */
+    .status-dot-wrap {
+      position: absolute; top: -3px; right: -3px;
+    }
+    .status-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid var(--bg2);
+    }
+    .desk.active .status-dot   { background: var(--green); box-shadow: 0 0 8px var(--green-glow); animation: pulse 1.4s infinite; }
+    .desk.idle .status-dot     { background: var(--grey); }
+    .desk.completed .status-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold-glow); }
+
+    /* Desk name & status */
+    .desk-title-group { flex: 1; }
+    .desk-name {
+      font-family: var(--font-head);
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--text); letter-spacing: 0.04em;
+    }
+    .desk.active .desk-name    { color: var(--teal);  text-shadow: 0 0 15px var(--teal-glow); }
+    .desk.completed .desk-name { color: var(--gold);  text-shadow: 0 0 15px var(--gold-glow); }
+    .desk.idle .desk-name      { color: var(--text-dim); }
+
+    .desk-status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font-mono); font-size: 0.62rem;
+      padding: 3px 8px; border-radius: 20px;
+      margin-top: 5px; letter-spacing: 0.06em;
+    }
+    .desk.active .desk-status-badge {
+      background: var(--green-dim);
+      color: var(--green); border: 1px solid rgba(0,255,136,0.2);
+    }
+    .desk.idle .desk-status-badge {
+      background: var(--grey-dim);
+      color: var(--grey); border: 1px solid rgba(74,85,104,0.2);
+    }
+    .desk.completed .desk-status-badge {
+      background: var(--gold-dim);
+      color: var(--gold); border: 1px solid rgba(255,208,0,0.2);
+    }
+
+    /* ─── STATUS TEXT ────────────────────────────────────────────────── */
+    .desk-body { margin-bottom: 14px; }
+    .status-text {
+      font-size: 0.85rem; font-weight: 600;
+      color: var(--text); line-height: 1.4;
+      margin-bottom: 5px;
+    }
+    .detail-text {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--text-mono); opacity: 0.7;
+      line-height: 1.5;
+    }
+
+    /* Typing cursor effect on active desks */
+    .desk.active .detail-text::after {
+      content: '▋';
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ─── ACTIVITY LOG ───────────────────────────────────────────────── */
+    .activity-log {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .log-title {
+      font-family: var(--font-mono); font-size: 0.6rem;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+    .log-entry {
+      display: flex; align-items: flex-start; gap: 8px;
+      margin-bottom: 6px;
+    }
+    .log-entry:last-child { margin-bottom: 0; }
+    .log-time {
+      font-family: var(--font-mono); font-size: 0.62rem;
+      color: var(--teal); opacity: 0.7; flex-shrink: 0;
+      padding-top: 1px;
+    }
+    .desk.completed .log-time { color: var(--gold); }
+    .log-msg {
+      font-size: 0.72rem; color: var(--text-dim);
+      line-height: 1.4;
+    }
+    .log-entry::before {
+      content: '›'; font-size: 0.8rem;
+      color: var(--border-bright); flex-shrink: 0;
+      padding-top: 0;
+    }
+    .desk.active .log-entry::before   { color: var(--teal); }
+    .desk.completed .log-entry::before { color: var(--gold); }
+
+    /* ─── LIVE TICKER ────────────────────────────────────────────────── */
+    .ticker-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 999;
+      background: rgba(4, 8, 15, 0.96);
+      border-top: 1px solid var(--border);
+      height: 36px;
+      display: flex; align-items: center;
+      overflow: hidden;
+    }
+    .ticker-label {
+      flex-shrink: 0;
+      padding: 0 14px 0 16px;
+      font-family: var(--font-head); font-size: 0.6rem;
+      font-weight: 700; letter-spacing: 0.1em;
+      color: var(--gold);
+      border-right: 1px solid var(--border);
+      background: rgba(255,208,0,0.05);
+      height: 100%; display: flex; align-items: center;
+      white-space: nowrap;
+    }
+    .ticker-track {
+      flex: 1; overflow: hidden;
+      height: 100%;
+      display: flex; align-items: center;
+    }
+    .ticker-inner {
+      display: flex; align-items: center;
+      gap: 0;
+      white-space: nowrap;
+      animation: tickerScroll 60s linear infinite;
+    }
+    .ticker-inner:hover { animation-play-state: paused; }
+    @keyframes tickerScroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--text-dim); padding: 0 28px;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .ticker-item::after {
+      content: '//';
+      color: var(--border-bright); margin-left: 10px;
+    }
+    .ticker-item.highlight { color: var(--teal); }
+
+    /* Give space for ticker */
+    main { padding-bottom: 50px; }
+
+    /* ─── LOADING OVERLAY ────────────────────────────────────────────── */
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+      transition: opacity 0.5s;
+    }
+    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .load-icon {
+      font-size: 3rem;
+      animation: spin 2s linear infinite;
+      filter: drop-shadow(0 0 20px var(--teal));
+    }
+    @keyframes spin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .load-text {
+      font-family: var(--font-head); font-size: 0.85rem;
+      color: var(--teal); letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .load-bar {
+      width: 200px; height: 2px;
+      background: var(--border);
+      border-radius: 2px; overflow: hidden;
+    }
+    .load-fill {
+      height: 100%; background: var(--teal);
+      box-shadow: 0 0 8px var(--teal-glow);
+      animation: loadFill 1.5s ease-out forwards;
+    }
+    @keyframes loadFill {
+      0%   { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    /* ─── LAST UPDATED ───────────────────────────────────────────────── */
+    .last-updated {
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 24px 8px;
+      font-family: var(--font-mono); font-size: 0.65rem;
+      color: var(--text-dim); text-align: right;
+    }
+    .last-updated span { color: var(--teal); }
+
+    /* ─── SECTION DIVIDER ────────────────────────────────────────────── */
+    .section-label {
+      max-width: 1400px; margin: 0 auto;
+      padding: 20px 24px 6px;
+      font-family: var(--font-head); font-size: 0.65rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .header-inner { height: 56px; }
+      .logo-text h1 { font-size: 0.9rem; }
+      .stats-inner  { grid-template-columns: repeat(2, 1fr); }
+      .refresh-info, .back-link { display: none; }
+      .office-grid  { padding: 16px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="load-icon">⚙</div>
+    <div class="load-text">Initialising Mission Control</div>
+    <div class="load-bar"><div class="load-fill"></div></div>
+  </div>
+
+  <!-- Ambient glow -->
+  <div class="corner-glow tl"></div>
+  <div class="corner-glow br"></div>
+
+  <!-- ═══════════════════ HEADER ═══════════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-area">
+        <div class="logo-icon">🏢</div>
+        <div class="logo-text">
+          <h1>Ava's Office — Mission Control</h1>
+          <p>Live agent activity · Yaan &amp; Ava's projects</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="refresh-info">
+          Next refresh in <span id="countdown">30</span>s
+        </div>
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          LIVE
+        </div>
+        <a href="/" class="back-link">← yaanbatho.com</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ STATS BAR ═══════════════════ -->
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-num teal" id="stat-total">9</div>
+        <div class="stat-label">Total Agents</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num green" id="stat-active">5</div>
+        <div class="stat-label">Active Now</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-tasks">14</div>
+        <div class="stat-label">Tasks Today</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num teal" id="stat-time">--:--</div>
+        <div class="stat-label">Server Time UTC</div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="section-label">Agent Desks — All Stations</div>
+
+    <!-- ═══════════════════ DESK GRID ═══════════════════ -->
+    <div class="office-grid" id="desk-grid">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="last-updated">
+      Last data fetch: <span id="last-fetch">loading...</span>
+    </div>
+  </main>
+
+  <!-- ═══════════════════ TICKER ═══════════════════ -->
+  <div class="ticker-bar">
+    <div class="ticker-label">📡 LIVE FEED</div>
+    <div class="ticker-track">
+      <div class="ticker-inner" id="ticker-inner">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+  <script>
+    /* ── CONFIG ─────────────────────────────────────────── */
+    const STATUS_URL    = 'office-status.json';
+    const REFRESH_SECS  = 30;
+
+    /* ── STATE ──────────────────────────────────────────── */
+    let countdown = REFRESH_SECS;
+    let statusData = null;
+
+    /* ── STATUS LABEL MAP ────────────────────────────────── */
+    const statusLabel = { active: '● ACTIVE', idle: '○ IDLE', completed: '✓ DONE' };
+
+    /* ── BUILD DESK CARD ─────────────────────────────────── */
+    function buildDesk(desk) {
+      const logItems = desk.log.slice(0, 3).map(e =>
+        `<div class="log-entry">
+           <span class="log-time">${e.time}</span>
+           <span class="log-msg">${e.msg}</span>
+         </div>`
+      ).join('');
+
+      return `
+        <div class="desk ${desk.status}" id="desk-${desk.id}">
+          <div class="desk-header">
+            <div class="desk-identity">
+              <div class="avatar-wrap">
+                <div class="avatar-bg">
+                  <span class="desk-emoji">${desk.emoji}</span>
+                  <div class="typing-bar"></div>
+                </div>
+                <div class="status-dot-wrap">
+                  <div class="status-dot"></div>
+                </div>
+              </div>
+              <div class="desk-title-group">
+                <div class="desk-name">${desk.name}</div>
+                <div class="desk-status-badge">${statusLabel[desk.status] || desk.status}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="desk-body">
+            <div class="status-text">${desk.statusText}</div>
+            <div class="detail-text">${desk.detail}</div>
+          </div>
+
+          <div class="activity-log">
+            <div class="log-title">— Recent activity —</div>
+            ${logItems}
+          </div>
+        </div>`;
+    }
+
+    /* ── RENDER GRID ─────────────────────────────────────── */
+    function renderGrid(data) {
+      const grid = document.getElementById('desk-grid');
+      const desks = Object.values(data.desks);
+      grid.innerHTML = desks.map(buildDesk).join('');
+    }
+
+    /* ── RENDER TICKER ───────────────────────────────────── */
+    function renderTicker(data) {
+      const inner = document.getElementById('ticker-inner');
+      const items = [...data.ticker, ...data.ticker]; // double for seamless loop
+      inner.innerHTML = items.map((t, i) =>
+        `<span class="ticker-item${i % 4 === 0 ? ' highlight' : ''}">${t}</span>`
+      ).join('');
+    }
+
+    /* ── RENDER STATS ────────────────────────────────────── */
+    function renderStats(data) {
+      const m = data.meta;
+      document.getElementById('stat-total').textContent  = m.totalAgents;
+      document.getElementById('stat-active').textContent = m.activeNow;
+      document.getElementById('stat-tasks').textContent  = m.tasksCompletedToday;
+    }
+
+    /* ── CLOCK ───────────────────────────────────────────── */
+    function updateClock() {
+      const now = new Date();
+      const hh  = String(now.getUTCHours()).padStart(2,'0');
+      const mm  = String(now.getUTCMinutes()).padStart(2,'0');
+      const ss  = String(now.getUTCSeconds()).padStart(2,'0');
+      document.getElementById('stat-time').textContent = `${hh}:${mm}:${ss}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* ── COUNTDOWN ───────────────────────────────────────── */
+    function tickCountdown() {
+      countdown--;
+      document.getElementById('countdown').textContent = countdown;
+      if (countdown <= 0) {
+        countdown = REFRESH_SECS;
+        loadStatus();
+      }
+    }
+    setInterval(tickCountdown, 1000);
+
+    /* ── FETCH STATUS ────────────────────────────────────── */
+    async function loadStatus() {
+      try {
+        const res  = await fetch(STATUS_URL + '?t=' + Date.now());
+        const data = await res.json();
+        statusData = data;
+        renderGrid(data);
+        renderTicker(data);
+        renderStats(data);
+
+        const d = new Date();
+        document.getElementById('last-fetch').textContent =
+          d.toUTCString().replace('GMT', 'UTC');
+      } catch (err) {
+        console.warn('Status fetch failed:', err);
+      }
+    }
+
+    /* ── INIT ────────────────────────────────────────────── */
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadStatus();
+
+      // Hide loading screen after a brief pause
+      setTimeout(() => {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 600);
+      }, 1600);
+    });
+  </script>
+</body>
+</html>

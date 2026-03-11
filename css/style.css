@@ -13,12 +13,12 @@ html {
 }
 
 :root {
-    --bg: #0A0A0A;
+    --bg: #000000;
     --fg: #EDEDED;
     --muted: #111111;
     --border: #222222;
     --glow: #FFFFFF;
-    --accent-red: #FF0040;
+    --accent-red: #cc0000;
     --accent-red-dim: #990028;
     --transition: all 0.3s ease;
     --font-heading: 'Orbitron', monospace;
@@ -345,6 +345,144 @@ h1::after {
     opacity: 1;
 }
 
+/* ===== AGENT SUPERMARKET BUTTON ===== */
+.btn-agent-market {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, #1a0000 0%, #2d0000 50%, #1a0000 100%);
+    border: 2px solid #cc0000;
+    border-radius: 12px;
+    padding: 14px 24px;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(204,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+.btn-agent-market::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(204,0,0,0.08), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+}
+.btn-agent-market:hover::before { transform: translateX(100%); }
+.btn-agent-market:hover {
+    border-color: #ff2222;
+    box-shadow: 0 0 32px rgba(204,0,0,0.5), 0 8px 24px rgba(0,0,0,0.4);
+    transform: translateY(-2px);
+}
+.agent-market-pixel {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    animation: robot-bob 1.5s ease-in-out infinite;
+}
+@keyframes robot-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+.agent-market-text { display: flex; flex-direction: column; text-align: left; flex: 1; }
+.agent-market-label {
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1;
+}
+.agent-market-sub {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.45);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+}
+.agent-market-arrow {
+    font-size: 1.1rem;
+    color: #cc0000;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+.btn-agent-market:hover .agent-market-arrow { transform: translateX(4px); }
+
+/* ===== MUSIC BUTTON (FLOATING) ===== */
+@keyframes eqBounce {
+    0%, 100% { transform: scaleY(0.25); }
+    50%       { transform: scaleY(1); }
+}
+@keyframes musicPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,0,64,0.6), 0 6px 24px rgba(0,0,0,0.5); }
+    50%       { box-shadow: 0 0 40px rgba(255,0,64,1), 0 8px 32px rgba(255,0,64,0.3); }
+}
+
+.btn-music-float {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    background: rgba(10,0,4,0.85);
+    border: 2px solid #cc0000;
+    border-radius: 50px;
+    color: #cc0000;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: musicPulse 2.2s ease-in-out infinite;
+    transition: background 0.3s, color 0.3s, transform 0.2s;
+}
+.btn-music-float:hover {
+    background: #cc0000;
+    color: #fff;
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 0 60px rgba(255,0,64,0.9), 0 12px 40px rgba(255,0,64,0.4);
+}
+.btn-music-float:hover .eq-bar { background: #fff; }
+
+.music-float-label { line-height: 1; }
+
+.music-eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 16px;
+    flex-shrink: 0;
+}
+.eq-bar {
+    display: block;
+    width: 3px;
+    border-radius: 2px;
+    background: #cc0000;
+    transform-origin: bottom;
+    animation: eqBounce 0.8s ease-in-out infinite;
+    height: 100%;
+}
+.eq-bar:nth-child(1) { animation-delay: 0s;    animation-duration: 0.65s; }
+.eq-bar:nth-child(2) { animation-delay: 0.18s; animation-duration: 0.90s; }
+.eq-bar:nth-child(3) { animation-delay: 0.06s; animation-duration: 0.55s; }
+.eq-bar:nth-child(4) { animation-delay: 0.28s; animation-duration: 0.80s; }
+.eq-bar:nth-child(5) { animation-delay: 0.12s; animation-duration: 1.00s; }
+
+@media (max-width: 600px) {
+    .btn-music-float {
+        bottom: 16px;
+        right: 16px;
+        padding: 12px 18px;
+        font-size: 12px;
+    }
+}
+
 /* Page Header */
 .page-header {
     padding: 80px 20px 40px;
@@ -431,6 +569,132 @@ h3 {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 24px;
     margin-bottom: 60px;
+}
+
+/* ============================================
+   EDITORIAL MAGAZINE LAYOUT — Featured Projects
+   ============================================ */
+
+.editorial-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 60px;
+}
+
+.editorial-row-a {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.editorial-row-b {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    min-height: 380px;
+}
+
+.editorial-row-b .card-link,
+.editorial-row-b .card {
+    height: 100%;
+}
+
+.editorial-row-b .card {
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+}
+
+.editorial-row-b .card-content {
+    flex: 1;
+}
+
+.parallax-panel {
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+    overflow: hidden;
+    min-height: 380px;
+}
+
+.parallax-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(10,10,10,0.6) 100%);
+    border-radius: 12px;
+}
+
+.editorial-cta-panel {
+    border: 1px solid rgba(34,34,34,0.4);
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(17,17,17,0.8), rgba(10,10,10,0.9));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 32px;
+    min-height: 380px;
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+    position: relative;
+    cursor: pointer;
+}
+
+.editorial-cta-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-red), transparent);
+    box-shadow: 0 0 10px var(--accent-red);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.editorial-cta-panel:hover {
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+.editorial-cta-panel:hover::before {
+    opacity: 1;
+}
+
+.editorial-cta-panel h3 {
+    font-size: clamp(22px, 3vw, 28px);
+    margin-bottom: 16px;
+}
+
+.editorial-cta-panel p {
+    color: rgba(237,237,237,0.6);
+    font-size: 15px;
+    max-width: 280px;
+    margin: 0 auto 28px;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .editorial-row-a,
+    .editorial-row-b {
+        grid-template-columns: 1fr;
+    }
+    .parallax-panel {
+        min-height: 200px;
+        background-attachment: scroll;
+    }
+    .editorial-row-b .card {
+        min-height: unset;
+    }
 }
 
 .card {
@@ -1287,6 +1551,7 @@ footer::before {
 
     .grid {
         grid-template-columns: 1fr;
+        gap: 14px;
     }
 
     .section-header {
@@ -1367,3 +1632,38 @@ footer::before {
 .card:nth-child(5) { animation-delay: 0.5s; }
 .card:nth-child(6) { animation-delay: 0.6s; }
 
+
+/* ============ STAT FIXES ============ */
+.stat-number {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: #cc0000 !important;
+    color: #cc0000 !important;
+    font-size: clamp(32px, 5vw, 52px) !important;
+}
+.stats-section {
+    background: #000000 !important;
+    padding: 40px 20px !important;
+}
+.stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+    max-width: 960px;
+    margin: 0 auto;
+}
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+    .stat-item {
+        padding: 12px 8px !important;
+    }
+}
+
+/* ============ JET BLACK BACKGROUNDS ============ */
+body, html { background: #000 !important; }
+.hero, section, .stats-section, .tech-stack-section,
+nav, footer, .container { background-color: #000 !important; }

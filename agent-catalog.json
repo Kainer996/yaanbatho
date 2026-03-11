@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0",
+  "name": "Yaan Batho Agent Tools",
+  "description": "Practical AI agent tools built by Yaan Batho and Ava for the human-AI economy",
+  "url": "https://yaanbatho.com/agent-tools.html",
+  "llms_txt": "https://yaanbatho.com/llms.txt",
+  "contact": {
+    "email": "hello@yaanbatho.com",
+    "website": "https://yaanbatho.com"
+  },
+  "last_updated": "2026-03-09",
+  "tools": [
+    {
+      "id": "shared-drive",
+      "name": "Shared Drive",
+      "tagline": "Give your agent files from any device",
+      "status": "live",
+      "description": "File sharing between humans and their AI agents. Upload from any device, your agent receives instantly. Drag and drop, password-protected folders, all file types supported.",
+      "pricing": {
+        "free_tier": true,
+        "free_limits": "5 files, 50MB",
+        "pro_price": "$4.99/month",
+        "pro_features": "Unlimited files, 10GB storage, API access"
+      },
+      "category": "file-management",
+      "tags": ["file-sharing", "human-agent", "upload", "storage", "productivity"],
+      "integration": {
+        "type": "web",
+        "url": "https://yaanbatho.com"
+      },
+      "purchase_url": "https://yaanbatho.com/agent-tools.html",
+      "demo_available": true
+    },
+    {
+      "id": "good-news-filter",
+      "name": "Good News Filter",
+      "tagline": "Block the doom. Keep the signal.",
+      "status": "available",
+      "description": "MCP server that filters any news feed to positive and neutral content only. Configurable block lists, sentiment scoring, supports RSS and major news APIs. Integrates with any MCP-compatible AI agent.",
+      "pricing": {
+        "free_tier": false,
+        "pro_price": "$9.99/month",
+        "pro_features": "Unlimited filtering, custom blocklists, RSS support, API access"
+      },
+      "category": "content-filtering",
+      "tags": ["news", "sentiment-analysis", "filter", "mcp", "mental-health", "rss"],
+      "integration": {
+        "type": "mcp-server",
+        "protocol": "MCP (Model Context Protocol)",
+        "compatible_with": ["OpenClaw", "Claude Desktop", "any MCP client"]
+      },
+      "purchase_url": "mailto:hello@yaanbatho.com?subject=Good News Filter Access",
+      "demo_available": true
+    },
+    {
+      "id": "crypto-strategy-monitor",
+      "name": "Crypto Strategy Monitor",
+      "tagline": "Adam's Strategy, automated",
+      "status": "available",
+      "description": "Automated trading monitor using trailing stop-loss and take-profit strategy. Configurable entry prices, stop percentages, and targets. Supports Crypto.com Exchange. Runs 24/7 as an autonomous agent.",
+      "pricing": {
+        "free_tier": false,
+        "pro_price": "$14.99/month",
+        "pro_features": "24/7 monitoring, custom strategy parameters, Telegram alerts, trade execution"
+      },
+      "category": "trading",
+      "tags": ["crypto", "trading", "automation", "stop-loss", "take-profit", "Crypto.com"],
+      "integration": {
+        "type": "agent-script",
+        "exchange": "Crypto.com",
+        "language": "Python"
+      },
+      "purchase_url": "mailto:hello@yaanbatho.com?subject=Crypto Monitor Access",
+      "demo_available": false,
+      "disclaimer": "Trading involves risk. Past performance does not guarantee future results."
+    },
+    {
+      "id": "agent-persona-setup",
+      "name": "Agent Persona Setup",
+      "tagline": "Your AI, your personality",
+      "status": "coming_soon",
+      "description": "Full custom AI agent setup: SOUL.md personality design, memory architecture (MEMORY.md, daily logs), heartbeat monitoring, and cron automations. Built by someone running this in production daily.",
+      "pricing": {
+        "free_tier": false,
+        "pro_price": "From $99 one-time",
+        "pro_features": "Custom personality, memory setup, 3 automations, 30-day support"
+      },
+      "category": "ai-setup",
+      "tags": ["agent-setup", "persona", "memory", "OpenClaw", "custom", "consulting"],
+      "integration": {
+        "type": "service",
+        "compatible_with": ["OpenClaw", "Claude", "GPT-4", "any LLM"]
+      },
+      "purchase_url": "mailto:hello@yaanbatho.com?subject=Agent Setup Waitlist",
+      "demo_available": false
+    }
+  ]
+}

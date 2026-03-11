@@ -2,11 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yaan Batho - Universe Builder</title>
     <meta name="description" content="Universe Builder focused on AI, futurism, and media. Creator of ROBOTIQUE, Orion's Barrel, and innovative digital experiences.">
+    <meta name="ai-tools" content="shared-drive, good-news-filter, crypto-monitor, agent-persona-setup">
+    <link rel="alternate" type="application/json" href="/agent-catalog.json" title="Agent Tools Catalog">
+    <link rel="ai-discovery" href="/llms.txt">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Yaan Batho","url":"https://yaanbatho.com","description":"AI agent tools and projects by Yaan Batho. Tools for the human-AI economy.","potentialAction":{"@type":"SearchAction","target":"https://yaanbatho.com/agent-tools.html"}}</script>
     
     <!-- Canonical -->
     <link rel="canonical" href="https://yaanbatho.com/" />
@@ -16,13 +24,13 @@
     <meta property="og:title" content="Yaan Batho — Universe Builder" />
     <meta property="og:description" content="Universe Builder focused on AI, futurism, and media. Creator of ROBOTIQUE, Orion's Barrel, and innovative digital experiences." />
     <meta property="og:url" content="https://yaanbatho.com/" />
-    <meta property="og:image" content="https://yaanbatho.com/videos/friend-shaped.mp4" />
+    <meta property="og:image" content="https://yaanbatho.com/images/hero-banner.jpg" />
     
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Yaan Batho — Universe Builder" />
     <meta name="twitter:description" content="Universe Builder focused on AI, futurism, and media. Creator of ROBOTIQUE, Orion's Barrel, and innovative digital experiences." />
-    <meta name="twitter:image" content="https://yaanbatho.com/videos/friend-shaped.mp4" />
+    <meta name="twitter:image" content="https://yaanbatho.com/images/hero-banner.jpg" />
     
     <!-- Person JSON-LD for LLM Discovery -->
     <script type="application/ld+json">
@@ -33,7 +41,7 @@
       "alternateName": ["Yaan"],
       "description": "Universe Builder focused on AI, futurism, media, and products. Building at the intersection of emerging technology and human creativity, exploring how artificial intelligence can amplify artistic expression and solve meaningful problems.",
       "url": "https://yaanbatho.com/",
-      "image": "https://yaanbatho.com/videos/friend-shaped.mp4",
+      "image": "https://yaanbatho.com/images/hero-banner.jpg",
       "jobTitle": "Universe Builder",
       "sameAs": [
         "https://robotique.world",
@@ -91,10 +99,11 @@
 <body>
     <header>
         <div class="container">
-            <a href="index.html" class="logo">Yaan Batho</a>
+            <a href="index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
             <nav>
                 <a href="index.html" class="active">Home</a>
                 <a href="projects.html">Projects</a>
+                <a href="products.html">Products</a>
                 <a href="bio.html">Bio</a>
                 <a href="music.html">Music</a>
                 <a href="contact.html">Contact</a>
@@ -104,14 +113,23 @@
     </header>
 
     <main>
-        <section class="hero parallax-container" style="background: url('images/hero-banner.png') center/cover no-repeat; min-height: 70vh; display: flex; align-items: center; position: relative;">
-            <div class="parallax-layer" style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,10,0.3), rgba(10,10,10,0.85));"></div>
-            <div class="container" style="position: relative; z-index: 1;">
-                <div class="badge reveal-on-scroll">
-                    <span>✨</span>
-                    <span>Building the future</span>
-                </div>
-                <img loading="lazy" src="images/yaan-batho-logo.png" alt="Yaan Batho" class="reveal-on-scroll" style="max-width: 90%; height: auto; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));">
+        <section class="hero parallax-container" style="background: url('images/hero-banner.jpg') center/cover no-repeat; min-height: 70vh; position: relative;">
+            <!-- Floating music button — bottom-right of hero -->
+            <a href="music.html" class="btn-music-float">
+                <span class="music-eq">
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                </span>
+                <span class="music-float-label">Music</span>
+            </a>
+        </section>
+
+        <!-- Hero text — below the image, clean background -->
+        <section style="background: #0a0a0a; padding: 3rem 0 2rem; text-align: center;">
+            <div class="container">
                 <p class="tagline reveal-on-scroll">
                     <span class="typewriter-text" style="border-right: 3px solid var(--accent-red); padding-right: 5px;">Universe Builder · AI, Automation & Creative Technology</span>
                 </p>
@@ -143,6 +161,171 @@
                         <span class="stat-label">Passion Driven</span>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <div class="container">
+
+                <!-- Batho's Tools — subtle, fits the aesthetic -->
+                <div class="reveal-on-scroll" style="text-align:center; margin-bottom: 3rem;">
+                    <a href="agent-tools.html" style="display:inline-block; opacity:0.72; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.72'">
+                        <img src="/images/bathos-button.png" alt="Batho's Tools — AI Hardware Store" style="width:100%; max-width:320px; height:auto; border-radius:8px; filter: brightness(0.85) saturate(0.8);">
+                    </a>
+                </div>
+
+                <div class="section-header reveal-on-scroll">
+                    <h2>Featured Projects</h2>
+                    <a href="projects.html" class="view-all">View all →</a>
+                </div>
+                
+                <div class="editorial-grid">
+
+                    <!-- ══ ROW A: Orion's Barrel + Chifftown ══ -->
+                    <div class="editorial-row-a reveal-on-scroll">
+
+                        <a href="https://orionsbarrel.com" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/projects/orions-barrel.png" alt="Orion's Barrel">
+                                </div>
+                                <div class="card-content">
+                                    <h3>Orion's Barrel</h3>
+                                    <p>Social sitcom set in a space bar. 90s clips, characters Mary/Carl/Walter, wormhole gag.</p>
+                                    <div class="tags">
+                                        <span class="tag">media</span>
+                                        <span class="tag">writing</span>
+                                        <span class="tag">AI video</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>CapCut</span>
+                                        <span>Veo</span>
+                                        <span>LLM</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="https://chifftown.com" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/projects/chifftown.png" alt="Chifftown">
+                                </div>
+                                <div class="card-content">
+                                    <h3>Chifftown / Chifly</h3>
+                                    <p>Virtual social center: webcam chat, virtual pubs, nightclubs, arcades.</p>
+                                    <div class="tags">
+                                        <span class="tag">product</span>
+                                        <span class="tag">social</span>
+                                        <span class="tag">webRTC</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>WebRTC</span>
+                                        <span>TURN</span>
+                                        <span>Next.js</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-a -->
+
+                    <!-- ══ ROW B: Good News 24 card + parallax image ══ -->
+                    <div class="editorial-row-b reveal-on-scroll">
+
+                        <a href="https://goodnews-24.com" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/projects/goodnews24.png" alt="Good News 24">
+                                </div>
+                                <div class="card-content">
+                                    <h3>Good News 24</h3>
+                                    <p>AI-powered positive news platform. Autonomous agents curate, write, and publish uplifting stories daily with auto-posting to social media.</p>
+                                    <div class="tags">
+                                        <span class="tag">agent</span>
+                                        <span class="tag">media</span>
+                                        <span class="tag">automation</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>AI Agents</span>
+                                        <span>Node.js</span>
+                                        <span>SEO</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <div class="parallax-panel" style="background-image: url('images/projects/project-goodnews-bg.jpg');"></div>
+
+                    </div><!-- /row-b -->
+
+                    <!-- ══ ROW A: QuarryPro + Robotique ══ -->
+                    <div class="editorial-row-a reveal-on-scroll">
+
+                        <a href="https://yaanbatho.com/quarry-pro/" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/quarry-pro-card.png" alt="QuarryPro">
+                                </div>
+                                <div class="card-content">
+                                    <span class="tag" style="background: var(--accent-red); color: white; margin-bottom: 8px; display: inline-block;">LIVE</span>
+                                    <h3>QuarryPro</h3>
+                                    <p>Professional quarry fleet management SaaS. 3D site map, production tracking, shift roster, KPI dashboards. Enterprise-grade at 99% less than MineStar.</p>
+                                    <div class="tags">
+                                        <span class="tag">product</span>
+                                        <span class="tag">automation</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>Three.js</span>
+                                        <span>Node.js</span>
+                                        <span>SQLite</span>
+                                        <span>Express</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="https://yaanbatho.com/robotique/" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/logo-mascot.jpg" alt="ROBOTIQUE — 2045" style="object-fit: contain; background: #000; padding: 12px;">
+                                </div>
+                                <div class="card-content">
+                                    <span class="tag" style="background: #cc0000; color: white; margin-bottom: 8px; display: inline-block;">IN DEVELOPMENT</span>
+                                    <h3>ROBOTIQUE — 2045</h3>
+                                    <p>You wake up in 2045 with nothing. Open-world cyberpunk RPG grounded in real futurism. Find your way home from a world you don't recognise.</p>
+                                    <div class="tags">
+                                        <span class="tag">game</span>
+                                        <span class="tag">RPG</span>
+                                        <span class="tag">sci-fi</span>
+                                        <span class="tag">2045</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>Phaser.js</span>
+                                        <span>JavaScript</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-a -->
+
+                    <!-- ══ ROW B flipped: parallax image LEFT + CTA block RIGHT ══ -->
+                    <div class="editorial-row-b flip reveal-on-scroll">
+
+                        <div class="parallax-panel" style="background-image: url('images/projects/project-quarrypro-bg.jpg');"></div>
+
+                        <a href="projects.html" class="editorial-cta-panel">
+                            <div>
+                                <h3>10+ Projects &amp; Counting →</h3>
+                                <p>Games, AI systems, music, media, tools. The full universe is waiting.</p>
+                                <span class="btn btn-primary" style="pointer-events:none;">View All Projects</span>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-b flip -->
+
+                </div><!-- /editorial-grid -->
             </div>
         </section>
 
@@ -203,250 +386,7 @@
             </div>
         </section>
 
-        <section id="projects">
-            <div class="container">
-                <div class="section-header reveal-on-scroll">
-                    <h2>Featured Projects</h2>
-                    <a href="projects.html" class="view-all">View all →</a>
-                </div>
-                
-                <div class="grid">
-                    <!-- Friend Shaped - No Link -->
-                    <div class="card tilt-card">
-                        <div class="card-image" style="padding: 0; background: #000;">
-                            <video 
-                                src="videos/friend-shaped.mp4" 
-                                style="width: 100%; height: 100%; object-fit: cover;"
-                                autoplay 
-                                loop 
-                                muted 
-                                playsinline
-                            ></video>
-                        </div>
-                        <div class="card-content">
-                            <h3>Friend Shaped</h3>
-                            <p>An experimental creative project exploring form, interaction, and digital companionship.</p>
-                            <div class="tags">
-                                <span class="tag">creative</span>
-                                <span class="tag">video</span>
-                                <span class="tag">experimental</span>
-                            </div>
-                            <div class="tech">
-                                <span>Video Production</span>
-                                <span>Creative Direction</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Robotique - Clickable -->
-                    <a href="https://robotique.world" target="_blank" rel="noopener noreferrer" class="card-link">
-                        <div class="card tilt-card">
-                            <div class="card-image">
-                                <img loading="lazy" src="images/projects/robotique.png" alt="Robotique">
-                            </div>
-                            <div class="card-content">
-                                <h3>Robotique</h3>
-                                <p>Brand + Shopify store, "Legendary Tee" package, Robotique University deep dives.</p>
-                                <div class="tags">
-                                    <span class="tag">brand</span>
-                                    <span class="tag">ecommerce</span>
-                                    <span class="tag">education</span>
-                                </div>
-                                <div class="tech">
-                                    <span>Shopify</span>
-                                    <span>Canva</span>
-                                    <span>AI video</span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Orion's Barrel - Clickable -->
-                    <a href="https://orionsbarrel.com" target="_blank" rel="noopener noreferrer" class="card-link">
-                        <div class="card tilt-card">
-                            <div class="card-image">
-                                <img loading="lazy" src="images/projects/orions-barrel.png" alt="Orion's Barrel">
-                            </div>
-                            <div class="card-content">
-                                <h3>Orion's Barrel</h3>
-                                <p>Social sitcom set in a space bar. 90s clips, characters Mary/Carl/Walter, wormhole gag.</p>
-                                <div class="tags">
-                                    <span class="tag">media</span>
-                                    <span class="tag">writing</span>
-                                    <span class="tag">AI video</span>
-                                </div>
-                                <div class="tech">
-                                    <span>CapCut</span>
-                                    <span>Veo</span>
-                                    <span>LLM</span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Chifftown - Clickable -->
-                    <a href="https://chifftown.com" target="_blank" rel="noopener noreferrer" class="card-link">
-                        <div class="card tilt-card">
-                            <div class="card-image">
-                                <img loading="lazy" src="images/projects/chifftown.png" alt="Chifftown">
-                            </div>
-                            <div class="card-content">
-                                <h3>Chifftown / Chifly</h3>
-                                <p>Virtual social center: webcam chat, virtual pubs, nightclubs, arcades.</p>
-                                <div class="tags">
-                                    <span class="tag">product</span>
-                                    <span class="tag">social</span>
-                                    <span class="tag">webRTC</span>
-                                </div>
-                                <div class="tech">
-                                    <span>WebRTC</span>
-                                    <span>TURN</span>
-                                    <span>Next.js</span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Good News 24 - Clickable -->
-                    <a href="https://goodnews-24.com" target="_blank" rel="noopener noreferrer" class="card-link">
-                        <div class="card tilt-card">
-                            <div class="card-image">
-                                <img loading="lazy" src="images/projects/goodnews24.png" alt="Good News 24">
-                            </div>
-                            <div class="card-content">
-                                <h3>Good News 24</h3>
-                                <p>AI-powered positive news platform. Autonomous agents curate, write, and publish uplifting stories daily with auto-posting to social media.</p>
-                                <div class="tags">
-                                    <span class="tag">agent</span>
-                                    <span class="tag">media</span>
-                                    <span class="tag">automation</span>
-                                </div>
-                                <div class="tech">
-                                    <span>AI Agents</span>
-                                    <span>Node.js</span>
-                                    <span>SEO</span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- AI Trading - No Link -->
-                    <div class="card tilt-card">
-                        <div class="card-image">
-                            <img loading="lazy" src="images/projects/ai-trading.png" alt="Autonomous Trading System">
-                        </div>
-                        <div class="card-content">
-                            <h3>Autonomous Trading System</h3>
-                            <p>AI agent that monitors crypto markets 24/7, executes trades using trailing stop-loss strategies, and sends real-time email reports.</p>
-                            <div class="tags">
-                                <span class="tag">agent</span>
-                                <span class="tag">fintech</span>
-                                <span class="tag">automation</span>
-                            </div>
-                            <div class="tech">
-                                <span>Python</span>
-                                <span>REST API</span>
-                                <span>Cron</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mini Diggerz - No Link -->
-                    <div class="card tilt-card">
-                        <div class="card-image">
-                            <img loading="lazy" src="images/projects/mini-diggerz.png" alt="Mini Diggerz">
-                        </div>
-                        <div class="card-content">
-                            <h3>Mini Diggerz</h3>
-                            <p>Isometric excavator game in Unreal Engine.</p>
-                            <div class="tags">
-                                <span class="tag">game</span>
-                            </div>
-                            <div class="tech">
-                                <span>UE5</span>
-                                <span>Blueprints</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pun Reel Engine - No Link -->
-                    <div class="card tilt-card">
-                        <div class="card-image">
-                            <img loading="lazy" src="images/projects/pun-reel.png" alt="Pun Reel Engine">
-                        </div>
-                        <div class="card-content">
-                            <h3>Pun Reel Engine</h3>
-                            <p>Classic jokes reimagined as AI video shorts.</p>
-                            <div class="tags">
-                                <span class="tag">media</span>
-                                <span class="tag">comedy</span>
-                            </div>
-                            <div class="tech">
-                                <span>AI video</span>
-                                <span>CapCut</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Robotique AI - No Link -->
-                    <div class="card tilt-card">
-                        <div class="card-image">
-                            <img loading="lazy" src="images/projects/robotique-ai.png" alt="Robotique AI Companion">
-                        </div>
-                        <div class="card-content">
-                            <h3>Robotique AI Companion</h3>
-                            <p>Tamagotchi-style cross-device companion with games, learning, reminders.</p>
-                            <div class="tags">
-                                <span class="tag">agent</span>
-                                <span class="tag">product</span>
-                            </div>
-                            <div class="tech">
-                                <span>Next.js</span>
-                                <span>LLM</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="testimonials-section">
-            <div class="container">
-                <h2 class="reveal-on-scroll animated-gradient-text">What People Say</h2>
-                <div class="testimonials-grid">
-                    <div class="testimonial-card reveal-on-scroll">
-                        <blockquote>Yaan has one of the most creative minds I've worked with. He sees possibilities where others see problems — and then he builds the solution before you've finished describing it.</blockquote>
-                        <div class="testimonial-author">
-                            <div class="testimonial-author-avatar">A</div>
-                            <div class="testimonial-author-info">
-                                <div class="author-name">Adam</div>
-                                <div class="author-role">Collaborator &amp; Trading Partner</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="testimonial-card reveal-on-scroll">
-                        <blockquote>The level of ambition and execution is rare. From AI-powered news platforms to space sitcoms — every project ships with genuine craft and personality.</blockquote>
-                        <div class="testimonial-author">
-                            <div class="testimonial-author-avatar">🤖</div>
-                            <div class="testimonial-author-info">
-                                <div class="author-name">The AI Community</div>
-                                <div class="author-role">Builders &amp; Creators</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="testimonial-card reveal-on-scroll">
-                        <blockquote>Not just a builder — a universe builder. Yaan doesn't just make products, he creates entire worlds with their own stories, characters, and ecosystems.</blockquote>
-                        <div class="testimonial-author">
-                            <div class="testimonial-author-avatar">✨</div>
-                            <div class="testimonial-author-info">
-                                <div class="author-name">Creative Peer</div>
-                                <div class="author-role">Fellow Creator</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <section>
             <div class="container">

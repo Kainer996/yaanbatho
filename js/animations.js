@@ -64,11 +64,24 @@ function initParallax() {
     
     if (parallaxElements.length === 0) return;
     
+    // Disable parallax movement on mobile — it causes inverted scroll issues
+    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+    
+    if (isMobile) {
+        // On mobile, just fix the gradient in place
+        parallaxElements.forEach(el => {
+            el.style.transform = 'none';
+            el.style.position = 'absolute';
+            el.style.inset = '0';
+        });
+        return;
+    }
+    
     window.addEventListener('scroll', () => {
         const scrolled = window.scrollY;
         
         parallaxElements.forEach((el, index) => {
-            const speed = (index + 1) * 0.3; // Different speeds for different layers
+            const speed = (index + 1) * 0.3;
             const yPos = -(scrolled * speed);
             el.style.transform = `translateY(${yPos}px)`;
         });
@@ -295,6 +308,12 @@ function initPageTransition() {
             transition.classList.remove('active');
         }, 800);
     });
+
+    // Failsafe: hide loader after 3 seconds no matter what
+    setTimeout(() => {
+        transition.classList.remove('active');
+        transition.style.display = 'none';
+    }, 3000);
     
     // Show on navigation
     document.querySelectorAll('a:not([target="_blank"])').forEach(link => {
