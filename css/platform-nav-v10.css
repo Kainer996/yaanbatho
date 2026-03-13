@@ -1,0 +1,29 @@
+/* Platform Nav v10 - visual platform lines for mascot */
+
+.mascot-platform {
+    position: fixed;
+    pointer-events: none;
+    z-index: 997;
+    height: 2px;
+}
+
+/* Top platform line: sits along header's bottom red border (already styled by header::after) */
+/* No extra visual needed — the header's red glow IS the platform */
+
+/* Bottom platform line: thin line just above the MUSIC button, extending left */
+.mascot-platform-bottom {
+    bottom: 72px;   /* just above the MUSIC button (bottom:24px + ~48px height) */
+    right: 24px;
+    width: 300px;
+    background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.15) 60%, rgba(204, 0, 0, 0.3));
+    opacity: 0;
+    transition: opacity 0.6s;
+}
+
+.mascot-platform-bottom.visible {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .mascot-platform { display: none; }
+}
