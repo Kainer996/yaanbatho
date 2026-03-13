@@ -1,0 +1,215 @@
+/* Spaceman Mascot v10 */
+
+#spaceman-mascot {
+    position: fixed;
+    z-index: 998;
+    pointer-events: none;
+    transition: none;
+    will-change: top, left;
+    image-rendering: auto;
+}
+
+/* Body wrapper */
+#spaceman-mascot .mascot-body {
+    position: relative;
+    width: 40px;
+    height: 80px;
+}
+
+/* Helmet / head circle */
+#spaceman-mascot .mascot-helmet {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 35%, #e0e0e0, #888);
+    border: 2px solid #666;
+    overflow: hidden;
+    box-shadow: 0 0 8px rgba(204, 0, 0, 0.4);
+}
+
+/* Face image inside helmet */
+#spaceman-mascot .mascot-face {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    display: block;
+    border-radius: 50%;
+}
+
+/* Visor reflection */
+#spaceman-mascot .mascot-helmet::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    width: 10px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    transform: rotate(-20deg);
+}
+
+/* Suit / torso */
+#spaceman-mascot .mascot-suit {
+    position: absolute;
+    top: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(180deg, #ddd, #aaa);
+    border-radius: 6px 6px 4px 4px;
+    border: 1px solid #888;
+}
+
+/* Red chest patch */
+#spaceman-mascot .mascot-suit::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 8px;
+    background: var(--accent-red, #cc0000);
+    border-radius: 2px;
+}
+
+/* Backpack */
+#spaceman-mascot .mascot-suit::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: -6px;
+    width: 8px;
+    height: 18px;
+    background: linear-gradient(180deg, #999, #666);
+    border-radius: 2px;
+    border: 1px solid #555;
+}
+
+/* Legs container */
+#spaceman-mascot .mascot-legs {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 24px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Individual leg */
+#spaceman-mascot .mascot-leg {
+    width: 10px;
+    height: 24px;
+    background: linear-gradient(180deg, #aaa, #888);
+    border-radius: 3px 3px 4px 4px;
+    transform-origin: top center;
+}
+
+/* Boot */
+#spaceman-mascot .mascot-leg::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: -1px;
+    width: 12px;
+    height: 6px;
+    background: #555;
+    border-radius: 3px;
+}
+
+/* Walking animation */
+#spaceman-mascot.walking .mascot-leg-left {
+    animation: legSwing 0.5s ease-in-out infinite;
+}
+#spaceman-mascot.walking .mascot-leg-right {
+    animation: legSwing 0.5s ease-in-out infinite 0.25s;
+}
+
+@keyframes legSwing {
+    0%, 100% { transform: rotate(-12deg); }
+    50%      { transform: rotate(12deg); }
+}
+
+/* Arms */
+#spaceman-mascot .mascot-arm-left,
+#spaceman-mascot .mascot-arm-right {
+    position: absolute;
+    top: 30px;
+    width: 8px;
+    height: 20px;
+    background: linear-gradient(180deg, #ccc, #999);
+    border-radius: 4px;
+    transform-origin: top center;
+}
+
+#spaceman-mascot .mascot-arm-left {
+    left: -2px;
+}
+#spaceman-mascot .mascot-arm-right {
+    right: -2px;
+}
+
+#spaceman-mascot.walking .mascot-arm-left {
+    animation: armSwing 0.5s ease-in-out infinite 0.25s;
+}
+#spaceman-mascot.walking .mascot-arm-right {
+    animation: armSwing 0.5s ease-in-out infinite;
+}
+
+@keyframes armSwing {
+    0%, 100% { transform: rotate(10deg); }
+    50%      { transform: rotate(-10deg); }
+}
+
+/* Flip for walking left */
+#spaceman-mascot.face-left .mascot-body {
+    transform: scaleX(-1);
+}
+
+/* Idle bobbing */
+#spaceman-mascot.idle .mascot-body {
+    animation: idleBob 2s ease-in-out infinite;
+}
+
+@keyframes idleBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+
+/* Jetpack flame when jumping between platforms */
+#spaceman-mascot .mascot-jetpack-flame {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: radial-gradient(ellipse, #ff6600, #cc0000, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+#spaceman-mascot.jumping .mascot-jetpack-flame {
+    opacity: 1;
+    animation: flameFlicker 0.12s infinite alternate;
+}
+
+@keyframes flameFlicker {
+    from { transform: translateX(-50%) scaleY(1); }
+    to   { transform: translateX(-50%) scaleY(1.4); }
+}
+
+/* Hide on small screens */
+@media (max-width: 768px) {
+    #spaceman-mascot { display: none; }
+}
