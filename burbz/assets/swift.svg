@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%"><stop offset="0%" stop-color="#5D6D7E" stop-opacity="0.25"/><stop offset="100%" stop-color="#0a0a12"/></radialGradient>
+    <clipPath id="frame"><circle cx="200" cy="200" r="190"/></clipPath>
+  </defs>
+  <rect width="400" height="400" fill="#0a0a12"/>
+  <circle cx="200" cy="200" r="190" fill="url(#bg)"/>
+  <!-- Heavy speed lines -->
+  <g clip-path="url(#frame)" opacity="0.2">
+    <line x1="400" y1="100" x2="0" y2="200" stroke="#5D6D7E" stroke-width="2"/>
+    <line x1="400" y1="150" x2="0" y2="220" stroke="#5D6D7E" stroke-width="1.5"/>
+    <line x1="400" y1="200" x2="0" y2="250" stroke="#fff" stroke-width="1"/>
+    <line x1="400" y1="250" x2="0" y2="280" stroke="#fff" stroke-width="1"/>
+    <line x1="400" y1="80" x2="0" y2="170" stroke="#fff" stroke-width="1"/>
+    <line x1="400" y1="300" x2="0" y2="310" stroke="#5D6D7E" stroke-width="1"/>
+  </g>
+  <!-- Swift - missile speedster -->
+  <g transform="translate(200,200) rotate(-5)">
+    <!-- Body - extremely streamlined -->
+    <ellipse cx="0" cy="0" rx="22" ry="50" fill="#2c2c2c" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Pale throat -->
+    <ellipse cx="0" cy="-15" rx="10" ry="12" fill="#5D6D7E" opacity="0.5"/>
+    <!-- Head - flat and aerodynamic -->
+    <ellipse cx="2" cy="-48" rx="18" ry="16" fill="#2c2c2c" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Eye -->
+    <circle cx="12" cy="-50" r="5" fill="#1a1a2e"/>
+    <circle cx="12" cy="-50" r="3" fill="#5D6D7E"/>
+    <circle cx="13" cy="-51" r="1" fill="white"/>
+    <!-- Brow -->
+    <line x1="6" y1="-57" x2="18" y2="-55" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Tiny beak -->
+    <polygon points="16,-48 28,-46 16,-43" fill="#2c3e50" stroke="#1a1a2e" stroke-width="1"/>
+    <!-- MASSIVE sickle-shaped wings - the defining feature -->
+    <path d="M-20,-10 L-130,-60 L-150,-70 L-140,-50 L-25,5 Z" fill="#2c2c2c" stroke="#1a1a2e" stroke-width="2.5"/>
+    <path d="M-150,-70 L-170,-75 L-155,-55 Z" fill="#1a1a1a" stroke="#1a1a2e" stroke-width="2"/>
+    <path d="M20,-10 L130,-60 L150,-70 L140,-50 L25,5 Z" fill="#2c2c2c" stroke="#1a1a2e" stroke-width="2.5"/>
+    <path d="M150,-70 L170,-75 L155,-55 Z" fill="#1a1a1a" stroke="#1a1a2e" stroke-width="2"/>
+    <!-- Forked tail -->
+    <path d="M-8,48 L-20,85 L-5,70 Z" fill="#1a1a1a" stroke="#1a1a2e" stroke-width="2"/>
+    <path d="M8,48 L20,85 L5,70 Z" fill="#1a1a1a" stroke="#1a1a2e" stroke-width="2"/>
+    <!-- Sonic boom effect -->
+    <g stroke="#5D6D7E" fill="none" stroke-width="1.5" opacity="0.35">
+      <path d="M-30,-60 Q-40,-55 -30,-48"/>
+      <path d="M-38,-65 Q-52,-55 -38,-43"/>
+      <path d="M30,-60 Q40,-55 30,-48"/>
+      <path d="M38,-65 Q52,-55 38,-43"/>
+    </g>
+    <!-- Motion blur streaks -->
+    <g stroke="white" stroke-width="2" opacity="0.15">
+      <line x1="-50" y1="30" x2="-100" y2="35"/>
+      <line x1="-45" y1="40" x2="-90" y2="43"/>
+      <line x1="50" y1="30" x2="100" y2="35"/>
+    </g>
+  </g>
+  <rect x="40" y="340" width="320" height="44" rx="4" fill="#2c2c2c" opacity="0.9"/>
+  <text x="200" y="370" font-family="'Arial Black',sans-serif" font-size="22" font-weight="bold" fill="#5D6D7E" text-anchor="middle" letter-spacing="3">COMMON SWIFT</text>
+</svg>

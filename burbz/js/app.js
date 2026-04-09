@@ -6,14 +6,16 @@
 (function () {
     'use strict';
 
-    // ---- BIRD EMOJI MAP ----
-    const BIRD_EMOJI = {
-        robin_eu: '\u{1F426}', peregrine: '\u{1F985}', blue_tit: '\u{1F426}',
-        golden_eagle: '\u{1F985}', crow_carrion: '\u{1F426}\u200D\u2B1B', kingfisher: '\u{1F426}',
-        barn_owl: '\u{1F989}', magpie: '\u{1F426}\u200D\u2B1B', wren: '\u{1F426}',
-        sparrowhawk: '\u{1F985}', heron_grey: '\u{1FAB6}', puffin: '\u{1F427}',
-        swift: '\u{1F426}', woodpecker_great: '\u{1F426}', raven: '\u{1F426}\u200D\u2B1B',
-        jay: '\u{1F426}'
+    // ---- BIRD PORTRAIT PATHS ----
+    const BIRD_PORTRAITS = {
+        robin_eu: 'assets/robin_eu.svg', peregrine: 'assets/peregrine.svg',
+        blue_tit: 'assets/blue_tit.svg', golden_eagle: 'assets/golden_eagle.svg',
+        crow_carrion: 'assets/crow_carrion.svg', kingfisher: 'assets/kingfisher.svg',
+        barn_owl: 'assets/barn_owl.svg', magpie: 'assets/magpie.svg',
+        wren: 'assets/wren.svg', sparrowhawk: 'assets/sparrowhawk.svg',
+        heron_grey: 'assets/heron_grey.svg', puffin: 'assets/puffin.svg',
+        swift: 'assets/swift.svg', woodpecker_great: 'assets/woodpecker_great.svg',
+        raven: 'assets/raven.svg', jay: 'assets/jay.svg'
     };
 
     // ---- STATE ----
@@ -68,8 +70,12 @@
     }
 
     // ---- UTILITY ----
-    function getEmoji(speciesId) {
-        return BIRD_EMOJI[speciesId] || '\u{1F426}';
+    function getPortraitURL(speciesId) {
+        return BIRD_PORTRAITS[speciesId] || 'assets/robin_eu.svg';
+    }
+
+    function getPortraitHTML(speciesId, cls) {
+        return '<img src="' + getPortraitURL(speciesId) + '" alt="" class="bird-portrait ' + (cls || '') + '">';
     }
 
     function xpForLevel(level) { return 100 * level * level; }
@@ -184,8 +190,7 @@
             return `
                 <div class="bird-card rarity-${bird.rarity}" data-id="${bird.id}" onclick="window.BURBZ.showBirdDetail('${bird.id}')">
                     <div class="card-art">
-                        <div class="card-art-bg" style="background: radial-gradient(circle, ${bgColor}44, transparent)"></div>
-                        <span class="bird-emoji">${getEmoji(bird.species_id)}</span>
+                        ${getPortraitHTML(bird.species_id, 'card-portrait')}
                     </div>
                     <div class="card-info">
                         <div class="card-name">${bird.common_name}</div>
@@ -226,7 +231,7 @@
         ];
 
         card.innerHTML = `
-            <div class="detail-portrait">${getEmoji(bird.species_id)}</div>
+            <div class="detail-portrait">${getPortraitHTML(bird.species_id, 'detail-img')}</div>
             <div class="detail-name">${bird.common_name}</div>
             <div class="detail-latin">${species ? species.latin_name : ''}</div>
             <span class="detail-rarity-badge ${bird.rarity}">${bird.rarity.toUpperCase()}</span>
@@ -469,7 +474,7 @@
         const overlay = document.getElementById('capture-overlay');
         const species = STATE.speciesData[bird.species_id];
 
-        document.getElementById('capture-card').textContent = getEmoji(bird.species_id);
+        document.getElementById('capture-card').innerHTML = getPortraitHTML(bird.species_id, 'capture-portrait');
         document.getElementById('capture-species').textContent = bird.common_name;
         const rarityEl = document.getElementById('capture-rarity');
         rarityEl.textContent = bird.rarity.toUpperCase();
@@ -585,7 +590,7 @@
 
         roster.innerHTML = STATE.flock.map(bird => `
             <div class="roster-card" data-id="${bird.id}">
-                <div class="card-art">${getEmoji(bird.species_id)}</div>
+                <div class="card-art">${getPortraitHTML(bird.species_id, 'roster-portrait')}</div>
                 <div class="card-name">${bird.common_name}</div>
                 <div class="card-level">LV ${bird.level}</div>
             </div>
@@ -642,9 +647,9 @@
 
     function showVSScreen(player, opponent) {
         const vs = document.getElementById('battle-vs');
-        document.getElementById('vs-card-player').textContent = getEmoji(player.species_id);
+        document.getElementById('vs-card-player').innerHTML = getPortraitHTML(player.species_id, 'vs-portrait');
         document.getElementById('vs-name-player').textContent = player.common_name;
-        document.getElementById('vs-card-opponent').textContent = getEmoji(opponent.species_id);
+        document.getElementById('vs-card-opponent').innerHTML = getPortraitHTML(opponent.species_id, 'vs-portrait');
         document.getElementById('vs-name-opponent').textContent = opponent.common_name;
         vs.classList.remove('hidden');
 
@@ -660,8 +665,8 @@
         const arena = document.getElementById('battle-arena');
 
         // Setup sprites
-        document.getElementById('player-sprite').textContent = getEmoji(bs.player.species_id);
-        document.getElementById('opp-sprite').textContent = getEmoji(bs.opponent.species_id);
+        document.getElementById('player-sprite').innerHTML = getPortraitHTML(bs.player.species_id, 'arena-portrait');
+        document.getElementById('opp-sprite').innerHTML = getPortraitHTML(bs.opponent.species_id, 'arena-portrait');
 
         // Setup HUDs
         document.getElementById('player-name').textContent = bs.player.common_name;
