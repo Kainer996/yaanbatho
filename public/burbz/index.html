@@ -268,6 +268,45 @@
             </section>
         </main>
 
+        <!-- SETTINGS MODAL -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content settings-content">
+                <button class="modal-close" id="settings-close">&times;</button>
+                <h2 class="section-title">SETTINGS</h2>
+
+                <h3 class="settings-subtitle">BIRD IDENTIFICATION</h3>
+                <p class="settings-hint">Plug in a real BirdNET-style or vision-model API. Leave provider on "mock" to keep the demo identification.</p>
+
+                <label class="settings-label">Sound provider</label>
+                <select id="cfg-sound-provider" class="settings-input">
+                    <option value="mock">Mock (random)</option>
+                    <option value="api">Custom API</option>
+                </select>
+
+                <label class="settings-label">Image provider</label>
+                <select id="cfg-image-provider" class="settings-input">
+                    <option value="mock">Mock (random)</option>
+                    <option value="api">Custom API</option>
+                </select>
+
+                <label class="settings-label">API endpoint</label>
+                <input id="cfg-api-endpoint" class="settings-input" type="url" placeholder="https://your-api.example.com/identify">
+
+                <label class="settings-label">API key (optional)</label>
+                <input id="cfg-api-key" class="settings-input" type="password" placeholder="Sent as X-API-Key header">
+
+                <p class="settings-hint">Endpoint receives a multipart/form-data POST with the audio/image blob. Respond with <code>{"species_id": "robin_eu", "confidence": 0.87}</code>.</p>
+
+                <h3 class="settings-subtitle">DATA</h3>
+                <button id="cfg-reset" class="btn-secondary">RESET ALL PROGRESS</button>
+
+                <div class="settings-actions">
+                    <button id="cfg-save" class="btn-fight"><span class="fight-text">SAVE</span></button>
+                </div>
+            </div>
+        </div>
+
         <!-- BIRD DETAIL MODAL -->
         <div id="bird-modal" class="modal hidden">
             <div class="modal-backdrop"></div>
