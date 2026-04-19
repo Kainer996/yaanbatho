@@ -168,6 +168,10 @@
                     <div class="panel-header">
                         <h2 class="section-title">CHOOSE YOUR FIGHTER</h2>
                     </div>
+                    <div class="battle-mode-nav">
+                        <button class="mode-btn active" data-mode="quick">QUICK MATCH</button>
+                        <button class="mode-btn" data-mode="ladder">LADDER</button>
+                    </div>
                     <div id="battle-roster" class="battle-roster">
                         <!-- Bird selection cards -->
                     </div>
@@ -179,6 +183,13 @@
                         <span class="fight-text">FIND OPPONENT</span>
                         <div class="fight-sparks"></div>
                     </button>
+                    <div id="ladder-panel" class="ladder-panel hidden">
+                        <h3 class="section-title">LADDER TIERS</h3>
+                        <p class="ladder-hint">Pick a fighter above, then challenge a tier. Clear each tier to unlock the next.</p>
+                        <div id="ladder-tiers" class="ladder-tiers">
+                            <!-- Tier cards injected by JS -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- VS SCREEN -->
