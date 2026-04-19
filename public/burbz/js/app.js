@@ -22,13 +22,19 @@
     const STATE = {
         speciesData: null,
         movesData: null,
+        typeChart: null,
+        ladderTiers: null,
         flock: [],
         playerXP: 0,
         playerLevel: 1,
         selectedBattleBird: null,
         battleState: null,
+        battleMode: 'quick',
+        ladderProgress: { winsByTier: {} },
         audioCtx: null,
         mediaStream: null,
+        mediaRecorder: null,
+        recordedBlob: null,
         recording: false,
         activeTab: 'flock'
     };
@@ -36,6 +42,7 @@
     // ---- STORAGE ----
     const STORAGE_KEY = 'burbz_flock';
     const PLAYER_KEY = 'burbz_player';
+    const LADDER_KEY = 'burbz_ladder';
 
     function saveState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE.flock));
@@ -43,6 +50,7 @@
             xp: STATE.playerXP,
             level: STATE.playerLevel
         }));
+        localStorage.setItem(LADDER_KEY, JSON.stringify(STATE.ladderProgress));
     }
 
     function loadState() {
@@ -54,6 +62,13 @@
                 const pd = JSON.parse(p);
                 STATE.playerXP = pd.xp || 0;
                 STATE.playerLevel = pd.level || 1;
+            }
+            const l = localStorage.getItem(LADDER_KEY);
+            if (l) {
+                const ld = JSON.parse(l);
+                STATE.ladderProgress = {
+                    winsByTier: (ld && ld.winsByTier) || {}
+                };
             }
         } catch (e) {
             console.warn('Failed to load state:', e);
@@ -67,6 +82,23 @@
         STATE.speciesData = {};
         data.species.forEach(s => { STATE.speciesData[s.species_id] = s; });
         STATE.movesData = data.moves;
+        STATE.typeChart = data.type_chart || {};
+        STATE.ladderTiers = data.ladder_tiers || [];
+    }
+
+    // ---- TYPE EFFECTIVENESS ----
+    function typeMultiplier(attackerElement, defenderElement) {
+        if (!attackerElement || !defenderElement || !STATE.typeChart) return 1;
+        const row = STATE.typeChart[attackerElement];
+        if (!row) return 1;
+        const m = row[defenderElement];
+        return typeof m === 'number' ? m : 1;
+    }
+
+    function effectivenessLabel(mult) {
+        if (mult >= 1.5) return "It's super effective!";
+        if (mult > 0 && mult < 1) return 'Not very effective...';
+        return '';
     }
 
     // ---- UTILITY ----
@@ -414,18 +446,25 @@
         reader.readAsDataURL(file);
     }
 
-    // ---- BIRD IDENTIFICATION (Mock - ready for real API) ----
-    function performBirdID(sourceType) {
-        // TODO: Replace with real BirdNET / image classifier API call
-        // This mock picks a random species with confidence gating
-        const speciesIds = Object.keys(STATE.speciesData);
-        const speciesId = speciesIds[Math.floor(Math.random() * speciesIds.length)];
+    // ---- BIRD IDENTIFICATION (routes through BurbzBirdID provider) ----
+    async function performBirdID(sourceType, blob) {
+        let result;
+        try {
+            if (window.BurbzBirdID) {
+                result = sourceType === 'sound'
+                    ? await window.BurbzBirdID.identifySound(blob || null)
+                    : await window.BurbzBirdID.identifyImage(blob || null);
+            }
+        } catch (err) {
+            console.warn('BurbzBirdID failed:', err);
+        }
+        if (!result || !result.species_id || !STATE.speciesData[result.species_id]) {
+            const ids = Object.keys(STATE.speciesData);
+            result = { species_id: ids[Math.floor(Math.random() * ids.length)], confidence: 0.6 };
+        }
+        const speciesId = result.species_id;
         const species = STATE.speciesData[speciesId];
-
-        // Simulate confidence (weighted toward higher for common birds)
-        const rarityConf = { common: 0.75, uncommon: 0.65, rare: 0.55, legendary: 0.45 };
-        const baseConf = rarityConf[species.rarity_tier] || 0.6;
-        const confidence = Math.min(0.99, baseConf + Math.random() * 0.25);
+        const confidence = result.confidence;
 
         const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
         const statusEl = document.getElementById('sound-status');
@@ -518,6 +557,7 @@
     async function init() {
         loadState();
         await loadSpeciesData();
+        if (window.BurbzBirdID) window.BurbzBirdID.setSpeciesData(STATE.speciesData);
         updatePlayerHUD();
         initTabs();
         initFlockFilters();
@@ -709,42 +749,44 @@
     }
 
     function calcDamage(attacker, defender, move) {
-        if (move.type === 'status') return 0;
+        if (move.type === 'status') return { dmg: 0, mult: 1 };
+        const accuracy = Math.random() * 100 <= move.accuracy;
+        if (!accuracy) return { dmg: -1, mult: 1 }; // miss
         const atkStat = move.type === 'special' ? attacker.stats.spl : attacker.stats.atk;
         const defStat = move.type === 'special' ? defender.stats.spl : defender.stats.def;
         const baseDmg = ((2 * attacker.level / 5 + 2) * move.power * atkStat / defStat) / 50 + 2;
         const variance = 0.85 + Math.random() * 0.3;
         const crit = Math.random() < 0.1 ? 1.5 : 1;
-        const accuracy = Math.random() * 100 <= move.accuracy;
-        if (!accuracy) return -1; // miss
-        return Math.floor(baseDmg * variance * crit);
+        const defenderElement = STATE.speciesData[defender.species_id]
+            ? STATE.speciesData[defender.species_id].element
+            : null;
+        const mult = typeMultiplier(move.element, defenderElement);
+        return { dmg: Math.floor(baseDmg * variance * crit * mult), mult: mult };
     }
 
     function applyStatusEffect(user, target, move) {
-        // Simple stat boost/heal for status moves
-        const effects = [];
-        if (move.description.toLowerCase().includes('defense') || move.description.toLowerCase().includes('shield')) {
-            user.stats.def = Math.floor(user.stats.def * 1.3);
-            effects.push('DEF UP!');
+        if (!move.effects || !Array.isArray(move.effects) || move.effects.length === 0) {
+            return 'Stats boosted!';
         }
-        if (move.description.toLowerCase().includes('special attack') || move.description.toLowerCase().includes('wisdom')) {
-            user.stats.spl = Math.floor(user.stats.spl * 1.3);
-            effects.push('SPL ATK UP!');
-        }
-        if (move.description.toLowerCase().includes('evasion') || move.description.toLowerCase().includes('dodge')) {
-            user.stats.spd = Math.floor(user.stats.spd * 1.2);
-            effects.push('SPEED UP!');
-        }
-        if (move.description.toLowerCase().includes('recover') || move.description.toLowerCase().includes('stance')) {
-            const heal = Math.floor(user.maxHP * 0.25);
-            user.currentHP = Math.min(user.maxHP, user.currentHP + heal);
-            effects.push('HEALED ' + heal + ' HP!');
-        }
-        if (move.description.toLowerCase().includes('lower')) {
-            target.stats.def = Math.floor(target.stats.def * 0.75);
-            effects.push('Enemy DEF DOWN!');
-        }
-        return effects.length > 0 ? effects.join(' ') : 'Stats boosted!';
+        const labels = [];
+        move.effects.forEach(function (effect) {
+            const subject = effect.target === 'opponent' ? target : user;
+            if (effect.action === 'heal') {
+                const heal = Math.floor(subject.maxHP * (effect.percent || 0.25));
+                subject.currentHP = Math.min(subject.maxHP, subject.currentHP + heal);
+                labels.push(effect.label || ('HEALED ' + heal + ' HP!'));
+                return;
+            }
+            const keys = Array.isArray(effect.stats) ? effect.stats : (effect.stat ? [effect.stat] : []);
+            const mult = typeof effect.multiplier === 'number' ? effect.multiplier : 1;
+            keys.forEach(function (k) {
+                if (typeof subject.stats[k] === 'number') {
+                    subject.stats[k] = Math.max(1, Math.floor(subject.stats[k] * mult));
+                }
+            });
+            if (keys.length > 0) labels.push(effect.label || 'Stats changed!');
+        });
+        return labels.length > 0 ? labels.join(' ') : 'Stats boosted!';
     }
 
     function showDamageNumber(targetSide, amount, type) {
@@ -788,15 +830,19 @@
             document.getElementById('log-text').textContent = effect;
             showDamageNumber('player', '', 'buff');
         } else {
-            const dmg = calcDamage(bs.player, bs.opponent, move);
-            if (dmg === -1) {
+            const result = calcDamage(bs.player, bs.opponent, move);
+            if (result.dmg === -1) {
                 document.getElementById('log-text').textContent = 'It missed!';
                 showDamageNumber('opponent', 0, 'miss');
             } else {
-                bs.opponent.currentHP -= dmg;
+                bs.opponent.currentHP -= result.dmg;
                 showHitFlash();
                 document.getElementById('opp-sprite').classList.add('hit-anim');
-                showDamageNumber('opponent', dmg, 'damage');
+                showDamageNumber('opponent', result.dmg, 'damage');
+                const eff = effectivenessLabel(result.mult);
+                if (eff) {
+                    setTimeout(() => { document.getElementById('log-text').textContent = eff; }, 400);
+                }
                 setTimeout(() => document.getElementById('opp-sprite').classList.remove('hit-anim'), 300);
                 updateBattleHP();
             }
@@ -832,15 +878,19 @@
             const effect = applyStatusEffect(bs.opponent, bs.player, move);
             document.getElementById('log-text').textContent = effect;
         } else {
-            const dmg = calcDamage(bs.opponent, bs.player, move);
-            if (dmg === -1) {
+            const result = calcDamage(bs.opponent, bs.player, move);
+            if (result.dmg === -1) {
                 document.getElementById('log-text').textContent = 'It missed!';
                 showDamageNumber('player', 0, 'miss');
             } else {
-                bs.player.currentHP -= dmg;
+                bs.player.currentHP -= result.dmg;
                 showHitFlash();
                 document.getElementById('player-sprite').classList.add('hit-anim');
-                showDamageNumber('player', dmg, 'damage');
+                showDamageNumber('player', result.dmg, 'damage');
+                const eff = effectivenessLabel(result.mult);
+                if (eff) {
+                    setTimeout(() => { document.getElementById('log-text').textContent = eff; }, 400);
+                }
                 setTimeout(() => document.getElementById('player-sprite').classList.remove('hit-anim'), 300);
                 updateBattleHP();
             }
@@ -910,3 +960,5 @@
     function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     document.addEventListener('DOMContentLoaded', init);
+
+})();
