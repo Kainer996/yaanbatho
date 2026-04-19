@@ -297,6 +297,144 @@
         modal.querySelector('.modal-backdrop').addEventListener('click', () => modal.classList.add('hidden'));
     }
 
+    // ---- DAILY CHALLENGES ----
+    const DAILY_KEY = 'burbz_daily';
+
+    const CHALLENGE_TEMPLATES = [
+        { id: 'capture',        targets: [2, 3, 4], rewards: [60, 100, 160], label: function (n) { return 'Capture ' + n + ' birds today'; } },
+        { id: 'battle_win',     targets: [2, 3, 5], rewards: [80, 140, 220], label: function (n) { return 'Win ' + n + ' battles'; } },
+        { id: 'ladder_win',     targets: [1, 2],    rewards: [120, 220],     label: function (n) { return 'Win ' + n + ' ladder match' + (n > 1 ? 'es' : ''); } },
+        { id: 'element_move',   targets: [3, 4, 5], rewards: [60, 90, 130],  label: function (n, meta) { return 'Use ' + n + ' ' + meta.element.toUpperCase() + ' moves'; } },
+        { id: 'rarity_capture', targets: [1],       rewards: [140],          label: function (n, meta) { return 'Capture a ' + meta.rarity.toUpperCase() + ' bird'; } }
+    ];
+
+    function todayKey() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function rollDailyChallenges() {
+        const pool = CHALLENGE_TEMPLATES.slice();
+        const picked = [];
+        const count = Math.min(3, pool.length);
+        for (let i = 0; i < count; i++) {
+            const poolIdx = Math.floor(Math.random() * pool.length);
+            const tpl = pool.splice(poolIdx, 1)[0];
+            const tIdx = Math.floor(Math.random() * tpl.targets.length);
+            const target = tpl.targets[tIdx];
+            const reward = tpl.rewards[tIdx];
+            const meta = {};
+            if (tpl.id === 'element_move') {
+                const els = ['flame', 'sky', 'aqua', 'shadow', 'light'];
+                meta.element = els[Math.floor(Math.random() * els.length)];
+            }
+            if (tpl.id === 'rarity_capture') {
+                const rs = ['uncommon', 'rare'];
+                meta.rarity = rs[Math.floor(Math.random() * rs.length)];
+            }
+            picked.push({
+                id: tpl.id + '_' + i,
+                type: tpl.id,
+                target: target,
+                reward_xp: reward,
+                progress: 0,
+                claimed: false,
+                label: tpl.label(target, meta),
+                meta: meta
+            });
+        }
+        return picked;
+    }
+
+    function ensureDailyChallenges() {
+        const today = todayKey();
+        if (!STATE.dailyChallenges || STATE.dailyChallenges.date !== today) {
+            STATE.dailyChallenges = { date: today, challenges: rollDailyChallenges() };
+            saveDaily();
+        }
+    }
+
+    function saveDaily() {
+        try { localStorage.setItem(DAILY_KEY, JSON.stringify(STATE.dailyChallenges)); } catch (e) {}
+    }
+
+    function loadDaily() {
+        try {
+            const s = localStorage.getItem(DAILY_KEY);
+            if (s) STATE.dailyChallenges = JSON.parse(s);
+        } catch (e) {}
+    }
+
+    const RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
+
+    function bumpChallenge(type, amount, predicate) {
+        if (!STATE.dailyChallenges || !STATE.dailyChallenges.challenges) return;
+        let changed = false;
+        STATE.dailyChallenges.challenges.forEach(function (c) {
+            if (c.type !== type || c.claimed) return;
+            if (predicate && !predicate(c)) return;
+            const next = Math.min(c.target, c.progress + amount);
+            if (next !== c.progress) {
+                c.progress = next;
+                changed = true;
+            }
+        });
+        if (changed) {
+            saveDaily();
+            renderDaily();
+        }
+    }
+
+    function recordCapture(bird) {
+        bumpChallenge('capture', 1);
+        bumpChallenge('rarity_capture', 1, function (c) {
+            return RARITY_ORDER[bird.rarity] >= RARITY_ORDER[c.meta.rarity];
+        });
+    }
+
+    function recordBattleWin(tier) {
+        bumpChallenge('battle_win', 1);
+        if (tier) bumpChallenge('ladder_win', 1);
+    }
+
+    function recordElementMove(element) {
+        if (!element) return;
+        bumpChallenge('element_move', 1, function (c) { return c.meta.element === element; });
+    }
+
+    function claimChallenge(id) {
+        if (!STATE.dailyChallenges) return;
+        const c = STATE.dailyChallenges.challenges.find(function (x) { return x.id === id; });
+        if (!c || c.claimed || c.progress < c.target) return;
+        c.claimed = true;
+        addXP(c.reward_xp);
+        saveDaily();
+        renderDaily();
+    }
+
+    function renderDaily() {
+        const grid = document.getElementById('daily-grid');
+        const dateEl = document.getElementById('daily-date');
+        if (!grid || !STATE.dailyChallenges) return;
+        if (dateEl) dateEl.textContent = STATE.dailyChallenges.date;
+        grid.innerHTML = STATE.dailyChallenges.challenges.map(function (c) {
+            const pct = Math.min(100, (c.progress / c.target) * 100);
+            const done = c.progress >= c.target;
+            const btn = c.claimed
+                ? '<button class="btn-claim claimed" disabled>CLAIMED</button>'
+                : done
+                    ? '<button class="btn-claim" onclick="window.BURBZ.claimChallenge(\'' + c.id + '\')">CLAIM +' + c.reward_xp + ' XP</button>'
+                    : '<span class="challenge-reward">+' + c.reward_xp + ' XP</span>';
+            const metaCls = c.meta && c.meta.element ? ' el-' + c.meta.element : '';
+            return '<div class="challenge-card' + (c.claimed ? ' done' : '') + metaCls + '">' +
+                '<div class="challenge-label">' + c.label + '</div>' +
+                '<div class="challenge-progress">' + c.progress + ' / ' + c.target + '</div>' +
+                '<div class="challenge-bar"><div class="challenge-bar-fill" style="width:' + pct + '%"></div></div>' +
+                btn +
+                '</div>';
+        }).join('');
+    }
+
     // ---- SETTINGS ----
     const SETTINGS_KEY = 'burbz_settings';
 
@@ -349,7 +487,7 @@
         });
         document.getElementById('cfg-reset').addEventListener('click', () => {
             if (!confirm('Reset all progress? This clears your flock, player level, ladder, and settings.')) return;
-            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY].forEach(k => localStorage.removeItem(k));
+            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY].forEach(k => localStorage.removeItem(k));
             location.reload();
         });
     }
@@ -563,6 +701,7 @@
         STATE.flock.push(bird);
         saveState();
         addXP(50);
+        recordCapture(bird);
         showCaptureScreen(bird);
     }
 
@@ -608,7 +747,8 @@
     window.BURBZ = {
         showBirdDetail,
         captureBird,
-        challengeTier
+        challengeTier,
+        claimChallenge
     };
 
     // ---- INIT ----
@@ -617,6 +757,8 @@
         await loadSpeciesData();
         if (window.BurbzBirdID) window.BurbzBirdID.setSpeciesData(STATE.speciesData);
         loadSettings();
+        loadDaily();
+        ensureDailyChallenges();
         updatePlayerHUD();
         initTabs();
         initFlockFilters();
@@ -626,6 +768,7 @@
         initImageID();
         initBattle();
         renderFlock();
+        renderDaily();
 
         // Splash screen
         document.getElementById('btn-enter').addEventListener('click', () => {
@@ -958,6 +1101,7 @@
 
         const moveName = bs.player.moves[moveIndex];
         const move = STATE.movesData[moveName] || { type: 'physical', power: 40, accuracy: 90 };
+        recordElementMove(move.element);
 
         // Player attacks
         document.getElementById('log-text').textContent = bs.player.common_name + ' used ' + moveName + '!';
@@ -1066,6 +1210,7 @@
         resultText.className = 'result-text ' + (victory ? 'victory' : 'defeat');
 
         if (victory) {
+            recordBattleWin(bs.tier);
             const xpGain = 30 + bs.opponent.level * 10;
             resultDetails.textContent = bs.player.common_name + ' defeated ' + bs.opponent.common_name + '!';
             resultRewards.innerHTML = `

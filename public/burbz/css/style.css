@@ -1356,6 +1356,103 @@ html, body {
     font-weight: 700;
 }
 
+/* --- DAILY CHALLENGES --- */
+.daily-challenges {
+    background: linear-gradient(135deg, rgba(76,201,240,0.06), rgba(123,47,247,0.06));
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+.daily-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
+.daily-title {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: var(--accent-blue);
+}
+.daily-date {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.daily-grid {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 600px) {
+    .daily-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.challenge-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.challenge-card.done { opacity: 0.55; }
+.challenge-card.el-flame  { border-left: 3px solid #ff7849; }
+.challenge-card.el-sky    { border-left: 3px solid #87ceeb; }
+.challenge-card.el-aqua   { border-left: 3px solid var(--accent-blue); }
+.challenge-card.el-shadow { border-left: 3px solid #b57edc; }
+.challenge-card.el-light  { border-left: 3px solid var(--accent-gold); }
+.challenge-label {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.challenge-progress {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+.challenge-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.challenge-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
+    transition: width 0.3s;
+}
+.btn-claim {
+    margin-top: 0.3rem;
+    background: var(--accent-gold);
+    color: #0a0a12;
+    border: none;
+    padding: 0.4rem 0.6rem;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: transform 0.1s;
+}
+.btn-claim:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-glow-gold); }
+.btn-claim.claimed, .btn-claim:disabled {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px dashed rgba(255,255,255,0.1);
+    cursor: default;
+}
+.challenge-reward {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    align-self: flex-end;
+}
+
 /* --- SETTINGS MODAL --- */
 .settings-content {
     max-width: 480px;
