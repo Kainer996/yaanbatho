@@ -297,6 +297,63 @@
         modal.querySelector('.modal-backdrop').addEventListener('click', () => modal.classList.add('hidden'));
     }
 
+    // ---- SETTINGS ----
+    const SETTINGS_KEY = 'burbz_settings';
+
+    function loadSettings() {
+        try {
+            const s = localStorage.getItem(SETTINGS_KEY);
+            if (!s) return;
+            const cfg = JSON.parse(s);
+            if (window.BurbzBirdID && cfg) {
+                window.BurbzBirdID.config.soundProvider = cfg.soundProvider || 'mock';
+                window.BurbzBirdID.config.imageProvider = cfg.imageProvider || 'mock';
+                window.BurbzBirdID.config.apiEndpoint = cfg.apiEndpoint || '';
+                window.BurbzBirdID.config.apiKey = cfg.apiKey || '';
+            }
+        } catch (e) { console.warn('Failed to load settings:', e); }
+    }
+
+    function saveSettings() {
+        const cfg = {
+            soundProvider: document.getElementById('cfg-sound-provider').value,
+            imageProvider: document.getElementById('cfg-image-provider').value,
+            apiEndpoint: document.getElementById('cfg-api-endpoint').value.trim(),
+            apiKey: document.getElementById('cfg-api-key').value.trim()
+        };
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg));
+        if (window.BurbzBirdID) {
+            Object.assign(window.BurbzBirdID.config, cfg);
+        }
+    }
+
+    function populateSettingsForm() {
+        const cfg = (window.BurbzBirdID && window.BurbzBirdID.config) || {};
+        document.getElementById('cfg-sound-provider').value = cfg.soundProvider || 'mock';
+        document.getElementById('cfg-image-provider').value = cfg.imageProvider || 'mock';
+        document.getElementById('cfg-api-endpoint').value = cfg.apiEndpoint || '';
+        document.getElementById('cfg-api-key').value = cfg.apiKey || '';
+    }
+
+    function initSettings() {
+        const modal = document.getElementById('settings-modal');
+        const open = () => { populateSettingsForm(); modal.classList.remove('hidden'); };
+        const close = () => modal.classList.add('hidden');
+
+        document.getElementById('btn-settings').addEventListener('click', open);
+        document.getElementById('settings-close').addEventListener('click', close);
+        modal.querySelector('.modal-backdrop').addEventListener('click', close);
+        document.getElementById('cfg-save').addEventListener('click', () => {
+            saveSettings();
+            close();
+        });
+        document.getElementById('cfg-reset').addEventListener('click', () => {
+            if (!confirm('Reset all progress? This clears your flock, player level, ladder, and settings.')) return;
+            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY].forEach(k => localStorage.removeItem(k));
+            location.reload();
+        });
+    }
+
     // ---- SOUND ID ----
     function initSoundID() {
         const btnRecord = document.getElementById('btn-record');
@@ -559,10 +616,12 @@
         loadState();
         await loadSpeciesData();
         if (window.BurbzBirdID) window.BurbzBirdID.setSpeciesData(STATE.speciesData);
+        loadSettings();
         updatePlayerHUD();
         initTabs();
         initFlockFilters();
         initModal();
+        initSettings();
         initSoundID();
         initImageID();
         initBattle();
