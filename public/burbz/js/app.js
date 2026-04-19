@@ -550,7 +550,8 @@
     // ---- EXPOSE PUBLIC API ----
     window.BURBZ = {
         showBirdDetail,
-        captureBird
+        captureBird,
+        challengeTier
     };
 
     // ---- INIT ----
@@ -584,7 +585,7 @@
     // ============================================
 
     function initBattle() {
-        document.getElementById('btn-find-battle').addEventListener('click', startBattle);
+        document.getElementById('btn-find-battle').addEventListener('click', () => startBattle(null));
         document.getElementById('btn-battle-again').addEventListener('click', () => {
             hideBattleScreens();
             renderBattleSelect();
@@ -592,6 +593,16 @@
         document.getElementById('btn-back-flock').addEventListener('click', () => {
             hideBattleScreens();
             switchTab('flock');
+        });
+
+        // Mode toggle (Quick Match | Ladder)
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                STATE.battleMode = btn.dataset.mode;
+                renderBattleSelect();
+            });
         });
 
         // Move buttons
@@ -602,6 +613,57 @@
                 }
             });
         });
+    }
+
+    // ---- LADDER ----
+    function tierUnlocked(tier) {
+        if (!tier) return false;
+        if (STATE.playerLevel >= (tier.unlock_level || 1)) return true;
+        // Also unlock if previous tier cleared
+        const idx = STATE.ladderTiers.indexOf(tier);
+        if (idx > 0) {
+            const prev = STATE.ladderTiers[idx - 1];
+            const prevWins = (STATE.ladderProgress.winsByTier || {})[prev.id] || 0;
+            if (prevWins >= prev.wins_to_clear) return true;
+        }
+        if (idx === 0) return true;
+        return false;
+    }
+
+    function renderLadder() {
+        const wrap = document.getElementById('ladder-tiers');
+        if (!wrap || !STATE.ladderTiers) return;
+        wrap.innerHTML = STATE.ladderTiers.map(tier => {
+            const wins = (STATE.ladderProgress.winsByTier || {})[tier.id] || 0;
+            const unlocked = tierUnlocked(tier);
+            const cleared = wins >= tier.wins_to_clear;
+            const cls = ['tier-card', 'tier-' + tier.id];
+            if (!unlocked) cls.push('locked');
+            if (cleared) cls.push('cleared');
+            const btn = unlocked
+                ? `<button class="btn-tier" onclick="window.BURBZ.challengeTier('${tier.id}')">${cleared ? 'REPLAY' : 'CHALLENGE'}</button>`
+                : `<span class="tier-lock">LV ${tier.unlock_level} REQUIRED</span>`;
+            return `
+                <div class="${cls.join(' ')}">
+                    <div class="tier-head">
+                        <span class="tier-name">${tier.name}</span>
+                        <span class="tier-reward">+${tier.reward_xp} XP</span>
+                    </div>
+                    <div class="tier-progress">${wins} / ${tier.wins_to_clear} wins</div>
+                    <div class="tier-bar"><div class="tier-bar-fill" style="width:${Math.min(100, (wins / tier.wins_to_clear) * 100)}%"></div></div>
+                    ${btn}
+                </div>`;
+        }).join('');
+    }
+
+    function challengeTier(tierId) {
+        const tier = STATE.ladderTiers.find(t => t.id === tierId);
+        if (!tier || !tierUnlocked(tier)) return;
+        if (!STATE.selectedBattleBird) {
+            alert('Pick a fighter first!');
+            return;
+        }
+        startBattle(tier);
     }
 
     function hideBattleScreens() {
@@ -615,43 +677,61 @@
         const roster = document.getElementById('battle-roster');
         const empty = document.getElementById('battle-select-empty');
         const fightBtn = document.getElementById('btn-find-battle');
+        const ladderPanel = document.getElementById('ladder-panel');
+        const isLadder = STATE.battleMode === 'ladder';
 
         if (STATE.flock.length === 0) {
             roster.innerHTML = '';
             empty.classList.remove('hidden');
             fightBtn.classList.add('hidden');
+            if (ladderPanel) ladderPanel.classList.add('hidden');
             return;
         }
 
         empty.classList.add('hidden');
-        fightBtn.classList.remove('hidden');
-        fightBtn.disabled = true;
         STATE.selectedBattleBird = null;
 
-        roster.innerHTML = STATE.flock.map(bird => `
-            <div class="roster-card" data-id="${bird.id}">
-                <div class="card-art">${getPortraitHTML(bird.species_id, 'roster-portrait')}</div>
-                <div class="card-name">${bird.common_name}</div>
-                <div class="card-level">LV ${bird.level}</div>
-            </div>
-        `).join('');
+        roster.innerHTML = STATE.flock.map(bird => {
+            const species = STATE.speciesData[bird.species_id];
+            const el = species && species.element ? species.element : 'normal';
+            return `
+                <div class="roster-card element-${el}" data-id="${bird.id}">
+                    <div class="card-art">${getPortraitHTML(bird.species_id, 'roster-portrait')}</div>
+                    <div class="card-name">${bird.common_name}</div>
+                    <div class="card-level">LV ${bird.level}</div>
+                    <span class="card-element el-${el}">${el.toUpperCase()}</span>
+                </div>
+            `;
+        }).join('');
 
         roster.querySelectorAll('.roster-card').forEach(card => {
             card.addEventListener('click', () => {
                 roster.querySelectorAll('.roster-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 STATE.selectedBattleBird = card.dataset.id;
-                fightBtn.disabled = false;
+                if (!isLadder) fightBtn.disabled = false;
             });
         });
+
+        if (isLadder) {
+            fightBtn.classList.add('hidden');
+            if (ladderPanel) ladderPanel.classList.remove('hidden');
+            renderLadder();
+        } else {
+            fightBtn.classList.remove('hidden');
+            fightBtn.disabled = true;
+            if (ladderPanel) ladderPanel.classList.add('hidden');
+        }
     }
 
-    function generateOpponent() {
+    function generateOpponent(tier) {
         const speciesIds = Object.keys(STATE.speciesData);
         const speciesId = speciesIds[Math.floor(Math.random() * speciesIds.length)];
         const species = STATE.speciesData[speciesId];
         const rarity = rollRarity();
-        const level = Math.max(1, STATE.playerLevel + Math.floor(Math.random() * 5) - 2);
+        const offset = tier && typeof tier.level_offset === 'number' ? tier.level_offset : 0;
+        const baseLevel = STATE.playerLevel + offset + Math.floor(Math.random() * 3) - 1;
+        const level = Math.max(1, baseLevel);
         const stats = calcStats(species.base_stats, level, rarity);
         return {
             id: 'opp_' + generateId(),
@@ -665,11 +745,11 @@
         };
     }
 
-    function startBattle() {
+    function startBattle(tier) {
         const playerBird = STATE.flock.find(b => b.id === STATE.selectedBattleBird);
         if (!playerBird) return;
 
-        const opponent = generateOpponent();
+        const opponent = generateOpponent(tier);
         const playerMaxHP = playerBird.stats.hp * 3 + 50;
         const oppMaxHP = opponent.stats.hp * 3 + 50;
 
@@ -677,7 +757,8 @@
             player: { ...playerBird, maxHP: playerMaxHP, currentHP: playerMaxHP },
             opponent: { ...opponent, maxHP: oppMaxHP, currentHP: oppMaxHP },
             turnInProgress: false,
-            round: 0
+            round: 0,
+            tier: tier || null
         };
 
         // Show VS screen
@@ -933,6 +1014,21 @@
                 <div class="reward-item">Round ${bs.round}</div>
             `;
             addXP(xpGain);
+
+            // Ladder progression
+            if (bs.tier) {
+                const tier = bs.tier;
+                if (!STATE.ladderProgress.winsByTier) STATE.ladderProgress.winsByTier = {};
+                const prev = STATE.ladderProgress.winsByTier[tier.id] || 0;
+                const next = prev + 1;
+                STATE.ladderProgress.winsByTier[tier.id] = next;
+                resultRewards.innerHTML += `<div class="reward-item">${tier.name.toUpperCase()} ${next}/${tier.wins_to_clear}</div>`;
+                if (prev < tier.wins_to_clear && next >= tier.wins_to_clear) {
+                    addXP(tier.reward_xp);
+                    resultRewards.innerHTML += `<div class="reward-item tier-clear-reward">${tier.name.toUpperCase()} CLEARED! +${tier.reward_xp} XP</div>`;
+                }
+                saveState();
+            }
 
             // Level up the bird
             const bird = STATE.flock.find(b => b.id === bs.player.id);

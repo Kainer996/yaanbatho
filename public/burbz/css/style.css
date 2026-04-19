@@ -1214,3 +1214,144 @@ html, body {
     .vs-portrait { width: 180px; height: 180px; }
     .arena-portrait { width: 140px; height: 140px; }
 }
+
+/* --- ELEMENT TYPES --- */
+.card-element {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 0.25rem;
+    background: rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+}
+.el-flame  { color: #ff7849; background: rgba(255,120,73,0.15); }
+.el-sky    { color: #87ceeb; background: rgba(135,206,235,0.15); }
+.el-aqua   { color: #4cc9f0; background: rgba(76,201,240,0.15); }
+.el-shadow { color: #b57edc; background: rgba(181,126,220,0.15); }
+.el-light  { color: #f4d03f; background: rgba(244,208,63,0.15); }
+.el-normal { color: #cfcfcf; background: rgba(207,207,207,0.1); }
+
+/* --- BATTLE MODE NAV --- */
+.battle-mode-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.mode-btn {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    padding: 0.5rem 1.2rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.2s;
+}
+.mode-btn:hover { color: var(--text-primary); border-color: var(--accent-blue); }
+.mode-btn.active {
+    background: var(--accent-red);
+    color: #fff;
+    border-color: var(--accent-red);
+    box-shadow: var(--shadow-glow-red);
+}
+
+/* --- LADDER PANEL --- */
+.ladder-panel {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.ladder-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+.ladder-tiers {
+    display: grid;
+    gap: 0.75rem;
+}
+.tier-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 0.9rem;
+    transition: all 0.2s;
+}
+.tier-card.locked { opacity: 0.45; }
+.tier-card.cleared { border-color: var(--accent-gold); box-shadow: 0 0 0 1px rgba(244,208,63,0.15); }
+.tier-card.tier-rookie   { border-left: 3px solid #95a5a6; }
+.tier-card.tier-bronze   { border-left: 3px solid #cd7f32; }
+.tier-card.tier-silver   { border-left: 3px solid #c0c0c0; }
+.tier-card.tier-gold     { border-left: 3px solid var(--accent-gold); }
+.tier-card.tier-champion { border-left: 3px solid var(--accent-purple); }
+.tier-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+}
+.tier-name {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+}
+.tier-reward {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--accent-gold);
+}
+.tier-progress {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+.tier-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+}
+.tier-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
+    transition: width 0.3s;
+}
+.btn-tier {
+    width: 100%;
+    background: var(--accent-blue);
+    color: #0a0a12;
+    border: none;
+    padding: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: transform 0.1s;
+}
+.btn-tier:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow-blue); }
+.tier-lock {
+    display: block;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    padding: 0.5rem;
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+}
+.tier-clear-reward {
+    color: var(--accent-gold) !important;
+    font-weight: 700;
+}
