@@ -144,25 +144,80 @@
             </div>
         </section>
 
-        <section class="stats-section">
+        <section class="projects-slideshow-section">
             <div class="container">
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-number">10+</span>
-                        <span class="stat-label">Projects Built</span>
+                <div class="projects-slideshow" id="projectsSlideshow">
+                    <div class="slideshow-track" id="slideshowTrack">
+                        <a href="https://orionsbarrel.com" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/projects/orions-barrel.png');"></div>
+                            <div class="slide-overlay">
+                                <h3>Orion's Barrel</h3>
+                                <p>Social sitcom set in a space bar.</p>
+                                <span class="slide-tag">media · AI video</span>
+                            </div>
+                        </a>
+                        <a href="https://chifftown.com" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/projects/chifftown.png');"></div>
+                            <div class="slide-overlay">
+                                <h3>Chifftown / Chifly</h3>
+                                <p>Virtual social center with webcam pubs, nightclubs, arcades.</p>
+                                <span class="slide-tag">product · webRTC</span>
+                            </div>
+                        </a>
+                        <a href="https://goodnews-24.com" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/projects/goodnews24.png');"></div>
+                            <div class="slide-overlay">
+                                <h3>Good News 24</h3>
+                                <p>AI-powered positive news platform with autonomous agents.</p>
+                                <span class="slide-tag">agent · automation</span>
+                            </div>
+                        </a>
+                        <a href="https://yaanbatho.com/quarry-pro/" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/quarry-pro-card.png');"></div>
+                            <div class="slide-overlay">
+                                <span class="slide-live">LIVE</span>
+                                <h3>QuarryPro</h3>
+                                <p>Quarry fleet management SaaS. 3D site map, KPIs, shift roster.</p>
+                                <span class="slide-tag">product · automation</span>
+                            </div>
+                        </a>
+                        <a href="https://yaanbatho.com/robotique/" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/logo-mascot.jpg'); background-size: contain; background-color: #000;"></div>
+                            <div class="slide-overlay">
+                                <h3>ROBOTIQUE — 2045</h3>
+                                <p>Open-world cyberpunk RPG grounded in real futurism.</p>
+                                <span class="slide-tag">game · RPG · sci-fi</span>
+                            </div>
+                        </a>
+                        <a href="/burbz/" class="slideshow-slide">
+                            <div class="slide-image" style="background: linear-gradient(135deg, #0a0a12 0%, #1a1a2e 50%, #e63946 100%); display:flex; align-items:center; justify-content:center;"><span style="font-size: 5rem; filter: drop-shadow(0 0 20px rgba(230,57,70,0.6));">&#x1F426;</span></div>
+                            <div class="slide-overlay">
+                                <span class="slide-live">NEW</span>
+                                <h3>BURBZ</h3>
+                                <p>Bird Fighter Collection. ID birds by sound, collect, battle.</p>
+                                <span class="slide-tag">game · AI · nature</span>
+                            </div>
+                        </a>
+                        <a href="https://yaanbatho.com/ultimate-quarrier/" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/projects/ultimate-quarrier.png');"></div>
+                            <div class="slide-overlay">
+                                <h3>Ultimate Quarrier</h3>
+                                <p>Arcade excavator game. Dig, crush, collect.</p>
+                                <span class="slide-tag">game · arcade</span>
+                            </div>
+                        </a>
+                        <a href="https://yaanbatho.com/motogp-hub/" target="_blank" rel="noopener noreferrer" class="slideshow-slide">
+                            <div class="slide-image" style="background-image: url('images/projects/motogp-hub.png');"></div>
+                            <div class="slide-overlay">
+                                <h3>MotoGP Hub</h3>
+                                <p>Live MotoGP stats, riders, telemetry.</p>
+                                <span class="slide-tag">sports · data</span>
+                            </div>
+                        </a>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-number">3</span>
-                        <span class="stat-label">Live Products</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">AI Agents Running</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">100%</span>
-                        <span class="stat-label">Passion Driven</span>
-                    </div>
+                    <button class="slideshow-arrow prev" aria-label="Previous project" id="slidePrev">&#x2039;</button>
+                    <button class="slideshow-arrow next" aria-label="Next project" id="slideNext">&#x203A;</button>
+                    <div class="slideshow-dots" id="slideshowDots"></div>
                 </div>
             </div>
         </section>
@@ -461,6 +516,7 @@
 
     <script src="js/main.js"></script>
     <script src="js/animations.js"></script>
+    <script src="js/slideshow.js"></script>
     <script src="js/platform-nav-v10.js"></script>
     <script src="js/mascot-v10.js"></script>
 </body>
