@@ -8,7 +8,7 @@
     "email": "hello@yaanbatho.com",
     "website": "https://yaanbatho.com"
   },
-  "last_updated": "2026-03-09",
+  "last_updated": "2026-04-21",
   "tools": [
     {
       "id": "shared-drive",
@@ -93,6 +93,29 @@
       },
       "purchase_url": "mailto:hello@yaanbatho.com?subject=Agent Setup Waitlist",
       "demo_available": false
+    },
+    {
+      "id": "pocket-producer",
+      "name": "Pocket Producer",
+      "tagline": "Your music producer, in your pocket",
+      "status": "available",
+      "description": "An MCP server that turns any MCP-compatible agent into a working music producer. Generates full tracks via Suno, critiques mixes, suggests chord progressions, and gives arrangement feedback — all shaped by the signature style of producers Kainer and Il Diablo. Trained on their own catalogue.",
+      "pricing": {
+        "free_tier": false,
+        "pro_price": "$19.99/month",
+        "pro_features": "Unlimited Suno generations (fair use), full reference library, mix critique, chord and arrangement tools, style-matched prompt presets"
+      },
+      "category": "music-production",
+      "tags": ["music", "production", "suno", "mcp", "audio", "mixing", "composition", "creative"],
+      "integration": {
+        "type": "mcp-server",
+        "protocol": "MCP (Model Context Protocol)",
+        "backend": "Suno (self-hosted open-source proxy, cookie-based)",
+        "compatible_with": ["OpenClaw", "Claude Desktop", "Claude Code", "any MCP client"]
+      },
+      "purchase_url": "mailto:hello@yaanbatho.com?subject=Pocket Producer Access",
+      "demo_available": true,
+      "source_path": "/mcp-servers/pocket-producer"
     }
   ]
 }
