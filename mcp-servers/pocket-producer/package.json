@@ -1,0 +1,44 @@
+{
+  "name": "@yaanbatho/pocket-producer",
+  "version": "0.1.0",
+  "description": "MCP server that turns any agent into a working music producer. Suno generations, mix critique, chord and arrangement tools — shaped by the signature style of Kainer and Il Diablo.",
+  "type": "module",
+  "bin": {
+    "pocket-producer": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "reference-tracks.json",
+    ".env.example",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "music-production",
+    "suno",
+    "agent",
+    "openclaw",
+    "claude"
+  ],
+  "author": "Yaan Batho",
+  "license": "MIT"
+}
