@@ -538,10 +538,38 @@
         try {
             STATE.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             STATE.recording = true;
+            STATE.recordedBlob = null;
             const btnRecord = document.getElementById('btn-record');
             btnRecord.classList.add('recording');
             btnRecord.querySelector('span').textContent = 'STOP';
             document.getElementById('sound-status').textContent = 'Listening...';
+
+            // MediaRecorder captures actual audio bytes for provider upload
+            const chunks = [];
+            let mimeType = '';
+            const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+            for (const c of candidates) {
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) {
+                    mimeType = c;
+                    break;
+                }
+            }
+            try {
+                STATE.mediaRecorder = mimeType
+                    ? new MediaRecorder(STATE.mediaStream, { mimeType: mimeType })
+                    : new MediaRecorder(STATE.mediaStream);
+                STATE.mediaRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) chunks.push(e.data);
+                };
+                STATE.mediaRecorder.onstop = () => {
+                    if (chunks.length > 0) {
+                        STATE.recordedBlob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+                    }
+                };
+                STATE.mediaRecorder.start();
+            } catch (recErr) {
+                console.warn('MediaRecorder unavailable:', recErr);
+            }
 
             // Audio visualization
             STATE.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -586,26 +614,36 @@
 
     function stopRecording() {
         STATE.recording = false;
-        if (STATE.mediaStream) {
-            STATE.mediaStream.getTracks().forEach(t => t.stop());
-            STATE.mediaStream = null;
-        }
-        if (STATE.audioCtx) {
-            STATE.audioCtx.close();
-            STATE.audioCtx = null;
-        }
         const btnRecord = document.getElementById('btn-record');
         btnRecord.classList.remove('recording');
         btnRecord.querySelector('span').textContent = 'RECORD';
         document.getElementById('sound-status').textContent = 'Analyzing...';
 
-        // Simulate identification (replace with real BirdNET API call)
-        setTimeout(() => performBirdID('sound'), 1500);
+        // MediaRecorder.stop is async; capture blob then run identification
+        const finish = () => {
+            if (STATE.mediaStream) {
+                STATE.mediaStream.getTracks().forEach(t => t.stop());
+                STATE.mediaStream = null;
+            }
+            if (STATE.audioCtx) {
+                STATE.audioCtx.close();
+                STATE.audioCtx = null;
+            }
+            performBirdID('sound', STATE.recordedBlob);
+        };
+
+        if (STATE.mediaRecorder && STATE.mediaRecorder.state !== 'inactive') {
+            STATE.mediaRecorder.addEventListener('stop', finish, { once: true });
+            try { STATE.mediaRecorder.stop(); } catch (e) { finish(); }
+            STATE.mediaRecorder = null;
+        } else {
+            finish();
+        }
     }
 
     function processAudioFile(file) {
         document.getElementById('sound-status').textContent = 'Analyzing ' + file.name + '...';
-        setTimeout(() => performBirdID('sound'), 1500);
+        performBirdID('sound', file);
     }
 
     // ---- IMAGE ID ----
@@ -634,9 +672,7 @@
             preview.src = e.target.result;
             preview.classList.remove('hidden');
             if (placeholder) placeholder.style.display = 'none';
-
-            // Simulate identification
-            setTimeout(() => performBirdID('image'), 2000);
+            performBirdID('image', file);
         };
         reader.readAsDataURL(file);
     }
