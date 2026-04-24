@@ -8,6 +8,7 @@
 
     // ---- PRIVATE STATE ----
     let _speciesById = {};
+    let _recentSpeciesIds = [];
 
     const RARITY_BASE = {
         common: 0.75,
@@ -26,9 +27,11 @@
     }
 
     function pickRandomSpeciesId() {
-        const ids = Object.keys(_speciesById);
-        if (ids.length === 0) return null;
-        return ids[Math.floor(Math.random() * ids.length)];
+        // Prefer recently-observed local species when available; fall back to full pool
+        const recent = _recentSpeciesIds.filter(id => _speciesById[id]);
+        const pool = recent.length > 0 && Math.random() < 0.8 ? recent : Object.keys(_speciesById);
+        if (pool.length === 0) return null;
+        return pool[Math.floor(Math.random() * pool.length)];
     }
 
     function rollConfidence(speciesId) {
@@ -99,6 +102,11 @@
 
         setSpeciesData: function (speciesById) {
             _speciesById = speciesById || {};
+        },
+
+        // Optional: bias the mock identifier toward species known to be nearby (from eBird)
+        setRecentSpecies: function (speciesIds) {
+            _recentSpeciesIds = Array.isArray(speciesIds) ? speciesIds.slice() : [];
         },
 
         identifySound: async function (audioBlob) {
