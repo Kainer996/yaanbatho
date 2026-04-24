@@ -27,6 +27,7 @@
         flock: [],
         playerXP: 0,
         playerLevel: 1,
+        flockView: 'flock',
         selectedBattleBird: null,
         battleState: null,
         battleMode: 'quick',
@@ -201,7 +202,7 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabId));
 
-        if (tabId === 'flock') renderFlock();
+        if (tabId === 'flock') renderFlockView();
         if (tabId === 'battle') renderBattleSelect();
         if (tabId === 'nearby') renderNearby();
     }
@@ -250,6 +251,71 @@
                 renderFlock(btn.dataset.filter);
             });
         });
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                STATE.flockView = btn.dataset.view;
+                renderFlockView();
+            });
+        });
+    }
+
+    function renderFlockView() {
+        const flockGrid = document.getElementById('flock-grid');
+        const flockEmpty = document.getElementById('flock-empty');
+        const dexGrid = document.getElementById('dex-grid');
+        const filters = document.getElementById('flock-filters');
+        const isDex = STATE.flockView === 'dex';
+        if (isDex) {
+            flockGrid.classList.add('hidden');
+            flockEmpty.classList.add('hidden');
+            dexGrid.classList.remove('hidden');
+            if (filters) filters.classList.add('hidden');
+            renderDex();
+        } else {
+            dexGrid.classList.add('hidden');
+            flockGrid.classList.remove('hidden');
+            if (filters) filters.classList.remove('hidden');
+            renderFlock();
+        }
+    }
+
+    function renderDex() {
+        const dexGrid = document.getElementById('dex-grid');
+        const dexCountEl = document.getElementById('dex-count');
+        if (!dexGrid || !STATE.speciesData) return;
+        const allSpecies = Object.values(STATE.speciesData);
+        const caughtIds = new Set(STATE.flock.map(b => b.species_id));
+        const caught = caughtIds.size;
+        const total = allSpecies.length;
+        if (dexCountEl) dexCountEl.textContent = '(' + caught + '/' + total + ')';
+
+        dexGrid.innerHTML = allSpecies.map(sp => {
+            const have = caughtIds.has(sp.species_id);
+            const el = sp.element || 'normal';
+            const cls = 'bird-card rarity-' + sp.rarity_tier + ' dex-card' + (have ? '' : ' locked');
+            const name = have ? sp.common_name : '???';
+            const onClick = have
+                ? 'onclick="window.BURBZ.showSpeciesDetail(\'' + sp.species_id + '\')"'
+                : '';
+            return '<div class="' + cls + '" ' + onClick + '>' +
+                '<div class="card-art">' + getPortraitHTML(sp.species_id, 'card-portrait' + (have ? '' : ' silhouette')) + '</div>' +
+                '<div class="card-info">' +
+                '<div class="card-name">' + name + '</div>' +
+                '<div class="card-meta">' +
+                '<span class="card-rarity ' + sp.rarity_tier + '">' + sp.rarity_tier.toUpperCase() + '</span>' +
+                (have ? '<span class="card-element el-' + el + '">' + el.toUpperCase() + '</span>' : '<span class="dex-unseen">NOT SEEN</span>') +
+                '</div></div></div>';
+        }).join('');
+    }
+
+    function showSpeciesDetail(speciesId) {
+        // Show any owned instance, preferring highest level
+        const owned = STATE.flock.filter(b => b.species_id === speciesId);
+        if (owned.length === 0) return;
+        owned.sort((a, b) => (b.level || 1) - (a.level || 1));
+        showBirdDetail(owned[0].id);
     }
 
     // ---- WIKIPEDIA ENRICHMENT ----
@@ -1007,7 +1073,8 @@
         showBirdDetail,
         captureBird,
         challengeTier,
-        claimChallenge
+        claimChallenge,
+        showSpeciesDetail
     };
 
     // ---- INIT ----
@@ -1029,7 +1096,7 @@
         initImageID();
         initBattle();
         initNearby();
-        renderFlock();
+        renderFlockView();
         renderDaily();
 
         // Splash screen

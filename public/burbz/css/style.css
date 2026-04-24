@@ -1215,6 +1215,59 @@ html, body {
     .arena-portrait { width: 140px; height: 140px; }
 }
 
+/* --- SPECIES INDEX (DEX) --- */
+.flock-view-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+}
+.view-btn {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    padding: 0.5rem 0.9rem;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.2s;
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+.view-btn:hover { color: var(--text-primary); border-color: var(--accent-blue); }
+.view-btn.active {
+    background: var(--accent-blue);
+    color: #0a0a12;
+    border-color: var(--accent-blue);
+}
+#dex-count {
+    font-size: 0.65rem;
+    opacity: 0.85;
+    font-weight: 600;
+}
+.dex-card.locked {
+    opacity: 0.75;
+    cursor: default;
+}
+.dex-card.locked .card-name { color: var(--text-muted); }
+.card-portrait.silhouette {
+    filter: brightness(0.02) saturate(0);
+    opacity: 0.55;
+}
+.dex-unseen {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,255,255,0.1);
+}
+
 /* --- FIELD-READY POLISH --- */
 
 /* 5-tab nav: shrink text gently so it fits on narrow phones; scroll as fallback */
