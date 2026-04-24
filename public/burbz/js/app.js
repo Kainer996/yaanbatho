@@ -103,7 +103,13 @@
 
     // ---- UTILITY ----
     function getPortraitURL(speciesId) {
-        return BIRD_PORTRAITS[speciesId] || 'assets/robin_eu.svg';
+        if (BIRD_PORTRAITS[speciesId]) return BIRD_PORTRAITS[speciesId];
+        // Fall back to portrait_ref on the species definition so new birds can reuse existing art
+        const sp = STATE.speciesData && STATE.speciesData[speciesId];
+        if (sp && sp.portrait_ref && BIRD_PORTRAITS[sp.portrait_ref]) {
+            return BIRD_PORTRAITS[sp.portrait_ref];
+        }
+        return 'assets/robin_eu.svg';
     }
 
     function getPortraitHTML(speciesId, cls) {
