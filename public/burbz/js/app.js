@@ -246,6 +246,69 @@
         });
     }
 
+    // ---- WIKIPEDIA ENRICHMENT ----
+    const WIKI_CACHE_KEY = 'burbz_wiki_cache';
+    let _wikiCache = null;
+
+    function loadWikiCache() {
+        if (_wikiCache) return _wikiCache;
+        try { _wikiCache = JSON.parse(localStorage.getItem(WIKI_CACHE_KEY) || '{}'); } catch (e) { _wikiCache = {}; }
+        return _wikiCache;
+    }
+
+    function saveWikiCache() {
+        try { localStorage.setItem(WIKI_CACHE_KEY, JSON.stringify(_wikiCache || {})); } catch (e) {}
+    }
+
+    async function fetchWikipediaSummary(title) {
+        const cache = loadWikiCache();
+        if (cache[title]) return cache[title];
+        try {
+            const url = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title);
+            const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            const entry = {
+                extract: data.extract || '',
+                thumb: (data.thumbnail && data.thumbnail.source) || '',
+                url: (data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page) || ''
+            };
+            cache[title] = entry;
+            _wikiCache = cache;
+            saveWikiCache();
+            return entry;
+        } catch (e) {
+            console.warn('Wikipedia fetch failed:', e);
+            return null;
+        }
+    }
+
+    async function enrichBirdDetailWithWiki(species, targetEl) {
+        if (!species || !targetEl) return;
+        const title = species.latin_name || species.common_name;
+        if (!title) return;
+        let entry = await fetchWikipediaSummary(title);
+        if (!entry || !entry.extract) {
+            // Fall back to common name if latin lookup failed
+            if (title !== species.common_name) {
+                entry = await fetchWikipediaSummary(species.common_name);
+            }
+        }
+        if (!entry || !entry.extract) return;
+        if (!document.body.contains(targetEl)) return;
+        const thumb = entry.thumb
+            ? '<img class="wiki-thumb" src="' + entry.thumb + '" alt="" loading="lazy">'
+            : '';
+        const link = entry.url
+            ? '<a class="wiki-link" href="' + entry.url + '" target="_blank" rel="noopener">Read on Wikipedia &rsaquo;</a>'
+            : '';
+        targetEl.innerHTML =
+            '<h4>FROM THE FIELD GUIDE</h4>' +
+            '<div class="wiki-body">' + thumb +
+            '<p class="wiki-extract">' + entry.extract + '</p>' +
+            '</div>' + link;
+    }
+
     // ---- BIRD DETAIL MODAL ----
     function showBirdDetail(birdId) {
         const bird = STATE.flock.find(b => b.id === birdId);
@@ -287,9 +350,13 @@
             <div style="margin-top:1rem; font-size:0.7rem; color:var(--text-muted)">
                 Captured ${new Date(bird.captured_at).toLocaleDateString()} via ${bird.source_type}
                 &bull; Confidence: ${Math.round(bird.confidence * 100)}%
-            </div>`;
+            </div>
+            <div class="detail-wiki" id="detail-wiki"></div>`;
 
         modal.classList.remove('hidden');
+
+        // Asynchronously enrich with Wikipedia — will update only if still open.
+        enrichBirdDetailWithWiki(species, document.getElementById('detail-wiki'));
     }
 
     function initModal() {
@@ -619,7 +686,7 @@
         });
         document.getElementById('cfg-reset').addEventListener('click', () => {
             if (!confirm('Reset all progress? This clears your flock, player level, ladder, and settings.')) return;
-            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY].forEach(k => localStorage.removeItem(k));
+            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY, WIKI_CACHE_KEY].forEach(k => localStorage.removeItem(k));
             location.reload();
         });
     }
@@ -809,8 +876,26 @@
         reader.readAsDataURL(file);
     }
 
+    let _lastAudioURL = null;
+    function setRecordingPlayback(blob) {
+        const wrap = document.getElementById('sound-visualizer');
+        if (!wrap) return;
+        let existing = document.getElementById('recording-player');
+        if (existing) existing.remove();
+        if (_lastAudioURL) { URL.revokeObjectURL(_lastAudioURL); _lastAudioURL = null; }
+        if (!blob) return;
+        _lastAudioURL = URL.createObjectURL(blob);
+        const audio = document.createElement('audio');
+        audio.id = 'recording-player';
+        audio.controls = true;
+        audio.src = _lastAudioURL;
+        audio.preload = 'metadata';
+        wrap.insertAdjacentElement('afterend', audio);
+    }
+
     // ---- BIRD IDENTIFICATION (routes through BurbzBirdID provider) ----
     async function performBirdID(sourceType, blob) {
+        if (sourceType === 'sound' && blob) setRecordingPlayback(blob);
         let result;
         try {
             if (window.BurbzBirdID) {

@@ -1453,6 +1453,61 @@ html, body {
     align-self: flex-end;
 }
 
+/* --- RECORDING PLAYBACK --- */
+#recording-player {
+    width: 100%;
+    max-width: 320px;
+    margin: 0.6rem auto 0;
+    display: block;
+    height: 36px;
+    filter: invert(0.85) hue-rotate(170deg);
+}
+
+/* --- WIKIPEDIA ENRICHMENT --- */
+.detail-wiki {
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+.detail-wiki:empty { display: none; }
+.detail-wiki h4 {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--accent-blue);
+    margin-bottom: 0.6rem;
+}
+.wiki-body {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+}
+.wiki-thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.04);
+}
+.wiki-extract {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    flex: 1;
+    min-width: 0;
+}
+.wiki-link {
+    display: inline-block;
+    margin-top: 0.6rem;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--accent-blue);
+    text-decoration: none;
+}
+.wiki-link:hover { text-decoration: underline; }
+
 /* --- NEAR ME --- */
 .nearby-panel {
     background: var(--bg-panel);
