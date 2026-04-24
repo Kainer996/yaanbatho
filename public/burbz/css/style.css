@@ -1453,6 +1453,93 @@ html, body {
     align-self: flex-end;
 }
 
+/* --- NEAR ME --- */
+.nearby-panel {
+    background: var(--bg-panel);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+}
+.nearby-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+    line-height: 1.5;
+}
+.nearby-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+.nearby-status {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--accent-blue);
+    min-height: 1em;
+}
+.nearby-meta {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+}
+.nearby-results {
+    display: grid;
+    gap: 0.5rem;
+}
+.nearby-card {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.8rem;
+}
+.nearby-card.playable {
+    border-color: rgba(76,201,240,0.4);
+    box-shadow: 0 0 0 1px rgba(76,201,240,0.1);
+}
+.nearby-portrait {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.04);
+}
+.nearby-portrait.placeholder { border: 1px dashed rgba(255,255,255,0.1); }
+.nearby-info { flex: 1; min-width: 0; }
+.nearby-name {
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.nearby-latin {
+    font-style: italic;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+.nearby-when {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+.nearby-badge {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: #0a0a12;
+    background: var(--accent-blue);
+}
+
 /* --- SETTINGS MODAL --- */
 .settings-content {
     max-width: 480px;

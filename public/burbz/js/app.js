@@ -197,6 +197,7 @@
 
         if (tabId === 'flock') renderFlock();
         if (tabId === 'battle') renderBattleSelect();
+        if (tabId === 'nearby') renderNearby();
     }
 
     // ---- FLOCK RENDERING ----
@@ -435,6 +436,132 @@
         }).join('');
     }
 
+    // ---- NEAR ME (eBird) ----
+    const NEARBY_KEY = 'burbz_nearby';
+
+    function loadNearby() {
+        try {
+            const s = localStorage.getItem(NEARBY_KEY);
+            if (s) STATE.nearby = JSON.parse(s);
+        } catch (e) {}
+    }
+
+    function saveNearby() {
+        try { localStorage.setItem(NEARBY_KEY, JSON.stringify(STATE.nearby || {})); } catch (e) {}
+    }
+
+    function getEbirdKey() {
+        try {
+            const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+            return s.ebirdKey || '';
+        } catch (e) { return ''; }
+    }
+
+    async function fetchNearbyBirds() {
+        const status = document.getElementById('nearby-status');
+        const key = getEbirdKey();
+        if (!key) {
+            status.textContent = 'Add an eBird API key in Settings first.';
+            return;
+        }
+        if (!navigator.geolocation) {
+            status.textContent = 'Geolocation not supported.';
+            return;
+        }
+        status.textContent = 'Locating…';
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            status.textContent = 'Fetching nearby observations…';
+            try {
+                const url = 'https://api.ebird.org/v2/data/obs/geo/recent?lat=' +
+                    lat.toFixed(4) + '&lng=' + lng.toFixed(4) + '&dist=25&back=14&maxResults=60';
+                const resp = await fetch(url, { headers: { 'X-eBirdApiToken': key } });
+                if (!resp.ok) throw new Error('eBird ' + resp.status);
+                const obs = await resp.json();
+                STATE.nearby = {
+                    fetchedAt: Date.now(),
+                    lat: lat,
+                    lng: lng,
+                    observations: Array.isArray(obs) ? obs : []
+                };
+                saveNearby();
+                biasIdProviderToNearby();
+                renderNearby();
+                status.textContent = 'Found ' + STATE.nearby.observations.length + ' species nearby.';
+            } catch (err) {
+                console.warn('eBird fetch failed:', err);
+                status.textContent = 'Could not fetch from eBird: ' + err.message;
+            }
+        }, (err) => {
+            status.textContent = 'Location denied (' + err.message + ').';
+        }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+    }
+
+    function matchLocalSpeciesFromNearby() {
+        if (!STATE.nearby || !STATE.nearby.observations || !STATE.speciesData) return [];
+        const codesInFlock = {};
+        Object.values(STATE.speciesData).forEach(sp => {
+            if (sp.ebird_code) codesInFlock[sp.ebird_code] = sp.species_id;
+        });
+        const seen = new Set();
+        const matches = [];
+        STATE.nearby.observations.forEach(o => {
+            const id = codesInFlock[o.speciesCode];
+            if (id && !seen.has(id)) {
+                seen.add(id);
+                matches.push(id);
+            }
+        });
+        return matches;
+    }
+
+    function biasIdProviderToNearby() {
+        if (window.BurbzBirdID && typeof window.BurbzBirdID.setRecentSpecies === 'function') {
+            window.BurbzBirdID.setRecentSpecies(matchLocalSpeciesFromNearby());
+        }
+    }
+
+    function renderNearby() {
+        const results = document.getElementById('nearby-results');
+        if (!results) return;
+        if (!STATE.nearby || !STATE.nearby.observations || STATE.nearby.observations.length === 0) {
+            results.innerHTML = '';
+            return;
+        }
+        const localMatches = new Set(matchLocalSpeciesFromNearby());
+        const codeToLocal = {};
+        Object.values(STATE.speciesData).forEach(sp => {
+            if (sp.ebird_code) codeToLocal[sp.ebird_code] = sp;
+        });
+        const when = new Date(STATE.nearby.fetchedAt).toLocaleString();
+        const header = '<div class="nearby-meta">Updated ' + when +
+            ' &middot; ' + STATE.nearby.observations.length + ' species within 25 km</div>';
+        const items = STATE.nearby.observations.slice(0, 40).map(o => {
+            const local = codeToLocal[o.speciesCode];
+            const playable = local && localMatches.has(local.species_id);
+            const cls = 'nearby-card' + (playable ? ' playable' : '');
+            const badge = playable ? '<span class="nearby-badge">IN GAME</span>' : '';
+            const portrait = local
+                ? getPortraitHTML(local.species_id, 'nearby-portrait')
+                : '<div class="nearby-portrait placeholder"></div>';
+            const seenAt = o.obsDt ? o.obsDt.replace('T', ' ') : '';
+            return '<div class="' + cls + '">' +
+                portrait +
+                '<div class="nearby-info">' +
+                '<div class="nearby-name">' + (o.comName || 'Unknown') + badge + '</div>' +
+                '<div class="nearby-latin">' + (o.sciName || '') + '</div>' +
+                '<div class="nearby-when">' + seenAt + (o.howMany ? ' &middot; ' + o.howMany : '') + '</div>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+        results.innerHTML = header + items;
+    }
+
+    function initNearby() {
+        const btn = document.getElementById('btn-locate');
+        if (btn) btn.addEventListener('click', fetchNearbyBirds);
+    }
+
     // ---- SETTINGS ----
     const SETTINGS_KEY = 'burbz_settings';
 
@@ -457,11 +584,15 @@
             soundProvider: document.getElementById('cfg-sound-provider').value,
             imageProvider: document.getElementById('cfg-image-provider').value,
             apiEndpoint: document.getElementById('cfg-api-endpoint').value.trim(),
-            apiKey: document.getElementById('cfg-api-key').value.trim()
+            apiKey: document.getElementById('cfg-api-key').value.trim(),
+            ebirdKey: document.getElementById('cfg-ebird-key').value.trim()
         };
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg));
         if (window.BurbzBirdID) {
-            Object.assign(window.BurbzBirdID.config, cfg);
+            window.BurbzBirdID.config.soundProvider = cfg.soundProvider;
+            window.BurbzBirdID.config.imageProvider = cfg.imageProvider;
+            window.BurbzBirdID.config.apiEndpoint = cfg.apiEndpoint;
+            window.BurbzBirdID.config.apiKey = cfg.apiKey;
         }
     }
 
@@ -471,6 +602,7 @@
         document.getElementById('cfg-image-provider').value = cfg.imageProvider || 'mock';
         document.getElementById('cfg-api-endpoint').value = cfg.apiEndpoint || '';
         document.getElementById('cfg-api-key').value = cfg.apiKey || '';
+        document.getElementById('cfg-ebird-key').value = getEbirdKey();
     }
 
     function initSettings() {
@@ -487,7 +619,7 @@
         });
         document.getElementById('cfg-reset').addEventListener('click', () => {
             if (!confirm('Reset all progress? This clears your flock, player level, ladder, and settings.')) return;
-            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY].forEach(k => localStorage.removeItem(k));
+            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY].forEach(k => localStorage.removeItem(k));
             location.reload();
         });
     }
@@ -795,6 +927,8 @@
         loadSettings();
         loadDaily();
         ensureDailyChallenges();
+        loadNearby();
+        biasIdProviderToNearby();
         updatePlayerHUD();
         initTabs();
         initFlockFilters();
@@ -803,6 +937,7 @@
         initSoundID();
         initImageID();
         initBattle();
+        initNearby();
         renderFlock();
         renderDaily();
 
