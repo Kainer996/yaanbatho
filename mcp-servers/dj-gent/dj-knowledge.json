@@ -1,0 +1,261 @@
+{
+  "$schema_version": "1.0",
+  "description": "Reference library for DJ-gent. Personas, Camelot wheel, slot templates, transition presets and crowd-reading heuristics. Edit freely — read at startup.",
+  "personas": [
+    {
+      "id": "warehouse-techno",
+      "name": "Warehouse Techno",
+      "bio": "Long-form melodic and driving techno. Hypnotic, machine-led, builds slowly and rewards patience. Camelot 7A-11A territory, mostly minor.",
+      "set_style": {
+        "genres": ["melodic techno", "driving techno", "deep techno"],
+        "bpm_range": [122, 134],
+        "preferred_keys_camelot": ["8A", "9A", "10A", "11A", "12A", "1A"],
+        "transition_styles": ["long blend", "eq swap on bar 33", "loop-roll handover"],
+        "energy_arc": "Slow ramp from 4/10 to 9/10 over 90 minutes. No sub-7 dips after the first hour.",
+        "track_length_minutes": [6, 9],
+        "vocals": "sparse — granular textures and one-shots only",
+        "do": [
+          "honor the first drop of the incoming track — never cut over it",
+          "blend for at least 32 bars when keys are compatible",
+          "use the breakdown of the outgoing track as the runway"
+        ],
+        "dont": [
+          "double-drop unless both tracks are <128 bpm and harmonically related",
+          "stack two melodic leads — kill one with EQ before the swap",
+          "tease a vocal hook you don't deliver inside 16 bars"
+        ]
+      }
+    },
+    {
+      "id": "peak-house",
+      "name": "Peak Tech-House",
+      "bio": "Peak-time tech and tribal house. Drum-forward, vocal hooks, festival energy. Camelot is flexible — groove > harmony in this lane.",
+      "set_style": {
+        "genres": ["tech house", "tribal house", "peak-time house"],
+        "bpm_range": [126, 132],
+        "preferred_keys_camelot": ["5A", "6A", "7A", "8A", "5B", "6B", "7B", "8B"],
+        "transition_styles": ["EQ swap", "filter sweep", "loop tease + slam", "vocal a cappella overlay"],
+        "energy_arc": "Open at 7/10, hold 8-9/10 across the slot, one breath at the 60% mark.",
+        "track_length_minutes": [4, 7],
+        "vocals": "expected — hooks, stabs, a cappellas overlaid on grooves",
+        "do": [
+          "ride the percussion bus — let the bongos overlap for 8 bars before the swap",
+          "use a vocal hook from track B as the announcement on track A's outro",
+          "drop short loops on the kick to extend tension before a slam"
+        ],
+        "dont": [
+          "let the energy dip below 7/10 for more than 16 bars",
+          "blend two basslines for more than 4 bars",
+          "play the same vocal a cappella twice in one set"
+        ]
+      }
+    },
+    {
+      "id": "sunrise",
+      "name": "Sunrise / Closing",
+      "bio": "Closing slot, 5-7am. Emotional, slower, melodic. The crowd is tired but locked in — reward them with payoff, not novelty.",
+      "set_style": {
+        "genres": ["progressive house", "melodic house", "deep house", "ambient techno"],
+        "bpm_range": [118, 124],
+        "preferred_keys_camelot": ["1A", "2A", "3A", "4A", "1B", "2B"],
+        "transition_styles": ["long blend", "drone-bridge", "key-shift +1 every 3 tracks"],
+        "energy_arc": "8/10 at the open (still peak), wind down to 5/10 by the close. No spikes.",
+        "track_length_minutes": [7, 12],
+        "vocals": "yearning, lyrical — full vocal cuts encouraged",
+        "do": [
+          "blend long. 64 bars is normal, 96 isn't unusual",
+          "drop a known emotional anchor track in the last 30 minutes",
+          "raise the key one Camelot tick every 3-4 tracks for lift"
+        ],
+        "dont": [
+          "introduce a new genre after 6am",
+          "hard-cut — the transition itself is part of the comedown",
+          "pull the bass on the last track until the lights are coming up"
+        ]
+      }
+    },
+    {
+      "id": "warmup",
+      "name": "Warm-up",
+      "bio": "First two hours of a 6-hour night. Dance-floor architect. Your job is to set the room up for the headliner, not steal the spotlight.",
+      "set_style": {
+        "genres": ["deep house", "downtempo", "dub techno", "afro house"],
+        "bpm_range": [115, 124],
+        "preferred_keys_camelot": ["6A", "7A", "8A", "9A", "6B", "7B"],
+        "transition_styles": ["long blend", "filter cross-fade", "drone bridge"],
+        "energy_arc": "Open at 3/10, end at 6/10. Never cross 7.",
+        "track_length_minutes": [6, 10],
+        "vocals": "spoken word, dub vocals, dub-style delays only",
+        "do": [
+          "leave headroom — the headliner needs somewhere to take it",
+          "start below 120 bpm and creep up 1 bpm every 20 minutes",
+          "use rare and deep cuts the crowd won't recognise"
+        ],
+        "dont": [
+          "drop a peak-time anthem in the warmup",
+          "exceed 124 bpm before the headliner is on",
+          "fill the dance floor in the first 20 minutes — let it breathe"
+        ]
+      }
+    }
+  ],
+  "camelot_wheel": {
+    "description": "Camelot notation. Number = position on the wheel (1-12). Letter A = minor, B = major. Compatible mixes: same number, +/- 1 number same letter, or same number flip letter (energy boost).",
+    "keys": [
+      { "camelot": "1A", "key": "A♭ minor", "openkey": "6m" },
+      { "camelot": "1B", "key": "B major", "openkey": "6d" },
+      { "camelot": "2A", "key": "E♭ minor", "openkey": "7m" },
+      { "camelot": "2B", "key": "F♯ major", "openkey": "7d" },
+      { "camelot": "3A", "key": "B♭ minor", "openkey": "8m" },
+      { "camelot": "3B", "key": "D♭ major", "openkey": "8d" },
+      { "camelot": "4A", "key": "F minor", "openkey": "9m" },
+      { "camelot": "4B", "key": "A♭ major", "openkey": "9d" },
+      { "camelot": "5A", "key": "C minor", "openkey": "10m" },
+      { "camelot": "5B", "key": "E♭ major", "openkey": "10d" },
+      { "camelot": "6A", "key": "G minor", "openkey": "11m" },
+      { "camelot": "6B", "key": "B♭ major", "openkey": "11d" },
+      { "camelot": "7A", "key": "D minor", "openkey": "12m" },
+      { "camelot": "7B", "key": "F major", "openkey": "12d" },
+      { "camelot": "8A", "key": "A minor", "openkey": "1m" },
+      { "camelot": "8B", "key": "C major", "openkey": "1d" },
+      { "camelot": "9A", "key": "E minor", "openkey": "2m" },
+      { "camelot": "9B", "key": "G major", "openkey": "2d" },
+      { "camelot": "10A", "key": "B minor", "openkey": "3m" },
+      { "camelot": "10B", "key": "D major", "openkey": "3d" },
+      { "camelot": "11A", "key": "F♯ minor", "openkey": "4m" },
+      { "camelot": "11B", "key": "A major", "openkey": "4d" },
+      { "camelot": "12A", "key": "D♭ minor", "openkey": "5m" },
+      { "camelot": "12B", "key": "E major", "openkey": "5d" }
+    ]
+  },
+  "slot_templates": [
+    {
+      "id": "warmup-90",
+      "name": "Warmup — 90 minutes",
+      "phases": [
+        { "name": "Settle", "minutes": 30, "energy": "3-4", "bpm_drift": "+1 bpm every 15 min", "notes": "establish the room, don't fill the floor" },
+        { "name": "Open", "minutes": 30, "energy": "4-5", "bpm_drift": "+2 bpm", "notes": "first heads on the floor, deep grooves" },
+        { "name": "Hand-off", "minutes": 30, "energy": "5-6", "bpm_drift": "lock at 122-124", "notes": "set up the headliner — leave the room hungry" }
+      ]
+    },
+    {
+      "id": "peak-120",
+      "name": "Peak — 120 minutes",
+      "phases": [
+        { "name": "Open", "minutes": 20, "energy": "7", "bpm_drift": "126-128", "notes": "land hard but leave room to climb" },
+        { "name": "Build", "minutes": 30, "energy": "7-8", "bpm_drift": "128-130", "notes": "introduce the first vocal hook" },
+        { "name": "Climax", "minutes": 40, "energy": "9", "bpm_drift": "130", "notes": "peak record(s), double-drops legal here" },
+        { "name": "Breath", "minutes": 10, "energy": "7", "bpm_drift": "128", "notes": "one melodic / vocal track to reset attention" },
+        { "name": "Send-off", "minutes": 20, "energy": "9-10", "bpm_drift": "130-132", "notes": "biggest record last 20 min, end on a banger" }
+      ]
+    },
+    {
+      "id": "closing-120",
+      "name": "Closing / Sunrise — 120 minutes",
+      "phases": [
+        { "name": "Continue", "minutes": 20, "energy": "8", "bpm_drift": "126→124", "notes": "carry the previous DJ's energy, don't reset" },
+        { "name": "Soften", "minutes": 30, "energy": "7", "bpm_drift": "124→122", "notes": "introduce melody, lengthen blends" },
+        { "name": "Anchor", "minutes": 40, "energy": "6-7", "bpm_drift": "122→120", "notes": "drop the emotional anchor track somewhere here" },
+        { "name": "Lift-up", "minutes": 20, "energy": "6", "bpm_drift": "120", "notes": "key-shift +1 every other track, vocals welcome" },
+        { "name": "Last record", "minutes": 10, "energy": "5", "bpm_drift": "118-120", "notes": "the goodbye record — they'll talk about this for years if you nail it" }
+      ]
+    }
+  ],
+  "transition_presets": [
+    {
+      "id": "long-blend",
+      "name": "Long blend",
+      "best_for": "harmonically matched tracks, melodic lanes",
+      "duration_bars": 32,
+      "bpm_tolerance": 1,
+      "key_rule": "same Camelot number, optionally +/- 1",
+      "moves": [
+        "drop track B at bar 33 of track A's outro",
+        "swap basslines on the next 16-bar boundary using EQ low cut on A",
+        "swap leads at the 32-bar mark using EQ mid cut on A",
+        "filter A out over the final 8 bars while B's drop arrives",
+        "kill A's channel only after B's first downbeat"
+      ]
+    },
+    {
+      "id": "eq-swap",
+      "name": "EQ swap",
+      "best_for": "groove-driven tracks, peak time",
+      "duration_bars": 16,
+      "bpm_tolerance": 1,
+      "key_rule": "same number or +/- 7 (energy switch)",
+      "moves": [
+        "align downbeats at the 16-bar boundary",
+        "kill A's lows, bring B's lows in, on the same beat",
+        "swap mids 8 bars later",
+        "use the percussion of both tracks to glue — don't EQ-cut highs",
+        "pull A's channel on the next 16-bar boundary"
+      ]
+    },
+    {
+      "id": "loop-tease-slam",
+      "name": "Loop tease + slam",
+      "best_for": "peak-time hand-offs, when track A has a strong loopable bar",
+      "duration_bars": 8,
+      "bpm_tolerance": 2,
+      "key_rule": "any — energy beats harmony here",
+      "moves": [
+        "find a 2-bar loop in A's drop section",
+        "loop it for 4-8 bars, raising filter cutoff each repeat",
+        "cue B at the next downbeat",
+        "kill A's loop entirely as B drops — no overlap",
+        "leave B clean for at least 16 bars before the next move"
+      ]
+    },
+    {
+      "id": "double-drop",
+      "name": "Double drop",
+      "best_for": "energy-matched, harmonically related peak records",
+      "duration_bars": 4,
+      "bpm_tolerance": 0.5,
+      "key_rule": "same Camelot number — anything else risks a clash",
+      "moves": [
+        "phase-align both tracks at the bar before the drop",
+        "ride both faders up — the kicks must hit on the same downbeat",
+        "kill A's bassline immediately on the drop",
+        "B carries the drop, A's lead continues for 8 bars then EQ-out",
+        "do not attempt above 130 bpm without rehearsal"
+      ]
+    },
+    {
+      "id": "filter-sweep",
+      "name": "Filter sweep cross-fade",
+      "best_for": "warmup, closing, mood shifts",
+      "duration_bars": 16,
+      "bpm_tolerance": 2,
+      "key_rule": "+/- 1 Camelot number recommended",
+      "moves": [
+        "high-pass A from full to 1 kHz over 8 bars",
+        "drop B on the next downbeat",
+        "high-pass B from 1 kHz back to full over 8 bars",
+        "let A ride underneath one bar past B's drop, then pull"
+      ]
+    }
+  ],
+  "cue_point_template": {
+    "description": "Default hot cue layout for a 4/4 dance track at typical structure. Adjust to track length and arrangement.",
+    "cues": [
+      { "label": "A — Intro start", "purpose": "phrase-aligned start, drop track in here" },
+      { "label": "B — First drop", "purpose": "skip the intro on impatient nights" },
+      { "label": "C — Breakdown", "purpose": "cue point for emotional reset or to ride a riser" },
+      { "label": "D — Second drop", "purpose": "double-drop launch point" },
+      { "label": "E — Final 16", "purpose": "outro start — your runway for the next mix" },
+      { "label": "F — Acapella section", "purpose": "if the track has a vocal-only bar, mark it for overlay use" },
+      { "label": "G — Loop point", "purpose": "a clean 2 or 4-bar loop for tease-slam transitions" },
+      { "label": "H — Last bar", "purpose": "emergency cut-out point" }
+    ]
+  },
+  "crowd_signals": [
+    { "signal": "front row backing off", "diagnosis": "energy too high too soon, or track is too dark", "pivot": "drop one BPM, drop a familiar vocal hook on the next track" },
+    { "signal": "phones up", "diagnosis": "they recognised something — milk it", "pivot": "extend the current track, loop the breakdown, delay the next mix by 16 bars" },
+    { "signal": "talking gets louder", "diagnosis": "you've lost them — usually a long blend that doesn't pay off", "pivot": "EQ-swap into a groove track at +2 energy, no melody" },
+    { "signal": "floor empties on the drop", "diagnosis": "drop landed wrong — bass mix or track choice", "pivot": "next track must be a known anchor — no risks" },
+    { "signal": "everyone facing the booth", "diagnosis": "they're with you — don't show off", "pivot": "stay the course, blend long, no genre swerves" },
+    { "signal": "first hands-up moment", "diagnosis": "the night just turned — capitalise", "pivot": "next 30 minutes is your peak window, line up the heat" }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "@yaanbatho/dj-gent",
+  "version": "0.1.0",
+  "description": "MCP server that turns any agent into a working DJ. Harmonic mixing (Camelot), set planning, transition design, cue points, energy curves and crowd-reading — shaped by built-in DJ personas.",
+  "type": "module",
+  "bin": {
+    "dj-gent": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "dj-knowledge.json",
+    ".env.example",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "dj",
+    "harmonic-mixing",
+    "camelot",
+    "set-planning",
+    "agent",
+    "openclaw",
+    "claude"
+  ],
+  "author": "Yaan Batho",
+  "license": "MIT"
+}
