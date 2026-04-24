@@ -93,7 +93,11 @@
                 </div>
                 <div class="panel-header">
                     <h2 class="section-title">YOUR FLOCK</h2>
-                    <div class="flock-filters">
+                    <div class="flock-view-nav">
+                        <button class="view-btn active" data-view="flock">MY FLOCK</button>
+                        <button class="view-btn" data-view="dex">SPECIES INDEX <span id="dex-count"></span></button>
+                    </div>
+                    <div class="flock-filters" id="flock-filters">
                         <button class="filter-btn active" data-filter="all">All</button>
                         <button class="filter-btn" data-filter="common">Common</button>
                         <button class="filter-btn" data-filter="uncommon">Uncommon</button>
@@ -111,6 +115,7 @@
                     <h3>No birds yet!</h3>
                     <p>Use Sound ID or Image ID to identify and capture your first bird fighter.</p>
                 </div>
+                <div id="dex-grid" class="flock-grid hidden"></div>
             </section>
 
             <!-- ===== SOUND ID TAB ===== -->
