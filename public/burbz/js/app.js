@@ -177,24 +177,34 @@
         const stats = calcStats(species.base_stats, level, rarity);
         const moves = species.move_pool.slice(0, 4);
 
-        return {
+        const bird = {
             id: generateId(),
             species_id: speciesId,
             common_name: species.common_name,
             source_type: sourceType,
             confidence: confidence,
             captured_at: new Date().toISOString(),
+            captured_location: null,
             level: level,
             xp: 0,
             stats: stats,
             rarity: rarity,
-            art_assets: {
-                portrait_url: null,
-                card_url: null,
-                animation_url: null
-            },
+            art_assets: { portrait_url: null, card_url: null, animation_url: null },
             moves: moves
         };
+
+        // Best-effort location stamp — non-blocking
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                bird.captured_location = {
+                    lat: +pos.coords.latitude.toFixed(4),
+                    lng: +pos.coords.longitude.toFixed(4)
+                };
+                saveState();
+            }, function () { /* ignore */ }, { enableHighAccuracy: false, timeout: 4000, maximumAge: 600000 });
+        }
+
+        return bird;
     }
 
     // ---- TAB SYSTEM ----
@@ -431,6 +441,7 @@
             <div style="margin-top:1rem; font-size:0.7rem; color:var(--text-muted)">
                 Captured ${new Date(bird.captured_at).toLocaleDateString()} via ${bird.source_type}
                 &bull; Confidence: ${Math.round(bird.confidence * 100)}%
+                ${bird.captured_location ? '<br>Near ' + bird.captured_location.lat + ', ' + bird.captured_location.lng + ' &middot; <a href="https://www.openstreetmap.org/?mlat=' + bird.captured_location.lat + '&mlon=' + bird.captured_location.lng + '#map=14/' + bird.captured_location.lat + '/' + bird.captured_location.lng + '" target="_blank" rel="noopener" style="color:var(--accent-blue);">View on map</a>' : ''}
             </div>
             <div class="detail-wiki" id="detail-wiki"></div>`;
 
@@ -791,7 +802,8 @@
                 ? getPortraitHTML(local.species_id, 'nearby-portrait')
                 : '<div class="nearby-portrait placeholder"></div>';
             const seenAt = o.obsDt ? o.obsDt.replace('T', ' ') : '';
-            return '<div class="' + cls + '">' +
+            const onClick = playable ? ' onclick="window.BURBZ.showSpeciesDetail(\'' + local.species_id + '\')"' : '';
+            return '<div class="' + cls + '"' + onClick + '>' +
                 portrait +
                 '<div class="nearby-info">' +
                 '<div class="nearby-name">' + (o.comName || 'Unknown') + badge + '</div>' +
