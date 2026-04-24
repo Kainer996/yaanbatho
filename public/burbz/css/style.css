@@ -1710,7 +1710,10 @@ html, body {
 .nearby-card.playable {
     border-color: rgba(76,201,240,0.4);
     box-shadow: 0 0 0 1px rgba(76,201,240,0.1);
+    cursor: pointer;
+    transition: transform 0.1s;
 }
+.nearby-card.playable:hover { transform: translateY(-1px); }
 .nearby-portrait {
     width: 46px;
     height: 46px;
