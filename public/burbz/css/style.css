@@ -1215,6 +1215,63 @@ html, body {
     .arena-portrait { width: 140px; height: 140px; }
 }
 
+/* --- FIELD-READY POLISH --- */
+
+/* 5-tab nav: shrink text gently so it fits on narrow phones; scroll as fallback */
+.tab-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn { min-width: 68px; }
+@media (max-width: 420px) {
+    .tab-btn { font-size: 0.58rem; padding: 0.6rem 0.2rem; letter-spacing: 0.08em; }
+    .tab-btn svg { width: 16px; height: 16px; }
+}
+
+/* Bigger record button + chunkier controls for thumb use */
+.btn-record {
+    min-width: 150px;
+    padding: 1.2rem 1.5rem;
+}
+.btn-record svg { width: 34px; height: 34px; }
+.btn-record span { font-size: 0.8rem; }
+.btn-upload svg, .btn-camera svg { width: 26px; height: 26px; }
+
+/* Louder confidence display */
+.result-confidence {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    letter-spacing: 0.1em;
+}
+.confidence-high, .confidence-mid, .confidence-low { text-shadow: 0 0 10px currentColor; }
+
+/* Make the primary capture CTA dead-obvious */
+.btn-capture {
+    width: 100%;
+    max-width: 340px;
+    font-size: 1.25rem;
+    padding: 0.9rem 1rem;
+}
+
+/* Nearby + ladder buttons: full width on mobile, thumb-size */
+@media (max-width: 600px) {
+    #btn-locate { width: 100%; min-height: 54px; }
+    .btn-tier { min-height: 44px; font-size: 0.82rem; }
+    .mode-btn { padding: 0.6rem 1rem; font-size: 0.7rem; }
+}
+
+/* Roster card touch targets */
+.roster-card { min-height: 120px; }
+
+/* Tighten near-me list on small screens */
+@media (max-width: 480px) {
+    .nearby-portrait { width: 40px; height: 40px; }
+    .nearby-name { font-size: 0.85rem; }
+    .nearby-latin { font-size: 0.7rem; }
+}
+
+/* Recording player: cleaner on iOS */
+#recording-player::-webkit-media-controls-panel { background-color: var(--bg-card); }
+
+
 /* --- ELEMENT TYPES --- */
 .card-element {
     display: inline-block;
