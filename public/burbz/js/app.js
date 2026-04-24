@@ -28,6 +28,8 @@
         playerXP: 0,
         playerLevel: 1,
         flockView: 'flock',
+        stats: { battleWins: 0 },
+        achievements: { unlocked: {} },
         selectedBattleBird: null,
         battleState: null,
         battleMode: 'quick',
@@ -44,6 +46,7 @@
     const STORAGE_KEY = 'burbz_flock';
     const PLAYER_KEY = 'burbz_player';
     const LADDER_KEY = 'burbz_ladder';
+    const STATS_KEY = 'burbz_stats';
 
     function saveState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE.flock));
@@ -52,6 +55,7 @@
             level: STATE.playerLevel
         }));
         localStorage.setItem(LADDER_KEY, JSON.stringify(STATE.ladderProgress));
+        localStorage.setItem(STATS_KEY, JSON.stringify(STATE.stats));
     }
 
     function loadState() {
@@ -70,6 +74,11 @@
                 STATE.ladderProgress = {
                     winsByTier: (ld && ld.winsByTier) || {}
                 };
+            }
+            const st = localStorage.getItem(STATS_KEY);
+            if (st) {
+                const sd = JSON.parse(st);
+                STATE.stats = { battleWins: (sd && sd.battleWins) || 0 };
             }
         } catch (e) {
             console.warn('Failed to load state:', e);
@@ -530,11 +539,16 @@
         bumpChallenge('rarity_capture', 1, function (c) {
             return RARITY_ORDER[bird.rarity] >= RARITY_ORDER[c.meta.rarity];
         });
+        evaluateAchievements();
     }
 
     function recordBattleWin(tier) {
         bumpChallenge('battle_win', 1);
         if (tier) bumpChallenge('ladder_win', 1);
+        if (!STATE.stats) STATE.stats = { battleWins: 0 };
+        STATE.stats.battleWins = (STATE.stats.battleWins || 0) + 1;
+        saveState();
+        evaluateAchievements();
     }
 
     function recordElementMove(element) {
@@ -573,6 +587,98 @@
                 btn +
                 '</div>';
         }).join('');
+    }
+
+    // ---- ACHIEVEMENTS ----
+    const ACHIEVE_KEY = 'burbz_achievements';
+
+    const ACHIEVEMENTS = [
+        { id: 'first_capture',   label: 'First Feathers',     desc: 'Capture your first bird',         xp: 50,  test: function (s) { return s.flock.length >= 1; } },
+        { id: 'flock_of_five',   label: 'Flock of Five',      desc: 'Capture 5 birds',                 xp: 100, test: function (s) { return s.flock.length >= 5; } },
+        { id: 'ten_strong',      label: 'Ten Strong',         desc: 'Capture 10 birds',                xp: 200, test: function (s) { return s.flock.length >= 10; } },
+        { id: 'full_spectrum',   label: 'Full Spectrum',      desc: 'Catch a bird of each element',    xp: 250, test: function (s) {
+            const set = new Set();
+            s.flock.forEach(function (b) {
+                const sp = s.speciesData[b.species_id];
+                if (sp && sp.element) set.add(sp.element);
+            });
+            return ['flame','sky','aqua','shadow','light','normal'].every(function (e) { return set.has(e); });
+        } },
+        { id: 'dex_halfway',     label: 'Half the Forest',    desc: 'Register half the species in the Index', xp: 300, test: function (s) {
+            const total = Object.keys(s.speciesData || {}).length;
+            const seen = new Set(s.flock.map(function (b) { return b.species_id; })).size;
+            return total > 0 && seen >= Math.ceil(total / 2);
+        } },
+        { id: 'dex_complete',    label: 'Master Birder',      desc: 'Complete the Species Index',      xp: 800, test: function (s) {
+            const total = Object.keys(s.speciesData || {}).length;
+            const seen = new Set(s.flock.map(function (b) { return b.species_id; })).size;
+            return total > 0 && seen >= total;
+        } },
+        { id: 'first_win',       label: 'First Blood',        desc: 'Win your first battle',           xp: 75,  test: function (s) { return (s.stats && s.stats.battleWins) >= 1; } },
+        { id: 'ten_wins',        label: 'Ten Takedowns',      desc: 'Win 10 battles',                  xp: 200, test: function (s) { return (s.stats && s.stats.battleWins) >= 10; } },
+        { id: 'ladder_climb',    label: 'Rung Climber',       desc: 'Clear the Rookie ladder tier',    xp: 150, test: function (s) {
+            const w = (s.ladderProgress && s.ladderProgress.winsByTier && s.ladderProgress.winsByTier.rookie) || 0;
+            return w >= 3;
+        } },
+        { id: 'champion_clear',  label: 'Champion',           desc: 'Clear the Champion ladder tier',  xp: 1000, test: function (s) {
+            const w = (s.ladderProgress && s.ladderProgress.winsByTier && s.ladderProgress.winsByTier.champion) || 0;
+            return w >= 5;
+        } },
+        { id: 'legendary_get',   label: 'Apex Predator',      desc: 'Capture a Legendary bird',        xp: 300, test: function (s) {
+            return s.flock.some(function (b) { return b.rarity === 'legendary'; });
+        } },
+        { id: 'field_explorer',  label: 'Field Explorer',     desc: 'Find birds near you using eBird', xp: 120, test: function (s) {
+            return !!(s.nearby && s.nearby.observations && s.nearby.observations.length > 0);
+        } }
+    ];
+
+    function loadAchievements() {
+        try {
+            const s = localStorage.getItem(ACHIEVE_KEY);
+            STATE.achievements = s ? JSON.parse(s) : { unlocked: {} };
+        } catch (e) { STATE.achievements = { unlocked: {} }; }
+        if (!STATE.achievements.unlocked) STATE.achievements.unlocked = {};
+    }
+
+    function saveAchievements() {
+        try { localStorage.setItem(ACHIEVE_KEY, JSON.stringify(STATE.achievements)); } catch (e) {}
+    }
+
+    function evaluateAchievements() {
+        if (!STATE.achievements) return;
+        ACHIEVEMENTS.forEach(function (a) {
+            if (STATE.achievements.unlocked[a.id]) return;
+            try {
+                if (a.test(STATE)) {
+                    STATE.achievements.unlocked[a.id] = Date.now();
+                    addXP(a.xp);
+                    showAchievementToast(a);
+                    saveAchievements();
+                }
+            } catch (e) { console.warn('Achievement check failed:', a.id, e); }
+        });
+    }
+
+    function showAchievementToast(ach) {
+        let host = document.getElementById('achievement-toasts');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'achievement-toasts';
+            host.className = 'achievement-toasts';
+            document.body.appendChild(host);
+        }
+        const el = document.createElement('div');
+        el.className = 'achievement-toast';
+        el.innerHTML =
+            '<div class="ach-kicker">ACHIEVEMENT UNLOCKED</div>' +
+            '<div class="ach-label">' + ach.label + '</div>' +
+            '<div class="ach-desc">' + ach.desc + ' &middot; +' + ach.xp + ' XP</div>';
+        host.appendChild(el);
+        requestAnimationFrame(function () { el.classList.add('visible'); });
+        setTimeout(function () {
+            el.classList.remove('visible');
+            setTimeout(function () { el.remove(); }, 500);
+        }, 4200);
     }
 
     // ---- NEAR ME (eBird) ----
@@ -627,6 +733,7 @@
                 biasIdProviderToNearby();
                 renderNearby();
                 status.textContent = 'Found ' + STATE.nearby.observations.length + ' species nearby.';
+                evaluateAchievements();
             } catch (err) {
                 console.warn('eBird fetch failed:', err);
                 status.textContent = 'Could not fetch from eBird: ' + err.message;
@@ -758,7 +865,7 @@
         });
         document.getElementById('cfg-reset').addEventListener('click', () => {
             if (!confirm('Reset all progress? This clears your flock, player level, ladder, and settings.')) return;
-            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY, WIKI_CACHE_KEY].forEach(k => localStorage.removeItem(k));
+            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY, WIKI_CACHE_KEY, ACHIEVE_KEY, STATS_KEY].forEach(k => localStorage.removeItem(k));
             location.reload();
         });
     }
@@ -1087,6 +1194,8 @@
         ensureDailyChallenges();
         loadNearby();
         biasIdProviderToNearby();
+        loadAchievements();
+        evaluateAchievements();
         updatePlayerHUD();
         initTabs();
         initFlockFilters();
