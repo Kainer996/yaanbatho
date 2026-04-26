@@ -1215,6 +1215,92 @@ html, body {
     .arena-portrait { width: 140px; height: 140px; }
 }
 
+/* --- SOUND PICKER (human-in-the-loop ID) --- */
+.sound-pick-title {
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+    color: var(--accent-blue);
+    margin-bottom: 0.4rem;
+}
+.sound-pick-hint {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+    line-height: 1.5;
+}
+.sound-pick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+@media (min-width: 600px) {
+    .sound-pick-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.sound-pick-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: transform 0.1s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+.sound-pick-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-blue);
+}
+.sound-pick-card.nearby {
+    border-color: rgba(76,201,240,0.5);
+    box-shadow: 0 0 0 1px rgba(76,201,240,0.15);
+}
+.sound-pick-card.el-flame  { border-left: 3px solid #ff7849; }
+.sound-pick-card.el-sky    { border-left: 3px solid #87ceeb; }
+.sound-pick-card.el-aqua   { border-left: 3px solid var(--accent-blue); }
+.sound-pick-card.el-shadow { border-left: 3px solid #b57edc; }
+.sound-pick-card.el-light  { border-left: 3px solid var(--accent-gold); }
+.sound-pick-art {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.04);
+}
+.sound-pick-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sound-pick-name {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.sound-pick-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+    align-items: center;
+}
+.sound-pick-meta .card-rarity {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+.sound-pick-foot {
+    margin-top: 0.6rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
 /* --- ACHIEVEMENT TOASTS --- */
 .achievement-toasts {
     position: fixed;

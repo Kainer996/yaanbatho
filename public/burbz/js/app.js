@@ -1084,9 +1084,63 @@
         wrap.insertAdjacentElement('afterend', audio);
     }
 
+    function showSoundPicker(blob) {
+        const resultEl = document.getElementById('sound-result');
+        const statusEl = document.getElementById('sound-status');
+        if (statusEl) statusEl.textContent = 'Pick what you heard:';
+
+        const nearbyIds = matchLocalSpeciesFromNearby ? matchLocalSpeciesFromNearby() : [];
+        const nearbySet = new Set(nearbyIds);
+        const allSpecies = Object.values(STATE.speciesData).slice();
+        allSpecies.sort(function (a, b) {
+            const aNear = nearbySet.has(a.species_id) ? 0 : 1;
+            const bNear = nearbySet.has(b.species_id) ? 0 : 1;
+            if (aNear !== bNear) return aNear - bNear;
+            return (a.common_name || '').localeCompare(b.common_name || '');
+        });
+
+        const intro = nearbyIds.length > 0
+            ? '<p class="sound-pick-hint">Birds eBird saw near you in the last 14 days appear first.</p>'
+            : '<p class="sound-pick-hint">Tap NEAR ME first to surface birds known to be in your area, or just pick from the full list below.</p>';
+
+        const cards = allSpecies.map(function (sp) {
+            const isNearby = nearbySet.has(sp.species_id);
+            const el = sp.element || 'normal';
+            const nearbyBadge = isNearby ? '<span class="nearby-badge">NEARBY</span>' : '';
+            return '<button class="sound-pick-card el-' + el + (isNearby ? ' nearby' : '') + '" ' +
+                'onclick="window.BURBZ.captureBird(\'' + sp.species_id + '\', \'sound\', 0.95)">' +
+                '<div class="sound-pick-art">' + getPortraitHTML(sp.species_id, 'sound-pick-portrait') + '</div>' +
+                '<div class="sound-pick-name">' + sp.common_name + '</div>' +
+                '<div class="sound-pick-meta">' +
+                '<span class="card-rarity ' + sp.rarity_tier + '">' + sp.rarity_tier.toUpperCase() + '</span>' +
+                nearbyBadge +
+                '</div></button>';
+        }).join('');
+
+        resultEl.innerHTML =
+            '<h3 class="sound-pick-title">Pick what you heard</h3>' +
+            intro +
+            '<div class="sound-pick-grid">' + cards + '</div>' +
+            '<p class="sound-pick-foot">Want true auto-ID? Add a BirdNET-Pi endpoint in Settings.</p>';
+        resultEl.classList.remove('hidden');
+    }
+
     // ---- BIRD IDENTIFICATION (routes through BurbzBirdID provider) ----
     async function performBirdID(sourceType, blob) {
         if (sourceType === 'sound' && blob) setRecordingPlayback(blob);
+
+        // For sound, if there is no real API endpoint configured, the auto-mock
+        // is misleading (it just picks a random bird). Show the user a "pick what
+        // you heard" chooser instead — birds known to be nearby (eBird) appear first.
+        if (sourceType === 'sound') {
+            const cfg = window.BurbzBirdID && window.BurbzBirdID.config;
+            const usingApi = cfg && cfg.soundProvider === 'api' && cfg.apiEndpoint;
+            if (!usingApi) {
+                showSoundPicker(blob);
+                return;
+            }
+        }
+
         let result;
         try {
             if (window.BurbzBirdID) {
