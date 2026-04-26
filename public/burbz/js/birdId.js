@@ -54,7 +54,7 @@
         };
     }
 
-    // ---- API IDENTIFIER ----
+    // ---- API IDENTIFIER (custom user-supplied endpoint) ----
     async function apiIdentify(blob, fieldName) {
         const cfg = window.BurbzBirdID.config;
         if (!cfg.apiEndpoint) {
@@ -83,7 +83,8 @@
             }
             return {
                 species_id: data.species_id,
-                confidence: typeof data.confidence === 'number' ? data.confidence : 0.6
+                confidence: typeof data.confidence === 'number' ? data.confidence : 0.6,
+                reasoning: data.reasoning || ''
             };
         } catch (err) {
             console.warn('BurbzBirdID: API fetch failed, falling back to mock.', err);
@@ -91,11 +92,62 @@
         }
     }
 
+    // ---- BUILT-IN: Claude-vision-on-spectrogram for sound ----
+    async function claudeSpectrogramIdentify(audioBlob, hint) {
+        if (!window.BurbzSpectrogram || typeof window.BurbzSpectrogram.generate !== 'function') {
+            throw new Error('Spectrogram module not loaded');
+        }
+        if (!audioBlob) throw new Error('No audio blob to identify');
+
+        const spectroBlob = await window.BurbzSpectrogram.generate(audioBlob, {
+            width: 800, height: 480, fftSize: 1024
+        });
+
+        const speciesPayload = Object.values(_speciesById).map(function (sp) {
+            return {
+                species_id: sp.species_id,
+                common_name: sp.common_name,
+                latin_name: sp.latin_name,
+                element: sp.element,
+                biome: sp.biome,
+                rarity_tier: sp.rarity_tier
+            };
+        });
+
+        const form = new FormData();
+        form.append('spectrogram', spectroBlob, 'spectrogram.png');
+        form.append('species', JSON.stringify(speciesPayload));
+        form.append('nearby', JSON.stringify((hint && hint.nearby) || _recentSpeciesIds || []));
+        if (hint && hint.region) form.append('region', hint.region);
+        form.append('recorded_at', new Date().toISOString());
+
+        const endpoint = (window.BurbzBirdID.config && window.BurbzBirdID.config.identifySoundUrl) || '/api/identify-sound';
+        const resp = await fetch(endpoint, { method: 'POST', body: form });
+        if (!resp.ok) {
+            const txt = await resp.text().catch(function () { return ''; });
+            const err = new Error('identify-sound responded ' + resp.status + ' — ' + txt);
+            err.status = resp.status;
+            throw err;
+        }
+        const data = await resp.json();
+        if (!data || !data.species_id || !_speciesById[data.species_id]) {
+            throw new Error('Server returned an unknown species_id');
+        }
+        return {
+            species_id: data.species_id,
+            confidence: typeof data.confidence === 'number' ? data.confidence : 0.5,
+            reasoning: data.reasoning || ''
+        };
+    }
+
     // ---- PUBLIC API ----
     window.BurbzBirdID = {
         config: {
-            soundProvider: 'mock',
+            // Defaults: real Claude-vision spectrogram pipeline for sound,
+            // mock for image (image classifier coming next).
+            soundProvider: 'claude-spectrogram',
             imageProvider: 'mock',
+            identifySoundUrl: '/api/identify-sound',
             apiEndpoint: '',
             apiKey: ''
         },
@@ -104,14 +156,18 @@
             _speciesById = speciesById || {};
         },
 
-        // Optional: bias the mock identifier toward species known to be nearby (from eBird)
+        // Bias mock identifier toward species known to be nearby (from eBird)
         setRecentSpecies: function (speciesIds) {
             _recentSpeciesIds = Array.isArray(speciesIds) ? speciesIds.slice() : [];
         },
 
         identifySound: async function (audioBlob) {
-            if (this.config.soundProvider === 'api') {
-                return apiIdentify(audioBlob, 'audio');
+            const mode = this.config.soundProvider;
+            if (mode === 'api') return apiIdentify(audioBlob, 'audio');
+            if (mode === 'claude-spectrogram') {
+                return claudeSpectrogramIdentify(audioBlob, {
+                    nearby: _recentSpeciesIds
+                });
             }
             return mockIdentify();
         },
