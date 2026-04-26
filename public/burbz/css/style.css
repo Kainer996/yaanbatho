@@ -1215,7 +1215,38 @@ html, body {
     .arena-portrait { width: 140px; height: 140px; }
 }
 
-/* --- SOUND PICKER (human-in-the-loop ID) --- */
+/* --- ID RETRY / CLAUDE REASONING --- */
+.id-retry {
+    background: var(--bg-card);
+    border-left: 3px solid var(--accent-red);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+}
+.id-retry h3 {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    color: var(--accent-red);
+    margin-bottom: 0.4rem;
+}
+.id-retry p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.result-reasoning {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--text-secondary);
+    background: rgba(76,201,240,0.06);
+    border-left: 2px solid var(--accent-blue);
+    padding: 0.5rem 0.7rem;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 0.4rem 0 0.8rem;
+    line-height: 1.45;
+}
+
+/* --- SOUND PICKER (legacy, kept for layout safety) --- */
 .sound-pick-title {
     font-family: var(--font-title);
     font-size: 1.3rem;

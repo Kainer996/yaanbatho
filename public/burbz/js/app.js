@@ -1084,44 +1084,15 @@
         wrap.insertAdjacentElement('afterend', audio);
     }
 
-    function showSoundPicker(blob) {
-        const resultEl = document.getElementById('sound-result');
+    function showRetryPrompt(reason, sourceType) {
+        const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
         const statusEl = document.getElementById('sound-status');
-        if (statusEl) statusEl.textContent = 'Pick what you heard:';
-
-        const nearbyIds = matchLocalSpeciesFromNearby ? matchLocalSpeciesFromNearby() : [];
-        const nearbySet = new Set(nearbyIds);
-        const allSpecies = Object.values(STATE.speciesData).slice();
-        allSpecies.sort(function (a, b) {
-            const aNear = nearbySet.has(a.species_id) ? 0 : 1;
-            const bNear = nearbySet.has(b.species_id) ? 0 : 1;
-            if (aNear !== bNear) return aNear - bNear;
-            return (a.common_name || '').localeCompare(b.common_name || '');
-        });
-
-        const intro = nearbyIds.length > 0
-            ? '<p class="sound-pick-hint">Birds eBird saw near you in the last 14 days appear first.</p>'
-            : '<p class="sound-pick-hint">Tap NEAR ME first to surface birds known to be in your area, or just pick from the full list below.</p>';
-
-        const cards = allSpecies.map(function (sp) {
-            const isNearby = nearbySet.has(sp.species_id);
-            const el = sp.element || 'normal';
-            const nearbyBadge = isNearby ? '<span class="nearby-badge">NEARBY</span>' : '';
-            return '<button class="sound-pick-card el-' + el + (isNearby ? ' nearby' : '') + '" ' +
-                'onclick="window.BURBZ.captureBird(\'' + sp.species_id + '\', \'sound\', 0.95)">' +
-                '<div class="sound-pick-art">' + getPortraitHTML(sp.species_id, 'sound-pick-portrait') + '</div>' +
-                '<div class="sound-pick-name">' + sp.common_name + '</div>' +
-                '<div class="sound-pick-meta">' +
-                '<span class="card-rarity ' + sp.rarity_tier + '">' + sp.rarity_tier.toUpperCase() + '</span>' +
-                nearbyBadge +
-                '</div></button>';
-        }).join('');
-
+        if (statusEl && sourceType === 'sound') statusEl.textContent = 'Try again';
         resultEl.innerHTML =
-            '<h3 class="sound-pick-title">Pick what you heard</h3>' +
-            intro +
-            '<div class="sound-pick-grid">' + cards + '</div>' +
-            '<p class="sound-pick-foot">Want true auto-ID? Add a BirdNET-Pi endpoint in Settings.</p>';
+            '<div class="id-retry">' +
+            '<h3>No clear match</h3>' +
+            '<p>' + (reason || 'The recording was too quiet, too noisy, or no clear bird call was found. Get closer, hold the phone steady, and try a longer clip (10 s).') + '</p>' +
+            '</div>';
         resultEl.classList.remove('hidden');
     }
 
@@ -1129,17 +1100,9 @@
     async function performBirdID(sourceType, blob) {
         if (sourceType === 'sound' && blob) setRecordingPlayback(blob);
 
-        // For sound, if there is no real API endpoint configured, the auto-mock
-        // is misleading (it just picks a random bird). Show the user a "pick what
-        // you heard" chooser instead — birds known to be nearby (eBird) appear first.
-        if (sourceType === 'sound') {
-            const cfg = window.BurbzBirdID && window.BurbzBirdID.config;
-            const usingApi = cfg && cfg.soundProvider === 'api' && cfg.apiEndpoint;
-            if (!usingApi) {
-                showSoundPicker(blob);
-                return;
-            }
-        }
+        const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
+        const statusEl = document.getElementById('sound-status');
+        if (statusEl && sourceType === 'sound') statusEl.textContent = 'Analyzing recording…';
 
         let result;
         try {
@@ -1150,22 +1113,54 @@
             }
         } catch (err) {
             console.warn('BurbzBirdID failed:', err);
+            if (sourceType === 'sound') {
+                const detail = err && err.status === 503
+                    ? 'Auto-ID is not yet configured on the server. Ask the site owner to set ANTHROPIC_API_KEY in Vercel.'
+                    : 'Identification service failed. Try again in a moment.';
+                showRetryPrompt(detail, sourceType);
+                return;
+            }
         }
+
         if (!result || !result.species_id || !STATE.speciesData[result.species_id]) {
+            // Image still falls back to the legacy mock; sound goes to the retry prompt.
+            if (sourceType === 'sound') {
+                showRetryPrompt(null, sourceType);
+                return;
+            }
             const ids = Object.keys(STATE.speciesData);
             result = { species_id: ids[Math.floor(Math.random() * ids.length)], confidence: 0.6 };
         }
+
+        // Sound: enforce a confidence floor so the player can't capture a bird
+        // the model is only guessing at. This protects game integrity.
+        if (sourceType === 'sound' && result.confidence < 0.5) {
+            const reason = result.reasoning
+                ? 'Closest guess was ' + STATE.speciesData[result.species_id].common_name +
+                  ', but confidence was only ' + Math.round(result.confidence * 100) + '%. ' +
+                  'The recording was probably too quiet, too short, or contained mostly background noise. Get closer or try a longer, cleaner clip.'
+                : null;
+            showRetryPrompt(reason, sourceType);
+            return;
+        }
+
         const speciesId = result.species_id;
         const species = STATE.speciesData[speciesId];
         const confidence = result.confidence;
+        const reasoning = result.reasoning || '';
 
-        const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
-        const statusEl = document.getElementById('sound-status');
         if (statusEl && sourceType === 'sound') statusEl.textContent = 'Match found!';
 
         const confClass = confidence >= 0.8 ? 'confidence-high' : confidence >= 0.6 ? 'confidence-mid' : 'confidence-low';
         const confLabel = confidence >= 0.8 ? 'HIGH' : confidence >= 0.6 ? 'MEDIUM' : 'LOW';
         const canCapture = confidence >= 0.5;
+
+        const reasoningHTML = reasoning
+            ? '<p class="result-reasoning">"' + reasoning + '"</p>'
+            : '';
+        const sourceFooter = sourceType === 'sound'
+            ? 'ID by Claude vision on a spectrogram of your recording.'
+            : 'Mock ID — image classifier coming next.';
 
         resultEl.innerHTML = `
             <div class="result-species">${species.common_name}</div>
@@ -1173,6 +1168,7 @@
             <div class="result-confidence ${confClass}">
                 ${confLabel} CONFIDENCE: ${Math.round(confidence * 100)}%
             </div>
+            ${reasoningHTML}
             <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.8rem;">
                 ${species.description}
             </p>
@@ -1184,9 +1180,7 @@
                        Confidence too low to capture. Try again!
                    </p>`
             }
-            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:0.8rem;">
-                Note: Using mock ID. Real BirdNET integration coming soon.
-            </p>`;
+            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:0.8rem;">${sourceFooter}</p>`;
 
         resultEl.classList.remove('hidden');
     }
