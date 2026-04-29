@@ -314,8 +314,10 @@
 
                 <label class="settings-label">Sound provider</label>
                 <select id="cfg-sound-provider" class="settings-input">
-                    <option value="mock">Mock (random)</option>
-                    <option value="api">Custom API</option>
+                    <option value="acoustic-local">In-browser acoustic classifier (free, offline)</option>
+                    <option value="claude-spectrogram">Claude vision (server, ANTHROPIC_API_KEY required)</option>
+                    <option value="api">Custom API endpoint</option>
+                    <option value="mock">Mock (random — testing only)</option>
                 </select>
 
                 <label class="settings-label">Image provider</label>
@@ -378,6 +380,7 @@
     </div>
 
     <script src="js/spectrogram.js"></script>
+    <script src="js/acousticClassifier.js"></script>
     <script src="js/birdId.js"></script>
     <script src="js/app.js"></script>
 </body>
