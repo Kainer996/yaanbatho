@@ -1158,9 +1158,16 @@
         const reasoningHTML = reasoning
             ? '<p class="result-reasoning">"' + reasoning + '"</p>'
             : '';
-        const sourceFooter = sourceType === 'sound'
-            ? 'ID by Claude vision on a spectrogram of your recording.'
-            : 'Mock ID — image classifier coming next.';
+        let sourceFooter;
+        if (sourceType === 'sound') {
+            const mode = window.BurbzBirdID && window.BurbzBirdID.config && window.BurbzBirdID.config.soundProvider;
+            if (mode === 'claude-spectrogram') sourceFooter = 'ID by Claude vision on a spectrogram of your recording.';
+            else if (mode === 'api') sourceFooter = 'ID via your configured Custom API endpoint.';
+            else if (mode === 'mock') sourceFooter = 'Mock ID (testing only).';
+            else sourceFooter = 'ID by in-browser acoustic classifier — no API, runs offline.';
+        } else {
+            sourceFooter = 'Mock ID — image classifier coming next.';
+        }
 
         resultEl.innerHTML = `
             <div class="result-species">${species.common_name}</div>

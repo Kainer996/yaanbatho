@@ -92,6 +92,26 @@
         }
     }
 
+    // ---- BUILT-IN: in-browser acoustic classifier (no API, no key) ----
+    async function localAcousticIdentify(audioBlob) {
+        if (!window.BurbzSpectrogram || typeof window.BurbzSpectrogram.analyze !== 'function') {
+            throw new Error('Spectrogram analyzer not loaded');
+        }
+        if (!window.BurbzAcoustic || typeof window.BurbzAcoustic.classify !== 'function') {
+            throw new Error('Acoustic classifier not loaded');
+        }
+        if (!audioBlob) throw new Error('No audio blob to identify');
+
+        const features = await window.BurbzSpectrogram.analyze(audioBlob, { fftSize: 1024 });
+        const result = window.BurbzAcoustic.classify(features, _speciesById, _recentSpeciesIds || []);
+        return {
+            species_id: result.species_id,
+            confidence: result.confidence,
+            reasoning: result.reasoning || '',
+            top: result.top || []
+        };
+    }
+
     // ---- BUILT-IN: Claude-vision-on-spectrogram for sound ----
     async function claudeSpectrogramIdentify(audioBlob, hint) {
         if (!window.BurbzSpectrogram || typeof window.BurbzSpectrogram.generate !== 'function') {
@@ -143,9 +163,11 @@
     // ---- PUBLIC API ----
     window.BurbzBirdID = {
         config: {
-            // Defaults: real Claude-vision spectrogram pipeline for sound,
-            // mock for image (image classifier coming next).
-            soundProvider: 'claude-spectrogram',
+            // Default: in-browser acoustic classifier — free, runs offline,
+            // no API key, works on GitHub Pages.
+            // Optional upgrade: 'claude-spectrogram' uses /api/identify-sound
+            // (better accuracy but requires ANTHROPIC_API_KEY on the host).
+            soundProvider: 'acoustic-local',
             imageProvider: 'mock',
             identifySoundUrl: '/api/identify-sound',
             apiEndpoint: '',
@@ -168,6 +190,9 @@
                 return claudeSpectrogramIdentify(audioBlob, {
                     nearby: _recentSpeciesIds
                 });
+            }
+            if (mode === 'acoustic-local') {
+                return localAcousticIdentify(audioBlob);
             }
             return mockIdentify();
         },

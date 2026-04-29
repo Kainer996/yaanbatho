@@ -205,6 +205,152 @@
     }
 
     window.BurbzSpectrogram = {
-        generate: generateSpectrogramBlob
+        generate: generateSpectrogramBlob,
+        analyze: analyzeAudioBlob
     };
+
+    /**
+     * Extract acoustic features from a recording suitable for classification.
+     * Returns a Promise<features> with:
+     *   peak_freq_hz       — frequency bin with the most aggregated energy
+     *   freq_range_hz      — [low, high] band that contains 80% of energy
+     *   duration_active_s  — seconds of "active" audio (above silence threshold)
+     *   modulation_rate_hz — how often the dominant frequency changes per second
+     *   harshness          — 0..1 fraction of energy outside the dominant band (noisy = high)
+     *   transient_rate_hz  — rate of sharp loudness onsets per second (drumming = high)
+     *   loudness_rms       — average RMS (0..1)
+     */
+    async function analyzeAudioBlob(blob, opts) {
+        opts = opts || {};
+        const fftSize = opts.fftSize || 1024;
+        const audio = await decodeAudio(blob);
+        const sampleRate = audio.sampleRate;
+        const len = audio.length;
+
+        // Mono mix
+        const samples = new Float32Array(len);
+        for (let c = 0; c < audio.numberOfChannels; c++) {
+            const ch = audio.getChannelData(c);
+            for (let i = 0; i < len; i++) samples[i] += ch[i];
+        }
+        if (audio.numberOfChannels > 1) {
+            const inv = 1 / audio.numberOfChannels;
+            for (let i = 0; i < len; i++) samples[i] *= inv;
+        }
+
+        // RMS for activity detection
+        let totalRms = 0;
+        const frameSize = Math.floor(sampleRate * 0.05); // 50 ms frames
+        const frames = Math.max(1, Math.floor(len / frameSize));
+        const frameRms = new Float32Array(frames);
+        for (let f = 0; f < frames; f++) {
+            let s = 0;
+            const start = f * frameSize;
+            for (let i = 0; i < frameSize; i++) {
+                const v = samples[start + i] || 0;
+                s += v * v;
+            }
+            frameRms[f] = Math.sqrt(s / frameSize);
+            totalRms += frameRms[f];
+        }
+        totalRms /= frames;
+
+        // Activity threshold = max(0.005, 1.5 * median)
+        const sortedRms = Array.from(frameRms).slice().sort(function (a, b) { return a - b; });
+        const median = sortedRms[Math.floor(sortedRms.length / 2)];
+        const threshold = Math.max(0.005, median * 1.5);
+        let activeFrames = 0;
+        let transientCount = 0;
+        let prevActive = false;
+        for (let f = 0; f < frames; f++) {
+            const active = frameRms[f] > threshold;
+            if (active) activeFrames++;
+            if (active && !prevActive) transientCount++;
+            prevActive = active;
+        }
+        const duration_active_s = activeFrames * 0.05;
+        const transient_rate_hz = duration_active_s > 0 ? transientCount / duration_active_s : 0;
+
+        // STFT — accumulate magnitude spectrum + per-frame peak frequency
+        const hop = Math.max(256, Math.floor(fftSize / 4));
+        const numFrames = Math.max(1, Math.floor((len - fftSize) / hop));
+        const bins = fftSize >> 1;
+        const aggMag = new Float64Array(bins);
+        const peakBinPerFrame = new Int32Array(numFrames);
+        const hann = new Float32Array(fftSize);
+        for (let i = 0; i < fftSize; i++) {
+            hann[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (fftSize - 1)));
+        }
+        const re = new Float64Array(fftSize);
+        const im = new Float64Array(fftSize);
+
+        for (let frame = 0; frame < numFrames; frame++) {
+            const start = frame * hop;
+            for (let i = 0; i < fftSize; i++) {
+                re[i] = samples[start + i] * hann[i];
+                im[i] = 0;
+            }
+            fft(re, im);
+            let frameMaxBin = 1;
+            let frameMaxMag = 0;
+            for (let k = 1; k < bins; k++) {
+                const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]);
+                aggMag[k] += mag;
+                if (mag > frameMaxMag) { frameMaxMag = mag; frameMaxBin = k; }
+            }
+            peakBinPerFrame[frame] = frameMaxBin;
+        }
+
+        const binFreq = sampleRate / fftSize;
+
+        // Peak frequency = aggregate magnitude argmax
+        let peakBin = 1;
+        let peakMag = 0;
+        for (let k = 1; k < bins; k++) {
+            if (aggMag[k] > peakMag) { peakMag = aggMag[k]; peakBin = k; }
+        }
+        const peak_freq_hz = peakBin * binFreq;
+
+        // Frequency band that contains the central 80% of energy
+        let totalEnergy = 0;
+        for (let k = 1; k < bins; k++) totalEnergy += aggMag[k];
+        let cum = 0;
+        let lowBin = 1, highBin = bins - 1;
+        for (let k = 1; k < bins; k++) {
+            cum += aggMag[k];
+            if (cum >= totalEnergy * 0.1 && lowBin === 1) lowBin = k;
+            if (cum >= totalEnergy * 0.9) { highBin = k; break; }
+        }
+        const freq_range_hz = [lowBin * binFreq, highBin * binFreq];
+
+        // Modulation rate: how often the per-frame peak bin changes substantially (≥4 bins)
+        let modulationChanges = 0;
+        for (let f = 1; f < numFrames; f++) {
+            if (Math.abs(peakBinPerFrame[f] - peakBinPerFrame[f - 1]) >= 4) modulationChanges++;
+        }
+        const totalSeconds = numFrames > 0 ? (numFrames * hop) / sampleRate : 1;
+        const modulation_rate_hz = totalSeconds > 0 ? modulationChanges / totalSeconds : 0;
+
+        // Harshness: fraction of energy outside ±25% of peak frequency.
+        // Tonal calls concentrate energy near a single frequency; harsh/noisy calls don't.
+        const peakLow = peakBin * 0.75, peakHigh = peakBin * 1.25;
+        let inEnergy = 0, outEnergy = 0;
+        for (let k = 1; k < bins; k++) {
+            if (k >= peakLow && k <= peakHigh) inEnergy += aggMag[k];
+            else outEnergy += aggMag[k];
+        }
+        const harshness = (inEnergy + outEnergy) > 0 ? outEnergy / (inEnergy + outEnergy) : 0;
+
+        return {
+            peak_freq_hz: peak_freq_hz,
+            freq_range_hz: freq_range_hz,
+            duration_active_s: duration_active_s,
+            modulation_rate_hz: modulation_rate_hz,
+            harshness: harshness,
+            transient_rate_hz: transient_rate_hz,
+            loudness_rms: totalRms,
+            sample_rate: sampleRate,
+            duration_total_s: len / sampleRate
+        };
+    }
 })();
