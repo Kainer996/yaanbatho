@@ -106,6 +106,8 @@ PORT=${APP_PORT}
 HOSTNAME=127.0.0.1
 # Required for /api/identify-sound (Burbz auto-ID via Claude vision)
 ANTHROPIC_API_KEY=
+# Required for /api/generate-track (Pocket Producer music generation via Replicate MusicGen)
+REPLICATE_API_TOKEN=
 # Optional: token used by /api/upload
 UPLOAD_TOKEN=$(openssl rand -hex 16 2>/dev/null || echo "change-me")
 EOF
@@ -197,7 +199,7 @@ cat <<EOF
 
 \033[1;33mNext steps:\033[0m
 
-  1) Edit the env file and paste your real Anthropic key:
+  1) Edit the env file and paste your real API keys (Anthropic, Replicate):
         sudo nano ${ENV_FILE}
         sudo systemctl restart yaanbatho
 
