@@ -8,7 +8,7 @@
     "email": "hello@yaanbatho.com",
     "website": "https://yaanbatho.com"
   },
-  "last_updated": "2026-04-21",
+  "last_updated": "2026-04-24",
   "tools": [
     {
       "id": "shared-drive",
@@ -116,6 +116,31 @@
       "purchase_url": "mailto:hello@yaanbatho.com?subject=Pocket Producer Access",
       "demo_available": true,
       "source_path": "/mcp-servers/pocket-producer"
+    },
+    {
+      "id": "nomad-trip-planner",
+      "name": "Nomad Trip Planner",
+      "tagline": "Your van's co-pilot — never fiddle with Maps while driving again",
+      "status": "available",
+      "description": "An MCP server that plans a short, van-friendly day trip from your work anchor. Picks 2-3 destinations within your drive-time budget, checks the weather window, computes daylight, recommends a parkup, and hands you a Google Maps deeplink and a one-paragraph brief you can have read aloud. Built for remote-working van-lifers.",
+      "pricing": {
+        "free_tier": true,
+        "free_limits": "1 trip plan/day, local parkup fixtures, hourly weather",
+        "pro_price": "$7.99/month",
+        "pro_features": "Unlimited plans, live parkup providers (iOverlander, Park4Night), overnight stay search, voice brief via TTS, iOS Shortcut, offline cache for poor-signal driving"
+      },
+      "category": "travel",
+      "tags": ["van-life", "trip-planner", "nomad", "mcp", "weather", "google-maps", "parking", "remote-work"],
+      "integration": {
+        "type": "mcp-server",
+        "protocol": "MCP (Model Context Protocol)",
+        "weather_provider": "Open-Meteo (free, no key)",
+        "compatible_with": ["OpenClaw", "Claude Desktop", "Claude Code", "any MCP client"],
+        "url": "https://yaanbatho.com/nomad-trip-planner-dashboard.html"
+      },
+      "purchase_url": "mailto:hello@yaanbatho.com?subject=Nomad Trip Planner Access",
+      "demo_available": true,
+      "source_path": "/mcp-servers/nomad-trip-planner"
     }
   ]
 }
