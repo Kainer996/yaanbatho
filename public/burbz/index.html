@@ -93,7 +93,11 @@
                 </div>
                 <div class="panel-header">
                     <h2 class="section-title">YOUR FLOCK</h2>
-                    <div class="flock-filters">
+                    <div class="flock-view-nav">
+                        <button class="view-btn active" data-view="flock">MY FLOCK</button>
+                        <button class="view-btn" data-view="dex">SPECIES INDEX <span id="dex-count"></span></button>
+                    </div>
+                    <div class="flock-filters" id="flock-filters">
                         <button class="filter-btn active" data-filter="all">All</button>
                         <button class="filter-btn" data-filter="common">Common</button>
                         <button class="filter-btn" data-filter="uncommon">Uncommon</button>
@@ -111,6 +115,7 @@
                     <h3>No birds yet!</h3>
                     <p>Use Sound ID or Image ID to identify and capture your first bird fighter.</p>
                 </div>
+                <div id="dex-grid" class="flock-grid hidden"></div>
             </section>
 
             <!-- ===== SOUND ID TAB ===== -->
@@ -309,8 +314,10 @@
 
                 <label class="settings-label">Sound provider</label>
                 <select id="cfg-sound-provider" class="settings-input">
-                    <option value="mock">Mock (random)</option>
-                    <option value="api">Custom API</option>
+                    <option value="acoustic-local">In-browser acoustic classifier (free, offline)</option>
+                    <option value="claude-spectrogram">Claude vision (server, ANTHROPIC_API_KEY required)</option>
+                    <option value="api">Custom API endpoint</option>
+                    <option value="mock">Mock (random — testing only)</option>
                 </select>
 
                 <label class="settings-label">Image provider</label>
@@ -372,6 +379,8 @@
         </div>
     </div>
 
+    <script src="js/spectrogram.js"></script>
+    <script src="js/acousticClassifier.js"></script>
     <script src="js/birdId.js"></script>
     <script src="js/app.js"></script>
 </body>

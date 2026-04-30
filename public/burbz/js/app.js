@@ -27,6 +27,9 @@
         flock: [],
         playerXP: 0,
         playerLevel: 1,
+        flockView: 'flock',
+        stats: { battleWins: 0 },
+        achievements: { unlocked: {} },
         selectedBattleBird: null,
         battleState: null,
         battleMode: 'quick',
@@ -43,6 +46,7 @@
     const STORAGE_KEY = 'burbz_flock';
     const PLAYER_KEY = 'burbz_player';
     const LADDER_KEY = 'burbz_ladder';
+    const STATS_KEY = 'burbz_stats';
 
     function saveState() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE.flock));
@@ -51,6 +55,7 @@
             level: STATE.playerLevel
         }));
         localStorage.setItem(LADDER_KEY, JSON.stringify(STATE.ladderProgress));
+        localStorage.setItem(STATS_KEY, JSON.stringify(STATE.stats));
     }
 
     function loadState() {
@@ -69,6 +74,11 @@
                 STATE.ladderProgress = {
                     winsByTier: (ld && ld.winsByTier) || {}
                 };
+            }
+            const st = localStorage.getItem(STATS_KEY);
+            if (st) {
+                const sd = JSON.parse(st);
+                STATE.stats = { battleWins: (sd && sd.battleWins) || 0 };
             }
         } catch (e) {
             console.warn('Failed to load state:', e);
@@ -103,7 +113,13 @@
 
     // ---- UTILITY ----
     function getPortraitURL(speciesId) {
-        return BIRD_PORTRAITS[speciesId] || 'assets/robin_eu.svg';
+        if (BIRD_PORTRAITS[speciesId]) return BIRD_PORTRAITS[speciesId];
+        // Fall back to portrait_ref on the species definition so new birds can reuse existing art
+        const sp = STATE.speciesData && STATE.speciesData[speciesId];
+        if (sp && sp.portrait_ref && BIRD_PORTRAITS[sp.portrait_ref]) {
+            return BIRD_PORTRAITS[sp.portrait_ref];
+        }
+        return 'assets/robin_eu.svg';
     }
 
     function getPortraitHTML(speciesId, cls) {
@@ -161,24 +177,34 @@
         const stats = calcStats(species.base_stats, level, rarity);
         const moves = species.move_pool.slice(0, 4);
 
-        return {
+        const bird = {
             id: generateId(),
             species_id: speciesId,
             common_name: species.common_name,
             source_type: sourceType,
             confidence: confidence,
             captured_at: new Date().toISOString(),
+            captured_location: null,
             level: level,
             xp: 0,
             stats: stats,
             rarity: rarity,
-            art_assets: {
-                portrait_url: null,
-                card_url: null,
-                animation_url: null
-            },
+            art_assets: { portrait_url: null, card_url: null, animation_url: null },
             moves: moves
         };
+
+        // Best-effort location stamp — non-blocking
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                bird.captured_location = {
+                    lat: +pos.coords.latitude.toFixed(4),
+                    lng: +pos.coords.longitude.toFixed(4)
+                };
+                saveState();
+            }, function () { /* ignore */ }, { enableHighAccuracy: false, timeout: 4000, maximumAge: 600000 });
+        }
+
+        return bird;
     }
 
     // ---- TAB SYSTEM ----
@@ -195,7 +221,7 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabId));
 
-        if (tabId === 'flock') renderFlock();
+        if (tabId === 'flock') renderFlockView();
         if (tabId === 'battle') renderBattleSelect();
         if (tabId === 'nearby') renderNearby();
     }
@@ -244,6 +270,71 @@
                 renderFlock(btn.dataset.filter);
             });
         });
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                STATE.flockView = btn.dataset.view;
+                renderFlockView();
+            });
+        });
+    }
+
+    function renderFlockView() {
+        const flockGrid = document.getElementById('flock-grid');
+        const flockEmpty = document.getElementById('flock-empty');
+        const dexGrid = document.getElementById('dex-grid');
+        const filters = document.getElementById('flock-filters');
+        const isDex = STATE.flockView === 'dex';
+        if (isDex) {
+            flockGrid.classList.add('hidden');
+            flockEmpty.classList.add('hidden');
+            dexGrid.classList.remove('hidden');
+            if (filters) filters.classList.add('hidden');
+            renderDex();
+        } else {
+            dexGrid.classList.add('hidden');
+            flockGrid.classList.remove('hidden');
+            if (filters) filters.classList.remove('hidden');
+            renderFlock();
+        }
+    }
+
+    function renderDex() {
+        const dexGrid = document.getElementById('dex-grid');
+        const dexCountEl = document.getElementById('dex-count');
+        if (!dexGrid || !STATE.speciesData) return;
+        const allSpecies = Object.values(STATE.speciesData);
+        const caughtIds = new Set(STATE.flock.map(b => b.species_id));
+        const caught = caughtIds.size;
+        const total = allSpecies.length;
+        if (dexCountEl) dexCountEl.textContent = '(' + caught + '/' + total + ')';
+
+        dexGrid.innerHTML = allSpecies.map(sp => {
+            const have = caughtIds.has(sp.species_id);
+            const el = sp.element || 'normal';
+            const cls = 'bird-card rarity-' + sp.rarity_tier + ' dex-card' + (have ? '' : ' locked');
+            const name = have ? sp.common_name : '???';
+            const onClick = have
+                ? 'onclick="window.BURBZ.showSpeciesDetail(\'' + sp.species_id + '\')"'
+                : '';
+            return '<div class="' + cls + '" ' + onClick + '>' +
+                '<div class="card-art">' + getPortraitHTML(sp.species_id, 'card-portrait' + (have ? '' : ' silhouette')) + '</div>' +
+                '<div class="card-info">' +
+                '<div class="card-name">' + name + '</div>' +
+                '<div class="card-meta">' +
+                '<span class="card-rarity ' + sp.rarity_tier + '">' + sp.rarity_tier.toUpperCase() + '</span>' +
+                (have ? '<span class="card-element el-' + el + '">' + el.toUpperCase() + '</span>' : '<span class="dex-unseen">NOT SEEN</span>') +
+                '</div></div></div>';
+        }).join('');
+    }
+
+    function showSpeciesDetail(speciesId) {
+        // Show any owned instance, preferring highest level
+        const owned = STATE.flock.filter(b => b.species_id === speciesId);
+        if (owned.length === 0) return;
+        owned.sort((a, b) => (b.level || 1) - (a.level || 1));
+        showBirdDetail(owned[0].id);
     }
 
     // ---- WIKIPEDIA ENRICHMENT ----
@@ -350,6 +441,7 @@
             <div style="margin-top:1rem; font-size:0.7rem; color:var(--text-muted)">
                 Captured ${new Date(bird.captured_at).toLocaleDateString()} via ${bird.source_type}
                 &bull; Confidence: ${Math.round(bird.confidence * 100)}%
+                ${bird.captured_location ? '<br>Near ' + bird.captured_location.lat + ', ' + bird.captured_location.lng + ' &middot; <a href="https://www.openstreetmap.org/?mlat=' + bird.captured_location.lat + '&mlon=' + bird.captured_location.lng + '#map=14/' + bird.captured_location.lat + '/' + bird.captured_location.lng + '" target="_blank" rel="noopener" style="color:var(--accent-blue);">View on map</a>' : ''}
             </div>
             <div class="detail-wiki" id="detail-wiki"></div>`;
 
@@ -458,11 +550,16 @@
         bumpChallenge('rarity_capture', 1, function (c) {
             return RARITY_ORDER[bird.rarity] >= RARITY_ORDER[c.meta.rarity];
         });
+        evaluateAchievements();
     }
 
     function recordBattleWin(tier) {
         bumpChallenge('battle_win', 1);
         if (tier) bumpChallenge('ladder_win', 1);
+        if (!STATE.stats) STATE.stats = { battleWins: 0 };
+        STATE.stats.battleWins = (STATE.stats.battleWins || 0) + 1;
+        saveState();
+        evaluateAchievements();
     }
 
     function recordElementMove(element) {
@@ -501,6 +598,98 @@
                 btn +
                 '</div>';
         }).join('');
+    }
+
+    // ---- ACHIEVEMENTS ----
+    const ACHIEVE_KEY = 'burbz_achievements';
+
+    const ACHIEVEMENTS = [
+        { id: 'first_capture',   label: 'First Feathers',     desc: 'Capture your first bird',         xp: 50,  test: function (s) { return s.flock.length >= 1; } },
+        { id: 'flock_of_five',   label: 'Flock of Five',      desc: 'Capture 5 birds',                 xp: 100, test: function (s) { return s.flock.length >= 5; } },
+        { id: 'ten_strong',      label: 'Ten Strong',         desc: 'Capture 10 birds',                xp: 200, test: function (s) { return s.flock.length >= 10; } },
+        { id: 'full_spectrum',   label: 'Full Spectrum',      desc: 'Catch a bird of each element',    xp: 250, test: function (s) {
+            const set = new Set();
+            s.flock.forEach(function (b) {
+                const sp = s.speciesData[b.species_id];
+                if (sp && sp.element) set.add(sp.element);
+            });
+            return ['flame','sky','aqua','shadow','light','normal'].every(function (e) { return set.has(e); });
+        } },
+        { id: 'dex_halfway',     label: 'Half the Forest',    desc: 'Register half the species in the Index', xp: 300, test: function (s) {
+            const total = Object.keys(s.speciesData || {}).length;
+            const seen = new Set(s.flock.map(function (b) { return b.species_id; })).size;
+            return total > 0 && seen >= Math.ceil(total / 2);
+        } },
+        { id: 'dex_complete',    label: 'Master Birder',      desc: 'Complete the Species Index',      xp: 800, test: function (s) {
+            const total = Object.keys(s.speciesData || {}).length;
+            const seen = new Set(s.flock.map(function (b) { return b.species_id; })).size;
+            return total > 0 && seen >= total;
+        } },
+        { id: 'first_win',       label: 'First Blood',        desc: 'Win your first battle',           xp: 75,  test: function (s) { return (s.stats && s.stats.battleWins) >= 1; } },
+        { id: 'ten_wins',        label: 'Ten Takedowns',      desc: 'Win 10 battles',                  xp: 200, test: function (s) { return (s.stats && s.stats.battleWins) >= 10; } },
+        { id: 'ladder_climb',    label: 'Rung Climber',       desc: 'Clear the Rookie ladder tier',    xp: 150, test: function (s) {
+            const w = (s.ladderProgress && s.ladderProgress.winsByTier && s.ladderProgress.winsByTier.rookie) || 0;
+            return w >= 3;
+        } },
+        { id: 'champion_clear',  label: 'Champion',           desc: 'Clear the Champion ladder tier',  xp: 1000, test: function (s) {
+            const w = (s.ladderProgress && s.ladderProgress.winsByTier && s.ladderProgress.winsByTier.champion) || 0;
+            return w >= 5;
+        } },
+        { id: 'legendary_get',   label: 'Apex Predator',      desc: 'Capture a Legendary bird',        xp: 300, test: function (s) {
+            return s.flock.some(function (b) { return b.rarity === 'legendary'; });
+        } },
+        { id: 'field_explorer',  label: 'Field Explorer',     desc: 'Find birds near you using eBird', xp: 120, test: function (s) {
+            return !!(s.nearby && s.nearby.observations && s.nearby.observations.length > 0);
+        } }
+    ];
+
+    function loadAchievements() {
+        try {
+            const s = localStorage.getItem(ACHIEVE_KEY);
+            STATE.achievements = s ? JSON.parse(s) : { unlocked: {} };
+        } catch (e) { STATE.achievements = { unlocked: {} }; }
+        if (!STATE.achievements.unlocked) STATE.achievements.unlocked = {};
+    }
+
+    function saveAchievements() {
+        try { localStorage.setItem(ACHIEVE_KEY, JSON.stringify(STATE.achievements)); } catch (e) {}
+    }
+
+    function evaluateAchievements() {
+        if (!STATE.achievements) return;
+        ACHIEVEMENTS.forEach(function (a) {
+            if (STATE.achievements.unlocked[a.id]) return;
+            try {
+                if (a.test(STATE)) {
+                    STATE.achievements.unlocked[a.id] = Date.now();
+                    addXP(a.xp);
+                    showAchievementToast(a);
+                    saveAchievements();
+                }
+            } catch (e) { console.warn('Achievement check failed:', a.id, e); }
+        });
+    }
+
+    function showAchievementToast(ach) {
+        let host = document.getElementById('achievement-toasts');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'achievement-toasts';
+            host.className = 'achievement-toasts';
+            document.body.appendChild(host);
+        }
+        const el = document.createElement('div');
+        el.className = 'achievement-toast';
+        el.innerHTML =
+            '<div class="ach-kicker">ACHIEVEMENT UNLOCKED</div>' +
+            '<div class="ach-label">' + ach.label + '</div>' +
+            '<div class="ach-desc">' + ach.desc + ' &middot; +' + ach.xp + ' XP</div>';
+        host.appendChild(el);
+        requestAnimationFrame(function () { el.classList.add('visible'); });
+        setTimeout(function () {
+            el.classList.remove('visible');
+            setTimeout(function () { el.remove(); }, 500);
+        }, 4200);
     }
 
     // ---- NEAR ME (eBird) ----
@@ -555,6 +744,7 @@
                 biasIdProviderToNearby();
                 renderNearby();
                 status.textContent = 'Found ' + STATE.nearby.observations.length + ' species nearby.';
+                evaluateAchievements();
             } catch (err) {
                 console.warn('eBird fetch failed:', err);
                 status.textContent = 'Could not fetch from eBird: ' + err.message;
@@ -612,7 +802,8 @@
                 ? getPortraitHTML(local.species_id, 'nearby-portrait')
                 : '<div class="nearby-portrait placeholder"></div>';
             const seenAt = o.obsDt ? o.obsDt.replace('T', ' ') : '';
-            return '<div class="' + cls + '">' +
+            const onClick = playable ? ' onclick="window.BURBZ.showSpeciesDetail(\'' + local.species_id + '\')"' : '';
+            return '<div class="' + cls + '"' + onClick + '>' +
                 portrait +
                 '<div class="nearby-info">' +
                 '<div class="nearby-name">' + (o.comName || 'Unknown') + badge + '</div>' +
@@ -686,7 +877,7 @@
         });
         document.getElementById('cfg-reset').addEventListener('click', () => {
             if (!confirm('Reset all progress? This clears your flock, player level, ladder, and settings.')) return;
-            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY, WIKI_CACHE_KEY].forEach(k => localStorage.removeItem(k));
+            [STORAGE_KEY, PLAYER_KEY, LADDER_KEY, SETTINGS_KEY, DAILY_KEY, NEARBY_KEY, WIKI_CACHE_KEY, ACHIEVE_KEY, STATS_KEY].forEach(k => localStorage.removeItem(k));
             location.reload();
         });
     }
@@ -893,9 +1084,26 @@
         wrap.insertAdjacentElement('afterend', audio);
     }
 
+    function showRetryPrompt(reason, sourceType) {
+        const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
+        const statusEl = document.getElementById('sound-status');
+        if (statusEl && sourceType === 'sound') statusEl.textContent = 'Try again';
+        resultEl.innerHTML =
+            '<div class="id-retry">' +
+            '<h3>No clear match</h3>' +
+            '<p>' + (reason || 'The recording was too quiet, too noisy, or no clear bird call was found. Get closer, hold the phone steady, and try a longer clip (10 s).') + '</p>' +
+            '</div>';
+        resultEl.classList.remove('hidden');
+    }
+
     // ---- BIRD IDENTIFICATION (routes through BurbzBirdID provider) ----
     async function performBirdID(sourceType, blob) {
         if (sourceType === 'sound' && blob) setRecordingPlayback(blob);
+
+        const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
+        const statusEl = document.getElementById('sound-status');
+        if (statusEl && sourceType === 'sound') statusEl.textContent = 'Analyzing recording…';
+
         let result;
         try {
             if (window.BurbzBirdID) {
@@ -905,22 +1113,61 @@
             }
         } catch (err) {
             console.warn('BurbzBirdID failed:', err);
+            if (sourceType === 'sound') {
+                const detail = err && err.status === 503
+                    ? 'Auto-ID is not yet configured on the server. Ask the site owner to set ANTHROPIC_API_KEY in Vercel.'
+                    : 'Identification service failed. Try again in a moment.';
+                showRetryPrompt(detail, sourceType);
+                return;
+            }
         }
+
         if (!result || !result.species_id || !STATE.speciesData[result.species_id]) {
+            // Image still falls back to the legacy mock; sound goes to the retry prompt.
+            if (sourceType === 'sound') {
+                showRetryPrompt(null, sourceType);
+                return;
+            }
             const ids = Object.keys(STATE.speciesData);
             result = { species_id: ids[Math.floor(Math.random() * ids.length)], confidence: 0.6 };
         }
+
+        // Sound: enforce a confidence floor so the player can't capture a bird
+        // the model is only guessing at. This protects game integrity.
+        if (sourceType === 'sound' && result.confidence < 0.5) {
+            const reason = result.reasoning
+                ? 'Closest guess was ' + STATE.speciesData[result.species_id].common_name +
+                  ', but confidence was only ' + Math.round(result.confidence * 100) + '%. ' +
+                  'The recording was probably too quiet, too short, or contained mostly background noise. Get closer or try a longer, cleaner clip.'
+                : null;
+            showRetryPrompt(reason, sourceType);
+            return;
+        }
+
         const speciesId = result.species_id;
         const species = STATE.speciesData[speciesId];
         const confidence = result.confidence;
+        const reasoning = result.reasoning || '';
 
-        const resultEl = document.getElementById(sourceType === 'sound' ? 'sound-result' : 'image-result');
-        const statusEl = document.getElementById('sound-status');
         if (statusEl && sourceType === 'sound') statusEl.textContent = 'Match found!';
 
         const confClass = confidence >= 0.8 ? 'confidence-high' : confidence >= 0.6 ? 'confidence-mid' : 'confidence-low';
         const confLabel = confidence >= 0.8 ? 'HIGH' : confidence >= 0.6 ? 'MEDIUM' : 'LOW';
         const canCapture = confidence >= 0.5;
+
+        const reasoningHTML = reasoning
+            ? '<p class="result-reasoning">"' + reasoning + '"</p>'
+            : '';
+        let sourceFooter;
+        if (sourceType === 'sound') {
+            const mode = window.BurbzBirdID && window.BurbzBirdID.config && window.BurbzBirdID.config.soundProvider;
+            if (mode === 'claude-spectrogram') sourceFooter = 'ID by Claude vision on a spectrogram of your recording.';
+            else if (mode === 'api') sourceFooter = 'ID via your configured Custom API endpoint.';
+            else if (mode === 'mock') sourceFooter = 'Mock ID (testing only).';
+            else sourceFooter = 'ID by in-browser acoustic classifier — no API, runs offline.';
+        } else {
+            sourceFooter = 'Mock ID — image classifier coming next.';
+        }
 
         resultEl.innerHTML = `
             <div class="result-species">${species.common_name}</div>
@@ -928,6 +1175,7 @@
             <div class="result-confidence ${confClass}">
                 ${confLabel} CONFIDENCE: ${Math.round(confidence * 100)}%
             </div>
+            ${reasoningHTML}
             <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.8rem;">
                 ${species.description}
             </p>
@@ -939,9 +1187,7 @@
                        Confidence too low to capture. Try again!
                    </p>`
             }
-            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:0.8rem;">
-                Note: Using mock ID. Real BirdNET integration coming soon.
-            </p>`;
+            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:0.8rem;">${sourceFooter}</p>`;
 
         resultEl.classList.remove('hidden');
     }
@@ -1001,7 +1247,8 @@
         showBirdDetail,
         captureBird,
         challengeTier,
-        claimChallenge
+        claimChallenge,
+        showSpeciesDetail
     };
 
     // ---- INIT ----
@@ -1014,6 +1261,8 @@
         ensureDailyChallenges();
         loadNearby();
         biasIdProviderToNearby();
+        loadAchievements();
+        evaluateAchievements();
         updatePlayerHUD();
         initTabs();
         initFlockFilters();
@@ -1023,7 +1272,7 @@
         initImageID();
         initBattle();
         initNearby();
-        renderFlock();
+        renderFlockView();
         renderDaily();
 
         // Splash screen

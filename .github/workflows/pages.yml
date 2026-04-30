@@ -1,0 +1,51 @@
+name: Deploy Burbz to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/burbz/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stage Burbz for Pages
+        run: |
+          mkdir -p _site
+          cp -r public/burbz/* _site/
+          # Tell Jekyll (GH Pages default) not to mangle our static files
+          touch _site/.nojekyll
+          # A landing redirect at the repo root so the bare URL just loads the game
+          cat > _site/index_redirect.html <<HTML
+          <!doctype html><meta http-equiv="refresh" content="0; url=./index.html">
+          HTML
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
