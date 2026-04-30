@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070707">
+<title>Nomad Roll Call — drop a pin where you parked up</title>
+<meta name="description" content="Drop a pin where you parked up tonight. A van-life log book that lives in your browser. Multi-user nomad feed coming with Pro.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
+<style>
+:root{--red:#cc0000;--red-hot:#ff2222;--black:#070707;--mid:#1c1c1c;--card:#161616;--border:#2a2a2a;--grey:#555;--ltgrey:#999;--white:#f5f5f5;--pixel:'VT323',monospace;--sign:'Black Ops One',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);line-height:1.5}
+a{color:var(--red-hot);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.top-nav{background:#000;border-bottom:3px solid var(--red);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--ltgrey);display:flex;align-items:center;gap:10px;font-size:.95rem}
+.nav-brand .dot{width:10px;height:10px;background:var(--red);display:inline-block}
+.nav-links{display:flex;gap:14px;font-family:var(--pixel);font-size:1rem}
+.nav-links a{color:var(--ltgrey)}
+.nav-links a:hover{color:var(--red-hot)}
+
+.shell{max-width:900px;margin:0 auto;padding:24px 20px 60px}
+.tag-pill{display:inline-block;font-family:var(--pixel);font-size:1.05rem;color:var(--red-hot);border:1px solid var(--red);padding:3px 10px;letter-spacing:2px;margin-bottom:10px}
+h1{font-family:var(--sign);font-size:clamp(1.9rem,4.5vw,2.6rem);letter-spacing:1px;line-height:1.05;margin-bottom:8px}
+h1 .red{color:var(--red-hot)}
+.lede{color:var(--ltgrey);max-width:680px;font-size:1rem;margin-bottom:20px}
+
+.banner{background:#1a0606;border:1px solid var(--red);border-radius:6px;padding:12px 14px;margin-bottom:20px;color:var(--ltgrey);font-size:.9rem}
+.banner b{color:var(--red-hot);letter-spacing:1px;font-family:var(--pixel);font-size:1.05rem}
+
+.controls{background:var(--card);border:1px solid var(--border);padding:18px;border-radius:6px;margin-bottom:22px}
+label{display:block;font-family:var(--pixel);font-size:1rem;color:var(--ltgrey);letter-spacing:1px;margin-bottom:6px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.full{grid-template-columns:1fr}
+input[type=text],textarea{background:var(--mid);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Inter',sans-serif;font-size:.95rem;border-radius:4px;width:100%}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--red)}
+textarea{resize:vertical;min-height:64px}
+.btn{display:inline-block;font-family:var(--sign);letter-spacing:1px;padding:10px 18px;border-radius:4px;border:1px solid var(--red);background:var(--red);color:var(--white);font-size:.95rem;cursor:pointer}
+.btn:hover{background:var(--red-hot);text-decoration:none}
+.btn-ghost{background:transparent;color:var(--white);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--red);background:var(--mid)}
+
+.actions-row{display:flex;flex-wrap:wrap;gap:10px}
+
+.vibe-chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--pixel);font-size:1.05rem;padding:6px 12px;border:1px solid var(--border);color:var(--ltgrey);background:var(--mid);border-radius:999px;cursor:pointer;user-select:none;letter-spacing:1px}
+.chip.on{border-color:var(--red);color:var(--red-hot);background:#1a0606}
+
+.entries{display:flex;flex-direction:column;gap:12px}
+.entry{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px}
+.entry .head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.entry .name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem}
+.entry .when{font-family:var(--pixel);font-size:.95rem;color:var(--ltgrey);white-space:nowrap}
+.entry .place{font-family:var(--pixel);color:var(--ltgrey);font-size:.95rem;letter-spacing:1px;margin-bottom:6px}
+.entry .vibe{display:inline-block;font-family:var(--pixel);font-size:.9rem;color:var(--red-hot);border:1px solid var(--red);padding:2px 8px;border-radius:999px;letter-spacing:1px;margin-right:6px}
+.entry .notes{color:var(--ltgrey);font-size:.95rem;border-top:1px dashed var(--border);padding-top:8px;margin-top:8px}
+.entry .row-bottom{display:flex;gap:8px;margin-top:10px}
+.entry .row-bottom .btn{padding:7px 12px;font-size:.85rem}
+
+.empty{text-align:center;color:var(--grey);padding:40px 0;font-family:var(--pixel);font-size:1.1rem;letter-spacing:1px}
+
+footer{margin-top:50px;padding:18px 0;font-family:var(--pixel);color:var(--grey);text-align:center;border-top:1px dashed var(--border);font-size:1.05rem;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-brand"><span class="dot"></span> NOMAD · ROLL CALL</div>
+  <div class="nav-links">
+    <a href="/nomad.html">nomad</a>
+    <a href="/nomad-pub-guide.html">pubs</a>
+    <a href="/">home</a>
+  </div>
+</nav>
+
+<div class="shell">
+  <span class="tag-pill">ROLL CALL · BETA · v0.1</span>
+  <h1>Where did you <span class="red">park up?</span></h1>
+  <p class="lede">A van-life log book. Drop a pin, jot a line about the spot, build a personal map of every parkup you've ever stayed at. Useful for "where was that quiet bit by the loch" three months from now.</p>
+
+  <div class="banner">
+    <b>LOCAL ONLY (for now)</b><br>
+    Entries are saved to <em>this browser</em>. They don't leave your device. The multi-user nomad feed — see who else is parked nearby tonight — is coming with the Pro tier. Want it sooner? <a href="mailto:hello@yaanbatho.com?subject=Roll%20Call%20-%20Pro%20waitlist">Get on the waitlist.</a>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div>
+        <label for="place">PLACE (or 📍 use GPS)</label>
+        <input id="place" type="text" placeholder="e.g. Boltons Bench, Lyndhurst" />
+      </div>
+      <div>
+        <label for="parkup">PARKUP NOTE</label>
+        <input id="parkup" type="text" placeholder="e.g. NT car park, free, level" />
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>VIBE</label>
+        <div class="vibe-chips" id="chips">
+          <span class="chip" data-vibe="quiet">quiet</span>
+          <span class="chip" data-vibe="scenic">scenic</span>
+          <span class="chip" data-vibe="busy">busy</span>
+          <span class="chip" data-vibe="forest">forest</span>
+          <span class="chip" data-vibe="beach">beach</span>
+          <span class="chip" data-vibe="urban">urban</span>
+        </div>
+      </div>
+      <div>
+        <label for="weather">WEATHER (one emoji is fine)</label>
+        <input id="weather" type="text" placeholder="☀️ ☁️ 🌧 ❄️" maxlength="6" />
+      </div>
+    </div>
+    <div class="row full">
+      <div>
+        <label for="notes">NOTES (optional)</label>
+        <textarea id="notes" placeholder="e.g. midges in the evening, but the sunset was unreal. Pub 5 min walk."></textarea>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button id="useLoc" class="btn btn-ghost" type="button">📍 Use my GPS</button>
+      <button id="save" class="btn" type="button">▸ Drop the pin</button>
+      <button id="exportBtn" class="btn btn-ghost" type="button">⤓ Export JSON</button>
+    </div>
+  </div>
+
+  <h2 style="font-family:var(--sign);letter-spacing:1px;margin-bottom:14px;font-size:1.4rem;"><span style="color:var(--red-hot)">▸</span> Your log <span id="count" style="font-family:var(--pixel);color:var(--ltgrey);font-size:1.1rem;letter-spacing:1px"></span></h2>
+
+  <div class="entries" id="entries"></div>
+</div>
+
+<footer>BUILT BY YAAN · AVA · ON THE ROAD · UK · LOCAL DATA, YOUR DEVICE</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const KEY = "yaan-nomad-rollcall-v1";
+
+function load(){ try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } }
+function save(list){ localStorage.setItem(KEY, JSON.stringify(list)); }
+
+let coords = null; // last GPS reading
+
+$("#chips").addEventListener("click", e => {
+  if (!e.target.classList.contains("chip")) return;
+  // single-select for vibe
+  $$(".chip").forEach(c => c.classList.remove("on"));
+  e.target.classList.add("on");
+});
+
+$("#useLoc").addEventListener("click", () => {
+  if (!navigator.geolocation){ alert("Geolocation not supported."); return; }
+  $("#useLoc").disabled = true;
+  $("#useLoc").textContent = "📍 …";
+  navigator.geolocation.getCurrentPosition(async pos => {
+    coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&lat=${coords.lat}&lon=${coords.lng}`, { headers:{ "Accept-Language":"en" } });
+      if (r.ok){ const j = await r.json(); if (j && j.display_name){
+        $("#place").value = j.display_name.split(",").slice(0,3).join(",").trim();
+      }}
+    } catch {}
+    $("#useLoc").disabled = false;
+    $("#useLoc").textContent = "📍 Update GPS";
+  }, () => { $("#useLoc").disabled = false; $("#useLoc").textContent = "📍 Use my GPS"; alert("Location denied."); }, { timeout: 10000, enableHighAccuracy:true });
+});
+
+$("#save").addEventListener("click", () => {
+  const place = $("#place").value.trim();
+  if (!place){ alert("Type a place or hit GPS."); return; }
+  const vibeChip = $(".chip.on");
+  const entry = {
+    id: Date.now(),
+    place,
+    parkup: $("#parkup").value.trim(),
+    vibe: vibeChip ? vibeChip.dataset.vibe : "",
+    weather: $("#weather").value.trim(),
+    notes: $("#notes").value.trim(),
+    coords: coords ? { lat:coords.lat, lng:coords.lng } : null,
+    when: new Date().toISOString()
+  };
+  const list = load();
+  list.unshift(entry);
+  save(list);
+  // reset form
+  $("#parkup").value = ""; $("#weather").value = ""; $("#notes").value = "";
+  $$(".chip").forEach(c => c.classList.remove("on"));
+  render();
+});
+
+$("#exportBtn").addEventListener("click", () => {
+  const data = JSON.stringify(load(), null, 2);
+  const blob = new Blob([data], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `nomad-rollcall-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+function fmtWhen(iso){
+  const d = new Date(iso);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  if (sameDay) return "today · " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  if (d.toDateString() === yesterday.toDateString()) return "yesterday · " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  return d.toLocaleDateString(undefined, { weekday:"short", day:"numeric", month:"short" });
+}
+
+function render(){
+  const list = load();
+  const wrap = $("#entries");
+  $("#count").textContent = list.length ? `(${list.length})` : "";
+  if (!list.length){ wrap.innerHTML = `<div class="empty">No pins yet. Drop your first one above.</div>`; return; }
+  wrap.innerHTML = list.map(e => {
+    const mapsLink = e.coords ? `https://www.google.com/maps/search/?api=1&query=${e.coords.lat},${e.coords.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.place)}`;
+    return `<div class="entry">
+      <div class="head">
+        <div>
+          <div class="name">${escapeHtml(e.place)}</div>
+          <div class="place">${e.parkup ? escapeHtml(e.parkup) : ""}${e.parkup && e.coords ? " · " : ""}${e.coords ? e.coords.lat.toFixed(3)+","+e.coords.lng.toFixed(3) : ""}</div>
+        </div>
+        <div class="when">${fmtWhen(e.when)}</div>
+      </div>
+      <div>
+        ${e.vibe ? `<span class="vibe">${escapeHtml(e.vibe)}</span>` : ""}
+        ${e.weather ? `<span class="vibe">${escapeHtml(e.weather)}</span>` : ""}
+      </div>
+      ${e.notes ? `<div class="notes">${escapeHtml(e.notes)}</div>` : ""}
+      <div class="row-bottom">
+        <a class="btn btn-ghost" href="${mapsLink}" target="_blank" rel="noopener">Open on map</a>
+        <button class="btn btn-ghost" type="button" data-id="${e.id}">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+  wrap.querySelectorAll("button[data-id]").forEach(b => {
+    b.addEventListener("click", () => {
+      if (!confirm("Delete this entry?")) return;
+      const id = parseInt(b.dataset.id, 10);
+      save(load().filter(e => e.id !== id));
+      render();
+    });
+  });
+}
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+render();
+</script>
+</body>
+</html>

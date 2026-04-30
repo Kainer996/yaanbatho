@@ -8,7 +8,7 @@
     "email": "hello@yaanbatho.com",
     "website": "https://yaanbatho.com"
   },
-  "last_updated": "2026-04-24",
+  "last_updated": "2026-04-30",
   "tools": [
     {
       "id": "shared-drive",
@@ -118,27 +118,33 @@
       "source_path": "/mcp-servers/pocket-producer"
     },
     {
-      "id": "nomad-trip-planner",
-      "name": "Nomad Trip Planner",
-      "tagline": "Your van's co-pilot — never fiddle with Maps while driving again",
+      "id": "nomad",
+      "name": "Nomad",
+      "tagline": "Tools for life on the road",
       "status": "available",
-      "description": "An MCP server that plans a short, van-friendly day trip from your work anchor. Picks 2-3 destinations within your drive-time budget, checks the weather window, computes daylight, recommends a parkup, and hands you a Google Maps deeplink and a one-paragraph brief you can have read aloud. Built for remote-working van-lifers.",
+      "description": "A small ecosystem of tools for van-life remote workers. Trip Planner (MCP server + live dashboard) plans van-friendly day trips with weather, daylight, parkups, and Maps deeplinks. Pub Guide finds van-friendly UK pubs by drive time and filters. Roll Call is a local-only parkup log book; multi-user nomad feed coming with Pro.",
       "pricing": {
         "free_tier": true,
-        "free_limits": "1 trip plan/day, local parkup fixtures, hourly weather",
+        "free_limits": "Trip Planner: 1 plan/day. Pub Guide: full curated list. Roll Call: unlimited local entries.",
         "pro_price": "$7.99/month",
-        "pro_features": "Unlimited plans, live parkup providers (iOverlander, Park4Night), overnight stay search, voice brief via TTS, iOS Shortcut, offline cache for poor-signal driving"
+        "pro_features": "Unlimited trip plans, live parkup providers (iOverlander, Park4Night), overnight stay search, TTS brief, iOS Shortcut, offline cache, multi-user Roll Call feed."
       },
       "category": "travel",
-      "tags": ["van-life", "trip-planner", "nomad", "mcp", "weather", "google-maps", "parking", "remote-work"],
+      "tags": ["van-life", "trip-planner", "pub-guide", "nomad", "mcp", "weather", "google-maps", "parking", "remote-work"],
       "integration": {
         "type": "mcp-server",
         "protocol": "MCP (Model Context Protocol)",
         "weather_provider": "Open-Meteo (free, no key)",
+        "geocoding": "postcodes.io + Nominatim (free, no key)",
         "compatible_with": ["OpenClaw", "Claude Desktop", "Claude Code", "any MCP client"],
-        "url": "https://yaanbatho.com/nomad-trip-planner-dashboard.html"
+        "url": "https://yaanbatho.com/nomad.html"
       },
-      "purchase_url": "mailto:hello@yaanbatho.com?subject=Nomad Trip Planner Access",
+      "components": [
+        { "name": "Trip Planner", "url": "https://yaanbatho.com/nomad-trip-planner-dashboard.html" },
+        { "name": "Pub Guide", "url": "https://yaanbatho.com/nomad-pub-guide.html" },
+        { "name": "Roll Call", "url": "https://yaanbatho.com/nomad-roll-call.html" }
+      ],
+      "purchase_url": "mailto:hello@yaanbatho.com?subject=Nomad Access",
       "demo_available": true,
       "source_path": "/mcp-servers/nomad-trip-planner"
     }
