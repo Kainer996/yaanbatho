@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070707">
+<title>Nomad — the toolkit for life on the road</title>
+<meta name="description" content="Nomad is a small ecosystem of tools for van-life remote workers. Trip Planner, Pub Guide, Roll Call. Built by Yaan Batho and Ava.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#cc0000; --red-hot:#ff2222; --black:#070707; --dark:#111;
+  --mid:#1c1c1c; --card:#161616; --border:#2a2a2a; --grey:#555;
+  --ltgrey:#999; --white:#f5f5f5;
+  --pixel:'VT323',monospace; --sign:'Black Ops One',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--red-hot);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.top-nav{background:#000;border-bottom:3px solid var(--red);padding:10px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--ltgrey);display:flex;align-items:center;gap:10px;font-size:.95rem}
+.nav-brand .dot{width:10px;height:10px;background:var(--red);display:inline-block}
+.nav-links{display:flex;gap:14px;font-family:var(--pixel);font-size:1rem}
+.nav-links a{color:var(--ltgrey)}
+.nav-links a:hover{color:var(--red-hot)}
+
+/* Hero with inline SVG mountains */
+.hero{position:relative;padding:64px 22px 90px;border-bottom:1px dashed var(--border);overflow:hidden}
+.hero-svg{position:absolute;left:0;right:0;bottom:0;height:260px;width:100%;display:block;z-index:0}
+.hero-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto}
+.tag-pill{display:inline-block;font-family:var(--pixel);font-size:1.1rem;color:var(--red-hot);border:1px solid var(--red);padding:4px 10px;letter-spacing:2px;margin-bottom:18px}
+.hero h1{font-family:var(--sign);font-size:clamp(2.4rem,6vw,4.6rem);letter-spacing:1px;line-height:1.05;margin-bottom:16px}
+.hero h1 .red{color:var(--red-hot)}
+.hero .lede{color:var(--ltgrey);max-width:680px;font-size:1.05rem}
+
+.shell{max-width:1100px;margin:0 auto;padding:46px 22px 60px}
+
+h2.section-title{font-family:var(--sign);font-size:1.8rem;margin-bottom:20px;letter-spacing:1px}
+.section-title .tick{color:var(--red-hot);margin-right:8px}
+
+/* Three big tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;margin-bottom:50px}
+.tile{position:relative;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-height:340px;text-decoration:none;color:var(--white);transition:transform .15s ease, border-color .15s ease}
+.tile:hover{transform:translateY(-3px);border-color:var(--red);text-decoration:none}
+.tile .art{height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a 0%,#1a0606 100%);border-bottom:1px solid var(--border)}
+.tile .art svg{width:100%;height:100%;display:block}
+.tile .body{padding:18px;flex:1;display:flex;flex-direction:column;gap:10px}
+.tile .pill{display:inline-block;font-family:var(--pixel);font-size:.95rem;color:var(--red-hot);border:1px solid var(--red);padding:2px 8px;letter-spacing:1px;align-self:flex-start}
+.tile .pill.soon{color:var(--ltgrey);border-color:var(--border)}
+.tile h3{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:1.35rem;line-height:1.15}
+.tile p{color:var(--ltgrey);font-size:.95rem;flex:1}
+.tile .cta{font-family:var(--pixel);font-size:1.1rem;color:var(--red-hot);letter-spacing:1px;margin-top:auto}
+
+.about{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:30px}
+.about h2{font-family:var(--sign);font-size:1.4rem;margin-bottom:10px}
+.about p{color:var(--ltgrey);max-width:760px}
+.about p+p{margin-top:10px}
+
+.foot-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.btn{display:inline-block;font-family:var(--sign);letter-spacing:1px;padding:10px 18px;border-radius:4px;border:1px solid var(--red);background:var(--red);color:var(--white);font-size:.95rem;cursor:pointer}
+.btn:hover{background:var(--red-hot);text-decoration:none}
+.btn-ghost{background:transparent;color:var(--white);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--red);background:var(--mid)}
+
+footer{margin-top:40px;padding:18px 0;font-family:var(--pixel);color:var(--grey);text-align:center;border-top:1px dashed var(--border);font-size:1.05rem;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-brand"><span class="dot"></span> YAAN BATHO · NOMAD</div>
+  <div class="nav-links">
+    <a href="/">home</a>
+    <a href="/agent-tools.html">agents</a>
+    <a href="/nomad-trip-planner.html">about</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <!-- Layered mountain silhouettes (3 ridges) -->
+  <svg class="hero-svg" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1a0606"/>
+        <stop offset="100%" stop-color="#070707"/>
+      </linearGradient>
+    </defs>
+    <rect width="1440" height="260" fill="url(#sky)"/>
+    <!-- back ridge -->
+    <path d="M0,180 L120,140 L260,170 L420,110 L580,150 L740,90 L880,140 L1020,100 L1180,150 L1320,120 L1440,160 L1440,260 L0,260 Z" fill="#2a0a0a" opacity="0.55"/>
+    <!-- mid ridge -->
+    <path d="M0,210 L160,170 L320,200 L480,150 L640,190 L820,140 L980,180 L1160,150 L1300,200 L1440,180 L1440,260 L0,260 Z" fill="#1a0606" opacity="0.85"/>
+    <!-- front ridge -->
+    <path d="M0,240 L180,210 L360,235 L560,200 L760,225 L960,205 L1180,230 L1440,215 L1440,260 L0,260 Z" fill="#0e0303"/>
+    <!-- a couple of stars / small lights -->
+    <circle cx="240" cy="60" r="1.5" fill="#ff2222" opacity="0.7"/>
+    <circle cx="780" cy="40" r="1.2" fill="#ff2222" opacity="0.55"/>
+    <circle cx="1180" cy="70" r="1.4" fill="#ff2222" opacity="0.7"/>
+  </svg>
+  <div class="hero-inner">
+    <span class="tag-pill">NOMAD · v0.2</span>
+    <h1>Tools for life on the <span class="red">road.</span></h1>
+    <p class="lede">A small ecosystem for van-life remote workers. Plan a trip without fiddling with Maps. Find a pub with parking. Drop a pin where you parked up. All built to be used at a glance, often parked, sometimes voiced.</p>
+  </div>
+</section>
+
+<div class="shell">
+
+  <h2 class="section-title"><span class="tick">▸</span>Pick a tool</h2>
+
+  <div class="tiles">
+    <a class="tile" href="/nomad-trip-planner-dashboard.html">
+      <div class="art">
+        <!-- compass illustration -->
+        <svg viewBox="0 0 220 160" aria-hidden="true">
+          <circle cx="110" cy="80" r="56" fill="#161616" stroke="#cc0000" stroke-width="2"/>
+          <circle cx="110" cy="80" r="48" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+          <polygon points="110,32 118,80 110,128 102,80" fill="#ff2222"/>
+          <polygon points="110,80 118,80 110,128 102,80" fill="#444"/>
+          <circle cx="110" cy="80" r="4" fill="#f5f5f5"/>
+          <text x="110" y="22" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#ff2222">N</text>
+          <text x="110" y="148" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#777">S</text>
+          <text x="40" y="84" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#777">W</text>
+          <text x="180" y="84" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#777">E</text>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="pill">LIVE</span>
+        <h3>Trip Planner</h3>
+        <p>Anchor, drive-time budget, vibe. Three van-friendly destinations with weather, daylight, parkup, and a Maps deeplink. Reads the brief aloud.</p>
+        <span class="cta">▸ open dashboard</span>
+      </div>
+    </a>
+
+    <a class="tile" href="/nomad-pub-guide.html">
+      <div class="art">
+        <!-- pub silhouette with warm window -->
+        <svg viewBox="0 0 220 160" aria-hidden="true">
+          <rect x="0" y="120" width="220" height="40" fill="#0e0303"/>
+          <polygon points="40,120 40,70 80,40 120,70 120,120" fill="#1a0606" stroke="#2a2a2a"/>
+          <rect x="60" y="80" width="20" height="22" fill="#ff8c2a" opacity="0.85"/>
+          <rect x="86" y="80" width="14" height="22" fill="#ffb060" opacity="0.7"/>
+          <rect x="50" y="105" width="60" height="15" fill="#0a0a0a"/>
+          <rect x="74" y="105" width="12" height="15" fill="#ffb060" opacity="0.6"/>
+          <!-- pub sign -->
+          <rect x="125" y="60" width="42" height="22" fill="#cc0000"/>
+          <text x="146" y="76" text-anchor="middle" font-family="Black Ops One, sans-serif" font-size="11" fill="#fff">PUB</text>
+          <!-- chimney smoke -->
+          <rect x="100" y="50" width="6" height="14" fill="#1a0606"/>
+          <circle cx="103" cy="42" r="3" fill="#444" opacity="0.5"/>
+          <circle cx="106" cy="34" r="4" fill="#444" opacity="0.35"/>
+          <!-- ground tufts -->
+          <path d="M0,140 Q20,134 40,140 T80,140 T120,140 T160,140 T220,140" stroke="#2a0a0a" fill="none" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="pill">LIVE</span>
+        <h3>Pub Guide</h3>
+        <p>Van-friendly UK pubs near your anchor. Filters for parking, food, real ale, dog-friendly, garden. One tap for directions. Curated list, growing.</p>
+        <span class="cta">▸ find a pub</span>
+      </div>
+    </a>
+
+    <a class="tile" href="/nomad-roll-call.html">
+      <div class="art">
+        <!-- van silhouette under a streetlight -->
+        <svg viewBox="0 0 220 160" aria-hidden="true">
+          <rect x="0" y="125" width="220" height="35" fill="#0e0303"/>
+          <!-- streetlight -->
+          <rect x="180" y="40" width="3" height="90" fill="#2a2a2a"/>
+          <rect x="170" y="38" width="20" height="6" fill="#2a2a2a"/>
+          <ellipse cx="180" cy="50" rx="44" ry="32" fill="#ffb060" opacity="0.18"/>
+          <!-- van body -->
+          <rect x="40" y="80" width="100" height="40" rx="4" fill="#1a0606" stroke="#cc0000"/>
+          <rect x="48" y="86" width="22" height="18" fill="#0a0a0a" stroke="#2a2a2a"/>
+          <rect x="74" y="86" width="22" height="18" fill="#0a0a0a" stroke="#2a2a2a"/>
+          <rect x="100" y="86" width="22" height="18" fill="#ffb060" opacity="0.7"/>
+          <circle cx="60" cy="125" r="8" fill="#0a0a0a" stroke="#444"/>
+          <circle cx="124" cy="125" r="8" fill="#0a0a0a" stroke="#444"/>
+          <!-- pin -->
+          <circle cx="90" cy="60" r="6" fill="#ff2222"/>
+          <polygon points="90,66 86,72 94,72" fill="#ff2222"/>
+          <circle cx="90" cy="60" r="2" fill="#070707"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="pill soon">BETA</span>
+        <h3>Roll Call</h3>
+        <p>Drop a pin where you parked up tonight. Notes, weather, vibe, photo URL. Local-only for now — multi-user feed for other nomads coming with Pro.</p>
+        <span class="cta">▸ check in</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="about">
+    <h2>What this is</h2>
+    <p>Nomad is a tiny family of tools that respect <em>driving cognition</em>. Short. Voiced where it can be. One tap where it can't. The point isn't to replace Google Maps — it's to give you the answer that makes opening Maps a one-second job instead of a ten-minute spiral.</p>
+    <p>Everything works in a normal browser, no app install. Open it on your phone, save it to your home screen, you're done. The Trip Planner has an MCP server so any agent (Claude Desktop, OpenClaw, Claude Code) can drive it for you.</p>
+    <div class="foot-actions">
+      <a class="btn" href="/nomad-trip-planner-dashboard.html">Open Trip Planner</a>
+      <a class="btn btn-ghost" href="/nomad-trip-planner.html">About the agent</a>
+      <a class="btn btn-ghost" href="https://github.com/Kainer996/yaanbatho/tree/main/mcp-servers/nomad-trip-planner" target="_blank" rel="noopener">MCP server source</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>BUILT BY YAAN · AVA · ON THE ROAD · UK</footer>
+
+</body>
+</html>
