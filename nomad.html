@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#070707">
-<title>Nomad — the toolkit for life on the road</title>
-<meta name="description" content="Nomad is a small ecosystem of tools for van-life remote workers. Trip Planner, Pub Guide, Roll Call. Built by Yaan Batho and Ava.">
+<title>Nomad Max — tools for life on the road</title>
+<meta name="description" content="Nomad Max is a small ecosystem of tools for van-life remote workers. Trip Planner, Pub Guide, Roll Call. Built by Yaan Batho and Ava.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
 <style>
 :root{
-  --red:#cc0000; --red-hot:#ff2222; --black:#070707; --dark:#111;
-  --mid:#1c1c1c; --card:#161616; --border:#2a2a2a; --grey:#555;
-  --ltgrey:#999; --white:#f5f5f5;
+  --red:#cc0000; --red-hot:#ff2222; --black:#070707;
+  --maroon:#1f0a0a; --maroon-deep:#1a0606; --maroon-mid:#2a0a0a;
+  --card:#1f0a0a; --border:#3a1414; --grey:#555; --ltgrey:#b9a39a; --white:#f5f5f5;
+  --gold:#e6a05c; --gold-warm:#ff8c2a;
+  --sunset-1:#1d3a4a; --sunset-2:#d97a3c; --sunset-3:#b32424;
   --pixel:'VT323',monospace; --sign:'Black Ops One',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -27,14 +29,15 @@ a:hover{text-decoration:underline}
 .nav-links a{color:var(--ltgrey)}
 .nav-links a:hover{color:var(--red-hot)}
 
-/* Hero with inline SVG mountains */
-.hero{position:relative;padding:64px 22px 90px;border-bottom:1px dashed var(--border);overflow:hidden}
+/* Hero with inline SVG mountains — sunset gradient sky */
+.hero{position:relative;padding:64px 22px 90px;border-bottom:1px dashed var(--border);overflow:hidden;background:linear-gradient(180deg,#1d3a4a 0%,#3b2a35 28%,#a85a30 62%,#9a1f1f 88%,#3b0a0a 100%)}
 .hero-svg{position:absolute;left:0;right:0;bottom:0;height:260px;width:100%;display:block;z-index:0}
 .hero-inner{position:relative;z-index:1;max-width:1100px;margin:0 auto}
 .tag-pill{display:inline-block;font-family:var(--pixel);font-size:1.1rem;color:var(--red-hot);border:1px solid var(--red);padding:4px 10px;letter-spacing:2px;margin-bottom:18px}
 .hero h1{font-family:var(--sign);font-size:clamp(2.4rem,6vw,4.6rem);letter-spacing:1px;line-height:1.05;margin-bottom:16px}
-.hero h1 .red{color:var(--red-hot)}
-.hero .lede{color:var(--ltgrey);max-width:680px;font-size:1.05rem}
+.hero h1 .gold{color:var(--gold)}
+.hero h1{color:#fff;text-shadow:0 2px 18px rgba(0,0,0,0.45)}
+.hero .lede{color:#f1d8c5;max-width:680px;font-size:1.05rem;text-shadow:0 1px 10px rgba(0,0,0,0.4)}
 
 .shell{max-width:1100px;margin:0 auto;padding:46px 22px 60px}
 
@@ -45,7 +48,7 @@ h2.section-title{font-family:var(--sign);font-size:1.8rem;margin-bottom:20px;let
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;margin-bottom:50px}
 .tile{position:relative;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-height:340px;text-decoration:none;color:var(--white);transition:transform .15s ease, border-color .15s ease}
 .tile:hover{transform:translateY(-3px);border-color:var(--red);text-decoration:none}
-.tile .art{height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a 0%,#1a0606 100%);border-bottom:1px solid var(--border)}
+.tile .art{height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d3a4a 0%,#a85a30 60%,#9a1f1f 100%);border-bottom:1px solid var(--border)}
 .tile .art svg{width:100%;height:100%;display:block}
 .tile .body{padding:18px;flex:1;display:flex;flex-direction:column;gap:10px}
 .tile .pill{display:inline-block;font-family:var(--pixel);font-size:.95rem;color:var(--red-hot);border:1px solid var(--red);padding:2px 8px;letter-spacing:1px;align-self:flex-start}
@@ -71,7 +74,7 @@ footer{margin-top:40px;padding:18px 0;font-family:var(--pixel);color:var(--grey)
 <body>
 
 <nav class="top-nav">
-  <div class="nav-brand"><span class="dot"></span> YAAN BATHO · NOMAD</div>
+  <div class="nav-brand"><span class="dot"></span> YAAN BATHO · NOMAD MAX</div>
   <div class="nav-links">
     <a href="/">home</a>
     <a href="/agent-tools.html">agents</a>
@@ -80,29 +83,24 @@ footer{margin-top:40px;padding:18px 0;font-family:var(--pixel);color:var(--grey)
 </nav>
 
 <section class="hero">
-  <!-- Layered mountain silhouettes (3 ridges) -->
+  <!-- Layered mountain silhouettes against the sunset gradient body -->
   <svg class="hero-svg" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true">
-    <defs>
-      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#1a0606"/>
-        <stop offset="100%" stop-color="#070707"/>
-      </linearGradient>
-    </defs>
-    <rect width="1440" height="260" fill="url(#sky)"/>
+    <!-- sun disc behind ridges -->
+    <circle cx="980" cy="180" r="62" fill="#ffb060" opacity="0.55"/>
+    <circle cx="980" cy="180" r="40" fill="#ffd49a" opacity="0.75"/>
     <!-- back ridge -->
-    <path d="M0,180 L120,140 L260,170 L420,110 L580,150 L740,90 L880,140 L1020,100 L1180,150 L1320,120 L1440,160 L1440,260 L0,260 Z" fill="#2a0a0a" opacity="0.55"/>
+    <path d="M0,180 L120,140 L260,170 L420,110 L580,150 L740,90 L880,140 L1020,100 L1180,150 L1320,120 L1440,160 L1440,260 L0,260 Z" fill="#5a1a18" opacity="0.7"/>
     <!-- mid ridge -->
-    <path d="M0,210 L160,170 L320,200 L480,150 L640,190 L820,140 L980,180 L1160,150 L1300,200 L1440,180 L1440,260 L0,260 Z" fill="#1a0606" opacity="0.85"/>
+    <path d="M0,210 L160,170 L320,200 L480,150 L640,190 L820,140 L980,180 L1160,150 L1300,200 L1440,180 L1440,260 L0,260 Z" fill="#2e0808" opacity="0.92"/>
     <!-- front ridge -->
     <path d="M0,240 L180,210 L360,235 L560,200 L760,225 L960,205 L1180,230 L1440,215 L1440,260 L0,260 Z" fill="#0e0303"/>
-    <!-- a couple of stars / small lights -->
-    <circle cx="240" cy="60" r="1.5" fill="#ff2222" opacity="0.7"/>
-    <circle cx="780" cy="40" r="1.2" fill="#ff2222" opacity="0.55"/>
-    <circle cx="1180" cy="70" r="1.4" fill="#ff2222" opacity="0.7"/>
+    <!-- birds / small specks -->
+    <path d="M260,70 q6,-4 12,0 q6,-4 12,0" stroke="#3b0a0a" stroke-width="1.5" fill="none" opacity="0.7"/>
+    <path d="M340,55 q5,-3 10,0 q5,-3 10,0" stroke="#3b0a0a" stroke-width="1.3" fill="none" opacity="0.6"/>
   </svg>
   <div class="hero-inner">
-    <span class="tag-pill">NOMAD · v0.2</span>
-    <h1>Tools for life on the <span class="red">road.</span></h1>
+    <span class="tag-pill">NOMAD MAX · v0.3</span>
+    <h1>Tools for life on the <span class="gold">road.</span></h1>
     <p class="lede">A small ecosystem for van-life remote workers. Plan a trip without fiddling with Maps. Find a pub with parking. Drop a pin where you parked up. All built to be used at a glance, often parked, sometimes voiced.</p>
   </div>
 </section>
@@ -114,17 +112,17 @@ footer{margin-top:40px;padding:18px 0;font-family:var(--pixel);color:var(--grey)
   <div class="tiles">
     <a class="tile" href="/nomad-trip-planner-dashboard.html">
       <div class="art">
-        <!-- compass illustration -->
+        <!-- compass illustration (gold + ember) -->
         <svg viewBox="0 0 220 160" aria-hidden="true">
-          <circle cx="110" cy="80" r="56" fill="#161616" stroke="#cc0000" stroke-width="2"/>
-          <circle cx="110" cy="80" r="48" fill="none" stroke="#2a2a2a" stroke-width="1"/>
-          <polygon points="110,32 118,80 110,128 102,80" fill="#ff2222"/>
-          <polygon points="110,80 118,80 110,128 102,80" fill="#444"/>
+          <circle cx="110" cy="80" r="56" fill="#1a0606" stroke="#e6a05c" stroke-width="2"/>
+          <circle cx="110" cy="80" r="48" fill="none" stroke="#3a1414" stroke-width="1"/>
+          <polygon points="110,32 118,80 110,128 102,80" fill="#ff8c2a"/>
+          <polygon points="110,80 118,80 110,128 102,80" fill="#5a2a14"/>
           <circle cx="110" cy="80" r="4" fill="#f5f5f5"/>
-          <text x="110" y="22" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#ff2222">N</text>
-          <text x="110" y="148" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#777">S</text>
-          <text x="40" y="84" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#777">W</text>
-          <text x="180" y="84" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#777">E</text>
+          <text x="110" y="22" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#ff8c2a">N</text>
+          <text x="110" y="148" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#b9a39a">S</text>
+          <text x="40" y="84" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#b9a39a">W</text>
+          <text x="180" y="84" text-anchor="middle" font-family="VT323, monospace" font-size="14" fill="#b9a39a">E</text>
         </svg>
       </div>
       <div class="body">
