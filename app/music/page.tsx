@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { SectionHeader } from "@/components/SectionHeader";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { Tag } from "@/components/Tag";
 import Image from "next/image";
+import tracksData from "@/content/music/tracks.json";
 
 interface Track {
   title: string;
@@ -15,30 +16,17 @@ interface Track {
   tags: string[];
 }
 
+const tracks: Track[] = tracksData as Track[];
+
 export default function MusicPage() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [filteredTracks, setFilteredTracks] = useState<Track[]>([]);
   const [selectedAlias, setSelectedAlias] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/content/music/tracks.json")
-      .then((res) => res.json())
-      .then((data) => {
-        setTracks(data);
-        setFilteredTracks(data);
-      })
-      .catch(() => setTracks([]));
-  }, []);
+  const filteredTracks = useMemo(
+    () => (selectedAlias ? tracks.filter((t) => t.alias === selectedAlias) : tracks),
+    [selectedAlias]
+  );
 
-  useEffect(() => {
-    if (selectedAlias) {
-      setFilteredTracks(tracks.filter((t) => t.alias === selectedAlias));
-    } else {
-      setFilteredTracks(tracks);
-    }
-  }, [selectedAlias, tracks]);
-
-  const aliases = Array.from(new Set(tracks.map((t) => t.alias)));
+  const aliases = useMemo(() => Array.from(new Set(tracks.map((t) => t.alias))), []);
 
   return (
     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">

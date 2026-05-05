@@ -44,6 +44,11 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
                 In Progress
               </span>
             )}
+            {project.status === "in-development" && (
+              <span className="text-xs px-2 py-1 border border-border/40 rounded-full">
+                In Development
+              </span>
+            )}
           </div>
 
           <p className="text-sm text-fg/60 mb-4 line-clamp-2">{project.excerpt}</p>

@@ -17,7 +17,7 @@ export interface Project {
   role?: string;
   year?: number;
   accent?: boolean;
-  status?: "released" | "in-progress";
+  status?: "released" | "in-progress" | "in-development";
 }
 
 export interface ProjectWithContent extends Project {

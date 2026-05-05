@@ -93,9 +93,9 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="border border-border/40 rounded-lg p-8 md:p-12 text-center glow"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Let's Build Together</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Let&apos;s Build Together</h2>
           <p className="text-lg text-fg/60 mb-8 max-w-2xl mx-auto">
-            Interested in collaboration or have a project in mind? Let's connect and create
+            Interested in collaboration or have a project in mind? Let&apos;s connect and create
             something extraordinary.
           </p>
           <Button asChild size="lg">

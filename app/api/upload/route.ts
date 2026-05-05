@@ -3,10 +3,18 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN || "yaan2026";
 const MAX_SIZE = 200 * 1024 * 1024; // 200MB
+const ALLOWED_MIME_PREFIXES = ["image/", "video/", "audio/"];
 
 export async function POST(req: NextRequest) {
+  const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN;
+  if (!UPLOAD_TOKEN) {
+    return NextResponse.json(
+      { error: "Uploads disabled: UPLOAD_TOKEN not configured on the server" },
+      { status: 503 }
+    );
+  }
+
   try {
     const formData = await req.formData();
     const token = formData.get("token") as string;
@@ -26,6 +34,11 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       if (file.size > MAX_SIZE) {
         results.push({ name: file.name, error: "Too large (200MB max)" });
+        continue;
+      }
+      const mime = file.type || "";
+      if (!ALLOWED_MIME_PREFIXES.some((p) => mime.startsWith(p))) {
+        results.push({ name: file.name, error: `Disallowed type: ${mime || "unknown"}` });
         continue;
       }
 

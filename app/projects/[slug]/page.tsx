@@ -68,6 +68,11 @@ export default async function ProjectPage({ params }: { params: { slug: string }
               In Progress
             </span>
           )}
+          {project.status === "in-development" && (
+            <span className="text-xs px-2 py-1 border border-border/40 rounded-full">
+              In Development
+            </span>
+          )}
           <time className="text-sm text-fg/60">{formatDate(project.date)}</time>
         </div>
 

@@ -19,7 +19,7 @@ export default function NowPage() {
       <div className="prose prose-invert prose-lg max-w-none">
         <h2>Current Focus</h2>
         <p>
-          Right now, I'm deep in the intersection of AI and creative media, exploring how
+          Right now, I&apos;m deep in the intersection of AI and creative media, exploring how
           emerging technologies can reshape storytelling and human connection.
         </p>
 
@@ -30,7 +30,7 @@ export default function NowPage() {
             companion with games, learning modules, and smart reminders.
           </li>
           <li>
-            <strong>Orion's Barrel</strong> - Continuing the social sitcom series set in a
+            <strong>Orion&apos;s Barrel</strong> - Continuing the social sitcom series set in a
             space bar, experimenting with AI video generation and character development.
           </li>
           <li>
@@ -55,14 +55,14 @@ export default function NowPage() {
 
         <h3>Reading</h3>
         <ul>
-          <li>"The Singularity is Near" by Ray Kurzweil</li>
-          <li>"Life 3.0" by Max Tegmark</li>
+          <li>&ldquo;The Singularity is Near&rdquo; by Ray Kurzweil</li>
+          <li>&ldquo;Life 3.0&rdquo; by Max Tegmark</li>
           <li>Various AI research papers and futurist blogs</li>
         </ul>
 
         <div className="mt-12 p-6 border border-border/40 rounded-lg bg-muted/50">
           <p className="text-sm text-fg/60 mb-0">
-            This is a "now page" inspired by Derek Sivers. It's a snapshot of what I'm
+            This is a &ldquo;now page&rdquo; inspired by Derek Sivers. It&apos;s a snapshot of what I&apos;m
             currently focused on. For past work, check out my{" "}
             <a href="/projects">projects</a> or <a href="/bio">bio</a>.
           </p>
