@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -168,7 +169,7 @@
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
                             <span>UPLOAD PHOTO</span>
                         </button>
-                        <input type="file" id="image-file-input" accept="image/*" capture="environment" class="hidden-input">
+                        <input type="file" id="image-file-input" accept="image/*" class="hidden-input">
                         <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden-input">
                     </div>
                     <div id="image-result" class="id-result hidden">
@@ -191,6 +192,7 @@
                         </button>
                         <span id="nearby-status" class="nearby-status"></span>
                     </div>
+                    <div id="nearby-map" class="nearby-map hidden"></div>
                     <div id="nearby-results" class="nearby-results"></div>
                 </div>
             </section>
@@ -379,6 +381,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/spectrogram.js"></script>
     <script src="js/acousticClassifier.js"></script>
     <script src="js/birdId.js"></script>
