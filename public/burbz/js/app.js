@@ -223,7 +223,13 @@
 
         if (tabId === 'flock') renderFlockView();
         if (tabId === 'battle') renderBattleSelect();
-        if (tabId === 'nearby') renderNearby();
+        if (tabId === 'nearby') {
+            renderNearby();
+            // Leaflet sizes itself from a hidden container as 0x0 — recalc once visible
+            setTimeout(function () {
+                if (_nearbyMap) _nearbyMap.invalidateSize();
+            }, 60);
+        }
     }
 
     // ---- FLOCK RENDERING ----
@@ -713,7 +719,38 @@
         } catch (e) { return ''; }
     }
 
-    async function fetchNearbyBirds() {
+    async function fetchNearbyAt(lat, lng, silent) {
+        const status = document.getElementById('nearby-status');
+        const key = getEbirdKey();
+        if (!key) {
+            if (!silent && status) status.textContent = 'Add an eBird API key in Settings first.';
+            return;
+        }
+        if (!silent && status) status.textContent = 'Fetching nearby observations…';
+        try {
+            const url = 'https://api.ebird.org/v2/data/obs/geo/recent?lat=' +
+                lat.toFixed(4) + '&lng=' + lng.toFixed(4) + '&dist=25&back=14&maxResults=60';
+            const resp = await fetch(url, { headers: { 'X-eBirdApiToken': key } });
+            if (!resp.ok) throw new Error('eBird ' + resp.status);
+            const obs = await resp.json();
+            STATE.nearby = {
+                fetchedAt: Date.now(),
+                lat: lat,
+                lng: lng,
+                observations: Array.isArray(obs) ? obs : []
+            };
+            saveNearby();
+            biasIdProviderToNearby();
+            renderNearby();
+            if (status) status.textContent = 'Found ' + STATE.nearby.observations.length + ' species nearby.';
+            evaluateAchievements();
+        } catch (err) {
+            console.warn('eBird fetch failed:', err);
+            if (!silent && status) status.textContent = 'Could not fetch from eBird: ' + err.message;
+        }
+    }
+
+    function fetchNearbyBirds() {
         const status = document.getElementById('nearby-status');
         const key = getEbirdKey();
         if (!key) {
@@ -725,33 +762,23 @@
             return;
         }
         status.textContent = 'Locating…';
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            const { latitude: lat, longitude: lng } = pos.coords;
-            status.textContent = 'Fetching nearby observations…';
-            try {
-                const url = 'https://api.ebird.org/v2/data/obs/geo/recent?lat=' +
-                    lat.toFixed(4) + '&lng=' + lng.toFixed(4) + '&dist=25&back=14&maxResults=60';
-                const resp = await fetch(url, { headers: { 'X-eBirdApiToken': key } });
-                if (!resp.ok) throw new Error('eBird ' + resp.status);
-                const obs = await resp.json();
-                STATE.nearby = {
-                    fetchedAt: Date.now(),
-                    lat: lat,
-                    lng: lng,
-                    observations: Array.isArray(obs) ? obs : []
-                };
-                saveNearby();
-                biasIdProviderToNearby();
-                renderNearby();
-                status.textContent = 'Found ' + STATE.nearby.observations.length + ' species nearby.';
-                evaluateAchievements();
-            } catch (err) {
-                console.warn('eBird fetch failed:', err);
-                status.textContent = 'Could not fetch from eBird: ' + err.message;
-            }
+        navigator.geolocation.getCurrentPosition((pos) => {
+            fetchNearbyAt(pos.coords.latitude, pos.coords.longitude, false);
         }, (err) => {
             status.textContent = 'Location denied (' + err.message + ').';
         }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+    }
+
+    // Auto-refresh: while the Near Me tab is open, refetch every 5 minutes
+    // using the last known coordinates (no geolocation re-prompt).
+    const NEARBY_REFRESH_MS = 5 * 60 * 1000;
+    function startNearbyAutoRefresh() {
+        setInterval(function () {
+            if (STATE.activeTab !== 'nearby') return;
+            if (!STATE.nearby || !STATE.nearby.lat) return;
+            if (Date.now() - (STATE.nearby.fetchedAt || 0) < NEARBY_REFRESH_MS) return;
+            fetchNearbyAt(STATE.nearby.lat, STATE.nearby.lng, true);
+        }, 60 * 1000);
     }
 
     function matchLocalSpeciesFromNearby() {
@@ -778,21 +805,93 @@
         }
     }
 
-    function renderNearby() {
-        const results = document.getElementById('nearby-results');
-        if (!results) return;
-        if (!STATE.nearby || !STATE.nearby.observations || STATE.nearby.observations.length === 0) {
-            results.innerHTML = '';
+    // ---- GAME MAP (Leaflet + eBird live observations) ----
+    let _nearbyMap = null;
+    let _nearbyMarkers = null;
+
+    function renderNearbyMap() {
+        const mapEl = document.getElementById('nearby-map');
+        if (!mapEl || typeof L === 'undefined') return;
+        if (!STATE.nearby || !STATE.nearby.lat || !STATE.nearby.observations) {
+            mapEl.classList.add('hidden');
             return;
         }
+        mapEl.classList.remove('hidden');
+
+        if (!_nearbyMap) {
+            _nearbyMap = L.map('nearby-map', { zoomControl: true, attributionControl: true })
+                .setView([STATE.nearby.lat, STATE.nearby.lng], 11);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                maxZoom: 18
+            }).addTo(_nearbyMap);
+            _nearbyMarkers = L.layerGroup().addTo(_nearbyMap);
+        } else {
+            _nearbyMap.setView([STATE.nearby.lat, STATE.nearby.lng], _nearbyMap.getZoom() || 11);
+        }
+        _nearbyMarkers.clearLayers();
+
+        // Player position
+        L.circleMarker([STATE.nearby.lat, STATE.nearby.lng], {
+            radius: 8, color: '#4cc9f0', fillColor: '#4cc9f0', fillOpacity: 0.9, weight: 2
+        }).bindPopup('<b>You are here</b>').addTo(_nearbyMarkers);
+
         const localMatches = new Set(matchLocalSpeciesFromNearby());
         const codeToLocal = {};
         Object.values(STATE.speciesData).forEach(sp => {
             if (sp.ebird_code) codeToLocal[sp.ebird_code] = sp;
         });
-        const when = new Date(STATE.nearby.fetchedAt).toLocaleString();
-        const header = '<div class="nearby-meta">Updated ' + when +
-            ' &middot; ' + STATE.nearby.observations.length + ' species within 25 km</div>';
+
+        STATE.nearby.observations.forEach(o => {
+            if (typeof o.lat !== 'number' || typeof o.lng !== 'number') return;
+            const local = codeToLocal[o.speciesCode];
+            const playable = local && localMatches.has(local.species_id);
+            const marker = L.circleMarker([o.lat, o.lng], {
+                radius: playable ? 7 : 5,
+                color: playable ? '#f4d03f' : '#8888aa',
+                fillColor: playable ? '#f4d03f' : '#555577',
+                fillOpacity: playable ? 0.85 : 0.55,
+                weight: playable ? 2 : 1
+            });
+            const seenAt = o.obsDt ? o.obsDt.replace('T', ' ') : '';
+            const fighterLink = playable
+                ? '<br><a href="#" onclick="window.BURBZ.showSpeciesDetail(\'' + local.species_id + '\'); return false;">View fighter &rsaquo;</a>'
+                : '';
+            marker.bindPopup(
+                '<b>' + (o.comName || 'Unknown') + '</b>' +
+                (playable ? ' <span class="map-ingame">IN GAME</span>' : '') +
+                '<br><i>' + (o.sciName || '') + '</i>' +
+                '<br>' + seenAt + (o.howMany ? ' &middot; ' + o.howMany + ' seen' : '') +
+                fighterLink
+            );
+            marker.addTo(_nearbyMarkers);
+        });
+    }
+
+    function timeAgo(ts) {
+        const mins = Math.floor((Date.now() - ts) / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + ' min ago';
+        const hrs = Math.floor(mins / 60);
+        return hrs + ' h ' + (mins % 60) + ' min ago';
+    }
+
+    function renderNearby() {
+        const results = document.getElementById('nearby-results');
+        if (!results) return;
+        if (!STATE.nearby || !STATE.nearby.observations || STATE.nearby.observations.length === 0) {
+            results.innerHTML = '';
+            renderNearbyMap();
+            return;
+        }
+        renderNearbyMap();
+        const localMatches = new Set(matchLocalSpeciesFromNearby());
+        const codeToLocal = {};
+        Object.values(STATE.speciesData).forEach(sp => {
+            if (sp.ebird_code) codeToLocal[sp.ebird_code] = sp;
+        });
+        const header = '<div class="nearby-meta">Updated ' + timeAgo(STATE.nearby.fetchedAt) +
+            ' &middot; ' + STATE.nearby.observations.length + ' species within 25 km &middot; auto-refreshes every 5 min</div>';
         const items = STATE.nearby.observations.slice(0, 40).map(o => {
             const local = codeToLocal[o.speciesCode];
             const playable = local && localMatches.has(local.species_id);
@@ -829,7 +928,12 @@
             if (!s) return;
             const cfg = JSON.parse(s);
             if (window.BurbzBirdID && cfg) {
-                window.BurbzBirdID.config.soundProvider = cfg.soundProvider || 'mock';
+                // Migration: 'mock' was the old default, not a user choice.
+                // Settings saved before the real classifier shipped would
+                // silently downgrade sound ID back to random — upgrade them.
+                let sound = cfg.soundProvider || 'acoustic-local';
+                if (sound === 'mock' && !cfg.soundProviderExplicit) sound = 'acoustic-local';
+                window.BurbzBirdID.config.soundProvider = sound;
                 window.BurbzBirdID.config.imageProvider = cfg.imageProvider || 'mock';
                 window.BurbzBirdID.config.apiEndpoint = cfg.apiEndpoint || '';
                 window.BurbzBirdID.config.apiKey = cfg.apiKey || '';
@@ -840,6 +944,7 @@
     function saveSettings() {
         const cfg = {
             soundProvider: document.getElementById('cfg-sound-provider').value,
+            soundProviderExplicit: true,
             imageProvider: document.getElementById('cfg-image-provider').value,
             apiEndpoint: document.getElementById('cfg-api-endpoint').value.trim(),
             apiKey: document.getElementById('cfg-api-key').value.trim(),
@@ -1272,6 +1377,7 @@
         initImageID();
         initBattle();
         initNearby();
+        startNearbyAutoRefresh();
         renderFlockView();
         renderDaily();
 
