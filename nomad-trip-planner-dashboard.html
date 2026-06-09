@@ -4,19 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#070707">
-<title>Nomad Trip Planner — Live Dashboard</title>
-<meta name="description" content="Live demo dashboard for the Nomad Trip Planner agent. Pick your anchor, drive-time budget, and vibe — get three van-friendly destinations with real weather, daylight, parkup notes, and Google Maps deeplinks.">
+<title>Nomad Max — Trip Planner</title>
+<meta name="description" content="Live demo dashboard for Nomad Max. Pick your anchor, drive-time budget, and vibe — get three van-friendly destinations with real weather, daylight, parkup notes, and Google Maps deeplinks.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
 <style>
 :root{
-  --red:#cc0000; --red-hot:#ff2222; --black:#070707; --dark:#111;
-  --mid:#1c1c1c; --card:#161616; --border:#2a2a2a; --grey:#555;
-  --ltgrey:#999; --white:#f5f5f5;
+  --red:#cc0000; --red-hot:#ff2222; --black:#070707;
+  --maroon:#1f0a0a; --maroon-deep:#1a0606; --maroon-mid:#2a0a0a;
+  --mid:#2a0a0a; --card:#1f0a0a; --border:#3a1414;
+  --grey:#555; --ltgrey:#b9a39a; --white:#f5f5f5;
+  --gold:#e6a05c; --gold-warm:#ff8c2a;
+  --sunset-1:#1d3a4a; --sunset-2:#d97a3c; --sunset-3:#b32424;
   --pixel:'VT323',monospace; --sign:'Black Ops One',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#1d3a4a 0%,#2a1518 18%,#070707 38%) no-repeat,#070707;color:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
 a{color:var(--red-hot);text-decoration:none}
 a:hover{text-decoration:underline}
 
@@ -93,28 +96,28 @@ footer{margin-top:50px;padding:18px 0;font-family:var(--pixel);color:var(--grey)
 <body>
 
 <nav class="top-nav">
-  <div class="nav-brand"><span class="dot"></span> YAAN BATHO · NOMAD TRIP PLANNER</div>
+  <div class="nav-brand"><span class="dot"></span> YAAN BATHO · NOMAD MAX · TRIP PLANNER</div>
   <div class="nav-links">
-    <a href="/nomad-trip-planner.html">about</a>
-    <a href="/agent-tools.html">tools</a>
+    <a href="/nomad.html">nomad max</a>
+    <a href="/nomad-pub-guide.html">pubs</a>
     <a href="/">home</a>
   </div>
 </nav>
 
 <div class="shell">
-  <span class="tag-pill">LIVE DEMO · v0.1</span>
+  <span class="tag-pill">NOMAD MAX · TRIP PLANNER</span>
   <h1>Plan my <span class="red">Friday</span>.</h1>
   <p class="lede">Set your anchor, your drive-time budget, and the vibe. The planner pulls live weather from Open-Meteo, computes daylight locally, and ranks three van-friendly spots. One tap opens directions in Google Maps. One tap reads the brief aloud.</p>
 
   <div class="controls">
     <div class="row">
       <div class="field">
-        <label for="anchor">ANCHOR (where you're starting from)</label>
-        <input id="anchor" type="text" placeholder="lat,lng or place name (defaults to Bristol)" value="51.4545,-2.5879" />
+        <label for="anchor">WHERE ARE YOU? (postcode, place name, or lat,lng)</label>
+        <input id="anchor" type="text" placeholder="e.g. BS1 4XE, Bristol, or 51.4545,-2.5879" value="" />
       </div>
       <div class="field-narrow">
         <label for="useLoc">&nbsp;</label>
-        <button id="useLoc" class="btn btn-ghost" type="button" style="width:100%">Use my location</button>
+        <button id="useLoc" class="btn btn-ghost" type="button" style="width:100%">📍 Use my GPS</button>
       </div>
     </div>
     <div class="row">
@@ -269,10 +272,40 @@ function weatherWord(code){
   return "mixed";
 }
 
-function parseAnchor(s){
-  const m = s.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
-  if (!m) return null;
-  return { lat:parseFloat(m[1]), lng:parseFloat(m[2]) };
+// Accepts "lat,lng", a UK postcode, or a place name.
+// Returns { lat, lng, label } or throws with a friendly message.
+async function resolveAnchor(s){
+  const raw = (s || "").trim();
+  if (!raw) throw new Error("Type a postcode or place, or hit GPS.");
+
+  // 1. lat,lng
+  const ll = raw.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (ll){
+    return { lat:parseFloat(ll[1]), lng:parseFloat(ll[2]), label:`${ll[1]}, ${ll[2]}` };
+  }
+
+  // 2. UK postcode (very forgiving regex, postcodes.io validates)
+  const pc = raw.match(/^[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}$/);
+  if (pc){
+    const url = `https://api.postcodes.io/postcodes/${encodeURIComponent(raw.replace(/\s+/g,""))}`;
+    const r = await fetch(url);
+    if (r.ok){
+      const j = await r.json();
+      if (j.result){
+        return { lat:j.result.latitude, lng:j.result.longitude, label:`${j.result.postcode} · ${j.result.admin_district || j.result.region || "UK"}` };
+      }
+    }
+    throw new Error(`Postcode "${raw}" not found.`);
+  }
+
+  // 3. Place name → Nominatim (OSM)
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(raw)}`;
+  const r = await fetch(url, { headers: { "Accept-Language": "en" } });
+  if (!r.ok) throw new Error("Place lookup failed — check your connection.");
+  const arr = await r.json();
+  if (!arr.length) throw new Error(`Couldn't find "${raw}". Try a postcode or a more specific place.`);
+  const top = arr[0];
+  return { lat:parseFloat(top.lat), lng:parseFloat(top.lon), label:top.display_name.split(",").slice(0,3).join(",") };
 }
 
 function mapsDirLink(from, to){
@@ -316,29 +349,53 @@ $("#drive").addEventListener("input", e => {
 
 $("#useLoc").addEventListener("click", () => {
   if (!navigator.geolocation){ setStatus("Geolocation not supported on this browser.", true); return; }
-  setStatus("Asking for location…");
+  setStatus("Asking for your location… (allow the prompt)");
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      $("#anchor").value = pos.coords.latitude.toFixed(4) + "," + pos.coords.longitude.toFixed(4);
-      setStatus("Got your location.");
+    async pos => {
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      $("#anchor").value = lat.toFixed(5) + "," + lng.toFixed(5);
+      setStatus("Got your GPS. Resolving area name…");
+      // Reverse geocode for a human-readable label (best effort, non-blocking)
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=12&lat=${lat}&lon=${lng}`, { headers:{ "Accept-Language":"en" } });
+        if (r.ok){
+          const j = await r.json();
+          if (j && j.display_name){
+            const short = j.display_name.split(",").slice(0,3).join(",");
+            $("#anchor").value = short;
+            setStatus(`Got your GPS · <b style="color:var(--red-hot)">${short}</b>`);
+            return;
+          }
+        }
+      } catch {}
+      setStatus(`Got your GPS · ${lat.toFixed(3)}, ${lng.toFixed(3)}`);
     },
-    err => setStatus("Location denied or unavailable. Type lat,lng instead.", true),
-    { timeout: 8000 }
+    err => setStatus("Location denied or unavailable. Type a postcode or place instead.", true),
+    { timeout: 10000, enableHighAccuracy: true }
   );
 });
 
 $("#date").value = todayISO();
 
 $("#plan").addEventListener("click", async () => {
-  const anchor = parseAnchor($("#anchor").value);
-  if (!anchor){ setStatus("Anchor must be lat,lng (e.g. 51.4545,-2.5879).", true); return; }
-  const maxDrive = parseInt($("#drive").value, 10);
-  const dateStr = $("#date").value || todayISO();
-  const vibes = getActiveVibes();
-
   $("#plan").disabled = true;
   $("#pick").classList.remove("show");
   $("#cards").innerHTML = "";
+
+  let anchor;
+  try {
+    setStatus("Resolving your location…");
+    anchor = await resolveAnchor($("#anchor").value);
+    setStatus(`Anchor: <b style="color:var(--red-hot)">${anchor.label}</b>`);
+  } catch (e){
+    setStatus(e.message || "Couldn't resolve that location.", true);
+    $("#plan").disabled = false;
+    return;
+  }
+
+  const maxDrive = parseInt($("#drive").value, 10);
+  const dateStr = $("#date").value || todayISO();
+  const vibes = getActiveVibes();
 
   // Filter spots by drive budget + vibe match
   let candidates = SPOTS.map(s => {

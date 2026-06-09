@@ -5,8 +5,8 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nomad Trip Planner — Your van's co-pilot</title>
-    <meta name="description" content="Nomad Trip Planner is an MCP server that plans a short, van-friendly day trip from your work anchor — destination, weather window, daylight, parkup, Maps deeplink — so you never fiddle with Google Maps while driving. Built for van-life remote workers by Yaan Batho and Ava.">
+    <title>Nomad Max — Your van's co-pilot</title>
+    <meta name="description" content="Nomad Max is an MCP server that plans a short, van-friendly day trip from your work anchor — destination, weather window, daylight, parkup, Maps deeplink — so you never fiddle with Google Maps while driving. Built for van-life remote workers by Yaan Batho and Ava.">
     <meta name="keywords" content="van life, trip planner, MCP server, nomad, day trip, van parking, parkup, weather window, Open-Meteo, Claude Desktop, OpenClaw">
     <link rel="alternate" type="application/json" href="/agent-catalog.json">
     <link rel="ai-tools" href="/llms.txt">
@@ -14,23 +14,28 @@
 
     <style>
     :root {
-        --red:      #cc0000;
-        --red-hot:  #ff2222;
-        --black:    #070707;
-        --dark:     #111;
-        --mid:      #1c1c1c;
-        --card:     #161616;
-        --border:   #2a2a2a;
-        --grey:     #555;
-        --ltgrey:   #999;
-        --white:    #f5f5f5;
-        --pixel:    'VT323', monospace;
-        --sign:     'Black Ops One', sans-serif;
+        --red:        #cc0000;
+        --red-hot:    #ff2222;
+        --black:      #070707;
+        --dark:       #111;
+        --maroon:     #1f0a0a;
+        --maroon-deep:#1a0606;
+        --mid:        #2a0a0a;
+        --card:       #1f0a0a;
+        --border:     #3a1414;
+        --grey:       #555;
+        --ltgrey:     #b9a39a;
+        --white:      #f5f5f5;
+        --gold:       #e6a05c;
+        --gold-warm:  #ff8c2a;
+        --pixel:      'VT323', monospace;
+        --sign:       'Black Ops One', sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
         font-family: 'Inter', sans-serif;
-        background: var(--black);
+        background: linear-gradient(180deg, #1d3a4a 0%, #2a1518 18%, #070707 38%) no-repeat, #070707;
+        min-height: 100vh;
         color: var(--white);
         overflow-x: hidden;
         line-height: 1.55;
@@ -278,7 +283,7 @@
 <section class="section">
     <h2><span class="tick">▸</span>The problem</h2>
     <p>You finish a call at 14:20. You've got two hours before the light goes. You want to park up somewhere with a view, maybe a short walk, ideally no rain, and somewhere the van actually fits. So you open Google Maps, zoom around, pinch a coastline, try to remember which car park had the height barrier, check the weather in a second tab, work out sunset in your head. All while half-driving, half-typing at a red light. It's a rubbish way to decide — and it's how most of us actually do it.</p>
-    <p>Nomad Trip Planner takes the question — <em>"where should I go for a couple of hours from here?"</em> — and gives a direct answer with a parkup recommendation, the weather window, sunset time, and a Maps deeplink you can tap once. No scrolling.</p>
+    <p>Nomad Max takes the question — <em>"where should I go for a couple of hours from here?"</em> — and gives a direct answer with a parkup recommendation, the weather window, sunset time, and a Maps deeplink you can tap once. No scrolling.</p>
 </section>
 
 <section class="section">
@@ -345,7 +350,7 @@
 
 <section class="section">
     <h2><span class="tick">▸</span>How it wires up</h2>
-    <p>Nomad Trip Planner speaks MCP over stdio. Weather uses <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> — free, no key — and parkups come from a local fixture today, with iOverlander / Park4Night / Google Places provider stubs ready to wire up. Register it with your MCP client:</p>
+    <p>Nomad Max speaks MCP over stdio. Weather uses <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> — free, no key — and parkups come from a local fixture today, with iOverlander / Park4Night / Google Places provider stubs ready to wire up. Register it with your MCP client:</p>
 <pre class="code"><span class="k">{</span>
   <span class="s">"mcpServers"</span><span class="k">:</span> <span class="k">{</span>
     <span class="s">"nomad-trip-planner"</span><span class="k">:</span> <span class="k">{</span>
