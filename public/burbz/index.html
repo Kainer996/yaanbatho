@@ -1026,6 +1026,50 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 }
 @keyframes toastIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(-10px)} }
+/* ========== ACADEMY ========== */
+.academy-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 12px; line-height: 1.5; }
+.academy-campus { margin: 0 10px 14px; border: 1px solid var(--bg4); border-radius: 14px; overflow: hidden; background: #0a0805; }
+.academy-campus svg { display: block; width: 100%; height: auto; }
+.academy-zone { cursor: pointer; }
+.academy-zone:hover, .academy-zone:focus { filter: drop-shadow(0 0 10px rgba(214,168,79,0.55)); }
+.academy-zone.active { filter: drop-shadow(0 0 14px rgba(214,168,79,0.85)); }
+.academy-zone.active .zone-plaque rect { fill: #d6a84f; }
+.academy-zone.active .zone-plaque text { fill: #11100d; }
+.academy-plaque-text { font-size: 14px; font-weight: 700; fill: var(--text2); letter-spacing: 0.06em; }
+.academy-banner-text { font-size: 15px; font-weight: 800; fill: #11100d; letter-spacing: 0.1em; }
+.academy-count-text { font-size: 13px; font-weight: 800; fill: #11100d; }
+.academy-bird-glyph { font-size: 20px; cursor: pointer; }
+.academy-bird-glyph.wander { animation: academyHop 2.6s ease-in-out infinite; }
+@keyframes academyHop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+#academyRoomPanel { margin: 0 10px 90px; }
+.academy-room-head { display: flex; align-items: baseline; gap: 8px; margin: 14px 4px 4px; }
+.academy-room-title { font-size: 16px; font-weight: 800; color: var(--accent); letter-spacing: 0.06em; }
+.academy-room-perk { font-size: 11px; color: var(--text3); }
+.academy-room-desc { font-size: 12px; color: var(--text2); margin: 0 4px 10px; line-height: 1.5; }
+.academy-empty { padding: 18px 14px; border: 1px dashed var(--bg4); border-radius: 12px; color: var(--text3); font-size: 12.5px; text-align: center; }
+.academy-bird-row { display: flex; gap: 10px; background: var(--bg3); border: 1px solid var(--bg4); border-radius: 12px; padding: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+.academy-bird-art { width: 54px; height: 54px; border-radius: 10px; object-fit: cover; background: var(--bg4); flex-shrink: 0; }
+.academy-bird-art.emoji { display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.academy-bird-main { flex: 1; min-width: 130px; }
+.academy-bird-name { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.academy-bird-meta { font-size: 11px; color: var(--text3); margin-bottom: 5px; }
+.academy-meter { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.academy-meter-label { font-size: 9.5px; color: var(--text3); width: 44px; letter-spacing: 0.05em; }
+.academy-meter-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--bg4); overflow: hidden; }
+.academy-meter-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.3s; }
+.academy-meter-fill.hp { background: var(--hp-green); }
+.academy-meter-fill.hunger { background: var(--hp-yellow); }
+.academy-meter-fill.happy { background: #b48ad6; }
+.academy-actions { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.academy-btn { background: var(--bg4); border: 1px solid var(--accent3); color: var(--text); font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 8px; letter-spacing: 0.04em; }
+.academy-btn:active { transform: scale(0.96); }
+.academy-btn.primary { background: var(--accent); color: #11100d; border-color: var(--accent); }
+.academy-btn:disabled { opacity: 0.42; }
+.academy-btn .cd { font-weight: 600; opacity: 0.8; }
+.academy-move { display: flex; gap: 6px; width: 100%; }
+.academy-move-btn { flex: 1; background: none; border: 1px dashed var(--bg4); color: var(--text3); font-size: 10px; padding: 5px 4px; border-radius: 7px; }
+.academy-move-btn:active { color: var(--accent); border-color: var(--accent3); }
 </style>
 </head>
 <body>
@@ -1195,6 +1239,164 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
     </div>
 
     <!-- QUESTS SCREEN -->
+    <!-- ACADEMY SCREEN -->
+    <div class="screen" id="screen-academy">
+      <div class="screen-title">BURB ACADEMY</div>
+      <div class="academy-sub">Your flock's campus. Rest them in the Roost, drill them in the Training Hall, let them roam the Gardens.</div>
+
+      <div class="academy-campus">
+        <svg viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg" id="academyCampusSvg" role="img" aria-label="Burb Academy campus">
+          <defs>
+            <linearGradient id="acSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0a0805"/>
+              <stop offset="0.62" stop-color="#241708"/>
+              <stop offset="1" stop-color="#6b4516"/>
+            </linearGradient>
+            <linearGradient id="acGround" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2a2010"/>
+              <stop offset="1" stop-color="#15100a"/>
+            </linearGradient>
+            <radialGradient id="acWindow" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="#ffe9a8"/>
+              <stop offset="1" stop-color="#d6a84f"/>
+            </radialGradient>
+            <radialGradient id="acPond" cx="0.5" cy="0.4" r="0.7">
+              <stop offset="0" stop-color="#39424d"/>
+              <stop offset="1" stop-color="#181c22"/>
+            </radialGradient>
+            <radialGradient id="acMoon" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="#fff3cf"/>
+              <stop offset="0.7" stop-color="#e8cf94"/>
+              <stop offset="1" stop-color="#e8cf9400"/>
+            </radialGradient>
+          </defs>
+
+          <!-- Sky -->
+          <rect x="0" y="0" width="800" height="360" fill="url(#acSky)"/>
+          <circle cx="652" cy="84" r="46" fill="url(#acMoon)" opacity="0.9"/>
+          <g fill="#f4ead4" opacity="0.55">
+            <circle cx="80" cy="60" r="1.6"/><circle cx="180" cy="110" r="1.2"/><circle cx="300" cy="50" r="1.4"/>
+            <circle cx="420" cy="90" r="1.1"/><circle cx="520" cy="40" r="1.5"/><circle cx="730" cy="150" r="1.2"/>
+            <circle cx="60" cy="170" r="1.1"/><circle cx="360" cy="140" r="1.3"/>
+          </g>
+          <!-- Distant treeline -->
+          <path d="M0,330 Q60,290 120,325 Q170,285 230,322 Q300,280 370,324 Q450,288 520,326 Q590,292 660,324 Q720,295 800,328 L800,360 L0,360 Z" fill="#13100a"/>
+          <!-- Ground -->
+          <rect x="0" y="352" width="800" height="168" fill="url(#acGround)"/>
+          <path d="M0,360 Q200,340 400,356 Q600,372 800,352 L800,372 Q600,388 400,372 Q200,358 0,376 Z" fill="#241b0e" opacity="0.6"/>
+          <!-- Path -->
+          <path d="M390,520 Q400,440 330,408 Q260,380 170,372 M410,520 Q420,452 500,412 Q580,382 660,374" stroke="#3a2d16" stroke-width="22" fill="none" stroke-linecap="round" opacity="0.8"/>
+
+          <!-- ZONE: THE ROOST (dorm) -->
+          <g class="academy-zone" data-room="dorm" id="academyZoneDorm">
+            <title>The Roost — rest &amp; care</title>
+            <!-- pole -->
+            <rect x="142" y="300" width="16" height="100" fill="#241a0d"/>
+            <!-- tower body -->
+            <path d="M104,180 L196,180 L188,316 L112,316 Z" fill="#3a2c14" stroke="#1c1810" stroke-width="3"/>
+            <!-- roof -->
+            <path d="M92,184 L150,118 L208,184 Z" fill="#553d18" stroke="#1c1810" stroke-width="3"/>
+            <circle cx="150" cy="124" r="6" fill="#d6a84f"/>
+            <!-- windows -->
+            <circle cx="150" cy="212" r="17" fill="url(#acWindow)"/>
+            <circle cx="128" cy="262" r="12" fill="url(#acWindow)" opacity="0.92"/>
+            <circle cx="172" cy="262" r="12" fill="url(#acWindow)" opacity="0.92"/>
+            <circle cx="150" cy="296" r="9" fill="#1c1810"/>
+            <!-- perch pegs -->
+            <rect x="96" y="226" width="22" height="5" rx="2.5" fill="#553d18"/>
+            <rect x="182" y="226" width="22" height="5" rx="2.5" fill="#553d18"/>
+            <!-- plaque -->
+            <g class="zone-plaque">
+              <rect x="86" y="404" width="128" height="30" rx="6" fill="#11100d" stroke="#8f6f2a"/>
+              <text x="150" y="424" text-anchor="middle" class="academy-plaque-text">&#127968; THE ROOST</text>
+            </g>
+            <g class="zone-count">
+              <circle cx="214" cy="404" r="13" fill="#d6a84f"/>
+              <text x="214" y="409" text-anchor="middle" class="academy-count-text" id="academyCountDorm">0</text>
+            </g>
+          </g>
+
+          <!-- ZONE: TRAINING HALL (gym) -->
+          <g class="academy-zone" data-room="training" id="academyZoneTraining">
+            <title>Training Hall — drills &amp; upgrades</title>
+            <!-- barn body -->
+            <path d="M540,236 L760,236 L760,372 L540,372 Z" fill="#33260f" stroke="#1c1810" stroke-width="3"/>
+            <path d="M528,240 L650,170 L772,240 Z" fill="#4a3413" stroke="#1c1810" stroke-width="3"/>
+            <!-- open front -->
+            <rect x="568" y="262" width="118" height="110" fill="#15100a"/>
+            <!-- inside: perch bar + target -->
+            <rect x="580" y="330" width="92" height="6" rx="3" fill="#553d18"/>
+            <rect x="586" y="298" width="6" height="38" fill="#3a2c14"/>
+            <rect x="660" y="298" width="6" height="38" fill="#3a2c14"/>
+            <circle cx="712" cy="300" r="22" fill="#11100d" stroke="#8f6f2a" stroke-width="3"/>
+            <circle cx="712" cy="300" r="13" fill="none" stroke="#8f6f2a" stroke-width="2.5"/>
+            <circle cx="712" cy="300" r="4.5" fill="#d6a84f"/>
+            <!-- banner -->
+            <rect x="586" y="216" width="128" height="26" rx="4" fill="#d6a84f"/>
+            <text x="650" y="234" text-anchor="middle" class="academy-banner-text">TRAINING HALL</text>
+            <!-- plaque -->
+            <g class="zone-plaque">
+              <rect x="576" y="404" width="148" height="30" rx="6" fill="#11100d" stroke="#8f6f2a"/>
+              <text x="650" y="424" text-anchor="middle" class="academy-plaque-text">&#127947;&#65039; THE GYM</text>
+            </g>
+            <g class="zone-count">
+              <circle cx="724" cy="404" r="13" fill="#d6a84f"/>
+              <text x="724" y="409" text-anchor="middle" class="academy-count-text" id="academyCountTraining">0</text>
+            </g>
+          </g>
+
+          <!-- ZONE: AVIARY GARDENS (outdoors) -->
+          <g class="academy-zone" data-room="outdoors" id="academyZoneOutdoors">
+            <title>Aviary Gardens — free roaming</title>
+            <!-- pond -->
+            <ellipse cx="392" cy="462" rx="98" ry="30" fill="url(#acPond)" stroke="#2a2010" stroke-width="3"/>
+            <ellipse cx="362" cy="456" rx="22" ry="6" fill="#f4ead4" opacity="0.10"/>
+            <!-- trees -->
+            <g>
+              <rect x="282" y="392" width="11" height="46" fill="#241a0d"/>
+              <circle cx="288" cy="376" r="34" fill="#2c3a18"/>
+              <circle cx="266" cy="392" r="22" fill="#243012"/>
+              <circle cx="310" cy="390" r="24" fill="#243012"/>
+            </g>
+            <g>
+              <rect x="494" y="402" width="10" height="40" fill="#241a0d"/>
+              <circle cx="499" cy="386" r="28" fill="#2c3a18"/>
+              <circle cx="520" cy="398" r="18" fill="#243012"/>
+            </g>
+            <!-- perch posts + string lights -->
+            <rect x="346" y="368" width="6" height="56" fill="#3a2c14"/>
+            <rect x="446" y="368" width="6" height="56" fill="#3a2c14"/>
+            <rect x="334" y="364" width="30" height="6" rx="3" fill="#553d18"/>
+            <rect x="434" y="364" width="30" height="6" rx="3" fill="#553d18"/>
+            <path d="M352,372 Q400,396 448,372" stroke="#8f6f2a" stroke-width="2" fill="none"/>
+            <g fill="#ffe9a8">
+              <circle cx="368" cy="381" r="3"/><circle cx="386" cy="387" r="3"/><circle cx="404" cy="389" r="3"/>
+              <circle cx="421" cy="386" r="3"/><circle cx="437" cy="379" r="3"/>
+            </g>
+            <!-- flowers -->
+            <g>
+              <circle cx="252" cy="470" r="4" fill="#b48ad6"/><circle cx="266" cy="482" r="3.5" fill="#d6a84f"/>
+              <circle cx="528" cy="474" r="4" fill="#b48ad6"/><circle cx="544" cy="464" r="3.5" fill="#d6a84f"/>
+            </g>
+            <!-- plaque -->
+            <g class="zone-plaque">
+              <rect x="312" y="490" width="160" height="26" rx="6" fill="#11100d" stroke="#8f6f2a"/>
+              <text x="392" y="508" text-anchor="middle" class="academy-plaque-text">&#127793; AVIARY GARDENS</text>
+            </g>
+            <g class="zone-count">
+              <circle cx="472" cy="490" r="13" fill="#d6a84f"/>
+              <text x="472" y="495" text-anchor="middle" class="academy-count-text" id="academyCountOutdoors">0</text>
+            </g>
+          </g>
+
+          <!-- Bird markers get drawn here -->
+          <g id="academyBirdMarkers"></g>
+        </svg>
+      </div>
+
+      <div id="academyRoomPanel"></div>
+    </div>
+
     <div class="screen" id="screen-quests">
       <div class="screen-title">QUESTS</div>
       <div id="questsList"></div>
@@ -1255,6 +1457,10 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
     <button class="nav-item" data-screen="battle">
       <div class="nav-icon">&#9876;&#65039;</div>
       <div class="nav-label">Battle</div>
+    </button>
+    <button class="nav-item" data-screen="academy">
+      <div class="nav-icon">&#127891;</div>
+      <div class="nav-label">Academy</div>
     </button>
     <button class="nav-item" data-screen="quests">
       <div class="nav-icon">&#128220;</div>
@@ -1517,6 +1723,7 @@ function loadState() {
   gameState.quests = (gameState.quests && typeof gameState.quests === 'object' && !Array.isArray(gameState.quests)) ? gameState.quests : {};
   gameState.badges = (gameState.badges && typeof gameState.badges === 'object' && !Array.isArray(gameState.badges)) ? gameState.badges : {};
   gameState.flock = Array.isArray(gameState.flock) ? gameState.flock.filter(b => b && typeof b === 'object') : [];
+  gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   if (gameState.activePetId === undefined) gameState.activePetId = null;
 
   // Migrate old flock format and old birds to have individual care/training objects.
@@ -2632,6 +2839,303 @@ function applyBirdTraining(bird, type) {
 }
 
 // ============================================================================
+// ACADEMY — campus where captured birds live, train, and get cared for
+// ============================================================================
+const ACADEMY_ROOMS = {
+  dorm: {
+    label: 'THE ROOST', icon: '🏠',
+    desc: 'The dorm tower. Birds resting here heal up while you feed, groom, and tuck them in.',
+    perk: 'Passive: heals HP, hunger grows slowly',
+    perches: [[150,212],[128,262],[172,262],[107,222],[193,222]]
+  },
+  training: {
+    label: 'THE GYM', icon: '🏋️',
+    desc: 'The training hall. Run drills to permanently raise a stat and earn XP. One drill per bird per session.',
+    perk: 'Passive: slow XP trickle, hunger grows faster',
+    perches: [[600,322],[636,322],[666,322],[712,268],[585,290]]
+  },
+  outdoors: {
+    label: 'AVIARY GARDENS', icon: '🌱',
+    desc: 'Open gardens with a pond and perches. Birds roam free, forage for snacks, and cheer up fast.',
+    perk: 'Passive: happiness recovers',
+    perches: [[349,358],[449,358],[288,346],[499,360],[392,440]]
+  }
+};
+let academySelectedRoom = 'outdoors';
+
+function ensureBirdAcademy(bird) {
+  if (!bird) return bird;
+  if (!bird.care || typeof bird.care !== 'object') bird.care = { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null };
+  if (!bird.training || typeof bird.training !== 'object') bird.training = { feedCount: 0, trainCount: 0 };
+  if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null };
+  if (!ACADEMY_ROOMS[bird.academy.room]) bird.academy.room = 'outdoors';
+  return bird;
+}
+
+function recalcBirdPower(bird) {
+  bird.power = Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def * 1.0 + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (1 + bird.level * 0.04) * 0.7);
+  bird.power = clamp(bird.power, 20, 9999);
+}
+
+function academyCdLeft(iso, cooldownMs) {
+  if (!iso) return 0;
+  const left = cooldownMs - (Date.now() - Date.parse(iso));
+  return left > 0 ? left : 0;
+}
+
+function fmtCd(ms) {
+  const m = Math.ceil(ms / 60000);
+  if (m >= 60) return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+  return m + 'm';
+}
+
+function academyBirdById(id) {
+  return gameState.flock.find(b => b && b.id === id) || null;
+}
+
+function renderAcademy() {
+  gameState.flock.forEach(ensureBirdAcademy);
+
+  // Zone counts + active highlight
+  const byRoom = { dorm: [], training: [], outdoors: [] };
+  gameState.flock.forEach(b => byRoom[b.academy.room].push(b));
+  const countIds = { dorm: 'academyCountDorm', training: 'academyCountTraining', outdoors: 'academyCountOutdoors' };
+  Object.keys(byRoom).forEach(room => {
+    const el = $(countIds[room]);
+    if (el) el.textContent = byRoom[room].length;
+    const zone = document.querySelector('.academy-zone[data-room="' + room + '"]');
+    if (zone) zone.classList.toggle('active', room === academySelectedRoom);
+  });
+
+  // Bird glyphs perched around campus
+  const markers = $('academyBirdMarkers');
+  if (markers) {
+    let html = '';
+    Object.keys(byRoom).forEach(room => {
+      const perches = ACADEMY_ROOMS[room].perches;
+      byRoom[room].slice(0, perches.length).forEach((b, i) => {
+        const [x, y] = perches[i];
+        const wander = room === 'outdoors' ? ' wander' : '';
+        const delay = (i * 0.45).toFixed(2);
+        html += '<text x="' + x + '" y="' + y + '" text-anchor="middle" class="academy-bird-glyph' + wander + '" style="animation-delay:' + delay + 's" data-room="' + room + '">' + getBirdMarkerEmoji(b.commonName || b.species) + '</text>';
+      });
+    });
+    markers.innerHTML = html;
+  }
+
+  renderAcademyRoomPanel(byRoom[academySelectedRoom]);
+}
+
+function renderAcademyRoomPanel(birds) {
+  const panel = $('academyRoomPanel');
+  if (!panel) return;
+  const room = ACADEMY_ROOMS[academySelectedRoom];
+
+  let html = '<div class="academy-room-head"><span class="academy-room-title">' + room.icon + ' ' + room.label + '</span>' +
+    '<span class="academy-room-perk">' + room.perk + '</span></div>' +
+    '<div class="academy-room-desc">' + room.desc + '</div>';
+
+  if (!birds || birds.length === 0) {
+    html += '<div class="academy-empty">' + (gameState.flock.length === 0
+      ? 'No birds yet — go scan some real birds and your captures will move in here.'
+      : 'No birds in this room. Move one over from another room.') + '</div>';
+    panel.innerHTML = html;
+    return;
+  }
+
+  html += birds.map(b => {
+    const art = getBirdArtUrl(b);
+    const artHtml = art
+      ? '<img class="academy-bird-art" src="' + escapeHtml(art) + '" alt="">'
+      : '<div class="academy-bird-art emoji">' + getBirdMarkerEmoji(b.commonName || b.species) + '</div>';
+    const hpPct = clamp(Math.round((b.hp / (b.maxHp || 1)) * 100), 0, 100);
+    const hungerPct = clamp(Math.round(b.care.hunger || 0), 0, 100);
+    const happyPct = clamp(Math.round(b.care.happiness || 0), 0, 100);
+
+    let actions = '';
+    if (academySelectedRoom === 'dorm') {
+      actions = academyActionBtn('academyFeed', b.id, '🍓 Feed', academyCdLeft(b.care.lastFed, 60*60*1000), true) +
+        academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
+        academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false);
+    } else if (academySelectedRoom === 'training') {
+      const cd = academyCdLeft(b.care.lastTrained, 90*60*1000);
+      actions = ['atk|⚔️ Strength','def|🛡️ Guard','spd|💨 Agility','int|🧠 Focus'].map(d => {
+        const [stat, label] = d.split('|');
+        return academyDrillBtn(b.id, stat, label, cd);
+      }).join('');
+    } else {
+      actions = academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
+    }
+
+    const moves = Object.keys(ACADEMY_ROOMS).filter(r => r !== academySelectedRoom).map(r =>
+      '<button class="academy-move-btn" onclick="academyMoveBird(\'' + b.id + '\',\'' + r + '\')">→ ' + ACADEMY_ROOMS[r].icon + ' ' + ACADEMY_ROOMS[r].label + '</button>'
+    ).join('');
+
+    return '<div class="academy-bird-row">' + artHtml +
+      '<div class="academy-bird-main">' +
+        '<div class="academy-bird-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
+        '<div class="academy-bird-meta">Lv ' + b.level + ' · ' + (b.rarity || 'common').toUpperCase() + ' · PWR ' + (b.power || '?') + (b.training.trainCount ? ' · ' + b.training.trainCount + ' drills done' : '') + '</div>' +
+        academyMeter('HP', hpPct, 'hp') +
+        academyMeter('HUNGER', hungerPct, 'hunger') +
+        academyMeter('HAPPY', happyPct, 'happy') +
+      '</div>' +
+      '<div class="academy-actions">' + actions + '</div>' +
+      '<div class="academy-move">' + moves + '</div>' +
+    '</div>';
+  }).join('');
+
+  panel.innerHTML = html;
+}
+
+function academyMeter(label, pct, cls) {
+  return '<div class="academy-meter"><span class="academy-meter-label">' + label + '</span>' +
+    '<div class="academy-meter-bar"><div class="academy-meter-fill ' + cls + '" style="width:' + pct + '%"></div></div></div>';
+}
+
+function academyActionBtn(fn, id, label, cdMs, primary) {
+  if (cdMs > 0) {
+    return '<button class="academy-btn" disabled>' + label + ' <span class="cd">' + fmtCd(cdMs) + '</span></button>';
+  }
+  return '<button class="academy-btn' + (primary ? ' primary' : '') + '" onclick="' + fn + '(\'' + id + '\')">' + label + '</button>';
+}
+
+function academyDrillBtn(id, stat, label, cdMs) {
+  if (cdMs > 0) {
+    return '<button class="academy-btn" disabled>' + label + ' <span class="cd">' + fmtCd(cdMs) + '</span></button>';
+  }
+  return '<button class="academy-btn primary" onclick="academyDrill(\'' + id + '\',\'' + stat + '\')">' + label + '</button>';
+}
+
+function academySelectRoom(room) {
+  if (!ACADEMY_ROOMS[room]) return;
+  academySelectedRoom = room;
+  SFX.tap();
+  renderAcademy();
+}
+
+function academyMoveBird(birdId, room) {
+  const bird = academyBirdById(birdId);
+  if (!bird || !ACADEMY_ROOMS[room]) return;
+  ensureBirdAcademy(bird);
+  bird.academy.room = room;
+  saveState();
+  SFX.tap();
+  showToast((bird.commonName || bird.species) + ' moved to ' + ACADEMY_ROOMS[room].label);
+  renderAcademy();
+}
+
+function academyFeed(birdId) {
+  const bird = academyBirdById(birdId);
+  if (!bird) return;
+  ensureBirdAcademy(bird);
+  const gain = applyBirdTraining(bird, 'feed');
+  if (gain) {
+    bird.care.hunger = clamp((bird.care.hunger || 0) - 28, 0, 100);
+    bird.care.happiness = clamp((bird.care.happiness || 80) + 8, 0, 100);
+    saveState();
+    showToast('🍓 ' + (bird.commonName || bird.species) + ' munches happily! ' + gain);
+    SFX.tap();
+    renderAcademy();
+    renderPetCompanion();
+  }
+}
+
+function academyGroom(birdId) {
+  const bird = academyBirdById(birdId);
+  if (!bird) return;
+  ensureBirdAcademy(bird);
+  if (academyCdLeft(bird.academy.lastGroom, 30*60*1000) > 0) { showToast('Feathers are already pristine!'); return; }
+  bird.academy.lastGroom = new Date().toISOString();
+  bird.care.happiness = clamp((bird.care.happiness || 80) + 16, 0, 100);
+  levelUpBird(bird, 3);
+  saveState();
+  showToast('🪮 ' + (bird.commonName || bird.species) + ' is looking sharp! +16 HAPPY, +3 XP');
+  SFX.tap();
+  renderAcademy();
+}
+
+function academyRest(birdId) {
+  const bird = academyBirdById(birdId);
+  if (!bird) return;
+  ensureBirdAcademy(bird);
+  if (academyCdLeft(bird.academy.lastRest, 2*60*60*1000) > 0) { showToast('Not sleepy yet!'); return; }
+  bird.academy.lastRest = new Date().toISOString();
+  bird.hp = bird.maxHp;
+  bird.care.happiness = clamp((bird.care.happiness || 80) + 6, 0, 100);
+  saveState();
+  showToast('💤 ' + (bird.commonName || bird.species) + ' slept deeply — fully healed!');
+  SFX.tap();
+  renderAcademy();
+}
+
+function academyDrill(birdId, stat) {
+  const bird = academyBirdById(birdId);
+  if (!bird || !['atk','def','spd','int'].includes(stat)) return;
+  ensureBirdAcademy(bird);
+  if (academyCdLeft(bird.care.lastTrained, 90*60*1000) > 0) { showToast('Needs a breather between drills!'); return; }
+
+  bird.training.trainCount = (bird.training.trainCount || 0) + 1;
+  const bonusKey = stat + 'Bonus';
+  if ((bird.training[bonusKey] || 0) >= 30) { showToast('That stat is maxed from training!'); return; }
+  bird.training[bonusKey] = clamp((bird.training[bonusKey] || 0) + 1, 0, 30);
+  bird[stat] = clamp((bird[stat] || 10) + 1, 10, 999);
+  bird.care.lastTrained = new Date().toISOString();
+  bird.care.hunger = clamp((bird.care.hunger || 0) + 10, 0, 100);
+  recalcBirdPower(bird);
+  levelUpBird(bird, 8);
+  saveState();
+  showToast('🏋️ Drill complete! +1 ' + stat.toUpperCase() + ', +8 XP');
+  SFX.tap();
+  renderAcademy();
+}
+
+function academyForage(birdId) {
+  const bird = academyBirdById(birdId);
+  if (!bird) return;
+  ensureBirdAcademy(bird);
+  if (academyCdLeft(bird.academy.lastForage, 60*60*1000) > 0) { showToast('Still digesting the last forage!'); return; }
+  bird.academy.lastForage = new Date().toISOString();
+  bird.care.hunger = clamp((bird.care.hunger || 0) - 22, 0, 100);
+  const lucky = Math.random() < 0.3;
+  if (lucky) bird.care.happiness = clamp((bird.care.happiness || 80) + 10, 0, 100);
+  levelUpBird(bird, 6);
+  saveState();
+  showToast('🪱 ' + (bird.commonName || bird.species) + ' foraged a feast!' + (lucky ? ' Found a juicy bonus! +10 HAPPY' : '') + ' +6 XP');
+  SFX.tap();
+  renderAcademy();
+}
+
+// Passive per-room effects, runs on the same 60s cadence as pet care
+function tickAcademy() {
+  if (!gameState || !Array.isArray(gameState.flock) || gameState.flock.length === 0) return;
+  gameState.flock.forEach(b => {
+    ensureBirdAcademy(b);
+    const room = b.academy.room;
+    if (room === 'dorm') {
+      b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04)), 1, b.maxHp || 100);
+      b.care.hunger = clamp((b.care.hunger || 0) + 1, 0, 100);
+    } else if (room === 'training') {
+      b.xp = (b.xp || 0) + 1;
+      b.care.hunger = clamp((b.care.hunger || 0) + 4, 0, 100);
+      b.care.happiness = clamp((b.care.happiness || 80) - 1, 0, 100);
+    } else {
+      b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
+      b.care.hunger = clamp((b.care.hunger || 0) + 2, 0, 100);
+    }
+  });
+  saveState();
+  if (currentScreen === 'academy') renderAcademy();
+}
+
+function wireAcademyZones() {
+  $$('.academy-zone').forEach(zone => {
+    if (zone.dataset.wired) return;
+    zone.dataset.wired = '1';
+    zone.addEventListener('click', () => academySelectRoom(zone.dataset.room));
+  });
+}
+
+// ============================================================================
 // PLAYER LEVEL
 // ============================================================================
 function addPlayerXp(amount) {
@@ -2742,6 +3246,7 @@ function switchScreen(name) {
   if (name === 'map') renderLiveMap();
   if (name === 'birdex') renderBirdex();
   if (name === 'battle') renderBattleSelect();
+  if (name === 'academy') { wireAcademyZones(); renderAcademy(); }
   if (name === 'quests') renderQuests();
   if (name === 'profile') renderProfile();
 }
@@ -4182,7 +4687,7 @@ function tickPetCare() {
 
 function startPetCareLoop() {
   clearInterval(petCareTimer);
-  petCareTimer = setInterval(tickPetCare, 60000);
+  petCareTimer = setInterval(() => { tickPetCare(); tickAcademy(); }, 60000);
 }
 
 function feedPet() {
