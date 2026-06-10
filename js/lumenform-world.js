@@ -269,7 +269,7 @@
     mascot.innerHTML = `
       <div class="mascot-chute"></div>
       <div class="mascot-head">
-        <img src="/images/yaan_face_v2.jpg" alt="" draggable="false" />
+        <img src="images/yaan_face_v2.jpg" alt="" draggable="false" />
       </div>
       <div class="mascot-body">
         <div class="mascot-torso">
