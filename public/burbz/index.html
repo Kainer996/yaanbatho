@@ -1087,6 +1087,20 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .academy-grad-sub { font-size: 12px; color: var(--text3); margin: 4px 0 8px; }
 .academy-grad-bonus { font-size: 13px; color: var(--accent); font-weight: 700; margin-bottom: 14px; }
 .academy-grad-btn { background: var(--accent); color: #11100d; border: none; font-weight: 800; font-size: 14px; padding: 10px 20px; border-radius: 10px; letter-spacing: 0.06em; }
+
+/* Diet & food tray */
+.academy-diet { font-size: 10.5px; color: var(--accent); margin-top: 5px; letter-spacing: 0.03em; }
+.academy-diet.unknown { color: var(--text3); font-style: italic; }
+.academy-tray { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: var(--bg2); border: 1px solid var(--bg4); border-radius: 10px; padding: 10px; }
+.academy-tray-title { grid-column: 1 / -1; font-size: 11.5px; font-weight: 700; color: var(--text2); letter-spacing: 0.04em; margin-bottom: 2px; }
+.academy-food { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--bg3); border: 1px solid var(--bg4); border-radius: 9px; padding: 7px 2px; transition: border-color 0.15s; }
+.academy-food:active { transform: scale(0.95); }
+.academy-food.known-pref { border-color: var(--accent); box-shadow: 0 0 6px rgba(214,168,79,0.35); }
+.academy-food.empty { opacity: 0.35; }
+.academy-food-emoji { font-size: 19px; }
+.academy-food-label { font-size: 8.5px; color: var(--text2); font-weight: 700; letter-spacing: 0.03em; }
+.academy-food-count { font-size: 8.5px; color: var(--text3); }
+.academy-tray-hint { grid-column: 1 / -1; font-size: 9.5px; color: var(--text3); line-height: 1.45; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -1601,6 +1615,131 @@ const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland
 const BURBZ_MAP_VERSION = 'real-world-habitat-map-20260609';
 
 // ============================================================================
+// BIRD DIETS — what each species actually eats in the wild.
+// Used by the Academy roost to gate feeding behind real knowledge.
+// ============================================================================
+const FOODS = {
+  seeds:    { label: 'Seeds',         emoji: '🌾', desc: 'Sunflower seeds, niger, millet — finches, sparrows, tits.' },
+  suet:     { label: 'Suet',          emoji: '🥩', desc: 'Fat cake. Bark-clinging insectivores love it in winter.' },
+  insects:  { label: 'Insects',       emoji: '🐛', desc: 'Beetles, caterpillars, mealworms. Warblers, robins, thrushes.' },
+  worms:    { label: 'Worms',         emoji: '🪱', desc: 'Earthworms. Ground-foragers like blackbirds and robins.' },
+  berries:  { label: 'Berries',       emoji: '🫐', desc: 'Hawthorn, rowan, holly. Thrushes, waxwings, finches in autumn.' },
+  fruit:    { label: 'Fruit',         emoji: '🍎', desc: 'Soft windfall apples, raisins. Garden thrushes and blackcaps.' },
+  fish:     { label: 'Fish',          emoji: '🐟', desc: 'Small fish snatched from water. Kingfishers, herons, gannets.' },
+  flying:   { label: 'Aerial bugs',   emoji: '🦟', desc: 'Midges and flying insects caught on the wing. Swifts, swallows, martins.' },
+  meat:     { label: 'Small prey',    emoji: '🐭', desc: 'Voles, small birds. Raptors and owls take live prey.' },
+  carrion:  { label: 'Carrion',       emoji: '🦴', desc: 'Scavenged remains. Crows, ravens, rooks, kites.' },
+  acorns:   { label: 'Acorns / nuts', emoji: '🌰', desc: 'Acorns, beech mast, hazelnuts. Jays, nuthatches, woodpeckers cache them.' },
+  aquatic:  { label: 'Pondweed',      emoji: '🌿', desc: 'Aquatic plants, snails, dabbled grains. Ducks, swans, geese.' }
+};
+
+// Diet rules. Each entry has match patterns + preferred foods (correct = full benefit)
+// + accepted foods (partial benefit) + a one-line factoid shown when fed correctly.
+// Order matters: first match wins, so more specific patterns go first.
+const BIRD_DIET_RULES = [
+  // Raptors & owls
+  { match: /\b(eagle|hawk|kite|harrier|peregrine|falcon|kestrel|merlin|osprey|buzzard|sparrowhawk|goshawk)\b/i,
+    pref: ['meat'], ok: ['carrion','fish'], avoid: ['seeds','berries','fruit','aquatic'],
+    fact: 'Raptors are obligate carnivores — they need live prey, not seeds.' },
+  { match: /\bowl\b/i,
+    pref: ['meat'], ok: ['insects'], avoid: ['seeds','fruit','fish','aquatic'],
+    fact: 'Owls hunt voles, mice and small birds — they swallow prey whole and cough up pellets.' },
+
+  // Fish-eating waterbirds
+  { match: /\bkingfisher\b/i,
+    pref: ['fish'], ok: ['insects'], avoid: ['seeds','berries','suet','meat'],
+    fact: 'Kingfishers plunge-dive for minnows and sticklebacks from a riverside perch.' },
+  { match: /\b(heron|egret|gannet|cormorant|razorbill|puffin|tern)\b/i,
+    pref: ['fish'], ok: ['aquatic'], avoid: ['seeds','berries','suet','fruit'],
+    fact: 'Seabirds and herons are fish-specialists — wrong food is wasted on them.' },
+
+  // Dabbling / grazing waterfowl
+  { match: /\b(mallard|duck|teal|gadwall|wigeon|shoveler|pochard|goose|swan)\b/i,
+    pref: ['aquatic'], ok: ['seeds'], avoid: ['meat','fish','suet'],
+    fact: 'Bread is bad for ducks. They want pondweed, grain, and aquatic invertebrates.' },
+
+  // Crow family (mostly omnivorous, with a scavenging tilt)
+  { match: /\b(raven|crow|rook|jackdaw)\b/i,
+    pref: ['carrion','meat'], ok: ['insects','acorns','seeds'], avoid: [],
+    fact: 'Corvids will eat almost anything — but carrion and meaty scraps bring them in fastest.' },
+  { match: /\bmagpie\b/i,
+    pref: ['carrion','insects'], ok: ['meat','seeds','berries'], avoid: [],
+    fact: 'Magpies are clever opportunists — they raid nests, scavenge, and stash shiny bits.' },
+  { match: /\bjay\b/i,
+    pref: ['acorns'], ok: ['insects','seeds','berries'], avoid: ['fish','aquatic'],
+    fact: 'Jays cache thousands of acorns each autumn — they plant whole oak woodlands.' },
+
+  // Aerial insectivores
+  { match: /\b(swift|swallow|martin)\b/i,
+    pref: ['flying'], ok: ['insects'], avoid: ['seeds','suet','fish','meat','berries','aquatic'],
+    fact: 'Swifts and martins feed on the wing — they can\'t take food from a feeder.' },
+
+  // Bark-clinging insectivores
+  { match: /\bwoodpecker\b/i,
+    pref: ['insects','suet'], ok: ['acorns','seeds'], avoid: ['fish','aquatic','meat'],
+    fact: 'Woodpeckers excavate grubs from rotten wood — suet logs are a perfect garden swap.' },
+  { match: /\b(treecreeper|nuthatch|goldcrest|firecrest)\b/i,
+    pref: ['insects','suet'], ok: ['seeds'], avoid: ['fish','aquatic','meat'],
+    fact: 'Bark-feeders work tree trunks for insects and spiders all year round.' },
+
+  // Tits & similar
+  { match: /\b(tit|chickadee)\b/i,
+    pref: ['suet','seeds'], ok: ['insects'], avoid: ['fish','aquatic','meat','carrion'],
+    fact: 'Tits will hammer a sunflower seed open and stash it under bark for later.' },
+
+  // Finches & sparrows
+  { match: /(?:\w*finch|\bsparrow|\bbunting|\byellowhammer|\bcrossbill|\blinnet|\bredpoll|\bsiskin)\b/i,
+    pref: ['seeds'], ok: ['berries','insects'], avoid: ['fish','aquatic','meat','carrion'],
+    fact: 'Finch beaks are designed to husk small seeds — niger and sunflower are favourites.' },
+
+  // Pigeons / doves
+  { match: /\b(pigeon|dove|collared dove|stock dove)\b/i,
+    pref: ['seeds'], ok: ['acorns','fruit'], avoid: ['fish','aquatic','meat','carrion'],
+    fact: 'Pigeons feed grain to their chicks via "crop milk" — they\'re grain specialists.' },
+
+  // Thrushes & blackbirds — soft fruit + worms
+  { match: /\b(blackbird|fieldfare|redwing|song thrush|mistle thrush|thrush|ouzel|blackcap)\b/i,
+    pref: ['worms','berries'], ok: ['fruit','insects'], avoid: ['fish','aquatic','meat'],
+    fact: 'Thrushes work lawns for worms in spring, then switch to hedgerow berries in autumn.' },
+
+  // Robin, wren, dunnock, warblers, wagtails
+  { match: /\b(robin|wren|dunnock|warbler|chiffchaff|whitethroat|stonechat|wagtail|pipit|wheatear)\b/i,
+    pref: ['insects','worms'], ok: ['suet','berries'], avoid: ['fish','aquatic','meat','carrion'],
+    fact: 'Robins follow garden spades for the worms turned up — they\'re close-range insect hunters.' },
+
+  // Larks, gamebirds, cuckoo (insectivores + seeds)
+  { match: /\b(skylark|lark|pipit|cuckoo)\b/i,
+    pref: ['insects'], ok: ['seeds'], avoid: ['fish','aquatic','meat'],
+    fact: 'Skylarks sing high then drop to ground level to feed on insects and grass seeds.' },
+
+  // Starling / waxwing
+  { match: /\bstarling\b/i,
+    pref: ['insects','suet'], ok: ['berries','fruit','seeds'], avoid: ['fish','aquatic','meat'],
+    fact: 'Starlings probe lawns for leatherjacket grubs — and adore mealworms.' },
+  { match: /\b(waxwing)\b/i,
+    pref: ['berries'], ok: ['fruit'], avoid: ['fish','aquatic','meat','seeds'],
+    fact: 'Waxwings irrupt south in cold years to strip rowan and cotoneaster berries.' },
+
+  // Wading birds
+  { match: /\b(oystercatcher|curlew|sandpiper|plover|lapwing|godwit|turnstone|knot)\b/i,
+    pref: ['insects','worms'], ok: ['fish'], avoid: ['seeds','fruit','aquatic','suet'],
+    fact: 'Waders probe mud and shore with long bills for worms, shellfish and crustaceans.' }
+];
+
+function inferBirdDiet(speciesName) {
+  if (!speciesName) return null;
+  const name = String(speciesName);
+  for (const rule of BIRD_DIET_RULES) {
+    if (rule.match.test(name)) return rule;
+  }
+  return null;
+}
+
+// Player's pantry — refilled gradually so feeding has rhythm
+const DEFAULT_PANTRY = { seeds: 6, suet: 4, insects: 5, worms: 4, berries: 4, fruit: 4, fish: 3, flying: 3, meat: 2, carrion: 2, acorns: 4, aquatic: 4 };
+const PANTRY_CAP = { seeds: 12, suet: 10, insects: 12, worms: 10, berries: 10, fruit: 10, fish: 8, flying: 8, meat: 6, carrion: 6, acorns: 10, aquatic: 10 };
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 function hashStr(str) {
@@ -1713,7 +1852,9 @@ const DEFAULT_STATE = {
   activePetId: null,
   // Legacy whole-app pet care kept for old saves/tests; active birds now use per-bird care.
   pet: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null },
-  birdCare: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null } // Default per-bird care state
+  birdCare: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null }, // Default per-bird care state
+  pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
+  pantryLastRefill: null // For pantry restocking
 };
 
 let gameState;
@@ -1741,6 +1882,7 @@ function loadState() {
   gameState.badges = (gameState.badges && typeof gameState.badges === 'object' && !Array.isArray(gameState.badges)) ? gameState.badges : {};
   gameState.flock = Array.isArray(gameState.flock) ? gameState.flock.filter(b => b && typeof b === 'object') : [];
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
+  gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
   if (gameState.activePetId === undefined) gameState.activePetId = null;
 
   // Migrate old flock format and old birds to have individual care/training objects.
@@ -2982,10 +3124,15 @@ function renderAcademyRoomPanel(birds) {
     const happyPct = clamp(Math.round(b.care.happiness || 0), 0, 100);
 
     let actions = '';
+    let tray = '';
     if (academySelectedRoom === 'dorm') {
-      actions = academyActionBtn('academyFeed', b.id, '🍓 Feed', academyCdLeft(b.care.lastFed, 60*60*1000), true) +
+      const fedCd = academyCdLeft(b.care.lastFed, 60*60*1000);
+      actions = (fedCd > 0
+          ? '<button class="academy-btn" disabled>🍽️ Feed <span class="cd">' + fmtCd(fedCd) + '</span></button>'
+          : '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>') +
         academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
         academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false);
+      if (academyFeedTrayBirdId === b.id && fedCd <= 0) tray = academyFeedTrayHTML(b);
     } else if (academySelectedRoom === 'training') {
       const cd = academyCdLeft(b.care.lastTrained, 90*60*1000);
       actions = ['atk|⚔️ Strength','def|🛡️ Guard','spd|💨 Agility','int|🧠 Focus'].map(d => {
@@ -3007,8 +3154,10 @@ function renderAcademyRoomPanel(birds) {
         academyMeter('HP', hpPct, 'hp') +
         academyMeter('HUNGER', hungerPct, 'hunger') +
         academyMeter('HAPPY', happyPct, 'happy') +
+        (academySelectedRoom === 'dorm' ? academyDietLine(b) : '') +
       '</div>' +
       '<div class="academy-actions">' + actions + '</div>' +
+      tray +
       '<div class="academy-move">' + moves + '</div>' +
     '</div>';
   }).join('');
@@ -3053,20 +3202,116 @@ function academyMoveBird(birdId, room) {
   renderAcademy();
 }
 
+// ---- Diet-aware feeding -----------------------------------------------
+let academyFeedTrayBirdId = null;
+
+function refillPantry() {
+  if (!gameState.pantry) gameState.pantry = { ...DEFAULT_PANTRY };
+  const now = Date.now();
+  const last = gameState.pantryLastRefill ? Date.parse(gameState.pantryLastRefill) : 0;
+  if (!last) { gameState.pantryLastRefill = new Date().toISOString(); return; }
+  const hours = Math.floor((now - last) / (60 * 60 * 1000));
+  if (hours < 1) return;
+  Object.keys(DEFAULT_PANTRY).forEach(k => {
+    gameState.pantry[k] = clamp((gameState.pantry[k] || 0) + hours, 0, PANTRY_CAP[k] || 10);
+  });
+  gameState.pantryLastRefill = new Date(last + hours * 60 * 60 * 1000).toISOString();
+  saveState();
+}
+
 function academyFeed(birdId) {
+  // Feed button now opens the food tray — the player must pick what this
+  // species actually eats in the wild.
+  academyFeedTrayBirdId = academyFeedTrayBirdId === birdId ? null : birdId;
+  SFX.tap();
+  renderAcademy();
+}
+
+function academyFeedFood(birdId, foodKey) {
   const bird = academyBirdById(birdId);
-  if (!bird) return;
+  const food = FOODS[foodKey];
+  if (!bird || !food) return;
   ensureBirdAcademy(bird);
-  const gain = applyBirdTraining(bird, 'feed');
-  if (gain) {
-    bird.care.hunger = clamp((bird.care.hunger || 0) - 28, 0, 100);
-    bird.care.happiness = clamp((bird.care.happiness || 80) + 8, 0, 100);
+  refillPantry();
+
+  if ((gameState.pantry[foodKey] || 0) <= 0) { showToast('No ' + food.label.toLowerCase() + ' left in the pantry — it restocks over time.'); return; }
+
+  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const name = bird.commonName || bird.species;
+  // Unknown species fall back to "generalist": seeds/insects accepted.
+  const pref = diet ? diet.pref : ['seeds', 'insects'];
+  const ok = diet ? diet.ok : ['berries', 'fruit', 'worms', 'suet'];
+
+  gameState.pantry[foodKey] = clamp((gameState.pantry[foodKey] || 0) - 1, 0, 99);
+
+  if (pref.includes(foodKey)) {
+    // Correct! Full benefit + the real-world factoid.
+    if (academyCdLeft(bird.care.lastFed, 60 * 60 * 1000) > 0) {
+      gameState.pantry[foodKey] += 1; // not hungry — refund the portion
+      showToast(name + ' is still full!');
+      return;
+    }
+    bird.care.lastFed = new Date().toISOString();
+    bird.training.feedCount = (bird.training.feedCount || 0) + 1;
+    bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 2, 0, 50);
+    bird.maxHp = clamp(bird.maxHp + 2, 50, 999);
+    bird.hp = bird.maxHp;
+    bird.care.hunger = clamp((bird.care.hunger || 0) - 30, 0, 100);
+    bird.care.happiness = clamp((bird.care.happiness || 80) + 10, 0, 100);
+    recalcBirdPower(bird);
+    levelUpBird(bird, 4);
+    const firstTime = !bird.academy.dietKnown;
+    bird.academy.dietKnown = true;
+    academyFeedTrayBirdId = null;
     saveState();
-    showToast('🍓 ' + (bird.commonName || bird.species) + ' munches happily! ' + gain);
+    showToast('✅ ' + food.emoji + ' Perfect! ' + (diet ? diet.fact : name + ' happily eats ' + food.label.toLowerCase() + '.') + ' +2 HP, +4 XP' + (firstTime ? ' · Diet discovered!' : ''));
     SFX.tap();
-    renderAcademy();
-    renderPetCompanion();
+  } else if (ok.includes(foodKey)) {
+    // Acceptable but not ideal — partial benefit, nudge toward the real diet.
+    bird.care.hunger = clamp((bird.care.hunger || 0) - 12, 0, 100);
+    bird.care.happiness = clamp((bird.care.happiness || 80) + 3, 0, 100);
+    saveState();
+    showToast('🆗 ' + name + ' nibbles the ' + food.label.toLowerCase() + '... but in the wild it mainly eats ' + (diet ? diet.pref.map(k => FOODS[k].label.toLowerCase()).join(' and ') : 'seeds and insects') + '.');
+    SFX.tap();
+  } else {
+    // Wrong food — refused, portion wasted, and the game teaches why.
+    bird.care.happiness = clamp((bird.care.happiness || 80) - 4, 0, 100);
+    saveState();
+    showToast('❌ ' + name + ' turns its beak up! ' + (diet ? diet.fact : 'Try seeds or insects for garden birds.'));
+    SFX.tap();
   }
+  renderAcademy();
+  renderPetCompanion();
+}
+
+function academyDietLine(bird) {
+  const diet = inferBirdDiet(bird.commonName || bird.species);
+  if (!bird.academy.dietKnown) {
+    return '<div class="academy-diet unknown">🍽️ Diet: ??? — feed the right food to discover it</div>';
+  }
+  const prefs = (diet ? diet.pref : ['seeds', 'insects']).map(k => FOODS[k].emoji + ' ' + FOODS[k].label).join(' · ');
+  return '<div class="academy-diet">🍽️ Diet: ' + prefs + '</div>';
+}
+
+function academyFeedTrayHTML(bird) {
+  refillPantry();
+  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const known = bird.academy.dietKnown;
+  return '<div class="academy-tray">' +
+    '<div class="academy-tray-title">What does a ' + escapeHtml(bird.commonName || bird.species) + ' eat in the wild?</div>' +
+    Object.keys(FOODS).map(k => {
+      const f = FOODS[k];
+      const count = gameState.pantry[k] || 0;
+      const knownPref = known && diet && diet.pref.includes(k);
+      return '<button class="academy-food' + (knownPref ? ' known-pref' : '') + (count <= 0 ? ' empty' : '') + '" ' +
+        'onclick="academyFeedFood(\'' + bird.id + '\',\'' + k + '\')" title="' + escapeHtml(f.desc) + '">' +
+        '<span class="academy-food-emoji">' + f.emoji + '</span>' +
+        '<span class="academy-food-label">' + f.label + '</span>' +
+        '<span class="academy-food-count">×' + count + '</span>' +
+      '</button>';
+    }).join('') +
+    '<div class="academy-tray-hint">Wrong food is wasted and the bird sulks — watch where you met it for clues. Pantry restocks hourly.</div>' +
+  '</div>';
 }
 
 function academyGroom(birdId) {
@@ -4753,17 +4998,14 @@ function startPetCareLoop() {
 function feedPet() {
   const bird = getActivePet();
   if (!bird) return;
-  const gainMessage = applyBirdTraining(bird, 'feed');
-  if (gainMessage) {
-    bird.care.hunger = clamp((bird.care.hunger || 0) - 28, 0, 100);
-    bird.care.happiness = clamp((bird.care.happiness || 80) + 8, 0, 100);
-    saveState();
-    renderPetCompanion();
-    petSay(`Snack time! ${gainMessage}`);
-    makePetSparkles(5);
-    SFX.tap();
-    if (currentScreen === 'birdex') renderBirdex();
-  }
+  // Feeding now teaches real diets — route to the Academy roost food tray.
+  ensureBirdAcademy(bird);
+  bird.academy.room = 'dorm';
+  academySelectedRoom = 'dorm';
+  academyFeedTrayBirdId = bird.id;
+  saveState();
+  petSay('Take me to the Roost — and pick the food I really eat!');
+  switchScreen('academy');
 }
 
 function playWithPet() {
