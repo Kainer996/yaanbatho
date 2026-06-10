@@ -43,7 +43,7 @@
       "Low gravity vibes 🌙",
       "Hi Addie! 💕",
       "Built this place myself 😎",
-      "We machine light into worlds. I machine pies into crumbs 🥧",
+      "Yaan machines light into worlds. I machine pies into crumbs 🥧",
       "T-minus let's go! ⚡",
     ],
     dropQuips: [
