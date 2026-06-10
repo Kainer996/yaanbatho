@@ -69,6 +69,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/lumenform.css?v=1">
     <link rel="stylesheet" href="css/lumenform-world.css?v=1">
+    <noscript>
+        <style>
+            /* no JS: skip the boot loader and show everything */
+            #lf-loader { display: none !important; }
+            .lf-reveal, .lf-line > span, .lf-hero-title { opacity: 1 !important; transform: none !important; }
+            .lf-work-stage, .lf-work-detail { display: none !important; }
+            .lf-work-card { display: block !important; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; }
+            .lf-work-item { grid-template-columns: 42px 1fr; grid-template-areas: "num title" "card card" "cat cat"; row-gap: 12px; }
+            .lf-work-num { grid-area: num; }
+            .lf-work-title { grid-area: title; }
+            .lf-work-cat { grid-area: cat; text-align: left; }
+            .lf-work-card { grid-area: card; }
+            .lf-work-card-icon { display: flex !important; align-items: center; justify-content: center; font-size: 56px; }
+        </style>
+    </noscript>
 </head>
 <body class="lf">
 
