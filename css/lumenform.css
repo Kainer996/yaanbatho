@@ -25,10 +25,12 @@
   --lf-floor-h: 24px;
   /* keeps content clear of the fixed lift shaft on the left edge */
   --lf-gutter: 84px;
+  /* tighter clearance used by wide media (hero image, machinery) */
+  --lf-shaft-pad: 64px;
 }
 
 @media (max-width: 700px) {
-  :root { --lf-gutter: 56px; }
+  :root { --lf-gutter: 56px; --lf-shaft-pad: 46px; }
 }
 
 /* ── Reset ─────────────────────────────────────────────────────── */
@@ -441,18 +443,18 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
 
 /* the banner itself sits in flow — never covered, never cropped */
 .lf-hero-frame {
-  position: relative;
   width: 100%;
   flex: none;
-  aspect-ratio: 1280 / 715;
-  max-height: min(68vh, 760px);
+  padding-left: var(--lf-shaft-pad);
+  padding-right: clamp(16px, 2.5vw, 28px);
 }
 
 .lf-hero-frame img {
-  position: absolute;
-  inset: 0;
+  display: block;
+  margin: 0 auto;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: min(72vh, 820px);
   object-fit: contain;
   filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.65));
 }
@@ -518,14 +520,16 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: clamp(14px, 2.4vh, 26px);
-  padding: clamp(10px, 2vh, 22px) clamp(20px, 4vw, 56px) clamp(18px, 3vh, 34px);
+  gap: clamp(10px, 1.8vh, 20px);
+  padding: clamp(6px, 1.2vh, 14px) 0 clamp(18px, 3vh, 32px);
+}
+
+/* text rows keep the reading gutter; media goes wider */
+.lf-hero-kicker, .lf-hero-sub, .lf-hero-cta {
   padding-inline: max(clamp(20px, 4vw, 56px), var(--lf-gutter));
 }
 
@@ -721,17 +725,81 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
 
 .lf-tagwall figcaption { margin-top: 16px; }
 
-/* compact variant: the graffiti hangs right under the hero image */
-.lf-hero .lf-tagwall { margin: 0; }
+/* compact variant: the graffiti is sprayed on the factory wall */
+.lf-hero .lf-tagwall {
+  margin: 0;
+  width: 100%;
+  padding: clamp(14px, 2.4vh, 26px) 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 158px, rgba(245, 245, 245, 0.05) 158px 160px),
+    linear-gradient(180deg, rgba(245, 245, 245, 0.035), rgba(245, 245, 245, 0.012) 55%, rgba(0, 0, 0, 0.18));
+}
 
 .lf-hero .lf-tagwall img {
-  max-width: min(420px, 74%);
-  max-height: clamp(96px, 17vh, 170px);
+  max-width: min(440px, 74%);
+  max-height: clamp(96px, 17vh, 176px);
   width: auto;
   transform: rotate(-1.5deg);
 }
 
 .lf-hero .lf-tagwall:hover img { transform: rotate(0deg) scale(1.03); }
+
+/* ── Machinery strips: the wall's gear-work edges ── */
+.lf-machinery {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 18px);
+  padding-left: var(--lf-shaft-pad);
+  padding-right: clamp(16px, 2.5vw, 28px);
+}
+
+.lf-mach-spin {
+  flex: none;
+  width: var(--s, 40px);
+  height: var(--s, 40px);
+  animation: lf-spin 16s linear infinite;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
+}
+
+.lf-mach-spin.rev { animation-direction: reverse; animation-duration: 11s; }
+
+.lf-mach-spin img { width: 100%; height: 100%; display: block; }
+
+/* connecting drive beam / pipework */
+.lf-mach-beam {
+  flex: 1 1 auto;
+  height: 10px;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 26px, rgba(224, 32, 32, 0.45) 26px 28px),
+    linear-gradient(180deg, #383838, #1c1c1c);
+  border-top: 1px solid #4a4a4a;
+  border-bottom: 1px solid #101010;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.lf-mach-beam.short { flex: 0 0 clamp(28px, 5vw, 72px); }
+
+.lf-mach-beam.hazard {
+  background:
+    repeating-linear-gradient(-45deg, rgba(204, 0, 0, 0.55) 0 9px, rgba(20, 20, 20, 0.95) 9px 18px);
+}
+
+.lf-mach-lamp {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lf-red-hot);
+  box-shadow: 0 0 12px rgba(255, 34, 34, 0.9);
+  animation: lf-pulse 1.6s ease-in-out infinite;
+}
+
+@media (max-width: 600px) {
+  .lf-machinery { gap: 8px; }
+  .lf-mach-spin { width: calc(var(--s, 40px) * 0.72); height: calc(var(--s, 40px) * 0.72); }
+}
 
 /* ── Work · LVL 02 — the Foundry ───────────────────────────────── */
 .lf-work {
