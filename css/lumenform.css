@@ -744,61 +744,36 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
 
 .lf-hero .lf-tagwall:hover img { transform: rotate(0deg) scale(1.03); }
 
-/* ── Machinery strips: the wall's gear-work edges ── */
-.lf-machinery {
+/* ── Wallworks: steel truss platforms with one big mounted flywheel ── */
+.lf-wallworks {
+  position: relative;
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: clamp(10px, 1.6vw, 18px);
-  padding-left: var(--lf-shaft-pad);
-  padding-right: clamp(16px, 2.5vw, 28px);
-}
-
-.lf-mach-spin {
+  height: 44px;
   flex: none;
-  width: var(--s, 40px);
-  height: var(--s, 40px);
-  animation: lf-spin 16s linear infinite;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6));
+  background-image: url('../images/lumenform/girder.svg');
+  background-size: 240px 44px;
+  background-repeat: repeat-x;
 }
 
-.lf-mach-spin.rev { animation-direction: reverse; animation-duration: 11s; }
-
-.lf-mach-spin img { width: 100%; height: 100%; display: block; }
-
-/* connecting drive beam / pipework */
-.lf-mach-beam {
-  flex: 1 1 auto;
-  height: 10px;
-  border-radius: 3px;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 26px, rgba(224, 32, 32, 0.45) 26px 28px),
-    linear-gradient(180deg, #383838, #1c1c1c);
-  border-top: 1px solid #4a4a4a;
-  border-bottom: 1px solid #101010;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+.lf-wallworks-gear {
+  position: absolute;
+  top: 50%;
+  width: clamp(150px, 22vw, 300px);
+  translate: 0 -50%;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+  will-change: transform;
 }
 
-.lf-mach-beam.short { flex: 0 0 clamp(28px, 5vw, 72px); }
+/* mounted off the platform edges, half-cut like the section gears */
+.lf-wallworks-gear.gear-right { right: -7%; }
+.lf-wallworks-gear.gear-left  { left: max(var(--lf-shaft-pad) - 26px, 4%); }
 
-.lf-mach-beam.hazard {
-  background:
-    repeating-linear-gradient(-45deg, rgba(204, 0, 0, 0.55) 0 9px, rgba(20, 20, 20, 0.95) 9px 18px);
-}
-
-.lf-mach-lamp {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--lf-red-hot);
-  box-shadow: 0 0 12px rgba(255, 34, 34, 0.9);
-  animation: lf-pulse 1.6s ease-in-out infinite;
-}
-
-@media (max-width: 600px) {
-  .lf-machinery { gap: 8px; }
-  .lf-mach-spin { width: calc(var(--s, 40px) * 0.72); height: calc(var(--s, 40px) * 0.72); }
+@media (max-width: 700px) {
+  /* small screens: tuck the wheels into the edges, clear of the tag */
+  .lf-wallworks-gear { width: 116px; }
+  .lf-wallworks-gear.gear-right { right: -52px; }
+  .lf-wallworks-gear.gear-left  { left: -52px; }
 }
 
 /* ── Work · LVL 02 — the Foundry ───────────────────────────────── */
