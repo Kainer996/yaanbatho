@@ -148,14 +148,14 @@
 
     const gear = document.createElementNS(ns, 'path');
     gear.setAttribute('d', buildGearPath(10, r * 0.95, r * 0.68));
-    gear.setAttribute('fill', '#5d5d5d');
-    gear.setAttribute('stroke', '#2c2c2c');
-    gear.setAttribute('stroke-width', '1');
+    gear.setAttribute('fill', '#8d8d8d');
+    gear.setAttribute('stroke', '#3f3f3f');
+    gear.setAttribute('stroke-width', '1.2');
 
     const hub = document.createElementNS(ns, 'circle');
     hub.setAttribute('r', (r * 0.28).toFixed(1));
-    hub.setAttribute('fill', '#cc0000');
-    hub.setAttribute('stroke', '#7a0000');
+    hub.setAttribute('fill', '#e01010');
+    hub.setAttribute('stroke', '#8a0000');
     hub.setAttribute('stroke-width', '1.5');
 
     const axle = document.createElementNS(ns, 'circle');
@@ -227,8 +227,9 @@
     liftEl.addEventListener('click', onLiftClick);
 
     // cogs at both ends of the cable
-    makeCog(30, true);
-    makeCog(30, false);
+    const cogSize = window.innerWidth <= 700 ? 30 : 38;
+    makeCog(cogSize, true);
+    makeCog(cogSize, false);
 
     // level HUD
     hudEl = document.createElement('div');
