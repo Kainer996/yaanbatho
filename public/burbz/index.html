@@ -1070,6 +1070,23 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .academy-move { display: flex; gap: 6px; width: 100%; }
 .academy-move-btn { flex: 1; background: none; border: 1px dashed var(--bg4); color: var(--text3); font-size: 10px; padding: 5px 4px; border-radius: 7px; }
 .academy-move-btn:active { color: var(--accent); border-color: var(--accent3); }
+.nav-item.needs-care { position: relative; }
+.nav-item.needs-care::after { content: ''; position: absolute; top: 6px; right: calc(50% - 18px); width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 6px rgba(255,107,107,0.7); animation: navPulse 1.4s ease-in-out infinite; }
+@keyframes navPulse { 0%,100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+
+.academy-grad-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.78); z-index: 9999; backdrop-filter: blur(6px); animation: gradFade 0.4s ease-out; }
+@keyframes gradFade { from { opacity: 0; } to { opacity: 1; } }
+.academy-grad-panel { width: min(86%, 320px); padding: 22px 20px 18px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 2px solid var(--accent); border-radius: 18px; text-align: center; box-shadow: 0 0 40px rgba(214,168,79,0.5); animation: gradPop 0.5s cubic-bezier(0.4, 1.4, 0.5, 1); }
+@keyframes gradPop { from { transform: scale(0.7); } to { transform: scale(1); } }
+.academy-grad-kicker { font-size: 11px; color: var(--accent); letter-spacing: 0.18em; font-weight: 700; }
+.academy-grad-title { font-size: 28px; color: var(--text); letter-spacing: 0.08em; font-weight: 800; margin: 4px 0 14px; text-shadow: 0 0 18px rgba(214,168,79,0.7); }
+.academy-grad-art { width: 120px; height: 120px; margin: 0 auto 12px; border-radius: 50%; overflow: hidden; border: 3px solid var(--accent); background: var(--bg4); }
+.academy-grad-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.academy-grad-emoji { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+.academy-grad-name { font-size: 17px; font-weight: 700; color: var(--text); }
+.academy-grad-sub { font-size: 12px; color: var(--text3); margin: 4px 0 8px; }
+.academy-grad-bonus { font-size: 13px; color: var(--accent); font-weight: 700; margin-bottom: 14px; }
+.academy-grad-btn { background: var(--accent); color: #11100d; border: none; font-weight: 800; font-size: 14px; padding: 10px 20px; border-radius: 10px; letter-spacing: 0.06em; }
 </style>
 </head>
 <body>
@@ -1081,7 +1098,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 
   <!-- Header -->
   <header class="header">
-    <div class="header-logo"><img src="/burbz/assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></div>
+    <div class="header-logo"><img src="assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></div>
     <div class="header-info">
       <div class="header-level" id="headerLevel">TRAINER LV. 1</div>
       <div class="header-xp-bar"><div class="header-xp-fill" id="headerXpFill" style="width: 0%"></div></div>
@@ -2917,10 +2934,22 @@ function renderAcademy() {
         const [x, y] = perches[i];
         const wander = room === 'outdoors' ? ' wander' : '';
         const delay = (i * 0.45).toFixed(2);
-        html += '<text x="' + x + '" y="' + y + '" text-anchor="middle" class="academy-bird-glyph' + wander + '" style="animation-delay:' + delay + 's" data-room="' + room + '">' + getBirdMarkerEmoji(b.commonName || b.species) + '</text>';
+        const needs = (b.care.hunger || 0) >= 70 || (b.care.happiness || 100) <= 30 || (b.hp || 1) < (b.maxHp || 1) * 0.4;
+        const alert = needs ? '<circle cx="' + (x + 12) + '" cy="' + (y - 14) + '" r="5" fill="#ff6b6b" stroke="#11100d" stroke-width="1.5"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.4s" repeatCount="indefinite"/></circle><text x="' + (x + 12) + '" y="' + (y - 11) + '" text-anchor="middle" style="font-size:8px;font-weight:800;fill:#11100d">!</text>' : '';
+        html += '<text x="' + x + '" y="' + y + '" text-anchor="middle" class="academy-bird-glyph' + wander + '" style="animation-delay:' + delay + 's" data-room="' + room + '">' + getBirdMarkerEmoji(b.commonName || b.species) + '</text>' + alert;
       });
     });
     markers.innerHTML = html;
+  }
+
+  // Tab-level needs indicator
+  const navBadge = document.querySelector('.nav-item[data-screen="academy"]');
+  if (navBadge) {
+    const anyNeeds = gameState.flock.some(b => {
+      ensureBirdAcademy(b);
+      return (b.care.hunger || 0) >= 70 || (b.care.happiness || 100) <= 30 || (b.hp || 1) < (b.maxHp || 1) * 0.4;
+    });
+    navBadge.classList.toggle('needs-care', anyNeeds);
   }
 
   renderAcademyRoomPanel(byRoom[academySelectedRoom]);
@@ -2973,8 +3002,8 @@ function renderAcademyRoomPanel(birds) {
 
     return '<div class="academy-bird-row">' + artHtml +
       '<div class="academy-bird-main">' +
-        '<div class="academy-bird-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
-        '<div class="academy-bird-meta">Lv ' + b.level + ' · ' + (b.rarity || 'common').toUpperCase() + ' · PWR ' + (b.power || '?') + (b.training.trainCount ? ' · ' + b.training.trainCount + ' drills done' : '') + '</div>' +
+        '<div class="academy-bird-name">' + (b.academy.honor === 'star_pupil' ? '⭐ ' : '') + escapeHtml(b.commonName || b.species) + '</div>' +
+        '<div class="academy-bird-meta">Lv ' + b.level + ' · ' + (b.rarity || 'common').toUpperCase() + ' · PWR ' + (b.power || '?') + (b.training.trainCount ? ' · ' + b.training.trainCount + ' drills done' : '') + (b.academy.honor === 'star_pupil' ? ' · Star Pupil' : '') + '</div>' +
         academyMeter('HP', hpPct, 'hp') +
         academyMeter('HUNGER', hungerPct, 'hunger') +
         academyMeter('HAPPY', happyPct, 'happy') +
@@ -3074,17 +3103,26 @@ function academyDrill(birdId, stat) {
   ensureBirdAcademy(bird);
   if (academyCdLeft(bird.care.lastTrained, 90*60*1000) > 0) { showToast('Needs a breather between drills!'); return; }
 
-  bird.training.trainCount = (bird.training.trainCount || 0) + 1;
   const bonusKey = stat + 'Bonus';
   if ((bird.training[bonusKey] || 0) >= 30) { showToast('That stat is maxed from training!'); return; }
+  bird.training.trainCount = (bird.training.trainCount || 0) + 1;
   bird.training[bonusKey] = clamp((bird.training[bonusKey] || 0) + 1, 0, 30);
   bird[stat] = clamp((bird[stat] || 10) + 1, 10, 999);
   bird.care.lastTrained = new Date().toISOString();
   bird.care.hunger = clamp((bird.care.hunger || 0) + 10, 0, 100);
   recalcBirdPower(bird);
   levelUpBird(bird, 8);
+
+  // Graduation milestone: 30 total drills = Star Pupil
+  if (bird.training.trainCount === 30 && !bird.academy.graduated) {
+    bird.academy.graduated = new Date().toISOString();
+    bird.academy.honor = 'star_pupil';
+    academyGraduationOverlay(bird);
+    addPlayerXp(120);
+  }
+
   saveState();
-  showToast('🏋️ Drill complete! +1 ' + stat.toUpperCase() + ', +8 XP');
+  showToast('🏋️ Drill complete! +1 ' + stat.toUpperCase() + ', +8 XP' + (bird.training.trainCount % 10 === 0 ? ' · ' + bird.training.trainCount + ' drills total' : ''));
   SFX.tap();
   renderAcademy();
 }
@@ -3125,6 +3163,28 @@ function tickAcademy() {
   });
   saveState();
   if (currentScreen === 'academy') renderAcademy();
+}
+
+function academyGraduationOverlay(bird) {
+  const existing = document.getElementById('academyGradOverlay');
+  if (existing) existing.remove();
+  const art = getBirdArtUrl(bird);
+  const div = document.createElement('div');
+  div.id = 'academyGradOverlay';
+  div.className = 'academy-grad-overlay';
+  const artHtml = art ? '<img src="' + escapeHtml(art) + '" alt="">' : '<div class="academy-grad-emoji">' + getBirdMarkerEmoji(bird.commonName || bird.species) + '</div>';
+  div.innerHTML = '<div class="academy-grad-panel">' +
+    '<div class="academy-grad-kicker">⭐ BURB ACADEMY ⭐</div>' +
+    '<div class="academy-grad-title">STAR PUPIL</div>' +
+    '<div class="academy-grad-art">' + artHtml + '</div>' +
+    '<div class="academy-grad-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
+    '<div class="academy-grad-sub">graduated with honours after 30 drills</div>' +
+    '<div class="academy-grad-bonus">+120 XP awarded</div>' +
+    '<button class="academy-grad-btn" id="academyGradClose">Celebrate</button>' +
+  '</div>';
+  document.body.appendChild(div);
+  div.querySelector('#academyGradClose').addEventListener('click', () => div.remove());
+  setTimeout(() => { if (document.body.contains(div)) div.remove(); }, 9000);
 }
 
 function wireAcademyZones() {
