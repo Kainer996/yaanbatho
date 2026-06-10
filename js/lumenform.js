@@ -52,12 +52,18 @@
     if (!title) return;
     const text = title.textContent.trim();
     title.textContent = '';
-    [...text].forEach((ch, i) => {
-      const span = document.createElement('span');
-      span.className = 'lf-ch';
-      span.textContent = ch;
-      span.style.transitionDelay = (0.05 + i * 0.045) + 's';
-      title.appendChild(span);
+    let i = 0;
+    text.split(' ').forEach(word => {
+      const w = document.createElement('span');
+      w.className = 'lf-word';
+      [...word].forEach(ch => {
+        const span = document.createElement('span');
+        span.className = 'lf-ch';
+        span.textContent = ch;
+        span.style.transitionDelay = (0.05 + i++ * 0.045) + 's';
+        w.appendChild(span);
+      });
+      title.appendChild(w);
     });
   }
 
@@ -121,7 +127,7 @@
         const r = el.parentElement.getBoundingClientRect();
         // parallax relative to element's journey through the viewport
         const delta = (r.top + r.height / 2) - vh / 2;
-        el.style.transform = `translateY(${(-delta * speed).toFixed(1)}px) scale(1.06)`;
+        el.style.transform = `translateY(${(-delta * speed).toFixed(1)}px)`;
       });
 
       gearEls.forEach(({ el, speed, base }) => {

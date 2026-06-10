@@ -25,7 +25,7 @@
     travelInterval: [9000, 16000],   // time on a platform before moving on
     quips: [
       "You alright, hun? 👋",
-      "Welcome to Lumenform ✨",
+      "Welcome to the studio ✨",
       "This website is crisp... 🤌",
       "...like the edge of a good lasagna. 🍝",
       "I keep these cogs oiled myself ⚙️",
@@ -215,6 +215,9 @@
     // lift cage
     liftEl = document.createElement('div');
     liftEl.id = 'lf-lift';
+    liftEl.style.width = CFG.liftW + 'px';
+    liftEl.style.height = CFG.liftH + 'px';
+    liftEl.style.left = CFG.liftLeft + 'px';
     liftEl.innerHTML =
       '<div class="lf-lift-cabin"></div>' +
       '<span class="lf-lift-lamp"></span>' +
@@ -811,6 +814,14 @@
 
   // ─── INIT ──────────────────────────────────────────────────────
   function init() {
+    // slimmer lift shaft on small screens so it stays inside the gutter
+    if (window.innerWidth <= 700) {
+      CFG.cableX = 20;
+      CFG.liftLeft = 3;
+      CFG.liftW = 34;
+      CFG.liftH = 46;
+      CFG.edgePadLeft = 52;
+    }
     measureHeader();
     buildWorld();
     buildMascot();

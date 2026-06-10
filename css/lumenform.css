@@ -23,6 +23,12 @@
   --lf-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --lf-header-h: 64px;
   --lf-floor-h: 24px;
+  /* keeps content clear of the fixed lift shaft on the left edge */
+  --lf-gutter: 84px;
+}
+
+@media (max-width: 700px) {
+  :root { --lf-gutter: 56px; }
 }
 
 /* ── Reset ─────────────────────────────────────────────────────── */
@@ -73,7 +79,12 @@ a { color: inherit; text-decoration: none; }
 
 img { max-width: 100%; display: block; }
 
-.lf-wrap { max-width: 1280px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px); }
+.lf-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 56px);
+  padding-inline: max(clamp(20px, 4vw, 56px), var(--lf-gutter));
+}
 
 section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
 
@@ -410,11 +421,23 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
 
 .lf-hero-bg {
   position: absolute;
-  inset: -12% 0;
-  background-size: cover;
-  background-position: center 30%;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-position: center;
   will-change: transform;
-  transform: scale(1.06);
+}
+
+/* soft fill behind the full image so nothing is ever cropped */
+.lf-hero-bg-blur {
+  background-size: cover;
+  filter: blur(26px) brightness(0.5) saturate(1.15);
+  transform: scale(1.18);
+}
+
+/* the actual banner — contained, always shown in full */
+.lf-hero-bg-full {
+  background-size: contain;
+  background-position: center 42%;
 }
 
 .lf-hero-shade {
@@ -474,6 +497,7 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 clamp(20px, 4vw, 56px) clamp(40px, 7vh, 90px);
+  padding-inline: max(clamp(20px, 4vw, 56px), var(--lf-gutter));
 }
 
 .lf-hero-kicker {
@@ -509,7 +533,11 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   margin: 0 0 18px -0.04em;
   display: flex;
   flex-wrap: wrap;
+  column-gap: 0.22em;
 }
+
+/* words stay intact; lines break only between them */
+.lf-hero-title .lf-word { display: flex; }
 
 .lf-hero-title .lf-ch {
   display: inline-block;
@@ -542,6 +570,7 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   width: 100%;
   margin: 0 auto;
   padding: 0 clamp(20px, 4vw, 56px) calc(var(--lf-floor-h) + 16px);
+  padding-inline: max(clamp(20px, 4vw, 56px), var(--lf-gutter));
 }
 
 .lf-hud-tag {
@@ -655,6 +684,32 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
 }
 
 .lf-studio-cols a:hover { color: var(--lf-red-hot); border-color: var(--lf-red-hot); }
+
+/* ── The graffiti tag on the studio wall ── */
+.lf-tagwall {
+  margin: clamp(56px, 8vw, 100px) auto 0;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.lf-tagwall img {
+  display: block;
+  margin: 0 auto;
+  max-width: min(580px, 92%);
+  /* black plate melts into the page; red underglow ties it to the palette */
+  mix-blend-mode: screen;
+  transform: rotate(-2deg);
+  filter: drop-shadow(0 0 34px rgba(204, 0, 0, 0.32)) drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
+  transition: transform 0.6s var(--lf-ease), filter 0.4s;
+}
+
+.lf-tagwall:hover img {
+  transform: rotate(0deg) scale(1.02);
+  filter: drop-shadow(0 0 44px rgba(255, 34, 34, 0.45)) drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
+}
+
+.lf-tagwall figcaption { margin-top: 16px; }
 
 /* ── Work · LVL 02 — the Foundry ───────────────────────────────── */
 .lf-work {
@@ -837,6 +892,7 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   gap: clamp(16px, 2.5vw, 36px);
   width: max-content;
   padding: 0 6vw;
+  padding-inline: max(6vw, var(--lf-gutter));
   will-change: transform;
 }
 
