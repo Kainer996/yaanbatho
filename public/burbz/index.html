@@ -1101,6 +1101,21 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .academy-food-label { font-size: 8.5px; color: var(--text2); font-weight: 700; letter-spacing: 0.03em; }
 .academy-food-count { font-size: 8.5px; color: var(--text3); }
 .academy-tray-hint { grid-column: 1 / -1; font-size: 9.5px; color: var(--text3); line-height: 1.45; margin-top: 2px; }
+
+/* Field-guide diet panel */
+.bird-info-foodgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+.bird-info-foodrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; align-items: center; }
+.bird-info-foodrow-label { font-size: 9.5px; letter-spacing: 0.08em; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 2px; }
+.bird-info-foodrow-label.preferred { color: #11100d; background: var(--accent); }
+.bird-info-foodrow-label.ok        { color: var(--accent); background: rgba(214,168,79,0.14); }
+.bird-info-foodrow-label.avoid     { color: var(--hp-red); background: rgba(255,107,107,0.12); }
+.bird-info-food { display: inline-flex; align-items: center; gap: 4px; background: var(--bg4); border: 1px solid var(--bg4); border-radius: 8px; padding: 4px 8px; font-size: 10.5px; color: var(--text2); }
+.bird-info-food.preferred { border-color: var(--accent); color: var(--text); }
+.bird-info-food.avoid     { border-color: rgba(255,107,107,0.4); color: var(--hp-red); text-decoration: line-through; opacity: 0.85; }
+.bird-info-food.unknown   { flex-direction: column; padding: 6px 4px; min-width: 50px; opacity: 0.55; }
+.bird-info-food-emoji { font-size: 14px; }
+.bird-info-food-label { font-size: 10.5px; font-weight: 600; }
+.bird-info-fact { font-size: 12px; color: var(--accent); margin-top: 8px; padding: 8px 10px; background: rgba(214,168,79,0.07); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -1150,6 +1165,10 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
         <div class="birdex-stat">
           <div class="birdex-stat-num" id="birdexPower">0</div>
           <div class="birdex-stat-label">Total Power</div>
+        </div>
+        <div class="birdex-stat">
+          <div class="birdex-stat-num" id="birdexDiets">0</div>
+          <div class="birdex-stat-label">Diets known</div>
         </div>
       </div>
       <div class="filter-row" id="filterRow">
@@ -1883,6 +1902,18 @@ function loadState() {
   gameState.flock = Array.isArray(gameState.flock) ? gameState.flock.filter(b => b && typeof b === 'object') : [];
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
+
+  // Diet-discovery achievement: any save with already-known diets should reflect
+  // the current count at boot so the badge unlocks aren't gated behind a future feed.
+  setTimeout(() => {
+    const known = countDiscoveredDiets();
+    if (known > 0) [...ACHIEVEMENT_QUESTS].filter(q => q.type === 'diets_known').forEach(q => {
+      if (gameState.quests && gameState.quests[q.id] && !gameState.quests[q.id].claimed) {
+        gameState.quests[q.id].progress = Math.min(q.target, known);
+      }
+    });
+    saveState();
+  }, 0);
   if (gameState.activePetId === undefined) gameState.activePetId = null;
 
   // Migrate old flock format and old birds to have individual care/training objects.
@@ -2571,6 +2602,42 @@ function renderEducationSections(bird, education) {
   `;
 }
 
+function renderBirdDietPanel(bird) {
+  if (!bird) return '';
+  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const known = bird && bird.academy && bird.academy.dietKnown;
+  const isPreview = bird.previewOnly;
+  const title = '<div class="bird-info-section-title">Feeding the real bird</div>';
+  if (isPreview) {
+    return '<div class="bird-info-section">' + title +
+      '<div class="bird-info-section-body">Capture this species in the wild to unlock the feeding panel — then head to the Academy roost to learn its diet.</div></div>';
+  }
+  if (!known) {
+    const hintFoods = (diet ? diet.pref.concat(diet.ok).slice(0,4) : ['seeds','insects','berries','suet'])
+      .map(k => FOODS[k]).filter(Boolean);
+    return '<div class="bird-info-section">' + title +
+      '<div class="bird-info-section-body">Diet not yet discovered. Visit the <b>Academy roost</b> and try a food on the tray — get it right and the full diet unlocks here.</div>' +
+      '<div class="bird-info-foodgrid">' + hintFoods.map(f =>
+        '<div class="bird-info-food unknown"><span class="bird-info-food-emoji">❔</span><span class="bird-info-food-label">???</span></div>'
+      ).join('') + '</div></div>';
+  }
+  const factHtml = diet && diet.fact ? '<div class="bird-info-fact">💡 ' + escapeHTML(diet.fact) + '</div>' : '';
+  const preferred = (diet ? diet.pref : ['seeds','insects']).map(k => FOODS[k]).filter(Boolean);
+  const accepted  = (diet ? diet.ok  : []).map(k => FOODS[k]).filter(Boolean);
+  const avoid     = (diet ? diet.avoid : []).map(k => FOODS[k]).filter(Boolean);
+  const block = (cls, label, list) => list.length
+    ? '<div class="bird-info-foodrow"><span class="bird-info-foodrow-label ' + cls + '">' + label + '</span>' + list.map(f =>
+        '<span class="bird-info-food ' + cls + '" title="' + escapeHTML(f.desc) + '"><span class="bird-info-food-emoji">' + f.emoji + '</span><span class="bird-info-food-label">' + escapeHTML(f.label) + '</span></span>'
+      ).join('') + '</div>'
+    : '';
+  return '<div class="bird-info-section">' + title +
+    block('preferred','Preferred', preferred) +
+    block('ok','Will accept', accepted) +
+    block('avoid','Avoid', avoid) +
+    factHtml +
+    '</div>';
+}
+
 function refreshBirdEducationBlock(birdId, bird) {
   loadBirdEducation().then(() => {
     const content = $('birdInfoContent');
@@ -2649,6 +2716,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-section-title">Habitat & diet</div>
       <div class="bird-info-section-body">${escapeHTML(info.habitat || 'Habitat unknown')} · ${escapeHTML(info.diet || 'Diet unknown')}</div>
     </div>
+    ${renderBirdDietPanel(bird)}
     <div class="bird-info-section">
       <div class="bird-info-section-title">Conservation</div>
       <div class="bird-info-section-body">${escapeHTML(info.conservation || 'Unknown')}</div>
@@ -3263,6 +3331,7 @@ function academyFeedFood(birdId, foodKey) {
     const firstTime = !bird.academy.dietKnown;
     bird.academy.dietKnown = true;
     academyFeedTrayBirdId = null;
+    updateQuestProgress('feed_correct', 1);
     saveState();
     showToast('✅ ' + food.emoji + ' Perfect! ' + (diet ? diet.fact : name + ' happily eats ' + food.label.toLowerCase() + '.') + ' +2 HP, +4 XP' + (firstTime ? ' · Diet discovered!' : ''));
     SFX.tap();
@@ -3581,6 +3650,7 @@ function renderBirdex() {
   $('birdexDiscovered').textContent = uniqueSpecies.size;
   $('birdexTotal').textContent = WILD_BIRDS.length;
   $('birdexPower').textContent = flock.reduce((sum, b) => sum + (b.power || 0), 0);
+  const dietsEl = $('birdexDiets'); if (dietsEl) dietsEl.textContent = countDiscoveredDiets();
 
   const grid = $('birdGrid');
   grid.innerHTML = '';
@@ -5066,7 +5136,8 @@ $('petCompanion').addEventListener('click', () => {
 const DAILY_QUESTS = [
   { id: 'daily_capture_3', name: 'Field Work', desc: 'Capture 3 birds today', type: 'capture', target: 3, reward: 50, icon: '\u{1F426}' },
   { id: 'daily_battle_2', name: 'Arena Fighter', desc: 'Win 2 battles', type: 'win', target: 2, reward: 40, icon: '\u{2694}\u{FE0F}' },
-  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}' }
+  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}' },
+  { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 60, icon: '\u{1F37D}\u{FE0F}' }
 ];
 
 const WEEKLY_QUESTS = [
@@ -5079,7 +5150,9 @@ const ACHIEVEMENT_QUESTS = [
   { id: 'ach_first_capture', name: 'First Discovery', desc: 'Capture your first bird', type: 'capture', target: 1, reward: 30, icon: '\u{1F331}' },
   { id: 'ach_10_species', name: 'Budding Birder', desc: 'Discover 10 unique species', type: 'total_species', target: 10, reward: 100, icon: '\u{1F3C5}' },
   { id: 'ach_first_win', name: 'First Victory', desc: 'Win your first battle', type: 'win', target: 1, reward: 30, icon: '\u{1F4AA}' },
-  { id: 'ach_legendary', name: 'Legendary Find', desc: 'Discover a Legendary bird', type: 'capture_legendary', target: 1, reward: 200, icon: '\u{1F451}' }
+  { id: 'ach_legendary', name: 'Legendary Find', desc: 'Discover a Legendary bird', type: 'capture_legendary', target: 1, reward: 200, icon: '\u{1F451}' },
+  { id: 'ach_diet_5',  name: 'Real Birdkeeper', desc: 'Discover the true diets of 5 species', type: 'diets_known', target: 5,  reward: 75,  icon: '\u{1F37D}\u{FE0F}' },
+  { id: 'ach_diet_15', name: 'Field Naturalist', desc: 'Discover the true diets of 15 species', type: 'diets_known', target: 15, reward: 200, icon: '\u{1F4D6}' }
 ];
 
 function initQuests() {
@@ -5143,7 +5216,24 @@ function updateQuestProgress(type, amount) {
       }
     });
   }
+  // Diet-discovery achievements track absolute count, not increment
+  if (type === 'feed_correct') {
+    const knownDiets = countDiscoveredDiets();
+    allQuests.filter(q => q.type === 'diets_known').forEach(q => {
+      if (gameState.quests[q.id]) {
+        gameState.quests[q.id].progress = Math.min(q.target, knownDiets);
+      }
+    });
+  }
   saveState();
+}
+
+function countDiscoveredDiets() {
+  const seen = new Set();
+  (gameState.flock || []).forEach(b => {
+    if (b && b.academy && b.academy.dietKnown) seen.add(b.species);
+  });
+  return seen.size;
 }
 
 function renderQuests() {
