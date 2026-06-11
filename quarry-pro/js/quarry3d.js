@@ -167,11 +167,14 @@ let gameHourTimer = null;
 const cameraShake = { time: 1, duration: 1, intensity: 0 };
 const EDGE_BUTTON_IDLE_LABEL = '🚛 Tip Edge';
 const STARTER_DEMO_FACE_GRID = { ix: 32, iz: 30 };
+// In-pit primary crushing, like a real operation: the crusher and screener
+// sit on the bench floor next to the shot rock, so loading loops are short
+// and only the finished-product run to the edge uses the haul ramp.
 const STARTER_DEMO_EQUIPMENT = Object.freeze([
-  { type: 'excavator', x: -38, z: -48, yaw: 0.15 },
-  { type: 'dumper', x: -18, z: -30, yaw: 0.2 },
-  { type: 'crusher', x: 2, z: -42, yaw: 0 },
-  { type: 'screener', x: 34, z: -42, yaw: 0 },
+  { type: 'excavator', x: -48, z: -54, yaw: 0.15 },
+  { type: 'dumper', x: -30, z: -58, yaw: 0.2 },
+  { type: 'crusher', x: -34, z: -38, yaw: 0 },
+  { type: 'screener', x: -22, z: -46, yaw: 0 },
   { type: 'loader', x: 48, z: -22, yaw: -0.35 },
 ]);
 const DIRECT_FEED_DEMO_EQUIPMENT = Object.freeze([

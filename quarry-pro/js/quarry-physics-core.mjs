@@ -8,7 +8,7 @@
  */
 
 export const VEHICLE_DYNAMICS = Object.freeze({
-  dumper:    { maxSpeed: 15, accel: 5.5, brake: 10, turnRate: 2.2, wheelRadius: 1.3,  wheelbase: 7.0, track: 5.8 },
+  dumper:    { maxSpeed: 16, accel: 5.5, brake: 10, turnRate: 2.2, wheelRadius: 1.3,  wheelbase: 7.0, track: 5.8 },
   excavator: { maxSpeed: 5.5, accel: 3.0, brake: 7, turnRate: 1.7, wheelRadius: 0.9,  wheelbase: 8.0, track: 6.0 },
   loader:    { maxSpeed: 10, accel: 5.5, brake: 11, turnRate: 2.6, wheelRadius: 1.15, wheelbase: 5.5, track: 4.6 },
   default:   { maxSpeed: 10, accel: 4.5, brake: 9,  turnRate: 2.1, wheelRadius: 1.2,  wheelbase: 6.0, track: 5.0 },
