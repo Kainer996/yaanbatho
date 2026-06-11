@@ -4459,6 +4459,7 @@ function updateGameHUD() {
     s('q3d-loop-status').style.color = edgeEvidence.ready ? '#ffd58a' : '#c9d1d9';
   }
   if (s('q3d-objective')) s('q3d-objective').textContent = `${snapshot.objective} · ${snapshot.recommendedNextAction}`;
+  toastBenchUnlocks();
   updateCinematicDashboard(snapshot);
   updateDirectFeedProofOverlay();
 }
@@ -5342,6 +5343,16 @@ function toastGame(message) {
   else console.log('[QuarryPro]', message);
 }
 
+let lastBenchUnlockEventCount = 0;
+function toastBenchUnlocks() {
+  const unlocks = (gameState.events || []).filter(event => event.type === 'bench_unlocked');
+  if (unlocks.length > lastBenchUnlockEventCount) {
+    const latest = unlocks.at(-1);
+    toastGame(`⭐ Level ${latest.level} — next bench down unlocked (+${latest.provenTonnes.toLocaleString()}t proven reserve)`);
+  }
+  lastBenchUnlockEventCount = unlocks.length;
+}
+
 function updateClock() {
   const el = document.getElementById('q3d-s-shift');
   if (!el) return;
@@ -5498,6 +5509,7 @@ function resetScene(options = {}) {
   stats.blasts = 0;
   stats.shiftStart = Date.now();
   nextDumperId = 1;
+  lastBenchUnlockEventCount = 0;
 
   updateStatsUI();
   updateLagoonVisuals();
