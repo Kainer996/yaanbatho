@@ -4,12 +4,14 @@ import {
   getTicketLabel,
 } from './quarry-staff-core.mjs';
 
+// Used-plant prices scaled for game pacing: a working pit should be able to
+// buy its next machine after a few processed shots, not after a few clicks.
 const EQUIPMENT_COSTS = {
-  dumper: 4500,
-  excavator: 5500,
-  crusher: 7500,
-  screener: 5000,
-  loader: 3500,
+  dumper: 8500,
+  excavator: 12500,
+  crusher: 18000,
+  screener: 14000,
+  loader: 6500,
 };
 
 const OPERATOR_TICKET_BY_EQUIPMENT = Object.freeze({
@@ -53,23 +55,35 @@ export const DEFAULT_WATER_STATE = Object.freeze({
 export const STARTER_QUARRY_EQUIPMENT = Object.freeze(['excavator', 'dumper', 'crusher', 'screener', 'loader']);
 export const DIRECT_FEED_STARTER_EQUIPMENT = Object.freeze(['excavator', 'crusher', 'screener']);
 export const STARTER_QUARRY_DEFAULTS = Object.freeze({
-  loanAmount: 10000,
+  loanAmount: 25000,
   blastTonnes: 1800,
   haulCycles: 3,
   payloadTonnes: 45,
 });
 export const DIRECT_FEED_STARTER_DEFAULTS = Object.freeze({
-  loanAmount: 10000,
+  loanAmount: 25000,
   blastTonnes: 1800,
   feedCycles: 3,
   payloadTonnes: 25,
 });
 
+// One real quarry economy: blasting and running plant costs money, finished
+// aggregate sold from the edge stockpiles earns it, and the bank charges for
+// every hour you sit on borrowed cash. Prices are £/t in UK aggregate range.
 const DEFAULT_ECONOMY = {
-  pricePerTonneCrushed: 7,
-  pricePerTonneScreened: 11,
-  xpPerTonne: 2,
-  screenYield: 0.85,
+  pricePerTonneCrushed: 5,
+  pricePerTonneScreened: 9,
+  xpPerTonne: 2,            // XP per tonne SOLD at the edge
+  xpPerTonneProduced: 0.5,  // small XP for tonnes through the plant
+  screenYield: 0.92,        // 92% to product decks
+  screenOversizeReturn: 0.05, // 5% oversize recirculated to the crusher feed
+  blastCostPerTonne: 1.2,   // drilling + explosives + shotfirer
+  fuelCostPerHaulCycle: 9,
+  fuelCostPerDirectFeedCycle: 5,
+  fuelCostPerEdgeRun: 4,
+  machineStandingCostPerHour: 3,
+  operatorWagePerHour: 22,
+  loanInterestPerHour: 0.001, // 0.1% of balance per game hour
   productPrices: {
     stockpile10mm: 14,
     stockpile20mm: 12,
@@ -77,26 +91,44 @@ const DEFAULT_ECONOMY = {
     dust: 5,
   },
   edgeProductPrices: {
-    edgeType1: 9,
+    edgeType1: 8,
     edge10mm: 16,
-    edge20mm: 14,
+    edge20mm: 13.5,
     edge40mm: 10,
-    edgeDust: 6,
+    edgeDust: 5,
+  },
+  // Live market demand multipliers — drift hour by hour, so the best product
+  // to haul to the edge changes over a shift.
+  demand: {
+    edgeType1: 1,
+    edge10mm: 1,
+    edge20mm: 1,
+    edge40mm: 1,
+    edgeDust: 1,
   },
 };
+export const DEMAND_MIN = 0.7;
+export const DEMAND_MAX = 1.35;
 
 export function createInitialGameState() {
   return {
     cash: 25000,
     xp: 0,
     level: 1,
+    gameHours: 0,
     tonnesToday: 0,
-    dailyTarget: 2000,
+    dailyTarget: 1000,
     blasts: 0,
     haulCycles: 0,
     soldTonnes: 0,
+    costs: {
+      blasting: 0,
+      fuel: 0,
+      wages: 0,
+      interest: 0,
+    },
     loans: {
-      balance: 30000,
+      balance: 0,
       interestRateApr: 0.085,
     },
     equipment: {
@@ -150,6 +182,7 @@ export function cloneState(state) {
     ...state,
     equipment: { ...state.equipment },
     material: { ...state.material },
+    costs: { blasting: 0, fuel: 0, wages: 0, interest: 0, ...(state.costs || {}) },
     quarryFace: state.quarryFace ? { ...state.quarryFace } : undefined,
     dumperLoad: state.dumperLoad ? { ...state.dumperLoad } : { productKey: null, tonnes: 0 },
     dumperLoads: cloneDumperLoads(state.dumperLoads),
@@ -277,13 +310,29 @@ export function sellEquipmentInState(state, type, options = {}) {
   return withObjectiveProgress(next);
 }
 
+export function getBlastCost(state, tonnes) {
+  const rate = state?.economy?.blastCostPerTonne ?? DEFAULT_ECONOMY.blastCostPerTonne;
+  return roundT(Math.max(0, Number(tonnes) || 0) * rate);
+}
+
+function applyBlastCostInPlace(state, tonnes) {
+  const cost = getBlastCost(state, tonnes);
+  if (cost <= 0) return 0;
+  // Overdraft allowed so a skint player can always shoot rock and trade out
+  // of trouble — the interest charge makes it expensive, not impossible.
+  state.cash = roundT(state.cash - cost);
+  state.costs.blasting = roundT((state.costs.blasting || 0) + cost);
+  return cost;
+}
+
 export function recordBlast(state, tonnes = 500) {
   const next = cloneState(state);
+  const cost = applyBlastCostInPlace(next, tonnes);
   next.material.looseGround = roundT((next.material.looseGround || 0) + tonnes);
   next.material.blastedRock = roundT(next.material.blastedRock + tonnes);
   applyDustActivityInPlace(next, { blastTonnes: tonnes });
   next.blasts += 1;
-  next.events.push({ type: 'blast_fired', tonnes });
+  next.events.push({ type: 'blast_fired', tonnes, cost });
   return withObjectiveProgress(next);
 }
 
@@ -303,11 +352,12 @@ export function recordQuarryFaceBlast(state, { tonnes = 1800 } = {}) {
     return withObjectiveProgress(next);
   }
 
+  const cost = applyBlastCostInPlace(next, produced);
   next.material.looseGround = roundT((next.material.looseGround || 0) + produced);
   next.material.blastedRock = roundT((next.material.blastedRock || 0) + produced);
   applyDustActivityInPlace(next, { blastTonnes: produced });
   next.blasts += 1;
-  next.events.push({ type: 'quarry_face_blasted', tonnes: produced, remainingTonnes: next.quarryFace.remainingTonnes });
+  next.events.push({ type: 'quarry_face_blasted', tonnes: produced, cost, remainingTonnes: next.quarryFace.remainingTonnes });
   return withObjectiveProgress(next);
 }
 
@@ -342,10 +392,11 @@ export function completeHaulCycle(state, { payloadTonnes = 45 } = {}) {
   const crushed = next.material.crusherFeed;
   next.material.crusherFeed = 0;
   const { sellableTonnes } = processCrusherOutput(next, crushed);
+  applyFuelCostInPlace(next, next.economy.fuelCostPerHaulCycle);
   applyDustActivityInPlace(next, { haulLoads: 1, crusherTonnes: moved, screenerTonnes: sellableTonnes });
 
   next.tonnesToday = roundT(next.tonnesToday + sellableTonnes);
-  next.xp = roundT(next.xp + sellableTonnes * next.economy.xpPerTonne);
+  next.xp = roundT(next.xp + sellableTonnes * (next.economy.xpPerTonneProduced ?? 0.5));
   next.haulCycles += 1;
   next.events.push({ type: 'haul_cycle_complete', payloadTonnes: moved, sellableTonnes });
 
@@ -362,10 +413,14 @@ export function completeExcavatorCrusherCycle(state, { payloadTonnes = 25 } = {}
   next.material.looseGround = roundT(Math.max(0, (next.material.looseGround ?? next.material.blastedRock) - moved));
   next.material.blastedRock = roundT(Math.max(0, (next.material.blastedRock || 0) - moved));
 
-  const { sellableTonnes } = processCrusherOutput(next, moved);
+  // Crush the fresh dig plus any oversize recirculated from the screen.
+  const crushed = roundT(moved + (next.material.crusherFeed || 0));
+  next.material.crusherFeed = 0;
+  const { sellableTonnes } = processCrusherOutput(next, crushed);
+  applyFuelCostInPlace(next, next.economy.fuelCostPerDirectFeedCycle);
   applyDustActivityInPlace(next, { crusherTonnes: moved, screenerTonnes: sellableTonnes });
   next.tonnesToday = roundT(next.tonnesToday + sellableTonnes);
-  next.xp = roundT(next.xp + sellableTonnes * next.economy.xpPerTonne);
+  next.xp = roundT(next.xp + sellableTonnes * (next.economy.xpPerTonneProduced ?? 0.5));
   next.haulCycles += 1;
   next.events.push({ type: 'excavator_crusher_cycle_complete', payloadTonnes: moved, sellableTonnes });
 
@@ -380,7 +435,8 @@ export function loadDumperFromScreenedStockpile(state, { productKey = null, payl
   const activeDumperId = normaliseDumperId(dumperId);
   if ((getDumperLoad(state, activeDumperId).tonnes || 0) > 0) return cloneState(state);
 
-  const selectedKey = productKey || getBestSellableProductKey(state);
+  // Default to whichever product is fetching the best live price.
+  const selectedKey = productKey || getBestMarketProductKey(state) || getBestSellableProductKey(state);
   if (!selectedKey) return cloneState(state);
   const edgeKey = productToEdgeKey(selectedKey);
   if (!edgeKey) throw new Error(`Unknown sellable product: ${selectedKey}`);
@@ -406,15 +462,47 @@ export function tipDumperToEdgeStockpile(state, { dumperId = 'default' } = {}) {
 
   const next = cloneState(state);
   const tipped = roundT(load.tonnes);
-  const prices = next.economy?.edgeProductPrices || DEFAULT_ECONOMY.edgeProductPrices;
+  const pricePerTonne = getMarketPrice(next, edgeKey);
+  const revenue = roundT(tipped * pricePerTonne);
   next.material[edgeKey] = roundT((next.material[edgeKey] || 0) + tipped);
-  next.cash = roundT(next.cash + tipped * (prices[edgeKey] || 0));
+  next.cash = roundT(next.cash + revenue);
   next.soldTonnes = roundT((next.soldTonnes || 0) + tipped);
   next.xp = roundT(next.xp + tipped * next.economy.xpPerTonne);
+  applyFuelCostInPlace(next, next.economy.fuelCostPerEdgeRun);
   applyDustActivityInPlace(next, { haulLoads: 1 });
   setDumperLoad(next, activeDumperId, { productKey: null, tonnes: 0 });
-  next.events.push({ type: 'edge_stockpile_tipped', productKey: load.productKey, edgeKey, tonnes: tipped, dumperId: activeDumperId });
+  next.events.push({
+    type: 'edge_stockpile_tipped',
+    productKey: load.productKey,
+    edgeKey,
+    tonnes: tipped,
+    pricePerTonne,
+    revenue,
+    dumperId: activeDumperId,
+  });
   return withObjectiveProgress(next);
+}
+
+/** Live sale price: base £/t scaled by the drifting demand multiplier. */
+export function getMarketPrice(state, edgeKey) {
+  const prices = state.economy?.edgeProductPrices || DEFAULT_ECONOMY.edgeProductPrices;
+  const demand = state.economy?.demand?.[edgeKey] ?? 1;
+  return Math.round((prices[edgeKey] || 0) * demand * 100) / 100;
+}
+
+/** The edge product fetching the best live £/t among materials we hold. */
+export function getBestMarketProductKey(state) {
+  let bestKey = null;
+  let bestPrice = -Infinity;
+  for (const key of SELLABLE_PRODUCT_KEYS) {
+    if ((state.material[key] || 0) <= 0) continue;
+    const price = getMarketPrice(state, productToEdgeKey(key));
+    if (price > bestPrice) {
+      bestPrice = price;
+      bestKey = key;
+    }
+  }
+  return bestKey;
 }
 
 export function completeEdgeHaulCycle(state, { productKey = null, payloadTonnes = 25, dumperId = 'default' } = {}) {
@@ -713,6 +801,74 @@ export function takeBankLoan(state, amount) {
   return withObjectiveProgress(next);
 }
 
+export function repayBankLoan(state, amount = 10000) {
+  const next = cloneState(state);
+  const repayable = Math.min(
+    Math.max(0, Number(amount) || 0),
+    Math.max(0, next.loans.balance || 0),
+    Math.max(0, next.cash || 0)
+  );
+  const repaid = roundT(repayable);
+  if (repaid <= 0) return next;
+  next.cash = roundT(next.cash - repaid);
+  next.loans.balance = roundT((next.loans.balance || 0) - repaid);
+  next.events.push({ type: 'bank_loan_repaid', amount: repaid, balance: next.loans.balance });
+  return withObjectiveProgress(next);
+}
+
+/**
+ * One game hour of running the site: loan interest, operator wages, plant
+ * standing costs, and a random walk on market demand. The 3D layer calls
+ * this on a steady tick so time costs money like a real operation.
+ */
+export function advanceGameHour(state, { random = Math.random } = {}) {
+  const next = cloneState(state);
+  const economy = next.economy;
+  next.gameHours = (next.gameHours || 0) + 1;
+
+  const interest = roundT((next.loans.balance || 0) * (economy.loanInterestPerHour ?? 0.001));
+  const operators = Object.values(next.staffAssignments || {})
+    .filter(assignment => assignment?.workerName).length;
+  const wages = roundT(operators * (economy.operatorWagePerHour ?? 22));
+  const machineCount = Object.values(next.equipment || {})
+    .reduce((total, count) => total + (Number(count) || 0), 0);
+  const standing = roundT(machineCount * (economy.machineStandingCostPerHour ?? 3));
+
+  const totalCost = roundT(interest + wages + standing);
+  if (totalCost > 0) {
+    next.cash = roundT(next.cash - totalCost);
+    next.costs.interest = roundT((next.costs.interest || 0) + interest);
+    next.costs.wages = roundT((next.costs.wages || 0) + wages);
+    next.costs.fuel = roundT((next.costs.fuel || 0) + standing);
+  }
+
+  // Demand drifts a few percent per hour, bounded so no product becomes
+  // worthless or absurdly lucrative.
+  const moves = {};
+  for (const key of EDGE_PRODUCT_KEYS) {
+    const current = economy.demand[key] ?? 1;
+    const drifted = current + (random() - 0.5) * 0.12;
+    economy.demand[key] = Math.round(clampRange(drifted, DEMAND_MIN, DEMAND_MAX) * 1000) / 1000;
+    moves[key] = roundT(economy.demand[key] - current);
+  }
+
+  next.events.push({
+    type: 'game_hour_elapsed',
+    gameHours: next.gameHours,
+    interest,
+    wages,
+    standing,
+    totalCost,
+    demand: { ...economy.demand },
+    demandMoves: moves,
+  });
+  return withObjectiveProgress(next);
+}
+
+function clampRange(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
+}
+
 export function getObjective(state) {
   if (state.blasts === 0 && state.material.blastedRock === 0) return 'Mark and fire a blast to create shot rock';
   if (state.equipment.excavator === 0) return 'Place an excavator by the blasted rock';
@@ -730,7 +886,19 @@ export function getObjective(state) {
 export function withObjectiveProgress(state) {
   const next = cloneState(state);
   next.objective = getObjective(next);
-  next.level = Math.max(1, Math.floor(next.xp / 1000) + 1);
+  // Levels are earned mostly by selling: L2 at 400xp (~200t sold), L3 at
+  // 1,600xp, L4 at 3,600xp… each level unlocks a deeper bench to blast.
+  next.level = Math.max(1, 1 + Math.floor(Math.sqrt(Math.max(0, next.xp) / 400)));
+  next.dailyTarget = 600 + next.level * 400;
+
+  // Levelling up unlocks the next bench down, which proves out more reserve.
+  const previousLevel = Math.max(1, Number(state.level) || 1);
+  if (next.level > previousLevel && next.quarryFace) {
+    const provenTonnes = (next.level - previousLevel) * 8000;
+    next.quarryFace.totalTonnes = roundT((next.quarryFace.totalTonnes || 0) + provenTonnes);
+    next.quarryFace.remainingTonnes = roundT((next.quarryFace.remainingTonnes || 0) + provenTonnes);
+    next.events.push({ type: 'bench_unlocked', level: next.level, provenTonnes });
+  }
   return next;
 }
 
@@ -951,6 +1119,7 @@ export function getOperationsSnapshot(state, options = {}) {
   const waterStatus = getWaterStatus(snapshotState.water);
   const revenue = roundT(events.reduce((total, event) => {
     if (event.type !== 'edge_stockpile_tipped') return total;
+    if (Number.isFinite(Number(event.revenue))) return total + Number(event.revenue);
     const price = snapshotState.economy?.edgeProductPrices?.[event.edgeKey] || 0;
     return total + (Number(event.tonnes) || 0) * price;
   }, 0));
@@ -991,6 +1160,12 @@ export function getOperationsSnapshot(state, options = {}) {
     revenue,
     councilWaterRevenue,
     totalRevenue: roundT(revenue + councilWaterRevenue),
+    costs: { ...(snapshotState.costs || {}) },
+    operatingCosts: roundT(Object.values(snapshotState.costs || {})
+      .reduce((total, value) => total + (Number(value) || 0), 0)),
+    market: Object.fromEntries(EDGE_PRODUCT_KEYS.map(key => [key, getMarketPrice(snapshotState, key)])),
+    gameHours: snapshotState.gameHours || 0,
+    quarryFace: { ...(snapshotState.quarryFace || {}) },
     equipmentCounts,
     activeEquipment,
     cycles: {
@@ -1030,9 +1205,11 @@ export function totalSellableProductStockpiles(state) {
 
 function cloneEconomy(economy) {
   return {
+    ...DEFAULT_ECONOMY,
     ...economy,
     productPrices: { ...(economy.productPrices || DEFAULT_ECONOMY.productPrices) },
     edgeProductPrices: { ...(economy.edgeProductPrices || DEFAULT_ECONOMY.edgeProductPrices) },
+    demand: { ...DEFAULT_ECONOMY.demand, ...(economy.demand || {}) },
   };
 }
 
@@ -1041,11 +1218,18 @@ function processCrusherOutput(next, crushed) {
   let rewardRate = next.economy.pricePerTonneCrushed;
 
   if (next.equipment.screener > 0) {
-    const screened = roundT(crushed * next.economy.screenYield);
-    const rejects = roundT(crushed - screened);
-    const tenMm = roundT(screened * 0.4);
-    const twentyMm = roundT(screened * 0.3529411765);
-    const fortyMm = roundT(screened * 0.1764705882);
+    // Mass balance like a real plant: most of the feed makes graded product,
+    // oversize recirculates to the crusher feed for the next pass, and a
+    // small scalpings fraction is genuine waste.
+    const yieldRate = next.economy.screenYield ?? 0.92;
+    const oversizeRate = next.economy.screenOversizeReturn ?? 0.05;
+    const screened = roundT(crushed * yieldRate);
+    const oversize = roundT(crushed * oversizeRate);
+    const scalpings = roundT(Math.max(0, crushed - screened - oversize));
+    // Product split typical of a 3-deck limestone screen.
+    const tenMm = roundT(screened * 0.30);
+    const twentyMm = roundT(screened * 0.32);
+    const fortyMm = roundT(screened * 0.24);
     const dust = roundT(screened - tenMm - twentyMm - fortyMm);
 
     next.material.screenedProduct = roundT(next.material.screenedProduct + screened);
@@ -1053,7 +1237,8 @@ function processCrusherOutput(next, crushed) {
     next.material.stockpile20mm = roundT(next.material.stockpile20mm + twentyMm);
     next.material.stockpile40mm = roundT(next.material.stockpile40mm + fortyMm);
     next.material.dust = roundT(next.material.dust + dust);
-    next.material.rejects = roundT(next.material.rejects + rejects);
+    next.material.crusherFeed = roundT((next.material.crusherFeed || 0) + oversize);
+    next.material.rejects = roundT(next.material.rejects + scalpings);
     sellableTonnes = screened;
     rewardRate = next.economy.pricePerTonneScreened;
   } else {
@@ -1061,6 +1246,14 @@ function processCrusherOutput(next, crushed) {
   }
 
   return { sellableTonnes, rewardRate };
+}
+
+function applyFuelCostInPlace(state, cost) {
+  const fuel = roundT(Math.max(0, Number(cost) || 0));
+  if (fuel <= 0) return 0;
+  state.cash = roundT(state.cash - fuel);
+  state.costs.fuel = roundT((state.costs.fuel || 0) + fuel);
+  return fuel;
 }
 
 function applyDustActivityInPlace(state, activity) {

@@ -2253,7 +2253,10 @@ html {
     grid-template-columns: 200px 1fr;
 }
 .main-layout.hide-map .content-panel {
-    grid-column: 2;
+    /* Span to the grid end: premium.css uses a 3-column grid with a
+       collapsed middle track, so pinning to column 2 left the whole
+       simulator 0px wide on desktop. */
+    grid-column: 2 / -1;
     border-left: 1px solid var(--border-color);
     max-height: calc(100vh - 60px);
     height: calc(100vh - 60px);

@@ -147,7 +147,7 @@ class App {
         if (panelName === 'simulation') {
             requestAnimationFrame(() => {
                 if (typeof initSimulation === 'function') initSimulation();
-                else if (quarrySim) quarrySim.resizeCanvas();
+                else if (typeof quarrySim !== 'undefined' && quarrySim) quarrySim.resizeCanvas();
             });
         }
     }
