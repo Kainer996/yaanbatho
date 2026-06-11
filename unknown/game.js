@@ -2480,8 +2480,16 @@ function refreshResidentPanel() {
 
 function selectResident(resident) {
     selectedResident = resident;
-    $('resident-panel').classList.toggle('show', !!resident);
-    if (!resident) followResident = null;
+    const panel = $('resident-panel');
+    panel.classList.toggle('show', !!resident);
+    if (resident) {
+        // always open the detail panel un-minimized when a colonist is picked
+        panel.classList.remove('collapsed');
+        const min = panel.querySelector('.min-btn[data-collapse]');
+        if (min) min.textContent = '–';
+    } else {
+        followResident = null;
+    }
     refreshHUD();
 }
 $('rp-close').addEventListener('click', () => selectResident(null));
