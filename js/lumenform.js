@@ -183,41 +183,38 @@
     sections.forEach(s => io.observe(s));
   }
 
-  /* ── Work deck: hover-to-inspect stage ───────────────────────── */
+  /* ── Work deck: dropdown menu (accordion) + hover stage ──────── */
   function initWorkDeck() {
     const list = document.getElementById('lf-work-list');
     const media = document.getElementById('lf-work-stage-media');
     const idxEl = document.getElementById('lf-work-stage-index');
     const metaEl = document.getElementById('lf-work-stage-meta');
-    const detail = document.getElementById('lf-work-detail');
     if (!list || !media) return;
 
-    const items = [...list.querySelectorAll('.lf-work-item')];
-    const total = String(items.length).padStart(2, '0');
+    const entries = [...list.querySelectorAll('.lf-work-entry')];
+    const total = String(entries.length).padStart(2, '0');
     let current = -1;
 
     function show(i) {
       if (i === current) return;
       current = i;
-      const item = items[i];
-      items.forEach((el, n) => el.classList.toggle('is-active', n === i));
+      const entry = entries[i];
 
       let node;
-      if (item.dataset.image) {
+      if (entry.dataset.image) {
         node = document.createElement('img');
-        node.src = item.dataset.image;
+        node.src = entry.dataset.image;
         node.alt = '';
       } else {
         node = document.createElement('div');
         node.className = 'lf-stage-icon';
-        node.textContent = item.dataset.icon || '◇';
-        const grad = item.querySelector('[data-grad]');
+        node.textContent = entry.dataset.icon || '◇';
+        const grad = entry.querySelector('[data-grad]');
         if (grad) node.style.background = getComputedStyle(grad).background;
       }
       media.appendChild(node);
       requestAnimationFrame(() => requestAnimationFrame(() => node.classList.add('is-live')));
 
-      // keep at most two layers (old fades under new)
       while (media.children.length > 2) media.removeChild(media.firstChild);
       if (media.children.length === 2) {
         media.firstChild.classList.remove('is-live');
@@ -226,14 +223,28 @@
       }
 
       if (idxEl) idxEl.textContent = String(i + 1).padStart(2, '0') + ' / ' + total;
-      if (metaEl) metaEl.textContent = item.dataset.meta || '';
-      if (detail) detail.innerHTML =
-        (item.dataset.desc || '') + ' <strong>[' + (item.dataset.tags || '') + ']</strong>';
+      if (metaEl) metaEl.textContent = entry.dataset.meta || '';
     }
 
-    items.forEach((item, i) => {
-      item.addEventListener('mouseenter', () => show(i));
-      item.addEventListener('focus', () => show(i));
+    function setOpen(entry, open) {
+      entry.classList.toggle('open', open);
+      const head = entry.querySelector('.lf-work-head');
+      if (head) head.setAttribute('aria-expanded', String(open));
+    }
+
+    entries.forEach((entry, i) => {
+      const head = entry.querySelector('.lf-work-head');
+      if (!head) return;
+      head.addEventListener('mouseenter', () => show(i));
+      head.addEventListener('focus', () => show(i));
+      head.addEventListener('click', () => {
+        const wasOpen = entry.classList.contains('open');
+        entries.forEach(e => setOpen(e, false));
+        if (!wasOpen) {
+          setOpen(entry, true);
+          show(i);
+        }
+      });
     });
 
     show(0);
