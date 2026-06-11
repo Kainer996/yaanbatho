@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown — Island Colony · Yaan Batho</title>
+    <meta name="description" content="Unknown: a peaceful RimWorld-inspired island colony sim by Yaan Batho — autonomous residents with individual personality brains, free-form building, day/night cycles and a living Three.js island.">
+    <link rel="canonical" href="https://yaanbatho.com/unknown/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Unknown — Island Colony">
+    <meta property="og:description" content="A peaceful island colony sim in the browser: autonomous residents with their own personality brains, free-form building, weather, day/night, and a living Three.js island.">
+    <meta property="og:url" content="https://yaanbatho.com/unknown/">
+    <link rel="stylesheet" href="/css/style.css?v=unknown-v19">
+    <style>
+        html, body { height: 100%; }
+        body { overflow: hidden; background: #75bce8; }
+        body::before, body::after { display: none; }
+        header { background: linear-gradient(180deg, rgba(2,16,30,.55), rgba(2,16,30,.10)); border-bottom: 1px solid rgba(255,255,255,.18); position: fixed; width: 100%; z-index: 20; }
+        header::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent); }
+        header .container { padding: 12px 20px; }
+        nav { gap: 22px; flex-wrap: wrap; justify-content: flex-end; }
+        nav a, .logo { text-shadow: 0 2px 14px rgba(0,25,50,.55); }
+        nav a:hover, nav a.active { color: #fff4b8; }
+        nav a.active::after { background: #fff4b8; box-shadow: 0 0 16px rgba(255,244,184,.85); bottom: -14px; }
+        #ocean-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        #ocean-stage canvas { display: block; width: 100%; height: 100%; }
+
+        .glass { border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(3,20,34,.42); color: rgba(255,255,255,.9); backdrop-filter: blur(14px); box-shadow: 0 18px 56px rgba(0,24,50,.22); }
+        .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--font-heading); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: #fff4b8; margin: 0 0 8px; }
+        .chip-btn { border: 1px solid rgba(255,255,255,.26); border-radius: 999px; padding: 9px 15px; background: rgba(2,22,38,.45); color: #fff; font-weight: 700; letter-spacing: .04em; cursor: pointer; backdrop-filter: blur(12px); box-shadow: 0 10px 34px rgba(0,25,55,.2); transition: background .15s ease, border-color .15s ease; }
+        .chip-btn:hover { background: rgba(255,244,184,.22); border-color: rgba(255,244,184,.68); }
+        .chip-btn.active { background: rgba(255,244,184,.3); border-color: #fff4b8; color: #fff4b8; }
+
+        /* ---- top bar ---- */
+        .topbar { position: fixed; top: 74px; left: 50%; transform: translateX(-50%); z-index: 14; display: flex; align-items: center; gap: 9px; padding: 8px 12px; }
+        .topbar .clock { font-family: var(--font-heading); font-size: .86rem; letter-spacing: .12em; color: #fff; white-space: nowrap; }
+        .topbar .clock small { color: rgba(255,255,255,.66); letter-spacing: .06em; }
+        .speed-group { display: flex; gap: 5px; }
+        .speed-btn { border: 1px solid rgba(255,255,255,.22); border-radius: 10px; min-width: 34px; padding: 5px 8px; background: rgba(255,255,255,.07); color: #fff; font-weight: 800; cursor: pointer; font-size: .8rem; }
+        .speed-btn.active { background: rgba(255,244,184,.32); border-color: #fff4b8; color: #fff4b8; }
+        .weather-chip { font-size: .82rem; color: rgba(255,255,255,.85); white-space: nowrap; }
+
+        .toast { position: fixed; top: 130px; left: 50%; transform: translateX(-50%); z-index: 18; padding: 10px 18px; border-radius: 999px; font-size: .85rem; font-weight: 600; color: #fff; background: rgba(8,40,30,.78); border: 1px solid rgba(150,255,190,.4); backdrop-filter: blur(10px); opacity: 0; pointer-events: none; transition: opacity .45s ease, transform .45s ease; max-width: min(560px, 90vw); text-align: center; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(6px); }
+
+        /* ---- build panel ---- */
+        .build-panel { position: fixed; left: clamp(14px, 3vw, 34px); top: 132px; z-index: 13; display: grid; gap: 8px; justify-items: start; max-width: min(360px, calc(100vw - 28px)); }
+        .build-toggle { border: 1px solid rgba(255,244,184,.4); border-radius: 999px; padding: 10px 16px; background: rgba(35,76,55,.5); color: #fff4b8; font-weight: 800; letter-spacing: .05em; cursor: pointer; backdrop-filter: blur(12px); box-shadow: 0 12px 40px rgba(0,25,55,.18); }
+        .build-menu { display: none; width: min(352px, calc(100vw - 28px)); max-height: min(56vh, 520px); overflow-y: auto; padding: 11px; }
+        .build-panel.open .build-menu { display: grid; gap: 7px; grid-template-columns: 1fr 1fr; }
+        .build-hint { grid-column: 1 / -1; margin: 0 0 2px; color: rgba(255,255,255,.74); font-size: .7rem; line-height: 1.3; }
+        .build-choice { border: 1px solid rgba(255,255,255,.18); border-radius: 12px; padding: 8px 9px; background: rgba(255,255,255,.08); color: #fff; text-align: left; font-weight: 700; cursor: pointer; font-size: .76rem; transition: background .12s ease; }
+        .build-choice:hover:not(:disabled) { background: rgba(255,244,184,.16); }
+        .build-choice small { display: block; margin-top: 2px; color: rgba(255,255,255,.66); font-weight: 500; font-size: .62rem; line-height: 1.3; }
+        .build-choice:disabled { opacity: .42; cursor: not-allowed; }
+        .build-choice.selected { border-color: #fff4b8; background: rgba(255,244,184,.24); }
+        .place-bar { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 16; display: none; gap: 9px; align-items: center; padding: 10px 14px; }
+        .place-bar.show { display: flex; }
+        .place-bar span { font-size: .8rem; color: rgba(255,255,255,.85); }
+
+        /* ---- community panel ---- */
+        .community-panel { position: fixed; right: clamp(14px, 3vw, 34px); top: 132px; z-index: 12; width: min(312px, calc(100vw - 28px)); max-height: calc(100vh - 200px); overflow-y: auto; padding: 12px; scrollbar-width: thin; }
+        .storage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-bottom: 10px; font-size: .66rem; }
+        .storage-chip { border: 1px solid rgba(255,255,255,.13); border-radius: 9px; padding: 4px 6px; background: rgba(255,255,255,.07); text-align: center; white-space: nowrap; }
+        .storage-chip strong { color: #fff4b8; }
+        .resident-list { display: grid; gap: 6px; }
+        .resident-card { border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 7px 9px; background: rgba(255,255,255,.05); cursor: pointer; transition: background .12s ease, border-color .12s ease; }
+        .resident-card:hover { background: rgba(255,244,184,.1); }
+        .resident-card.selected { border-color: #fff4b8; background: rgba(255,244,184,.14); }
+        .resident-card .rc-head { display: flex; align-items: center; gap: 7px; }
+        .rc-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; box-shadow: 0 0 8px rgba(255,255,255,.3); }
+        .resident-card strong { color: #fff4b8; font-size: .78rem; }
+        .resident-card .rc-action { display: block; color: rgba(255,255,255,.8); font-size: .68rem; line-height: 1.3; margin-top: 2px; }
+        .rc-need { display: block; margin-top: 3px; height: 4px; border-radius: 999px; background: rgba(255,255,255,.13); overflow: hidden; }
+        .rc-need i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7ee0a4, #fff4b8, #ff9e7d); }
+
+        /* ---- selected resident detail ---- */
+        .resident-panel { position: fixed; left: clamp(14px, 3vw, 34px); bottom: clamp(16px, 3vw, 34px); z-index: 13; width: min(330px, calc(100vw - 28px)); max-height: min(58vh, 480px); overflow-y: auto; padding: 13px 14px; display: none; scrollbar-width: thin; }
+        .resident-panel.show { display: block; }
+        .rp-close { float: right; border: none; background: none; color: rgba(255,255,255,.6); font-size: 1.05rem; cursor: pointer; padding: 0 2px; }
+        .rp-thought { margin: 6px 0 9px; color: rgba(255,255,255,.82); font-size: .76rem; line-height: 1.4; font-style: italic; }
+        .rp-say { margin: 0 0 9px; color: #ffe9a8; font-size: .76rem; line-height: 1.4; }
+        .need-row { display: grid; grid-template-columns: 64px 1fr 34px; align-items: center; gap: 7px; margin: 4px 0; font-size: .7rem; }
+        .need-label { color: rgba(255,255,255,.78); }
+        .need-track { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.14); }
+        .need-fill { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7ee0a4, #fff4b8, #ff9e7d); transition: width .3s ease; }
+        .need-value { text-align: right; color: rgba(255,255,255,.66); font-variant-numeric: tabular-nums; }
+        .trait-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px; }
+        .trait-chip { border: 1px solid rgba(255,244,184,.2); border-radius: 999px; padding: 3px 7px; background: rgba(255,244,184,.08); color: rgba(255,255,255,.84); font-size: .6rem; white-space: nowrap; }
+        .rp-rel { margin-top: 7px; font-size: .68rem; color: rgba(255,255,255,.74); line-height: 1.5; }
+        .rp-rel strong { color: #fff4b8; }
+        .rp-actions { display: flex; gap: 7px; margin-top: 9px; }
+        .rp-actions .chip-btn { padding: 6px 12px; font-size: .7rem; }
+
+        /* ---- bottom-right cluster ---- */
+        .corner-actions { position: fixed; right: clamp(14px, 3vw, 34px); bottom: clamp(16px, 3vw, 34px); z-index: 13; display: grid; gap: 8px; justify-items: end; }
+        .walk-help { max-width: 250px; padding: 9px 12px; border-radius: 13px; font-size: .72rem; line-height: 1.35; text-align: right; color: rgba(255,255,255,.74); }
+        .brain-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #888; margin-right: 6px; vertical-align: 1px; }
+        .brain-dot.on { background: #7ee0a4; box-shadow: 0 0 9px #7ee0a4; }
+
+        /* ---- brains modal ---- */
+        .brains-modal { position: fixed; inset: 0; z-index: 30; display: none; place-items: center; background: rgba(2,12,22,.6); backdrop-filter: blur(6px); }
+        .brains-modal.show { display: grid; }
+        .brains-card { width: min(480px, calc(100vw - 32px)); max-height: 86vh; overflow-y: auto; padding: 22px; }
+        .brains-card h2 { margin: 0 0 4px; font-size: 1.15rem; color: #fff4b8; letter-spacing: .06em; }
+        .brains-card p { margin: 0 0 12px; font-size: .78rem; line-height: 1.5; color: rgba(255,255,255,.78); }
+        .brains-card label { display: block; margin: 10px 0 4px; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.66); }
+        .brains-card input, .brains-card select { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: #fff; font-size: .82rem; }
+        .brains-card input:focus, .brains-card select:focus { outline: none; border-color: #fff4b8; }
+        .brains-card select option { color: #08263a; }
+        .brains-foot { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        .brains-status { margin-top: 10px; font-size: .72rem; color: rgba(255,255,255,.7); }
+
+        .quality-chip { position: fixed; right: clamp(14px, 3vw, 34px); bottom: clamp(14px, 3vw, 34px); z-index: 8; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 9px 13px; background: rgba(0,20,38,.25); color: rgba(255,255,255,.6); font-size: .76rem; backdrop-filter: blur(10px); display: none; }
+
+        .touch-pad { position: fixed; left: 14px; bottom: 14px; z-index: 17; display: none; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(2, 46px); gap: 8px; touch-action: none; }
+        .touch-btn { border: 1px solid rgba(255,255,255,.22); border-radius: 16px; background: rgba(2,22,38,.34); color: #fff; font-weight: 800; font-size: 1rem; backdrop-filter: blur(10px); }
+        .touch-btn[data-key="KeyW"] { grid-column: 2; grid-row: 1; }
+        .touch-btn[data-key="KeyA"] { grid-column: 1; grid-row: 2; }
+        .touch-btn[data-key="KeyS"] { grid-column: 2; grid-row: 2; }
+        .touch-btn[data-key="KeyD"] { grid-column: 3; grid-row: 2; }
+
+        .loader { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, #d7f3ff, #63a4d2 58%, #123b5f); color: white; z-index: 40; font-family: var(--font-heading); letter-spacing: .16em; transition: opacity .7s ease; }
+        .loader.hidden { opacity: 0; pointer-events: none; }
+        .loader small { display: block; margin-top: 10px; text-align: center; font-size: .68rem; letter-spacing: .22em; color: rgba(255,255,255,.7); }
+        .webgl-error { position: fixed; inset: auto 18px 18px 18px; z-index: 41; padding: 14px 16px; border-radius: 14px; background: rgba(2,15,25,.86); color: #fff; display: none; }
+
+        @media (max-width: 760px), (pointer: coarse) {
+            body { overflow: hidden; }
+            header { background: rgba(0,0,0,.82); }
+            header .container { padding: 7px 12px; min-height: 0; }
+            .logo { font-size: 14px; letter-spacing: .13em; }
+            .logo img { height: 32px !important; width: 32px !important; margin-right: 7px !important; }
+            nav { display: none; }
+            .mobile-menu-btn { display: block; font-size: 1.55rem; padding: 4px 6px; }
+            .topbar { top: 56px; padding: 6px 9px; gap: 6px; }
+            .topbar .clock { font-size: .7rem; }
+            .weather-chip { display: none; }
+            .speed-btn { min-width: 28px; padding: 4px 6px; font-size: .7rem; }
+            .toast { top: 102px; font-size: .74rem; padding: 8px 14px; }
+            .build-panel { top: 104px; left: 10px; }
+            .build-toggle { padding: 8px 13px; font-size: .74rem; }
+            .build-menu { max-height: 46vh; }
+            .build-panel.open .build-menu { grid-template-columns: 1fr; }
+            .community-panel { top: 104px; right: 10px; width: min(228px, 52vw); max-height: 44vh; padding: 9px; }
+            .storage-grid { grid-template-columns: repeat(2, 1fr); font-size: .58rem; }
+            .resident-card strong { font-size: .7rem; }
+            .resident-card .rc-action { font-size: .6rem; }
+            .resident-panel { left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); width: auto; max-height: 38vh; }
+            .corner-actions { right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); }
+            .walk-help { display: none; }
+            .chip-btn { padding: 8px 12px; font-size: .74rem; }
+            body.walking .build-panel, body.walking .community-panel,
+            body.walking .resident-panel, body.walking .topbar { display: none; }
+            body.walking .touch-pad { display: grid; left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); }
+            body.placing .community-panel { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/projects.html">Projects</a>
+                <a href="/unknown/" class="active">Unknown</a>
+                <a href="/products.html">Products</a>
+                <a href="/ava-projects/">Ava Projects</a>
+                <a href="/bio.html">Bio</a>
+                <a href="/music.html">Music</a>
+                <a href="/contact.html">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <div id="ocean-stage" aria-label="A living Three.js island colony"></div>
+    <div class="loader" id="loader">RAISING THE ISLAND<small id="loader-step">summoning water…</small></div>
+    <div class="webgl-error" id="webgl-error">This browser could not start the WebGL island. Try a newer browser or enable hardware acceleration.</div>
+
+    <div class="topbar glass" id="topbar">
+        <span class="clock" id="clock">Day 1 · 09:00 <small>morning</small></span>
+        <span class="speed-group">
+            <button class="speed-btn" data-speed="0" type="button" title="Pause">⏸</button>
+            <button class="speed-btn active" data-speed="1" type="button" title="Normal speed">▶</button>
+            <button class="speed-btn" data-speed="3" type="button" title="Fast forward">⏩</button>
+        </span>
+        <span class="weather-chip" id="weather-chip">☀ clear skies</span>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <div class="build-panel" id="build-panel">
+        <button class="build-toggle" id="build-toggle" type="button">🔨 Build</button>
+        <div class="build-menu glass" id="build-menu" aria-label="Build island items"></div>
+    </div>
+    <div class="place-bar glass" id="place-bar">
+        <span id="place-label">Placing…</span>
+        <button class="chip-btn" id="place-rotate" type="button">⟳ Rotate</button>
+        <button class="chip-btn" id="place-confirm" type="button">✓ Place</button>
+        <button class="chip-btn" id="place-cancel" type="button">✕ Cancel</button>
+    </div>
+
+    <aside class="community-panel glass" id="community-panel" aria-label="Island community">
+        <div class="panel-title">Colony <span id="colony-mood" style="text-transform:none;letter-spacing:.02em;color:rgba(255,255,255,.7)">settling in</span></div>
+        <div class="storage-grid" id="storage-grid"></div>
+        <div class="panel-title" style="margin-top:4px">Residents <span id="resident-count" style="color:rgba(255,255,255,.6)"></span></div>
+        <div class="resident-list" id="resident-list"></div>
+    </aside>
+
+    <aside class="resident-panel glass" id="resident-panel" aria-label="Selected resident">
+        <button class="rp-close" id="rp-close" type="button" aria-label="Close">✕</button>
+        <div class="panel-title" id="rp-name">Resident</div>
+        <p class="rp-thought" id="rp-thought"></p>
+        <p class="rp-say" id="rp-say"></p>
+        <div id="rp-needs"></div>
+        <div class="trait-row" id="rp-traits"></div>
+        <div class="rp-rel" id="rp-rel"></div>
+        <div class="rp-actions">
+            <button class="chip-btn" id="rp-follow" type="button">🎥 Follow</button>
+        </div>
+    </aside>
+
+    <div class="corner-actions">
+        <button class="chip-btn" id="brains-btn" type="button"><span class="brain-dot" id="brain-dot"></span>Brains</button>
+        <button class="chip-btn" id="walk-btn" type="button">🚶 Walk the island</button>
+        <div class="walk-help glass" id="walk-help">Drag to orbit · scroll to zoom · click a resident to inspect · Build places real things the colony uses.</div>
+    </div>
+
+    <div class="touch-pad" id="touch-pad" aria-label="Touch walk controls">
+        <button class="touch-btn" data-key="KeyW" type="button">▲</button>
+        <button class="touch-btn" data-key="KeyA" type="button">◀</button>
+        <button class="touch-btn" data-key="KeyS" type="button">▼</button>
+        <button class="touch-btn" data-key="KeyD" type="button">▶</button>
+    </div>
+
+    <div class="brains-modal" id="brains-modal">
+        <div class="brains-card glass">
+            <h2>🧠 Resident brains</h2>
+            <p>Each resident already has a personality-driven local brain (traits, needs, memories, relationships). Connect an LLM and every resident gets their <strong>own little GPT</strong>: a private persona that thinks, talks and sets goals in character. Your key is stored only in this browser and calls go straight from your browser to the API.</p>
+            <label for="brains-provider">Provider</label>
+            <select id="brains-provider">
+                <option value="openai">OpenAI (api.openai.com)</option>
+                <option value="custom">Custom OpenAI-compatible endpoint</option>
+            </select>
+            <div id="brains-endpoint-row" style="display:none">
+                <label for="brains-endpoint">Endpoint URL</label>
+                <input id="brains-endpoint" type="url" placeholder="https://your-host/v1/chat/completions">
+            </div>
+            <label for="brains-model">Model</label>
+            <input id="brains-model" type="text" value="gpt-4o-mini" placeholder="gpt-4o-mini">
+            <label for="brains-key">API key</label>
+            <input id="brains-key" type="password" placeholder="sk-…" autocomplete="off">
+            <div class="brains-foot">
+                <button class="chip-btn" id="brains-save" type="button">Save & enable</button>
+                <button class="chip-btn" id="brains-disable" type="button">Disable</button>
+                <button class="chip-btn" id="brains-close" type="button">Close</button>
+            </div>
+            <div class="brains-status" id="brains-status">Brains: local personality AI (no LLM connected).</div>
+            <div class="brains-foot" style="margin-top:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:12px">
+                <button class="chip-btn" id="reset-colony" type="button">🗑 Reset colony save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="quality-chip" id="quality-chip">island colony v19</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="./game.js?v=v19"></script>
+</body>
+</html>
