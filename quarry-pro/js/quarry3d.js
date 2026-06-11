@@ -792,7 +792,6 @@ function initThree() {
   // reflections rather than reading as matte plastic.
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = buildEnvironmentMap(pmrem);
-  scene.environmentIntensity = 0.55;
   pmrem.dispose();
 
   buildSkyDome();
@@ -865,6 +864,11 @@ function initThree() {
   M.quarryWall = makeCinematicRockMaterial();
   M.routeGlow = new THREE.MeshBasicMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.34, depthWrite: false });
   M.routeGlowSoft = new THREE.MeshBasicMaterial({ color: 0x9cc4ee, transparent: true, opacity: 0.14, depthWrite: false });
+
+  // Keep image-based lighting subtle (r161 has no scene.environmentIntensity).
+  Object.values(M).forEach(mat => {
+    if (mat?.isMeshStandardMaterial && mat.envMapIntensity === 1) mat.envMapIntensity = 0.55;
+  });
 
   // Build world
   buildTerrain();

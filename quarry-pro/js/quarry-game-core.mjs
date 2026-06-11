@@ -427,7 +427,7 @@ export function completeExcavatorCrusherCycle(state, { payloadTonnes = 25 } = {}
   return withObjectiveProgress(next);
 }
 
-export function loadDumperFromScreenedStockpile(state, { productKey = null, payloadTonnes = 25, dumperId = 'default' } = {}) {
+export function loadDumperFromScreenedStockpile(state, { productKey = null, payloadTonnes = 40, dumperId = 'default' } = {}) {
   if ((state.equipment.dumper || 0) <= 0) throw new Error('Place a dumper before loading product');
   if (((state.equipment.loader || 0) + (state.equipment.excavator || 0)) <= 0) {
     throw new Error('Place a loader or excavator before loading product');
@@ -505,7 +505,7 @@ export function getBestMarketProductKey(state) {
   return bestKey;
 }
 
-export function completeEdgeHaulCycle(state, { productKey = null, payloadTonnes = 25, dumperId = 'default' } = {}) {
+export function completeEdgeHaulCycle(state, { productKey = null, payloadTonnes = 40, dumperId = 'default' } = {}) {
   const activeDumperId = normaliseDumperId(dumperId);
   const currentLoad = getDumperLoad(state, activeDumperId);
   const loadedState = currentLoad.tonnes > 0
@@ -735,7 +735,7 @@ export function getEdgeHaulEvidence(state, options = {}) {
   const loadedTonnes = roundT(selectedLoad.tonnes || status.loadedTonnes || 0);
   const availableProduct = productKey ? roundT(state.material?.[productKey] || 0) : 0;
   const estimatedLoadTonnes = roundT(Math.min(
-    Number(options.payloadTonnes) || 25,
+    Number(options.payloadTonnes) || 40,
     loadedTonnes > 0 ? loadedTonnes : availableProduct
   ));
   const prices = state.economy?.edgeProductPrices || DEFAULT_ECONOMY.edgeProductPrices;
