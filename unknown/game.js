@@ -3297,7 +3297,7 @@ window.__unknownOcean.forcePair = (a, b) => {
     const rb = residents.find((r) => r.profile.name.toLowerCase().includes(String(b).toLowerCase()));
     if (!ra || !rb) return { ok: false };
     ra.relationships[rb.profile.name] = rb.relationships[ra.profile.name] = 100;
-    let paired = false; for (let i = 0; i < 6 && !paired; i++) paired = tryRomance(ra, rb);
+    let paired = false; for (let i = 0; i < 40 && !paired; i++) paired = tryRomance(ra, rb);
     return { ok: paired, partner: ra.partner ? residentById(ra.partner)?.profile.name : null };
 };
 window.__unknownOcean.forceTrade = (name) => {
