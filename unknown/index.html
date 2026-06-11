@@ -20,8 +20,8 @@
     <style>
         :root {
             --font: var(--font-heading, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
-            --chrome-top: 74px;          /* below the site header */
-            --panel-top: 120px;          /* below the floating top bar */
+            --chrome-top: 14px;          /* top bar sits near the top */
+            --panel-top: 60px;           /* below the floating top bar */
             --safe-l: env(safe-area-inset-left, 0px);
             --safe-r: env(safe-area-inset-right, 0px);
             --safe-b: env(safe-area-inset-bottom, 0px);
@@ -30,14 +30,9 @@
         html, body { height: 100%; }
         body { overflow: hidden; background: #75bce8; }
         body::before, body::after { display: none; }
-        header { background: linear-gradient(180deg, rgba(2,16,30,.55), rgba(2,16,30,.10)); border-bottom: 1px solid rgba(255,255,255,.18); position: fixed; width: 100%; z-index: 20; }
-        header::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent); }
-        header .container { padding: 12px 20px; }
-        nav { gap: 22px; flex-wrap: wrap; justify-content: flex-end; }
-        nav a, .logo { text-shadow: 0 2px 14px rgba(0,25,50,.55); }
-        nav a:hover, nav a.active { color: #fff4b8; }
-        nav a.active::after { background: #fff4b8; box-shadow: 0 0 16px rgba(255,244,184,.85); bottom: -14px; }
         #ocean-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; }
+
+        .home-ico { text-decoration: none; }
         #ocean-stage canvas { display: block; width: 100%; height: 100%; }
 
         .glass { border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(3,20,34,.46); color: rgba(255,255,255,.9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 18px 56px rgba(0,24,50,.22); }
@@ -158,21 +153,14 @@
         .loader small { display: block; margin-top: 10px; text-align: center; font-size: .68rem; letter-spacing: .22em; color: rgba(255,255,255,.7); }
         .webgl-error { position: fixed; inset: auto 18px 18px 18px; z-index: 41; padding: 14px 16px; border-radius: 14px; background: rgba(2,15,25,.86); color: #fff; display: none; }
 
-        /* ---- fullscreen / immersive mode (hides the site header) ---- */
-        body.fs { --chrome-top: 12px; --panel-top: 56px; }
-        body.fs header { display: none; }
+        /* ---- fullscreen / immersive mode ---- */
+        body.fs { --chrome-top: 10px; --panel-top: 52px; }
 
         /* ---- mobile / touch ---- */
         @media (max-width: 760px), (pointer: coarse) {
-            :root { --chrome-top: 54px; --panel-top: 96px; }
+            :root { --chrome-top: 12px; --panel-top: 52px; }
             body.fs { --chrome-top: 10px; --panel-top: 50px; }
             body { overflow: hidden; }
-            header { background: rgba(0,0,0,.82); }
-            header .container { padding: 7px 12px; min-height: 0; }
-            .logo { font-size: 14px; letter-spacing: .13em; }
-            .logo img { height: 30px !important; width: 30px !important; margin-right: 7px !important; }
-            nav { display: none; }
-            .mobile-menu-btn { display: block; font-size: 1.5rem; padding: 4px 6px; }
             .topbar { gap: 6px; padding: 6px 9px; }
             .topbar .clock { font-size: .68rem; }
             .weather-chip { display: none; }
@@ -206,28 +194,12 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <a href="/index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
-            <nav>
-                <a href="/index.html">Home</a>
-                <a href="/projects.html">Projects</a>
-                <a href="/unknown/" class="active">Unknown</a>
-                <a href="/products.html">Products</a>
-                <a href="/ava-projects/">Ava Projects</a>
-                <a href="/bio.html">Bio</a>
-                <a href="/music.html">Music</a>
-                <a href="/contact.html">Contact</a>
-            </nav>
-            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
-        </div>
-    </header>
-
     <div id="ocean-stage" aria-label="A living Three.js island colony"></div>
     <div class="loader" id="loader">RAISING THE ISLAND<small id="loader-step">summoning water…</small></div>
     <div class="webgl-error" id="webgl-error">This browser could not start the WebGL island. Try a newer browser or enable hardware acceleration.</div>
 
     <div class="topbar glass" id="topbar">
+        <a class="icon-btn home-ico" href="/index.html" title="Back to yaanbatho.com" aria-label="Back to home">←</a>
         <span class="clock" id="clock">Day 1 · 09:00 <small>morning</small></span>
         <span class="speed-group">
             <button class="speed-btn" data-speed="0" type="button" title="Pause">⏸</button>
