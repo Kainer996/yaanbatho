@@ -463,7 +463,15 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   height: auto;
   max-height: min(72vh, 820px);
   object-fit: contain;
-  filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.65));
+  /* feather the edges so the photo's black box melts into the page */
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 7%, #000 90%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 7%, #000 90%, transparent 100%);
+  mask-composite: intersect;
 }
 
 /* screen-reader-only headline (the visual name lives in the header) */
@@ -737,10 +745,23 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   margin: 0;
   width: 100%;
   padding: clamp(14px, 2.4vh, 26px) 0;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 158px, rgba(245, 245, 245, 0.05) 158px 160px),
-    linear-gradient(180deg, rgba(245, 245, 245, 0.035), rgba(245, 245, 245, 0.012) 55%, rgba(0, 0, 0, 0.18));
+  position: relative;
 }
+
+/* wall sheen + concrete seams — soft-masked so there's no visible box */
+.lf-hero .lf-tagwall::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 158px, rgba(245, 245, 245, 0.045) 158px 160px),
+    radial-gradient(85% 130% at 50% 50%, rgba(245, 245, 245, 0.05), rgba(245, 245, 245, 0.015) 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(95% 110% at 50% 50%, #000 35%, transparent 92%);
+  mask-image: radial-gradient(95% 110% at 50% 50%, #000 35%, transparent 92%);
+}
+
+.lf-hero .lf-tagwall img { position: relative; }
 
 .lf-hero .lf-tagwall img {
   max-width: min(440px, 74%);
