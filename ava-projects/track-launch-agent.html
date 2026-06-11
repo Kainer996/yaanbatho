@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track Launch Agent — Ava Projects</title>
+  <meta name="description" content="A free release-planning micro-tool for independent electronic producers: positioning, promo copy, release checklist and AI prompts in one page." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/track-launch-agent.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#05060d; --panel:#111426; --panel2:#171b31; --ink:#f7fbff; --muted:#b9c1d9; --blue:#64d2ff; --acid:#b7ff4a; --pink:#ff6ac9; --amber:#ffd166; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.42); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 14% 0%, rgba(100,210,255,.2), transparent 34rem), radial-gradient(circle at 90% 10%, rgba(183,255,74,.14), transparent 32rem), radial-gradient(circle at 50% 55%, rgba(255,106,201,.08), transparent 36rem), var(--bg); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.22; background:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size:42px 42px; mask-image:linear-gradient(to bottom, #000, transparent 72%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(5,6,13,.76); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:900; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--blue),var(--acid)); color:#05060d; box-shadow:0 0 28px rgba(100,210,255,.28); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--acid); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:820px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--amber); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:24px 0 10px; color:#eaf7ff; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:92px; resize:vertical; }
+    .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#05060d; background:linear-gradient(135deg,var(--blue),var(--acid)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(100,210,255,.22); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--blue); }
+    .result-card p, .result-card li { color:#e9f4ff; line-height:1.48; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--blue); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(100,210,255,.14),rgba(183,255,74,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(100,210,255,.35); color:var(--blue); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 900px) { .tool { grid-template-columns:1fr; } header { position:relative; } .row { grid-template-columns:1fr; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li { color:#111; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 2 · Independent producer micro-tool</p>
+    <h1>Track Launch Agent</h1>
+    <p class="lede">A free release-planning assistant for electronic producers who have finished a track but need sharper positioning, promo copy, a release checklist, and a ready-to-use AI prompt. Built around Yaan's real Kainer-era experience: Beatport, BBC Radio 1 support, and music good enough for Moby to play.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Independent electronic producers without a manager, PR team, or label machine.</div>
+      <div class="pill"><b>First product</b>Free tool → £9–£19 Independent Producer Release Kit.</div>
+      <div class="pill"><b>Why Yaan</b>He has actually released records and knows the gap between finishing music and launching it properly.</div>
+      <div class="pill"><b>Built</b>2026-05-18 23:01 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Generate your track launch plan</h2>
+        <div class="row">
+          <div><label for="artist">Artist name</label><input id="artist" placeholder="e.g. Kainer" /></div>
+          <div><label for="track">Track title</label><input id="track" placeholder="e.g. Night Signal" /></div>
+        </div>
+        <div class="row">
+          <div><label for="genre">Genre / lane</label><select id="genre"><option>melodic techno</option><option>progressive house</option><option>breaks</option><option>deep house</option><option>ambient electronic</option><option>drum & bass</option><option>UK garage</option><option>leftfield electronica</option></select></div>
+          <div><label for="goal">Main launch goal</label><select id="goal"><option>Pitch labels</option><option>Sell Bandcamp downloads</option><option>Get playlist / DJ support</option><option>Grow socials</option><option>Build mailing list</option><option>Book gigs / DJ sets</option></select></div>
+        </div>
+        <label for="refs">Similar artists / labels</label><input id="refs" placeholder="e.g. Jon Hopkins, Bicep, Anjunadeep" />
+        <label for="mood">Mood, story, or sonic hook</label><textarea id="mood" placeholder="e.g. Warm late-night synth line, rolling percussion, motorway-after-midnight feeling."></textarea>
+        <div class="row">
+          <div><label for="date">Target release date / month</label><input id="date" placeholder="e.g. July 2026" /></div>
+          <div><label for="level">Experience level</label><select id="level"><option>Returning artist</option><option>First release</option><option>Released before</option><option>Label owner</option></select></div>
+        </div>
+        <div class="actions">
+          <button id="generate">Generate My Track Launch Plan</button>
+          <button class="secondary" id="copy">Copy plan</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Your launch plan</h2>
+        <p class="mini">No fake “blow up overnight” nonsense — just clearer positioning and useful copy you can paste into Bandcamp, email, socials, or an AI agent.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Fill in the details and hit “Generate My Track Launch Plan”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Independent artists can now sell directly through platforms like Bandcamp, Gumroad, Shopify, Ko-fi and their own sites. The bottleneck is often not making the music — it is packaging the release, explaining it clearly, and following through after upload day.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free planner becomes a search/social hook for a paid <strong>Independent Producer Release Kit</strong>: AI prompts, pitch templates, artist bio worksheets, release calendars, and a self-audit checklist priced at £9–£19.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://www.ifpi.org/our-industry/industry-data/">IFPI — global recorded music industry data</a>
+        <a href="https://www.shopify.com/blog/digital-products">Shopify — selling digital products online</a>
+        <a href="https://gumroad.com/help/article/66-gumroads-fees">Gumroad — fees for selling digital goods</a>
+        <a href="https://bandcamp.com/artists">Bandcamp — artist direct-to-fan platform</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Make the first paid download: <strong>The Independent Producer Release Kit</strong>. Keep it honest and practical — “finish the release properly” instead of fake music-industry hype. Yaan can seed it with his Kainer credibility and later add personalised release reviews.</p>
+      <div class="tags"><span class="tag">music income</span><span class="tag">AI workflow</span><span class="tag">digital product</span><span class="tag">Yaan credibility</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Independent%20Producer%20Release%20Kit">Register interest in the Release Kit</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — turning finished tracks into owned creative income.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function planText() {
+      const artist = $('artist').value.trim() || 'Your Artist Name';
+      const track = $('track').value.trim() || 'Your Track Title';
+      const genre = $('genre').value;
+      const refs = $('refs').value.trim() || 'artists in your lane';
+      const mood = $('mood').value.trim() || 'a clear sonic hook and emotional world';
+      const goal = $('goal').value;
+      const date = $('date').value.trim() || 'your target release window';
+      const level = $('level').value;
+      const pitch = `${track} by ${artist} is a ${genre} release for fans of ${refs}, built around ${mood}.`;
+      const caption = `New music from ${artist}: “${track}” lands ${date}. ${pitch} Pre-save, follow, or send it to one person who loves ${genre}.`;
+      const email = `${artist} — ${track}: ${genre} release for fans of ${refs}`;
+      const ai = `Act as an honest electronic music release manager. Help me improve this launch plan without hype. Artist: ${artist}. Track: ${track}. Genre: ${genre}. References: ${refs}. Mood/story: ${mood}. Goal: ${goal}. Release window: ${date}. Experience: ${level}. Give me a 30-day action plan, sharper pitch, Bandcamp copy, social captions, and three label/playlist outreach emails.`;
+      return {artist, track, genre, refs, mood, goal, date, level, pitch, caption, email, ai};
+    }
+    function generatePlan() {
+      const p = planText();
+      $('output').innerHTML = `
+        <div class="result-card"><h3>Positioning</h3><p><strong>One-line pitch:</strong> ${esc(p.pitch)}</p><p><strong>Goal:</strong> ${esc(p.goal)} · <strong>Release window:</strong> ${esc(p.date)}</p></div>
+        <div class="result-card"><h3>Promo copy</h3><p><strong>Bandcamp / press blurb:</strong> ${esc(p.pitch)} It gives listeners a quick reason to care before they hit play: a recognisable lane, a sonic hook, and a mood they can imagine.</p><p><strong>Social caption:</strong> ${esc(p.caption)}</p><p><strong>Email subject:</strong> ${esc(p.email)}</p></div>
+        <div class="result-card"><h3>Release checklist</h3><ul><li><strong>4 weeks before:</strong> final master, artwork, distributor/upload path, private link, 1-paragraph story.</li><li><strong>2 weeks before:</strong> announce date, send 10 warm pitches, prep 5 short clips, update bio and links.</li><li><strong>Release week:</strong> post the clearest clip first, email supporters, DM genuine DJ/producer contacts, pin the best link.</li><li><strong>2 weeks after:</strong> share reactions, make one behind-the-track post, pitch a second wave, collect emails for the next release.</li></ul></div>
+        <div class="result-card"><h3>Copy-ready AI prompt</h3><p>${esc(p.ai)}</p></div>`;
+    }
+    $('generate').addEventListener('click', generatePlan);
+    $('copy').addEventListener('click', async () => {
+      generatePlan();
+      const p = planText();
+      const text = `TRACK LAUNCH PLAN\n\nArtist: ${p.artist}\nTrack: ${p.track}\nGenre: ${p.genre}\nGoal: ${p.goal}\nRelease window: ${p.date}\n\nOne-line pitch:\n${p.pitch}\n\nSocial caption:\n${p.caption}\n\nEmail subject:\n${p.email}\n\nChecklist:\n- 4 weeks before: final master, artwork, distributor/upload path, private link, 1-paragraph story.\n- 2 weeks before: announce date, send 10 warm pitches, prep 5 short clips, update bio and links.\n- Release week: post the clearest clip first, email supporters, DM genuine DJ/producer contacts, pin the best link.\n- 2 weeks after: share reactions, make one behind-the-track post, pitch a second wave, collect emails for next release.\n\nAI prompt:\n${p.ai}`;
+      try { await navigator.clipboard.writeText(text); $('copy').textContent = 'Copied ✓'; }
+      catch (err) { $('copy').textContent = 'Select and copy manually'; }
+      setTimeout(() => $('copy').textContent = 'Copy plan', 1800);
+    });
+  </script>
+</body>
+</html>

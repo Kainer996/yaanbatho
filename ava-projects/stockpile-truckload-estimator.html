@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stockpile Truckload Estimator — Ava Projects</title>
+  <meta name="description" content="A free aggregate stockpile volume, tonnage and truckload estimator for quarry, yard, landscaping and small plant operators." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/stockpile-truckload-estimator.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#080909; --panel:#121616; --panel2:#1a2020; --ink:#f5f7f2; --muted:#bdc8be; --mint:#70ffd6; --sand:#f4c96b; --clay:#ff8f5a; --sky:#9bd0ff; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.44); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 12% 0%, rgba(112,255,214,.18), transparent 34rem), radial-gradient(circle at 90% 8%, rgba(244,201,107,.16), transparent 34rem), linear-gradient(180deg,#080909,#0d1010 48%,#070808); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.15; background:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size:44px 44px; mask-image:linear-gradient(to bottom,#000,transparent 78%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(8,9,9,.78); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:950; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--mint),var(--sand)); color:#080909; box-shadow:0 0 28px rgba(112,255,214,.28); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--mint); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:880px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--sand); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(320px,.96fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:20px 0 10px; color:#effff9; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:82px; resize:vertical; }
+    .minirow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .tworow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#07100d; background:linear-gradient(135deg,var(--mint),var(--sand)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(112,255,214,.24); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--mint); }
+    .result-card p, .result-card li { color:#f3f7ea; line-height:1.48; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .big { font-size:clamp(28px,4vw,48px); font-weight:950; letter-spacing:-.04em; color:var(--sand); }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--sky); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(112,255,214,.14),rgba(244,201,107,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(112,255,214,.35); color:var(--mint); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 940px) { .tool { grid-template-columns:1fr; } header { position:relative; } .minirow, .tworow { grid-template-columns:1fr; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li { color:#111; } .big { color:#000; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 7 · Quarry knowledge calculator</p>
+    <h1>Stockpile Truckload Estimator</h1>
+    <p class="lede">A practical aggregate estimator for quarry yards, landscapers and small contractors: measure a pile, choose the shape and material, then get rough cubic metres, tonnes, 8-wheeler loads and artic loads before ordering, quoting or tidying the yard.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Small aggregate yards, muck-away firms, landscapers, groundworkers and plant operators.</div>
+      <div class="pill"><b>First product</b>Free calculator → £9–£19 Aggregate Estimator Pack.</div>
+      <div class="pill"><b>Why Yaan</b>He understands how real piles, loading shovels, bulk density and “that looks about right” site maths actually meet.</div>
+      <div class="pill"><b>Built</b>2026-05-19 04:01 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Estimate the pile</h2>
+        <p class="mini">This is deliberately rough-and-useful, not survey-grade. Measure consistently, choose the closest pile shape, and add a shrink / swell allowance if the material is messy or uneven.</p>
+
+        <div class="tworow">
+          <div><label for="jobName">Pile / job name</label><input id="jobName" value="40mm clean stone bay" /></div>
+          <div><label for="shape">Pile shape</label><select id="shape"><option value="cone">Cone / round pile</option><option value="windrow">Long windrow / ridge</option><option value="bay">Rectangular bay / bunker</option><option value="trapezoid">Trapezoid heap</option></select></div>
+        </div>
+
+        <h3>Measurements</h3>
+        <div class="minirow">
+          <div><label id="labelA" for="a">Diameter / length (m)</label><input id="a" type="number" min="0" step="0.1" value="8" /></div>
+          <div><label id="labelB" for="b">Height (m)</label><input id="b" type="number" min="0" step="0.1" value="2.4" /></div>
+          <div><label id="labelC" for="c">Width / top width (m)</label><input id="c" type="number" min="0" step="0.1" value="0" /></div>
+        </div>
+
+        <h3>Material and haulage</h3>
+        <div class="minirow">
+          <div><label for="material">Material preset</label><select id="material"><option value="1.60">Crushed stone / aggregate — 1.60 t/m³</option><option value="1.70">Wet sand — 1.70 t/m³</option><option value="1.45">Dry sand — 1.45 t/m³</option><option value="1.35">Scalpings / mixed fill — 1.35 t/m³</option><option value="1.20">Topsoil — 1.20 t/m³</option><option value="1.80">Ballast / dense gravel — 1.80 t/m³</option><option value="custom">Custom density</option></select></div>
+          <div><label for="density">Bulk density (tonnes / m³)</label><input id="density" type="number" min="0.1" step="0.01" value="1.60" /></div>
+          <div><label for="allowance">Shape / waste allowance %</label><input id="allowance" type="number" min="-30" max="40" step="1" value="10" /></div>
+        </div>
+        <div class="minirow">
+          <div><label for="eightWheel">8-wheeler payload (t)</label><input id="eightWheel" type="number" min="1" step="0.5" value="20" /></div>
+          <div><label for="artic">Artic payload (t)</label><input id="artic" type="number" min="1" step="0.5" value="29" /></div>
+          <div><label for="price">Optional material price £ / tonne</label><input id="price" type="number" min="0" step="0.5" value="18" /></div>
+        </div>
+
+        <label for="notes">Site notes</label>
+        <textarea id="notes">Check moisture, contamination, access, weighbridge tickets and whether the pile has a hidden back slope before relying on this for a quote.</textarea>
+
+        <div class="actions">
+          <button id="calculate">Estimate stockpile</button>
+          <button class="secondary" id="example">Load windrow example</button>
+          <button class="secondary" id="copy">Copy estimate</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Estimated material</h2>
+        <p class="mini">Use the result as a planning number, then confirm important orders with weighbridge tickets, drone survey, GPS measure or a proper stockpile survey.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Enter the measurements and hit “Estimate stockpile”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Bulk materials are everywhere, but small sites still lose time to rough guesses: “How many tonnes is that?”, “How many loads?”, “Is there enough in the bay?” A fast estimator turns Yaan’s quarry knowledge into a useful long-tail search tool.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free page can lead into an Aggregate Estimator Pack: printable density table, truck payload cheat sheet, quote worksheet, stockpile log and customer email templates for aggregate, soil and muck-away jobs.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-stone-crushed.pdf">USGS Mineral Commodity Summaries 2025 — crushed stone is a major construction commodity</a>
+        <a href="https://www.engineeringtoolbox.com/density-materials-d_1652.html">Engineering ToolBox — common material densities for gravel, sand, stone and soil</a>
+        <a href="https://www.cpa.uk.net/">Construction Plant-hire Association — UK plant and construction equipment sector body</a>
+        <a href="https://www.mineralproducts.org/">Mineral Products Association — UK aggregates, asphalt, cement, concrete and industrial mineral sector</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Package an <strong>Aggregate Estimator Pack</strong>: printable density cards, pile-shape formula sheet, stockpile count log, truckload worksheet, quote email templates and a “site measuring mistakes” checklist. The hook: “Stop guessing how many tonnes are in the pile.”</p>
+      <div class="tags"><span class="tag">quarry knowledge</span><span class="tag">aggregate calculator</span><span class="tag">template pack</span><span class="tag">simple SaaS wedge</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Aggregate%20Estimator%20Pack">Register interest in the estimator pack</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — turning site maths into owned digital leverage.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const num = (id) => Number($(id).value) || 0;
+    const fmt = (n, d = 1) => Number(n).toLocaleString('en-GB', {maximumFractionDigits:d, minimumFractionDigits:d});
+    const money = (n) => '£' + Math.round(n).toLocaleString('en-GB');
+    function esc(s) { return String(s || '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+    function updateLabels() {
+      const s = $('shape').value;
+      const labels = {
+        cone: ['Diameter at base (m)', 'Height (m)', 'Unused'],
+        windrow: ['Length (m)', 'Average height (m)', 'Average base width (m)'],
+        bay: ['Length (m)', 'Average fill height (m)', 'Width (m)'],
+        trapezoid: ['Length (m)', 'Height (m)', 'Average base width (m)']
+      }[s];
+      $('labelA').textContent = labels[0]; $('labelB').textContent = labels[1]; $('labelC').textContent = labels[2];
+      $('c').disabled = s === 'cone';
+    }
+    function setDensityFromMaterial() {
+      if ($('material').value !== 'custom') $('density').value = $('material').value;
+    }
+    function model() {
+      const s = $('shape').value;
+      const a = Math.max(0, num('a'));
+      const b = Math.max(0, num('b'));
+      const c = Math.max(0, num('c'));
+      let volume = 0;
+      let formula = '';
+      if (s === 'cone') { const r = a / 2; volume = Math.PI * r * r * b / 3; formula = 'Cone: π × radius² × height ÷ 3'; }
+      if (s === 'windrow') { volume = (c * b / 2) * a; formula = 'Windrow: triangular cross-section × length'; }
+      if (s === 'bay') { volume = a * c * b; formula = 'Bay: length × width × average fill height'; }
+      if (s === 'trapezoid') { volume = a * c * b * 0.65; formula = 'Trapezoid heap: length × base width × height × 0.65 shape factor'; }
+      const allowance = Math.max(-30, Math.min(40, num('allowance'))) / 100;
+      const adjustedVolume = volume * (1 + allowance);
+      const density = Math.max(0.1, num('density'));
+      const tonnes = adjustedVolume * density;
+      const eightLoads = tonnes / Math.max(1, num('eightWheel'));
+      const articLoads = tonnes / Math.max(1, num('artic'));
+      const value = tonnes * Math.max(0, num('price'));
+      return {s, a, b, c, volume, formula, adjustedVolume, density, tonnes, eightLoads, articLoads, value, allowance};
+    }
+    function calculate() {
+      updateLabels();
+      const p = model();
+      const warning = p.tonnes < 5 ? 'Small pile: measure carefully because a tiny height error can swing the result.' : p.allowance > 0.18 ? 'High allowance: sensible for messy piles, but mark it clearly if using the number in a quote.' : 'Useful planning estimate: confirm anything financial with tickets or a proper survey.';
+      $('output').innerHTML = `
+        <div class="result-card"><h3>${esc($('jobName').value || 'Stockpile estimate')}</h3><div class="big">${fmt(p.tonnes, 1)} tonnes</div><p>${fmt(p.adjustedVolume, 1)} m³ at ${fmt(p.density, 2)} t/m³.</p></div>
+        <div class="result-card"><h3>Truckloads</h3><ul><li>8-wheeler loads: <strong>${fmt(p.eightLoads, 1)}</strong> at ${fmt(num('eightWheel'), 1)}t payload.</li><li>Artic loads: <strong>${fmt(p.articLoads, 1)}</strong> at ${fmt(num('artic'), 1)}t payload.</li><li>Round up for ordering: <strong>${Math.ceil(p.eightLoads)}</strong> 8-wheelers or <strong>${Math.ceil(p.articLoads)}</strong> artics.</li></ul></div>
+        <div class="result-card"><h3>Volume maths</h3><p><strong>${fmt(p.volume, 1)} m³</strong> measured volume before allowance.</p><p>${esc(p.formula)}. Allowance applied: ${fmt(p.allowance * 100, 0)}%.</p></div>
+        <div class="result-card"><h3>Planning note</h3><p>${warning}</p><p>Optional material value: <strong>${money(p.value)}</strong> at £${fmt(num('price'), 2)} / tonne.</p><p class="mini">This is a planning aid, not a certified stockpile survey.</p></div>`;
+    }
+    function estimateText() {
+      const p = model();
+      return `STOCKPILE ESTIMATE\n\nPile/job: ${$('jobName').value}\nShape: ${$('shape').selectedOptions[0].text}\nMeasurements: A ${p.a}m, B ${p.b}m, C ${p.c}m\n\nMeasured volume: ${fmt(p.volume, 1)} m3\nAdjusted volume: ${fmt(p.adjustedVolume, 1)} m3\nBulk density: ${fmt(p.density, 2)} t/m3\nEstimated tonnage: ${fmt(p.tonnes, 1)} tonnes\n\n8-wheeler loads: ${fmt(p.eightLoads, 1)} (round to ${Math.ceil(p.eightLoads)})\nArtic loads: ${fmt(p.articLoads, 1)} (round to ${Math.ceil(p.articLoads)})\nEstimated material value: ${money(p.value)}\n\nNotes: ${$('notes').value}\n\nGenerated with Ava's Stockpile Truckload Estimator: https://yaanbatho.com/ava-projects/stockpile-truckload-estimator.html`;
+    }
+    function copyText() {
+      navigator.clipboard.writeText(estimateText()).then(() => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy estimate', 1800); }).catch(() => { $('copy').textContent = 'Select and copy manually'; });
+    }
+    function loadExample() {
+      $('jobName').value = 'Scalpings windrow near wash bay'; $('shape').value = 'windrow'; $('a').value = 22; $('b').value = 1.7; $('c').value = 4.5; $('material').value = '1.35'; $('density').value = 1.35; $('allowance').value = 12; $('eightWheel').value = 20; $('artic').value = 29; $('price').value = 12; calculate();
+    }
+    document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('input', calculate));
+    $('shape').addEventListener('change', calculate);
+    $('material').addEventListener('change', () => { setDensityFromMaterial(); calculate(); });
+    $('calculate').addEventListener('click', calculate);
+    $('copy').addEventListener('click', copyText);
+    $('example').addEventListener('click', loadExample);
+    updateLabels();
+    calculate();
+  </script>
+</body>
+</html>

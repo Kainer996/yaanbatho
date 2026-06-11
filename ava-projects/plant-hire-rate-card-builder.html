@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Hire Rate Card Builder — Ava Projects</title>
+  <meta name="description" content="A free plant hire and owner-operator rate card calculator for turning fuel, finance, maintenance, labour, utilisation and margin into quote-ready hourly and day rates." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/plant-hire-rate-card-builder.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#080a08; --panel:#12170f; --panel2:#1b2417; --ink:#f7f8ed; --muted:#c4c8b6; --lime:#b7ff5a; --amber:#ffd166; --steel:#9bd0ff; --orange:#ff9d42; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.44); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 12% 0%, rgba(183,255,90,.20), transparent 34rem), radial-gradient(circle at 90% 8%, rgba(255,157,66,.16), transparent 34rem), linear-gradient(180deg,#080a08,#0c100b 48%,#070807); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.16; background:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size:46px 46px; mask-image:linear-gradient(to bottom,#000,transparent 78%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(8,10,8,.78); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:950; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--lime),var(--orange)); color:#080a08; box-shadow:0 0 28px rgba(183,255,90,.28); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--lime); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:870px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--amber); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.03fr) minmax(320px,.97fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:20px 0 10px; color:#f2ffe4; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:84px; resize:vertical; }
+    .minirow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .tworow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#081008; background:linear-gradient(135deg,var(--lime),var(--amber)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(183,255,90,.24); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--lime); }
+    .result-card p, .result-card li { color:#f3f7ea; line-height:1.48; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .big { font-size:clamp(28px,4vw,48px); font-weight:950; letter-spacing:-.04em; color:var(--amber); }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--steel); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(183,255,90,.14),rgba(255,157,66,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(183,255,90,.35); color:var(--lime); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 940px) { .tool { grid-template-columns:1fr; } header { position:relative; } .minirow, .tworow { grid-template-columns:1fr; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li { color:#111; } .big { color:#000; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 6 · Quarry knowledge micro-tool</p>
+    <h1>Plant Hire Rate Card Builder</h1>
+    <p class="lede">A practical calculator for small plant operators, owner-drivers and contractors: turn fuel, finance, maintenance, labour, utilisation and margin into quote-ready hourly, half-day, day and mobilisation rates before you accidentally price yourself poor.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Owner-operators and small contractors who quote diggers, loaders, dumpers, telehandlers or crusher/screener work.</div>
+      <div class="pill"><b>First product</b>Free calculator → £9–£19 Plant Rate Card + Quote Template Pack.</div>
+      <div class="pill"><b>Why Yaan</b>He knows real plant, quarry sites and the hidden costs that tidy spreadsheet people miss.</div>
+      <div class="pill"><b>Built</b>2026-05-19 03:02 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Build your rate card</h2>
+        <p class="mini">Use realistic weekly costs and expected paid hours. The utilisation field is the sanity check: a machine that only earns 20 hours a week still has to pay for the whole week.</p>
+
+        <div class="tworow">
+          <div><label for="machine">Machine / service</label><input id="machine" value="5T excavator + operator" /></div>
+          <div><label for="region">Region / note</label><input id="region" value="Local jobs within 15 miles" /></div>
+        </div>
+
+        <h3>Weekly fixed costs</h3>
+        <div class="minirow">
+          <div><label for="finance">Finance / depreciation £</label><input id="finance" type="number" min="0" step="1" value="280" /></div>
+          <div><label for="insurance">Insurance / compliance £</label><input id="insurance" type="number" min="0" step="1" value="85" /></div>
+          <div><label for="yard">Yard, admin, phone £</label><input id="yard" type="number" min="0" step="1" value="65" /></div>
+        </div>
+
+        <h3>Running costs</h3>
+        <div class="minirow">
+          <div><label for="fuelBurn">Fuel burn litres / hour</label><input id="fuelBurn" type="number" min="0" step="0.1" value="5.5" /></div>
+          <div><label for="fuelPrice">Fuel price £ / litre</label><input id="fuelPrice" type="number" min="0" step="0.01" value="1.35" /></div>
+          <div><label for="wear">Maintenance, tracks, buckets £ / hr</label><input id="wear" type="number" min="0" step="0.5" value="8" /></div>
+        </div>
+
+        <h3>Labour, utilisation and margin</h3>
+        <div class="minirow">
+          <div><label for="labour">Operator wage target £ / hr</label><input id="labour" type="number" min="0" step="1" value="28" /></div>
+          <div><label for="paidHours">Expected paid hours / week</label><input id="paidHours" type="number" min="1" step="1" value="32" /></div>
+          <div><label for="margin">Profit margin %</label><input id="margin" type="number" min="0" max="80" step="1" value="25" /></div>
+        </div>
+        <div class="minirow">
+          <div><label for="halfDayHours">Half-day hours</label><input id="halfDayHours" type="number" min="1" step="0.5" value="4" /></div>
+          <div><label for="dayHours">Day-rate hours</label><input id="dayHours" type="number" min="1" step="0.5" value="8" /></div>
+          <div><label for="standby">Standby / waiting % of rate</label><input id="standby" type="number" min="0" max="100" step="1" value="55" /></div>
+        </div>
+
+        <h3>Mobilisation</h3>
+        <div class="minirow">
+          <div><label for="travelMiles">Travel / haulage miles</label><input id="travelMiles" type="number" min="0" step="1" value="20" /></div>
+          <div><label for="mileCost">Cost per mile £</label><input id="mileCost" type="number" min="0" step="0.1" value="2.2" /></div>
+          <div><label for="loadTime">Load / unload hours</label><input id="loadTime" type="number" min="0" step="0.25" value="1" /></div>
+        </div>
+
+        <label for="notes">Quote notes / exclusions</label>
+        <textarea id="notes">Fuel included at normal digging load. Attachments, muck-away, permits and abnormal access priced separately.</textarea>
+
+        <div class="actions">
+          <button id="calculate">Calculate rate card</button>
+          <button class="secondary" id="example">Load compact loader example</button>
+          <button class="secondary" id="copy">Copy quote text</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Your quote-ready rates</h2>
+        <p class="mini">The output separates the minimum viable hourly cost from the rate you should actually quote with margin.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Enter the real numbers and hit “Calculate rate card”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Small operators often quote from memory while fuel, wear, finance, insurance, travel and quiet days hide in the background. A simple rate-card tool turns Yaan’s site knowledge into a search-friendly product wedge.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free builder can lead into a paid rate-card pack: editable spreadsheet, quote email templates, mobilisation checklist, weekly cost worksheet and machine-specific examples for excavators, loaders and dumpers.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://www.hae.org.uk/">Hire Association Europe — UK hire industry body</a>
+        <a href="https://www.cpa.uk.net/">Construction Plant-hire Association — plant-hire sector body</a>
+        <a href="https://www.equipmentwatch.com/">EquipmentWatch — ownership and operating cost data products</a>
+        <a href="https://www.ons.gov.uk/businessindustryandtrade/constructionindustry">ONS — UK construction industry statistics</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Package a <strong>Plant Rate Card + Quote Template Pack</strong>: editable rate card, cost worksheet, “don’t forget this cost” checklist, customer quote email, daywork sheet and three example machine profiles. The hook is simple: “Stop doing busy jobs that secretly lose money.”</p>
+      <div class="tags"><span class="tag">quarry knowledge</span><span class="tag">calculator</span><span class="tag">simple SaaS wedge</span><span class="tag">template pack</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Plant%20Rate%20Card%20Template%20Pack">Register interest in the rate-card pack</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — turning real plant knowledge into owned digital leverage.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const money = (n) => '£' + Math.round(n).toLocaleString('en-GB');
+    const money2 = (n) => '£' + Number(n).toFixed(2);
+    const val = (id) => Number($(id).value) || 0;
+    function esc(s) { return String(s || '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+    function model() {
+      const fixedWeekly = val('finance') + val('insurance') + val('yard');
+      const hours = Math.max(1, val('paidHours'));
+      const fixedPerHour = fixedWeekly / hours;
+      const fuelPerHour = val('fuelBurn') * val('fuelPrice');
+      const variablePerHour = fuelPerHour + val('wear') + val('labour');
+      const breakEven = fixedPerHour + variablePerHour;
+      const margin = Math.max(0, Math.min(80, val('margin'))) / 100;
+      const quoted = breakEven / (1 - margin || 1);
+      const halfDay = quoted * val('halfDayHours');
+      const day = quoted * val('dayHours');
+      const standby = quoted * (Math.max(0, Math.min(100, val('standby'))) / 100);
+      const mob = (val('travelMiles') * val('mileCost')) + (val('loadTime') * quoted);
+      return {fixedWeekly, hours, fixedPerHour, fuelPerHour, variablePerHour, breakEven, margin, quoted, halfDay, day, standby, mob};
+    }
+    function calculate() {
+      const p = model();
+      const machine = $('machine').value.trim() || 'Plant + operator';
+      const region = $('region').value.trim();
+      const warning = p.hours < 25 ? 'Low utilisation: your fixed costs are being spread over very few paid hours, so the hourly rate needs to be stronger.' : p.margin < .15 ? 'Thin margin: this may keep you busy without leaving much profit for breakdowns, quiet days or replacement kit.' : 'Healthy structure: now compare against local market rates and adjust for job difficulty.';
+      $('output').innerHTML = `
+        <div class="result-card"><h3>Recommended quote rate</h3><div class="big">${money(p.quoted)} / hour</div><p>${esc(machine)}${region ? ' · ' + esc(region) : ''}</p></div>
+        <div class="result-card"><h3>Minimum viable cost</h3><p><strong>${money2(p.breakEven)} / hour</strong> before profit margin.</p><ul><li>Fixed costs: ${money2(p.fixedPerHour)} / hr from ${money(p.fixedWeekly)} weekly overheads across ${p.hours} paid hours.</li><li>Fuel: ${money2(p.fuelPerHour)} / hr.</li><li>Labour + wear: ${money2(val('labour') + val('wear'))} / hr.</li></ul></div>
+        <div class="result-card"><h3>Rate card</h3><ul><li>Half day (${val('halfDayHours')} hrs): <strong>${money(p.halfDay)}</strong></li><li>Day rate (${val('dayHours')} hrs): <strong>${money(p.day)}</strong></li><li>Standby / waiting: <strong>${money(p.standby)} / hr</strong></li><li>Mobilisation / travel line: <strong>${money(p.mob)}</strong></li></ul></div>
+        <div class="result-card"><h3>Sanity check</h3><p>${warning}</p><p class="mini">This is a quoting aid, not accounting advice. Check tax, VAT, local competition, job risk, attachments and site conditions.</p></div>`;
+    }
+    function quoteText() {
+      const p = model();
+      return `PLANT HIRE RATE CARD\n\nMachine/service: ${$('machine').value}\nArea/note: ${$('region').value}\n\nRecommended hourly rate: ${money(p.quoted)} / hr\nHalf day: ${money(p.halfDay)}\nDay rate: ${money(p.day)}\nStandby/waiting: ${money(p.standby)} / hr\nMobilisation/travel: ${money(p.mob)}\n\nMinimum viable cost before profit: ${money2(p.breakEven)} / hr\nFuel cost estimate: ${money2(p.fuelPerHour)} / hr\nFixed weekly overheads: ${money(p.fixedWeekly)} spread over ${p.hours} paid hrs\n\nNotes: ${$('notes').value}\n\nGenerated with Ava's Plant Hire Rate Card Builder: https://yaanbatho.com/ava-projects/plant-hire-rate-card-builder.html`;
+    }
+    function copyText() {
+      navigator.clipboard.writeText(quoteText()).then(() => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy quote text', 1800); }).catch(() => { $('copy').textContent = 'Select and copy manually'; });
+    }
+    function loadExample() {
+      $('machine').value = 'Compact loader + operator'; $('region').value = 'Yard, farm and local site work'; $('finance').value = 210; $('insurance').value = 70; $('yard').value = 55; $('fuelBurn').value = 4.2; $('fuelPrice').value = 1.35; $('wear').value = 7; $('labour').value = 28; $('paidHours').value = 28; $('margin').value = 24; $('halfDayHours').value = 4; $('dayHours').value = 8; $('standby').value = 50; $('travelMiles').value = 16; $('mileCost').value = 2; $('loadTime').value = 0.75; calculate();
+    }
+    document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('input', calculate));
+    $('calculate').addEventListener('click', calculate);
+    $('copy').addEventListener('click', copyText);
+    $('example').addEventListener('click', loadExample);
+    calculate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+---
+title: "Chifftown / Chifly"
+excerpt: "Virtual social center featuring webcam chat, virtual pubs, nightclubs, and arcades. Building the future of online social interaction."
+date: "2024-01-10"
+tags: ["product", "social", "webRTC"]
+tech: ["WebRTC", "TURN", "Next.js"]
+cover: "/projects/chifftown.jpg"
+repo: "https://github.com/yaanbatho/chifftown"
+status: "released"
+year: 2024
+---
+
+## The Problem
+
+Online social platforms have become increasingly impersonal. Video calls are formal. Chat rooms lack presence. Social media is performative. We needed something that captures the spontaneity and warmth of real-world social spaces.
+
+## The Solution
+
+Chifftown (also known as Chifly) is a virtual social center where people can hang out in themed spaces - pubs, nightclubs, arcades, and more. It uses WebRTC for real-time video and audio, creating authentic social experiences in digital environments.
+
+## Core Features
+
+### Virtual Spaces
+- **The Pub**: Casual hangout with table-based seating
+- **The Nightclub**: Music-driven space with DJ features
+- **The Arcade**: Collaborative gaming and competitions
+- **Private Rooms**: Customizable spaces for groups
+
+### Social Mechanics
+- Proximity-based audio/video (get closer, hear better)
+- Spatial audio for realistic conversations
+- Avatar customization and expression
+- Persistent spaces that remember you
+
+### Technical Infrastructure
+- WebRTC for peer-to-peer communication
+- TURN servers for NAT traversal
+- Next.js for the web application
+- Real-time state synchronization
+
+## Design Philosophy
+
+### Casual by Default
+No pressure to perform. Cameras are optional. Audio quality matters more than video. The focus is on connection, not presentation.
+
+### Space Matters
+Just like in real life, where you are affects who you talk to. The virtual geography creates natural conversation boundaries and serendipitous encounters.
+
+### Always On
+Spaces persist whether you're there or not. Drop in anytime. See who's around. Leave when you want.
+
+## Technical Deep Dive
+
+### WebRTC Implementation
+Setting up peer-to-peer connections at scale is challenging. We use a mesh network for small groups and switch to SFU (Selective Forwarding Unit) for larger gatherings.
+
+### Spatial Audio
+Custom audio routing based on user position in virtual space. Distance calculations determine volume and stereo positioning.
+
+### State Management
+Real-time synchronization across clients using WebSocket connections with fallback to long polling.
+
+## Challenges Overcome
+
+**Network Reliability**: Not all users have perfect connections. Implemented adaptive quality and graceful degradation.
+
+**Privacy Concerns**: Built-in tools for moderation, reporting, and private spaces with encryption.
+
+**Scalability**: Moving from peer-to-peer to hybrid architecture as user numbers grow.
+
+## User Stories
+
+> "Finally found a place to just hang out online without the pressure of social media." - Early tester
+
+> "It's like my local pub, but I can visit in my pajamas." - Regular user
+
+## Metrics & Growth
+
+- Average session time: 45 minutes
+- Return rate: 68% daily active users
+- Peak concurrent users: 500+
+- Positive sentiment: 89%
+
+## What's Next
+
+- Mobile app for on-the-go socializing
+- VR integration for immersive experiences
+- AI companions for solo visitors
+- Creator tools for custom spaces
+
+## Lessons Learned
+
+Building social products is about psychology as much as technology. The technical infrastructure enables connection, but the space design and social mechanics create community.
+
+WebRTC is powerful but requires careful consideration of edge cases. Testing in real-world network conditions is essential.
+
+

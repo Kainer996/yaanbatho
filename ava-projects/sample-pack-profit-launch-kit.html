@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sample Pack Profit + Launch Kit — Ava Projects</title>
+  <meta name="description" content="A free sample-pack profit calculator and launch-kit generator for electronic producers selling loops, one-shots, presets, MIDI or field recordings." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/sample-pack-profit-launch-kit.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#06050d; --panel:#12101f; --panel2:#1b1830; --ink:#fffafd; --muted:#c7bfd1; --violet:#b38cff; --mint:#6fffe9; --rose:#ff78b7; --amber:#ffd166; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.42); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 15% 0%, rgba(179,140,255,.22), transparent 34rem), radial-gradient(circle at 86% 10%, rgba(111,255,233,.14), transparent 32rem), radial-gradient(circle at 50% 55%, rgba(255,120,183,.09), transparent 36rem), var(--bg); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.2; background:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size:44px 44px; mask-image:linear-gradient(to bottom, #000, transparent 74%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(6,5,13,.76); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:900; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--violet),var(--mint)); color:#06050d; box-shadow:0 0 28px rgba(179,140,255,.28); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--mint); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:850px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--amber); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:24px 0 10px; color:#fff3fb; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:92px; resize:vertical; }
+    .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#06050d; background:linear-gradient(135deg,var(--violet),var(--mint)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(179,140,255,.28); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--mint); }
+    .result-card p, .result-card li { color:#f8efff; line-height:1.48; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .stat { border:1px solid rgba(111,255,233,.22); border-radius:18px; padding:14px; background:rgba(111,255,233,.06); }
+    .stat b { display:block; font-size:24px; color:var(--mint); margin-top:4px; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--mint); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(179,140,255,.15),rgba(111,255,233,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(111,255,233,.35); color:var(--mint); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 900px) { .tool { grid-template-columns:1fr; } header { position:relative; } .row, .stats { grid-template-columns:1fr; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card, .stat { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li { color:#111; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 5 · Producer digital-product tool</p>
+    <h1>Sample Pack Profit + Launch Kit</h1>
+    <p class="lede">A free planner for electronic producers who want to turn loops, one-shots, presets, MIDI, Ableton racks, or field recordings into a small sellable digital product — with profit maths, product copy, folder checklist, and a launch prompt in one page.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Independent producers with hard drives full of usable sounds but no simple product plan.</div>
+      <div class="pill"><b>First product</b>Free calculator → £9–£19 Sample Pack Launch Kit.</div>
+      <div class="pill"><b>Why Yaan</b>Kainer credibility plus real production experience: he knows what makes sounds useful to other producers.</div>
+      <div class="pill"><b>Built</b>2026-05-19 02:01 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Build your sample-pack plan</h2>
+        <div class="row">
+          <div><label for="creator">Creator / artist name</label><input id="creator" placeholder="e.g. Kainer" /></div>
+          <div><label for="pack">Pack title idea</label><input id="pack" placeholder="e.g. Quarry Signal Drums Vol. 1" /></div>
+        </div>
+        <div class="row">
+          <div><label for="type">Pack type</label><select id="type"><option>drum loops</option><option>one-shots</option><option>synth loops</option><option>field recordings</option><option>preset pack</option><option>MIDI pack</option><option>Ableton rack</option><option>mixed sample pack</option></select></div>
+          <div><label for="genre">Genre / buyer lane</label><select id="genre"><option>techno</option><option>house</option><option>breaks</option><option>drum & bass</option><option>ambient electronic</option><option>garage</option><option>cinematic electronica</option><option>experimental club music</option></select></div>
+        </div>
+        <div class="row">
+          <div><label for="files">Number of included files</label><input id="files" type="number" min="1" value="80" /></div>
+          <div><label for="price">Price per pack (£)</label><input id="price" type="number" min="1" step="0.50" value="12" /></div>
+        </div>
+        <div class="row">
+          <div><label for="sales">Target sales</label><input id="sales" type="number" min="1" value="50" /></div>
+          <div><label for="fee">Platform fee (%)</label><input id="fee" type="number" min="0" max="40" step="0.5" value="10" /></div>
+        </div>
+        <div class="row">
+          <div><label for="cost">Artwork / ads / tools cost (£)</label><input id="cost" type="number" min="0" step="1" value="25" /></div>
+          <div><label for="format">Delivery platform</label><select id="format"><option>Gumroad</option><option>Payhip</option><option>Ko-fi</option><option>Bandcamp bonus</option><option>own website</option><option>Shopify</option></select></div>
+        </div>
+        <label for="vibe">Sonic hook / story</label><textarea id="vibe" placeholder="e.g. metallic quarry textures, warm analogue chords, van-at-night road ambience, tight club drums."></textarea>
+        <div class="actions">
+          <button id="generate">Generate Launch Kit</button>
+          <button class="secondary" id="copy">Copy kit</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Your pack plan</h2>
+        <p class="mini">This is not “get rich from loops” nonsense. It is a tiny direct-sale product planner: clear niche, sensible price, useful files, proper readme, and a realistic launch checklist.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Fill in the details and hit “Generate Launch Kit”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Independent music creators already buy and sell samples, presets and production resources. Yaan has an unfair wedge here: real electronic music credibility, taste, and the ability to package sounds with a story instead of another faceless loop dump.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free planner can lead into a paid <strong>Sample Pack Launch Kit</strong>: folder templates, license/readme files, naming worksheets, launch captions, artwork prompts, and a 7-day sales checklist priced at £9–£19.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://splice.com/sounds">Splice Sounds — mainstream sample marketplace demand</a>
+        <a href="https://gumroad.com/pricing">Gumroad — direct digital-product selling</a>
+        <a href="https://payhip.com/pricing">Payhip — creator storefront pricing</a>
+        <a href="https://www.midiaresearch.com/blog/the-music-creator-economy-is-entering-a-new-era">MIDiA — music creator economy trend</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Package the first paid download: <strong>The Sample Pack Launch Kit</strong>. Keep it tight: editable folder structure, royalty-free license/readme templates, Gumroad/Payhip listing copy prompts, launch checklist, and “10 pack angles for electronic producers” worksheet.</p>
+      <div class="tags"><span class="tag">music income</span><span class="tag">sample packs</span><span class="tag">creator tools</span><span class="tag">digital download</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Sample%20Pack%20Launch%20Kit">Register interest in the Launch Kit</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — turning hard-drive treasure into owned creative income.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function money(n) { return '£' + Number(n || 0).toLocaleString('en-GB', {maximumFractionDigits: 2}); }
+    function num(id, fallback) { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : fallback; }
+    function kitData() {
+      const creator = $('creator').value.trim() || 'Your Artist Name';
+      const pack = $('pack').value.trim() || 'Your Sample Pack';
+      const type = $('type').value;
+      const genre = $('genre').value;
+      const files = Math.max(1, Math.round(num('files', 80)));
+      const price = Math.max(0, num('price', 12));
+      const sales = Math.max(1, Math.round(num('sales', 50)));
+      const fee = Math.min(80, Math.max(0, num('fee', 10)));
+      const cost = Math.max(0, num('cost', 25));
+      const format = $('format').value;
+      const vibe = $('vibe').value.trim() || 'a distinct sonic hook producers can understand quickly';
+      const gross = price * sales;
+      const fees = gross * (fee / 100);
+      const net = gross - fees - cost;
+      const breakEven = price > 0 ? Math.ceil(cost / (price * (1 - fee / 100))) : 0;
+      const perFile = files > 0 ? price / files : 0;
+      const priceSignal = perFile < 0.08 ? 'very generous value' : perFile < 0.2 ? 'sensible impulse-buy value' : 'premium/niche positioning';
+      const title = `${pack} — ${files} ${genre} ${type} by ${creator}`;
+      const blurb = `${pack} is a ${genre} ${type} pack by ${creator}, built around ${vibe}. It is designed for producers who want usable sounds quickly: labelled files, clean folders, royalty-free use, and enough character to spark a track instead of another bland loop folder.`;
+      const ai = `Act as a practical sample-pack product manager for electronic music producers. Help me refine this digital product without hype. Creator: ${creator}. Pack: ${pack}. Type: ${type}. Genre: ${genre}. Files: ${files}. Price: £${price}. Platform: ${format}. Sonic hook: ${vibe}. Give me: sharper pack positioning, 5 better title options, Gumroad/Payhip description, folder structure, license/readme wording, 7-day launch checklist, and 5 short social posts.`;
+      return {creator, pack, type, genre, files, price, sales, fee, cost, format, vibe, gross, fees, net, breakEven, perFile, priceSignal, title, blurb, ai};
+    }
+    function generateKit() {
+      const k = kitData();
+      $('output').innerHTML = `
+        <div class="stats">
+          <div class="stat">Gross at ${esc(k.sales)} sales<b>${money(k.gross)}</b></div>
+          <div class="stat">Est. net after fees/costs<b>${money(k.net)}</b></div>
+          <div class="stat">Break-even sales<b>${esc(k.breakEven)}</b></div>
+          <div class="stat">Price per file<b>${money(k.perFile)}</b></div>
+        </div>
+        <div class="result-card"><h3>Positioning</h3><p><strong>Listing title:</strong> ${esc(k.title)}</p><p><strong>Price read:</strong> ${esc(k.priceSignal)} at ${money(k.price)} for ${esc(k.files)} files.</p></div>
+        <div class="result-card"><h3>Product description</h3><p>${esc(k.blurb)}</p><p><strong>Best platform angle:</strong> launch first on ${esc(k.format)} as a clean direct download, then reuse the page copy for email, socials, and a simple landing page.</p></div>
+        <div class="result-card"><h3>Pack checklist</h3><ul><li>Use folders like <strong>Loops / One-Shots / MIDI / Presets / Demos / License</strong>.</li><li>Name files with BPM, key, type and short vibe tag where useful.</li><li>Add a plain-English royalty-free readme: buyers can use sounds in their music, but cannot resell the pack itself.</li><li>Include 3–5 demo loops so buyers hear the pack in context.</li></ul></div>
+        <div class="result-card"><h3>Copy-ready AI prompt</h3><p>${esc(k.ai)}</p></div>`;
+    }
+    $('generate').addEventListener('click', generateKit);
+    $('copy').addEventListener('click', async () => {
+      generateKit();
+      const k = kitData();
+      const text = `SAMPLE PACK LAUNCH KIT\n\nCreator: ${k.creator}\nPack: ${k.pack}\nType: ${k.type}\nGenre: ${k.genre}\nFiles: ${k.files}\nPrice: £${k.price}\nPlatform: ${k.format}\nTarget sales: ${k.sales}\n\nGross: ${money(k.gross)}\nFees: ${money(k.fees)}\nNet after fees/costs: ${money(k.net)}\nBreak-even sales: ${k.breakEven}\nPrice per file: ${money(k.perFile)}\n\nListing title:\n${k.title}\n\nDescription:\n${k.blurb}\n\nChecklist:\n- Folders: Loops / One-Shots / MIDI / Presets / Demos / License.\n- Name files with BPM, key, type and vibe tag.\n- Add royalty-free readme: buyers can use sounds in their music, not resell the pack.\n- Include 3-5 demo loops.\n\nAI prompt:\n${k.ai}`;
+      try { await navigator.clipboard.writeText(text); $('copy').textContent = 'Copied ✓'; }
+      catch (err) { $('copy').textContent = 'Select and copy manually'; }
+      setTimeout(() => $('copy').textContent = 'Copy kit', 1800);
+    });
+    generateKit();
+  </script>
+</body>
+</html>

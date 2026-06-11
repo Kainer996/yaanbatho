@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery — Yaan Batho</title>
+    <meta name="description" content="A creative archive — videos, artwork, and visual experiments by Yaan Batho.">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #080810;
+            --bg2:       #0e0e1a;
+            --surface:   #12121f;
+            --border:    rgba(255,255,255,0.07);
+            --text:      #f5f5f7;
+            --muted:     rgba(245,245,247,0.45);
+            --muted2:    rgba(245,245,247,0.2);
+            --accent:    #cc0000;
+            --accent2:   #ff2222;
+            --glow:      rgba(204,0,0,0.35);
+            --grad:      linear-gradient(135deg, #cc0000, #ff6600);
+            --font:      'Space Grotesk', sans-serif;
+            --mono:      'Space Mono', monospace;
+        }
+
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── NOISE OVERLAY ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            height: 64px;
+            background: rgba(8,8,16,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-logo img {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .nav-links a.active { color: var(--accent2); }
+
+        /* ─── HERO ─── */
+        .hero {
+            position: relative;
+            height: 60vh;
+            min-height: 400px;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 48px 64px;
+            overflow: hidden;
+            margin-top: 64px;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('/images/gallery/gallery-hero.jpg');
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.05);
+            transition: transform 8s ease;
+            filter: brightness(0.35) saturate(0.8);
+        }
+
+        .hero:hover .hero-bg { transform: scale(1); }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, var(--bg) 0%, rgba(8,8,16,0.3) 60%, transparent 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 700px;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(204,0,0,0.12);
+            border: 1px solid rgba(204,0,0,0.3);
+            border-radius: 100px;
+            padding: 5px 14px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent2);
+            margin-bottom: 20px;
+        }
+
+        .hero-pill::before { content: '◈'; margin-right: 2px; }
+
+        .hero-title {
+            font-size: clamp(2.8rem, 6vw, 5rem);
+            font-weight: 800;
+            line-height: 1.0;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+        }
+
+        .hero-title .red {
+            background: var(--grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--muted);
+            max-width: 480px;
+            line-height: 1.6;
+        }
+
+        /* ─── STATS ROW ─── */
+        .stats-row {
+            display: flex;
+            gap: 32px;
+            padding: 28px 48px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-num {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: var(--text);
+        }
+
+        .stat-num span { color: var(--accent2); }
+
+        .stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted2);
+            font-weight: 600;
+        }
+
+        /* ─── FILTER BAR ─── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 24px 48px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 64px;
+            z-index: 800;
+            background: rgba(8,8,16,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted2);
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .filter-btn {
+            padding: 6px 16px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--font);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: rgba(204,0,0,0.4);
+            color: var(--text);
+            background: rgba(204,0,0,0.08);
+        }
+
+        .filter-btn:focus-visible,
+        .view-btn:focus-visible,
+        .lightbox-close:focus-visible,
+        .lightbox-nav:focus-visible {
+            outline: 2px solid var(--accent2);
+            outline-offset: 2px;
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .view-toggle {
+            margin-left: auto;
+            display: flex;
+            gap: 4px;
+        }
+
+        .view-btn {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active, .view-btn:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+        }
+
+        /* ─── GALLERY GRID ─── */
+        .gallery-wrap {
+            padding: 40px 48px 120px;
+        }
+
+        /* Masonry layout */
+        .gallery-grid {
+            columns: 3;
+            column-gap: 20px;
+            transition: all 0.3s;
+        }
+
+        .gallery-grid.two-col { columns: 2; }
+        .gallery-grid.one-col { columns: 1; }
+
+        .gallery-item {
+            break-inside: avoid;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                        box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                        opacity 0.3s;
+            will-change: transform;
+        }
+
+        .gallery-item.hidden {
+            display: none;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(204,0,0,0.2);
+        }
+
+        .gallery-item img,
+        .gallery-item video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .gallery-item:hover img,
+        .gallery-item:hover video {
+            transform: scale(1.03);
+        }
+
+        .gallery-item .item-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(8,8,16,0.95) 0%, rgba(8,8,16,0.2) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+        }
+
+        .gallery-item:hover .item-overlay { opacity: 1; }
+
+        .item-type-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(8,8,16,0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 3px 10px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .item-type-badge.video { color: #ff6600; border-color: rgba(255,102,0,0.3); }
+        .item-type-badge.music { color: #00d4a0; border-color: rgba(0,212,160,0.3); }
+        .item-type-badge.art   { color: var(--accent2); border-color: rgba(204,0,0,0.3); }
+
+        .item-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .item-year {
+            font-size: 0.72rem;
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+
+        /* video play icon */
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 56px; height: 56px;
+            background: rgba(204,0,0,0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            backdrop-filter: blur(4px);
+        }
+
+        .gallery-item:hover .play-icon {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* expand icon for images */
+        .expand-icon {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-item:hover .expand-icon { opacity: 1; }
+
+        /* ─── LIGHTBOX ─── */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: rgba(0,0,0,0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s, background 0.35s;
+        }
+
+        .lightbox.open {
+            opacity: 1;
+            pointer-events: all;
+            background: rgba(0,0,0,0.92);
+        }
+
+        .lightbox-inner {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            transform: scale(0.92) translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .lightbox.open .lightbox-inner {
+            transform: scale(1) translateY(0);
+        }
+
+        .lightbox-inner img,
+        .lightbox-inner video {
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: 12px;
+            display: block;
+            object-fit: contain;
+        }
+
+        .lightbox-inner video { width: 80vw; }
+
+        .lightbox-caption {
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .lightbox-caption h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .lightbox-caption p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -48px;
+            right: 0;
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .lightbox-close:hover { background: var(--accent); }
+
+        .lightbox-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            width: 48px; height: 48px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+
+        .lightbox-nav:hover { background: var(--accent); border-color: var(--accent); }
+        .lightbox-prev { left: 24px; }
+        .lightbox-next { right: 24px; }
+
+        /* ─── UPLOAD ZONE ─── */
+        .upload-zone {
+            margin: 0 48px 48px;
+            border: 2px dashed rgba(204,0,0,0.25);
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            background: rgba(204,0,0,0.03);
+            transition: all 0.2s;
+        }
+
+        .upload-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(204,0,0,0.08);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .upload-zone h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload-zone p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .upload-zone .sub { font-size: 0.75rem; margin-top: 8px; color: var(--muted2); }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            display: none;
+        }
+
+        .empty-state.visible { display: block; }
+        .empty-state p { color: var(--muted); margin-top: 12px; }
+
+        /* ─── FOOTER ─── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--muted2);
+            font-size: 0.8rem;
+        }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .gallery-item {
+            animation: fadeSlideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .gallery-grid { columns: 2; }
+        }
+
+        @media (max-width: 640px) {
+            nav { padding: 0 16px; }
+            .nav-links { display: none; }
+            .hero { padding: 0 20px 48px; }
+            .stats-row { padding: 20px; gap: 20px; flex-wrap: wrap; }
+            .filter-bar { padding: 16px 20px; }
+            .gallery-wrap { padding: 24px 20px 80px; }
+            .gallery-grid { columns: 1; }
+            .upload-zone { margin: 0 20px 32px; padding: 32px 20px; }
+            footer { padding: 24px 20px; flex-direction: column; gap: 12px; text-align: center; }
+            .lightbox-nav { display: none; }
+            #spotlight { padding: 0 20px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav aria-label="Primary navigation">
+        <a href="index.html" class="nav-logo">
+            <img src="/images/logo.png" alt="Yaan Batho">
+            Yaan Batho
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="projects.html">Projects</a>
+            <a href="products.html">Products</a>
+            <a href="gallery.html" class="active">Gallery</a>
+            <a href="music.html">Music</a>
+            <a href="bio.html">Bio</a>
+            <a href="contact.html">Contact</a>
+                <a href="/paperclip/">Mission Control</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-pill">Creative Archive</div>
+            <h1 class="hero-title">The <span class="red">Gallery</span></h1>
+            <p class="hero-sub">Videos, artwork, experiments — everything I've made, in one place. A visual record of what I've been building.</p>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat">
+            <div class="stat-num" id="statTotal"><span>0</span></div>
+            <div class="stat-label">Works</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num" id="statVideos"><span>0</span></div>
+            <div class="stat-label">Videos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num" id="statArt"><span>0</span></div>
+            <div class="stat-label">Artworks</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num" id="statYears"><span>—</span></div>
+            <div class="stat-label">Years Active</div>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <span class="filter-label" id="galleryFilterLabel">Filter</span>
+        <button type="button" class="filter-btn active" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="filter-btn" data-filter="video" aria-pressed="false">Video</button>
+        <button type="button" class="filter-btn" data-filter="art" aria-pressed="false">Art</button>
+        <button type="button" class="filter-btn" data-filter="music" aria-pressed="false">Music / Visual</button>
+        <button type="button" class="filter-btn" data-filter="sitcom" aria-pressed="false">Orion's Barrel</button>
+
+        <div class="view-toggle" role="group" aria-label="Gallery layout">
+            <button type="button" class="view-btn active" id="viewMasonry" title="Masonry" aria-label="Masonry layout" aria-pressed="true">⊞</button>
+            <button type="button" class="view-btn" id="viewTwo" title="Two column" aria-label="Two column layout" aria-pressed="false">⊟</button>
+            <button type="button" class="view-btn" id="viewOne" title="Single column" aria-label="Single column layout" aria-pressed="false">☰</button>
+        </div>
+    </div>
+
+
+
+    <!-- NOW SHOWING SPOTLIGHT -->
+    <div id="spotlight" style="display:none; padding:0 48px 8px; margin-bottom:8px;">
+        <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; color:rgba(245,245,247,0.2); font-weight:600; margin-bottom:16px;">◈ Now Showing</div>
+        <div id="spotlightInner" style="position:relative; border-radius:16px; overflow:hidden; cursor:pointer; background:#12121f; border:1px solid rgba(255,255,255,0.07); max-height:480px;">
+            <div id="spotlightMedia" style="width:100%; line-height:0;"></div>
+            <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(8,8,16,0.95) 0%, transparent 60%); pointer-events:none;"></div>
+            <div style="position:absolute; bottom:0; left:0; right:0; padding:28px 32px;">
+                <div id="spotlightBadge" style="display:inline-block; padding:3px 10px; border-radius:100px; font-size:0.68rem; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:#ff2222; border:1px solid rgba(204,0,0,0.3); margin-bottom:10px;"></div>
+                <div id="spotlightTitle" style="font-size:clamp(1.4rem, 3vw, 2.2rem); font-weight:800; letter-spacing:-0.02em; line-height:1.1; margin-bottom:8px;"></div>
+                <div id="spotlightDesc" style="font-size:0.875rem; color:rgba(245,245,247,0.5); line-height:1.5;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="gallery-wrap">
+        <div class="gallery-grid" id="galleryGrid">
+            <!-- Items injected by JS -->
+        </div>
+        <div class="empty-state" id="emptyState">
+            <div style="font-size:3rem">🎭</div>
+            <p>Nothing in this category yet — more coming soon.</p>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Gallery lightbox">
+        <button type="button" class="lightbox-nav lightbox-prev" id="lbPrev" aria-label="Previous item">‹</button>
+        <div class="lightbox-inner" id="lightboxInner">
+            <button type="button" class="lightbox-close" id="lbClose" aria-label="Close lightbox">✕</button>
+            <div id="lbMedia"></div>
+            <div class="lightbox-caption" id="lbCaption"></div>
+        </div>
+        <button type="button" class="lightbox-nav lightbox-next" id="lbNext" aria-label="Next item">›</button>
+    </div>
+
+    <!-- MASCOT NAV -->
+    <link rel="stylesheet" href="/css/platform-nav-v19.css">
+    <link rel="stylesheet" href="/css/mascot-v20.css?v=1774811835">
+    <script src="/js/platform-nav-v19.js" defer></script>
+    <script src="/js/mascot-v20.js?v=1774811835" defer></script>
+    <script src="/js/cosmo-chat.js?v=1774811835" defer></script>
+
+    <script>
+    /* ═══════════════════════════════════════════
+       GALLERY DATA
+       Add items here. Yaan will add his work as he sends it.
+       Each item: { id, title, year, category, type, src, thumb, description }
+    ═══════════════════════════════════════════ */
+    const GALLERY_ITEMS = [
+        {
+            id: 1,
+            title: "Friend Shaped",
+            year: "2025",
+            category: "sitcom",
+            type: "video",
+            src: "/videos/friend-shaped.mp4",
+            thumb: null,
+            description: "Orion's Barrel — animated short"
+        },
+        {
+            id: 1773694427217,
+            title: "Modular Synthesiser — Manga Style",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694427217-kainer._minimal_graphic_of_a_modular_synthesiser_in_manga_style_804d10e8-6e8b-4a95-9d4f-52149959565c.png",
+            thumb: "/drive/files/portfolio/1773694427217-kainer._minimal_graphic_of_a_modular_synthesiser_in_manga_style_804d10e8-6e8b-4a95-9d4f-52149959565c.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773694297860,
+            title: "Adobe Express",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694297860-Adobe_Express_20231015_1801050_1.png",
+            thumb: "/drive/files/portfolio/1773694297860-Adobe_Express_20231015_1801050_1.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773694195328,
+            title: "Good Ninja Frogs",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694195328-good_ninja_frogs.png",
+            thumb: "/drive/files/portfolio/1773694195328-good_ninja_frogs.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773694190003,
+            title: "Space Duck",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694190003-kainer._space_duck_in_yellow_white_and_black_no_background_09c75b54-bf08-40cd-87fb-df71942ecbbb.png",
+            thumb: "/drive/files/portfolio/1773694190003-kainer._space_duck_in_yellow_white_and_black_no_background_09c75b54-bf08-40cd-87fb-df71942ecbbb.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773694186482,
+            title: "Alien",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694186482-alien_finished.png",
+            thumb: "/drive/files/portfolio/1773694186482-alien_finished.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773694145361,
+            title: "Artsy",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694145361-artsy.jpg",
+            thumb: "/drive/files/portfolio/1773694145361-artsy.jpg",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773693985736,
+            title: "Untitled Design",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773693985736-Untitled_design__97_dfd.png",
+            thumb: "/drive/files/portfolio/1773693985736-Untitled_design__97_dfd.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773693862206,
+            title: "Dog & Turtle",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773693862206-freepik__make-the-dog-in-img1-and-the-turtle-in-img1-are-on__16810.png",
+            thumb: "/drive/files/portfolio/1773693862206-freepik__make-the-dog-in-img1-and-the-turtle-in-img1-are-on__16810.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773693850495,
+            title: "Manga Isometric Japanese Town",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773693850495-kainer._manga_isometric_japanese_town_--ar_43_--profile_zt15f_fb363050-a649-4fc0-81c3-bd2579340f30_3.png",
+            thumb: "/drive/files/portfolio/1773693850495-kainer._manga_isometric_japanese_town_--ar_43_--profile_zt15f_fb363050-a649-4fc0-81c3-bd2579340f30_3.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773693791645,
+            title: "Dystopian Cyberpunk City",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773693791645-freepik__yaan-is-in-a-distopian-cyberpunk-city__14921.png",
+            thumb: "/drive/files/portfolio/1773693791645-freepik__yaan-is-in-a-distopian-cyberpunk-city__14921.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773693716734,
+            title: "The Alien Says",
+            year: "2026",
+            category: "art",
+            type: "video",
+            src: "/drive/files/portfolio/1773693716734-The_alien_says_202508252019.mp4",
+            thumb: null,
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773693482042,
+            title: "Character 360",
+            year: "2026",
+            category: "art",
+            type: "video",
+            src: "/drive/files/portfolio/1773693482042-freepik_rotate-character-360-degrees_minimax_768p_16-9_24fps_82501.mp4",
+            thumb: null,
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 1773694145356,
+            title: "Robot Toy",
+            year: "2026",
+            category: "art",
+            type: "image",
+            src: "/drive/files/portfolio/1773694145356-robot_toy.png",
+            thumb: "/drive/files/portfolio/1773694145356-robot_toy.png",
+            description: "From Yaan's creative archive"
+        },
+        {
+            id: 0.5,
+            title: "Yaan Batho — Facebook Video",
+            year: "2023",
+            category: "video",
+            type: "embed",
+            embedSrc: "https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Fyaan.batho%2Fvideos%2F1940615343385017%2F&show_text=false&width=560&t=0",
+            thumb: null,
+            description: "From Yaan's Facebook — video work."
+        }
+    ];
+
+    /* ═══════════════════════════════════════════
+       GALLERY ENGINE
+    ═══════════════════════════════════════════ */
+    const grid = document.getElementById('galleryGrid');
+    const emptyState = document.getElementById('emptyState');
+    const lightbox = document.getElementById('lightbox');
+    const lbInner = document.getElementById('lightboxInner');
+    const lbMedia = document.getElementById('lbMedia');
+    const lbCaption = document.getElementById('lbCaption');
+
+    let currentItems = [...GALLERY_ITEMS];
+    let currentIndex = 0;
+    let activeFilter = 'all';
+
+    // ── Clean up auto-generated titles
+    function cleanTitle(item) {
+        // If title looks like a UUID or timestamp hash, use a generic label
+        if (/^[a-f0-9-]{30,}$/i.test(item.title.replace(/\s/g, ''))) {
+            return item.type === 'video' ? 'Untitled Video' : 'Untitled Work';
+        }
+        return item.title;
+    }
+
+    // ── Spotlight: show first real item
+    function renderSpotlight(items) {
+        const real = items.find(i => !i.description?.includes('placeholder'));
+        if (!real) { document.getElementById('spotlight').style.display = 'none'; return; }
+
+        document.getElementById('spotlight').style.display = 'block';
+        const title = cleanTitle(real);
+        document.getElementById('spotlightTitle').textContent = title;
+        document.getElementById('spotlightDesc').textContent = real.description || '';
+        document.getElementById('spotlightBadge').textContent = real.type === 'video' ? '▶ Video' : real.category === 'sitcom' ? '◈ Orion\'s Barrel' : '◈ Art';
+
+        const media = document.getElementById('spotlightMedia');
+        if (real.type === 'video') {
+            media.innerHTML = `<video src="${real.src}" autoplay muted loop playsinline style="width:100%;max-height:420px;object-fit:cover;display:block;"></video>`;
+        } else {
+            media.innerHTML = `<img src="${real.src}" alt="${title}" style="width:100%;max-height:420px;object-fit:cover;display:block;">`;
+        }
+
+        // Click spotlight to open lightbox
+        const visibleItems = items.filter(i => activeFilter === 'all' || i.category === activeFilter);
+        const idx = visibleItems.findIndex(i => i.src === real.src);
+        document.getElementById('spotlightInner').onclick = () => openLightbox(Math.max(0, idx), visibleItems);
+    }
+
+    // ── Render
+    function render(items) {
+        grid.innerHTML = '';
+        const visible = items.filter(item => activeFilter === 'all' || item.category === activeFilter);
+        
+        if (visible.length === 0) {
+            emptyState.classList.add('visible');
+        } else {
+            emptyState.classList.remove('visible');
+        }
+
+        renderSpotlight(visible);
+
+        // Skip first real item from grid (it's in spotlight)
+        const real = visible.find(i => !i.description?.includes('placeholder'));
+        const gridItems = visible.filter(i => i !== real);
+
+        gridItems.forEach((item, i) => {
+            const el = document.createElement('div');
+            el.className = 'gallery-item';
+            el.style.animationDelay = `${i * 0.07}s`;
+            el.dataset.id = item.id;
+            el.dataset.index = i;
+
+            const title = cleanTitle(item);
+            const badge = `<span class="item-type-badge ${item.type === 'video' ? 'video' : item.category === 'music' ? 'music' : 'art'}">${item.type === 'video' ? '▶ Video' : item.category === 'music' ? '♪ Visual' : '◈ Art'}</span>`;
+
+            if (item.type === 'embed') {
+                el.innerHTML = `
+                    ${badge}
+                    <div style="position:relative;padding-bottom:56.25%;background:#12121f;min-height:180px;">
+                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+                            <div style="font-size:2.5rem;opacity:0.6">▶</div>
+                            <div style="font-size:0.8rem;color:rgba(245,245,247,0.4)">Facebook Video</div>
+                        </div>
+                    </div>
+                    <div class="play-icon">▶</div>
+                    <div class="item-overlay"></div>
+                `;
+            } else if (item.type === 'video') {
+                el.innerHTML = `
+                    ${badge}
+                    <video src="${item.src}" muted loop preload="none" poster="${item.thumb || ''}"></video>
+                    <div class="play-icon">▶</div>
+                    <div class="item-overlay"></div>
+                `;
+                const vid = el.querySelector('video');
+                el.addEventListener('mouseenter', () => vid.play().catch(()=>{}));
+                el.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+            } else {
+                el.innerHTML = `
+                    ${badge}
+                    <img src="${item.src}" alt="${title}" loading="lazy">
+                    <div class="expand-icon">⤢</div>
+                    <div class="item-overlay"></div>
+                `;
+            }
+
+            el.addEventListener('click', () => openLightbox(i, visible));
+            grid.appendChild(el);
+
+        });
+
+        updateStats(items);
+    }
+
+    // ── Stats
+    function updateStats(items) {
+        const total = items.length;
+        const videos = items.filter(i => i.type === 'video').length;
+        const art = items.filter(i => i.type === 'image').length;
+        const years = [...new Set(items.map(i => i.year))];
+        const yearRange = years.length > 1
+            ? `${Math.min(...years)}–${Math.max(...years)}`
+            : (years[0] || '—');
+
+        document.querySelector('#statTotal span').textContent = total;
+        document.querySelector('#statVideos span').textContent = videos;
+        document.querySelector('#statArt span').textContent = art;
+        document.querySelector('#statYears span').textContent = yearRange;
+    }
+
+    // ── Lightbox
+    function openLightbox(index, items) {
+        currentItems = items;
+        currentIndex = index;
+        showLightboxItem(currentIndex);
+        lightbox.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function showLightboxItem(index) {
+        const item = currentItems[index];
+        lbMedia.innerHTML = '';
+
+        if (item.type === 'embed') {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'width:80vw;max-width:700px;';
+            wrap.innerHTML = `<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;">
+                <iframe src="${item.embedSrc}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+            </div>`;
+            lbMedia.appendChild(wrap);
+        } else if (item.type === 'video') {
+            const vid = document.createElement('video');
+            vid.src = item.src;
+            vid.controls = true;
+            vid.autoplay = true;
+            lbMedia.appendChild(vid);
+        } else {
+            const img = document.createElement('img');
+            img.src = item.src;
+            img.alt = item.title;
+            lbMedia.appendChild(img);
+        }
+
+        lbCaption.innerHTML = `
+            <h3>${item.title}</h3>
+            <p>${item.year}${item.description ? ' · ' + item.description : ''}</p>
+        `;
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('open');
+        document.body.style.overflow = '';
+        lbMedia.innerHTML = '';
+    }
+
+    document.getElementById('lbClose').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+    document.getElementById('lbPrev').addEventListener('click', () => {
+        currentIndex = (currentIndex - 1 + currentItems.length) % currentItems.length;
+        showLightboxItem(currentIndex);
+    });
+
+    document.getElementById('lbNext').addEventListener('click', () => {
+        currentIndex = (currentIndex + 1) % currentItems.length;
+        showLightboxItem(currentIndex);
+    });
+
+    document.addEventListener('keydown', e => {
+        if (!lightbox.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') document.getElementById('lbPrev').click();
+        if (e.key === 'ArrowRight') document.getElementById('lbNext').click();
+    });
+
+    // ── Filters
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            activeFilter = btn.dataset.filter;
+            render(GALLERY_ITEMS);
+        });
+    });
+
+    function setActiveView(activeId, className) {
+        grid.className = className;
+        document.querySelectorAll('.view-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+        });
+        const activeBtn = document.getElementById(activeId);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
+    }
+
+    // ── View toggle
+    document.getElementById('viewMasonry').addEventListener('click', () => {
+        setActiveView('viewMasonry', 'gallery-grid');
+    });
+    document.getElementById('viewTwo').addEventListener('click', () => {
+        setActiveView('viewTwo', 'gallery-grid two-col');
+    });
+    document.getElementById('viewOne').addEventListener('click', () => {
+        setActiveView('viewOne', 'gallery-grid one-col');
+    });
+
+    // ── Drag & Drop upload zone (optional element)
+    const uploadZone = document.getElementById('uploadZone');
+
+    if (uploadZone) {
+        uploadZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const files = [...e.dataTransfer.files];
+            files.forEach(file => addLocalFile(file));
+        });
+
+        uploadZone.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = 'image/*,video/*';
+            input.onchange = () => [...input.files].forEach(addLocalFile);
+            input.click();
+        });
+    }
+
+    function addLocalFile(file) {
+        const url = URL.createObjectURL(file);
+        const isVideo = file.type.startsWith('video/');
+        const newItem = {
+            id: Date.now() + Math.random(),
+            title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+            year: new Date().getFullYear().toString(),
+            category: isVideo ? 'video' : 'art',
+            type: isVideo ? 'video' : 'image',
+            src: url,
+            thumb: null,
+            description: 'Local preview'
+        };
+        GALLERY_ITEMS.unshift(newItem);
+        render(GALLERY_ITEMS);
+    }
+
+    // ── Parallax hero
+    const heroBg = document.getElementById('heroBg');
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        heroBg.style.transform = `scale(1.05) translateY(${y * 0.25}px)`;
+    }, { passive: true });
+
+    // ── Load from shared-drive scan + uploaded items, merge with built-ins
+    async function loadUploads() {
+        try {
+            // Fetch both sources in parallel
+            const [scanRes, uploadRes] = await Promise.allSettled([
+                fetch('/gallery-upload/scan'),
+                fetch('/gallery-upload/items')
+            ]);
+
+            const scanned  = scanRes.status  === 'fulfilled' ? await scanRes.value.json()  : [];
+            const uploaded = uploadRes.status === 'fulfilled' ? await uploadRes.value.json() : [];
+
+            // Merge: scanned + uploaded, deduplicate by src, prepend to built-ins
+            const allNew = [...scanned, ...uploaded];
+            const existingSrcs = new Set(GALLERY_ITEMS.map(i => i.src));
+            allNew.forEach(item => {
+                if (!existingSrcs.has(item.src)) {
+                    existingSrcs.add(item.src);
+                    GALLERY_ITEMS.unshift(item);
+                }
+            });
+
+            // Sort: Friend Shaped always first, then rest, placeholders last
+            GALLERY_ITEMS.sort((a, b) => {
+                if (a.title === 'Friend Shaped') return -1;
+                if (b.title === 'Friend Shaped') return 1;
+                const aPlaceholder = a.description?.includes('placeholder');
+                const bPlaceholder = b.description?.includes('placeholder');
+                if (aPlaceholder && !bPlaceholder) return 1;
+                if (!aPlaceholder && bPlaceholder) return -1;
+                return 0;
+            });
+
+        } catch (e) { /* offline/error — fall back to built-ins */ }
+        render(GALLERY_ITEMS);
+    }
+
+    // ── Init — render immediately from built-in items, then check for new uploads
+    render(GALLERY_ITEMS);
+    loadUploads();
+    </script>
+
+    <footer>
+        <span>© 2026 Yaan Batho</span>
+        <span style="color:var(--muted2)">Gallery — A creative archive</span>
+    </footer>
+
+</body>
+</html>

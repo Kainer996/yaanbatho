@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown — Yaan Batho</title>
+    <meta name="description" content="Unknown: a realistic Three.js ocean experiment by Yaan Batho — sunlight, water, horizon, and nothing else.">
+    <link rel="canonical" href="https://yaanbatho.com/unknown/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Unknown — Three.js Ocean Experiment">
+    <meta property="og:description" content="Just water in the sunshine. A browser-based Three.js ocean experiment.">
+    <meta property="og:url" content="https://yaanbatho.com/unknown/">
+    <link rel="stylesheet" href="/css/style.css?v=unknown-ocean2">
+    <style>
+        html, body { height: 100%; }
+        body { overflow: hidden; background: #75bce8; }
+        body::before, body::after { display: none; }
+        header { background: linear-gradient(180deg, rgba(2,16,30,.55), rgba(2,16,30,.10)); border-bottom: 1px solid rgba(255,255,255,.18); position: fixed; width: 100%; }
+        header::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent); }
+        header .container { padding: 14px 20px; }
+        nav { gap: 22px; flex-wrap: wrap; justify-content: flex-end; }
+        nav a, .logo { text-shadow: 0 2px 14px rgba(0,25,50,.55); }
+        nav a:hover, nav a.active { color: #fff4b8; }
+        nav a.active::after { background: #fff4b8; box-shadow: 0 0 16px rgba(255,244,184,.85); bottom: -14px; }
+        #ocean-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        #ocean-stage canvas { display: block; width: 100%; height: 100%; }
+        .unknown-hud { position: fixed; left: clamp(18px, 4vw, 58px); bottom: clamp(18px, 5vh, 58px); z-index: 10; max-width: 540px; padding: 20px 22px; border: 1px solid rgba(255,255,255,.22); border-radius: 22px; background: linear-gradient(135deg, rgba(3,18,32,.36), rgba(4,57,88,.15)); backdrop-filter: blur(14px); box-shadow: 0 24px 80px rgba(0,24,50,.26); color: rgba(255,255,255,.92); }
+        .unknown-hud .eyebrow { display: block; font-family: var(--font-heading); font-size: .74rem; letter-spacing: .28em; text-transform: uppercase; color: #fff4b8; margin-bottom: 8px; }
+        .unknown-hud h1 { font-size: clamp(2rem, 5vw, 4.8rem); line-height: .9; margin: 0 0 10px; letter-spacing: .08em; text-transform: uppercase; color: #fff; text-shadow: 0 5px 30px rgba(0,38,80,.42); }
+        .unknown-hud p { margin: 0; font-size: clamp(.98rem, 1.5vw, 1.2rem); color: rgba(255,255,255,.78); }
+        .quality-chip { position: fixed; right: clamp(14px, 3vw, 34px); bottom: clamp(14px, 3vw, 34px); z-index: 10; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 9px 13px; background: rgba(0,20,38,.25); color: rgba(255,255,255,.76); font-size: .82rem; backdrop-filter: blur(10px); }
+        .walk-panel { position: fixed; right: clamp(14px, 3vw, 34px); top: 92px; z-index: 12; display: grid; gap: 8px; justify-items: end; }
+        .walk-btn { border: 1px solid rgba(255,255,255,.26); border-radius: 999px; padding: 11px 16px; background: rgba(2,22,38,.38); color: #fff; font-weight: 700; letter-spacing: .04em; cursor: pointer; backdrop-filter: blur(12px); box-shadow: 0 12px 40px rgba(0,25,55,.20); }
+        .walk-btn:hover { background: rgba(255,244,184,.22); border-color: rgba(255,244,184,.68); }
+        .walk-help { max-width: 260px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(0,20,38,.26); color: rgba(255,255,255,.76); font-size: .78rem; line-height: 1.35; text-align: right; backdrop-filter: blur(10px); }
+        .touch-pad { position: fixed; left: 14px; bottom: 14px; z-index: 14; display: none; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(2, 46px); gap: 8px; touch-action: none; }
+        .touch-btn { border: 1px solid rgba(255,255,255,.22); border-radius: 16px; background: rgba(2,22,38,.34); color: #fff; font-weight: 800; font-size: 1rem; backdrop-filter: blur(10px); }
+        .touch-btn[data-key="KeyW"] { grid-column: 2; grid-row: 1; }
+        .touch-btn[data-key="KeyA"] { grid-column: 1; grid-row: 2; }
+        .touch-btn[data-key="KeyS"] { grid-column: 2; grid-row: 2; }
+        .touch-btn[data-key="KeyD"] { grid-column: 3; grid-row: 2; }
+        .loader { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, #d7f3ff, #63a4d2 58%, #123b5f); color: white; z-index: 30; font-family: var(--font-heading); letter-spacing: .16em; transition: opacity .7s ease; }
+        .loader.hidden { opacity: 0; pointer-events: none; }
+        .webgl-error { position: fixed; inset: auto 18px 18px 18px; z-index: 40; padding: 14px 16px; border-radius: 14px; background: rgba(2,15,25,.86); color: #fff; display: none; }
+        @media (max-width: 760px) { body { overflow: hidden; } .logo { font-size: 15px; } nav { display: none; } .mobile-menu-btn { display: block; } header .container { padding: 10px 14px; } .unknown-hud { left: 12px; right: 12px; bottom: 98px; padding: 14px 15px; max-width: none; pointer-events: none; } .unknown-hud h1 { font-size: clamp(1.65rem, 9vw, 2.7rem); margin-bottom: 6px; } .unknown-hud p { font-size: .86rem; line-height: 1.35; } .unknown-hud .eyebrow { font-size: .62rem; letter-spacing: .2em; } .quality-chip { display: none; } .walk-panel { top: 68px; right: 10px; gap: 6px; } .walk-btn { padding: 10px 13px; font-size: .78rem; } .walk-help { display: none; } .touch-pad { display: grid; } body.walking .unknown-hud { display: none; } body.walking .touch-pad { display: grid; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/projects.html">Projects</a>
+                <a href="/unknown/" class="active">Unknown</a>
+                <a href="/products.html">Products</a>
+                <a href="/ava-projects/">Ava Projects</a>
+                <a href="/bio.html">Bio</a>
+                <a href="/music.html">Music</a>
+                <a href="/contact.html">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <div id="ocean-stage" aria-label="A realistic Three.js ocean surface under bright sunshine"></div>
+    <div class="loader" id="loader">SUMMONING WATER</div>
+    <div class="webgl-error" id="webgl-error">This browser could not start the WebGL ocean renderer. Try a newer browser or enable hardware acceleration.</div>
+    <section class="unknown-hud" aria-label="Project title">
+        <span class="eyebrow">Three.js Water.js + Sky.js study</span>
+        <h1>Unknown</h1>
+        <p>Just water in the sunshine — now with a walkable tiny island, sandy roads, a little hut, one peaceful resident, physical sky lighting, real reflection/refraction water, layered normal-map ripples, bloom, haze, and a low ocean camera.</p>
+    </section>
+    <div class="walk-panel">
+        <button class="walk-btn" id="walk-btn" type="button">Walk the island</button>
+        <div class="walk-help" id="walk-help">Click to land on the island. WASD / arrows to walk, mouse to look, Esc to return to orbit.</div>
+    </div>
+    <div class="touch-pad" id="touch-pad" aria-label="Touch walk controls">
+        <button class="touch-btn" data-key="KeyW" type="button">▲</button>
+        <button class="touch-btn" data-key="KeyA" type="button">◀</button>
+        <button class="touch-btn" data-key="KeyS" type="button">▼</button>
+        <button class="touch-btn" data-key="KeyD" type="button">▶</button>
+    </div>
+    <div class="quality-chip">drag to look · island life v6</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { Water } from 'three/addons/objects/Water.js';
+        import { Sky } from 'three/addons/objects/Sky.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        const stage = document.getElementById('ocean-stage');
+        const loader = document.getElementById('loader');
+        const errorBox = document.getElementById('webgl-error');
+        const walkBtn = document.getElementById('walk-btn');
+        const touchPad = document.getElementById('touch-pad');
+        const isMobile = matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+        const quality = {
+            mobile: isMobile,
+            pixelRatio: Math.min(devicePixelRatio, isMobile ? 1.05 : 1.75),
+            waterSegments: isMobile ? 64 : 128,
+            normalTextureSize: isMobile ? 256 : 512,
+            reflectionSize: isMobile ? 256 : 1024,
+            bloom: !isMobile
+        };
+        window.__unknownOcean = { status: 'booting', version: 'island-life-v6', quality };
+        window.__unknownOceanErrors = [];
+
+        function makeWaterNormalTexture(size = 512) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const image = ctx.createImageData(size, size);
+            const data = image.data;
+            const rand = (x, y) => {
+                const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+                return s - Math.floor(s);
+            };
+            const noise = (x, y) => {
+                const x0 = Math.floor(x), y0 = Math.floor(y);
+                const xf = x - x0, yf = y - y0;
+                const u = xf * xf * (3 - 2 * xf);
+                const v = yf * yf * (3 - 2 * yf);
+                const a = rand(x0, y0);
+                const b = rand(x0 + 1, y0);
+                const c = rand(x0, y0 + 1);
+                const d = rand(x0 + 1, y0 + 1);
+                return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a, b, u), THREE.MathUtils.lerp(c, d, u), v);
+            };
+            const height = (x, y) => {
+                let value = 0;
+                let amp = 0.55;
+                let freq = 0.035;
+                for (let i = 0; i < 5; i++) {
+                    value += amp * noise(x * freq + i * 19.7, y * freq + i * 7.3);
+                    freq *= 2.06;
+                    amp *= 0.52;
+                }
+                value += 0.11 * Math.sin((x * 0.19 + y * 0.06));
+                value += 0.08 * Math.sin((x * -0.08 + y * 0.23));
+                return value;
+            };
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const hL = height(x - 1, y);
+                    const hR = height(x + 1, y);
+                    const hD = height(x, y - 1);
+                    const hU = height(x, y + 1);
+                    const nx = (hL - hR) * 1.85;
+                    const ny = (hD - hU) * 1.85;
+                    const nz = 1.0;
+                    const inv = 1 / Math.hypot(nx, ny, nz);
+                    const i = (y * size + x) * 4;
+                    data[i] = Math.floor((nx * inv * 0.5 + 0.5) * 255);
+                    data[i + 1] = Math.floor((ny * inv * 0.5 + 0.5) * 255);
+                    data[i + 2] = Math.floor((nz * inv * 0.5 + 0.5) * 255);
+                    data[i + 3] = 255;
+                }
+            }
+            ctx.putImageData(image, 0, 0);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.colorSpace = THREE.NoColorSpace;
+            texture.anisotropy = 8;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createDistantIsland() {
+            const island = new THREE.Group();
+            island.name = 'distant-island-atoll';
+            island.position.set(18, -0.8, -760);
+            island.scale.set(1.2, 1.2, 1.2);
+
+            const sandMat = new THREE.MeshStandardMaterial({ color: 0xcaa66d, roughness: 0.95, metalness: 0.02, fog: true });
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x315f38, roughness: 0.88, fog: true });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x5e625c, roughness: 0.96, fog: true });
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7b5631, roughness: 0.9, fog: true });
+            const palmMat = new THREE.MeshStandardMaterial({ color: 0x235c3b, roughness: 0.8, fog: true, side: THREE.DoubleSide });
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0xb28b57, roughness: 1.0, metalness: 0.0, fog: true });
+            const hutWoodMat = new THREE.MeshStandardMaterial({ color: 0x8b5f36, roughness: 0.86, fog: true });
+            const hutRoofMat = new THREE.MeshStandardMaterial({ color: 0xb99150, roughness: 0.98, fog: true });
+            const hutDarkMat = new THREE.MeshStandardMaterial({ color: 0x2f2118, roughness: 0.92, fog: true });
+            const clothMat = new THREE.MeshStandardMaterial({ color: 0xe6f0d1, roughness: 0.82, fog: true });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xb87952, roughness: 0.8, fog: true });
+            const islandDetail = isMobile ? { sand: [32, 10], hill: [24, 10], fronds: 5 } : { sand: [48, 18], hill: [36, 16], fronds: 7 };
+
+            function addRoad(name, x, y, z, width, length, rot = 0) {
+                const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.5, length), roadMat);
+                road.name = `island-road-${name}`;
+                road.position.set(x, y, z);
+                road.rotation.y = rot;
+                island.add(road);
+                return road;
+            }
+
+            function addHut() {
+                const hut = new THREE.Group();
+                hut.name = 'island-hut-home';
+                hut.position.set(4, 16.4, -18);
+                hut.rotation.y = -0.18;
+
+                const floor = new THREE.Mesh(new THREE.BoxGeometry(28, 2.1, 20), hutWoodMat);
+                hut.add(floor);
+
+                const cabin = new THREE.Mesh(new THREE.BoxGeometry(22, 14, 16), hutWoodMat);
+                cabin.position.y = 8;
+                hut.add(cabin);
+
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(18, 11, 4), hutRoofMat);
+                roof.name = 'thatched-hut-roof';
+                roof.position.y = 20.2;
+                roof.rotation.y = Math.PI * 0.25;
+                roof.scale.z = 0.72;
+                hut.add(roof);
+
+                const door = new THREE.Mesh(new THREE.BoxGeometry(5.4, 8.8, 0.75), hutDarkMat);
+                door.name = 'hut-front-door';
+                door.position.set(-3.8, 5.8, 8.35);
+                hut.add(door);
+
+                const window = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.6, 0.8), hutDarkMat);
+                window.name = 'hut-window';
+                window.position.set(5.8, 9, 8.4);
+                hut.add(window);
+
+                const porch = new THREE.Mesh(new THREE.BoxGeometry(13, 1.1, 8), hutWoodMat);
+                porch.name = 'hut-porch';
+                porch.position.set(0, 0.8, 13.2);
+                hut.add(porch);
+
+                [[-10, -7], [10, -7], [-10, 7], [10, 7]].forEach(([x, z]) => {
+                    const stilt = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 9, 6), trunkMat);
+                    stilt.position.set(x, -5.2, z);
+                    hut.add(stilt);
+                });
+
+                island.add(hut);
+                return hut;
+            }
+
+            function addResident() {
+                const person = new THREE.Group();
+                person.name = 'island-resident-one-person';
+                person.position.set(-15, 18.2, 12);
+                person.rotation.y = 0.55;
+
+                const body = new THREE.Mesh(new THREE.CapsuleGeometry(2.3, 5.4, 4, 10), clothMat);
+                body.name = 'resident-body';
+                body.position.y = 8.4;
+                person.add(body);
+
+                const head = new THREE.Mesh(new THREE.SphereGeometry(2.45, isMobile ? 12 : 18, isMobile ? 8 : 12), skinMat);
+                head.name = 'resident-head';
+                head.position.y = 14.9;
+                person.add(head);
+
+                const hat = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.2, isMobile ? 12 : 18), hutRoofMat);
+                hat.name = 'resident-sun-hat';
+                hat.position.y = 17.3;
+                person.add(hat);
+
+                const brim = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 4.8, 0.35, isMobile ? 14 : 24), hutRoofMat);
+                brim.position.y = 16.3;
+                person.add(brim);
+
+                [[-1.05], [1.05]].forEach(([x]) => {
+                    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.72, 5.4, 8), skinMat);
+                    leg.position.set(x, 3, 0);
+                    person.add(leg);
+                });
+                [[-2.85, 0.2, -0.25], [2.85, -0.2, 0.25]].forEach(([x, rz, z]) => {
+                    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.54, 5.8, 8), skinMat);
+                    arm.position.set(x, 8.2, z);
+                    arm.rotation.z = rz;
+                    person.add(arm);
+                });
+                const shadow = new THREE.Mesh(
+                    new THREE.CircleGeometry(4.1, isMobile ? 16 : 28),
+                    new THREE.MeshBasicMaterial({ color: 0x1f241e, transparent: true, opacity: 0.16, depthWrite: false })
+                );
+                shadow.name = 'resident-soft-shadow';
+                shadow.rotation.x = -Math.PI / 2;
+                shadow.position.y = 0.16;
+                person.add(shadow);
+
+                island.add(person);
+                return person;
+            }
+
+            const sand = new THREE.Mesh(new THREE.SphereGeometry(84, islandDetail.sand[0], islandDetail.sand[1]), sandMat);
+            sand.scale.set(1.9, 0.11, 0.62);
+            sand.position.y = -1.2;
+            sand.rotation.y = -0.08;
+            island.add(sand);
+
+            const hill = new THREE.Mesh(new THREE.SphereGeometry(58, islandDetail.hill[0], islandDetail.hill[1]), grassMat);
+            hill.scale.set(1.05, 0.32, 0.46);
+            hill.position.set(-8, 8, -5);
+            hill.rotation.y = 0.18;
+            island.add(hill);
+
+            const backHill = new THREE.Mesh(new THREE.SphereGeometry(42, isMobile ? 20 : 28, isMobile ? 8 : 12), grassMat);
+            backHill.scale.set(1.05, 0.26, 0.42);
+            backHill.position.set(42, 5.4, 3);
+            backHill.rotation.y = -0.22;
+            island.add(backHill);
+
+            addRoad('shoreline-spine', -10, 8.55, 1, 12, 150, Math.PI * 0.47);
+            addRoad('beach-crossing', 18, 8.75, -2, 10, 118, Math.PI * 0.06);
+            addRoad('palm-loop-west', -42, 9.15, -6, 9, 58, Math.PI * -0.18);
+            addRoad('palm-loop-east', 48, 9.05, 5, 8, 52, Math.PI * 0.26);
+            addRoad('lookout-track', -5, 13.8, -6, 8, 72, Math.PI * 0.33);
+
+            const hut = addHut();
+            const resident = addResident();
+
+            const rockPositions = [
+                [-86, 2.3, 6, 10, 5, 7], [83, 1.9, -3, 12, 4, 6],
+                [-32, 3.2, -19, 8, 5, 5], [24, 2.8, 18, 7, 4, 6]
+            ];
+            rockPositions.forEach(([x, y, z, sx, sy, sz], idx) => {
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rockMat);
+                rock.position.set(x, y, z);
+                rock.scale.set(sx, sy, sz);
+                rock.rotation.set(idx * 0.31, idx * 0.67, idx * 0.19);
+                island.add(rock);
+            });
+
+            function addPalm(x, z, height, lean, rot) {
+                const palm = new THREE.Group();
+                palm.position.set(x, 9.5, z);
+                palm.rotation.z = lean;
+                palm.rotation.y = rot;
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, height, 8), trunkMat);
+                trunk.position.y = height * 0.5;
+                trunk.rotation.x = 0.08;
+                palm.add(trunk);
+                for (let i = 0; i < islandDetail.fronds; i++) {
+                    const frond = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 23), palmMat);
+                    frond.position.y = height + 1.3;
+                    frond.rotation.y = (i / islandDetail.fronds) * Math.PI * 2;
+                    frond.rotation.x = Math.PI * 0.5 + 0.36;
+                    frond.position.x = Math.cos(frond.rotation.y) * 4.2;
+                    frond.position.z = Math.sin(frond.rotation.y) * 4.2;
+                    palm.add(frond);
+                }
+                island.add(palm);
+            }
+            addPalm(-34, -8, 34, -0.13, 0.2);
+            addPalm(-14, 3, 42, 0.09, -0.45);
+            addPalm(32, -2, 29, 0.17, 0.72);
+
+            const shimmer = new THREE.Mesh(
+                new THREE.RingGeometry(72, 122, 80),
+                new THREE.MeshBasicMaterial({ color: 0x9ce8ff, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide })
+            );
+            shimmer.rotation.x = -Math.PI / 2;
+            shimmer.position.y = 0.05;
+            shimmer.scale.set(1.65, 0.55, 1);
+            island.add(shimmer);
+
+            return island;
+        }
+
+        try {
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0xb7ddf2, 0.00008);
+
+            const islandCenter = new THREE.Vector3(18, -0.8, -760);
+            const islandLookTarget = islandCenter.clone().add(new THREE.Vector3(0, 24, 0));
+            const islandIsoCamera = islandCenter.clone().add(new THREE.Vector3(178, 176, 214));
+
+            const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 20000);
+            camera.position.copy(islandIsoCamera);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setPixelRatio(quality.pixelRatio);
+            renderer.setSize(innerWidth, innerHeight);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = isMobile ? 0.9 : 0.82;
+            stage.appendChild(renderer.domElement);
+
+            const waterGeometry = new THREE.PlaneGeometry(10000, 10000, quality.waterSegments, quality.waterSegments);
+            const water = new Water(waterGeometry, {
+                textureWidth: quality.reflectionSize,
+                textureHeight: quality.reflectionSize,
+                waterNormals: makeWaterNormalTexture(quality.normalTextureSize),
+                sunDirection: new THREE.Vector3(),
+                sunColor: 0xfff2c2,
+                waterColor: 0x033454,
+                distortionScale: isMobile ? 4.4 : 5.2,
+                fog: scene.fog !== undefined
+            });
+            water.rotation.x = -Math.PI / 2;
+            water.material.uniforms.size.value = isMobile ? 2.15 : 1.85;
+            scene.add(water);
+
+            const sky = new Sky();
+            sky.scale.setScalar(10000);
+            scene.add(sky);
+
+            const sun = new THREE.Vector3();
+            const skyUniforms = sky.material.uniforms;
+            skyUniforms.turbidity.value = 6.1;
+            skyUniforms.rayleigh.value = 1.35;
+            skyUniforms.mieCoefficient.value = 0.011;
+            skyUniforms.mieDirectionalG.value = 0.86;
+
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            let renderTarget;
+            const parameters = { elevation: 8.6, azimuth: 121 };
+
+            function updateSun() {
+                const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+                const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+                sun.setFromSphericalCoords(1, phi, theta);
+                sky.material.uniforms.sunPosition.value.copy(sun);
+                water.material.uniforms.sunDirection.value.copy(sun).normalize();
+                if (renderTarget) renderTarget.dispose();
+                renderTarget = pmremGenerator.fromScene(sky);
+                scene.environment = renderTarget.texture;
+            }
+            updateSun();
+
+            const ambience = new THREE.HemisphereLight(0xdff7ff, 0x25482f, 1.35);
+            scene.add(ambience);
+            const islandSun = new THREE.DirectionalLight(0xffedbd, 2.4);
+            islandSun.position.copy(sun).multiplyScalar(520);
+            scene.add(islandSun);
+
+            const sunGlare = new THREE.Mesh(
+                new THREE.CircleGeometry(110, 96),
+                new THREE.MeshBasicMaterial({ color: 0xfff1aa, transparent: true, opacity: 0.72, depthWrite: false })
+            );
+            sunGlare.position.copy(sun).multiplyScalar(6400);
+            scene.add(sunGlare);
+
+            const haze = new THREE.Mesh(
+                new THREE.PlaneGeometry(10000, 1300),
+                new THREE.MeshBasicMaterial({ color: 0xd7f0ff, transparent: true, opacity: 0.18, depthWrite: false })
+            );
+            haze.position.set(0, 118, -3350);
+            scene.add(haze);
+
+            const island = createDistantIsland();
+            scene.add(island);
+            window.__unknownOcean.island = 'distant-atoll';
+            window.__unknownOcean.hut = 'island-hut-home';
+            window.__unknownOcean.resident = 'one-peaceful-resident';
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.045;
+            controls.enablePan = false;
+            controls.minDistance = 95;
+            controls.maxDistance = 420;
+            controls.minPolarAngle = Math.PI * 0.28;
+            controls.maxPolarAngle = Math.PI * 0.43;
+            controls.target.copy(islandLookTarget);
+            camera.lookAt(islandLookTarget);
+            window.__unknownOcean.cameraStart = 'isometric-island-overlook';
+
+            const walkKeys = new Set();
+            const walkState = {
+                enabled: false,
+                yaw: 0,
+                pitch: -0.04,
+                speed: 58,
+                eyeHeight: 7.8
+            };
+
+            function islandGroundHeight(x, z) {
+                const lx = (x - islandCenter.x) / 1.2;
+                const lz = (z - islandCenter.z) / 1.2;
+                const beach = 8.2;
+                const hill = 7.2 * Math.exp(-((lx + 8) ** 2 / 4300 + (lz + 5) ** 2 / 950));
+                const backHill = 3.5 * Math.exp(-((lx - 42) ** 2 / 2100 + (lz - 3) ** 2 / 900));
+                return islandCenter.y + (beach + hill + backHill) * 1.2;
+            }
+
+            function clampToIsland() {
+                const lx = (camera.position.x - islandCenter.x) / 1.2;
+                const lz = (camera.position.z - islandCenter.z) / 1.2;
+                const rx = 148;
+                const rz = 58;
+                const ellipse = Math.sqrt((lx * lx) / (rx * rx) + (lz * lz) / (rz * rz));
+                if (ellipse > 1) {
+                    const scale = 1 / ellipse;
+                    camera.position.x = islandCenter.x + lx * scale * 1.2;
+                    camera.position.z = islandCenter.z + lz * scale * 1.2;
+                }
+                camera.position.y = islandGroundHeight(camera.position.x, camera.position.z) + walkState.eyeHeight;
+            }
+
+            function updateWalkLook() {
+                const direction = new THREE.Vector3(
+                    Math.sin(walkState.yaw) * Math.cos(walkState.pitch),
+                    Math.sin(walkState.pitch),
+                    -Math.cos(walkState.yaw) * Math.cos(walkState.pitch)
+                );
+                camera.lookAt(camera.position.clone().add(direction));
+            }
+
+            function enterWalkMode(requestLock = true) {
+                walkState.enabled = true;
+                controls.enabled = false;
+                camera.position.set(islandCenter.x + 10, 0, islandCenter.z + 64);
+                walkState.yaw = 0;
+                walkState.pitch = -0.02;
+                clampToIsland();
+                updateWalkLook();
+                document.body.classList.add('walking');
+                walkBtn.textContent = isMobile ? 'Walking — tap to orbit' : 'Walking island — Esc to orbit';
+                window.__unknownOcean.walkMode = true;
+                window.__unknownOcean.walkControls = isMobile ? 'touch D-pad + drag look' : 'WASD/arrows + mouse look';
+                if (!isMobile && requestLock && stage.requestPointerLock) stage.requestPointerLock();
+            }
+
+            function exitWalkMode() {
+                walkState.enabled = false;
+                walkKeys.clear();
+                controls.enabled = true;
+                document.body.classList.remove('walking');
+                controls.target.copy(islandCenter).add(new THREE.Vector3(0, 12, 0));
+                controls.update();
+                walkBtn.textContent = 'Walk the island';
+                window.__unknownOcean.walkMode = false;
+            }
+
+            walkBtn.addEventListener('click', () => walkState.enabled && isMobile ? exitWalkMode() : enterWalkMode(true));
+            stage.addEventListener('click', () => { if (!isMobile && walkState.enabled && stage.requestPointerLock) stage.requestPointerLock(); });
+            document.addEventListener('pointerlockchange', () => { if (!isMobile && walkState.enabled && document.pointerLockElement !== stage) exitWalkMode(); });
+            document.addEventListener('keydown', (event) => {
+                if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code)) {
+                    walkKeys.add(event.code);
+                    if (walkState.enabled) event.preventDefault();
+                }
+                if (event.code === 'Escape' && walkState.enabled) exitWalkMode();
+            });
+            document.addEventListener('keyup', (event) => walkKeys.delete(event.code));
+            document.addEventListener('mousemove', (event) => {
+                if (!walkState.enabled || document.pointerLockElement !== stage) return;
+                walkState.yaw -= event.movementX * 0.0021;
+                walkState.pitch = THREE.MathUtils.clamp(walkState.pitch - event.movementY * 0.0017, -0.55, 0.45);
+                updateWalkLook();
+            });
+            let touchLook = null;
+            stage.addEventListener('touchstart', (event) => {
+                if (!walkState.enabled || event.target.closest('.touch-pad')) return;
+                const touch = event.changedTouches[0];
+                touchLook = { id: touch.identifier, x: touch.clientX, y: touch.clientY };
+            }, { passive: true });
+            stage.addEventListener('touchmove', (event) => {
+                if (!walkState.enabled || !touchLook) return;
+                const touch = [...event.changedTouches].find(t => t.identifier === touchLook.id);
+                if (!touch) return;
+                const dx = touch.clientX - touchLook.x;
+                const dy = touch.clientY - touchLook.y;
+                touchLook.x = touch.clientX;
+                touchLook.y = touch.clientY;
+                walkState.yaw -= dx * 0.004;
+                walkState.pitch = THREE.MathUtils.clamp(walkState.pitch - dy * 0.003, -0.55, 0.45);
+                updateWalkLook();
+                event.preventDefault();
+            }, { passive: false });
+            stage.addEventListener('touchend', () => { touchLook = null; }, { passive: true });
+            touchPad.querySelectorAll('.touch-btn').forEach((btn) => {
+                const key = btn.dataset.key;
+                const press = (event) => { walkKeys.add(key); event.preventDefault(); };
+                const release = (event) => { walkKeys.delete(key); event.preventDefault(); };
+                btn.addEventListener('pointerdown', press);
+                btn.addEventListener('pointerup', release);
+                btn.addEventListener('pointercancel', release);
+                btn.addEventListener('pointerleave', release);
+            });
+            window.__unknownOcean.enterWalkMode = () => enterWalkMode(false);
+            window.__unknownOcean.exitWalkMode = exitWalkMode;
+
+            const composer = quality.bloom ? new EffectComposer(renderer) : null;
+            if (composer) {
+                composer.addPass(new RenderPass(scene, camera));
+                composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.16, 0.18, 0.72));
+            }
+
+            const clock = new THREE.Clock();
+            const baseCamera = camera.position.clone();
+
+            function resize() {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setPixelRatio(quality.pixelRatio);
+                renderer.setSize(innerWidth, innerHeight);
+                if (composer) composer.setSize(innerWidth, innerHeight);
+            }
+            addEventListener('resize', resize);
+
+            function tick() {
+                const delta = Math.min(clock.getDelta(), 0.05);
+                const elapsed = clock.elapsedTime;
+                water.material.uniforms.time.value += delta * 0.82;
+
+                if (walkState.enabled) {
+                    const forward = Number(walkKeys.has('KeyW') || walkKeys.has('ArrowUp')) - Number(walkKeys.has('KeyS') || walkKeys.has('ArrowDown'));
+                    const strafe = Number(walkKeys.has('KeyD') || walkKeys.has('ArrowRight')) - Number(walkKeys.has('KeyA') || walkKeys.has('ArrowLeft'));
+                    const sprint = walkKeys.has('ShiftLeft') || walkKeys.has('ShiftRight') ? 1.75 : 1;
+                    const step = walkState.speed * sprint * delta;
+                    const sin = Math.sin(walkState.yaw);
+                    const cos = Math.cos(walkState.yaw);
+                    camera.position.x += (sin * forward + cos * strafe) * step;
+                    camera.position.z += (-cos * forward + sin * strafe) * step;
+                    clampToIsland();
+                    updateWalkLook();
+                    window.__unknownOcean.walkPosition = {
+                        x: Math.round(camera.position.x * 10) / 10,
+                        y: Math.round(camera.position.y * 10) / 10,
+                        z: Math.round(camera.position.z * 10) / 10
+                    };
+                } else {
+                    const breathe = Math.sin(elapsed * 0.16) * 1.8;
+                    if (document.pointerLockElement === null) {
+                        camera.position.y += (baseCamera.y + breathe - camera.position.y) * 0.002;
+                    }
+                    controls.update();
+                }
+
+                sunGlare.lookAt(camera.position);
+                haze.lookAt(camera.position.x, haze.position.y, camera.position.z);
+                if (composer) composer.render();
+                else renderer.render(scene, camera);
+                window.__unknownOcean.status = 'rendering';
+                requestAnimationFrame(tick);
+            }
+
+            requestAnimationFrame(() => {
+                loader.classList.add('hidden');
+                tick();
+            });
+        } catch (error) {
+            console.error('Unknown ocean failed to start', error);
+            window.__unknownOcean.status = 'error';
+            window.__unknownOceanErrors.push(String(error && error.stack || error));
+            loader.classList.add('hidden');
+            errorBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

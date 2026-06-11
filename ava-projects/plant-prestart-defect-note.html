@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Pre-Start + Defect Note Generator — Ava Projects</title>
+  <meta name="description" content="A mobile-friendly pre-start checklist and defect-note generator for plant, quarry, recycling, construction and van-based operators." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/plant-prestart-defect-note.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#08100f; --panel:#111b1a; --panel2:#172624; --ink:#f5fff9; --muted:#b9cec7; --teal:#55f0d8; --lime:#b8ff6a; --amber:#ffd166; --red:#ff7a90; --line:rgba(255,255,255,.14); --shadow:0 22px 70px rgba(0,0,0,.35); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 12% 5%, rgba(85,240,216,.22), transparent 32rem), radial-gradient(circle at 88% 12%, rgba(184,255,106,.16), transparent 34rem), linear-gradient(180deg,#08100f 0%,#0b1116 100%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(8,16,15,.78); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:800; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--teal),var(--lime)); color:#07110f; }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 32px; }
+    .eyebrow { color:var(--teal); font-size:12px; font-weight:900; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,88px); line-height:.95; margin:14px 0 18px; }
+    .lede { color:var(--muted); max-width:780px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--amber); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(310px,.9fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:24px 0 10px; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.22); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:96px; resize:vertical; }
+    .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-top:10px; }
+    .check { display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); border-radius:16px; padding:12px; background:rgba(255,255,255,.045); color:var(--muted); }
+    .check input { width:auto; margin-top:4px; accent-color:var(--teal); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:900; color:#06100f; background:linear-gradient(135deg,var(--teal),var(--lime)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .note { white-space:pre-wrap; min-height:280px; border:1px dashed rgba(85,240,216,.34); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; color:#eafff8; line-height:1.45; }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(85,240,216,.35); color:var(--teal); border-radius:999px; padding:6px 10px; font-size:12px; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:170px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--teal); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(85,240,216,.14),rgba(184,255,106,.09)); }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 880px) { .tool { grid-template-columns:1fr; } header { position:relative; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } .panel, .note { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini { color:#222; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 1 · Plant paperwork micro-tool</p>
+    <h1>Plant Pre-Start + Defect Note Generator</h1>
+    <p class="lede">A simple mobile page for operators to run a quick machine check, turn defects into a tidy handover note, then print or save the result. It uses Yaan's real quarry and plant knowledge as the wedge into a practical paid template pack.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Plant, quarry, recycling, groundworks and owner-operator crews.</div>
+      <div class="pill"><b>First product</b>Free generator → £9 paperwork pack upsell.</div>
+      <div class="pill"><b>Why Yaan</b>He knows the machines, the daily faff, and the language operators actually use.</div>
+      <div class="pill"><b>Built</b>2026-05-18 22:02 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Build your check note</h2>
+        <div class="row">
+          <div><label for="machine">Machine type</label><select id="machine"><option>Loading shovel</option><option>Excavator</option><option>Dump truck / dumper</option><option>Telehandler</option><option>Crusher / screener</option><option>Van / support vehicle</option></select></div>
+          <div><label for="machineId">Machine ID / reg</label><input id="machineId" placeholder="e.g. CAT 980 / WX12 ABC" /></div>
+        </div>
+        <div class="row">
+          <div><label for="site">Site</label><input id="site" placeholder="e.g. Clitheroe quarry" /></div>
+          <div><label for="hours">Hours / mileage</label><input id="hours" placeholder="e.g. 8,420 hrs" /></div>
+        </div>
+        <div class="row">
+          <div><label for="operator">Operator</label><input id="operator" placeholder="Name" /></div>
+          <div><label for="date">Date</label><input id="date" type="date" /></div>
+        </div>
+
+        <h3>Quick pre-start checks</h3>
+        <div class="checks" id="checks">
+          <label class="check"><input type="checkbox" value="Oil, coolant, AdBlue/fuel levels checked">Oil, coolant, AdBlue/fuel levels</label>
+          <label class="check"><input type="checkbox" value="No obvious leaks under or around machine">Leaks underneath / around machine</label>
+          <label class="check"><input type="checkbox" value="Tyres/tracks, wheel nuts, cuts and pressures checked">Tyres/tracks, wheel nuts, cuts/pressures</label>
+          <label class="check"><input type="checkbox" value="Pins, bushes, bucket/attachment and locking gear checked">Pins, bushes, bucket/attachment lock</label>
+          <label class="check"><input type="checkbox" value="Lights, beacons, horn, reverse alarm and camera/mirrors checked">Lights, beacons, horn, alarms, cameras/mirrors</label>
+          <label class="check"><input type="checkbox" value="Brakes, steering and seat belt checked before work">Brakes, steering, seat belt</label>
+          <label class="check"><input type="checkbox" value="Guards, handrails, steps and access points checked">Guards, handrails, steps/access</label>
+          <label class="check"><input type="checkbox" value="Fire extinguisher, spill kit and emergency stops present/checked">Fire extinguisher, spill kit, emergency stops</label>
+          <label class="check"><input type="checkbox" value="Cab clean, visibility clear and paperwork/logbook available">Cab, visibility, paperwork/logbook</label>
+          <label class="check"><input type="checkbox" value="Machine warmed up and unusual noises/vibration monitored">Warm-up, unusual noise/vibration</label>
+        </div>
+
+        <label for="defects">Defects found</label>
+        <textarea id="defects" placeholder="e.g. Small hydraulic weep on lift ram. Beacon intermittent."></textarea>
+        <label for="action">Action taken / handover</label>
+        <textarea id="action" placeholder="e.g. Reported to supervisor. Machine okay for light duty pending fitter check."></textarea>
+        <div class="actions">
+          <button id="generate">Generate note</button>
+          <button class="secondary" id="copy">Copy note</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Generated defect note</h2>
+        <p class="mini">This is deliberately plain-English so it can be pasted into WhatsApp, email, a job sheet, or a site log.</p>
+        <div class="note" id="output">Fill in the form, tick the checks completed, then hit “Generate note”.</div>
+        <p class="mini"><strong>Note:</strong> This helper does not replace your employer/site procedure, statutory inspection, competent-person check, or any required maintenance system. It is a tidy note-maker, not legal advice.</p>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>PUWER-style inspection and maintenance duties create constant paperwork pressure, but many small operators do not want a giant enterprise system. They want fast, printable, phone-friendly admin that sounds like site life.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>Use this free generator as a search/social hook, then sell a £9 “Plant Operator Paperwork Pack”: daily checks, defect log, handover sheet, toolbox talk prompts, and laminated cab cards.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://www.hse.gov.uk/work-equipment-machinery/inspection.htm">HSE — inspection of work equipment</a>
+        <a href="https://www.hse.gov.uk/quarries/">HSE — quarries guidance</a>
+        <a href="https://www.cpa.uk.net/">Construction Plant-hire Association resources</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Turn this into a paid download: <strong>Plant Operator Paperwork Pack v1</strong>. Keep it blunt, useful, and operator-friendly — not corporate fluff. The pitch: “Spend less time making notes from scratch; keep clean records when something needs reporting.”</p>
+      <div class="tags"><span class="tag">quarry knowledge</span><span class="tag">micro-SaaS wedge</span><span class="tag">PDF templates</span><span class="tag">operator admin</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Plant%20Operator%20Paperwork%20Pack">Register interest in the £9 pack</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — practical little wedges toward freedom.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    $('date').value = today;
+
+    function generateNote() {
+      const checked = [...document.querySelectorAll('#checks input:checked')].map(x => `- ${x.value}`);
+      const machine = $('machine').value;
+      const machineId = $('machineId').value || 'Not entered';
+      const site = $('site').value || 'Not entered';
+      const hours = $('hours').value || 'Not entered';
+      const operator = $('operator').value || 'Not entered';
+      const date = $('date').value || today;
+      const defects = $('defects').value.trim() || 'No defects recorded.';
+      const action = $('action').value.trim() || 'No action recorded.';
+      const status = defects.toLowerCase().includes('no defect') || defects.toLowerCase() === 'none' || defects === 'No defects recorded.' ? 'No defects recorded' : 'Defect / observation recorded';
+      $('output').textContent = `PLANT PRE-START / DEFECT NOTE\n\nDate: ${date}\nSite: ${site}\nOperator: ${operator}\nMachine: ${machine}\nMachine ID/reg: ${machineId}\nHours/mileage: ${hours}\nStatus: ${status}\n\nChecks completed:\n${checked.length ? checked.join('\n') : '- No checks ticked'}\n\nDefects / observations:\n${defects}\n\nAction taken / handover:\n${action}\n\nGenerated with Ava Projects Plant Pre-Start + Defect Note Generator.`;
+    }
+
+    $('generate').addEventListener('click', generateNote);
+    $('copy').addEventListener('click', async () => {
+      generateNote();
+      try {
+        await navigator.clipboard.writeText($('output').textContent);
+        $('copy').textContent = 'Copied ✓';
+      } catch (err) {
+        $('copy').textContent = 'Select note and copy manually';
+      }
+      setTimeout(() => $('copy').textContent = 'Copy note', 1800);
+    });
+  </script>
+</body>
+</html>

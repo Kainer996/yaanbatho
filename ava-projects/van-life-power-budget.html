@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Van Life Power Budget Calculator — Ava Projects</title>
+  <meta name="description" content="A free van life power calculator for estimating daily watt-hours, battery size, solar panel needs and off-grid runtime before buying gear." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/van-life-power-budget.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#05080b; --panel:#101923; --panel2:#142434; --ink:#f6fbff; --muted:#b8c7d5; --sky:#74d7ff; --mint:#75f2bf; --sun:#ffd166; --rose:#ff7aa8; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.44); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 10% 0%, rgba(116,215,255,.22), transparent 34rem), radial-gradient(circle at 90% 8%, rgba(117,242,191,.16), transparent 32rem), radial-gradient(circle at 45% 70%, rgba(255,209,102,.08), transparent 36rem), var(--bg); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.18; background:linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px); background-size:44px 44px; mask-image:linear-gradient(to bottom, #000, transparent 72%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(5,8,11,.76); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:900; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--sky),var(--mint)); color:#05080b; box-shadow:0 0 28px rgba(116,215,255,.28); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--mint); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:840px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--sun); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:20px 0 10px; color:#eaf7ff; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    .row { display:grid; grid-template-columns:1.2fr .7fr .7fr auto; gap:10px; align-items:end; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+    .row:first-of-type { border-top:1px solid rgba(255,255,255,.08); }
+    .row small { display:block; color:var(--muted); margin-top:5px; }
+    .minirow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:14px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#06100d; background:linear-gradient(135deg,var(--sky),var(--mint)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .remove { padding:10px 12px; color:var(--ink); background:rgba(255,122,168,.16); border:1px solid rgba(255,122,168,.34); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(116,215,255,.22); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--sky); }
+    .result-card p, .result-card li { color:#e9f4ff; line-height:1.48; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .big { font-size:clamp(28px,4vw,48px); font-weight:950; letter-spacing:-.04em; color:var(--mint); }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--sky); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(116,215,255,.14),rgba(117,242,191,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(116,215,255,.35); color:var(--sky); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 940px) { .tool { grid-template-columns:1fr; } header { position:relative; } .row, .minirow { grid-template-columns:1fr; } .remove { width:100%; } }
+    @media print { header, .actions, .market, .product, footer, .back, .remove { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li { color:#111; } .big { color:#000; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 3 · Van life practical micro-tool</p>
+    <h1>Van Life Power Budget Calculator</h1>
+    <p class="lede">A friendly off-grid power planner for van lifers, campers and remote workers: add your fridge, laptop, lights, fan, Starlink or camera kit, then get a sensible daily watt-hour estimate, battery target, solar target and runtime warning before buying expensive gear.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Van lifers and weekend campers confused by watts, watt-hours, batteries and solar.</div>
+      <div class="pill"><b>First product</b>Free calculator → £7–£15 Van Power Setup Cheat Sheet.</div>
+      <div class="pill"><b>Why Yaan</b>He actually lives in a van, understands practical kit decisions, and can speak from lived experience.</div>
+      <div class="pill"><b>Built</b>2026-05-19 00:01 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Calculate your daily power use</h2>
+        <p class="mini">Start with the presets, tweak watts and hours, then add anything specific to your setup. This is a planning estimate, not electrical installation advice.</p>
+        <div id="loads"></div>
+        <div class="actions">
+          <button id="add">Add another device</button>
+          <button class="secondary" id="reset">Reset presets</button>
+        </div>
+        <div class="minirow">
+          <div><label for="days">Days off-grid wanted</label><input id="days" type="number" min="1" step="0.5" value="2" /></div>
+          <div><label for="sun">Peak sun hours / day</label><input id="sun" type="number" min="1" step="0.5" value="3" /></div>
+          <div><label for="loss">System losses %</label><input id="loss" type="number" min="0" max="40" step="1" value="20" /></div>
+        </div>
+        <div class="actions">
+          <button id="calculate">Calculate Power Budget</button>
+          <button class="secondary" id="copy">Copy results</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Your power plan</h2>
+        <p class="mini">Useful enough for a first buying decision: daily demand, recommended battery, solar panel range, and how heavy your setup is.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Adjust the devices and hit “Calculate Power Budget”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Van power is a painful buying problem. People are mixing travel, camping, remote work and creator kit, but most calculators feel either too technical or too generic. A simple van-specific tool can win search traffic and trust.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free calculator can lead to affiliate links for LiFePO4 batteries, portable power stations, solar panels, DC fridges and battery monitors — plus a small paid setup checklist PDF.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://www.rvia.org/news-insights">RVIA — RV ownership and shipment news</a>
+        <a href="https://thedyrt.com/camping-report">The Dyrt — camping and remote-work trend reports</a>
+        <a href="https://www.grandviewresearch.com/industry-analysis/portable-power-station-market-report">Grand View Research — portable power station market</a>
+        <a href="https://www.renogy.com/calculators">Renogy — solar and off-grid calculator examples</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Package a <strong>Van Power Setup Cheat Sheet</strong>: plain-English watt-hour examples, printable device log, battery/solar sizing rules of thumb, and a pre-buy checklist. Keep it practical and lived-in — “don’t waste £800 on the wrong box” is the hook.</p>
+      <div class="tags"><span class="tag">van life</span><span class="tag">affiliate funnel</span><span class="tag">calculator</span><span class="tag">lived experience</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Van%20Power%20Setup%20Cheat%20Sheet">Register interest in the cheat sheet</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — practical van-life leverage toward owned income.</footer>
+
+  <script>
+    const presets = [
+      ['12V compressor fridge', 45, 10],
+      ['Laptop charging', 65, 3],
+      ['LED lights', 12, 5],
+      ['Phone + small electronics', 20, 3],
+      ['Roof fan', 25, 4],
+      ['Wi‑Fi / router', 10, 8]
+    ];
+    const $ = (id) => document.getElementById(id);
+    function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function addRow(name = '', watts = 20, hours = 1) {
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.innerHTML = `<div><label>Device</label><input class="name" value="${esc(name)}" placeholder="e.g. Camera batteries" /><small>Use average watts if it cycles on/off.</small></div><div><label>Watts</label><input class="watts" type="number" min="0" step="1" value="${watts}" /></div><div><label>Hours / day</label><input class="hours" type="number" min="0" step="0.25" value="${hours}" /></div><button class="remove" type="button">Remove</button>`;
+      div.querySelector('.remove').addEventListener('click', () => { div.remove(); calculate(); });
+      div.querySelectorAll('input').forEach(input => input.addEventListener('input', calculate));
+      $('loads').appendChild(div);
+    }
+    function resetRows() { $('loads').innerHTML = ''; presets.forEach(p => addRow(...p)); calculate(); }
+    function rows() { return [...document.querySelectorAll('#loads .row')].map(row => ({ name: row.querySelector('.name').value.trim() || 'Unnamed device', watts: Number(row.querySelector('.watts').value) || 0, hours: Number(row.querySelector('.hours').value) || 0 })); }
+    function plan() {
+      const loss = Math.max(0, Math.min(40, Number($('loss').value) || 0));
+      const days = Math.max(0.5, Number($('days').value) || 1);
+      const sun = Math.max(1, Number($('sun').value) || 3);
+      const items = rows().map(i => ({...i, wh: i.watts * i.hours}));
+      const rawWh = items.reduce((sum, i) => sum + i.wh, 0);
+      const dailyWh = rawWh * (1 + loss / 100);
+      const batteryWh = dailyWh * days;
+      const batteryAh12 = batteryWh / 12;
+      const solarWatts = dailyWh / sun / 0.75;
+      const level = dailyWh < 700 ? 'light' : dailyWh < 1500 ? 'medium' : 'heavy';
+      return {loss, days, sun, items, rawWh, dailyWh, batteryWh, batteryAh12, solarWatts, level};
+    }
+    function calculate() {
+      const p = plan();
+      const top = p.items.filter(i => i.wh > 0).sort((a,b) => b.wh - a.wh).slice(0, 4);
+      const advice = p.level === 'light' ? 'A compact power station or modest LiFePO4 setup may cover this if you recharge regularly.' : p.level === 'medium' ? 'This is the normal full-time van-life zone: battery capacity and realistic solar input matter.' : 'This is a hungry setup. Consider reducing heat/cooking loads, adding alternator charging, or sizing a serious battery bank.';
+      $('output').innerHTML = `
+        <div class="result-card"><h3>Daily energy demand</h3><div class="big">${Math.round(p.dailyWh).toLocaleString()} Wh/day</div><p>Includes ${p.loss}% allowance for inverter, charging and real-world losses.</p></div>
+        <div class="result-card"><h3>Battery target</h3><p><strong>${Math.round(p.batteryWh).toLocaleString()} Wh</strong> usable storage for ${p.days} day(s) off-grid.</p><p>Rough 12V equivalent: <strong>${Math.round(p.batteryAh12)} Ah</strong> usable. If your battery should not be fully discharged, buy extra capacity.</p></div>
+        <div class="result-card"><h3>Solar target</h3><p>With ${p.sun} peak sun hours, start around <strong>${Math.ceil(p.solarWatts / 50) * 50} W</strong> of solar, then adjust for UK weather, shade and roof space.</p></div>
+        <div class="result-card"><h3>Setup type: ${p.level}</h3><p>${advice}</p><ul>${top.map(i => `<li>${esc(i.name)}: ${Math.round(i.wh)} Wh/day</li>`).join('')}</ul></div>`;
+    }
+    function copyText() {
+      const p = plan();
+      const text = `VAN LIFE POWER BUDGET\n\nDaily demand: ${Math.round(p.dailyWh)} Wh/day\nBattery target: ${Math.round(p.batteryWh)} Wh usable for ${p.days} day(s)\n12V equivalent: ${Math.round(p.batteryAh12)} Ah usable\nSolar target: about ${Math.ceil(p.solarWatts / 50) * 50} W\nSetup type: ${p.level}\n\nLoads:\n${p.items.map(i => `- ${i.name}: ${i.watts}W x ${i.hours}h = ${Math.round(i.wh)}Wh/day`).join('\n')}\n\nNote: planning estimate only; check manufacturer specs and get qualified help for permanent electrical installs.`;
+      navigator.clipboard.writeText(text).then(() => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy results', 1800); }).catch(() => { $('copy').textContent = 'Select and copy manually'; });
+    }
+    $('add').addEventListener('click', () => { addRow('New device', 20, 1); calculate(); });
+    $('reset').addEventListener('click', resetRows);
+    $('calculate').addEventListener('click', calculate);
+    $('copy').addEventListener('click', copyText);
+    ['days','sun','loss'].forEach(id => $(id).addEventListener('input', calculate));
+    resetRows();
+  </script>
+</body>
+</html>

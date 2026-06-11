@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Van Dog Enrichment Planner — Ava Projects</title>
+  <meta name="description" content="A free small-space dog enrichment planner for van life, rainy days and travel days: generate calm activities, feeding ideas, rest windows and a packing checklist." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/van-dog-enrichment-planner.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#070b12; --panel:#111b28; --ink:#fffaf2; --muted:#c9c0b3; --mint:#8ef0c2; --sky:#8bd8ff; --sun:#ffd166; --clay:#ffad7a; --rose:#ff8fb7; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.42); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 8% 0%, rgba(142,240,194,.18), transparent 34rem), radial-gradient(circle at 88% 8%, rgba(139,216,255,.16), transparent 34rem), radial-gradient(circle at 45% 76%, rgba(255,173,122,.10), transparent 38rem), var(--bg); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.15; background:radial-gradient(circle, rgba(255,255,255,.13) 1px, transparent 1.7px); background-size:34px 34px; mask-image:linear-gradient(to bottom, #000, transparent 74%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(7,11,18,.76); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:950; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--mint),var(--sky)); color:#07100b; box-shadow:0 0 28px rgba(142,240,194,.25); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--mint); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:850px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--sun); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.02fr) minmax(330px,.98fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:20px 0 10px; color:#fff8ec; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:82px; resize:vertical; line-height:1.45; }
+    .minirow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .threerow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:9px; margin-top:8px; }
+    .check { display:flex; gap:9px; align-items:center; border:1px solid var(--line); border-radius:16px; padding:10px; background:rgba(0,0,0,.18); color:var(--muted); }
+    .check input { width:auto; accent-color:var(--mint); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#07100b; background:linear-gradient(135deg,var(--mint),var(--sky)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(142,240,194,.24); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--mint); }
+    .result-card p, .result-card li { color:#fff8ec; line-height:1.5; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .big { font-size:clamp(28px,4vw,46px); font-weight:950; letter-spacing:-.04em; color:var(--clay); }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .note { white-space:pre-wrap; color:#fff8ec; line-height:1.55; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--sky); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(142,240,194,.14),rgba(139,216,255,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(142,240,194,.35); color:var(--mint); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 940px) { .tool { grid-template-columns:1fr; } header { position:relative; } .minirow, .threerow { grid-template-columns:1fr; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li, .note { color:#111; } .big, .result-card h3 { color:#000; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 8 · Animal + van-life micro-tool</p>
+    <h1>Van Dog Enrichment Planner</h1>
+    <p class="lede">A calm-day planner for dogs in vans, small flats, campsites and rainy afternoons: choose the dog, the day and the gear you have, then generate enrichment games, feeding ideas, rest windows and a printable travel checklist.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Van lifers, campers, pet owners and sitters who need low-space dog activities quickly.</div>
+      <div class="pill"><b>First product</b>Free planner → £5–£12 Van Dog Enrichment Cards and travel checklist pack.</div>
+      <div class="pill"><b>Why Yaan</b>It blends his love of animals with lived van-life practicality and simple digital-product leverage.</div>
+      <div class="pill"><b>Built</b>2026-05-19 05:02 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Build a calm dog day</h2>
+        <p class="mini">This creates a practical enrichment plan, not medical or behaviour advice. Keep activities safe for your own dog and adjust for heat, stress, fitness and training level.</p>
+        <div class="minirow">
+          <div><label for="dogName">Dog name</label><input id="dogName" value="Mabel" /></div>
+          <div><label for="size">Dog size</label><select id="size"><option>Small</option><option selected>Medium</option><option>Large</option><option>Giant</option></select></div>
+        </div>
+        <div class="threerow">
+          <div><label for="energy">Energy level</label><select id="energy"><option>Low</option><option selected>Medium</option><option>High</option><option>Rocket-powered</option></select></div>
+          <div><label for="situation">Today is a...</label><select id="situation"><option>Travel day</option><option selected>Rainy day</option><option>Parked-up van day</option><option>Workday</option><option>Campsite day</option></select></div>
+          <div><label for="time">Total active time</label><select id="time"><option>5 minutes</option><option selected>15 minutes</option><option>30 minutes</option><option>60 minutes</option></select></div>
+        </div>
+        <div class="minirow">
+          <div><label for="space">Space available</label><select id="space"><option>Van only</option><option selected>Small indoor space</option><option>Small outdoor patch</option><option>Park / open space nearby</option></select></div>
+          <div><label for="weather">Weather / mood</label><select id="weather"><option>Hot</option><option selected>Wet or muddy</option><option>Cold</option><option>Fine</option><option>Dog seems unsettled</option></select></div>
+        </div>
+        <label>Gear you have</label>
+        <div class="checks" id="gear">
+          <label class="check"><input type="checkbox" value="treats" checked /> Treats / kibble</label>
+          <label class="check"><input type="checkbox" value="towel" checked /> Towel</label>
+          <label class="check"><input type="checkbox" value="snuffle" /> Snuffle mat</label>
+          <label class="check"><input type="checkbox" value="chew" checked /> Chew / lick mat</label>
+          <label class="check"><input type="checkbox" value="toy" checked /> Favourite toy</label>
+          <label class="check"><input type="checkbox" value="box" /> Cardboard box</label>
+        </div>
+        <label for="notes">Special notes</label><textarea id="notes">Avoid jumping in the van. Keep games calm after food. Loves sniffing for treats in a towel.</textarea>
+        <div class="actions">
+          <button id="generate">Generate dog day</button>
+          <button class="secondary" id="copy">Copy plan</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+          <button class="secondary" id="sample">Load high-energy travel example</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Your enrichment plan</h2>
+        <p class="mini">A sitter/owner-friendly plan with short activities, calm breaks and a tiny packing list.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Choose the day and hit “Generate dog day”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Dog owners spend heavily on care, travel and convenience, but on real days — bad weather, van moves, campsite mornings, work calls — they need quick calm activities more than theory. This is useful, kind and search-friendly.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free planner can lead to printable enrichment cards, a 30-day calm dog calendar, a van-dog packing checklist, and affiliate links for snuffle mats, lick mats, cooling mats, collapsible bowls, travel crates and GPS tags.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://www.americanpetproducts.org/press_industrytrends.asp">APPA — pet industry spending and ownership trends</a>
+        <a href="https://www.bluecross.org.uk/advice/dog/behaviour-and-training/enrichment-for-dogs">Blue Cross — enrichment for dogs guidance</a>
+        <a href="https://www.battersea.org.uk/pet-advice/dog-advice/dog-enrichment">Battersea — dog enrichment advice</a>
+        <a href="https://www.rover.com/blog/dog-enrichment/">Rover — dog enrichment ideas</a>
+        <a href="https://www.akc.org/expert-advice/travel/camping-with-dogs/">AKC — camping with dogs travel content</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Package a <strong>Van Dog Calm-Day Pack</strong>: 30 printable enrichment cards, travel-day routine templates, rainy-day activity sheet, packing checklist and campsite etiquette card. The hook: “keep your dog calm, busy and happy when space is tiny.”</p>
+      <div class="tags"><span class="tag">animals</span><span class="tag">van life</span><span class="tag">printables</span><span class="tag">affiliate funnel</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Van%20Dog%20Calm-Day%20Pack">Register interest in the pack</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — animal-love, van-life reality and tiny product bets.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function val(id) { return $(id).value.trim(); }
+    function gearList() { return [...document.querySelectorAll('#gear input:checked')].map(x => x.value); }
+    function pickActivities() {
+      const gear = gearList();
+      const situation = val('situation');
+      const energy = val('energy');
+      const space = val('space');
+      const weather = val('weather');
+      const activities = [];
+      if (gear.includes('towel')) activities.push('Towel scatter: roll a few treats inside a towel, fold it loosely, and let the dog sniff them out. Keep it easy if they get frustrated.');
+      if (gear.includes('snuffle')) activities.push('Snuffle mat meal: use part of breakfast or dinner in the mat so food becomes ten minutes of nose-work instead of a bowl disappearing in ten seconds.');
+      if (gear.includes('chew')) activities.push('Lick or chew settle: give a safe chew or lick mat after the active game so the day drops back into calm.');
+      if (gear.includes('toy')) activities.push('Toy name game: hide the favourite toy in plain sight, ask for a find, then reward with praise and a short tug or cuddle.');
+      if (gear.includes('box')) activities.push('Cardboard rummage box: put scrunched paper and a few treats in a shallow box. Supervise and remove anything your dog tries to eat.');
+      if (situation === 'Travel day') activities.unshift('Pre-drive sniff stop: five to ten minutes of slow sniffing before moving the van beats a frantic ball session.');
+      if (weather === 'Hot') activities.unshift('Cool calm choice: avoid hard exercise; use shade, water, damp towel rests and gentle sniffing.');
+      if (weather === 'Dog seems unsettled') activities.unshift('Decompression first: sit quietly together for two minutes, scatter a few treats, then start the easiest activity only.');
+      if (space === 'Park / open space nearby' && energy !== 'Low') activities.unshift('Long-line sniff mission: let them investigate calmly for 10–20 minutes, rewarding check-ins instead of chasing excitement.');
+      if (activities.length < 4) activities.push('Kibble trail: place a tiny trail of food around safe corners of the room or van so the dog has to use their nose.');
+      if (energy === 'Rocket-powered') activities.push('Two-round rule: do a short brain game, rest, then repeat later. High-energy dogs often need better pacing, not chaos.');
+      return activities.slice(0, 5);
+    }
+    function planText() {
+      const name = val('dogName') || 'Dog';
+      const acts = pickActivities();
+      const gear = gearList().join(', ') || 'no special gear';
+      return `${name.toUpperCase()} — VAN DOG ENRICHMENT PLAN\n\nDOG / DAY\n- Size: ${val('size')}\n- Energy: ${val('energy')}\n- Situation: ${val('situation')}\n- Space: ${val('space')}\n- Weather / mood: ${val('weather')}\n- Active time available: ${val('time')}\n- Gear: ${gear}\n\nTODAY'S PLAN\n1. Morning: ${acts[0]}\n2. Midday: ${acts[1] || acts[0]}\n3. Feeding enrichment: ${acts[2] || 'Use a scatter feed or towel roll instead of a plain bowl.'}\n4. Evening wind-down: ${acts[3] || 'Finish with a calm chew, gentle fuss and a predictable sleep spot.'}\n5. Bonus: ${acts[4] || 'Keep the day easy, safe and sniff-heavy.'}\n\nREST WINDOWS\n- After food: keep things calm.\n- After travel: offer water, a toilet break and a familiar bed or blanket.\n- If the dog gets frantic: make the task easier and add a quiet reset.\n\nPACKING CHECKLIST\n[ ] Water and bowl\n[ ] Treats or kibble for enrichment\n[ ] Towel / blanket\n[ ] Safe chew or lick mat\n[ ] Lead, harness and ID tag\n[ ] Poo bags and wipes\n\nNOTES\n${val('notes') || 'No special notes added.'}\n\nGenerated with Ava Projects — Van Dog Enrichment Planner`;
+    }
+    function generate() {
+      const name = esc(val('dogName') || 'Dog');
+      const activities = pickActivities();
+      $('output').innerHTML = `
+        <div class="result-card"><h3>${name}'s calm-day score</h3><div class="big">${esc(val('time'))} plan</div><p>${esc(val('situation'))} · ${esc(val('space'))} · ${gearList().length} gear item(s) selected.</p></div>
+        <div class="result-card"><h3>Activity menu</h3><ul>${activities.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div>
+        <div class="result-card"><h3>Printable plan</h3><div class="note">${esc(planText())}</div></div>
+        <div class="result-card"><h3>Product hint</h3><p>If this gets search traffic, turn the activity logic into a pretty printable card deck: rainy day, travel day, campsite day and work-call calm sets.</p></div>`;
+    }
+    function copyPlan() {
+      navigator.clipboard.writeText(planText()).then(() => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy plan', 1800); }).catch(() => { $('copy').textContent = 'Select and copy manually'; });
+    }
+    function loadSample() {
+      $('dogName').value = 'Roo'; $('size').value = 'Large'; $('energy').value = 'Rocket-powered'; $('situation').value = 'Travel day'; $('time').value = '30 minutes'; $('space').value = 'Park / open space nearby'; $('weather').value = 'Dog seems unsettled';
+      document.querySelectorAll('#gear input').forEach(input => input.checked = ['treats','towel','chew','toy','box'].includes(input.value));
+      $('notes').value = 'Needs sniffing before the drive. No fetch near roads. Settles well with a chew after ten quiet minutes.';
+      generate();
+    }
+    document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('input', generate));
+    $('generate').addEventListener('click', generate);
+    $('copy').addEventListener('click', copyPlan);
+    $('sample').addEventListener('click', loadSample);
+    generate();
+  </script>
+</body>
+</html>

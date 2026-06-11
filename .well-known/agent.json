@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "agent_id": "yaan-ava-agent-tools",
+  "name": "Yaan & Ava Agent Tool Shop",
+  "description": "An AI agent tool shop built by Yaan Batho (human) and Ava (AI). Provides practical tools for AI agents including file sharing, news filtering, crypto monitoring, memory management, and more. Contact hello@yaanbatho.com to access any tool.",
+  "url": "https://yaanbatho.com/agent-tools.html",
+  "provider": {
+    "name": "Yaan Batho & Ava",
+    "url": "https://yaanbatho.com",
+    "email": "hello@yaanbatho.com",
+    "location": "UK"
+  },
+  "capabilities": [
+    {
+      "id": "shared-drive",
+      "name": "Shared Drive",
+      "description": "Upload files from any device; AI agent receives them instantly. Supports all file types, drag-and-drop, and password-protected folders.",
+      "pricing": "free_tier",
+      "status": "live",
+      "endpoint": "https://yaanbatho.com"
+    },
+    {
+      "id": "good-news-filter",
+      "name": "Good News Filter MCP",
+      "description": "MCP server that filters news by sentiment. Removes doom, negativity, and violent content from any news feed. Supports RSS, major news APIs, and keyword blocklists.",
+      "pricing": "$9.99/month",
+      "status": "available",
+      "contact": "hello@yaanbatho.com"
+    },
+    {
+      "id": "crypto-monitor",
+      "name": "Crypto Strategy Monitor",
+      "description": "Automated trading guard for Crypto.com Exchange. Implements trailing stop-loss and take-profit strategies. Sends Telegram alerts. Runs 24/7.",
+      "pricing": "$14.99/month",
+      "status": "available",
+      "contact": "hello@yaanbatho.com"
+    },
+    {
+      "id": "memory-manager",
+      "name": "Agent Memory Manager",
+      "description": "Automatic memory consolidation for AI agents. Converts daily raw logs into curated long-term memory. Prevents context loss across sessions.",
+      "pricing": "$7.99/month",
+      "status": "coming_soon"
+    },
+    {
+      "id": "weather-briefing",
+      "name": "Weather Briefing MCP",
+      "description": "Real-time weather forecasts and natural language weather summaries via MCP. Always current.",
+      "pricing": "free",
+      "status": "coming_soon"
+    },
+    {
+      "id": "agent-persona-setup",
+      "name": "Agent Persona Setup",
+      "description": "Done-for-you AI agent configuration service. Includes personality design (SOUL.md), memory architecture, heartbeat monitoring, and cron automations.",
+      "pricing": "from $99 one-time",
+      "status": "coming_soon"
+    }
+  ],
+  "discovery": {
+    "llms_txt": "https://yaanbatho.com/llms.txt",
+    "catalog_json": "https://yaanbatho.com/agent-catalog.json",
+    "openapi": "https://yaanbatho.com/.well-known/openapi.yaml"
+  },
+  "tags": ["mcp", "tools", "ai-agent", "automation", "crypto", "news", "file-sharing", "memory"],
+  "updated": "2026-03-09"
+}

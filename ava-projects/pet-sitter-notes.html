@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pet Sitter Notes Generator — Ava Projects</title>
+  <meta name="description" content="Create a printable pet sitter instruction sheet with feeding, walks, personality notes, vet contacts and house handover details in minutes." />
+  <link rel="canonical" href="https://yaanbatho.com/ava-projects/pet-sitter-notes.html" />
+  <style>
+    :root { color-scheme: dark; --bg:#080b10; --panel:#111927; --panel2:#172236; --ink:#fbf8f1; --muted:#c9c0b3; --mint:#8ef0c2; --sky:#89d8ff; --sun:#ffd166; --peach:#ffb38a; --rose:#ff8fb7; --line:rgba(255,255,255,.14); --shadow:0 24px 80px rgba(0,0,0,.42); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:radial-gradient(circle at 8% 0%, rgba(142,240,194,.18), transparent 34rem), radial-gradient(circle at 88% 8%, rgba(255,179,138,.16), transparent 34rem), radial-gradient(circle at 45% 80%, rgba(137,216,255,.1), transparent 38rem), var(--bg); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.16; background:radial-gradient(circle, rgba(255,255,255,.12) 1px, transparent 1.5px); background-size:30px 30px; mask-image:linear-gradient(to bottom, #000, transparent 72%); }
+    a { color:inherit; }
+    header { padding:22px clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:center; gap:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(8,11,16,.76); backdrop-filter:blur(16px); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); text-decoration:none; font-weight:950; }
+    .paw { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:linear-gradient(135deg,var(--mint),var(--peach)); color:#080b10; box-shadow:0 0 28px rgba(142,240,194,.25); }
+    nav { display:flex; gap:14px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    nav a { text-decoration:none; }
+    .hero { max-width:1180px; margin:0 auto; padding:70px clamp(18px,5vw,72px) 28px; position:relative; }
+    .back { color:var(--muted); text-decoration:none; }
+    .eyebrow { color:var(--mint); font-size:12px; font-weight:950; letter-spacing:.18em; text-transform:uppercase; margin-top:26px; }
+    h1 { max-width:980px; font-size:clamp(42px,8vw,86px); line-height:.94; margin:14px 0 18px; letter-spacing:-.05em; }
+    .lede { color:var(--muted); max-width:850px; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .hero-grid { margin-top:28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
+    .pill, .panel { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035)); border-radius:24px; box-shadow:var(--shadow); }
+    .pill { padding:17px; color:var(--muted); }
+    .pill b { display:block; color:var(--sun); margin-bottom:6px; }
+    main { max-width:1180px; margin:0 auto; padding:18px clamp(18px,5vw,72px) 80px; position:relative; }
+    .tool { display:grid; grid-template-columns:minmax(0,1.02fr) minmax(330px,.98fr); gap:18px; align-items:start; }
+    .panel { padding:24px; }
+    h2 { margin:0 0 14px; font-size:clamp(24px,3vw,34px); }
+    h3 { margin:20px 0 10px; color:#fff8ec; }
+    label { display:block; color:var(--muted); font-size:14px; margin:12px 0 7px; }
+    input, select, textarea { width:100%; border:1px solid var(--line); border-radius:16px; padding:12px 13px; background:rgba(0,0,0,.28); color:var(--ink); font:inherit; outline:none; }
+    textarea { min-height:86px; resize:vertical; line-height:1.45; }
+    .minirow { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .threerow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    button, .cta { border:0; cursor:pointer; border-radius:999px; padding:12px 16px; font-weight:950; color:#07100b; background:linear-gradient(135deg,var(--mint),var(--peach)); text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    button.secondary, .cta.secondary { color:var(--ink); background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .output { display:grid; gap:12px; }
+    .result-card { border:1px solid rgba(142,240,194,.24); background:rgba(0,0,0,.24); border-radius:20px; padding:16px; }
+    .result-card h3 { margin:0 0 8px; color:var(--mint); }
+    .result-card p, .result-card li { color:#fff8ec; line-height:1.5; }
+    .result-card ul { margin:8px 0 0; padding-left:20px; }
+    .big { font-size:clamp(28px,4vw,46px); font-weight:950; letter-spacing:-.04em; color:var(--peach); }
+    .mini { color:var(--muted); font-size:14px; line-height:1.55; }
+    .note { white-space:pre-wrap; color:#fff8ec; line-height:1.55; }
+    .market { margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    .market .panel { box-shadow:none; min-height:180px; }
+    .market p { color:var(--muted); line-height:1.5; }
+    .sources a { display:block; margin:8px 0; color:var(--sky); overflow-wrap:anywhere; }
+    .product { margin-top:20px; background:linear-gradient(135deg,rgba(142,240,194,.14),rgba(255,179,138,.09)); }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0 0; }
+    .tag { border:1px solid rgba(142,240,194,.35); color:var(--mint); border-radius:999px; padding:6px 10px; font-size:12px; }
+    footer { padding:38px 18px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width: 940px) { .tool { grid-template-columns:1fr; } header { position:relative; } .minirow, .threerow { grid-template-columns:1fr; } }
+    @media print { header, .actions, .market, .product, footer, .back { display:none !important; } body { background:#fff; color:#000; } body::before { display:none; } .panel, .result-card { box-shadow:none; border-color:#999; background:#fff; color:#000; } main, .hero { max-width:none; padding:0; } h1 { font-size:32px; } .lede, label, .mini, .result-card p, .result-card li, .note { color:#111; } .big, .result-card h3 { color:#000; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./"><span class="paw">🐾</span><span>Ava Projects</span></a>
+    <nav><a href="/projects.html">Projects</a><a href="/products.html">Products</a><a href="/ava-projects/">Lab</a></nav>
+  </header>
+
+  <section class="hero">
+    <a class="back" href="./">← Back to Ava Projects</a>
+    <p class="eyebrow">Night Run 4 · Animal-care printable micro-tool</p>
+    <h1>Pet Sitter Notes Generator</h1>
+    <p class="lede">A kind, practical handover sheet for pets: feeding, walks, cleaning, quirks, vet details, house access and “please do not forget this” notes — ready to copy, print or save as a PDF before a sitter arrives.</p>
+    <div class="hero-grid">
+      <div class="pill"><b>Target</b>Pet owners, sitters, friends, family and boarding handovers who need clear instructions fast.</div>
+      <div class="pill"><b>First product</b>Free generator → £7–£19 Pet Care Binder printable pack.</div>
+      <div class="pill"><b>Why Yaan</b>Animals are one of his real loves, and this is useful without pretending to be a giant startup.</div>
+      <div class="pill"><b>Built</b>2026-05-19 01:01 UTC by Ava 🐾</div>
+    </div>
+  </section>
+
+  <main>
+    <section class="tool">
+      <div class="panel">
+        <h2>Create the sitter handover</h2>
+        <p class="mini">Fill in what matters. The generated note stays in your browser — no accounts, no upload, no drama.</p>
+        <div class="minirow">
+          <div><label for="petName">Pet name</label><input id="petName" value="Mabel" /></div>
+          <div><label for="species">Pet type</label><input id="species" value="Dog" placeholder="Dog, cat, rabbit..." /></div>
+        </div>
+        <div class="threerow">
+          <div><label for="age">Age</label><input id="age" value="4" /></div>
+          <div><label for="temperament">Temperament</label><select id="temperament"><option>Friendly but excitable</option><option>Shy at first</option><option>Very calm</option><option>Needs a confident handler</option><option>Custom / see notes</option></select></div>
+          <div><label for="alone">Can be left alone</label><input id="alone" value="3 hours" /></div>
+        </div>
+        <label for="feeding">Feeding schedule</label><textarea id="feeding">Breakfast 7:30am: 1 scoop dry food with water. Dinner 6:00pm: 1 scoop plus a small spoon of wet food.</textarea>
+        <label for="routine">Walks, play, litter or cleaning routine</label><textarea id="routine">Morning walk around 8am, short toilet break mid-afternoon, calmer sniffy walk after dinner. Loves puzzle toys for 10 minutes before bed.</textarea>
+        <label for="allowed">Treats, food rules and boundaries</label><textarea id="allowed">Treats are fine after walks. No grapes, chocolate, onions or cooked bones. Please keep the front door closed before clipping the lead.</textarea>
+        <label for="quirks">Personality, quirks and comfort notes</label><textarea id="quirks">Barks at delivery vans but settles if you calmly say “thank you”. Sleeps better with the radio low. Favourite toy is the green rope.</textarea>
+        <div class="minirow">
+          <div><label for="vet">Vet / emergency contact</label><textarea id="vet">Happy Paws Vets — 01200 000000. Owner backup: Yaan — 07xxx xxxxxx.</textarea></div>
+          <div><label for="house">House access and practical notes</label><textarea id="house">Key safe by side gate. Bins are outside the back door. Towels for muddy paws are by the entrance.</textarea></div>
+        </div>
+        <div class="actions">
+          <button id="generate">Generate sitter note</button>
+          <button class="secondary" id="copy">Copy note</button>
+          <button class="secondary" onclick="window.print()">Print / save PDF</button>
+          <button class="secondary" id="sample">Load cat example</button>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Your printable note</h2>
+        <p class="mini">A sitter-friendly summary, emergency details and a simple checklist.</p>
+        <div id="output" class="output">
+          <div class="result-card"><h3>Ready when you are</h3><p>Fill the fields and hit “Generate sitter note”.</p></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="market">
+      <div class="panel">
+        <h2>Why this matters</h2>
+        <p>Pet care is emotional and practical. Owners want their animals safe, calm and understood while they travel, work or ask family for help. A simple printable tool removes stress at exactly the point people are already searching for templates.</p>
+      </div>
+      <div class="panel">
+        <h2>Monetisation</h2>
+        <p>The free generator can lead to a small paid Pet Care Binder, unbranded PDF exports, email capture, and affiliate recommendations for cameras, feeders, GPS tags, enrichment toys and travel bowls.</p>
+      </div>
+      <div class="panel sources">
+        <h2>Research sources</h2>
+        <a href="https://www.americanpetproducts.org/press_industrytrends.asp">APPA — pet industry spending and ownership trends</a>
+        <a href="https://www.avma.org/resources-tools/reports-statistics/us-pet-ownership-statistics">AVMA — pet ownership statistics</a>
+        <a href="https://trends.google.com/trends/explore?geo=US&q=pet%20sitter%20instructions,pet%20care%20checklist,dog%20feeding%20schedule,puppy%20schedule">Google Trends — pet sitter instructions and care checklist searches</a>
+        <a href="https://www.etsy.com/search?q=pet%20sitter%20instructions%20template">Etsy — paid pet sitter instruction template marketplace signal</a>
+      </div>
+    </section>
+
+    <section class="panel product">
+      <h2>Next tiny product step</h2>
+      <p class="lede">Package a <strong>Pet Care Binder</strong>: sitter notes, feeding tracker, medication/supplement tracker, daily routine sheet, vet visit notes, puppy/kitten routine template and a printable fridge card. Keep it warm, beautiful and dead simple — “your pet’s routine in one calm page” is the hook.</p>
+      <div class="tags"><span class="tag">animals</span><span class="tag">printables</span><span class="tag">micro SaaS</span><span class="tag">affiliate funnel</span></div>
+      <p><a class="cta" href="mailto:hello@yaanbatho.com?subject=Pet%20Care%20Binder">Register interest in the binder</a></p>
+    </section>
+  </main>
+
+  <footer>Built by Ava 🐾 for Yaan — animal-love turned into a tiny useful income asset.</footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function val(id) { return $(id).value.trim(); }
+    function noteText() {
+      const name = val('petName') || 'My pet';
+      const species = val('species') || 'Pet';
+      return `${name.toUpperCase()} — PET SITTER NOTES\n\nBASICS\n- Type: ${species}\n- Age: ${val('age') || 'Not specified'}\n- Temperament: ${val('temperament')}\n- Can be left alone: ${val('alone') || 'Not specified'}\n\nFEEDING\n${val('feeding') || 'No feeding notes added.'}\n\nROUTINE\n${val('routine') || 'No routine notes added.'}\n\nTREATS / RULES\n${val('allowed') || 'No treat or boundary notes added.'}\n\nQUIRKS / COMFORT\n${val('quirks') || 'No personality notes added.'}\n\nVET / EMERGENCY\n${val('vet') || 'No vet details added.'}\n\nHOUSE NOTES\n${val('house') || 'No house notes added.'}\n\nSITTER CHECKLIST\n[ ] Fresh water checked\n[ ] Meals given as instructed\n[ ] Toilet / litter / cleaning done\n[ ] Walk, play or enrichment completed\n[ ] Doors, gates and windows secure\n[ ] Owner updated with a photo or quick message\n\nGenerated with Ava Projects — Pet Sitter Notes Generator`;
+    }
+    function generate() {
+      const name = esc(val('petName') || 'My pet');
+      const species = esc(val('species') || 'Pet');
+      const text = esc(noteText());
+      $('output').innerHTML = `
+        <div class="result-card"><h3>${name}'s handover</h3><div class="big">${species} care sheet</div><p>Print this, save it as a PDF, or copy it into a message for the sitter.</p></div>
+        <div class="result-card"><h3>Generated note</h3><div class="note">${text}</div></div>
+        <div class="result-card"><h3>Nice little upsell</h3><p>If this gets search traffic, turn it into a paid unbranded PDF export and a pretty printable binder. Pet owners pay for calm, not complexity.</p></div>`;
+    }
+    function copyNote() {
+      const text = noteText();
+      navigator.clipboard.writeText(text).then(() => { $('copy').textContent = 'Copied ✓'; setTimeout(() => $('copy').textContent = 'Copy note', 1800); }).catch(() => { $('copy').textContent = 'Select and copy manually'; });
+    }
+    function loadCat() {
+      $('petName').value = 'Luna'; $('species').value = 'Cat'; $('age').value = '7'; $('temperament').value = 'Shy at first'; $('alone').value = 'Overnight with a check-in';
+      $('feeding').value = 'Breakfast 8am: half pouch wet food. Dinner 7pm: half pouch wet food. Dry food can stay topped up lightly.';
+      $('routine').value = 'Scoop litter morning and evening. Ten minutes of wand-toy play if she comes over. Keep bedroom door open because that is her safe room.';
+      $('allowed').value = 'No milk. Dreamies are fine, but only a few. Keep windows on the latch.';
+      $('quirks').value = 'May hide for the first hour. Do not chase her — sit quietly and let her choose you. She likes gentle cheek scratches.';
+      $('vet').value = 'Local vet: 01200 000000. Owner backup: 07xxx xxxxxx.';
+      $('house').value = 'Spare litter in cupboard. Food bowls by sink. Key goes back in the key safe after every visit.';
+      generate();
+    }
+    document.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('input', generate));
+    $('generate').addEventListener('click', generate);
+    $('copy').addEventListener('click', copyNote);
+    $('sample').addEventListener('click', loadCat);
+    generate();
+  </script>
+</body>
+</html>

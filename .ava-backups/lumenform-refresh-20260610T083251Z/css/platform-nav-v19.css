@@ -1,0 +1,58 @@
+/* =============================================
+   PLATFORM NAV — Two platforms + edge cables + corner cogs
+   ============================================= */
+
+/* ─── FLOOR PLATFORM ─────────────────────────── */
+#platform-floor {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  z-index: 8990;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    #1a1a1a 0px, #1a1a1a 38px,
+    #222    38px, #222    40px
+  );
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.5);
+}
+
+
+
+/* Rivet pattern */
+#platform-floor::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 4px;
+  transform: translateY(-50%);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px, transparent 18px,
+    rgba(204,0,0,0.3) 18px, rgba(204,0,0,0.3) 20px
+  );
+}
+
+/* ─── LIFT CABLES — far edges ─────────────────── */
+.lift-cable {
+  position: fixed;
+  top: 0;
+  bottom: 22px;
+  width: 4px;
+  z-index: 8985;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    #999 0px,  #999 5px,
+    #555 5px,  #555 8px,
+    #888 8px,  #888 10px,
+    #555 10px, #555 14px
+  );
+  opacity: 0.8;
+}
+
+.lift-cable-left  { left: 8px; }
+.lift-cable-right { right: 8px; }

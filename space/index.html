@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Frontier — Space Exploration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#060a12;--panel:rgba(6,14,28,0.88);--panel-solid:#0a1020;
+            --border:rgba(0,220,255,0.25);--border-bright:rgba(0,220,255,0.6);
+            --cyan:#00dcff;--cyan-dim:#006a7a;--cyan-glow:rgba(0,220,255,0.15);
+            --teal:#00ffc8;--gold:#e8c84a;--red:#ff4455;--green:#44ff88;
+            --text:#d0e8f0;--text-dim:#5a7a8a;
+        }
+        body{font-family:'Rajdhani',sans-serif;overflow:hidden;background:#000;color:var(--text);user-select:none}
+        #gameCanvas{display:block;width:100vw;height:100vh;cursor:crosshair}
+
+        /* ===== HUD PANELS (Realms-of-Dominion layout, space skin) ===== */
+        .hud{position:fixed;pointer-events:none;font-size:13px;letter-spacing:0.5px;z-index:100}
+        .hud-panel{
+            background:var(--panel);border:1px solid var(--border);
+            padding:10px 14px;backdrop-filter:blur(12px);
+            box-shadow:0 0 20px rgba(0,220,255,0.06),inset 0 1px 0 rgba(0,220,255,0.08);
+            border-radius:4px;
+        }
+        .hud-title{font-family:'Orbitron',sans-serif;font-size:10px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;opacity:0.8}
+        .hud-value{color:var(--cyan);font-weight:700}
+        .hud-row{display:flex;justify-content:space-between;padding:2px 0;font-size:12px}
+        .hud-label{color:var(--text-dim)}
+        .hud-divider{border:none;border-top:1px solid var(--border);margin:6px 0}
+
+        /* Top bar — full width like Realms */
+        #top-bar{
+            position:fixed;top:0;left:0;right:0;height:48px;z-index:200;
+            display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+            background:linear-gradient(180deg,rgba(6,14,28,0.95),rgba(6,14,28,0.7));
+            border-bottom:1px solid var(--border);
+            backdrop-filter:blur(12px);pointer-events:auto;
+        }
+        .faction-name{font-family:'Orbitron',sans-serif;color:var(--cyan);font-size:15px;font-weight:700;text-shadow:0 0 12px rgba(0,220,255,0.3)}
+        .resources{display:flex;gap:18px;font-size:13px}
+        .res-item{display:flex;align-items:center;gap:4px}
+        .res-icon{font-size:14px;opacity:0.8}
+        .res-val{color:var(--cyan);font-weight:700;font-family:'Orbitron',sans-serif;font-size:12px}
+        .res-change{font-size:10px;margin-left:2px}
+        .res-pos{color:var(--green)}.res-neg{color:var(--red)}
+        .turn-info{font-size:12px;color:var(--text-dim);font-family:'Orbitron',sans-serif;letter-spacing:1px}
+
+        /* HUD positions */
+        #hud-top-left{top:58px;left:12px;min-width:180px}
+        #hud-top-right{top:58px;right:12px;text-align:right;min-width:200px}
+        #hud-bottom-center{bottom:12px;left:50%;transform:translateX(-50%);width:380px}
+        #hud-bottom-left{bottom:12px;left:12px;width:190px;height:190px}
+        #hud-bottom-right{bottom:12px;right:12px;width:240px}
+
+        /* Bars */
+        .bar-container{width:100%;height:22px;background:rgba(0,40,60,0.5);border:1px solid var(--border);margin:4px 0;position:relative;border-radius:2px;overflow:hidden}
+        .bar-fill{height:100%;border-radius:2px;transition:width 0.3s}
+        .bar-speed .bar-fill{background:linear-gradient(90deg,var(--cyan-dim),var(--cyan))}
+        .bar-fuel .bar-fill{background:linear-gradient(90deg,#006a3a,var(--green))}
+        .bar-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-family:'Orbitron',sans-serif;letter-spacing:1px;text-shadow:1px 1px 3px #000}
+
+        /* Radar */
+        #radar{width:168px;height:168px;border:1px solid var(--border-bright);border-radius:50%;position:relative;margin:4px auto;background:radial-gradient(circle,rgba(0,60,80,0.2),rgba(0,10,20,0.6))}
+        #radar::before{content:'';position:absolute;top:50%;left:50%;width:2px;height:2px;background:var(--cyan);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px var(--cyan)}
+        #radar::after{content:'';position:absolute;top:0;left:50%;width:1px;height:100%;background:rgba(0,220,255,0.08);transform:translateX(-50%)}
+        .radar-dot{position:absolute;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 4px currentColor}
+
+        /* Overlays (station menu, star map) */
+        .overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);display:none;pointer-events:all;z-index:1000;overflow-y:auto;padding:40px;backdrop-filter:blur(4px)}
+        .overlay.active{display:block}
+        .overlay-content{
+            max-width:900px;margin:0 auto;
+            background:var(--panel-solid);border:1px solid var(--border-bright);
+            padding:28px;border-radius:6px;
+            box-shadow:0 0 40px rgba(0,220,255,0.15);
+        }
+        .overlay h2{font-family:'Orbitron',sans-serif;color:var(--cyan);border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:20px;font-size:20px;letter-spacing:2px;font-weight:700}
+
+        /* Tabs — Realms style */
+        .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
+        .tab-btn{
+            flex:1;padding:10px;text-align:center;font-size:12px;cursor:pointer;
+            background:transparent;color:var(--text-dim);border:none;
+            font-family:'Orbitron',sans-serif;letter-spacing:1px;transition:all .2s;
+        }
+        .tab-btn.active{color:var(--cyan);background:var(--cyan-glow);border-bottom:2px solid var(--cyan)}
+        .tab-btn:hover{color:var(--cyan)}
+        .tab-content{display:none}.tab-content.active{display:block}
+
+        /* Items / cards */
+        .item-list{display:flex;flex-direction:column;gap:10px}
+        .item{
+            background:rgba(0,30,50,0.6);border:1px solid var(--border);
+            padding:14px;cursor:pointer;transition:all .2s;border-radius:3px;
+        }
+        .item:hover{border-color:var(--cyan);background:rgba(0,50,80,0.5);box-shadow:0 0 12px rgba(0,220,255,0.1)}
+        .item h3{font-family:'Orbitron',sans-serif;color:var(--cyan);margin-bottom:4px;font-size:13px;letter-spacing:1px}
+        .item-row{display:flex;justify-content:space-between;margin:3px 0;font-size:12px}
+
+        /* Buttons */
+        .btn{
+            padding:8px 20px;
+            background:linear-gradient(180deg,rgba(0,80,120,0.6),rgba(0,40,60,0.6));
+            border:1px solid var(--border);color:var(--cyan);cursor:pointer;
+            font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:1px;
+            transition:all .2s;border-radius:3px;margin:4px;
+        }
+        .btn:hover{background:linear-gradient(180deg,rgba(0,140,180,0.7),rgba(0,80,120,0.6));border-color:var(--cyan);box-shadow:0 0 15px rgba(0,220,255,0.3)}
+        .btn:disabled{opacity:0.3;cursor:not-allowed}
+
+        /* Dock prompt */
+        #prompt-text{
+            position:fixed;bottom:50%;left:50%;transform:translate(-50%,50%);
+            background:var(--panel);border:1px solid var(--cyan);
+            padding:16px 36px;font-size:16px;font-family:'Orbitron',sans-serif;
+            display:none;pointer-events:all;z-index:999;border-radius:4px;
+            animation:pulse 2s infinite;letter-spacing:1px;
+        }
+        @keyframes pulse{
+            0%,100%{box-shadow:0 0 15px rgba(0,220,255,0.3)}
+            50%{box-shadow:0 0 30px rgba(0,220,255,0.6)}
+        }
+        .waypoint-marker{position:fixed;color:var(--gold);font-size:18px;pointer-events:none;text-shadow:0 0 8px rgba(232,200,74,0.6)}
+        .market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+        .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .stat-grid .item-row{padding:4px 8px;background:rgba(0,30,50,0.4);border-radius:2px}
+
+        /* Scrollbar */
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:var(--cyan-dim);border-radius:3px}
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- TOP BAR — full-width like Realms of Dominion -->
+    <div id="top-bar">
+        <div class="faction-name">⬡ STELLAR FRONTIER</div>
+        <div class="resources">
+            <div class="res-item"><span class="res-icon">₵</span><span class="res-val" id="credits">1000</span></div>
+            <div class="res-item"><span class="res-icon">❤</span><span class="res-val" id="health">100</span><span style="color:var(--text-dim)">%</span></div>
+            <div class="res-item"><span class="res-icon">⚡</span><span class="res-val" id="fuel">100</span><span style="color:var(--text-dim)">%</span></div>
+            <div class="res-item"><span class="res-icon">★</span><span class="res-val" id="reputation">Neutral</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+            <div class="turn-info"><span id="system-name">ALPHA CENTAURI</span></div>
+            <div class="turn-info" style="opacity:0.6" id="coords">0, 0</div>
+        </div>
+    </div>
+
+    <!-- LEFT PANEL — commander info -->
+    <div id="hud-top-left" class="hud hud-panel">
+        <div class="hud-title">Commander</div>
+        <div class="hud-row"><span class="hud-label">Name</span><span class="hud-value" id="player-name">Commander</span></div>
+        <hr class="hud-divider">
+        <div id="contract-display" style="font-size:11px;color:var(--gold);min-height:14px"></div>
+    </div>
+
+    <!-- RIGHT PANEL — target info -->
+    <div id="hud-top-right" class="hud hud-panel">
+        <div class="hud-title">Target</div>
+        <div id="target-info" style="font-size:12px">
+            <div style="color:var(--text-dim)">No Target</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM CENTER — speed + fuel bars -->
+    <div id="hud-bottom-center" class="hud hud-panel">
+        <div class="bar-container bar-speed">
+            <div id="speed-bar" class="bar-fill" style="width:0%"></div>
+            <div class="bar-label">SPEED <span id="speed">0</span></div>
+        </div>
+        <div class="bar-container bar-fuel">
+            <div id="fuel-bar" class="bar-fill" style="width:100%"></div>
+            <div class="bar-label">FUEL <span id="fuel-label">100</span>%</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM LEFT — radar -->
+    <div id="hud-bottom-left" class="hud hud-panel">
+        <div class="hud-title" style="text-align:center">Radar</div>
+        <div id="radar"></div>
+    </div>
+
+    <!-- BOTTOM RIGHT — ship systems -->
+    <div id="hud-bottom-right" class="hud hud-panel">
+        <div class="hud-title">Ship Systems</div>
+        <div class="hud-row"><span class="hud-label">Shields</span><span class="hud-value" id="shield-val">100%</span></div>
+        <div class="hud-row"><span class="hud-label">Weapons</span><span class="hud-value" id="weapon-val">10 DMG</span></div>
+        <div class="hud-row"><span class="hud-label">Cargo</span><span class="hud-value" id="cargo-val">0/10</span></div>
+        <div class="hud-row"><span class="hud-label">Engine</span><span class="hud-value" id="engine-val">100 m/s</span></div>
+    </div>
+    
+    <div id="prompt-text"></div>
+    
+    <!-- Station Menu Overlay -->
+    <div id="station-menu" class="overlay">
+        <div class="overlay-content">
+            <h2>⬡ STATION: <span id="station-title"></span></h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="game.switchTab('contracts')">⟐ CONTRACTS</button>
+                <button class="tab-btn" onclick="game.switchTab('shipyard')">⚙ SHIPYARD</button>
+                <button class="tab-btn" onclick="game.switchTab('market')">⟁ MARKET</button>
+                <button class="tab-btn" onclick="game.switchTab('hangar')">◈ HANGAR</button>
+            </div>
+            
+            <div id="tab-contracts" class="tab-content active">
+                <div id="contracts-list" class="item-list"></div>
+            </div>
+            
+            <div id="tab-shipyard" class="tab-content">
+                <div id="upgrades-list" class="item-list"></div>
+            </div>
+            
+            <div id="tab-market" class="tab-content">
+                <div id="market-list" class="market-grid"></div>
+            </div>
+            
+            <div id="tab-hangar" class="tab-content">
+                <h3>Ship Stats</h3>
+                <div id="ship-stats" class="stat-grid"></div>
+            </div>
+            
+            <button class="btn" onclick="game.closeStationMenu()" style="margin-top:16px;width:100%">⟩ UNDOCK [ESC]</button>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // GAME STATE
+        // ============================================
+        
+        const gameState = {
+            player: {
+                name: 'Commander',
+                credits: 1000,
+                reputation: 0,
+                health: 100,
+                fuel: 100,
+                ship: {
+                    speed: 0,
+                    maxSpeed: 100,
+                    acceleration: 2,
+                    cargoCapacity: 10,
+                    cargoUsed: 0,
+                    weaponDamage: 10,
+                    shieldStrength: 100
+                },
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                rotation: 0
+            },
+            camera: {
+                x: 0,
+                y: 0,
+                zoom: 0.25,
+                targetZoom: 0.25,
+                isDragging: false,
+                dragStartX: 0,
+                dragStartY: 0
+            },
+            activeContract: null,
+            nearestStation: null,
+            targetObject: null,
+            autopilot: { active: false, target: null, targetName: '', startX: 0, startY: 0, progress: 0 },
+            commodities: ['Food', 'Minerals', 'Tech', 'Luxury'],
+            lastSave: Date.now(),
+            objects: {
+                planets: [],
+                stations: [],
+                asteroids: []
+            },
+            stars: [],
+            shipTrail: []
+        };
+        
+        // ============================================
+        // GAME CLASS
+        // ============================================
+        
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resizeCanvas();
+                
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.hoveredObject = null;
+                this.stationMenuOpen = false;
+                
+                this.init();
+                this.loadGame();
+                this.animate();
+            }
+            
+            init() {
+                // Create starfield
+                this.createStarfield();
+                
+                // Create solar system objects
+                this.createPlanets();
+                this.createStations();
+                this.createAsteroidBelt();
+                
+                // Event listeners
+                window.addEventListener('resize', () => this.resizeCanvas());
+                
+                this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
+                this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
+                this.canvas.addEventListener('wheel', (e) => this.onMouseWheel(e));
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'e' || e.key === 'E') this.tryDock();
+                    if (e.key === 'f' || e.key === 'F') this.flyToSelected();
+                    if (e.key === 'Escape') {
+                        this.closeStationMenu();
+                        gameState.autopilot.active = false;
+                    }
+                });
+            }
+            
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            createStarfield() {
+                for (let i = 0; i < 2000; i++) {
+                    gameState.stars.push({
+                        x: (Math.random() - 0.5) * 10000,
+                        y: (Math.random() - 0.5) * 10000,
+                        size: Math.random() * 1.5 + 0.5,
+                        opacity: Math.random() * 0.5 + 0.5,
+                        twinkleSpeed: Math.random() * 0.02,
+                        twinklePhase: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+            
+            createPlanets() {
+                const planetConfigs = [
+                    { name: 'Solis Prime', dist: 400, size: 25, color1: '#ff9d00', color2: '#ffdd00', moons: 0 },
+                    { name: 'Volcania', dist: 650, size: 32, color1: '#ff3300', color2: '#ff8800', moons: 0 },
+                    { name: 'Terrafirm', dist: 950, size: 40, color1: '#0066cc', color2: '#00cc66', moons: 1 },
+                    { name: 'Dustara', dist: 1300, size: 35, color1: '#cc9944', color2: '#ffcc66', moons: 0 },
+                    { name: 'Verdania', dist: 1700, size: 45, color1: '#00aa44', color2: '#88ff44', moons: 2 },
+                    { name: 'Cryonis', dist: 2100, size: 38, color1: '#aaccff', color2: '#ffffff', moons: 1 },
+                    { name: 'Nexara', dist: 2500, size: 50, color1: '#8844ff', color2: '#cc44ff', moons: 3 },
+                    { name: 'Oceanus', dist: 2900, size: 42, color1: '#0044aa', color2: '#0088ff', moons: 2 }
+                ];
+                
+                planetConfigs.forEach((config, i) => {
+                    const angle = (Math.PI * 2 / planetConfigs.length) * i + Math.random() * 0.5;
+                    const planet = {
+                        type: 'planet',
+                        name: config.name,
+                        x: Math.cos(angle) * config.dist,
+                        y: Math.sin(angle) * config.dist,
+                        size: config.size,
+                        orbitDist: config.dist,
+                        orbitSpeed: 0.00003 / (config.dist / 400),
+                        angle: angle,
+                        color1: config.color1,
+                        color2: config.color2,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: 0.001,
+                        moons: []
+                    };
+                    
+                    // Add moons
+                    for (let m = 0; m < config.moons; m++) {
+                        const moonAngle = (Math.PI * 2 / config.moons) * m;
+                        planet.moons.push({
+                            dist: config.size * (1.8 + m * 0.6),
+                            angle: moonAngle,
+                            speed: 0.01 + m * 0.005,
+                            size: config.size * 0.2
+                        });
+                    }
+                    
+                    gameState.objects.planets.push(planet);
+                });
+            }
+            
+            createStations() {
+                const stationConfigs = [
+                    { name: 'Station Alpha', x: 800, y: 300 },
+                    { name: 'Station Beta', x: -700, y: -900 },
+                    { name: 'Station Gamma', x: 1500, y: 1200 },
+                    { name: 'Station Delta', x: -1200, y: 1000 },
+                    { name: 'Station Epsilon', x: 2200, y: -600 },
+                    { name: 'Outpost Zeta', x: -500, y: 1800 }
+                ];
+                
+                stationConfigs.forEach(config => {
+                    const station = {
+                        type: 'station',
+                        name: config.name,
+                        x: config.x,
+                        y: config.y,
+                        size: 15,
+                        rotation: 0,
+                        rotationSpeed: 0.01,
+                        contracts: this.generateContracts(),
+                        market: this.generateMarket()
+                    };
+                    gameState.objects.stations.push(station);
+                });
+            }
+            
+            createAsteroidBelt() {
+                // Create asteroid belt between orbits
+                for (let i = 0; i < 300; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 1550 + (Math.random() - 0.5) * 250;
+                    gameState.objects.asteroids.push({
+                        type: 'asteroid',
+                        x: Math.cos(angle) * dist,
+                        y: Math.sin(angle) * dist,
+                        size: 2 + Math.random() * 4,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: (Math.random() - 0.5) * 0.02
+                    });
+                }
+            }
+            
+            generateContracts() {
+                const contracts = [];
+                const types = ['cargo', 'bounty', 'mining', 'exploration'];
+                
+                for (let i = 0; i < 5; i++) {
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    let contract = {
+                        id: Date.now() + i,
+                        type: type,
+                        title: '',
+                        description: '',
+                        reward: 0
+                    };
+                    
+                    switch(type) {
+                        case 'cargo':
+                            const commodity = gameState.commodities[Math.floor(Math.random() * gameState.commodities.length)];
+                            const targetStation = gameState.objects.stations[Math.floor(Math.random() * gameState.objects.stations.length)];
+                            contract.title = `Deliver ${commodity}`;
+                            contract.description = `Transport 5 units of ${commodity} to ${targetStation.name}`;
+                            contract.reward = 500 + Math.floor(Math.random() * 1500);
+                            contract.targetStation = targetStation;
+                            break;
+                        case 'bounty':
+                            contract.title = 'Eliminate Hostile';
+                            contract.description = 'Destroy a pirate ship threatening trade routes';
+                            contract.reward = 1000 + Math.floor(Math.random() * 2000);
+                            break;
+                        case 'mining':
+                            const amount = 20 + Math.floor(Math.random() * 30);
+                            contract.title = `Mine ${amount} Minerals`;
+                            contract.description = `Collect ${amount} units from asteroid belt`;
+                            contract.reward = 800 + Math.floor(Math.random() * 1200);
+                            contract.targetAmount = amount;
+                            contract.collected = 0;
+                            break;
+                        case 'exploration':
+                            const targetPlanet = gameState.objects.planets[Math.floor(Math.random() * gameState.objects.planets.length)];
+                            contract.title = `Scan ${targetPlanet.name}`;
+                            contract.description = `Travel to ${targetPlanet.name} and perform scan`;
+                            contract.reward = 600 + Math.floor(Math.random() * 900);
+                            contract.targetPlanet = targetPlanet;
+                            break;
+                    }
+                    
+                    contracts.push(contract);
+                }
+                
+                return contracts;
+            }
+            
+            generateMarket() {
+                const market = {};
+                gameState.commodities.forEach(commodity => {
+                    market[commodity] = {
+                        buyPrice: 50 + Math.floor(Math.random() * 150),
+                        sellPrice: 30 + Math.floor(Math.random() * 100),
+                        stock: 10 + Math.floor(Math.random() * 90)
+                    };
+                });
+                return market;
+            }
+            
+            onMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = e.clientX - rect.left;
+                this.mouseY = e.clientY - rect.top;
+                
+                // Pan map if dragging with middle button or shift+drag
+                if (gameState.camera.isDragging) {
+                    const dx = (e.clientX - gameState.camera.dragStartX) / gameState.camera.zoom;
+                    const dy = (e.clientY - gameState.camera.dragStartY) / gameState.camera.zoom;
+                    gameState.camera.x -= dx;
+                    gameState.camera.y -= dy;
+                    gameState.camera.dragStartX = e.clientX;
+                    gameState.camera.dragStartY = e.clientY;
+                }
+                
+                // Check hover
+                this.updateHover();
+            }
+            
+            onMouseDown(e) {
+                if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+                    // Middle click or shift+left click = pan
+                    gameState.camera.isDragging = true;
+                    gameState.camera.dragStartX = e.clientX;
+                    gameState.camera.dragStartY = e.clientY;
+                    e.preventDefault();
+                } else if (e.button === 0 && !this.stationMenuOpen) {
+                    // Left click = select
+                    this.selectObject();
+                } else if (e.button === 2) {
+                    // Right click = quick fly
+                    this.selectObject();
+                    this.flyToSelected();
+                }
+            }
+            
+            onMouseUp(e) {
+                if (e.button === 1 || e.button === 0) {
+                    gameState.camera.isDragging = false;
+                }
+            }
+            
+            onMouseWheel(e) {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+                gameState.camera.targetZoom = Math.max(0.3, Math.min(3, gameState.camera.targetZoom * zoomFactor));
+            }
+            
+            updateHover() {
+                const worldPos = this.screenToWorld(this.mouseX, this.mouseY);
+                this.hoveredObject = null;
+                
+                // Check planets
+                for (const planet of gameState.objects.planets) {
+                    const dx = worldPos.x - planet.x;
+                    const dy = worldPos.y - planet.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < planet.size + 10) {
+                        this.hoveredObject = planet;
+                        break;
+                    }
+                }
+                
+                // Check stations
+                if (!this.hoveredObject) {
+                    for (const station of gameState.objects.stations) {
+                        const dx = worldPos.x - station.x;
+                        const dy = worldPos.y - station.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < station.size + 10) {
+                            this.hoveredObject = station;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            selectObject() {
+                if (this.hoveredObject) {
+                    gameState.targetObject = this.hoveredObject;
+                }
+            }
+            
+            flyToSelected() {
+                if (gameState.targetObject) {
+                    const target = gameState.targetObject;
+                    gameState.autopilot = {
+                        active: true,
+                        target: { x: target.x, y: target.y },
+                        targetName: target.name,
+                        startX: gameState.player.x,
+                        startY: gameState.player.y,
+                        progress: 0
+                    };
+                }
+            }
+            
+            screenToWorld(screenX, screenY) {
+                const cx = this.canvas.width / 2;
+                const cy = this.canvas.height / 2;
+                return {
+                    x: (screenX - cx) / gameState.camera.zoom + gameState.camera.x,
+                    y: (screenY - cy) / gameState.camera.zoom + gameState.camera.y
+                };
+            }
+            
+            worldToScreen(worldX, worldY) {
+                const cx = this.canvas.width / 2;
+                const cy = this.canvas.height / 2;
+                return {
+                    x: (worldX - gameState.camera.x) * gameState.camera.zoom + cx,
+                    y: (worldY - gameState.camera.y) * gameState.camera.zoom + cy
+                };
+            }
+            
+            update(delta) {
+                // Smooth camera zoom
+                gameState.camera.zoom += (gameState.camera.targetZoom - gameState.camera.zoom) * 0.1;
+                
+                // Update planets
+                gameState.objects.planets.forEach(planet => {
+                    planet.angle += planet.orbitSpeed;
+                    planet.x = Math.cos(planet.angle) * planet.orbitDist;
+                    planet.y = Math.sin(planet.angle) * planet.orbitDist;
+                    planet.rotation += planet.rotationSpeed;
+                    
+                    // Update moons
+                    planet.moons.forEach(moon => {
+                        moon.angle += moon.speed;
+                    });
+                });
+                
+                // Update stations
+                gameState.objects.stations.forEach(station => {
+                    station.rotation += station.rotationSpeed;
+                });
+                
+                // Update asteroids
+                gameState.objects.asteroids.forEach(asteroid => {
+                    asteroid.rotation += asteroid.rotationSpeed;
+                });
+                
+                // Update player/autopilot
+                if (gameState.autopilot.active) {
+                    gameState.autopilot.progress += delta * 0.3;
+                    if (gameState.autopilot.progress >= 1) {
+                        gameState.autopilot.progress = 1;
+                        gameState.autopilot.active = false;
+                        gameState.player.x = gameState.autopilot.target.x;
+                        gameState.player.y = gameState.autopilot.target.y;
+                        gameState.player.ship.speed = 0;
+                        gameState.shipTrail = [];
+                    } else {
+                        // Ease in/out
+                        const t = gameState.autopilot.progress;
+                        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                        gameState.player.x = gameState.autopilot.startX + (gameState.autopilot.target.x - gameState.autopilot.startX) * ease;
+                        gameState.player.y = gameState.autopilot.startY + (gameState.autopilot.target.y - gameState.autopilot.startY) * ease;
+                        
+                        // Ship rotation toward target
+                        const dx = gameState.autopilot.target.x - gameState.player.x;
+                        const dy = gameState.autopilot.target.y - gameState.player.y;
+                        gameState.player.rotation = Math.atan2(dy, dx);
+                        
+                        // Speed indication
+                        gameState.player.ship.speed = t < 0.5 ? t * 200 : (1 - t) * 200;
+                        
+                        // Add trail
+                        if (Math.random() < 0.3) {
+                            gameState.shipTrail.push({
+                                x: gameState.player.x,
+                                y: gameState.player.y,
+                                life: 30
+                            });
+                        }
+                        
+                        // Consume fuel
+                        gameState.player.fuel = Math.max(0, gameState.player.fuel - delta * 2);
+                    }
+                }
+                
+                // Update ship trail
+                for (let i = gameState.shipTrail.length - 1; i >= 0; i--) {
+                    gameState.shipTrail[i].life--;
+                    if (gameState.shipTrail[i].life <= 0) {
+                        gameState.shipTrail.splice(i, 1);
+                    }
+                }
+                
+                // Refuel slowly when not moving
+                if (!gameState.autopilot.active && gameState.player.ship.speed < 1) {
+                    gameState.player.fuel = Math.min(100, gameState.player.fuel + delta * 0.5);
+                }
+                
+                // Camera follow player
+                gameState.camera.x += (gameState.player.x - gameState.camera.x) * 0.1;
+                gameState.camera.y += (gameState.player.y - gameState.camera.y) * 0.1;
+                
+                // Check near station
+                this.checkNearStation();
+                
+                // Update HUD
+                this.updateHUD();
+                
+                // Auto-save
+                this.autoSave();
+            }
+            
+            checkNearStation() {
+                let nearest = null;
+                let minDist = Infinity;
+                
+                gameState.objects.stations.forEach(station => {
+                    const dx = station.x - gameState.player.x;
+                    const dy = station.y - gameState.player.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = station;
+                    }
+                });
+                
+                gameState.nearestStation = nearest;
+                
+                if (minDist < 100 && !this.stationMenuOpen) {
+                    this.showPrompt(`Press E to dock at ${nearest.name}`);
+                } else if (this.stationMenuOpen) {
+                    // Keep prompt hidden
+                } else {
+                    this.hidePrompt();
+                }
+            }
+            
+            updateHUD() {
+                const p = gameState.player;
+                
+                document.getElementById('credits').textContent = Math.floor(p.credits);
+                document.getElementById('health').textContent = Math.floor(p.health);
+                document.getElementById('fuel').textContent = Math.floor(p.fuel);
+                document.getElementById('fuel-label').textContent = Math.floor(p.fuel);
+                document.getElementById('speed').textContent = Math.floor(Math.abs(p.ship.speed));
+                document.getElementById('coords').textContent = `${Math.floor(p.x)}, ${Math.floor(p.y)}`;
+                
+                const speedPercent = (Math.abs(p.ship.speed) / p.ship.maxSpeed) * 100;
+                document.getElementById('speed-bar').style.width = Math.min(speedPercent, 100) + '%';
+                document.getElementById('fuel-bar').style.width = p.fuel + '%';
+                
+                // Ship systems
+                document.getElementById('shield-val').textContent = Math.floor(p.ship.shieldStrength) + '%';
+                document.getElementById('weapon-val').textContent = p.ship.weaponDamage + ' DMG';
+                document.getElementById('cargo-val').textContent = p.ship.cargoUsed + '/' + p.ship.cargoCapacity;
+                document.getElementById('engine-val').textContent = Math.floor(p.ship.maxSpeed) + ' m/s';
+                
+                // Reputation
+                let rep = 'Neutral';
+                if (p.reputation > 50) rep = 'Friendly';
+                if (p.reputation > 100) rep = 'Allied';
+                if (p.reputation < -50) rep = 'Hostile';
+                document.getElementById('reputation').textContent = rep;
+                
+                // Contract display
+                if (gameState.activeContract) {
+                    document.getElementById('contract-display').textContent = `CONTRACT: ${gameState.activeContract.title}`;
+                } else {
+                    document.getElementById('contract-display').textContent = '';
+                }
+                
+                // Target info
+                if (gameState.targetObject) {
+                    const target = gameState.targetObject;
+                    const dx = target.x - p.x;
+                    const dy = target.y - p.y;
+                    const dist = Math.floor(Math.sqrt(dx * dx + dy * dy));
+                    let info = `<div><strong>${target.name}</strong></div>`;
+                    info += `<div>Distance: ${dist}m</div>`;
+                    info += `<div>Type: ${target.type}</div>`;
+                    document.getElementById('target-info').innerHTML = info;
+                } else {
+                    document.getElementById('target-info').innerHTML = '<div style="color:var(--text-dim)">No Target</div>';
+                }
+                
+                // Autopilot indicator
+                let apEl = document.getElementById('autopilot-hud');
+                if (!apEl) {
+                    apEl = document.createElement('div');
+                    apEl.id = 'autopilot-hud';
+                    apEl.className = 'hud';
+                    apEl.style.cssText = 'top:60px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;font-size:16px;z-index:150;';
+                    document.body.appendChild(apEl);
+                }
+                if (gameState.autopilot.active) {
+                    const dx = gameState.autopilot.target.x - p.x;
+                    const dy = gameState.autopilot.target.y - p.y;
+                    const dist = Math.floor(Math.sqrt(dx * dx + dy * dy));
+                    apEl.innerHTML = `<div class="hud-panel" style="padding:6px 16px;display:inline-block;border-color:rgba(0,255,200,0.6);color:#0fc">⟐ AUTOPILOT — ${gameState.autopilot.targetName} — ${dist}m</div>`;
+                } else {
+                    apEl.innerHTML = '';
+                }
+                
+                // Radar
+                this.updateRadar();
+            }
+            
+            updateRadar() {
+                const radar = document.getElementById('radar');
+                radar.innerHTML = '<div style="position:absolute;top:50%;left:50%;width:2px;height:2px;background:var(--cyan);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px var(--cyan)"></div>';
+                
+                const radarRange = 3000;
+                const radarSize = 180;
+                const px = gameState.player.x;
+                const py = gameState.player.y;
+                
+                const allObjects = [
+                    ...gameState.objects.planets.map(o => ({ obj: o, color: '#4a4', size: 6 })),
+                    ...gameState.objects.stations.map(o => ({ obj: o, color: '#0ff', size: 6 }))
+                ];
+                
+                allObjects.forEach(({ obj, color, size }) => {
+                    const dx = obj.x - px;
+                    const dy = obj.y - py;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < radarRange && dist > 1) {
+                        const dot = document.createElement('div');
+                        dot.className = 'radar-dot';
+                        dot.style.width = size + 'px';
+                        dot.style.height = size + 'px';
+                        dot.style.backgroundColor = color;
+                        
+                        const scale = (radarSize / 2) / radarRange;
+                        const x = radarSize / 2 + dx * scale;
+                        const y = radarSize / 2 + dy * scale;
+                        
+                        dot.style.left = x + 'px';
+                        dot.style.top = y + 'px';
+                        
+                        radar.appendChild(dot);
+                    }
+                });
+            }
+            
+            tryDock() {
+                if (gameState.nearestStation) {
+                    const dx = gameState.nearestStation.x - gameState.player.x;
+                    const dy = gameState.nearestStation.y - gameState.player.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        this.openStationMenu(gameState.nearestStation);
+                    }
+                }
+            }
+            
+            openStationMenu(station) {
+                this.currentStation = station;
+                this.stationMenuOpen = true;
+                document.getElementById('station-title').textContent = station.name;
+                
+                // Refresh contracts and market
+                station.contracts = this.generateContracts();
+                station.market = this.generateMarket();
+                
+                this.renderContracts(station.contracts);
+                this.renderUpgrades();
+                this.renderMarket(station.market);
+                this.renderHangar();
+                
+                document.getElementById('station-menu').classList.add('active');
+            }
+            
+            closeStationMenu() {
+                this.stationMenuOpen = false;
+                document.getElementById('station-menu').classList.remove('active');
+            }
+            
+            switchTab(tabName) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                event.target.classList.add('active');
+                document.getElementById('tab-' + tabName).classList.add('active');
+            }
+            
+            renderContracts(contracts) {
+                const list = document.getElementById('contracts-list');
+                list.innerHTML = '';
+                
+                contracts.forEach(contract => {
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    item.innerHTML = `
+                        <h3>${contract.title}</h3>
+                        <div>${contract.description}</div>
+                        <div class="item-row">
+                            <span>Reward: ${contract.reward}₵</span>
+                        </div>
+                    `;
+                    item.onclick = () => this.acceptContract(contract);
+                    list.appendChild(item);
+                });
+            }
+            
+            acceptContract(contract) {
+                if (gameState.activeContract) {
+                    alert('You already have an active contract!');
+                    return;
+                }
+                gameState.activeContract = contract;
+                this.closeStationMenu();
+                this.showPrompt(`Contract accepted: ${contract.title}`, 2000);
+            }
+            
+            renderUpgrades() {
+                const list = document.getElementById('upgrades-list');
+                list.innerHTML = '';
+                
+                const upgrades = [
+                    { name: 'Engine Upgrade', cost: 2000, stat: 'maxSpeed', value: 20 },
+                    { name: 'Weapon Upgrade', cost: 3000, stat: 'weaponDamage', value: 5 },
+                    { name: 'Cargo Expansion', cost: 1500, stat: 'cargoCapacity', value: 10 },
+                    { name: 'Shield Boost', cost: 2500, stat: 'shieldStrength', value: 50 }
+                ];
+                
+                upgrades.forEach(upgrade => {
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    item.innerHTML = `
+                        <h3>${upgrade.name}</h3>
+                        <div class="item-row">
+                            <span>Cost: ${upgrade.cost}₵</span>
+                            <button class="btn" ${gameState.player.credits < upgrade.cost ? 'disabled' : ''}>BUY</button>
+                        </div>
+                    `;
+                    item.querySelector('button').onclick = (e) => {
+                        e.stopPropagation();
+                        if (gameState.player.credits >= upgrade.cost) {
+                            gameState.player.credits -= upgrade.cost;
+                            gameState.player.ship[upgrade.stat] += upgrade.value;
+                            this.showPrompt('Upgrade purchased!', 2000);
+                            this.renderUpgrades();
+                        }
+                    };
+                    list.appendChild(item);
+                });
+            }
+            
+            renderMarket(market) {
+                const list = document.getElementById('market-list');
+                list.innerHTML = '';
+                
+                Object.keys(market).forEach(commodity => {
+                    const data = market[commodity];
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    item.innerHTML = `
+                        <h3>${commodity}</h3>
+                        <div class="item-row">
+                            <span>Buy: ${data.buyPrice}₵</span>
+                            <span>Sell: ${data.sellPrice}₵</span>
+                        </div>
+                        <div class="item-row">
+                            <button class="btn">BUY</button>
+                            <button class="btn">SELL</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+            
+            renderHangar() {
+                const stats = document.getElementById('ship-stats');
+                const ship = gameState.player.ship;
+                stats.innerHTML = `
+                    <div class="item-row">Max Speed: ${ship.maxSpeed}</div>
+                    <div class="item-row">Acceleration: ${ship.acceleration}</div>
+                    <div class="item-row">Cargo: ${ship.cargoUsed}/${ship.cargoCapacity}</div>
+                    <div class="item-row">Weapon: ${ship.weaponDamage} DMG</div>
+                    <div class="item-row">Shield: ${ship.shieldStrength}</div>
+                `;
+            }
+            
+            showPrompt(text, duration = 0) {
+                const prompt = document.getElementById('prompt-text');
+                prompt.textContent = text;
+                prompt.style.display = 'block';
+                
+                if (duration > 0) {
+                    setTimeout(() => this.hidePrompt(), duration);
+                }
+            }
+            
+            hidePrompt() {
+                document.getElementById('prompt-text').style.display = 'none';
+            }
+            
+            saveGame() {
+                const saveData = {
+                    player: gameState.player,
+                    activeContract: gameState.activeContract,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('stellarFrontierSave', JSON.stringify(saveData));
+            }
+            
+            loadGame() {
+                const saveData = localStorage.getItem('stellarFrontierSave');
+                if (saveData) {
+                    try {
+                        const data = JSON.parse(saveData);
+                        // Only load compatible 2D save data
+                        if (data.player && typeof data.player.x === 'number') {
+                            gameState.player.credits = data.player.credits || 1000;
+                            gameState.player.reputation = data.player.reputation || 0;
+                            gameState.player.health = data.player.health || 100;
+                            gameState.player.fuel = data.player.fuel || 100;
+                            gameState.player.x = data.player.x || 0;
+                            gameState.player.y = data.player.y || 0;
+                            if (data.player.ship) Object.assign(gameState.player.ship, data.player.ship);
+                            gameState.activeContract = data.activeContract;
+                        } else {
+                            // Incompatible old 3D save, ignore it
+                            console.log('Discarding incompatible save data');
+                            localStorage.removeItem('stellarFrontierSave');
+                        }
+                    } catch (e) {
+                        console.error('Failed to load save:', e);
+                        localStorage.removeItem('stellarFrontierSave');
+                    }
+                }
+            }
+            
+            autoSave() {
+                if (Date.now() - gameState.lastSave > 30000) {
+                    this.saveGame();
+                    gameState.lastSave = Date.now();
+                }
+            }
+            
+            // ============================================
+            // RENDER
+            // ============================================
+            
+            render() {
+                const ctx = this.ctx;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                
+                // Clear with deep space
+                ctx.fillStyle = '#000408';
+                ctx.fillRect(0, 0, w, h);
+                
+                // Draw stars
+                this.renderStars(ctx);
+                
+                // Draw nebula (subtle background clouds)
+                this.renderNebula(ctx);
+                
+                // Draw orbital rings
+                this.renderOrbitalRings(ctx);
+                
+                // Draw sun
+                this.renderSun(ctx);
+                
+                // Draw asteroid belt
+                this.renderAsteroids(ctx);
+                
+                // Draw planets
+                this.renderPlanets(ctx);
+                
+                // Draw stations
+                this.renderStations(ctx);
+                
+                // Draw ship trail
+                this.renderShipTrail(ctx);
+                
+                // Draw player ship
+                this.renderPlayerShip(ctx);
+                
+                // Draw hover effects
+                this.renderHoverEffects(ctx);
+            }
+            
+            renderStars(ctx) {
+                const time = Date.now() * 0.001;
+                gameState.stars.forEach(star => {
+                    const screen = this.worldToScreen(star.x, star.y);
+                    if (screen.x < -100 || screen.x > this.canvas.width + 100 || screen.y < -100 || screen.y > this.canvas.height + 100) return;
+                    
+                    const twinkle = Math.sin(time * star.twinkleSpeed + star.twinklePhase) * 0.3 + 0.7;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity * twinkle})`;
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, star.size * gameState.camera.zoom, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            renderNebula(ctx) {
+                // Faint colored gradient clouds
+                const nebulaClouds = [
+                    { x: 1500, y: 800, radius: 600, color: 'rgba(100, 50, 150, 0.08)' },
+                    { x: -1200, y: -900, radius: 500, color: 'rgba(50, 100, 200, 0.06)' },
+                    { x: 2000, y: -500, radius: 700, color: 'rgba(150, 50, 100, 0.05)' }
+                ];
+                
+                nebulaClouds.forEach(cloud => {
+                    const screen = this.worldToScreen(cloud.x, cloud.y);
+                    const gradient = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, cloud.radius * gameState.camera.zoom);
+                    gradient.addColorStop(0, cloud.color);
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                });
+            }
+            
+            renderOrbitalRings(ctx) {
+                gameState.objects.planets.forEach(planet => {
+                    const screen = this.worldToScreen(0, 0);
+                    ctx.strokeStyle = 'rgba(100, 150, 200, 0.15)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, planet.orbitDist * gameState.camera.zoom, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+            }
+            
+            renderSun(ctx) {
+                const screen = this.worldToScreen(0, 0);
+                const time = Date.now() * 0.001;
+                
+                // Outer glow
+                const glowRadius = 150 * gameState.camera.zoom;
+                const gradient = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, glowRadius);
+                gradient.addColorStop(0, 'rgba(255, 200, 50, 0.8)');
+                gradient.addColorStop(0.4, 'rgba(255, 150, 30, 0.4)');
+                gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Core
+                const coreGradient = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, 80 * gameState.camera.zoom);
+                coreGradient.addColorStop(0, '#ffff88');
+                coreGradient.addColorStop(0.6, '#ffdd00');
+                coreGradient.addColorStop(1, '#ff9d00');
+                ctx.fillStyle = coreGradient;
+                ctx.beginPath();
+                ctx.arc(screen.x, screen.y, 80 * gameState.camera.zoom, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Animated rays
+                ctx.save();
+                ctx.translate(screen.x, screen.y);
+                ctx.rotate(time * 0.1);
+                for (let i = 0; i < 12; i++) {
+                    const angle = (Math.PI * 2 / 12) * i;
+                    ctx.save();
+                    ctx.rotate(angle);
+                    const rayGradient = ctx.createLinearGradient(0, 0, 0, 200 * gameState.camera.zoom);
+                    rayGradient.addColorStop(0, 'rgba(255, 220, 100, 0.3)');
+                    rayGradient.addColorStop(1, 'rgba(255, 200, 50, 0)');
+                    ctx.fillStyle = rayGradient;
+                    ctx.fillRect(-3 * gameState.camera.zoom, 0, 6 * gameState.camera.zoom, 200 * gameState.camera.zoom);
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+            
+            renderPlanets(ctx) {
+                gameState.objects.planets.forEach(planet => {
+                    const screen = this.worldToScreen(planet.x, planet.y);
+                    const size = planet.size * gameState.camera.zoom;
+                    
+                    // Glow
+                    if (this.hoveredObject === planet) {
+                        const glowGradient = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, size * 1.8);
+                        glowGradient.addColorStop(0, planet.color1 + '40');
+                        glowGradient.addColorStop(1, planet.color1 + '00');
+                        ctx.fillStyle = glowGradient;
+                        ctx.beginPath();
+                        ctx.arc(screen.x, screen.y, size * 1.8, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Planet gradient
+                    const planetGradient = ctx.createRadialGradient(screen.x - size * 0.3, screen.y - size * 0.3, 0, screen.x, screen.y, size);
+                    planetGradient.addColorStop(0, planet.color2);
+                    planetGradient.addColorStop(0.7, planet.color1);
+                    planetGradient.addColorStop(1, '#000000');
+                    ctx.fillStyle = planetGradient;
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Surface details (rotating)
+                    ctx.save();
+                    ctx.translate(screen.x, screen.y);
+                    ctx.rotate(planet.rotation);
+                    ctx.globalAlpha = 0.3;
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 / 5) * i;
+                        const dist = size * 0.5;
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                        ctx.beginPath();
+                        ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, size * 0.15, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    
+                    // Moons
+                    planet.moons.forEach(moon => {
+                        const mx = screen.x + Math.cos(moon.angle) * moon.dist * gameState.camera.zoom;
+                        const my = screen.y + Math.sin(moon.angle) * moon.dist * gameState.camera.zoom;
+                        ctx.fillStyle = '#888888';
+                        ctx.beginPath();
+                        ctx.arc(mx, my, moon.size * gameState.camera.zoom, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    
+                    // Name label
+                    if (gameState.camera.zoom > 0.5) {
+                        ctx.fillStyle = '#aaddff';
+                        ctx.font = `${Math.floor(12 * gameState.camera.zoom)}px Rajdhani`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(planet.name, screen.x, screen.y + size + 5 * gameState.camera.zoom);
+                    }
+                });
+            }
+            
+            renderStations(ctx) {
+                gameState.objects.stations.forEach(station => {
+                    const screen = this.worldToScreen(station.x, station.y);
+                    const size = station.size * gameState.camera.zoom;
+                    const time = Date.now() * 0.001;
+                    
+                    // Glow
+                    if (this.hoveredObject === station) {
+                        const glowGradient = ctx.createRadialGradient(screen.x, screen.y, 0, screen.x, screen.y, size * 3);
+                        glowGradient.addColorStop(0, 'rgba(0, 220, 255, 0.4)');
+                        glowGradient.addColorStop(1, 'rgba(0, 220, 255, 0)');
+                        ctx.fillStyle = glowGradient;
+                        ctx.beginPath();
+                        ctx.arc(screen.x, screen.y, size * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Station body (hexagon)
+                    ctx.save();
+                    ctx.translate(screen.x, screen.y);
+                    ctx.rotate(station.rotation);
+                    
+                    ctx.fillStyle = '#555555';
+                    ctx.strokeStyle = '#888888';
+                    ctx.lineWidth = 2 * gameState.camera.zoom;
+                    ctx.beginPath();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (Math.PI * 2 / 6) * i;
+                        const x = Math.cos(angle) * size;
+                        const y = Math.sin(angle) * size;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Lights (pulsing)
+                    const pulse = Math.sin(time * 2) * 0.3 + 0.7;
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (Math.PI * 2 / 6) * i;
+                        const x = Math.cos(angle) * size;
+                        const y = Math.sin(angle) * size;
+                        ctx.fillStyle = `rgba(0, 220, 255, ${pulse})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2 * gameState.camera.zoom, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                    
+                    // Name label
+                    if (gameState.camera.zoom > 0.4) {
+                        ctx.fillStyle = '#00dcff';
+                        ctx.font = `${Math.floor(11 * gameState.camera.zoom)}px Rajdhani`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(station.name, screen.x, screen.y + size * 2);
+                    }
+                });
+            }
+            
+            renderAsteroids(ctx) {
+                if (gameState.camera.zoom < 0.4) return; // Too zoomed out
+                
+                gameState.objects.asteroids.forEach(asteroid => {
+                    const screen = this.worldToScreen(asteroid.x, asteroid.y);
+                    const size = asteroid.size * gameState.camera.zoom;
+                    
+                    ctx.save();
+                    ctx.translate(screen.x, screen.y);
+                    ctx.rotate(asteroid.rotation);
+                    
+                    ctx.fillStyle = '#444444';
+                    ctx.strokeStyle = '#666666';
+                    ctx.lineWidth = 0.5 * gameState.camera.zoom;
+                    ctx.beginPath();
+                    // Irregular shape
+                    const points = 6;
+                    for (let i = 0; i < points; i++) {
+                        const angle = (Math.PI * 2 / points) * i;
+                        const dist = size * (0.7 + Math.random() * 0.3);
+                        const x = Math.cos(angle) * dist;
+                        const y = Math.sin(angle) * dist;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                });
+            }
+            
+            renderShipTrail(ctx) {
+                gameState.shipTrail.forEach(trail => {
+                    const screen = this.worldToScreen(trail.x, trail.y);
+                    const alpha = trail.life / 30;
+                    ctx.fillStyle = `rgba(0, 220, 255, ${alpha * 0.4})`;
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, 2 * gameState.camera.zoom, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            renderPlayerShip(ctx) {
+                const screen = this.worldToScreen(gameState.player.x, gameState.player.y);
+                const size = 12 * gameState.camera.zoom;
+                
+                ctx.save();
+                ctx.translate(screen.x, screen.y);
+                ctx.rotate(gameState.player.rotation);
+                
+                // Ship body (triangle)
+                ctx.fillStyle = '#2288ff';
+                ctx.strokeStyle = '#00dcff';
+                ctx.lineWidth = 2 * gameState.camera.zoom;
+                ctx.beginPath();
+                ctx.moveTo(size, 0);
+                ctx.lineTo(-size * 0.6, -size * 0.5);
+                ctx.lineTo(-size * 0.6, size * 0.5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                // Engine glow
+                if (gameState.autopilot.active) {
+                    const glowGradient = ctx.createRadialGradient(-size * 0.6, 0, 0, -size * 0.6, 0, size);
+                    glowGradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+                    glowGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+                    ctx.fillStyle = glowGradient;
+                    ctx.beginPath();
+                    ctx.arc(-size * 0.6, 0, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+            
+            renderHoverEffects(ctx) {
+                if (this.hoveredObject && !this.stationMenuOpen) {
+                    const screen = this.worldToScreen(this.hoveredObject.x, this.hoveredObject.y);
+                    
+                    // Tooltip
+                    ctx.fillStyle = 'rgba(6, 14, 28, 0.9)';
+                    ctx.strokeStyle = '#00dcff';
+                    ctx.lineWidth = 1;
+                    const tooltipWidth = 150;
+                    const tooltipHeight = 30;
+                    ctx.fillRect(screen.x - tooltipWidth / 2, screen.y - this.hoveredObject.size * gameState.camera.zoom - tooltipHeight - 10, tooltipWidth, tooltipHeight);
+                    ctx.strokeRect(screen.x - tooltipWidth / 2, screen.y - this.hoveredObject.size * gameState.camera.zoom - tooltipHeight - 10, tooltipWidth, tooltipHeight);
+                    
+                    ctx.fillStyle = '#00dcff';
+                    ctx.font = '14px Rajdhani';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.hoveredObject.name, screen.x, screen.y - this.hoveredObject.size * gameState.camera.zoom - tooltipHeight / 2 - 10);
+                }
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                this.update(1 / 60);
+                this.render();
+            }
+        }
+        
+        // Start the game
+        try {
+            window.game = new Game();
+            console.log('Game initialized successfully, planets:', gameState.objects.planets.length, 'stations:', gameState.objects.stations.length);
+        } catch(e) {
+            console.error('Game init error:', e);
+            document.body.innerHTML += '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:red;font-size:20px;z-index:9999">ERROR: ' + e.message + '</div>';
+        }
+        
+        console.log('🚀 Stellar Frontier - 2D Edition Ready');
+        console.log('Controls: Left-click=Select, Right-click=Quick-fly, F=Fly to selected, E=Dock');
+        console.log('Pan: Middle-drag or Shift+drag, Zoom: Mouse wheel');
+    </script>
+</body>
+</html>

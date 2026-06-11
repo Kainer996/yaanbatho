@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#12271d">
+<title>Nomad Trip Planner — Live Dashboard</title>
+<meta name="description" content="Live demo dashboard for the Nomad Trip Planner agent. Pick your anchor, drive-time budget, and vibe — get three parking-aware destinations with real weather, daylight, parkup notes, and Google Maps deeplinks.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#6f8f75; --red-hot:#d6a35d; --black:#08120d; --dark:#102018;
+  --mid:#18281f; --card:#12271d; --border:#2b4a35; --grey:#79907d;
+  --ltgrey:#c3d1be; --white:#f4ead7;
+  --pixel:'VT323',monospace; --sign:'Black Ops One',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:radial-gradient(circle at 12% -8%,rgba(111,143,117,.24),transparent 36%),linear-gradient(180deg,#08120d 0%,#102018 50%,#08120d 100%);color:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--red-hot);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.top-nav{background:rgba(8,18,13,.92);backdrop-filter:blur(14px);border-bottom:3px solid var(--red);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.nav-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--ltgrey);display:flex;align-items:center;gap:10px;font-size:.95rem}
+.nav-brand .dot{width:10px;height:10px;background:var(--red-hot);display:inline-block;border-radius:50%;box-shadow:0 0 18px rgba(210,154,85,.65)}
+.nav-links{display:flex;gap:14px;font-family:var(--pixel);font-size:1rem}
+.nav-links a{color:var(--ltgrey)}
+.nav-links a:hover{color:var(--red-hot)}
+
+.shell{max-width:1100px;margin:0 auto;padding:42px 20px 60px}
+
+.tag-pill{display:inline-block;font-family:var(--pixel);font-size:1.05rem;color:var(--red-hot);border:1px solid rgba(214,163,93,.75);background:rgba(18,39,29,.72);border-radius:999px;padding:3px 12px;letter-spacing:2px;margin-bottom:14px}
+h1{font-family:var(--sign);font-size:clamp(1.9rem,4.5vw,2.8rem);letter-spacing:1px;line-height:1.05;margin-bottom:8px}
+h1 .red{color:var(--red-hot)}
+.lede{color:var(--ltgrey);max-width:680px;font-size:1rem;margin-bottom:26px}
+
+.controls{background:linear-gradient(135deg,rgba(18,39,29,.96),rgba(43,74,53,.72)),url('/assets/nomad-forest-hero.svg') center/cover no-repeat;border:1px solid var(--border);padding:18px;border-radius:16px;margin-bottom:22px;box-shadow:0 18px 45px rgba(0,0,0,.22)}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.row:last-child{margin-bottom:0}
+label{display:block;font-family:var(--pixel);font-size:1rem;color:var(--ltgrey);letter-spacing:1px;margin-bottom:6px}
+input[type=text]{background:rgba(8,18,13,.74);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Inter',sans-serif;font-size:.95rem;border-radius:10px;width:100%}
+input[type=text]:focus{outline:none;border-color:var(--red)}
+input[type=range]{width:100%;accent-color:var(--red-hot)}
+.field{flex:1;min-width:220px}
+.field-narrow{min-width:160px;flex:0 1 200px}
+.btn{display:inline-block;font-family:var(--sign);letter-spacing:1px;padding:11px 20px;border-radius:999px;border:1px solid var(--red);background:var(--red);color:#08120d;font-size:1rem;cursor:pointer;transition:transform .08s ease, background .15s ease}
+.btn:hover{background:var(--red-hot);text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn-ghost{background:transparent;color:var(--white);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--red);background:var(--mid)}
+.btn[disabled]{opacity:.5;cursor:wait}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--pixel);font-size:1.05rem;letter-spacing:1px;padding:6px 12px;border:1px solid var(--border);color:var(--ltgrey);background:var(--mid);border-radius:999px;cursor:pointer;user-select:none}
+.chip.on{border-color:var(--red-hot);color:var(--red-hot);background:rgba(36,79,58,.72)}
+.slider-val{font-family:var(--pixel);color:var(--red-hot);font-size:1.2rem;margin-left:8px}
+
+.status{font-family:var(--pixel);font-size:1.05rem;color:var(--ltgrey);margin:12px 2px}
+.status.err{color:var(--red-hot)}
+
+.pick{background:linear-gradient(135deg,#203b2b 0%,var(--card) 60%);border:1px solid var(--red);padding:22px;border-radius:16px;margin-bottom:22px;display:none;box-shadow:0 18px 45px rgba(0,0,0,.22)}
+.pick.show{display:block}
+.pick .label{font-family:var(--pixel);color:var(--red-hot);letter-spacing:2px;font-size:1rem;margin-bottom:6px}
+.pick h2{font-family:var(--sign);font-size:1.7rem;line-height:1.1;margin-bottom:10px}
+.pick .why{color:var(--ltgrey);margin-bottom:14px}
+.pick-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:linear-gradient(180deg,rgba(18,39,29,.96),rgba(16,32,24,.96));border:1px solid var(--border);padding:16px;border-radius:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 16px 36px rgba(0,0,0,.2)}
+.card .head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.15rem;line-height:1.2}
+.card .rank{font-family:var(--pixel);color:var(--red-hot);font-size:1.1rem}
+.card .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.88rem}
+.meta-cell{background:var(--mid);border:1px solid var(--border);border-radius:4px;padding:8px 10px}
+.meta-cell .k{font-family:var(--pixel);color:var(--ltgrey);font-size:.95rem;letter-spacing:1px}
+.meta-cell .v{color:var(--white);font-weight:600;margin-top:2px}
+.parkup{font-size:.9rem;color:var(--ltgrey);border-top:1px dashed var(--border);padding-top:10px;margin-top:2px}
+.parkup .pk-name{color:var(--white);font-weight:600}
+.actions{display:flex;gap:8px;margin-top:auto}
+.actions .btn{flex:1;padding:10px;font-size:.92rem;text-align:center}
+
+footer{margin-top:50px;padding:18px 0;font-family:var(--pixel);color:var(--grey);text-align:center;border-top:1px dashed var(--border);font-size:1.05rem;letter-spacing:1px}
+
+.note{background:rgba(24,40,31,.86);border-left:3px solid var(--red-hot);padding:10px 14px;margin:18px 0;color:var(--ltgrey);font-size:.9rem;border-radius:0 12px 12px 0}
+.note b{color:var(--white)}
+
+@media(max-width:520px){
+  h1{font-size:1.7rem}
+  .meta{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-brand"><span class="dot"></span> YAAN BATHO · NOMAD TRIP PLANNER</div>
+  <div class="nav-links">
+    <a href="/nomad-trip-planner.html">about</a>
+    <a href="/agent-tools.html">tools</a>
+    <a href="/">home</a>
+  </div>
+</nav>
+
+<div class="shell">
+  <span class="tag-pill">LIVE DEMO · v0.1</span>
+  <h1>Plan my <span class="red">Friday</span>.</h1>
+  <p class="lede">Set your anchor, your drive-time budget, and the vibe. The planner pulls live weather from Open-Meteo, computes daylight locally, and ranks three parking-aware spots. One tap opens directions in Google Maps. One tap reads the brief aloud.</p>
+
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label for="anchor">ANCHOR (where you're starting from)</label>
+        <input id="anchor" type="text" placeholder="lat,lng or place name (defaults to Bristol)" value="51.4545,-2.5879" />
+      </div>
+      <div class="field-narrow">
+        <label for="useLoc">&nbsp;</label>
+        <button id="useLoc" class="btn btn-ghost" type="button" style="width:100%">Use my location</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="drive">MAX DRIVE TIME <span id="driveVal" class="slider-val">60 min</span></label>
+        <input id="drive" type="range" min="15" max="180" step="5" value="60" />
+      </div>
+      <div class="field">
+        <label for="date">DATE</label>
+        <input id="date" type="text" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>VIBE</label>
+        <div class="chips" id="chips">
+          <span class="chip" data-vibe="beach">beach</span>
+          <span class="chip" data-vibe="forest">forest</span>
+          <span class="chip" data-vibe="mountain">mountain</span>
+          <span class="chip" data-vibe="quiet">quiet</span>
+          <span class="chip on" data-vibe="scenic">scenic</span>
+          <span class="chip" data-vibe="new">new-to-me</span>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <button id="plan" class="btn" type="button">▸ Plan my Friday</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status" class="status">Ready. Hit <b style="color:var(--red-hot)">▸ Plan my Friday</b> when you're set.</div>
+
+  <div id="pick" class="pick" aria-live="polite"></div>
+  <div id="cards" class="cards"></div>
+
+  <div class="note">
+    <b>How this works.</b> Distances are haversine × 1.3 at 55 km/h — good for ranking, not final ETA. Weather is a 6-hour daytime average from Open-Meteo. Sunset uses an inline NOAA approximation. Parkups are a curated UK fixture set; the production MCP server swaps in iOverlander / Park4Night.
+  </div>
+</div>
+
+<footer>BUILT BY YAAN · AVA · ON THE ROAD · UK</footer>
+
+<script>
+// ---- Curated parking-aware UK spots (lat, lng, vibe tags, parkup hint) ----
+const SPOTS = [
+  { name:"Brighton Seafront", lat:50.8198, lng:-0.1378, vibes:["beach","scenic"],
+    parkup:{ name:"Madeira Drive layby", note:"Pay & display, height OK, sea views" } },
+  { name:"New Forest — Lyndhurst", lat:50.8728, lng:-1.5750, vibes:["forest","quiet","new"],
+    parkup:{ name:"Bolton's Bench car park", note:"Free, gravel, ponies wander through" } },
+  { name:"Box Hill, Surrey", lat:51.2547, lng:-0.3175, vibes:["scenic","forest"],
+    parkup:{ name:"NT Box Hill car park", note:"NT members free, height bar 2.1m — check" } },
+  { name:"Seven Sisters, Seaford", lat:50.7430, lng:0.1690, vibes:["beach","scenic","new"],
+    parkup:{ name:"Seven Sisters Country Park", note:"Pay & display, gravel overflow, no overnight" } },
+  { name:"Dartmoor — Princetown", lat:50.5447, lng:-3.9870, vibes:["mountain","quiet","new"],
+    parkup:{ name:"Princetown visitor centre", note:"Free, level, frequent fog — go on clear days" } },
+  { name:"Peak District — Castleton", lat:53.3441, lng:-1.7746, vibes:["mountain","scenic"],
+    parkup:{ name:"Castleton main car park", note:"Pay & display, generous bays, walk to Mam Tor" } },
+  { name:"Cotswolds — Bourton-on-the-Water", lat:51.8847, lng:-1.7546, vibes:["scenic","quiet"],
+    parkup:{ name:"Rissington Road car park", note:"Pay & display, level, 5 min walk to river" } },
+  { name:"Whitstable Harbour", lat:51.3635, lng:1.0258, vibes:["beach","quiet","new"],
+    parkup:{ name:"Gorrell Tank car park", note:"Pay & display, oysters & sunset over the sea" } },
+  { name:"Symonds Yat, Wye Valley", lat:51.8420, lng:-2.6390, vibes:["forest","scenic","new"],
+    parkup:{ name:"Yat Rock car park", note:"Forestry England, peregrines overhead" } },
+  { name:"Cheddar Gorge", lat:51.2820, lng:-2.7650, vibes:["mountain","scenic"],
+    parkup:{ name:"Cliffs car park", note:"Pay & display, look up, eat cheese" } }
+];
+
+// ---- helpers ----
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function haversineKm(a, b){
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI/180;
+  const dLng = (b.lng - a.lng) * Math.PI/180;
+  const la1 = a.lat * Math.PI/180, la2 = b.lat * Math.PI/180;
+  const x = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+function driveMinutes(km){
+  return Math.round((km * 1.3 / 55) * 60); // 1.3x road factor, 55 km/h avg
+}
+
+// NOAA-style sunset approximation. Returns "HH:MM" in local browser time.
+function sunsetLocal(lat, lng, dateStr){
+  const date = new Date(dateStr + "T12:00:00");
+  const start = new Date(date.getFullYear(), 0, 0);
+  const N = Math.floor((date - start) / 86400000);
+  const lngHour = lng / 15;
+  const t = N + ((18 - lngHour) / 24); // sunset estimate
+  const M = (0.9856 * t) - 3.289;
+  const Lraw = M + (1.916 * Math.sin(M*Math.PI/180)) + (0.020 * Math.sin(2*M*Math.PI/180)) + 282.634;
+  const L = ((Lraw % 360) + 360) % 360;
+  let RAraw = Math.atan(0.91764 * Math.tan(L*Math.PI/180)) * 180/Math.PI;
+  RAraw = ((RAraw % 360) + 360) % 360;
+  const Lq = Math.floor(L / 90) * 90;
+  const RAq = Math.floor(RAraw / 90) * 90;
+  const RA = (RAraw + (Lq - RAq)) / 15;
+  const sinDec = 0.39782 * Math.sin(L*Math.PI/180);
+  const cosDec = Math.cos(Math.asin(sinDec));
+  const zenith = 90.833;
+  const cosH = (Math.cos(zenith*Math.PI/180) - (sinDec * Math.sin(lat*Math.PI/180))) / (cosDec * Math.cos(lat*Math.PI/180));
+  if (cosH > 1 || cosH < -1) return "—";
+  const H = (Math.acos(cosH) * 180/Math.PI) / 15;
+  const T = H + RA - (0.06571 * t) - 6.622;
+  let UT = T - lngHour;
+  UT = ((UT % 24) + 24) % 24;
+  // Convert to local browser time
+  const local = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), Math.floor(UT), Math.round((UT % 1) * 60)));
+  const hh = String(local.getHours()).padStart(2, "0");
+  const mm = String(local.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+async function fetchWeather(lat, lng, dateStr){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation,wind_speed_10m,weather_code&start_date=${dateStr}&end_date=${dateStr}&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("weather fetch failed");
+  const j = await res.json();
+  const h = j.hourly;
+  // Daytime average 09:00–18:00
+  const idx = h.time.map((t,i)=>({t,i})).filter(x => {
+    const hr = parseInt(x.t.slice(11,13),10);
+    return hr >= 9 && hr <= 18;
+  }).map(x => x.i);
+  const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+  const temp = avg(idx.map(i => h.temperature_2m[i]));
+  const precip = idx.reduce((a,i)=>a+h.precipitation[i],0); // sum mm
+  const wind = avg(idx.map(i => h.wind_speed_10m[i]));
+  const codes = idx.map(i => h.weather_code[i]);
+  // Score: lower is better. Penalise rain heavily, wind moderately, cold mildly.
+  const score = precip*4 + wind*0.4 + Math.max(0, 14 - temp)*0.6;
+  return { temp:Math.round(temp), precip:precip.toFixed(1), wind:Math.round(wind), code:codes[Math.floor(codes.length/2)], score };
+}
+
+function weatherWord(code){
+  if (code === 0) return "clear";
+  if (code <= 3) return "partly cloudy";
+  if (code <= 48) return "fog";
+  if (code <= 67) return "rain";
+  if (code <= 77) return "snow";
+  if (code <= 82) return "showers";
+  if (code <= 99) return "thunderstorms";
+  return "mixed";
+}
+
+function parseAnchor(s){
+  const m = s.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  return { lat:parseFloat(m[1]), lng:parseFloat(m[2]) };
+}
+
+function mapsDirLink(from, to){
+  return `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&travelmode=driving`;
+}
+function mapsSearchLink(to, label){
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}&query_place_id=&center=${to.lat},${to.lng}`;
+}
+
+function speak(text){
+  if (!("speechSynthesis" in window)){ alert("Speech synthesis not supported on this device."); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.02; u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+
+function brief(spot, weather, sunset, driveMin){
+  return `Heading to ${spot.name}. About ${driveMin} minutes from your anchor. Weather looks ${weatherWord(weather.code)}, around ${weather.temp} degrees, ${weather.precip} millimetres of rain expected, wind ${weather.wind} kilometres an hour. Sunset ${sunset}. Parkup: ${spot.parkup.name}. ${spot.parkup.note}.`;
+}
+
+// ---- UI wiring ----
+function setStatus(t, isErr=false){
+  const el = $("#status");
+  el.innerHTML = t;
+  el.classList.toggle("err", isErr);
+}
+
+function getActiveVibes(){
+  return [...$$(".chip.on")].map(c => c.dataset.vibe);
+}
+
+$("#chips").addEventListener("click", e => {
+  if (!e.target.classList.contains("chip")) return;
+  e.target.classList.toggle("on");
+});
+
+$("#drive").addEventListener("input", e => {
+  $("#driveVal").textContent = e.target.value + " min";
+});
+
+$("#useLoc").addEventListener("click", () => {
+  if (!navigator.geolocation){ setStatus("Geolocation not supported on this browser.", true); return; }
+  setStatus("Asking for location…");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      $("#anchor").value = pos.coords.latitude.toFixed(4) + "," + pos.coords.longitude.toFixed(4);
+      setStatus("Got your location.");
+    },
+    err => setStatus("Location denied or unavailable. Type lat,lng instead.", true),
+    { timeout: 8000 }
+  );
+});
+
+$("#date").value = todayISO();
+
+$("#plan").addEventListener("click", async () => {
+  const anchor = parseAnchor($("#anchor").value);
+  if (!anchor){ setStatus("Anchor must be lat,lng (e.g. 51.4545,-2.5879).", true); return; }
+  const maxDrive = parseInt($("#drive").value, 10);
+  const dateStr = $("#date").value || todayISO();
+  const vibes = getActiveVibes();
+
+  $("#plan").disabled = true;
+  $("#pick").classList.remove("show");
+  $("#cards").innerHTML = "";
+
+  // Filter spots by drive budget + vibe match
+  let candidates = SPOTS.map(s => {
+    const km = haversineKm(anchor, s);
+    const min = driveMinutes(km);
+    const vibeMatch = vibes.length === 0 ? 1 : vibes.some(v => s.vibes.includes(v)) ? 1 : 0;
+    return { spot:s, km, min, vibeMatch };
+  })
+  .filter(c => c.min <= maxDrive)
+  .filter(c => c.vibeMatch === 1);
+
+  if (candidates.length === 0){
+    setStatus(`No spots match within ${maxDrive} min and those vibes. Loosen vibe or extend drive time.`, true);
+    $("#plan").disabled = false;
+    return;
+  }
+
+  // Sort by drive time first, take top 6 to keep weather calls cheap
+  candidates.sort((a,b) => a.min - b.min);
+  candidates = candidates.slice(0, 6);
+
+  setStatus(`Checking weather for ${candidates.length} candidate${candidates.length===1?"":"s"}…`);
+
+  try {
+    await Promise.all(candidates.map(async c => {
+      try { c.weather = await fetchWeather(c.spot.lat, c.spot.lng, dateStr); }
+      catch { c.weather = null; }
+      c.sunset = sunsetLocal(c.spot.lat, c.spot.lng, dateStr);
+    }));
+  } catch(e){
+    setStatus("Weather lookup failed — check connection.", true);
+    $("#plan").disabled = false;
+    return;
+  }
+
+  // Rank: weather score (lower is better) primary, drive time secondary
+  candidates.sort((a,b) => {
+    const sa = a.weather ? a.weather.score : 999;
+    const sb = b.weather ? b.weather.score : 999;
+    if (Math.abs(sa - sb) > 1) return sa - sb;
+    return a.min - b.min;
+  });
+
+  const top = candidates.slice(0, 3);
+  renderPick(top[0], anchor);
+  renderCards(top, anchor);
+  setStatus(`Done. ${top.length} ranked. Top pick on weather: <b style="color:var(--red-hot)">${top[0].spot.name}</b>.`);
+  $("#plan").disabled = false;
+});
+
+function weatherLine(w){
+  if (!w) return "weather unavailable";
+  return `${weatherWord(w.code)}, ${w.temp}°C, ${w.precip}mm rain, wind ${w.wind} km/h`;
+}
+
+function renderPick(c, anchor){
+  const el = $("#pick");
+  const dir = mapsDirLink(anchor, c.spot);
+  const briefText = c.weather ? brief(c.spot, c.weather, c.sunset, c.min) : `Heading to ${c.spot.name}. About ${c.min} minutes from your anchor. Sunset ${c.sunset}.`;
+  el.innerHTML = `
+    <div class="label">TODAY'S PICK · BEST WEATHER WINDOW</div>
+    <h2>${c.spot.name}</h2>
+    <p class="why">${c.min} min · ${weatherLine(c.weather)} · sunset ${c.sunset} · parkup at <b>${c.spot.parkup.name}</b></p>
+    <div class="pick-actions">
+      <a class="btn" href="${dir}" target="_blank" rel="noopener">▸ Open in Maps</a>
+      <button class="btn btn-ghost" type="button" id="speakPick">🔊 Read aloud</button>
+    </div>`;
+  el.classList.add("show");
+  $("#speakPick").addEventListener("click", () => speak(briefText));
+}
+
+function renderCards(top, anchor){
+  const wrap = $("#cards");
+  wrap.innerHTML = top.map((c, i) => {
+    const dir = mapsDirLink(anchor, c.spot);
+    const search = mapsSearchLink(c.spot, c.spot.name);
+    return `
+      <div class="card">
+        <div class="head">
+          <div class="name">${c.spot.name}</div>
+          <div class="rank">#${i+1}</div>
+        </div>
+        <div class="meta">
+          <div class="meta-cell"><div class="k">DRIVE</div><div class="v">${c.min} min</div></div>
+          <div class="meta-cell"><div class="k">SUNSET</div><div class="v">${c.sunset}</div></div>
+          <div class="meta-cell"><div class="k">TEMP</div><div class="v">${c.weather?c.weather.temp+'°C':'—'}</div></div>
+          <div class="meta-cell"><div class="k">RAIN</div><div class="v">${c.weather?c.weather.precip+'mm':'—'}</div></div>
+        </div>
+        <div class="parkup">
+          <div class="pk-name">${c.spot.parkup.name}</div>
+          ${c.spot.parkup.note}
+        </div>
+        <div class="actions">
+          <a class="btn" href="${dir}" target="_blank" rel="noopener">Directions</a>
+          <button class="btn btn-ghost" type="button" data-i="${i}">🔊 Brief</button>
+        </div>
+      </div>`;
+  }).join("");
+  // wire speak buttons
+  wrap.querySelectorAll(".btn-ghost[data-i]").forEach(b => {
+    b.addEventListener("click", () => {
+      const i = parseInt(b.dataset.i, 10);
+      const c = top[i];
+      const t = c.weather ? brief(c.spot, c.weather, c.sunset, c.min) : `${c.spot.name}. ${c.min} minutes. Sunset ${c.sunset}.`;
+      speak(t);
+    });
+  });
+}
+</script>
+</body>
+</html>

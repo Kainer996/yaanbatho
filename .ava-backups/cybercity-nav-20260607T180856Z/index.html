@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaan Batho — Public Product Lab</title>
+    <meta name="description" content="Yaan Batho's public product lab: AI agents, browser games, nomad travel tools, music, and useful internet experiments you can try or commission.">
+    <meta name="ai-tools" content="shared-drive, good-news-filter, crypto-monitor, agent-persona-setup">
+    <link rel="alternate" type="application/json" href="/agent-catalog.json" title="Agent Tools Catalog">
+    <link rel="ai-discovery" href="/llms.txt">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Yaan Batho","url":"https://yaanbatho.com","description":"Public product lab by Yaan Batho: practical AI tools, browser games, nomad travel helpers, music, and useful internet experiments.","potentialAction":{"@type":"SearchAction","target":"https://yaanbatho.com/agent-tools.html"}}</script>
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://yaanbatho.com/" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="Yaan Batho — Public Product Lab" />
+    <meta property="og:description" content="AI agents, browser games, nomad travel tools, music, and useful internet experiments you can try or commission." />
+    <meta property="og:url" content="https://yaanbatho.com/" />
+    <meta property="og:image" content="https://yaanbatho.com/images/hero-banner.jpg" />
+    
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Yaan Batho — Public Product Lab" />
+    <meta name="twitter:description" content="AI agents, browser games, nomad travel tools, music, and useful internet experiments you can try or commission." />
+    <meta name="twitter:image" content="https://yaanbatho.com/images/hero-banner.jpg" />
+    
+    <!-- Person JSON-LD for LLM Discovery -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Yaan Batho",
+      "alternateName": ["Yaan"],
+      "description": "Creator and builder running a public product lab for AI agents, browser games, nomad travel tools, music, and useful internet experiments.",
+      "url": "https://yaanbatho.com/",
+      "image": "https://yaanbatho.com/images/hero-banner.jpg",
+      "jobTitle": "Universe Builder",
+      "sameAs": [
+        "https://robotique.world",
+        "https://instagram.com/robotiqueworld",
+        "https://instagram.com/yaanbatho",
+        "https://x.com/yaanbatho",
+        "https://github.com/yaanbatho"
+      ],
+      "knowsAbout": [
+        "Artificial Intelligence",
+        "Futurism",
+        "Media Production",
+        "AI Video Generation",
+        "Brain-Computer Interfaces",
+        "Creative Technology",
+        "Product Development",
+        "Sound Design",
+        "Game Development",
+        "Brand Design"
+      ],
+      "hasOccupation": {
+        "@type": "Occupation",
+        "name": "Universe Builder",
+        "description": "Creator building at the intersection of AI, futurism, and media"
+      },
+      "creator": [
+        {
+          "@type": "CreativeWork",
+          "name": "ROBOTIQUE",
+          "description": "Lifestyle brand with ecommerce, educational content, and community-driven experiences",
+          "url": "https://robotique.world"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Orion's Barrel",
+          "description": "Social sitcom set in a space bar exploring AI video generation and character-driven storytelling"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Friend Shaped",
+          "description": "Experimental creative project exploring form, interaction, and digital companionship"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Chifftown / Chifly",
+          "description": "Virtual social center with webcam chat, virtual pubs, nightclubs, and arcades"
+        }
+      ]
+    }
+    </script>
+    
+    <link rel="stylesheet" href="css/style.css?v=cyberdeck2">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/mascot-v19.css">
+    <link rel="stylesheet" href="css/platform-nav-v19.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
+            <nav>
+                <a href="index.html" class="active">Home</a>
+                <a href="projects.html">Projects</a>
+                <a href="unknown/">Unknown</a>
+                <a href="products.html">Products</a>
+                <a href="ava-projects/">Ava Projects</a>
+                <a href="bio.html">Bio</a>
+                <a href="music.html">Music</a>
+                <a href="contact.html">Contact</a>
+                <a href="upload.html">Upload</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero parallax-container hero-cinematic" style="background: url('images/hero-banner.jpg') center/cover no-repeat; min-height: 70vh; position: relative;">
+            <div class="hero-ambient hero-ambient-red" aria-hidden="true"></div>
+            <div class="hero-ambient hero-ambient-white" aria-hidden="true"></div>
+            <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
+            <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
+            <div class="hero-scanline" aria-hidden="true"></div>
+            <!-- Floating music button — bottom-right of hero -->
+            <a href="music.html" class="btn-music-float">
+                <span class="music-eq">
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                    <span class="eq-bar"></span>
+                </span>
+                <span class="music-float-label">Music</span>
+            </a>
+        </section>
+
+        <!-- Hero text — below the image, clean background -->
+        <section style="background: #0a0a0a; padding: 3rem 0 2rem; text-align: center;">
+            <div class="container">
+                <img src="/images/yaan-batho-logo.png" alt="Yaan Batho" class="hero-logo reveal-on-scroll" style="display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto 1.5rem; padding: 0 1rem;">
+                <p class="tagline reveal-on-scroll">
+                    <span class="typewriter-text" style="border-right: 3px solid var(--accent-red); padding-right: 5px;">Public Product Lab · AI Agents, Games, Travel Tools & Music</span>
+                </p>
+                <p class="reveal-on-scroll" style="max-width: 680px; margin: 1rem auto; opacity: 0.85; font-size: 1.1rem;">I build useful internet experiments in public: autonomous AI systems, browser games, nomad tools, music, and service-ready prototypes for people who want weird ideas turned into working products.</p>
+                <div class="cta-group reveal-on-scroll">
+                    <a href="now.html" class="btn btn-primary magnetic">See What's Shipping <span class="bounce-arrow">→</span></a>
+                    <a href="contact.html" class="btn btn-secondary magnetic">Commission a Build</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="build-deck" class="build-deck-section" aria-label="Project quick deck">
+            <div class="container">
+                <div class="cyber-project-menu reveal-on-scroll" aria-label="Project quick deck">
+                    <div class="cyber-menu-copy">
+                        <span class="eyebrow">Project uplink</span>
+                        <h2>Build deck</h2>
+                    </div>
+
+                    <div class="cyber-scroll-shell">
+                        <div class="cyber-scroll-hud" aria-hidden="true">
+                            <span>LIVE_PROJECTS</span>
+                            <span>tap_to_expand</span>
+                        </div>
+                        <div class="cyber-project-rail" tabindex="0" aria-label="Scroll and tap a project to preview it">
+                            <button type="button" class="cyber-project-link" data-title="Orion's Barrel" data-meta="Space sitcom · AI video" data-desc="Social sitcom set in a space bar. 90s clips, characters Mary/Carl/Walter, wormhole gag." data-image="images/projects/orions-barrel.png" data-tags="media,writing,AI video" data-tech="CapCut,Veo,LLM" data-url="https://orionsbarrel.com">
+                                <span class="cyber-index">01</span>
+                                <span class="cyber-title">Orion's Barrel</span>
+                                <span class="cyber-meta">Space sitcom · AI video</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="Chifftown / Chifly" data-meta="Virtual pubs · WebRTC" data-desc="Virtual social center: webcam chat, virtual pubs, nightclubs, arcades." data-image="images/projects/chifftown.png" data-tags="product,social,webRTC" data-tech="WebRTC,TURN,Next.js" data-url="https://chifftown.com">
+                                <span class="cyber-index">02</span>
+                                <span class="cyber-title">Chifftown / Chifly</span>
+                                <span class="cyber-meta">Virtual pubs · WebRTC</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="Good News 24" data-meta="Positive media engine" data-desc="Positive news platform with a freshness-focused publishing pipeline, readable story pages, RSS, and a safer owned-audience loop ready for review." data-image="images/projects/goodnews24.png" data-tags="agent,media,automation" data-tech="AI Agents,Node.js,SEO" data-url="https://goodnews-24.com">
+                                <span class="cyber-index">03</span>
+                                <span class="cyber-title">Good News 24</span>
+                                <span class="cyber-meta">Positive media engine</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="QuarryPro" data-meta="Quarry sim prototype" data-desc="Pre-alpha quarry simulator and operations prototype: 3D site maps, haul routes, production pressure, and game-first experiments grounded in real quarry work." data-image="images/quarry-pro-card.png" data-tags="product,automation" data-tech="Three.js,Node.js,SQLite,Express" data-url="https://yaanbatho.com/quarry-pro/">
+                                <span class="cyber-index">04</span>
+                                <span class="cyber-title">QuarryPro</span>
+                                <span class="cyber-meta">Quarry sim prototype</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="ROBOTIQUE — 2045" data-meta="Cyberpunk RPG" data-desc="You wake up in 2045 with nothing. Open-world cyberpunk RPG grounded in real futurism. Find your way home from a world you don't recognise." data-image="images/logo-mascot.jpg" data-tags="game,RPG,sci-fi,2045" data-tech="Phaser.js,JavaScript" data-url="https://yaanbatho.com/robotique/">
+                                <span class="cyber-index">05</span>
+                                <span class="cyber-title">ROBOTIQUE — 2045</span>
+                                <span class="cyber-meta">Cyberpunk RPG</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="BURBZ" data-meta="Bird companions · AI" data-desc="Turn birds you hear or photograph into manga fighter companions, build a Birdex, and treat early recognition as playful field-guide clues while the game improves." data-icon="🐦" data-tags="game,AI,nature" data-tech="BirdNET,JavaScript,Web Audio" data-url="/burbz/">
+                                <span class="cyber-index">06</span>
+                                <span class="cyber-title">BURBZ</span>
+                                <span class="cyber-meta">Bird companions · AI</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="Nomad Trip Planner" data-meta="Park-ups · weather · maps" data-desc="Pick an anchor, choose a drive-time budget, and get useful nearby park-up ideas with weather, daylight, and one-tap Maps links." data-icon="🧭" data-tags="travel tools,parking,maps" data-tech="Park-ups,Weather,Maps" data-url="/nomad-trip-planner-dashboard.html">
+                                <span class="cyber-index">07</span>
+                                <span class="cyber-title">Nomad Trip Planner</span>
+                                <span class="cyber-meta">Park-ups · weather · maps</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="Nomad Toolkit" data-meta="Vanlife helper stack" data-desc="A simple collection of travel helpers: trip planning, pub parking filters, and personal park-up notes without the faff." data-icon="🏕️" data-tags="toolkit,travel" data-tech="Trip Planner,Pub Guide,Roll Call" data-url="/nomad.html">
+                                <span class="cyber-index">08</span>
+                                <span class="cyber-title">Nomad Toolkit</span>
+                                <span class="cyber-meta">Vanlife helper stack</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="Unknown" data-meta="Three.js ocean study" data-desc="Just water in the sunshine: a browser-based ocean experiment with procedural waves, glare, haze, and horizon light." data-icon="≈" data-tags="browser,Three.js,ocean" data-tech="Three.js,GLSL,WebGL" data-url="/unknown/">
+                                <span class="cyber-index">09</span>
+                                <span class="cyber-title">Unknown</span>
+                                <span class="cyber-meta">Three.js ocean study</span>
+                            </button>
+                            <button type="button" class="cyber-project-link" data-title="Full Archive" data-meta="Open every build file" data-desc="Games, AI systems, music, media, and tools — collected in one place." data-icon="◇" data-tags="archive,projects,lab" data-tech="Ideas,Builds,Links" data-url="projects.html">
+                                <span class="cyber-index">10</span>
+                                <span class="cyber-title">Full Archive</span>
+                                <span class="cyber-meta">Open every build file</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="cyber-card-stage" aria-live="polite">
+                        <div class="cyber-card-empty">
+                            <span>select_project</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-section">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number">LIVE</span>
+                        <span class="stat-label">Public Lab</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">Try-Now Tools</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Builder Mode</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Human Built</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <div class="container">
+
+                <!-- Batho's Tools — subtle, fits the aesthetic -->
+                <div class="reveal-on-scroll" style="text-align:center; margin-bottom: 3rem;">
+                    <a href="agent-tools.html" style="display:inline-block; opacity:0.72; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.72'">
+                        <img src="/images/bathos-button.png" alt="Batho's Tools — AI Hardware Store" style="width:100%; max-width:320px; height:auto; border-radius:8px; filter: brightness(1) saturate(1);">
+                    </a>
+                </div>
+
+
+
+                <div class="section-header reveal-on-scroll">
+                    <h2>Featured Projects</h2>
+                    <a href="projects.html" class="view-all">View all →</a>
+                </div>
+                
+                <div class="editorial-grid">
+
+                    <!-- ══ ROW A: Orion's Barrel + Chifftown ══ -->
+                    <div class="editorial-row-a reveal-on-scroll">
+
+                        <a href="https://orionsbarrel.com" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/projects/orions-barrel.png" alt="Orion's Barrel">
+                                </div>
+                                <div class="card-content">
+                                    <h3>Orion's Barrel</h3>
+                                    <p>Social sitcom set in a space bar. 90s clips, characters Mary/Carl/Walter, wormhole gag.</p>
+                                    <div class="tags">
+                                        <span class="tag">media</span>
+                                        <span class="tag">writing</span>
+                                        <span class="tag">AI video</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>CapCut</span>
+                                        <span>Veo</span>
+                                        <span>LLM</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="https://chifftown.com" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/projects/chifftown.png" alt="Chifftown">
+                                </div>
+                                <div class="card-content">
+                                    <h3>Chifftown / Chifly</h3>
+                                    <p>Virtual social center: webcam chat, virtual pubs, nightclubs, arcades.</p>
+                                    <div class="tags">
+                                        <span class="tag">product</span>
+                                        <span class="tag">social</span>
+                                        <span class="tag">webRTC</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>WebRTC</span>
+                                        <span>TURN</span>
+                                        <span>Next.js</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-a -->
+
+                    <!-- ══ ROW B: Good News 24 card + parallax image ══ -->
+                    <div class="editorial-row-b reveal-on-scroll">
+
+                        <a href="https://goodnews-24.com" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/projects/goodnews24.png" alt="Good News 24">
+                                </div>
+                                <div class="card-content">
+                                    <h3>Good News 24</h3>
+                                    <p>Positive news platform with a freshness-focused publishing pipeline, readable story pages, RSS, and a safer owned-audience loop ready for review.</p>
+                                    <div class="tags">
+                                        <span class="tag">agent</span>
+                                        <span class="tag">media</span>
+                                        <span class="tag">automation</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>AI Agents</span>
+                                        <span>Node.js</span>
+                                        <span>SEO</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <div class="parallax-panel" style="background-image: url('images/projects/project-goodnews-bg.jpg');"></div>
+
+                    </div><!-- /row-b -->
+
+                    <!-- ══ ROW A: QuarryPro + Robotique ══ -->
+                    <div class="editorial-row-a reveal-on-scroll">
+
+                        <a href="https://yaanbatho.com/quarry-pro/" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/quarry-pro-card.png" alt="QuarryPro">
+                                </div>
+                                <div class="card-content">
+                                    <span class="tag" style="background: var(--accent-red); color: white; margin-bottom: 8px; display: inline-block;">LIVE</span>
+                                    <h3>QuarryPro</h3>
+                                    <p>Pre-alpha quarry simulator and operations prototype: 3D site maps, haul routes, production pressure, and game-first experiments grounded in real quarry work.</p>
+                                    <div class="tags">
+                                        <span class="tag">product</span>
+                                        <span class="tag">automation</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>Three.js</span>
+                                        <span>Node.js</span>
+                                        <span>SQLite</span>
+                                        <span>Express</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="https://yaanbatho.com/robotique/" target="_blank" rel="noopener noreferrer" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image">
+                                    <img loading="lazy" src="images/logo-mascot.jpg" alt="ROBOTIQUE — 2045" style="object-fit: contain; background: #000; padding: 12px;">
+                                </div>
+                                <div class="card-content">
+                                    <span class="tag" style="background: #cc0000; color: white; margin-bottom: 8px; display: inline-block;">IN DEVELOPMENT</span>
+                                    <h3>ROBOTIQUE — 2045</h3>
+                                    <p>You wake up in 2045 with nothing. Open-world cyberpunk RPG grounded in real futurism. Find your way home from a world you don't recognise.</p>
+                                    <div class="tags">
+                                        <span class="tag">game</span>
+                                        <span class="tag">RPG</span>
+                                        <span class="tag">sci-fi</span>
+                                        <span class="tag">2045</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>Phaser.js</span>
+                                        <span>JavaScript</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-a -->
+
+                    <!-- ══ ROW B: Burbz card ══ -->
+                    <div class="editorial-row-b reveal-on-scroll">
+
+                        <a href="/burbz/" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image" style="background: linear-gradient(135deg, #0a0a12 0%, #1a1a2e 50%, #e63946 100%); display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                                    <span style="font-size: 4rem; filter: drop-shadow(0 0 20px rgba(230,57,70,0.5));">&#x1F426;</span>
+                                </div>
+                                <div class="card-content">
+                                    <span class="tag" style="background: var(--accent-red); color: white; margin-bottom: 8px; display: inline-block;">NEW</span>
+                                    <h3>BURBZ</h3>
+                                    <p>Turn birds you hear or photograph into manga fighter companions, build a Birdex, and treat early recognition as playful field-guide clues while the game improves.</p>
+                                    <div class="tags">
+                                        <span class="tag">game</span>
+                                        <span class="tag">AI</span>
+                                        <span class="tag">nature</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>BirdNET</span>
+                                        <span>JavaScript</span>
+                                        <span>Web Audio</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <div class="parallax-panel" style="background: linear-gradient(135deg, #e63946 0%, #4cc9f0 50%, #f4d03f 100%);"></div>
+
+                    </div><!-- /row-b burbz -->
+
+                    <!-- ══ ROW A: Nomad travel tools cards ══ -->
+                    <div class="editorial-row-a reveal-on-scroll">
+
+                        <a href="/nomad-trip-planner-dashboard.html" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image" style="background: linear-gradient(135deg, #0D0D0D 0%, #1a3a2a 30%, #E87B35 80%, #D4A574 100%); display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                                    <span style="font-size: 4rem; filter: drop-shadow(0 0 20px rgba(232,123,53,0.5));">&#x1F9ED;</span>
+                                </div>
+                                <div class="card-content">
+                                    <span class="tag" style="background: var(--accent-red); color: white; margin-bottom: 8px; display: inline-block;">NEW</span>
+                                    <h3>NOMAD TRIP PLANNER</h3>
+                                    <p>Pick an anchor, choose a drive-time budget, and get useful nearby park-up ideas with weather, daylight, and one-tap Maps links.</p>
+                                    <div class="tags">
+                                        <span class="tag">travel tools</span>
+                                        <span class="tag">parking</span>
+                                        <span class="tag">maps</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>Park-ups</span>
+                                        <span>Weather</span>
+                                        <span>Maps</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="/nomad.html" class="card-link">
+                            <div class="card tilt-card">
+                                <div class="card-image" style="background: linear-gradient(135deg, #4A7C8F 0%, #1a3a2a 50%, #2C1810 100%); display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                                    <span style="font-size: 3.5rem; filter: drop-shadow(0 0 20px rgba(74,124,143,0.5));">&#x1F3D5;&#xFE0F;</span>
+                                </div>
+                                <div class="card-content">
+                                    <h3>NOMAD TOOLKIT</h3>
+                                    <p>A simple collection of travel helpers: trip planning, pub parking filters, and personal park-up notes without the faff.</p>
+                                    <div class="tags">
+                                        <span class="tag">toolkit</span>
+                                        <span class="tag">travel</span>
+                                    </div>
+                                    <div class="tech">
+                                        <span>Trip Planner</span>
+                                        <span>Pub Guide</span>
+                                        <span>Roll Call</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-a nomad tools -->
+
+                    <!-- ══ ROW B flipped: parallax image LEFT + CTA block RIGHT ══ -->
+                    <div class="editorial-row-b flip reveal-on-scroll">
+
+                        <div class="parallax-panel" style="background-image: url('images/projects/project-quarrypro-bg.jpg');"></div>
+
+                        <a href="projects.html" class="editorial-cta-panel">
+                            <div>
+                                <h3>Explore the full project archive →</h3>
+                                <p>Games, AI systems, music, media, and tools — collected in one place.</p>
+                                <span class="btn btn-primary" style="pointer-events:none;">View All Projects</span>
+                            </div>
+                        </a>
+
+                    </div><!-- /row-b flip -->
+
+                </div><!-- /editorial-grid -->
+            </div>
+        </section>
+
+        <section class="tech-stack-section">
+            <div class="container">
+                <h2 class="reveal-on-scroll animated-gradient-text">Tech Stack</h2>
+                <p class="reveal-on-scroll">Tools and technologies I build with every day</p>
+                <div class="tech-stack-grid">
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🤖</span>
+                        <span>AI / LLMs</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">⚛️</span>
+                        <span>React</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🟢</span>
+                        <span>Node.js</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🐍</span>
+                        <span>Python</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🎮</span>
+                        <span>Unreal Engine</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🎬</span>
+                        <span>Veo / AI Video</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">📡</span>
+                        <span>WebRTC</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🛒</span>
+                        <span>Shopify</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🔗</span>
+                        <span>REST APIs</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">⚡</span>
+                        <span>Next.js</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🎵</span>
+                        <span>Sound Design</span>
+                    </div>
+                    <div class="tech-stack-item reveal-on-scroll">
+                        <span class="tech-stack-icon">🧠</span>
+                        <span>AI Agents</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <section>
+            <div class="container">
+                <div class="cta-box reveal-on-scroll">
+                    <h2 class="animated-gradient-text">Let's Build Together</h2>
+                    <p>Need a scrappy AI tool, static funnel, weird prototype, game loop, or automation built quickly? Send the brief and I'll help turn it into something testable.</p>
+                    <a href="contact.html" class="btn btn-primary magnetic">Send a Build Brief <span class="bounce-arrow">→</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>Yaan Batho</h3>
+                    <p>Public product lab · AI, games, tools, music</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="now.html">Now</a>
+                    <a href="uses.html">Uses</a>
+                    <a href="contact.html">Contact</a>
+                <a href="upload.html">Upload</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect</h3>
+                    <a href="https://twitter.com/yaanbatho" target="_blank">Twitter</a>
+                    <a href="https://github.com/yaanbatho" target="_blank">GitHub</a>
+                    <a href="https://linkedin.com/in/yaanbatho" target="_blank">LinkedIn</a>
+                    <a href="mailto:hello@yaanbatho.com">Email</a>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>© 2026 Yaan Batho. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    (() => {
+        const deck = document.querySelector('.cyber-project-menu');
+        if (!deck) return;
+
+        const stage = deck.querySelector('.cyber-card-stage');
+        const buttons = Array.from(deck.querySelectorAll('.cyber-project-link'));
+
+        const chipList = (value, className) => (value || '')
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean)
+            .map(item => `<span>${item}</span>`)
+            .join('');
+
+        const renderPreview = (button) => {
+            buttons.forEach(item => item.classList.toggle('is-active', item === button));
+            const image = button.dataset.image
+                ? `<img src="${button.dataset.image}" alt="${button.dataset.title}">`
+                : `<span class="preview-icon">${button.dataset.icon || '◇'}</span>`;
+
+            stage.innerHTML = `
+                <article class="cyber-preview-card" aria-label="${button.dataset.title} preview">
+                    <div class="preview-image">${image}</div>
+                    <div class="cyber-preview-body">
+                        <div class="cyber-preview-topline">
+                            <span class="cyber-preview-kicker">${button.dataset.meta || 'project'}</span>
+                            <button type="button" class="cyber-preview-close" aria-label="Close project preview">×</button>
+                        </div>
+                        <h3>${button.dataset.title}</h3>
+                        <p>${button.dataset.desc || ''}</p>
+                        <div class="cyber-preview-tags">${chipList(button.dataset.tags)}</div>
+                        <div class="cyber-preview-tech">${chipList(button.dataset.tech)}</div>
+                        <a class="cyber-preview-open" href="${button.dataset.url || 'projects.html'}">Open project →</a>
+                    </div>
+                </article>`;
+        };
+
+        deck.addEventListener('click', (event) => {
+            const picker = event.target.closest('.cyber-project-link');
+            if (picker) {
+                event.preventDefault();
+                renderPreview(picker);
+                return;
+            }
+
+            if (event.target.closest('.cyber-preview-close')) {
+                const card = stage.querySelector('.cyber-preview-card');
+                buttons.forEach(item => item.classList.remove('is-active'));
+                if (card) {
+                    card.classList.add('is-closing');
+                    window.setTimeout(() => {
+                        stage.innerHTML = '<div class="cyber-card-empty"><span>select_project</span></div>';
+                    }, 220);
+                }
+            }
+        });
+    })();
+    </script>
+    <script src="js/main.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/platform-nav-v19.js"></script>
+    <script src="js/mascot-v19.js"></script>
+</body>
+</html>

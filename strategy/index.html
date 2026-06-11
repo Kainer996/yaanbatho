@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realms of Dominion — Grand Strategy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1014;--panel:#241a1e;--border:#4a3528;--gold:#d4a54a;--gold-dim:#8a6a2a;--text:#e8d8c8;--text-dim:#9a8a7a;--red:#c44;--green:#4a4;--blue:#48a;--purple:#8a4a8a}
+body{background:var(--bg);color:var(--text);font-family:'Cinzel',serif;overflow:hidden;height:100vh;display:flex;flex-direction:column;user-select:none}
+#top-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:linear-gradient(180deg,#2a1e22,#1a1014);border-bottom:2px solid var(--border);height:52px;flex-shrink:0}
+.faction-name{font-family:'Cinzel Decorative',serif;color:var(--gold);font-size:18px;text-shadow:0 0 10px rgba(212,165,74,0.3)}
+.resources{display:flex;gap:20px;font-size:13px}
+.res-item{display:flex;align-items:center;gap:4px}
+.res-icon{font-size:16px}
+.res-val{color:var(--gold);font-weight:700}
+.res-change{font-size:11px;margin-left:2px}
+.res-pos{color:var(--green)}.res-neg{color:var(--red)}
+.turn-info{font-size:14px;color:var(--text-dim)}
+#end-turn{background:linear-gradient(180deg,#6a4a2a,#4a3218);border:2px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;font-size:14px;padding:6px 20px;cursor:pointer;border-radius:4px;transition:all .2s}
+#end-turn:hover{background:linear-gradient(180deg,#8a6a3a,#6a4a28);box-shadow:0 0 15px rgba(212,165,74,0.4)}
+#main{display:flex;flex:1;overflow:hidden}
+#map-container{flex:1;position:relative;background:#0a0608;overflow:hidden}
+#map-canvas{cursor:pointer}
+#minimap{position:absolute;bottom:10px;left:10px;border:2px solid var(--border);border-radius:4px;background:rgba(10,6,8,0.9)}
+#sidebar{width:320px;background:var(--panel);border-left:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}
+.tab-btn{flex:1;padding:8px;text-align:center;font-size:11px;cursor:pointer;background:transparent;color:var(--text-dim);border:none;font-family:'Cinzel',serif;transition:all .2s}
+.tab-btn.active{color:var(--gold);background:rgba(212,165,74,0.1);border-bottom:2px solid var(--gold)}
+.tab-btn:hover{color:var(--gold)}
+.sidebar-content{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.section-title{font-size:13px;color:var(--gold);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.section-title:first-child{margin-top:0}
+.prov-name{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);margin-bottom:4px}
+.prov-terrain{font-size:12px;color:var(--text-dim);margin-bottom:8px}
+.prov-stat{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+.action-btn{width:100%;padding:8px;margin:3px 0;background:linear-gradient(180deg,#3a2a1e,#2a1a12);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;border-radius:3px;transition:all .2s}
+.action-btn:hover:not(:disabled){background:linear-gradient(180deg,#5a3a2a,#3a2a1e);border-color:var(--gold)}
+.action-btn:disabled{opacity:0.4;cursor:not-allowed}
+.action-btn.war{border-color:var(--red);color:#e88}
+.action-btn.peace{border-color:var(--green);color:#8e8}
+.action-btn.ally{border-color:var(--blue);color:#8ae}
+.diplo-row{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid rgba(74,53,40,0.3);font-size:12px}
+.diplo-faction{display:flex;align-items:center;gap:6px}
+.diplo-color{width:12px;height:12px;border-radius:2px;border:1px solid rgba(255,255,255,0.2)}
+.diplo-rel{font-weight:700}
+.rel-pos{color:var(--green)}.rel-neg{color:var(--red)}.rel-neu{color:var(--text-dim)}
+.diplo-status{font-size:10px;padding:2px 6px;border-radius:8px}
+.status-ally{background:rgba(68,136,170,0.3);color:#8ae}
+.status-war{background:rgba(204,68,68,0.3);color:#e88}
+.status-peace{background:rgba(100,100,100,0.3);color:var(--text-dim)}
+.tech-tree{margin:4px 0}
+.tech-branch{margin:8px 0}
+.tech-branch-name{font-size:12px;color:var(--gold-dim);margin-bottom:4px}
+.tech-levels{display:flex;gap:3px}
+.tech-level{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid var(--border);border-radius:3px;background:rgba(0,0,0,0.3)}
+.tech-level.researched{background:rgba(212,165,74,0.3);border-color:var(--gold);color:var(--gold)}
+.tech-level.available{background:rgba(74,138,74,0.2);border-color:var(--green);cursor:pointer}
+.tech-level.available:hover{background:rgba(74,138,74,0.4)}
+#event-log{height:80px;border-top:2px solid var(--border);background:rgba(26,16,20,0.95);overflow-y:auto;padding:6px 12px;font-size:11px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;flex-shrink:0}
+.log-entry{padding:2px 0;border-bottom:1px solid rgba(74,53,40,0.2)}
+.log-turn{color:var(--gold-dim);margin-right:6px}
+.log-combat{color:var(--red)}.log-diplo{color:var(--blue)}.log-event{color:var(--purple)}.log-eco{color:var(--green)}
+#overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+#overlay.show{display:flex}
+.modal{background:var(--panel);border:2px solid var(--gold);border-radius:8px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;text-align:center}
+.modal h2{font-family:'Cinzel Decorative',serif;color:var(--gold);margin-bottom:16px;font-size:22px}
+.modal p{font-size:13px;margin:8px 0;line-height:1.5}
+.modal-btn{display:inline-block;padding:8px 24px;margin:8px;background:linear-gradient(180deg,#5a3a2a,#3a2a1e);border:1px solid var(--gold);color:var(--gold);font-family:'Cinzel',serif;cursor:pointer;border-radius:4px;font-size:13px}
+.modal-btn:hover{background:linear-gradient(180deg,#7a5a3a,#5a3a2a)}
+.faction-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.faction-option{padding:10px;border:2px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;text-align:left}
+.faction-option:hover{border-color:var(--gold);transform:scale(1.02)}
+.faction-option .fname{font-size:14px;font-weight:700;margin-bottom:2px}
+.faction-option .fpersonality{font-size:10px;color:var(--text-dim)}
+.battle-report{text-align:left;font-size:12px}
+.battle-side{margin:8px 0}
+.battle-side .side-name{font-weight:700;font-size:14px}
+.battle-bar{height:8px;border-radius:4px;margin:4px 0;overflow:hidden;background:rgba(0,0,0,0.3)}
+.battle-fill{height:100%;border-radius:4px;transition:width 1s}
+#menu-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center}
+#menu-overlay.show{display:flex}
+.menu-panel{background:var(--panel);border:2px solid var(--gold);border-radius:8px;padding:24px;width:300px;text-align:center}
+.menu-panel h2{color:var(--gold);margin-bottom:16px}
+.menu-btn{display:block;width:100%;padding:10px;margin:6px 0;background:linear-gradient(180deg,#3a2a1e,#2a1a12);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;cursor:pointer;border-radius:4px;font-size:13px}
+.menu-btn:hover{border-color:var(--gold);background:linear-gradient(180deg,#5a3a2a,#3a2a1e)}
+.army-move-hint{position:absolute;padding:4px 8px;background:rgba(26,16,20,0.95);border:1px solid var(--gold);border-radius:4px;font-size:11px;color:var(--gold);pointer-events:none;display:none}
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <div class="faction-name" id="faction-name">Realms of Dominion</div>
+  <div class="resources" id="resources"></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="turn-info" id="turn-info">Spring, Year 1</div>
+    <button id="menu-btn" style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;border-radius:3px">☰ Menu</button>
+    <button id="end-turn">End Turn ⟩</button>
+  </div>
+</div>
+<div id="main">
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+    <canvas id="minimap" width="180" height="140"></canvas>
+    <div class="army-move-hint" id="move-hint"></div>
+  </div>
+  <div id="sidebar">
+    <div class="sidebar-tabs">
+      <button class="tab-btn active" data-tab="province">Province</button>
+      <button class="tab-btn" data-tab="diplomacy">Diplomacy</button>
+      <button class="tab-btn" data-tab="research">Research</button>
+    </div>
+    <div class="sidebar-content" id="sidebar-content"></div>
+  </div>
+</div>
+<div id="event-log"></div>
+<div id="overlay"><div class="modal" id="modal"></div></div>
+<div id="menu-overlay"><div class="menu-panel" id="menu-panel"></div></div>
+
+<script>
+// ===================== GAME ENGINE =====================
+const SEASONS = ['Spring','Summer','Autumn','Winter'];
+const TERRAINS = [
+  {name:'Plains',color:'#5a7a3a',defense:0,gold:2,food:4,manpower:3,tech:0},
+  {name:'Forest',color:'#2a5a2a',defense:2,gold:1,food:2,manpower:2,tech:1},
+  {name:'Mountains',color:'#6a5a4a',defense:4,gold:3,food:0,manpower:1,tech:1},
+  {name:'Coast',color:'#3a6a7a',defense:1,gold:4,food:3,manpower:2,tech:0},
+  {name:'Desert',color:'#9a8a5a',defense:0,gold:1,food:1,manpower:1,tech:0},
+  {name:'Hills',color:'#7a6a4a',defense:2,gold:2,food:2,manpower:2,tech:1},
+  {name:'Farmland',color:'#6a8a3a',defense:0,gold:2,food:6,manpower:4,tech:0},
+  {name:'Capital',color:'#5a5a6a',defense:1,gold:4,food:3,manpower:4,tech:2}
+];
+const BUILDINGS = [
+  {name:'Farm',icon:'🌾',cost:30,effect:'food',bonus:3,desc:'+3 Food'},
+  {name:'Fort',icon:'🏰',cost:50,effect:'defense',bonus:3,desc:'+3 Defense'},
+  {name:'Market',icon:'🏪',cost:40,effect:'gold',bonus:3,desc:'+3 Gold'},
+  {name:'Library',icon:'📚',cost:45,effect:'tech',bonus:2,desc:'+2 Tech'}
+];
+const FACTION_DATA = [
+  {name:'House Valdris',color:'#c44444',personality:'aggressive',desc:'Warlike raiders from the north'},
+  {name:'Kingdom of Aurelia',color:'#4488cc',personality:'diplomatic',desc:'Masters of trade and alliance'},
+  {name:'The Iron March',color:'#888888',personality:'aggressive',desc:'Disciplined military empire'},
+  {name:'Sylvan Reach',color:'#44aa44',personality:'balanced',desc:'Forest realm of ancient wisdom'},
+  {name:'Dawnspire Accord',color:'#cc8844',personality:'economic',desc:'Merchant princes of the coast'},
+  {name:'The Obsidian Throne',color:'#8844aa',personality:'aggressive',desc:'Dark sorcerers seeking dominion'},
+  {name:'Free Cities of Tarn',color:'#44aaaa',personality:'economic',desc:'Trading federation of free peoples'},
+  {name:'Order of the Flame',color:'#ccaa44',personality:'balanced',desc:'Holy knights defending the realm'}
+];
+const TECH_TREES = {
+  military:[
+    {name:'Iron Weapons',cost:20,bonus:{attack:1}},
+    {name:'Steel Armor',cost:35,bonus:{defense:1}},
+    {name:'Siege Engines',cost:50,bonus:{attack:2}},
+    {name:'War Tactics',cost:70,bonus:{attack:1,defense:1}},
+    {name:'Grand Army',cost:100,bonus:{attack:2,defense:2}}
+  ],
+  economic:[
+    {name:'Currency',cost:20,bonus:{gold:2}},
+    {name:'Crop Rotation',cost:30,bonus:{food:2}},
+    {name:'Trade Routes',cost:45,bonus:{gold:3}},
+    {name:'Banking',cost:65,bonus:{gold:4}},
+    {name:'Industrial Age',cost:90,bonus:{gold:5,food:3}}
+  ],
+  diplomatic:[
+    {name:'Envoys',cost:20,bonus:{relations:5}},
+    {name:'Royal Marriages',cost:35,bonus:{relations:10}},
+    {name:'Spy Network',cost:50,bonus:{intel:1}},
+    {name:'Vassal System',cost:70,bonus:{relations:15}},
+    {name:'Imperial Authority',cost:100,bonus:{relations:20}}
+  ]
+};
+const EVENTS = [
+  {name:'Bountiful Harvest',desc:'The fields overflow with grain!',type:'eco',effect:p=>{p.food=(p.food||0);return{food:15}}},
+  {name:'Plague',desc:'Disease spreads through the province.',type:'event',effect:p=>{return{manpower:-8}}},
+  {name:'Gold Rush',desc:'Prospectors discover precious metals!',type:'eco',effect:p=>{return{gold:20}}},
+  {name:'Rebellion',desc:'The people rise against their ruler!',type:'combat',effect:p=>{p.army=Math.max(0,(p.army||0)-3);return{army:-3}}},
+  {name:'Trade Boom',desc:'Merchants flock to our markets.',type:'eco',effect:p=>{return{gold:12}}},
+  {name:'Scholarly Discovery',desc:'Sages make a breakthrough!',type:'event',effect:p=>{return{tech:8}}},
+  {name:'Bandits',desc:'Brigands raid the countryside.',type:'combat',effect:p=>{return{gold:-8,food:-5}}},
+  {name:'Festival',desc:'The people celebrate! Morale soars.',type:'event',effect:p=>{return{manpower:5}}},
+  {name:'Earthquake',desc:'The earth trembles, buildings crack.',type:'event',effect:p=>{if(p.buildings.length>0){p.buildings.pop();return{building:-1}}return{}}},
+  {name:'Foreign Traders',desc:'Exotic merchants bring rare goods.',type:'eco',effect:p=>{return{gold:10,tech:3}}}
+];
+
+// ===================== MAP GENERATION =====================
+const HEX_SIZE = 38;
+const HEX_W = Math.sqrt(3)*HEX_SIZE;
+const HEX_H = 2*HEX_SIZE;
+const COLS = 10, ROWS = 5;
+
+function hexCorners(cx,cy,s){
+  const c=[];
+  for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);c.push([cx+s*Math.cos(a),cy+s*Math.sin(a)])}
+  return c;
+}
+function hexCenter(col,row){
+  const x = col*HEX_W + (row%2?HEX_W/2:0) + HEX_W;
+  const y = row*HEX_H*0.75 + HEX_H;
+  return [x,y];
+}
+function hexNeighbors(col,row){
+  const n=[];
+  const even=row%2===0;
+  const dirs=even?[[-1,-1],[0,-1],[-1,0],[1,0],[-1,1],[0,1]]:[[0,-1],[1,-1],[-1,0],[1,0],[0,1],[1,1]];
+  for(const[dc,dr]of dirs){
+    const nc=col+dc,nr=row+dr;
+    if(nc>=0&&nc<COLS&&nr>=0&&nr<ROWS)n.push([nc,nr]);
+  }
+  return n;
+}
+
+function generateMap(){
+  const provinces=[];
+  let id=0;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const[cx,cy]=hexCenter(c,r);
+      const ti = Math.floor(Math.random()*TERRAINS.length);
+      provinces.push({
+        id:id++,col:c,row:r,cx,cy,
+        terrain:TERRAINS[ti],terrainIdx:ti,
+        owner:-1,army:0,buildings:[],
+        name:genProvName()
+      });
+    }
+  }
+  return provinces;
+}
+
+const PROV_NAMES_A=['North','South','East','West','Great','Old','New','High','Low','Dark','Iron','Golden','Silver','White','Black','Red','Green','Blue','Storm','Sun','Moon','Star','Frost','Fire','Shadow'];
+const PROV_NAMES_B=['shire','vale','march','hold','fell','moor','wood','field','ford','gate','haven','reach','keep','helm','guard','watch','land','dale','ridge','brook','crest','peak','stone','tower','hollow'];
+function genProvName(){return PROV_NAMES_A[Math.floor(Math.random()*PROV_NAMES_A.length)]+PROV_NAMES_B[Math.floor(Math.random()*PROV_NAMES_B.length)]}
+
+// ===================== GAME STATE =====================
+let G = null; // game state
+let selectedProvince = null;
+let selectedArmy = null;
+let currentTab = 'province';
+let mapOffsetX = 0, mapOffsetY = 0;
+let mapDragging = false, dragStartX = 0, dragStartY = 0, dragOX = 0, dragOY = 0;
+let hoveredProvince = null;
+
+function newGame(factionIdx){
+  const provinces = generateMap();
+  const factions = FACTION_DATA.map((fd,i)=>({
+    ...fd,id:i,
+    gold:50,food:30,manpower:20,tech:0,
+    techResearched:{military:0,economic:0,diplomatic:0},
+    relations:{},
+    wars:new Set(),
+    allies:new Set(),
+    isPlayer:i===factionIdx,
+    alive:true
+  }));
+  // Init relations
+  for(let i=0;i<factions.length;i++){
+    for(let j=0;j<factions.length;j++){
+      if(i!==j)factions[i].relations[j]=0;
+    }
+  }
+  // Assign starting provinces
+  const starts = [];
+  const used = new Set();
+  for(let i=0;i<factions.length;i++){
+    let attempts=0,sc,sr;
+    do{
+      sc=Math.floor(Math.random()*COLS);
+      sr=Math.floor(Math.random()*ROWS);
+      attempts++;
+    }while(used.has(sr*COLS+sc)&&attempts<100);
+    used.add(sr*COLS+sc);
+    starts.push([sc,sr]);
+    const p=provinces[sr*COLS+sc];
+    p.owner=i;p.army=5;
+    // Give neighbors
+    const nb=hexNeighbors(sc,sr);
+    let given=0;
+    for(const[nc,nr]of nb){
+      if(given>=2)break;
+      const np=provinces[nr*COLS+nc];
+      if(np.owner===-1){np.owner=i;np.army=2;given++;used.add(nr*COLS+nc)}
+    }
+  }
+  G={
+    provinces,factions,
+    turn:0,season:0,year:1,
+    playerFaction:factionIdx,
+    log:[],
+    gameOver:false,
+    winner:-1
+  };
+  addLog('The realm stirs. A new age begins.','event');
+  return G;
+}
+
+function addLog(msg,type='event'){
+  const s=SEASONS[G.season];
+  G.log.unshift({msg,type,turn:`${s} Y${G.year}`});
+  renderLog();
+}
+
+// ===================== RESOURCE CALCULATION =====================
+function calcIncome(factionId){
+  const f=G.factions[factionId];
+  let gold=0,food=0,manpower=0,tech=0;
+  for(const p of G.provinces){
+    if(p.owner===factionId){
+      gold+=p.terrain.gold;food+=p.terrain.food;manpower+=p.terrain.manpower;tech+=p.terrain.tech;
+      for(const b of p.buildings){
+        const bd=BUILDINGS.find(x=>x.name===b);
+        if(bd){
+          if(bd.effect==='gold')gold+=bd.bonus;
+          if(bd.effect==='food')food+=bd.bonus;
+          if(bd.effect==='tech')tech+=bd.bonus;
+        }
+      }
+    }
+  }
+  // Tech bonuses
+  const tr=f.techResearched;
+  for(let i=0;i<tr.economic;i++){
+    const t=TECH_TREES.economic[i];
+    if(t.bonus.gold)gold+=t.bonus.gold;
+    if(t.bonus.food)food+=t.bonus.food;
+  }
+  // Army upkeep
+  let armyCost=0;
+  for(const p of G.provinces){if(p.owner===factionId)armyCost+=p.army}
+  gold-=Math.floor(armyCost*0.5);
+  return{gold,food,manpower,tech,armyCost};
+}
+
+// ===================== COMBAT =====================
+function resolveBattle(attacker,defender,aProv,dProv){
+  const af=G.factions[attacker],df=G.factions[defender];
+  let aStr=aProv.armyMoving||0;
+  let dStr=dProv.army;
+  // Tech bonuses
+  let aBonus=0,dBonus=0;
+  for(let i=0;i<af.techResearched.military;i++){
+    const t=TECH_TREES.military[i];
+    if(t.bonus.attack)aBonus+=t.bonus.attack;
+  }
+  for(let i=0;i<df.techResearched.military;i++){
+    const t=TECH_TREES.military[i];
+    if(t.bonus.defense)dBonus+=t.bonus.defense;
+  }
+  // Terrain defense
+  dBonus+=dProv.terrain.defense;
+  // Fort bonus
+  if(dProv.buildings.includes('Fort'))dBonus+=3;
+  
+  const aPower=aStr*(1+aBonus*0.15)+Math.random()*3;
+  const dPower=dStr*(1+dBonus*0.15)+Math.random()*3;
+  
+  const aLoss=Math.max(1,Math.round(dPower*0.4+Math.random()*2));
+  const dLoss=Math.max(1,Math.round(aPower*0.4+Math.random()*2));
+  
+  const aRemain=Math.max(0,aStr-aLoss);
+  const dRemain=Math.max(0,dStr-dLoss);
+  
+  const result={
+    attacker:af.name,defender:df.name,
+    attackerColor:af.color,defenderColor:df.color,
+    aStart:aStr,dStart:dStr,
+    aLoss,dLoss,aRemain,dRemain,
+    province:dProv.name,
+    won:aRemain>dRemain
+  };
+  
+  if(result.won){
+    dProv.owner=attacker;
+    dProv.army=aRemain;
+  }else{
+    dProv.army=dRemain;
+  }
+  
+  addLog(`⚔️ Battle at ${dProv.name}: ${af.name} vs ${df.name} — ${result.won?af.name:df.name} wins!`,'combat');
+  return result;
+}
+
+// ===================== DIPLOMACY =====================
+function declareWar(a,b){
+  G.factions[a].wars.add(b);G.factions[b].wars.add(a);
+  G.factions[a].allies.delete(b);G.factions[b].allies.delete(a);
+  G.factions[a].relations[b]=Math.max(-100,G.factions[a].relations[b]-30);
+  G.factions[b].relations[a]=Math.max(-100,G.factions[b].relations[a]-30);
+  addLog(`⚔️ ${G.factions[a].name} declares WAR on ${G.factions[b].name}!`,'combat');
+}
+function makePeace(a,b){
+  G.factions[a].wars.delete(b);G.factions[b].wars.delete(a);
+  G.factions[a].relations[b]+=10;G.factions[b].relations[a]+=10;
+  addLog(`🕊️ ${G.factions[a].name} and ${G.factions[b].name} make peace.`,'diplo');
+}
+function formAlliance(a,b){
+  G.factions[a].allies.add(b);G.factions[b].allies.add(a);
+  G.factions[a].relations[b]+=20;G.factions[b].relations[a]+=20;
+  addLog(`🤝 ${G.factions[a].name} and ${G.factions[b].name} form an alliance!`,'diplo');
+}
+
+// ===================== AI TURN =====================
+function aiTurn(fId){
+  const f=G.factions[fId];
+  if(!f.alive)return;
+  const income=calcIncome(fId);
+  f.gold+=income.gold;f.food+=income.food;f.manpower+=income.manpower;f.tech+=income.tech;
+  f.gold=Math.max(0,f.gold);
+  
+  const myProvs=G.provinces.filter(p=>p.owner===fId);
+  if(myProvs.length===0){f.alive=false;return}
+  
+  // Build
+  if(f.gold>=30){
+    const buildable=myProvs.filter(p=>p.buildings.length<3);
+    if(buildable.length>0){
+      const p=buildable[Math.floor(Math.random()*buildable.length)];
+      const affordable=BUILDINGS.filter(b=>b.cost<=f.gold&&!p.buildings.includes(b.name));
+      if(affordable.length>0){
+        const b=affordable[Math.floor(Math.random()*affordable.length)];
+        p.buildings.push(b.name);f.gold-=b.cost;
+      }
+    }
+  }
+  // Recruit
+  if(f.gold>=15&&f.manpower>=5){
+    const p=myProvs[Math.floor(Math.random()*myProvs.length)];
+    const recruit=Math.min(3,Math.floor(f.gold/15),Math.floor(f.manpower/5));
+    if(recruit>0){p.army+=recruit;f.gold-=recruit*15;f.manpower-=recruit*5}
+  }
+  // Research
+  for(const tree of['military','economic','diplomatic']){
+    const lvl=f.techResearched[tree];
+    if(lvl<5){
+      const t=TECH_TREES[tree][lvl];
+      if(f.tech>=t.cost){f.tech-=t.cost;f.techResearched[tree]++;addLog(`📖 ${f.name} researches ${t.name}.`,'eco')}
+    }
+  }
+  // Diplomacy AI
+  for(let j=0;j<G.factions.length;j++){
+    if(j===fId||!G.factions[j].alive)continue;
+    const rel=f.relations[j]||0;
+    if(f.personality==='aggressive'&&rel<-10&&!f.wars.has(j)&&Math.random()<0.15){
+      declareWar(fId,j);
+    }else if(f.personality==='diplomatic'&&rel>20&&!f.allies.has(j)&&!f.wars.has(j)&&Math.random()<0.2){
+      formAlliance(fId,j);
+    }
+    // Drift relations
+    if(f.wars.has(j)){f.relations[j]=Math.max(-100,f.relations[j]-2)}
+    else if(f.allies.has(j)){f.relations[j]=Math.min(100,f.relations[j]+1)}
+    else{f.relations[j]+=(Math.random()<0.5?1:-1)}
+  }
+  // Military: move/attack
+  if(f.wars.size>0){
+    const enemies=[...f.wars];
+    for(const p of myProvs){
+      if(p.army>=4){
+        const nb=hexNeighbors(p.col,p.row);
+        const targets=nb.map(([c,r])=>G.provinces[r*COLS+c]).filter(np=>enemies.includes(np.owner));
+        if(targets.length>0&&Math.random()<0.5){
+          const target=targets[Math.floor(Math.random()*targets.length)];
+          const sendArmy=Math.floor(p.army*0.6);
+          p.army-=sendArmy;
+          target.armyMoving=sendArmy;
+          const result=resolveBattle(fId,target.owner,{armyMoving:sendArmy},target);
+          delete target.armyMoving;
+          if(result.won)showBattleReport(result);
+        }
+      }
+    }
+  }
+  // Peace if losing badly
+  for(const enemy of[...f.wars]){
+    const myCount=G.provinces.filter(p=>p.owner===fId).length;
+    const theirCount=G.provinces.filter(p=>p.owner===enemy).length;
+    if(myCount<theirCount*0.5&&Math.random()<0.3)makePeace(fId,enemy);
+  }
+}
+
+// ===================== END TURN =====================
+function endTurn(){
+  if(G.gameOver)return;
+  const pf=G.factions[G.playerFaction];
+  const income=calcIncome(G.playerFaction);
+  pf.gold+=income.gold;pf.food+=income.food;pf.manpower+=income.manpower;pf.tech+=income.tech;
+  pf.gold=Math.max(0,pf.gold);
+  
+  // AI turns
+  for(let i=0;i<G.factions.length;i++){
+    if(i!==G.playerFaction)aiTurn(i);
+  }
+  // Random event
+  if(Math.random()<0.4){
+    const playerProvs=G.provinces.filter(p=>p.owner===G.playerFaction);
+    if(playerProvs.length>0){
+      const ep=playerProvs[Math.floor(Math.random()*playerProvs.length)];
+      const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+      const result=ev.effect(ep);
+      if(result.gold)pf.gold+=result.gold;
+      if(result.food)pf.food+=result.food;
+      if(result.manpower)pf.manpower+=result.manpower;
+      if(result.tech)pf.tech+=result.tech;
+      pf.gold=Math.max(0,pf.gold);pf.food=Math.max(0,pf.food);pf.manpower=Math.max(0,pf.manpower);
+      addLog(`📜 ${ev.name} in ${ep.name}: ${ev.desc}`,'event');
+      showEvent(ev,ep,result);
+    }
+  }
+  // Advance turn
+  G.season++;
+  if(G.season>=4){G.season=0;G.year++}
+  G.turn++;
+  // Food->manpower conversion
+  if(pf.food>=10){pf.manpower+=2;pf.food-=5}
+  // Check victory
+  checkVictory();
+  selectedProvince=null;selectedArmy=null;
+  renderAll();
+}
+
+function checkVictory(){
+  const total=G.provinces.length;
+  for(const f of G.factions){
+    if(!f.alive)continue;
+    const count=G.provinces.filter(p=>p.owner===f.id).length;
+    if(count===0){f.alive=false;addLog(`💀 ${f.name} has been destroyed!`,'combat');continue}
+    if(count>=total*0.6){
+      G.gameOver=true;G.winner=f.id;
+      showVictory(f,'domination');return;
+    }
+    if(f.techResearched.military>=5&&f.techResearched.economic>=5&&f.techResearched.diplomatic>=5){
+      G.gameOver=true;G.winner=f.id;
+      showVictory(f,'technology');return;
+    }
+  }
+}
+
+// ===================== RENDERING =====================
+const canvas=document.getElementById('map-canvas');
+const ctx=canvas.getContext('2d');
+const miniCanvas=document.getElementById('minimap');
+const miniCtx=miniCanvas.getContext('2d');
+
+function resizeCanvas(){
+  const cont=document.getElementById('map-container');
+  canvas.width=cont.clientWidth;canvas.height=cont.clientHeight;
+  renderMap();renderMinimap();
+}
+
+function renderMap(){
+  if(!G)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(mapOffsetX,mapOffsetY);
+  
+  for(const p of G.provinces){
+    const corners=hexCorners(p.cx,p.cy,HEX_SIZE);
+    // Fill
+    ctx.beginPath();
+    corners.forEach(([x,y],i)=>{i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.closePath();
+    
+    if(p.owner>=0){
+      const f=G.factions[p.owner];
+      ctx.fillStyle=f.color+'88';
+      ctx.fill();
+      // Terrain pattern overlay
+      ctx.fillStyle=p.terrain.color+'44';
+      ctx.fill();
+    }else{
+      ctx.fillStyle=p.terrain.color;
+      ctx.fill();
+    }
+    
+    // Hover
+    if(hoveredProvince===p.id){
+      ctx.fillStyle='rgba(212,165,74,0.15)';ctx.fill();
+      ctx.strokeStyle='#d4a54a';ctx.lineWidth=3;ctx.stroke();
+    }
+    // Selected
+    if(selectedProvince===p.id){
+      ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke();
+    }else if(selectedArmy!==null&&selectedArmy!==p.id){
+      // Show valid move targets
+      const sp=G.provinces[selectedArmy];
+      const nb=hexNeighbors(sp.col,sp.row);
+      if(nb.some(([c,r])=>r*COLS+c===p.id)){
+        ctx.strokeStyle='rgba(212,165,74,0.6)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+      }
+    }
+    // Border
+    ctx.strokeStyle=p.owner>=0?G.factions[p.owner].color+'aa':'#333';
+    ctx.lineWidth=1.5;ctx.stroke();
+    
+    // Province name
+    ctx.fillStyle='rgba(232,216,200,0.8)';ctx.font='9px Cinzel';ctx.textAlign='center';
+    ctx.fillText(p.name,p.cx,p.cy-12);
+    
+    // Army count
+    if(p.army>0){
+      ctx.fillStyle='#1a1014dd';
+      ctx.beginPath();ctx.arc(p.cx,p.cy+6,12,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle=p.owner>=0?G.factions[p.owner].color:'#666';
+      ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle='#e8d8c8';ctx.font='bold 11px Cinzel';
+      ctx.fillText('⚔'+p.army,p.cx,p.cy+10);
+    }
+    // Buildings
+    if(p.buildings.length>0){
+      const icons=p.buildings.map(b=>{const bd=BUILDINGS.find(x=>x.name===b);return bd?bd.icon:'?'}).join('');
+      ctx.font='10px sans-serif';
+      ctx.fillText(icons,p.cx,p.cy+24);
+    }
+  }
+  ctx.restore();
+}
+
+function renderMinimap(){
+  if(!G)return;
+  const mw=miniCanvas.width,mh=miniCanvas.height;
+  miniCtx.clearRect(0,0,mw,mh);
+  miniCtx.fillStyle='#0a0608';miniCtx.fillRect(0,0,mw,mh);
+  const mapW=(COLS+1)*HEX_W+HEX_W;
+  const mapH=(ROWS+1)*HEX_H*0.75+HEX_H;
+  const scale=Math.min(mw/mapW,mh/mapH)*0.9;
+  const ox=(mw-mapW*scale)/2,oy=(mh-mapH*scale)/2;
+  for(const p of G.provinces){
+    miniCtx.fillStyle=p.owner>=0?G.factions[p.owner].color:p.terrain.color;
+    miniCtx.beginPath();
+    miniCtx.arc(p.cx*scale+ox,p.cy*scale+oy,3,0,Math.PI*2);
+    miniCtx.fill();
+  }
+  // Viewport indicator
+  miniCtx.strokeStyle='var(--gold)';miniCtx.lineWidth=1;
+  miniCtx.strokeRect((-mapOffsetX)*scale+ox,(-mapOffsetY)*scale+oy,canvas.width*scale,canvas.height*scale);
+}
+
+function renderResources(){
+  if(!G)return;
+  const f=G.factions[G.playerFaction];
+  const income=calcIncome(G.playerFaction);
+  const res=document.getElementById('resources');
+  res.innerHTML=`
+    <div class="res-item"><span class="res-icon">💰</span><span class="res-val">${Math.floor(f.gold)}</span><span class="res-change ${income.gold>=0?'res-pos':'res-neg'}">(${income.gold>=0?'+':''}${income.gold})</span></div>
+    <div class="res-item"><span class="res-icon">🌾</span><span class="res-val">${Math.floor(f.food)}</span><span class="res-change ${income.food>=0?'res-pos':'res-neg'}">(${income.food>=0?'+':''}${income.food})</span></div>
+    <div class="res-item"><span class="res-icon">👥</span><span class="res-val">${Math.floor(f.manpower)}</span><span class="res-change res-pos">(+${income.manpower})</span></div>
+    <div class="res-item"><span class="res-icon">📖</span><span class="res-val">${Math.floor(f.tech)}</span><span class="res-change res-pos">(+${income.tech})</span></div>
+    <div class="res-item" style="opacity:0.6"><span class="res-icon">⚔️</span><span style="font-size:10px">-${income.armyCost}g upkeep</span></div>
+  `;
+}
+
+function renderTurnInfo(){
+  if(!G)return;
+  document.getElementById('turn-info').textContent=`${SEASONS[G.season]}, Year ${G.year}`;
+  document.getElementById('faction-name').textContent=G.factions[G.playerFaction].name;
+  document.getElementById('faction-name').style.color=G.factions[G.playerFaction].color;
+}
+
+function renderLog(){
+  const el=document.getElementById('event-log');
+  if(!G)return;
+  el.innerHTML=G.log.slice(0,50).map(l=>`<div class="log-entry"><span class="log-turn">[${l.turn}]</span><span class="log-${l.type}">${l.msg}</span></div>`).join('');
+}
+
+function renderSidebar(){
+  if(!G)return;
+  const el=document.getElementById('sidebar-content');
+  if(currentTab==='province')renderProvinceTab(el);
+  else if(currentTab==='diplomacy')renderDiplomacyTab(el);
+  else if(currentTab==='research')renderResearchTab(el);
+}
+
+function renderProvinceTab(el){
+  if(selectedProvince===null){
+    el.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--text-dim)">
+      <div style="font-size:32px;margin-bottom:12px">🏰</div>
+      <div style="font-size:13px">Select a province<br>on the map</div>
+    </div>`;
+    return;
+  }
+  const p=G.provinces[selectedProvince];
+  const isOwn=p.owner===G.playerFaction;
+  const ownerName=p.owner>=0?G.factions[p.owner].name:'Unclaimed';
+  const f=G.factions[G.playerFaction];
+  
+  let html=`
+    <div class="prov-name">${p.name}</div>
+    <div class="prov-terrain">${p.terrain.name} — Owned by ${ownerName}</div>
+    <div class="section-title">Province Stats</div>
+    <div class="prov-stat"><span>💰 Gold</span><span>+${p.terrain.gold}/turn</span></div>
+    <div class="prov-stat"><span>🌾 Food</span><span>+${p.terrain.food}/turn</span></div>
+    <div class="prov-stat"><span>👥 Manpower</span><span>+${p.terrain.manpower}/turn</span></div>
+    <div class="prov-stat"><span>📖 Tech</span><span>+${p.terrain.tech}/turn</span></div>
+    <div class="prov-stat"><span>🛡️ Defense</span><span>${p.terrain.defense}${p.buildings.includes('Fort')?' +3 (Fort)':''}</span></div>
+    <div class="prov-stat"><span>⚔️ Army</span><span>${p.army}</span></div>
+  `;
+  
+  if(p.buildings.length>0){
+    html+=`<div class="section-title">Buildings</div>`;
+    for(const b of p.buildings){
+      const bd=BUILDINGS.find(x=>x.name===b);
+      html+=`<div class="prov-stat"><span>${bd?bd.icon:''} ${b}</span><span>${bd?bd.desc:''}</span></div>`;
+    }
+  }
+  
+  if(isOwn){
+    html+=`<div class="section-title">Actions</div>`;
+    // Recruit
+    const canRecruit=f.gold>=15&&f.manpower>=5;
+    html+=`<button class="action-btn" onclick="recruitArmy(${p.id})" ${canRecruit?'':'disabled'}>⚔️ Recruit Army (15💰 5👥)</button>`;
+    // Move army
+    if(p.army>0){
+      html+=`<button class="action-btn" onclick="startArmyMove(${p.id})" ${selectedArmy===p.id?'style="border-color:var(--gold);color:var(--gold)"':''}>🚶 ${selectedArmy===p.id?'Moving... click target':'Move Army'}</button>`;
+    }
+    // Build
+    if(p.buildings.length<3){
+      html+=`<div class="section-title">Build (max 3)</div>`;
+      for(const b of BUILDINGS){
+        if(p.buildings.includes(b.name))continue;
+        const canBuild=f.gold>=b.cost;
+        html+=`<button class="action-btn" onclick="buildInProvince(${p.id},'${b.name}')" ${canBuild?'':'disabled'}>${b.icon} ${b.name} — ${b.cost}💰 (${b.desc})</button>`;
+      }
+    }
+  }else if(p.owner>=0){
+    const pf=G.factions[G.playerFaction];
+    const isAtWar=pf.wars.has(p.owner);
+    const isAlly=pf.allies.has(p.owner);
+    html+=`<div class="section-title">Diplomacy with ${G.factions[p.owner].name}</div>`;
+    html+=`<div class="prov-stat"><span>Relations</span><span class="${(pf.relations[p.owner]||0)>=0?'rel-pos':'rel-neg'}">${pf.relations[p.owner]||0}</span></div>`;
+    if(!isAtWar&&!isAlly){
+      html+=`<button class="action-btn war" onclick="playerDeclareWar(${p.owner})">⚔️ Declare War</button>`;
+      html+=`<button class="action-btn ally" onclick="playerProposeAlliance(${p.owner})">🤝 Propose Alliance</button>`;
+    }
+    if(isAtWar){
+      html+=`<button class="action-btn peace" onclick="playerMakePeace(${p.owner})">🕊️ Propose Peace</button>`;
+    }
+    if(isAlly){
+      html+=`<div style="color:var(--blue);font-size:12px;margin:8px 0">🤝 Allied</div>`;
+    }
+  }
+  
+  el.innerHTML=html;
+}
+
+function renderDiplomacyTab(el){
+  const pf=G.factions[G.playerFaction];
+  let html=`<div class="section-title">Diplomatic Relations</div>`;
+  for(const f of G.factions){
+    if(f.id===G.playerFaction||!f.alive)continue;
+    const rel=pf.relations[f.id]||0;
+    const isWar=pf.wars.has(f.id);
+    const isAlly=pf.allies.has(f.id);
+    const provCount=G.provinces.filter(p=>p.owner===f.id).length;
+    const relClass=rel>10?'rel-pos':rel<-10?'rel-neg':'rel-neu';
+    const status=isWar?'war':isAlly?'ally':'peace';
+    
+    html+=`<div class="diplo-row">
+      <div class="diplo-faction">
+        <div class="diplo-color" style="background:${f.color}"></div>
+        <div>
+          <div style="font-size:12px">${f.name}</div>
+          <div style="font-size:10px;color:var(--text-dim)">${provCount} provinces • ${f.personality}</div>
+        </div>
+      </div>
+      <div>
+        <span class="diplo-rel ${relClass}">${rel>0?'+':''}${rel}</span>
+        <span class="diplo-status status-${status}">${status.toUpperCase()}</span>
+      </div>
+    </div>
+    <div style="padding:2px 4px 8px;display:flex;gap:4px">
+      ${!isWar&&!isAlly?`<button class="action-btn war" style="font-size:10px;padding:4px" onclick="playerDeclareWar(${f.id})">⚔️ War</button><button class="action-btn ally" style="font-size:10px;padding:4px" onclick="playerProposeAlliance(${f.id})">🤝 Ally</button>`:''}
+      ${isWar?`<button class="action-btn peace" style="font-size:10px;padding:4px" onclick="playerMakePeace(${f.id})">🕊️ Peace</button>`:''}
+      ${isAlly?`<button class="action-btn" style="font-size:10px;padding:4px" onclick="breakAlliance(${f.id})">💔 Break Alliance</button>`:''}
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderResearchTab(el){
+  const f=G.factions[G.playerFaction];
+  let html='';
+  for(const[tree,techs]of Object.entries(TECH_TREES)){
+    const researched=f.techResearched[tree];
+    const icons={military:'⚔️',economic:'💰',diplomatic:'🤝'};
+    html+=`<div class="tech-branch"><div class="tech-branch-name">${icons[tree]} ${tree.charAt(0).toUpperCase()+tree.slice(1)} (${researched}/5)</div><div class="tech-levels">`;
+    for(let i=0;i<5;i++){
+      const t=techs[i];
+      const isResearched=i<researched;
+      const isAvailable=i===researched&&f.tech>=t.cost;
+      const isNext=i===researched;
+      let cls=isResearched?'researched':isAvailable?'available':'';
+      let title=`${t.name} (Cost: ${t.cost} Tech)`;
+      html+=`<div class="tech-level ${cls}" title="${title}" ${isAvailable?`onclick="researchTech('${tree}')"`:''} style="position:relative">
+        ${i+1}
+        ${isResearched?'<div style="position:absolute;top:-2px;right:-2px;font-size:8px">✓</div>':''}
+      </div>`;
+    }
+    html+=`</div>`;
+    if(researched<5){
+      const next=techs[researched];
+      const canResearch=f.tech>=next.cost;
+      html+=`<div style="font-size:11px;margin:4px 0;color:var(--text-dim)">Next: ${next.name} — ${next.cost} 📖</div>`;
+      html+=`<button class="action-btn" onclick="researchTech('${tree}')" ${canResearch?'':'disabled'} style="font-size:11px;padding:5px">📖 Research ${next.name}</button>`;
+    }else{
+      html+=`<div style="font-size:11px;margin:4px 0;color:var(--gold)">✨ Complete!</div>`;
+    }
+    html+=`</div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderAll(){
+  renderMap();renderMinimap();renderResources();renderTurnInfo();renderSidebar();
+}
+
+// ===================== PLAYER ACTIONS =====================
+function recruitArmy(pId){
+  const f=G.factions[G.playerFaction];
+  if(f.gold<15||f.manpower<5)return;
+  G.provinces[pId].army+=2;f.gold-=15;f.manpower-=5;
+  addLog(`⚔️ Recruited 2 soldiers in ${G.provinces[pId].name}.`,'eco');
+  renderAll();
+}
+function startArmyMove(pId){
+  selectedArmy=selectedArmy===pId?null:pId;
+  renderAll();
+}
+function buildInProvince(pId,bName){
+  const f=G.factions[G.playerFaction];
+  const b=BUILDINGS.find(x=>x.name===bName);
+  if(!b||f.gold<b.cost)return;
+  const p=G.provinces[pId];
+  if(p.buildings.length>=3||p.buildings.includes(bName))return;
+  p.buildings.push(bName);f.gold-=b.cost;
+  addLog(`🏗️ Built ${bName} in ${p.name}.`,'eco');
+  renderAll();
+}
+function researchTech(tree){
+  const f=G.factions[G.playerFaction];
+  const lvl=f.techResearched[tree];
+  if(lvl>=5)return;
+  const t=TECH_TREES[tree][lvl];
+  if(f.tech<t.cost)return;
+  f.tech-=t.cost;f.techResearched[tree]++;
+  addLog(`📖 Researched ${t.name}!`,'eco');
+  renderAll();
+}
+function playerDeclareWar(fId){
+  declareWar(G.playerFaction,fId);renderAll();
+}
+function playerMakePeace(fId){
+  const enemy=G.factions[fId];
+  if(Math.random()<0.5||enemy.relations[G.playerFaction]>-30){
+    makePeace(G.playerFaction,fId);
+  }else{
+    addLog(`❌ ${enemy.name} refuses peace!`,'diplo');
+  }
+  renderAll();
+}
+function playerProposeAlliance(fId){
+  const target=G.factions[fId];
+  if(target.relations[G.playerFaction]>10||Math.random()<0.3){
+    formAlliance(G.playerFaction,fId);
+  }else{
+    addLog(`❌ ${target.name} declines the alliance.`,'diplo');
+  }
+  renderAll();
+}
+function breakAlliance(fId){
+  G.factions[G.playerFaction].allies.delete(fId);
+  G.factions[fId].allies.delete(G.playerFaction);
+  G.factions[G.playerFaction].relations[fId]-=20;
+  G.factions[fId].relations[G.playerFaction]-=20;
+  addLog(`💔 Alliance with ${G.factions[fId].name} broken.`,'diplo');
+  renderAll();
+}
+
+// ===================== MODALS =====================
+function showOverlay(html){
+  document.getElementById('modal').innerHTML=html;
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay(){document.getElementById('overlay').classList.remove('show')}
+function showBattleReport(r){
+  showOverlay(`
+    <h2>⚔️ Battle of ${r.province}</h2>
+    <div class="battle-report">
+      <div class="battle-side">
+        <div class="side-name" style="color:${r.attackerColor}">${r.attacker} (Attacker)</div>
+        <div>Strength: ${r.aStart} → ${r.aRemain} (lost ${r.aLoss})</div>
+        <div class="battle-bar"><div class="battle-fill" style="width:${(r.aRemain/r.aStart)*100}%;background:${r.attackerColor}"></div></div>
+      </div>
+      <div class="battle-side">
+        <div class="side-name" style="color:${r.defenderColor}">${r.defender} (Defender)</div>
+        <div>Strength: ${r.dStart} → ${r.dRemain} (lost ${r.dLoss})</div>
+        <div class="battle-bar"><div class="battle-fill" style="width:${r.dRemain/Math.max(1,r.dStart)*100}%;background:${r.defenderColor}"></div></div>
+      </div>
+      <div style="text-align:center;margin-top:12px;font-size:16px;color:var(--gold)">${r.won?r.attacker:r.defender} is victorious!</div>
+    </div>
+    <button class="modal-btn" onclick="hideOverlay()">Continue</button>
+  `);
+}
+function showEvent(ev,prov,result){
+  const effects=Object.entries(result).filter(([k,v])=>v!==0).map(([k,v])=>`${k}: ${v>0?'+':''}${v}`).join(', ');
+  showOverlay(`
+    <h2>📜 ${ev.name}</h2>
+    <p>${ev.desc}</p>
+    <p style="color:var(--gold)">${prov.name}</p>
+    <p style="font-size:12px;color:var(--text-dim)">${effects||'No effect'}</p>
+    <button class="modal-btn" onclick="hideOverlay()">Continue</button>
+  `);
+}
+function showVictory(faction,type){
+  const isPlayer=faction.id===G.playerFaction;
+  const provCount=G.provinces.filter(p=>p.owner===faction.id).length;
+  showOverlay(`
+    <h2>${isPlayer?'🏆 VICTORY!':'💀 DEFEAT'}</h2>
+    <p style="font-size:16px;color:${faction.color}">${faction.name}</p>
+    <p>${type==='domination'?'has conquered the realm through military dominance!':'has achieved technological supremacy!'}</p>
+    <p style="color:var(--text-dim)">Turn ${G.turn} — ${SEASONS[G.season]}, Year ${G.year}</p>
+    <p>${provCount} provinces controlled</p>
+    <button class="modal-btn" onclick="hideOverlay();showFactionSelect()">New Game</button>
+  `);
+}
+function showFactionSelect(){
+  let html=`<h2>⚔️ Realms of Dominion</h2><p style="color:var(--text-dim);margin-bottom:16px">Choose your realm</p><div class="faction-pick">`;
+  for(const[i,f]of FACTION_DATA.entries()){
+    html+=`<div class="faction-option" style="border-color:${f.color}40" onclick="startGame(${i})">
+      <div class="fname" style="color:${f.color}">${f.name}</div>
+      <div class="fpersonality">${f.desc}</div>
+      <div class="fpersonality" style="margin-top:2px">Style: ${f.personality}</div>
+    </div>`;
+  }
+  html+=`</div>`;
+  showOverlay(html);
+}
+
+function startGame(fIdx){
+  hideOverlay();
+  newGame(fIdx);
+  renderAll();
+}
+
+// ===================== MENU =====================
+function showMenu(){
+  const mp=document.getElementById('menu-panel');
+  mp.innerHTML=`
+    <h2>☰ Menu</h2>
+    <button class="menu-btn" onclick="saveGame()">💾 Save Game</button>
+    <button class="menu-btn" onclick="loadGame()">📂 Load Game</button>
+    <button class="menu-btn" onclick="hideMenu();showFactionSelect()">🆕 New Game</button>
+    <button class="menu-btn" onclick="hideMenu()">✕ Close</button>
+  `;
+  document.getElementById('menu-overlay').classList.add('show');
+}
+function hideMenu(){document.getElementById('menu-overlay').classList.remove('show')}
+function saveGame(){
+  const save={...G,factions:G.factions.map(f=>({...f,wars:[...f.wars],allies:[...f.allies]}))};
+  localStorage.setItem('realms_save',JSON.stringify(save));
+  addLog('💾 Game saved!','event');hideMenu();renderAll();
+}
+function loadGame(){
+  const data=localStorage.getItem('realms_save');
+  if(!data){alert('No save found!');return}
+  G=JSON.parse(data);
+  G.factions.forEach(f=>{f.wars=new Set(f.wars);f.allies=new Set(f.allies)});
+  hideMenu();selectedProvince=null;selectedArmy=null;renderAll();
+  addLog('📂 Game loaded!','event');
+}
+
+// ===================== INPUT =====================
+canvas.addEventListener('mousemove',e=>{
+  if(mapDragging){
+    mapOffsetX=dragOX+(e.clientX-dragStartX);
+    mapOffsetY=dragOY+(e.clientY-dragStartY);
+    renderMap();renderMinimap();
+    return;
+  }
+  if(!G)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left-mapOffsetX;
+  const my=e.clientY-rect.top-mapOffsetY;
+  let found=null;
+  for(const p of G.provinces){
+    const dx=mx-p.cx,dy=my-p.cy;
+    if(Math.sqrt(dx*dx+dy*dy)<HEX_SIZE*0.85){found=p.id;break}
+  }
+  if(found!==hoveredProvince){hoveredProvince=found;renderMap()}
+});
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.button===1||e.button===2||(e.button===0&&e.shiftKey)){
+    mapDragging=true;dragStartX=e.clientX;dragStartY=e.clientY;dragOX=mapOffsetX;dragOY=mapOffsetY;
+    canvas.style.cursor='grabbing';e.preventDefault();return;
+  }
+});
+canvas.addEventListener('mouseup',e=>{
+  if(mapDragging){mapDragging=false;canvas.style.cursor='pointer';return}
+  if(!G)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left-mapOffsetX;
+  const my=e.clientY-rect.top-mapOffsetY;
+  let clicked=null;
+  for(const p of G.provinces){
+    const dx=mx-p.cx,dy=my-p.cy;
+    if(Math.sqrt(dx*dx+dy*dy)<HEX_SIZE*0.85){clicked=p.id;break}
+  }
+  if(clicked===null){selectedProvince=null;selectedArmy=null;renderAll();return}
+  
+  // Army movement
+  if(selectedArmy!==null&&clicked!==selectedArmy){
+    const src=G.provinces[selectedArmy];
+    const dst=G.provinces[clicked];
+    const nb=hexNeighbors(src.col,src.row);
+    if(nb.some(([c,r])=>r*COLS+c===clicked)){
+      if(dst.owner===G.playerFaction||dst.owner===-1){
+        // Friendly move
+        const move=Math.ceil(src.army*0.7);
+        src.army-=move;
+        if(dst.owner===-1)dst.owner=G.playerFaction;
+        dst.army+=move;
+        addLog(`🚶 Moved ${move} troops to ${dst.name}.`,'eco');
+        selectedArmy=null;
+      }else if(G.factions[G.playerFaction].wars.has(dst.owner)){
+        // Attack!
+        const move=Math.ceil(src.army*0.7);
+        src.army-=move;
+        const result=resolveBattle(G.playerFaction,dst.owner,{armyMoving:move},dst);
+        showBattleReport(result);
+        selectedArmy=null;
+      }else if(G.factions[G.playerFaction].allies.has(dst.owner)){
+        addLog(`❌ Can't attack allies!`,'diplo');
+        selectedArmy=null;
+      }else{
+        addLog(`❌ Must declare war first!`,'diplo');
+        selectedArmy=null;
+      }
+    }
+    renderAll();return;
+  }
+  
+  selectedProvince=clicked;selectedArmy=null;
+  renderAll();
+});
+
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{
+  // Simple scroll to pan
+  mapOffsetX-=e.deltaX*0.5;
+  mapOffsetY-=e.deltaY*0.5;
+  renderMap();renderMinimap();
+  e.preventDefault();
+},{passive:false});
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab=btn.dataset.tab;
+    renderSidebar();
+  });
+});
+
+document.getElementById('end-turn').addEventListener('click',endTurn);
+document.getElementById('menu-btn').addEventListener('click',showMenu);
+
+window.addEventListener('resize',resizeCanvas);
+
+// ===================== INIT =====================
+resizeCanvas();
+// Check for saved game
+const hasSave=localStorage.getItem('realms_save');
+if(hasSave){
+  showOverlay(`
+    <h2>⚔️ Realms of Dominion</h2>
+    <p>A saved realm awaits...</p>
+    <button class="modal-btn" onclick="loadGame();hideOverlay()">📂 Continue</button>
+    <button class="modal-btn" onclick="hideOverlay();showFactionSelect()">🆕 New Game</button>
+  `);
+}else{
+  showFactionSelect();
+}
+</script>
+</body>
+</html>

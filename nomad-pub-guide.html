@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070707">
+<title>Nomad Pub Guide — UK pubs with parking</title>
+<meta name="description" content="Find UK pubs with useful parking near you, with filters for food, dogs, gardens, log fires, real ale, and one-tap directions.">
+<link rel="canonical" href="https://yaanbatho.com/nomad-pub-guide.html">
+<meta property="og:title" content="Nomad Pub Guide — UK pubs with parking">
+<meta property="og:description" content="A van-life friendly pub finder with parking, food, dogs, gardens, log fires, real ale, and one-tap directions.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yaanbatho.com/nomad-pub-guide.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&family=VT323&family=Black+Ops+One&display=swap" rel="stylesheet">
+<style>
+:root{--red:#cc0000;--red-hot:#ff2222;--black:#070707;--dark:#111;--mid:#1c1c1c;--card:#161616;--border:#2a2a2a;--grey:#555;--ltgrey:#999;--white:#f5f5f5;--pixel:'VT323',monospace;--sign:'Black Ops One',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);line-height:1.5}
+a{color:var(--red-hot);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.top-nav{background:#000;border-bottom:3px solid var(--red);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--ltgrey);display:flex;align-items:center;gap:10px;font-size:.95rem}
+.nav-brand .dot{width:10px;height:10px;background:var(--red);display:inline-block}
+.nav-links{display:flex;gap:14px;font-family:var(--pixel);font-size:1rem}
+.nav-links a{color:var(--ltgrey)}
+.nav-links a:hover{color:var(--red-hot)}
+
+.shell{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
+.tag-pill{display:inline-block;font-family:var(--pixel);font-size:1.05rem;color:var(--red-hot);border:1px solid var(--red);padding:3px 10px;letter-spacing:2px;margin-bottom:12px}
+h1{font-family:var(--sign);font-size:clamp(1.9rem,4.5vw,2.8rem);letter-spacing:1px;line-height:1.05;margin-bottom:8px}
+h1 .red{color:var(--red-hot)}
+.lede{color:var(--ltgrey);max-width:680px;font-size:1rem;margin-bottom:24px}
+
+.controls{background:var(--card);border:1px solid var(--border);padding:18px;border-radius:6px;margin-bottom:20px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.row:last-child{margin-bottom:0}
+label{display:block;font-family:var(--pixel);font-size:1rem;color:var(--ltgrey);letter-spacing:1px;margin-bottom:6px}
+input[type=text]{background:var(--mid);border:1px solid var(--border);color:var(--white);padding:10px 12px;font-family:'Inter',sans-serif;font-size:.95rem;border-radius:4px;width:100%}
+input[type=text]:focus{outline:none;border-color:var(--red)}
+input[type=range]{width:100%;accent-color:var(--red-hot)}
+.field{flex:1;min-width:220px}
+.field-narrow{min-width:160px;flex:0 1 200px}
+.btn{display:inline-block;font-family:var(--sign);letter-spacing:1px;padding:11px 20px;border-radius:4px;border:1px solid var(--red);background:var(--red);color:var(--white);font-size:.95rem;cursor:pointer;transition:transform .08s ease,background .15s ease}
+.btn:hover{background:var(--red-hot);text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn-ghost{background:transparent;color:var(--white);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--red);background:var(--mid)}
+.btn[disabled]{opacity:.5;cursor:wait}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--pixel);font-size:1.05rem;letter-spacing:1px;padding:6px 12px;border:1px solid var(--border);color:var(--ltgrey);background:var(--mid);border-radius:999px;cursor:pointer;user-select:none}
+.chip.on{border-color:var(--red);color:var(--red-hot);background:#1a0606}
+.slider-val{font-family:var(--pixel);color:var(--red-hot);font-size:1.15rem;margin-left:8px}
+
+.status{font-family:var(--pixel);font-size:1.05rem;color:var(--ltgrey);margin:12px 2px}
+.status.err{color:var(--red-hot)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--border);padding:16px;border-radius:6px;display:flex;flex-direction:column;gap:10px}
+.card .head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card .name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem;line-height:1.2}
+.card .place{color:var(--ltgrey);font-size:.85rem;font-family:var(--pixel);letter-spacing:1px;margin-top:2px}
+.card .dist{font-family:var(--pixel);color:var(--red-hot);font-size:1.05rem;white-space:nowrap}
+.card .why{font-size:.92rem;color:var(--ltgrey);border-top:1px dashed var(--border);padding-top:10px}
+.attr-row{display:flex;flex-wrap:wrap;gap:6px}
+.attr{font-family:var(--pixel);font-size:.85rem;letter-spacing:1px;padding:2px 8px;border-radius:999px;background:var(--mid);color:var(--ltgrey);border:1px solid var(--border)}
+.attr.match{color:var(--red-hot);border-color:var(--red)}
+.actions{display:flex;gap:8px;margin-top:auto}
+.actions .btn{flex:1;padding:9px;font-size:.9rem;text-align:center}
+
+footer{margin-top:50px;padding:18px 0;font-family:var(--pixel);color:var(--grey);text-align:center;border-top:1px dashed var(--border);font-size:1.05rem;letter-spacing:1px}
+
+.note{background:var(--mid);border-left:3px solid var(--red);padding:10px 14px;margin:18px 0;color:var(--ltgrey);font-size:.9rem}
+.note b{color:var(--white)}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-brand"><span class="dot"></span> NOMAD · PUB GUIDE</div>
+  <div class="nav-links">
+    <a href="/nomad.html">nomad</a>
+    <a href="/nomad-trip-planner-dashboard.html">trip planner</a>
+    <a href="/">home</a>
+  </div>
+</nav>
+
+<div class="shell">
+  <span class="tag-pill">PUB GUIDE · v0.1</span>
+  <h1>A pub. With <span class="red">parking.</span></h1>
+  <p class="lede">Curated UK pubs with useful parking. Filter for the bit that matters tonight — parking, food, real ale, garden, dog-friendly, log fire, family room. One tap opens directions.</p>
+
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label for="anchor">WHERE ARE YOU? (postcode, place name, or lat,lng)</label>
+        <input id="anchor" type="text" placeholder="e.g. BS1 4XE, Bristol, or 51.4545,-2.5879" value="" />
+      </div>
+      <div class="field-narrow">
+        <label for="useLoc">&nbsp;</label>
+        <button id="useLoc" class="btn btn-ghost" type="button" style="width:100%">📍 Use my GPS</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="drive">MAX DRIVE TIME <span id="driveVal" class="slider-val">45 min</span></label>
+        <input id="drive" type="range" min="10" max="180" step="5" value="45" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>MUST HAVE</label>
+        <div class="chips" id="chips">
+          <span class="chip on" data-attr="parking">parking</span>
+          <span class="chip" data-attr="food">food</span>
+          <span class="chip" data-attr="real_ale">real ale</span>
+          <span class="chip" data-attr="dog_friendly">dog friendly</span>
+          <span class="chip" data-attr="garden">garden</span>
+          <span class="chip" data-attr="log_fire">log fire</span>
+          <span class="chip" data-attr="family">family</span>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <button id="find" class="btn" type="button">▸ Find me a pub</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status" class="status">Pick your filters and tap <b style="color:var(--red-hot)">▸ Find me a pub</b>.</div>
+
+  <div id="cards" class="cards"></div>
+
+  <div class="note">
+    <b>Honest about the data.</b> Starter list of ~12 hand-picked parking-friendly pubs across the UK. Distances are haversine × 1.3 at 55 km/h — good for ranking, not final ETA. If you want to add a pub, email <a href="mailto:hello@yaanbatho.com?subject=Pub%20Guide%20-%20Add%20a%20pub">hello@yaanbatho.com</a>. The Pro tier will pull from a live database.
+  </div>
+</div>
+
+<footer>BUILT BY YAAN · AVA · ON THE ROAD · UK</footer>
+
+<script>
+// ---- Curated UK pubs with useful parking ----
+// Hand-picked list. Coords are best-effort; verify before driving.
+const PUBS = [
+  { name:"The Royal Oak", place:"Fritham, New Forest", lat:50.9220, lng:-1.6675,
+    why:"Thatched, open fires, ponies in the car park. No food but bring your own from the deli next door.",
+    attrs:["parking","real_ale","dog_friendly","garden","log_fire"] },
+  { name:"The Pheasant Inn", place:"Bassenthwaite Lake, Cumbria", lat:54.6585, lng:-3.2160,
+    why:"Lake District coaching inn. Big car park, proper food, fells in every window.",
+    attrs:["parking","food","real_ale","dog_friendly","log_fire"] },
+  { name:"Tan Hill Inn", place:"Reeth, Yorkshire Dales", lat:54.4365, lng:-2.1205,
+    why:"Highest pub in Britain at 1,732ft. Vast car park, lock-ins, snowed-in legends.",
+    attrs:["parking","food","real_ale","dog_friendly","log_fire","family"] },
+  { name:"The Fleece Inn", place:"Bretforton, Worcestershire", lat:52.0993, lng:-1.8475,
+    why:"National Trust-owned medieval longhouse. Asparagus auctions in May, witch marks on the floor.",
+    attrs:["parking","food","real_ale","garden","log_fire","family"] },
+  { name:"The Anchor Inn", place:"Sutton Gault, Cambridgeshire", lat:52.3708, lng:0.1130,
+    why:"Riverside on the Old Bedford. Fenland skies, gastro food, easy parking on the bank.",
+    attrs:["parking","food","real_ale","dog_friendly","garden"] },
+  { name:"The Drewe Arms", place:"Drewsteignton, Devon", lat:50.7008, lng:-3.7525,
+    why:"Thatched on the edge of Dartmoor. Castle Drogo five minutes up the road. Generous car park.",
+    attrs:["parking","food","real_ale","dog_friendly","garden","log_fire","family"] },
+  { name:"The Hare & Hounds", place:"Westonbirt, Cotswolds", lat:51.6125, lng:-2.2570,
+    why:"Cotswold stone, big garden, walks straight into Westonbirt Arboretum.",
+    attrs:["parking","food","real_ale","dog_friendly","garden","family"] },
+  { name:"The Black Bull", place:"Frosterley, County Durham", lat:54.7345, lng:-1.9755,
+    why:"Award-winning ale list. Eccentric. Steam train rolls past the door.",
+    attrs:["parking","food","real_ale","dog_friendly","log_fire"] },
+  { name:"The Three Horseshoes", place:"Madingley, Cambridgeshire", lat:52.2245, lng:0.0470,
+    why:"Country gastropub on the edge of Cambridge. Italian-leaning kitchen, big rear car park.",
+    attrs:["parking","food","real_ale","garden"] },
+  { name:"The Star Inn at Harome", place:"Harome, North Yorkshire", lat:54.2375, lng:-1.0640,
+    why:"Michelin gastropub, North York Moors edge. Book ahead for food, useful parking.",
+    attrs:["parking","food","real_ale","garden","log_fire"] },
+  { name:"The Bridge Inn", place:"Topsham, Devon", lat:50.6898, lng:-3.4715,
+    why:"15th-century cask-only pub on the Exe. The Queen has been. No frills, all soul.",
+    attrs:["parking","real_ale","dog_friendly","log_fire"] },
+  { name:"The George Inn", place:"Norton St Philip, Somerset", lat:51.3045, lng:-2.3450,
+    why:"Claims to be Britain's oldest pub still trading. Coaching-inn courtyard. Proper food.",
+    attrs:["parking","food","real_ale","garden","log_fire","family"] }
+];
+
+const ATTR_LABELS = {
+  parking:"parking", food:"food", real_ale:"real ale", dog_friendly:"dog friendly",
+  garden:"garden", log_fire:"log fire", family:"family"
+};
+
+// ---- helpers ----
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function haversineKm(a, b){
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI/180;
+  const dLng = (b.lng - a.lng) * Math.PI/180;
+  const la1 = a.lat * Math.PI/180, la2 = b.lat * Math.PI/180;
+  const x = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+function driveMinutes(km){ return Math.round((km * 1.3 / 55) * 60); }
+
+async function resolveAnchor(s){
+  const raw = (s||"").trim();
+  if (!raw) throw new Error("Type a postcode or place, or hit GPS.");
+  const ll = raw.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (ll) return { lat:parseFloat(ll[1]), lng:parseFloat(ll[2]), label:`${ll[1]}, ${ll[2]}` };
+  const pc = raw.match(/^[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}$/);
+  if (pc){
+    const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(raw.replace(/\s+/g,""))}`);
+    if (r.ok){ const j = await r.json(); if (j.result) return { lat:j.result.latitude, lng:j.result.longitude, label:`${j.result.postcode} · ${j.result.admin_district || j.result.region || "UK"}` }; }
+    throw new Error(`Postcode "${raw}" not found.`);
+  }
+  const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(raw)}`, { headers:{ "Accept-Language":"en" } });
+  if (!r.ok) throw new Error("Place lookup failed — check your connection.");
+  const arr = await r.json();
+  if (!arr.length) throw new Error(`Couldn't find "${raw}". Try a postcode or a more specific place.`);
+  return { lat:parseFloat(arr[0].lat), lng:parseFloat(arr[0].lon), label:arr[0].display_name.split(",").slice(0,3).join(",") };
+}
+
+function mapsDirLink(from, to){ return `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&travelmode=driving`; }
+
+function setStatus(t, isErr=false){ const el = $("#status"); el.innerHTML = t; el.classList.toggle("err", isErr); }
+function getActiveAttrs(){ return [...$$(".chip.on")].map(c => c.dataset.attr); }
+
+$("#chips").addEventListener("click", e => { if (!e.target.classList.contains("chip")) return; e.target.classList.toggle("on"); });
+$("#drive").addEventListener("input", e => { $("#driveVal").textContent = e.target.value + " min"; });
+$("#useLoc").addEventListener("click", () => {
+  if (!navigator.geolocation){ setStatus("Geolocation not supported.", true); return; }
+  setStatus("Asking for your location… (allow the prompt)");
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    $("#anchor").value = lat.toFixed(5) + "," + lng.toFixed(5);
+    setStatus("Got your GPS. Resolving area name…");
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=12&lat=${lat}&lon=${lng}`, { headers:{ "Accept-Language":"en" } });
+      if (r.ok){ const j = await r.json(); if (j && j.display_name){ const short = j.display_name.split(",").slice(0,3).join(","); $("#anchor").value = short; setStatus(`Got your GPS · <b style="color:var(--red-hot)">${short}</b>`); return; } }
+    } catch {}
+    setStatus(`Got your GPS · ${lat.toFixed(3)}, ${lng.toFixed(3)}`);
+  }, () => setStatus("Location denied. Type a postcode or place.", true), { timeout: 10000, enableHighAccuracy:true });
+});
+
+$("#find").addEventListener("click", async () => {
+  $("#find").disabled = true;
+  $("#cards").innerHTML = "";
+  let anchor;
+  try { setStatus("Resolving your location…"); anchor = await resolveAnchor($("#anchor").value); setStatus(`Anchor: <b style="color:var(--red-hot)">${anchor.label}</b>`); }
+  catch(e){ setStatus(e.message || "Couldn't resolve.", true); $("#find").disabled = false; return; }
+
+  const maxDrive = parseInt($("#drive").value, 10);
+  const want = getActiveAttrs();
+
+  let candidates = PUBS.map(p => {
+    const km = haversineKm(anchor, p);
+    const min = driveMinutes(km);
+    const matches = want.length === 0 ? p.attrs.length : want.filter(a => p.attrs.includes(a)).length;
+    const allMatch = want.length === 0 || want.every(a => p.attrs.includes(a));
+    return { pub:p, km, min, matches, allMatch };
+  }).filter(c => c.min <= maxDrive && c.allMatch);
+
+  if (candidates.length === 0){
+    setStatus(`No pubs match within ${maxDrive} min with those filters. Loosen filters or extend drive time.`, true);
+    $("#find").disabled = false;
+    return;
+  }
+
+  candidates.sort((a,b) => a.min - b.min);
+  renderCards(candidates, anchor, want);
+  setStatus(`Done. <b style="color:var(--red-hot)">${candidates.length}</b> pub${candidates.length===1?"":"s"} within ${maxDrive} min.`);
+  $("#find").disabled = false;
+});
+
+function renderCards(list, anchor, want){
+  const wrap = $("#cards");
+  wrap.innerHTML = list.map(c => {
+    const dir = mapsDirLink(anchor, c.pub);
+    const attrs = c.pub.attrs.map(a => `<span class="attr ${want.includes(a) ? 'match' : ''}">${ATTR_LABELS[a] || a}</span>`).join("");
+    return `<div class="card">
+      <div class="head">
+        <div>
+          <div class="name">${c.pub.name}</div>
+          <div class="place">${c.pub.place}</div>
+        </div>
+        <div class="dist">${c.min} min</div>
+      </div>
+      <div class="attr-row">${attrs}</div>
+      <div class="why">${c.pub.why}</div>
+      <div class="actions">
+        <a class="btn" href="${dir}" target="_blank" rel="noopener">Directions</a>
+        <a class="btn btn-ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.pub.name + ' ' + c.pub.place)}" target="_blank" rel="noopener">Search</a>
+      </div>
+    </div>`;
+  }).join("");
+}
+</script>
+</body>
+</html>

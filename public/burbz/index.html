@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BURBZ - Bird Fighter Collection</title>
+    <meta name="description" content="Identify real birds, collect them as manga fighter characters, and battle. Built by Yaan Batho.">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- SPLASH / TITLE SCREEN -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <span class="splash-b">B</span><span class="splash-u">U</span><span class="splash-r">R</span><span class="splash-b2">B</span><span class="splash-z">Z</span>
+            </div>
+            <div class="splash-subtitle">BIRD FIGHTER COLLECTION</div>
+            <div class="splash-tagline">Identify. Collect. Battle.</div>
+            <button id="btn-enter" class="btn-enter pulse-glow">
+                <span class="btn-enter-text">PRESS START</span>
+            </button>
+            <div class="splash-credit">by <a href="https://yaanbatho.com" target="_blank">Yaan Batho</a></div>
+        </div>
+        <div class="splash-birds">
+            <div class="splash-bird splash-bird-1"></div>
+            <div class="splash-bird splash-bird-2"></div>
+            <div class="splash-bird splash-bird-3"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app" class="app hidden">
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <span class="logo-mini">BURBZ</span>
+            </div>
+            <div class="top-bar-center">
+                <div class="player-info">
+                    <span class="player-level" id="player-level">LV 1</span>
+                    <div class="xp-bar-mini">
+                        <div class="xp-bar-fill" id="player-xp-bar" style="width: 0%"></div>
+                    </div>
+                    <span class="bird-count" id="bird-count">0 Birds</span>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <button class="btn-icon" id="btn-settings" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- TAB NAVIGATION -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="flock">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <span>FLOCK</span>
+            </button>
+            <button class="tab-btn" data-tab="sound">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                <span>SOUND ID</span>
+            </button>
+            <button class="tab-btn" data-tab="image">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                <span>IMAGE ID</span>
+            </button>
+            <button class="tab-btn" data-tab="battle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.78 2.2l-1.2 4.78-3.46-1.26-.18.5c-.18.5-.23 1.04-.12 1.56l-4.4 4.4c-.52-.12-1.06-.06-1.56.12l-.5.18 1.26 3.46-4.78 1.2 1.06 1.06 3.9-.98 6.58-6.58c.52.12 1.06.06 1.56-.12l.5-.18-1.26-3.46 4.78-1.2-1.18-1.06z"/></svg>
+                <span>BATTLE</span>
+            </button>
+        </nav>
+
+        <!-- TAB CONTENT AREA -->
+        <main class="tab-content">
+
+            <!-- ===== FLOCK TAB ===== -->
+            <section id="tab-flock" class="tab-panel active">
+                <div class="panel-header">
+                    <h2 class="section-title">YOUR FLOCK</h2>
+                    <div class="flock-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="common">Common</button>
+                        <button class="filter-btn" data-filter="uncommon">Uncommon</button>
+                        <button class="filter-btn" data-filter="rare">Rare</button>
+                        <button class="filter-btn" data-filter="legendary">Legendary</button>
+                    </div>
+                </div>
+                <div id="flock-grid" class="flock-grid">
+                    <!-- Bird cards injected by JS -->
+                </div>
+                <div id="flock-empty" class="empty-state">
+                    <div class="empty-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                    </div>
+                    <h3>No birds yet!</h3>
+                    <p>Use Sound ID or Image ID to identify and capture your first bird fighter.</p>
+                </div>
+            </section>
+
+            <!-- ===== SOUND ID TAB ===== -->
+            <section id="tab-sound" class="tab-panel">
+                <div class="panel-header">
+                    <h2 class="section-title">SOUND IDENTIFICATION</h2>
+                </div>
+                <div class="id-panel">
+                    <div class="id-visualizer" id="sound-visualizer">
+                        <canvas id="audio-canvas" width="300" height="150"></canvas>
+                        <div class="viz-overlay" id="sound-status">Ready to listen</div>
+                    </div>
+                    <div class="id-controls">
+                        <button id="btn-record" class="btn-action btn-record">
+                            <div class="record-ring"></div>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                            <span>RECORD</span>
+                        </button>
+                        <button id="btn-upload-audio" class="btn-action btn-upload">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                            <span>UPLOAD AUDIO</span>
+                        </button>
+                        <input type="file" id="audio-file-input" accept="audio/*" class="hidden-input">
+                    </div>
+                    <div id="sound-result" class="id-result hidden">
+                        <!-- Filled by JS after identification -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== IMAGE ID TAB ===== -->
+            <section id="tab-image" class="tab-panel">
+                <div class="panel-header">
+                    <h2 class="section-title">IMAGE IDENTIFICATION</h2>
+                </div>
+                <div class="id-panel">
+                    <div class="id-preview" id="image-preview">
+                        <div class="preview-placeholder">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <span>No image selected</span>
+                        </div>
+                        <img id="preview-img" class="hidden" alt="Bird photo preview">
+                    </div>
+                    <div class="id-controls">
+                        <button id="btn-camera" class="btn-action btn-camera">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                            <span>CAMERA</span>
+                        </button>
+                        <button id="btn-upload-image" class="btn-action btn-upload">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                            <span>UPLOAD PHOTO</span>
+                        </button>
+                        <input type="file" id="image-file-input" accept="image/*" capture="environment" class="hidden-input">
+                        <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden-input">
+                    </div>
+                    <div id="image-result" class="id-result hidden">
+                        <!-- Filled by JS after identification -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== BATTLE TAB ===== -->
+            <section id="tab-battle" class="tab-panel">
+                <!-- BATTLE SELECT SCREEN -->
+                <div id="battle-select" class="battle-select">
+                    <div class="panel-header">
+                        <h2 class="section-title">CHOOSE YOUR FIGHTER</h2>
+                    </div>
+                    <div id="battle-roster" class="battle-roster">
+                        <!-- Bird selection cards -->
+                    </div>
+                    <div id="battle-select-empty" class="empty-state">
+                        <h3>No fighters available!</h3>
+                        <p>Capture at least one bird to enter the arena.</p>
+                    </div>
+                    <button id="btn-find-battle" class="btn-fight hidden" disabled>
+                        <span class="fight-text">FIND OPPONENT</span>
+                        <div class="fight-sparks"></div>
+                    </button>
+                </div>
+
+                <!-- VS SCREEN -->
+                <div id="battle-vs" class="battle-vs hidden">
+                    <div class="vs-fighter vs-left">
+                        <div class="vs-card" id="vs-card-player"></div>
+                        <div class="vs-name" id="vs-name-player"></div>
+                    </div>
+                    <div class="vs-emblem">
+                        <span class="vs-text">VS</span>
+                    </div>
+                    <div class="vs-fighter vs-right">
+                        <div class="vs-card" id="vs-card-opponent"></div>
+                        <div class="vs-name" id="vs-name-opponent"></div>
+                    </div>
+                </div>
+
+                <!-- BATTLE ARENA -->
+                <div id="battle-arena" class="battle-arena hidden">
+                    <div class="arena-bg">
+                        <div class="arena-ground"></div>
+                    </div>
+
+                    <!-- Opponent side -->
+                    <div class="arena-opponent">
+                        <div class="fighter-hud hud-opponent">
+                            <div class="hud-name" id="opp-name"></div>
+                            <div class="hud-level" id="opp-level"></div>
+                            <div class="hp-bar">
+                                <div class="hp-bar-fill" id="opp-hp-bar"></div>
+                                <span class="hp-text" id="opp-hp-text"></span>
+                            </div>
+                        </div>
+                        <div class="fighter-sprite" id="opp-sprite"></div>
+                    </div>
+
+                    <!-- Player side -->
+                    <div class="arena-player">
+                        <div class="fighter-sprite" id="player-sprite"></div>
+                        <div class="fighter-hud hud-player">
+                            <div class="hud-name" id="player-name"></div>
+                            <div class="hud-level" id="player-level-battle"></div>
+                            <div class="hp-bar">
+                                <div class="hp-bar-fill" id="player-hp-bar"></div>
+                                <span class="hp-text" id="player-hp-text"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Battle log -->
+                    <div class="battle-log" id="battle-log">
+                        <div class="log-text" id="log-text">Battle start!</div>
+                    </div>
+
+                    <!-- Move buttons -->
+                    <div class="move-panel" id="move-panel">
+                        <button class="move-btn" data-move="0"></button>
+                        <button class="move-btn" data-move="1"></button>
+                        <button class="move-btn" data-move="2"></button>
+                        <button class="move-btn" data-move="3"></button>
+                    </div>
+                </div>
+
+                <!-- BATTLE RESULT -->
+                <div id="battle-result" class="battle-result hidden">
+                    <div class="result-banner" id="result-banner">
+                        <div class="result-text" id="result-text">VICTORY</div>
+                    </div>
+                    <div class="result-details" id="result-details"></div>
+                    <div class="result-rewards" id="result-rewards"></div>
+                    <button id="btn-battle-again" class="btn-fight">
+                        <span class="fight-text">FIGHT AGAIN</span>
+                    </button>
+                    <button id="btn-back-flock" class="btn-secondary">BACK TO FLOCK</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- BIRD DETAIL MODAL -->
+        <div id="bird-modal" class="modal hidden">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content bird-detail">
+                <button class="modal-close" id="modal-close">&times;</button>
+                <div class="detail-card" id="detail-card">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPTURE CELEBRATION -->
+        <div id="capture-overlay" class="capture-overlay hidden">
+            <div class="capture-content">
+                <div class="capture-flash"></div>
+                <div class="capture-card" id="capture-card">
+                    <!-- Filled by JS -->
+                </div>
+                <div class="capture-text">
+                    <h2 id="capture-species"></h2>
+                    <p id="capture-rarity"></p>
+                </div>
+                <button id="btn-capture-dismiss" class="btn-fight">
+                    <span class="fight-text">ADD TO FLOCK</span>
+                </button>
+            </div>
+            <div class="capture-particles" id="capture-particles"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

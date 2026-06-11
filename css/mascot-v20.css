@@ -1,0 +1,530 @@
+/* ===========================
+   YAAN MASCOT - Space Explorer
+   Walks, jumps & climbs around yaanbatho.com
+   =========================== */
+
+#site-mascot {
+  position: fixed;
+  top: 0;
+  left: 50px;
+  width: 56px;
+  height: 80px;
+  transform: scale(0.5);
+  transform-origin: top left;
+  z-index: 9999;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease;
+}
+
+#site-mascot:hover .mascot-head {
+  animation: mascot-nod 0.4s ease;
+}
+
+/* ===========================
+   HELMET (HEAD)
+   =========================== */
+
+.mascot-head {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+
+  /* Helmet - metallic ring */
+  border: 4px solid #b0b8c1;
+  box-shadow:
+    0 0 0 2px #78868f,
+    0 0 0 4px #d0d8e0,
+    inset 0 2px 8px rgba(255,255,255,0.3),
+    0 4px 12px rgba(0,0,0,0.5);
+
+  /* Slight blue visor tint */
+  background: #c8dff5;
+}
+
+.mascot-head img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+  object-position: center 15%;
+  display: block;
+  filter: contrast(1.05) saturate(1.1);
+  transform: scaleX(-1); /* mirror so face looks right by default */
+}
+
+/* Visor shine overlay */
+.mascot-head::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  width: 18px;
+  height: 12px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  transform: rotate(-25deg);
+  pointer-events: none;
+}
+
+/* Helmet collar ring */
+.mascot-head::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  right: -6px;
+  height: 10px;
+  background: linear-gradient(180deg, #c8cdd2 0%, #8f9aa3 100%);
+  border-radius: 0 0 30px 30px;
+  z-index: 3;
+  border: 1px solid #6a7880;
+}
+
+/* ===========================
+   BODY
+   =========================== */
+
+.mascot-body {
+  margin-top: 2px;
+  position: relative;
+}
+
+/* TORSO - white spacesuit */
+.mascot-torso {
+  width: 40px;
+  height: 30px;
+  background: linear-gradient(160deg, #f0f2f5 0%, #d8dde3 60%, #c5ccd4 100%);
+  border: 2.5px solid #8f9aa3;
+  border-radius: 10px 10px 5px 5px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow:
+    inset 2px 2px 6px rgba(255,255,255,0.8),
+    inset -2px -2px 4px rgba(0,0,0,0.1),
+    0 2px 4px rgba(0,0,0,0.25);
+}
+
+/* Chest control panel / red stripe */
+.mascot-torso::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 14px;
+  background: linear-gradient(180deg, #cc0000 0%, #990000 100%);
+  border-radius: 3px;
+  border: 1.5px solid #660000;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+}
+
+/* Chest panel buttons */
+.mascot-torso::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 2px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 1px;
+  box-shadow: 0 3px 0 rgba(255,255,255,0.5);
+}
+
+/* Arms */
+.mascot-arm {
+  position: absolute;
+  top: 2px;
+  width: 11px;
+  height: 22px;
+  background: linear-gradient(180deg, #e8ecf0 0%, #c8cdd2 100%);
+  border: 2px solid #8f9aa3;
+  border-radius: 5px 5px 7px 7px;
+  box-shadow: inset 1px 1px 3px rgba(255,255,255,0.6);
+}
+
+.mascot-arm.left  { left: -12px; transform-origin: top center; }
+.mascot-arm.right { right: -12px; transform-origin: top center; }
+
+/* Gloves */
+.mascot-arm.left::after,
+.mascot-arm.right::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: -1px;
+  width: 11px;
+  height: 7px;
+  background: #cc0000;
+  border: 1.5px solid #880000;
+  border-radius: 3px 3px 5px 5px;
+}
+
+/* WAIST connector ring */
+.mascot-waist {
+  width: 36px;
+  height: 7px;
+  background: linear-gradient(180deg, #9aa3aa 0%, #6a7880 100%);
+  border: 1.5px solid #556068;
+  border-radius: 3px;
+  margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* LEGS - spacesuit */
+.mascot-legs {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.mascot-leg {
+  width: 14px;
+  height: 22px;
+  background: linear-gradient(180deg, #dde2e8 0%, #c0c7cf 100%);
+  border: 2px solid #8f9aa3;
+  border-radius: 4px 4px 2px 2px;
+  position: relative;
+  transform-origin: top center;
+  box-shadow: inset 1px 0 3px rgba(255,255,255,0.5);
+}
+
+/* Knee joint ring */
+.mascot-leg::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  right: -2px;
+  height: 5px;
+  background: linear-gradient(180deg, #a0aab3 0%, #788088 100%);
+  border: 1px solid #6a7880;
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+
+/* Boots - big rounded astronaut boots */
+.mascot-leg::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: -4px;
+  width: 20px;
+  height: 10px;
+  background: linear-gradient(180deg, #e8ecf0 0%, #b8bfc8 100%);
+  border: 2px solid #8f9aa3;
+  border-radius: 4px 6px 6px 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* ===========================
+   ANIMATIONS
+   =========================== */
+
+@keyframes mascot-idle {
+  0%, 100% { transform: scale(0.5) translateY(0) scaleY(1); }
+  50%       { transform: scale(0.5) translateY(-5px) scaleY(1.02); }
+}
+
+/* Gentle float for space feel */
+@keyframes mascot-float {
+  0%, 100% { transform: scale(0.5) translateY(0) rotate(-0.5deg); }
+  33%       { transform: scale(0.5) translateY(-3px) rotate(0.5deg); }
+  66%       { transform: scale(0.5) translateY(-1px) rotate(-0.3deg); }
+}
+@keyframes mascot-float-left {
+  0%, 100% { transform: scale(0.5) scaleX(-1) translateY(0) rotate(0.5deg); }
+  33%       { transform: scale(0.5) scaleX(-1) translateY(-3px) rotate(-0.5deg); }
+  66%       { transform: scale(0.5) scaleX(-1) translateY(-1px) rotate(0.3deg); }
+}
+
+@keyframes mascot-walk {
+  0%, 100% { transform: scale(0.5) translateY(0) rotate(-1deg); }
+  50%       { transform: scale(0.5) translateY(-2px) rotate(1deg); }
+}
+@keyframes mascot-walk-left {
+  0%, 100% { transform: scale(0.5) scaleX(-1) translateY(0) rotate(1deg); }
+  50%       { transform: scale(0.5) scaleX(-1) translateY(-2px) rotate(-1deg); }
+}
+
+@keyframes mascot-leg-left {
+  0%, 100% { transform: rotate(0deg); }
+  25%       { transform: rotate(-22deg); }
+  75%       { transform: rotate(18deg); }
+}
+
+@keyframes mascot-leg-right {
+  0%, 100% { transform: rotate(0deg); }
+  25%       { transform: rotate(18deg); }
+  75%       { transform: rotate(-22deg); }
+}
+
+@keyframes mascot-arm-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25%       { transform: rotate(-50deg); }
+  75%       { transform: rotate(-10deg); }
+}
+
+@keyframes mascot-jump {
+  0%   { transform: scale(0.5) translateY(0) scaleY(1) scaleX(1); }
+  12%  { transform: scale(0.5) translateY(0) scaleY(0.82) scaleX(1.18); }
+  38%  { transform: scale(0.5) translateY(-65px) scaleY(1.08) scaleX(0.93); }
+  62%  { transform: scale(0.5) translateY(-65px) scaleY(1.08) scaleX(0.93); }
+  86%  { transform: scale(0.5) translateY(0) scaleY(0.78) scaleX(1.22); }
+  100% { transform: scale(0.5) translateY(0) scaleY(1) scaleX(1); }
+}
+
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(14deg); }
+  40%       { transform: rotate(-10deg); }
+  60%       { transform: rotate(12deg); }
+  80%       { transform: rotate(-7deg); }
+}
+
+@keyframes mascot-nod {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  30%       { transform: rotate(8deg) translateY(2px); }
+  60%       { transform: rotate(-5deg) translateY(-1px); }
+}
+
+/* ===========================
+   STATE CLASSES
+   =========================== */
+
+#site-mascot.state-idle {
+  animation: mascot-float 2.5s ease-in-out infinite;
+}
+#site-mascot.facing-left.state-idle {
+  animation: mascot-float-left 2.5s ease-in-out infinite;
+}
+
+#site-mascot.state-idle .mascot-leg.left,
+#site-mascot.state-idle .mascot-leg.right {
+  animation: none;
+  transform: rotate(0deg);
+}
+
+#site-mascot.state-idle .mascot-arm.right {
+  animation: mascot-arm-wave 2.5s ease-in-out infinite;
+}
+
+#site-mascot.state-walk {
+  animation: mascot-walk 0.5s ease-in-out infinite;
+}
+#site-mascot.facing-left.state-walk {
+  animation: mascot-walk-left 0.5s ease-in-out infinite;
+}
+
+#site-mascot.state-walk .mascot-leg.left {
+  animation: mascot-leg-left 0.5s ease-in-out infinite;
+}
+
+#site-mascot.state-walk .mascot-leg.right {
+  animation: mascot-leg-right 0.5s ease-in-out infinite;
+}
+
+#site-mascot.state-jump {
+  animation: mascot-jump 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+#site-mascot.state-wave .mascot-head {
+  animation: mascot-wave 0.6s ease-in-out 2;
+}
+
+/* Flip direction — must preserve scale(0.5) so size stays consistent */
+#site-mascot.facing-left {
+  transform: scale(0.5) scaleX(-1);
+}
+/* Face turns WITH the character — no counter-flip needed */
+
+/* Mobile — no zoom (it distorts top/left positioning).
+   JS handles floor/header placement; character is 28×40px which is fine on mobile. */
+@media (max-width: 768px) {
+  #site-mascot.facing-left {
+    transform: scale(0.5) scaleX(-1);
+  }
+}
+
+/* Grapple aim — character looks up, slight lean back */
+#site-mascot.state-grapple-aim {
+  animation: mascot-aim 0.45s ease-in-out infinite alternate;
+}
+#site-mascot.facing-left.state-grapple-aim {
+  animation: mascot-aim-left 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes mascot-aim {
+  0%   { transform: scale(0.5) rotate(0deg) translateY(0); }
+  100% { transform: scale(0.5) rotate(-6deg) translateY(-4px); }
+}
+@keyframes mascot-aim-left {
+  0%   { transform: scale(0.5) scaleX(-1) rotate(0deg) translateY(0); }
+  100% { transform: scale(0.5) scaleX(-1) rotate(6deg) translateY(-4px); }
+}
+
+#site-mascot.state-grapple-aim .mascot-arm.right {
+  animation: mascot-arm-raise 0.3s ease forwards;
+}
+
+@keyframes mascot-arm-raise {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(-110deg); }
+}
+
+/* Landing shadow */
+#mascot-shadow {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.18);
+  pointer-events: none;
+  z-index: 9996;
+  transition: width 0.1s, opacity 0.15s;
+}
+
+/* ===========================
+   SPEECH BUBBLE
+   =========================== */
+
+.mascot-bubble {
+  /* Fixed to viewport — independent of mascot element and its scaleX flip */
+  position: fixed;
+  background: white;
+  border: 3px solid #222;
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-family: 'Space Grotesk', 'Arial Rounded MT Bold', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  /* Horizontal text — min-width forces a wide bubble, no tall columns */
+  white-space: normal;
+  min-width: 140px;
+  max-width: 220px;
+  line-height: 1.45;
+  word-break: normal;
+  box-shadow: 4px 4px 0 #222;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px) scale(0.9);
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 10000;
+}
+
+/* Tail pointing DOWN (bubble is above character) */
+.mascot-bubble.tail-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #222;
+}
+
+/* Tail pointing UP (bubble is below character) */
+.mascot-bubble.tail-top::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #222;
+}
+
+.mascot-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ===========================
+   GRAPPLE AIM STATE
+   =========================== */
+
+#site-mascot.state-grapple-aim {
+  animation: mascot-grapple-aim 0.4s ease forwards !important;
+}
+#site-mascot.facing-left.state-grapple-aim {
+  animation: mascot-grapple-aim-left 0.4s ease forwards !important;
+}
+
+@keyframes mascot-grapple-aim {
+  0%   { transform: scale(0.5) rotate(0deg); }
+  50%  { transform: scale(0.5) rotate(-8deg) translateY(-4px); }
+  100% { transform: scale(0.5) rotate(-5deg) translateY(-3px); }
+}
+@keyframes mascot-grapple-aim-left {
+  0%   { transform: scale(0.5) scaleX(-1) rotate(0deg); }
+  50%  { transform: scale(0.5) scaleX(-1) rotate(8deg) translateY(-4px); }
+  100% { transform: scale(0.5) scaleX(-1) rotate(5deg) translateY(-3px); }
+}
+
+#site-mascot.state-grapple-aim .mascot-arm.right {
+  transform: rotate(-120deg) !important;
+  transition: transform 0.3s ease;
+}
+
+/* ─── JETPACK (shoulder-mounted) ─────────────── */
+.mascot-jetpack {
+  position: absolute;
+  top: 14px;            /* shoulder height — just below the head */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 28px;            /* wide gap so packs sit either side of the body */
+  z-index: 0;
+  pointer-events: none;
+}
+
+.jpack {
+  width: 8px;
+  height: 14px;
+  background: linear-gradient(180deg, #aaa 0%, #ccc 40%, #777 100%);
+  border-radius: 3px 3px 2px 2px;
+  border: 1px solid #444;
+  position: relative;
+  box-shadow: 0 0 3px rgba(255,150,0,0);
+  transition: box-shadow 0.2s;
+}
+
+.jflame {
+  position: absolute;
+  bottom: -18px;        /* flames fire downward from the pack */
+  left: 50%;
+  width: 8px;
+  height: 20px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 40% 40%;
+  opacity: 0;
+  background: linear-gradient(180deg,
+    #fff 0%, #ffe066 15%, #ff9900 45%, #ff4400 75%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Jetpack state: show & animate flames */
+#site-mascot.state-jetpack .jpack {
+  box-shadow: 0 0 6px rgba(255,150,0,0.7);
+}
+
+#site-mascot.state-jetpack .jflame {
+  opacity: 1;
+  animation: jflicker 0.1s ease-in-out infinite alternate;
+}
+
+#site-mascot.state-jetpack .jpack-l .jflame {
+  animation-delay: 0.05s;
+}
+
+@keyframes jflicker {
+  from { transform: translateX(-50%) scaleY(0.85) scaleX(0.9); opacity: 0.85; }
+  to   { transform: translateX(-50%) scaleY(1.2)  scaleX(1.1); opacity: 1; }
+}

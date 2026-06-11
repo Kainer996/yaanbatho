@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="55%"><stop offset="0%" stop-color="#7f8c8d" stop-opacity="0.25"/><stop offset="100%" stop-color="#0a0a12"/></radialGradient>
+    <clipPath id="frame"><circle cx="200" cy="200" r="190"/></clipPath>
+  </defs>
+  <rect width="400" height="400" fill="#0a0a12"/>
+  <circle cx="200" cy="200" r="190" fill="url(#bg)"/>
+  <!-- Water reflection -->
+  <g clip-path="url(#frame)" opacity="0.08">
+    <rect x="10" y="300" width="380" height="90" fill="#4cc9f0"/>
+    <line x1="30" y1="310" x2="120" y2="310" stroke="#fff" stroke-width="1"/>
+    <line x1="180" y1="320" x2="300" y2="320" stroke="#fff" stroke-width="1"/>
+    <line x1="100" y1="340" x2="250" y2="340" stroke="#fff" stroke-width="0.5"/>
+  </g>
+  <!-- Grey Heron - patient tank -->
+  <g transform="translate(200,175)">
+    <!-- Long neck -->
+    <path d="M0,15 Q-15,-30 0,-70 Q5,-85 0,-100" stroke="#7f8c8d" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <path d="M0,15 Q-15,-30 0,-70 Q5,-85 0,-100" stroke="#bdc3c7" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <!-- Body - large -->
+    <ellipse cx="0" cy="25" rx="50" ry="45" fill="#7f8c8d" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Lighter belly -->
+    <ellipse cx="0" cy="30" rx="35" ry="32" fill="#bdc3c7" opacity="0.5"/>
+    <!-- Head -->
+    <circle cx="0" cy="-105" r="22" fill="#ecf0f1" stroke="#1a1a2e" stroke-width="3"/>
+    <!-- Black crest plume -->
+    <path d="M-5,-125 L-25,-140 L-20,-125 L-10,-120" fill="#2c3e50" stroke="#1a1a2e" stroke-width="1.5"/>
+    <path d="M0,-125 L-15,-145 L-10,-128" fill="#2c3e50" stroke="#1a1a2e" stroke-width="1"/>
+    <!-- Eye stripe -->
+    <line x1="-15,-110" y1="-110" x2="20" y2="-108" stroke="#2c3e50" stroke-width="4"/>
+    <!-- Eye - patient and calculating -->
+    <circle cx="10" cy="-108" r="6" fill="#f39c12"/>
+    <circle cx="11" cy="-108" r="3.5" fill="#1a1a2e"/>
+    <circle cx="12" cy="-109" r="1.2" fill="#f39c12"/>
+    <!-- Massive spear beak -->
+    <polygon points="18,-105 65,-98 18,-92" fill="#f39c12" stroke="#1a1a2e" stroke-width="2"/>
+    <line x1="18" y1="-98" x2="60" y2="-98" stroke="#DAA520" stroke-width="1" opacity="0.5"/>
+    <!-- Wings folded - shield-like -->
+    <path d="M-46,10 L-80,-10 L-75,15 L-70,45 L-48,35 Z" fill="#5D6D7E" stroke="#1a1a2e" stroke-width="2.5"/>
+    <path d="M46,10 L80,-10 L75,15 L70,45 L48,35 Z" fill="#5D6D7E" stroke="#1a1a2e" stroke-width="2.5"/>
+    <!-- Long legs -->
+    <line x1="-12" y1="65" x2="-15" y2="130" stroke="#7f8c8d" stroke-width="4" stroke-linecap="round"/>
+    <line x1="12" y1="65" x2="15" y2="130" stroke="#7f8c8d" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-25,130 L-15,130 L-5,130" stroke="#7f8c8d" stroke-width="3" fill="none"/>
+    <path d="M5,130 L15,130 L25,130" stroke="#7f8c8d" stroke-width="3" fill="none"/>
+    <!-- Stillwater ripples -->
+    <g stroke="#4cc9f0" fill="none" stroke-width="1" opacity="0.3">
+      <ellipse cx="0" cy="135" rx="30" ry="5"/>
+      <ellipse cx="0" cy="135" rx="50" ry="8"/>
+    </g>
+  </g>
+  <rect x="40" y="340" width="320" height="44" rx="4" fill="#7f8c8d" opacity="0.9"/>
+  <text x="200" y="370" font-family="'Arial Black',sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="3">GREY HERON</text>
+</svg>

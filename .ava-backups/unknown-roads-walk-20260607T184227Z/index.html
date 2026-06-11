@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown — Yaan Batho</title>
+    <meta name="description" content="Unknown: a realistic Three.js ocean experiment by Yaan Batho — sunlight, water, horizon, and nothing else.">
+    <link rel="canonical" href="https://yaanbatho.com/unknown/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Unknown — Three.js Ocean Experiment">
+    <meta property="og:description" content="Just water in the sunshine. A browser-based Three.js ocean experiment.">
+    <meta property="og:url" content="https://yaanbatho.com/unknown/">
+    <link rel="stylesheet" href="/css/style.css?v=unknown-ocean2">
+    <style>
+        html, body { height: 100%; }
+        body { overflow: hidden; background: #75bce8; }
+        body::before, body::after { display: none; }
+        header { background: linear-gradient(180deg, rgba(2,16,30,.55), rgba(2,16,30,.10)); border-bottom: 1px solid rgba(255,255,255,.18); position: fixed; width: 100%; }
+        header::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent); }
+        header .container { padding: 14px 20px; }
+        nav { gap: 22px; flex-wrap: wrap; justify-content: flex-end; }
+        nav a, .logo { text-shadow: 0 2px 14px rgba(0,25,50,.55); }
+        nav a:hover, nav a.active { color: #fff4b8; }
+        nav a.active::after { background: #fff4b8; box-shadow: 0 0 16px rgba(255,244,184,.85); bottom: -14px; }
+        #ocean-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        #ocean-stage canvas { display: block; width: 100%; height: 100%; }
+        .unknown-hud { position: fixed; left: clamp(18px, 4vw, 58px); bottom: clamp(18px, 5vh, 58px); z-index: 10; max-width: 540px; padding: 20px 22px; border: 1px solid rgba(255,255,255,.22); border-radius: 22px; background: linear-gradient(135deg, rgba(3,18,32,.36), rgba(4,57,88,.15)); backdrop-filter: blur(14px); box-shadow: 0 24px 80px rgba(0,24,50,.26); color: rgba(255,255,255,.92); }
+        .unknown-hud .eyebrow { display: block; font-family: var(--font-heading); font-size: .74rem; letter-spacing: .28em; text-transform: uppercase; color: #fff4b8; margin-bottom: 8px; }
+        .unknown-hud h1 { font-size: clamp(2rem, 5vw, 4.8rem); line-height: .9; margin: 0 0 10px; letter-spacing: .08em; text-transform: uppercase; color: #fff; text-shadow: 0 5px 30px rgba(0,38,80,.42); }
+        .unknown-hud p { margin: 0; font-size: clamp(.98rem, 1.5vw, 1.2rem); color: rgba(255,255,255,.78); }
+        .quality-chip { position: fixed; right: clamp(14px, 3vw, 34px); bottom: clamp(14px, 3vw, 34px); z-index: 10; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 9px 13px; background: rgba(0,20,38,.25); color: rgba(255,255,255,.76); font-size: .82rem; backdrop-filter: blur(10px); }
+        .loader { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, #d7f3ff, #63a4d2 58%, #123b5f); color: white; z-index: 30; font-family: var(--font-heading); letter-spacing: .16em; transition: opacity .7s ease; }
+        .loader.hidden { opacity: 0; pointer-events: none; }
+        .webgl-error { position: fixed; inset: auto 18px 18px 18px; z-index: 40; padding: 14px 16px; border-radius: 14px; background: rgba(2,15,25,.86); color: #fff; display: none; }
+        @media (max-width: 760px) { body { overflow: hidden; } .logo { font-size: 15px; } nav { display: none; } .mobile-menu-btn { display: block; } .unknown-hud { left: 14px; right: 14px; bottom: 14px; padding: 17px 18px; } .quality-chip { display: none; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/projects.html">Projects</a>
+                <a href="/unknown/" class="active">Unknown</a>
+                <a href="/products.html">Products</a>
+                <a href="/ava-projects/">Ava Projects</a>
+                <a href="/bio.html">Bio</a>
+                <a href="/music.html">Music</a>
+                <a href="/contact.html">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <div id="ocean-stage" aria-label="A realistic Three.js ocean surface under bright sunshine"></div>
+    <div class="loader" id="loader">SUMMONING WATER</div>
+    <div class="webgl-error" id="webgl-error">This browser could not start the WebGL ocean renderer. Try a newer browser or enable hardware acceleration.</div>
+    <section class="unknown-hud" aria-label="Project title">
+        <span class="eyebrow">Three.js Water.js + Sky.js study</span>
+        <h1>Unknown</h1>
+        <p>Just water in the sunshine — now with a tiny distant island, physical sky lighting, real reflection/refraction water, layered normal-map ripples, bloom, haze, and a low ocean camera.</p>
+    </section>
+    <div class="quality-chip">drag to look · scroll to breathe · island v3</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { Water } from 'three/addons/objects/Water.js';
+        import { Sky } from 'three/addons/objects/Sky.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        const stage = document.getElementById('ocean-stage');
+        const loader = document.getElementById('loader');
+        const errorBox = document.getElementById('webgl-error');
+        window.__unknownOcean = { status: 'booting', version: 'island-v3' };
+        window.__unknownOceanErrors = [];
+
+        function makeWaterNormalTexture(size = 512) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const image = ctx.createImageData(size, size);
+            const data = image.data;
+            const rand = (x, y) => {
+                const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+                return s - Math.floor(s);
+            };
+            const noise = (x, y) => {
+                const x0 = Math.floor(x), y0 = Math.floor(y);
+                const xf = x - x0, yf = y - y0;
+                const u = xf * xf * (3 - 2 * xf);
+                const v = yf * yf * (3 - 2 * yf);
+                const a = rand(x0, y0);
+                const b = rand(x0 + 1, y0);
+                const c = rand(x0, y0 + 1);
+                const d = rand(x0 + 1, y0 + 1);
+                return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a, b, u), THREE.MathUtils.lerp(c, d, u), v);
+            };
+            const height = (x, y) => {
+                let value = 0;
+                let amp = 0.55;
+                let freq = 0.035;
+                for (let i = 0; i < 5; i++) {
+                    value += amp * noise(x * freq + i * 19.7, y * freq + i * 7.3);
+                    freq *= 2.06;
+                    amp *= 0.52;
+                }
+                value += 0.11 * Math.sin((x * 0.19 + y * 0.06));
+                value += 0.08 * Math.sin((x * -0.08 + y * 0.23));
+                return value;
+            };
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const hL = height(x - 1, y);
+                    const hR = height(x + 1, y);
+                    const hD = height(x, y - 1);
+                    const hU = height(x, y + 1);
+                    const nx = (hL - hR) * 1.85;
+                    const ny = (hD - hU) * 1.85;
+                    const nz = 1.0;
+                    const inv = 1 / Math.hypot(nx, ny, nz);
+                    const i = (y * size + x) * 4;
+                    data[i] = Math.floor((nx * inv * 0.5 + 0.5) * 255);
+                    data[i + 1] = Math.floor((ny * inv * 0.5 + 0.5) * 255);
+                    data[i + 2] = Math.floor((nz * inv * 0.5 + 0.5) * 255);
+                    data[i + 3] = 255;
+                }
+            }
+            ctx.putImageData(image, 0, 0);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.colorSpace = THREE.NoColorSpace;
+            texture.anisotropy = 8;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createDistantIsland() {
+            const island = new THREE.Group();
+            island.name = 'distant-island-atoll';
+            island.position.set(18, -0.8, -760);
+            island.scale.set(1.2, 1.2, 1.2);
+
+            const sandMat = new THREE.MeshStandardMaterial({ color: 0xcaa66d, roughness: 0.95, metalness: 0.02, fog: true });
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x315f38, roughness: 0.88, fog: true });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x5e625c, roughness: 0.96, fog: true });
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7b5631, roughness: 0.9, fog: true });
+            const palmMat = new THREE.MeshStandardMaterial({ color: 0x235c3b, roughness: 0.8, fog: true, side: THREE.DoubleSide });
+
+            const sand = new THREE.Mesh(new THREE.SphereGeometry(84, 48, 18), sandMat);
+            sand.scale.set(1.9, 0.11, 0.62);
+            sand.position.y = -1.2;
+            sand.rotation.y = -0.08;
+            island.add(sand);
+
+            const hill = new THREE.Mesh(new THREE.SphereGeometry(58, 36, 16), grassMat);
+            hill.scale.set(1.05, 0.32, 0.46);
+            hill.position.set(-8, 8, -5);
+            hill.rotation.y = 0.18;
+            island.add(hill);
+
+            const backHill = new THREE.Mesh(new THREE.SphereGeometry(42, 28, 12), grassMat);
+            backHill.scale.set(1.05, 0.26, 0.42);
+            backHill.position.set(42, 5.4, 3);
+            backHill.rotation.y = -0.22;
+            island.add(backHill);
+
+            const rockPositions = [
+                [-86, 2.3, 6, 10, 5, 7], [83, 1.9, -3, 12, 4, 6],
+                [-32, 3.2, -19, 8, 5, 5], [24, 2.8, 18, 7, 4, 6]
+            ];
+            rockPositions.forEach(([x, y, z, sx, sy, sz], idx) => {
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rockMat);
+                rock.position.set(x, y, z);
+                rock.scale.set(sx, sy, sz);
+                rock.rotation.set(idx * 0.31, idx * 0.67, idx * 0.19);
+                island.add(rock);
+            });
+
+            function addPalm(x, z, height, lean, rot) {
+                const palm = new THREE.Group();
+                palm.position.set(x, 9.5, z);
+                palm.rotation.z = lean;
+                palm.rotation.y = rot;
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, height, 8), trunkMat);
+                trunk.position.y = height * 0.5;
+                trunk.rotation.x = 0.08;
+                palm.add(trunk);
+                for (let i = 0; i < 7; i++) {
+                    const frond = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 23), palmMat);
+                    frond.position.y = height + 1.3;
+                    frond.rotation.y = (i / 7) * Math.PI * 2;
+                    frond.rotation.x = Math.PI * 0.5 + 0.36;
+                    frond.position.x = Math.cos(frond.rotation.y) * 4.2;
+                    frond.position.z = Math.sin(frond.rotation.y) * 4.2;
+                    palm.add(frond);
+                }
+                island.add(palm);
+            }
+            addPalm(-34, -8, 34, -0.13, 0.2);
+            addPalm(-14, 3, 42, 0.09, -0.45);
+            addPalm(32, -2, 29, 0.17, 0.72);
+
+            const shimmer = new THREE.Mesh(
+                new THREE.RingGeometry(72, 122, 80),
+                new THREE.MeshBasicMaterial({ color: 0x9ce8ff, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide })
+            );
+            shimmer.rotation.x = -Math.PI / 2;
+            shimmer.position.y = 0.05;
+            shimmer.scale.set(1.65, 0.55, 1);
+            island.add(shimmer);
+
+            return island;
+        }
+
+        try {
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0xb7ddf2, 0.00008);
+
+            const camera = new THREE.PerspectiveCamera(54, innerWidth / innerHeight, 0.1, 20000);
+            camera.position.set(0, 16, 86);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 760 ? 1.35 : 1.75));
+            renderer.setSize(innerWidth, innerHeight);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.82;
+            stage.appendChild(renderer.domElement);
+
+            const waterGeometry = new THREE.PlaneGeometry(10000, 10000, 128, 128);
+            const water = new Water(waterGeometry, {
+                textureWidth: innerWidth < 760 ? 512 : 1024,
+                textureHeight: innerWidth < 760 ? 512 : 1024,
+                waterNormals: makeWaterNormalTexture(512),
+                sunDirection: new THREE.Vector3(),
+                sunColor: 0xfff2c2,
+                waterColor: 0x033454,
+                distortionScale: 5.2,
+                fog: scene.fog !== undefined
+            });
+            water.rotation.x = -Math.PI / 2;
+            water.material.uniforms.size.value = 1.85;
+            scene.add(water);
+
+            const sky = new Sky();
+            sky.scale.setScalar(10000);
+            scene.add(sky);
+
+            const sun = new THREE.Vector3();
+            const skyUniforms = sky.material.uniforms;
+            skyUniforms.turbidity.value = 6.1;
+            skyUniforms.rayleigh.value = 1.35;
+            skyUniforms.mieCoefficient.value = 0.011;
+            skyUniforms.mieDirectionalG.value = 0.86;
+
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            let renderTarget;
+            const parameters = { elevation: 8.6, azimuth: 121 };
+
+            function updateSun() {
+                const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+                const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+                sun.setFromSphericalCoords(1, phi, theta);
+                sky.material.uniforms.sunPosition.value.copy(sun);
+                water.material.uniforms.sunDirection.value.copy(sun).normalize();
+                if (renderTarget) renderTarget.dispose();
+                renderTarget = pmremGenerator.fromScene(sky);
+                scene.environment = renderTarget.texture;
+            }
+            updateSun();
+
+            const ambience = new THREE.HemisphereLight(0xdff7ff, 0x25482f, 1.35);
+            scene.add(ambience);
+            const islandSun = new THREE.DirectionalLight(0xffedbd, 2.4);
+            islandSun.position.copy(sun).multiplyScalar(520);
+            scene.add(islandSun);
+
+            const sunGlare = new THREE.Mesh(
+                new THREE.CircleGeometry(110, 96),
+                new THREE.MeshBasicMaterial({ color: 0xfff1aa, transparent: true, opacity: 0.72, depthWrite: false })
+            );
+            sunGlare.position.copy(sun).multiplyScalar(6400);
+            scene.add(sunGlare);
+
+            const haze = new THREE.Mesh(
+                new THREE.PlaneGeometry(10000, 1300),
+                new THREE.MeshBasicMaterial({ color: 0xd7f0ff, transparent: true, opacity: 0.18, depthWrite: false })
+            );
+            haze.position.set(0, 118, -3350);
+            scene.add(haze);
+
+            const island = createDistantIsland();
+            scene.add(island);
+            window.__unknownOcean.island = 'distant-atoll';
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.045;
+            controls.enablePan = false;
+            controls.minDistance = 45;
+            controls.maxDistance = 180;
+            controls.minPolarAngle = Math.PI * 0.455;
+            controls.maxPolarAngle = Math.PI * 0.515;
+            controls.target.set(0, 5, -210);
+
+            const composer = new EffectComposer(renderer);
+            composer.addPass(new RenderPass(scene, camera));
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.16, 0.18, 0.72);
+            composer.addPass(bloomPass);
+
+            const clock = new THREE.Clock();
+            const baseCamera = camera.position.clone();
+
+            function resize() {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 760 ? 1.35 : 1.75));
+                renderer.setSize(innerWidth, innerHeight);
+                composer.setSize(innerWidth, innerHeight);
+            }
+            addEventListener('resize', resize);
+
+            function tick() {
+                const elapsed = clock.getElapsedTime();
+                water.material.uniforms.time.value += 1 / 75;
+                const breathe = Math.sin(elapsed * 0.16) * 1.8;
+                if (!controls.enabled || !controls.mouseButtons) {
+                    camera.position.y = baseCamera.y + breathe;
+                } else if (document.pointerLockElement === null) {
+                    camera.position.y += (baseCamera.y + breathe - camera.position.y) * 0.002;
+                }
+                sunGlare.lookAt(camera.position);
+                haze.lookAt(camera.position.x, haze.position.y, camera.position.z);
+                controls.update();
+                composer.render();
+                window.__unknownOcean.status = 'rendering';
+                requestAnimationFrame(tick);
+            }
+
+            requestAnimationFrame(() => {
+                loader.classList.add('hidden');
+                tick();
+            });
+        } catch (error) {
+            console.error('Unknown ocean failed to start', error);
+            window.__unknownOcean.status = 'error';
+            window.__unknownOceanErrors.push(String(error && error.stack || error));
+            loader.classList.add('hidden');
+            errorBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unknown — Yaan Batho</title>
+    <meta name="description" content="Unknown: a realistic Three.js ocean experiment by Yaan Batho — sunlight, water, horizon, and nothing else.">
+    <link rel="canonical" href="https://yaanbatho.com/unknown/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Unknown — Three.js Ocean Experiment">
+    <meta property="og:description" content="Just water in the sunshine. A browser-based Three.js ocean experiment.">
+    <meta property="og:url" content="https://yaanbatho.com/unknown/">
+    <link rel="stylesheet" href="/css/style.css?v=unknown-ocean2">
+    <style>
+        html, body { height: 100%; }
+        body { overflow: hidden; background: #75bce8; }
+        body::before, body::after { display: none; }
+        header { background: linear-gradient(180deg, rgba(2,16,30,.55), rgba(2,16,30,.10)); border-bottom: 1px solid rgba(255,255,255,.18); position: fixed; width: 100%; }
+        header::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent); }
+        header .container { padding: 14px 20px; }
+        nav { gap: 22px; flex-wrap: wrap; justify-content: flex-end; }
+        nav a, .logo { text-shadow: 0 2px 14px rgba(0,25,50,.55); }
+        nav a:hover, nav a.active { color: #fff4b8; }
+        nav a.active::after { background: #fff4b8; box-shadow: 0 0 16px rgba(255,244,184,.85); bottom: -14px; }
+        #ocean-stage { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        #ocean-stage canvas { display: block; width: 100%; height: 100%; }
+        .unknown-hud { position: fixed; left: clamp(18px, 4vw, 58px); bottom: clamp(18px, 5vh, 58px); z-index: 10; max-width: 540px; padding: 20px 22px; border: 1px solid rgba(255,255,255,.22); border-radius: 22px; background: linear-gradient(135deg, rgba(3,18,32,.36), rgba(4,57,88,.15)); backdrop-filter: blur(14px); box-shadow: 0 24px 80px rgba(0,24,50,.26); color: rgba(255,255,255,.92); }
+        .unknown-hud .eyebrow { display: block; font-family: var(--font-heading); font-size: .74rem; letter-spacing: .28em; text-transform: uppercase; color: #fff4b8; margin-bottom: 8px; }
+        .unknown-hud h1 { font-size: clamp(2rem, 5vw, 4.8rem); line-height: .9; margin: 0 0 10px; letter-spacing: .08em; text-transform: uppercase; color: #fff; text-shadow: 0 5px 30px rgba(0,38,80,.42); }
+        .unknown-hud p { margin: 0; font-size: clamp(.98rem, 1.5vw, 1.2rem); color: rgba(255,255,255,.78); }
+        .quality-chip { position: fixed; right: clamp(14px, 3vw, 34px); bottom: clamp(14px, 3vw, 34px); z-index: 10; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 9px 13px; background: rgba(0,20,38,.25); color: rgba(255,255,255,.76); font-size: .82rem; backdrop-filter: blur(10px); }
+        .walk-panel { position: fixed; right: clamp(14px, 3vw, 34px); top: 92px; z-index: 12; display: grid; gap: 8px; justify-items: end; }
+        .walk-btn { border: 1px solid rgba(255,255,255,.26); border-radius: 999px; padding: 11px 16px; background: rgba(2,22,38,.38); color: #fff; font-weight: 700; letter-spacing: .04em; cursor: pointer; backdrop-filter: blur(12px); box-shadow: 0 12px 40px rgba(0,25,55,.20); }
+        .walk-btn:hover { background: rgba(255,244,184,.22); border-color: rgba(255,244,184,.68); }
+        .walk-help { max-width: 260px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(0,20,38,.26); color: rgba(255,255,255,.76); font-size: .78rem; line-height: 1.35; text-align: right; backdrop-filter: blur(10px); }
+        .needs-panel { position: fixed; left: clamp(14px, 3vw, 34px); bottom: clamp(14px, 3vw, 34px); z-index: 11; width: min(310px, calc(100vw - 28px)); padding: 12px 13px; border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(3,20,34,.34); color: rgba(255,255,255,.88); backdrop-filter: blur(14px); box-shadow: 0 18px 56px rgba(0,24,50,.18); }
+        .needs-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; color: #fff4b8; }
+        .needs-mood { color: rgba(255,255,255,.74); letter-spacing: .02em; text-transform: none; font-size: .76rem; }
+        .need-row { display: grid; grid-template-columns: 76px 1fr 38px; align-items: center; gap: 8px; margin: 6px 0; font-size: .78rem; }
+        .need-label { color: rgba(255,255,255,.8); }
+        .need-track { height: 7px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.15); }
+        .need-fill { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7ee0a4, #fff4b8, #ff9e7d); transition: width .35s ease; }
+        .need-row[data-state="rising"] .need-fill { background: linear-gradient(90deg, #fff4b8, #ffbf73); }
+        .need-row[data-state="urgent"] .need-fill { background: linear-gradient(90deg, #ffbf73, #ff7f7f); }
+        .need-value { text-align: right; color: rgba(255,255,255,.72); font-variant-numeric: tabular-nums; }
+        .survival-actions { position: fixed; right: clamp(14px, 3vw, 34px); bottom: clamp(58px, 7vw, 86px); z-index: 11; width: min(300px, calc(100vw - 28px)); padding: 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(3,20,34,.34); color: rgba(255,255,255,.88); backdrop-filter: blur(14px); box-shadow: 0 18px 56px rgba(0,24,50,.18); }
+        .survival-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; color: #fff4b8; font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; }
+        .survival-status { color: rgba(255,255,255,.72); letter-spacing: .02em; text-transform: none; font-size: .74rem; }
+        .autonomy-line { margin: -2px 0 8px; color: rgba(255,255,255,.74); font-size: .74rem; line-height: 1.25; }
+        .inventory-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 9px; font-size: .78rem; }
+        .inventory-chip { border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 6px 9px; background: rgba(255,255,255,.08); text-align: center; }
+        .survival-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .survival-btn { border: 1px solid rgba(255,255,255,.22); border-radius: 13px; padding: 9px 8px; background: rgba(2,22,38,.36); color: #fff; font-weight: 800; font-size: .76rem; cursor: pointer; }
+        .survival-btn:hover:not(:disabled) { background: rgba(255,244,184,.22); border-color: rgba(255,244,184,.68); }
+        .survival-btn:disabled { opacity: .42; cursor: not-allowed; }
+        .touch-pad { position: fixed; left: 14px; bottom: 14px; z-index: 14; display: none; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(2, 46px); gap: 8px; touch-action: none; }
+        .touch-btn { border: 1px solid rgba(255,255,255,.22); border-radius: 16px; background: rgba(2,22,38,.34); color: #fff; font-weight: 800; font-size: 1rem; backdrop-filter: blur(10px); }
+        .touch-btn[data-key="KeyW"] { grid-column: 2; grid-row: 1; }
+        .touch-btn[data-key="KeyA"] { grid-column: 1; grid-row: 2; }
+        .touch-btn[data-key="KeyS"] { grid-column: 2; grid-row: 2; }
+        .touch-btn[data-key="KeyD"] { grid-column: 3; grid-row: 2; }
+        .loader { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, #d7f3ff, #63a4d2 58%, #123b5f); color: white; z-index: 30; font-family: var(--font-heading); letter-spacing: .16em; transition: opacity .7s ease; }
+        .loader.hidden { opacity: 0; pointer-events: none; }
+        .webgl-error { position: fixed; inset: auto 18px 18px 18px; z-index: 40; padding: 14px 16px; border-radius: 14px; background: rgba(2,15,25,.86); color: #fff; display: none; }
+        @media (max-width: 760px), (pointer: coarse) {
+            body { overflow: hidden; }
+            header { background: rgba(0,0,0,.82); }
+            header .container { padding: 7px 12px; min-height: 0; }
+            .logo { font-size: 14px; letter-spacing: .13em; }
+            .logo img { height: 32px !important; width: 32px !important; margin-right: 7px !important; }
+            nav { display: none; }
+            .mobile-menu-btn { display: block; font-size: 1.55rem; padding: 4px 6px; }
+            .unknown-hud { left: 12px; right: 12px; bottom: 98px; padding: 14px 15px; max-width: none; pointer-events: none; }
+            .unknown-hud h1 { font-size: clamp(1.65rem, 9vw, 2.7rem); margin-bottom: 6px; }
+            .unknown-hud p { font-size: .86rem; line-height: 1.35; }
+            .unknown-hud .eyebrow { font-size: .62rem; letter-spacing: .2em; }
+            .quality-chip { display: none; }
+            .walk-panel { top: 62px; right: 10px; gap: 6px; }
+            .walk-btn { padding: 9px 13px; font-size: .76rem; }
+            .walk-help { display: none; }
+            .needs-panel,
+            .survival-actions { bottom: max(10px, env(safe-area-inset-bottom)); padding: 8px; border-radius: 16px; }
+            .needs-panel { left: 10px; width: min(224px, 38vw); }
+            .needs-title { font-size: .62rem; margin-bottom: 5px; letter-spacing: .14em; }
+            .needs-mood { display: none; }
+            .need-row { grid-template-columns: 56px 1fr; gap: 5px; margin: 3px 0; font-size: .66rem; }
+            .need-value { display: none; }
+            .need-track { height: 6px; }
+            .survival-actions { right: 10px; width: min(334px, 54vw); }
+            .survival-title { font-size: .62rem; margin-bottom: 5px; letter-spacing: .13em; }
+            .survival-status { display: none; }
+            .autonomy-line { margin: 0 0 6px; font-size: .66rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .inventory-row { gap: 5px; margin-bottom: 6px; font-size: .64rem; }
+            .inventory-chip { padding: 5px 7px; }
+            .survival-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+            .survival-btn { min-height: 36px; padding: 7px 4px; font-size: .62rem; }
+            .touch-pad { display: none; }
+            body.walking .unknown-hud,
+            body.walking .needs-panel,
+            body.walking .survival-actions { display: none; }
+            body.walking .touch-pad { display: grid; left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); }
+        }
+        @media (max-height: 620px) and (pointer: coarse) {
+            .walk-panel { top: 58px; }
+            .walk-btn { padding: 8px 12px; font-size: .72rem; }
+            .needs-panel { width: min(198px, 34vw); }
+            .survival-actions { width: min(360px, 56vw); }
+            .needs-panel,
+            .survival-actions { padding: 7px; }
+            .need-row { grid-template-columns: 48px 1fr; font-size: .61rem; }
+            .survival-buttons { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+            .survival-btn { min-height: 32px; font-size: .58rem; }
+            .inventory-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 560px) and (orientation: portrait) {
+            .needs-panel { left: 10px; right: 10px; bottom: calc(max(10px, env(safe-area-inset-bottom)) + 142px); width: auto; }
+            .survival-actions { left: 10px; right: 10px; width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/index.html" class="logo"><img src="/images/logo.png" alt="Yaan Batho" style="height:42px;width:42px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">Yaan Batho</a>
+            <nav>
+                <a href="/index.html">Home</a>
+                <a href="/projects.html">Projects</a>
+                <a href="/unknown/" class="active">Unknown</a>
+                <a href="/products.html">Products</a>
+                <a href="/ava-projects/">Ava Projects</a>
+                <a href="/bio.html">Bio</a>
+                <a href="/music.html">Music</a>
+                <a href="/contact.html">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <div id="ocean-stage" aria-label="A realistic Three.js ocean surface under bright sunshine"></div>
+    <div class="loader" id="loader">SUMMONING WATER</div>
+    <div class="webgl-error" id="webgl-error">This browser could not start the WebGL ocean renderer. Try a newer browser or enable hardware acceleration.</div>
+    <div class="walk-panel">
+        <button class="walk-btn" id="walk-btn" type="button">Walk the island</button>
+        <div class="walk-help" id="walk-help">Click to land on the island. WASD / arrows to walk, mouse to look, Esc to return to orbit.</div>
+    </div>
+    <div class="touch-pad" id="touch-pad" aria-label="Touch walk controls">
+        <button class="touch-btn" data-key="KeyW" type="button">▲</button>
+        <button class="touch-btn" data-key="KeyA" type="button">◀</button>
+        <button class="touch-btn" data-key="KeyS" type="button">▼</button>
+        <button class="touch-btn" data-key="KeyD" type="button">▶</button>
+    </div>
+    <aside class="needs-panel" id="needs-panel" aria-label="Resident needs">
+        <div class="needs-title">Resident needs <span class="needs-mood" id="needs-mood">Settling in</span></div>
+        <div class="need-row" data-need="hunger"><span class="need-label">Hungry</span><span class="need-track"><span class="need-fill"></span></span><span class="need-value">0%</span></div>
+        <div class="need-row" data-need="thirst"><span class="need-label">Thirsty</span><span class="need-track"><span class="need-fill"></span></span><span class="need-value">0%</span></div>
+        <div class="need-row" data-need="boredom"><span class="need-label">Bored</span><span class="need-track"><span class="need-fill"></span></span><span class="need-value">0%</span></div>
+        <div class="need-row" data-need="tiredness"><span class="need-label">Tired</span><span class="need-track"><span class="need-fill"></span></span><span class="need-value">0%</span></div>
+    </aside>
+    <aside class="survival-actions" id="survival-actions" aria-label="Fishing and cooking">
+        <div class="survival-title">Island tasks <span class="survival-status" id="survival-status">Ready</span></div>
+        <div class="autonomy-line" id="autonomy-status">Auto: deciding what he needs next</div>
+        <div class="inventory-row">
+            <span class="inventory-chip">Raw fish <strong id="raw-fish-count">0</strong></span>
+            <span class="inventory-chip">Cooked <strong id="cooked-fish-count">0</strong></span>
+        </div>
+        <div class="survival-buttons">
+            <button class="survival-btn" id="fish-btn" type="button">🎣 Fish</button>
+            <button class="survival-btn" id="cook-btn" type="button">🔥 Cook</button>
+            <button class="survival-btn" id="eat-btn" type="button">🍽️ Eat</button>
+            <button class="survival-btn" id="drink-btn" type="button">💧 Drink</button>
+            <button class="survival-btn" id="sleep-btn" type="button">🛏️ Sleep</button>
+            <button class="survival-btn" id="play-btn" type="button">🪁 Play</button>
+        </div>
+    </aside>
+    <div class="quality-chip">drag to look · island life v13</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.165.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.165.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { Water } from 'three/addons/objects/Water.js';
+        import { Sky } from 'three/addons/objects/Sky.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        const stage = document.getElementById('ocean-stage');
+        const loader = document.getElementById('loader');
+        const errorBox = document.getElementById('webgl-error');
+        const walkBtn = document.getElementById('walk-btn');
+        const touchPad = document.getElementById('touch-pad');
+        const fishBtn = document.getElementById('fish-btn');
+        const cookBtn = document.getElementById('cook-btn');
+        const eatBtn = document.getElementById('eat-btn');
+        const drinkBtn = document.getElementById('drink-btn');
+        const sleepBtn = document.getElementById('sleep-btn');
+        const playBtn = document.getElementById('play-btn');
+        const rawFishCountEl = document.getElementById('raw-fish-count');
+        const cookedFishCountEl = document.getElementById('cooked-fish-count');
+        const survivalStatusEl = document.getElementById('survival-status');
+        const autonomyStatusEl = document.getElementById('autonomy-status');
+        const isMobile = matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+        const quality = {
+            mobile: isMobile,
+            pixelRatio: Math.min(devicePixelRatio, isMobile ? 1.05 : 1.75),
+            waterSegments: isMobile ? 64 : 128,
+            normalTextureSize: isMobile ? 256 : 512,
+            reflectionSize: isMobile ? 256 : 1024,
+            bloom: !isMobile
+        };
+        window.__unknownOcean = { status: 'booting', version: 'island-life-v13-compact-mobile-ui', quality };
+        window.__unknownOceanErrors = [];
+        const realtimeConfig = {
+            storageKey: 'unknown-island-life-v2',
+            maxOfflineSeconds: 60 * 60 * 24 * 3,
+            idleStepSeconds: 45,
+            maxOfflineActions: 720
+        };
+
+        const needDefs = [
+            { key: 'hunger', label: 'Hungry', icon: '🍌', ratePerMinute: 3.2 },
+            { key: 'thirst', label: 'Thirsty', icon: '💧', ratePerMinute: 4.4 },
+            { key: 'boredom', label: 'Bored', icon: '🪁', ratePerMinute: 2.8 },
+            { key: 'tiredness', label: 'Tired', icon: '💤', ratePerMinute: 2.1 }
+        ];
+        const needLabels = Object.fromEntries(needDefs.map((need) => [need.key, need.label]));
+
+        function clampNeed(value) {
+            return Math.max(0, Math.min(100, value));
+        }
+
+        function createInitialNeeds() {
+            return {
+                hunger: 16,
+                thirst: 12,
+                boredom: 9,
+                tiredness: 7,
+                mood: 'Settling in',
+                topNeed: 'hunger',
+                topNeedValue: 16
+            };
+        }
+
+        function getDominantNeed(needs) {
+            return needDefs.reduce((top, need) => needs[need.key] > needs[top.key] ? need : top, needDefs[0]);
+        }
+
+        function describeMood(value) {
+            if (value >= 82) return 'Needs help now';
+            if (value >= 62) return 'Getting uncomfortable';
+            if (value >= 38) return 'Starting to complain';
+            return 'Content for now';
+        }
+
+        function settleNeeds(needs) {
+            const dominant = getDominantNeed(needs);
+            return {
+                ...needs,
+                topNeed: dominant.key,
+                topNeedValue: needs[dominant.key],
+                mood: describeMood(needs[dominant.key])
+            };
+        }
+
+        function advanceNeeds(needs, deltaSeconds) {
+            const next = { ...needs };
+            for (const need of needDefs) {
+                next[need.key] = clampNeed(next[need.key] + need.ratePerMinute * (deltaSeconds / 60));
+            }
+            return settleNeeds(next);
+        }
+
+        function reduceNeed(needs, key, amount) {
+            if (!needLabels[key]) return { ...needs };
+            return settleNeeds({ ...needs, [key]: clampNeed(needs[key] - amount) });
+        }
+
+        function createInitialSurvivalState() {
+            return {
+                rawFish: 0,
+                cookedFish: 0,
+                fishingTrips: 0,
+                cookedTotal: 0,
+                waterDrinks: 0,
+                sleepSessions: 0,
+                playSessions: 0,
+                lastAction: 'Ready to fish',
+                actionNonce: 0
+            };
+        }
+
+        function catchFishInState(state) {
+            const bonusCatch = state.fishingTrips > 0 && state.fishingTrips % 4 === 3 ? 1 : 0;
+            return {
+                ...state,
+                rawFish: state.rawFish + 1 + bonusCatch,
+                fishingTrips: state.fishingTrips + 1,
+                lastAction: bonusCatch ? 'Lucky catch: 2 fish!' : 'Caught 1 fish',
+                actionNonce: state.actionNonce + 1
+            };
+        }
+
+        function cookFishInState(state) {
+            if (state.rawFish <= 0) return { ...state, lastAction: 'Catch a fish first' };
+            return {
+                ...state,
+                rawFish: state.rawFish - 1,
+                cookedFish: state.cookedFish + 1,
+                cookedTotal: state.cookedTotal + 1,
+                lastAction: 'Cooked 1 fish on the bonfire',
+                actionNonce: state.actionNonce + 1
+            };
+        }
+
+        function eatCookedFishInState(state) {
+            if (state.cookedFish <= 0) return { nextState: { ...state, lastAction: 'No cooked fish yet' }, ate: false };
+            return {
+                nextState: {
+                    ...state,
+                    cookedFish: state.cookedFish - 1,
+                    lastAction: 'Ate cooked fish',
+                    actionNonce: state.actionNonce + 1
+                },
+                ate: true
+            };
+        }
+
+        function drinkFreshWaterInState(state) {
+            return {
+                ...state,
+                waterDrinks: state.waterDrinks + 1,
+                lastAction: 'Drank fresh water',
+                actionNonce: state.actionNonce + 1
+            };
+        }
+
+        function sleepInState(state) {
+            return {
+                ...state,
+                sleepSessions: state.sleepSessions + 1,
+                lastAction: 'Had a little island nap',
+                actionNonce: state.actionNonce + 1
+            };
+        }
+
+        function playInState(state) {
+            return {
+                ...state,
+                playSessions: state.playSessions + 1,
+                lastAction: 'Played by the kite',
+                actionNonce: state.actionNonce + 1
+            };
+        }
+
+        function normalizeSavedNeeds(savedNeeds) {
+            const base = createInitialNeeds();
+            if (!savedNeeds || typeof savedNeeds !== 'object') return settleNeeds(base);
+            const next = { ...base };
+            for (const need of needDefs) next[need.key] = clampNeed(Number(savedNeeds[need.key] ?? base[need.key]));
+            return settleNeeds(next);
+        }
+
+        function normalizeSavedSurvival(savedSurvival) {
+            const base = createInitialSurvivalState();
+            if (!savedSurvival || typeof savedSurvival !== 'object') return base;
+            return {
+                ...base,
+                rawFish: Math.max(0, Math.floor(Number(savedSurvival.rawFish ?? base.rawFish))),
+                cookedFish: Math.max(0, Math.floor(Number(savedSurvival.cookedFish ?? base.cookedFish))),
+                fishingTrips: Math.max(0, Math.floor(Number(savedSurvival.fishingTrips ?? base.fishingTrips))),
+                cookedTotal: Math.max(0, Math.floor(Number(savedSurvival.cookedTotal ?? base.cookedTotal))),
+                waterDrinks: Math.max(0, Math.floor(Number(savedSurvival.waterDrinks ?? base.waterDrinks))),
+                sleepSessions: Math.max(0, Math.floor(Number(savedSurvival.sleepSessions ?? base.sleepSessions))),
+                playSessions: Math.max(0, Math.floor(Number(savedSurvival.playSessions ?? base.playSessions))),
+                lastAction: String(savedSurvival.lastAction || base.lastAction).slice(0, 96),
+                actionNonce: Math.max(0, Math.floor(Number(savedSurvival.actionNonce ?? base.actionNonce)))
+            };
+        }
+
+        function chooseOfflineTask(needs, survival) {
+            if (survival.rawFish > 0 && survival.cookedFish < 2) return 'cook';
+            if (needs.hunger >= 42) {
+                if (survival.cookedFish > 0) return 'eat';
+                if (survival.rawFish > 0) return 'cook';
+                return 'fish';
+            }
+            if (needs.thirst >= 58) return 'drink';
+            if (needs.tiredness >= 68) return 'sleep';
+            if (needs.boredom >= 62) return 'play';
+            return null;
+        }
+
+        function runOfflineAction(needs, survival, task, availableSeconds) {
+            const actionSeconds = { fish: 55, cook: 48, eat: 24, drink: 20, sleep: 300, play: 75 }[task] || 30;
+            if (availableSeconds < 1) return { needs, survival, spent: 0, did: null };
+            const spent = Math.min(actionSeconds, availableSeconds);
+            let nextNeeds = advanceNeeds(needs, spent);
+            let nextSurvival = survival;
+            if (task === 'fish') {
+                nextSurvival = catchFishInState(nextSurvival);
+                nextNeeds = reduceNeed(nextNeeds, 'boredom', 8);
+            } else if (task === 'cook') {
+                const cookedBefore = nextSurvival.cookedFish;
+                nextSurvival = cookFishInState(nextSurvival);
+                if (nextSurvival.cookedFish > cookedBefore) nextNeeds = reduceNeed(reduceNeed(nextNeeds, 'boredom', 5), 'tiredness', -2);
+            } else if (task === 'eat') {
+                const result = eatCookedFishInState(nextSurvival);
+                nextSurvival = result.nextState;
+                if (result.ate) nextNeeds = reduceNeed(nextNeeds, 'hunger', 34);
+            } else if (task === 'drink') {
+                nextSurvival = drinkFreshWaterInState(nextSurvival);
+                nextNeeds = reduceNeed(nextNeeds, 'thirst', 38);
+            } else if (task === 'sleep') {
+                nextSurvival = sleepInState(nextSurvival);
+                nextNeeds = reduceNeed(reduceNeed(nextNeeds, 'tiredness', 48), 'boredom', -4);
+            } else if (task === 'play') {
+                nextSurvival = playInState(nextSurvival);
+                nextNeeds = reduceNeed(reduceNeed(nextNeeds, 'boredom', 42), 'tiredness', -6);
+            }
+            return { needs: nextNeeds, survival: nextSurvival, spent, did: task };
+        }
+
+        function simulateRealtimeIsland(savedSnapshot, nowMs = Date.now()) {
+            let needs = normalizeSavedNeeds(savedSnapshot?.needs);
+            let survival = normalizeSavedSurvival(savedSnapshot?.survival);
+            const savedAt = Number(savedSnapshot?.savedAt || 0);
+            const rawElapsed = savedAt > 0 ? Math.max(0, (nowMs - savedAt) / 1000) : 0;
+            let remaining = Math.min(rawElapsed, realtimeConfig.maxOfflineSeconds);
+            let actions = 0;
+            const actionCounts = { fish: 0, cook: 0, eat: 0, drink: 0, sleep: 0, play: 0 };
+            while (remaining > 1 && actions < realtimeConfig.maxOfflineActions) {
+                const task = chooseOfflineTask(needs, survival);
+                if (!task) {
+                    const spent = Math.min(realtimeConfig.idleStepSeconds, remaining);
+                    needs = advanceNeeds(needs, spent);
+                    remaining -= spent;
+                    continue;
+                }
+                const result = runOfflineAction(needs, survival, task, remaining);
+                if (!result.spent) break;
+                needs = result.needs;
+                survival = result.survival;
+                remaining -= result.spent;
+                actions += 1;
+                if (result.did) actionCounts[result.did] += 1;
+            }
+            if (remaining > 1) needs = advanceNeeds(needs, remaining);
+            const elapsedSeconds = Math.floor(rawElapsed);
+            const parts = [];
+            if (actionCounts.fish) parts.push(`caught ${actionCounts.fish} fish`);
+            if (actionCounts.cook) parts.push(`cooked ${actionCounts.cook}`);
+            if (actionCounts.eat) parts.push(`ate ${actionCounts.eat}`);
+            if (actionCounts.drink) parts.push(`drank ${actionCounts.drink}`);
+            if (actionCounts.sleep) parts.push(`napped ${actionCounts.sleep}`);
+            if (actionCounts.play) parts.push(`played ${actionCounts.play}`);
+            if (elapsedSeconds >= 20) {
+                survival = {
+                    ...survival,
+                    lastAction: parts.length ? `While away: ${parts.slice(0, 3).join(', ')}` : `Time passed while you were away`
+                };
+            }
+            return { needs, survival, elapsedSeconds, actions, actionCounts, capped: rawElapsed > realtimeConfig.maxOfflineSeconds };
+        }
+
+        function makeWaterNormalTexture(size = 512) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const image = ctx.createImageData(size, size);
+            const data = image.data;
+            const rand = (x, y) => {
+                const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+                return s - Math.floor(s);
+            };
+            const noise = (x, y) => {
+                const x0 = Math.floor(x), y0 = Math.floor(y);
+                const xf = x - x0, yf = y - y0;
+                const u = xf * xf * (3 - 2 * xf);
+                const v = yf * yf * (3 - 2 * yf);
+                const a = rand(x0, y0);
+                const b = rand(x0 + 1, y0);
+                const c = rand(x0, y0 + 1);
+                const d = rand(x0 + 1, y0 + 1);
+                return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a, b, u), THREE.MathUtils.lerp(c, d, u), v);
+            };
+            const height = (x, y) => {
+                let value = 0;
+                let amp = 0.55;
+                let freq = 0.035;
+                for (let i = 0; i < 5; i++) {
+                    value += amp * noise(x * freq + i * 19.7, y * freq + i * 7.3);
+                    freq *= 2.06;
+                    amp *= 0.52;
+                }
+                value += 0.11 * Math.sin((x * 0.19 + y * 0.06));
+                value += 0.08 * Math.sin((x * -0.08 + y * 0.23));
+                return value;
+            };
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const hL = height(x - 1, y);
+                    const hR = height(x + 1, y);
+                    const hD = height(x, y - 1);
+                    const hU = height(x, y + 1);
+                    const nx = (hL - hR) * 1.85;
+                    const ny = (hD - hU) * 1.85;
+                    const nz = 1.0;
+                    const inv = 1 / Math.hypot(nx, ny, nz);
+                    const i = (y * size + x) * 4;
+                    data[i] = Math.floor((nx * inv * 0.5 + 0.5) * 255);
+                    data[i + 1] = Math.floor((ny * inv * 0.5 + 0.5) * 255);
+                    data[i + 2] = Math.floor((nz * inv * 0.5 + 0.5) * 255);
+                    data[i + 3] = 255;
+                }
+            }
+            ctx.putImageData(image, 0, 0);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.colorSpace = THREE.NoColorSpace;
+            texture.anisotropy = 8;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createDistantIsland() {
+            const island = new THREE.Group();
+            island.name = 'distant-island-atoll';
+            island.position.set(18, -0.8, -760);
+            island.scale.set(1.2, 1.2, 1.2);
+
+            const sandMat = new THREE.MeshStandardMaterial({ color: 0xd8bf82, roughness: 0.96, metalness: 0.01, fog: true });
+            const grassMat = new THREE.MeshStandardMaterial({ color: 0x2f7644, roughness: 0.9, fog: true });
+            const grassDarkMat = new THREE.MeshStandardMaterial({ color: 0x225a36, roughness: 0.94, fog: true });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x6a6a61, roughness: 0.96, fog: true });
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7b5631, roughness: 0.9, fog: true });
+            const palmMat = new THREE.MeshStandardMaterial({ color: 0x235c3b, roughness: 0.8, fog: true, side: THREE.DoubleSide });
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0xd1b074, roughness: 1.0, metalness: 0.0, fog: true });
+            const hutWoodMat = new THREE.MeshStandardMaterial({ color: 0x8b5f36, roughness: 0.86, fog: true });
+            const hutRoofMat = new THREE.MeshStandardMaterial({ color: 0xb99150, roughness: 0.98, fog: true });
+            const hutDarkMat = new THREE.MeshStandardMaterial({ color: 0x2f2118, roughness: 0.92, fog: true });
+            const clothMat = new THREE.MeshStandardMaterial({ color: 0xe6f0d1, roughness: 0.82, fog: true });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xb87952, roughness: 0.8, fog: true });
+            const emberMat = new THREE.MeshBasicMaterial({ color: 0xff7b2c, transparent: true, opacity: 0.84 });
+            const flameMat = new THREE.MeshBasicMaterial({ color: 0xffd56a, transparent: true, opacity: 0.78 });
+            const fishMat = new THREE.MeshStandardMaterial({ color: 0x7fc6d6, roughness: 0.5, metalness: 0.08, fog: true });
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xf4ead0, transparent: true, opacity: 0.76 });
+            const waterMat = new THREE.MeshStandardMaterial({ color: 0x55b9d7, roughness: 0.28, metalness: 0.02, transparent: true, opacity: 0.82, fog: true });
+            const bedMat = new THREE.MeshStandardMaterial({ color: 0xe6d39b, roughness: 0.92, fog: true });
+            const kiteMat = new THREE.MeshBasicMaterial({ color: 0xffdc7c, side: THREE.DoubleSide });
+            const islandDetail = isMobile ? { sand: [40, 12], hill: [30, 12], fronds: 5 } : { sand: [64, 20], hill: [48, 18], fronds: 7 };
+
+            function makeStatusSprite() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 128;
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.colorSpace = THREE.SRGBColorSpace;
+                const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
+                const sprite = new THREE.Sprite(material);
+                sprite.name = 'resident-needs-thought-bubble';
+                sprite.scale.set(24, 12, 1);
+                sprite.position.set(0, 28, 0);
+                sprite.userData.canvas = canvas;
+                sprite.userData.texture = texture;
+                sprite.userData.lastText = '';
+                return sprite;
+            }
+
+            function addRoad(name, x, y, z, width, length, rot = 0) {
+                const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.5, length), roadMat);
+                road.name = `island-road-${name}`;
+                road.position.set(x, y, z);
+                road.rotation.y = rot;
+                island.add(road);
+                return road;
+            }
+
+            function addHut() {
+                const hut = new THREE.Group();
+                hut.name = 'island-hut-home';
+                hut.position.set(14, 24.2, -12);
+                hut.rotation.y = -0.18;
+
+                const floor = new THREE.Mesh(new THREE.BoxGeometry(28, 2.1, 20), hutWoodMat);
+                hut.add(floor);
+
+                const cabin = new THREE.Mesh(new THREE.BoxGeometry(22, 14, 16), hutWoodMat);
+                cabin.position.y = 8;
+                hut.add(cabin);
+
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(18, 11, 4), hutRoofMat);
+                roof.name = 'thatched-hut-roof';
+                roof.position.y = 20.2;
+                roof.rotation.y = Math.PI * 0.25;
+                roof.scale.z = 0.72;
+                hut.add(roof);
+
+                const door = new THREE.Mesh(new THREE.BoxGeometry(5.4, 8.8, 0.75), hutDarkMat);
+                door.name = 'hut-front-door';
+                door.position.set(-3.8, 5.8, 8.35);
+                hut.add(door);
+
+                const window = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.6, 0.8), hutDarkMat);
+                window.name = 'hut-window';
+                window.position.set(5.8, 9, 8.4);
+                hut.add(window);
+
+                const porch = new THREE.Mesh(new THREE.BoxGeometry(13, 1.1, 8), hutWoodMat);
+                porch.name = 'hut-porch';
+                porch.position.set(0, 0.8, 13.2);
+                hut.add(porch);
+
+                [[-10, -7], [10, -7], [-10, 7], [10, 7]].forEach(([x, z]) => {
+                    const stilt = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 9, 6), trunkMat);
+                    stilt.position.set(x, -5.2, z);
+                    hut.add(stilt);
+                });
+
+                island.add(hut);
+                return hut;
+            }
+
+            function addFishingSpot() {
+                const spot = new THREE.Group();
+                spot.name = 'shore-fishing-spot';
+                spot.position.set(-58, 11.0, 28);
+                spot.rotation.y = Math.PI * 0.62;
+
+                const post = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 18, 8), trunkMat);
+                post.name = 'fishing-rod';
+                post.position.set(0, 8.5, 0);
+                post.rotation.z = -0.42;
+                spot.add(post);
+
+                const line = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(5.5, 15, 0), new THREE.Vector3(18, 1.2, -8)]),
+                    lineMat
+                );
+                line.name = 'fishing-line';
+                spot.add(line);
+
+                const bobber = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 8), new THREE.MeshBasicMaterial({ color: 0xfff0d0 }));
+                bobber.name = 'fishing-bobber';
+                bobber.position.set(18, 1.2, -8);
+                spot.add(bobber);
+
+                island.add(spot);
+                return spot;
+            }
+
+            function makeTinyFish(name, x, y, z, scale = 1) {
+                const fish = new THREE.Group();
+                fish.name = name;
+                fish.position.set(x, y, z);
+                fish.scale.setScalar(scale);
+                const body = new THREE.Mesh(new THREE.SphereGeometry(2.2, 14, 8), fishMat);
+                body.scale.set(1.55, 0.62, 0.72);
+                fish.add(body);
+                const tail = new THREE.Mesh(new THREE.ConeGeometry(1.25, 2.6, 3), fishMat);
+                tail.position.x = -3.2;
+                tail.rotation.z = Math.PI / 2;
+                fish.add(tail);
+                island.add(fish);
+                return fish;
+            }
+
+            function addBonfire() {
+                const fire = new THREE.Group();
+                fire.name = 'cooking-bonfire';
+                fire.position.set(-10, 18.7, 31);
+
+                for (let i = 0; i < 8; i++) {
+                    const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5, 0), rockMat);
+                    const a = (i / 8) * Math.PI * 2;
+                    stone.position.set(Math.cos(a) * 5.2, 0.7, Math.sin(a) * 5.2);
+                    stone.scale.set(1.3, 0.7, 1.0);
+                    fire.add(stone);
+                }
+                [[-2.5, 0.45], [2.5, -0.45], [0, 1.55]].forEach(([x, rot]) => {
+                    const log = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 9, 8), trunkMat);
+                    log.position.set(x, 1.5, 0);
+                    log.rotation.z = Math.PI / 2;
+                    log.rotation.y = rot;
+                    fire.add(log);
+                });
+                const ember = new THREE.Mesh(new THREE.SphereGeometry(3.1, 16, 8), emberMat);
+                ember.name = 'bonfire-embers';
+                ember.scale.y = 0.34;
+                ember.position.y = 1.4;
+                fire.add(ember);
+                for (let i = 0; i < 3; i++) {
+                    const flame = new THREE.Mesh(new THREE.ConeGeometry(1.7 - i * 0.22, 6.8 - i, 14), flameMat);
+                    flame.name = `bonfire-flame-${i}`;
+                    flame.position.set((i - 1) * 1.1, 4.4 + i * 0.25, 0.35 * i);
+                    flame.rotation.y = i * 1.2;
+                    fire.add(flame);
+                }
+                const spit = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 14, 8), trunkMat);
+                spit.name = 'fish-cooking-spit';
+                spit.position.set(0, 7.3, 0);
+                spit.rotation.z = Math.PI / 2;
+                fire.add(spit);
+                const cookingFish = makeTinyFish('fish-on-bonfire-spit', 0, 0, 0, 0.62);
+                cookingFish.position.set(0, 7.35, 0);
+                cookingFish.rotation.z = 0.05;
+                fire.add(cookingFish);
+                island.remove(cookingFish);
+
+                island.add(fire);
+                return fire;
+            }
+
+            function addCareProps() {
+                const care = new THREE.Group();
+                care.name = 'resident-care-props';
+
+                const barrel = new THREE.Group();
+                barrel.name = 'fresh-water-barrel';
+                barrel.position.set(32, 18.4, -1);
+                const barrelBody = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 4.2, 8.4, 16), hutWoodMat);
+                barrelBody.position.y = 4.2;
+                barrel.add(barrelBody);
+                const waterTop = new THREE.Mesh(new THREE.CylinderGeometry(3.25, 3.25, 0.35, 16), waterMat);
+                waterTop.name = 'barrel-fresh-water';
+                waterTop.position.y = 8.65;
+                barrel.add(waterTop);
+                care.add(barrel);
+
+                const napMat = new THREE.Group();
+                napMat.name = 'sleeping-roll-bed';
+                napMat.position.set(31, 18.25, -20);
+                napMat.rotation.y = -0.28;
+                const matBase = new THREE.Mesh(new THREE.BoxGeometry(15, 0.75, 8), bedMat);
+                matBase.name = 'woven-sleeping-mat';
+                matBase.position.y = 0.45;
+                napMat.add(matBase);
+                const pillow = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.5, 6.6), clothMat);
+                pillow.name = 'sleeping-mat-pillow';
+                pillow.position.set(-4.4, 1.45, 0);
+                napMat.add(pillow);
+                care.add(napMat);
+
+                const kite = new THREE.Group();
+                kite.name = 'boredom-play-kite';
+                kite.position.set(-42, 28, -23);
+                const kiteFace = new THREE.Mesh(new THREE.PlaneGeometry(9, 11), kiteMat);
+                kiteFace.name = 'yellow-island-kite';
+                kiteFace.rotation.z = Math.PI * 0.25;
+                kite.add(kiteFace);
+                const kiteTail = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -6, 0), new THREE.Vector3(-3, -12, 0), new THREE.Vector3(2, -18, 0)]),
+                    lineMat
+                );
+                kiteTail.name = 'kite-tail-string';
+                kite.add(kiteTail);
+                care.add(kite);
+
+                island.add(care);
+                return care;
+            }
+
+            function addResident() {
+                const person = new THREE.Group();
+                person.name = 'island-resident-one-person';
+                person.position.set(-22, 18.8, 16);
+                person.rotation.y = 0.55;
+
+                const body = new THREE.Mesh(new THREE.CapsuleGeometry(2.3, 5.4, 4, 10), clothMat);
+                body.name = 'resident-body';
+                body.position.y = 8.4;
+                person.add(body);
+
+                const head = new THREE.Mesh(new THREE.SphereGeometry(2.45, isMobile ? 12 : 18, isMobile ? 8 : 12), skinMat);
+                head.name = 'resident-head';
+                head.position.y = 14.9;
+                person.add(head);
+
+                const hat = new THREE.Mesh(new THREE.ConeGeometry(4.1, 2.2, isMobile ? 12 : 18), hutRoofMat);
+                hat.name = 'resident-sun-hat';
+                hat.position.y = 17.3;
+                person.add(hat);
+
+                const brim = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 4.8, 0.35, isMobile ? 14 : 24), hutRoofMat);
+                brim.position.y = 16.3;
+                person.add(brim);
+
+                [[-1.05], [1.05]].forEach(([x]) => {
+                    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.72, 5.4, 8), skinMat);
+                    leg.position.set(x, 3, 0);
+                    person.add(leg);
+                });
+                [[-2.85, 0.2, -0.25], [2.85, -0.2, 0.25]].forEach(([x, rz, z]) => {
+                    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.54, 5.8, 8), skinMat);
+                    arm.position.set(x, 8.2, z);
+                    arm.rotation.z = rz;
+                    person.add(arm);
+                });
+                const shadow = new THREE.Mesh(
+                    new THREE.CircleGeometry(4.1, isMobile ? 16 : 28),
+                    new THREE.MeshBasicMaterial({ color: 0x1f241e, transparent: true, opacity: 0.16, depthWrite: false })
+                );
+                shadow.name = 'resident-soft-shadow';
+                shadow.rotation.x = -Math.PI / 2;
+                shadow.position.y = 0.16;
+                person.add(shadow);
+
+                person.userData.needsSprite = makeStatusSprite();
+                person.add(person.userData.needsSprite);
+
+                island.add(person);
+                return person;
+            }
+
+            const sand = new THREE.Mesh(new THREE.SphereGeometry(86, islandDetail.sand[0], islandDetail.sand[1]), sandMat);
+            sand.name = 'round-sandy-island-base';
+            sand.scale.set(1.16, 0.115, 1.02);
+            sand.position.y = -1.0;
+            sand.rotation.y = -0.08;
+            island.add(sand);
+
+            const hill = new THREE.Mesh(new THREE.SphereGeometry(58, islandDetail.hill[0], islandDetail.hill[1]), grassMat);
+            hill.name = 'soft-round-grassy-plateau';
+            hill.scale.set(1.0, 0.28, 0.86);
+            hill.position.set(-5, 7.6, -2);
+            hill.rotation.y = 0.08;
+            island.add(hill);
+
+            const backHill = new THREE.Mesh(new THREE.SphereGeometry(38, isMobile ? 20 : 30, isMobile ? 8 : 12), grassDarkMat);
+            backHill.name = 'gentle-back-grass-rise';
+            backHill.scale.set(0.74, 0.18, 0.62);
+            backHill.position.set(30, 5.0, 20);
+            backHill.rotation.y = -0.16;
+            island.add(backHill);
+
+            const hutPad = new THREE.Mesh(
+                new THREE.CircleGeometry(21, isMobile ? 28 : 42),
+                roadMat
+            );
+            hutPad.name = 'raised-clear-sandy-hut-pad';
+            hutPad.rotation.x = -Math.PI / 2;
+            hutPad.position.set(14, 17.85, -12);
+            hutPad.scale.set(1.1, 0.74, 1);
+            island.add(hutPad);
+
+            addRoad('shoreline-curve', -4, 9.05, 18, 7, 74, Math.PI * 0.48);
+            addRoad('hut-path', 6, 18.05, 0, 6.5, 48, Math.PI * 0.08);
+            addRoad('palm-loop-west', -34, 12.2, -2, 5.8, 38, Math.PI * -0.2);
+            addRoad('palm-loop-east', 38, 10.0, 14, 5.5, 34, Math.PI * 0.28);
+
+            const hut = addHut();
+            const resident = addResident();
+            const fishingSpot = addFishingSpot();
+            const bonfire = addBonfire();
+            const careProps = addCareProps();
+            const schoolFish = [
+                makeTinyFish('swimming-fish-1', -78, 1.5, 48, 0.9),
+                makeTinyFish('swimming-fish-2', -70, 1.1, 57, 0.7),
+                makeTinyFish('swimming-fish-3', -88, 1.3, 38, 0.65)
+            ];
+            island.userData.hut = hut;
+            island.userData.resident = resident;
+            island.userData.fishingSpot = fishingSpot;
+            island.userData.bonfire = bonfire;
+            island.userData.careProps = careProps;
+            island.userData.schoolFish = schoolFish;
+
+            const rockPositions = [
+                [-86, 2.3, 6, 10, 5, 7], [83, 1.9, -3, 12, 4, 6],
+                [-32, 3.2, -19, 8, 5, 5], [24, 2.8, 18, 7, 4, 6]
+            ];
+            rockPositions.forEach(([x, y, z, sx, sy, sz], idx) => {
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rockMat);
+                rock.position.set(x, y, z);
+                rock.scale.set(sx, sy, sz);
+                rock.rotation.set(idx * 0.31, idx * 0.67, idx * 0.19);
+                island.add(rock);
+            });
+
+            function addPalm(x, z, height, lean, rot) {
+                const palm = new THREE.Group();
+                palm.position.set(x, 9.5, z);
+                palm.rotation.z = lean;
+                palm.rotation.y = rot;
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, height, 8), trunkMat);
+                trunk.position.y = height * 0.5;
+                trunk.rotation.x = 0.08;
+                palm.add(trunk);
+                for (let i = 0; i < islandDetail.fronds; i++) {
+                    const frond = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 23), palmMat);
+                    frond.position.y = height + 1.3;
+                    frond.rotation.y = (i / islandDetail.fronds) * Math.PI * 2;
+                    frond.rotation.x = Math.PI * 0.5 + 0.36;
+                    frond.position.x = Math.cos(frond.rotation.y) * 4.2;
+                    frond.position.z = Math.sin(frond.rotation.y) * 4.2;
+                    palm.add(frond);
+                }
+                island.add(palm);
+            }
+            addPalm(-38, -10, 33, -0.13, 0.2);
+            addPalm(-18, 4, 40, 0.09, -0.45);
+            addPalm(34, 8, 28, 0.17, 0.72);
+
+            const shimmer = new THREE.Mesh(
+                new THREE.RingGeometry(72, 122, 80),
+                new THREE.MeshBasicMaterial({ color: 0x9ce8ff, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide })
+            );
+            shimmer.rotation.x = -Math.PI / 2;
+            shimmer.position.y = 0.05;
+            shimmer.scale.set(1.65, 0.55, 1);
+            island.add(shimmer);
+
+            return island;
+        }
+
+        try {
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0xb7ddf2, 0.00008);
+
+            const islandCenter = new THREE.Vector3(18, -0.8, -760);
+            const islandLookTarget = islandCenter.clone().add(new THREE.Vector3(0, 24, 0));
+            const islandIsoCamera = islandCenter.clone().add(new THREE.Vector3(178, 176, 214));
+
+            const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 20000);
+            camera.position.copy(islandIsoCamera);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setPixelRatio(quality.pixelRatio);
+            renderer.setSize(innerWidth, innerHeight);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = isMobile ? 0.9 : 0.82;
+            stage.appendChild(renderer.domElement);
+
+            const waterGeometry = new THREE.PlaneGeometry(10000, 10000, quality.waterSegments, quality.waterSegments);
+            const water = new Water(waterGeometry, {
+                textureWidth: quality.reflectionSize,
+                textureHeight: quality.reflectionSize,
+                waterNormals: makeWaterNormalTexture(quality.normalTextureSize),
+                sunDirection: new THREE.Vector3(),
+                sunColor: 0xfff2c2,
+                waterColor: 0x033454,
+                distortionScale: isMobile ? 4.4 : 5.2,
+                fog: scene.fog !== undefined
+            });
+            water.rotation.x = -Math.PI / 2;
+            water.material.uniforms.size.value = isMobile ? 2.15 : 1.85;
+            scene.add(water);
+
+            const sky = new Sky();
+            sky.scale.setScalar(10000);
+            scene.add(sky);
+
+            const sun = new THREE.Vector3();
+            const skyUniforms = sky.material.uniforms;
+            skyUniforms.turbidity.value = 6.1;
+            skyUniforms.rayleigh.value = 1.35;
+            skyUniforms.mieCoefficient.value = 0.011;
+            skyUniforms.mieDirectionalG.value = 0.86;
+
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            let renderTarget;
+            const parameters = { elevation: 8.6, azimuth: 121 };
+
+            function updateSun() {
+                const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
+                const theta = THREE.MathUtils.degToRad(parameters.azimuth);
+                sun.setFromSphericalCoords(1, phi, theta);
+                sky.material.uniforms.sunPosition.value.copy(sun);
+                water.material.uniforms.sunDirection.value.copy(sun).normalize();
+                if (renderTarget) renderTarget.dispose();
+                renderTarget = pmremGenerator.fromScene(sky);
+                scene.environment = renderTarget.texture;
+            }
+            updateSun();
+
+            const ambience = new THREE.HemisphereLight(0xdff7ff, 0x25482f, 1.35);
+            scene.add(ambience);
+            const islandSun = new THREE.DirectionalLight(0xffedbd, 2.4);
+            islandSun.position.copy(sun).multiplyScalar(520);
+            scene.add(islandSun);
+
+            const sunGlare = new THREE.Mesh(
+                new THREE.CircleGeometry(110, 96),
+                new THREE.MeshBasicMaterial({ color: 0xfff1aa, transparent: true, opacity: 0.72, depthWrite: false })
+            );
+            sunGlare.position.copy(sun).multiplyScalar(6400);
+            scene.add(sunGlare);
+
+            const haze = new THREE.Mesh(
+                new THREE.PlaneGeometry(10000, 1300),
+                new THREE.MeshBasicMaterial({ color: 0xd7f0ff, transparent: true, opacity: 0.18, depthWrite: false })
+            );
+            haze.position.set(0, 118, -3350);
+            scene.add(haze);
+
+            const island = createDistantIsland();
+            scene.add(island);
+            const resident = island.userData.resident;
+            const fishingSpot = island.userData.fishingSpot;
+            const bonfire = island.userData.bonfire;
+            const careProps = island.userData.careProps;
+            const playKite = careProps?.getObjectByName('boredom-play-kite');
+            const waterBarrel = careProps?.getObjectByName('fresh-water-barrel');
+            const sleepMat = careProps?.getObjectByName('sleeping-roll-bed');
+            const schoolFish = island.userData.schoolFish || [];
+            window.__unknownOcean.island = 'distant-atoll';
+            window.__unknownOcean.hut = 'island-hut-home';
+            window.__unknownOcean.resident = 'one-peaceful-resident';
+            window.__unknownOcean.fishing = 'catch-raw-fish-at-shore';
+            window.__unknownOcean.bonfire = 'cook-raw-fish-into-cooked-fish';
+            window.__unknownOcean.careProps = 'water-barrel-sleeping-mat-play-kite';
+
+            const needRows = new Map([...document.querySelectorAll('.need-row')].map((row) => [row.dataset.need, row]));
+            const moodEl = document.getElementById('needs-mood');
+            let residentNeeds = settleNeeds(createInitialNeeds());
+            let needsHudTimer = 0;
+
+            function updateResidentNeedBubble(force = false) {
+                const sprite = resident?.userData.needsSprite;
+                if (!sprite) return;
+                const dominant = needDefs.find((need) => need.key === residentNeeds.topNeed) || needDefs[0];
+                const text = `${dominant.icon} ${dominant.label}`;
+                if (!force && sprite.userData.lastText === text) return;
+                sprite.userData.lastText = text;
+                const canvas = sprite.userData.canvas;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.strokeStyle = 'rgba(12,35,42,0.48)';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.roundRect(24, 20, 208, 72, 34);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(12,35,42,0.9)';
+                ctx.font = '700 30px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 128, 56);
+                ctx.beginPath();
+                ctx.arc(58, 100, 9, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.76)';
+                ctx.fill();
+                sprite.userData.texture.needsUpdate = true;
+            }
+
+            function updateNeedsHUD() {
+                for (const need of needDefs) {
+                    const row = needRows.get(need.key);
+                    if (!row) continue;
+                    const value = Math.round(residentNeeds[need.key]);
+                    row.querySelector('.need-fill').style.width = `${value}%`;
+                    row.querySelector('.need-value').textContent = `${value}%`;
+                    row.dataset.state = value >= 70 ? 'urgent' : value >= 40 ? 'rising' : 'ok';
+                }
+                if (moodEl) moodEl.textContent = `${residentNeeds.mood} · most ${needLabels[residentNeeds.topNeed].toLowerCase()}`;
+                updateResidentNeedBubble();
+                window.__unknownOcean.needs = { ...residentNeeds };
+            }
+
+            function setResidentNeeds(nextNeeds) {
+                residentNeeds = settleNeeds(nextNeeds);
+                updateNeedsHUD();
+                return { ...residentNeeds };
+            }
+
+            window.__unknownOcean.advanceNeedsFor = (seconds = 60) => setResidentNeeds(advanceNeeds(residentNeeds, Number(seconds) || 0));
+            window.__unknownOcean.reduceNeed = (key, amount = 25) => setResidentNeeds(reduceNeed(residentNeeds, key, Number(amount) || 0));
+            window.__unknownOcean.resetNeeds = () => {
+                const state = setResidentNeeds(createInitialNeeds());
+                if (typeof persistRealtimeState === 'function') persistRealtimeState('reset-needs');
+                return state;
+            };
+            window.__unknownOcean.needsMechanics = 'hunger-thirst-boredom-tiredness-passive-decay';
+            updateNeedsHUD();
+            updateResidentNeedBubble(true);
+
+            let survivalState = createInitialSurvivalState();
+            let survivalPulse = 0;
+
+            function updateSurvivalHUD() {
+                rawFishCountEl.textContent = survivalState.rawFish;
+                cookedFishCountEl.textContent = survivalState.cookedFish;
+                survivalStatusEl.textContent = survivalState.lastAction;
+                cookBtn.disabled = survivalState.rawFish <= 0;
+                eatBtn.disabled = survivalState.cookedFish <= 0;
+                window.__unknownOcean.survival = { ...survivalState };
+            }
+
+            function setSurvivalState(nextState) {
+                survivalState = nextState;
+                survivalPulse = 1;
+                updateSurvivalHUD();
+                return { ...survivalState };
+            }
+
+            function catchFish() {
+                const next = catchFishInState(survivalState);
+                setSurvivalState(next);
+                setResidentNeeds(reduceNeed(residentNeeds, 'boredom', 8));
+                return { ...survivalState };
+            }
+
+            function cookFish() {
+                const beforeCooked = survivalState.cookedFish;
+                const next = cookFishInState(survivalState);
+                setSurvivalState(next);
+                if (survivalState.cookedFish > beforeCooked) {
+                    setResidentNeeds(reduceNeed(reduceNeed(residentNeeds, 'boredom', 5), 'tiredness', -2));
+                }
+                return { ...survivalState };
+            }
+
+            function eatCookedFish() {
+                const result = eatCookedFishInState(survivalState);
+                setSurvivalState(result.nextState);
+                if (result.ate) setResidentNeeds(reduceNeed(residentNeeds, 'hunger', 34));
+                return { ...survivalState, ate: result.ate };
+            }
+
+            function drinkWater() {
+                setSurvivalState(drinkFreshWaterInState(survivalState));
+                setResidentNeeds(reduceNeed(residentNeeds, 'thirst', 38));
+                return { ...survivalState };
+            }
+
+            function sleepNow() {
+                setSurvivalState(sleepInState(survivalState));
+                setResidentNeeds(reduceNeed(reduceNeed(residentNeeds, 'tiredness', 48), 'boredom', -4));
+                return { ...survivalState };
+            }
+
+            function playNow() {
+                setSurvivalState(playInState(survivalState));
+                setResidentNeeds(reduceNeed(reduceNeed(residentNeeds, 'boredom', 42), 'tiredness', -6));
+                return { ...survivalState };
+            }
+
+            const residentDestinations = {
+                home: { label: 'home', position: new THREE.Vector3(-22, 18.8, 16) },
+                fishing: { label: 'fishing rod', position: new THREE.Vector3(-58, 12.4, 28) },
+                bonfire: { label: 'bonfire', position: new THREE.Vector3(-10, 18.8, 31) },
+                water: { label: 'water barrel', position: new THREE.Vector3(32, 18.8, -1) },
+                bed: { label: 'sleeping mat', position: new THREE.Vector3(31, 18.8, -20) },
+                play: { label: 'kite', position: new THREE.Vector3(-42, 19.0, -23) }
+            };
+            const residentAI = {
+                enabled: true,
+                state: 'thinking',
+                action: 'settling in',
+                destination: 'home',
+                timer: 0.8,
+                speed: 20,
+                lastNeed: 'hunger'
+            };
+            let realtimeSaveTimer = 0;
+            let lastRealtimeSnapshot = null;
+
+            function readRealtimeSnapshot() {
+                try {
+                    const raw = localStorage.getItem(realtimeConfig.storageKey);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    console.warn('Could not read island realtime save', error);
+                    return null;
+                }
+            }
+
+            function makeRealtimeSnapshot(reason = 'auto') {
+                return {
+                    version: 2,
+                    reason,
+                    savedAt: Date.now(),
+                    needs: { ...residentNeeds },
+                    survival: { ...survivalState },
+                    ai: { ...residentAI },
+                    residentPosition: resident ? {
+                        x: Math.round(resident.position.x * 100) / 100,
+                        y: Math.round(resident.position.y * 100) / 100,
+                        z: Math.round(resident.position.z * 100) / 100
+                    } : null
+                };
+            }
+
+            function persistRealtimeState(reason = 'auto') {
+                try {
+                    lastRealtimeSnapshot = makeRealtimeSnapshot(reason);
+                    localStorage.setItem(realtimeConfig.storageKey, JSON.stringify(lastRealtimeSnapshot));
+                    window.__unknownOcean.realtimeSave = { savedAt: lastRealtimeSnapshot.savedAt, reason };
+                } catch (error) {
+                    console.warn('Could not save island realtime state', error);
+                }
+            }
+
+            function formatAwayTime(seconds) {
+                if (seconds < 60) return `${Math.max(1, Math.floor(seconds))}s`;
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+                return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
+            }
+
+            function restoreRealtimeState() {
+                const saved = readRealtimeSnapshot();
+                if (!saved) {
+                    persistRealtimeState('first-visit');
+                    return null;
+                }
+                const result = simulateRealtimeIsland(saved, Date.now());
+                residentNeeds = result.needs;
+                survivalState = result.survival;
+                if (saved.ai && typeof saved.ai === 'object') {
+                    Object.assign(residentAI, {
+                        enabled: saved.ai.enabled !== false,
+                        state: 'thinking',
+                        action: result.elapsedSeconds >= 20 ? `catching up after ${formatAwayTime(result.elapsedSeconds)} away` : 'deciding what he needs next',
+                        destination: saved.ai.destination || 'home',
+                        timer: 0.35,
+                        speed: Number(saved.ai.speed) || residentAI.speed,
+                        lastNeed: saved.ai.lastNeed || residentAI.lastNeed
+                    });
+                }
+                if (resident && saved.residentPosition) {
+                    const destination = residentDestinations[residentAI.destination] || residentDestinations.home;
+                    resident.position.set(
+                        Number(saved.residentPosition.x ?? destination.position.x),
+                        Number(saved.residentPosition.y ?? destination.position.y),
+                        Number(saved.residentPosition.z ?? destination.position.z)
+                    );
+                }
+                window.__unknownOcean.realtime = {
+                    enabled: true,
+                    elapsedSeconds: result.elapsedSeconds,
+                    elapsedLabel: formatAwayTime(result.elapsedSeconds),
+                    actions: result.actions,
+                    actionCounts: result.actionCounts,
+                    capped: result.capped
+                };
+                persistRealtimeState('restore');
+                return result;
+            }
+
+            function updateAutonomyStatus() {
+                if (!autonomyStatusEl) return;
+                autonomyStatusEl.textContent = `Auto: ${residentAI.action}`;
+                window.__unknownOcean.autonomy = { ...residentAI };
+            }
+
+            function moveResidentToward(destinationKey, delta) {
+                if (!resident) return true;
+                const destination = residentDestinations[destinationKey] || residentDestinations.home;
+                const target = destination.position;
+                const dx = target.x - resident.position.x;
+                const dz = target.z - resident.position.z;
+                const dy = target.y - resident.position.y;
+                const distance = Math.hypot(dx, dz);
+                if (distance > 0.15) resident.rotation.y = Math.atan2(dx, dz);
+                const step = Math.min(distance, residentAI.speed * delta);
+                if (distance > 0.01) {
+                    resident.position.x += (dx / distance) * step;
+                    resident.position.z += (dz / distance) * step;
+                }
+                resident.position.y += dy * Math.min(1, delta * 5);
+                return distance < 1.4 && Math.abs(dy) < 0.8;
+            }
+
+            function sendResident(destinationKey, actionText, nextState) {
+                residentAI.destination = destinationKey;
+                residentAI.action = actionText;
+                residentAI.state = nextState;
+                updateAutonomyStatus();
+            }
+
+            function pickResidentTask() {
+                if (survivalState.rawFish > 0 && survivalState.cookedFish < 2) return sendResident('bonfire', 'taking raw fish to the bonfire', 'walk-cook');
+                if (residentNeeds.hunger >= 42) {
+                    if (survivalState.cookedFish > 0) return sendResident('bonfire', 'going to eat cooked fish', 'walk-eat');
+                    if (survivalState.rawFish > 0) return sendResident('bonfire', 'going to cook fish', 'walk-cook');
+                    return sendResident('fishing', 'going to the fishing rod', 'walk-fish');
+                }
+                if (residentNeeds.thirst >= 58) return sendResident('water', 'going to drink water', 'walk-drink');
+                if (residentNeeds.tiredness >= 68) return sendResident('bed', 'going for a nap', 'walk-sleep');
+                if (residentNeeds.boredom >= 62) return sendResident('play', 'going to play with the kite', 'walk-play');
+                return sendResident('home', 'pottering around happily', 'walk-home');
+            }
+
+            function startResidentAction(actionState, actionText, seconds) {
+                residentAI.state = actionState;
+                residentAI.action = actionText;
+                residentAI.timer = seconds;
+                updateAutonomyStatus();
+            }
+
+            function completeResidentAction() {
+                if (residentAI.state === 'fishing') {
+                    catchFish();
+                    return sendResident('bonfire', 'carrying fish to the bonfire', 'walk-cook');
+                }
+                if (residentAI.state === 'cooking') {
+                    cookFish();
+                    if (residentNeeds.hunger >= 34 && survivalState.cookedFish > 0) return sendResident('bonfire', 'ready to eat the cooked fish', 'walk-eat');
+                }
+                if (residentAI.state === 'eating') eatCookedFish();
+                if (residentAI.state === 'drinking') drinkWater();
+                if (residentAI.state === 'sleeping') sleepNow();
+                if (residentAI.state === 'playing') playNow();
+                residentAI.state = 'thinking';
+                residentAI.timer = 0.65;
+                residentAI.action = 'deciding what he needs next';
+                updateAutonomyStatus();
+            }
+
+            function updateResidentAutonomy(delta) {
+                if (!residentAI.enabled || !resident) return;
+                if (residentAI.state === 'thinking') {
+                    residentAI.timer -= delta;
+                    if (residentAI.timer <= 0) pickResidentTask();
+                    return;
+                }
+                if (residentAI.state.startsWith('walk-')) {
+                    if (!moveResidentToward(residentAI.destination, delta)) return;
+                    if (residentAI.state === 'walk-fish') return startResidentAction('fishing', 'fishing at the shore', 1.8);
+                    if (residentAI.state === 'walk-cook') return startResidentAction('cooking', 'cooking fish on the bonfire', 1.45);
+                    if (residentAI.state === 'walk-eat') return startResidentAction('eating', 'eating cooked fish', 1.05);
+                    if (residentAI.state === 'walk-drink') return startResidentAction('drinking', 'drinking from the barrel', 0.9);
+                    if (residentAI.state === 'walk-sleep') return startResidentAction('sleeping', 'napping on the sleeping mat', 2.1);
+                    if (residentAI.state === 'walk-play') return startResidentAction('playing', 'playing with the kite', 1.35);
+                    residentAI.state = 'thinking';
+                    residentAI.timer = 1.8;
+                    residentAI.action = 'resting near home';
+                    updateAutonomyStatus();
+                    return;
+                }
+                residentAI.timer -= delta;
+                if (residentAI.timer <= 0) completeResidentAction();
+            }
+
+            fishBtn.addEventListener('click', catchFish);
+            cookBtn.addEventListener('click', cookFish);
+            eatBtn.addEventListener('click', eatCookedFish);
+            drinkBtn.addEventListener('click', drinkWater);
+            sleepBtn.addEventListener('click', sleepNow);
+            playBtn.addEventListener('click', playNow);
+            window.__unknownOcean.catchFish = catchFish;
+            window.__unknownOcean.cookFish = cookFish;
+            window.__unknownOcean.eatCookedFish = eatCookedFish;
+            window.__unknownOcean.drinkWater = drinkWater;
+            window.__unknownOcean.sleepNow = sleepNow;
+            window.__unknownOcean.playNow = playNow;
+            window.__unknownOcean.resetSurvival = () => {
+                const state = setSurvivalState(createInitialSurvivalState());
+                persistRealtimeState('reset-survival');
+                return state;
+            };
+            window.__unknownOcean.survivalMechanics = 'fish-cook-eat-drink-sleep-play-care-loop';
+            window.__unknownOcean.autonomousResident = 'walk-to-tools-and-use-them-when-needed';
+            window.__unknownOcean.realtimeMechanics = 'localStorage-Date.now-offline-catchup';
+            window.__unknownOcean.setAutonomy = (enabled = true) => {
+                residentAI.enabled = Boolean(enabled);
+                residentAI.action = residentAI.enabled ? 'deciding what he needs next' : 'waiting for manual care';
+                updateAutonomyStatus();
+                persistRealtimeState('toggle-autonomy');
+                return { ...residentAI };
+            };
+            window.__unknownOcean.forceHungry = () => {
+                const state = setResidentNeeds({ ...residentNeeds, hunger: 72, thirst: residentNeeds.thirst, boredom: residentNeeds.boredom, tiredness: residentNeeds.tiredness });
+                persistRealtimeState('force-hungry');
+                return state;
+            };
+            window.__unknownOcean.saveRealtime = () => { persistRealtimeState('manual'); return lastRealtimeSnapshot; };
+            window.__unknownOcean.simulateRealtimeCatchup = (secondsAway = 3600) => simulateRealtimeIsland({
+                savedAt: Date.now() - Math.max(0, Number(secondsAway) || 0) * 1000,
+                needs: { ...residentNeeds },
+                survival: { ...survivalState },
+                ai: { ...residentAI },
+                residentPosition: resident ? { x: resident.position.x, y: resident.position.y, z: resident.position.z } : null
+            }, Date.now());
+            window.__unknownOcean.clearRealtimeSave = () => {
+                localStorage.removeItem(realtimeConfig.storageKey);
+                residentNeeds = settleNeeds(createInitialNeeds());
+                survivalState = createInitialSurvivalState();
+                Object.assign(residentAI, { enabled: true, state: 'thinking', action: 'fresh start', destination: 'home', timer: 0.35 });
+                if (resident) resident.position.copy(residentDestinations.home.position);
+                updateNeedsHUD();
+                updateSurvivalHUD();
+                updateAutonomyStatus();
+                persistRealtimeState('clear-realtime-save');
+                return { needs: { ...residentNeeds }, survival: { ...survivalState }, autonomy: { ...residentAI } };
+            };
+            restoreRealtimeState();
+            updateNeedsHUD();
+            updateResidentNeedBubble(true);
+            updateSurvivalHUD();
+            updateAutonomyStatus();
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.045;
+            controls.enablePan = false;
+            controls.minDistance = 95;
+            controls.maxDistance = 420;
+            controls.minPolarAngle = Math.PI * 0.28;
+            controls.maxPolarAngle = Math.PI * 0.43;
+            controls.target.copy(islandLookTarget);
+            camera.lookAt(islandLookTarget);
+            window.__unknownOcean.cameraStart = 'isometric-island-overlook';
+
+            const walkKeys = new Set();
+            const walkState = {
+                enabled: false,
+                yaw: 0,
+                pitch: -0.04,
+                speed: 58,
+                eyeHeight: 7.8
+            };
+
+            function islandGroundHeight(x, z) {
+                const lx = (x - islandCenter.x) / 1.2;
+                const lz = (z - islandCenter.z) / 1.2;
+                const beach = 8.4;
+                const hill = 7.0 * Math.exp(-((lx + 5) ** 2 / 3300 + (lz + 2) ** 2 / 2600));
+                const backHill = 2.4 * Math.exp(-((lx - 30) ** 2 / 1200 + (lz - 20) ** 2 / 900));
+                return islandCenter.y + (beach + hill + backHill) * 1.2;
+            }
+
+            function clampToIsland() {
+                const lx = (camera.position.x - islandCenter.x) / 1.2;
+                const lz = (camera.position.z - islandCenter.z) / 1.2;
+                const rx = 92;
+                const rz = 82;
+                const ellipse = Math.sqrt((lx * lx) / (rx * rx) + (lz * lz) / (rz * rz));
+                if (ellipse > 1) {
+                    const scale = 1 / ellipse;
+                    camera.position.x = islandCenter.x + lx * scale * 1.2;
+                    camera.position.z = islandCenter.z + lz * scale * 1.2;
+                }
+                camera.position.y = islandGroundHeight(camera.position.x, camera.position.z) + walkState.eyeHeight;
+            }
+
+            function updateWalkLook() {
+                const direction = new THREE.Vector3(
+                    Math.sin(walkState.yaw) * Math.cos(walkState.pitch),
+                    Math.sin(walkState.pitch),
+                    -Math.cos(walkState.yaw) * Math.cos(walkState.pitch)
+                );
+                camera.lookAt(camera.position.clone().add(direction));
+            }
+
+            function enterWalkMode(requestLock = true) {
+                walkState.enabled = true;
+                controls.enabled = false;
+                camera.position.set(islandCenter.x + 10, 0, islandCenter.z + 64);
+                walkState.yaw = 0;
+                walkState.pitch = -0.02;
+                clampToIsland();
+                updateWalkLook();
+                document.body.classList.add('walking');
+                walkBtn.textContent = isMobile ? 'Walking — tap to orbit' : 'Walking island — Esc to orbit';
+                window.__unknownOcean.walkMode = true;
+                window.__unknownOcean.walkControls = isMobile ? 'touch D-pad + drag look' : 'WASD/arrows + mouse look';
+                if (!isMobile && requestLock && stage.requestPointerLock) stage.requestPointerLock();
+            }
+
+            function exitWalkMode() {
+                walkState.enabled = false;
+                walkKeys.clear();
+                controls.enabled = true;
+                document.body.classList.remove('walking');
+                controls.target.copy(islandCenter).add(new THREE.Vector3(0, 12, 0));
+                controls.update();
+                walkBtn.textContent = 'Walk the island';
+                window.__unknownOcean.walkMode = false;
+            }
+
+            walkBtn.addEventListener('click', () => walkState.enabled && isMobile ? exitWalkMode() : enterWalkMode(true));
+            stage.addEventListener('click', () => { if (!isMobile && walkState.enabled && stage.requestPointerLock) stage.requestPointerLock(); });
+            document.addEventListener('pointerlockchange', () => { if (!isMobile && walkState.enabled && document.pointerLockElement !== stage) exitWalkMode(); });
+            document.addEventListener('keydown', (event) => {
+                if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code)) {
+                    walkKeys.add(event.code);
+                    if (walkState.enabled) event.preventDefault();
+                }
+                if (event.code === 'Escape' && walkState.enabled) exitWalkMode();
+            });
+            document.addEventListener('keyup', (event) => walkKeys.delete(event.code));
+            document.addEventListener('mousemove', (event) => {
+                if (!walkState.enabled || document.pointerLockElement !== stage) return;
+                walkState.yaw -= event.movementX * 0.0021;
+                walkState.pitch = THREE.MathUtils.clamp(walkState.pitch - event.movementY * 0.0017, -0.55, 0.45);
+                updateWalkLook();
+            });
+            let touchLook = null;
+            stage.addEventListener('touchstart', (event) => {
+                if (!walkState.enabled || event.target.closest('.touch-pad')) return;
+                const touch = event.changedTouches[0];
+                touchLook = { id: touch.identifier, x: touch.clientX, y: touch.clientY };
+            }, { passive: true });
+            stage.addEventListener('touchmove', (event) => {
+                if (!walkState.enabled || !touchLook) return;
+                const touch = [...event.changedTouches].find(t => t.identifier === touchLook.id);
+                if (!touch) return;
+                const dx = touch.clientX - touchLook.x;
+                const dy = touch.clientY - touchLook.y;
+                touchLook.x = touch.clientX;
+                touchLook.y = touch.clientY;
+                walkState.yaw -= dx * 0.004;
+                walkState.pitch = THREE.MathUtils.clamp(walkState.pitch - dy * 0.003, -0.55, 0.45);
+                updateWalkLook();
+                event.preventDefault();
+            }, { passive: false });
+            stage.addEventListener('touchend', () => { touchLook = null; }, { passive: true });
+            touchPad.querySelectorAll('.touch-btn').forEach((btn) => {
+                const key = btn.dataset.key;
+                const press = (event) => { walkKeys.add(key); event.preventDefault(); };
+                const release = (event) => { walkKeys.delete(key); event.preventDefault(); };
+                btn.addEventListener('pointerdown', press);
+                btn.addEventListener('pointerup', release);
+                btn.addEventListener('pointercancel', release);
+                btn.addEventListener('pointerleave', release);
+            });
+            window.__unknownOcean.enterWalkMode = () => enterWalkMode(false);
+            window.__unknownOcean.exitWalkMode = exitWalkMode;
+            window.__unknownOcean.refinement = 'compact-mobile-ui-no-overlap';
+
+            const composer = quality.bloom ? new EffectComposer(renderer) : null;
+            if (composer) {
+                composer.addPass(new RenderPass(scene, camera));
+                composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.16, 0.18, 0.72));
+            }
+
+            const clock = new THREE.Clock();
+            const baseCamera = camera.position.clone();
+
+            function resize() {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setPixelRatio(quality.pixelRatio);
+                renderer.setSize(innerWidth, innerHeight);
+                if (composer) composer.setSize(innerWidth, innerHeight);
+            }
+            addEventListener('resize', resize);
+            addEventListener('beforeunload', () => persistRealtimeState('beforeunload'));
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') persistRealtimeState('hidden');
+            });
+
+            function tick() {
+                const delta = Math.min(clock.getDelta(), 0.05);
+                const elapsed = clock.elapsedTime;
+                water.material.uniforms.time.value += delta * 0.82;
+
+                residentNeeds = advanceNeeds(residentNeeds, delta);
+                needsHudTimer += delta;
+                if (needsHudTimer >= 0.35) {
+                    needsHudTimer = 0;
+                    updateNeedsHUD();
+                }
+                updateResidentAutonomy(delta);
+                realtimeSaveTimer += delta;
+                if (realtimeSaveTimer >= 5) {
+                    realtimeSaveTimer = 0;
+                    persistRealtimeState('heartbeat');
+                }
+                if (resident) {
+                    const dominantPulse = Math.min(1, residentNeeds.topNeedValue / 100);
+                    resident.rotation.z = Math.sin(elapsed * 1.5) * 0.018 * dominantPulse;
+                    const sprite = resident.userData.needsSprite;
+                    if (sprite) sprite.position.y = 28 + Math.sin(elapsed * 1.8) * 0.9;
+                }
+                if (fishingSpot) {
+                    fishingSpot.rotation.z = Math.sin(elapsed * 1.7) * 0.012 * (1 + survivalPulse);
+                    const bobber = fishingSpot.getObjectByName('fishing-bobber');
+                    if (bobber) bobber.position.y = 1.2 + Math.sin(elapsed * 3.2) * 0.55;
+                }
+                if (bonfire) {
+                    bonfire.children.forEach((child) => {
+                        if (child.name?.startsWith('bonfire-flame')) {
+                            const seed = Number(child.name.split('-').pop()) || 0;
+                            child.scale.setScalar(1 + Math.sin(elapsed * 5.4 + seed) * 0.08 + survivalPulse * 0.12);
+                            child.material.opacity = 0.64 + Math.sin(elapsed * 4.7 + seed) * 0.12;
+                        }
+                    });
+                }
+                schoolFish.forEach((fish, idx) => {
+                    fish.position.x += Math.sin(elapsed * 0.8 + idx) * 0.018;
+                    fish.position.z += Math.cos(elapsed * 0.7 + idx * 0.4) * 0.014;
+                    fish.rotation.y = Math.sin(elapsed * 0.9 + idx) * 0.32;
+                });
+                if (playKite) {
+                    playKite.position.y = 28 + Math.sin(elapsed * 1.3) * (1.6 + survivalPulse * 2.2);
+                    playKite.rotation.z = Math.sin(elapsed * 1.1) * 0.08;
+                }
+                if (waterBarrel) waterBarrel.rotation.y = Math.sin(elapsed * 0.8) * 0.015 * survivalPulse;
+                if (sleepMat) sleepMat.scale.y = 1 + Math.sin(elapsed * 1.5) * 0.025 * survivalPulse;
+                survivalPulse = Math.max(0, survivalPulse - delta * 1.8);
+
+                if (walkState.enabled) {
+                    const forward = Number(walkKeys.has('KeyW') || walkKeys.has('ArrowUp')) - Number(walkKeys.has('KeyS') || walkKeys.has('ArrowDown'));
+                    const strafe = Number(walkKeys.has('KeyD') || walkKeys.has('ArrowRight')) - Number(walkKeys.has('KeyA') || walkKeys.has('ArrowLeft'));
+                    const sprint = walkKeys.has('ShiftLeft') || walkKeys.has('ShiftRight') ? 1.75 : 1;
+                    const step = walkState.speed * sprint * delta;
+                    const sin = Math.sin(walkState.yaw);
+                    const cos = Math.cos(walkState.yaw);
+                    camera.position.x += (sin * forward + cos * strafe) * step;
+                    camera.position.z += (-cos * forward + sin * strafe) * step;
+                    clampToIsland();
+                    updateWalkLook();
+                    window.__unknownOcean.walkPosition = {
+                        x: Math.round(camera.position.x * 10) / 10,
+                        y: Math.round(camera.position.y * 10) / 10,
+                        z: Math.round(camera.position.z * 10) / 10
+                    };
+                } else {
+                    const breathe = Math.sin(elapsed * 0.16) * 1.8;
+                    if (document.pointerLockElement === null) {
+                        camera.position.y += (baseCamera.y + breathe - camera.position.y) * 0.002;
+                    }
+                    controls.update();
+                }
+
+                sunGlare.lookAt(camera.position);
+                haze.lookAt(camera.position.x, haze.position.y, camera.position.z);
+                if (composer) composer.render();
+                else renderer.render(scene, camera);
+                window.__unknownOcean.status = 'rendering';
+                requestAnimationFrame(tick);
+            }
+
+            requestAnimationFrame(() => {
+                loader.classList.add('hidden');
+                tick();
+            });
+        } catch (error) {
+            console.error('Unknown ocean failed to start', error);
+            window.__unknownOcean.status = 'error';
+            window.__unknownOceanErrors.push(String(error && error.stack || error));
+            loader.classList.add('hidden');
+            errorBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

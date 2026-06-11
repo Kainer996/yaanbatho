@@ -1,0 +1,136 @@
+{
+  "$schema_version": "1.0",
+  "description": "Reference library of tracks by Kainer and Il Diablo. Pocket Producer uses this as the source of truth for style, arrangement feedback, and prompt generation. Edit freely — this file is read at startup and on every list_reference_tracks call.",
+  "producers": [
+    {
+      "id": "kainer",
+      "name": "Kainer",
+      "bio": "UK-based producer. Melodic, machine-music leaning techno with hardware-driven grooves, hypnotic repetition, and restrained harmony.",
+      "signature_style": {
+        "genres": ["melodic techno", "electro", "deep techno"],
+        "bpm_range": [122, 134],
+        "common_keys": ["A minor", "F minor", "C minor", "G minor"],
+        "sound_palette": [
+          "Roland-style analog bass",
+          "detuned poly pad layers",
+          "shuffled hi-hats with swing at 55-60%",
+          "granular vocal textures",
+          "FM bells for counter-melody",
+          "tape-saturated drums"
+        ],
+        "mix_fingerprint": [
+          "low-end sits wide and warm, slight saturation on the sub",
+          "kick at -6 to -7 dBFS peak, punchy but not clipping",
+          "reverb is sparse — short plates on percussion, long halls reserved for breaks",
+          "sidechain is felt, not heard — 2-3 dB of ducking on pads, not pumping",
+          "stereo image widens above 300 Hz, everything below kept mono"
+        ],
+        "arrangement_patterns": [
+          "8-bar intro on drums + atmosphere, no bass",
+          "first drop around bar 32, bassline enters, one melodic element",
+          "breakdown at bar 96 with a single riser and filtered lead",
+          "second drop adds the counter-melody, peak density around bar 160",
+          "outro mirrors the intro — strip back to atmosphere"
+        ],
+        "references_outside_catalogue": [
+          "Âme — Rej era",
+          "Stephan Bodzin — Powers of Ten",
+          "Recondite — Hinterland",
+          "Trentemøller — The Last Resort"
+        ]
+      },
+      "tracks": [
+        { "id": "eastwick", "title": "Eastwick", "file": "/music/tracks/Kainer_-_Eastwick__Original_Mix_.mp3", "artwork": "/music/eastwick.png", "notes": "" },
+        { "id": "keplar-8", "title": "Keplar 8", "file": "/music/tracks/Kainer_-_Keplar_8__Original_Mix_.mp3", "artwork": "/music/keplar-8.png", "notes": "" },
+        { "id": "klockwerk-alpha-4", "title": "Klockwerk ALPHA 4", "file": "/music/tracks/Kainer_-_Klockwerk_ALPHA_4.mp3", "artwork": "/music/klockwerk.png", "notes": "" },
+        { "id": "mandalin", "title": "Mandalin", "file": "/music/tracks/Kainer_-_Mandalin__Original_Mix_.mp3", "artwork": "/music/mandalin.png", "notes": "" },
+        { "id": "neon", "title": "Neon", "file": "/music/tracks/Kainer_-_Neon__Original_Mix_.mp3", "artwork": "/music/neon.png", "notes": "" },
+        { "id": "orange", "title": "Orange", "file": "/music/tracks/Kainer_-_Orange__Original_Mix_.mp3", "artwork": "/music/orange.png", "notes": "" },
+        { "id": "rasp", "title": "Rasp", "file": "/music/tracks/Kainer_-_Rasp__Original_Mix_.mp3", "artwork": "/music/rasp.png", "notes": "" }
+      ]
+    },
+    {
+      "id": "il-diablo",
+      "name": "Il Diablo",
+      "bio": "Rolling, peak-time tech-house and tribal techno. Drum-forward, heavy on groove, unafraid of a vocal hook.",
+      "signature_style": {
+        "genres": ["tech house", "tribal techno", "peak-time house"],
+        "bpm_range": [126, 132],
+        "common_keys": ["F minor", "D minor", "A minor", "G minor"],
+        "sound_palette": [
+          "percussive bongos and congas",
+          "tight 909 kick",
+          "chopped vocal stabs",
+          "acid 303 leads (sparse)",
+          "resonant filter sweeps on risers",
+          "dry claps layered with rimshots"
+        ],
+        "mix_fingerprint": [
+          "groove-first — the percussion bus is the loudest non-kick element",
+          "kick and bass share the low end via side-chain, not EQ carving",
+          "vocals compressed hard and placed just above the pad bed",
+          "short room reverb glues percussion together",
+          "master bus: gentle glue compressor, 1-2 dB of reduction"
+        ],
+        "arrangement_patterns": [
+          "DJ-friendly 16-bar drum intro",
+          "bassline drops at bar 17, vocal hook teased",
+          "full drop by bar 33 — percussion, bass, vocal, hook",
+          "stripped breakdown at bar 97 — percussion and vocal only",
+          "second drop is harder, adds the acid lead",
+          "outro mirrors intro — 16 bars of drums only"
+        ],
+        "references_outside_catalogue": [
+          "Fisher — Losing It",
+          "Patrick Topping — Forget",
+          "Solardo — XTC",
+          "Michael Bibi — Hanging Tree"
+        ]
+      },
+      "tracks": [
+        { "id": "kerb-diver", "title": "Kerb Diver", "file": "/music/tracks/Il-Diablo_-_Kerb_Diver__Original_Mix_.mp3", "artwork": "/music/kerb-diver.png", "notes": "" },
+        { "id": "factor-666", "title": "Factor 666", "file": "/music/tracks/Il_Diablo_-_Factor_666__Original_Mix__thejackal996_hotmail__1_.co.uk.mp3", "artwork": "/music/factor-666.png", "notes": "" },
+        { "id": "hey-cousin", "title": "Hey Cousin", "file": "/music/tracks/Il_Diablo_-_Hey_Cousin___Original_Mix_.mp3", "artwork": "/music/hey-cousin.png", "notes": "" },
+        { "id": "la-habana", "title": "La Habana", "file": "/music/tracks/Il_Diablo_-_La_Habana__Original_Mix_.mp3", "artwork": "/music/la-habana.png", "notes": "" }
+      ]
+    }
+  ],
+  "chord_progression_presets": {
+    "melodic_techno_minor": [
+      ["i", "VI", "III", "VII"],
+      ["i", "iv", "VI", "V"],
+      ["i", "VII", "VI", "V"],
+      ["i", "v", "VI", "III"]
+    ],
+    "tech_house_groove": [
+      ["i", "i", "VI", "VII"],
+      ["i", "VII", "i", "VI"],
+      ["i", "iv", "i", "VII"]
+    ],
+    "deep_emotional": [
+      ["i", "iv", "VI", "III"],
+      ["i", "III", "VII", "iv"],
+      ["VI", "VII", "i", "i"]
+    ]
+  },
+  "mix_critique_checklist": [
+    "Low end mono below 120 Hz?",
+    "Kick and bass not fighting (sidechain or EQ carve)?",
+    "Vocals sitting above the pad bed, not buried?",
+    "Stereo width reserved for highs, sub kept centered?",
+    "Reverb tails not swallowing the groove?",
+    "Master bus headroom: peak near -1 dBTP, integrated LUFS -8 to -10 for club / -14 for streaming?",
+    "Reference A/B done against at least two commercial tracks in the same genre?",
+    "Mono compatibility check — does it still groove in mono?",
+    "Transient clarity on the kick and top percussion?",
+    "Any frequency masking in the 200-500 Hz mud zone?"
+  ],
+  "arrangement_phases": [
+    { "name": "Intro", "bars": "1-16", "elements": "drums + atmosphere, DJ-friendly, build anticipation" },
+    { "name": "First Drop", "bars": "17-48", "elements": "bassline + one melodic element" },
+    { "name": "Verse / Development", "bars": "49-80", "elements": "introduce counter-melody or vocal" },
+    { "name": "Breakdown", "bars": "81-112", "elements": "strip back, tension, riser" },
+    { "name": "Main Drop", "bars": "113-160", "elements": "full arrangement, peak energy" },
+    { "name": "Outro", "bars": "161-192", "elements": "mirror intro, DJ-friendly exit" }
+  ]
+}
