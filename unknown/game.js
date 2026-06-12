@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { Water } from 'three/addons/objects/Water.js';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -489,6 +490,43 @@ function shadowify(object) {
     return object;
 }
 
+/* ---- open-source 3D models (CC0, bundled — see assets/models/ATTRIBUTION.md) ---- */
+const MODEL_DEFS = {
+    palm1: { url: './assets/models/palm1.glb', height: 21 },
+    palm2: { url: './assets/models/palm2.glb', height: 18 },
+    hut: { url: './assets/models/hut.glb', height: 17 },
+    shelter: { url: './assets/models/shelter.glb', height: 11 },
+    house: { url: './assets/models/house.glb', height: 15 },
+    boat: { url: './assets/models/boat.glb', height: 4.5 },
+    market: { url: './assets/models/market.glb', height: 10 },
+    rock: { url: './assets/models/rock.glb', height: 4 }
+};
+const modelLib = { items: {}, ready: false };
+function loadModels() {
+    const loader = new GLTFLoader();
+    const jobs = Object.entries(MODEL_DEFS).map(([key, def]) => new Promise((resolve) => {
+        loader.load(def.url, (gltf) => {
+            const sceneM = gltf.scene;
+            sceneM.traverse((n) => { if (n.isMesh) { n.castShadow = quality.shadows; n.receiveShadow = quality.shadows; } });
+            const box = new THREE.Box3().setFromObject(sceneM);
+            modelLib.items[key] = { scene: sceneM, box, size: box.getSize(new THREE.Vector3()), center: box.getCenter(new THREE.Vector3()), def };
+            resolve(true);
+        }, undefined, () => resolve(false));   // load failure → procedural fallback stays
+    }));
+    return Promise.all(jobs).then(() => { modelLib.ready = true; window.__unknownOcean.models = Object.keys(modelLib.items); });
+}
+function getModel(key, targetHeight) {
+    const item = modelLib.items[key];
+    if (!item) return null;
+    const s = (targetHeight || item.def.height) / Math.max(0.001, item.size.y);
+    const clone = item.scene.clone(true);
+    clone.position.set(-item.center.x * s, -item.box.min.y * s, -item.center.z * s);
+    clone.scale.setScalar(s);
+    const holder = new THREE.Group();
+    holder.add(clone);
+    return holder;
+}
+
 const world = new THREE.Group();
 world.name = 'island-world';
 scene.add(world);
@@ -579,6 +617,7 @@ function makeBroadleaf(rng) {
 const trees = [];
 function plantTree(builder, x, z) {
     const t = builder(worldRng);
+    t.userData.kind = builder === makePalm ? 'palm' : 'leaf';
     const h = heightAt(x, z);
     t.position.set(x, h - 0.3, z);
     t.rotation.y = worldRng() * Math.PI * 2;
@@ -1056,7 +1095,10 @@ const buildFactories = {
         const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.55, 1.1, 8), MAT.woodDark);
         bucket.position.y = 3.6; g.add(bucket);
     }),
-    shelter: () => frameWith((g) => {
+    shelter: () => {
+        const model = getModel('shelter', 11);
+        if (model) return model;
+        return frameWith((g) => {
         const base = new THREE.Mesh(new THREE.BoxGeometry(10.5, 1.2, 8), MAT.wood);
         base.position.y = 0.7; g.add(base);
         [[-4.4, -3.2], [4.4, -3.2], [-4.4, 3.2], [4.4, 3.2]].forEach(([x, z]) => {
@@ -1067,8 +1109,18 @@ const buildFactories = {
         roof.position.y = 7.6; roof.rotation.y = Math.PI / 4; roof.scale.z = 0.8; g.add(roof);
         const mat = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.5, 4.2), new THREE.MeshStandardMaterial({ color: 0xe6d39b, roughness: 0.92 }));
         mat.position.y = 1.55; g.add(mat);
-    }),
-    guestCabin: () => frameWith((g) => {
+        });
+    },
+    guestCabin: () => {
+        const model = getModel('house', 15);
+        if (model) {
+            const lantern = new THREE.PointLight(0xffd07a, 0, 30, 2);
+            lantern.name = 'cabin-lantern';
+            lantern.position.set(0, 7, 6);
+            model.add(lantern);
+            return model;
+        }
+        return frameWith((g) => {
         const body = new THREE.Mesh(new THREE.BoxGeometry(13, 7.5, 10), MAT.wood);
         body.position.y = 4.2; g.add(body);
         for (let i = 0; i < 2; i++) {
@@ -1084,7 +1136,24 @@ const buildFactories = {
         const lantern = new THREE.PointLight(0xffd07a, 0, 30, 2);
         lantern.name = 'cabin-lantern';
         lantern.position.set(0, 6.5, 6); g.add(lantern);
-    }),
+        });
+    },
+    market: () => {
+        const model = getModel('market', 10);
+        if (model) return model;
+        return frameWith((g) => {
+        const counter = new THREE.Mesh(new THREE.BoxGeometry(9, 2.6, 4), MAT.wood);
+        counter.position.y = 1.4; g.add(counter);
+        [[-3.8, -1.6], [3.8, -1.6]].forEach(([x, z]) => {
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 7, 6), MAT.trunk);
+            post.position.set(x, 3.5, z); g.add(post);
+        });
+        const awning = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0xc4534a, roughness: 0.85 }));
+        awning.position.set(0, 7, -0.4); awning.rotation.x = 0.14; g.add(awning);
+        const crate = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.8, 2.2), MAT.woodDark);
+        crate.position.set(2.4, 0.9, 3.2); g.add(crate);
+        });
+    },
     socialBench: () => frameWith((g) => {
         const seat = new THREE.Mesh(new THREE.BoxGeometry(10, 0.9, 2.8), MAT.wood);
         seat.position.y = 2.6; g.add(seat);
@@ -1214,6 +1283,39 @@ const buildFactories = {
         }
     })
 };
+
+// Once the CC0 GLB models are loaded, swap the placeholder look for the real thing.
+function upgradeWorldModels() {
+    for (const tree of trees) {
+        if (tree.userData.kind !== 'palm') continue;
+        const model = getModel(Math.random() < 0.5 ? 'palm1' : 'palm2', 15 + Math.random() * 8);
+        if (!model) continue;
+        tree.clear();
+        tree.userData.crown = null;
+        tree.add(model);
+    }
+    const hutModel = getModel('hut', 17);
+    if (hutModel && props.hut) {
+        hutModel.position.copy(props.hut.position);
+        hutModel.rotation.y = props.hut.rotation.y;
+        const lantern = new THREE.PointLight(0xffd07a, 0, 40, 1.9);
+        lantern.name = 'hut-lantern';
+        lantern.position.set(0, 8, 6);
+        hutModel.add(lantern);
+        world.remove(props.hut);
+        props.hut = hutModel;
+        world.add(hutModel);
+    }
+    for (const item of builtItems) {
+        if (!['shelter', 'guestCabin', 'market'].includes(item.key)) continue;
+        const fresh = buildFactories[item.key]();
+        fresh.position.copy(item.mesh.position);
+        fresh.rotation.y = item.mesh.rotation.y;
+        world.remove(item.mesh);
+        item.mesh = fresh;
+        world.add(fresh);
+    }
+}
 
 /* ============================================================
    6. Characters
@@ -1762,6 +1864,61 @@ function assignHomes(announce = false) {
 
 function homelessCount() { return residents.filter((r) => !r.home).length; }
 
+/* ---- jobs & the working day (Tropico-style) ---- */
+const JOB_DEFS = {
+    farmer: { label: 'Farmer', icon: '🌾', traits: ['diligence', 'patience'] },
+    fisher: { label: 'Fisher', icon: '🎣', traits: ['patience', 'resilience'] },
+    craftsman: { label: 'Craftsman', icon: '🛠️', traits: ['ambition', 'diligence'] },
+    researcher: { label: 'Researcher', icon: '📜', traits: ['imagination', 'curiosity'] },
+    cook: { label: 'Cook', icon: '🍳', traits: ['kindness', 'diligence'] },
+    vendor: { label: 'Vendor', icon: '🛒', traits: ['sociability', 'ambition'] }
+};
+const workplaces = [];
+let workplaceSeq = 0;
+function registerWorkplace(role, label, x, z, slots) {
+    const wp = { id: 'wp-' + (workplaceSeq++), role, label, x, z, slots, workers: [] };
+    workplaces.push(wp);
+    return wp;
+}
+function workplaceById(id) { return workplaces.find((w) => w.id === id); }
+function jobFit(profile, role) {
+    const def = JOB_DEFS[role];
+    return def.traits.reduce((s, t) => s + traitOf(profile, t), 0) / def.traits.length;
+}
+function assignJobs() {
+    // drop stale assignments
+    workplaces.forEach((wp) => { wp.workers = wp.workers.filter((id) => { const r = residentById(id); return r && !r.child && r.job?.wpId === wp.id; }); });
+    residents.forEach((r) => { if (r.job && (!workplaceById(r.job.wpId) || r.child)) r.job = null; });
+    // fill vacancies with the best-suited unemployed adults
+    for (const wp of workplaces) {
+        while (wp.workers.length < wp.slots) {
+            const pool = residents.filter((r) => !r.child && !r.job);
+            if (!pool.length) return;
+            pool.sort((a, b) => jobFit(b.profile, wp.role) - jobFit(a.profile, wp.role));
+            const hire = pool[0];
+            hire.job = { wpId: wp.id, role: wp.role };
+            wp.workers.push(hire.profile.id);
+        }
+    }
+}
+function isWorkHours() { return gameClock.hour >= 8 && gameClock.hour < 17; }
+function isEvening() { return gameClock.hour >= 17 && gameClock.hour < 21.5; }
+function marketCount() { return builtItems.filter((b) => b.key === 'market').length; }
+
+/* ---- happiness & approval (the Tropico mood meter) ---- */
+function happinessOf(r) {
+    let s = (100 - r.needs.topNeedValue) * 0.55;
+    s += r.home ? 18 : 0;
+    s += r.child ? 12 : (r.job ? 12 : 4);
+    s += r.partner ? 8 : 0;
+    s += Math.min((r.children || []).length * 3, 6);
+    return clamp(Math.round(s), 0, 100);
+}
+function colonyApproval() {
+    if (!residents.length) return 50;
+    return Math.round(residents.reduce((s, r) => s + happinessOf(r), 0) / residents.length);
+}
+
 function compatibility(a, b) {
     const axes = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'emotionalSensitivity'];
     let diff = 0;
@@ -1773,6 +1930,7 @@ function compatibility(a, b) {
 // Two single, fond, compatible villagers may pair up and start a household.
 function tryRomance(a, b) {
     if (!a || !b || a === b || a.partner || b.partner) return false;
+    if (a.child || b.child || a.parents?.includes(b.profile.id) || b.parents?.includes(a.profile.id)) return false;
     const rel = Math.min(a.relationships[b.profile.name] || 50, b.relationships[a.profile.name] || 50);
     if (rel < 74) return false;
     if (compatibility(a.profile, b.profile) < 0.5) return false;
@@ -1780,6 +1938,7 @@ function tryRomance(a, b) {
     a.partner = b.profile.id; b.partner = a.profile.id;
     const hh = 'household-' + a.profile.id;
     a.household = b.household = hh;
+    a.coupleSinceDay = b.coupleSinceDay = gameClock.day;
     a.relationships[b.profile.name] = b.relationships[a.profile.name] = 100;
     remember(a, `became close with ${b.profile.name}`);
     remember(b, `became close with ${a.profile.name}`);
@@ -1797,6 +1956,87 @@ function updateRomance() {
     }
 }
 
+/* ---- children: settled couples start families ---- */
+const CHILD_NAMES = ['Koa', 'Nami', 'Riff', 'Lulu', 'Kai', 'Mio', 'Tilo', 'Suni', 'Bea', 'Ondo'];
+const CHILD_GROWN_DAYS = 14;
+let childSeq = 0;
+
+function makeChildProfile(pa, pb) {
+    const first = CHILD_NAMES[childSeq % CHILD_NAMES.length];
+    const surname = pa.name.split(' ')[1] || pb.name.split(' ')[1] || 'Isle';
+    const blend = (av, bv, jitter = 14) => clamp(Math.round((av + bv) / 2 + (Math.random() - 0.5) * jitter * 2), 5, 95);
+    const ocean = {};
+    ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'emotionalSensitivity'].forEach((k) => {
+        ocean[k] = blend(pa.ocean?.[k] ?? 50, pb.ocean?.[k] ?? 50);
+    });
+    const traits = {};
+    traitDefs.forEach((t) => { traits[t.key] = blend(pa.traits[t.key] ?? 50, pb.traits[t.key] ?? 50); });
+    traits.playfulness = clamp(traits.playfulness + 18, 0, 100);
+    traits.curiosity = clamp(traits.curiosity + 14, 0, 100);
+    return {
+        id: 'kid-' + (childSeq++) + '-' + Math.floor(Math.random() * 1e5),
+        name: `${first} ${surname}`,
+        archetype: 'island kid',
+        color: pb.color, accent: pa.accent, skin: pa.skin,
+        ocean, traits,
+        voice: 'small, excitable, asks why about everything, easily delighted',
+        thought: 'Everything on this island is big and amazing.'
+    };
+}
+
+function spawnChild(pa, pb) {
+    const house = houseById(pa.home);
+    if (!house) return null;
+    const profile = makeChildProfile(pa.profile, pb.profile);
+    const r = spawnResident(profile, house.x + 3, house.z + 4);
+    r.child = true;
+    r.ageDays = 0;
+    r.parents = [pa.profile.id, pb.profile.id];
+    r.mesh.scale.setScalar(0.5);
+    placeInHouse(r, house);
+    pa.children = [...(pa.children || []), profile.id];
+    pb.children = [...(pb.children || []), profile.id];
+    r.relationships[pa.profile.name] = r.relationships[pb.profile.name] = 95;
+    pa.relationships[profile.name] = pb.relationships[profile.name] = 95;
+    remember(pa, `welcomed baby ${profile.name}`);
+    remember(pb, `welcomed baby ${profile.name}`);
+    toast(`👶 ${pa.profile.name.split(' ')[0]} and ${pb.profile.name.split(' ')[0]} welcomed a baby — ${profile.name}!`, 7);
+    return r;
+}
+
+// A couple whose house is full will move (together) to a roomier one to start a family.
+function ensureFamilyRoom(a, b) {
+    if (!a.home || a.home !== b.home) return false;
+    const house = houseById(a.home);
+    if (!house) return false;
+    if (houseFree(house) >= 1) return true;
+    const better = houses
+        .filter((h) => h.id !== house.id)
+        .filter((h) => h.capacity - h.occupants.filter((id) => id !== a.profile.id && id !== b.profile.id).length >= 3)
+        .sort((x, y) => houseFree(y) - houseFree(x))[0];
+    if (!better) return false;
+    placeInHouse(a, better);
+    placeInHouse(b, better);
+    assignHomes();
+    toast(`🏠 ${a.profile.name.split(' ')[0]} and ${b.profile.name.split(' ')[0]} moved into ${better.label} to start a family.`);
+    return houseFree(houseById(a.home)) >= 1;
+}
+
+function updateFamilies() {
+    for (const r of residents) {
+        if (!r.partner || r.profile.id >= r.partner || r.child) continue;
+        const p = residentById(r.partner);
+        if (!p || !r.home || r.home !== p.home) continue;          // must live together
+        if ((r.children || []).length >= 2) continue;              // small island families
+        const days = gameClock.day - (r.coupleSinceDay ?? gameClock.day);
+        if (days < 2) continue;                                    // settled in first
+        const house = houseById(r.home);
+        if (!house) continue;
+        if (houseFree(house) < 1 && !ensureFamilyRoom(r, p)) continue;   // needs a spare bed
+        if (Math.random() < 0.03) { spawnChild(r, p); return; }
+    }
+}
+
 // 0–100 measure of how nice a place this is to live — drives newcomers.
 function computeHabitability() {
     const n = residents.length || 1;
@@ -1806,8 +2046,8 @@ function computeHabitability() {
     const foodSec = clamp(((communityStorage.food || 0) + (communityStorage.cookedFish || 0)) / (n * 4 + 4), 0, 1);
     const waterSec = clamp((communityStorage.water || 0) / (n * 3 + 3), 0, 1);
     const niceBuilds = builtItems.filter((b) => ['guestCabin', 'shelter', 'firePit', 'socialBench', 'flowerGarden', 'well', 'watchtower', 'researchDesk'].includes(b.key)).length;
-    const avgMood = 1 - clamp(residents.reduce((s, r) => s + r.needs.topNeedValue, 0) / (n * 100), 0, 1);
-    const score = housingFrac * 34 + Math.min(spareBeds, 3) * 4 + foodSec * 16 + waterSec * 12 + Math.min(niceBuilds, 6) * 2.5 + avgMood * 13;
+    const approval = colonyApproval() / 100;
+    const score = housingFrac * 34 + Math.min(spareBeds, 3) * 4 + foodSec * 16 + waterSec * 12 + Math.min(niceBuilds, 6) * 2.5 + approval * 13;
     habitability = clamp(Math.round(score), 0, 100);
     return habitability;
 }
@@ -1824,6 +2064,7 @@ function maybeBoatArrival() {
         startPlan(r, { type: 'personality', activity: 'tidy-camp', x: villageCenter.x, z: villageCenter.z, action: 'arriving by boat and walking up to the village', duration: 3 });
         r.ai.state = 'walking';
         assignHomes();
+        assignJobs();
         toast(`⛵ Word of a thriving colony spread — ${profile.name}, ${profile.archetype}, sailed in to join!`, 7);
         spawnArrivalBoat();
     }
@@ -1861,6 +2102,7 @@ function doTrade(resident) {
     }
     if (!best || bestIncome <= 0) return null;
     Object.entries(bestSold).forEach(([g, qty]) => { communityStorage[g] = Math.max(0, (communityStorage[g] || 0) - qty); });
+    bestIncome = Math.round(bestIncome * (1 + 0.15 * marketCount()));   // market stalls negotiate better prices
     communityStorage.coins = (communityStorage.coins || 0) + bestIncome;
     // spend coins on whatever the colony is short of, if this village sells it
     let bought = null;
@@ -1878,6 +2120,8 @@ function doTrade(resident) {
 /* ---- little sailing boats for arrivals and trade voyages ---- */
 const boats = [];
 function makeBoat() {
+    const model = getModel('boat', 5.5);
+    if (model) { model.rotation.y = Math.PI / 2; const g = new THREE.Group(); g.add(model); return g; }
     const boat = new THREE.Group();
     const hull = new THREE.Mesh(new THREE.BoxGeometry(6, 1.6, 2.8), MAT.wood);
     hull.position.y = 0.8; boat.add(hull);
@@ -2070,8 +2314,20 @@ function chooseAction(resident) {
         const spot = homePos(resident) || nearestSpot(sleepSpots, px, pz);
         options.push({ type: 'sleep', x: spot.x, z: spot.z, action: `going to rest at ${spot.label}`, duration: 0, score: 290 + needs.tiredness + biasBoost('rest') });
     }
+    // the working day: employed adults go to their workplace 08:00–17:00
+    if (!resident.child && resident.job && isWorkHours()) {
+        const wp = workplaceById(resident.job.wpId);
+        if (wp) {
+            const def = JOB_DEFS[wp.role];
+            options.push({
+                type: 'work', x: wp.x, z: wp.z, action: `working as ${def.label.toLowerCase()} at ${wp.label}`, duration: 5,
+                score: 232 + traitOf(profile, 'diligence') * 0.3 + traitOf(profile, 'conscientiousness') * 0.2 + biasBoost('build') + biasBoost('gather')
+            });
+        }
+    }
+    const eveningBoost = isEvening() ? 70 : 0;   // village social life after the workday
     // social
-    if (needs.social > 45) {
+    if (needs.social > 45 || (eveningBoost && needs.social > 22)) {
         const others = residents.filter((r) => r !== resident && r.ai.state !== 'sleeping');
         if (others.length) {
             const target = others.sort((a, b) => (resident.relationships[a.profile.name] || 50) - (resident.relationships[b.profile.name] || 50))[0];
@@ -2079,7 +2335,7 @@ function chooseAction(resident) {
             options.push({
                 type: 'social', targetName: target.profile.name, x: spot.x, z: spot.z,
                 action: `finding ${target.profile.name.split(' ')[0]} for a chat`, duration: 4,
-                score: 140 + needs.social + traitOf(profile, 'sociability') * 0.7 + traitOf(profile, 'extraversion') * 0.3 + biasBoost('social')
+                score: 140 + eveningBoost + needs.social + traitOf(profile, 'sociability') * 0.7 + traitOf(profile, 'extraversion') * 0.3 + biasBoost('social')
             });
         }
     }
@@ -2091,7 +2347,7 @@ function chooseAction(resident) {
         });
     }
     // research at desks
-    if (researchSpots.length && storageDeficit('research') > 0) {
+    if (!resident.child && researchSpots.length && storageDeficit('research') > 0) {
         const spot = nearestSpot(researchSpots, px, pz);
         options.push({
             type: 'research', x: spot.x, z: spot.z, action: 'researching at the desk', duration: 5,
@@ -2099,25 +2355,26 @@ function chooseAction(resident) {
         });
     }
     // crafting at workshops: wood+fibre → cloth/metal trickle
-    if (craftSpots.length && (communityStorage.wood || 0) > 4 && (storageDeficit('cloth') > 0 || storageDeficit('metal') > 0)) {
+    if (!resident.child && craftSpots.length && (communityStorage.wood || 0) > 4 && (storageDeficit('cloth') > 0 || storageDeficit('metal') > 0)) {
         const spot = nearestSpot(craftSpots, px, pz);
         options.push({
             type: 'craft', x: spot.x, z: spot.z, action: 'crafting at the workshop', duration: 5,
             score: 74 + (storageDeficit('cloth') + storageDeficit('metal')) * 7 + traitOf(profile, 'ambition') * 0.35 + traitOf(profile, 'diligence') * 0.3 + biasBoost('craft')
         });
     }
-    // trade surplus goods with neighbouring villages for coins (only ambitious/sociable folk, only once there's a dock)
-    if (tradeSpots.length && tradeSurplusValue() >= 10 && traderScore(profile) > 55) {
+    // trade surplus goods with neighbouring villages for coins (only ambitious/sociable adults, only once there's a dock)
+    if (!resident.child && tradeSpots.length && tradeSurplusValue() >= 10 && traderScore(profile) > 55) {
         const spot = nearestSpot(tradeSpots, px, pz);
         options.push({
             type: 'trade', x: spot.x, z: spot.z, action: 'loading the trade boat to sail to another village', duration: 7,
             score: 92 + traderScore(profile) * 0.4 + tradeSurplusValue() * 0.4 + biasBoost('build')
         });
     }
-    // gathering for the colony
+    // gathering for the colony (kids only "help" with light fun things)
     for (const key of storageKeys) {
         const deficit = storageDeficit(key);
         if (deficit <= 0 || !resourceFlavor[key]) continue;
+        if (resident.child && !['shells', 'herbs'].includes(key)) continue;
         if (!nearestNode(key, px, pz)) continue;
         const flavor = resourceFlavor[key];
         const affinity = traitOf(profile, flavor.trait) * 0.5;
@@ -2131,18 +2388,19 @@ function chooseAction(resident) {
             score: 72 + deficit * 9 + affinity + diligent + curious - crowd * 56 + biasBoost(goalKey) + biasBoost('gather')
         });
     }
-    // personality time
-    if (needs.boredom > 26 || needs.curiosity > 34 || options.length === 0) {
+    // personality time (children mostly play)
+    if (needs.boredom > 26 || needs.curiosity > 34 || resident.child || options.length === 0) {
         const turn = (resident.memories.length + residents.indexOf(resident)) % personalityActivities.length;
         const scored = personalityActivities.map((a, i) => ({
             a,
             s: traitOf(profile, a.trait) * 1.25 + needs.boredom * 0.6 + needs.curiosity * 0.5 + ((i + turn) % 5) * 6 +
+               (resident.child && (a.trait === 'playfulness' || a.trait === 'curiosity' || a.trait === 'imagination') ? 55 : 0) +
                biasBoost('explore') * (a.trait === 'wanderlust' || a.trait === 'confidence' ? 1 : 0) +
                biasBoost('play') * (a.trait === 'playfulness' ? 1 : 0)
         })).sort((x, y) => y.s - x.s);
         const pick = scored[0];
         const where = pick.a.where();
-        options.push({ type: 'personality', activity: pick.a.id, x: where.x, z: where.z, action: pick.a.action, duration: pick.a.duration, score: 58 + pick.s * 0.55 });
+        options.push({ type: 'personality', activity: pick.a.id, x: where.x, z: where.z, action: pick.a.action, duration: pick.a.duration, score: 58 + eveningBoost * 0.8 + pick.s * 0.55 });
     }
 
     options.sort((a, b) => b.score - a.score);
@@ -2294,6 +2552,48 @@ function completePlan(resident) {
             if (target) tryRomance(resident, target);   // closeness can blossom into a couple
             break;
         }
+        case 'work': {
+            const wp = resident.job && workplaceById(resident.job.wpId);
+            if (wp) {
+                switch (wp.role) {
+                    case 'farmer':
+                        communityStorage.food = (communityStorage.food || 0) + 2;
+                        if (Math.random() < 0.3) communityStorage.seeds = (communityStorage.seeds || 0) + 1;
+                        break;
+                    case 'fisher':
+                        communityStorage.rawFish = (communityStorage.rawFish || 0) + 2;
+                        break;
+                    case 'craftsman':
+                        if ((communityStorage.wood || 0) > 1) {
+                            communityStorage.wood -= 1;
+                            if (storageDeficit('cloth') >= storageDeficit('metal') && (communityStorage.fibre || 0) > 0) {
+                                communityStorage.fibre -= 1;
+                                communityStorage.cloth = (communityStorage.cloth || 0) + 1;
+                            } else {
+                                communityStorage.metal = (communityStorage.metal || 0) + 1;
+                            }
+                        }
+                        break;
+                    case 'researcher':
+                        communityStorage.research = (communityStorage.research || 0) + 1;
+                        easeNeed(needs, 'curiosity', 16);
+                        break;
+                    case 'cook': {
+                        const batch = Math.min(2, communityStorage.rawFish || 0);
+                        communityStorage.rawFish -= batch;
+                        communityStorage.cookedFish = (communityStorage.cookedFish || 0) + batch;
+                        break;
+                    }
+                    case 'vendor':
+                        if (tradeSurplusValue() > 0) communityStorage.coins = (communityStorage.coins || 0) + 1 + Math.round(Math.random());
+                        break;
+                }
+                easeNeed(needs, 'boredom', 7);
+                if (Math.random() < 0.2) remember(resident, `a good shift as ${JOB_DEFS[wp.role].label.toLowerCase()}`);
+                resident.currentThought = `Honest work at ${wp.label}.`;
+            }
+            break;
+        }
         case 'trade': {
             const result = doTrade(resident);
             if (result) {
@@ -2335,6 +2635,19 @@ function completePlan(resident) {
 
 function updateResident(resident, simHours, realDelta) {
     advanceNeeds(resident.needs, simHours);
+    // children grow up day by day
+    if (resident.child && simHours > 0) {
+        resident.ageDays = (resident.ageDays || 0) + simHours / 24;
+        const grown = clamp(resident.ageDays / CHILD_GROWN_DAYS, 0, 1);
+        resident.mesh.scale.setScalar(0.5 + grown * 0.5);
+        if (grown >= 1) {
+            resident.child = false;
+            resident.mesh.scale.setScalar(1);
+            resident.currentThought = 'I grew up on this island. Time to pull my weight.';
+            toast(`🎉 ${resident.profile.name} has grown up and is joining the workforce!`, 6);
+            assignJobs();
+        }
+    }
     // no roof of your own is uncomfortable
     if (!resident.home && simHours > 0) {
         resident.needs.comfort = clamp(resident.needs.comfort + simHours * 5, 0, 100);
@@ -2396,7 +2709,8 @@ const buildCatalog = {
     firePit: { label: 'Fire pit', icon: '🔥', cost: { stone: 4, wood: 2 }, effect: 'Cooking + cosy night light' },
     workshop: { label: 'Workshop', icon: '🛠️', cost: { wood: 4, stone: 2 }, effect: 'Crafting: wood→cloth/metal' },
     researchDesk: { label: 'Research desk', icon: '📜', cost: { wood: 3, shells: 2 }, effect: 'Research point, eases curiosity' },
-    dock: { label: 'Fishing dock', icon: '🎣', cost: { wood: 5, fibre: 3 }, effect: 'Shore only · strong fish node', shore: true },
+    market: { label: 'Market stall', icon: '🛒', cost: { wood: 3, cloth: 2 }, effect: 'Vendor job, better trade prices, meet spot' },
+    dock: { label: 'Fishing dock', icon: '🎣', cost: { wood: 5, fibre: 3 }, effect: 'Shore only · fisher jobs + sea trade', shore: true },
     windmill: { label: 'Windmill', icon: '🌬️', cost: { wood: 4, fibre: 3, metal: 2 }, effect: 'Everyone works a little faster' },
     watchtower: { label: 'Watchtower', icon: '🗼', cost: { wood: 6, stone: 3 }, effect: 'Lookout spot, eases curiosity' },
     flowerGarden: { label: 'Flower garden', icon: '🌸', cost: { seeds: 3, shells: 2 }, effect: 'Beauty: comfort + boredom eased' }
@@ -2415,11 +2729,13 @@ function applyBuildEffects(key, x, z) {
     switch (key) {
         case 'garden':
             resourceNodes.push({ key: 'food', label: 'garden bed', x, z, mesh: null });
+            registerWorkplace('farmer', 'the garden bed', x, z, 1);
             storageGoals.food += 4;
             break;
         case 'farmPlot':
             resourceNodes.push({ key: 'food', label: 'farm plot', x, z, mesh: null });
             resourceNodes.push({ key: 'seeds', label: 'farm plot', x, z, mesh: null });
+            registerWorkplace('farmer', 'the farm plot', x, z, 2);
             storageGoals.food += 8;
             break;
         case 'waterJar':
@@ -2455,16 +2771,23 @@ function applyBuildEffects(key, x, z) {
             break;
         case 'workshop':
             craftSpots.push({ x, z, label: 'the workshop' });
+            registerWorkplace('craftsman', 'the workshop', x, z, 2);
             storageGoals.wood += 4;
             break;
         case 'researchDesk':
             researchSpots.push({ x, z, label: 'the research desk' });
+            registerWorkplace('researcher', 'the research desk', x, z, 1);
             communityStorage.research = (communityStorage.research || 0) + 2;
             residents.forEach((r) => easeNeed(r.needs, 'curiosity', 18));
+            break;
+        case 'market':
+            socialSpots.push({ x, z, label: 'the market stall' });
+            registerWorkplace('vendor', 'the market stall', x, z, 1);
             break;
         case 'dock':
             resourceNodes.push({ key: 'rawFish', label: 'the dock', x, z, mesh: null });
             tradeSpots.push({ x, z, label: 'the dock' });   // enables sea trade with other villages
+            registerWorkplace('fisher', 'the dock', x, z, 2);
             communityStorage.rawFish = (communityStorage.rawFish || 0) + 2;
             storageGoals.rawFish += 4;
             break;
@@ -2498,6 +2821,7 @@ function constructBuilding(key, x, z, rotY, { silent = false, charge = true } = 
     reserve(x, z, 8);
     builtItems.push({ key, x, z, rotY, mesh });
     applyBuildEffects(key, x, z);
+    assignJobs();
     if (!silent) {
         mesh.scale.setScalar(0.05);
         buildPops.push({ mesh, t: 0 });
@@ -2573,8 +2897,17 @@ const brain = {
         const needsTxt = needDefs.map((d) => `${d.key}=${Math.round(n[d.key])}`).join(', ');
         const storeTxt = storageKeys.map((k) => `${k}=${Math.floor(communityStorage[k] || 0)}/${storageGoals[k]}`).join(', ');
         const relTxt = Object.entries(resident.relationships).map(([name, v]) => `${name.split(' ')[0]}=${Math.round(v)}`).join(', ') || 'none yet';
+        const home = resident.home && houseById(resident.home);
+        const partner = resident.partner && residentById(resident.partner);
+        const wp = resident.job && workplaceById(resident.job.wpId);
+        const lifeTxt = [
+            home ? `You live in ${home.label}.` : 'You have no house of your own yet.',
+            partner ? `Your partner is ${partner.profile.name}.` : '',
+            resident.child ? 'You are a child; you mostly play and learn.' : (wp ? `Your job: ${JOB_DEFS[resident.job.role].label} at ${wp.label}.` : 'You have no assigned job; you forage for the colony.')
+        ].filter(Boolean).join(' ');
         return [
             `Day ${gameClock.day}, ${String(Math.floor(gameClock.hour)).padStart(2, '0')}:00 (${phaseOfDay()}), weather ${weather.state}.`,
+            lifeTxt,
             `Your needs (0 fine → 100 urgent): ${needsTxt}.`,
             `Colony storage vs goals: ${storeTxt}.`,
             `Friendships (0-100): ${relTxt}.`,
@@ -2692,12 +3025,10 @@ function refreshHUD() {
         pile.visible = amount > 0.5;
         pile.scale.setScalar(clamp(0.45 + amount / Math.max(4, storageGoals[key]), 0.4, 1.3));
     });
-    // colony mood + habitability + housing
-    const urgent = residents.filter((r) => r.needs.topNeedValue > 62).length;
+    // colony approval + habitability + housing
     const homeless = homelessCount();
-    const moodWord = urgent === 0 ? 'thriving' : urgent === 1 ? 'one struggling' : `${urgent} struggling`;
     const homeNote = homeless ? ` · ${homeless} homeless` : '';
-    $('colony-mood').textContent = `${moodWord} · ${habitability}% habitable${homeNote}`;
+    $('colony-mood').textContent = `${colonyApproval()}% happy · ${habitability}% habitable${homeNote} · 🪙${Math.floor(communityStorage.coins || 0)}`;
     $('resident-count').textContent = `${residents.length}`;
     // resident cards (updated in place so clicks stay stable)
     if (Number(residentListEl.dataset.count || 0) !== residents.length) {
@@ -2748,8 +3079,22 @@ function refreshResidentPanel() {
     const partner = r.partner && residentById(r.partner);
     const housemates = home ? home.occupants.filter((id) => id !== r.profile.id).map((id) => residentById(id)?.profile.name.split(' ')[0]).filter(Boolean) : [];
     const lines = [];
+    lines.push(`😊 Happiness ${happinessOf(r)}%`);
+    if (r.child) lines.push(`🧒 Child, ${Math.floor(r.ageDays || 0)} days old`);
+    else if (r.job) {
+        const wp = workplaceById(r.job.wpId);
+        lines.push(`💼 ${JOB_DEFS[r.job.role].icon} ${JOB_DEFS[r.job.role].label}${wp ? ` at ${wp.label}` : ''}`);
+    } else lines.push('💼 Forager (no assigned job yet)');
     lines.push(`🏠 ${home ? `Lives in ${home.label}` : 'No home yet — needs a house'}`);
     if (partner) lines.push(`💞 Partner: <strong>${partner.profile.name.split(' ')[0]}</strong>`);
+    if (r.parents?.length) {
+        const folks = r.parents.map((id) => residentById(id)?.profile.name.split(' ')[0]).filter(Boolean).join(' & ');
+        if (folks) lines.push(`👨‍👩‍👧 Child of ${folks}`);
+    }
+    if (r.children?.length) {
+        const kids = r.children.map((id) => residentById(id)?.profile.name.split(' ')[0]).filter(Boolean).join(', ');
+        if (kids) lines.push(`👶 Children: ${kids}`);
+    }
     if (housemates.length) lines.push(`👪 Lives with: ${housemates.join(', ')}`);
     if (rels) lines.push(`Friends: ${rels}`);
     $('rp-rel').innerHTML = lines.join('<br>');
@@ -3124,6 +3469,7 @@ function saveColony(reason = 'auto') {
             arrivalIndex,
             lastArrivalDay,
             built: builtItems.map(({ key, x, z, rotY }) => ({ key, x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10, rotY: Math.round(rotY * 100) / 100 })),
+            childSeq,
             residents: residents.map((r) => ({
                 id: r.profile.id,
                 x: Math.round(r.mesh.position.x * 10) / 10,
@@ -3134,7 +3480,14 @@ function saveColony(reason = 'auto') {
                 thought: r.currentThought,
                 home: r.home,
                 partner: r.partner,
-                household: r.household
+                household: r.household,
+                coupleSinceDay: r.coupleSinceDay,
+                children: r.children,
+                // island-born villagers carry generated profiles that must persist whole
+                child: r.child || undefined,
+                ageDays: r.ageDays,
+                parents: r.parents,
+                bornProfile: r.parents ? r.profile : undefined
             }))
         }));
     } catch { /* storage full or blocked — keep playing */ }
@@ -3174,6 +3527,14 @@ function applySavedResidents(saved) {
         if (data.home && houseById(data.home)) r.home = data.home;
         if (data.partner) r.partner = data.partner;
         if (data.household) r.household = data.household;
+        if (data.coupleSinceDay !== undefined) r.coupleSinceDay = data.coupleSinceDay;
+        if (Array.isArray(data.children)) r.children = data.children;
+        if (data.parents) r.parents = data.parents;
+        if (data.ageDays !== undefined) r.ageDays = Number(data.ageDays) || 0;
+        if (data.child) {
+            r.child = true;
+            r.mesh.scale.setScalar(0.5 + clamp((r.ageDays || 0) / CHILD_GROWN_DAYS, 0, 1) * 0.5);
+        }
     }
     assignHomes();   // reconcile occupancy and seat anyone still homeless
 }
@@ -3240,8 +3601,12 @@ function publishDebugState() {
         topTraits: topTraits(r.profile, 4),
         home: r.home ? (houseById(r.home)?.label || r.home) : null,
         partner: r.partner ? residentById(r.partner)?.profile.name : null,
-        household: r.household
+        household: r.household,
+        job: r.job ? JOB_DEFS[r.job.role].label : (r.child ? 'child' : 'forager'),
+        happiness: happinessOf(r)
     }));
+    o.approval = colonyApproval();
+    o.jobs = workplaces.map((w) => ({ role: w.role, label: w.label, workers: w.workers.length, slots: w.slots }));
     o.habitability = habitability;
     o.coins = communityStorage.coins || 0;
     o.population = residents.length;
@@ -3311,8 +3676,24 @@ window.__unknownOcean.society = () => ({
     population: residents.length, habitability, coins: communityStorage.coins || 0,
     arrivalsRemaining: ROSTER.length - arrivalIndex,
     houses: houses.map((h) => ({ label: h.label, capacity: h.capacity, occupants: h.occupants.length })),
-    couples: window.__unknownOcean.couples, homeless: homelessCount()
+    couples: window.__unknownOcean.couples, homeless: homelessCount(),
+    children: residents.filter((r) => r.child).map((r) => `${r.profile.name} (${Math.floor(r.ageDays || 0)}d)`),
+    grownHere: residents.filter((r) => r.parents && !r.child).map((r) => r.profile.name),
+    approval: colonyApproval(),
+    jobs: residents.map((r) => `${r.profile.name.split(' ')[0]}: ${r.child ? 'child' : r.job ? JOB_DEFS[r.job.role].label : 'forager'}`)
 });
+window.__unknownOcean.forceBaby = () => {
+    let parent = residents.find((r) => r.partner && r.home && residentById(r.partner)?.home === r.home && houseFree(houseById(r.home)) > 0);
+    if (!parent) {
+        // try relocating a cohabiting couple to a roomier house first
+        const couple = residents.find((r) => r.partner && r.home && residentById(r.partner)?.home === r.home);
+        if (couple && ensureFamilyRoom(couple, residentById(couple.partner))) parent = couple;
+    }
+    if (!parent) return { ok: false, message: 'no cohabiting couple with a spare bed' };
+    const baby = spawnChild(parent, residentById(parent.partner));
+    refreshHUD();
+    return baby ? { ok: true, name: baby.profile.name } : { ok: false };
+};
 window.__unknownOcean.enterWalkMode = () => enterWalkMode(false);
 window.__unknownOcean.exitWalkMode = exitWalkMode;
 window.__unknownOcean.enterPlacement = enterPlacement;
@@ -3457,7 +3838,7 @@ function tick() {
         computeHabitability();
         maybeBoatArrival();
         romanceTimer += simHours;
-        if (romanceTimer > 1.5) { romanceTimer = 0; updateRomance(); }   // courtship roughly every game-hour-and-a-half
+        if (romanceTimer > 1.5) { romanceTimer = 0; updateRomance(); updateFamilies(); }   // courtship + family life, every game-hour-and-a-half
     }
     updateDayNight();
 
@@ -3545,17 +3926,28 @@ try {
     const saved = loadColony();
 
     // who lives here: the saved roster, or just three starters on a fresh island
-    const startIds = (saved?.residents?.length ? saved.residents.map((d) => d.id) : ROSTER.slice(0, STARTERS).map((p) => p.id));
+    const savedList = saved?.residents || [];
+    const startIds = (savedList.length ? savedList.filter((d) => !d.bornProfile).map((d) => d.id) : ROSTER.slice(0, STARTERS).map((p) => p.id));
     startIds.forEach((id, i) => {
         const profile = ROSTER.find((p) => p.id === id);
         if (!profile) return;
         const a = (i / Math.max(1, startIds.length)) * Math.PI * 2;
         spawnResident(profile, villageCenter.x + Math.cos(a) * 16, villageCenter.z + Math.sin(a) * 14);
     });
+    // island-born villagers (children, possibly grown) respawn from their saved profiles
+    childSeq = Math.max(0, Number(saved?.childSeq) || 0);
+    savedList.filter((d) => d.bornProfile).forEach((d) => {
+        spawnResident(d.bornProfile, Number(d.x) || villageCenter.x, Number(d.z) || villageCenter.z);
+    });
     if (!saved) { arrivalIndex = STARTERS; assignHomes(); }
     applySavedResidents(saved);
     offlineCatchup(saved);
+    // base workplaces every colony starts with
+    registerWorkplace('cook', 'the bonfire', -4, 26, 1);
+    registerWorkplace('fisher', 'the fishing rocks', -26, -136, 1);
+    assignJobs();
     computeHabitability();
+    loadModels().then(() => upgradeWorldModels());   // CC0 GLB upgrade pass, non-blocking
 
     updateDayNight(true);
     updateBrainUI();
