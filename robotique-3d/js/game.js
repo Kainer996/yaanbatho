@@ -6,8 +6,8 @@ import * as THREE from 'three';
 import {S, save, loadSave, hasSave, clearSave, clamp, setCtx,
         ITEMS, hasItem, QUESTS, activeQuest, questTargetPos,
         DOORS, PARENT, SCENE_NAMES, ROOMS, NPCS, PEDS, SAYS, npcEntryNode,
-        INTRO, PICKUPS, humanCanvases, spriteCanvas, ROBOT_ROWS, PAL_ROBOT, PALS} from './content.js';
-import {UI, INPUT, TOUCH} from './ui.js';
+        INTRO, PICKUPS, humanCanvases, spriteCanvas, ROBOT_ROWS, PAL_ROBOT, PALS} from './content.js?v=9';
+import {UI, INPUT, TOUCH} from './ui.js?v=9';
 
 /* ---------------- renderer / scene ---------------- */
 const canvas=document.getElementById('gl');
@@ -1084,13 +1084,20 @@ function boot(newGame){
 UI.init();
 INPUT.init(canvas);
 if(hasSave()) document.getElementById('btnContinue').style.display='block';
-document.getElementById('btnNew').onclick=()=>{
+function guarded(fn){
+  return ()=>{ try{ fn(); }catch(e){
+    if(window.__showErr) window.__showErr('boot: '+(e.stack||e.message||e));
+    else throw e;
+  } };
+}
+document.getElementById('btnNew').onclick=guarded(()=>{
   const nm=document.getElementById('nameInput').value.trim();
   S.name=nm||'Yaan';
   clearSave();
   boot(true);
-};
-document.getElementById('btnContinue').onclick=()=>{
+});
+document.getElementById('btnContinue').onclick=guarded(()=>{
   if(loadSave()){ boot(false); UI.toast('Game loaded.'); }
   else boot(true);
-};
+});
+window.__gameReady=true;

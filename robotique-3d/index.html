@@ -200,7 +200,7 @@
   <button class="btn" id="btnContinue" style="display:none;">Continue</button>
   <div id="titleFoot">A first-person open-world RPG in the New Meridian of 2045.<br>
   Built from real futurist predictions and real wormhole physics.<br>
-  <span style="opacity:.7">Extra pixel art: &ldquo;Warped City&rdquo; (CC0) &amp; &ldquo;Cyberpunk Street&rdquo; (CC-BY 3.0) by Luis Zuno / ansimuz</span></div>
+  <span style="opacity:.7">Extra pixel art: &ldquo;Warped City&rdquo; (CC0) &amp; &ldquo;Cyberpunk Street&rdquo; (CC-BY 3.0) by Luis Zuno / ansimuz &middot; build 9</span></div>
 </div>
 <div id="fade"></div>
 <div id="sysBtns">
@@ -213,9 +213,45 @@
   <div class="tbtn" id="tA">E<small>USE</small></div>
 </div>
 
-<script type="importmap">
-{ "imports": { "three": "./js/three.module.min.js" } }
+<div id="errbox" style="display:none; position:fixed; left:4%; right:4%; bottom:4%; z-index:99;
+  background:rgba(40,8,16,.96); border:2px solid #ff5560; border-radius:8px; padding:12px 14px;
+  color:#ffd9dd; font-size:12px; line-height:1.5; max-height:45%; overflow:auto;
+  user-select:text; -webkit-user-select:text;"></div>
+<script>
+/* startup diagnostics: surface engine errors on screen */
+window.__errs=[];
+function __showErr(msg){
+  window.__errs.push(msg);
+  var b=document.getElementById('errbox');
+  b.style.display='block';
+  b.innerHTML='<b>ENGINE ERROR — send Claude a screenshot of this box:</b><br>'+
+    window.__errs.map(function(e){return '&#9656; '+String(e).replace(/</g,'&lt;');}).join('<br>');
+}
+window.addEventListener('error', function(e){
+  __showErr((e.message||'script error')+' @ '+(e.filename||'?').split('/').pop()+':'+(e.lineno||'?'));
+}, true);
+window.addEventListener('unhandledrejection', function(e){
+  __showErr('promise: '+(e.reason && (e.reason.stack||e.reason.message||e.reason)));
+});
+setTimeout(function(){
+  if(!window.__gameReady)
+    __showErr('Engine did not finish starting after 8s. '+
+      (window.__errs.length? '':'No JS error was caught — likely a module failed to load (network/MIME). ')+
+      'WebGL: '+(function(){try{var c=document.createElement('canvas');
+        return (c.getContext('webgl2')||c.getContext('webgl'))?'available':'NOT AVAILABLE';}catch(x){return 'check failed';}})());
+}, 8000);
+/* immediate feedback if the engine never bound the buttons */
+window.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('btnNew').addEventListener('click', function(){
+    if(!window.__gameReady)
+      __showErr('Engine not running — the button can’t start the game. '+
+        (window.__errs.length? 'See errors above.':'No error caught; a module likely failed to load.'));
+  });
+});
 </script>
-<script type="module" src="./js/game.js"></script>
+<script type="importmap">
+{ "imports": { "three": "./js/three.module.min.js?v=9" } }
+</script>
+<script type="module" src="./js/game.js?v=9"></script>
 </body>
 </html>
