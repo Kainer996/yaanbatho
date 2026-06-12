@@ -8992,7 +8992,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- 3D Quarry Simulator — Three.js ES module -->
     <script type="module">
 // quarry3d.js
-import * as THREE from "https://esm.sh/three@0.161.0";
+import * as THREE2 from "https://esm.sh/three@0.161.0";
 import { OrbitControls } from "https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js";
 
 // quarry-staff-core.mjs
@@ -10631,6 +10631,93 @@ function getDustEmitInterval(speed) {
   return Math.max(0.05, 0.34 - speed * 0.018);
 }
 
+// quarry-assets.mjs
+import * as THREE from "https://esm.sh/three@0.161.0";
+import { GLTFLoader } from "https://esm.sh/three@0.161.0/examples/jsm/loaders/GLTFLoader.js";
+var MODEL_MANIFEST = [
+  { key: "pineA", url: "assets/models/pine-a.glb", targetHeight: 13 },
+  { key: "pineB", url: "assets/models/pine-b.glb", targetHeight: 15 },
+  { key: "rockA", url: "assets/models/rock-a.glb", targetHeight: 2.4 },
+  { key: "rockB", url: "assets/models/rock-b.glb", targetHeight: 3.2 },
+  { key: "rockC", url: "assets/models/rock-c.glb", targetHeight: 2 },
+  { key: "rockD", url: "assets/models/rock-d.glb", targetHeight: 4.2 },
+  { key: "bushA", url: "assets/models/bush-a.glb", targetHeight: 1.9 },
+  { key: "bushB", url: "assets/models/bush-b.glb", targetHeight: 2.6 }
+];
+var library = {
+  ready: false,
+  models: {}
+};
+function normalisePrototype(gltfScene, targetHeight) {
+  const proto = gltfScene;
+  const box = new THREE.Box3().setFromObject(proto);
+  const size = box.getSize(new THREE.Vector3());
+  const height = Math.max(1e-3, size.y);
+  const scale = targetHeight / height;
+  proto.scale.setScalar(scale);
+  proto.updateMatrixWorld(true);
+  const scaledBox = new THREE.Box3().setFromObject(proto);
+  proto.position.y -= scaledBox.min.y;
+  const centre = scaledBox.getCenter(new THREE.Vector3());
+  proto.position.x -= centre.x;
+  proto.position.z -= centre.z;
+  proto.traverse((child) => {
+    if (!child.isMesh) return;
+    child.castShadow = true;
+    child.receiveShadow = true;
+    if (child.material) {
+      child.material.roughness = Math.max(0.7, child.material.roughness ?? 0.9);
+      child.material.metalness = 0;
+    }
+  });
+  return proto;
+}
+async function loadAssetLibrary({ timeoutMs = 12e3 } = {}) {
+  if (library.ready) return library;
+  const loader = new GLTFLoader();
+  const withTimeout = (promise) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("asset timeout")), timeoutMs))
+  ]);
+  await Promise.all(MODEL_MANIFEST.map(async (spec) => {
+    try {
+      const gltf = await withTimeout(loader.loadAsync(spec.url));
+      const wrapper = new THREE.Group();
+      wrapper.add(normalisePrototype(gltf.scene, spec.targetHeight));
+      library.models[spec.key] = wrapper;
+    } catch (err) {
+      library.models[spec.key] = null;
+    }
+  }));
+  library.ready = Object.values(library.models).some(Boolean);
+  return library;
+}
+function cloneModel(key, { scaleJitter = 0.25 } = {}) {
+  const proto = library.models[key];
+  if (!proto) return null;
+  const clone = proto.clone(true);
+  const jitter = 1 + (Math.random() - 0.5) * 2 * scaleJitter;
+  clone.scale.multiplyScalar(jitter);
+  clone.rotation.y = Math.random() * Math.PI * 2;
+  return clone;
+}
+function isAssetLibraryReady() {
+  return library.ready;
+}
+function createTreeModel() {
+  const key = Math.random() < 0.6 ? "pineA" : "pineB";
+  return cloneModel(key) || cloneModel(key === "pineA" ? "pineB" : "pineA");
+}
+function createRockModel({ large = false } = {}) {
+  const keys = large ? ["rockD", "rockB"] : ["rockA", "rockC", "rockB"];
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  return cloneModel(key, { scaleJitter: 0.35 });
+}
+function createBushModel() {
+  const key = Math.random() < 0.5 ? "bushA" : "bushB";
+  return cloneModel(key, { scaleJitter: 0.3 });
+}
+
 // quarry-terrain-core.mjs?v=20260601-ground-cleanup
 var GRID2 = 80;
 var CELL2 = 5;
@@ -11753,11 +11840,11 @@ function normalizeAngle(angle) {
 var TONNES_PER_BLAST = 500;
 var EDGE_HAUL_PAYLOAD_TONNES = 40;
 var TONNES_PER_FACE_BLAST = 1800;
-var COL_LIMESTONE = new THREE.Color(12038822);
-var COL_PIT_FLOOR = new THREE.Color(6249301);
-var COL_SKY = new THREE.Color(9680326);
-var COL_DEEP_ROCK = new THREE.Color(5133145);
-var COL_TEAL_GLOW = new THREE.Color(3535327);
+var COL_LIMESTONE = new THREE2.Color(12038822);
+var COL_PIT_FLOOR = new THREE2.Color(6249301);
+var COL_SKY = new THREE2.Color(9680326);
+var COL_DEEP_ROCK = new THREE2.Color(5133145);
+var COL_TEAL_GLOW = new THREE2.Color(3535327);
 var scene;
 var camera;
 var renderer;
@@ -11789,7 +11876,6 @@ var activePlantProcessingVisual = null;
 var activePlantFeedOwner = null;
 var dustSuppressionRig = null;
 var lagoonVisuals = [];
-var cinematicRouteVisuals = [];
 var lastSnapshotEmit = 0;
 var manualEdgeHaulRunId = 0;
 var nextDumperId = 1;
@@ -12367,27 +12453,27 @@ function initThree() {
   if (!wrap) return;
   const W = Math.max(wrap.clientWidth || 800, 400);
   const H = Math.max(wrap.clientHeight || 500, 380);
-  scene = new THREE.Scene();
-  const horizonColor = new THREE.Color(12899292);
-  scene.fog = new THREE.FogExp2(horizonColor, 115e-5);
-  camera = new THREE.PerspectiveCamera(45, W / H, 0.5, 2400);
+  scene = new THREE2.Scene();
+  const horizonColor = new THREE2.Color(12899292);
+  scene.fog = new THREE2.FogExp2(horizonColor, 115e-5);
+  camera = new THREE2.PerspectiveCamera(45, W / H, 0.5, 2400);
   camera.position.set(-185, 205, 245);
   camera.lookAt(0, 0, 0);
-  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  renderer = new THREE2.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(W, H);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.shadowMap.type = THREE2.PCFSoftShadowMap;
+  renderer.toneMapping = THREE2.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.outputColorSpace = THREE2.SRGBColorSpace;
   renderer.domElement.style.cssText = "display:block;width:100%;height:100%;";
   wrap.insertBefore(renderer.domElement, wrap.firstChild);
-  const pmrem = new THREE.PMREMGenerator(renderer);
+  const pmrem = new THREE2.PMREMGenerator(renderer);
   scene.environment = buildEnvironmentMap(pmrem);
   pmrem.dispose();
   buildSkyDome();
-  const sun = new THREE.DirectionalLight(16773334, 3.1);
+  const sun = new THREE2.DirectionalLight(16773334, 3.1);
   sun.position.set(-150, 260, 120);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
@@ -12401,9 +12487,9 @@ function initThree() {
   sun.shadow.normalBias = 0.6;
   scene.add(sun);
   scene.add(sun.target);
-  const hemi = new THREE.HemisphereLight(12507370, 5722175, 1.15);
+  const hemi = new THREE2.HemisphereLight(12507370, 5722175, 1.15);
   scene.add(hemi);
-  const ambient = new THREE.AmbientLight(10465984, 0.32);
+  const ambient = new THREE2.AmbientLight(10465984, 0.32);
   scene.add(ambient);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 0, 0);
@@ -12413,17 +12499,17 @@ function initThree() {
   controls.enableDamping = true;
   controls.dampingFactor = 0.07;
   controls.update();
-  raycaster = new THREE.Raycaster();
-  pointer = new THREE.Vector2();
-  clock = new THREE.Clock();
-  M.yellow = new THREE.MeshStandardMaterial({ color: 15901981, roughness: 0.42, metalness: 0.28 });
-  M.yellowE = new THREE.MeshStandardMaterial({ color: 14520082, roughness: 0.5, metalness: 0.25 });
-  M.black = new THREE.MeshStandardMaterial({ color: 1447964, roughness: 0.62, metalness: 0.35 });
-  M.darkGrey = new THREE.MeshStandardMaterial({ color: 2895668, roughness: 0.55, metalness: 0.5 });
-  M.midGrey = new THREE.MeshStandardMaterial({ color: 4869716, roughness: 0.5, metalness: 0.55 });
-  M.red = new THREE.MeshStandardMaterial({ color: 12723997, roughness: 0.45, metalness: 0.25 });
-  M.hub = new THREE.MeshStandardMaterial({ color: 9409691, roughness: 0.35, metalness: 0.85 });
-  M.glass = new THREE.MeshStandardMaterial({
+  raycaster = new THREE2.Raycaster();
+  pointer = new THREE2.Vector2();
+  clock = new THREE2.Clock();
+  M.yellow = new THREE2.MeshStandardMaterial({ color: 15901981, roughness: 0.42, metalness: 0.28 });
+  M.yellowE = new THREE2.MeshStandardMaterial({ color: 14520082, roughness: 0.5, metalness: 0.25 });
+  M.black = new THREE2.MeshStandardMaterial({ color: 1447964, roughness: 0.62, metalness: 0.35 });
+  M.darkGrey = new THREE2.MeshStandardMaterial({ color: 2895668, roughness: 0.55, metalness: 0.5 });
+  M.midGrey = new THREE2.MeshStandardMaterial({ color: 4869716, roughness: 0.5, metalness: 0.55 });
+  M.red = new THREE2.MeshStandardMaterial({ color: 12723997, roughness: 0.45, metalness: 0.25 });
+  M.hub = new THREE2.MeshStandardMaterial({ color: 9409691, roughness: 0.35, metalness: 0.85 });
+  M.glass = new THREE2.MeshStandardMaterial({
     color: 9418447,
     roughness: 0.08,
     metalness: 0.9,
@@ -12431,16 +12517,16 @@ function initThree() {
     opacity: 0.55,
     envMapIntensity: 1.6
   });
-  M.rubber = new THREE.MeshStandardMaterial({ color: 1579547, roughness: 0.96, metalness: 0 });
-  M.grass = new THREE.MeshStandardMaterial({ color: 4609082, roughness: 1, metalness: 0 });
-  M.brown = new THREE.MeshStandardMaterial({ color: 5453853, roughness: 0.95, metalness: 0 });
-  M.green = new THREE.MeshStandardMaterial({ color: 3495467, roughness: 0.95, metalness: 0 });
-  M.greenDark = new THREE.MeshStandardMaterial({ color: 2638111, roughness: 0.95, metalness: 0 });
-  M.greenLight = new THREE.MeshStandardMaterial({ color: 4877877, roughness: 0.95, metalness: 0 });
-  M.concrete = new THREE.MeshStandardMaterial({ color: 9342082, roughness: 0.92, metalness: 0 });
-  M.orange = new THREE.MeshStandardMaterial({ color: 15094554, roughness: 0.5, metalness: 0.2 });
-  M.looseRock = new THREE.MeshStandardMaterial({ color: 10195072, roughness: 0.98, metalness: 0, flatShading: true });
-  M.water = new THREE.MeshStandardMaterial({
+  M.rubber = new THREE2.MeshStandardMaterial({ color: 1579547, roughness: 0.96, metalness: 0 });
+  M.grass = new THREE2.MeshStandardMaterial({ color: 4609082, roughness: 1, metalness: 0 });
+  M.brown = new THREE2.MeshStandardMaterial({ color: 5453853, roughness: 0.95, metalness: 0 });
+  M.green = new THREE2.MeshStandardMaterial({ color: 3495467, roughness: 0.95, metalness: 0 });
+  M.greenDark = new THREE2.MeshStandardMaterial({ color: 2638111, roughness: 0.95, metalness: 0 });
+  M.greenLight = new THREE2.MeshStandardMaterial({ color: 4877877, roughness: 0.95, metalness: 0 });
+  M.concrete = new THREE2.MeshStandardMaterial({ color: 9342082, roughness: 0.92, metalness: 0 });
+  M.orange = new THREE2.MeshStandardMaterial({ color: 15094554, roughness: 0.5, metalness: 0.2 });
+  M.looseRock = new THREE2.MeshStandardMaterial({ color: 10195072, roughness: 0.98, metalness: 0, flatShading: true });
+  M.water = new THREE2.MeshStandardMaterial({
     color: 2981288,
     roughness: 0.08,
     metalness: 0.55,
@@ -12448,11 +12534,11 @@ function initThree() {
     opacity: 0.82,
     envMapIntensity: 1.8
   });
-  M.road = new THREE.MeshStandardMaterial({ color: 7037270, roughness: 0.95, metalness: 0 });
-  M.bermStone = new THREE.MeshStandardMaterial({ color: 7694940, roughness: 0.98, metalness: 0, flatShading: true });
+  M.road = new THREE2.MeshStandardMaterial({ color: 7037270, roughness: 0.95, metalness: 0 });
+  M.bermStone = new THREE2.MeshStandardMaterial({ color: 7694940, roughness: 0.98, metalness: 0, flatShading: true });
   M.quarryWall = makeCinematicRockMaterial();
-  M.routeGlow = new THREE.MeshBasicMaterial({ color: 12576511, transparent: true, opacity: 0.34, depthWrite: false });
-  M.routeGlowSoft = new THREE.MeshBasicMaterial({ color: 10274030, transparent: true, opacity: 0.14, depthWrite: false });
+  M.routeGlow = new THREE2.MeshBasicMaterial({ color: 12576511, transparent: true, opacity: 0.34, depthWrite: false });
+  M.routeGlowSoft = new THREE2.MeshBasicMaterial({ color: 10274030, transparent: true, opacity: 0.14, depthWrite: false });
   Object.values(M).forEach((mat) => {
     if (mat?.isMeshStandardMaterial && mat.envMapIntensity === 1) mat.envMapIntensity = 0.55;
   });
@@ -12482,14 +12568,14 @@ function makeSkyGradientTexture() {
   grad.addColorStop(1, "#c9d4d2");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 64, 512);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = new THREE2.CanvasTexture(canvas);
+  tex.colorSpace = THREE2.SRGBColorSpace;
   return tex;
 }
 function buildSkyDome() {
-  const sky = new THREE.Mesh(
-    new THREE.SphereGeometry(1500, 32, 24),
-    new THREE.MeshBasicMaterial({ map: makeSkyGradientTexture(), side: THREE.BackSide, fog: false, depthWrite: false })
+  const sky = new THREE2.Mesh(
+    new THREE2.SphereGeometry(1500, 32, 24),
+    new THREE2.MeshBasicMaterial({ map: makeSkyGradientTexture(), side: THREE2.BackSide, fog: false, depthWrite: false })
   );
   sky.name = "skyDome";
   sky.renderOrder = -10;
@@ -12503,9 +12589,9 @@ function buildSkyDome() {
   radial.addColorStop(1, "rgba(255,236,190,0)");
   gctx.fillStyle = radial;
   gctx.fillRect(0, 0, 128, 128);
-  const glowTex = new THREE.CanvasTexture(glowCanvas);
-  glowTex.colorSpace = THREE.SRGBColorSpace;
-  const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  const glowTex = new THREE2.CanvasTexture(glowCanvas);
+  glowTex.colorSpace = THREE2.SRGBColorSpace;
+  const sunSprite = new THREE2.Sprite(new THREE2.SpriteMaterial({
     map: glowTex,
     transparent: true,
     depthWrite: false,
@@ -12514,9 +12600,9 @@ function buildSkyDome() {
   sunSprite.position.set(-720, 1080, 560).normalize().multiplyScalar(1380);
   sunSprite.scale.setScalar(420);
   scene.add(sunSprite);
-  const cloudMat = new THREE.SpriteMaterial({ map: glowTex, color: 16777215, transparent: true, opacity: 0.32, depthWrite: false, fog: false });
+  const cloudMat = new THREE2.SpriteMaterial({ map: glowTex, color: 16777215, transparent: true, opacity: 0.32, depthWrite: false, fog: false });
   for (let i = 0; i < 9; i++) {
-    const cloud = new THREE.Sprite(cloudMat);
+    const cloud = new THREE2.Sprite(cloudMat);
     const a = i / 9 * Math.PI * 2 + seededUnit(i, 7) * 1.2;
     const r = 820 + seededUnit(i, 13) * 420;
     cloud.position.set(Math.cos(a) * r, 240 + seededUnit(i, 29) * 260, Math.sin(a) * r);
@@ -12525,21 +12611,21 @@ function buildSkyDome() {
   }
 }
 function buildEnvironmentMap(pmrem) {
-  const envScene = new THREE.Scene();
-  const envSky = new THREE.Mesh(
-    new THREE.SphereGeometry(80, 16, 12),
-    new THREE.MeshBasicMaterial({ map: makeSkyGradientTexture(), side: THREE.BackSide })
+  const envScene = new THREE2.Scene();
+  const envSky = new THREE2.Mesh(
+    new THREE2.SphereGeometry(80, 16, 12),
+    new THREE2.MeshBasicMaterial({ map: makeSkyGradientTexture(), side: THREE2.BackSide })
   );
   envScene.add(envSky);
-  const envSun = new THREE.Mesh(
-    new THREE.SphereGeometry(8, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 16773836 })
+  const envSun = new THREE2.Mesh(
+    new THREE2.SphereGeometry(8, 8, 8),
+    new THREE2.MeshBasicMaterial({ color: 16773836 })
   );
   envSun.position.set(-30, 45, 24);
   envScene.add(envSun);
-  const envGround = new THREE.Mesh(
-    new THREE.CircleGeometry(70, 24).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 7236190 })
+  const envGround = new THREE2.Mesh(
+    new THREE2.CircleGeometry(70, 24).rotateX(-Math.PI / 2),
+    new THREE2.MeshBasicMaterial({ color: 7236190 })
   );
   envGround.position.y = -12;
   envScene.add(envGround);
@@ -12563,9 +12649,9 @@ function makeRockDetailTexture() {
     ctx.fillStyle = `rgba(${seededUnit(i, 43) > 0.5 ? 200 : 70},${seededUnit(i, 47) > 0.5 ? 196 : 72},${68},0.05)`;
     ctx.fillRect(0, y, size, 1.6 + seededUnit(i, 53) * 2.4);
   }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = new THREE2.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE2.RepeatWrapping;
+  tex.colorSpace = THREE2.SRGBColorSpace;
   return tex;
 }
 var STRATA_BANDS = [
@@ -12628,26 +12714,26 @@ function buildTerrain() {
       idx.push(a, c, b, b, c, d);
     }
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  geo.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
-  geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  const geo = new THREE2.BufferGeometry();
+  geo.setAttribute("position", new THREE2.BufferAttribute(positions, 3));
+  geo.setAttribute("color", new THREE2.BufferAttribute(colors, 3));
+  geo.setAttribute("normal", new THREE2.BufferAttribute(normals, 3));
+  geo.setAttribute("uv", new THREE2.BufferAttribute(uvs, 2));
   geo.setIndex(idx);
   const detail = makeRockDetailTexture();
   detail.repeat.set(22, 22);
-  const mat = new THREE.MeshStandardMaterial({
+  const mat = new THREE2.MeshStandardMaterial({
     vertexColors: true,
     map: detail,
     roughness: 0.98,
     metalness: 0
   });
-  terrainMesh = new THREE.Mesh(geo, mat);
+  terrainMesh = new THREE2.Mesh(geo, mat);
   terrainMesh.receiveShadow = true;
   terrainMesh.name = "terrain";
   scene.add(terrainMesh);
-  const gp = new THREE.Mesh(
-    new THREE.PlaneGeometry(1400, 1400).rotateX(-Math.PI / 2),
+  const gp = new THREE2.Mesh(
+    new THREE2.PlaneGeometry(1400, 1400).rotateX(-Math.PI / 2),
     M.grass
   );
   gp.position.y = BACKDROP_GROUND_Y;
@@ -12796,7 +12882,7 @@ function destroyBlastAffectedEnvironment(blastX, blastZ, { faceHit = false } = {
   window.__qproLastBlastEnvironmentCleanup = { destroyed, blastX, blastZ };
   return destroyed;
 }
-function buildEnvironment() {
+function addSkylineTreeRing() {
   const skylineTreeCount = 44;
   for (let i = 0; i < skylineTreeCount; i++) {
     const a = i / skylineTreeCount * Math.PI * 2;
@@ -12807,11 +12893,38 @@ function buildEnvironment() {
     registerTerrainAnchoredObject(tree, { destructible: true, category: "tree" });
     scene.add(tree);
   }
+}
+function replantEnvironmentFlora() {
+  terrainAnchoredObjects = terrainAnchoredObjects.filter((object) => {
+    const category = object?.userData?.environmentCategory;
+    if (category !== "tree" && category !== "scrub") return true;
+    scene.remove(object);
+    disposeObject3D(object);
+    return false;
+  });
+  addSkylineTreeRing();
+  addPerimeterTreeLine();
+  addScrubAndHedgerows();
+  scatterRockOutcrops();
+}
+function scatterRockOutcrops() {
+  if (!isAssetLibraryReady()) return;
+  for (let i = 0; i < 16; i++) {
+    const rock = createRockModel({ large: i % 5 === 0 });
+    if (!rock) return;
+    const a = seededUnit(i, 71) * Math.PI * 2;
+    const r = 150 + seededUnit(i, 73) * 90;
+    rock.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    registerTerrainAnchoredObject(rock, { destructible: true, category: "rockProp" });
+    scene.add(rock);
+  }
+}
+function buildEnvironment() {
+  addSkylineTreeRing();
   addPerimeterTreeLine();
   addScrubAndHedgerows();
   addCinematicQuarryBackdrops();
   addHaulRoadDetails();
-  addCinematicRouteGlow();
   addLagoonVisuals();
   addSiteHut(170, 160);
   addDustSuppressionRig();
@@ -12820,11 +12933,15 @@ function buildEnvironment() {
   if (shouldShowQuarryFaceOutline()) addQuarryFaceOutline();
 }
 function makeTree() {
-  const g = new THREE.Group();
+  if (isAssetLibraryReady()) {
+    const model = createTreeModel();
+    if (model) return model;
+  }
+  const g = new THREE2.Group();
   const s = 0.7 + Math.random() * 0.7;
   const lean = (Math.random() - 0.5) * 0.07;
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.32 * s, 0.55 * s, 5 * s, 6),
+  const trunk = new THREE2.Mesh(
+    new THREE2.CylinderGeometry(0.32 * s, 0.55 * s, 5 * s, 6),
     M.brown
   );
   trunk.position.y = 2.5 * s;
@@ -12837,7 +12954,7 @@ function makeTree() {
     { y: 11.4, r: 2.1, h: 3.8, mat: Math.random() > 0.5 ? M.greenLight : M.green }
   ];
   tiers.forEach((tier, index) => {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(tier.r * s, tier.h * s, 7), tier.mat);
+    const cone = new THREE2.Mesh(new THREE2.ConeGeometry(tier.r * s, tier.h * s, 7), tier.mat);
     cone.position.set(
       lean * tier.y * s + (Math.random() - 0.5) * 0.3,
       tier.y * s,
@@ -12879,22 +12996,23 @@ function seededUnit(index, salt = 0) {
   return x - Math.floor(x);
 }
 function addScrubAndHedgerows() {
-  const scrubMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6254392 });
-  const hedgeMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 3231781 });
+  const scrubMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6254392 });
+  const hedgeMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 3231781 });
   for (let i = 0; i < 74; i++) {
     const side = i % 4;
     const t = seededUnit(i, 1);
     const offset = (seededUnit(i, 2) - 0.5) * 18;
     const x = side < 2 ? -210 + t * 420 : side === 2 ? -198 - offset : 198 + offset;
     const z = side < 2 ? side === 0 ? -198 - offset : 198 + offset : -210 + t * 420;
-    const scrub = new THREE.Mesh(
-      new THREE.ConeGeometry(1.7 + seededUnit(i, 3) * 1.4, 2.2 + seededUnit(i, 4) * 2.4, 6),
+    const bush = isAssetLibraryReady() ? createBushModel() : null;
+    const scrub = bush || new THREE2.Mesh(
+      new THREE2.ConeGeometry(1.7 + seededUnit(i, 3) * 1.4, 2.2 + seededUnit(i, 4) * 2.4, 6),
       scrubMat
     );
-    scrub.position.set(x, 1.1, z);
+    scrub.position.set(x, bush ? 0 : 1.1, z);
     scrub.rotation.y = seededUnit(i, 5) * Math.PI * 2;
     scrub.castShadow = true;
-    registerTerrainAnchoredObject(scrub, { baseOffset: 1.1, destructible: true, category: "scrub" });
+    registerTerrainAnchoredObject(scrub, { baseOffset: bush ? 0 : 1.1, destructible: true, category: "scrub" });
     scene.add(scrub);
   }
   [
@@ -12907,20 +13025,21 @@ function addScrubAndHedgerows() {
     for (let n = 0; n < count; n++) {
       const offsetX = (seededUnit(index * 20 + n, 12) - 0.5) * 46;
       const offsetZ = (seededUnit(index * 20 + n, 13) - 0.5) * 10;
-      const scrub = new THREE.Mesh(
-        new THREE.ConeGeometry(1.3 + seededUnit(index * 20 + n, 14) * 1.5, 2.1 + seededUnit(index * 20 + n, 15) * 2.2, 6),
+      const bush = isAssetLibraryReady() ? createBushModel() : null;
+      const scrub = bush || new THREE2.Mesh(
+        new THREE2.ConeGeometry(1.3 + seededUnit(index * 20 + n, 14) * 1.5, 2.1 + seededUnit(index * 20 + n, 15) * 2.2, 6),
         scrubMat
       );
-      scrub.position.set(x + offsetX, 1.05, z + offsetZ);
+      scrub.position.set(x + offsetX, bush ? 0 : 1.05, z + offsetZ);
       scrub.rotation.y = seededUnit(index * 20 + n, 16) * Math.PI * 2;
       scrub.castShadow = true;
-      registerTerrainAnchoredObject(scrub, { baseOffset: 1.05, destructible: true, category: "scrub" });
+      registerTerrainAnchoredObject(scrub, { baseOffset: bush ? 0 : 1.05, destructible: true, category: "scrub" });
       scene.add(scrub);
     }
   });
 }
 function makeCinematicRockMaterial() {
-  return new THREE.MeshStandardMaterial({
+  return new THREE2.MeshStandardMaterial({
     roughness: 0.75,
     metalness: 0.12,
     color: 7170400,
@@ -12935,21 +13054,21 @@ function addCinematicQuarryBackdrops() {
     { x: 218, z: 22, sx: 340, sy: 52, yaw: -Math.PI / 2, name: "east-benched-rock-wall" }
   ];
   wallSpecs.forEach((spec, wallIndex) => {
-    const group = new THREE.Group();
+    const group = new THREE2.Group();
     group.name = spec.name;
     for (let bench = 0; bench < 5; bench++) {
       const width = spec.sx - bench * 34;
       const height = Math.max(7, spec.sy / 5 - bench * 0.7);
-      const slab = new THREE.Mesh(
-        new THREE.BoxGeometry(width, height, 9),
+      const slab = new THREE2.Mesh(
+        new THREE2.BoxGeometry(width, height, 9),
         M.quarryWall || makeCinematicRockMaterial()
       );
       slab.position.set(0, bench * 9.2 + height / 2 - 7, -bench * 8);
       slab.castShadow = true;
       slab.receiveShadow = true;
       group.add(slab);
-      const road = new THREE.Mesh(
-        new THREE.BoxGeometry(width * 0.82, 0.55, 7.5),
+      const road = new THREE2.Mesh(
+        new THREE2.BoxGeometry(width * 0.82, 0.55, 7.5),
         M.road
       );
       road.position.set(0, bench * 9.2 - 2.2, -bench * 8 + 8.4);
@@ -12966,8 +13085,8 @@ function addCinematicQuarryBackdrops() {
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius;
     if (Math.abs(x) < 78 && Math.abs(z) < 86) continue;
-    const chip = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(1 + seededUnit(i, 43) * 2.2, 0),
+    const chip = new THREE2.Mesh(
+      new THREE2.DodecahedronGeometry(1 + seededUnit(i, 43) * 2.2, 0),
       M.bermStone
     );
     chip.scale.set(1.2 + seededUnit(i, 44), 0.42 + seededUnit(i, 45) * 0.45, 1.1 + seededUnit(i, 46) * 1.2);
@@ -12986,27 +13105,6 @@ function addCinematicQuarryBackdrops() {
     glassDashboard: true
   };
 }
-function createGlowTube(points, { radius = 1.1, material = M.routeGlow } = {}) {
-  const curve = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(p.x, getTerrainHeight(p.x, p.z) + 1.25, p.z)));
-  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, radius, 8, false), material.clone());
-  mesh.renderOrder = 8;
-  return mesh;
-}
-function addCinematicRouteGlow() {
-  cinematicRouteVisuals.forEach((obj) => disposeObject3D(obj));
-  cinematicRouteVisuals = [];
-  const routeSets = [
-    [{ x: -52, z: -48 }, { x: -10, z: -38 }, { x: 38, z: -42 }, { x: 92, z: -72 }, { x: 156, z: -144 }],
-    [{ x: -30, z: -28 }, { x: -70, z: 8 }, { x: -114, z: 62 }, { x: -154, z: 132 }]
-  ];
-  routeSets.forEach((points, index) => {
-    const soft = createGlowTube(points, { radius: index === 0 ? 2.6 : 2.05, material: M.routeGlowSoft });
-    const core = createGlowTube(points, { radius: index === 0 ? 0.72 : 0.55, material: M.routeGlow });
-    scene.add(soft, core);
-    cinematicRouteVisuals.push(soft, core);
-  });
-  window.__qproCinematicRoutes = routeSets.map((points) => points.length);
-}
 function addHaulRoadDetails() {
   window.__qproGroundPlateCleanup = {
     roadSlabsVisible: false,
@@ -13020,7 +13118,7 @@ function addHaulRoadDetails() {
   for (let i = 0; i < 34; i++) {
     const x = -74 + i * 8.5;
     const z = -70 + Math.sin(i * 0.7) * 11;
-    const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8 + seededUnit(i, 10) * 0.28, 0), M.bermStone);
+    const stone = new THREE2.Mesh(new THREE2.DodecahedronGeometry(0.8 + seededUnit(i, 10) * 0.28, 0), M.bermStone);
     stone.scale.set(1, 0.72 + seededUnit(i, 11) * 0.22, 1.25 + seededUnit(i, 12) * 0.35);
     stone.position.set(x, getTerrainHeight(x, z) + 0.48, z);
     stone.rotation.y = seededUnit(i, 9) * Math.PI;
@@ -13034,7 +13132,7 @@ function addHaulRoadDetails() {
     [130, -145, 16739072],
     [-28, -54, 16763904]
   ].forEach(([x, z, color]) => {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 3.2, 8), new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color }));
+    const cone = new THREE2.Mesh(new THREE2.ConeGeometry(1.1, 3.2, 8), new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color }));
     cone.position.set(x, getTerrainHeight(x, z) + 1.6, z);
     cone.castShadow = true;
     registerTerrainAnchoredObject(cone, { baseOffset: 1.6, destructible: true, category: "cone" });
@@ -13046,23 +13144,24 @@ function addLagoonVisuals() {
     { x: -156, z: 138, sx: 54, sz: 34, name: "settlement-lagoon" },
     { x: -112, z: 164, sx: 32, sz: 22, name: "clean-water-lagoon" }
   ].map((spec, index) => {
-    const group = new THREE.Group();
+    const group = new THREE2.Group();
     group.name = spec.name;
-    const basin = new THREE.Mesh(
-      new THREE.CylinderGeometry(spec.sx / 2, spec.sx / 2, 1.2, 28),
-      new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 4932663 })
+    const basin = new THREE2.Mesh(
+      new THREE2.CylinderGeometry(spec.sx / 2, spec.sx / 2, 1.2, 28),
+      new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 4932663 })
     );
     basin.scale.z = spec.sz / spec.sx;
     basin.position.y = -0.4;
     basin.receiveShadow = true;
     group.add(basin);
-    const water = new THREE.Mesh(new THREE.CircleGeometry(spec.sx * 0.43, 28), M.water);
+    const water = new THREE2.Mesh(new THREE2.CircleGeometry(spec.sx * 0.43, 28), M.water);
     water.scale.z = spec.sz / spec.sx;
     water.rotation.x = -Math.PI / 2;
     water.position.y = 0.24 + index * 0.05;
     water.name = `${spec.name}-water`;
     group.add(water);
     group.position.set(spec.x, 0, spec.z);
+    registerTerrainAnchoredObject(group, { category: "lagoon" });
     scene.add(group);
     return { ...spec, group, water };
   });
@@ -13084,7 +13183,7 @@ function addDustSuppressionRig() {
   window.__qproDustSuppressionRig = getDustSuppressionHookState();
 }
 function makeDriverTag(text = "Reese Cakes") {
-  const group = new THREE.Group();
+  const group = new THREE2.Group();
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 160;
@@ -13101,15 +13200,15 @@ function makeDriverTag(text = "Reese Cakes") {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, 256, 72);
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new THREE2.CanvasTexture(canvas);
   texture.needsUpdate = true;
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+  const sprite = new THREE2.Sprite(new THREE2.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
   sprite.position.set(-1.5, 10.2, 0);
   sprite.scale.set(13.5, 4.2, 1);
   sprite.renderOrder = 20;
   group.add(sprite);
-  const arrowMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16768341, emissive: 4468736 });
-  const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.7, 3), arrowMat);
+  const arrowMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16768341, emissive: 4468736 });
+  const arrow = new THREE2.Mesh(new THREE2.ConeGeometry(0.9, 2.7, 3), arrowMat);
   arrow.position.set(-1.5, 7.5, 0);
   arrow.rotation.z = Math.PI;
   arrow.castShadow = true;
@@ -13127,24 +13226,24 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 function makeDustSuppressionRig() {
-  const group = new THREE.Group();
-  const tractorGreen = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 2062901 });
-  const bowserRed = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 12262685 });
-  const sprayMat = new THREE.MeshBasicMaterial({ color: 9163775, transparent: true, opacity: 0.38 });
-  const tractor = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(7, 2.6, 4), tractorGreen);
+  const group = new THREE2.Group();
+  const tractorGreen = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 2062901 });
+  const bowserRed = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 12262685 });
+  const sprayMat = new THREE2.MeshBasicMaterial({ color: 9163775, transparent: true, opacity: 0.38 });
+  const tractor = new THREE2.Group();
+  const body = new THREE2.Mesh(new THREE2.BoxGeometry(7, 2.6, 4), tractorGreen);
   body.position.y = 2.2;
   body.castShadow = true;
   tractor.add(body);
-  const cab = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.1, 3.4), tractorGreen);
+  const cab = new THREE2.Mesh(new THREE2.BoxGeometry(3.2, 3.1, 3.4), tractorGreen);
   cab.position.set(-1.8, 4.1, 0);
   cab.castShadow = true;
   tractor.add(cab);
-  const bonnet = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.8, 3.2), tractorGreen);
+  const bonnet = new THREE2.Mesh(new THREE2.BoxGeometry(3.8, 1.8, 3.2), tractorGreen);
   bonnet.position.set(2.4, 3, 0);
   tractor.add(bonnet);
   [[-2.6, 1.2, -2.4, 1.35], [-2.6, 1.2, 2.4, 1.35], [2.6, 1, -2.2, 1], [2.6, 1, 2.2, 1]].forEach(([x, y, z, r]) => {
-    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.8, 14), M.rubber);
+    const wheel = new THREE2.Mesh(new THREE2.CylinderGeometry(r, r, 0.8, 14), M.rubber);
     wheel.rotation.x = Math.PI / 2;
     wheel.userData.rolls = true;
     wheel.position.set(x, y, z);
@@ -13153,23 +13252,23 @@ function makeDustSuppressionRig() {
   });
   group.add(tractor);
   group.add(makeDriverTag("Reese Cakes"));
-  const drawbar = new THREE.Mesh(new THREE.BoxGeometry(5, 0.28, 0.28), M.darkGrey);
+  const drawbar = new THREE2.Mesh(new THREE2.BoxGeometry(5, 0.28, 0.28), M.darkGrey);
   drawbar.position.set(-6.2, 1.2, 0);
   group.add(drawbar);
-  const tank = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 5.6, 18), bowserRed);
+  const tank = new THREE2.Mesh(new THREE2.CylinderGeometry(2.2, 2.2, 5.6, 18), bowserRed);
   tank.rotation.z = Math.PI / 2;
   tank.position.set(-10.2, 2.3, 0);
   tank.castShadow = true;
   group.add(tank);
   [[-11.8, -2.1], [-11.8, 2.1], [-8.7, -2.1], [-8.7, 2.1]].forEach(([x, z]) => {
-    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.65, 12), M.rubber);
+    const wheel = new THREE2.Mesh(new THREE2.CylinderGeometry(0.85, 0.85, 0.65, 12), M.rubber);
     wheel.rotation.x = Math.PI / 2;
     wheel.userData.rolls = true;
     wheel.position.set(x, 0.85, z);
     wheel.castShadow = true;
     group.add(wheel);
   });
-  const spray = new THREE.Mesh(new THREE.ConeGeometry(3.4, 9, 14, 1, true), sprayMat);
+  const spray = new THREE2.Mesh(new THREE2.ConeGeometry(3.4, 9, 14, 1, true), sprayMat);
   spray.rotation.z = Math.PI / 2;
   spray.position.set(-15, 1.5, 0);
   spray.visible = false;
@@ -13234,10 +13333,10 @@ function updateDustSuppressionRig(dt) {
   window.__qproDustSuppressionRig = getDustSuppressionHookState();
 }
 function spawnSuppressionMist(x, y, z) {
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 10475506, transparent: true, opacity: 0.28 });
-  const mist = new THREE.Mesh(new THREE.SphereGeometry(0.55 + Math.random() * 0.9, 5, 5), mat);
+  const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 10475506, transparent: true, opacity: 0.28 });
+  const mist = new THREE2.Mesh(new THREE2.SphereGeometry(0.55 + Math.random() * 0.9, 5, 5), mat);
   mist.position.set(x + (Math.random() - 0.5) * 4, y, z + (Math.random() - 0.5) * 4);
-  mist.userData.vel = new THREE.Vector3((Math.random() - 0.5) * 0.8, 0.6 + Math.random() * 0.8, (Math.random() - 0.5) * 0.8);
+  mist.userData.vel = new THREE2.Vector3((Math.random() - 0.5) * 0.8, 0.6 + Math.random() * 0.8, (Math.random() - 0.5) * 0.8);
   mist.userData.life = 0.9;
   mist.userData.decay = 0.9 + Math.random() * 0.45;
   mist.userData.dust = true;
@@ -13245,21 +13344,22 @@ function spawnSuppressionMist(x, y, z) {
   particles.push(mist);
 }
 function addSiteHut(x, z) {
-  const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6719658 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(12, 5, 7), mat);
+  const g = new THREE2.Group();
+  const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6719658 });
+  const body = new THREE2.Mesh(new THREE2.BoxGeometry(12, 5, 7), mat);
   body.position.y = 2.5;
   body.castShadow = true;
   g.add(body);
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(13, 1, 8), new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 4478310 }));
+  const roof = new THREE2.Mesh(new THREE2.BoxGeometry(13, 1, 8), new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 4478310 }));
   roof.position.y = 5.5;
   g.add(roof);
   g.position.set(x, 0, z);
+  registerTerrainAnchoredObject(g, { category: "siteHut" });
   scene.add(g);
 }
 function addStockpile(x, z, col, rx, ry) {
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: col });
-  const cone = new THREE.Mesh(new THREE.ConeGeometry(rx, ry, 8), mat);
+  const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: col });
+  const cone = new THREE2.Mesh(new THREE2.ConeGeometry(rx, ry, 8), mat);
   cone.position.set(x, getPileCenterY({ terrainHeight: getTerrainHeight(x, z), pileHeight: ry, clearance: 0 }), z);
   cone.castShadow = true;
   cone.receiveShadow = true;
@@ -13296,7 +13396,7 @@ function updateAggregateStockpileVisuals() {
     const height = Math.max(1, Math.min(18, 1 + Math.sqrt(totalProductTonnes) * 0.8));
     const radius = Math.max(baseRadius, Math.min(16, baseRadius + Math.sqrt(totalProductTonnes) * 0.34));
     pile.geometry.dispose();
-    pile.geometry = new THREE.ConeGeometry(radius, height, 10);
+    pile.geometry = new THREE2.ConeGeometry(radius, height, 10);
     pile.position.y = getPileCenterY({ terrainHeight: getTerrainHeight(pile.position.x, pile.position.z), pileHeight: height, clearance: 0 });
     pile.visible = totalProductTonnes > 0.1;
     window.__qproProductPileDebug.push({
@@ -13332,14 +13432,14 @@ function updateEdgeStockpileVisuals() {
     const height = Math.max(1.2, Math.min(32, 1.2 + Math.sqrt(tonnes) * 1.05));
     const radius = Math.max(baseRadius, Math.min(24, baseRadius + Math.sqrt(tonnes) * 0.5));
     pile.geometry.dispose();
-    pile.geometry = new THREE.ConeGeometry(radius, height, 10);
+    pile.geometry = new THREE2.ConeGeometry(radius, height, 10);
     pile.position.y = getPileCenterY({ terrainHeight: getTerrainHeight(pile.position.x, pile.position.z), pileHeight: height, clearance: 0 });
     pile.visible = tonnes > 0.1;
   });
 }
 function createEdgeHaulRouteVisual(route) {
   clearEdgeHaulRouteVisual();
-  const group = new THREE.Group();
+  const group = new THREE2.Group();
   group.name = "active-edge-haul-route";
   group.userData.routeSegments = [];
   group.userData.waypointMarkers = [];
@@ -13373,39 +13473,39 @@ function createEdgeHaulRouteVisual(route) {
   return group;
 }
 function createRouteSegmentMesh(segment) {
-  const from = new THREE.Vector3(segment.from.x, getTerrainHeight(segment.from.x, segment.from.z) + 1.1, segment.from.z);
-  const to = new THREE.Vector3(segment.to.x, getTerrainHeight(segment.to.x, segment.to.z) + 1.1, segment.to.z);
+  const from = new THREE2.Vector3(segment.from.x, getTerrainHeight(segment.from.x, segment.from.z) + 1.1, segment.from.z);
+  const to = new THREE2.Vector3(segment.to.x, getTerrainHeight(segment.to.x, segment.to.z) + 1.1, segment.to.z);
   const direction = to.clone().sub(from);
   const length = Math.max(0.01, direction.length());
-  const mesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.65, 0.65, length, 8),
-    new THREE.MeshBasicMaterial({ color: 3580927, transparent: true, opacity: 0.34 })
+  const mesh = new THREE2.Mesh(
+    new THREE2.CylinderGeometry(0.65, 0.65, length, 8),
+    new THREE2.MeshBasicMaterial({ color: 3580927, transparent: true, opacity: 0.34 })
   );
   mesh.position.copy(from).add(to).multiplyScalar(0.5);
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+  mesh.quaternion.setFromUnitVectors(new THREE2.Vector3(0, 1, 0), direction.normalize());
   mesh.renderOrder = 7;
   return mesh;
 }
 function createRouteWaypointMarker(point, index, route) {
-  const group = new THREE.Group();
+  const group = new THREE2.Group();
   group.position.set(point.x, getTerrainHeight(point.x, point.z) + 2.1, point.z);
   group.userData.waypointIndex = index;
   const color = index === route.tipAtWaypointIndex ? 16756736 : index === route.loadAtWaypointIndex ? 4176208 : 5809919;
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(4.8, 0.32, 8, 28),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.78 })
+  const ring = new THREE2.Mesh(
+    new THREE2.TorusGeometry(4.8, 0.32, 8, 28),
+    new THREE2.MeshBasicMaterial({ color, transparent: true, opacity: 0.78 })
   );
   ring.rotation.x = Math.PI / 2;
   group.add(ring);
-  const mast = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.25, 0.25, 4.6, 6),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.62 })
+  const mast = new THREE2.Mesh(
+    new THREE2.CylinderGeometry(0.25, 0.25, 4.6, 6),
+    new THREE2.MeshBasicMaterial({ color, transparent: true, opacity: 0.62 })
   );
   mast.position.y = 2.3;
   group.add(mast);
-  const beacon = new THREE.Mesh(
-    new THREE.SphereGeometry(1.15, 12, 8),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.92 })
+  const beacon = new THREE2.Mesh(
+    new THREE2.SphereGeometry(1.15, 12, 8),
+    new THREE2.MeshBasicMaterial({ color, transparent: true, opacity: 0.92 })
   );
   beacon.position.y = 4.8;
   group.add(beacon);
@@ -13445,7 +13545,7 @@ function clearEdgeHaulRouteVisual() {
 function createDirectFeedProofGuideVisual(plan) {
   clearDirectFeedProofGuideVisual();
   if (!plan?.active || !Array.isArray(plan.pathPoints) || plan.pathPoints.length < 2) return null;
-  const group = new THREE.Group();
+  const group = new THREE2.Group();
   group.name = "direct-feed-proof-guide";
   group.userData.planMode = plan.mode;
   group.userData.phase = plan.phase;
@@ -13458,9 +13558,9 @@ function createDirectFeedProofGuideVisual(plan) {
     group.add(segment);
   }
   plan.pathPoints.forEach((point, index) => {
-    const marker = new THREE.Mesh(
-      new THREE.SphereGeometry(index === plan.pathPoints.length - 1 ? 1.3 : 0.95, 14, 10),
-      new THREE.MeshBasicMaterial({
+    const marker = new THREE2.Mesh(
+      new THREE2.SphereGeometry(index === plan.pathPoints.length - 1 ? 1.3 : 0.95, 14, 10),
+      new THREE2.MeshBasicMaterial({
         color: index === plan.pathPoints.length - 1 ? 3003583 : 16436245,
         transparent: true,
         opacity: index === 1 ? 0.9 : 0.78
@@ -13471,9 +13571,9 @@ function createDirectFeedProofGuideVisual(plan) {
     marker.userData.guideMarker = index === 0 ? "excavator" : index === plan.pathPoints.length - 1 ? "hopper" : "bucket-arc";
     group.add(marker);
   });
-  const badge = new THREE.Mesh(
-    new THREE.BoxGeometry(12, 1.2, 0.22),
-    new THREE.MeshBasicMaterial({ color: 404022, transparent: true, opacity: 0.62 })
+  const badge = new THREE2.Mesh(
+    new THREE2.BoxGeometry(12, 1.2, 0.22),
+    new THREE2.MeshBasicMaterial({ color: 404022, transparent: true, opacity: 0.62 })
   );
   const mid = plan.pathPoints[Math.floor(plan.pathPoints.length / 2)];
   badge.position.set(mid.x, mid.y + 2.2, mid.z);
@@ -13493,20 +13593,20 @@ function createDirectFeedProofGuideVisual(plan) {
   return group;
 }
 function createProofGuideSegment(fromPoint, toPoint, activeStream) {
-  const from = new THREE.Vector3(fromPoint.x, fromPoint.y, fromPoint.z);
-  const to = new THREE.Vector3(toPoint.x, toPoint.y, toPoint.z);
+  const from = new THREE2.Vector3(fromPoint.x, fromPoint.y, fromPoint.z);
+  const to = new THREE2.Vector3(toPoint.x, toPoint.y, toPoint.z);
   const direction = to.clone().sub(from);
   const length = Math.max(0.01, direction.length());
-  const mesh = new THREE.Mesh(
-    new THREE.CylinderGeometry(activeStream ? 0.42 : 0.28, activeStream ? 0.42 : 0.28, length, 10),
-    new THREE.MeshBasicMaterial({
+  const mesh = new THREE2.Mesh(
+    new THREE2.CylinderGeometry(activeStream ? 0.42 : 0.28, activeStream ? 0.42 : 0.28, length, 10),
+    new THREE2.MeshBasicMaterial({
       color: activeStream ? 16096779 : 3003583,
       transparent: true,
       opacity: activeStream ? 0.74 : 0.48
     })
   );
   mesh.position.copy(from).add(to).multiplyScalar(0.5);
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+  mesh.quaternion.setFromUnitVectors(new THREE2.Vector3(0, 1, 0), direction.normalize());
   mesh.renderOrder = 11;
   return mesh;
 }
@@ -13554,9 +13654,9 @@ function setDumperProductLoadVisual(eq, productKey, tonnes) {
   const tipperGroup = eq.userData.tipperGroup;
   if (!tipperGroup || !productKey || tonnes <= 0) return;
   const loadHeight = Math.max(0.25, Math.min(1.35, 0.25 + tonnes / 25));
-  const load = new THREE.Mesh(
-    new THREE.BoxGeometry(5.6, loadHeight, 3.2),
-    new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(productKey) })
+  const load = new THREE2.Mesh(
+    new THREE2.BoxGeometry(5.6, loadHeight, 3.2),
+    new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(productKey) })
   );
   load.position.set(3.35, 1.3 + loadHeight / 2, 0);
   load.castShadow = true;
@@ -13592,11 +13692,11 @@ function spawnScreenerDischargeBurst(flowsOrTonnes, materialBefore = null, mater
   if (!flows.length) return;
   flows.forEach((flow) => {
     const count = Math.max(6, Math.min(24, Math.round(flow.tonnes / 1.6)));
-    const from = new THREE.Vector3(flow.from.x, flow.from.y, flow.from.z);
-    const to = new THREE.Vector3(flow.to.x, flow.to.y, flow.to.z);
+    const from = new THREE2.Vector3(flow.from.x, flow.from.y, flow.from.z);
+    const to = new THREE2.Vector3(flow.to.x, flow.to.y, flow.to.z);
     for (let i = 0; i < count; i++) {
-      const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(flow.productKey), transparent: true, opacity: 0.88 });
-      const chip = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.35, 0.55), mat);
+      const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(flow.productKey), transparent: true, opacity: 0.88 });
+      const chip = new THREE2.Mesh(new THREE2.BoxGeometry(0.55, 0.35, 0.55), mat);
       chip.position.set(
         from.x + (Math.random() - 0.5) * 1.8,
         from.y + Math.random() * 1.2,
@@ -13608,7 +13708,7 @@ function spawnScreenerDischargeBurst(flowsOrTonnes, materialBefore = null, mater
       chip.userData.life = 1.45;
       chip.userData.decay = 0.9 + Math.random() * 0.3;
       chip.userData.grav = true;
-      chip.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+      chip.userData.spin = new THREE2.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
       chip.userData.productKey = flow.productKey;
       scene.add(chip);
       particles.push(chip);
@@ -13619,12 +13719,12 @@ function spawnScreenerDischargeBurst(flowsOrTonnes, materialBefore = null, mater
 function spawnDischargeRibbon(from, to, productKey, tonnes) {
   const direction = to.clone().sub(from);
   const length = Math.max(0.01, direction.length());
-  const ribbon = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.22, 0.22, length, 6),
-    new THREE.MeshBasicMaterial({ color: getProductColor(productKey), transparent: true, opacity: Math.min(0.5, 0.18 + tonnes / 80) })
+  const ribbon = new THREE2.Mesh(
+    new THREE2.CylinderGeometry(0.22, 0.22, length, 6),
+    new THREE2.MeshBasicMaterial({ color: getProductColor(productKey), transparent: true, opacity: Math.min(0.5, 0.18 + tonnes / 80) })
   );
   ribbon.position.copy(from).add(to).multiplyScalar(0.5);
-  ribbon.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+  ribbon.quaternion.setFromUnitVectors(new THREE2.Vector3(0, 1, 0), direction.normalize());
   ribbon.renderOrder = 6;
   ribbon.userData.life = 1.15;
   ribbon.userData.decay = 0.95;
@@ -13638,8 +13738,8 @@ function spawnEdgeTipParticles(eq, productKey, tonnes) {
   const target = getEdgeStockpileTarget(edgeKey) || eq.position;
   const count = Math.max(8, Math.min(28, Math.round(tonnes)));
   for (let i = 0; i < count; i++) {
-    const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(edgeKey || productKey), transparent: true, opacity: 0.9 });
-    const chip = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.45, 0.65), mat);
+    const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(edgeKey || productKey), transparent: true, opacity: 0.9 });
+    const chip = new THREE2.Mesh(new THREE2.BoxGeometry(0.65, 0.45, 0.65), mat);
     chip.position.set(eq.position.x + 4, eq.position.y + 5, eq.position.z + (Math.random() - 0.5) * 4);
     const vel = target.clone().sub(chip.position).multiplyScalar(0.65 + Math.random() * 0.25);
     vel.y = 5 + Math.random() * 3;
@@ -13647,19 +13747,19 @@ function spawnEdgeTipParticles(eq, productKey, tonnes) {
     chip.userData.life = 1.2;
     chip.userData.decay = 0.9 + Math.random() * 0.4;
     chip.userData.grav = true;
-    chip.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+    chip.userData.spin = new THREE2.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
     scene.add(chip);
     particles.push(chip);
   }
 }
 function spawnLoaderProductTransfer(plan, productKey, tonnes) {
   if (!plan?.active || !plan.showMaterialStream || tonnes <= 0) return;
-  const from = new THREE.Vector3(plan.streamFrom.x, plan.streamFrom.y, plan.streamFrom.z);
-  const to = new THREE.Vector3(plan.streamTo.x, plan.streamTo.y, plan.streamTo.z);
+  const from = new THREE2.Vector3(plan.streamFrom.x, plan.streamFrom.y, plan.streamFrom.z);
+  const to = new THREE2.Vector3(plan.streamTo.x, plan.streamTo.y, plan.streamTo.z);
   const count = Math.max(8, Math.min(26, Math.round(tonnes * 0.9)));
   for (let i = 0; i < count; i++) {
-    const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(productKey), transparent: true, opacity: 0.9 });
-    const chip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.5), mat);
+    const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor(productKey), transparent: true, opacity: 0.9 });
+    const chip = new THREE2.Mesh(new THREE2.BoxGeometry(0.5, 0.34, 0.5), mat);
     chip.position.set(
       from.x + (Math.random() - 0.5) * 1.4,
       from.y + Math.random() * 0.8,
@@ -13671,7 +13771,7 @@ function spawnLoaderProductTransfer(plan, productKey, tonnes) {
     chip.userData.life = 0.95;
     chip.userData.decay = 0.9 + Math.random() * 0.2;
     chip.userData.grav = true;
-    chip.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+    chip.userData.spin = new THREE2.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
     scene.add(chip);
     particles.push(chip);
   }
@@ -13679,12 +13779,12 @@ function spawnLoaderProductTransfer(plan, productKey, tonnes) {
 }
 function spawnCrusherTipTransfer(plan, tonnes) {
   if (!plan?.active || !plan.showMaterialStream || tonnes <= 0) return;
-  const from = new THREE.Vector3(plan.streamFrom.x, plan.streamFrom.y, plan.streamFrom.z);
-  const to = new THREE.Vector3(plan.streamTo.x, plan.streamTo.y, plan.streamTo.z);
+  const from = new THREE2.Vector3(plan.streamFrom.x, plan.streamFrom.y, plan.streamFrom.z);
+  const to = new THREE2.Vector3(plan.streamTo.x, plan.streamTo.y, plan.streamTo.z);
   const count = Math.max(10, Math.min(30, Math.round(tonnes * 0.7)));
   for (let i = 0; i < count; i++) {
-    const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor("shot-rock"), transparent: true, opacity: 0.92 });
-    const chip = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.42, 0.6), mat);
+    const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: getProductColor("shot-rock"), transparent: true, opacity: 0.92 });
+    const chip = new THREE2.Mesh(new THREE2.BoxGeometry(0.6, 0.42, 0.6), mat);
     chip.position.set(
       from.x + (Math.random() - 0.5) * 1.8,
       from.y + Math.random() * 0.7,
@@ -13696,7 +13796,7 @@ function spawnCrusherTipTransfer(plan, tonnes) {
     chip.userData.life = 1.05;
     chip.userData.decay = 0.92 + Math.random() * 0.22;
     chip.userData.grav = true;
-    chip.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+    chip.userData.spin = new THREE2.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
     scene.add(chip);
     particles.push(chip);
   }
@@ -13706,8 +13806,8 @@ function spawnExcavatorCrusherLoadBurst(from, to, tonnes) {
   if (!from || !to || tonnes <= 0) return;
   const count = Math.max(8, Math.min(24, Math.round(tonnes * 0.7)));
   for (let i = 0; i < count; i++) {
-    const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 9076847, transparent: true, opacity: 0.9 });
-    const chip = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.55), mat);
+    const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 9076847, transparent: true, opacity: 0.9 });
+    const chip = new THREE2.Mesh(new THREE2.BoxGeometry(0.55, 0.4, 0.55), mat);
     chip.position.set(
       from.x + (Math.random() - 0.5) * 4,
       from.y + 2.2 + Math.random() * 2,
@@ -13719,7 +13819,7 @@ function spawnExcavatorCrusherLoadBurst(from, to, tonnes) {
     chip.userData.life = 1.25;
     chip.userData.decay = 0.92 + Math.random() * 0.28;
     chip.userData.grav = true;
-    chip.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+    chip.userData.spin = new THREE2.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
     scene.add(chip);
     particles.push(chip);
   }
@@ -13735,7 +13835,7 @@ function removeLoadedLooseGroundVisuals(loadedTonnes) {
   }
 }
 function addQuarryFaceOutline() {
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 13369344, emissive: 2228224 });
+  const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 13369344, emissive: 2228224 });
   const a = gridToWorld(QUARRY_FACE.minX, QUARRY_FACE.minZ);
   const b = gridToWorld(QUARRY_FACE.maxX, QUARRY_FACE.maxZ);
   const cx = (a.x + b.x) / 2;
@@ -13743,48 +13843,94 @@ function addQuarryFaceOutline() {
   const w = Math.abs(b.x - a.x);
   const d = Math.abs(b.z - a.z);
   [[cx, a.z, w, 1, 1.2], [cx, b.z, w, 1, 1.2], [a.x, cz, 1.2, 1, d], [b.x, cz, 1.2, 1, d]].forEach(([x, z, sx, sy, sz]) => {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
+    const rail = new THREE2.Mesh(new THREE2.BoxGeometry(sx, sy, sz), mat);
     rail.position.set(x, getTerrainHeight(x, z) + 0.6, z);
     scene.add(rail);
   });
 }
+var beaconLamps = [];
+function makeBeacon() {
+  const grp = new THREE2.Group();
+  const stem = new THREE2.Mesh(new THREE2.CylinderGeometry(0.09, 0.09, 0.28, 6), M.darkGrey);
+  grp.add(stem);
+  const lampMat = new THREE2.MeshStandardMaterial({
+    color: 16746496,
+    emissive: 16733440,
+    emissiveIntensity: 1.2,
+    roughness: 0.35
+  });
+  const lamp = new THREE2.Mesh(new THREE2.CylinderGeometry(0.17, 0.21, 0.34, 8), lampMat);
+  lamp.position.y = 0.3;
+  grp.add(lamp);
+  beaconLamps.push(lampMat);
+  return grp;
+}
+function pulseBeacons() {
+  const t = Date.now() / 1e3;
+  const glow = 0.9 + Math.max(0, Math.sin(t * 5.2)) * 1.6;
+  beaconLamps.forEach((mat) => {
+    mat.emissiveIntensity = glow;
+  });
+}
+function addHandrail(parent, { x0, x1, y, z, height = 0.85 }) {
+  const length = Math.abs(x1 - x0);
+  const cx = (x0 + x1) / 2;
+  const rail = new THREE2.Mesh(new THREE2.CylinderGeometry(0.055, 0.055, length, 5).rotateZ(Math.PI / 2), M.hub);
+  rail.position.set(cx, y + height, z);
+  parent.add(rail);
+  const posts = Math.max(2, Math.round(length / 1.6));
+  for (let i = 0; i < posts; i++) {
+    const px = x0 + length * i / (posts - 1) * Math.sign(x1 - x0);
+    const post = new THREE2.Mesh(new THREE2.CylinderGeometry(0.05, 0.05, height, 5), M.hub);
+    post.position.set(px, y + height / 2, z);
+    parent.add(post);
+  }
+}
+function addMirror(parent, { x, y, z }) {
+  const arm = new THREE2.Mesh(new THREE2.CylinderGeometry(0.05, 0.05, 0.7, 5).rotateX(Math.PI / 2), M.darkGrey);
+  arm.position.set(x, y, z > 0 ? z - 0.35 : z + 0.35);
+  parent.add(arm);
+  const mirror = new THREE2.Mesh(new THREE2.BoxGeometry(0.1, 0.55, 0.4), M.glass);
+  mirror.position.set(x, y, z);
+  parent.add(mirror);
+}
 function makeDumper() {
-  const g = new THREE.Group();
-  const chassis = new THREE.Mesh(new THREE.BoxGeometry(10, 2.5, 4.5), M.yellow);
+  const g = new THREE2.Group();
+  const chassis = new THREE2.Mesh(new THREE2.BoxGeometry(10, 2.5, 4.5), M.yellow);
   chassis.position.set(0, 1.25, 0);
   chassis.castShadow = true;
   g.add(chassis);
-  const cab = new THREE.Mesh(new THREE.BoxGeometry(4, 3.2, 4.2), M.yellow);
+  const cab = new THREE2.Mesh(new THREE2.BoxGeometry(4, 3.2, 4.2), M.yellow);
   cab.position.set(-3.5, 3.35, 0);
   cab.castShadow = true;
   g.add(cab);
-  const winF = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.8, 3), M.glass);
+  const winF = new THREE2.Mesh(new THREE2.BoxGeometry(0.1, 1.8, 3), M.glass);
   winF.position.set(-5.55, 3.6, 0);
   g.add(winF);
-  const winT = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 0.1), M.glass);
+  const winT = new THREE2.Mesh(new THREE2.BoxGeometry(3, 1.5, 0.1), M.glass);
   winT.position.set(-3.5, 3.6, 2.15);
   g.add(winT);
-  const tipperGroup = new THREE.Group();
+  const tipperGroup = new THREE2.Group();
   tipperGroup.position.set(-0.3, 2.5, 0);
   g.add(tipperGroup);
-  const bed = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1, 4.2), M.yellowE);
+  const bed = new THREE2.Mesh(new THREE2.BoxGeometry(6.5, 1, 4.2), M.yellowE);
   bed.position.set(3.1, 0.5, 0);
   bed.castShadow = true;
   tipperGroup.add(bed);
-  const sideWall = new THREE.Mesh(new THREE.BoxGeometry(6.5, 2.2, 0.25), M.yellowE);
+  const sideWall = new THREE2.Mesh(new THREE2.BoxGeometry(6.5, 2.2, 0.25), M.yellowE);
   sideWall.position.set(3.1, 1.6, 2.1);
   tipperGroup.add(sideWall);
   const sideWall2 = sideWall.clone();
   sideWall2.position.z = -2.1;
   tipperGroup.add(sideWall2);
-  const rearWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.2, 4.7), M.yellowE);
+  const rearWall = new THREE2.Mesh(new THREE2.BoxGeometry(0.25, 2.2, 4.7), M.yellowE);
   rearWall.position.set(6.5, 1.6, 0);
   tipperGroup.add(rearWall);
   g.userData.tipperGroup = tipperGroup;
-  const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 3, 6), M.darkGrey);
+  const exhaust = new THREE2.Mesh(new THREE2.CylinderGeometry(0.2, 0.2, 3, 6), M.darkGrey);
   exhaust.position.set(-4.5, 4.5, -1.5);
   g.add(exhaust);
-  const wGeo = new THREE.CylinderGeometry(1.3, 1.3, 1.1, 10);
+  const wGeo = new THREE2.CylinderGeometry(1.3, 1.3, 1.1, 10);
   const wheelPos = [
     [-3.5, 1.3, 2.9],
     [-3.5, 1.3, -2.9],
@@ -13794,95 +13940,111 @@ function makeDumper() {
     [3.5, 1.3, -2.9]
   ];
   wheelPos.forEach(([wx, wy, wz]) => {
-    const wheel = new THREE.Mesh(wGeo, M.rubber);
+    const wheel = new THREE2.Mesh(wGeo, M.rubber);
     wheel.rotation.x = Math.PI / 2;
     wheel.userData.rolls = true;
     wheel.position.set(wx, wy, wz);
     wheel.castShadow = true;
     g.add(wheel);
-    const tread = new THREE.Mesh(new THREE.CylinderGeometry(1.31, 1.31, 0.5, 10), M.black);
+    const tread = new THREE2.Mesh(new THREE2.CylinderGeometry(1.31, 1.31, 0.5, 10), M.black);
     tread.rotation.x = Math.PI / 2;
     tread.userData.rolls = true;
     tread.position.set(wx, wy, wz);
     g.add(tread);
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 6), M.hub);
+    const hub = new THREE2.Mesh(new THREE2.CylinderGeometry(0.4, 0.4, 1.2, 6), M.hub);
     hub.rotation.x = Math.PI / 2;
     hub.userData.rolls = true;
     hub.position.set(wx, wy, wz);
     g.add(hub);
   });
-  const hlMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16777164, emissive: 8947776 });
+  const hlMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16777164, emissive: 8947776 });
   [-1, 1].forEach((z) => {
-    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.7, 0.8), hlMat);
+    const hl = new THREE2.Mesh(new THREE2.BoxGeometry(0.2, 0.7, 0.8), hlMat);
     hl.position.set(-5.6, 2.8, z);
     g.add(hl);
   });
+  const beacon = makeBeacon();
+  beacon.position.set(-3.5, 5.1, 1.5);
+  g.add(beacon);
+  addMirror(g, { x: -5.4, y: 4.4, z: 2.5 });
+  addMirror(g, { x: -5.4, y: 4.4, z: -2.5 });
+  for (let i = 0; i < 3; i++) {
+    const rung = new THREE2.Mesh(new THREE2.BoxGeometry(0.08, 0.07, 0.7), M.hub);
+    rung.position.set(-5.62, 0.7 + i * 0.7, 1.6);
+    g.add(rung);
+  }
+  addHandrail(g, { x0: -5.4, x1: -1.6, y: 2.5, z: -2.15, height: 0.8 });
   return g;
 }
 function makeExcavator() {
-  const g = new THREE.Group();
-  const uc = new THREE.Mesh(new THREE.BoxGeometry(8, 1.6, 5.5), M.black);
+  const g = new THREE2.Group();
+  const uc = new THREE2.Mesh(new THREE2.BoxGeometry(8, 1.6, 5.5), M.black);
   uc.position.y = 0.8;
   uc.castShadow = true;
   g.add(uc);
   [-3, 3].forEach((z) => {
-    const tf = new THREE.Mesh(new THREE.BoxGeometry(8.5, 1.3, 1.6), M.black);
+    const tf = new THREE2.Mesh(new THREE2.BoxGeometry(8.5, 1.3, 1.6), M.black);
     tf.position.set(0, 0.65, z);
     tf.castShadow = true;
     g.add(tf);
     for (let rx = -3.5; rx <= 3.5; rx += 1.2) {
-      const r = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 1.7, 7), M.rubber);
+      const r = new THREE2.Mesh(new THREE2.CylinderGeometry(0.65, 0.65, 1.7, 7), M.rubber);
       r.rotation.x = Math.PI / 2;
       r.position.set(rx, 0.65, z);
       g.add(r);
     }
-    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 1.7, 8), M.darkGrey);
+    const sp = new THREE2.Mesh(new THREE2.CylinderGeometry(0.8, 0.8, 1.7, 8), M.darkGrey);
     sp.rotation.x = Math.PI / 2;
     sp.position.set(4.3, 0.8, z);
     g.add(sp);
   });
-  const cabin = new THREE.Group();
+  const cabin = new THREE2.Group();
   cabin.position.y = 1.6;
   g.add(cabin);
-  const cabBody = new THREE.Mesh(new THREE.BoxGeometry(5, 3.2, 5), M.yellow);
+  const cabBody = new THREE2.Mesh(new THREE2.BoxGeometry(5, 3.2, 5), M.yellow);
   cabBody.position.set(0, 1.6, 0);
   cabBody.castShadow = true;
   cabin.add(cabBody);
-  const wF = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.8, 3.2), M.glass);
+  const wF = new THREE2.Mesh(new THREE2.BoxGeometry(0.1, 1.8, 3.2), M.glass);
   wF.position.set(2.56, 1.9, 0);
   cabin.add(wF);
-  const wTop = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 3.2), M.glass);
+  const wTop = new THREE2.Mesh(new THREE2.BoxGeometry(2, 0.1, 3.2), M.glass);
   wTop.position.set(1.5, 3.3, 0);
   cabin.add(wTop);
-  const cw = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 5), M.black);
+  const cw = new THREE2.Mesh(new THREE2.BoxGeometry(3.5, 2.5, 5), M.black);
   cw.position.set(-3.3, 1.2, 0);
   cabin.add(cw);
-  const ec = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.5, 5.1), M.darkGrey);
+  const excBeacon = makeBeacon();
+  excBeacon.position.set(0.6, 3.4, 1.8);
+  cabin.add(excBeacon);
+  addHandrail(cabin, { x0: -4.6, x1: -0.4, y: 2.45, z: 2.45, height: 0.8 });
+  addHandrail(cabin, { x0: -4.6, x1: -0.4, y: 2.45, z: -2.45, height: 0.8 });
+  const ec = new THREE2.Mesh(new THREE2.BoxGeometry(4.5, 1.5, 5.1), M.darkGrey);
   ec.position.set(-1, 0.75, 0);
   cabin.add(ec);
-  const boomPivot = new THREE.Group();
+  const boomPivot = new THREE2.Group();
   boomPivot.position.set(2.6, 2, 0);
   cabin.add(boomPivot);
-  const boom = new THREE.Mesh(new THREE.BoxGeometry(1.3, 8, 1.2), M.yellow);
+  const boom = new THREE2.Mesh(new THREE2.BoxGeometry(1.3, 8, 1.2), M.yellow);
   boom.position.set(0, 4, 0);
   boom.castShadow = true;
   boomPivot.add(boom);
-  const armPivot = new THREE.Group();
+  const armPivot = new THREE2.Group();
   armPivot.position.set(0, 8, 0);
   boomPivot.add(armPivot);
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(1, 6, 1), M.yellow);
+  const arm = new THREE2.Mesh(new THREE2.BoxGeometry(1, 6, 1), M.yellow);
   arm.position.set(0, 3, 0);
   arm.castShadow = true;
   armPivot.add(arm);
-  const bucketPivot = new THREE.Group();
+  const bucketPivot = new THREE2.Group();
   bucketPivot.position.set(0, 6, 0);
   armPivot.add(bucketPivot);
-  const bucket = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.8, 1.8), M.darkGrey);
+  const bucket = new THREE2.Mesh(new THREE2.BoxGeometry(2.2, 1.8, 1.8), M.darkGrey);
   bucket.position.y = 0.9;
   bucket.castShadow = true;
   bucketPivot.add(bucket);
   for (let tx = -0.8; tx <= 0.8; tx += 0.4) {
-    const tooth = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 0.6, 4), M.black);
+    const tooth = new THREE2.Mesh(new THREE2.CylinderGeometry(0.08, 0.15, 0.6, 4), M.black);
     tooth.position.set(tx, 1.9, 0);
     bucketPivot.add(tooth);
   }
@@ -13897,39 +14059,47 @@ function makeExcavator() {
   return g;
 }
 function makeLoader() {
-  const g = new THREE.Group();
-  const chassis = new THREE.Mesh(new THREE.BoxGeometry(8, 2.2, 4.5), M.yellow);
+  const g = new THREE2.Group();
+  const chassis = new THREE2.Mesh(new THREE2.BoxGeometry(8, 2.2, 4.5), M.yellow);
   chassis.position.set(0, 1.4, 0);
   chassis.castShadow = true;
   g.add(chassis);
-  const cab = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.8), M.yellow);
+  const cab = new THREE2.Mesh(new THREE2.BoxGeometry(3.2, 3.2, 3.8), M.yellow);
   cab.position.set(-1.8, 3.8, 0);
   cab.castShadow = true;
   g.add(cab);
-  const windscreen = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.7, 2.8), M.glass);
+  const windscreen = new THREE2.Mesh(new THREE2.BoxGeometry(0.12, 1.7, 2.8), M.glass);
   windscreen.position.set(-3.45, 4, 0);
   g.add(windscreen);
-  const engine = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.1, 4.2), M.yellowE);
+  const engine = new THREE2.Mesh(new THREE2.BoxGeometry(3.4, 2.1, 4.2), M.yellowE);
   engine.position.set(2.4, 3, 0);
   engine.castShadow = true;
   g.add(engine);
-  const bucketPivot = new THREE.Group();
+  const loaderBeacon = makeBeacon();
+  loaderBeacon.position.set(-1.8, 5.55, 1.2);
+  g.add(loaderBeacon);
+  const loaderExhaust = new THREE2.Mesh(new THREE2.CylinderGeometry(0.16, 0.16, 1.6, 6), M.darkGrey);
+  loaderExhaust.position.set(1.6, 4.8, -1.2);
+  g.add(loaderExhaust);
+  addMirror(g, { x: -3.3, y: 4.9, z: 2.1 });
+  addMirror(g, { x: -3.3, y: 4.9, z: -2.1 });
+  const bucketPivot = new THREE2.Group();
   bucketPivot.position.set(4.3, 2.3, 0);
   g.add(bucketPivot);
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.45, 0.35), M.darkGrey);
+  const armL = new THREE2.Mesh(new THREE2.BoxGeometry(4.8, 0.45, 0.35), M.darkGrey);
   armL.position.set(2.4, 0.6, 1.65);
   bucketPivot.add(armL);
   const armR = armL.clone();
   armR.position.z = -1.65;
   bucketPivot.add(armR);
-  const bucket = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.4, 5.4), M.darkGrey);
+  const bucket = new THREE2.Mesh(new THREE2.BoxGeometry(2.8, 1.4, 5.4), M.darkGrey);
   bucket.position.set(5.1, 0.05, 0);
   bucket.rotation.z = -0.25;
   bucket.castShadow = true;
   bucketPivot.add(bucket);
-  const wheelGeo = new THREE.CylinderGeometry(1.15, 1.15, 0.9, 12);
+  const wheelGeo = new THREE2.CylinderGeometry(1.15, 1.15, 0.9, 12);
   [[-2.7, 1.1, 2.65], [-2.7, 1.1, -2.65], [2.7, 1.1, 2.65], [2.7, 1.1, -2.65]].forEach(([wx, wy, wz]) => {
-    const wheel = new THREE.Mesh(wheelGeo, M.rubber);
+    const wheel = new THREE2.Mesh(wheelGeo, M.rubber);
     wheel.rotation.x = Math.PI / 2;
     wheel.userData.rolls = true;
     wheel.position.set(wx, wy, wz);
@@ -13941,13 +14111,13 @@ function makeLoader() {
   return g;
 }
 function makeCrusher() {
-  const g = new THREE.Group();
-  const steelMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6252132 });
-  const darkSteelMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 3356982 });
-  const beltMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 1381653 });
-  const yellowPanelMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 15901978 });
-  const guardMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 13156520 });
-  const rockMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 8615783 });
+  const g = new THREE2.Group();
+  const steelMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6252132 });
+  const darkSteelMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 3356982 });
+  const beltMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 1381653 });
+  const yellowPanelMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 15901978 });
+  const guardMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 13156520 });
+  const rockMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 8615783 });
   const addMesh = (mesh, { cast = true, receive = true } = {}) => {
     mesh.castShadow = cast;
     mesh.receiveShadow = receive;
@@ -13955,13 +14125,13 @@ function makeCrusher() {
     return mesh;
   };
   const addBox = (size, position, material, rotation = {}) => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);
+    const mesh = new THREE2.Mesh(new THREE2.BoxGeometry(size.x, size.y, size.z), material);
     mesh.position.set(position.x, position.y, position.z);
     mesh.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
     return addMesh(mesh);
   };
   const addCylinder = (radius, depth, position, material, rotation = {}) => {
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, depth, 14), material);
+    const mesh = new THREE2.Mesh(new THREE2.CylinderGeometry(radius, radius, depth, 14), material);
     mesh.position.set(position.x, position.y, position.z);
     mesh.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
     return addMesh(mesh);
@@ -13978,11 +14148,11 @@ function makeCrusher() {
   addBox({ x: 0.55, y: 5.4, z: 9 }, { x: -10, y: 7, z: 0 }, steelMat, { z: 0.18 });
   addBox({ x: 7.4, y: 5, z: 0.55 }, { x: -13.5, y: 7, z: -4.7 }, steelMat, { x: 0.14 });
   addBox({ x: 7.4, y: 5, z: 0.55 }, { x: -13.5, y: 7, z: 4.7 }, steelMat, { x: -0.14 });
-  const hopperMaterial = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.55, 5.6), new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 9076847, transparent: true, opacity: 0.92 }));
+  const hopperMaterial = new THREE2.Mesh(new THREE2.BoxGeometry(5.2, 0.55, 5.6), new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 9076847, transparent: true, opacity: 0.92 }));
   hopperMaterial.position.set(-13.5, 9, 0);
   hopperMaterial.visible = false;
   g.add(hopperMaterial);
-  g.userData.feedPoint = new THREE.Vector3(-13.5, 8.9, 0);
+  g.userData.feedPoint = new THREE2.Vector3(-13.5, 8.9, 0);
   g.userData.hopperMaterial = hopperMaterial;
   addBox({ x: 8.5, y: 7, z: 7.8 }, { x: -5.2, y: 6.4, z: 0 }, steelMat);
   addBox({ x: 8.2, y: 6, z: 7.2 }, { x: 2.6, y: 6.2, z: 0 }, darkSteelMat);
@@ -13995,11 +14165,11 @@ function makeCrusher() {
   g.userData.flywheel = flywheel;
   const beltAngle = 0.32;
   const beltLength = 31;
-  const conveyor = new THREE.Group();
+  const conveyor = new THREE2.Group();
   conveyor.position.set(8.8, 7.9, 0);
   conveyor.rotation.z = beltAngle;
   g.add(conveyor);
-  const belt = new THREE.Mesh(new THREE.BoxGeometry(beltLength, 0.55, 3.1), beltMat);
+  const belt = new THREE2.Mesh(new THREE2.BoxGeometry(beltLength, 0.55, 3.1), beltMat);
   belt.position.x = beltLength / 2;
   belt.castShadow = true;
   belt.receiveShadow = true;
@@ -14007,27 +14177,27 @@ function makeCrusher() {
   g.userData.conveyorBelt = belt;
   g.userData.beltRocks = [];
   [6, 13, 20, 27].forEach((x, index) => {
-    const rock = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.48, 1.05), rockMat);
+    const rock = new THREE2.Mesh(new THREE2.BoxGeometry(1.25, 0.48, 1.05), rockMat);
     rock.position.set(x, 0.48, index % 2 ? 0.8 : -0.65);
     rock.visible = false;
     rock.castShadow = true;
     conveyor.add(rock);
     g.userData.beltRocks.push(rock);
   });
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(beltLength, 0.35, 3.8), steelMat);
+  const deck = new THREE2.Mesh(new THREE2.BoxGeometry(beltLength, 0.35, 3.8), steelMat);
   deck.position.set(beltLength / 2, -0.42, 0);
   deck.castShadow = true;
   deck.receiveShadow = true;
   conveyor.add(deck);
   [-2.1, 2.1].forEach((z) => {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(beltLength, 0.38, 0.28), guardMat);
+    const rail = new THREE2.Mesh(new THREE2.BoxGeometry(beltLength, 0.38, 0.28), guardMat);
     rail.position.set(beltLength / 2, 0.45, z);
     rail.castShadow = true;
     conveyor.add(rail);
   });
   g.userData.beltRollers = [];
   [2.4, 9.2, 16, 23, 30].forEach((x) => {
-    const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 3.65, 14), steelMat);
+    const roller = new THREE2.Mesh(new THREE2.CylinderGeometry(0.72, 0.72, 3.65, 14), steelMat);
     roller.rotation.x = Math.PI / 2;
     roller.position.set(x, -0.05, 0);
     roller.castShadow = true;
@@ -14039,16 +14209,16 @@ function makeCrusher() {
       addBox({ x: 0.35, y: h, z: 0.35 }, { x: 8.8 + x * Math.cos(beltAngle), y: 2 + h / 2, z }, steelMat, { z: -0.08 });
     });
   });
-  const dischargePile = new THREE.Mesh(new THREE.ConeGeometry(6.8, 3.2, 10), rockMat);
+  const dischargePile = new THREE2.Mesh(new THREE2.ConeGeometry(6.8, 3.2, 10), rockMat);
   dischargePile.position.set(37, 1.6, 0);
   dischargePile.userData.localPileHeight = 3.2;
   dischargePile.castShadow = true;
   dischargePile.receiveShadow = true;
   g.add(dischargePile);
-  g.userData.dischargePoint = new THREE.Vector3(37, 10.2, 0);
+  g.userData.dischargePoint = new THREE2.Vector3(37, 10.2, 0);
   g.userData.dischargePile = dischargePile;
-  const glowMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 65348, emissive: 17425 });
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), glowMat);
+  const glowMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 65348, emissive: 17425 });
+  const glow = new THREE2.Mesh(new THREE2.SphereGeometry(0.45, 8, 8), glowMat);
   glow.position.set(5.8, 8.8, 4.25);
   g.add(glow);
   g.userData.statusLight = glow;
@@ -14056,14 +14226,14 @@ function makeCrusher() {
   return g;
 }
 function makeScreener() {
-  const g = new THREE.Group();
-  const frameMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 4474950 });
-  const bodyMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 3104626 });
-  const panelMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 15196880 });
-  const beltMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 1184274 });
-  const meshMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6252386 });
+  const g = new THREE2.Group();
+  const frameMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 4474950 });
+  const bodyMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 3104626 });
+  const panelMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 15196880 });
+  const beltMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 1184274 });
+  const meshMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 6252386 });
   const addBox = (size, position, material, rotation = {}) => {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);
+    const mesh = new THREE2.Mesh(new THREE2.BoxGeometry(size.x, size.y, size.z), material);
     mesh.position.set(position.x, position.y, position.z);
     mesh.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
     mesh.castShadow = true;
@@ -14072,7 +14242,7 @@ function makeScreener() {
     return mesh;
   };
   const addCyl = (radius, depth, position, material, rotation = {}) => {
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, depth, 12), material);
+    const mesh = new THREE2.Mesh(new THREE2.CylinderGeometry(radius, radius, depth, 12), material);
     mesh.position.set(position.x, position.y, position.z);
     mesh.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
     mesh.castShadow = true;
@@ -14103,21 +14273,21 @@ function makeScreener() {
   g.userData.screenDeckBaseY = screen.position.y;
   g.userData.screenDeckBaseZ = screen.position.z;
   const conveyor = (name, x, y, z, length, width, rz, ry = 0) => {
-    const group = new THREE.Group();
+    const group = new THREE2.Group();
     group.name = name;
     group.position.set(x, y, z);
     group.rotation.set(0, ry, rz);
     g.add(group);
-    const belt = new THREE.Mesh(new THREE.BoxGeometry(length, 0.32, width), beltMat);
+    const belt = new THREE2.Mesh(new THREE2.BoxGeometry(length, 0.32, width), beltMat);
     belt.position.x = length / 2;
     belt.castShadow = true;
     group.add(belt);
-    const spine = new THREE.Mesh(new THREE.BoxGeometry(length, 0.22, width + 0.55), frameMat);
+    const spine = new THREE2.Mesh(new THREE2.BoxGeometry(length, 0.22, width + 0.55), frameMat);
     spine.position.set(length / 2, -0.28, 0);
     spine.castShadow = true;
     group.add(spine);
     [-width / 2 - 0.25, width / 2 + 0.25].forEach((railZ) => {
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(length, 0.18, 0.16), panelMat);
+      const rail = new THREE2.Mesh(new THREE2.BoxGeometry(length, 0.18, 0.16), panelMat);
       rail.position.set(length / 2, 0.26, railZ);
       group.add(rail);
     });
@@ -14143,24 +14313,24 @@ function makeScreener() {
 var blastMat;
 function placeBlastMarker(wx, wy, wz) {
   if (!blastMat) {
-    blastMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16720384, emissive: 5570560 });
+    blastMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16720384, emissive: 5570560 });
   }
   const gridX = Math.max(0, Math.min(GRID, Math.round((wx + HALF) / CELL)));
   const gridZ = Math.max(0, Math.min(GRID, Math.round((wz + HALF) / CELL)));
   const snapped = gridToWorld(gridX, gridZ);
   const snappedY = getTerrainHeight(snapped.x, snapped.z);
-  const m = new THREE.Mesh(new THREE.SphereGeometry(2, 10, 10), blastMat.clone());
+  const m = new THREE2.Mesh(new THREE2.SphereGeometry(2, 10, 10), blastMat.clone());
   m.position.set(snapped.x, snappedY + 2, snapped.z);
   m.castShadow = true;
   m.userData.type = "blastMarker";
   m.userData.gridX = gridX;
   m.userData.gridZ = gridZ;
   const chargeMarkers = [];
-  const chargeMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16763904, emissive: 3351040 });
+  const chargeMat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16763904, emissive: 3351040 });
   [-1, 0, 1].forEach((dx) => {
     [-1, 0, 1].forEach((dz) => {
       const wp = gridToWorld(gridX + dx * 2, gridZ + dz * 2);
-      const plug = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.35, 8), chargeMat);
+      const plug = new THREE2.Mesh(new THREE2.CylinderGeometry(0.35, 0.35, 0.35, 8), chargeMat);
       plug.position.set(wp.x, getTerrainHeight(wp.x, wp.z) + 0.25, wp.z);
       plug.castShadow = true;
       scene.add(plug);
@@ -14168,9 +14338,9 @@ function placeBlastMarker(wx, wy, wz) {
     });
   });
   m.userData.chargeMarkers = chargeMarkers;
-  const stake = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.2, 4, 6),
-    new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16776960 })
+  const stake = new THREE2.Mesh(
+    new THREE2.CylinderGeometry(0.2, 0.2, 4, 6),
+    new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 16776960 })
   );
   stake.position.set(snapped.x, snappedY + 2, snapped.z);
   scene.add(stake);
@@ -14229,6 +14399,9 @@ function detonateBlast(marker) {
   const deformation = deformTerrain(gx, gz);
   destroyBlastAffectedEnvironment(marker.position.x, marker.position.z, { faceHit: deformation.faceHit });
   updateTerrainAnchoredObjectHeights();
+  reanchorLooseGroundPiles();
+  updateAggregateStockpileVisuals();
+  updateEdgeStockpileVisuals();
   const expectedTonnes = deformation.faceHit ? TONNES_PER_FACE_BLAST : TONNES_PER_BLAST;
   spawnBlastParticles(marker.position.x, marker.position.y, marker.position.z, expectedTonnes);
   cleanupBlastMarker(marker);
@@ -14292,19 +14465,30 @@ function spawnLooseGroundPiles(x, y, z, tonnes) {
     const py = getTerrainHeight(px, pz);
     const size = 2 + Math.random() * 4;
     const pileHeight = size * (0.7 + Math.random() * 0.6);
-    const pile = new THREE.Mesh(new THREE.ConeGeometry(size, pileHeight, 7), M.looseRock);
+    const pile = new THREE2.Mesh(new THREE2.ConeGeometry(size, pileHeight, 7), M.looseRock);
     pile.position.set(px, getLoosePileRestingY({ terrainHeight: py, pileHeight }), pz);
     pile.rotation.y = Math.random() * Math.PI * 2;
     pile.castShadow = true;
     pile.receiveShadow = true;
     pile.userData.type = "looseGroundPile";
+    pile.userData.pileHeight = pileHeight;
     scene.add(pile);
     looseGroundPiles.push(pile);
   }
 }
+function reanchorLooseGroundPiles() {
+  looseGroundPiles.forEach((pile) => {
+    if (!pile?.parent) return;
+    const pileHeight = pile.userData.pileHeight || 3;
+    pile.position.y = getLoosePileRestingY({
+      terrainHeight: getTerrainHeight(pile.position.x, pile.position.z),
+      pileHeight
+    });
+  });
+}
 function spawnBlastParticles(x, y, z, tonnes = 500) {
   const scale = Math.max(0.6, Math.min(2.2, tonnes / 900));
-  const flash = new THREE.PointLight(16756838, 320 * scale, 160, 1.8);
+  const flash = new THREE2.PointLight(16756838, 320 * scale, 160, 1.8);
   flash.position.set(x, y + 6, z);
   flash.userData.flashLight = true;
   flash.userData.life = 1;
@@ -14312,9 +14496,9 @@ function spawnBlastParticles(x, y, z, tonnes = 500) {
   flash.userData.baseIntensity = 320 * scale;
   scene.add(flash);
   particles.push(flash);
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(2.2, 3.4, 40).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 15260868, transparent: true, opacity: 0.65, depthWrite: false })
+  const ring = new THREE2.Mesh(
+    new THREE2.RingGeometry(2.2, 3.4, 40).rotateX(-Math.PI / 2),
+    new THREE2.MeshBasicMaterial({ color: 15260868, transparent: true, opacity: 0.65, depthWrite: false })
   );
   ring.position.set(x, getTerrainHeight(x, z) + 0.4, z);
   ring.userData.shockwave = true;
@@ -14327,18 +14511,18 @@ function spawnBlastParticles(x, y, z, tonnes = 500) {
   const fireCount = Math.round(45 * scale);
   for (let i = 0; i < fireCount; i++) {
     const s = 0.6 + Math.random() * 2;
-    const mat = new THREE.MeshStandardMaterial({
+    const mat = new THREE2.MeshStandardMaterial({
       color: Math.random() > 0.5 ? 16733456 : 14232328,
       emissive: Math.random() > 0.5 ? 16742178 : 11149824,
       emissiveIntensity: 1.6,
       roughness: 0.8
     });
-    const m = new THREE.Mesh(new THREE.SphereGeometry(s, 5, 5), mat);
+    const m = new THREE2.Mesh(new THREE2.SphereGeometry(s, 5, 5), mat);
     m.position.set(x, y, z);
     const \u03B8 = Math.random() * Math.PI * 2;
     const \u03C6 = Math.random() * Math.PI * 0.55;
     const sp = (12 + Math.random() * 22) * (0.8 + scale * 0.3);
-    m.userData.vel = new THREE.Vector3(Math.cos(\u03B8) * Math.cos(\u03C6) * sp, Math.sin(\u03C6) * sp + 4, Math.sin(\u03B8) * Math.cos(\u03C6) * sp);
+    m.userData.vel = new THREE2.Vector3(Math.cos(\u03B8) * Math.cos(\u03C6) * sp, Math.sin(\u03C6) * sp + 4, Math.sin(\u03B8) * Math.cos(\u03C6) * sp);
     m.userData.life = 1;
     m.userData.decay = 0.5 + Math.random() * 0.6;
     m.userData.grav = true;
@@ -14348,20 +14532,20 @@ function spawnBlastParticles(x, y, z, tonnes = 500) {
   const rockCount = Math.round(26 * scale);
   for (let i = 0; i < rockCount; i++) {
     const s = 0.8 + Math.random() * 2.5;
-    const m = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(s * 0.7, 0),
-      new THREE.MeshStandardMaterial({ color: 10130566, roughness: 0.98, flatShading: true })
+    const m = new THREE2.Mesh(
+      new THREE2.DodecahedronGeometry(s * 0.7, 0),
+      new THREE2.MeshStandardMaterial({ color: 10130566, roughness: 0.98, flatShading: true })
     );
     m.position.set(x + (Math.random() - 0.5) * 12, y, z + (Math.random() - 0.5) * 12);
     const \u03B8 = Math.random() * Math.PI * 2;
     const sp = (6 + Math.random() * 14) * (0.85 + scale * 0.25);
-    m.userData.vel = new THREE.Vector3(Math.cos(\u03B8) * sp, 8 + Math.random() * 18 * scale, Math.sin(\u03B8) * sp);
+    m.userData.vel = new THREE2.Vector3(Math.cos(\u03B8) * sp, 8 + Math.random() * 18 * scale, Math.sin(\u03B8) * sp);
     m.userData.life = 3;
     m.userData.decay = 0.25 + Math.random() * 0.2;
     m.userData.grav = true;
     m.userData.blastRockChunk = true;
     m.userData.restHeight = s * 0.38;
-    m.userData.spin = new THREE.Vector3((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
+    m.userData.spin = new THREE2.Vector3((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
     m.castShadow = true;
     scene.add(m);
     particles.push(m);
@@ -14371,10 +14555,10 @@ function spawnBlastParticles(x, y, z, tonnes = 500) {
     spawnDust(x + (Math.random() - 0.5) * 20, y + Math.random() * 5, z + (Math.random() - 0.5) * 20);
   }
   for (let i = 0; i < Math.round(14 * scale); i++) {
-    const mat = new THREE.MeshStandardMaterial({ color: 7300956, transparent: true, opacity: 0.5, roughness: 1 });
-    const m = new THREE.Mesh(new THREE.SphereGeometry(2.4 + Math.random() * 2.6, 6, 6), mat);
+    const mat = new THREE2.MeshStandardMaterial({ color: 7300956, transparent: true, opacity: 0.5, roughness: 1 });
+    const m = new THREE2.Mesh(new THREE2.SphereGeometry(2.4 + Math.random() * 2.6, 6, 6), mat);
     m.position.set(x + (Math.random() - 0.5) * 8, y + 2 + Math.random() * 6, z + (Math.random() - 0.5) * 8);
-    m.userData.vel = new THREE.Vector3((Math.random() - 0.5) * 1.4 + 0.8, 4.5 + Math.random() * 3.5, (Math.random() - 0.5) * 1.4);
+    m.userData.vel = new THREE2.Vector3((Math.random() - 0.5) * 1.4 + 0.8, 4.5 + Math.random() * 3.5, (Math.random() - 0.5) * 1.4);
     m.userData.life = 1;
     m.userData.decay = 0.16 + Math.random() * 0.12;
     m.userData.dust = true;
@@ -14383,10 +14567,10 @@ function spawnBlastParticles(x, y, z, tonnes = 500) {
   }
 }
 function spawnDust(x, y, z) {
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 12628120, transparent: true, opacity: 0.55 });
-  const m = new THREE.Mesh(new THREE.SphereGeometry(1.5 + Math.random() * 1.5, 5, 5), mat);
+  const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 12628120, transparent: true, opacity: 0.55 });
+  const m = new THREE2.Mesh(new THREE2.SphereGeometry(1.5 + Math.random() * 1.5, 5, 5), mat);
   m.position.set(x, y, z);
-  m.userData.vel = new THREE.Vector3((Math.random() - 0.5) * 1.5, 2 + Math.random() * 3, (Math.random() - 0.5) * 1.5);
+  m.userData.vel = new THREE2.Vector3((Math.random() - 0.5) * 1.5, 2 + Math.random() * 3, (Math.random() - 0.5) * 1.5);
   m.userData.life = 1;
   m.userData.decay = 0.3 + Math.random() * 0.4;
   m.userData.dust = true;
@@ -14394,10 +14578,10 @@ function spawnDust(x, y, z) {
   particles.push(m);
 }
 function spawnActiveDust(x, y, z) {
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 12101768, transparent: true, opacity: 0.4 });
-  const m = new THREE.Mesh(new THREE.SphereGeometry(0.5 + Math.random(), 4, 4), mat);
+  const mat = new THREE2.MeshStandardMaterial({ roughness: 0.75, metalness: 0.12, color: 12101768, transparent: true, opacity: 0.4 });
+  const m = new THREE2.Mesh(new THREE2.SphereGeometry(0.5 + Math.random(), 4, 4), mat);
   m.position.set(x + (Math.random() - 0.5) * 3, y, z + (Math.random() - 0.5) * 3);
-  m.userData.vel = new THREE.Vector3((Math.random() - 0.5) * 0.5, 1 + Math.random() * 1.5, (Math.random() - 0.5) * 0.5);
+  m.userData.vel = new THREE2.Vector3((Math.random() - 0.5) * 0.5, 1 + Math.random() * 1.5, (Math.random() - 0.5) * 0.5);
   m.userData.life = 1;
   m.userData.decay = 0.8 + Math.random() * 0.6;
   m.userData.dust = true;
@@ -14546,7 +14730,7 @@ function updateCounts() {
 function alignCrusherDischargePileToTerrain(eq) {
   const pile = eq?.userData?.dischargePile;
   if (!pile) return;
-  const worldPos = new THREE.Vector3();
+  const worldPos = new THREE2.Vector3();
   pile.getWorldPosition(worldPos);
   pile.position.y = getScaledChildPileLocalY({
     equipmentY: eq.position.y,
@@ -14555,7 +14739,7 @@ function alignCrusherDischargePileToTerrain(eq) {
     parentScaleY: eq.scale?.y || 1,
     clearance: 0
   });
-  const alignedWorldPos = new THREE.Vector3();
+  const alignedWorldPos = new THREE2.Vector3();
   pile.getWorldPosition(alignedWorldPos);
   window.__qproCrusherDischargePileDebug = {
     x: Math.round(alignedWorldPos.x * 100) / 100,
@@ -14699,7 +14883,7 @@ function updateDumperAI(eq, dt) {
         return;
       }
       eq.userData.aiState = "return";
-      eq.userData.returnTarget = getNearestLooseGroundTarget(eq.position) || new THREE.Vector3(
+      eq.userData.returnTarget = getNearestLooseGroundTarget(eq.position) || new THREE2.Vector3(
         (Math.random() - 0.5) * 120,
         0,
         (Math.random() - 0.5) * 120
@@ -14759,7 +14943,7 @@ function updateDumperAI(eq, dt) {
       eq.userData.loaderProductStreamSpawned = false;
       setDumperProductLoadVisual(eq, load.productKey, load.tonnes);
       const edgeKey = productToEdgeKey(load.productKey);
-      eq.userData.target = getEdgeStockpileTarget(edgeKey) || new THREE.Vector3(145, 0, -188);
+      eq.userData.target = getEdgeStockpileTarget(edgeKey) || new THREE2.Vector3(145, 0, -188);
       eq.userData.aiState = "to_edge";
     }
     return;
@@ -14801,15 +14985,15 @@ function getNearestLooseGroundTarget(position) {
   if ((gameState.material.looseGround || 0) <= 0) return null;
   const excavators = placedEquip.filter((e) => e.userData.equipType === "excavator");
   if (excavators.length) return getNearestEquipmentPosition(position, excavators);
-  return new THREE.Vector3(0, 0, 0);
+  return new THREE2.Vector3(0, 0, 0);
 }
 function getProductStockpileTarget(productKey) {
   const found = aggregateStockpiles.find((p) => p.key === productKey);
-  return found ? new THREE.Vector3(found.x, 0, found.z) : null;
+  return found ? new THREE2.Vector3(found.x, 0, found.z) : null;
 }
 function getEdgeStockpileTarget(edgeKey) {
   const found = edgeStockpiles.find((p) => p.key === edgeKey);
-  return found ? new THREE.Vector3(found.x, 0, found.z) : null;
+  return found ? new THREE2.Vector3(found.x, 0, found.z) : null;
 }
 function getNearestEquipmentPosition(position, equipment) {
   let best = equipment[0], bd = Infinity;
@@ -14836,10 +15020,10 @@ function getNearestEquipment(position, equipment) {
 }
 function getNearestLoadingMachineForProduct(dumper, productPile) {
   const loaders = placedEquip.filter((e) => e.userData.equipType === "loader");
-  if (loaders.length) return getNearestEquipment(productPile || dumper?.position || new THREE.Vector3(), loaders);
+  if (loaders.length) return getNearestEquipment(productPile || dumper?.position || new THREE2.Vector3(), loaders);
   const machines = placedEquip.filter((e) => e.userData.equipType === "excavator");
   if (!machines.length) return null;
-  const target = productPile || dumper?.position || new THREE.Vector3();
+  const target = productPile || dumper?.position || new THREE2.Vector3();
   return getNearestEquipment(target, machines);
 }
 function getLoaderSideDumperTarget(productPile, loaderMachine) {
@@ -14849,7 +15033,7 @@ function getLoaderSideDumperTarget(productPile, loaderMachine) {
     standOff: 13
   });
   if (!parking.active) return productPile;
-  return new THREE.Vector3(parking.x, 0, parking.z);
+  return new THREE2.Vector3(parking.x, 0, parking.z);
 }
 function applyLoaderProductCycleVisual(machine, plan) {
   if (!machine || !plan?.active) return;
@@ -14894,7 +15078,7 @@ function moveDumperToward(eq, target, dt, arrivalDistance) {
     const isLastLeg = route.index >= route.points.length - 1;
     const arrived = moveEquipmentToward(
       eq,
-      new THREE.Vector3(wp.x, 0, wp.z),
+      new THREE2.Vector3(wp.x, 0, wp.z),
       dt,
       isLastLeg ? arrivalDistance : 8,
       { forwardAxis: { x: -1, z: 0 }, loaded: Boolean(eq.userData.loaded || eq.userData.loadedProduct) }
@@ -15037,7 +15221,7 @@ function updateExcavatorAI(eq, dt) {
     toastGame("\u{1F3ED} Move the excavator closer to both shot rock and the crusher hopper");
   }
   if (trackingDecision.active && trackingDecision.shouldMove) {
-    const target = new THREE.Vector3(trackingDecision.target.x, 0, trackingDecision.target.z);
+    const target = new THREE2.Vector3(trackingDecision.target.x, 0, trackingDecision.target.z);
     moveEquipmentToward(eq, target, dt, 4, { speed: Math.max(7, eq.userData.speed * 0.72), forwardAxis: { x: 1, z: 0 } });
   } else if (trackingDecision.active && trackingDecision.faceDirection) {
     eq.rotation.y = getVehicleYawForDirection(trackingDecision.faceDirection, { x: 1, z: 0 });
@@ -15107,8 +15291,8 @@ function updateExcavatorAI(eq, dt) {
   }
   if (feedCyclePlan?.showMaterialStream && !eq.userData.excavatorCrusherFeedStreamSpawned) {
     eq.userData.excavatorCrusherFeedStreamSpawned = true;
-    const from = new THREE.Vector3(feedCyclePlan.streamFrom.x, feedCyclePlan.streamFrom.y, feedCyclePlan.streamFrom.z);
-    const to = new THREE.Vector3(feedCyclePlan.streamTo.x, feedCyclePlan.streamTo.y, feedCyclePlan.streamTo.z);
+    const from = new THREE2.Vector3(feedCyclePlan.streamFrom.x, feedCyclePlan.streamFrom.y, feedCyclePlan.streamFrom.z);
+    const to = new THREE2.Vector3(feedCyclePlan.streamTo.x, feedCyclePlan.streamTo.y, feedCyclePlan.streamTo.z);
     spawnExcavatorCrusherLoadBurst(from, to, feedCyclePlan.feedTonnes);
     spawnDischargeRibbon(from, to, "shot-rock", feedCyclePlan.feedTonnes);
   }
@@ -15187,7 +15371,7 @@ function updateCrusherAI(eq, dt, processingPlan = { active: false, reason: "idle
   eq.userData.dustTimer = (eq.userData.dustTimer || 0) + dt;
   if (eq.userData.dustTimer > 2 + Math.random() * 3) {
     eq.userData.dustTimer = 0;
-    const dustPoint = eq.userData.dischargePoint ? eq.localToWorld(eq.userData.dischargePoint.clone()) : new THREE.Vector3(eq.position.x, eq.position.y + 20 * (eq.scale.y || 1), eq.position.z + 8);
+    const dustPoint = eq.userData.dischargePoint ? eq.localToWorld(eq.userData.dischargePoint.clone()) : new THREE2.Vector3(eq.position.x, eq.position.y + 20 * (eq.scale.y || 1), eq.position.z + 8);
     spawnActiveDust(dustPoint.x, dustPoint.y, dustPoint.z);
   }
 }
@@ -15658,7 +15842,7 @@ function refreshDirectFeedProofGuideVisual() {
   const proofEvidence = getDirectFeedProofEvidence(gameState, { mode: new URLSearchParams(window.location.search || "").get("demo") || "direct-feed" });
   const guidePlan = getDirectFeedProofGuidePlan({
     excavatorPosition: excavator?.position,
-    rubblePosition: getNearestLooseGroundTarget(excavator?.position || new THREE.Vector3(-30, 0, -45)),
+    rubblePosition: getNearestLooseGroundTarget(excavator?.position || new THREE2.Vector3(-30, 0, -45)),
     crusherFeedPosition: crusherFeed,
     feedTonnes: Math.min(25, gameState.material.looseGround || 0),
     elapsedSeconds: 1.8,
@@ -15770,7 +15954,7 @@ function manualEdgeDumperRun() {
   }
   const productTarget = getProductStockpileTarget(productKey);
   const edgeKey = productToEdgeKey(productKey);
-  const edgeTarget = getEdgeStockpileTarget(edgeKey) || new THREE.Vector3(145, 0, -188);
+  const edgeTarget = getEdgeStockpileTarget(edgeKey) || new THREE2.Vector3(145, 0, -188);
   let route;
   try {
     route = createEdgeHaulRoute({
@@ -15870,7 +16054,7 @@ function animateManualEdgeHaul(dumper, route, options) {
     const sample = sampleRouteAtDistance(route, travelled);
     const previous = dumper.position.clone();
     dumper.position.set(sample.x, dumper.position.y, sample.z);
-    const dir = new THREE.Vector3(sample.x - previous.x, 0, sample.z - previous.z);
+    const dir = new THREE2.Vector3(sample.x - previous.x, 0, sample.z - previous.z);
     if (dir.lengthSq() > 1e-4) {
       const motion = dumper.userData.motion || (dumper.userData.motion = createVehicleMotionState());
       motion.heading = Math.atan2(dir.z, dir.x);
@@ -16088,7 +16272,7 @@ function toastLatestEdgeTipEvent() {
 function runManualPlantFeedCycle() {
   const dumper = placedEquip.find((eq) => eq.userData.equipType === "dumper" && !eq.userData.manualEdgeHaulActive) || placedEquip.find((eq) => eq.userData.equipType === "dumper");
   const crusherTarget = getCrusherFeedWorldTarget();
-  const rubbleTarget = getNearestLooseGroundTarget(dumper?.position || new THREE.Vector3(-30, 0, -45));
+  const rubbleTarget = getNearestLooseGroundTarget(dumper?.position || new THREE2.Vector3(-30, 0, -45));
   if ((gameState.material.looseGround || 0) <= 0 || !crusherTarget || !rubbleTarget) {
     toastGame("\u{1F3ED} Need blasted rock and a placed crusher before processing");
     updateGameHUD();
@@ -16133,12 +16317,12 @@ function runManualPlantFeedCycle() {
 }
 function runManualExcavatorCrusherFeedCycle() {
   const excavator = getNearestEquipment(
-    getNearestLooseGroundTarget(new THREE.Vector3(-30, 0, -45)) || new THREE.Vector3(-30, 0, -45),
+    getNearestLooseGroundTarget(new THREE2.Vector3(-30, 0, -45)) || new THREE2.Vector3(-30, 0, -45),
     placedEquip.filter((eq) => eq.userData.equipType === "excavator")
   );
-  const crusher = getNearestEquipment(excavator?.position || new THREE.Vector3(), placedEquip.filter((eq) => eq.userData.equipType === "crusher"));
+  const crusher = getNearestEquipment(excavator?.position || new THREE2.Vector3(), placedEquip.filter((eq) => eq.userData.equipType === "crusher"));
   const crusherFeed = getCrusherFeedWorldPoint(crusher);
-  const rubbleTarget = getNearestLooseGroundTarget(excavator?.position || new THREE.Vector3(-30, 0, -45));
+  const rubbleTarget = getNearestLooseGroundTarget(excavator?.position || new THREE2.Vector3(-30, 0, -45));
   if (activePlantFeedOwner && activePlantFeedOwner !== excavator?.uuid) {
     toastGame("\u{1F3ED} Plant feed is already in progress");
     return false;
@@ -16231,7 +16415,7 @@ function animateManualPlantFeed(dumper, route, options) {
     const sample = sampleRouteAtDistance(route, route.totalDistance * t);
     const previous = dumper.position.clone();
     dumper.position.set(sample.x, dumper.position.y, sample.z);
-    const dir = new THREE.Vector3(sample.x - previous.x, 0, sample.z - previous.z);
+    const dir = new THREE2.Vector3(sample.x - previous.x, 0, sample.z - previous.z);
     if (dir.lengthSq() > 1e-4) {
       const motion = dumper.userData.motion || (dumper.userData.motion = createVehicleMotionState());
       motion.heading = Math.atan2(dir.z, dir.x);
@@ -16310,18 +16494,18 @@ function setProcessButtonState(label = "\u{1F3ED} Process load", busy = false) {
 function getCrusherFeedWorldTarget() {
   const crusher = placedEquip.find((eq) => eq.userData.equipType === "crusher");
   if (!crusher) return null;
-  const localFeed = crusher.userData.feedPoint || new THREE.Vector3(-13.5, 8.9, 0);
+  const localFeed = crusher.userData.feedPoint || new THREE2.Vector3(-13.5, 8.9, 0);
   const world = localFeed.clone();
   crusher.localToWorld(world);
-  return new THREE.Vector3(world.x, getTerrainHeight(world.x, world.z), world.z);
+  return new THREE2.Vector3(world.x, getTerrainHeight(world.x, world.z), world.z);
 }
 function getCrusherFeedHopperWorldTarget() {
   const crusher = placedEquip.find((eq) => eq.userData.equipType === "crusher");
   if (!crusher) return null;
-  const localFeed = crusher.userData.feedPoint || new THREE.Vector3(-13.5, 8.9, 0);
+  const localFeed = crusher.userData.feedPoint || new THREE2.Vector3(-13.5, 8.9, 0);
   const world = localFeed.clone();
   crusher.localToWorld(world);
-  return new THREE.Vector3(world.x, world.y, world.z);
+  return new THREE2.Vector3(world.x, world.y, world.z);
 }
 function toastLatestProductionEvent() {
   const event = gameState.events.at(-1);
@@ -16492,6 +16676,7 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.085);
   controls.update();
   applyCameraShake(dt);
+  pulseBeacons();
   updateParticles(dt);
   updateAI(dt);
   updateDustSuppressionRig(dt);
@@ -16530,6 +16715,13 @@ function init() {
   bootRequestedDemoMode();
   if (gameHourTimer) clearInterval(gameHourTimer);
   gameHourTimer = setInterval(runGameHourTick, GAME_HOUR_REAL_MS);
+  loadAssetLibrary().then((lib) => {
+    if (lib.ready) {
+      replantEnvironmentFlora();
+      console.log("[QuarryPro 3D] \u2713 Open-source environment assets loaded");
+    }
+  }).catch(() => {
+  });
   console.log("[QuarryPro 3D] \u2713 Ready \u2014 Bankfield Quarry Simulator");
 }
 if (document.readyState === "loading") {
