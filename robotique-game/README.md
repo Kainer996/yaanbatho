@@ -32,6 +32,7 @@ Progress autosaves to `localStorage` (sleep in your apartment to be safe).
 
 - **Five districts**: Memorial Park → Residential Block → Market Street → Transit Plaza → Meridian Research Campus
 - **Six enterable interiors**: GreenGrid Market (groceries + "gardening equipment"), Kaiten-45 sushi bar (conveyor belt, eat at the counter), the Crooked Bean café, and Tanaka Towers — lobby, stairwell, second-floor hallway with cyberpunk neighbours (Vex the synth musician, D3X behind his intercom, POST-3 the mailbot), and your own Unit 4
+- **Velvet Row**: a red-light nightlife street north of Transit Plaza (follow the pulsing chevrons where the road visibly runs deeper into the city). Crimson smog skyline, string lights, marquee venues — Pink Noodle 24H, a peep show, the GIRLS GIRLS GIRLS strip, a capsule hotel, and the members-only NEON GARDEN club guarded by Big Sef. Talk to Roxy and Sable, the Row's unregistered working girls, drink at **The Static** (the last human-tended bar in the city, jukebox strictly pre-Turing-test), and meet Crow, a fixer who already knows what Dr. Okafor will need in Chapter 2
 - **Survival**: hunger meter that drains over time — eat sushi, toasties, printed bentos; starving slows you down and drains HP. HP regenerates when fed; sleeping fully heals
 - **Combat**: a mugger ambushes you back in the park — fist-fight him (E/F to punch, back off when he winds up). His dropped chip funds your apartment. Shock Knuckles (+8 damage) sold at the market
 - **Inventory** (I): carry food, use it anywhere

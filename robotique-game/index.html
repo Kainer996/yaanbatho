@@ -351,6 +351,11 @@ const PAL_PED3   = {h:'#d8d2c2',f:'#b8b2a2',s:'#caa27e',e:'#1c1810',j:'#7f3f6f',
 const PAL_KENJI  = {h:'#1c1826',f:'#120e1c',s:'#eebf94',e:'#1c140c',j:'#e8e4da',w:'#3a3140',n:'#2c2838',b:'#1c1826'};
 const PAL_VEX    = {h:'#43ffd9',f:'#2bbf9f',s:'#d8a87e',e:'#140e1c',j:'#33203f',w:'#ff4f9a',n:'#1f1b2e',b:'#8a32a0'};
 const PAL_RAZE   = {h:'#241f33',f:'#181426',s:'#b88a66',e:'#ff5560',j:'#312a44',w:'#1c1828',n:'#221e30',b:'#15121f'};
+const PAL_ROXY   = {h:'#f2d8e8',f:'#d8b8cc',s:'#e8b08c',e:'#241218',j:'#ff2f7a',w:'#1a1022',n:'#e8b08c',b:'#ff2f7a'};
+const PAL_SABLE  = {h:'#8a3fff',f:'#6a2fd0',s:'#caa27e',e:'#160e1c',j:'#1c1828',w:'#ff2f7a',n:'#1c1828',b:'#0e0c16'};
+const PAL_SEF    = {h:'#0c0a14',f:'#080610',s:'#8a5a3a',e:'#0c0806',j:'#14121f',w:'#2c2838',n:'#14121f',b:'#0a0810'};
+const PAL_DEE    = {h:'#ff8c3a',f:'#d0681e',s:'#f0c4a0',e:'#22150c',j:'#2a2a36',w:'#e8e4da',n:'#2c2838',b:'#1c1826'};
+const PAL_CROW   = {h:'#1a1a22',f:'#101016',s:'#cfa27e',e:'#0c0a08',j:'#23202c',w:'#0e0c16',n:'#23202c',b:'#0e0c16'};
 
 /* Kenji gets a white headband (j = chef whites) */
 const KENJI_PATCH = [
@@ -774,8 +779,12 @@ const SCENES = {
   lobby: {w:480, name:'TANAKA TOWERS · LOBBY'},
   hall:  {w:480, name:'TANAKA TOWERS · FLOOR 2'},
   room:  {w:480, name:'UNIT 4'},
+  alley: {w:1600, name:'VELVET ROW'},
+  static:{w:480, name:'THE STATIC'},
 };
-const PARENT={market:'street',sushi:'street',cafe:'street',lobby:'street',hall:'lobby',room:'hall'};
+const PARENT={market:'street',sushi:'street',cafe:'street',lobby:'street',hall:'lobby',room:'hall',
+  alley:'street','static':'alley'};
+const ALLEY_X=2839; // the street visibly runs north here (gap in the architecture)
 const DOORS=[
  {scene:'street', x:2050, to:'market', tx:64,  label:'GreenGrid Market'},
  {scene:'market', x:36,   to:'street', tx:2050,label:'leave'},
@@ -789,6 +798,10 @@ const DOORS=[
  {scene:'hall',   x:436,  to:'lobby',  tx:436, label:'stairs · lobby'},
  {scene:'hall',   x:300,  to:'room',   tx:430, label:'Unit 4'},
  {scene:'room',   x:458,  to:'hall',   tx:300, label:'hallway'},
+ {scene:'street', x:ALLEY_X, to:'alley', tx:96, label:'up the street — Velvet Row'},
+ {scene:'alley',  x:60,   to:'street', tx:ALLEY_X, label:'back to Transit Plaza'},
+ {scene:'alley',  x:565,  to:'static', tx:64,  label:'The Static'},
+ {scene:'static', x:36,   to:'alley',  tx:565, label:'leave'},
 ];
 function goDoor(d){
   AU.door();
@@ -817,6 +830,11 @@ const NPCS = {
   vex:   { x:150,  name:'Vex',        pal:PAL_VEX,    patch:null,          face:1,  scene:'hall' },
   dex:   { x:226,  name:'Unit 3 Intercom', poi:true,                       face:1,  scene:'hall' },
   mailbot:{x:210,  name:'POST-3',     robot:true,                          face:1,  scene:'lobby' },
+  roxy:  { x:880,  name:'Roxy',       pal:PAL_ROXY,   patch:null,          face:-1, scene:'alley' },
+  sable: { x:1180, name:'Sable',      pal:PAL_SABLE,  patch:null,          face:1,  scene:'alley' },
+  sef:   { x:1402, name:'Big Sef',    pal:PAL_SEF,    patch:null,          face:-1, scene:'alley' },
+  dee:   { x:330,  name:'Dee',        pal:PAL_DEE,    patch:null,          face:-1, scene:'static' },
+  crow:  { x:150,  name:'Crow',       pal:PAL_CROW,   patch:null,          face:1,  scene:'static' },
 };
 /* wandering pedestrians: x range + lines */
 const PEDS = [
@@ -1119,6 +1137,78 @@ N('mara.toast','Mara',"Toastie, extra cheddar. The printer knows me by now.",
   S.credits-=7; eat(24,4); UI.refreshHUD(); save(); UI.toast('+24 food'); },
  choices:[{t:'Order more', n:'mara.menu'},{t:'(Done)', n:null}]});
 
+/* ---------- Velvet Row ---------- */
+N('roxy.hi','Roxy',
+"Slow night. The companion droids undercut everyone on the Row — perfect skin, perfect patience, ₣30 an hour. You know what I sell that they can't print? Imperfection. Genuine human disinterest. Premium product.",
+{choices:[
+ {t:'"How much just to talk?"', n:'roxy.talk'},
+ {t:'"Stay safe out here."', n:'roxy.bye'}],
+ fx(){ S.flags.roxyMet=true; }});
+N('roxy.talk','Roxy',
+"₣50, and I've heard every sad story on this Row twice. ...Except maybe yours. You're the zero-count. No implants, no feed, no ad-profile. Walking around like a hole in the data. Half the Row thinks you're a cop. The other half thinks you're a ghost.",
+{choices:[
+ {t:'"Which half are you in?"', n:'roxy.ghost'},
+ {t:'(Leave)', n:null}]});
+N('roxy.ghost','Roxy',
+"Neither. I think you're like me — off the registry on purpose. Basic pays for everything now, sugar, but it watches everything too. Some of us decided privacy was worth more than free rent. The Row is where the unwatched do business.");
+N('roxy.bye','Roxy',
+"Safe is a subscription service, sugar. I pay month to month.");
+N('roxy.again','Roxy',
+"Still vertical, ghost? The droids did three shifts while you blinked. Quantity's theirs. Quality walks slowly.");
+N('sable.hi','Sable',
+"Keep walking or buy something. Those are the two speeds on Velvet Row.",
+{choices:[
+ {t:'"What’s down here?"', n:'sable.info'},
+ {t:'"Just passing through."', n:'sable.pass'}]});
+N('sable.info','Sable',
+"The Static pours honest drinks. Neon Garden's for people who matter — you don't. The rest of the Row is noodles, capsules, and rented affection. Everything a body needs and nothing a soul does.",
+{fx(){ if(S.flags.muggerDown){ UI.toast('Sable looks you over again.'); } },
+ choices:[{t:'"And you?"', n:'sable.me'},{t:'(Leave)', n:null}]});
+N('sable.me','Sable',
+"I'm the neighborhood watch. The kind the neighborhood actually trusts.\n...Word is a ghost folded Raze in the park with bare hands. If that's you — the Row remembers who clears its debts. First drink at the Static is honest. Tell Dee that Sable sent you.");
+N('sable.pass','Sable',
+"Everyone's just passing through. Some of us have been passing through for eleven years.");
+N('sef.hi','Big Sef',
+"Neon Garden is members only. You are not a member. This concludes the guided tour.",
+{choices:[
+ {t:'"How do I get in?"', n:'sef.how'},
+ {t:'"Nice suit."', n:'sef.suit'}]});
+N('sef.how','Big Sef',
+"Get a name on the Row. Or get ₣5,000. Names are cheaper and last longer.");
+N('sef.suit','Big Sef',
+"Printed it myself. Kevlar-weave, climate-managed. The Row stays very polite when the doorman is bulletproof.");
+N('dee.hi','Dee',
+"The Static. Last bar in New Meridian with a human pulling the taps. What'll it be?",
+{choices:[
+ {t:'Synth-whiskey — ₣8', n:'dee.whiskey'},
+ {t:'2026 Old-Fashioned — ₣18', n:'dee.fashioned'},
+ {t:'"Why ‘The Static’?"', n:'dee.why'},
+ {t:'(Leave)', n:null}]});
+N('dee.whiskey','Dee',
+"Synth-whiskey. Molecularly identical to the real thing, which annoys purists, which is half the flavor.",
+{fx(){ if(S.credits<8){ UI.toast('Not enough credits.'); return 'skip'; }
+  S.credits-=8; eat(10,2); UI.refreshHUD(); save(); UI.toast('+10 food'); },
+ choices:[{t:'Another', n:'dee.hi'},{t:'(Done)', n:null}]});
+N('dee.fashioned','Dee',
+"A 2026 Old-Fashioned. Real cane sugar, real orange peel, recipe frozen the year the wormhole opened. House specialty. Drink it slow — that year's not coming back.\n...Well. For most people.",
+{fx(){ if(S.credits<18){ UI.toast('Not enough credits.'); return 'skip'; }
+  S.credits-=18; eat(16,4); UI.refreshHUD(); save(); UI.toast('+16 food'); },
+ choices:[{t:'Another', n:'dee.hi'},{t:'(Done)', n:null}]});
+N('dee.why','Dee',
+"Jukebox only plays pre-2029 — nothing written by anything that ever passed a Turing test. Pure human static, start to finish. The machines make better music now. That's exactly why nobody here wants it.",
+{choices:[{t:'Synth-whiskey — ₣8', n:'dee.whiskey'},{t:'(Leave)', n:null}]});
+N('crow.hi','Crow',
+"You're new, you're analog, and you walked past three cameras that couldn't decide if you exist. That's a useful condition, friend. Sit. Crow buys the first round of conversation.",
+{choices:[
+ {t:'"Who are you?"', n:'crow.who'},
+ {t:'"What do you sell?"', n:'crow.sell'},
+ {t:'(Back away)', n:null}]});
+N('crow.who','Crow',
+"A procurement specialist. The city prints everything now — but some things have no public template, and some templates have no public license. That gap is my entire economy.",
+{choices:[{t:'"What do you sell?"', n:'crow.sell'},{t:'(Leave)', n:null}]});
+N('crow.sell','Crow',
+"Anything with the serial filed off. And lately — a rumor, free of charge: the campus lady is hunting negative-energy cells. Casimir-grade. Restricted, traceable, impossible to requisition... officially.\nWhen she sends you shopping, ghost — and she will — you come see Crow first.");
+
 /* generic ped node is built on the fly */
 
 function deliveryDone(){
@@ -1145,6 +1235,11 @@ function npcEntryNode(key){
     case 'vex':  return f.vexMet? 'vex.again' : 'vex.hi';
     case 'dex':  return 'dex.hi';
     case 'mailbot': return 'post.hi';
+    case 'roxy': return f.roxyMet? 'roxy.again' : 'roxy.hi';
+    case 'sable': return 'sable.hi';
+    case 'sef':  return 'sef.hi';
+    case 'dee':  return 'dee.hi';
+    case 'crow': return 'crow.hi';
     case 'vendo':
       if(!f.metVendo) return 'vendo.hi';
       if(f.carrying) return 'vendo.carrying';
@@ -1823,6 +1918,152 @@ INTERIORS.hall = buildLayer(W,H,(g)=>{
   g.fillStyle='#5a4632'; g.fillRect(122,224,18,8);
 });
 
+/* ---- Velvet Row: far layer (crimson smog skyline, parallax .35) ---- */
+const ALLEY_FAR = buildLayer(800,H,(g,w)=>{
+  const gr=g.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,'#12030e'); gr.addColorStop(.5,'#330b26');
+  gr.addColorStop(.85,'#7a1f3e'); gr.addColorStop(1,'#a83648');
+  g.fillStyle=gr; g.fillRect(0,0,w,H);
+  const rnd=mulberry(606);
+  for(let i=0;i<46;i++){ g.fillStyle='rgba(255,170,190,'+(.2+rnd()*.4)+')';
+    g.fillRect(rnd()*w|0, rnd()*64|0, 1,1); }
+  for(let i=0;i<6;i++){ g.fillStyle='rgba(140,40,70,'+(.16+rnd()*.18)+')';
+    g.fillRect(0,(72+i*16+rnd()*8)|0, w, (5+rnd()*6)|0); }
+  let x=0;
+  while(x<w){ const bw=34+rnd()*52|0, bh=60+rnd()*92|0;
+    g.fillStyle='#180a16'; g.fillRect(x,234-bh,bw,bh);
+    for(let wy=234-bh+6; wy<222; wy+=8) for(let wx=x+3; wx<x+bw-4; wx+=7)
+      if(rnd()<.28){ g.fillStyle=rnd()<.6?'#ff2f7a':'#ff8c3a'; g.fillRect(wx,wy,3,4); }
+    if(rnd()<.5){ g.fillStyle='#ff2f7a'; g.fillRect(x,234-bh,bw,1); }
+    x+=bw+(rnd()*6|0);
+  }
+});
+
+/* ---- Velvet Row: the nightlife strip ---- */
+INTERIORS.alley = buildLayer(1600,H,(g,w)=>{
+  g.fillStyle='#1c0a18'; g.fillRect(0,0,w,H);
+  g.fillStyle='rgba(36,16,38,.0)';
+  const rnd=mulberry(909);
+  // wet asphalt
+  g.fillStyle='#120714'; g.fillRect(0,GROUND,w,H-GROUND);
+  for(let x=0;x<w;x+=26){ g.fillStyle='#170a19'; g.fillRect(x,GROUND,13,H-GROUND); }
+  // canyon back wall, low enough that the crimson skyline shows above the venues
+  g.fillStyle='#241026'; g.fillRect(0,104,w,128);
+  for(let y=108;y<200;y+=6) for(let x=(y%12?0:5); x<w; x+=11)
+    if(rnd()<.12){ g.fillStyle='#1e0c1f'; g.fillRect(x,y,10,5); }
+  // shady upper-floor windows on the back wall
+  for(let x=30;x<w-40;x+=46) if(rnd()<.62){
+    g.fillStyle='#140816'; g.fillRect(x,112,16,20);
+    g.fillStyle=rnd()<.5?'rgba(255,47,122,.5)':'rgba(255,140,58,.45)'; g.fillRect(x+2,114,12,16);
+    if(rnd()<.4){ g.fillStyle='#0c0410'; g.fillRect(x+5,118,6,10); }
+  }
+  // wall posters
+  for(let x=20;x<w-20;x+=30) if(rnd()<.3){
+    g.fillStyle=['#ff2f7a','#ff8c3a','#b14aff','#43ffd9'][(rnd()*4)|0];
+    g.globalAlpha=.5; g.fillRect(x,150+rnd()*30|0,9,12); g.globalAlpha=1;
+    g.fillStyle='#0c0410'; g.fillRect(x+2,154+rnd()*20|0,5,2);
+  }
+  function venue(x,wd,sign,col,opts={}){
+    g.fillStyle=opts.body||'#23101f'; g.fillRect(x,86,wd,146);
+    g.fillStyle='rgba(255,255,255,.04)'; g.fillRect(x,86,wd,3);
+    g.fillStyle='rgba(0,0,0,.35)'; g.fillRect(x+wd-4,86,4,146);
+    // sign band, bright
+    g.fillStyle='#0c0410'; g.fillRect(x+4,96,wd-8,18);
+    g.globalAlpha=.5; g.fillStyle=col; g.fillRect(x+4,96,wd-8,18); g.globalAlpha=1;
+    g.fillStyle='#fff'; g.font='7px monospace'; g.fillText(sign, x+10, 102);
+    g.fillStyle=col; g.fillRect(x+4,95,wd-8,1); g.fillRect(x+4,114,wd-8,1);
+    // marquee lamp dots under the sign
+    for(let lx=x+8; lx<x+wd-8; lx+=8){ g.fillStyle='#ffd23f'; g.fillRect(lx,117,2,2); }
+    if(!opts.noWin){
+      // glowing interior with patron silhouettes
+      g.fillStyle='#1a0a14'; g.fillRect(x+8,130,wd-16,46);
+      g.globalAlpha=.38; g.fillStyle=col; g.fillRect(x+8,130,wd-16,46); g.globalAlpha=1;
+      for(let fx2=x+14; fx2<x+wd-20; fx2+=16) if(rnd()<.6){
+        g.fillStyle='rgba(10,4,16,.85)'; g.fillRect(fx2,144,7,8); g.fillRect(fx2+1,140,5,5); }
+      g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(x+8,130,wd-16,2);
+      if(opts.bars) for(let bx=x+12; bx<x+wd-12; bx+=7){ g.fillStyle='#0c0410'; g.fillRect(bx,130,2,46); }
+    }
+    const dx=opts.doorX!=null? opts.doorX : (x+wd/2|0);
+    g.fillStyle='#2c1430'; g.fillRect(dx-12,194,24,38);
+    g.fillStyle='#0a0410'; g.fillRect(dx-9,198,18,34);
+    g.fillStyle=col; g.fillRect(dx-9,196,18,2); g.fillRect(dx+4,214,2,4);
+    // jutting side sign
+    if(opts.side){ g.fillStyle='#0c0410'; g.fillRect(x+wd-2,124,14,26);
+      g.globalAlpha=.6; g.fillStyle=col; g.fillRect(x+wd-2,124,14,26); g.globalAlpha=1;
+      g.fillStyle='#0c0410'; g.fillRect(x+wd+2,128,6,4); g.fillRect(x+wd+2,136,6,4); g.fillRect(x+wd+2,144,6,2); }
+  }
+  venue(120,124,'PINK NOODLE 24H','#ff8c3a',{side:true});
+  venue(292,110,'L I V E  ·  L I V E','#ff2f7a',{bars:true});
+  venue(490,150,'THE  STATIC','#43ffd9',{doorX:565, body:'#13202a', side:true});
+  venue(688,124,'GIRLS GIRLS GIRLS','#ff2f7a',{body:'#2a0e22', side:true});
+  venue(948,134,'HOT·L  CAPSULE','#ff5560',{body:'#26101a'});
+  // dark alcove with graffiti (Sable's corner)
+  g.fillStyle='#0e0510'; g.fillRect(1140,110,92,122);
+  g.fillStyle='#ff2f7a'; g.fillRect(1152,138,30,3); g.fillRect(1152,146,18,3);
+  g.fillStyle='#43ffd9'; g.fillRect(1196,136,3,16);
+  // NEON GARDEN club
+  g.fillStyle='#1a0a2a'; g.fillRect(1300,70,236,162);
+  g.fillStyle='#0c0410'; g.fillRect(1320,80,196,30);
+  g.fillStyle='#b14aff'; g.font='7px monospace'; g.fillText('N E O N   G A R D E N', 1336, 90);
+  g.globalAlpha=.35; g.fillStyle='#b14aff'; g.fillRect(1320,80,196,30); g.globalAlpha=1;
+  for(let y=116;y<188;y+=10){ g.fillStyle='rgba(177,74,255,.12)'; g.fillRect(1316,y,204,3); }
+  g.fillStyle='#2a1444'; g.fillRect(1404,150,52,82);
+  g.fillStyle='#0a0414'; g.fillRect(1410,158,40,74);
+  g.fillStyle='#b14aff'; g.fillRect(1410,156,40,2);
+  g.fillStyle='#ffd23f'; g.fillRect(1382,206,2,26); g.fillRect(1478,206,2,26);
+  g.fillStyle='#ff2f7a'; g.fillRect(1382,208,98,2);
+  // dead end: fence + dumpster
+  g.fillStyle='#160a18'; g.fillRect(1560,100,40,132);
+  for(let y=110;y<228;y+=10){ g.fillStyle='#241026'; g.fillRect(1562,y,36,3); }
+  g.fillStyle='#11181f'; g.fillRect(1498,208,48,6);
+  g.fillStyle='#1c2a24'; g.fillRect(1498,214,48,18);
+  // string-light cords (bulbs animate at render time)
+  g.strokeStyle='rgba(70,32,66,.9)'; g.lineWidth=1;
+  for(let sx0=80; sx0<w-260; sx0+=240){
+    g.beginPath();
+    for(let i=0;i<=10;i++){ const t=i/10, xx=sx0+220*t, yy=56+Math.sin(Math.PI*t)*10;
+      if(i) g.lineTo(xx,yy); else g.moveTo(xx,yy); }
+    g.stroke();
+  }
+});
+
+/* ---- The Static (dive bar) ---- */
+INTERIORS['static'] = buildLayer(W,H,(g)=>{
+  g.fillStyle='#10141c'; g.fillRect(0,0,W,H);
+  g.fillStyle='#161c26'; g.fillRect(0,26,W,206);
+  g.fillStyle='#0c1018'; g.fillRect(0,GROUND,W,H-GROUND);
+  for(let x=0;x<W;x+=24){ g.fillStyle='#0e131c'; g.fillRect(x,GROUND,12,H-GROUND); }
+  g.fillStyle='#43ffd9'; g.font='7px monospace'; g.fillText('T H E   S T A T I C', 150, 44);
+  g.globalAlpha=.18; g.fillStyle='#43ffd9'; g.fillRect(140,38,160,16); g.globalAlpha=1;
+  // back bar bottles
+  g.fillStyle='#141a24'; g.fillRect(240,70,200,116);
+  const rnd=mulberry(33);
+  for(let y=84;y<170;y+=28){
+    g.fillStyle='#2a3140'; g.fillRect(244,y+18,192,4);
+    for(let x=252;x<428;x+=14){
+      g.fillStyle=['#ff2f7a','#43ffd9','#ffd23f','#b14aff','#ff8c3a'][(rnd()*5)|0];
+      g.fillRect(x,y,7,18); }
+  }
+  // counter (Dee works it)
+  g.fillStyle='#3a2c20'; g.fillRect(230,196,220,10);
+  g.fillStyle='#241a12'; g.fillRect(230,206,220,26);
+  g.fillStyle='#5a4528'; g.fillRect(230,196,220,2);
+  for(const sx of [270,390]){ g.fillStyle='#8a1f3a'; g.fillRect(sx-7,214,14,5);
+    g.fillStyle='#1a1018'; g.fillRect(sx-2,219,4,13); }
+  // corner booth (Crow's office)
+  g.fillStyle='#2c1020'; g.fillRect(88,168,124,20);
+  g.fillStyle='#1c0a14'; g.fillRect(84,188,132,44);
+  g.fillStyle='#3a1428'; g.fillRect(96,206,108,6); g.fillRect(140,212,4,20);
+  g.fillStyle='#0a0810'; g.fillRect(148,26,2,28);
+  g.fillStyle='#ffd23f'; g.fillRect(142,54,13,5);
+  g.fillStyle='rgba(255,200,100,.06)'; g.beginPath(); g.arc(149,92,48,0,7); g.fill();
+  // jukebox
+  g.fillStyle='#241a2e'; g.fillRect(420,156,42,76);
+  g.fillStyle='#0e0a14'; g.fillRect(426,164,30,52);
+  inDoor(g,36,'exit','#43ffd9');
+});
+const DRUNK_FRAMES = humanFrames(PAL_PED2);
+
 /* ---- Unit 4 (your apartment) ---- */
 INTERIORS.room = buildLayer(W, H, (g)=>{
   g.fillStyle='#191527'; g.fillRect(0,0,W,H);                 // wall
@@ -1967,6 +2208,7 @@ function tryInteract(){
   }
   if(S.scene==='room' && Math.abs(S.x-ROOM_BED_X)<26){ doSleep(); return; }
   if(S.scene==='street' && Math.abs(S.x-DOOR_LAB_X)<20){ UI.toast('ARRAY ACCESS: sealed. “Exotic-matter charge insufficient.”'); return; }
+  if(S.scene==='alley' && Math.abs(S.x-1430)<16){ UI.toast('Big Sef doesn’t move. “Members only, ghost.”'); return; }
   const t=nearestTalkable();
   if(t){ talkTo(t); }
 }
@@ -2047,8 +2289,19 @@ function assetsReady(){
   if(!ART.sky || !ART.fore || !ART.towers) return;  // offline → keep procedural art
   const g=NEAR.getContext('2d'); g.imageSmoothingEnabled=false;
   // bake the warm street-level architecture into the world (Market St + Transit)
-  g.drawImage(ART.fore, 0,0,352,172, 1638,62, 352,172);
-  g.drawImage(ART.fore, 0,0,352,172, 2664,62, 352,172);
+  for(const bx of [1638,2664]){
+    g.drawImage(ART.fore, 0,0,352,172, bx,62, 352,172);
+    // pull the warm palette toward the city's cool dusk
+    g.globalAlpha=.10; g.fillStyle='#2a1b3d'; g.fillRect(bx,62,352,172); g.globalAlpha=1;
+    // fade the left/right seams into the neighbouring architecture
+    for(let i=0;i<30;i++){
+      g.globalAlpha=(1-i/30)*.9; g.fillStyle='#141a30';
+      g.fillRect(bx+i,62,1,172); g.fillRect(bx+351-i,62,1,172);
+    }
+    g.globalAlpha=1;
+    // ground-contact shadow so the buildings sit on the pavement
+    g.globalAlpha=.35; g.fillStyle='#05060f'; g.fillRect(bx+4,228,344,5); g.globalAlpha=1;
+  }
   if(ART.ant){ g.drawImage(ART.ant, 1676,28); g.drawImage(ART.ant, 2948,32); }
   if(ART.hotel) g.drawImage(ART.hotel, 1256,110);
   ART_READY=true;
@@ -2109,8 +2362,8 @@ function update(dt){
 }
 
 function camX(){
-  if(S.scene!=='street') return 0;
-  return clamp(S.x-W/2, 0, WORLD_W-W);
+  const sw=SCENES[S.scene].w;
+  return clamp(S.x-W/2, 0, Math.max(0, sw-W));
 }
 function drawSprite(g, img, x, yBottom, cam){
   g.drawImage(img, Math.round(x-img.width/2-cam), Math.round(yBottom-img.height));
@@ -2186,6 +2439,12 @@ function render(){
     g.fillStyle='rgba(67,255,217,'+(.08+.05*Math.sin(anim*2+p.x))+')'; g.fillRect(sx+2,GROUND+21,p.w-4,2);
     g.fillStyle='rgba(255,79,154,'+(.05+.04*Math.sin(anim*1.6+p.x*2))+')'; g.fillRect(sx+6,GROUND+22,p.w-12,1);
   }
+  // warm light spill under the asset architecture, seating it into the street
+  if(ART_READY) for(const bx of [1638,2664]){
+    const sx=bx-cam; if(sx<-360||sx>W+10) continue;
+    g.fillStyle='rgba(255,120,40,'+(.05+.015*Math.sin(anim*1.4+bx))+')';
+    g.fillRect(sx+6,GROUND,340,16);
+  }
   // neon street reflections
   g.globalAlpha=.12;
   for(const hb of HOLOS){ const sx=hb.x-cam; if(sx>-40&&sx<W+40){ g.fillStyle='#43ffd9'; g.fillRect(sx-2,GROUND,36,H-GROUND); } }
@@ -2220,6 +2479,16 @@ function render(){
     const sx=b.x-cam; if(sx<-60||sx>W+60) continue;
     const im=seq(b.k,b.n,b.r); if(im) g.drawImage(im, Math.round(sx), b.y);
   }
+  // pulsing chevrons: the street runs north here, up to Velvet Row
+  { const sx=ALLEY_X-cam;
+    if(sx>-20&&sx<W+20){
+      const yy=GROUND-70+Math.sin(anim*3)*3;
+      g.fillStyle='rgba(5,4,14,.7)'; g.fillRect(sx-10,yy-4,20,26);
+      g.fillStyle='rgba(255,47,122,.5)'; g.fillRect(sx-10,yy-4,20,1); g.fillRect(sx-10,yy+21,20,1);
+      g.fillStyle='rgba(255,47,122,'+(.75+.25*Math.sin(anim*5))+')';
+      g.beginPath(); g.moveTo(sx,yy);   g.lineTo(sx-7,yy+8);  g.lineTo(sx+7,yy+8);  g.fill();
+      g.beginPath(); g.moveTo(sx,yy+9); g.lineTo(sx-7,yy+17); g.lineTo(sx+7,yy+17); g.fill();
+    } }
 
   // fx
   for(const f of FX){
@@ -2306,8 +2575,58 @@ function drawPunch(g,cam){
   if(hasItem('knuckles')){ g.fillStyle='#43ffd9'; g.fillRect(px+(S.face>0?11:-15), py-2, 2, 2); }
 }
 function renderInterior(g){
-  const sc=S.scene;
-  g.drawImage(INTERIORS[sc],0,0);
+  const sc=S.scene, cam=camX();
+  if(sc==='alley'){
+    const off=-Math.round(cam*.35)%ALLEY_FAR.width;
+    g.drawImage(ALLEY_FAR, off, -68);
+    g.drawImage(ALLEY_FAR, off+ALLEY_FAR.width, -68);
+    g.fillStyle='#12030e'; g.fillRect(0,0,W,14); // keep the very top deep dark
+  }
+  g.drawImage(INTERIORS[sc], -Math.round(cam), 0);
+  if(sc==='alley'){
+    // string-light bulbs
+    for(let sx0=80; sx0<1340; sx0+=240) for(let i=0;i<=10;i++){
+      const t=i/10, xx=sx0+220*t-cam, yy=56+Math.sin(Math.PI*t)*10+Math.sin(anim*2+i+sx0)*1.5;
+      if(xx<-5||xx>W+5) continue;
+      g.fillStyle=['#ff2f7a','#ffd23f','#43ffd9'][i%3]; g.fillRect(Math.round(xx),Math.round(yy),2,2);
+    }
+    // neon sign glow on the wet street
+    for(const [vx,vw,col] of [[120,124,'#ff8c3a'],[292,110,'#ff2f7a'],[490,150,'#43ffd9'],
+        [688,124,'#ff2f7a'],[948,134,'#ff5560'],[1300,236,'#b14aff']]){
+      const sx=vx-cam; if(sx<-vw-20||sx>W+20) continue;
+      g.globalAlpha=.10+.05*Math.sin(anim*2+vx); g.fillStyle=col;
+      g.fillRect(sx+6,GROUND,vw-12,14); g.globalAlpha=1;
+    }
+    // bass pulse spilling out of Neon Garden
+    const ph=(anim*1.4)%1, bx=1430-cam;
+    if(bx>-90&&bx<W+90){
+      g.globalAlpha=(1-ph)*.25; g.strokeStyle='#b14aff'; g.lineWidth=1;
+      g.beginPath(); g.ellipse(bx,200,18+ph*30,8+ph*15,0,0,7); g.stroke(); g.globalAlpha=1;
+    }
+    // steam
+    for(const stx of [262,930,1244]){
+      const sx=stx-cam; if(sx<-12||sx>W+12) continue;
+      for(let i=0;i<4;i++){ const p2=(anim*.5+i*.25+stx*.01)%1;
+        g.fillStyle='rgba(255,200,220,'+(.12*(1-p2))+')';
+        g.fillRect(sx+Math.sin(p2*5)*3, GROUND-p2*28, 3,3); }
+    }
+    // a regular, three drinks past steady
+    const dwx=1020+Math.sin(anim*.18)*70, ddir=Math.cos(anim*.18)>0?1:-1;
+    drawHuman(g, DRUNK_FRAMES, {x:dwx, face:ddir, dir:ddir}, cam, true);
+    // roxy's cigarette
+    const rx=NPCS.roxy.x-cam;
+    if(rx>-10&&rx<W+10){ const p3=(anim*.6)%1;
+      g.fillStyle='rgba(220,220,230,'+(.25*(1-p3))+')';
+      g.fillRect(Math.round(rx+8+p3*5), Math.round(GROUND-26-p3*16), 1,1); }
+  }
+  else if(sc==='static'){
+    // jukebox mood light cycling through the room
+    const hue=['#ff2f7a','#43ffd9','#ffd23f'][Math.floor(anim*.8)%3];
+    g.globalAlpha=.22+.08*Math.sin(anim*3); g.fillStyle=hue; g.fillRect(426,164,30,52); g.globalAlpha=1;
+    g.globalAlpha=.05; g.fillStyle=hue; g.fillRect(0,26,W,206); g.globalAlpha=1;
+    // neon sign flicker
+    if(Math.sin(anim*9.7)>.94){ g.fillStyle='rgba(16,20,28,.85)'; g.fillRect(140,38,80,16); }
+  }
   if(sc==='sushi'){
     for(let i=0;i<7;i++){
       const px=110+((anim*26+i*56)%360);
@@ -2355,19 +2674,19 @@ function renderInterior(g){
     const n=NPCS[k];
     if((n.scene||'street')!==sc || n.poi) continue;
     if(n.robot){
-      g.drawImage(S.x<n.x? SPR.robotF:SPR.robot, Math.round(n.x-8), Math.round(GROUND-24+Math.sin(anim*3)*1));
+      g.drawImage(S.x<n.x? SPR.robotF:SPR.robot, Math.round(n.x-8-cam), Math.round(GROUND-24+Math.sin(anim*3)*1));
     } else {
       n.face = Math.abs(n.x-S.x)<60 ? (S.x<n.x?-1:1) : n.face;
-      drawHuman(g, n.frames, n, 0, false);
+      drawHuman(g, n.frames, n, cam, false);
     }
   }
-  drawMarker(g, questTargetX(), 0);
+  drawMarker(g, questTargetX(), cam);
   const moving=Math.abs(S.vx)>8;
   const img = moving? (S.face>0?SPR.player.walkR:SPR.player.walkL)[Math.floor(anim*9)%4]
     : (S.face>0?SPR.player.idleR:SPR.player.idleL);
-  drawSprite(g, img, S.x, S.y, 0);
-  drawPunch(g,0);
-  updatePrompt(0);
+  drawSprite(g, img, S.x, S.y, cam);
+  drawPunch(g,cam);
+  updatePrompt(cam);
 }
 
 function updatePrompt(cam){
@@ -2380,6 +2699,7 @@ function updatePrompt(cam){
     if(d){ label = (d.needKey&&!S.flags.hasKey)? 'E — locked' : 'E — '+d.label; px=d.x; }
     else if(S.scene==='room' && Math.abs(S.x-ROOM_BED_X)<26) label='E — sleep';
     else if(S.scene==='street' && Math.abs(S.x-DOOR_LAB_X)<20) label='E — Array door';
+    else if(S.scene==='alley' && Math.abs(S.x-1430)<16) label='E — NEON GARDEN';
     else { const t=nearestTalkable();
       if(t){ px = t.type==='npc'? NPCS[t.k].x : PEDS[t.i].x;
         label = (t.type==='npc'&&NPCS[t.k].poi)? 'E — intercom' : 'E — talk'; } }
