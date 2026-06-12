@@ -79,16 +79,16 @@ const world=new THREE.Group(); scene.add(world);
 
 /* ground + roads */
 {
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,1400), flatMat(0x0b0d18));
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,1400,12,12), flatMat(0x0b0d18));
   ground.rotation.x=-Math.PI/2; ground.position.set(150,0,500); world.add(ground);
   const roadMat=flatMat(0x14172a);
-  const main=new THREE.Mesh(new THREE.PlaneGeometry(540,10), roadMat);
+  const main=new THREE.Mesh(new THREE.PlaneGeometry(540,10,24,1), roadMat);
   main.rotation.x=-Math.PI/2; main.position.set(0,.02,0); world.add(main);
-  const row=new THREE.Mesh(new THREE.PlaneGeometry(14,150), roadMat);
+  const row=new THREE.Mesh(new THREE.PlaneGeometry(14,150,1,8), roadMat);
   row.rotation.x=-Math.PI/2; row.position.set(100,.02,-80); world.add(row);
   const walkMat=flatMat(0x191d33);
   for(const z of [-7,7]){
-    const sw=new THREE.Mesh(new THREE.PlaneGeometry(540,4), walkMat);
+    const sw=new THREE.Mesh(new THREE.PlaneGeometry(540,4,24,1), walkMat);
     sw.rotation.x=-Math.PI/2; sw.position.set(0,.03,z); world.add(sw);
   }
   // center line dashes
@@ -98,7 +98,7 @@ const world=new THREE.Group(); scene.add(world);
     d.rotation.x=-Math.PI/2; d.position.set(x,.04,0); world.add(d);
   }
   // park lawn
-  const lawn=new THREE.Mesh(new THREE.PlaneGeometry(120,40), flatMat(0x0e1f18));
+  const lawn=new THREE.Mesh(new THREE.PlaneGeometry(120,40,6,2), flatMat(0x0e1f18));
   lawn.rotation.x=-Math.PI/2; lawn.position.set(-200,.025,18); world.add(lawn);
 }
 
@@ -136,16 +136,19 @@ function addBuilding(x,z,w,d,h,seed,opts={}){
 }
 {
   let seed=11;
-  // north side (z=-16): continuous except the Velvet Row junction (x 88..112)
+  // north side: front faces at z=-10 (doors/signs sit at -9.9, in front)
+  // gaps: Velvet Row junction (x 84..118) and the open campus plaza (x>150)
   for(let x=-250;x<250;){
     const w=14+((seed*7)%18), h=18+((seed*13)%46);
-    if(!(x+w>84 && x<118)) addBuilding(x+w/2,-16-((seed%3)*2),w,16,h,seed);
+    if(!(x+w>84 && x<118) && !(x+w>150)) addBuilding(x+w/2, -18-((seed%3)*2), w, 16, h, seed);
     x+=w+2; seed+=3;
   }
-  // south side (z=16): only east of the park
+  // campus lab (holds the Array door at x=200)
+  addBuilding(200, -18, 28, 16, 13, 77, {base:'#16242c'});
+  // south side: front faces at z=+10
   for(let x=-140;x<250;){
     const w=14+((seed*5)%20), h=14+((seed*11)%40);
-    addBuilding(x+w/2,16+((seed%3)*2),w,16,h,seed);
+    addBuilding(x+w/2, 18+((seed%3)*2), w, 16, h, seed);
     x+=w+2; seed+=5;
   }
   // distant skyline ring
@@ -153,12 +156,12 @@ function addBuilding(x,z,w,d,h,seed,opts={}){
     const a=i/26*Math.PI*2;
     addBuilding(Math.cos(a)*300, Math.sin(a)*300, 30,30, 50+((i*37)%90), i*7+5, {base:'#141a32'});
   }
-  // Velvet Row walls (x≈90 and x≈110, z -12..-150)
+  // Velvet Row walls: inner faces at x=89 and x=111
   for(let z=-18;z>-150;){
     const d=12+((seed*7)%10), h=16+((seed*13)%26);
-    addBuilding(86,z-d/2,10,d,h,seed,{base:'#2a1226'}); seed+=2;
+    addBuilding(84,z-d/2,10,d,h,seed,{base:'#2a1226'}); seed+=2;
     const d2=12+((seed*5)%12), h2=16+((seed*11)%24);
-    addBuilding(114,z-d2/2,10,d2,h2,seed,{base:'#2a1226'}); seed+=2;
+    addBuilding(116,z-d2/2,10,d2,h2,seed,{base:'#2a1226'}); seed+=2;
     z-=Math.max(d,d2)+2;
   }
   // Row dead-end (Neon Garden)
@@ -204,9 +207,9 @@ bannerPlane(['banner-side-1.png','banner-side-2.png','banner-side-3.png','banner
   m.position.set(-100,10.5,-9.7); world.add(m);
 }
 /* Velvet Row venue signs */
-function rowSign(label,color,z,side){ // side: -1 west wall (x=91), +1 east (x=109)
+function rowSign(label,color,z,side){ // side: -1 west wall (face x=89), +1 east (face x=111)
   const sign=neonSign(label,color,8,2);
-  sign.position.set(side<0? 91.2:108.8, 4.6, z);
+  sign.position.set(side<0? 89.15:110.85, 4.6, z);
   sign.rotation.y= side<0? Math.PI/2 : -Math.PI/2;
   world.add(sign);
 }
@@ -220,7 +223,7 @@ rowSign('HOT·L','#ff5560',-110,-1);
   const arch=new THREE.Mesh(new THREE.PlaneGeometry(4,4.4), flatMat(0x120822));
   arch.position.set(100,2.2,-133.9); world.add(arch); }
 { const d=new THREE.Mesh(new THREE.PlaneGeometry(2.2,3.2), flatMat(0x0e2a2a));
-  d.position.set(91.05,1.6,-75); d.rotation.y=Math.PI/2; world.add(d); }
+  d.position.set(89.1,1.6,-75); d.rotation.y=Math.PI/2; world.add(d); }
 
 /* props */
 function lamp(x,z,color){
@@ -263,14 +266,14 @@ let arrayRing;
 {
   arrayRing=new THREE.Mesh(new THREE.TorusGeometry(7,.6,10,40),
     new THREE.MeshBasicMaterial({color:0x43ffd9}));
-  arrayRing.position.set(215,10,-26); world.add(arrayRing);
+  arrayRing.position.set(228,24,-24); world.add(arrayRing);   // floats over the campus
   const inner=new THREE.Mesh(new THREE.TorusGeometry(5.4,.18,8,40),
     new THREE.MeshBasicMaterial({color:0xff4f9a}));
   inner.position.copy(arrayRing.position); world.add(inner);
   arrayRing.userData.inner=inner;
-  const glow=new THREE.PointLight(0x43ffd9, 60, 70); glow.position.set(215,9,-24); scene.add(glow);
-  const base=new THREE.Mesh(new THREE.BoxGeometry(3,3.5,3), flatMat(0x162830));
-  base.position.set(215,1.75,-26); world.add(base);
+  const glow=new THREE.PointLight(0x43ffd9, 60, 90); glow.position.set(228,22,-22); scene.add(glow);
+  const base=new THREE.Mesh(new THREE.BoxGeometry(2.4,17,2.4), flatMat(0x162830));
+  base.position.set(228,8.5,-24); world.add(base);            // support pylon
 }
 const rowLight=new THREE.PointLight(0xff2f7a, 40, 60); rowLight.position.set(100,8,-80); scene.add(rowLight);
 const gardenLight=new THREE.PointLight(0xb14aff, 30, 40); gardenLight.position.set(100,5,-128); scene.add(gardenLight);
@@ -367,7 +370,8 @@ room('static', 0x43ffd9, g=>{ counter(g,2,-3,8,0x43ffd9);
 
 /* walkable AABBs: [x1,z1,x2,z2] */
 const WALK={
-  world:[[-255,-9,255,9],[-255,9,-140,32],[88,-150,112,-5],[140,-9,255,32]],
+  world:[[-255,-9,255,9],[-255,9,-140,32],[89.5,-150,110.5,-5],[140,-9,255,32],
+         [150,-34,186,-9],[214,-34,255,-9]],   // campus plaza, either side of the lab
 };
 for(const k in ROOMS){ const [cx,cz]=ROOMS[k]; WALK[k]=[[cx-7.4,cz-6.4,cx+7.4,cz+6.4]]; }
 function inWalk(scene,x,z){
