@@ -13,8 +13,10 @@ step. Open it in any browser and play.
 |---|---|
 | ◄ ► / A D | walk |
 | SPACE / W | jump |
-| E | talk · doors · advance dialogue |
+| E | talk · doors · advance dialogue · punch (in a fight) |
+| F | punch |
 | 1 2 3 (or ▲▼ + E) | dialogue choices |
+| I | bag / inventory |
 | J | quest log |
 | H | help |
 | M | sound on/off |
@@ -29,10 +31,14 @@ Progress autosaves to `localStorage` (sleep in your apartment to be safe).
 ## Chapter 1 content
 
 - **Five districts**: Memorial Park → Residential Block → Market Street → Transit Plaza → Meridian Research Campus
-- **Six story NPCs** + wandering pedestrians, each with branching dialogue
-- **Economy**: courier runs for VN-D0R (₣60), café shifts for Mara (₣50), freelance gigs after the main job
-- **Five quests**, ending with the apartment (enterable interior, sleep/save) and Dr. Okafor's wormhole briefing
-- Hand-authored pixel sprites, parallax neon skyline, holo-billboards, drones, hovercars, a robo-dog
+- **Six enterable interiors**: GreenGrid Market (groceries + "gardening equipment"), Kaiten-45 sushi bar (conveyor belt, eat at the counter), the Crooked Bean café, and Tanaka Towers — lobby, stairwell, second-floor hallway with cyberpunk neighbours (Vex the synth musician, D3X behind his intercom, POST-3 the mailbot), and your own Unit 4
+- **Survival**: hunger meter that drains over time — eat sushi, toasties, printed bentos; starving slows you down and drains HP. HP regenerates when fed; sleeping fully heals
+- **Combat**: a mugger ambushes you back in the park — fist-fight him (E/F to punch, back off when he winds up). His dropped chip funds your apartment. Shock Knuckles (+8 damage) sold at the market
+- **Inventory** (I): carry food, use it anywhere
+- **Ten story NPCs** + wandering pedestrians, all with branching dialogue
+- **Economy**: courier runs (₣60), café shifts (₣50), freelance gigs, ₣300 apartment
+- **Six quests**, ending with the apartment and Dr. Okafor's wormhole briefing
+- Hand-authored outlined-and-shaded pixel sprites, parallax neon skyline with searchlights, tower beacons, sagging cables, fire escapes, holo-billboards, crosswalks, puddle reflections, drones, hovercars, a robo-dog
 
 ## The science (it checks out)
 
