@@ -19,6 +19,11 @@ step. Open it in any browser and play.
 | H | help |
 | M | sound on/off |
 
+**On phones/tablets** touch controls appear automatically: ◄ ► to walk, **E** to
+talk/use, ▲ to jump, plus quest-log and sound buttons in the top-right. Tap the
+dialogue box (or the screen) to advance conversations, tap replies to choose them.
+The **⛶ button** enters fullscreen and locks landscape orientation.
+
 Progress autosaves to `localStorage` (sleep in your apartment to be safe).
 
 ## Chapter 1 content
@@ -53,5 +58,4 @@ machine can never take you earlier than the moment it was created — which is w
 - Chapter 2: *The Exotic Vacuum* — charge the Array, open the door to 2026
 - Playable 2026 city; travel freely between both years
 - Inventory, more jobs, apartment upgrades, NPC schedules
-- Touch controls for mobile
 - (Maybe) swap pixel art for painted/photographic art once the world is proven
