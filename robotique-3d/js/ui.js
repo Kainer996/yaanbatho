@@ -2,7 +2,7 @@
    ROBOTIQUE 3D — DOM UI module
    Dialogue box, HUD, panels, toasts, touch controls, fullscreen.
    ===================================================================== */
-import {S, ITEMS, QUESTS, activeQuest, SAYS} from './content.js?v=9';
+import {S, ITEMS, QUESTS, activeQuest, SAYS} from './content.js?v=10';
 
 export const TOUCH = ('ontouchstart' in window) ||
   (window.matchMedia && matchMedia('(pointer:coarse)').matches);

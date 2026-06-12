@@ -6,8 +6,8 @@ import * as THREE from 'three';
 import {S, save, loadSave, hasSave, clearSave, clamp, setCtx,
         ITEMS, hasItem, QUESTS, activeQuest, questTargetPos,
         DOORS, PARENT, SCENE_NAMES, ROOMS, NPCS, PEDS, SAYS, npcEntryNode,
-        INTRO, PICKUPS, humanCanvases, spriteCanvas, ROBOT_ROWS, PAL_ROBOT, PALS} from './content.js?v=9';
-import {UI, INPUT, TOUCH} from './ui.js?v=9';
+        INTRO, PICKUPS, humanCanvases, spriteCanvas, ROBOT_ROWS, PAL_ROBOT, PALS} from './content.js?v=10';
+import {UI, INPUT, TOUCH} from './ui.js?v=10';
 
 /* ---------------- renderer / scene ---------------- */
 const canvas=document.getElementById('gl');
@@ -870,6 +870,18 @@ function doSleep(){
   },1100);
 }
 
+/* ---------------- dev/test mode (?dev=1 in the URL — not for players) ---------------- */
+const DEV = typeof location!=='undefined' &&
+            new URLSearchParams(location.search).has('dev');
+let turbo=false;
+function toggleTurbo(){
+  if(!DEV) return;
+  turbo=!turbo;
+  UI.toast(turbo? '⚡ TURBO ON (dev)':'⚡ turbo off','quest');
+  const b=document.getElementById('btnTurbo');
+  if(b){ b.style.borderColor=turbo?'#ffd23f':''; b.style.color=turbo?'#ffd23f':''; }
+}
+
 /* ---------------- input actions ---------------- */
 let started=false;
 INPUT.onAction=(k)=>{
@@ -885,6 +897,7 @@ INPUT.onAction=(k)=>{
   if(k==='j') UI.togglePanel('questPanel');
   else if(k==='i') UI.togglePanel('invPanel');
   else if(k==='h') UI.togglePanel('helpPanel');
+  else if(k==='t') toggleTurbo();
   else if(k==='escape'){ UI.closePanels(); document.exitPointerLock&&document.exitPointerLock(); }
   else if(k==='f') punch();
   else if(k==='e'){
@@ -935,7 +948,7 @@ function update(dt){
   /* movement */
   if(!UI.dialogOpen && !UI.anyPanel() && !RIDE){
     const sprint=INPUT.keys['shift']? 1.7:1;
-    const sp=4.2*sprint*(S.hunger<=20?.7:1);
+    const sp=4.2*sprint*(S.hunger<=20?.7:1)*(turbo?8:1);
     let mx=0,mz=0;
     if(INPUT.keys['w']||INPUT.keys['arrowup']) mz-=1;
     if(INPUT.keys['s']||INPUT.keys['arrowdown']) mz+=1;
@@ -1069,6 +1082,13 @@ function playIntro(i){
 function boot(newGame){
   document.getElementById('title').style.display='none';
   document.getElementById('hud').style.display='flex';
+  if(DEV && !document.getElementById('btnTurbo')){
+    const b=document.createElement('button');
+    b.id='btnTurbo'; b.className='sbtn'; b.title='Turbo (dev)'; b.textContent='⚡';
+    b.addEventListener('click', toggleTurbo);
+    document.getElementById('sysBtns').prepend(b);
+    UI.toast('DEV MODE — ⚡/T toggles turbo','quest');
+  }
   if(TOUCH){
     document.getElementById('touchUI').style.display='block';
     document.getElementById('btnQuests').style.display='flex';
