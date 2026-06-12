@@ -199,7 +199,8 @@
       <button class="btn" id="btnContinue" style="display:none;">Continue</button>
       <div id="titleFoot">A side-scrolling open-world RPG.<br>
       The future below is built from real predictions &mdash; Kurzweil and company.<br>
-      The way home is built from real physics.</div>
+      The way home is built from real physics.<br>
+      <span style="opacity:.7">Extra pixel art: &ldquo;Warped City&rdquo; (CC0) &amp; &ldquo;Cyberpunk Street&rdquo; (CC-BY 3.0) by Luis Zuno / ansimuz</span></div>
     </div>
     <div id="fade"></div>
   </div>
@@ -2011,6 +2012,49 @@ function doSleep(){
 }
 
 /* =====================================================================
+   OPEN-SOURCE ART — Luis Zuno (@ansimuz)
+   "Warped City" (CC0) + "Cyberpunk Street Environment" (CC-BY 3.0)
+   Loaded progressively; the game falls back to procedural art if offline.
+   ===================================================================== */
+const ART={};
+const ART_FILES={ sky:'skyline-a.png', towers:'near-towers.png', fore:'street-fore.png',
+  hotel:'hotel-sign.png', ant:'antenna.png', vred:'v-red.png', vyel:'v-yellow.png', vpol:'v-police.png' };
+(function(){
+  const SEQ={ bneon:['banner-neon',4], bsushi:['banner-sushi',3], bbig:['banner-big',4],
+    bcoke:['banner-coke',3], bside:['banner-side',4], mon:['monitor',4], adrone:['drone',4] };
+  for(const k in SEQ) for(let i=1;i<=SEQ[k][1];i++) ART_FILES[k+i]=SEQ[k][0]+'-'+i+'.png';
+})();
+let ART_READY=false, artPending=Object.keys(ART_FILES).length;
+for(const k in ART_FILES){
+  const im=new Image();
+  im.onload=()=>{ ART[k]=im; if(--artPending===0) assetsReady(); };
+  im.onerror=()=>{ if(--artPending===0) assetsReady(); };
+  im.src='assets/'+ART_FILES[k];
+}
+function seq(k,n,rate){ return ART[k+(1+Math.floor(anim*rate)%n)]; }
+/* sub-rect cuts of the five towers in near-towers.png */
+const TOWER_CUTS=[[0,80],[84,90],[186,118],[308,80],[392,98]];
+const TOWER_POS=[{x:520,t:3},{x:935,t:0},{x:1120,t:1},{x:1555,t:4},{x:3060,t:2},{x:3330,t:3}];
+const BANNERS=[
+ {k:'bcoke',n:3,x:668,y:100,r:6},{k:'bcoke',n:3,x:1496,y:104,r:5},
+ {k:'mon',n:4,x:1852,y:126,r:5},{k:'bbig',n:4,x:2014,y:80,r:7},
+ {k:'bneon',n:4,x:2302,y:144,r:8},{k:'bsushi',n:3,x:2448,y:160,r:6},
+ {k:'bside',n:4,x:2884,y:106,r:8},{k:'mon',n:4,x:3136,y:118,r:5},
+ {k:'bneon',n:4,x:3492,y:116,r:8},
+];
+const FLYBYS=[{k:'vpol',y:12,v:-72,x:2200},{k:'vred',y:46,v:-40,x:3800},{k:'vyel',y:27,v:-56,x:900}];
+function assetsReady(){
+  if(!ART.sky || !ART.fore || !ART.towers) return;  // offline → keep procedural art
+  const g=NEAR.getContext('2d'); g.imageSmoothingEnabled=false;
+  // bake the warm street-level architecture into the world (Market St + Transit)
+  g.drawImage(ART.fore, 0,0,352,172, 1638,62, 352,172);
+  g.drawImage(ART.fore, 0,0,352,172, 2664,62, 352,172);
+  if(ART.ant){ g.drawImage(ART.ant, 1676,28); g.drawImage(ART.ant, 2948,32); }
+  if(ART.hotel) g.drawImage(ART.hotel, 1256,110);
+  ART_READY=true;
+}
+
+/* =====================================================================
    GAME LOOP
    ===================================================================== */
 let last=0, anim=0, started=false, lastZone=null, introStep=0;
@@ -2059,6 +2103,7 @@ function update(dt){
       if(p.x<p.a){p.x=p.a;p.dir=1;} if(p.x>p.b){p.x=p.b;p.dir=-1;}
     }
     for(const c of CARS){ c.x+=c.v; if(c.x>WORLD_W*.6) c.x=-30; if(c.x<-40) c.x=WORLD_W*.6; }
+    for(const f of FLYBYS){ f.x+=f.v*dt; if(f.x<-420) f.x=WORLD_W+400; }
     for(const d of DRONES){ d.x+=d.v; if(d.x>WORLD_W+20) d.x=-20; if(d.x<-20) d.x=WORLD_W+20; }
   }
 }
@@ -2083,7 +2128,10 @@ function render(){
   g.clearRect(0,0,W,H);
   if(S.scene!=='street'){ renderInterior(g); return; }
 
-  g.drawImage(SKY,0,0);
+  if(ART_READY){
+    const off=-Math.round(cam*.06)%128;
+    for(let x=off-128; x<W+130; x+=128) g.drawImage(ART.sky, x, -2);
+  } else g.drawImage(SKY,0,0);
   // far hovercars
   for(const c of CARS){ const sx=c.x-cam*.3; if(sx>-30&&sx<W+30) g.drawImage(c.spr, Math.round(sx), c.y); }
   g.drawImage(FAR, -Math.round(cam*.15)%FAR.width, 0);
@@ -2105,6 +2153,12 @@ function render(){
       g.fillStyle='rgba(255,70,90,.95)'; g.fillRect(bx,b.y,2,2);
       g.fillStyle='rgba(255,70,90,.16)'; g.fillRect(bx-2,b.y-2,6,6);
     }
+  }
+  // neon megatowers (Warped City, parallax .55)
+  if(ART_READY) for(const tp of TOWER_POS){
+    const c=TOWER_CUTS[tp.t], sx=tp.x-cam*.55;
+    if(sx<-c[1]-10||sx>W+10) continue;
+    g.drawImage(ART.towers, c[0],0,c[1],209, Math.round(sx),25, c[1],209);
   }
   g.drawImage(NEAR, -Math.round(cam), 0);
 
@@ -2161,6 +2215,11 @@ function render(){
     if(p.door==='apt'&&S.flags.hasKey){ g.fillStyle='#ffd23f';
       g.fillRect(sx-1, GROUND-44+Math.sin(anim*4)*2, 3, 3); }
   }
+  // animated neon banners & signs (Warped City)
+  if(ART_READY) for(const b of BANNERS){
+    const sx=b.x-cam; if(sx<-60||sx>W+60) continue;
+    const im=seq(b.k,b.n,b.r); if(im) g.drawImage(im, Math.round(sx), b.y);
+  }
 
   // fx
   for(const f of FX){
@@ -2177,6 +2236,16 @@ function render(){
   // drones
   for(const d of DRONES){ const sx=d.x-cam*.9; if(sx<-15||sx>W+15) continue;
     g.drawImage(SPR.drone[Math.floor(anim*10)%2], Math.round(sx), Math.round(d.y+Math.sin(anim*2+d.x)*3)); }
+  // hover-car flybys + the Array patrol drone (Warped City)
+  if(ART_READY){
+    for(const f of FLYBYS){
+      const sx=f.x-cam;
+      if(sx>-200&&sx<W+200 && ART[f.k])
+        g.drawImage(ART[f.k], Math.round(sx), Math.round(f.y+Math.sin(anim+f.x)*2));
+    }
+    const ddx=3652-cam, dim=seq('adrone',4,8);
+    if(dim && ddx>-70&&ddx<W+70) g.drawImage(dim, Math.round(ddx), Math.round(78+Math.sin(anim*1.2)*6));
+  }
 
   // robo-dog trotting around the park
   const dogX = 300+Math.sin(anim*.25)*140;

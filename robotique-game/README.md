@@ -59,6 +59,20 @@ machine can never take you earlier than the moment it was created — which is w
 2026, the year the throat opened, is exactly as far back as you can go. Hawking's
 **chronology protection conjecture** is the standing threat in the lore.
 
+## Art credits
+
+Most art is original to this project. The city is additionally dressed with
+open-source pixel art by **Luis Zuno (@ansimuz)** — see `assets/LICENSES.txt`:
+
+- **Warped City** ([OpenGameArt](https://opengameart.org/content/warped-city), CC0):
+  sunset skyline, neon megatowers, animated banners/signs (incl. the sushi bar
+  banner and HOTEL sign), hover-cars, patrol drone
+- **Cyberpunk Street Environment** ([OpenGameArt](https://opengameart.org/content/cyberpunk-street-environment), CC-BY 3.0):
+  the warm street-level architecture on Market Street and Transit Plaza
+
+The game still runs fully offline — if the asset files can't load it falls
+back to the original procedural art.
+
 ## Roadmap
 
 - Chapter 2: *The Exotic Vacuum* — charge the Array, open the door to 2026
