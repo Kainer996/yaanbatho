@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ROBOTIQUE 3D — Chapter 1: Waking in 2045</title>
+<style>
+  :root{
+    --ink:#e8e6f0; --dim:#8b8aa6; --accent:#43ffd9; --accent2:#ff4f9a; --gold:#ffd23f;
+    --panel:rgba(10,12,28,.92); --border:#2e3560;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%; background:#05060f; overflow:hidden; overscroll-behavior:none;}
+  body{font-family:'Courier New', monospace; color:var(--ink);
+    touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+  #gl{position:fixed; inset:0; display:block;}
+  #vignette{position:fixed; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 58%, rgba(2,3,10,.5) 100%);}
+
+  /* crosshair */
+  #xhair{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none;
+    width:6px; height:6px; border:1px solid rgba(232,230,240,.6); border-radius:50%; z-index:5;}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed; top:max(8px, env(safe-area-inset-top)); left:10px; right:10px;
+    display:none; justify-content:space-between; align-items:flex-start; pointer-events:none;
+    font-size:13px; letter-spacing:.5px; z-index:10;}
+  .chip{background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:4px 10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.5); white-space:nowrap;}
+  #credits{color:var(--gold); font-weight:bold;}
+  #clock{color:var(--dim);}
+  #hudL{display:flex; gap:8px; flex-wrap:wrap;}
+  .bar{display:inline-block; width:74px; height:7px; background:#141832; border:1px solid #2e3560;
+    border-radius:3px; overflow:hidden; vertical-align:middle; margin-left:6px;}
+  .bar i{display:block; height:100%; width:100%;}
+  #hpbar i{background:linear-gradient(90deg,#ff4f6a,#ff8a5a);}
+  #hungbar i{background:linear-gradient(90deg,#ffd23f,#ff9a3f);}
+  .chip .ic{font-size:11px; color:var(--dim);}
+  #tracker{max-width:46%; text-align:right;}
+  #tracker .qt{color:var(--accent); font-weight:bold; text-transform:uppercase; font-size:11px;}
+  #tracker .qo{color:var(--ink); font-size:12px; margin-top:2px;}
+  #hint{position:fixed; bottom:8px; left:50%; transform:translateX(-50%); font-size:12px;
+    color:var(--dim); background:var(--panel); border:1px solid var(--border); border-radius:4px;
+    padding:3px 12px; pointer-events:none; white-space:nowrap; display:none; z-index:10;}
+
+  /* interact prompt */
+  #prompt{position:fixed; left:50%; top:58%; transform:translateX(-50%); display:none; pointer-events:none;
+    background:var(--panel); border:1px solid var(--accent); color:var(--accent); font-size:13px;
+    font-weight:bold; padding:3px 10px; border-radius:3px; box-shadow:0 0 10px rgba(67,255,217,.35); z-index:10;}
+
+  /* ---------- dialogue ---------- */
+  #dlg{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); width:min(86%,640px);
+    background:var(--panel); border:2px solid var(--border); border-radius:6px; padding:12px 16px 10px;
+    display:none; box-shadow:0 8px 30px rgba(0,0,0,.7); z-index:20;}
+  #dlgName{color:var(--accent); font-weight:bold; font-size:13px; text-transform:uppercase;
+    letter-spacing:1px; margin-bottom:6px;}
+  #dlgName.player{color:var(--accent2);}
+  #dlgText{font-size:14px; line-height:1.5; min-height:42px; white-space:pre-wrap;}
+  #dlgChoices{margin-top:8px; display:none;}
+  .choice{padding:4px 8px; font-size:13px; color:var(--ink); cursor:pointer; border-radius:3px;}
+  .choice .key{color:var(--gold); font-weight:bold; margin-right:6px;}
+  .choice.sel{background:rgba(67,255,217,.12); outline:1px solid rgba(67,255,217,.4);}
+  #dlgMore{position:absolute; right:12px; bottom:6px; color:var(--dim); font-size:11px;
+    animation:blink 1s steps(2) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* ---------- toasts ---------- */
+  #toasts{position:fixed; top:54px; left:50%; transform:translateX(-50%); display:flex;
+    flex-direction:column; gap:6px; align-items:center; pointer-events:none; z-index:15;}
+  .toast{background:var(--panel); border:1px solid var(--gold); color:var(--gold); font-size:13px;
+    padding:5px 14px; border-radius:4px; box-shadow:0 0 14px rgba(255,210,63,.25);
+    animation:toastIn .25s ease-out; text-align:center;}
+  .toast.quest{border-color:var(--accent); color:var(--accent); box-shadow:0 0 14px rgba(67,255,217,.25);}
+  .toast.zone{border-color:var(--accent2); color:var(--accent2); letter-spacing:3px;
+    text-transform:uppercase; font-size:12px;}
+  @keyframes toastIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1;}}
+  .toast.out{transition:opacity .5s; opacity:0;}
+
+  /* ---------- panels ---------- */
+  .panel{position:fixed; inset:0; background:rgba(3,4,12,.82); display:none;
+    align-items:center; justify-content:center; z-index:30;}
+  .panelBox{width:min(88%,560px); max-height:80%; overflow:auto; background:var(--panel);
+    border:2px solid var(--border); border-radius:8px; padding:18px 22px;}
+  .panelBox h2{color:var(--accent); font-size:15px; letter-spacing:2px; text-transform:uppercase;
+    margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;}
+  .qitem{margin-bottom:12px;}
+  .qitem .qn{color:var(--gold); font-weight:bold; font-size:13px;}
+  .qitem .qd{color:var(--dim); font-size:12px; margin-top:2px; line-height:1.45;}
+  .qitem .qs{font-size:12px; margin-top:2px;}
+  .qitem.done .qn{color:var(--dim); text-decoration:line-through;}
+  .qitem.done .qs{color:var(--accent);}
+  .kv{display:flex; gap:10px; font-size:13px; margin-bottom:6px;}
+  .kv .k{color:var(--gold); font-weight:bold; min-width:90px;}
+  .panelBox .closehint{margin-top:12px; color:var(--dim); font-size:11px; text-align:center;}
+  .btn{display:block; margin:6px auto; background:var(--panel); border:1px solid var(--border);
+    color:var(--ink); font-family:inherit; font-size:14px; letter-spacing:2px; padding:9px 34px;
+    cursor:pointer; border-radius:4px; text-transform:uppercase;}
+  .btn:hover{border-color:var(--accent); color:var(--accent); box-shadow:0 0 14px rgba(67,255,217,.3);}
+
+  /* ---------- title / ending ---------- */
+  #title{position:fixed; inset:0; z-index:40; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; background:rgba(3,4,12,.62); text-align:center;}
+  #titleLogo{font-size:clamp(34px,7vw,64px); font-weight:bold; letter-spacing:.18em; color:var(--ink);
+    text-shadow:0 0 18px rgba(67,255,217,.8), 0 0 50px rgba(255,79,154,.5); margin-bottom:4px;}
+  #titleSub{color:var(--accent2); font-size:13px; letter-spacing:6px; text-transform:uppercase;
+    margin-bottom:30px; text-shadow:0 0 12px rgba(255,79,154,.6);}
+  #nameRow{margin-bottom:18px; font-size:13px; color:var(--dim);}
+  #nameInput{background:#0a0d20; border:1px solid var(--border); color:var(--ink); padding:5px 10px;
+    font-family:inherit; font-size:14px; width:140px; text-align:center; border-radius:3px; outline:none;
+    user-select:text; -webkit-user-select:text;}
+  #nameInput:focus{border-color:var(--accent);}
+  #titleFoot{margin-top:26px; color:var(--dim); font-size:11px; line-height:1.7;}
+  #fade{position:fixed; inset:0; background:#000; opacity:1; pointer-events:none;
+    transition:opacity 1.2s ease; z-index:25;}
+  #ending .panelBox{text-align:center; border-color:var(--accent);}
+  #ending h2{border:none;}
+  #ending p{font-size:13px; line-height:1.7; color:var(--ink); margin-bottom:10px; text-align:left;}
+  #ending .sig{color:var(--accent2); letter-spacing:3px; font-size:12px; margin-top:14px;}
+
+  /* ---------- system buttons ---------- */
+  #sysBtns{position:fixed; top:max(8px, env(safe-area-inset-top)); right:max(10px, env(safe-area-inset-right));
+    display:flex; gap:8px; z-index:50;}
+  .sbtn{width:40px; height:40px; border-radius:6px; background:var(--panel); border:1px solid var(--border);
+    color:var(--dim); font-size:18px; font-family:inherit; display:flex; align-items:center;
+    justify-content:center; cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation;}
+  .sbtn:active{border-color:var(--accent); color:var(--accent);}
+
+  /* ---------- touch controls ---------- */
+  #touchUI{position:fixed; inset:0; pointer-events:none; display:none; z-index:45;}
+  #stick{position:absolute; pointer-events:auto; left:max(18px, env(safe-area-inset-left));
+    bottom:max(20px, env(safe-area-inset-bottom)); width:120px; height:120px; border-radius:50%;
+    background:rgba(14,18,42,.4); border:2px solid var(--border); touch-action:none;}
+  #knob{position:absolute; left:50%; top:50%; width:48px; height:48px; border-radius:50%;
+    background:rgba(67,255,217,.18); border:2px solid rgba(67,255,217,.5);
+    transform:translate(-50%,-50%); pointer-events:none;}
+  .tbtn{position:absolute; pointer-events:auto; width:70px; height:70px; border-radius:50%;
+    background:rgba(14,18,42,.55); border:2px solid var(--border); color:var(--dim);
+    font-size:20px; font-family:inherit; display:flex; align-items:center; justify-content:center;
+    user-select:none; -webkit-user-select:none; touch-action:none;}
+  .tbtn.on, .tbtn:active{border-color:var(--accent); color:var(--accent); background:rgba(67,255,217,.12);}
+  .tbtn small{font-size:9px; letter-spacing:1px; position:absolute; bottom:7px; left:0; right:0;
+    text-align:center; pointer-events:none;}
+  #tA{right:max(18px, env(safe-area-inset-right)); bottom:max(20px, env(safe-area-inset-bottom));
+    width:78px; height:78px; border-color:rgba(67,255,217,.55); color:var(--accent);}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+<div id="xhair"></div>
+<div id="hud">
+  <div id="hudL">
+    <div class="chip" id="credits">&#8353; 0</div>
+    <div class="chip" id="clock">19:05 &middot; JUN 12 2045</div>
+    <div class="chip"><span class="ic">HP</span><span class="bar" id="hpbar"><i></i></span></div>
+    <div class="chip"><span class="ic">FOOD</span><span class="bar" id="hungbar"><i></i></span></div>
+  </div>
+  <div class="chip" id="tracker"><div class="qt"></div><div class="qo"></div></div>
+</div>
+<div id="prompt"></div>
+<div id="toasts"></div>
+<div id="hint">WASD move &middot; mouse look (click to capture) &middot; E talk/use &middot; F punch &middot; I bag &middot; J quests &middot; H help</div>
+<div id="dlg">
+  <div id="dlgName"></div>
+  <div id="dlgText"></div>
+  <div id="dlgChoices"></div>
+  <div id="dlgMore">E &#9654;</div>
+</div>
+<div class="panel" id="questPanel"><div class="panelBox">
+  <h2>Quest Log</h2><div id="questList"></div>
+  <div class="closehint">J / ESC / tap outside to close</div>
+</div></div>
+<div class="panel" id="invPanel"><div class="panelBox">
+  <h2>Bag</h2><div id="invList"></div>
+  <div class="closehint">I / ESC / tap outside to close</div>
+</div></div>
+<div class="panel" id="helpPanel"><div class="panelBox">
+  <h2>Field Manual</h2>
+  <div class="kv"><span class="k">W A S D</span><span>walk (hold SHIFT to jog)</span></div>
+  <div class="kv"><span class="k">MOUSE</span><span>look — click the world once to capture the cursor</span></div>
+  <div class="kv"><span class="k">E</span><span>talk &middot; doors &middot; advance dialogue &middot; punch in a fight</span></div>
+  <div class="kv"><span class="k">F</span><span>punch</span></div>
+  <div class="kv"><span class="k">1 2 3</span><span>dialogue replies (or &#9650;&#9660; + E)</span></div>
+  <div class="kv"><span class="k">I / J</span><span>bag / quest log</span></div>
+  <div class="kv"><span class="k">TOUCH</span><span>left stick walks &middot; drag right side to look &middot; big E button talks/punches</span></div>
+  <div class="kv"><span class="k">GOAL</span><span>follow the light pillar &mdash; it marks your current objective</span></div>
+  <div class="closehint">H / ESC / tap outside to close</div>
+</div></div>
+<div class="panel" id="ending"><div class="panelBox">
+  <h2>END OF CHAPTER 1</h2>
+  <div id="endText"></div>
+  <button class="btn" id="btnEndClose">Keep exploring 2045</button>
+  <div class="sig">ROBOTIQUE &middot; CHAPTER 2: THE EXOTIC VACUUM &middot; COMING SOON</div>
+</div></div>
+<div id="title">
+  <div id="titleLogo">ROBOTIQUE</div>
+  <div id="titleSub">3D &middot; Chapter 1 &middot; Waking in 2045</div>
+  <div id="nameRow">YOUR NAME &nbsp;<input id="nameInput" maxlength="12" value="Yaan"></div>
+  <button class="btn" id="btnNew">New Game</button>
+  <button class="btn" id="btnContinue" style="display:none;">Continue</button>
+  <div id="titleFoot">A first-person open-world RPG in the New Meridian of 2045.<br>
+  Built from real futurist predictions and real wormhole physics.<br>
+  <span style="opacity:.7">Extra pixel art: &ldquo;Warped City&rdquo; (CC0) &amp; &ldquo;Cyberpunk Street&rdquo; (CC-BY 3.0) by Luis Zuno / ansimuz</span></div>
+</div>
+<div id="fade"></div>
+<div id="sysBtns">
+  <button class="sbtn" id="btnQuests" style="display:none;" title="Quest log">&#9776;</button>
+  <button class="sbtn" id="btnBag" style="display:none;" title="Bag">&#9641;</button>
+  <button class="sbtn" id="btnFS" title="Fullscreen">&#x26F6;</button>
+</div>
+<div id="touchUI">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tbtn" id="tA">E<small>USE</small></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./js/three.module.min.js" } }
+</script>
+<script type="module" src="./js/game.js"></script>
+</body>
+</html>
