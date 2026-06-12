@@ -146,6 +146,7 @@
 </head>
 <body>
 <canvas id="gl"></canvas>
+<div id="dayglow" style="position:fixed; inset:0; pointer-events:none; mix-blend-mode:screen; background:#86a6cb; opacity:0; z-index:2;"></div>
 <div id="vignette"></div>
 <div id="xhair"></div>
 <div id="hud">
@@ -200,7 +201,7 @@
   <button class="btn" id="btnContinue" style="display:none;">Continue</button>
   <div id="titleFoot">A first-person open-world RPG in the New Meridian of 2045.<br>
   Built from real futurist predictions and real wormhole physics.<br>
-  <span style="opacity:.7">Extra pixel art: &ldquo;Warped City&rdquo; (CC0) &amp; &ldquo;Cyberpunk Street&rdquo; (CC-BY 3.0) by Luis Zuno / ansimuz &middot; build 10</span></div>
+  <span style="opacity:.7">Extra pixel art: &ldquo;Warped City&rdquo; (CC0) &amp; &ldquo;Cyberpunk Street&rdquo; (CC-BY 3.0) by Luis Zuno / ansimuz &middot; build 11</span></div>
 </div>
 <div id="fade"></div>
 <div id="sysBtns">
@@ -250,8 +251,8 @@ window.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 <script type="importmap">
-{ "imports": { "three": "./js/three.module.min.js?v=10" } }
+{ "imports": { "three": "./js/three.module.min.js?v=11" } }
 </script>
-<script type="module" src="./js/game.js?v=10"></script>
+<script type="module" src="./js/game.js?v=11"></script>
 </body>
 </html>

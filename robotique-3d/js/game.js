@@ -5,9 +5,9 @@
 import * as THREE from 'three';
 import {S, save, loadSave, hasSave, clearSave, clamp, setCtx,
         ITEMS, hasItem, QUESTS, activeQuest, questTargetPos,
-        DOORS, PARENT, SCENE_NAMES, ROOMS, NPCS, PEDS, SAYS, npcEntryNode,
-        INTRO, PICKUPS, humanCanvases, spriteCanvas, ROBOT_ROWS, PAL_ROBOT, PALS} from './content.js?v=10';
-import {UI, INPUT, TOUCH} from './ui.js?v=10';
+        DOORS, PARENT, SCENE_NAMES, ROOMS, NPCS, PEDS, SAYS, npcEntryNode, npcPresent,
+        INTRO, PICKUPS, humanCanvases, spriteCanvas, ROBOT_ROWS, PAL_ROBOT, PALS} from './content.js?v=11';
+import {UI, INPUT, TOUCH} from './ui.js?v=11';
 
 /* ---------------- renderer / scene ---------------- */
 const canvas=document.getElementById('gl');
@@ -102,7 +102,8 @@ const world=new THREE.Group(); scene.add(world);
   lawn.rotation.x=-Math.PI/2; lawn.position.set(-200,.025,18); world.add(lawn);
 }
 
-/* sky: stars + moon */
+/* sky: stars + moon + sun (driven by the day/night cycle) */
+let stars, moon, sun;
 {
   const starGeo=new THREE.BufferGeometry();
   const pos=[];
@@ -111,15 +112,58 @@ const world=new THREE.Group(); scene.add(world);
     pos.push(Math.cos(a)*Math.cos(e)*r, Math.sin(e)*r, Math.sin(a)*Math.cos(e)*r);
   }
   starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
-  const stars=new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xc8d2ff, size:1.6, sizeAttenuation:false, fog:false}));
+  stars=new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xc8d2ff, size:1.6,
+    sizeAttenuation:false, fog:false, transparent:true, opacity:1}));
   scene.add(stars);
   const mc=document.createElement('canvas'); mc.width=64; mc.height=64;
   const mg=mc.getContext('2d');
   mg.fillStyle='#f4ead8'; mg.beginPath(); mg.arc(32,32,26,0,7); mg.fill();
   mg.fillStyle='#d8c8b0'; mg.beginPath(); mg.arc(22,24,6,0,7); mg.fill();
   mg.beginPath(); mg.arc(40,40,4,0,7); mg.fill();
-  const moon=new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(mc), fog:false}));
+  moon=new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(mc), fog:false, transparent:true}));
   moon.scale.set(34,34,1); moon.position.set(140,200,-260); scene.add(moon);
+  const sc=document.createElement('canvas'); sc.width=64; sc.height=64;
+  const sg=sc.getContext('2d');
+  sg.fillStyle='#ffd27a'; sg.beginPath(); sg.arc(32,32,24,0,7); sg.fill();
+  sg.fillStyle='#fff4d8'; sg.beginPath(); sg.arc(32,28,16,0,7); sg.fill();
+  sun=new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(sc), fog:false, transparent:true}));
+  sun.scale.set(44,44,1); sun.visible=false; scene.add(sun);
+}
+
+/* ---------------- day/night cycle ---------------- */
+const SKY_N=new THREE.Color(0x070a1c), SKY_D=new THREE.Color(0x86a9cd), SKY_K=new THREE.Color(0xb05c3e);
+const FOG_N=new THREE.Color(0x0a0c20), FOG_D=new THREE.Color(0x97b3d2), FOG_K=new THREE.Color(0xa06246);
+function dayFactor(){            // 0 = night, 1 = full day (dawn 5-7h, dusk 18-20h)
+  const h=S.minutes/60;
+  return Math.min(THREE.MathUtils.smoothstep(h,5,7), 1-THREE.MathUtils.smoothstep(h,18,20));
+}
+function duskFactor(){           // golden-hour bump around 06:00 and 19:00
+  const h=S.minutes/60;
+  return Math.max(Math.exp(-((h-6)**2)/.7), Math.exp(-((h-19)**2)/.7));
+}
+const _sky=new THREE.Color();
+function applyDayNight(){
+  const dT=dayFactor(), kT=duskFactor();
+  _sky.copy(SKY_N).lerp(SKY_D,dT).lerp(SKY_K,kT*.45);
+  scene.background.copy(_sky);
+  scene.fog.color.copy(FOG_N).lerp(FOG_D,dT).lerp(FOG_K,kT*.4);
+  stars.material.opacity=Math.max(0,1-dT*1.4);
+  /* sun arc 06→20h, moon arc 19→07h */
+  const h=S.minutes/60;
+  const st=(h-6)/14;
+  sun.visible = st>0 && st<1;
+  if(sun.visible) sun.position.set(-300+st*600, Math.sin(st*Math.PI)*230+15, -250);
+  const mt=((h>=19? h-19 : h+5))/12;
+  moon.visible = mt>0 && mt<1;
+  if(moon.visible){ moon.position.set(300-mt*600, Math.sin(mt*Math.PI)*210+20, -260);
+    moon.material.opacity=Math.max(.15,1-dT); }
+  /* daylight wash over the unlit neon city */
+  const glow=document.getElementById('dayglow');
+  if(glow){
+    const r=Math.round(134+kT*90), gC=Math.round(166-kT*60), b=Math.round(203-kT*110);
+    glow.style.background='rgb('+r+','+gC+','+b+')';
+    glow.style.opacity=(dT*.5 + kT*.14).toFixed(3);
+  }
 }
 
 /* buildings along the main street */
@@ -840,6 +884,7 @@ function nearestInteract(){
     const n=NPCS[k];
     if((n.scene||'world')!==S.scene) continue;
     if(MUG.active) continue;
+    if(!npcPresent(n)) continue;            // off shift — not on the street right now
     consider(n.x,n.z, n.poi? 'intercom — '+n.name : 'talk — '+n.name, ()=>{
       S.flags.talked[k]=true; UI.open(npcEntryNode(k));
     });
@@ -858,6 +903,7 @@ function doSleep(){
   UI.fadeTo(true,900);
   setTimeout(()=>{
     S.minutes=7*60+30;
+    S.day=(S.day||1)+1;                    // wake the next morning
     S.flags.shiftCooldown=0;
     S.hp=S.maxHp; S.hunger=clamp(S.hunger-15,5,100);
     if(!S.flags.slept){
@@ -881,6 +927,24 @@ function toggleTurbo(){
   const b=document.getElementById('btnTurbo');
   if(b){ b.style.borderColor=turbo?'#ffd23f':''; b.style.color=turbo?'#ffd23f':''; }
 }
+const TIME_PRESETS=[0,1,60,360];           // paused · normal · 1 day ≈ 48s · 1 day ≈ 8s
+let timeIdx=1;
+function cycleTime(d){
+  if(!DEV) return;
+  timeIdx=(timeIdx+d+TIME_PRESETS.length)%TIME_PRESETS.length;
+  const x=TIME_PRESETS[timeIdx];
+  UI.toast('⏱ time '+(x===0?'PAUSED':'×'+x)+' (dev)','quest');
+  const b=document.getElementById('btnTime');
+  if(b) b.textContent=['⏸','▶','⏩','⏭'][timeIdx];
+}
+function hopHour(){
+  if(!DEV) return;
+  S.minutes+=60;
+  if(S.minutes>=1440){ S.minutes-=1440; S.day=(S.day||1)+1; }
+  UI.refreshHUD();
+  UI.toast('⏱ +1h → '+String(Math.floor(S.minutes/60)).padStart(2,'0')+':'+
+    String(S.minutes%60).padStart(2,'0')+' (dev)','quest');
+}
 
 /* ---------------- input actions ---------------- */
 let started=false;
@@ -898,6 +962,9 @@ INPUT.onAction=(k)=>{
   else if(k==='i') UI.togglePanel('invPanel');
   else if(k==='h') UI.togglePanel('helpPanel');
   else if(k==='t') toggleTurbo();
+  else if(k===']') cycleTime(1);
+  else if(k==='[') cycleTime(-1);
+  else if(k==='n') hopHour();
   else if(k==='escape'){ UI.closePanels(); document.exitPointerLock&&document.exitPointerLock(); }
   else if(k==='f') punch();
   else if(k==='e'){
@@ -971,8 +1038,17 @@ function update(dt){
   camKick=Math.max(0,camKick-dt*4);
   if(S.flags.shiftCooldown>0) S.flags.shiftCooldown=Math.max(0,S.flags.shiftCooldown-dt/60);
 
-  /* clock + hunger */
-  S._clk=(S._clk||0)+dt; if(S._clk>2){ S._clk=0; S.minutes=(S.minutes+1)%(24*60); UI.refreshHUD(); }
+  /* game clock: presets are dev-adjustable; 1x = 1 game-minute per 2s */
+  S._clk=(S._clk||0)+dt*TIME_PRESETS[timeIdx];
+  let hudDirty=false;
+  while(S._clk>2){
+    S._clk-=2;
+    S.minutes++;
+    if(S.minutes>=24*60){ S.minutes-=24*60; S.day=(S.day||1)+1; }
+    hudDirty=true;
+  }
+  if(hudDirty) UI.refreshHUD();
+  applyDayNight();
   S._hug=(S._hug||0)+dt;
   if(S._hug>10){ S._hug=0; S.hunger=clamp(S.hunger-1,0,100);
     if(S.hunger===24) UI.toast('You are getting hungry. Find food.');
@@ -985,6 +1061,12 @@ function update(dt){
   /* zone toast */
   const z=zoneAt();
   if(z && z!==lastZone){ lastZone=z; UI.toast(z,'zone'); }
+
+  /* NPC shifts: night workers etc. */
+  for(const k in BB){
+    const e=BB[k];
+    e.sprite.visible=npcPresent(e.def);
+  }
 
   /* peds */
   if(S.scene==='world') for(const p of PEDS){
@@ -1083,11 +1165,14 @@ function boot(newGame){
   document.getElementById('title').style.display='none';
   document.getElementById('hud').style.display='flex';
   if(DEV && !document.getElementById('btnTurbo')){
-    const b=document.createElement('button');
-    b.id='btnTurbo'; b.className='sbtn'; b.title='Turbo (dev)'; b.textContent='⚡';
-    b.addEventListener('click', toggleTurbo);
-    document.getElementById('sysBtns').prepend(b);
-    UI.toast('DEV MODE — ⚡/T toggles turbo','quest');
+    const sys=document.getElementById('sysBtns');
+    const mk=(id,txt,title,fn)=>{ const b=document.createElement('button');
+      b.id=id; b.className='sbtn'; b.title=title; b.textContent=txt;
+      b.addEventListener('click', fn); sys.prepend(b); return b; };
+    mk('btnTurbo','⚡','Turbo (dev)', toggleTurbo);
+    const bh=mk('btnHour','+1h','Skip an hour (dev)', hopHour); bh.style.fontSize='12px';
+    mk('btnTime','▶','Time speed (dev)', ()=>cycleTime(1));
+    UI.toast('DEV MODE — ⚡ turbo · ▶ time speed · +1h skip','quest');
   }
   if(TOUCH){
     document.getElementById('touchUI').style.display='block';

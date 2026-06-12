@@ -15,7 +15,7 @@ export const S = {
   scene:'world',
   name:'Yaan',
   x:-200, z:8, yaw:-Math.PI/2,            // wake at the park bench, facing east
-  credits:0, hp:100, maxHp:100, hunger:70,
+  credits:0, hp:100, maxHp:100, hunger:70, day:1,
   punchCd:0, punchT:0,
   minutes: 19*60+5,
   inv:{},
@@ -27,7 +27,7 @@ export const S = {
 };
 export const SAVE_KEY='robotique_3d_ch1';
 export function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({
-  name:S.name,x:S.x,z:S.z,yaw:S.yaw,credits:S.credits,minutes:S.minutes,
+  name:S.name,x:S.x,z:S.z,yaw:S.yaw,credits:S.credits,minutes:S.minutes,day:S.day,
   flags:S.flags,quests:S.quests,scene:S.scene,hp:S.hp,hunger:S.hunger,inv:S.inv
 })); }catch(e){} }
 export function loadSave(){
@@ -35,7 +35,7 @@ export function loadSave(){
     const d=JSON.parse(localStorage.getItem(SAVE_KEY));
     if(!d) return false;
     Object.assign(S,{name:d.name,x:d.x,z:d.z,yaw:d.yaw||0,credits:d.credits,
-      minutes:d.minutes,scene:d.scene||'world',hp:d.hp??100,hunger:d.hunger??70,inv:d.inv||{}});
+      minutes:d.minutes,day:d.day??1,scene:d.scene||'world',hp:d.hp??100,hunger:d.hunger??70,inv:d.inv||{}});
     S.flags=Object.assign(S.flags,d.flags); S.quests=d.quests;
     return true;
   }catch(e){ return false; }
@@ -150,9 +150,9 @@ export const NPCS = {
   dex:   { x:240,  z:1005, name:'Unit 3 Intercom', poi:true, scene:'hall' },
   dee:   { x:363,  z:996,  name:'Dee',        pal:'dee',   scene:'static' },
   crow:  { x:356,  z:998,  name:'Crow',       pal:'crow',  scene:'static' },
-  roxy:  { x:94,   z:-60,  name:'Roxy',       pal:'roxy' },
-  sable: { x:106,  z:-95,  name:'Sable',      pal:'sable' },
-  sef:   { x:97,   z:-126, name:'Big Sef',    pal:'sef' },
+  roxy:  { x:94,   z:-60,  name:'Roxy',       pal:'roxy',  hours:[19,6] },
+  sable: { x:106,  z:-95,  name:'Sable',      pal:'sable', hours:[19,6] },
+  sef:   { x:97,   z:-126, name:'Big Sef',    pal:'sef',   hours:[18,7] },
   juno:  { x:-172, z:14,   name:'Juno',       pal:'vex' },
   skewer:{ x:124,  z:6.5,  name:'SKW-R 7',    robot:true },
   tomas: { x:222,  z:-14,  name:'Tomas',      pal:'ped1' },
@@ -624,6 +624,11 @@ export function genericGigDeliver(key){
   N(id, NPCS[key].name, "Package for me? ...Signed. Tell the noodle robot his logistics empire grows by the day.",
     {fx(){ deliveryDone(); }});
   return id;
+}
+export function npcPresent(n){
+  if(!n.hours) return true;
+  const h=S.minutes/60, [a,b]=n.hours;
+  return a<b ? (h>=a&&h<b) : (h>=a||h<b);
 }
 export function npcEntryNode(key){
   const f=S.flags;

@@ -60,6 +60,19 @@ Nothing in the code assumes a server: all paths are relative, storage is
 `localStorage`, input already handles touch, and fullscreen/orientation-lock
 are wired.
 
+## Time
+
+A full **day/night cycle** runs on the in-game clock (HUD shows time and day
+count; one game-day ≈ 48 real minutes). The sun and moon arc across the sky,
+stars fade in, dawn and dusk get a golden-hour wash, and the city's neon takes
+over after dark. **Time gates content**: Velvet Row works nights — Roxy, Sable
+and Big Sef are only out between evening and dawn. Sleeping advances to the
+next morning. Quests can hook the clock (`npcPresent`, hour-based schedules).
+
+Dev mode (`?dev=1`) adds time controls next to the turbo button: **▶ cycles
+time speed** (paused / ×1 / ×60 / ×360 ≈ an 8-second day) and **+1h skips an
+hour** — keys `[` `]` and `N` on desktop.
+
 ## City life
 
 - **Flying cars**: thirteen hover-cars (including two air-taxis) stream along
