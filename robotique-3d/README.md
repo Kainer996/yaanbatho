@@ -60,6 +60,27 @@ Nothing in the code assumes a server: all paths are relative, storage is
 `localStorage`, input already handles touch, and fullscreen/orientation-lock
 are wired.
 
+## City life
+
+- **Flying cars**: thirteen hover-cars (including two air-taxis) stream along
+  lit lanes above both sides of the street, plus crossing traffic over Velvet
+  Row. **Sky-Cab pads** at Memorial Park, Transit Plaza and the Research
+  Campus fly you across the city — the first courier hop is free, and Otto,
+  the cab's AI, has opinions about when you'll own a flying car of your own.
+  (Player-owned flying cars are on the roadmap — Otto promised.)
+- **Street food**: VN-D0R sells noodle bowls, SKW-R 7 grills vat-yakitori at
+  Transit Plaza, and every interior serves something.
+- **Item pickups**: ten glowing pickups hidden around the world and interiors —
+  food and anonymous credit chips. Walk into them; they go straight to the bag.
+- **Furnished interiors**: every room is dressed — stocked shelves, freezer
+  doors and a living hydroponic wall at GreenGrid; tables, pastry case and a
+  city window at the Bean; conveyor plates, lanterns and a bottle wall at
+  Kaiten-45; mailboxes, sofa and dead elevator in the lobby; numbered doors on
+  Floor 2; a kitchenette, wardrobe and skyline window in Unit 4; bottle wall,
+  booth and jukebox at The Static.
+- **Seven more citizens**: Juno the busker, SKW-R 7, Tomas the tourist, Hex
+  the loop tech, Nia, Goro, and Pim the bar poet.
+
 ## Chapter 1 content
 
 Identical beats to the 2D version: wake in the park → Elias → VN-D0R's three

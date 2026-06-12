@@ -22,7 +22,7 @@ export const S = {
   flags:{ intro:false, metElias:false, metVendo:false, deliveries:0,
           carrying:null, hasKey:false, slept:false, chapterDone:false,
           shiftCooldown:0, gigTarget:null, parkCue:false, muggerDown:false,
-          drop:null, roxyMet:false, vexMet:false, talked:{} },
+          drop:null, roxyMet:false, vexMet:false, rodeCab:false, picked:{}, talked:{} },
   quests:{},
 };
 export const SAVE_KEY='robotique_3d_ch1';
@@ -65,7 +65,7 @@ export const QUESTS = {
     obj:()=> S.flags.carrying? 'Deliver the '+S.flags.carrying.what+' to '+S.flags.carrying.toName
       : 'Return to VN-D0R for the next package ('+S.flags.deliveries+'/3 delivered)' },
   parkEcho:{ title:'Echoes in the Park',
-    desc:'A message relayed through VN-D0R: Elias wants to see you back at the Memorial Park bench. The park is darker at this hour.',
+    desc:'A message relayed through VN-D0R: Elias wants to see you back at the Memorial Park bench. It’s a long way west — the Sky-Cab pads fly couriers across the city (first hop free).',
     obj:()=> S.flags.drop? 'Pick up the dropped credit chip'
       : S.flags.muggerDown? 'Talk to Elias'
       : S.flags.parkCue? 'Defend yourself! (E or F to punch)'
@@ -153,6 +153,13 @@ export const NPCS = {
   roxy:  { x:94,   z:-60,  name:'Roxy',       pal:'roxy' },
   sable: { x:106,  z:-95,  name:'Sable',      pal:'sable' },
   sef:   { x:97,   z:-126, name:'Big Sef',    pal:'sef' },
+  juno:  { x:-172, z:14,   name:'Juno',       pal:'vex' },
+  skewer:{ x:124,  z:6.5,  name:'SKW-R 7',    robot:true },
+  tomas: { x:222,  z:-14,  name:'Tomas',      pal:'ped1' },
+  wrench:{ x:70,   z:-6,   name:'Hex',        pal:'priya' },
+  nia:   { x:-4,   z:999,  name:'Nia',        pal:'ped3',  scene:'market' },
+  goro:  { x:115,  z:999,  name:'Goro',       pal:'tan',   scene:'sushi' },
+  pim:   { x:366,  z:999,  name:'Pim',        pal:'ped2',  scene:'static' },
 };
 export const PEDS=[
   { ax:-120, bx:60, x:-40, z:6.8, pal:'ped1', name:'Commuter',
@@ -164,6 +171,20 @@ export const PEDS=[
   { ax:60, bx:130, x:90, z:6.8, pal:'ped3', name:'Dreamer',
     lines:["Just came out of a dive den. Full-immersion VR — nanos talk straight to the cortex. Felt three days pass in two hours.",
            "My nanos flagged my cortisol, booked me a counselor, and ordered soup. I love the future, mostly."] },
+];
+
+/* ---------- world pickups ---------- */
+export const PICKUPS=[
+ {id:'p1', scene:'world', x:-218, z:12,   kind:'soycaf'},
+ {id:'p2', scene:'world', x:-60,  z:7.5,  kind:'bar'},
+ {id:'p3', scene:'world', x:103,  z:-50,  kind:'credits', amt:15},
+ {id:'p4', scene:'world', x:160,  z:24,   kind:'bar'},
+ {id:'p5', scene:'world', x:228,  z:-32,  kind:'soycaf'},
+ {id:'p6', scene:'hall',  x:247,  z:1004, kind:'credits', amt:10},
+ {id:'p7', scene:'world', x:-130, z:6,    kind:'credits', amt:12},
+ {id:'p8', scene:'market',x:-6,   z:1002, kind:'bento'},
+ {id:'p9', scene:'world', x:96,   z:-144, kind:'bento'},
+ {id:'p10',scene:'static',x:366,  z:1003, kind:'soycaf'},
 ];
 
 /* =====================================================================
@@ -252,7 +273,13 @@ N('vendo.gig','VN-D0R',
 "Freelance run available: package for a random corner of the city. ₣45 on return. Accept?",
 {choices:[
  {t:'"Deal."', n:'vendo.gigGo'},
+ {t:'Bowl of noodles — ₣6', n:'vendo.eat'},
  {t:'"Not now."', n:null}]});
+N('vendo.eat','VN-D0R',
+"ONE BOWL, ALMOST-FAMOUS. The broth is free. The noodles are ₣6. The existential satisfaction is included.",
+{fx(){ if(S.credits<6){ G.toast('Not enough credits.'); return 'skip'; }
+  S.credits-=6; G.eat(35,4); save(); G.toast('+35 food'); },
+ choices:[{t:'Another bowl', n:'vendo.eat'},{t:'(Done)', n:null}]});
 N('vendo.gigGo','VN-D0R',
 "Routing... done. Move those legs, human.",
 {fx(){
@@ -361,7 +388,7 @@ N('okafor.zero2','Dr. Okafor',
 "My lenses are not broken. Your jacket is nineteen years out of fashion, your gait is uncorrected, and you flinched at a delivery drone. Say it.",
 {choices:[{t:'"...I went to sleep in 2026."', n:'okafor.zero'}]});
 N('okafor.zero','Dr. Okafor',
-"2026. Of course. The year the throat opened.\nGet yourself stable first — lodging, food, sleep. A chrono-displaced nervous system is not something I'll experiment on while it's running on park-bench cortisol. Then come back. We will talk about the Array, and about getting you home.");
+"2026. Of course. The year the throat opened.\nGet yourself stable first — lodging, food, sleep. A chrono-displaced nervous system is not something I'll experiment on while it's running on park-bench cortisol. Then come back. We will talk about the Array, and about getting you home.\n...It's a long walk back west. Take a Sky-Cab from the pad outside — couriers ride the first hop free.");
 N('okafor.early','Dr. Okafor',
 "Lodging first. Sleep first. Then the Array. Physics has waited nineteen years for you; it can wait one more night.");
 N('okafor.final','Dr. Okafor',
@@ -531,6 +558,67 @@ N('crow.who','Crow',
 N('crow.sell','Crow',
 "Anything with the serial filed off. And lately — a rumor, free of charge: the campus lady is hunting negative-energy cells. Casimir-grade. Restricted, traceable, impossible to requisition... officially.\nWhen she sends you shopping, ghost — and she will — you come see Crow first.");
 
+/* ---------- Otto, the Sky-Cab (heard during flight) ---------- */
+N('otto.1','OTTO · SKY-CAB 88',
+"Good evening. Route locked, lane network has the wheel — I just do the talking. Courier rates apply, which tonight means: free. Sit back.",
+{next:'otto.2'});
+N('otto.2','OTTO · SKY-CAB 88',
+"First time up? Everything looks better from the lanes. Down there is the world they automated. Up here is the world they forgot to.",
+{next:'otto.3'});
+N('otto.3','OTTO · SKY-CAB 88',
+"You know they print one of these airframes in eleven hours flat? One day you'll own your own flying car, citizen — mark my words. The sky's been half empty since the commute died. Plenty of room for one more.",
+{next:'otto.4'});
+N('otto.4','OTTO · SKY-CAB 88',
+"Coming up on the pad now. Mind the step — gravity is still manual.");
+N('otto.again','OTTO · SKY-CAB 88',
+"SKY-CAB 88, route locked. Try not to drip noodle broth on the upholstery this time.");
+
+/* ---------- street life ---------- */
+N('juno.hi','Juno',
+"Spare a listen? Hand-played synth — no neural assist, every wrong note certified human.\nThe AIs compose better than all of us now, so 'worse on purpose' is the only genre left with a cover charge.",
+{choices:[
+ {t:'"Play something."', n:'juno.play'},
+ {t:'"Good luck out here."', n:null}]});
+N('juno.play','Juno',
+"This one's called 'Nineteen Missing Years.' Wrote it tonight. About a guy I just met, obviously.\n...He pauses, fingers hovering. For a second the park is very quiet.");
+N('skewer.hi','SKW-R 7',
+"GRILLED PROTEIN. SIX FORMATS. ZERO ANIMALS. ONE SECRET GLAZE. THE GLAZE IS LEGALLY A SAUCE.",
+{choices:[
+ {t:'Vat-yakitori — ₣5', n:'skewer.yaki'},
+ {t:'Synth-churro — ₣4', n:'skewer.churro'},
+ {t:'(Leave)', n:null}]});
+N('skewer.yaki','SKW-R 7',"YAKITORI. CAUTION: SKEWER IS NOT FOOD. THE LESSON IS FREE.",
+{fx(){ if(S.credits<5){ G.toast('Not enough credits.'); return 'skip'; }
+  S.credits-=5; G.eat(15,2); save(); G.toast('+15 food'); },
+ choices:[{t:'Another', n:'skewer.hi'},{t:'(Done)', n:null}]});
+N('skewer.churro','SKW-R 7',"CHURRO. THE SUGAR IS REAL. NOTHING ELSE IS. ENJOY.",
+{fx(){ if(S.credits<4){ G.toast('Not enough credits.'); return 'skip'; }
+  S.credits-=4; G.eat(12,1); save(); G.toast('+12 food'); },
+ choices:[{t:'Another', n:'skewer.hi'},{t:'(Done)', n:null}]});
+N('tomas.hi','Tomas',
+"Excuse me — would you photograph me with the Array? My lenses refuse. They say the ring 'contains non-consenting spacetime.' Cameras have opinions now. I miss 2030.",
+{choices:[
+ {t:'"What do you think it is?"', n:'tomas.theory'},
+ {t:'"Sure." (mime a photo)', n:'tomas.photo'}]});
+N('tomas.theory','Tomas',
+"Officially? 'Vacuum research.' But my cousin's neighbor's nanny-bot says a man walked out of it last month wearing nineteen-year-old shoes. Tourists believe anything. I believe everything. Saves time.");
+N('tomas.photo','Tomas',
+"You just... moved your hands. There's no camera. ...I love it. Most analog thing I've seen all year. Here, the memory's better anyway.");
+N('wrench.hi','Hex',
+"Mind the grate — loop coil's venting tonight. You want infrastructure gossip? The hyperloop reroutes itself around birds now. BIRDS. Three day delay to retrain the model. Nobody told the birds.",
+{choices:[{t:'"Sounds frustrating."', n:'wrench.2'},{t:'(Leave)', n:null}]});
+N('wrench.2','Hex',
+"Frustrating? It's job security. The machines fix everything except each other's manners.");
+N('nia.hi','Nia',
+"They restocked the real oranges. REAL ones, soil-grown — forty credits each. I buy one a year, on my birthday, and I eat it very slowly in front of the printer out of spite.");
+N('goro.hi','Goro',
+"Forty years I've eaten here. The algorithm started me on salmon. We've been through some things together, the belt and I. Tonight it sent me oyster. It knows about the divorce.");
+N('pim.hi','Pim',
+"Sit, sit. I'm a poet. Pre-'29 model — fully human, increasingly obsolete.\nDee keeps me in whiskey, I keep the bar in melancholy. It's a circular economy.",
+{choices:[{t:'"Recite something."', n:'pim.poem'},{t:'(Leave)', n:null}]});
+N('pim.poem','Pim',
+"'The stars came back when the engines learned to whisper — / and nobody looked up, / because the feed was brighter.'\n...The jukebox hates me. Everyone's a critic.");
+
 export function genericGigDeliver(key){
   const id='gig.'+key;
   N(id, NPCS[key].name, "Package for me? ...Signed. Tell the noodle robot his logistics empire grows by the day.",
@@ -575,6 +663,13 @@ export function npcEntryNode(key){
     case 'sef':  return 'sef.hi';
     case 'dee':  return 'dee.hi';
     case 'crow': return 'crow.hi';
+    case 'juno': return 'juno.hi';
+    case 'skewer': return 'skewer.hi';
+    case 'tomas': return 'tomas.hi';
+    case 'wrench': return 'wrench.hi';
+    case 'nia':  return 'nia.hi';
+    case 'goro': return 'goro.hi';
+    case 'pim':  return 'pim.hi';
   }
 }
 
