@@ -84,6 +84,13 @@ import {
   dampValue,
 } from './quarry-physics-core.mjs?v=20260611-overhaul';
 import {
+  loadAssetLibrary,
+  isAssetLibraryReady,
+  createTreeModel,
+  createRockModel,
+  createBushModel,
+} from './quarry-assets.mjs?v=20260612-assets';
+import {
   EXCAVATOR_ANIMATION,
   EXCAVATOR_POSE,
   createEdgeHaulRoute,
@@ -159,7 +166,6 @@ let activePlantProcessingVisual = null;
 let activePlantFeedOwner = null;
 let dustSuppressionRig = null;
 let lagoonVisuals = [];
-let cinematicRouteVisuals = [];
 let lastSnapshotEmit = 0;
 let manualEdgeHaulRunId = 0;
 let nextDumperId = 1;
@@ -1275,8 +1281,7 @@ function destroyBlastAffectedEnvironment(blastX, blastZ, { faceHit = false } = {
   return destroyed;
 }
 
-function buildEnvironment() {
-  // Tree ring around the quarry
+function addSkylineTreeRing() {
   const skylineTreeCount = 44;
   for (let i = 0; i < skylineTreeCount; i++) {
     const a = (i / skylineTreeCount) * Math.PI * 2;
@@ -1287,12 +1292,45 @@ function buildEnvironment() {
     registerTerrainAnchoredObject(tree, { destructible: true, category: 'tree' });
     scene.add(tree);
   }
+}
 
+/**
+ * Once the open-source asset library is in, replace the procedural cones
+ * with real tree/bush models and scatter rock outcrops around the site.
+ */
+function replantEnvironmentFlora() {
+  terrainAnchoredObjects = terrainAnchoredObjects.filter(object => {
+    const category = object?.userData?.environmentCategory;
+    if (category !== 'tree' && category !== 'scrub') return true;
+    scene.remove(object);
+    disposeObject3D(object);
+    return false;
+  });
+  addSkylineTreeRing();
+  addPerimeterTreeLine();
+  addScrubAndHedgerows();
+  scatterRockOutcrops();
+}
+
+function scatterRockOutcrops() {
+  if (!isAssetLibraryReady()) return;
+  for (let i = 0; i < 16; i++) {
+    const rock = createRockModel({ large: i % 5 === 0 });
+    if (!rock) return;
+    const a = seededUnit(i, 71) * Math.PI * 2;
+    const r = 150 + seededUnit(i, 73) * 90;
+    rock.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    registerTerrainAnchoredObject(rock, { destructible: true, category: 'rockProp' });
+    scene.add(rock);
+  }
+}
+
+function buildEnvironment() {
+  addSkylineTreeRing();
   addPerimeterTreeLine();
   addScrubAndHedgerows();
   addCinematicQuarryBackdrops();
   addHaulRoadDetails();
-  addCinematicRouteGlow();
   addLagoonVisuals();
 
   // No long rectangular perimeter boxes. They looked like floating surface slabs
@@ -1312,6 +1350,11 @@ function buildEnvironment() {
 }
 
 function makeTree() {
+  // Prefer the open-source pine models; fall back to the procedural conifer.
+  if (isAssetLibraryReady()) {
+    const model = createTreeModel();
+    if (model) return model;
+  }
   const g = new THREE.Group();
   const s = 0.7 + Math.random() * 0.7;
   const lean = (Math.random() - 0.5) * 0.07;
@@ -1387,14 +1430,15 @@ function addScrubAndHedgerows() {
     const offset = (seededUnit(i, 2) - 0.5) * 18;
     const x = side < 2 ? -210 + t * 420 : (side === 2 ? -198 - offset : 198 + offset);
     const z = side < 2 ? (side === 0 ? -198 - offset : 198 + offset) : -210 + t * 420;
-    const scrub = new THREE.Mesh(
+    const bush = isAssetLibraryReady() ? createBushModel() : null;
+    const scrub = bush || new THREE.Mesh(
       new THREE.ConeGeometry(1.7 + seededUnit(i, 3) * 1.4, 2.2 + seededUnit(i, 4) * 2.4, 6),
       scrubMat
     );
-    scrub.position.set(x, 1.1, z);
+    scrub.position.set(x, bush ? 0 : 1.1, z);
     scrub.rotation.y = seededUnit(i, 5) * Math.PI * 2;
     scrub.castShadow = true;
-    registerTerrainAnchoredObject(scrub, { baseOffset: 1.1, destructible: true, category: 'scrub' });
+    registerTerrainAnchoredObject(scrub, { baseOffset: bush ? 0 : 1.1, destructible: true, category: 'scrub' });
     scene.add(scrub);
   }
   // Avoid long rectangular hedge strips: they read as floating green boards on mobile.
@@ -1406,14 +1450,15 @@ function addScrubAndHedgerows() {
     for (let n = 0; n < count; n++) {
       const offsetX = (seededUnit(index * 20 + n, 12) - 0.5) * 46;
       const offsetZ = (seededUnit(index * 20 + n, 13) - 0.5) * 10;
-      const scrub = new THREE.Mesh(
+      const bush = isAssetLibraryReady() ? createBushModel() : null;
+      const scrub = bush || new THREE.Mesh(
         new THREE.ConeGeometry(1.3 + seededUnit(index * 20 + n, 14) * 1.5, 2.1 + seededUnit(index * 20 + n, 15) * 2.2, 6),
         scrubMat
       );
-      scrub.position.set(x + offsetX, 1.05, z + offsetZ);
+      scrub.position.set(x + offsetX, bush ? 0 : 1.05, z + offsetZ);
       scrub.rotation.y = seededUnit(index * 20 + n, 16) * Math.PI * 2;
       scrub.castShadow = true;
-      registerTerrainAnchoredObject(scrub, { baseOffset: 1.05, destructible: true, category: 'scrub' });
+      registerTerrainAnchoredObject(scrub, { baseOffset: bush ? 0 : 1.05, destructible: true, category: 'scrub' });
       scene.add(scrub);
     }
   });
@@ -1490,28 +1535,9 @@ function addCinematicQuarryBackdrops() {
   };
 }
 
-function createGlowTube(points, { radius = 1.1, material = M.routeGlow } = {}) {
-  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(p.x, getTerrainHeight(p.x, p.z) + 1.25, p.z)));
-  const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, radius, 8, false), material.clone());
-  mesh.renderOrder = 8;
-  return mesh;
-}
-
-function addCinematicRouteGlow() {
-  cinematicRouteVisuals.forEach(obj => disposeObject3D(obj));
-  cinematicRouteVisuals = [];
-  const routeSets = [
-    [{ x: -52, z: -48 }, { x: -10, z: -38 }, { x: 38, z: -42 }, { x: 92, z: -72 }, { x: 156, z: -144 }],
-    [{ x: -30, z: -28 }, { x: -70, z: 8 }, { x: -114, z: 62 }, { x: -154, z: 132 }],
-  ];
-  routeSets.forEach((points, index) => {
-    const soft = createGlowTube(points, { radius: index === 0 ? 2.6 : 2.05, material: M.routeGlowSoft });
-    const core = createGlowTube(points, { radius: index === 0 ? 0.72 : 0.55, material: M.routeGlow });
-    scene.add(soft, core);
-    cinematicRouteVisuals.push(soft, core);
-  });
-  window.__qproCinematicRoutes = routeSets.map(points => points.length);
-}
+// The old decorative cross-map route glow tubes are gone: they read as
+// random grey streaks hovering over the terrain, and they never re-anchored
+// after blasts deformed the ground beneath them.
 
 function addHaulRoadDetails() {
   // Keep the haul road readable through stones, cones and vehicle movement only.
@@ -1579,6 +1605,7 @@ function addLagoonVisuals() {
     water.name = `${spec.name}-water`;
     group.add(water);
     group.position.set(spec.x, 0, spec.z);
+    registerTerrainAnchoredObject(group, { category: 'lagoon' });
     scene.add(group);
     return { ...spec, group, water };
   });
@@ -1787,6 +1814,7 @@ function addSiteHut(x, z) {
   roof.position.y = 5.5;
   g.add(roof);
   g.position.set(x, 0, z);
+  registerTerrainAnchoredObject(g, { category: 'siteHut' });
   scene.add(g);
 }
 
@@ -2361,6 +2389,53 @@ function addHaulRoad() {
 // ═══════════════════════════════════════════════════════════════
 
 // ── Dumper ──────────────────────────────────────────────────────
+// ── Machine detail kit: beacons, mirrors, handrails ─────────────
+const beaconLamps = [];
+
+function makeBeacon() {
+  const grp = new THREE.Group();
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.28, 6), M.darkGrey);
+  grp.add(stem);
+  const lampMat = new THREE.MeshStandardMaterial({
+    color: 0xff8800, emissive: 0xff5500, emissiveIntensity: 1.2, roughness: 0.35,
+  });
+  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.21, 0.34, 8), lampMat);
+  lamp.position.y = 0.3;
+  grp.add(lamp);
+  beaconLamps.push(lampMat);
+  return grp;
+}
+
+function pulseBeacons() {
+  const t = Date.now() / 1000;
+  const glow = 0.9 + Math.max(0, Math.sin(t * 5.2)) * 1.6;
+  beaconLamps.forEach(mat => { mat.emissiveIntensity = glow; });
+}
+
+function addHandrail(parent, { x0, x1, y, z, height = 0.85 }) {
+  const length = Math.abs(x1 - x0);
+  const cx = (x0 + x1) / 2;
+  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, length, 5).rotateZ(Math.PI / 2), M.hub);
+  rail.position.set(cx, y + height, z);
+  parent.add(rail);
+  const posts = Math.max(2, Math.round(length / 1.6));
+  for (let i = 0; i < posts; i++) {
+    const px = x0 + (length * i) / (posts - 1) * Math.sign(x1 - x0);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, height, 5), M.hub);
+    post.position.set(px, y + height / 2, z);
+    parent.add(post);
+  }
+}
+
+function addMirror(parent, { x, y, z }) {
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 5).rotateX(Math.PI / 2), M.darkGrey);
+  arm.position.set(x, y, z > 0 ? z - 0.35 : z + 0.35);
+  parent.add(arm);
+  const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.55, 0.4), M.glass);
+  mirror.position.set(x, y, z);
+  parent.add(mirror);
+}
+
 function makeDumper() {
   const g = new THREE.Group();
 
@@ -2448,6 +2523,19 @@ function makeDumper() {
     g.add(hl);
   });
 
+  // Detail kit: roof beacon, mirrors, access ladder, deck handrail
+  const beacon = makeBeacon();
+  beacon.position.set(-3.5, 5.1, 1.5);
+  g.add(beacon);
+  addMirror(g, { x: -5.4, y: 4.4, z: 2.5 });
+  addMirror(g, { x: -5.4, y: 4.4, z: -2.5 });
+  for (let i = 0; i < 3; i++) {
+    const rung = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.07, 0.7), M.hub);
+    rung.position.set(-5.62, 0.7 + i * 0.7, 1.6);
+    g.add(rung);
+  }
+  addHandrail(g, { x0: -5.4, x1: -1.6, y: 2.5, z: -2.15, height: 0.8 });
+
   return g;
 }
 
@@ -2503,6 +2591,13 @@ function makeExcavator() {
   const cw = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 5), M.black);
   cw.position.set(-3.3, 1.2, 0);
   cabin.add(cw);
+
+  // Detail kit: cab beacon and engine-deck handrail
+  const excBeacon = makeBeacon();
+  excBeacon.position.set(0.6, 3.4, 1.8);
+  cabin.add(excBeacon);
+  addHandrail(cabin, { x0: -4.6, x1: -0.4, y: 2.45, z: 2.45, height: 0.8 });
+  addHandrail(cabin, { x0: -4.6, x1: -0.4, y: 2.45, z: -2.45, height: 0.8 });
 
   // Engine cover
   const ec = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.5, 5.1), M.darkGrey);
@@ -2582,6 +2677,16 @@ function makeLoader() {
   engine.position.set(2.4, 3, 0);
   engine.castShadow = true;
   g.add(engine);
+
+  // Detail kit: cab beacon, exhaust stack, mirrors
+  const loaderBeacon = makeBeacon();
+  loaderBeacon.position.set(-1.8, 5.55, 1.2);
+  g.add(loaderBeacon);
+  const loaderExhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.6, 6), M.darkGrey);
+  loaderExhaust.position.set(1.6, 4.8, -1.2);
+  g.add(loaderExhaust);
+  addMirror(g, { x: -3.3, y: 4.9, z: 2.1 });
+  addMirror(g, { x: -3.3, y: 4.9, z: -2.1 });
 
   const bucketPivot = new THREE.Group();
   bucketPivot.position.set(4.3, 2.3, 0);
@@ -2963,6 +3068,11 @@ function detonateBlast(marker) {
   const deformation = deformTerrain(gx, gz);
   destroyBlastAffectedEnvironment(marker.position.x, marker.position.z, { faceHit: deformation.faceHit });
   updateTerrainAnchoredObjectHeights();
+  // Nothing may hover over the new bench: settle rock piles and product
+  // stockpiles onto the deformed ground too.
+  reanchorLooseGroundPiles();
+  updateAggregateStockpileVisuals();
+  updateEdgeStockpileVisuals();
 
   // Blast particles, scaled by shot size
   const expectedTonnes = deformation.faceHit ? TONNES_PER_FACE_BLAST : TONNES_PER_BLAST;
@@ -3044,9 +3154,26 @@ function spawnLooseGroundPiles(x, y, z, tonnes) {
     pile.castShadow = true;
     pile.receiveShadow = true;
     pile.userData.type = 'looseGroundPile';
+    pile.userData.pileHeight = pileHeight;
     scene.add(pile);
     looseGroundPiles.push(pile);
   }
+}
+
+/**
+ * Drop every shot-rock pile back onto the (possibly just-deformed) ground.
+ * Without this, piles from an earlier shot hover in mid-air after the next
+ * blast cuts the bench beneath them deeper.
+ */
+function reanchorLooseGroundPiles() {
+  looseGroundPiles.forEach(pile => {
+    if (!pile?.parent) return;
+    const pileHeight = pile.userData.pileHeight || 3;
+    pile.position.y = getLoosePileRestingY({
+      terrainHeight: getTerrainHeight(pile.position.x, pile.position.z),
+      pileHeight,
+    });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5541,6 +5668,7 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.085);
   controls.update();
   applyCameraShake(dt);
+  pulseBeacons();
   updateParticles(dt);
   updateAI(dt);
   updateDustSuppressionRig(dt);
@@ -5587,6 +5715,13 @@ function init() {
   bootRequestedDemoMode();
   if (gameHourTimer) clearInterval(gameHourTimer);
   gameHourTimer = setInterval(runGameHourTick, GAME_HOUR_REAL_MS);
+  // Swap procedural cones for the open-source models once they arrive.
+  loadAssetLibrary().then(lib => {
+    if (lib.ready) {
+      replantEnvironmentFlora();
+      console.log('[QuarryPro 3D] ✓ Open-source environment assets loaded');
+    }
+  }).catch(() => {});
   console.log('[QuarryPro 3D] ✓ Ready — Bankfield Quarry Simulator');
 }
 
