@@ -1205,4 +1205,9 @@ document.getElementById('btnContinue').onclick=guarded(()=>{
   if(loadSave()){ boot(false); UI.toast('Game loaded.'); }
   else boot(true);
 });
+/* continuous autosave so Continue resumes exactly where you left off */
+setInterval(()=>{ if(started && !RIDE && !MUG.active) save(); }, 15000);
+addEventListener('pagehide', ()=>{ if(started) save(); });
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden' && started) save(); });
 window.__gameReady=true;
