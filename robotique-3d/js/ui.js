@@ -2,22 +2,23 @@
    ROBOTIQUE 3D — DOM UI module
    Dialogue box, HUD, panels, toasts, touch controls, fullscreen.
    ===================================================================== */
-import {S, ITEMS, QUESTS, activeQuest, SAYS} from './content.js?v=11';
+import {S, ITEMS, QUESTS, activeQuest, SAYS, SCENE_NAMES} from './content.js?v=11';
 
 export const TOUCH = ('ontouchstart' in window) ||
   (window.matchMedia && matchMedia('(pointer:coarse)').matches);
 
 export const UI = {
   el:{}, typing:false, typeTimer:null, node:null, choiceIdx:0,
-  onUseItem:null, onAdvanceSound:null,
+  onUseItem:null, onAdvanceSound:null, onSwitchMode:null, onGraphicsPreset:null,
+  pauseTab:'status', graphicsInfo:null,
 
   init(){
     for(const id of ['hud','credits','clock','tracker','prompt','dlg','dlgName','dlgText',
       'dlgChoices','dlgMore','toasts','questPanel','questList','helpPanel','title','fade',
-      'ending','endText','hint','invPanel','invList','xhair']) this.el[id]=document.getElementById(id);
+      'ending','endText','hint','invPanel','invList','pausePanel','pauseBody','xhair']) this.el[id]=document.getElementById(id);
     this.el.dlg.addEventListener('click', e=>{
       if(e.target.closest('.choice')) return; this.advance(); });
-    for(const pid of ['questPanel','helpPanel','invPanel']){
+    for(const pid of ['questPanel','helpPanel','invPanel','pausePanel']){
       const p=this.el[pid];
       p.addEventListener('click', e=>{ if(e.target===p) this.closePanels(); });
     }
@@ -54,6 +55,7 @@ export const UI = {
   /* ---- dialogue ---- */
   open(nodeId){
     const n=SAYS[nodeId]; if(!n) return;
+    if(document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
     if(n.fx){ const r=n.fx(); if(r==='skip'){ this.close(); return; } }
     this.node=n; this.el.dlg.style.display='block';
     this.el.dlgName.textContent=n.who;
@@ -117,15 +119,21 @@ export const UI = {
   togglePanel(which){
     const p=this.el[which];
     const open=p.style.display==='flex';
+    if(!open && document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
     this.closePanels();
     if(!open){
       if(which==='questPanel') this.renderQuests();
       if(which==='invPanel') this.renderInv();
+      if(which==='pausePanel') this.renderPause(this.pauseTab);
       p.style.display='flex';
     }
   },
-  anyPanel(){ return ['questPanel','helpPanel','invPanel'].some(id=>this.el[id].style.display==='flex'); },
-  closePanels(){ for(const id of ['questPanel','helpPanel','invPanel']) this.el[id].style.display='none'; },
+  togglePause(tab){
+    this.pauseTab=tab||this.pauseTab||'status';
+    this.togglePanel('pausePanel');
+  },
+  anyPanel(){ return ['questPanel','helpPanel','invPanel','pausePanel'].some(id=>this.el[id].style.display==='flex'); },
+  closePanels(){ for(const id of ['questPanel','helpPanel','invPanel','pausePanel']) this.el[id].style.display='none'; },
   renderQuests(){
     const box=this.el.questList; box.innerHTML='';
     const ids=Object.keys(S.quests);
@@ -154,6 +162,80 @@ export const UI = {
       }
       box.appendChild(d);
     }
+  },
+  renderPause(tab){
+    this.pauseTab=tab||this.pauseTab||'status';
+    const q=activeQuest();
+    const loc=S.scene==='world'?'NEW MERIDIAN':(SCENE_NAMES[S.scene]||S.scene).toUpperCase();
+    const invIds=Object.keys(S.inv).filter(id=>S.inv[id]>0);
+    const questIds=Object.keys(S.quests);
+    let body='';
+    if(this.pauseTab==='status'){
+      body='<div class="pauseStats">'+
+        '<div><b>'+loc+'</b><span>location</span></div>'+
+        '<div><b>&#8353; '+S.credits+'</b><span>credits</span></div>'+
+        '<div><b>'+Math.round(S.hp)+'/'+S.maxHp+'</b><span>health</span></div>'+
+        '<div><b>'+Math.round(S.hunger)+'%</b><span>food</span></div>'+
+        '</div>'+
+        '<div class="qitem"><div class="qn">'+(q?QUESTS[q].title:'No active job')+'</div>'+
+        '<div class="qd">'+(q?QUESTS[q].obj():'Talk to people in the city to pick up work and clues.')+'</div></div>';
+    } else if(this.pauseTab==='bag'){
+      body=invIds.length? invIds.map(id=>{
+        const it=ITEMS[id]; if(!it) return '';
+        return '<div class="qitem"><div class="qn">'+it.name+' x'+S.inv[id]+'</div><div class="qd">'+it.desc+'</div></div>';
+      }).join('') : '<div class="qd">Bag empty. GreenGrid Market sells food and gear.</div>';
+    } else if(this.pauseTab==='jobs'){
+      body=questIds.length? questIds.map(id=>{
+        const qd=QUESTS[id], st=S.quests[id];
+        return '<div class="qitem '+(st==='done'?'done':'')+'"><div class="qn">'+qd.title+'</div>'+
+          '<div class="qd">'+qd.desc+'</div><div class="qs">'+(st==='done'?'Complete':qd.obj())+'</div></div>';
+      }).join('') : '<div class="qd">No jobs yet. Elias in Memorial Park is a good first lead.</div>';
+    } else if(this.pauseTab==='map'){
+      body='<div class="mapGrid">'+
+        '<span>Memorial Park</span><span>Tanaka Towers</span><span>Market Street</span>'+
+        '<span>Transit Plaza</span><span>Velvet Row</span><span>Meridian Campus</span>'+
+        '<span>MedLoop Clinic</span><span>Fab Commons</span><span>Neuro-Arcade</span>'+
+        '<span>Array Annex</span>'+
+        '</div><div class="qd">Follow the gold pillar for the current objective. Sky-Cab pads link the long walks.</div>';
+    } else if(this.pauseTab==='mode'){
+      body='<div class="modeCard"><div><b>Switch to 2D</b><span>Keep your name, credits, quests, bag, and location.</span></div>'+
+        '<button class="btn" id="pauseSwitchMode">Open 2D View</button></div>'+
+        '<div class="qd">The same Chapter 1 story continues in the side-scrolling version.</div>';
+    } else {
+      const g=this.graphicsInfo||{};
+      const preset=g.preset||'balanced';
+      const presetBtn=(id,name,desc)=>'<button class="'+(preset===id?'on':'')+'" data-gfx="'+id+'">'+
+        '<b>'+name+'</b><span>'+desc+'</span></button>';
+      body='<div class="gfxGrid">'+
+        presetBtn('performance','Performance','Cooler battery, lighter rain, lower render scale.')+
+        presetBtn('balanced','Balanced','Default mobile-first clarity and atmosphere.')+
+        presetBtn('ultra','Ultra','Sharper render, richer bloom-style overlays.')+
+        '</div><div class="gfxFacts">'+
+        '<div><b>Renderer</b>'+((g.renderer||'WebGL')+' / Three r'+(g.three||'?'))+'</div>'+
+        '<div><b>WebGPU</b>'+(g.webgpu||'not detected')+'</div>'+
+        '<div><b>Render Scale</b>'+(g.pixelRatio||'?')+'x</div>'+
+        '<div><b>Atmosphere</b>'+(g.atmosphere||'balanced')+'</div>'+
+        '</div>';
+    }
+    this.el.pauseBody.innerHTML=
+      '<div class="pauseHero"><div><b>2045 field kit</b><span>Food, work, shelter, transport, and one dead phone from the wrong year.</span></div></div>'+
+      '<div class="pauseTabs">'+['status','bag','jobs','map','mode','gfx'].map(id=>
+        '<button class="'+(id===this.pauseTab?'on':'')+'" data-tab="'+id+'">'+id+'</button>').join('')+'</div>'+
+      '<div class="pauseContent">'+body+'</div>'+
+      '<div class="closehint">P / ESC / tap outside to close</div>';
+    this.el.pauseBody.querySelectorAll('[data-tab]').forEach(b=>{
+      b.onclick=()=>this.renderPause(b.dataset.tab);
+    });
+    const sw=this.el.pauseBody.querySelector('#pauseSwitchMode');
+    if(sw) sw.onclick=()=>this.onSwitchMode&&this.onSwitchMode();
+    this.el.pauseBody.querySelectorAll('[data-gfx]').forEach(b=>{
+      b.onclick=()=>this.onGraphicsPreset&&this.onGraphicsPreset(b.dataset.gfx);
+    });
+  },
+  setGraphicsInfo(info){
+    this.graphicsInfo=info;
+    if(this.pauseTab==='gfx' && this.el.pausePanel && this.el.pausePanel.style.display==='flex')
+      this.renderPause('gfx');
   },
 
   fadeTo(black, ms){
@@ -251,6 +333,8 @@ export const INPUT = {
 
     document.getElementById('btnQuests').addEventListener('click', ()=>this.onAction&&this.onAction('j'));
     document.getElementById('btnBag').addEventListener('click', ()=>this.onAction&&this.onAction('i'));
+    const btnPause=document.getElementById('btnPause');
+    if(btnPause) btnPause.addEventListener('click', ()=>this.onAction&&this.onAction('p'));
 
     /* fullscreen */
     const btnFS=document.getElementById('btnFS');

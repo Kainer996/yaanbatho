@@ -26,26 +26,36 @@ const S = {
   flags:{ intro:false, metElias:false, metVendo:false, deliveries:0,
           carrying:null, hasKey:false, slept:false, chapterDone:false,
           shiftCooldown:0, gigTarget:null, parkCue:false, muggerDown:false,
-          drop:null, roxyMet:false, vexMet:false, rodeCab:false, picked:{}, talked:{} },
+          drop:null, roxyMet:false, vexMet:false, rodeCab:false, arrayCalibrated:false,
+          arrayCharge:0, picked:{}, talked:{} },
   quests:{},
 };
 const SAVE_KEY='robotique_3d_ch1';
-function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({
-  name:S.name,x:S.x,z:S.z,yaw:S.yaw,credits:S.credits,minutes:S.minutes,day:S.day,
-  flags:S.flags,quests:S.quests,scene:S.scene,hp:S.hp,hunger:S.hunger,inv:S.inv
-})); }catch(e){} }
+const BRIDGE_KEY='robotique_ch1_mode_bridge';
+function savePayload(){
+  return {
+    name:S.name,x:S.x,z:S.z,yaw:S.yaw,credits:S.credits,minutes:S.minutes,day:S.day,
+    flags:S.flags,quests:S.quests,scene:S.scene,hp:S.hp,hunger:S.hunger,inv:S.inv
+  };
+}
+function applyPayload(d){
+  if(!d) return false;
+  Object.assign(S,{name:d.name||S.name,x:d.x??S.x,z:d.z??S.z,yaw:d.yaw||0,credits:d.credits??S.credits,
+    minutes:d.minutes??S.minutes,day:d.day??1,scene:d.scene||'world',hp:d.hp??100,hunger:d.hunger??70,inv:d.inv||{}});
+  S.flags=Object.assign(S.flags,d.flags||{});
+  S.quests=d.quests||{};
+  return true;
+}
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(savePayload())); }catch(e){} }
 function loadSave(){
   try{
     const d=JSON.parse(localStorage.getItem(SAVE_KEY));
     if(!d) return false;
-    Object.assign(S,{name:d.name,x:d.x,z:d.z,yaw:d.yaw||0,credits:d.credits,
-      minutes:d.minutes,day:d.day??1,scene:d.scene||'world',hp:d.hp??100,hunger:d.hunger??70,inv:d.inv||{}});
-    S.flags=Object.assign(S.flags,d.flags); S.quests=d.quests;
-    return true;
+    return applyPayload(d);
   }catch(e){ return false; }
 }
 function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
-function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); localStorage.removeItem(BRIDGE_KEY); }catch(e){} }
 
 /* ---------------- items ---------------- */
 const ITEMS = {
@@ -91,12 +101,15 @@ function activeQuest(){
 /* ---------------- scene graph ---------------- */
 /* world coordinates in meters; interiors are rooms parked at z≈1000 */
 const PARENT={market:'world',cafe:'world',sushi:'world',lobby:'world',
-  hall:'lobby',room:'hall','static':'world'};
+  hall:'lobby',room:'hall',clinic:'world',maker:'world',arcade:'world','static':'world',annex:'world'};
 const SCENE_NAMES={market:'GREENGRID MARKET',cafe:'THE CROOKED BEAN',sushi:'KAITEN-45',
-  lobby:'TANAKA TOWERS · LOBBY',hall:'TANAKA TOWERS · FLOOR 2',room:'UNIT 4','static':'THE STATIC'};
+  lobby:'TANAKA TOWERS · LOBBY',hall:'TANAKA TOWERS · FLOOR 2',room:'UNIT 4',
+  clinic:'MEDLOOP CLINIC',maker:'FAB COMMONS',arcade:'NEURO-ARCADE','static':'THE STATIC',
+  annex:'MERIDIAN ARRAY ANNEX'};
 const ROOMS={                       // interior room centers (world-space parking lot)
   market:[0,1000], cafe:[60,1000], sushi:[120,1000], lobby:[180,1000],
-  hall:[240,1000], room:[300,1000], 'static':[360,1000],
+  hall:[240,1000], room:[300,1000], clinic:[420,1000], maker:[480,1000],
+  arcade:[540,1000], annex:[600,1000], 'static':[360,1000],
 };
 const DOORS=[
  {scene:'world', x:-40, z:-10,  to:'market', tx:0,   tz:1004, tyaw:Math.PI,  label:'GreenGrid Market'},
@@ -111,8 +124,16 @@ const DOORS=[
  {scene:'hall',  x:245, z:994,  to:'lobby',  tx:185, tz:997, tyaw:0,        label:'stairs · lobby'},
  {scene:'hall',  x:236, z:1005, to:'room',   tx:300, tz:1004, tyaw:Math.PI, label:'Unit 4'},
  {scene:'room',  x:300, z:1006, to:'hall',   tx:236, tz:1003, tyaw:0,       label:'hallway'},
+ {scene:'world', x:-180,z:-10,  to:'clinic', tx:420, tz:1004, tyaw:Math.PI, label:'MedLoop Clinic'},
+ {scene:'clinic',x:420, z:1006, to:'world',  tx:-180,tz:-7,  tyaw:Math.PI,  label:'leave'},
+ {scene:'world', x:240, z:-10,  to:'maker',  tx:480, tz:1004, tyaw:Math.PI, label:'Fab Commons'},
+ {scene:'maker', x:480, z:1006, to:'world',  tx:240, tz:-7,  tyaw:Math.PI,  label:'leave'},
+ {scene:'world', x:100, z:-30,  to:'arcade', tx:540, tz:1004, tyaw:Math.PI, label:'Neuro-Arcade'},
+ {scene:'arcade',x:540, z:1006, to:'world',  tx:100, tz:-30, tyaw:0,        label:'leave'},
  {scene:'world', x:88.5,z:-75,  to:'static', tx:360, tz:1004, tyaw:Math.PI, label:'The Static'},
  {scene:'static',x:360, z:1006, to:'world',  tx:91,  tz:-75,  tyaw:Math.PI/2, label:'leave'},
+ {scene:'world', x:200, z:-10,  to:'annex',  tx:600, tz:1004, tyaw:Math.PI, label:'Array Annex'},
+ {scene:'annex', x:600, z:1006, to:'world',  tx:200, tz:-7,  tyaw:Math.PI,  label:'leave'},
 ];
 function chainOf(s){ const c=[s]; while(PARENT[c[0]]) c.unshift(PARENT[c[0]]); return c; }
 function navTarget(tScene,tx,tz){
@@ -154,6 +175,10 @@ const NPCS = {
   dex:   { x:240,  z:1005, name:'Unit 3 Intercom', poi:true, scene:'hall' },
   dee:   { x:363,  z:996,  name:'Dee',        pal:'dee',   scene:'static' },
   crow:  { x:356,  z:998,  name:'Crow',       pal:'crow',  scene:'static' },
+  lyra:  { x:414,  z:997,  name:'Nurse Lyra', pal:'lyra',  scene:'clinic' },
+  bram:  { x:480,  z:997,  name:'Bram',       pal:'bram',  scene:'maker' },
+  iko:   { x:542,  z:997,  name:'Iko',        pal:'iko',   scene:'arcade' },
+  quinn: { x:600,  z:997,  name:'Quinn',      pal:'quinn', scene:'annex' },
   roxy:  { x:94,   z:-60,  name:'Roxy',       pal:'roxy',  hours:[19,6] },
   sable: { x:106,  z:-95,  name:'Sable',      pal:'sable', hours:[19,6] },
   sef:   { x:97,   z:-126, name:'Big Sef',    pal:'sef',   hours:[18,7] },
@@ -175,6 +200,21 @@ const PEDS=[
   { ax:60, bx:130, x:90, z:6.8, pal:'ped3', name:'Dreamer',
     lines:["Just came out of a dive den. Full-immersion VR — nanos talk straight to the cortex. Felt three days pass in two hours.",
            "My nanos flagged my cortisol, booked me a counselor, and ordered soup. I love the future, mostly."] },
+  { ax:-230, bx:-150, x:-205, z:23, pal:'tan', name:'Park Regular',
+    lines:["Basic income covers the pod. I come here for the trees. Real carbon, real bugs, real weather.",
+           "They say people born after 2035 never learned to be bored. Seems dangerous."] },
+  { ax:-115, bx:-45, x:-92, z:-6.8, pal:'ped2', name:'Lease Runner',
+    lines:["Tanaka Towers says the elevator is self-healing. It has been healing for four years.",
+           "Rent is paid by contract now. People still argue with buildings like that helps."] },
+  { ax:118, bx:210, x:146, z:7.1, pal:'ped1', name:'Transit Nurse',
+    lines:["Clinic drones caught a stroke six blocks before the patient felt it. Still cannot make people sleep.",
+           "Your vitals are invisible to public health. That is either privacy or a medical emergency."] },
+  { ax:88, bx:108, x:96, z:-48, pal:'ped3', name:'Row Local',
+    lines:["Velvet Row is where the city admits desire did not get automated away.",
+           "Keep your pockets sealed. Half the scams here are legal and the other half are prettier."] },
+  { ax:170, bx:245, x:208, z:-27, pal:'ped2', name:'Lab Intern',
+    lines:["Negative energy is real. Useful negative energy is still a grant proposal with teeth.",
+           "Okafor says wormholes are not time machines until somebody survives the paperwork."] },
 ];
 
 /* ---------- world pickups ---------- */
@@ -415,6 +455,36 @@ N('okafor.end','Dr. Okafor',
 "Soon. The throat needs a fresh exotic-matter charge before it can pass anything heavier than a photon — and harvesting Casimir energy at that scale takes components I can't requisition... officially.\nWork with me, courier. Help me charge the Array, and you can choose: 2026, 2045 — or the door between them, open both ways.",
 {fx(){ G.endChapter(); }});
 
+/* ---------- Meridian Array Annex ---------- */
+N('quinn.hi','Quinn',
+"Welcome to the public-safe side of the Meridian Array. The core is still sealed, but this annex keeps the Casimir stack from drifting out of tune.",
+{choices:[
+ {t:'"You work on time travel?"', n:'quinn.time'},
+ {t:'"Any work I can do?"', n:'quinn.job'},
+ {t:'"What am I looking at?"', n:'quinn.room'},
+ {t:'(Leave)', n:null}]});
+N('quinn.time','Quinn',
+"I work on vacuum geometry. Marketing says time travel because nobody funds a grant called 'please let us keep two wormhole mouths from eating causality.' The shortcut is real. The hard part is keeping it gentle.",
+{choices:[
+ {t:'"What am I looking at?"', n:'quinn.room'},
+ {t:'"Any work I can do?"', n:'quinn.job'},
+ {t:'(Leave)', n:null}]});
+N('quinn.room','Quinn',
+"Those black plates are Casimir cavities: two surfaces so close the vacuum runs out of ways to vibrate between them. The dip is tiny, negative, and wildly useful if you stack enough precision on top of it.",
+{choices:[
+ {t:'"You work on time travel?"', n:'quinn.time'},
+ {t:'"Any work I can do?"', n:'quinn.job'},
+ {t:'(Leave)', n:null}]});
+N('quinn.job','Quinn',
+"I need a human courier with no city implant to walk the calibration loop. The sensors hate you in a useful way. Stand still, breathe normally, and do not touch the blue ring.",
+{fx(){
+  if(S.flags.arrayCalibrated){ G.toast('Quinn: "Calibration is holding. The Array remembers you."'); return 'skip'; }
+  G.fadeWork(()=>{ G.earn(75); S.flags.arrayCalibrated=true; S.flags.arrayCharge=(S.flags.arrayCharge||0)+1; G.refreshHUD(); save(); });
+},
+ choices:[{t:'"Did that help?"', n:'quinn.done'},{t:'(Leave)', n:null}]});
+N('quinn.done','Quinn',
+"Yes. Negative energy profile improved by a frankly rude margin. Okafor will pretend she is not relieved. Keep doing courier work; the Array needs parts, favors, and people who can still improvise.");
+
 /* ---------- Raze ---------- */
 N('raze.intro','???',
 "Hey. Zero-count. Yeah, you — no implants, no ID overlay, nobody streaming your feed. Which means nobody's watching. Hand over the credit chips.",
@@ -623,6 +693,79 @@ N('pim.hi','Pim',
 N('pim.poem','Pim',
 "'The stars came back when the engines learned to whisper — / and nobody looked up, / because the feed was brighter.'\n...The jukebox hates me. Everyone's a critic.");
 
+/* ---------- New Meridian interiors ---------- */
+N('lyra.hi','Nurse Lyra',
+"MedLoop triage says you are walking around with no health mesh, no nano-maintenance record, and a circadian profile from the old internet. That is not illegal, just medically loud.",
+{choices:[
+ {t:'"Can you patch me up?"', n:'lyra.scan'},
+ {t:'"What can medicine do now?"', n:'lyra.future'},
+ {t:'"Do people still work here?"', n:'lyra.work'},
+ {t:'(Leave)', n:null}]});
+N('lyra.scan','Nurse Lyra',
+"I can run a free surface scan and print soup-grade electrolytes. For deep work you need a registry or cash. The future is generous; billing software is immortal.",
+{choices:[
+ {t:'"What can medicine do now?"', n:'lyra.future'},
+ {t:'"Do people still work here?"', n:'lyra.work'},
+ {t:'(Leave)', n:null}]});
+N('lyra.future','Nurse Lyra',
+"Most cancers get spotted by blood nanos before they have a name. Hearts are grown to order. Brain injury is still terrifying, sleep still matters, and nobody has automated grief. Remember that part.",
+{choices:[
+ {t:'"Can you patch me up?"', n:'lyra.scan'},
+ {t:'(Leave)', n:null}]});
+N('lyra.work','Nurse Lyra',
+"Doctors spend less time memorizing and more time negotiating with AIs, families, and frightened people. The machines give options. Someone still has to be responsible for choosing.",
+{choices:[
+ {t:'"What can medicine do now?"', n:'lyra.future'},
+ {t:'(Leave)', n:null}]});
+
+N('bram.hi','Bram',
+"Welcome to Fab Commons. If it has atoms and a license, we can print it. If it lacks a license, we can discuss recycling rates in a very private tone.",
+{choices:[
+ {t:'"Can you repair old tech?"', n:'bram.repair'},
+ {t:'"What do people do for work?"', n:'bram.jobs'},
+ {t:'"What can printers make?"', n:'bram.print'},
+ {t:'(Leave)', n:null}]});
+N('bram.repair','Bram',
+"A phone from 2026? Museum-grade rectangle. I can print a charger adapter, but the networks it loved are fossils. Keep it anyway. Old machines remember old truths.",
+{choices:[
+ {t:'"What do people do for work?"', n:'bram.jobs'},
+ {t:'"What can printers make?"', n:'bram.print'},
+ {t:'(Leave)', n:null}]});
+N('bram.jobs','Bram',
+"People still work. We authenticate, design, mediate, perform, care, and break things creatively. Automation ate the boring tasks, then invented paperwork with better lighting.",
+{choices:[
+ {t:'"What can printers make?"', n:'bram.print'},
+ {t:'(Leave)', n:null}]});
+N('bram.print','Bram',
+"Food, parts, clothes, organ scaffolds, little houses on bad days. The rare material is trust: who signed the template, where the feedstock came from, and what the AI optimized away.",
+{choices:[
+ {t:'"Can you repair old tech?"', n:'bram.repair'},
+ {t:'(Leave)', n:null}]});
+
+N('iko.hi','Iko',
+"Neuro-Arcade intake: full-dive rooms are clean, sober, and capped at four subjective hours. If your memories start rendering ads, press the red thought.",
+{choices:[
+ {t:'"How does full-dive work?"', n:'iko.dive'},
+ {t:'"Is this a job too?"', n:'iko.jobs'},
+ {t:'"Can it change time?"', n:'iko.time'},
+ {t:'(Leave)', n:null}]});
+N('iko.dive','Iko',
+"The rig maps motor intent and sensory cortex, then lets an AI dream a world fast enough to fool you. Fun, mostly. Less fun when grief, gambling, or politics buys better lighting.",
+{choices:[
+ {t:'"Is this a job too?"', n:'iko.jobs'},
+ {t:'"Can it change time?"', n:'iko.time'},
+ {t:'(Leave)', n:null}]});
+N('iko.jobs','Iko',
+"Most players come for escape. Pros come for rehearsal: surgery, firefighting, first dates. A simulation is cheap. Embarrassment remains expensive.",
+{choices:[
+ {t:'"How does full-dive work?"', n:'iko.dive'},
+ {t:'(Leave)', n:null}]});
+N('iko.time','Iko',
+"Subjective time stretches, but it is not real time travel. Official disclaimer. If you actually woke up from 2026, I am suddenly less confident in my disclaimers.",
+{choices:[
+ {t:'"How does full-dive work?"', n:'iko.dive'},
+ {t:'(Leave)', n:null}]});
+
 function genericGigDeliver(key){
   const id='gig.'+key;
   N(id, NPCS[key].name, "Package for me? ...Signed. Tell the noodle robot his logistics empire grows by the day.",
@@ -672,6 +815,10 @@ function npcEntryNode(key){
     case 'sef':  return 'sef.hi';
     case 'dee':  return 'dee.hi';
     case 'crow': return 'crow.hi';
+    case 'lyra': return 'lyra.hi';
+    case 'bram': return 'bram.hi';
+    case 'iko':  return 'iko.hi';
+    case 'quinn': return f.arrayCalibrated? 'quinn.done' : 'quinn.hi';
     case 'juno': return 'juno.hi';
     case 'skewer': return 'skewer.hi';
     case 'tomas': return 'tomas.hi';
@@ -722,6 +869,10 @@ const PALS = {
   sef:   {h:'#0c0a14',f:'#080610',s:'#8a5a3a',e:'#0c0806',j:'#14121f',w:'#2c2838',n:'#14121f',b:'#0a0810'},
   dee:   {h:'#ff8c3a',f:'#d0681e',s:'#f0c4a0',e:'#22150c',j:'#2a2a36',w:'#e8e4da',n:'#2c2838',b:'#1c1826'},
   crow:  {h:'#1a1a22',f:'#101016',s:'#cfa27e',e:'#0c0a08',j:'#23202c',w:'#0e0c16',n:'#23202c',b:'#0e0c16'},
+  lyra:  {h:'#162636',f:'#0e1a26',s:'#d9a37e',e:'#0c1420',j:'#f2f4f8',w:'#43ffd9',n:'#314158',b:'#182436'},
+  bram:  {h:'#322018',f:'#24140e',s:'#c99670',e:'#130c08',j:'#d6a336',w:'#26384f',n:'#202638',b:'#11131c'},
+  iko:   {h:'#2ef0c8',f:'#19a98e',s:'#c89472',e:'#110b20',j:'#30204a',w:'#ff4f9a',n:'#19142a',b:'#43ffd9'},
+  quinn: {h:'#1b1830',f:'#100d20',s:'#b9825e',e:'#0f0b14',j:'#dbe7f4',w:'#7a5cff',n:'#25304a',b:'#43ffd9'},
   ped1:  {h:'#4a3260',f:'#382450',s:'#e5b491',e:'#1a1c2c',j:'#5a4a8a',w:'#cfd2da',n:'#33304a',b:'#5e5a72'},
   ped2:  {h:'#c2541f',f:'#a04015',s:'#f2cba6',e:'#22180f',j:'#3f7f9f',w:'#e8e2cf',n:'#2c3a44',b:'#27313a'},
   ped3:  {h:'#d8d2c2',f:'#b8b2a2',s:'#caa27e',e:'#1c1810',j:'#7f3f6f',w:'#ddd5e5',n:'#3a2c44',b:'#2c2235'},
@@ -786,15 +937,16 @@ const TOUCH = ('ontouchstart' in window) ||
 
 const UI = {
   el:{}, typing:false, typeTimer:null, node:null, choiceIdx:0,
-  onUseItem:null, onAdvanceSound:null,
+  onUseItem:null, onAdvanceSound:null, onSwitchMode:null, onGraphicsPreset:null,
+  pauseTab:'status', graphicsInfo:null,
 
   init(){
     for(const id of ['hud','credits','clock','tracker','prompt','dlg','dlgName','dlgText',
       'dlgChoices','dlgMore','toasts','questPanel','questList','helpPanel','title','fade',
-      'ending','endText','hint','invPanel','invList','xhair']) this.el[id]=document.getElementById(id);
+      'ending','endText','hint','invPanel','invList','pausePanel','pauseBody','xhair']) this.el[id]=document.getElementById(id);
     this.el.dlg.addEventListener('click', e=>{
       if(e.target.closest('.choice')) return; this.advance(); });
-    for(const pid of ['questPanel','helpPanel','invPanel']){
+    for(const pid of ['questPanel','helpPanel','invPanel','pausePanel']){
       const p=this.el[pid];
       p.addEventListener('click', e=>{ if(e.target===p) this.closePanels(); });
     }
@@ -831,6 +983,7 @@ const UI = {
   /* ---- dialogue ---- */
   open(nodeId){
     const n=SAYS[nodeId]; if(!n) return;
+    if(document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
     if(n.fx){ const r=n.fx(); if(r==='skip'){ this.close(); return; } }
     this.node=n; this.el.dlg.style.display='block';
     this.el.dlgName.textContent=n.who;
@@ -894,15 +1047,21 @@ const UI = {
   togglePanel(which){
     const p=this.el[which];
     const open=p.style.display==='flex';
+    if(!open && document.pointerLockElement && document.exitPointerLock) document.exitPointerLock();
     this.closePanels();
     if(!open){
       if(which==='questPanel') this.renderQuests();
       if(which==='invPanel') this.renderInv();
+      if(which==='pausePanel') this.renderPause(this.pauseTab);
       p.style.display='flex';
     }
   },
-  anyPanel(){ return ['questPanel','helpPanel','invPanel'].some(id=>this.el[id].style.display==='flex'); },
-  closePanels(){ for(const id of ['questPanel','helpPanel','invPanel']) this.el[id].style.display='none'; },
+  togglePause(tab){
+    this.pauseTab=tab||this.pauseTab||'status';
+    this.togglePanel('pausePanel');
+  },
+  anyPanel(){ return ['questPanel','helpPanel','invPanel','pausePanel'].some(id=>this.el[id].style.display==='flex'); },
+  closePanels(){ for(const id of ['questPanel','helpPanel','invPanel','pausePanel']) this.el[id].style.display='none'; },
   renderQuests(){
     const box=this.el.questList; box.innerHTML='';
     const ids=Object.keys(S.quests);
@@ -931,6 +1090,80 @@ const UI = {
       }
       box.appendChild(d);
     }
+  },
+  renderPause(tab){
+    this.pauseTab=tab||this.pauseTab||'status';
+    const q=activeQuest();
+    const loc=S.scene==='world'?'NEW MERIDIAN':(SCENE_NAMES[S.scene]||S.scene).toUpperCase();
+    const invIds=Object.keys(S.inv).filter(id=>S.inv[id]>0);
+    const questIds=Object.keys(S.quests);
+    let body='';
+    if(this.pauseTab==='status'){
+      body='<div class="pauseStats">'+
+        '<div><b>'+loc+'</b><span>location</span></div>'+
+        '<div><b>&#8353; '+S.credits+'</b><span>credits</span></div>'+
+        '<div><b>'+Math.round(S.hp)+'/'+S.maxHp+'</b><span>health</span></div>'+
+        '<div><b>'+Math.round(S.hunger)+'%</b><span>food</span></div>'+
+        '</div>'+
+        '<div class="qitem"><div class="qn">'+(q?QUESTS[q].title:'No active job')+'</div>'+
+        '<div class="qd">'+(q?QUESTS[q].obj():'Talk to people in the city to pick up work and clues.')+'</div></div>';
+    } else if(this.pauseTab==='bag'){
+      body=invIds.length? invIds.map(id=>{
+        const it=ITEMS[id]; if(!it) return '';
+        return '<div class="qitem"><div class="qn">'+it.name+' x'+S.inv[id]+'</div><div class="qd">'+it.desc+'</div></div>';
+      }).join('') : '<div class="qd">Bag empty. GreenGrid Market sells food and gear.</div>';
+    } else if(this.pauseTab==='jobs'){
+      body=questIds.length? questIds.map(id=>{
+        const qd=QUESTS[id], st=S.quests[id];
+        return '<div class="qitem '+(st==='done'?'done':'')+'"><div class="qn">'+qd.title+'</div>'+
+          '<div class="qd">'+qd.desc+'</div><div class="qs">'+(st==='done'?'Complete':qd.obj())+'</div></div>';
+      }).join('') : '<div class="qd">No jobs yet. Elias in Memorial Park is a good first lead.</div>';
+    } else if(this.pauseTab==='map'){
+      body='<div class="mapGrid">'+
+        '<span>Memorial Park</span><span>Tanaka Towers</span><span>Market Street</span>'+
+        '<span>Transit Plaza</span><span>Velvet Row</span><span>Meridian Campus</span>'+
+        '<span>MedLoop Clinic</span><span>Fab Commons</span><span>Neuro-Arcade</span>'+
+        '<span>Array Annex</span>'+
+        '</div><div class="qd">Follow the gold pillar for the current objective. Sky-Cab pads link the long walks.</div>';
+    } else if(this.pauseTab==='mode'){
+      body='<div class="modeCard"><div><b>Switch to 2D</b><span>Keep your name, credits, quests, bag, and location.</span></div>'+
+        '<button class="btn" id="pauseSwitchMode">Open 2D View</button></div>'+
+        '<div class="qd">The same Chapter 1 story continues in the side-scrolling version.</div>';
+    } else {
+      const g=this.graphicsInfo||{};
+      const preset=g.preset||'balanced';
+      const presetBtn=(id,name,desc)=>'<button class="'+(preset===id?'on':'')+'" data-gfx="'+id+'">'+
+        '<b>'+name+'</b><span>'+desc+'</span></button>';
+      body='<div class="gfxGrid">'+
+        presetBtn('performance','Performance','Cooler battery, lighter rain, lower render scale.')+
+        presetBtn('balanced','Balanced','Default mobile-first clarity and atmosphere.')+
+        presetBtn('ultra','Ultra','Sharper render, richer bloom-style overlays.')+
+        '</div><div class="gfxFacts">'+
+        '<div><b>Renderer</b>'+((g.renderer||'WebGL')+' / Three r'+(g.three||'?'))+'</div>'+
+        '<div><b>WebGPU</b>'+(g.webgpu||'not detected')+'</div>'+
+        '<div><b>Render Scale</b>'+(g.pixelRatio||'?')+'x</div>'+
+        '<div><b>Atmosphere</b>'+(g.atmosphere||'balanced')+'</div>'+
+        '</div>';
+    }
+    this.el.pauseBody.innerHTML=
+      '<div class="pauseHero"><div><b>2045 field kit</b><span>Food, work, shelter, transport, and one dead phone from the wrong year.</span></div></div>'+
+      '<div class="pauseTabs">'+['status','bag','jobs','map','mode','gfx'].map(id=>
+        '<button class="'+(id===this.pauseTab?'on':'')+'" data-tab="'+id+'">'+id+'</button>').join('')+'</div>'+
+      '<div class="pauseContent">'+body+'</div>'+
+      '<div class="closehint">P / ESC / tap outside to close</div>';
+    this.el.pauseBody.querySelectorAll('[data-tab]').forEach(b=>{
+      b.onclick=()=>this.renderPause(b.dataset.tab);
+    });
+    const sw=this.el.pauseBody.querySelector('#pauseSwitchMode');
+    if(sw) sw.onclick=()=>this.onSwitchMode&&this.onSwitchMode();
+    this.el.pauseBody.querySelectorAll('[data-gfx]').forEach(b=>{
+      b.onclick=()=>this.onGraphicsPreset&&this.onGraphicsPreset(b.dataset.gfx);
+    });
+  },
+  setGraphicsInfo(info){
+    this.graphicsInfo=info;
+    if(this.pauseTab==='gfx' && this.el.pausePanel && this.el.pausePanel.style.display==='flex')
+      this.renderPause('gfx');
   },
 
   fadeTo(black, ms){
@@ -1028,6 +1261,8 @@ const INPUT = {
 
     document.getElementById('btnQuests').addEventListener('click', ()=>this.onAction&&this.onAction('j'));
     document.getElementById('btnBag').addEventListener('click', ()=>this.onAction&&this.onAction('i'));
+    const btnPause=document.getElementById('btnPause');
+    if(btnPause) btnPause.addEventListener('click', ()=>this.onAction&&this.onAction('p'));
 
     /* fullscreen */
     const btnFS=document.getElementById('btnFS');
@@ -1058,44 +1293,106 @@ const INPUT = {
 
 /* ---------------- renderer / scene ---------------- */
 const canvas=document.getElementById('gl');
+const GFX_KEY='robotique_3d_gfx';
+const GFX_PRESETS={
+  performance:{label:'Performance', mobile:1, desktop:1, exposure:1.02,
+    rain:.15, vignette:.62, cinema:.48, bottom:.54, contrast:1, saturation:1.02, atmosphere:'light'},
+  balanced:{label:'Balanced', mobile:1.35, desktop:1.35, exposure:1.08,
+    rain:.24, vignette:.58, cinema:.42, bottom:.48, contrast:1.02, saturation:1.08, atmosphere:'balanced'},
+  ultra:{label:'Ultra', mobile:1.75, desktop:1.75, exposure:1.16,
+    rain:.34, vignette:.52, cinema:.34, bottom:.42, contrast:1.06, saturation:1.18, atmosphere:'dense'}
+};
+let gfxPresetName=(()=>{ try{ return localStorage.getItem(GFX_KEY)||'balanced'; }catch(e){ return 'balanced'; } })();
+if(!GFX_PRESETS[gfxPresetName]) gfxPresetName='balanced';
 const renderer=new THREE.WebGLRenderer({canvas, antialias:false, powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x070a1c);
-scene.fog=new THREE.Fog(0x0a0c20, 25, 170);
+scene.fog=new THREE.Fog(0x080a16, 38, 230);
 const camera=new THREE.PerspectiveCamera(72, innerWidth/innerHeight, .1, 500);
 camera.rotation.order='YXZ';
 let pitch=0;
-addEventListener('resize', ()=>{
-  renderer.setSize(innerWidth,innerHeight);
-  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-});
-if(window.visualViewport) visualViewport.addEventListener('resize', ()=>{
-  renderer.setSize(visualViewport.width,visualViewport.height);
-  camera.aspect=visualViewport.width/visualViewport.height; camera.updateProjectionMatrix();
-});
 
-scene.add(new THREE.AmbientLight(0x33365a, 1.1));
-const hemi=new THREE.HemisphereLight(0x2a2150, 0x0c0a18, .8); scene.add(hemi);
+scene.add(new THREE.AmbientLight(0x272a48, .9));
+const hemi=new THREE.HemisphereLight(0x25204b, 0x070812, .72); scene.add(hemi);
 const moonLight=new THREE.DirectionalLight(0x8a9ad0, .35);
 moonLight.position.set(80,120,-60); scene.add(moonLight);
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+function resizeRenderer(){
+  const vp=window.visualViewport;
+  const w=Math.max(1, Math.round(vp?vp.width:innerWidth));
+  const h=Math.max(1, Math.round(vp?vp.height:innerHeight));
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+function graphicsStatus(){
+  const p=GFX_PRESETS[gfxPresetName]||GFX_PRESETS.balanced;
+  const ratio=renderer.getPixelRatio ? renderer.getPixelRatio() : Math.min(devicePixelRatio,2);
+  const isWebGL2=!!(renderer.capabilities&&renderer.capabilities.isWebGL2);
+  return {
+    preset:gfxPresetName,
+    renderer:isWebGL2?'WebGL2':'WebGL',
+    three:THREE.REVISION,
+    webgpu:('gpu' in navigator)?'available in browser':'not available',
+    pixelRatio:Math.round(ratio*100)/100,
+    atmosphere:p.atmosphere
+  };
+}
+function applyGraphicsPreset(name, quiet){
+  if(!GFX_PRESETS[name]) name='balanced';
+  gfxPresetName=name;
+  const p=GFX_PRESETS[name];
+  const dpr=devicePixelRatio||1;
+  const ratio=TOUCH
+    ? Math.max(.75, Math.min(dpr, p.mobile))
+    : Math.max(.75, Math.min(2, p.desktop));
+  renderer.setPixelRatio(ratio);
+  renderer.toneMappingExposure=p.exposure;
+  renderer.shadowMap.enabled=name==='ultra';
+  moonLight.castShadow=name==='ultra';
+  const root=document.documentElement;
+  root.style.setProperty('--rain-opacity', p.rain);
+  root.style.setProperty('--vignette-edge', p.vignette);
+  root.style.setProperty('--cinema-edge', p.cinema);
+  root.style.setProperty('--cinema-bottom', p.bottom);
+  root.style.setProperty('--scene-contrast', p.contrast);
+  root.style.setProperty('--scene-saturation', p.saturation);
+  try{ localStorage.setItem(GFX_KEY,name); }catch(e){}
+  resizeRenderer();
+  UI.setGraphicsInfo(graphicsStatus());
+  if(!quiet) UI.toast('Graphics: '+p.label,'quest');
+}
+addEventListener('resize', resizeRenderer);
+if(window.visualViewport) visualViewport.addEventListener('resize', resizeRenderer);
+applyGraphicsPreset(gfxPresetName,true);
 
 /* ---------------- texture helpers ---------------- */
 function ctex(c){ const t=new THREE.CanvasTexture(c);
   t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter;
   t.colorSpace=THREE.SRGBColorSpace; return t; }
 function buildingTex(seed, base, winA, winB, neon){
-  const c=document.createElement('canvas'); c.width=64; c.height=128;
+  const c=document.createElement('canvas'); c.width=128; c.height=256;
   const g=c.getContext('2d');
-  g.fillStyle=base; g.fillRect(0,0,64,128);
+  const grad=g.createLinearGradient(0,0,128,256);
+  grad.addColorStop(0,base); grad.addColorStop(1,'#070a16');
+  g.fillStyle=grad; g.fillRect(0,0,128,256);
   let s=seed; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
-  for(let y=6;y<120;y+=10) for(let x=4;x<58;x+=8){
-    if(rnd()<.5){ g.fillStyle = rnd()<.78? (rnd()<.5?winA:winB) : '#0a0d1a';
-      g.fillRect(x,y,5,6); }
+  g.globalAlpha=.18;
+  for(let i=0;i<220;i++){
+    const v=16+(rnd()*32|0); g.fillStyle='rgb('+v+','+(v+6)+','+(v+18)+')';
+    g.fillRect(rnd()*128|0,rnd()*256|0,1+rnd()*3|0,1);
   }
-  if(neon && rnd()<.85){ g.fillStyle=neon; g.fillRect(0,0,64,3);
-    if(rnd()<.5) g.fillRect((rnd()*50)|0,8,3,30+rnd()*40|0); }
+  g.globalAlpha=1;
+  for(let y=10;y<238;y+=16) for(let x=8;x<116;x+=13){
+    if(rnd()<.5){ g.fillStyle = rnd()<.78? (rnd()<.5?winA:winB) : '#0a0d1a';
+      g.shadowColor=g.fillStyle; g.shadowBlur=5;
+      g.fillRect(x,y,7,8); g.shadowBlur=0; }
+  }
+  g.strokeStyle='rgba(255,255,255,.05)';
+  for(let x=0;x<128;x+=16){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,256); g.stroke(); }
+  if(neon && rnd()<.85){ g.shadowColor=neon; g.shadowBlur=16; g.fillStyle=neon; g.fillRect(0,0,128,5);
+    if(rnd()<.5) g.fillRect((rnd()*100)|0,16,5,60+rnd()*80|0); g.shadowBlur=0; }
   return ctex(c);
 }
 function flatMat(color){ return new THREE.MeshBasicMaterial({color}); }
@@ -1120,20 +1417,103 @@ function artTex(file){
   t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter;
   t.colorSpace=THREE.SRGBColorSpace; return t;
 }
+function photoTex(file){
+  const t=texLoader.load('assets/'+file);
+  t.magFilter=THREE.LinearFilter; t.minFilter=THREE.LinearFilter;
+  t.colorSpace=THREE.SRGBColorSpace; return t;
+}
+function surfaceTex(file, rx, ry, color){
+  const t=texLoader.load('assets/'+file);
+  t.magFilter=THREE.LinearFilter; t.minFilter=THREE.LinearMipmapLinearFilter;
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx, ry);
+  if(color) t.colorSpace=THREE.SRGBColorSpace;
+  t.anisotropy=Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+function wetAsphaltMat(rx, ry, tint, opts={}){
+  return new THREE.MeshStandardMaterial({
+    color:tint||0xffffff,
+    map:surfaceTex('wet-asphalt-2045.png',rx,ry,true),
+    emissiveMap:surfaceTex('wet-asphalt-2045.png',rx,ry,true),
+    bumpMap:surfaceTex('wet-asphalt-2045-bump.png',rx,ry,false),
+    bumpScale:opts.bumpScale??.035,
+    roughnessMap:surfaceTex('wet-asphalt-2045-roughness.png',rx,ry,false),
+    roughness:opts.roughness??.36,
+    metalness:opts.metalness??.12,
+    emissive:opts.emissive??0x07111a,
+    emissiveIntensity:opts.emissiveIntensity??.05
+  });
+}
+function wetSheenMat(rx, ry, opacity){
+  return new THREE.MeshBasicMaterial({
+    map:surfaceTex('wet-asphalt-2045.png',rx,ry,true),
+    transparent:true, opacity,
+    blending:THREE.AdditiveBlending,
+    depthWrite:false
+  });
+}
+const ROOM_SKINS={
+  clinic:{wall:'clinic-wall-2045.png', floor:'clinic-floor-2045.png',
+    wallRepeat:[1.18,1], floorRepeat:[1.7,2.1], roughness:.32, metalness:.03,
+    floorRoughness:.26, floorMetalness:.12, sheen:.11, emissive:.035},
+  maker:{wall:'maker-wall-2045.png', floor:'maker-floor-2045.png',
+    wallRepeat:[1.35,1], floorRepeat:[2.2,2.1], roughness:.38, metalness:.2,
+    floorRoughness:.28, floorMetalness:.22, sheen:.09, emissive:.045},
+  arcade:{wall:'arcade-wall-2045.png', floor:'arcade-floor-2045.png',
+    wallRepeat:[1.25,1], floorRepeat:[2,2], roughness:.24, metalness:.18,
+    floorRoughness:.2, floorMetalness:.18, sheen:.16, emissive:.07},
+  annex:{wall:'annex-wall-2045.png', floor:'annex-floor-2045.png',
+    wallRepeat:[1.18,1], floorRepeat:[1.7,1.7], roughness:.26, metalness:.26,
+    floorRoughness:.18, floorMetalness:.28, sheen:.18, emissive:.065},
+};
+function roomWallMat(key, accent){
+  const skin=ROOM_SKINS[key];
+  if(!skin) return new THREE.MeshBasicMaterial({color:0x171527, side:THREE.BackSide});
+  return new THREE.MeshStandardMaterial({
+    map:surfaceTex(skin.wall, skin.wallRepeat[0], skin.wallRepeat[1], true),
+    color:0xffffff, roughness:skin.roughness, metalness:skin.metalness,
+    emissive:accent, emissiveIntensity:skin.emissive, side:THREE.BackSide
+  });
+}
+function roomFloorMat(key, accent){
+  const skin=ROOM_SKINS[key];
+  if(!skin) return flatMat(0x100e1c);
+  return new THREE.MeshStandardMaterial({
+    map:surfaceTex(skin.floor, skin.floorRepeat[0], skin.floorRepeat[1], true),
+    color:0xffffff, roughness:skin.floorRoughness, metalness:skin.floorMetalness,
+    emissive:accent, emissiveIntensity:skin.emissive*.45
+  });
+}
+function roomSheenMat(key){
+  const skin=ROOM_SKINS[key]; if(!skin) return null;
+  return new THREE.MeshBasicMaterial({
+    map:surfaceTex(skin.floor, skin.floorRepeat[0], skin.floorRepeat[1], true),
+    color:0xffffff, transparent:true, opacity:skin.sheen,
+    blending:THREE.AdditiveBlending, depthWrite:false
+  });
+}
+const skylineBackdrop=photoTex('new-meridian-skyline-2045-game.png');
+scene.background=skylineBackdrop;
 
 /* ---------------- world geometry ---------------- */
 const world=new THREE.Group(); scene.add(world);
 
 /* ground + roads */
 {
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,1400,12,12), flatMat(0x0b0d18));
+  const groundMat=wetAsphaltMat(70,70,0x8792a4,{roughness:.58,metalness:.04,bumpScale:.018,emissive:0x0a141e,emissiveIntensity:.10});
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,1400,12,12), groundMat);
   ground.rotation.x=-Math.PI/2; ground.position.set(150,0,500); world.add(ground);
-  const roadMat=flatMat(0x14172a);
+  const roadMat=wetAsphaltMat(36,1.4,0xffffff,{roughness:.24,metalness:.18,bumpScale:.028,emissive:0x1d3444,emissiveIntensity:.22});
   const main=new THREE.Mesh(new THREE.PlaneGeometry(540,10,24,1), roadMat);
   main.rotation.x=-Math.PI/2; main.position.set(0,.02,0); world.add(main);
-  const row=new THREE.Mesh(new THREE.PlaneGeometry(14,150,1,8), roadMat);
+  const mainSheen=new THREE.Mesh(new THREE.PlaneGeometry(540,10,24,1), wetSheenMat(36,1.4,.13));
+  mainSheen.rotation.x=-Math.PI/2; mainSheen.position.set(0,.062,0); world.add(mainSheen);
+  const rowMat=wetAsphaltMat(1.3,10,0xffffff,{roughness:.25,metalness:.18,bumpScale:.028,emissive:0x1d3444,emissiveIntensity:.22});
+  const row=new THREE.Mesh(new THREE.PlaneGeometry(14,150,1,8), rowMat);
   row.rotation.x=-Math.PI/2; row.position.set(100,.02,-80); world.add(row);
-  const walkMat=flatMat(0x191d33);
+  const rowSheen=new THREE.Mesh(new THREE.PlaneGeometry(14,150,1,8), wetSheenMat(1.3,10,.13));
+  rowSheen.rotation.x=-Math.PI/2; rowSheen.position.set(100,.062,-80); world.add(rowSheen);
+  const walkMat=wetAsphaltMat(34,.75,0xb7c1d2,{roughness:.45,metalness:.06,bumpScale:.02,emissive:0x142432,emissiveIntensity:.14});
   for(const z of [-7,7]){
     const sw=new THREE.Mesh(new THREE.PlaneGeometry(540,4,24,1), walkMat);
     sw.rotation.x=-Math.PI/2; sw.position.set(0,.03,z); world.add(sw);
@@ -1147,6 +1527,34 @@ const world=new THREE.Group(); scene.add(world);
   // park lawn
   const lawn=new THREE.Mesh(new THREE.PlaneGeometry(120,40,6,2), flatMat(0x0e1f18));
   lawn.rotation.x=-Math.PI/2; lawn.position.set(-200,.025,18); world.add(lawn);
+  const puddleMat=new THREE.MeshBasicMaterial({color:0x86e8ff, transparent:true, opacity:.16,
+    depthWrite:false, blending:THREE.AdditiveBlending});
+  for(let i=0;i<42;i++){
+    const p=new THREE.Mesh(new THREE.CircleGeometry(1,18), puddleMat.clone());
+    const onRow=i%5===0;
+    p.scale.set(.8+Math.random()*3.2,.18+Math.random()*.7,1);
+    p.rotation.x=-Math.PI/2; p.rotation.z=Math.random()*Math.PI;
+    p.position.set(onRow? 100+(Math.random()-.5)*8 : -250+Math.random()*500, .055,
+      onRow? -18-Math.random()*124 : -3.5+Math.random()*7);
+    p.material.opacity=.06+Math.random()*.14;
+    world.add(p);
+  }
+  const curbGlow=new THREE.MeshBasicMaterial({color:0x43ffd9, transparent:true, opacity:.22,
+    blending:THREE.AdditiveBlending, depthWrite:false});
+  for(const z of [-5.1,5.1]){
+    const strip=new THREE.Mesh(new THREE.PlaneGeometry(520,.08), curbGlow.clone());
+    strip.rotation.x=-Math.PI/2; strip.position.set(0,.07,z); world.add(strip);
+  }
+}
+
+let rain;
+{
+  const geo=new THREE.BufferGeometry(), pos=[];
+  for(let i=0;i<1400;i++) pos.push(-280+Math.random()*560, 2+Math.random()*90, -165+Math.random()*245);
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+  rain=new THREE.Points(geo, new THREE.PointsMaterial({color:0x9fefff, size:.11,
+    transparent:true, opacity:.32, fog:false, blending:THREE.AdditiveBlending, depthWrite:false}));
+  scene.add(rain);
 }
 
 /* sky: stars + moon + sun (driven by the day/night cycle) */
@@ -1178,8 +1586,8 @@ let stars, moon, sun;
 }
 
 /* ---------------- day/night cycle ---------------- */
-const SKY_N=new THREE.Color(0x070a1c), SKY_D=new THREE.Color(0x86a9cd), SKY_K=new THREE.Color(0xb05c3e);
-const FOG_N=new THREE.Color(0x0a0c20), FOG_D=new THREE.Color(0x97b3d2), FOG_K=new THREE.Color(0xa06246);
+const SKY_N=new THREE.Color(0x070a1c), SKY_D=new THREE.Color(0x5b7592), SKY_K=new THREE.Color(0x3a2440);
+const FOG_N=new THREE.Color(0x080a16), FOG_D=new THREE.Color(0x4d6178), FOG_K=new THREE.Color(0x211728);
 function dayFactor(){            // 0 = night, 1 = full day (dawn 5-7h, dusk 18-20h)
   const h=S.minutes/60;
   return Math.min(THREE.MathUtils.smoothstep(h,5,7), 1-THREE.MathUtils.smoothstep(h,18,20));
@@ -1192,8 +1600,8 @@ const _sky=new THREE.Color();
 function applyDayNight(){
   const dT=dayFactor(), kT=duskFactor();
   _sky.copy(SKY_N).lerp(SKY_D,dT).lerp(SKY_K,kT*.45);
-  scene.background.copy(_sky);
-  scene.fog.color.copy(FOG_N).lerp(FOG_D,dT).lerp(FOG_K,kT*.4);
+  if(scene.background&&scene.background.isColor) scene.background.copy(_sky);
+  scene.fog.color.copy(FOG_N).lerp(FOG_D,dT*.55).lerp(FOG_K,kT*.28);
   stars.material.opacity=Math.max(0,1-dT*1.4);
   /* sun arc 06→20h, moon arc 19→07h */
   const h=S.minutes/60;
@@ -1207,9 +1615,9 @@ function applyDayNight(){
   /* daylight wash over the unlit neon city */
   const glow=document.getElementById('dayglow');
   if(glow){
-    const r=Math.round(134+kT*90), gC=Math.round(166-kT*60), b=Math.round(203-kT*110);
+    const r=Math.round(82+kT*38), gC=Math.round(102-kT*18), b=Math.round(132-kT*30);
     glow.style.background='rgb('+r+','+gC+','+b+')';
-    glow.style.opacity=(dT*.5 + kT*.14).toFixed(3);
+    glow.style.opacity=(dT*.22 + kT*.045).toFixed(3);
   }
 }
 
@@ -1242,11 +1650,7 @@ function addBuilding(x,z,w,d,h,seed,opts={}){
     addBuilding(x+w/2, 18+((seed%3)*2), w, 16, h, seed);
     x+=w+2; seed+=5;
   }
-  // distant skyline ring
-  for(let i=0;i<26;i++){
-    const a=i/26*Math.PI*2;
-    addBuilding(Math.cos(a)*300, Math.sin(a)*300, 30,30, 50+((i*37)%90), i*7+5, {base:'#141a32'});
-  }
+  // The generated skyline backdrop now carries long-range city depth.
   // Velvet Row walls: inner faces at x=89 and x=111
   for(let z=-18;z>-150;){
     const d=12+((seed*7)%10), h=16+((seed*13)%26);
@@ -1274,7 +1678,9 @@ shopFront(-40,'GREENGRID','#43d97a');
 shopFront(0,'CROOKED BEAN','#ff4f9a');
 shopFront(40,'KAITEN-45','#ff5560');
 shopFront(-100,'TANAKA TOWERS','#ffd23f');
+shopFront(-180,'MEDLOOP','#6ad8ff');
 shopFront(200,'MERIDIAN ARRAY','#43ffd9');
+shopFront(240,'FAB COMMONS','#ff8c3a');
 
 /* ansimuz banner planes (animated) */
 const ANIM_SIGNS=[];
@@ -1305,6 +1711,7 @@ function rowSign(label,color,z,side){ // side: -1 west wall (face x=89), +1 east
   world.add(sign);
 }
 rowSign('PINK NOODLE','#ff8c3a',-35,-1);
+rowSign('NEURO-ARCADE','#b14aff',-30,+1);
 rowSign('LIVE · LIVE','#ff2f7a',-50,+1);
 rowSign('THE STATIC','#43ffd9',-75,-1);
 rowSign('GIRLS GIRLS','#ff2f7a',-92,+1);
@@ -1315,6 +1722,8 @@ rowSign('HOT·L','#ff5560',-110,-1);
   arch.position.set(100,2.2,-133.9); world.add(arch); }
 { const d=new THREE.Mesh(new THREE.PlaneGeometry(2.2,3.2), flatMat(0x0e2a2a));
   d.position.set(89.1,1.6,-75); d.rotation.y=Math.PI/2; world.add(d); }
+{ const d=new THREE.Mesh(new THREE.PlaneGeometry(2.2,3.2), flatMat(0x1f1230));
+  d.position.set(110.9,1.6,-30); d.rotation.y=-Math.PI/2; world.add(d); }
 
 /* props */
 function lamp(x,z,color){
@@ -1379,9 +1788,23 @@ function buildCar(color, taxi){
   body.position.y=.35; g.add(body);
   const cab=new THREE.Mesh(new THREE.BoxGeometry(1.7,.55,1.4), flatMat(0x16202c));
   cab.position.set(-.2,.95,0); g.add(cab);
+  const glass=new THREE.Mesh(new THREE.BoxGeometry(1.35,.34,1.22),
+    new THREE.MeshBasicMaterial({color:0x9fefff, transparent:true, opacity:.28,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  glass.position.set(.08,1.12,0); g.add(glass);
   const skirt=new THREE.Mesh(new THREE.BoxGeometry(3.5,.1,1.7),
     new THREE.MeshBasicMaterial({color:0x43ffd9}));
   skirt.position.y=.02; g.add(skirt);
+  for(const z of [-.92,.92]){
+    const rail=new THREE.Mesh(new THREE.BoxGeometry(3.2,.08,.08),
+      new THREE.MeshBasicMaterial({color:0x9fffea, transparent:true, opacity:.72}));
+    rail.position.set(0,.14,z); g.add(rail);
+    const fan=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.06,18),
+      new THREE.MeshBasicMaterial({color:0x43ffd9, transparent:true, opacity:.38,
+        blending:THREE.AdditiveBlending, depthWrite:false}));
+    fan.rotation.x=Math.PI/2; fan.position.set(1.05,.08,z*.7); g.add(fan);
+    const fan2=fan.clone(); fan2.position.x=-1.05; g.add(fan2);
+  }
   const engine=new THREE.Mesh(new THREE.BoxGeometry(.18,.4,1.1),
     new THREE.MeshBasicMaterial({color:0xff4f9a}));
   engine.position.set(-1.75,.45,0); g.add(engine);
@@ -1423,13 +1846,53 @@ for(const p of PADS){
   sign.position.set(p.x+2.6,4.6,p.z); world.add(sign);
 }
 const taxiCab=buildCar(0xffc014,true); taxiCab.visible=false; scene.add(taxiCab);
-let RIDE=null, rideY=1.62;
+const playerCab=buildCar(0x43ffd9,true); playerCab.visible=false; scene.add(playerCab);
+let RIDE=null, rideY=1.62, PILOT=null;
+const PILOT_UI={
+  root:document.getElementById('pilotHud'),
+  speed:document.getElementById('pilotSpeed'),
+  speedBar:document.getElementById('pilotSpeedBar'),
+  alt:document.getElementById('pilotAlt'),
+  altBar:document.getElementById('pilotAltBar'),
+  bank:document.getElementById('pilotBank'),
+  status:document.getElementById('pilotStatus'),
+  touchLabel:document.getElementById('tALabel'),
+  cabButton:document.getElementById('btnCab'),
+};
+function setPilotHud(on){
+  document.body.classList.toggle('pilotMode', !!on);
+  if(PILOT_UI.root) PILOT_UI.root.style.display=on?'block':'none';
+  if(PILOT_UI.touchLabel) PILOT_UI.touchLabel.textContent=on?'LAND':'USE';
+  if(PILOT_UI.cabButton) PILOT_UI.cabButton.textContent=on?'LAND':'CAB';
+}
+function updatePilotHud(){
+  if(!PILOT || !PILOT_UI.root) return;
+  const kph=Math.round(PILOT.speed||0);
+  const alt=Math.round(Math.max(0,rideY));
+  const edge=S.x<=-255||S.x>=255||S.z<=-145||S.z>=28;
+  if(PILOT_UI.speed) PILOT_UI.speed.textContent=kph+' KPH';
+  if(PILOT_UI.alt) PILOT_UI.alt.textContent=alt+' M';
+  if(PILOT_UI.speedBar) PILOT_UI.speedBar.style.width=clamp(kph/75*100,0,100)+'%';
+  if(PILOT_UI.altBar) PILOT_UI.altBar.style.width=clamp(alt/14*100,0,100)+'%';
+  if(PILOT_UI.bank) PILOT_UI.bank.style.transform='translate('+Math.round((PILOT.bank||0)*72)+'px, -50%) rotate('+((PILOT.bank||0)*9)+'deg)';
+  if(PILOT_UI.status) PILOT_UI.status.textContent=edge?'EDGE':PILOT.boost?'BOOST':'HOVER';
+}
 function padMenu(idx){
   const opts=PADS.map((p,i)=>i).filter(i=>i!==idx);
+  const destChoices=S.flags.metVendo
+    ? opts.map(i=>({t:PADS[i].name+(S.flags.rodeCab?' - ₣8':' - FREE'), n:'cab.go'+i}))
+    : [];
   SAYS['cab.menu']={who:'SKY-CAB PAD',
     text:'Lane network online. Destination?'+(S.flags.rodeCab?' Fare: ₣8 per hop.':' First courier hop is free.'),
     choices:[...opts.map(i=>({t:PADS[i].name+(S.flags.rodeCab?' — ₣8':' — FREE'), n:'cab.go'+i})),
              {t:'(Step back)', n:null}]};
+  SAYS['cab.menu'].text=S.flags.metVendo
+    ? 'Lane network online. Destination?'+(S.flags.rodeCab?' Fare: ₣8 per hop.':' First courier hop is free.')
+    : 'Visitor mode online. Courier lanes are locked, but the training glide is free.';
+  SAYS['cab.menu'].choices=[{t:'Manual pilot training - FREE', n:'cab.pilot'}, ...destChoices,
+    {t:'(Step back)', n:null}];
+  SAYS['cab.pilot']={who:'SKY-CAB PAD', text:'Manual hover envelope unlocked. Stay below the traffic ceiling. Press E to land.',
+    fx:()=>{ setTimeout(()=>{ UI.close(); startPilot(idx); }, 350); }};
   for(const i of opts){
     SAYS['cab.go'+i]={who:'SKY-CAB', text:'Cab descending. Watch your head.',
       fx:()=>{
@@ -1442,6 +1905,7 @@ function padMenu(idx){
   UI.open('cab.menu');
 }
 function startRide(from,to){
+  PILOT=null; playerCab.visible=false; setPilotHud(false);
   const a=PADS[from], b=PADS[to];
   const h=26+Math.random()*5;
   const pts=[
@@ -1456,6 +1920,34 @@ function startRide(from,to){
   taxiCab.visible=true;
   setTimeout(()=>UI.open(S.flags.rodeCab? 'otto.again':'otto.1'), 1400);
 }
+function startPilot(idx){
+  const p=idx==null ? {x:S.x,z:S.z} : PADS[idx];
+  RIDE=null; taxiCab.visible=false;
+  S.scene='world'; S.x=p.x; S.z=p.z; S.yaw=-Math.PI/2;
+  rideY=8.5; PILOT={pad:idx,t:0,speed:0,boost:false,bank:0};
+  playerCab.visible=true;
+  playerCab.position.set(S.x,rideY-1.4,S.z);
+  playerCab.rotation.y=S.yaw;
+  setPilotHud(true);
+  updatePilotHud();
+  UI.toast('PILOT MODE: steer with WASD/stick · edge-stick or SHIFT boosts · E lands','quest');
+}
+function togglePilot(){
+  if(PILOT){ landPilot(); return; }
+  if(S.scene!=='world'){ UI.toast('Sky-Cab summon works outdoors.'); return; }
+  startPilot(null);
+}
+function landPilot(){
+  if(!PILOT) return;
+  if(!inWalk('world',S.x,S.z)){
+    if(S.z<-14 && S.x>75 && S.x<125){ S.x=100; S.z=clamp(S.z,-140,-18); }
+    else { S.z=clamp(S.z,-7,7); S.x=clamp(S.x,-250,250); }
+  }
+  PILOT=null; playerCab.visible=false; rideY=1.62;
+  playerCab.rotation.x=0; playerCab.rotation.z=0; setPilotHud(false);
+  UI.toast('Sky-Cab landed.','quest');
+  save();
+}
 const DRONES=[];
 for(let i=0;i<3;i++){
   const texs=['drone-1.png','drone-2.png','drone-3.png','drone-4.png'].map(artTex);
@@ -1465,14 +1957,19 @@ for(let i=0;i<3;i++){
 }
 
 /* ---------------- interiors ---------------- */
+const INTERIOR_SPIN=[];
 function room(key, accent, build){
   const [cx,cz]=ROOMS[key];
   const grp=new THREE.Group(); grp.position.set(cx,0,cz); world.add(grp);
-  const box=new THREE.Mesh(new THREE.BoxGeometry(16,4.2,14),
-    new THREE.MeshBasicMaterial({color:0x171527, side:THREE.BackSide}));
+  const box=new THREE.Mesh(new THREE.BoxGeometry(16,4.2,14), roomWallMat(key, accent));
   box.position.y=2.1; grp.add(box);
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,14), flatMat(0x100e1c));
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,14), roomFloorMat(key, accent));
   floor.rotation.x=-Math.PI/2; floor.position.y=.01; grp.add(floor);
+  const sheenMat=roomSheenMat(key);
+  if(sheenMat){
+    const sheen=new THREE.Mesh(new THREE.PlaneGeometry(15.7,13.7), sheenMat);
+    sheen.rotation.x=-Math.PI/2; sheen.position.y=.026; grp.add(sheen);
+  }
   const strip=new THREE.Mesh(new THREE.BoxGeometry(15.6,.12,.12),
     new THREE.MeshBasicMaterial({color:accent}));
   strip.position.set(0,3.9,-6.8); grp.add(strip);
@@ -1557,6 +2054,40 @@ function cityWindow(grp,x,z,w,ry){
   win.position.set(x,2.2,z); if(ry) win.rotation.y=ry; grp.add(win);
   const frame=new THREE.Mesh(new THREE.BoxGeometry(w+.3,.12,.12), flatMat(0x3c4468));
   frame.position.set(x,3.36,z+(ry?0:.02)); if(ry) frame.rotation.y=ry; grp.add(frame);
+}
+function glassPanel(grp,x,z,w,h,col,ry,op=.24){
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+    new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:op,
+      blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
+  pane.position.set(x,h/2+.35,z); if(ry) pane.rotation.y=ry; grp.add(pane);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(w+.16,.05,.08), flatMat(0x2d384a));
+  top.position.set(x,h+.36,z); if(ry) top.rotation.y=ry; grp.add(top);
+}
+function glowPlane(grp,x,y,z,w,h,col,ry,op=.36){
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+    new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:op,
+      blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
+  m.position.set(x,y,z); if(ry) m.rotation.y=ry; grp.add(m);
+  return m;
+}
+function ceilingPanel(grp,x,z,w,d,col){
+  const p=new THREE.Mesh(new THREE.BoxGeometry(w,.04,d),
+    new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.72}));
+  p.position.set(x,4.06,z); grp.add(p);
+  const light=new THREE.PointLight(col,.7,7); light.position.set(x,3.8,z); grp.add(light);
+}
+function tube(grp,x,z,h,col){
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,h,12),
+    new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.72}));
+  t.position.set(x,h/2,z); grp.add(t);
+  const light=new THREE.PointLight(col,.55,4); light.position.set(x,1.8,z); grp.add(light);
+}
+function holoDisc(grp,x,z,r,col,op=.22){
+  const d=new THREE.Mesh(new THREE.RingGeometry(r*.68,r,36),
+    new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:op,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  d.rotation.x=-Math.PI/2; d.position.set(x,.08,z); grp.add(d);
+  return d;
 }
 
 room('market', 0x43d97a, g=>{
@@ -1702,6 +2233,192 @@ room('static', 0x43ffd9, g=>{
   hangLamp(g,-5,2,0xffd23f);
   poster(g,-6.9,-1,'PRE-29 ONLY','#43ffd9',Math.PI/2);
   pipes(g,0x18b89a); crate(g,6.5,-5.5,.8);
+});
+room('clinic', 0x6ad8ff, g=>{
+  counter(g,-4.4,-4.2,5,0x6ad8ff);
+  cityWindow(g,4.8,-6.85,4);
+  ceilingPanel(g,-4.3,-.8,3.2,2.2,0xbfefff);
+  ceilingPanel(g,0,-.4,3.2,2.4,0x6ad8ff);
+  ceilingPanel(g,4.2,-.8,3.2,2.2,0x43ffd9);
+  glassPanel(g,-1.8,1.5,4.8,2.35,0xbfefff,Math.PI/2,.16);
+  glassPanel(g,2.15,2.2,3.4,2.15,0x6ad8ff,Math.PI/2,.13);
+  glowPlane(g,-5.9,2.1,-6.62,2.4,1.2,0x6ad8ff,0,.24);
+  for(const [x,col] of [[-4.4,0x6ad8ff],[0,0x43ffd9],[4.4,0xff4f9a]]){
+    const bed=new THREE.Mesh(new THREE.BoxGeometry(2.2,.32,1), flatMat(0x20283a));
+    bed.position.set(x,.45,.8); g.add(bed);
+    holoDisc(g,x,.8,1.25,col,.1);
+    const pad=new THREE.Mesh(new THREE.BoxGeometry(1.9,.08,.86),
+      new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.55}));
+    pad.position.set(x,.68,.8); g.add(pad);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.035,8,28),
+      new THREE.MeshBasicMaterial({color:col}));
+    ring.position.set(x,1.45,.8); ring.rotation.y=Math.PI/2; g.add(ring);
+    const screen=new THREE.Mesh(new THREE.PlaneGeometry(.95,.55),
+      new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.65}));
+    screen.position.set(x,2.2,-.25); g.add(screen);
+    tube(g,x+.95,.2,1.9,col);
+  }
+  const triage=new THREE.Mesh(new THREE.BoxGeometry(2.2,2,.7), flatMat(0x142632));
+  triage.position.set(5.6,1,-4.8); g.add(triage);
+  const panel=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1),
+    new THREE.MeshBasicMaterial({color:0x6ad8ff, transparent:true, opacity:.45}));
+  panel.position.set(5.6,1.5,-4.4); g.add(panel);
+  pipes(g,0x6ad8ff); hangLamp(g,0,2.6,0xbfefff);
+  poster(g,-6.9,-1,'TRIAGE 24','#6ad8ff',Math.PI/2);
+  plant(g,-6.6,5.4); crate(g,6.4,4.8,.7);
+});
+room('maker', 0xff8c3a, g=>{
+  counter(g,4.5,-4.2,5,0xff8c3a);
+  ceilingPanel(g,-3.2,-2.2,4.8,2,0xff8c3a);
+  ceilingPanel(g,3.6,1.6,3.2,2,0x43ffd9);
+  glowPlane(g,0,2.2,-6.62,7.2,1.5,0xff8c3a,0,.2);
+  const workbench=new THREE.Mesh(new THREE.BoxGeometry(8,.28,1.15), flatMat(0x1c1a20));
+  workbench.position.set(-1.2,.9,1.25); g.add(workbench);
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(8.3,.08,.08),
+    new THREE.MeshBasicMaterial({color:0xff8c3a}));
+  rail.position.set(-1.2,1.1,.65); g.add(rail);
+  for(let i=0;i<8;i++){
+    const part=new THREE.Mesh(new THREE.BoxGeometry(.36,.18,.28),
+      new THREE.MeshBasicMaterial({color:[0x7a5cff,0xffd23f,0x43ffd9,0xa0a8b8][i%4]}));
+    part.position.set(-4.8+i*1.05,1.14,1.22); g.add(part);
+  }
+  for(const x of [-4.8,-1.6,1.6]){
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(1.7,2.6,1.2), flatMat(0x2e2430));
+    frame.position.set(x,1.3,-2.2); g.add(frame);
+    holoDisc(g,x,-2.2,1,0xff8c3a,.12);
+    const bay=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.75,.9),
+      new THREE.MeshBasicMaterial({color:0xff8c3a, transparent:true, opacity:.24}));
+    bay.position.set(x,1.25,-2.2); g.add(bay);
+    const head=new THREE.Mesh(new THREE.BoxGeometry(.8,.16,.45),
+      new THREE.MeshBasicMaterial({color:0x43ffd9}));
+    head.position.set(x,2.25,-2.2); g.add(head);
+    const print=new THREE.Mesh(new THREE.CylinderGeometry(.34,.42,.55,8), flatMat(0x7a5cff));
+    print.position.set(x,.5,-2.2); g.add(print);
+  }
+  for(const x of [-5.5,-3.8,-2.1,.2,2.5]) crate(g,x,3.5,.8);
+  const arm=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.2,6), flatMat(0x343a46));
+  arm.rotation.z=Math.PI/2.8; arm.position.set(4.8,2.15,-1.2); g.add(arm);
+  const claw=new THREE.Mesh(new THREE.BoxGeometry(.55,.18,.18),
+    new THREE.MeshBasicMaterial({color:0xffd23f}));
+  claw.position.set(5.7,1.55,-1.2); g.add(claw);
+  const arm2=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,1.8,6), flatMat(0x343a46));
+  arm2.rotation.z=-Math.PI/3.2; arm2.position.set(2.8,2.1,1.1); g.add(arm2);
+  const weld=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),
+    new THREE.MeshBasicMaterial({color:0x43ffd9, transparent:true, opacity:.9}));
+  weld.position.set(2.1,1.5,1.4); g.add(weld);
+  const weldLight=new THREE.PointLight(0x43ffd9,1.4,4); weldLight.position.set(2.1,1.5,1.4); g.add(weldLight);
+  cityWindow(g,-5.2,-6.85,3.4);
+  pipes(g,0xff8c3a); hangLamp(g,-2.4,1.6,0xffd23f); hangLamp(g,3.8,2.6,0x43ffd9);
+  poster(g,6.9,.3,'PRINT WHILE-U-WAIT','#ff8c3a',-Math.PI/2);
+});
+room('arcade', 0xb14aff, g=>{
+  counter(g,-5,-4.3,4.4,0xb14aff);
+  ceilingPanel(g,0,-1.3,7.2,2.1,0xb14aff);
+  ceilingPanel(g,0,3.6,5.5,2.4,0x43ffd9);
+  glowPlane(g,0,2.25,-6.6,7.4,2.2,0x170c2a,0,.75);
+  glowPlane(g,0,2.28,-6.57,6.8,1.8,0xb14aff,0,.16);
+  for(const [x,col] of [[-3.6,0xff2f7a],[-1.2,0x43ffd9],[1.2,0xffd23f],[3.6,0xb14aff]]){
+    const cab=new THREE.Group(); cab.position.set(x,0,-1); g.add(cab);
+    const shell=new THREE.Mesh(new THREE.BoxGeometry(1.35,2.7,1.1), flatMat(0x171326));
+    shell.position.y=1.35; cab.add(shell);
+    const glass=new THREE.Mesh(new THREE.PlaneGeometry(.95,1.25),
+      new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.58}));
+    glass.position.set(0,1.68,.58); cab.add(glass);
+    const visor=new THREE.Mesh(new THREE.BoxGeometry(.8,.16,.18),
+      new THREE.MeshBasicMaterial({color:col}));
+    visor.position.set(0,2.45,.62); cab.add(visor);
+    const base=new THREE.Mesh(new THREE.BoxGeometry(1.6,.2,1.3), flatMat(0x241536));
+    base.position.y=.1; cab.add(base);
+  }
+  for(const [x,col] of [[-4.2,0xff2f7a],[4.2,0x43ffd9]]){
+    const pod=new THREE.Group(); pod.position.set(x,0,3.25); g.add(pod);
+    const base=new THREE.Mesh(new THREE.BoxGeometry(2.4,.32,1.15), flatMat(0x11101c));
+    base.position.y=.45; pod.add(base);
+    const lid=new THREE.Mesh(new THREE.BoxGeometry(2.05,.42,.95),
+      new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.26,
+        blending:THREE.AdditiveBlending, depthWrite:false}));
+    lid.position.y=.95; pod.add(lid);
+    tube(pod,-.86,.48,1.6,col); tube(pod,.86,.48,1.6,col);
+  }
+  const stage=new THREE.Mesh(new THREE.CylinderGeometry(1.8,1.8,.08,16), flatMat(0x22133a));
+  stage.position.set(0,.05,1.75); g.add(stage);
+  holoDisc(g,0,1.75,1.65,0x43ffd9,.11);
+  const holo=new THREE.Mesh(new THREE.TorusGeometry(.75,.025,8,32),
+    new THREE.MeshBasicMaterial({color:0x43ffd9}));
+  holo.position.set(0,1.18,1.75); holo.rotation.x=Math.PI/2; g.add(holo);
+  const holo2=new THREE.Mesh(new THREE.TorusGeometry(1.05,.018,8,36),
+    new THREE.MeshBasicMaterial({color:0xff2f7a, transparent:true, opacity:.8}));
+  holo2.position.set(0,1.55,1.75); holo2.rotation.x=Math.PI/2; g.add(holo2);
+  const wall=new THREE.Mesh(new THREE.PlaneGeometry(6,2.4),
+    new THREE.MeshBasicMaterial({color:0x0e0a18}));
+  wall.position.set(0,2.1,-6.78); g.add(wall);
+  poster(g,0,-6.65,'DREAM ENGINE','#b14aff',0);
+  poster(g,6.9,-1,'NO BODY NO ENTRY','#ff2f7a',-Math.PI/2);
+  pipes(g,0xb14aff); hangLamp(g,-3,2.6,0xff2f7a); hangLamp(g,3,2.6,0x43ffd9);
+});
+
+room('annex', 0x43ffd9, g=>{
+  ceilingPanel(g,-3.9,-2.3,4.8,2.2,0x43ffd9);
+  ceilingPanel(g,3.9,-2.3,4.8,2.2,0x7a5cff);
+  ceilingPanel(g,0,3.2,5.2,2.1,0xff4f9a);
+  glowPlane(g,0,2.25,-6.62,8.2,1.7,0x43ffd9,0,.18);
+  poster(g,0,-6.65,'MERIDIAN ARRAY ANNEX','#43ffd9',0);
+  poster(g,6.9,.2,'DO NOT TOUCH BLUE RING','#ff4f9a',-Math.PI/2);
+
+  const dais=new THREE.Mesh(new THREE.CylinderGeometry(2.8,3.15,.18,28), flatMat(0x101a28));
+  dais.position.set(0,.12,-1.6); g.add(dais);
+  holoDisc(g,0,-1.6,2.7,0x43ffd9,.16);
+  const throat=new THREE.Mesh(new THREE.TorusGeometry(1.75,.09,10,54),
+    new THREE.MeshBasicMaterial({color:0x43ffd9, transparent:true, opacity:.9,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  throat.position.set(0,2.05,-2.2); g.add(throat);
+  INTERIOR_SPIN.push({obj:throat, axis:'z', speed:.9});
+  const throat2=new THREE.Mesh(new THREE.TorusGeometry(1.18,.045,8,48),
+    new THREE.MeshBasicMaterial({color:0xff4f9a, transparent:true, opacity:.82,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  throat2.position.copy(throat.position); g.add(throat2);
+  INTERIOR_SPIN.push({obj:throat2, axis:'z', speed:-1.25});
+  const veil=new THREE.Mesh(new THREE.CircleGeometry(1.08,40),
+    new THREE.MeshBasicMaterial({color:0x132a40, transparent:true, opacity:.36,
+      blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
+  veil.position.copy(throat.position); veil.position.z-=.02; g.add(veil);
+
+  for(const x of [-5.1,-3.45,3.45,5.1]){
+    const stack=new THREE.Group(); stack.position.set(x,0,-3.6); g.add(stack);
+    for(let i=0;i<5;i++){
+      const plate=new THREE.Mesh(new THREE.BoxGeometry(1.05,.045,.78),
+        new THREE.MeshBasicMaterial({color:i%2?0x8ea2bc:0x243048, transparent:true, opacity:i%2?.68:1}));
+      plate.position.y=.75+i*.24; stack.add(plate);
+      const gap=new THREE.Mesh(new THREE.BoxGeometry(.82,.018,.58),
+        new THREE.MeshBasicMaterial({color:0x43ffd9, transparent:true, opacity:.28,
+          blending:THREE.AdditiveBlending, depthWrite:false}));
+      gap.position.y=.86+i*.24; stack.add(gap);
+    }
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,1.6,6), flatMat(0x2d384a));
+    post.position.set(0,.9,.48); stack.add(post);
+    tube(stack,0,.05,1.8,x<0?0x43ffd9:0x7a5cff);
+  }
+
+  for(const [x,z,col] of [[-4.9,2.55,0x43ffd9],[4.9,2.55,0x7a5cff],[-5.7,-.1,0xff4f9a],[5.7,-.1,0xffd23f]]){
+    const pod=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.05,.9), flatMat(0x121928));
+    pod.position.set(x,.55,z); g.add(pod);
+    const screen=new THREE.Mesh(new THREE.PlaneGeometry(1.05,.58),
+      new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.62,
+        blending:THREE.AdditiveBlending, depthWrite:false}));
+    screen.position.set(x,1.35,z-.48); g.add(screen);
+    const key=new THREE.Mesh(new THREE.BoxGeometry(.82,.04,.32),
+      new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.34}));
+    key.position.set(x,.98,z+.32); g.add(key);
+  }
+
+  for(const x of [-2.4,-1.2,1.2,2.4]){
+    const rib=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,3.2,6),
+      new THREE.MeshBasicMaterial({color:0x7a5cff, transparent:true, opacity:.62}));
+    rib.position.set(x,1.8,-2.2); rib.rotation.z=Math.PI/2; g.add(rib);
+  }
+  pipes(g,0x43ffd9);
+  hangLamp(g,-2.7,1.7,0x43ffd9); hangLamp(g,2.7,1.7,0x7a5cff);
+  crate(g,-6.4,4.9,.7); crate(g,6.4,4.6,.65);
 });
 
 /* walkable AABBs: [x1,z1,x2,z2] */
@@ -1898,6 +2615,7 @@ function goDoor(d){
 }
 function nearestInteract(){
   // returns {label, act} or null
+  if(PILOT) return {label:'land hovercar', act:landPilot};
   if(RIDE) return null;
   const fx=-Math.sin(S.yaw), fz=-Math.cos(S.yaw);
   let best=null, bd=2.8;
@@ -1915,13 +2633,9 @@ function nearestInteract(){
       ()=>{ if(d.needKey&&!S.flags.hasKey){ UI.toast('Locked. Mr. Tan handles the leases.'); return; } goDoor(d); });
   }
   if(S.scene==='world'){
-    consider(200,-10,'Array door', ()=>UI.toast('ARRAY ACCESS: sealed. “Exotic-matter charge insufficient.”'));
     consider(100,-132,'NEON GARDEN', ()=>UI.toast('Big Sef doesn’t move. “Members only, ghost.”'));
     if(S.flags.drop) consider(S.flags.drop.x,S.flags.drop.z,'pick up credit chip', ()=>{}, 2.2);
-    PADS.forEach((p,i)=>consider(p.x,p.z,'SKY-CAB pad — '+p.name, ()=>{
-      if(!S.flags.metVendo){ UI.toast('“PADS SERVE REGISTERED COURIERS.” Get hired first.'); return; }
-      padMenu(i);
-    }, 3));
+    PADS.forEach((p,i)=>consider(p.x,p.z,'SKY-CAB pad — '+p.name, ()=>padMenu(i), 3));
   }
   if(S.scene==='room'){
     const [cx,cz]=ROOMS.room;
@@ -1993,10 +2707,103 @@ function hopHour(){
     String(S.minutes%60).padStart(2,'0')+' (dev)','quest');
 }
 
+/* ---------------- 3D / 2D mode bridge ---------------- */
+const STREET_3D_TO_2D=[[-230,240],[-193,430],[-180,560],[-100,1290],[-40,2050],[0,2245],[40,2430],
+  [100,2839],[108,2920],[200,3960],[240,4100]];
+const STREET_2D_TO_3D=STREET_3D_TO_2D.map(a=>[a[1],a[0]]);
+const ALLEY_Z_TO_2D=[[-18,96],[-30,320],[-60,880],[-75,565],[-95,1180],[-126,1402],[-140,1500]]
+  .sort((a,b)=>a[0]-b[0]);
+const ALLEY_2D_TO_Z=[[60,-18],[320,-30],[565,-75],[880,-60],[1180,-95],[1402,-126],[1500,-140]]
+  .sort((a,b)=>a[0]-b[0]);
+function plain(v){ try{ return JSON.parse(JSON.stringify(v||{})); }catch(e){ return {}; } }
+function mapAnchors(v, anchors){
+  if(v<=anchors[0][0]) return anchors[0][1];
+  for(let i=1;i<anchors.length;i++){
+    const a=anchors[i-1], b=anchors[i];
+    if(v<=b[0]){
+      const t=(v-a[0])/(b[0]-a[0]);
+      return a[1]+(b[1]-a[1])*t;
+    }
+  }
+  return anchors[anchors.length-1][1];
+}
+function map3dTo2d(scene,x,z){
+  if(scene==='world'){
+    if(z<-14 && x>75 && x<125) return {scene:'alley', x:clamp(Math.round(mapAnchors(z,ALLEY_Z_TO_2D)),60,1500)};
+    return {scene:'street', x:clamp(Math.round(mapAnchors(x,STREET_3D_TO_2D)),12,4188)};
+  }
+  const interior={market:64,cafe:64,sushi:64,lobby:64,hall:436,room:430,
+    clinic:64,maker:64,arcade:64,annex:64,'static':64};
+  return {scene, x:interior[scene]||240};
+}
+function map2dTo3d(scene,x){
+  if(scene==='street') return {scene:'world', x:mapAnchors(x||248,STREET_2D_TO_3D), z:-7, yaw:-Math.PI/2};
+  if(scene==='alley') return {scene:'world', x:100, z:mapAnchors(x||96,ALLEY_2D_TO_Z), yaw:0};
+  const c=ROOMS[scene];
+  if(c) return {scene, x:c[0], z:c[1]+4, yaw:Math.PI};
+  return {scene:'world', x:-200, z:8, yaw:-Math.PI/2};
+}
+function flagsFor2d(flags){
+  const out=plain(flags);
+  if(out.drop && typeof out.drop==='object')
+    out.drop={x:Math.round(map3dTo2d('world',out.drop.x??S.x,out.drop.z??S.z).x)};
+  return out;
+}
+function flagsFor3d(flags){
+  const out=plain(flags);
+  if(out.drop && typeof out.drop==='object'){
+    const p=map2dTo3d('street', out.drop.x||430);
+    out.drop={x:p.x,z:p.z};
+  }
+  return out;
+}
+function bridgeRecord(target){
+  try{
+    const raw=localStorage.getItem(BRIDGE_KEY);
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    return d&&d.target===target ? d : null;
+  }catch(e){ return null; }
+}
+function hasModeBridge(target){ return !!bridgeRecord(target); }
+function consumeModeBridge(target){
+  const rec=bridgeRecord(target);
+  if(!rec||!rec.state) return false;
+  const st=plain(rec.state);
+  if(target==='3d'){
+    const pos=map2dTo3d(st.scene||'street', st.x||248);
+    Object.assign(st,pos,{flags:flagsFor3d(st.flags||{})});
+    const ok=applyPayload(st);
+    try{ localStorage.removeItem(BRIDGE_KEY); }catch(e){}
+    return ok;
+  }
+  return false;
+}
+function writeModeBridge(target){
+  const payload=savePayload();
+  const pos=map3dTo2d(S.scene,S.x,S.z);
+  const state=Object.assign({}, payload, pos, {
+    flags:flagsFor2d(payload.flags), quests:plain(payload.quests), inv:plain(payload.inv), day:S.day||1
+  });
+  try{
+    localStorage.setItem(BRIDGE_KEY, JSON.stringify({target, source:'3d', at:Date.now(), state}));
+    return true;
+  }catch(e){ return false; }
+}
+function switchTo2D(){
+  if(!started) return;
+  save();
+  if(writeModeBridge('2d')){
+    UI.toast('Switching to 2D view...','quest');
+    setTimeout(()=>{ location.href='../robotique-game/?bridge=1'; }, 120);
+  } else UI.toast('Mode switch unavailable in this browser.');
+}
+
 /* ---------------- input actions ---------------- */
 let started=false;
 INPUT.onAction=(k)=>{
   if(!started) return;
+  if(PILOT && k==='e'){ landPilot(); return; }
   if(UI.dialogOpen){
     if(k==='e'||k===' '||k==='enter') UI.advance();
     else if(k==='arrowup') UI.moveChoice(-1);
@@ -2008,6 +2815,9 @@ INPUT.onAction=(k)=>{
   if(k==='j') UI.togglePanel('questPanel');
   else if(k==='i') UI.togglePanel('invPanel');
   else if(k==='h') UI.togglePanel('helpPanel');
+  else if(k==='p') UI.togglePause('status');
+  else if(k==='c') togglePilot();
+  else if(k==='v') switchTo2D();
   else if(k==='t') toggleTurbo();
   else if(k===']') cycleTime(1);
   else if(k==='[') cycleTime(-1);
@@ -2015,6 +2825,7 @@ INPUT.onAction=(k)=>{
   else if(k==='escape'){ UI.closePanels(); document.exitPointerLock&&document.exitPointerLock(); }
   else if(k==='f') punch();
   else if(k==='e'){
+    if(PILOT){ landPilot(); return; }
     const t=nearestInteract();
     if(t&&t.act) t.act();
   }
@@ -2060,7 +2871,39 @@ function update(dt){
   }
 
   /* movement */
-  if(!UI.dialogOpen && !UI.anyPanel() && !RIDE){
+  if(PILOT){
+    PILOT.t+=dt;
+    let targetSpeed=0;
+    if(!UI.dialogOpen && !UI.anyPanel()){
+      let mx=0,mz=0;
+      if(INPUT.keys['w']||INPUT.keys['arrowup']) mz-=1;
+      if(INPUT.keys['s']||INPUT.keys['arrowdown']) mz+=1;
+      if(INPUT.keys['a']||INPUT.keys['arrowleft']) mx-=1;
+      if(INPUT.keys['d']||INPUT.keys['arrowright']) mx+=1;
+      mx+=INPUT.stick.x; mz+=INPUT.stick.y;
+      const rawLen=Math.hypot(mx,mz);
+      const boost=(INPUT.keys['shift']||INPUT.keys[' ']) || rawLen>.92;
+      const sp=(boost?18:12)*(turbo?4:1);
+      const len=rawLen;
+      if(len>0.01){
+        mx/=Math.max(1,len); mz/=Math.max(1,len);
+        const sin=Math.sin(S.yaw), cos=Math.cos(S.yaw);
+        S.x=clamp(S.x+(mx*cos + mz*sin)*sp*dt, -260, 260);
+        S.z=clamp(S.z+(-mx*sin + mz*cos)*sp*dt, -150, 32);
+        targetSpeed=sp*3.6;
+      }
+      PILOT.boost=boost && len>0.01;
+      PILOT.bank+=(mx*.65-PILOT.bank)*Math.min(1,dt*5);
+    }
+    PILOT.speed+=(targetSpeed-PILOT.speed)*Math.min(1,dt*4.5);
+    rideY=8.5+Math.sin(PILOT.t*2.2)*.35+(PILOT.boost?.28:0);
+    playerCab.visible=true;
+    playerCab.position.set(S.x,rideY-1.45,S.z);
+    playerCab.rotation.y=S.yaw;
+    playerCab.rotation.x=(PILOT.boost?-.08:0);
+    playerCab.rotation.z=-(PILOT.bank||0)*.35;
+    updatePilotHud();
+  } else if(!UI.dialogOpen && !UI.anyPanel() && !RIDE){
     const sprint=INPUT.keys['shift']? 1.7:1;
     const sp=4.2*sprint*(S.hunger<=20?.7:1)*(turbo?8:1);
     let mx=0,mz=0;
@@ -2168,7 +3011,25 @@ function update(dt){
     if(d.sp.position.x>260) d.sp.position.x=-260;
     if(d.sp.position.x<-260) d.sp.position.x=260; }
   arrayRing.rotation.z=t*.4; arrayRing.userData.inner.rotation.z=-t*.7;
+  for(const rig of INTERIOR_SPIN){
+    if(rig.axis==='y') rig.obj.rotation.y=t*rig.speed;
+    else if(rig.axis==='x') rig.obj.rotation.x=t*rig.speed;
+    else rig.obj.rotation.z=t*rig.speed;
+  }
   chip.rotation.y=t*3; if(chip.visible) chip.position.y=.3+Math.sin(t*4)*.06;
+  if(rain){
+    const attr=rain.geometry.attributes.position, a=attr.array;
+    for(let i=0;i<a.length;i+=3){
+      a[i+1]-=dt*(24+((i/3)%7));
+      a[i]+=.015*Math.sin(t+i);
+      if(a[i+1]<.8){
+        a[i]=S.x-70+Math.random()*140;
+        a[i+1]=18+Math.random()*72;
+        a[i+2]=S.z-48+Math.random()*96;
+      }
+    }
+    attr.needsUpdate=true;
+  }
 
   /* quest beacon */
   const qt=questTargetPos();
@@ -2177,7 +3038,7 @@ function update(dt){
   else beacon.visible=false;
 
   /* camera */
-  camera.position.set(S.x, (RIDE? rideY : 1.62+Math.sin(bobT)*0.045) + camKick*0.06, S.z);
+  camera.position.set(S.x, (PILOT? rideY+.85 : RIDE? rideY : 1.62+Math.sin(bobT)*0.045) + camKick*0.06, S.z);
   camera.rotation.y=S.yaw; camera.rotation.x=pitch + (S.punchT>0? .04:0);
 
   /* prompt */
@@ -2234,8 +3095,16 @@ function boot(newGame){
   if(newGame) setTimeout(()=>playIntro(0), 900);
 }
 UI.init();
+UI.onSwitchMode=switchTo2D;
+UI.onGraphicsPreset=(name)=>applyGraphicsPreset(name,false);
+UI.setGraphicsInfo(graphicsStatus());
 INPUT.init(canvas);
-if(hasSave()) document.getElementById('btnContinue').style.display='block';
+const btnMode=document.getElementById('btnMode');
+if(btnMode) btnMode.addEventListener('click', switchTo2D);
+const btnCab=document.getElementById('btnCab');
+if(btnCab) btnCab.addEventListener('click', togglePilot);
+const wantsBridge=new URLSearchParams(location.search).get('bridge')==='1';
+let bridgeBooted=false;
 function guarded(fn){
   return ()=>{ try{ fn(); }catch(e){
     if(window.__showErr) window.__showErr('boot: '+(e.stack||e.message||e));
@@ -2249,13 +3118,24 @@ document.getElementById('btnNew').onclick=guarded(()=>{
   boot(true);
 });
 document.getElementById('btnContinue').onclick=guarded(()=>{
-  if(loadSave()){ boot(false); UI.toast('Game loaded.'); }
+  if(consumeModeBridge('3d')){ boot(false); UI.toast('Switched to 3D view.','quest'); }
+  else if(loadSave()){ boot(false); UI.toast('Game loaded.'); }
   else boot(true);
 });
+if(wantsBridge){
+  if(consumeModeBridge('3d')){ bridgeBooted=true; boot(false); UI.toast('Switched to 3D view.','quest'); }
+  if(history.replaceState) history.replaceState(null,'',location.pathname);
+}
+if(!bridgeBooted && (hasSave()||hasModeBridge('3d'))) document.getElementById('btnContinue').style.display='block';
 /* continuous autosave so Continue resumes exactly where you left off */
-setInterval(()=>{ if(started && !RIDE && !MUG.active) save(); }, 15000);
-addEventListener('pagehide', ()=>{ if(started) save(); });
+setInterval(()=>{ if(started && !RIDE && !PILOT && !MUG.active) save(); }, 15000);
+function settlePilotForSave(){
+  if(!PILOT) return;
+  if(!inWalk('world',S.x,S.z)){ S.z=clamp(S.z,-7,7); S.x=clamp(S.x,-250,250); }
+  PILOT=null; playerCab.visible=false; rideY=1.62;
+}
+addEventListener('pagehide', ()=>{ if(started){ settlePilotForSave(); save(); } });
 document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState==='hidden' && started) save(); });
+  if(document.visibilityState==='hidden' && started){ settlePilotForSave(); save(); } });
 window.__gameReady=true;
 

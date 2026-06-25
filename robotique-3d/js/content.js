@@ -22,26 +22,36 @@ export const S = {
   flags:{ intro:false, metElias:false, metVendo:false, deliveries:0,
           carrying:null, hasKey:false, slept:false, chapterDone:false,
           shiftCooldown:0, gigTarget:null, parkCue:false, muggerDown:false,
-          drop:null, roxyMet:false, vexMet:false, rodeCab:false, picked:{}, talked:{} },
+          drop:null, roxyMet:false, vexMet:false, rodeCab:false, arrayCalibrated:false,
+          arrayCharge:0, picked:{}, talked:{} },
   quests:{},
 };
 export const SAVE_KEY='robotique_3d_ch1';
-export function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({
-  name:S.name,x:S.x,z:S.z,yaw:S.yaw,credits:S.credits,minutes:S.minutes,day:S.day,
-  flags:S.flags,quests:S.quests,scene:S.scene,hp:S.hp,hunger:S.hunger,inv:S.inv
-})); }catch(e){} }
+export const BRIDGE_KEY='robotique_ch1_mode_bridge';
+export function savePayload(){
+  return {
+    name:S.name,x:S.x,z:S.z,yaw:S.yaw,credits:S.credits,minutes:S.minutes,day:S.day,
+    flags:S.flags,quests:S.quests,scene:S.scene,hp:S.hp,hunger:S.hunger,inv:S.inv
+  };
+}
+export function applyPayload(d){
+  if(!d) return false;
+  Object.assign(S,{name:d.name||S.name,x:d.x??S.x,z:d.z??S.z,yaw:d.yaw||0,credits:d.credits??S.credits,
+    minutes:d.minutes??S.minutes,day:d.day??1,scene:d.scene||'world',hp:d.hp??100,hunger:d.hunger??70,inv:d.inv||{}});
+  S.flags=Object.assign(S.flags,d.flags||{});
+  S.quests=d.quests||{};
+  return true;
+}
+export function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(savePayload())); }catch(e){} }
 export function loadSave(){
   try{
     const d=JSON.parse(localStorage.getItem(SAVE_KEY));
     if(!d) return false;
-    Object.assign(S,{name:d.name,x:d.x,z:d.z,yaw:d.yaw||0,credits:d.credits,
-      minutes:d.minutes,day:d.day??1,scene:d.scene||'world',hp:d.hp??100,hunger:d.hunger??70,inv:d.inv||{}});
-    S.flags=Object.assign(S.flags,d.flags); S.quests=d.quests;
-    return true;
+    return applyPayload(d);
   }catch(e){ return false; }
 }
 export function hasSave(){ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } }
-export function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+export function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); localStorage.removeItem(BRIDGE_KEY); }catch(e){} }
 
 /* ---------------- items ---------------- */
 export const ITEMS = {
@@ -87,12 +97,15 @@ export function activeQuest(){
 /* ---------------- scene graph ---------------- */
 /* world coordinates in meters; interiors are rooms parked at z≈1000 */
 export const PARENT={market:'world',cafe:'world',sushi:'world',lobby:'world',
-  hall:'lobby',room:'hall','static':'world'};
+  hall:'lobby',room:'hall',clinic:'world',maker:'world',arcade:'world','static':'world',annex:'world'};
 export const SCENE_NAMES={market:'GREENGRID MARKET',cafe:'THE CROOKED BEAN',sushi:'KAITEN-45',
-  lobby:'TANAKA TOWERS · LOBBY',hall:'TANAKA TOWERS · FLOOR 2',room:'UNIT 4','static':'THE STATIC'};
+  lobby:'TANAKA TOWERS · LOBBY',hall:'TANAKA TOWERS · FLOOR 2',room:'UNIT 4',
+  clinic:'MEDLOOP CLINIC',maker:'FAB COMMONS',arcade:'NEURO-ARCADE','static':'THE STATIC',
+  annex:'MERIDIAN ARRAY ANNEX'};
 export const ROOMS={                       // interior room centers (world-space parking lot)
   market:[0,1000], cafe:[60,1000], sushi:[120,1000], lobby:[180,1000],
-  hall:[240,1000], room:[300,1000], 'static':[360,1000],
+  hall:[240,1000], room:[300,1000], clinic:[420,1000], maker:[480,1000],
+  arcade:[540,1000], annex:[600,1000], 'static':[360,1000],
 };
 export const DOORS=[
  {scene:'world', x:-40, z:-10,  to:'market', tx:0,   tz:1004, tyaw:Math.PI,  label:'GreenGrid Market'},
@@ -107,8 +120,16 @@ export const DOORS=[
  {scene:'hall',  x:245, z:994,  to:'lobby',  tx:185, tz:997, tyaw:0,        label:'stairs · lobby'},
  {scene:'hall',  x:236, z:1005, to:'room',   tx:300, tz:1004, tyaw:Math.PI, label:'Unit 4'},
  {scene:'room',  x:300, z:1006, to:'hall',   tx:236, tz:1003, tyaw:0,       label:'hallway'},
+ {scene:'world', x:-180,z:-10,  to:'clinic', tx:420, tz:1004, tyaw:Math.PI, label:'MedLoop Clinic'},
+ {scene:'clinic',x:420, z:1006, to:'world',  tx:-180,tz:-7,  tyaw:Math.PI,  label:'leave'},
+ {scene:'world', x:240, z:-10,  to:'maker',  tx:480, tz:1004, tyaw:Math.PI, label:'Fab Commons'},
+ {scene:'maker', x:480, z:1006, to:'world',  tx:240, tz:-7,  tyaw:Math.PI,  label:'leave'},
+ {scene:'world', x:100, z:-30,  to:'arcade', tx:540, tz:1004, tyaw:Math.PI, label:'Neuro-Arcade'},
+ {scene:'arcade',x:540, z:1006, to:'world',  tx:100, tz:-30, tyaw:0,        label:'leave'},
  {scene:'world', x:88.5,z:-75,  to:'static', tx:360, tz:1004, tyaw:Math.PI, label:'The Static'},
  {scene:'static',x:360, z:1006, to:'world',  tx:91,  tz:-75,  tyaw:Math.PI/2, label:'leave'},
+ {scene:'world', x:200, z:-10,  to:'annex',  tx:600, tz:1004, tyaw:Math.PI, label:'Array Annex'},
+ {scene:'annex', x:600, z:1006, to:'world',  tx:200, tz:-7,  tyaw:Math.PI,  label:'leave'},
 ];
 export function chainOf(s){ const c=[s]; while(PARENT[c[0]]) c.unshift(PARENT[c[0]]); return c; }
 export function navTarget(tScene,tx,tz){
@@ -150,6 +171,10 @@ export const NPCS = {
   dex:   { x:240,  z:1005, name:'Unit 3 Intercom', poi:true, scene:'hall' },
   dee:   { x:363,  z:996,  name:'Dee',        pal:'dee',   scene:'static' },
   crow:  { x:356,  z:998,  name:'Crow',       pal:'crow',  scene:'static' },
+  lyra:  { x:414,  z:997,  name:'Nurse Lyra', pal:'lyra',  scene:'clinic' },
+  bram:  { x:480,  z:997,  name:'Bram',       pal:'bram',  scene:'maker' },
+  iko:   { x:542,  z:997,  name:'Iko',        pal:'iko',   scene:'arcade' },
+  quinn: { x:600,  z:997,  name:'Quinn',      pal:'quinn', scene:'annex' },
   roxy:  { x:94,   z:-60,  name:'Roxy',       pal:'roxy',  hours:[19,6] },
   sable: { x:106,  z:-95,  name:'Sable',      pal:'sable', hours:[19,6] },
   sef:   { x:97,   z:-126, name:'Big Sef',    pal:'sef',   hours:[18,7] },
@@ -171,6 +196,21 @@ export const PEDS=[
   { ax:60, bx:130, x:90, z:6.8, pal:'ped3', name:'Dreamer',
     lines:["Just came out of a dive den. Full-immersion VR — nanos talk straight to the cortex. Felt three days pass in two hours.",
            "My nanos flagged my cortisol, booked me a counselor, and ordered soup. I love the future, mostly."] },
+  { ax:-230, bx:-150, x:-205, z:23, pal:'tan', name:'Park Regular',
+    lines:["Basic income covers the pod. I come here for the trees. Real carbon, real bugs, real weather.",
+           "They say people born after 2035 never learned to be bored. Seems dangerous."] },
+  { ax:-115, bx:-45, x:-92, z:-6.8, pal:'ped2', name:'Lease Runner',
+    lines:["Tanaka Towers says the elevator is self-healing. It has been healing for four years.",
+           "Rent is paid by contract now. People still argue with buildings like that helps."] },
+  { ax:118, bx:210, x:146, z:7.1, pal:'ped1', name:'Transit Nurse',
+    lines:["Clinic drones caught a stroke six blocks before the patient felt it. Still cannot make people sleep.",
+           "Your vitals are invisible to public health. That is either privacy or a medical emergency."] },
+  { ax:88, bx:108, x:96, z:-48, pal:'ped3', name:'Row Local',
+    lines:["Velvet Row is where the city admits desire did not get automated away.",
+           "Keep your pockets sealed. Half the scams here are legal and the other half are prettier."] },
+  { ax:170, bx:245, x:208, z:-27, pal:'ped2', name:'Lab Intern',
+    lines:["Negative energy is real. Useful negative energy is still a grant proposal with teeth.",
+           "Okafor says wormholes are not time machines until somebody survives the paperwork."] },
 ];
 
 /* ---------- world pickups ---------- */
@@ -411,6 +451,36 @@ N('okafor.end','Dr. Okafor',
 "Soon. The throat needs a fresh exotic-matter charge before it can pass anything heavier than a photon — and harvesting Casimir energy at that scale takes components I can't requisition... officially.\nWork with me, courier. Help me charge the Array, and you can choose: 2026, 2045 — or the door between them, open both ways.",
 {fx(){ G.endChapter(); }});
 
+/* ---------- Meridian Array Annex ---------- */
+N('quinn.hi','Quinn',
+"Welcome to the public-safe side of the Meridian Array. The core is still sealed, but this annex keeps the Casimir stack from drifting out of tune.",
+{choices:[
+ {t:'"You work on time travel?"', n:'quinn.time'},
+ {t:'"Any work I can do?"', n:'quinn.job'},
+ {t:'"What am I looking at?"', n:'quinn.room'},
+ {t:'(Leave)', n:null}]});
+N('quinn.time','Quinn',
+"I work on vacuum geometry. Marketing says time travel because nobody funds a grant called 'please let us keep two wormhole mouths from eating causality.' The shortcut is real. The hard part is keeping it gentle.",
+{choices:[
+ {t:'"What am I looking at?"', n:'quinn.room'},
+ {t:'"Any work I can do?"', n:'quinn.job'},
+ {t:'(Leave)', n:null}]});
+N('quinn.room','Quinn',
+"Those black plates are Casimir cavities: two surfaces so close the vacuum runs out of ways to vibrate between them. The dip is tiny, negative, and wildly useful if you stack enough precision on top of it.",
+{choices:[
+ {t:'"You work on time travel?"', n:'quinn.time'},
+ {t:'"Any work I can do?"', n:'quinn.job'},
+ {t:'(Leave)', n:null}]});
+N('quinn.job','Quinn',
+"I need a human courier with no city implant to walk the calibration loop. The sensors hate you in a useful way. Stand still, breathe normally, and do not touch the blue ring.",
+{fx(){
+  if(S.flags.arrayCalibrated){ G.toast('Quinn: "Calibration is holding. The Array remembers you."'); return 'skip'; }
+  G.fadeWork(()=>{ G.earn(75); S.flags.arrayCalibrated=true; S.flags.arrayCharge=(S.flags.arrayCharge||0)+1; G.refreshHUD(); save(); });
+},
+ choices:[{t:'"Did that help?"', n:'quinn.done'},{t:'(Leave)', n:null}]});
+N('quinn.done','Quinn',
+"Yes. Negative energy profile improved by a frankly rude margin. Okafor will pretend she is not relieved. Keep doing courier work; the Array needs parts, favors, and people who can still improvise.");
+
 /* ---------- Raze ---------- */
 N('raze.intro','???',
 "Hey. Zero-count. Yeah, you — no implants, no ID overlay, nobody streaming your feed. Which means nobody's watching. Hand over the credit chips.",
@@ -619,6 +689,79 @@ N('pim.hi','Pim',
 N('pim.poem','Pim',
 "'The stars came back when the engines learned to whisper — / and nobody looked up, / because the feed was brighter.'\n...The jukebox hates me. Everyone's a critic.");
 
+/* ---------- New Meridian interiors ---------- */
+N('lyra.hi','Nurse Lyra',
+"MedLoop triage says you are walking around with no health mesh, no nano-maintenance record, and a circadian profile from the old internet. That is not illegal, just medically loud.",
+{choices:[
+ {t:'"Can you patch me up?"', n:'lyra.scan'},
+ {t:'"What can medicine do now?"', n:'lyra.future'},
+ {t:'"Do people still work here?"', n:'lyra.work'},
+ {t:'(Leave)', n:null}]});
+N('lyra.scan','Nurse Lyra',
+"I can run a free surface scan and print soup-grade electrolytes. For deep work you need a registry or cash. The future is generous; billing software is immortal.",
+{choices:[
+ {t:'"What can medicine do now?"', n:'lyra.future'},
+ {t:'"Do people still work here?"', n:'lyra.work'},
+ {t:'(Leave)', n:null}]});
+N('lyra.future','Nurse Lyra',
+"Most cancers get spotted by blood nanos before they have a name. Hearts are grown to order. Brain injury is still terrifying, sleep still matters, and nobody has automated grief. Remember that part.",
+{choices:[
+ {t:'"Can you patch me up?"', n:'lyra.scan'},
+ {t:'(Leave)', n:null}]});
+N('lyra.work','Nurse Lyra',
+"Doctors spend less time memorizing and more time negotiating with AIs, families, and frightened people. The machines give options. Someone still has to be responsible for choosing.",
+{choices:[
+ {t:'"What can medicine do now?"', n:'lyra.future'},
+ {t:'(Leave)', n:null}]});
+
+N('bram.hi','Bram',
+"Welcome to Fab Commons. If it has atoms and a license, we can print it. If it lacks a license, we can discuss recycling rates in a very private tone.",
+{choices:[
+ {t:'"Can you repair old tech?"', n:'bram.repair'},
+ {t:'"What do people do for work?"', n:'bram.jobs'},
+ {t:'"What can printers make?"', n:'bram.print'},
+ {t:'(Leave)', n:null}]});
+N('bram.repair','Bram',
+"A phone from 2026? Museum-grade rectangle. I can print a charger adapter, but the networks it loved are fossils. Keep it anyway. Old machines remember old truths.",
+{choices:[
+ {t:'"What do people do for work?"', n:'bram.jobs'},
+ {t:'"What can printers make?"', n:'bram.print'},
+ {t:'(Leave)', n:null}]});
+N('bram.jobs','Bram',
+"People still work. We authenticate, design, mediate, perform, care, and break things creatively. Automation ate the boring tasks, then invented paperwork with better lighting.",
+{choices:[
+ {t:'"What can printers make?"', n:'bram.print'},
+ {t:'(Leave)', n:null}]});
+N('bram.print','Bram',
+"Food, parts, clothes, organ scaffolds, little houses on bad days. The rare material is trust: who signed the template, where the feedstock came from, and what the AI optimized away.",
+{choices:[
+ {t:'"Can you repair old tech?"', n:'bram.repair'},
+ {t:'(Leave)', n:null}]});
+
+N('iko.hi','Iko',
+"Neuro-Arcade intake: full-dive rooms are clean, sober, and capped at four subjective hours. If your memories start rendering ads, press the red thought.",
+{choices:[
+ {t:'"How does full-dive work?"', n:'iko.dive'},
+ {t:'"Is this a job too?"', n:'iko.jobs'},
+ {t:'"Can it change time?"', n:'iko.time'},
+ {t:'(Leave)', n:null}]});
+N('iko.dive','Iko',
+"The rig maps motor intent and sensory cortex, then lets an AI dream a world fast enough to fool you. Fun, mostly. Less fun when grief, gambling, or politics buys better lighting.",
+{choices:[
+ {t:'"Is this a job too?"', n:'iko.jobs'},
+ {t:'"Can it change time?"', n:'iko.time'},
+ {t:'(Leave)', n:null}]});
+N('iko.jobs','Iko',
+"Most players come for escape. Pros come for rehearsal: surgery, firefighting, first dates. A simulation is cheap. Embarrassment remains expensive.",
+{choices:[
+ {t:'"How does full-dive work?"', n:'iko.dive'},
+ {t:'(Leave)', n:null}]});
+N('iko.time','Iko',
+"Subjective time stretches, but it is not real time travel. Official disclaimer. If you actually woke up from 2026, I am suddenly less confident in my disclaimers.",
+{choices:[
+ {t:'"How does full-dive work?"', n:'iko.dive'},
+ {t:'(Leave)', n:null}]});
+
 export function genericGigDeliver(key){
   const id='gig.'+key;
   N(id, NPCS[key].name, "Package for me? ...Signed. Tell the noodle robot his logistics empire grows by the day.",
@@ -668,6 +811,10 @@ export function npcEntryNode(key){
     case 'sef':  return 'sef.hi';
     case 'dee':  return 'dee.hi';
     case 'crow': return 'crow.hi';
+    case 'lyra': return 'lyra.hi';
+    case 'bram': return 'bram.hi';
+    case 'iko':  return 'iko.hi';
+    case 'quinn': return f.arrayCalibrated? 'quinn.done' : 'quinn.hi';
     case 'juno': return 'juno.hi';
     case 'skewer': return 'skewer.hi';
     case 'tomas': return 'tomas.hi';
@@ -718,6 +865,10 @@ export const PALS = {
   sef:   {h:'#0c0a14',f:'#080610',s:'#8a5a3a',e:'#0c0806',j:'#14121f',w:'#2c2838',n:'#14121f',b:'#0a0810'},
   dee:   {h:'#ff8c3a',f:'#d0681e',s:'#f0c4a0',e:'#22150c',j:'#2a2a36',w:'#e8e4da',n:'#2c2838',b:'#1c1826'},
   crow:  {h:'#1a1a22',f:'#101016',s:'#cfa27e',e:'#0c0a08',j:'#23202c',w:'#0e0c16',n:'#23202c',b:'#0e0c16'},
+  lyra:  {h:'#162636',f:'#0e1a26',s:'#d9a37e',e:'#0c1420',j:'#f2f4f8',w:'#43ffd9',n:'#314158',b:'#182436'},
+  bram:  {h:'#322018',f:'#24140e',s:'#c99670',e:'#130c08',j:'#d6a336',w:'#26384f',n:'#202638',b:'#11131c'},
+  iko:   {h:'#2ef0c8',f:'#19a98e',s:'#c89472',e:'#110b20',j:'#30204a',w:'#ff4f9a',n:'#19142a',b:'#43ffd9'},
+  quinn: {h:'#1b1830',f:'#100d20',s:'#b9825e',e:'#0f0b14',j:'#dbe7f4',w:'#7a5cff',n:'#25304a',b:'#43ffd9'},
   ped1:  {h:'#4a3260',f:'#382450',s:'#e5b491',e:'#1a1c2c',j:'#5a4a8a',w:'#cfd2da',n:'#33304a',b:'#5e5a72'},
   ped2:  {h:'#c2541f',f:'#a04015',s:'#f2cba6',e:'#22180f',j:'#3f7f9f',w:'#e8e2cf',n:'#2c3a44',b:'#27313a'},
   ped3:  {h:'#d8d2c2',f:'#b8b2a2',s:'#caa27e',e:'#1c1810',j:'#7f3f6f',w:'#ddd5e5',n:'#3a2c44',b:'#2c2235'},
