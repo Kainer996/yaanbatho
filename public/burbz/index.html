@@ -1764,7 +1764,8 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   <div class="toast-container" id="toastContainer"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js" crossorigin="anonymous"></script>
+<script src="lib/three.min.js?v=0.158.0"></script>
+<script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-xp-20260701"></script>
 <script src="battle_core.js?v=squad-league-20260624"></script>
 <script>
@@ -5791,8 +5792,8 @@ function villageMakeBuilding(shopKey) {
 
 function initVillageScene(stage) {
   villageScene = new THREE.Scene();
-  villageScene.background = new THREE.Color(0x0d0a14);
-  villageScene.fog = new THREE.Fog(0x0d0a14, 20, 44);
+  villageScene.background = new THREE.Color(0x181430);
+  villageScene.fog = new THREE.Fog(0x181430, 26, 54);
 
   villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
 
@@ -5851,13 +5852,13 @@ function initVillageScene(stage) {
   }
 
   // Lighting: moonlight + warm torches
-  villageScene.add(new THREE.HemisphereLight(0x35405f, 0x141008, 0.85));
-  const moon = new THREE.DirectionalLight(0x9fb3ff, 0.5);
+  villageScene.add(new THREE.HemisphereLight(0x6a7ab0, 0x2a2112, 1.7));
+  const moon = new THREE.DirectionalLight(0xaabcff, 1.0);
   moon.position.set(-8, 14, 6); villageScene.add(moon);
   villageTorches = [];
   for (const k of Object.keys(VILLAGE_SHOPS)) {
     const p = VILLAGE_SHOPS[k].pos;
-    const t = new THREE.PointLight(0xffb45e, 1.2, 9, 2);
+    const t = new THREE.PointLight(0xffb45e, 1.7, 11, 2);
     t.position.set(p[0] * 0.82, 1.7, p[2] * 0.82);
     villageScene.add(t);
     villageTorches.push(t);
@@ -5916,7 +5917,7 @@ function villageAnimate(ts) {
   villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
   villageCamera.lookAt(0, 1.4, 0);
   villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
-  villageTorches.forEach((l, i) => { l.intensity = 1.1 + Math.sin(t * 7 + i * 1.7) * 0.14; });
+  villageTorches.forEach((l, i) => { l.intensity = 1.6 + Math.sin(t * 7 + i * 1.7) * 0.18; });
   villageRenderer.render(villageScene, villageCamera);
 }
 
@@ -7021,7 +7022,7 @@ function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').
 function addBattleLog(type, text) { const log = $('battleLog'); const entry = document.createElement('div'); entry.className = 'battle-log-entry ' + type; entry.textContent = text; log.insertBefore(entry, log.firstChild); while (log.children.length > 20) log.removeChild(log.lastChild); }
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy });
 
 // ============================================================================
 // PET COMPANION

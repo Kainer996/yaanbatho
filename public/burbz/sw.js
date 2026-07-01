@@ -1,7 +1,8 @@
-const BURBZ_CACHE = 'burbz-training-hall-sessions-v1-20260701';
+const BURBZ_CACHE = 'burbz-village-offline-3d-v2-20260701';
 const BURBZ_ASSETS = [
   './',
   './index.html',
+  './lib/three.min.js?v=0.158.0',
   './academy_treehouse_core.js',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',
@@ -143,10 +144,26 @@ const BURBZ_ASSETS = [
   './icons/maskable-512.png'
 ];
 
+// The app shell must cache or the install fails; artwork/video are best-effort
+// so one missing file can never knock out offline support for the whole game.
+const BURBZ_CORE = [
+  './',
+  './index.html',
+  './lib/three.min.js?v=0.158.0',
+  './academy_treehouse_core.js',
+  './battle_core.js',
+  './manifest.json'
+];
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(BURBZ_CACHE)
-      .then(cache => cache.addAll(BURBZ_ASSETS))
+      .then(cache => Promise.all(BURBZ_ASSETS.map(asset =>
+        cache.add(asset).catch(err => {
+          if (BURBZ_CORE.includes(asset)) throw err;
+          console.warn('BURBZ SW: optional asset skipped', asset);
+        })
+      )))
       .then(() => self.skipWaiting())
   );
 });
@@ -175,6 +192,10 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(request).then(cached => cached || caches.match('./index.html')))
+      .catch(() => caches.match(request, { ignoreSearch: true }).then(cached => {
+        if (cached) return cached;
+        if (request.mode === 'navigate') return caches.match('./index.html');
+        return Response.error();
+      }))
   );
 });
