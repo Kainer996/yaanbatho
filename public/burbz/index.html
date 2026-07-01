@@ -1290,6 +1290,48 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .bird-info-food-emoji { font-size: 14px; }
 .bird-info-food-label { font-size: 10.5px; font-weight: 600; }
 .bird-info-fact { font-size: 12px; color: var(--accent); margin-top: 8px; padding: 8px 10px; background: rgba(214,168,79,0.07); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0; line-height: 1.5; }
+/* ========== VILLAGE (medieval 3D hub) ========== */
+.village-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 10px; line-height: 1.5; }
+.village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: none; }
+.village-stage canvas { display: block; width: 100%; height: 100%; }
+.village-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text3); font-size: 12.5px; letter-spacing: 0.06em; }
+.village-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 12px 90px; }
+.village-chip { background: var(--bg3); border: 1px solid var(--bg4); color: var(--text2); font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 9px; letter-spacing: 0.03em; }
+.village-chip:active { border-color: var(--accent); color: var(--accent); }
+.village-fallback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; height: 100%; overflow-y: auto; }
+.village-fallback-building { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--bg4); border-radius: 12px; padding: 12px 8px; color: var(--text); }
+.village-fallback-building:active { border-color: var(--accent); }
+.vfb-icon { font-size: 30px; }
+.vfb-name { font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; }
+.vfb-desc { font-size: 9.5px; color: var(--text3); text-align: center; line-height: 1.4; }
+
+.village-shop-overlay { position: fixed; inset: 0; z-index: 1200; display: none; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+.village-shop-overlay.show { display: flex; align-items: flex-end; justify-content: center; }
+.shop-panel { width: 100%; max-width: 460px; max-height: 72vh; overflow-y: auto; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--accent3); border-bottom: none; border-radius: 18px 18px 0 0; padding: 14px 14px calc(16px + var(--safe-bottom)); animation: shopRise 0.28s cubic-bezier(0.3, 1.2, 0.5, 1); }
+@keyframes shopRise { from { transform: translateY(40%); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+.shop-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.shop-icon { font-size: 30px; }
+.shop-name { font-family: Georgia, serif; font-size: 17px; font-weight: 800; color: var(--accent); letter-spacing: 0.03em; }
+.shop-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+.shop-close { margin-left: auto; font-size: 26px; color: var(--text3); padding: 2px 8px; }
+.shop-coins { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+.shop-coins b { color: var(--legendary); }
+.shop-stock { display: flex; flex-direction: column; gap: 8px; }
+.shop-item { display: flex; align-items: center; gap: 10px; background: var(--bg4); border: 1px solid rgba(240,199,103,0.12); border-radius: 11px; padding: 10px 12px; }
+.shop-item-main { flex: 1; min-width: 0; }
+.shop-item-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.shop-item-detail { font-size: 10.5px; color: var(--text3); line-height: 1.4; }
+.shop-pantry-note { color: var(--accent); font-weight: 700; }
+.shop-buy-btn { flex-shrink: 0; background: var(--accent); color: #11100d; font-size: 12px; font-weight: 800; padding: 9px 13px; border-radius: 9px; letter-spacing: 0.03em; }
+.shop-buy-btn:active { transform: scale(0.95); }
+
+.map-village-orb { pointer-events: auto; width: 52px; height: 52px; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: linear-gradient(180deg, #3a2812, #241a0d); color: #f4ead4; box-shadow: 0 8px 20px rgba(0,0,0,0.38), 0 0 0 3px rgba(240,199,103,0.25); margin-left: 8px; }
+.map-village-orb:active { transform: scale(0.94); }
+
+@media (max-width: 430px) {
+  .nav-label { font-size: 8.5px; letter-spacing: 0.02em; }
+  .nav-icon { font-size: 17px; }
+}
 </style>
 </head>
 <body>
@@ -1326,7 +1368,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
         <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><div class="map-area-birds-title">Area birds</div><div class="map-area-birds-sub">Revealed here · common → rare</div><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
-        <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy">Tap Likely birds for a habitat overlay, or tap a marker for details.</div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button></div>
+        <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy">Tap Likely birds for a habitat overlay, or tap a marker for details.</div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button><button class="map-village-orb" id="mapVillageBtn" aria-label="Enter the village">&#127984;</button></div>
       </div>
     </div>
 
@@ -1489,6 +1531,17 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
       <div id="academyRoomInterior"></div>
     </div>
 
+    <!-- VILLAGE SCREEN — medieval 3D hub -->
+    <div class="screen" id="screen-village">
+      <div class="screen-title">BURB VILLAGE</div>
+      <div class="village-sub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
+      <div class="village-stage" id="villageStage">
+        <div class="village-loading" id="villageLoading">Raising the timber frames…</div>
+      </div>
+      <div class="village-legend" id="villageLegend"></div>
+      <div class="village-shop-overlay" id="villageShopOverlay"></div>
+    </div>
+
     <div class="screen" id="screen-quests">
       <div class="screen-title">QUESTS</div>
       <div id="expeditionQuestList"></div>
@@ -1582,6 +1635,10 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
     <button class="nav-item active" data-screen="map">
       <div class="nav-icon">&#128506;&#65039;</div>
       <div class="nav-label">Map</div>
+    </button>
+    <button class="nav-item" data-screen="village">
+      <div class="nav-icon">&#127984;</div>
+      <div class="nav-label">Village</div>
     </button>
     <button class="nav-item" data-screen="birdex">
       <div class="nav-icon">&#128218;</div>
@@ -1707,6 +1764,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   <div class="toast-container" id="toastContainer"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js" crossorigin="anonymous"></script>
 <script src="academy_treehouse_core.js?v=quest-xp-20260701"></script>
 <script src="battle_core.js?v=squad-league-20260624"></script>
 <script>
@@ -5529,6 +5587,7 @@ function switchScreen(name) {
   if (name === 'battle') renderBattleSelect();
   if (name === 'academy') { wireAcademyZones(); renderAcademy(); }
   if (name === 'academy-room') renderAcademyRoomInterior();
+  if (name === 'village') { renderVillage(); setTimeout(onVillageResize, 60); }
   if (name === 'inventory') renderInventory();
   if (name === 'quests') renderQuests();
   if (name === 'leaderboards') renderLeaderboards();
@@ -5569,6 +5628,383 @@ function discoveredSpeciesRecords() { return Object.values(gameState.discoveredS
 function recruitCostForBird(bird) { return RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common; }
 function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && bird.rarity) || 'common'] || RARITY_DISCOVERY_REWARD.common; }
 function addCoins(amount) { gameState.player.coins = Math.max(0, Math.floor((Number(gameState.player.coins) || 0) + amount)); return gameState.player.coins; }
+
+// ============================================================================
+// VILLAGE — medieval 3D market square with RPG shops (three.js)
+// ============================================================================
+const VILLAGE_SHOPS = {
+  general: {
+    name: 'The Seed & Sundry', icon: '🛒', desc: 'General store. Restock the Academy pantry with proper bird food.',
+    color: 0x7a4f22, roof: 0x8f2f2a, pos: [-7.5, 0, -1.5],
+    stock: [
+      { id: 'pack_seeds',   label: 'Seed sack',      detail: '+5 Seeds',        price: 10, food: 'seeds',   qty: 5 },
+      { id: 'pack_suet',    label: 'Suet block',     detail: '+4 Suet',         price: 12, food: 'suet',    qty: 4 },
+      { id: 'pack_insects', label: 'Mealworm tub',   detail: '+5 Insects',      price: 14, food: 'insects', qty: 5 },
+      { id: 'pack_worms',   label: 'Worm pot',       detail: '+4 Worms',        price: 12, food: 'worms',   qty: 4 },
+      { id: 'pack_berries', label: 'Berry basket',   detail: '+4 Berries',      price: 12, food: 'berries', qty: 4 },
+      { id: 'pack_fish',    label: 'Fresh minnows',  detail: '+3 Fish',         price: 18, food: 'fish',    qty: 3 },
+      { id: 'pack_meat',    label: 'Butcher scraps', detail: '+2 Small prey',   price: 20, food: 'meat',    qty: 2 },
+      { id: 'pack_acorns',  label: 'Acorn pouch',    detail: '+4 Acorns',       price: 10, food: 'acorns',  qty: 4 }
+    ]
+  },
+  potion: {
+    name: 'The Gilded Beak', icon: '🧪', desc: 'Potion shop. Brews act on your active pet companion.',
+    color: 0x4a2b6e, roof: 0x2f2a6e, pos: [7.5, 0, -1.5],
+    stock: [
+      { id: 'heal_potion', label: 'Heal draught',   detail: 'Fully restores your pet\'s HP',      price: 25, effect: 'heal' },
+      { id: 'happy_tonic', label: 'Cheer tonic',    detail: '+30 happiness for your pet',         price: 18, effect: 'happy' },
+      { id: 'xp_scroll',   label: 'Wisdom scroll',  detail: '+40 XP for your pet',                price: 30, effect: 'xp' },
+      { id: 'feast_elixir',label: 'Feast elixir',   detail: 'Empties your pet\'s hunger bar',     price: 15, effect: 'feast' }
+    ]
+  },
+  smith: {
+    name: 'Talon & Anvil', icon: '⚒️', desc: 'Blacksmith. Gear for hard-training birds.',
+    color: 0x4c4c50, roof: 0x2b2b30, pos: [-7.5, 0, 6],
+    stock: [
+      { id: 'drill_token', label: 'Drill whistle', detail: 'Your pet may drill again right now (clears training cooldown)', price: 30, effect: 'drill' },
+      { id: 'rest_token',  label: 'Feather pillow', detail: 'Your pet may Deep Rest again right now', price: 22, effect: 'rest' }
+    ]
+  },
+  tavern: {
+    name: "The Puffin's Rest", icon: '🍻', desc: 'Tavern. Birders trade field wisdom over a warm cup.',
+    color: 0x6e4a22, roof: 0x365a2a, pos: [7.5, 0, 6],
+    stock: [
+      { id: 'rumor', label: 'Buy a round, hear a rumour', detail: 'A real bird fact + a little trainer XP', price: 5, effect: 'rumor' }
+    ]
+  },
+  guild: {
+    name: "Birders' Guild", icon: '📜', desc: 'The guild posts work for capable trainers.',
+    color: 0x8a6f2a, roof: 0x6e552a, pos: [0, 0, -9.5],
+    stock: [
+      { id: 'quests', label: 'Read the quest board', detail: 'Opens your quest log', price: 0, effect: 'quests' }
+    ]
+  }
+};
+
+let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
+let villageBuildings = [], villageSigns = [], villageTorches = [];
+let villageCam = { azimuth: 0.0, polar: 1.12, dist: 17 };
+let villageFallbackMode = false;
+
+function renderVillage() {
+  const stage = $('villageStage');
+  if (!stage) return;
+  renderVillageLegend();
+  if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
+  try {
+    if (!villageRenderer) initVillageScene(stage);
+    const loading = $('villageLoading');
+    if (loading) loading.remove();
+    if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
+    onVillageResize();
+  } catch (err) {
+    console.warn('BURBZ village: 3D init failed, using 2D square', err);
+    villageFallbackMode = true;
+    renderVillageFallback();
+  }
+}
+
+function renderVillageLegend() {
+  const legend = $('villageLegend');
+  if (!legend) return;
+  legend.innerHTML = Object.keys(VILLAGE_SHOPS).map(k =>
+    '<button class="village-chip" onclick="villageOpenShop(\'' + k + '\')">' + VILLAGE_SHOPS[k].icon + ' ' + escapeHtml(VILLAGE_SHOPS[k].name) + '</button>'
+  ).join('');
+}
+
+function renderVillageFallback() {
+  const stage = $('villageStage');
+  if (!stage) return;
+  stage.innerHTML = '<div class="village-fallback">' + Object.keys(VILLAGE_SHOPS).map(k => {
+    const s = VILLAGE_SHOPS[k];
+    return '<button class="village-fallback-building" onclick="villageOpenShop(\'' + k + '\')">' +
+      '<span class="vfb-icon">' + s.icon + '</span><span class="vfb-name">' + escapeHtml(s.name) + '</span>' +
+      '<span class="vfb-desc">' + escapeHtml(s.desc) + '</span></button>';
+  }).join('') + '</div>';
+}
+
+function villageMakeSign(text) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const x = c.getContext('2d');
+  x.fillStyle = '#2a1c0c'; x.fillRect(0, 0, 256, 96);
+  x.strokeStyle = '#d6a84f'; x.lineWidth = 6; x.strokeRect(4, 4, 248, 88);
+  x.fillStyle = '#f4ead4'; x.font = 'bold 30px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text, 128, 50);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(3.4, 1.28, 1);
+  return sprite;
+}
+
+function villageMakeBuilding(shopKey) {
+  const cfg = VILLAGE_SHOPS[shopKey];
+  const g = new THREE.Group();
+  g.userData.shopKey = shopKey;
+
+  const bodyMat = new THREE.MeshLambertMaterial({ color: 0xd9cbb0 });      // plaster
+  const beamMat = new THREE.MeshLambertMaterial({ color: 0x3a2812 });      // dark timber
+  const roofMat = new THREE.MeshLambertMaterial({ color: cfg.roof });
+  const baseMat = new THREE.MeshLambertMaterial({ color: cfg.color });
+
+  // Stone base storey + plaster upper storey (classic tudor look)
+  const base = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.6, 3.6), baseMat);
+  base.position.y = 0.8; g.add(base);
+  const upper = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.7, 4.0), bodyMat);
+  upper.position.y = 2.45; g.add(upper);
+
+  // Timber frame beams on the upper storey
+  for (const dx of [-2.1, -0.7, 0.7, 2.1]) {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.7, 0.1), beamMat);
+    beam.position.set(dx, 2.45, 2.06); g.add(beam);
+  }
+  const beltH = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.16, 4.1), beamMat);
+  beltH.position.y = 1.62; g.add(beltH);
+
+  // Pyramid roof
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(3.7, 2.2, 4), roofMat);
+  roof.position.y = 4.4; roof.rotation.y = Math.PI / 4; g.add(roof);
+
+  // Door
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.35, 0.12), beamMat);
+  door.position.set(0, 0.68, 1.83); g.add(door);
+
+  // Glowing windows
+  const winMat = new THREE.MeshBasicMaterial({ color: 0xffd98a });
+  for (const dx of [-1.4, 1.4]) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.62, 0.08), winMat);
+    win.position.set(dx, 2.45, 2.08); g.add(win);
+  }
+
+  // Hanging sign
+  const sign = villageMakeSign(cfg.icon + ' ' + cfg.name.replace(/^The /, ''));
+  sign.position.set(0, 3.6, 2.5);
+  sign.userData.baseY = 3.6;
+  g.add(sign);
+  villageSigns.push(sign);
+
+  g.position.set(cfg.pos[0], 0, cfg.pos[2]);
+  g.lookAt(0, 0, 0);
+  g.rotation.x = 0; g.rotation.z = 0;
+  return g;
+}
+
+function initVillageScene(stage) {
+  villageScene = new THREE.Scene();
+  villageScene.background = new THREE.Color(0x0d0a14);
+  villageScene.fog = new THREE.Fog(0x0d0a14, 20, 44);
+
+  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+
+  villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  villageRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  stage.appendChild(villageRenderer.domElement);
+
+  // Ground: grass disc + cobble square + paths
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(26, 40), new THREE.MeshLambertMaterial({ color: 0x24331a }));
+  ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(5.4, 8), new THREE.MeshLambertMaterial({ color: 0x4a4440 }));
+  plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
+  for (const k of Object.keys(VILLAGE_SHOPS)) {
+    const p = VILLAGE_SHOPS[k].pos;
+    const len = Math.hypot(p[0], p[2]);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(1.4, len), new THREE.MeshLambertMaterial({ color: 0x57503f }));
+    path.rotation.x = -Math.PI / 2;
+    path.position.set(p[0] / 2, 0.015, p[2] / 2);
+    path.rotation.z = Math.atan2(p[0], p[2]);
+    villageScene.add(path);
+  }
+
+  // Central well
+  const well = new THREE.Group();
+  const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 0.9, 10), new THREE.MeshLambertMaterial({ color: 0x6b675e }));
+  wellBase.position.y = 0.45; well.add(wellBase);
+  const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.0, 6), new THREE.MeshLambertMaterial({ color: 0x8f2f2a }));
+  wellRoof.position.y = 2.35; well.add(wellRoof);
+  for (const dx of [-1.05, 1.05]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.6, 0.14), new THREE.MeshLambertMaterial({ color: 0x3a2812 }));
+    post.position.set(dx, 1.35, 0); well.add(post);
+  }
+  villageScene.add(well);
+
+  // Buildings
+  villageBuildings = [];
+  for (const k of Object.keys(VILLAGE_SHOPS)) {
+    const b = villageMakeBuilding(k);
+    villageScene.add(b);
+    villageBuildings.push(b);
+  }
+
+  // Trees around the edge
+  const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3a2812 });
+  const leafMat = new THREE.MeshLambertMaterial({ color: 0x2c3a18 });
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + 0.3;
+    const r = 15 + (i % 3) * 2.5;
+    const tree = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 1.6, 6), trunkMat);
+    trunk.position.y = 0.8; tree.add(trunk);
+    const crown = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.6, 7), leafMat);
+    crown.position.y = 2.6; tree.add(crown);
+    tree.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    villageScene.add(tree);
+  }
+
+  // Lighting: moonlight + warm torches
+  villageScene.add(new THREE.HemisphereLight(0x35405f, 0x141008, 0.85));
+  const moon = new THREE.DirectionalLight(0x9fb3ff, 0.5);
+  moon.position.set(-8, 14, 6); villageScene.add(moon);
+  villageTorches = [];
+  for (const k of Object.keys(VILLAGE_SHOPS)) {
+    const p = VILLAGE_SHOPS[k].pos;
+    const t = new THREE.PointLight(0xffb45e, 1.2, 9, 2);
+    t.position.set(p[0] * 0.82, 1.7, p[2] * 0.82);
+    villageScene.add(t);
+    villageTorches.push(t);
+  }
+
+  // Input: drag to orbit, tap to enter a shop
+  const el = villageRenderer.domElement;
+  let down = null, dragged = false;
+  el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar }; dragged = false; });
+  el.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - down.x, dy = e.clientY - down.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    villageCam.azimuth = down.az - dx * 0.006;
+    villageCam.polar = Math.min(1.42, Math.max(0.55, down.po - dy * 0.004));
+  });
+  el.addEventListener('pointerup', e => {
+    const wasDrag = dragged; down = null;
+    if (wasDrag) return;
+    const rect = el.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, villageCamera);
+    const hits = ray.intersectObjects(villageBuildings, true);
+    if (hits.length > 0) {
+      let obj = hits[0].object;
+      while (obj && !obj.userData.shopKey) obj = obj.parent;
+      if (obj && obj.userData.shopKey) villageOpenShop(obj.userData.shopKey);
+    }
+  });
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    villageCam.dist = Math.min(26, Math.max(10, villageCam.dist + e.deltaY * 0.02));
+  }, { passive: false });
+
+  window.addEventListener('resize', onVillageResize);
+}
+
+function onVillageResize() {
+  const stage = $('villageStage');
+  if (!stage || !villageRenderer) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (w === 0 || h === 0) return;
+  villageRenderer.setSize(w, h, false);
+  villageCamera.aspect = w / h;
+  villageCamera.updateProjectionMatrix();
+}
+
+function villageAnimate(ts) {
+  if (currentScreen !== 'village') { villageRunning = false; return; }
+  requestAnimationFrame(villageAnimate);
+  if (!villageRenderer || !villageScene) return;
+  const t = (ts || 0) / 1000;
+  villageCam.azimuth += 0.0006; // slow idle drift
+  const { azimuth, polar, dist } = villageCam;
+  villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
+  villageCamera.lookAt(0, 1.4, 0);
+  villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
+  villageTorches.forEach((l, i) => { l.intensity = 1.1 + Math.sin(t * 7 + i * 1.7) * 0.14; });
+  villageRenderer.render(villageScene, villageCamera);
+}
+
+// ---- Shop overlay + purchases ----
+function villageOpenShop(shopKey) {
+  const shop = VILLAGE_SHOPS[shopKey];
+  const overlay = $('villageShopOverlay');
+  if (!shop || !overlay) return;
+  SFX.tap();
+  const coins = gameState.player.coins || 0;
+  const rows = shop.stock.map(item => {
+    const pantryNote = item.food ? '<span class="shop-pantry-note">You have ×' + ((gameState.pantry && gameState.pantry[item.food]) || 0) + '</span>' : '';
+    const buyLabel = item.price > 0 ? item.price + ' 🪙' : 'Open';
+    return '<div class="shop-item">' +
+      '<div class="shop-item-main"><div class="shop-item-name">' + escapeHtml(item.label) + '</div>' +
+      '<div class="shop-item-detail">' + escapeHtml(item.detail) + ' ' + pantryNote + '</div></div>' +
+      '<button class="shop-buy-btn" onclick="villageBuy(\'' + shopKey + '\',\'' + item.id + '\')">' + buyLabel + '</button>' +
+      '</div>';
+  }).join('');
+  overlay.innerHTML = '<div class="shop-panel">' +
+    '<div class="shop-head"><span class="shop-icon">' + shop.icon + '</span>' +
+    '<div><div class="shop-name">' + escapeHtml(shop.name) + '</div><div class="shop-desc">' + escapeHtml(shop.desc) + '</div></div>' +
+    '<button class="shop-close" onclick="villageCloseShop()">&times;</button></div>' +
+    '<div class="shop-coins">Your purse: <b>' + coins + ' 🪙</b></div>' +
+    '<div class="shop-stock">' + rows + '</div>' +
+    '</div>';
+  overlay.classList.add('show');
+}
+
+function villageCloseShop() {
+  const overlay = $('villageShopOverlay');
+  if (overlay) { overlay.classList.remove('show'); overlay.innerHTML = ''; }
+}
+
+function villageBuy(shopKey, itemId) {
+  const shop = VILLAGE_SHOPS[shopKey];
+  const item = shop && shop.stock.find(i => i.id === itemId);
+  if (!item) return;
+  const coins = gameState.player.coins || 0;
+
+  if (item.effect === 'quests') { villageCloseShop(); switchScreen('quests'); return; }
+
+  if (coins < item.price) { showToast('Not enough coins — win battles and finish quests to earn more!'); return; }
+
+  // Pantry food packs
+  if (item.food) {
+    const cap = (typeof PANTRY_CAP === 'object' && PANTRY_CAP[item.food]) || 12;
+    const cur = (gameState.pantry && gameState.pantry[item.food]) || 0;
+    if (cur >= cap) { showToast('Your pantry can\'t hold any more ' + item.food + '!'); return; }
+    addCoins(-item.price);
+    gameState.pantry[item.food] = Math.min(cap, cur + item.qty);
+    saveState(); updateHeader();
+    showToast('🛒 Bought ' + item.label + '! Pantry: ' + gameState.pantry[item.food] + ' ' + item.food);
+    villageOpenShop(shopKey);
+    return;
+  }
+
+  // Effects that need an active pet
+  const needsPet = ['heal', 'happy', 'xp', 'feast', 'drill', 'rest'].includes(item.effect);
+  const pet = needsPet ? getActivePet() : null;
+  if (needsPet && !pet) { showToast('Choose an active pet in the Burbz tab first!'); return; }
+
+  addCoins(-item.price);
+  let msg = '';
+  if (item.effect === 'heal')  { pet.hp = pet.maxHp; msg = '🧪 ' + (pet.commonName || pet.species) + ' is fully healed!'; }
+  if (item.effect === 'happy') { pet.care = pet.care || {}; pet.care.happiness = clamp((pet.care.happiness || 80) + 30, 0, 100); msg = '🧪 ' + (pet.commonName || pet.species) + ' is delighted! +30 happiness'; }
+  if (item.effect === 'xp')    { levelUpBird(pet, 40); msg = '📜 ' + (pet.commonName || pet.species) + ' studies the scroll — +40 XP!'; }
+  if (item.effect === 'feast') { pet.care = pet.care || {}; pet.care.hunger = 0; msg = '🧪 ' + (pet.commonName || pet.species) + ' is completely full!'; }
+  if (item.effect === 'drill') { pet.care = pet.care || {}; pet.care.lastTrained = null; msg = '⚒️ The whistle sounds — ' + (pet.commonName || pet.species) + ' can drill again!'; }
+  if (item.effect === 'rest')  { pet.academy = pet.academy || {}; pet.academy.lastRest = null; msg = '⚒️ ' + (pet.commonName || pet.species) + ' can Deep Rest again!'; }
+  if (item.effect === 'rumor') {
+    const rule = BIRD_DIET_RULES[Math.floor(Math.random() * BIRD_DIET_RULES.length)];
+    addPlayerXp(3);
+    msg = '🍻 A birder leans in: "' + (rule && rule.fact ? rule.fact : 'Feed the right food and any bird will trust you.') + '" (+3 XP)';
+  }
+  saveState(); updateHeader();
+  showToast(msg || 'Purchased!');
+  villageOpenShop(shopKey);
+}
+
+// Map screen entry point
+(function wireVillageEntry() {
+  const btn = $('mapVillageBtn');
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', () => switchScreen('village'));
+  }
+})();
 
 function rememberDiscoveredBird(bird, opts = {}) {
   if (!bird) return false;
