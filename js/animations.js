@@ -138,9 +138,14 @@ function initStatsCounter() {
         entries.forEach(entry => {
             if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
                 entry.target.classList.add('counted');
-                const targetText = entry.target.textContent;
-                const targetNumber = parseInt(targetText.replace(/\D/g, ''));
+                const targetText = entry.target.textContent.trim();
+                const targetNumber = parseInt(targetText.replace(/\D/g, ''), 10);
                 const suffix = targetText.replace(/[0-9]/g, '');
+
+                if (Number.isNaN(targetNumber)) {
+                    entry.target.textContent = targetText;
+                    return;
+                }
                 
                 animateCounter(entry.target, targetNumber);
                 
@@ -153,6 +158,48 @@ function initStatsCounter() {
     }, { threshold: 0.5 });
     
     statNumbers.forEach(stat => observer.observe(stat));
+}
+
+// ============================================
+// CINEMATIC HERO MOTION
+// ============================================
+function initHeroCinematicMotion() {
+    const hero = document.querySelector('.hero-cinematic');
+    if (!hero) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!canHover) return;
+
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let rafId = null;
+
+    function animatePan() {
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+        hero.style.setProperty('--hero-pan-x', `${currentX.toFixed(2)}px`);
+        hero.style.setProperty('--hero-pan-y', `${currentY.toFixed(2)}px`);
+        rafId = requestAnimationFrame(animatePan);
+    }
+
+    hero.addEventListener('mousemove', (event) => {
+        const rect = hero.getBoundingClientRect();
+        const relX = (event.clientX - rect.left) / rect.width - 0.5;
+        const relY = (event.clientY - rect.top) / rect.height - 0.5;
+        targetX = relX * 18;
+        targetY = relY * 10;
+        if (!rafId) animatePan();
+    });
+
+    hero.addEventListener('mouseleave', () => {
+        targetX = 0;
+        targetY = 0;
+    });
 }
 
 // ============================================
@@ -373,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     initParallax();
     initParticles();
+    initHeroCinematicMotion();
     initSmoothScroll();
     initStaggeredCards();
     
