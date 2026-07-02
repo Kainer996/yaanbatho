@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-village-offline-3d-v2-20260701';
+const BURBZ_CACHE = 'burbz-proc-villages-v3-20260701';
 const BURBZ_ASSETS = [
   './',
   './index.html',
