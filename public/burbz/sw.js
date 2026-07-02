@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-player-cone-v4-20260702';
+const BURBZ_CACHE = 'burbz-bird-id-correction-v5-20260702';
 const BURBZ_ASSETS = [
   './',
   './index.html',
