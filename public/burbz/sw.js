@@ -1,8 +1,10 @@
-const BURBZ_CACHE = 'burbz-proc-villages-v3-20260701';
+const BURBZ_CACHE = 'burbz-player-cone-v4-20260702';
 const BURBZ_ASSETS = [
   './',
   './index.html',
   './lib/three.min.js?v=0.158.0',
+  './lib/maplibre-gl.js?v=5.24.0',
+  './lib/maplibre-gl.css?v=5.24.0',
   './academy_treehouse_core.js',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',
