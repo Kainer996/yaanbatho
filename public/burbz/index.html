@@ -6705,7 +6705,8 @@ function openSpeciesPicker(onPick) {
     const rows = all.filter(s => !query || s.name.toLowerCase().includes(query)).slice(0, 60);
     listEl.innerHTML = rows.map(s => {
       const art = getMapBirdArtUrl({ commonName: s.name });
-      const media = art ? `<img src="${escapeHtml(art)}" alt="">` : `<div class="sp-emoji">${getBirdMarkerEmoji(s.name)}</div>`;
+      const emoji = getBirdMarkerEmoji(s.name);
+      const media = art ? `<img src="${escapeHtml(art)}" alt="" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'sp-emoji',textContent:'${emoji}'}))">` : `<div class="sp-emoji">${emoji}</div>`;
       const col = RARITY_COLORS[s.rarity] || RARITY_COLORS.common;
       const sub = s.near ? 'Seen in this area' : (s.habitat || '').split(',')[0];
       return `<button class="species-picker-row" data-name="${escapeHtml(s.name)}">${media}<div><div class="species-picker-name">${escapeHtml(s.name)}</div><div class="species-picker-sub">${escapeHtml(sub)}</div></div><div class="species-picker-rarity" style="color:${col}">${escapeHtml(s.rarity)}</div></button>`;
@@ -7013,10 +7014,13 @@ function createBirdCardHTML(bird, idx) {
 function createKnownSpeciesCardHTML(bird, idx) {
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
   const cardArtUrl = getBirdArtUrl(bird);
+  const cardEmoji = bird.emoji || getBirdMarkerEmoji(bird.commonName || bird.species || '') || '&#128038;';
+  // Keep proper artwork, but if an image ever fails to load, fall back to the
+  // emoji rather than showing a broken-image icon.
   const artBg = cardArtUrl
-    ? `<img src="${cardArtUrl}" alt="${bird.commonName}" loading="lazy">`
+    ? `<img src="${cardArtUrl}" alt="${bird.commonName}" loading="lazy" onerror="this.onerror=null;this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';">`
     : '';
-  const birdIcon = cardArtUrl ? '' : `<div class="bird-emoji">${bird.emoji || '&#128038;'}</div>`;
+  const birdIcon = `<div class="bird-emoji"${cardArtUrl ? ' style="display:none"' : ''}>${cardEmoji}</div>`;
   const key = bird.discoveryKey || speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
   const cost = recruitCostForBird(bird);
   const alreadyCompanion = !!companionForSpecies(bird.species || bird.commonName);
