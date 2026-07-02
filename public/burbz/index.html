@@ -293,10 +293,10 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .burbz-user-location { width:24px !important; height:24px !important; border-radius:50%; background:#f0c767; border:4px solid #fff4d0; box-shadow:0 0 0 16px rgba(240,199,103,.20),0 0 28px rgba(240,199,103,.86); }
 /* Player position: line-of-sight cone + top-down avatar disc */
 .burbz-player-marker { position:relative; width:170px; height:170px; pointer-events:none; }
-.burbz-player-cone { position:absolute; left:50%; top:50%; width:150px; height:120px; transform:translate(-50%,-100%); pointer-events:auto; cursor:grab; clip-path:polygon(50% 100%, 6% 4%, 0 0, 100% 0, 94% 4%); background:radial-gradient(120% 100% at 50% 100%, rgba(255,224,150,.62) 0%, rgba(240,199,103,.34) 34%, rgba(240,199,103,.10) 66%, rgba(240,199,103,0) 100%); filter:drop-shadow(0 0 6px rgba(240,199,103,.35)); }
+.burbz-player-cone { position:absolute; left:50%; top:50%; width:150px; height:120px; transform:translate(-50%,-100%); pointer-events:none; clip-path:polygon(50% 100%, 6% 4%, 0 0, 100% 0, 94% 4%); background:radial-gradient(120% 100% at 50% 100%, rgba(255,224,150,.62) 0%, rgba(240,199,103,.34) 34%, rgba(240,199,103,.10) 66%, rgba(240,199,103,0) 100%); filter:drop-shadow(0 0 6px rgba(240,199,103,.35)); }
 .burbz-player-cone::after { content:''; position:absolute; inset:0; clip-path:polygon(50% 100%, 6% 4%, 0 0, 100% 0, 94% 4%); background:linear-gradient(to top, rgba(255,240,200,.5), rgba(255,240,200,0) 55%); opacity:.7; }
 .burbz-player-marker.grabbing .burbz-player-cone { cursor:grabbing; }
-.burbz-player-dot { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:30px; height:30px; border-radius:50%; pointer-events:auto; cursor:grab; background:radial-gradient(circle at 40% 34%, #fff6d8 0%, #f5cd6f 46%, #c9922f 100%); border:3px solid #fff4d0; box-shadow:0 0 0 5px rgba(240,199,103,.22), 0 0 22px rgba(240,199,103,.7), 0 4px 12px rgba(0,0,0,.5); }
+.burbz-player-dot { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:30px; height:30px; border-radius:50%; pointer-events:none; background:radial-gradient(circle at 40% 34%, #fff6d8 0%, #f5cd6f 46%, #c9922f 100%); border:3px solid #fff4d0; box-shadow:0 0 0 5px rgba(240,199,103,.22), 0 0 22px rgba(240,199,103,.7), 0 4px 12px rgba(0,0,0,.5); }
 .burbz-player-dot::before { content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:#2a1c0c; box-shadow:0 0 6px rgba(0,0,0,.6); }
 .burbz-player-pulse { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:30px; height:30px; border-radius:50%; border:2px solid rgba(240,199,103,.6); pointer-events:none; animation:burbzPlayerPulse 2.4s ease-out infinite; }
 @keyframes burbzPlayerPulse { 0% { width:30px; height:30px; opacity:.7; } 100% { width:120px; height:120px; opacity:0; } }
@@ -5538,23 +5538,53 @@ function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
 function burbzMapStyle() { return 'https://tiles.openfreemap.org/styles/liberty'; }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:76, attributionControl:true, canvasContextAttributes:{ antialias:true } }); liveMap.on('load', () => { styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:76, attributionControl:true, canvasContextAttributes:{ antialias:true } }); wireMapRotateOnly(); liveMap.on('load', () => { styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; try { if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d'); if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); } if (/road|transport|street|path|track/i.test(id)) { if (layer.type === 'line') { liveMap.setPaintProperty(id, 'line-color', ['match', ['get','class'], ['motorway','trunk','primary'], '#a47a3d', ['secondary','tertiary'], '#8f6f35', '#6e5b36']); liveMap.setPaintProperty(id, 'line-opacity', .74); } } if (/building/i.test(id)) { if (layer.type === 'fill' || layer.type === 'fill-extrusion') liveMap.setLayoutProperty(id, 'visibility', 'none'); } if (layer.type === 'symbol' && /label|place|poi/i.test(id)) { liveMap.setLayoutProperty(id, 'visibility', id.match(/place|settlement|country|city|town/i) ? 'visible' : 'none'); if (liveMap.getPaintProperty(id, 'text-color') !== undefined) liveMap.setPaintProperty(id, 'text-color', '#d7c184'); } if (/park|landcover|landuse|wood|forest|grass/i.test(id) && (layer.type === 'fill' || layer.type === 'background')) { if (liveMap.getPaintProperty(id, 'fill-color') !== undefined) liveMap.setPaintProperty(id, 'fill-color', '#274b2e'); if (liveMap.getPaintProperty(id, 'fill-opacity') !== undefined) liveMap.setPaintProperty(id, 'fill-opacity', .54); } } catch(e) {} }); }
 function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { if (!liveMap.getSource('burbz-terrain-dem')) liveMap.addSource('burbz-terrain-dem', { type:'raster-dem', tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding:'terrarium', tileSize:256, maxzoom:15, attribution:'Elevation tiles © AWS Open Data / Mapzen' }); liveMap.setTerrain({ source:'burbz-terrain-dem', exaggeration:1.45 }); if (!liveMap.getLayer('burbz-hillshade')) { const firstSymbol = (liveMap.getStyle().layers || []).find(layer => layer.type === 'symbol'); liveMap.addLayer({ id:'burbz-hillshade', type:'hillshade', source:'burbz-terrain-dem', paint:{ 'hillshade-shadow-color':'#2d2110', 'hillshade-highlight-color':'#ead794', 'hillshade-accent-color':'#5e7b45', 'hillshade-exaggeration':.32 } }, firstSymbol && firstSymbol.id); } liveMapTerrainEnabled = true; } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(enableBurbzTerrain, 220); return; } console.warn('BURBZ terrain setup failed', err); } }
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function playableRevealScale() { if (!liveMap) return 1; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; return Math.max(.46, Math.min(1, Math.pow(2, zoom - BURBZ_START_ZOOM))); }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 1.2) liveMap.setPitch(targetPitch); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } refreshCloudFogSoon(); }
+// Pokémon Go / Jurassic World Alive movement model: you are pinned to your real
+// GPS position, cannot pan ("walk") the map, and a one-finger left/right swipe
+// spins the camera a full 360° around you so you can look in any direction.
+function wireMapRotateOnly() {
+  if (!liveMap || liveMap._burbzRotateWired) return;
+  liveMap._burbzRotateWired = true;
+  try { liveMap.dragPan.disable(); } catch (e) {}
+  try { liveMap.doubleClickZoom.disable(); } catch (e) {}
+  try { liveMap.keyboard && liveMap.keyboard.disable(); } catch (e) {}
+  const canvas = liveMap.getCanvasContainer();
+  canvas.style.touchAction = 'none';
+  canvas.style.cursor = 'ew-resize';
+  const pointers = new Set();
+  let active = false, startX = 0, startBearing = 0;
+  canvas.addEventListener('pointerdown', e => {
+    pointers.add(e.pointerId);
+    if (pointers.size === 1) { active = true; startX = e.clientX; startBearing = liveMap.getBearing(); }
+    else active = false; // a second finger → let MapLibre pinch-zoom/rotate take over
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!active || pointers.size !== 1) return;
+    liveMap.setBearing(startBearing - (e.clientX - startX) * 0.6); // ~one screen-width ≈ 250°
+  });
+  const end = e => { pointers.delete(e.pointerId); if (pointers.size !== 1) active = false; };
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('pointerleave', end);
+  // Keep the line-of-sight cone pointing into whatever direction you've spun to.
+  liveMap.on('rotate', () => applyPlayerHeading(liveMap.getBearing()));
+}
+
 function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('move', refreshCloudFogSoon); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
-function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; enablePlayerCompass(); if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
+function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
   function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.jumpTo({ zoom:z, pitch:burbzPitchForZoom(z) }); refreshCloudFogSoon(); }
-  const shell = $('liveMapShell'); if (shell && !shell.dataset.compassWired) { shell.dataset.compassWired = '1'; const askOnce = () => { enablePlayerCompass(); shell.removeEventListener('pointerdown', askOnce); }; shell.addEventListener('pointerdown', askOnce, { once:false }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); } }
 function startLiveGeolocation() { if (!navigator.geolocation || liveMapWatchId !== null) { if (!navigator.geolocation) setMapLabels('Location unavailable', 'This browser cannot provide location, so Burbz will not pretend you are somewhere else.'); return; } navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Tap ⌖ and allow location to reveal the Bird Burbs realm around your own phone.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); liveMapWatchId = navigator.geolocation.watchPosition(pos => handleLivePosition(pos, false), () => {}, { enableHighAccuracy:true, timeout:15000, maximumAge:0 }); }
 function handleLivePosition(pos, fly) { const lat = pos.coords.latitude, lon = pos.coords.longitude; liveMapHasPrecisePosition = true; liveMapLastPosition = { lat, lon, source:'Your live position' }; updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true }); }
-async function updateLiveMapPosition(lat, lon, source, opts = {}) { const seq = ++liveMapUpdateSeq; liveMapLastPosition = { lat, lon, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!liveMapUserMoved && opts.follow) { liveMap.panTo([lon, lat], { animate:true, duration:350 }); } if (opts.precise) { rememberExploredArea(lat, lon); refreshCloudFogSoon(); if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); liveMapUserMarker.setRotation(playerHeading); wirePlayerCompass(); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return; const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
+async function updateLiveMapPosition(lat, lon, source, opts = {}) { const seq = ++liveMapUpdateSeq; liveMapLastPosition = { lat, lon, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (opts.precise) { try { liveMap.setCenter([lon, lat]); } catch (e) {} } if (opts.precise) { rememberExploredArea(lat, lon); refreshCloudFogSoon(); if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return; const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
 async function fetchNearbyHabitatFeatures(lat, lon, radius = 1400) { radius = Math.max(300, Math.min(8000, Math.round(radius))); const query = `[out:json][timeout:8];(node(around:${radius},${lat},${lon})[natural];way(around:${radius},${lat},${lon})[natural];relation(around:${radius},${lat},${lon})[natural];node(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];way(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];relation(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];node(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];way(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];relation(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];node(around:${radius},${lat},${lon})[waterway];way(around:${radius},${lat},${lon})[waterway];node(around:${radius},${lat},${lon})[water];way(around:${radius},${lat},${lon})[water];);out center tags 70;`; const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body:'data=' + encodeURIComponent(query) }); if (!res.ok) throw new Error('Overpass ' + res.status); const data = await res.json(); return (data.elements || []).map(el => ({ lat:el.lat || (el.center && el.center.lat), lon:el.lon || (el.center && el.center.lon), tags:el.tags || {} })).filter(f => Number.isFinite(f.lat) && Number.isFinite(f.lon)); }
 function classifyHabitat(tags = {}) { const natural = tags.natural || '', landuse = tags.landuse || '', leisure = tags.leisure || '', waterway = tags.waterway || ''; if (natural === 'coastline' || tags.place === 'sea' || /beach|bay|strait/.test(natural)) return 'coast'; if (waterway || /water|river|stream|lake|pond|reservoir/.test(natural + ' ' + (tags.water || ''))) return 'water'; if (/wetland|marsh|reedbed|fen|bog/.test(natural)) return 'wetland'; if (/tree|wood|forest|scrub|heath/.test(natural) || /forest|orchard/.test(landuse)) return 'woodland'; if (/park|garden|nature_reserve|recreation_ground/.test(leisure + ' ' + landuse)) return 'park'; if (/farmland|farmyard|allotments/.test(landuse)) return 'farmland'; if (/grassland|meadow|grass/.test(natural + ' ' + landuse)) return 'grassland'; if (/peak|fell|scree/.test(natural)) return 'hills'; return 'urban'; }
 function mapRegionForCoords(lat, lon) {
@@ -5588,22 +5618,12 @@ function drawPlayerRange(lat, lon) { if (!liveMap || !liveMap.getSource('burbz-p
 let playerHeading = 0, playerHeadingManual = false, playerCompassWired = false;
 
 function makePlayerMarkerEl() {
+  // You are pinned to your real GPS position (Pokémon Go / Jurassic World style):
+  // the avatar sits at the map centre, the line-of-sight cone points into the
+  // current view, and swiping anywhere on the map spins the camera around you.
   const el = document.createElement('div');
   el.className = 'burbz-player-marker';
   el.innerHTML = '<div class="burbz-player-cone"></div><div class="burbz-player-pulse"></div><div class="burbz-player-dot"></div>';
-  // Drag horizontally on the cone or dot to spin your line of sight a full 360°.
-  // (Position never moves — you only walk by walking in real life.)
-  let startX = null, startHeading = 0;
-  const onDown = e => { startX = e.clientX; startHeading = playerHeading; playerHeadingManual = true; el.classList.add('grabbing'); e.stopPropagation(); if (e.target.setPointerCapture) { try { e.target.setPointerCapture(e.pointerId); } catch (_) {} } };
-  const onMove = e => { if (startX === null) return; applyPlayerHeading(startHeading + (e.clientX - startX) * 0.9); e.stopPropagation(); };
-  const onUp = e => { if (startX === null) return; startX = null; el.classList.remove('grabbing'); e.stopPropagation(); };
-  ['.burbz-player-cone', '.burbz-player-dot'].forEach(sel => {
-    const t = el.querySelector(sel);
-    t.addEventListener('pointerdown', onDown);
-    t.addEventListener('pointermove', onMove);
-    t.addEventListener('pointerup', onUp);
-    t.addEventListener('pointercancel', onUp);
-  });
   return el;
 }
 
@@ -5805,10 +5825,22 @@ function villageNameFromSeed(seed) {
 
 // Twilight palettes — one is picked per village seed
 const VILLAGE_PALETTES = [
-  { sky: 0x181430, ground: 0x24331a, plaster: 0xd9cbb0, timber: 0x3a2812, stone: 0x6b675e, roofs: [0x8f2f2a, 0x6e552a, 0x2f2a6e, 0x365a2a, 0x2b2b30], hemiSky: 0x6a7ab0, hemiGround: 0x2a2112 },
-  { sky: 0x241530, ground: 0x2b3418, plaster: 0xe2d4ba, timber: 0x2e1f0e, stone: 0x74695c, roofs: [0xa03a2e, 0x7a5c2e, 0x513a78, 0x3e6630, 0x37373d], hemiSky: 0x8a6a9a, hemiGround: 0x2c1f10 },
-  { sky: 0x101c34, ground: 0x233028, plaster: 0xd2cfc2, timber: 0x33261a, stone: 0x5e6068, roofs: [0x7e2c3a, 0x8a7020, 0x2a3f78, 0x2f5638, 0x3a3a44], hemiSky: 0x5a78c0, hemiGround: 0x1c2014 },
-  { sky: 0x162018, ground: 0x273a1c, plaster: 0xd6c8a8, timber: 0x3c2a14, stone: 0x6a6a58, roofs: [0x96402a, 0x6d5426, 0x3a2f6e, 0x2f5a2e, 0x2e2e34], hemiSky: 0x5a8a78, hemiGround: 0x241c0c }
+  // moonlit blue
+  { sky: 0x181430, ground: 0x24331a, plaster: 0xd9cbb0, timber: 0x3a2812, stone: 0x6b675e, roofs: [0x8f2f2a, 0x6e552a, 0x2f2a6e, 0x365a2a, 0x2b2b30], hemiSky: 0x6a7ab0, hemiGround: 0x2a2112, speck: [120,150,60] },
+  // violet dusk
+  { sky: 0x241530, ground: 0x2b3418, plaster: 0xe2d4ba, timber: 0x2e1f0e, stone: 0x74695c, roofs: [0xa03a2e, 0x7a5c2e, 0x513a78, 0x3e6630, 0x37373d], hemiSky: 0x8a6a9a, hemiGround: 0x2c1f10, speck: [130,155,70] },
+  // cold starlit teal
+  { sky: 0x101c34, ground: 0x233028, plaster: 0xd2cfc2, timber: 0x33261a, stone: 0x5e6068, roofs: [0x7e2c3a, 0x8a7020, 0x2a3f78, 0x2f5638, 0x3a3a44], hemiSky: 0x5a78c0, hemiGround: 0x1c2014, speck: [110,150,90] },
+  // misty green
+  { sky: 0x162018, ground: 0x273a1c, plaster: 0xd6c8a8, timber: 0x3c2a14, stone: 0x6a6a58, roofs: [0x96402a, 0x6d5426, 0x3a2f6e, 0x2f5a2e, 0x2e2e34], hemiSky: 0x5a8a78, hemiGround: 0x241c0c, speck: [120,160,70] },
+  // warm sunset ember
+  { sky: 0x2a1a1a, ground: 0x2f2f18, plaster: 0xe8cfa6, timber: 0x2c1c10, stone: 0x7a6a58, roofs: [0xb0492c, 0x8a5a24, 0x6e3a2a, 0x94702a, 0x4a3a2e], hemiSky: 0xc07a5a, hemiGround: 0x33200f, speck: [150,150,60] },
+  // autumn amber (brown ground, warm roofs)
+  { sky: 0x1e1a24, ground: 0x3a2e16, plaster: 0xe0c69a, timber: 0x33230f, stone: 0x726352, roofs: [0xa85a2a, 0x8a6520, 0xb0742a, 0x7a4a24, 0x5a4a30], hemiSky: 0x9a7a6a, hemiGround: 0x38260e, speck: [170,130,50] },
+  // frostbitten pale (snowy feel, cool grey-blue ground)
+  { sky: 0x1c2438, ground: 0x3c4650, plaster: 0xeef0f4, timber: 0x2a2a30, stone: 0x8a929c, roofs: [0x6a4a6e, 0x3a5a7a, 0x5a5a66, 0x7a3a3a, 0x4a6a6a], hemiSky: 0x9ab0d0, hemiGround: 0x3a4048, speck: [200,210,225] },
+  // deep forest emerald
+  { sky: 0x0e1a14, ground: 0x1c3018, plaster: 0xcdd0ba, timber: 0x2a2410, stone: 0x5a6858, roofs: [0x7a3a2a, 0x6a6a24, 0x2a5a3a, 0x3a4a2a, 0x2e3630], hemiSky: 0x4a8a6a, hemiGround: 0x141c10, speck: [90,150,70] }
 ];
 
 // ---- Villages scattered on the live map ------------------------------------
@@ -5882,7 +5914,7 @@ function currentVillage() {
 
 // ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
-let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null;
+let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
 let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
@@ -5939,12 +5971,13 @@ function villageCanvasTex(size, draw) {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return t;
 }
-function villageGrassTexture(r, baseHex) {
+function villageGrassTexture(r, baseHex, speck) {
+  const sp = speck || [120, 150, 60];
   return villageCanvasTex(256, (x, s) => {
     x.fillStyle = '#' + baseHex.toString(16).padStart(6, '0'); x.fillRect(0, 0, s, s);
     for (let i = 0; i < 900; i++) {
-      const g = 40 + Math.floor(r() * 46);
-      x.fillStyle = 'rgba(' + Math.floor(g * 0.7) + ',' + g + ',' + Math.floor(g * 0.42) + ',' + (0.25 + r() * 0.4) + ')';
+      const j = 0.7 + r() * 0.55; // brightness jitter per speck
+      x.fillStyle = 'rgba(' + Math.floor(sp[0] * j) + ',' + Math.floor(sp[1] * j) + ',' + Math.floor(sp[2] * j) + ',' + (0.22 + r() * 0.4) + ')';
       x.fillRect(r() * s, r() * s, 1.6 + r() * 2.4, 1.6 + r() * 2.4);
     }
   });
@@ -6156,6 +6189,91 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
 }
 
 // ---- Props -------------------------------------------------------------------
+// A plain villager cottage (no shop) — fills out bigger settlements.
+function villageMakeCottage(r, pal) {
+  const g = new THREE.Group();
+  const w = 2.2 + r() * 1.1, d = 2.0 + r() * 0.9, h = 1.2 + r() * 0.5;
+  const bodyMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.12) });
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+  body.position.y = h / 2; g.add(body);
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.12, d + 0.06), beamMat);
+  belt.position.y = h; g.add(belt);
+  const roofH = 0.9 + r() * 0.6, W = w / 2 + 0.28;
+  const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
+  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: d + 0.5, bevelEnabled: false }), roofMat);
+  roof.position.set(0, h, -(d + 0.5) / 2); g.add(roof);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.85, 0.1), beamMat);
+  door.position.set((r() - 0.5) * w * 0.4, 0.43, d / 2 + 0.03); g.add(door);
+  if (r() < 0.75) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.06), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+    win.position.set(-(r() - 0.5) * w * 0.55, h * 0.6, d / 2 + 0.04); g.add(win);
+  }
+  if (r() < 0.55) {
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), new THREE.MeshLambertMaterial({ color: pal.stone }));
+    chimney.position.set((r() - 0.5) * w * 0.4, h + roofH * 0.55, (r() - 0.5) * d * 0.3); g.add(chimney);
+    const smokeTex = villageSmokeTexture();
+    for (let i = 0; i < 2; i++) {
+      const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.32 }));
+      puff.scale.set(0.55, 0.55, 1); puff.position.copy(chimney.position); puff.position.y += 0.5;
+      puff.userData = { baseY: puff.position.y, phase: r() * 3, speed: 0.24 + r() * 0.14 };
+      g.add(puff); villageSmokes.push(puff);
+    }
+  }
+  g.add(villageBlobShadow(Math.max(w, d) * 0.72));
+  return g;
+}
+
+// A stone church with a spire — a village landmark.
+function villageMakeChurch(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[0] });
+  const nave = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.2, 4.4), stoneMat);
+  nave.position.y = 1.1; g.add(nave);
+  const roofH = 1.2, W = 1.5;
+  const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
+  const naveRoof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 4.6, bevelEnabled: false }), roofMat);
+  naveRoof.position.set(0, 2.2, -2.3); g.add(naveRoof);
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(1.7, 4.6, 1.7), stoneMat);
+  tower.position.set(0, 2.3, 2.7); g.add(tower);
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(1.25, 2.4, 4), roofMat);
+  spire.position.set(0, 5.8, 2.7); spire.rotation.y = Math.PI / 4; g.add(spire);
+  const goldMat = new THREE.MeshBasicMaterial({ color: 0xf0d98a });
+  const cv = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.62, 0.1), goldMat); cv.position.set(0, 7.4, 2.7); g.add(cv);
+  const ch = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.1), goldMat); ch.position.set(0, 7.35, 2.7); g.add(ch);
+  const win = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+  win.position.set(0, 2.5, 4.61); g.add(win);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,205,120'), transparent: true, depthWrite: false, opacity: 0.5 }));
+  glow.scale.set(2, 2, 1); glow.position.set(0, 2.5, 4.9); g.add(glow);
+  g.add(villageBlobShadow(2.6));
+  return g;
+}
+
+// A windmill with turning sails — an alternative landmark.
+function villageMakeWindmill(r, pal) {
+  const g = new THREE.Group();
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.4, 4.0, 12), new THREE.MeshLambertMaterial({ color: pal.stone }));
+  tower.position.y = 2.0; g.add(tower);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.1, 12), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+  cap.position.y = 4.55; g.add(cap);
+  const sails = new THREE.Group();
+  const sailMat = new THREE.MeshLambertMaterial({ color: pal.timber, side: THREE.DoubleSide });
+  const clothMat = new THREE.MeshLambertMaterial({ color: pal.plaster, side: THREE.DoubleSide });
+  for (let i = 0; i < 4; i++) {
+    const arm = new THREE.Group();
+    const spar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.6, 0.12), sailMat); spar.position.y = 1.3; arm.add(spar);
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 2.3), clothMat); cloth.position.set(0.32, 1.3, 0); arm.add(cloth);
+    arm.rotation.z = i * Math.PI / 2; sails.add(arm);
+  }
+  sails.position.set(0, 4.0, 1.35);
+  g.add(sails);
+  villageWindmills.push(sails);
+  g.add(villageBlobShadow(1.7));
+  return g;
+}
+
 function villageMakeTree(r, pal) {
   const tree = new THREE.Group();
   const trunkMat = new THREE.MeshLambertMaterial({ color: pal.timber });
@@ -6327,24 +6445,29 @@ function disposeVillageScene() {
     mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
   });
   villageScene = null;
-  villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null;
+  villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null; villageWindmills = [];
 }
 
 function buildVillageScene(v) {
   disposeVillageScene();
   const r = villageRngFrom(v.seed);
   const pal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  // Settlement size drives how many cottages/landmarks appear, so villages range
+  // from a tiny hamlet (just the shops) to a sprawling market town.
+  const sizeRoll = r();
+  const tier = sizeRoll < 0.34 ? 0 : sizeRoll < 0.74 ? 1 : 2; // 0 hamlet · 1 village · 2 town
+  const groundR = 30 + tier * 5;
 
   villageScene = new THREE.Scene();
   villageScene.background = new THREE.Color(pal.sky);
-  villageScene.fog = new THREE.Fog(pal.sky, 30, 66);
+  villageScene.fog = new THREE.Fog(pal.sky, 30 + tier * 4, 66 + tier * 8);
 
   // Ground, plaza and paths
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 44), new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground) }));
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(groundR, 44), new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground, pal.speck) }));
   ground.material.map.repeat.set(9, 9);
   ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
   const cobbles = villageCobbleTexture(r);
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(5.2 + r() * 1.4, 22), new THREE.MeshLambertMaterial({ map: cobbles }));
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(4.8 + tier * 0.7 + r() * 1.4, 22), new THREE.MeshLambertMaterial({ map: cobbles }));
   plaza.material.map.repeat.set(3.4, 3.4);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
@@ -6355,8 +6478,9 @@ function buildVillageScene(v) {
   villageBuildings = [];
   shopKeys.forEach((k, i) => {
     const angle = startAngle + (i / shopKeys.length) * Math.PI * 2 + (r() - 0.5) * 0.4;
-    const radius = 7.8 + r() * 1.8;
+    const radius = 7.4 + tier * 0.8 + r() * 1.8;
     const px = Math.cos(angle) * radius, pz = Math.sin(angle) * radius;
+    if (roofPool.length === 0) roofPool.push(...pal.roofs);
     const roofColor = roofPool.splice(Math.floor(r() * roofPool.length), 1)[0];
     const b = villageMakeBuilding(k, { icon: VILLAGE_SHOPS[k].icon, name: VILLAGE_SHOPS[k].name, roofColor }, r, pal);
     b.position.set(px, 0, pz);
@@ -6383,6 +6507,27 @@ function buildVillageScene(v) {
     villageScene.add(torch);
     villageTorches.push(torch);
   });
+
+  // Cottages fill out bigger settlements (none in a hamlet).
+  const cottageCount = tier === 0 ? 0 : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
+  for (let i = 0; i < cottageCount; i++) {
+    const a = r() * Math.PI * 2, rad = 11.5 + r() * (3 + tier * 2);
+    const cx = Math.cos(a) * rad, cz = Math.sin(a) * rad;
+    const cottage = villageMakeCottage(r, pal);
+    cottage.position.set(cx, 0, cz);
+    cottage.lookAt(0, 0, 0); cottage.rotation.x = 0; cottage.rotation.z = 0;
+    cottage.rotation.y += (r() - 0.5) * 0.5;
+    villageScene.add(cottage);
+  }
+
+  // A landmark for villages and towns — a church or a windmill on the edge.
+  if (tier >= 1 && r() < (tier === 2 ? 0.95 : 0.5)) {
+    const a = startAngle + Math.PI + (r() - 0.5) * 1.2, rad = 12 + r() * 3;
+    const landmark = (r() < 0.5) ? villageMakeChurch(r, pal) : villageMakeWindmill(r, pal);
+    landmark.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    landmark.rotation.y = -a + (r() - 0.5);
+    villageScene.add(landmark);
+  }
 
   // Village centrepiece: well, market cross or fountain
   villageScene.add(villageMakeCentrepiece(r, pal));
@@ -6415,7 +6560,7 @@ function buildVillageScene(v) {
   }
 
   // Trees ringing the village
-  const treeCount = 9 + Math.floor(r() * 6);
+  const treeCount = 8 + tier * 3 + Math.floor(r() * 6);
   for (let i = 0; i < treeCount; i++) {
     const a = (i / treeCount) * Math.PI * 2 + r() * 0.5;
     const rad = 14.5 + r() * 7;
@@ -6492,6 +6637,7 @@ function villageAnimate(ts) {
   villageCamera.lookAt(0, 1.4, 0);
   villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
   villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
+  villageWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });
   villageSmokes.forEach(p => {
     const cycle = ((t * p.userData.speed + p.userData.phase) % 1.6);
     p.position.y = p.userData.baseY + cycle * 1.6;
