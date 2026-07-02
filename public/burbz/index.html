@@ -1327,6 +1327,11 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 
 .map-village-orb { pointer-events: auto; width: 52px; height: 52px; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: linear-gradient(180deg, #3a2812, #241a0d); color: #f4ead4; box-shadow: 0 8px 20px rgba(0,0,0,0.38), 0 0 0 3px rgba(240,199,103,0.25); margin-left: 8px; }
 .map-village-orb:active { transform: scale(0.94); }
+.burbz-village-marker { display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
+.burbz-village-marker .burbz-village-icon { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #4a3418, #241a0d 78%); box-shadow: 0 6px 14px rgba(0,0,0,0.45), 0 0 0 2.5px rgba(240,199,103,0.4); animation: villageMarkerBob 3.2s ease-in-out infinite; }
+.burbz-village-marker .burbz-village-name { margin-top: 3px; padding: 2px 8px; border-radius: 999px; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 0.06em; color: #f4ead4; background: rgba(22,18,10,0.72); border: 1px solid rgba(240,199,103,0.35); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+.burbz-village-marker:active .burbz-village-icon { transform: scale(0.92); }
+@keyframes villageMarkerBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
 @media (max-width: 430px) {
   .nav-label { font-size: 8.5px; letter-spacing: 0.02em; }
@@ -1533,13 +1538,12 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 
     <!-- VILLAGE SCREEN — medieval 3D hub -->
     <div class="screen" id="screen-village">
-      <div class="screen-title">BURB VILLAGE</div>
-      <div class="village-sub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
+      <div class="screen-title" id="villageTitle">BURB VILLAGE</div>
+      <div class="village-sub" id="villageSub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
       <div class="village-stage" id="villageStage">
         <div class="village-loading" id="villageLoading">Raising the timber frames…</div>
       </div>
       <div class="village-legend" id="villageLegend"></div>
-      <div class="village-shop-overlay" id="villageShopOverlay"></div>
     </div>
 
     <div class="screen" id="screen-quests">
@@ -1759,6 +1763,9 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
       </div>
     </div>
   </div>
+
+  <!-- Village shop overlay (must sit beside the nav so it stacks above it) -->
+  <div class="village-shop-overlay" id="villageShopOverlay"></div>
 
   <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
@@ -5488,7 +5495,7 @@ function showToast(msg) {
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null, liveMapExploredPoints = [];
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get exploredPoints() { return liveMapExploredPoints; }, get playableRevealScale() { return playableRevealScale(); }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get exploredPoints() { return liveMapExploredPoints; }, get playableRevealScale() { return playableRevealScale(); }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = reject; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -5500,7 +5507,7 @@ function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getS
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function playableRevealScale() { if (!liveMap) return 1; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; return Math.max(.46, Math.min(1, Math.pow(2, zoom - BURBZ_START_ZOOM))); }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 1.2) liveMap.setPitch(targetPitch); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } refreshCloudFogSoon(); }
-function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('move', refreshCloudFogSoon); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
+function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('move', refreshCloudFogSoon); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
 function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
   function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.jumpTo({ zoom:z, pitch:burbzPitchForZoom(z) }); refreshCloudFogSoon(); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
@@ -5548,7 +5555,7 @@ function rememberExploredArea(lat, lon) { if (!gameState) return; const cell = m
 function renderCloudFog() { const fog = $('mapCloudFog'), shell = $('liveMapShell'); if (!fog || !shell) return; const w = Math.max(1, shell.clientWidth || 360), h = Math.max(1, shell.clientHeight || 640); const scale = playableRevealScale(); const points = (liveMapExploredPoints || []).map(p => liveMap ? liveMap.project([p.lon, p.lat]) : { x:w/2, y:h/2 }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y)); if (liveMapLastPosition && liveMap) points.push(liveMap.project([liveMapLastPosition.lon, liveMapLastPosition.lat])); const reveals = points.map((p,i) => { const isCurrent = i === points.length - 1; const patchScale = isCurrent ? scale : Math.max(.32, scale * .78); const rw = w * patchScale; const rh = h * patchScale; const x = Math.round(Math.max(-rw*.55, Math.min(w-rw*.45, isCurrent && scale >= .995 ? 0 : p.x - rw/2))); const y = Math.round(Math.max(-rh*.55, Math.min(h-rh*.45, isCurrent && scale >= .995 ? 0 : p.y - rh/2))); const r = Math.round(Math.min(rw, rh) * (patchScale >= .98 ? 0 : .055)); return `<rect x="${x}" y="${y}" width="${Math.round(rw)}" height="${Math.round(rh)}" rx="${r}" ry="${r}" fill="black"/>`; }).join(''); const swirls = Array.from({length:20}, (_,i) => { const y = 32 + (i * 61) % Math.max(120,h); const x = -90 + (i * 97) % (w + 180); return `<path class="cloud-swirl" d="M${x} ${y} C${x+38} ${y-24}, ${x+74} ${y+24}, ${x+118} ${y} S${x+194} ${y-18}, ${x+238} ${y+8}"/>`; }).join(''); fog.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" data-cloud-fog="1" data-reveal-shape="zoom-playable-screen" data-reveal-scale="${scale.toFixed(3)}"><defs><filter id="burbzCloudBlur"><feGaussianBlur stdDeviation="10"/></filter><mask id="burbzRevealMask"><rect width="${w}" height="${h}" fill="white"/>${reveals}</mask></defs><rect class="cloud-base" width="${w}" height="${h}" mask="url(#burbzRevealMask)" filter="url(#burbzCloudBlur)"/><g mask="url(#burbzRevealMask)">${swirls}</g></svg>`; }
 function refreshCloudFogSoon() { requestAnimationFrame(renderCloudFog); }
 function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); list.innerHTML = rows.slice(0,14).map(row => { const art = getMapBirdArtUrl(row.bird || { commonName:row.species }); const img = art ? `<img src="${escapeHtml(art)}" alt="${escapeHtml(row.species)}">` : `<span>${row.emoji}</span>`; return `<div class="map-area-bird" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>'; }
-function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); renderAreaBirdColumns(spawns); refreshCloudFogSoon(); }
+function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); refreshCloudFogSoon(); }
 function addMapBirdChip(coords, species, birdSymbol, spawn) { const shell = $('liveMapShell'); if (!shell || !liveMap) return; const point = liveMap.project(coords); const chip = makeHtmlMarker('burbz-map-bird-chip', `<div class="burbz-marker-orb">${birdSymbol}</div><div class="burbz-marker-label">${escapeHtml(species)}</div>`); chip.style.left = Math.max(56, Math.min(shell.clientWidth - 56, point.x)) + 'px'; chip.style.top = Math.max(190, Math.min(shell.clientHeight - 190, point.y)) + 'px'; chip.addEventListener('click', () => updateNearbyCard([spawn], 1)); shell.appendChild(chip); liveMapBirdChips.push(chip); }
 function createBirdSpawnPopup(spawn) { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const source = spawn.realFeature ? 'anchored to a real mapped habitat clue' : 'summoned from the local habitat estimate'; return `<div class="burbz-popup-title">${escapeHtml(species)}</div><div class="burbz-popup-copy">Likely around ${escapeHtml(habitat)} here — ${source}. In Bird Burbs this is a ${escapeHtml(habitatPoiName(spawn.habitat))} encounter.</div><button class="burbz-popup-btn" onclick="document.querySelector('[data-screen=scan]')?.click()">Scan this spot</button>`; }
 function updateNearbyCard(spawns, featureCount) { const first = spawns[0]; if (!first) return; const species = first.bird.commonName || first.bird.name || first.bird.species; const habitat = HABITAT_LABELS[first.habitat] || HABITAT_LABELS.default; const artUrl = getMapBirdArtUrl(first.bird); if ($('mapNearbyIcon')) $('mapNearbyIcon').innerHTML = artUrl ? `<img src="${escapeHTML(artUrl)}" alt="${escapeHTML(species)}">` : getBirdMarkerEmoji(species); $('mapNearbyTitle').textContent = `${species} nearby`; $('mapNearbyCopy').textContent = `${habitat}: ${featureCount ? featureCount + ' mapped clues' : 'likely in this area'} — check the area list.`; }
@@ -5631,12 +5638,14 @@ function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && 
 function addCoins(amount) { gameState.player.coins = Math.max(0, Math.floor((Number(gameState.player.coins) || 0) + amount)); return gameState.player.coins; }
 
 // ============================================================================
-// VILLAGE — medieval 3D market square with RPG shops (three.js)
+// VILLAGE — procedurally generated medieval market squares (three.js)
+// Every village on the map has its own seed: layout, palette, roofs, props
+// and name are all grown from it, so no two villages look quite the same
+// (and the same village always looks the same when you come back).
 // ============================================================================
 const VILLAGE_SHOPS = {
   general: {
     name: 'The Seed & Sundry', icon: '🛒', desc: 'General store. Restock the Academy pantry with proper bird food.',
-    color: 0x7a4f22, roof: 0x8f2f2a, pos: [-7.5, 0, -1.5],
     stock: [
       { id: 'pack_seeds',   label: 'Seed sack',      detail: '+5 Seeds',        price: 10, food: 'seeds',   qty: 5 },
       { id: 'pack_suet',    label: 'Suet block',     detail: '+4 Suet',         price: 12, food: 'suet',    qty: 4 },
@@ -5650,7 +5659,6 @@ const VILLAGE_SHOPS = {
   },
   potion: {
     name: 'The Gilded Beak', icon: '🧪', desc: 'Potion shop. Brews act on your active pet companion.',
-    color: 0x4a2b6e, roof: 0x2f2a6e, pos: [7.5, 0, -1.5],
     stock: [
       { id: 'heal_potion', label: 'Heal draught',   detail: 'Fully restores your pet\'s HP',      price: 25, effect: 'heal' },
       { id: 'happy_tonic', label: 'Cheer tonic',    detail: '+30 happiness for your pet',         price: 18, effect: 'happy' },
@@ -5660,7 +5668,6 @@ const VILLAGE_SHOPS = {
   },
   smith: {
     name: 'Talon & Anvil', icon: '⚒️', desc: 'Blacksmith. Gear for hard-training birds.',
-    color: 0x4c4c50, roof: 0x2b2b30, pos: [-7.5, 0, 6],
     stock: [
       { id: 'drill_token', label: 'Drill whistle', detail: 'Your pet may drill again right now (clears training cooldown)', price: 30, effect: 'drill' },
       { id: 'rest_token',  label: 'Feather pillow', detail: 'Your pet may Deep Rest again right now', price: 22, effect: 'rest' }
@@ -5668,32 +5675,138 @@ const VILLAGE_SHOPS = {
   },
   tavern: {
     name: "The Puffin's Rest", icon: '🍻', desc: 'Tavern. Birders trade field wisdom over a warm cup.',
-    color: 0x6e4a22, roof: 0x365a2a, pos: [7.5, 0, 6],
     stock: [
       { id: 'rumor', label: 'Buy a round, hear a rumour', detail: 'A real bird fact + a little trainer XP', price: 5, effect: 'rumor' }
     ]
   },
   guild: {
     name: "Birders' Guild", icon: '📜', desc: 'The guild posts work for capable trainers.',
-    color: 0x8a6f2a, roof: 0x6e552a, pos: [0, 0, -9.5],
     stock: [
       { id: 'quests', label: 'Read the quest board', detail: 'Opens your quest log', price: 0, effect: 'quests' }
     ]
   }
 };
 
+// ---- Seeded randomness -----------------------------------------------------
+function burbzHash32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function villageRngFrom(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const VILLAGE_NAME_HEADS = ['Wren', 'Thrush', 'Raven', 'Finch', 'Owl', 'Heron', 'Kestrel', 'Robin', 'Swift', 'Lark', 'Magpie', 'Dove', 'Rook', 'Siskin', 'Plover', 'Crake'];
+const VILLAGE_NAME_TAILS = ['ford', 'bury', 'stead', 'wick', 'holm', 'combe', 'garth', 'thorpe', 'dale', 'moor', 'brook', 'field', 'ley', 'den', 'worth', 'hollow'];
+function villageNameFromSeed(seed) {
+  const r = villageRngFrom(seed ^ 0x5f356495);
+  return VILLAGE_NAME_HEADS[Math.floor(r() * VILLAGE_NAME_HEADS.length)] + VILLAGE_NAME_TAILS[Math.floor(r() * VILLAGE_NAME_TAILS.length)];
+}
+
+// Twilight palettes — one is picked per village seed
+const VILLAGE_PALETTES = [
+  { sky: 0x181430, ground: 0x24331a, plaster: 0xd9cbb0, timber: 0x3a2812, stone: 0x6b675e, roofs: [0x8f2f2a, 0x6e552a, 0x2f2a6e, 0x365a2a, 0x2b2b30], hemiSky: 0x6a7ab0, hemiGround: 0x2a2112 },
+  { sky: 0x241530, ground: 0x2b3418, plaster: 0xe2d4ba, timber: 0x2e1f0e, stone: 0x74695c, roofs: [0xa03a2e, 0x7a5c2e, 0x513a78, 0x3e6630, 0x37373d], hemiSky: 0x8a6a9a, hemiGround: 0x2c1f10 },
+  { sky: 0x101c34, ground: 0x233028, plaster: 0xd2cfc2, timber: 0x33261a, stone: 0x5e6068, roofs: [0x7e2c3a, 0x8a7020, 0x2a3f78, 0x2f5638, 0x3a3a44], hemiSky: 0x5a78c0, hemiGround: 0x1c2014 },
+  { sky: 0x162018, ground: 0x273a1c, plaster: 0xd6c8a8, timber: 0x3c2a14, stone: 0x6a6a58, roofs: [0x96402a, 0x6d5426, 0x3a2f6e, 0x2f5a2e, 0x2e2e34], hemiSky: 0x5a8a78, hemiGround: 0x241c0c }
+];
+
+// ---- Villages scattered on the live map ------------------------------------
+const VILLAGE_CELL_DEG = 0.02; // ~2.2 km cells; ~1 in 3 hosts a village
+let liveMapVillageMarkers = [], liveMapVillageRefreshTimer = null;
+
+function villagesNearLatLng(lat, lon, span) {
+  const out = [], cs = VILLAGE_CELL_DEG, reach = span || 3;
+  const ci = Math.floor(lat / cs), cj = Math.floor(lon / cs);
+  for (let di = -reach; di <= reach; di++) {
+    for (let dj = -reach; dj <= reach; dj++) {
+      const i = ci + di, j = cj + dj;
+      const h = burbzHash32('burbz-village:' + i + ':' + j);
+      if (h % 100 >= 34) continue;
+      const r = villageRngFrom(h);
+      out.push({ seed: h, name: villageNameFromSeed(h), lat: (i + 0.18 + r() * 0.64) * cs, lon: (j + 0.18 + r() * 0.64) * cs });
+    }
+  }
+  return out;
+}
+
+function nearestVillageTo(lat, lon) {
+  let best = null, bestD = Infinity;
+  villagesNearLatLng(lat, lon, 4).forEach(v => {
+    const d = Math.hypot(v.lat - lat, v.lon - lon);
+    if (d < bestD) { bestD = d; best = v; }
+  });
+  return best;
+}
+
+function drawVillageMarkers(lat, lon) {
+  if (!liveMap || !window.maplibregl) return;
+  liveMapVillageMarkers.forEach(m => m.remove());
+  liveMapVillageMarkers = [];
+  villagesNearLatLng(lat, lon, 3).forEach(v => {
+    const el = makeHtmlMarker('burbz-village-marker',
+      '<div class="burbz-village-icon">🏰</div><div class="burbz-village-name">' + escapeHtml(v.name) + '</div>');
+    el.style.zIndex = '3';
+    el.addEventListener('click', e => { e.stopPropagation(); enterVillage(v); });
+    liveMapVillageMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([v.lon, v.lat]).addTo(liveMap));
+  });
+}
+
+function scheduleVillageMarkerRefresh() {
+  if (!liveMap) return;
+  clearTimeout(liveMapVillageRefreshTimer);
+  liveMapVillageRefreshTimer = setTimeout(() => {
+    try { const c = liveMap.getCenter(); drawVillageMarkers(c.lat, c.lng); } catch (e) {}
+  }, 350);
+}
+
+function enterVillage(v) {
+  villageActive = { seed: v.seed >>> 0, name: v.name };
+  if (gameState) { gameState.lastVillage = villageActive; saveState(); }
+  SFX.tap();
+  switchScreen('village');
+  showToast('🏰 Welcome to ' + v.name);
+}
+
+function currentVillage() {
+  if (villageActive) return villageActive;
+  const saved = gameState && gameState.lastVillage;
+  if (saved && typeof saved.seed === 'number' && saved.name) { villageActive = saved; return villageActive; }
+  if (liveMapLastPosition) {
+    const near = nearestVillageTo(liveMapLastPosition.lat, liveMapLastPosition.lon);
+    if (near) { villageActive = { seed: near.seed, name: near.name }; return villageActive; }
+  }
+  villageActive = { seed: 1206870301, name: 'Burbholm' };
+  return villageActive;
+}
+
+// ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
-let villageBuildings = [], villageSigns = [], villageTorches = [];
-let villageCam = { azimuth: 0.0, polar: 1.12, dist: 17 };
+let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null;
+let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
 let villageFallbackMode = false;
+let villageBuiltSeed = null;
+let villageActive = null;
 
 function renderVillage() {
   const stage = $('villageStage');
   if (!stage) return;
+  const v = currentVillage();
+  const title = $('villageTitle');
+  if (title) title.textContent = v.name.toUpperCase();
+  const sub = $('villageSub');
+  if (sub) sub.textContent = 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside. Find more villages on the map.';
   renderVillageLegend();
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {
-    if (!villageRenderer) initVillageScene(stage);
+    ensureVillageRenderer(stage);
+    if (villageBuiltSeed !== v.seed) buildVillageScene(v);
     const loading = $('villageLoading');
     if (loading) loading.remove();
     if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
@@ -5724,147 +5837,362 @@ function renderVillageFallback() {
   }).join('') + '</div>';
 }
 
+// ---- Canvas textures (grass, cobbles, canopy stripes, glows) ----------------
+function villageCanvasTex(size, draw) {
+  const c = document.createElement('canvas'); c.width = size; c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+function villageGrassTexture(r, baseHex) {
+  return villageCanvasTex(256, (x, s) => {
+    x.fillStyle = '#' + baseHex.toString(16).padStart(6, '0'); x.fillRect(0, 0, s, s);
+    for (let i = 0; i < 900; i++) {
+      const g = 40 + Math.floor(r() * 46);
+      x.fillStyle = 'rgba(' + Math.floor(g * 0.7) + ',' + g + ',' + Math.floor(g * 0.42) + ',' + (0.25 + r() * 0.4) + ')';
+      x.fillRect(r() * s, r() * s, 1.6 + r() * 2.4, 1.6 + r() * 2.4);
+    }
+  });
+}
+function villageCobbleTexture(r) {
+  return villageCanvasTex(256, (x, s) => {
+    x.fillStyle = '#3c3833'; x.fillRect(0, 0, s, s);
+    const cell = 26;
+    for (let gy = 0; gy < s / cell; gy++) {
+      for (let gx = 0; gx < s / cell + 1; gx++) {
+        const off = (gy % 2) * cell / 2;
+        const tone = 100 + Math.floor(r() * 44);
+        x.fillStyle = 'rgb(' + tone + ',' + (tone - 6) + ',' + (tone - 14) + ')';
+        x.beginPath();
+        x.ellipse(gx * cell + off, gy * cell + cell / 2, cell / 2 - 2.2, cell / 2 - 3.4, 0, 0, Math.PI * 2);
+        x.fill();
+      }
+    }
+  });
+}
+function villageStripeTexture(r, cA, cB) {
+  return villageCanvasTex(128, (x, s) => {
+    for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? cA : cB; x.fillRect(i * s / 8, 0, s / 8, s); }
+  });
+}
+function villageGlowTexture(rgb) {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 2, 32, 32, 30);
+  g.addColorStop(0, 'rgba(' + rgb + ',0.85)');
+  g.addColorStop(0.5, 'rgba(' + rgb + ',0.28)');
+  g.addColorStop(1, 'rgba(' + rgb + ',0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+function villageSmokeTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 4, 32, 32, 30);
+  g.addColorStop(0, 'rgba(200,200,210,0.55)');
+  g.addColorStop(1, 'rgba(200,200,210,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+
 function villageMakeSign(text) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 96;
   const x = c.getContext('2d');
-  x.fillStyle = '#2a1c0c'; x.fillRect(0, 0, 256, 96);
-  x.strokeStyle = '#d6a84f'; x.lineWidth = 6; x.strokeRect(4, 4, 248, 88);
-  x.fillStyle = '#f4ead4'; x.font = 'bold 30px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = '#241708'; x.fillRect(0, 0, 256, 96);
+  x.fillStyle = '#2f1e0b'; x.fillRect(6, 6, 244, 84);
+  x.strokeStyle = '#d6a84f'; x.lineWidth = 5; x.strokeRect(8, 8, 240, 80);
+  x.strokeStyle = 'rgba(214,168,79,0.35)'; x.lineWidth = 2; x.strokeRect(16, 16, 224, 64);
+  x.fillStyle = '#f4ead4'; x.font = 'bold 28px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(text, 128, 50);
   const tex = new THREE.CanvasTexture(c);
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-  const sprite = new THREE.Sprite(mat);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
   sprite.scale.set(3.4, 1.28, 1);
   return sprite;
 }
 
-function villageMakeBuilding(shopKey) {
-  const cfg = VILLAGE_SHOPS[shopKey];
+// Soft dark disc that fakes a contact shadow (cheaper than real shadows on phones)
+function villageBlobShadow(radius) {
+  const m = new THREE.Mesh(
+    new THREE.CircleGeometry(radius, 18),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })
+  );
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.011;
+  return m;
+}
+
+// ---- Building generator ------------------------------------------------------
+function villageMakeBuilding(shopKey, cfg, r, pal) {
   const g = new THREE.Group();
   g.userData.shopKey = shopKey;
 
-  const bodyMat = new THREE.MeshLambertMaterial({ color: 0xd9cbb0 });      // plaster
-  const beamMat = new THREE.MeshLambertMaterial({ color: 0x3a2812 });      // dark timber
-  const roofMat = new THREE.MeshLambertMaterial({ color: cfg.roof });
-  const baseMat = new THREE.MeshLambertMaterial({ color: cfg.color });
+  const w = 3.5 + r() * 1.2, d = 2.9 + r() * 0.9;
+  const baseH = 1.45 + r() * 0.35, upH = 1.5 + r() * 0.45;
+  const jetty = 0.35 + r() * 0.4; // medieval overhang of the upper storey
+  const uw = w + jetty, ud = d + jetty;
 
-  // Stone base storey + plaster upper storey (classic tudor look)
-  const base = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.6, 3.6), baseMat);
-  base.position.y = 0.8; g.add(base);
-  const upper = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.7, 4.0), bodyMat);
-  upper.position.y = 2.45; g.add(upper);
+  const plaster = new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.08);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: plaster });
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const roofMat = new THREE.MeshLambertMaterial({ color: cfg.roofColor });
+  const baseMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.06) });
 
-  // Timber frame beams on the upper storey
-  for (const dx of [-2.1, -0.7, 0.7, 2.1]) {
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.7, 0.1), beamMat);
-    beam.position.set(dx, 2.45, 2.06); g.add(beam);
+  // Stone lower storey + jettied plaster upper storey
+  const base = new THREE.Mesh(new THREE.BoxGeometry(w, baseH, d), baseMat);
+  base.position.y = baseH / 2; g.add(base);
+  const upper = new THREE.Mesh(new THREE.BoxGeometry(uw, upH, ud), bodyMat);
+  upper.position.y = baseH + upH / 2; g.add(upper);
+
+  // Timber frame: corner posts, belt beam, studs and diagonal braces
+  const beltH = new THREE.Mesh(new THREE.BoxGeometry(uw + 0.12, 0.18, ud + 0.12), beamMat);
+  beltH.position.y = baseH; g.add(beltH);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, upH, 0.2), beamMat);
+    post.position.set(sx * (uw / 2 - 0.08), baseH + upH / 2, sz * (ud / 2 - 0.08));
+    g.add(post);
   }
-  const beltH = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.16, 4.1), beamMat);
-  beltH.position.y = 1.62; g.add(beltH);
-
-  // Pyramid roof
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(3.7, 2.2, 4), roofMat);
-  roof.position.y = 4.4; roof.rotation.y = Math.PI / 4; g.add(roof);
-
-  // Door
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.35, 0.12), beamMat);
-  door.position.set(0, 0.68, 1.83); g.add(door);
-
-  // Glowing windows
-  const winMat = new THREE.MeshBasicMaterial({ color: 0xffd98a });
-  for (const dx of [-1.4, 1.4]) {
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.62, 0.08), winMat);
-    win.position.set(dx, 2.45, 2.08); g.add(win);
+  const studCount = Math.max(2, Math.floor(uw / 1.35));
+  for (let i = 0; i < studCount; i++) {
+    const sxp = -uw / 2 + (i + 1) * uw / (studCount + 1);
+    const stud = new THREE.Mesh(new THREE.BoxGeometry(0.14, upH, 0.1), beamMat);
+    stud.position.set(sxp, baseH + upH / 2, ud / 2 + 0.02);
+    g.add(stud);
+    if (r() < 0.6) {
+      const brace = new THREE.Mesh(new THREE.BoxGeometry(0.1, upH * 0.86, 0.08), beamMat);
+      brace.position.set(sxp + (r() < 0.5 ? -0.32 : 0.32), baseH + upH / 2, ud / 2 + 0.03);
+      brace.rotation.z = (r() < 0.5 ? 1 : -1) * 0.5;
+      g.add(brace);
+    }
   }
 
-  // Hanging sign
+  // Glowing (or dark) windows on the upper storey
+  const litMat = new THREE.MeshBasicMaterial({ color: 0xffd98a });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x1c1812 });
+  const winCount = Math.max(2, Math.round(uw / 1.7));
+  for (let i = 0; i < winCount; i++) {
+    const wx = -uw / 2 + (i + 0.5) * uw / winCount;
+    const lit = r() < 0.72;
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.62, 0.08), lit ? litMat : darkMat);
+    win.position.set(wx, baseH + upH / 2 + 0.05, ud / 2 + 0.06);
+    g.add(win);
+    if (lit) {
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,205,120'), transparent: true, depthWrite: false, opacity: 0.5 }));
+      glow.scale.set(1.5, 1.5, 1); glow.position.set(wx, baseH + upH / 2 + 0.05, ud / 2 + 0.3);
+      g.add(glow);
+    }
+    // shutters
+    if (r() < 0.5) {
+      for (const sside of [-1, 1]) {
+        const sh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.6, 0.05), roofMat);
+        sh.position.set(wx + sside * 0.42, baseH + upH / 2 + 0.05, ud / 2 + 0.05);
+        g.add(sh);
+      }
+    }
+  }
+
+  // Arched door + warm lantern beside it
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.25, 0.12), beamMat);
+  door.position.set(0, 0.62, d / 2 + 0.03); g.add(door);
+  const arch = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 12, 1, false, 0, Math.PI), beamMat);
+  arch.rotation.x = Math.PI / 2; arch.rotation.z = Math.PI / 2;
+  arch.position.set(0, 1.25, d / 2 + 0.03); g.add(arch);
+  const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+  lantern.position.set(w / 2 - 0.4, 1.5, d / 2 + 0.12); g.add(lantern);
+  const lGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.75 }));
+  lGlow.scale.set(1.9, 1.9, 1); lGlow.position.copy(lantern.position).z += 0.15;
+  g.add(lGlow);
+
+  // Roof: gable, pyramid or hipped — with overhang and a ridge beam
+  const roofH = 1.45 + r() * 0.7;
+  const roofStyle = r();
+  if (roofStyle < 0.5) {
+    const W = uw / 2 + 0.45;
+    const shape = new THREE.Shape();
+    shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
+    const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: ud + 0.9, bevelEnabled: false }), roofMat);
+    roof.position.set(0, baseH + upH, -(ud + 0.9) / 2); g.add(roof);
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, ud + 1.05), beamMat);
+    ridge.position.set(0, baseH + upH + roofH, 0); g.add(ridge);
+    // shingle courses so the roof reads as tiles rather than a flat slab
+    const slope = Math.atan2(roofH, W);
+    const shingleMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(cfg.roofColor).offsetHSL(0, 0, -0.06) });
+    for (const s of [-1, 1]) {
+      for (const f of [0.3, 0.62]) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, ud + 0.95), shingleMat);
+        line.position.set(s * W * (1 - f), baseH + upH + roofH * f + 0.05, 0);
+        line.rotation.z = -s * slope;
+        g.add(line);
+      }
+    }
+  } else if (roofStyle < 0.8) {
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(uw, ud) * 0.72, roofH + 0.3, 4), roofMat);
+    roof.position.y = baseH + upH + (roofH + 0.3) / 2; roof.rotation.y = Math.PI / 4; g.add(roof);
+  } else {
+    const roof = new THREE.Mesh(new THREE.CylinderGeometry(Math.min(uw, ud) * 0.2, Math.max(uw, ud) * 0.76, roofH, 4), roofMat);
+    roof.position.y = baseH + upH + roofH / 2; roof.rotation.y = Math.PI / 4; g.add(roof);
+  }
+
+  // Chimney with drifting smoke
+  if (r() < 0.65) {
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.1, 0.42), baseMat);
+    chimney.position.set((r() - 0.5) * uw * 0.5, baseH + upH + roofH * 0.75, (r() - 0.5) * ud * 0.3);
+    g.add(chimney);
+    const smokeTex = villageSmokeTexture();
+    for (let i = 0; i < 3; i++) {
+      const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.4 }));
+      puff.scale.set(0.7, 0.7, 1);
+      puff.position.copy(chimney.position); puff.position.y += 0.7;
+      puff.userData = { baseY: puff.position.y, phase: r() * 3, speed: 0.28 + r() * 0.15 };
+      g.add(puff);
+      villageSmokes.push(puff);
+    }
+  }
+
+  // Hanging shop sign on a bracket
+  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), beamMat);
+  bracket.position.set(-w / 2 + 0.5, baseH + upH + 0.55, d / 2 + 0.4); g.add(bracket);
   const sign = villageMakeSign(cfg.icon + ' ' + cfg.name.replace(/^The /, ''));
-  sign.position.set(0, 3.6, 2.5);
-  sign.userData.baseY = 3.6;
+  sign.position.set(-w / 2 + 0.5, baseH + upH + 0.1, d / 2 + 0.75);
+  sign.userData.baseY = sign.position.y;
   g.add(sign);
   villageSigns.push(sign);
 
-  g.position.set(cfg.pos[0], 0, cfg.pos[2]);
-  g.lookAt(0, 0, 0);
-  g.rotation.x = 0; g.rotation.z = 0;
+  g.add(villageBlobShadow(Math.max(uw, ud) * 0.72));
   return g;
 }
 
-function initVillageScene(stage) {
-  villageScene = new THREE.Scene();
-  villageScene.background = new THREE.Color(0x181430);
-  villageScene.fog = new THREE.Fog(0x181430, 26, 54);
+// ---- Props -------------------------------------------------------------------
+function villageMakeTree(r, pal) {
+  const tree = new THREE.Group();
+  const trunkMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const leafHue = new THREE.Color(0x2c3a18).offsetHSL((r() - 0.5) * 0.06, 0, (r() - 0.5) * 0.08);
+  const leafMat = new THREE.MeshLambertMaterial({ color: leafHue });
+  const s = 0.8 + r() * 0.8;
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.26 * s, 1.5 * s, 6), trunkMat);
+  trunk.position.y = 0.75 * s; tree.add(trunk);
+  if (r() < 0.5) {
+    const crown = new THREE.Mesh(new THREE.ConeGeometry(1.15 * s, 2.6 * s, 7), leafMat);
+    crown.position.y = 2.5 * s; tree.add(crown);
+  } else {
+    for (let i = 0; i < 3; i++) {
+      const blob = new THREE.Mesh(new THREE.SphereGeometry((0.75 + r() * 0.4) * s, 7, 6), leafMat);
+      blob.position.set((r() - 0.5) * 0.9 * s, (1.9 + r() * 0.8) * s, (r() - 0.5) * 0.9 * s);
+      tree.add(blob);
+    }
+  }
+  tree.add(villageBlobShadow(1.0 * s));
+  return tree;
+}
 
-  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+function villageMakeStall(r, pal) {
+  const stall = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const cA = '#' + new THREE.Color(pal.roofs[Math.floor(r() * pal.roofs.length)]).getHexString();
+  const canopyMat = new THREE.MeshLambertMaterial({ map: villageStripeTexture(r, cA, '#e8dcc0'), side: THREE.DoubleSide });
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.75, 1.0), beamMat);
+  counter.position.y = 0.38; stall.add(counter);
+  for (const sx of [-0.9, 0.9]) for (const sz of [-0.42, 0.42]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.9, 0.09), beamMat);
+    post.position.set(sx, 0.95, sz); stall.add(post);
+  }
+  const canopy = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.5), canopyMat);
+  canopy.rotation.x = -Math.PI / 2 + 0.28;
+  canopy.position.set(0, 1.95, 0); stall.add(canopy);
+  for (let i = 0; i < 3; i++) {
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.24, 0.34),
+      new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+    box.position.set(-0.6 + i * 0.6, 0.87, (r() - 0.5) * 0.4);
+    box.rotation.y = r() * 0.8; stall.add(box);
+  }
+  stall.add(villageBlobShadow(1.4));
+  return stall;
+}
 
+function villageMakeBarrel(r, pal) {
+  const barrel = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.34, 0.62, 9),
+    new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08) })
+  );
+  barrel.position.y = 0.31;
+  const grp = new THREE.Group(); grp.add(barrel); grp.add(villageBlobShadow(0.42));
+  return grp;
+}
+
+function villageMakeCentrepiece(r, pal) {
+  const grp = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const pick = r();
+  if (pick < 0.4) {
+    // Covered well
+    const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 0.9, 10), stoneMat);
+    wellBase.position.y = 0.45; grp.add(wellBase);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.86, 12), new THREE.MeshBasicMaterial({ color: 0x24406e }));
+    water.rotation.x = -Math.PI / 2; water.position.y = 0.92; grp.add(water);
+    for (const dx of [-1.05, 1.05]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.6, 0.14), beamMat);
+      post.position.set(dx, 1.35, 0); grp.add(post);
+    }
+    const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.0, 6), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+    wellRoof.position.y = 2.35; grp.add(wellRoof);
+  } else if (pick < 0.7) {
+    // Market cross on steps
+    for (let i = 0; i < 3; i++) {
+      const step = new THREE.Mesh(new THREE.CylinderGeometry(1.5 - i * 0.4, 1.5 - i * 0.4, 0.24, 8), stoneMat);
+      step.position.y = 0.12 + i * 0.24; grp.add(step);
+    }
+    const column = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 2.2, 8), stoneMat);
+    column.position.y = 1.8; grp.add(column);
+    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.8, 0.14), stoneMat);
+    crossV.position.y = 3.2; grp.add(crossV);
+    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.14, 0.14), stoneMat);
+    crossH.position.y = 3.3; grp.add(crossH);
+  } else {
+    // Old fountain
+    const basin = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.55, 12), stoneMat);
+    basin.position.y = 0.28; grp.add(basin);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(1.32, 16), new THREE.MeshBasicMaterial({ color: 0x2a4a7a }));
+    water.rotation.x = -Math.PI / 2; water.position.y = 0.57; grp.add(water);
+    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.22, 1.3, 8), stoneMat);
+    spire.position.y = 1.2; grp.add(spire);
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.36, 0.2, 10), stoneMat);
+    bowl.position.y = 1.9; grp.add(bowl);
+  }
+  grp.add(villageBlobShadow(1.7));
+  return grp;
+}
+
+function villageMakeGarland(r, pal, from, to) {
+  const grp = new THREE.Group();
+  const flags = 8;
+  for (let i = 1; i < flags; i++) {
+    const t = i / flags;
+    const x = from.x + (to.x - from.x) * t;
+    const z = from.z + (to.z - from.z) * t;
+    const sag = Math.sin(t * Math.PI) * 0.7;
+    const y = from.y + (to.y - from.y) * t - sag;
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.16, 0); shape.lineTo(0.16, 0); shape.lineTo(0, -0.4); shape.closePath();
+    const flag = new THREE.Mesh(new THREE.ShapeGeometry(shape),
+      new THREE.MeshBasicMaterial({ color: pal.roofs[i % pal.roofs.length], side: THREE.DoubleSide }));
+    flag.position.set(x, y, z);
+    flag.lookAt(0, y, 0);
+    grp.add(flag);
+  }
+  return grp;
+}
+
+// ---- Renderer / scene lifecycle ----------------------------------------------
+function ensureVillageRenderer(stage) {
+  if (villageRenderer) {
+    if (!villageRenderer.domElement.isConnected) stage.appendChild(villageRenderer.domElement);
+    return;
+  }
+  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
   villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   villageRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   stage.appendChild(villageRenderer.domElement);
 
-  // Ground: grass disc + cobble square + paths
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(26, 40), new THREE.MeshLambertMaterial({ color: 0x24331a }));
-  ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(5.4, 8), new THREE.MeshLambertMaterial({ color: 0x4a4440 }));
-  plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
-  for (const k of Object.keys(VILLAGE_SHOPS)) {
-    const p = VILLAGE_SHOPS[k].pos;
-    const len = Math.hypot(p[0], p[2]);
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(1.4, len), new THREE.MeshLambertMaterial({ color: 0x57503f }));
-    path.rotation.x = -Math.PI / 2;
-    path.position.set(p[0] / 2, 0.015, p[2] / 2);
-    path.rotation.z = Math.atan2(p[0], p[2]);
-    villageScene.add(path);
-  }
-
-  // Central well
-  const well = new THREE.Group();
-  const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 0.9, 10), new THREE.MeshLambertMaterial({ color: 0x6b675e }));
-  wellBase.position.y = 0.45; well.add(wellBase);
-  const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.0, 6), new THREE.MeshLambertMaterial({ color: 0x8f2f2a }));
-  wellRoof.position.y = 2.35; well.add(wellRoof);
-  for (const dx of [-1.05, 1.05]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.6, 0.14), new THREE.MeshLambertMaterial({ color: 0x3a2812 }));
-    post.position.set(dx, 1.35, 0); well.add(post);
-  }
-  villageScene.add(well);
-
-  // Buildings
-  villageBuildings = [];
-  for (const k of Object.keys(VILLAGE_SHOPS)) {
-    const b = villageMakeBuilding(k);
-    villageScene.add(b);
-    villageBuildings.push(b);
-  }
-
-  // Trees around the edge
-  const trunkMat = new THREE.MeshLambertMaterial({ color: 0x3a2812 });
-  const leafMat = new THREE.MeshLambertMaterial({ color: 0x2c3a18 });
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * Math.PI * 2 + 0.3;
-    const r = 15 + (i % 3) * 2.5;
-    const tree = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 1.6, 6), trunkMat);
-    trunk.position.y = 0.8; tree.add(trunk);
-    const crown = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.6, 7), leafMat);
-    crown.position.y = 2.6; tree.add(crown);
-    tree.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-    villageScene.add(tree);
-  }
-
-  // Lighting: moonlight + warm torches
-  villageScene.add(new THREE.HemisphereLight(0x6a7ab0, 0x2a2112, 1.7));
-  const moon = new THREE.DirectionalLight(0xaabcff, 1.0);
-  moon.position.set(-8, 14, 6); villageScene.add(moon);
-  villageTorches = [];
-  for (const k of Object.keys(VILLAGE_SHOPS)) {
-    const p = VILLAGE_SHOPS[k].pos;
-    const t = new THREE.PointLight(0xffb45e, 1.7, 11, 2);
-    t.position.set(p[0] * 0.82, 1.7, p[2] * 0.82);
-    villageScene.add(t);
-    villageTorches.push(t);
-  }
-
-  // Input: drag to orbit, tap to enter a shop
   const el = villageRenderer.domElement;
   let down = null, dragged = false;
   el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar }; dragged = false; });
@@ -5891,15 +6219,167 @@ function initVillageScene(stage) {
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
-    villageCam.dist = Math.min(26, Math.max(10, villageCam.dist + e.deltaY * 0.02));
+    villageCam.dist = Math.min(30, Math.max(12, villageCam.dist + e.deltaY * 0.02));
   }, { passive: false });
 
   window.addEventListener('resize', onVillageResize);
 }
 
+function disposeVillageScene() {
+  if (!villageScene) return;
+  villageScene.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+    mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+  });
+  villageScene = null;
+  villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null;
+}
+
+function buildVillageScene(v) {
+  disposeVillageScene();
+  const r = villageRngFrom(v.seed);
+  const pal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+
+  villageScene = new THREE.Scene();
+  villageScene.background = new THREE.Color(pal.sky);
+  villageScene.fog = new THREE.Fog(pal.sky, 30, 66);
+
+  // Ground, plaza and paths
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 44), new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground) }));
+  ground.material.map.repeat.set(9, 9);
+  ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
+  const cobbles = villageCobbleTexture(r);
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(5.2 + r() * 1.4, 22), new THREE.MeshLambertMaterial({ map: cobbles }));
+  plaza.material.map.repeat.set(3.4, 3.4);
+  plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
+
+  // Buildings on a ring with jittered spacing, radius and colours
+  const shopKeys = Object.keys(VILLAGE_SHOPS);
+  const startAngle = r() * Math.PI * 2;
+  const roofPool = pal.roofs.slice();
+  villageBuildings = [];
+  shopKeys.forEach((k, i) => {
+    const angle = startAngle + (i / shopKeys.length) * Math.PI * 2 + (r() - 0.5) * 0.4;
+    const radius = 7.8 + r() * 1.8;
+    const px = Math.cos(angle) * radius, pz = Math.sin(angle) * radius;
+    const roofColor = roofPool.splice(Math.floor(r() * roofPool.length), 1)[0];
+    const b = villageMakeBuilding(k, { icon: VILLAGE_SHOPS[k].icon, name: VILLAGE_SHOPS[k].name, roofColor }, r, pal);
+    b.position.set(px, 0, pz);
+    b.lookAt(0, 0, 0);
+    b.rotation.x = 0; b.rotation.z = 0;
+    b.rotation.y += (r() - 0.5) * 0.22;
+    villageScene.add(b);
+    villageBuildings.push(b);
+
+    // Cobbled path from the plaza to each door
+    const len = Math.hypot(px, pz);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(1.4, len), new THREE.MeshLambertMaterial({ map: cobbles.clone() }));
+    path.material.map.needsUpdate = true;
+    path.material.map.repeat.set(0.9, len / 2.4);
+    path.rotation.x = -Math.PI / 2;
+    path.position.set(px / 2, 0.015, pz / 2);
+    path.rotation.z = Math.atan2(px, pz);
+    villageScene.add(path);
+
+    // A warm torch by each doorway
+    const torch = new THREE.PointLight(0xffb45e, 1.7, 11, 2);
+    torch.position.set(px * 0.82, 1.7, pz * 0.82);
+    torch.userData.base = 1.5 + r() * 0.4;
+    villageScene.add(torch);
+    villageTorches.push(torch);
+  });
+
+  // Village centrepiece: well, market cross or fountain
+  villageScene.add(villageMakeCentrepiece(r, pal));
+
+  // Market stalls around the plaza
+  const stallCount = 1 + Math.floor(r() * 3);
+  for (let i = 0; i < stallCount; i++) {
+    const a = r() * Math.PI * 2, rad = 3.6 + r() * 1.6;
+    const stall = villageMakeStall(r, pal);
+    stall.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    stall.rotation.y = -a + Math.PI / 2 + (r() - 0.5) * 0.4;
+    villageScene.add(stall);
+  }
+
+  // Bunting strung across the square
+  if (r() < 0.75) {
+    const a = r() * Math.PI * 2;
+    villageScene.add(villageMakeGarland(r, pal,
+      new THREE.Vector3(Math.cos(a) * 5.5, 3.1, Math.sin(a) * 5.5),
+      new THREE.Vector3(Math.cos(a + Math.PI) * 5.5, 3.1, Math.sin(a + Math.PI) * 5.5)));
+  }
+
+  // Barrels and clutter near the buildings
+  const clutterCount = 4 + Math.floor(r() * 5);
+  for (let i = 0; i < clutterCount; i++) {
+    const near = villageBuildings[Math.floor(r() * villageBuildings.length)];
+    const barrel = villageMakeBarrel(r, pal);
+    barrel.position.set(near.position.x + (r() - 0.5) * 4.5, 0, near.position.z + (r() - 0.5) * 4.5);
+    villageScene.add(barrel);
+  }
+
+  // Trees ringing the village
+  const treeCount = 9 + Math.floor(r() * 6);
+  for (let i = 0; i < treeCount; i++) {
+    const a = (i / treeCount) * Math.PI * 2 + r() * 0.5;
+    const rad = 14.5 + r() * 7;
+    const tree = villageMakeTree(r, pal);
+    tree.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    villageScene.add(tree);
+  }
+
+  // Night sky: stars + a bright moon sprite
+  const starCount = 240;
+  const starPos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    const a = r() * Math.PI * 2, p = r() * Math.PI * 0.42;
+    const rad = 46;
+    starPos[i * 3] = Math.cos(a) * Math.sin(p + 0.12) * rad;
+    starPos[i * 3 + 1] = Math.cos(p) * rad * 0.6 + 6;
+    starPos[i * 3 + 2] = Math.sin(a) * Math.sin(p + 0.12) * rad;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  villageScene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcdd8ff, size: 0.22, sizeAttenuation: true, transparent: true, opacity: 0.9, fog: false })));
+  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('220,230,255'), transparent: true, depthWrite: false, fog: false }));
+  moonSprite.scale.set(9, 9, 1);
+  moonSprite.position.set(-22, 24, 14);
+  villageScene.add(moonSprite);
+
+  // Fireflies drifting over the green
+  const flyCount = 22;
+  const flyPos = new Float32Array(flyCount * 3);
+  const flyBase = [];
+  for (let i = 0; i < flyCount; i++) {
+    const a = r() * Math.PI * 2, rad = 4 + r() * 11;
+    const bx = Math.cos(a) * rad, bz = Math.sin(a) * rad, by = 0.6 + r() * 1.8;
+    flyBase.push({ x: bx, y: by, z: bz, p: r() * 6.28, s: 0.5 + r() * 0.8 });
+    flyPos[i * 3] = bx; flyPos[i * 3 + 1] = by; flyPos[i * 3 + 2] = bz;
+  }
+  const flyGeo = new THREE.BufferGeometry();
+  flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
+  villageFireflies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xd8ff9a, size: 0.16, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+  villageFireflies.userData.base = flyBase;
+  villageScene.add(villageFireflies);
+
+  // Lighting: moonlight + warm hearth-glow
+  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 1.7));
+  const moon = new THREE.DirectionalLight(0xaabcff, 1.0);
+  moon.position.set(-8, 14, 6); villageScene.add(moon);
+
+  villageBuiltSeed = v.seed;
+  // Open on the gap between the first two buildings so nothing blocks the view
+  // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
+  villageCam.azimuth = Math.PI / 2 - (startAngle + Math.PI / shopKeys.length);
+  villageCam.polar = 1.02;
+  villageCam.dist = 22 + r() * 2.5;
+}
+
 function onVillageResize() {
   const stage = $('villageStage');
-  if (!stage || !villageRenderer) return;
+  if (!stage || !villageRenderer || !villageCamera) return;
   const w = stage.clientWidth, h = stage.clientHeight;
   if (w === 0 || h === 0) return;
   villageRenderer.setSize(w, h, false);
@@ -5917,7 +6397,26 @@ function villageAnimate(ts) {
   villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
   villageCamera.lookAt(0, 1.4, 0);
   villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
-  villageTorches.forEach((l, i) => { l.intensity = 1.6 + Math.sin(t * 7 + i * 1.7) * 0.18; });
+  villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
+  villageSmokes.forEach(p => {
+    const cycle = ((t * p.userData.speed + p.userData.phase) % 1.6);
+    p.position.y = p.userData.baseY + cycle * 1.6;
+    p.material.opacity = 0.4 * (1 - cycle / 1.6);
+    const sc = 0.55 + cycle * 0.6;
+    p.scale.set(sc, sc, 1);
+  });
+  if (villageFireflies) {
+    const pos = villageFireflies.geometry.attributes.position;
+    const base = villageFireflies.userData.base;
+    for (let i = 0; i < base.length; i++) {
+      const b = base[i];
+      pos.setXYZ(i,
+        b.x + Math.sin(t * b.s + b.p) * 0.8,
+        b.y + Math.sin(t * b.s * 1.4 + b.p * 2) * 0.4,
+        b.z + Math.cos(t * b.s * 0.8 + b.p) * 0.8);
+    }
+    pos.needsUpdate = true;
+  }
   villageRenderer.render(villageScene, villageCamera);
 }
 
@@ -5998,12 +6497,17 @@ function villageBuy(shopKey, itemId) {
   villageOpenShop(shopKey);
 }
 
-// Map screen entry point
+// Map screen entry point — the orb walks you into the nearest village
 (function wireVillageEntry() {
   const btn = $('mapVillageBtn');
   if (btn && !btn.dataset.wired) {
     btn.dataset.wired = '1';
-    btn.addEventListener('click', () => switchScreen('village'));
+    btn.addEventListener('click', () => {
+      const pos = liveMapLastPosition;
+      const near = pos ? nearestVillageTo(pos.lat, pos.lon) : null;
+      if (near) enterVillage(near);
+      else switchScreen('village');
+    });
   }
 })();
 
