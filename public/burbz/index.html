@@ -596,6 +596,8 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   display: flex; background: var(--bg2); border-radius: 10px; padding: 4px;
   margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);
 }
+.scan-know-btn { display:block; width:100%; margin-top:10px; min-height:44px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(214,168,79,.28); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
+.scan-know-btn:active { border-color:var(--legendary); color:#f4ead4; }
 .scan-mode-btn {
   flex: 1; padding: 10px; text-align: center; border-radius: 8px;
   font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px;
@@ -1018,6 +1020,18 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .recruit-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .recruit-list .bird-card { min-height:338px; }
 .recruit-close { width:100%; min-height:44px; margin-top:12px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
+.recruit-correct-btn { width:100%; min-height:46px; margin-top:10px; border-radius:12px; background:linear-gradient(180deg,#3a2c12,#241a0d); color:#f4ead4; border:1px solid rgba(214,168,79,.42); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13.5px; text-transform:uppercase; letter-spacing:.03em; }
+.recruit-correct-btn:active { transform:scale(.985); }
+.species-picker-search { width:100%; margin:10px 0; padding:12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(214,168,79,.32); color:#fff; font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700; }
+.species-picker-search:focus { outline:none; border-color:var(--legendary); }
+.species-picker-list { display:grid; gap:7px; max-height:52vh; overflow:auto; -webkit-overflow-scrolling:touch; }
+.species-picker-row { display:grid; grid-template-columns:40px minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px 9px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); text-align:left; color:#fff; cursor:pointer; }
+.species-picker-row:active { border-color:var(--legendary); background:rgba(214,168,79,.12); }
+.species-picker-row img { width:40px; height:40px; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.5)); }
+.species-picker-row .sp-emoji { font-size:26px; text-align:center; }
+.species-picker-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.species-picker-sub { font-size:9.5px; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.species-picker-rarity { font-size:9px; font-weight:900; text-transform:uppercase; }
 
 /* ========== INTRO CUTSCENE ========== */
 .intro-cutscene-overlay { position:fixed; inset:0; z-index:1400; display:none; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 18%, rgba(25,51,60,.72), rgba(0,0,0,.94) 68%); backdrop-filter:blur(10px); padding:calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom)); }
@@ -1450,6 +1464,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
           <canvas id="waveformCanvas"></canvas>
         </div>
         <button class="scan-btn" id="scanBtn">START LISTENING</button>
+        <button class="scan-know-btn" id="scanKnowBtn">Already know it? Log the bird yourself</button>
       </div>
 
       <!-- Image scan area -->
@@ -1703,6 +1718,18 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
       <div class="recruit-wallet" id="recruitWallet">Coins: 0</div>
       <div class="recruit-list" id="recruitList"></div>
       <button class="recruit-close" id="recruitClose">Keep exploring</button>
+    </div>
+  </div>
+
+  <!-- Species picker: correct a wrong auto-ID / log a bird you already know -->
+  <div class="recruit-overlay species-picker-overlay" id="speciesPickerOverlay">
+    <div class="recruit-sheet">
+      <div class="modal-handle"></div>
+      <div class="recruit-title">What did you hear?</div>
+      <div class="recruit-copy">Pick the bird you actually saw or heard. It goes into your Birdex and replaces the auto-guess.</div>
+      <input type="search" id="speciesPickerSearch" class="species-picker-search" placeholder="Search e.g. Song Thrush" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="species-picker-list" id="speciesPickerList"></div>
+      <button class="recruit-close" id="speciesPickerClose">Cancel</button>
     </div>
   </div>
 
@@ -5506,7 +5533,7 @@ function showToast(msg) {
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null, liveMapExploredPoints = [];
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get exploredPoints() { return liveMapExploredPoints; }, get playableRevealScale() { return playableRevealScale(); }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get exploredPoints() { return liveMapExploredPoints; }, get playableRevealScale() { return playableRevealScale(); }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, simulateScan(name, sci, conf) { return handleBirdCandidates({ species: name, scientificName: sci || '', confidence: conf || 0.4 }, []); }, correctScan(name) { return correctScanDiscovery(name); }, logKnown(name) { return logKnownBird(name); }, pickerSpecies() { return allSpeciesForPicker(); } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -6643,7 +6670,84 @@ function renderRpgHud() {
   [['burbzCoins', gameState.player.coins || 0], ['burbzCompanions', companions], ['burbzInventory', items], ['profileCoins', gameState.player.coins || 0], ['profileInventory', items], ['profileGifts', giftItemCount()], ['inventoryCoins', gameState.player.coins || 0], ['inventoryItems', items], ['inventoryGifts', giftItemCount()]].forEach(([id, val]) => { const el = $(id); if (el) el.textContent = val; });
 }
 
-function showRecruitChoiceOverlay(birds, message) {
+// ---- Correct a wrong auto-ID (the sound/photo scanner's top guess) ----------
+// Field bird ID is never perfect, so let the player confirm the species — the
+// way Merlin makes you confirm — instead of silently trusting one guess.
+let scanCorrectContext = null;
+
+function removeDiscoveredSpecies(name) {
+  if (!gameState.discoveredSpecies) return false;
+  const canonical = canonicalSpeciesName(name);
+  const keys = new Set([speciesKey(canonical), ...discoveryKeysForSpecies(canonical)]);
+  let removed = false;
+  keys.forEach(k => { if (k && gameState.discoveredSpecies[k]) { delete gameState.discoveredSpecies[k]; removed = true; } });
+  return removed;
+}
+
+function allSpeciesForPicker() {
+  const areaFirst = new Set((likelyBirdRows(liveMapSpawns || []) || []).map(r => speciesKey(canonicalSpeciesName(r.species))));
+  const seen = new Set(), list = [];
+  (BURBZ_SPECIES_PROFILES || []).forEach(p => {
+    const key = speciesKey(p.name);
+    if (!key || seen.has(key)) return; seen.add(key);
+    list.push({ name: p.name, rarity: p.rarity || 'common', habitat: p.habitat || '', near: areaFirst.has(key) });
+  });
+  list.sort((a, b) => (b.near - a.near) || a.name.localeCompare(b.name));
+  return list;
+}
+
+function openSpeciesPicker(onPick) {
+  const overlay = $('speciesPickerOverlay'), listEl = $('speciesPickerList'), search = $('speciesPickerSearch');
+  if (!overlay || !listEl) return;
+  const all = allSpeciesForPicker();
+  const render = q => {
+    const query = (q || '').trim().toLowerCase();
+    const rows = all.filter(s => !query || s.name.toLowerCase().includes(query)).slice(0, 60);
+    listEl.innerHTML = rows.map(s => {
+      const art = getMapBirdArtUrl({ commonName: s.name });
+      const media = art ? `<img src="${escapeHtml(art)}" alt="">` : `<div class="sp-emoji">${getBirdMarkerEmoji(s.name)}</div>`;
+      const col = RARITY_COLORS[s.rarity] || RARITY_COLORS.common;
+      const sub = s.near ? 'Seen in this area' : (s.habitat || '').split(',')[0];
+      return `<button class="species-picker-row" data-name="${escapeHtml(s.name)}">${media}<div><div class="species-picker-name">${escapeHtml(s.name)}</div><div class="species-picker-sub">${escapeHtml(sub)}</div></div><div class="species-picker-rarity" style="color:${col}">${escapeHtml(s.rarity)}</div></button>`;
+    }).join('') || '<div class="map-area-birds-sub" style="padding:14px">No match — try another name.</div>';
+    listEl.querySelectorAll('.species-picker-row').forEach(btn => btn.addEventListener('click', () => { overlay.classList.remove('show'); onPick(btn.dataset.name); }));
+  };
+  if (search) { search.value = ''; search.oninput = () => render(search.value); }
+  render('');
+  overlay.classList.add('show');
+  setTimeout(() => { try { search && search.focus(); } catch (_) {} }, 120);
+}
+
+function logKnownBird(chosenName) {
+  const bird = createBirdEntry(chosenName, '', 1);
+  const isNew = rememberDiscoveredBird(bird);
+  fetchBirdArt(chosenName);
+  saveState(); updateHeader(); renderBirdex(); renderProfile();
+  showToast((isNew ? '✓ Logged ' : 'Already in Birdex · ') + bird.commonName);
+  scanCorrectContext = { names: [bird.commonName] };
+  showRecruitChoiceOverlay([bird], bird.commonName + ' is in your Birdex. Recruit it if you want it as a companion.', { correctable: true });
+}
+
+function correctScanDiscovery(chosenName) {
+  const wrongNames = (scanCorrectContext && scanCorrectContext.names) || [];
+  const chosenKey = speciesKey(canonicalSpeciesName(chosenName));
+  // Drop the wrong auto-logged species (but keep any the player already recruited).
+  wrongNames.forEach(wrong => {
+    if (speciesKey(canonicalSpeciesName(wrong)) === chosenKey) return;
+    if (companionForSpecies(wrong)) return;
+    removeDiscoveredSpecies(wrong);
+  });
+  const bird = createBirdEntry(chosenName, '', 1);
+  rememberDiscoveredBird(bird);
+  fetchBirdArt(chosenName);
+  saveState(); updateHeader(); renderBirdex(); renderProfile();
+  const wrongLabel = (wrongNames[0] && speciesKey(canonicalSpeciesName(wrongNames[0])) !== chosenKey) ? ' instead of ' + wrongNames[0] : '';
+  showToast('✓ Logged ' + bird.commonName + wrongLabel);
+  scanCorrectContext = { names: [bird.commonName] };
+  showRecruitChoiceOverlay([bird], 'Corrected — ' + bird.commonName + ' is in your Birdex. Recruit it if you want it as a companion.', { correctable: true });
+}
+
+function showRecruitChoiceOverlay(birds, message, opts = {}) {
   const choices = (birds || []).filter(Boolean).reduce((acc, bird) => {
     const key = speciesKey(bird.species || bird.commonName);
     if (key && !acc.some(b => speciesKey(b.species || b.commonName) === key)) acc.push(bird);
@@ -6655,6 +6759,15 @@ function showRecruitChoiceOverlay(birds, message) {
   $('recruitCopy').textContent = message || 'You discovered birds nearby. The Birdex remembers them, but only recruited birds become companions.';
   $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0) + ' · choose carefully — discoveries stay in the Birdex.';
   list.innerHTML = choices.map((bird, idx) => createKnownSpeciesCardHTML(bird, idx)).join('');
+  // "Wrong bird?" correction affordance for scan results.
+  const closeBtn = $('recruitClose');
+  let correctBtn = $('recruitCorrectBtn');
+  if (opts.correctable && closeBtn) {
+    if (!correctBtn) { correctBtn = document.createElement('button'); correctBtn.id = 'recruitCorrectBtn'; correctBtn.className = 'recruit-correct-btn'; closeBtn.parentNode.insertBefore(correctBtn, closeBtn); }
+    correctBtn.textContent = '🔍 Not the right bird? Pick what you heard';
+    correctBtn.style.display = '';
+    correctBtn.onclick = () => { overlay.classList.remove('show'); openSpeciesPicker(name => correctScanDiscovery(name)); };
+  } else if (correctBtn) { correctBtn.style.display = 'none'; }
   overlay.classList.add('show');
 }
 
@@ -6667,6 +6780,8 @@ function handleBirdCandidates(primary, detections = []) {
   });
   const newDiscoveries = [];
   candidates.forEach(bird => { if (rememberDiscoveredBird(bird)) newDiscoveries.push(bird); fetchBirdArt(bird.species); });
+  // Remember what the scanner guessed so the player can correct a wrong ID.
+  scanCorrectContext = { names: candidates.map(b => b.commonName || b.species).filter(Boolean) };
   const top = candidates[0];
   if (top) {
     const resultEl = $('scanResult');
@@ -6679,12 +6794,12 @@ function handleBirdCandidates(primary, detections = []) {
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex, but you can only afford/recruit the ones you choose.' : 'Species discovered. Spend coins if you want this bird as a companion.');
+    showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex, but you can only afford/recruit the ones you choose.' : 'Species discovered. Spend coins if you want this bird as a companion.', { correctable: true });
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   } else if (top) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it when you can afford it.'); }
+    else { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it when you can afford it.', { correctable: true }); }
   }
 }
 
@@ -7036,6 +7151,9 @@ $('scanBtn').addEventListener('click', async () => {
     startRecording();
   }
 });
+
+// Already know the bird (e.g. confirmed on Merlin)? Log it directly.
+$('scanKnowBtn')?.addEventListener('click', () => { SFX.tap(); scanCorrectContext = { names: [] }; openSpeciesPicker(name => logKnownBird(name)); });
 
 async function startRecording() {
   try {
@@ -8133,6 +8251,8 @@ $('recruitOverlay')?.addEventListener('click', (e) => {
     if (ok) $('recruitOverlay').classList.remove('show');
   }
 });
+$('speciesPickerClose')?.addEventListener('click', () => $('speciesPickerOverlay')?.classList.remove('show'));
+$('speciesPickerOverlay')?.addEventListener('click', (e) => { if (e.target === $('speciesPickerOverlay')) e.currentTarget.classList.remove('show'); });
 
 $('toggleSfx').addEventListener('click', () => {
   const el = $('toggleSfx');
