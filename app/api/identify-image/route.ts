@@ -7,7 +7,6 @@ type Species = {
   species_id: string;
   common_name: string;
   latin_name: string;
-  element?: string;
   biome?: string[];
   rarity_tier?: string;
 };
@@ -34,15 +33,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid multipart body" }, { status: 400 });
   }
 
-  const spectrogram = form.get("spectrogram") as File | null;
+  const image = form.get("image") as File | null;
   const speciesJson = form.get("species") as string | null;
   const nearbyJson = (form.get("nearby") as string | null) || "[]";
   const region = (form.get("region") as string | null) || "";
-  const recordedAt = (form.get("recorded_at") as string | null) || "";
 
-  if (!spectrogram || !speciesJson) {
+  if (!image || !speciesJson) {
     return NextResponse.json(
-      { error: "spectrogram (image) and species (JSON list) are required" },
+      { error: "image and species (JSON list) are required" },
       { status: 400 }
     );
   }
@@ -60,9 +58,9 @@ export async function POST(req: NextRequest) {
   }
 
   const allowedIds = new Set(species.map((s) => s.species_id));
-  const buf = Buffer.from(await spectrogram.arrayBuffer());
+  const buf = Buffer.from(await image.arrayBuffer());
   const b64 = buf.toString("base64");
-  const mediaType = spectrogram.type || "image/png";
+  const mediaType = image.type || "image/jpeg";
 
   const speciesList = species
     .map((s) => {
@@ -75,36 +73,26 @@ export async function POST(req: NextRequest) {
     .join("\n");
 
   const nearbyHint = nearby.length > 0
-    ? `Birds tagged [SEEN NEARBY] have been observed in the user's location within the last 14 days. Strongly bias toward these — most sounds in the field will be from a recently-observed local species.`
-    : `No nearby species data is available; pick the most acoustically plausible match.`;
+    ? `Birds tagged [SEEN NEARBY] have been observed in the user's location recently. If the photo is ambiguous, bias toward these local species.`
+    : `No nearby species data is available; pick the most visually plausible match.`;
 
-  const prompt = `You are identifying a bird from a spectrogram of a recording.
+  const prompt = `You are identifying a bird from a photograph taken in the field.
 
-The image is a log-frequency spectrogram (low frequencies at the bottom, high at the top, brighter pixels = louder energy at that frequency / time). Bird vocalisations have characteristic patterns:
-- Robins, Wrens, Goldfinches: complex tonal warbles, often spanning 3-7 kHz, with rapid frequency modulation
-- Tits (Blue/Great): high, thin whistles around 4-7 kHz, often two- or three-note phrases
-- Corvids (Crow/Raven/Magpie/Jay): broadband caws/croaks with strong energy under 2 kHz, harsh and noisy
-- Owls: low hoots well under 1 kHz
-- Raptors (Peregrine/Sparrowhawk/Eagle): sharp shrill cries 1-3 kHz
-- Woodpeckers: rapid drumming bursts, broadband
-- Aquatic (Heron/Mallard/Puffin/Kingfisher): low harsh calls or sharp whistles by water
-- Skylark, Swift, Song Thrush: long sustained complex song
-- Background noise / wind / silence: no clear structured patterns
+Look carefully at the bird's size, shape, plumage colour and pattern, bill shape, leg colour, and any visible field marks. Match it to the single best species from the list below.
 
 Available species (you MUST return one species_id from this list):
 ${speciesList}
 
 ${nearbyHint}
 ${region ? `User region: ${region}` : ""}
-${recordedAt ? `Recorded at: ${recordedAt}` : ""}
 
 Respond with ONLY a single JSON object, no markdown, no prose around it:
-{"species_id": "<one of the species_ids above>", "confidence": <number between 0 and 1>, "reasoning": "<one short sentence describing what you see in the spectrogram>"}
+{"species_id": "<one of the species_ids above>", "confidence": <number between 0 and 1>, "reasoning": "<one short sentence describing the key field marks you see>"}
 
 Confidence guidance:
-- 0.85+ : a clear, structured bird call you can match with high certainty
-- 0.5-0.85 : plausible match but ambiguous (multiple birds could fit)
-- below 0.5 : the spectrogram shows mostly noise / wind / silence / nothing identifiable; pick the most likely nearby species but signal low confidence so the player knows to retry`;
+- 0.85+ : a clear, well-lit bird with diagnostic field marks you can match confidently
+- 0.5-0.85 : the bird is visible but the view is partial, distant or ambiguous
+- below 0.5 : no clear bird in frame, or too blurred/dark to identify; pick the most likely nearby species but signal low confidence so the player knows to retry`;
 
   let claudeResp: Response;
   try {
