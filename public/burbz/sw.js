@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-rotate-varied-villages-v7-20260702';
+const BURBZ_CACHE = 'burbz-gui-medieval-polish-v8-20260704';
 const BURBZ_ASSETS = [
   './',
   './index.html',
