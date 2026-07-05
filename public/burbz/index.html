@@ -83,8 +83,6 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   border-radius:10px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
   font-size:17px; color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
-.nav-item.inventory-nav .nav-icon { width:34px; height:34px; border-radius:12px; background:linear-gradient(135deg,rgba(214,168,79,.26),rgba(0,0,0,.20)); box-shadow:0 0 18px rgba(214,168,79,.18); }
-.nav-item.inventory-nav.active .nav-icon { filter:drop-shadow(0 0 14px var(--accent)); }
 .card-back { justify-content:flex-start; gap:6px; overflow:auto; }
 .card-back-actions { margin-top:8px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
 .card-back-actions .card-pet-btn, .card-back-actions .academy-send-btn { min-height:34px; margin:0; }
@@ -160,45 +158,58 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   background: linear-gradient(90deg, var(--accent), rgba(214,168,79,.25) 55%, transparent);
 }
 
-/* ========== BOTTOM NAV ========== */
+/* ========== BOTTOM NAV ==========
+   Monoline SVG icons instead of mixed emoji, one quiet accent colour, and the
+   core Scan action raised in the centre — the layout language of polished
+   mobile games rather than nine competing glyphs. */
 .bottom-nav {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 200;
   padding-bottom: var(--safe-bottom);
-  background: linear-gradient(180deg, rgba(8,7,6,0.96), #000);
-  border-top: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(10,9,7,0.92), #050403 62%);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(240,199,103,0.14);
   display: flex; height: calc(var(--nav-height) + var(--safe-bottom));
+  overflow: visible;
 }
 .nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; padding: 8px 0; position: relative; transition: all 0.25s ease;
-  min-height: 44px;
+  gap: 2px; padding: 6px 0 4px; position: relative; transition: color 0.22s ease;
+  min-height: 44px; min-width: 0; color: var(--text3);
 }
-.nav-item::before {
-  content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
-  width: 0; height: 2px; background: var(--accent); transition: width 0.25s ease;
-}
-.nav-item.active::before { width: 32px; }
 .nav-icon {
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-  font-size: 20px; transition: all 0.25s ease; position: relative;
+  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.22s ease, filter 0.22s ease; position: relative;
 }
+.nav-icon svg { width: 22px; height: 22px; display: block; }
 .nav-icon::before {
-  content: ''; position: absolute; inset: -3px; border-radius: 12px;
-  background: radial-gradient(circle at 50% 40%, rgba(214,168,79,.30), rgba(214,168,79,0) 72%);
-  opacity: 0; transition: opacity .25s ease; pointer-events: none;
+  content: ''; position: absolute; inset: -5px -9px; border-radius: 999px;
+  background: radial-gradient(circle at 50% 45%, rgba(214,168,79,.22), rgba(214,168,79,0) 74%);
+  opacity: 0; transition: opacity .22s ease; pointer-events: none;
 }
+.nav-item.active { color: var(--accent); }
 .nav-item.active .nav-icon::before { opacity: 1; }
-.nav-item.active .nav-icon {
-  transform: translateY(-2px) scale(1.1);
-  filter: drop-shadow(0 0 8px var(--accent));
-}
-.nav-item:active .nav-icon { transform: scale(.92); }
+.nav-item.active .nav-icon { transform: translateY(-1px); filter: drop-shadow(0 0 7px rgba(214,168,79,.55)); }
+.nav-item:active .nav-icon { transform: scale(.9); }
 .nav-label {
-  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px; color: var(--text3);
-  transition: color 0.25s ease;
+  font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2px; color: inherit;
+  white-space: nowrap;
+  transition: color 0.22s ease;
 }
-.nav-item.active .nav-label { color: var(--accent); }
+/* Raised centre Scan button — the game's primary verb */
+.nav-item.nav-scan { color: var(--text2); flex: .85; }
+.nav-scan .nav-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  margin-top: -26px; margin-bottom: 1px;
+  background: linear-gradient(150deg, #f4d485, #c2913a 58%, #96691f);
+  color: #241a08;
+  box-shadow: 0 5px 16px rgba(0,0,0,.55), 0 0 0 4px rgba(5,4,3,.95), 0 0 20px rgba(214,168,79,.28);
+}
+.nav-scan .nav-icon svg { width: 25px; height: 25px; }
+.nav-scan .nav-icon::before { display: none; }
+.nav-scan.active .nav-icon { transform: translateY(-1px); filter: none; box-shadow: 0 5px 16px rgba(0,0,0,.55), 0 0 0 4px rgba(5,4,3,.95), 0 0 26px rgba(240,199,103,.6); }
+.nav-scan:active .nav-icon { transform: scale(.93); }
+.nav-scan .nav-label { color: var(--accent); }
 .nav-badge {
   position: absolute; top: 4px; right: 50%; transform: translateX(16px);
   background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
@@ -320,14 +331,29 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .burbz-prop-marker { display:grid; place-items:center; width:34px !important; height:38px !important; background:transparent; border:0; pointer-events:none; z-index:2; }
 .burbz-prop-marker .burbz-prop { font-size:21px; line-height:1; filter:drop-shadow(0 4px 5px rgba(0,0,0,.5)) sepia(.14); animation:propSway 4.6s ease-in-out infinite; }
 .burbz-prop-marker:nth-child(2n) .burbz-prop { animation-duration:5.8s; animation-delay:-2.2s; }
+/* Tappable loot scattered on the map */
+.burbz-pickup-marker { display:grid; place-items:center; width:40px !important; height:44px !important; background:transparent; border:0; cursor:pointer; pointer-events:auto; z-index:3; transition:opacity .4s ease, transform .4s ease; }
+.burbz-pickup-marker .burbz-pickup-orb { width:32px; height:32px; display:grid; place-items:center; font-size:18px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(64,50,22,.92), rgba(24,18,8,.9) 78%); box-shadow:0 4px 10px rgba(0,0,0,.45), 0 0 0 2px rgba(240,199,103,.5), 0 0 16px rgba(240,199,103,.35); animation:pickupBob 2.6s ease-in-out infinite; }
+.burbz-pickup-marker:active .burbz-pickup-orb { transform:scale(.9); }
+.burbz-pickup-marker.collected { opacity:0; transform:translateY(-14px) scale(.6); pointer-events:none; }
+@keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
+.burbz-pickup-burst { position:absolute; z-index:60; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none; animation:pickupBurst 1.5s ease-out forwards; }
+.burbz-pickup-burst-glyph { font-size:26px; filter:drop-shadow(0 0 12px rgba(240,199,103,.9)); }
+.burbz-pickup-burst-text { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:.04em; color:#ffe9ad; text-shadow:0 1px 3px rgba(0,0,0,.8); white-space:nowrap; }
+@keyframes pickupBurst { 0% { opacity:0; transform:translate(-50%,-100%) scale(.5); } 18% { opacity:1; transform:translate(-50%,-118%) scale(1.15); } 40% { transform:translate(-50%,-128%) scale(1); } 100% { opacity:0; transform:translate(-50%,-190%) scale(.94); } }
 @keyframes propSway { 0%,100%{ transform:translateY(0) rotate(-1.4deg); } 50%{ transform:translateY(-2.5px) rotate(1.4deg); } }
 .burbz-map-popup .maplibregl-popup-content { background:rgba(8,18,17,.94); color:#fff; border:1px solid rgba(240,199,103,.32); border-radius:14px; box-shadow:0 12px 28px rgba(0,0,0,.38); padding:12px; }
 .burbz-map-popup .maplibregl-popup-tip { border-top-color:rgba(8,18,17,.94); border-bottom-color:rgba(8,18,17,.94); }
 .burbz-popup-title { font-family:'Russo One',sans-serif; color:var(--accent2); margin-bottom:3px; }
 .burbz-popup-copy { color:var(--text2); font-size:12px; line-height:1.25; }
 .burbz-popup-btn { margin-top:8px; width:100%; border:0; border-radius:10px; padding:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#111; font-family:'Rajdhani',sans-serif; font-weight:900; }
+/* Attribution collapses into a barely-there ⓘ dot (tap to expand the credits). */
 .maplibregl-ctrl-attrib, .maplibregl-ctrl { font-size:9px; background:rgba(0,0,0,.35) !important; color:rgba(255,255,255,.65) !important; }
 .maplibregl-ctrl-attrib a { color:rgba(255,255,255,.86) !important; }
+.maplibregl-ctrl-attrib.maplibregl-compact { min-height:20px; opacity:.28; background:transparent !important; }
+.maplibregl-ctrl-attrib.maplibregl-compact-show { opacity:.9; background:rgba(0,0,0,.55) !important; }
+.maplibregl-ctrl-attrib-button { width:20px !important; height:20px !important; filter:grayscale(1) brightness(.8); }
+.maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right { bottom:6px; }
 .maplibregl-ctrl-group { background:rgba(8,18,17,.70) !important; border:1px solid rgba(240,199,103,.18); backdrop-filter:blur(8px); }
 .maplibregl-ctrl-group button { filter:sepia(.35); }
 
@@ -865,21 +891,6 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   background: radial-gradient(circle at 34% 30%, rgba(214,168,79,.22), var(--bg3) 72%);
   border: 1px solid rgba(214,168,79,.18); flex-shrink: 0;
 }
-.academy-quest-link {
-  margin: 0 10px 14px; padding: 13px 14px; border-radius: 16px;
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(135deg, rgba(214,168,79,.12), rgba(0,0,0,.28));
-  border: 1px solid rgba(214,168,79,.26); box-shadow: 0 8px 22px rgba(0,0,0,.24);
-}
-.academy-quest-link-main { flex: 1; min-width: 0; }
-.academy-quest-link-title { font-family: 'Russo One', sans-serif; font-size: 14px; color: var(--accent2); }
-.academy-quest-link-copy { font-size: 11px; color: var(--text3); line-height: 1.4; margin-top: 3px; }
-.academy-quest-link-btn {
-  flex-shrink: 0; min-height: 42px; padding: 0 16px; border-radius: 12px; border: 1px solid rgba(214,168,79,.34);
-  background: rgba(214,168,79,.12); color: var(--accent2);
-  font-family: 'Rajdhani', sans-serif; font-weight: 900; font-size: 12px; letter-spacing: .08em;
-}
-.academy-quest-link-btn.ready { background: linear-gradient(135deg, var(--legendary), #f59f00); border: 0; color: #11100d; animation: claimPulse 1.5s ease infinite; }
 .quest-info { flex: 1; }
 .quest-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; }
 .quest-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
@@ -1211,7 +1222,8 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .treehouse-room-count { position:absolute; right:-7px; top:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--legendary); color:#11100d; font-weight:900; font-size:11px; border:2px solid #11100d; }
 .treehouse-placement-hint { position:absolute; left:50%; top:18px; transform:translateX(-50%); z-index:9; max-width:86%; padding:9px 12px; border-radius:999px; background:rgba(214,168,79,.95); color:#11100d; font-weight:900; font-family:'Rajdhani',sans-serif; letter-spacing:.06em; text-transform:uppercase; box-shadow:0 10px 24px rgba(0,0,0,.4); pointer-events:none; }
 .treehouse-bird-layer { position:absolute; inset:0; z-index:8; pointer-events:none; }
-.treehouse-bird { position:absolute; width:28px; height:28px; margin:-14px 0 0 -14px; display:flex; align-items:center; justify-content:center; font-size:19px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.55)); animation:treeBirdHop 2.4s ease-in-out infinite; }
+.treehouse-bird { position:absolute; width:19px; height:19px; margin:-10px 0 0 -10px; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 2px 3px rgba(0,0,0,.55)); animation:treeBirdHop 2.4s ease-in-out infinite; }
+.treehouse-bird svg { width:100%; height:100%; display:block; }
 .treehouse-bird:nth-child(3n) { animation-duration:2.9s; }
 .treehouse-bird:nth-child(4n) { animation-duration:2.1s; }
 @keyframes treeBirdHop { 0%,100%{ translate:0 0; } 30%{ translate:0 -8px; } 48%{ translate:0 -1px; } 62%{ translate:0 -5px; } 76%{ translate:0 0; } }
@@ -1243,6 +1255,77 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .starter-quest-card { padding:10px; border-radius:14px; border:1px solid rgba(255,212,59,.16); background:linear-gradient(135deg,rgba(255,212,59,.08),rgba(0,0,0,.22)); }
 .starter-quest-head { display:flex; justify-content:space-between; gap:8px; align-items:center; font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); text-transform:uppercase; letter-spacing:.06em; }
 .starter-quest-copy { color:var(--text3); font-size:11px; line-height:1.35; margin-top:4px; }
+
+/* ---- Fallout Shelter-style quest board ---- */
+.quest-board-card { display:flex; align-items:center; gap:12px; margin:0 10px 10px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.10),rgba(0,0,0,.28)); cursor:pointer; transition:transform .15s ease, border-color .2s ease; }
+.quest-board-card:active { transform:scale(.98); }
+.quest-board-card.locked { opacity:.5; cursor:default; }
+.quest-board-icon { width:44px; height:44px; display:grid; place-items:center; font-size:24px; border-radius:13px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.28), rgba(0,0,0,.35)); border:1px solid rgba(214,168,79,.3); flex:none; }
+.quest-board-go { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.08em; color:var(--accent2); white-space:nowrap; }
+.quest-duration { font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--text3); background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.25); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+.quest-away-card { display:flex; align-items:center; gap:12px; margin:0 10px 10px; padding:12px; border-radius:16px; border:1px solid rgba(120,200,140,.28); background:linear-gradient(135deg,rgba(60,120,80,.14),rgba(0,0,0,.3)); cursor:pointer; transition:transform .15s ease; }
+.quest-away-card:active { transform:scale(.98); }
+.quest-away-card.ready { border-color:rgba(255,212,90,.6); background:linear-gradient(135deg,rgba(214,168,79,.2),rgba(0,0,0,.3)); box-shadow:0 0 18px rgba(214,168,79,.22); }
+.quest-away-art, img.quest-away-art { width:46px; height:46px; border-radius:12px; object-fit:cover; display:grid; place-items:center; font-size:24px; background:rgba(0,0,0,.3); flex:none; }
+.quest-away-pct { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; color:var(--accent2); }
+.quest-claim-btn.pulse { animation:claimPulse 1.6s ease-in-out infinite; }
+@keyframes claimPulse { 0%,100% { transform:scale(1); box-shadow:0 0 0 rgba(214,168,79,0); } 50% { transform:scale(1.07); box-shadow:0 0 16px rgba(214,168,79,.55); } }
+.quest-card.claiming { animation:questCardOut .6s ease-in forwards; }
+@keyframes questCardOut { 0% { opacity:1; transform:translateX(0) scale(1); } 30% { transform:translateX(0) scale(1.03); } 100% { opacity:0; transform:translateX(60px) scale(.92); max-height:0; margin-bottom:0; padding-top:0; padding-bottom:0; } }
+.quest-all-done { margin:0 10px 12px; padding:10px 12px; border-radius:12px; border:1px dashed rgba(214,168,79,.3); color:var(--text3); font-size:12px; }
+
+/* Quest overlay (send sheet + adventure log) */
+.quest-overlay { position:fixed; inset:0; z-index:600; display:none; align-items:flex-end; justify-content:center; background:rgba(4,6,5,.72); backdrop-filter:blur(4px); }
+.quest-overlay.open { display:flex; }
+.quest-overlay-panel { position:relative; width:100%; max-width:520px; max-height:82vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:18px 16px calc(18px + var(--safe-bottom, 0px)); background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); border-bottom:none; box-shadow:0 -14px 44px rgba(0,0,0,.6); animation:questSheetUp .28s ease-out; }
+@keyframes questSheetUp { from { transform:translateY(48px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.quest-overlay-close { position:absolute; top:12px; right:12px; width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.4); color:var(--text3); font-size:14px; }
+.quest-overlay-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.quest-overlay-icon { width:52px; height:52px; display:grid; place-items:center; font-size:28px; border-radius:15px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.3), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.35); flex:none; }
+.quest-overlay-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:19px; letter-spacing:.04em; color:#f4ead4; text-transform:uppercase; }
+.quest-overlay-sub { font-size:12px; color:var(--text3); margin-top:2px; }
+.quest-overlay-copy { font-size:12.5px; line-height:1.45; color:var(--text2); margin-bottom:10px; }
+.quest-overlay-label { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); margin:12px 0 6px; }
+.quest-overlay-hint { font-size:10px; color:var(--text3); text-transform:none; letter-spacing:.02em; font-weight:600; }
+.quest-bird-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+.quest-bird-chip { flex:none; width:86px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 6px; border-radius:14px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.3); color:var(--text2); transition:border-color .15s ease, transform .15s ease; }
+.quest-bird-chip.selected { border-color:var(--accent); background:linear-gradient(180deg,rgba(214,168,79,.18),rgba(0,0,0,.32)); box-shadow:0 0 14px rgba(214,168,79,.3); transform:translateY(-2px); }
+.quest-bird-chip.disabled { opacity:.4; }
+img.quest-bird-chip-art, .quest-bird-chip-art { width:44px; height:44px; border-radius:11px; object-fit:cover; background:rgba(0,0,0,.3); }
+.quest-bird-chip-name { font-size:10.5px; font-weight:700; color:#f4ead4; text-align:center; line-height:1.15; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.quest-bird-chip-note { font-size:9px; font-weight:800; letter-spacing:.06em; color:var(--text3); text-transform:uppercase; }
+.quest-equip-row { display:flex; flex-wrap:wrap; gap:6px; }
+.quest-equip-chip { padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.3); color:var(--text2); font-size:12px; font-weight:700; transition:border-color .15s ease; }
+.quest-equip-chip.selected { border-color:var(--accent); background:rgba(214,168,79,.18); color:#ffe9ad; box-shadow:0 0 10px rgba(214,168,79,.25); }
+.quest-equip-count { font-size:10px; color:var(--text3); }
+.quest-equip-none { font-size:11.5px; color:var(--text3); padding:4px 2px; }
+.quest-send-btn { width:100%; margin-top:16px; padding:14px; border-radius:15px; border:none; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:16px; letter-spacing:.08em; color:#241a08; background:linear-gradient(135deg,#f0c767,#c99a3f); box-shadow:0 6px 18px rgba(214,168,79,.3); }
+.quest-send-btn:disabled { opacity:.45; box-shadow:none; }
+.quest-send-btn.claim { animation:claimPulse 1.6s ease-in-out infinite; }
+/* Adventure log */
+img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px; object-fit:cover; display:grid; place-items:center; font-size:26px; background:rgba(0,0,0,.3); flex:none; }
+.quest-log-progress { margin:4px 0 10px; }
+.quest-log-gathered { font-size:11.5px; color:var(--text3); margin-bottom:8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.quest-log-loot-chip { padding:2px 8px; border-radius:999px; background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.3); color:#ffe9ad; font-weight:800; font-size:11px; }
+.quest-log-list { max-height:44vh; overflow-y:auto; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(0,0,0,.32); padding:10px; }
+.quest-log-row { display:flex; align-items:baseline; gap:8px; padding:5px 2px; border-bottom:1px dashed rgba(255,255,255,.06); font-size:12.5px; line-height:1.4; }
+.quest-log-row:last-child { border-bottom:none; }
+.quest-log-pct { flex:none; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:var(--accent2); width:30px; }
+.quest-log-text { color:var(--text2); flex:1; }
+.quest-log-loot { flex:none; font-weight:800; color:#ffe9ad; font-size:11.5px; }
+.quest-log-footnote { margin-top:12px; font-size:11.5px; color:var(--text3); text-align:center; font-style:italic; }
+/* Claim celebration burst */
+.quest-claim-celebration { position:fixed; inset:0; z-index:900; display:grid; place-items:center; background:radial-gradient(circle at 50% 45%, rgba(214,168,79,.16), rgba(4,6,5,.55)); pointer-events:none; transition:opacity .45s ease; }
+.quest-claim-celebration.fading { opacity:0; }
+.qcc-center { position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.qcc-bit { position:absolute; top:0; left:50%; font-size:22px; animation:qccFly 1.3s cubic-bezier(.16,.8,.34,1) forwards; }
+@keyframes qccFly { 0% { transform:translate(-50%,0) scale(.4); opacity:0; } 12% { opacity:1; } 100% { transform:translate(calc(-50% + var(--tx)), var(--ty)) scale(1.1); opacity:0; } }
+.qcc-badge { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:26px; letter-spacing:.12em; color:#ffe9ad; text-shadow:0 0 24px rgba(214,168,79,.9), 0 2px 4px rgba(0,0,0,.7); animation:qccPop .5s cubic-bezier(.2,1.6,.4,1); }
+.qcc-rewards { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:20px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.7); animation:qccPop .5s .08s cubic-bezier(.2,1.6,.4,1) backwards; }
+.qcc-items { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; animation:qccPop .5s .16s cubic-bezier(.2,1.6,.4,1) backwards; }
+.qcc-item { padding:3px 10px; border-radius:999px; background:rgba(0,0,0,.5); border:1px solid rgba(214,168,79,.4); color:#ffe9ad; font-weight:700; font-size:12px; }
+.qcc-clue { font-size:13px; color:#cdd8ff; font-weight:700; text-shadow:0 1px 3px rgba(0,0,0,.8); animation:qccPop .5s .22s cubic-bezier(.2,1.6,.4,1) backwards; }
+@keyframes qccPop { 0% { transform:scale(.3); opacity:0; } 100% { transform:scale(1); opacity:1; } }
 .starter-bird-buttons { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 .starter-bird-btn { min-height:32px; border-radius:999px; padding:0 10px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.13); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; }
 .starter-bird-btn[disabled] { opacity:.42; filter:grayscale(.5); }
@@ -1595,8 +1678,6 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
         <div class="treehouse-help" data-feature="quest-roost"><strong>Treehouse Academy:</strong> choose a building below, tap the tree to place it, then tap placed buildings to manage or move them.</div>
       </div>
 
-      <div id="academyExpeditionPanel"></div>
-
       <div id="academyBuildPanel"></div>
 
       <div id="academyRoomPanel"></div>
@@ -1707,40 +1788,40 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" data-screen="map">
-      <div class="nav-icon">&#128506;&#65039;</div>
+    <button class="nav-item active" data-screen="map" aria-label="Map">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3.6 5.8a1 1 0 0 0-.6.9v12.4l6-2 6 2 5.4-1.8a1 1 0 0 0 .6-.9V3.9l-6 2-6-1.9Z"/><path d="M9 4v13.1M15 5.9V19"/></svg></div>
       <div class="nav-label">Map</div>
     </button>
-    <button class="nav-item" data-screen="village">
-      <div class="nav-icon">&#127984;</div>
+    <button class="nav-item" data-screen="village" aria-label="Village">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-9.5L7 8V5h2.2v1.6h1.7V5h2.2v1.6h1.7V5H17v3l2 2.5V20"/><path d="M10 20v-3.2a2 2 0 0 1 4 0V20M3 20h18"/></svg></div>
       <div class="nav-label">Village</div>
     </button>
-    <button class="nav-item" data-screen="birdex">
-      <div class="nav-icon">&#128218;</div>
+    <button class="nav-item" data-screen="birdex" aria-label="Burbz codex">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.2C10 4.8 7.4 4.2 4.5 4.2V18c2.9 0 5.5.6 7.5 2 2-1.4 4.6-2 7.5-2V4.2c-2.9 0-5.5.6-7.5 2Z"/><path d="M12 6.2V20"/></svg></div>
       <div class="nav-label">Burbz</div>
     </button>
-    <button class="nav-item" data-screen="scan">
-      <div class="nav-icon">&#128225;</div>
-      <div class="nav-label">Scan</div>
-    </button>
-    <button class="nav-item" data-screen="battle">
-      <div class="nav-icon">&#9876;&#65039;</div>
+    <button class="nav-item" data-screen="battle" aria-label="Battle">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 11.5 11.5M19 4 7.5 15.5M14.5 15.5 18 19M9.5 15.5 6 19M4.2 16.2l3.6 3.6M19.8 16.2l-3.6 3.6"/></svg></div>
       <div class="nav-label">Battle</div>
     </button>
-    <button class="nav-item inventory-nav" data-screen="inventory">
-      <div class="nav-icon">&#127890;</div>
+    <button class="nav-item nav-scan" data-screen="scan" aria-label="Scan a bird">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.2V6a2 2 0 0 1 2-2h2.2M15.8 4H18a2 2 0 0 1 2 2v2.2M20 15.8V18a2 2 0 0 1-2 2h-2.2M8.2 20H6a2 2 0 0 1-2-2v-2.2"/><circle cx="12" cy="12" r="3.4"/></svg></div>
+      <div class="nav-label">Scan</div>
+    </button>
+    <button class="nav-item inventory-nav" data-screen="inventory" aria-label="Bag">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 7.5V6a3.5 3.5 0 0 1 7 0v1.5"/><path d="M6 9.5A3.5 3.5 0 0 1 9.5 6h5A3.5 3.5 0 0 1 18 9.5V20H6V9.5Z"/><path d="M9 14h6v6H9z"/></svg></div>
       <div class="nav-label">Bag</div>
     </button>
-    <button class="nav-item" data-screen="academy">
-      <div class="nav-icon">&#127891;</div>
+    <button class="nav-item" data-screen="academy" aria-label="Academy">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 8.8 12 13.6l9.5-4.8L12 4Z"/><path d="M6.5 11.2v4.6c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.6M21.5 9v5"/></svg></div>
       <div class="nav-label">Academy</div>
     </button>
-    <button class="nav-item" data-screen="quests">
-      <div class="nav-icon">&#128220;</div>
+    <button class="nav-item" data-screen="quests" aria-label="Quests">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7"/><path d="M7 4a2 2 0 0 0-2 2v1.5h4V6a2 2 0 0 0-2-2ZM7 20a2 2 0 0 1-2-2v-1h4v1a2 2 0 0 1-2 2ZM10.5 9.5H16M10.5 13h5.5"/></svg></div>
       <div class="nav-label">Quests</div>
     </button>
-    <button class="nav-item" data-screen="leaderboards">
-      <div class="nav-icon">&#127942;</div>
+    <button class="nav-item" data-screen="leaderboards" aria-label="Ranks">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4Z"/><path d="M8 5.5H5a3 3 0 0 0 3 3.8M16 5.5h3a3 3 0 0 1-3 3.8M12 13.5v2.5M9.5 19c0-1.7 1.1-3 2.5-3s2.5 1.3 2.5 3M7.5 20h9"/></svg></div>
       <div class="nav-label">Ranks</div>
     </button>
   </nav>
@@ -2052,11 +2133,14 @@ const REAL_WORLD_COMMONNESS = {
 };
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
-const BURBZ_MAP_VERSION = 'no-cloud-fog-framed-card-art-v2-20260705';
+const BURBZ_MAP_VERSION = 'fast-map-pickups-quest-flow-v1-20260705';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
-function burbzPitchForZoom(zoom) { return Math.max(54, Math.min(76, 58 + (Number(zoom || BURBZ_START_ZOOM) - 14) * 5.2)); }
+// Gentler pitch curve than before: extreme pitch (70°+) forced MapLibre to
+// stream a huge wedge of far-horizon tiles every frame, which is what made the
+// map feel slow and stuttery on phones. 44–58° keeps the Pokémon-Go feel cheap.
+function burbzPitchForZoom(zoom) { return Math.max(44, Math.min(58, 48 + (Number(zoom || BURBZ_START_ZOOM) - 14) * 3.4)); }
 
 // ============================================================================
 // BIRD DIETS — what each species actually eats in the wild.
@@ -4758,6 +4842,84 @@ function academyRoomPosition(roomId, fallback) {
   return { x: fallback.x, y: fallback.y };
 }
 
+// Plumage tints so each perched bird in the Academy reads as *that* bird —
+// a robin is rusty orange, a blue tit blue-and-yellow, a crow near-black.
+const BIRD_TINTS = [
+  [/robin/i, ['#d95f3b', '#8a6f52']],
+  [/blue tit/i, ['#4f8fd0', '#e8d44d']],
+  [/great tit/i, ['#e0cf4a', '#2b3a2e']],
+  [/coal tit|marsh tit|willow tit/i, ['#8f8a7a', '#33302a']],
+  [/long-tailed tit/i, ['#e3cfd4', '#4a3f42']],
+  [/blackbird/i, ['#26262c', '#e8a53a']],
+  [/blackcap/i, ['#8a8d84', '#2e2e30']],
+  [/crow|rook/i, ['#1d1d24', '#34343e']],
+  [/raven/i, ['#131318', '#2a2a34']],
+  [/magpie/i, ['#22232b', '#e8ecf2']],
+  [/jackdaw/i, ['#3a3d44', '#8f97a2']],
+  [/jay/i, ['#c9a091', '#4f8fd0']],
+  [/goldfinch/i, ['#c8382a', '#e8c83d']],
+  [/greenfinch/i, ['#8aa03f', '#c9c94a']],
+  [/chaffinch/i, ['#c87a5a', '#5f7590']],
+  [/bullfinch/i, ['#d0506b', '#3c3c46']],
+  [/sparrowhawk/i, ['#5d6b7a', '#c88a6a']],
+  [/sparrow/i, ['#8a6f52', '#5a4632']],
+  [/starling/i, ['#3a3a52', '#7a7a9a']],
+  [/wood ?pigeon|pigeon|dove/i, ['#9aa0b4', '#d8dce4']],
+  [/dunnock/i, ['#6b6b62', '#8a8578']],
+  [/song thrush|mistle thrush|thrush/i, ['#a88a5c', '#e8dcc0']],
+  [/wren/i, ['#a87848', '#7a5432']],
+  [/mallard|duck/i, ['#2e6b4f', '#8a7a5a']],
+  [/heron/i, ['#8a95a5', '#d4dae2']],
+  [/kingfisher/i, ['#2f9fd0', '#e07b39']],
+  [/barn owl/i, ['#e8d9b8', '#c9a878']],
+  [/owl/i, ['#9a7248', '#6b4f30']],
+  [/kestrel/i, ['#b5713f', '#7a8494']],
+  [/buzzard/i, ['#7a5c3a', '#5a4228']],
+  [/eagle/i, ['#6b4a26', '#3f2c16']],
+  [/peregrine|falcon/i, ['#4a5568', '#c8cdd4']],
+  [/red kite|kite/i, ['#b0532f', '#6b6f78']],
+  [/swift/i, ['#4a4a50', '#38383e']],
+  [/swallow|martin/i, ['#2e4a8a', '#e0d8c8']],
+  [/woodpecker/i, ['#26262c', '#d0342c']],
+  [/nuthatch/i, ['#7a91a8', '#d09a5c']],
+  [/treecreeper/i, ['#8a7458', '#e0d8c4']],
+  [/wagtail/i, ['#2b2b31', '#e4e6ea']],
+  [/chiffchaff|willow warbler|warbler/i, ['#9aa065', '#c8c894']],
+  [/goldcrest|firecrest/i, ['#a0a55a', '#e8c83d']],
+  [/puffin/i, ['#17181d', '#e0763a']],
+  [/gull/i, ['#d4d8de', '#8a95a5']],
+  [/curlew|lapwing|plover|snipe/i, ['#8a7a5c', '#5c4f38']],
+  [/siskin/i, ['#a5b040', '#3c3c2a']],
+  [/redwing|fieldfare/i, ['#96795a', '#b0432f']],
+  [/nightingale/i, ['#a5765a', '#c9a882']],
+  [/cuckoo/i, ['#6f7a86', '#a8b0ba']],
+  [/pheasant/i, ['#a05a2c', '#3c6e4f']],
+  [/moorhen|coot/i, ['#2c3038', '#c8362a']],
+  [/swan/i, ['#eef0f2', '#e8a53a']],
+  [/goose/i, ['#9a9284', '#5c564c']],
+  [/cockatoo|galah/i, ['#e6b8c4', '#f0f0ee']],
+  [/lorikeet|parakeet|rosella/i, ['#3e8a4a', '#d0342c']],
+  [/kookaburra/i, ['#b0a48e', '#5a7ba0']]
+];
+function birdTintFor(species) {
+  const s = String(species || '');
+  for (const [re, colors] of BIRD_TINTS) { if (re.test(s)) return colors; }
+  const h = burbzHash32('tint:' + s.toLowerCase()) % 360;
+  return ['hsl(' + h + ',44%,56%)', 'hsl(' + ((h + 42) % 360) + ',38%,36%)'];
+}
+// Tiny perched-bird glyph, tinted per species (emoji can't be recoloured).
+function miniBirdSVG(species) {
+  const [body, wing] = birdTintFor(species);
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M5.2 9.2 1.2 6.6l1.5 5.3-1.3 4.7 4.6-2.5z" fill="' + body + '" opacity=".82"/>' +
+    '<ellipse cx="11.6" cy="12" rx="7.3" ry="6.6" fill="' + body + '"/>' +
+    '<path d="M18.3 10.4 22.6 12l-4.3 1.7z" fill="#e8a53a"/>' +
+    '<ellipse cx="10.6" cy="13" rx="4.2" ry="3.2" fill="' + wing + '" opacity=".92"/>' +
+    '<circle cx="15.2" cy="9.5" r="1.15" fill="#10100e"/>' +
+    '<circle cx="15.55" cy="9.15" r=".4" fill="#fff"/>' +
+  '</svg>';
+}
+
 function renderAcademyTreehouse(byRoom) {
   const tree = $('academyTreehouse');
   const layer = $('treehouseRoomLayer');
@@ -4782,7 +4944,7 @@ function renderAcademyTreehouse(byRoom) {
     const perches = (ACADEMY_ROOMS[r.id] && ACADEMY_ROOMS[r.id].perches) || [[pos.x,pos.y]];
     list.slice(0, 120).forEach((b, i) => {
       const perch = r.id === 'outdoors' ? [pos.x + ((i % 7) - 3) * 5, pos.y + (Math.floor(i / 7) % 3) * 3] : [pos.x + ((i % 5) - 2) * 3, pos.y + 7 + (Math.floor(i / 5) % 2) * 3];
-      birdHtml += '<div class="treehouse-bird" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + getBirdMarkerEmoji(b.commonName || b.species) + '</div>';
+      birdHtml += '<div class="treehouse-bird" title="' + escapeHtml(b.commonName || b.species) + '" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + miniBirdSVG(b.commonName || b.species) + '</div>';
     });
   });
   birds.innerHTML = birdHtml;
@@ -4832,7 +4994,7 @@ function birdHasActiveExpedition(birdId) {
   return ensureBirdExpeditions().some(q => q.birdId === birdId && q.status !== 'claimed' && (window.BurbzAcademyCore ? window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now()).status !== 'complete' : true));
 }
 
-function startBirdExpedition(birdId, templateId) {
+function startBirdExpedition(birdId, templateId, loadout) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
   const starterQuest = isStarterExpeditionTemplate(templateId);
@@ -4840,6 +5002,18 @@ function startBirdExpedition(birdId, templateId) {
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now());
+  // Fallout Shelter-style loadout: a pantry provision and a charm item ride
+  // along and pay out as bonuses when the quest is claimed.
+  const equipment = { provision: null, charm: null };
+  if (loadout && loadout.provision && (gameState.pantry[loadout.provision] || 0) > 0) {
+    gameState.pantry[loadout.provision] -= 1;
+    equipment.provision = loadout.provision;
+  }
+  if (loadout && loadout.charm && (gameState.inventory.items[loadout.charm] || 0) > 0) {
+    gameState.inventory.items[loadout.charm] -= 1;
+    equipment.charm = loadout.charm;
+  }
+  quest.equipment = equipment;
   gameState.birdExpeditions.unshift(quest);
   saveState();
   SFX.tap();
@@ -4853,18 +5027,58 @@ function claimBirdExpedition(expeditionId) {
   const advanced = window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now());
   if (advanced.status !== 'complete') { showToast('Still questing — check back soon.'); return; }
   q.status = 'claimed';
-  addCoins(advanced.rewards.coins || 0);
+  const equipment = q.equipment || {};
+  let coins = advanced.rewards.coins || 0;
+  if (equipment.provision) coins = Math.round(coins * 1.25); // well-fed birds haul more
+  addCoins(coins);
   const questXp = Math.max(0, Math.floor(Number(advanced.rewards.xp) || 0));
   if (questXp > 0) addPlayerXp(questXp);
-  Object.entries(advanced.rewards.items || {}).forEach(([key, count]) => {
+  const items = { ...(advanced.rewards.items || {}) };
+  if (equipment.charm) {
+    const template = getExpeditionTemplate(q.templateId);
+    const pool = (template && template.items) || Object.keys(items);
+    if (pool.length) { const bonus = pool[q.seed % pool.length]; items[bonus] = (items[bonus] || 0) + 1; }
+  }
+  Object.entries(items).forEach(([key, count]) => {
     if (count > 0) gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + count;
   });
   const foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
   const bird = academyBirdById(q.birdId);
   if (bird) levelUpBird(bird, questXp || 10);
+  // A claimed quest leaves the board for good.
+  gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
   saveState();
-  showToast(foundNewClue ? 'Merlin Clue recorded: ' + advanced.story.title + ' · +' + questXp + ' XP' : 'Quest claimed! +' + (advanced.rewards.coins || 0) + ' coins, +' + questXp + ' XP and goodies');
+  closeQuestOverlay();
+  playQuestClaimCelebration({ coins, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   renderBirdExpeditions(); renderInventory(); updateHeader();
+}
+
+// ---- Claim celebration: a quick dopamine burst of coins and sparkles -------
+function playQuestClaimCelebration(rewards) {
+  document.getElementById('questClaimCelebration')?.remove();
+  const el = document.createElement('div');
+  el.id = 'questClaimCelebration';
+  el.className = 'quest-claim-celebration';
+  const bits = [];
+  const glyphs = ['🪙', '✨', '🪙', '🪶', '✨', '🪙'];
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2 + Math.random() * 0.4;
+    const d = 90 + Math.random() * 110;
+    bits.push('<span class="qcc-bit" style="--tx:' + Math.round(Math.cos(a) * d) + 'px;--ty:' + Math.round(Math.sin(a) * d - 40) + 'px;animation-delay:' + (Math.random() * 0.15).toFixed(2) + 's">' + glyphs[i % glyphs.length] + '</span>');
+  }
+  const itemBits = Object.entries(rewards.items || {}).filter(([, n]) => n > 0)
+    .map(([k, n]) => '<span class="qcc-item">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + (n > 1 ? ' ×' + n : '') + '</span>').join('');
+  el.innerHTML = '<div class="qcc-center">' + bits.join('') +
+    '<div class="qcc-badge">QUEST COMPLETE!</div>' +
+    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
+    (itemBits ? '<div class="qcc-items">' + itemBits + '</div>' : '') +
+    (rewards.clue ? '<div class="qcc-clue">📜 Merlin Clue: ' + escapeHtml(rewards.clue) + '</div>' : '') +
+    '</div>';
+  document.body.appendChild(el);
+  SFX.victory();
+  vibrate(60);
+  setTimeout(() => el.classList.add('fading'), 1500);
+  setTimeout(() => el.remove(), 2000);
 }
 
 function renderMerlinClueNotebook() {
@@ -4880,51 +5094,285 @@ function renderMerlinClueNotebook() {
   return '<div class="merlin-clue-notebook"><div class="merlin-clue-title">Merlin\'s Clues</div><div class="academy-builder-copy">Recovered story clues make the Academy feel remembered. The Moon-Branch Route Map points toward moon_branch_trial when found.</div><div class="merlin-clue-grid">' + cards + '</div></div>';
 }
 
-function renderStarterQuestBoard(templates) {
-  const starterTemplates = templates.filter(t => t.starter === true);
-  if (!starterTemplates.length) return '';
-  const birds = (gameState.flock || []).filter(b => b && b.id);
-  const birdButtons = (template) => {
-    if (!birds.length) return '<div class="academy-empty">Recruit your first companion, then send them straight out for seed, coins and simple scavenging.</div>';
-    return '<div class="starter-bird-buttons">' + birds.slice(0, 8).map(b => {
-      const name = b.commonName || b.species || 'Bird';
-      const active = birdHasActiveExpedition(b.id);
-      return '<button class="starter-bird-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'' + template.id + '\')" ' + (active ? 'disabled' : '') + '>' + (active ? 'Away: ' : 'Send ') + escapeHtml(name) + '</button>';
-    }).join('') + '</div>';
-  };
-  return '<div class="expedition-panel" data-feature="starter-quests"><div class="expedition-title">Starter Quests — available now</div><div class="academy-builder-copy">No Quest Roost needed: send a companion straight away on tiny beginner errands. Bigger expeditions still unlock through the Academy later.</div><div class="starter-quest-grid">' + starterTemplates.map(t => '<div class="starter-quest-card"><div class="starter-quest-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + t.minutes + ' min</span></div><div class="starter-quest-copy">Simple early-game quest for seed, coins or scavenged supplies. Rewards +' + (t.xp || 0) + ' Trainer XP.</div>' + birdButtons(t) + '</div>').join('') + '</div></div>';
+// ---- Fallout Shelter-style quest board --------------------------------------
+// The board shows the quests themselves (no bird lists). Tapping a quest opens
+// a send sheet where you pick one bird plus its loadout; tapping a bird that is
+// out opens its procedurally generated adventure log.
+const QUEST_TEMPLATE_INFO = {
+  find_seed:    'A quick hop around the gardens for spilt seed. The perfect first errand.',
+  find_coins:   'Someone always drops a coin near the market lane. Send a sharp-eyed bird.',
+  scavenge:     'Moss, twigs and berries for the Academy stores. Easy pickings.',
+  short_forage: 'An hour among the hedgerows for berries and shiny finds.',
+  supply_run:   'A two-hour supply route past the squirrel market. Fills the pantry.',
+  moon_scout:   'A three-hour night flight tracing Merlin runes. The best coin — and secrets.'
+};
+
+function questDurationLabel(minutes) {
+  if (minutes < 60) return minutes + ' min';
+  const h = minutes / 60;
+  return (h % 1 === 0 ? h : h.toFixed(1)) + 'h';
+}
+
+function questTimeLeftLabel(q) {
+  const ms = Math.max(0, q.endMs - Date.now());
+  if (ms <= 0) return 'Back home!';
+  return fmtCd(ms) + ' left';
 }
 
 function renderBirdExpeditions() {
-  const panel = $('academyExpeditionPanel');
   const questScreen = $('expeditionQuestList');
-  if (!panel && !questScreen) return;
-  const rows = ensureBirdExpeditions().slice(0, 8).map(q => window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now()));
+  if (!questScreen) return;
+  const rows = ensureBirdExpeditions().filter(q => q.status !== 'claimed').slice(0, 10)
+    .map(q => window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now()));
   const templates = window.BurbzAcademyCore.getQuestTemplates();
-  const activeHtml = rows.length ? rows.map(q => {
+  const roostBuilt = isAcademyBuildingBuilt('quest_roost');
+
+  // Birds currently away (tap for the adventure log)
+  const activeHtml = rows.length ? '<div class="quest-section-title">Birds on Quests</div>' + rows.map(q => {
     const done = q.status === 'complete';
-    const rewards = '+' + q.rewards.coins + ' coins · +' + (q.rewards.xp || 0) + ' XP · ' + Object.keys(q.rewards.items || {}).filter(k => q.rewards.items[k] > 0).join(', ');
-    const storyReward = q.story && q.story.clueId ? '<div class="quest-reward">Merlin Clue: ' + escapeHtml(q.story.title) + '</div>' : '';
-    return '<div class="expedition-card"><div class="expedition-head"><span>' + q.icon + ' ' + escapeHtml(q.birdName) + '</span><span>' + q.progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + q.progressPct + '%"></div></div><div class="expedition-meta">' + escapeHtml(q.label) + ' · ' + escapeHtml(rewards) + '</div>' + storyReward + '<div class="expedition-log">' + q.events.slice(-4).map(e => '<div>• ' + escapeHtml(e.text) + '</div>').join('') + '</div>' + (done && q.status !== 'claimed' ? '<button class="quest-claim-btn" onclick="claimBirdExpedition(\'' + q.id + '\')">CLAIM LOOT</button>' : q.status === 'claimed' ? '<div class="quest-reward">Claimed</div>' : '') + '</div>';
-  }).join('') : '<div class="academy-empty">No birds are away right now. Build the Quest Roost, send a bird, then follow its event log in real time.</div>';
-  const starterHtml = renderStarterQuestBoard(templates);
-  const advancedTemplates = templates.filter(t => t.starter !== true);
-  const startHtml = advancedTemplates.map(t => '<button class="expedition-start-btn" onclick="showToast(\'Open the Quest Roost and pick a bird for ' + t.label.replace(/'/g,'') + '.\')">' + t.icon + ' ' + Math.round(t.minutes/60) + 'h</button>').join('');
-  const html = starterHtml + '<div class="expedition-panel"><div class="expedition-title">Quest Roost Expeditions</div><div class="academy-builder-copy">Fallout Shelter-inspired: send birds away for real time, follow their generated journey, then claim coins, items and Merlin Clues.</div><div class="expedition-actions">' + startHtml + '</div>' + activeHtml + renderMerlinClueNotebook() + '</div>';
-  if (questScreen) questScreen.innerHTML = html;
-  // Quests now live in one place — the Quests tab. The Academy just shows a
-  // small live summary so the two screens no longer duplicate each other.
-  if (panel) {
-    const active = rows.filter(q => q.status !== 'claimed');
-    const ready = active.filter(q => q.status === 'complete').length;
-    const summary = !active.length
-      ? 'No birds are out questing right now.'
-      : ready
-        ? ready + ' quest' + (ready === 1 ? '' : 's') + ' ready to claim · ' + active.length + ' underway'
-        : active.length + ' bird' + (active.length === 1 ? '' : 's') + ' out on expeditions';
-    panel.innerHTML = '<div class="academy-quest-link"><div class="academy-quest-link-main"><div class="academy-quest-link-title">🧭 Expeditions &amp; Quests</div><div class="academy-quest-link-copy">' + escapeHtml(summary) + ' — everything now lives in the Quests tab.</div></div><button class="academy-quest-link-btn' + (ready ? ' ready' : '') + '" id="academyOpenQuestsBtn">' + (ready ? 'CLAIM' : 'OPEN') + '</button></div>';
-    $('academyOpenQuestsBtn')?.addEventListener('click', () => { SFX.tap(); switchScreen('quests'); });
+    const bird = academyBirdById(q.birdId);
+    const art = bird ? birdOnlyImgHTML(bird, 'quest-away-art') : '<div class="quest-away-art">' + q.icon + '</div>';
+    return '<div class="quest-away-card' + (done ? ' ready' : '') + '" onclick="openQuestLog(\'' + q.id + '\')">' +
+      art +
+      '<div class="quest-info">' +
+        '<div class="quest-name">' + q.icon + ' ' + escapeHtml(q.label) + '</div>' +
+        '<div class="quest-desc">' + escapeHtml(q.birdName) + (done ? ' is back with the loot!' : ' · ' + questTimeLeftLabel(q)) + '</div>' +
+        '<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + q.progressPct + '%"></div></div>' +
+      '</div>' +
+      (done ? '<button class="quest-claim-btn pulse" onclick="event.stopPropagation();claimBirdExpedition(\'' + q.id + '\')">CLAIM</button>' : '<div class="quest-away-pct">' + q.progressPct + '%</div>') +
+    '</div>';
+  }).join('') : '';
+
+  // The quest board itself — info only, birds are chosen after tapping
+  const boardHtml = '<div class="quest-section-title">Quest Board</div>' + templates.map(t => {
+    const locked = t.starter !== true && !roostBuilt;
+    const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
+    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP';
+    return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
+      '<div class="quest-board-icon">' + t.icon + '</div>' +
+      '<div class="quest-info">' +
+        '<div class="quest-name">' + escapeHtml(t.label) + ' <span class="quest-duration">' + questDurationLabel(t.minutes) + '</span></div>' +
+        '<div class="quest-desc">' + escapeHtml(info) + '</div>' +
+        '<div class="quest-progress-text">' + (locked ? '🔒 Build the Quest Roost in the Academy to unlock' : rewardHint) + '</div>' +
+      '</div>' +
+      (locked ? '' : '<div class="quest-board-go">SEND ›</div>') +
+    '</div>';
+  }).join('');
+
+  questScreen.innerHTML = activeHtml + boardHtml + renderMerlinClueNotebook();
+  scheduleQuestBoardRefresh();
+}
+
+let questBoardRefreshTimer = null;
+function scheduleQuestBoardRefresh() {
+  clearTimeout(questBoardRefreshTimer);
+  const hasActive = ensureBirdExpeditions().some(q => q.status !== 'claimed');
+  if (!hasActive) return;
+  questBoardRefreshTimer = setTimeout(() => {
+    if (currentScreen === 'quests' && !document.getElementById('questOverlay')?.classList.contains('open')) renderBirdExpeditions();
+    else scheduleQuestBoardRefresh();
+  }, 20000);
+}
+
+// ---- Send sheet: pick a bird + loadout (Fallout Shelter style) --------------
+let questSendState = { templateId: null, birdId: null, provision: null, charm: null };
+
+function questOverlayEl() {
+  let el = document.getElementById('questOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'questOverlay';
+    el.className = 'quest-overlay';
+    el.addEventListener('click', e => { if (e.target === el) closeQuestOverlay(); });
+    document.body.appendChild(el);
   }
+  return el;
+}
+
+function closeQuestOverlay() {
+  clearTimeout(questLogRefreshTimer);
+  const el = document.getElementById('questOverlay');
+  if (el) el.classList.remove('open');
+  if (currentScreen === 'quests') scheduleQuestBoardRefresh();
+}
+
+function openQuestSend(templateId) {
+  const t = getExpeditionTemplate(templateId);
+  if (!t) return;
+  SFX.tap();
+  questSendState = { templateId, birdId: null, provision: null, charm: null };
+  renderQuestSendSheet();
+}
+
+function renderQuestSendSheet() {
+  const t = getExpeditionTemplate(questSendState.templateId);
+  if (!t) return;
+  const el = questOverlayEl();
+  const birds = (gameState.flock || []).filter(b => b && b.id);
+  const info = QUEST_TEMPLATE_INFO[t.id] || '';
+
+  const birdChips = birds.length ? birds.map(b => {
+    const away = birdHasActiveExpedition(b.id);
+    const training = birdHasActiveTraining(b.id);
+    const tooLow = (b.level || 1) < (t.minLevel || 1);
+    const disabled = away || training || tooLow;
+    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1);
+    const sel = questSendState.birdId === b.id ? ' selected' : '';
+    return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
+      birdOnlyImgHTML(b, 'quest-bird-chip-art') +
+      '<span class="quest-bird-chip-name">' + escapeHtml(b.commonName || b.species) + '</span>' +
+      '<span class="quest-bird-chip-note">' + note + '</span>' +
+    '</button>';
+  }).join('') : '<div class="academy-empty">No companions yet — scan and recruit a bird first.</div>';
+
+  const provisions = Object.keys(FOODS).filter(k => (gameState.pantry && gameState.pantry[k] || 0) > 0);
+  const provisionChips = provisions.length ? provisions.map(k => {
+    const sel = questSendState.provision === k ? ' selected' : '';
+    return '<button class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'provision\',\'' + k + '\')">' + FOODS[k].emoji + ' ' + escapeHtml(FOODS[k].label) + ' <span class="quest-equip-count">×' + gameState.pantry[k] + '</span></button>';
+  }).join('') : '<div class="quest-equip-none">Pantry is empty — buy food in a village.</div>';
+
+  const charms = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
+  const charmChips = charms.length ? charms.map(([k, n]) => {
+    const sel = questSendState.charm === k ? ' selected' : '';
+    return '<button class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'charm\',\'' + k + '\')">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' <span class="quest-equip-count">×' + n + '</span></button>';
+  }).join('') : '<div class="quest-equip-none">No charms in the bag yet — quests award them.</div>';
+
+  el.innerHTML = '<div class="quest-overlay-panel">' +
+    '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
+    '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
+      '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
+      '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP</div></div></div>' +
+    '<div class="quest-overlay-copy">' + escapeHtml(info) + '</div>' +
+    '<div class="quest-overlay-label">Choose a bird</div>' +
+    '<div class="quest-bird-row">' + birdChips + '</div>' +
+    '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins</span></div>' +
+    '<div class="quest-equip-row">' + provisionChips + '</div>' +
+    '<div class="quest-overlay-label">Charm <span class="quest-overlay-hint">+1 bonus find</span></div>' +
+    '<div class="quest-equip-row">' + charmChips + '</div>' +
+    '<button class="quest-send-btn" id="questSendBtn" ' + (questSendState.birdId ? '' : 'disabled') + ' onclick="confirmQuestSend()">' +
+      (questSendState.birdId ? '🧭 SEND ON QUEST' : 'PICK A BIRD FIRST') + '</button>' +
+  '</div>';
+  el.classList.add('open');
+}
+
+function selectQuestBird(birdId) {
+  SFX.tap();
+  questSendState.birdId = questSendState.birdId === birdId ? null : birdId;
+  renderQuestSendSheet();
+}
+
+function toggleQuestEquip(slot, key) {
+  SFX.tap();
+  questSendState[slot] = questSendState[slot] === key ? null : key;
+  renderQuestSendSheet();
+}
+
+function confirmQuestSend() {
+  if (!questSendState.birdId || !questSendState.templateId) return;
+  startBirdExpedition(questSendState.birdId, questSendState.templateId, { provision: questSendState.provision, charm: questSendState.charm });
+  closeQuestOverlay();
+  renderQuests();
+}
+
+// ---- Adventure log: a procedurally generated journey, Fallout Shelter style --
+const QUEST_LOG_FLAVOUR = [
+  'shelters from a rain shower under a broad oak leaf',
+  'spots a fox below and keeps to the high branches',
+  'trades gossip with a passing wood pigeon',
+  'follows an old drover’s trail across the meadow',
+  'preens for a moment on a mossy fencepost',
+  'watches a farmer’s cart rumble down the lane',
+  'dodges a grumpy magpie guarding its hedge',
+  'sings back at a distant church bell',
+  'rides a warm updraft over the mill pond',
+  'inspects a strange glint in the streambed',
+  'naps briefly in an abandoned nest',
+  'startles a squirrel and claims its lookout perch',
+  'shakes the dew off and presses on',
+  'circles a ruined watchtower, just in case',
+  'shares crumbs with a friendly wren'
+];
+const QUEST_LOG_COIN_LINES = [
+  'finds {n} coins beneath a loose cobble',
+  'earns {n} coins helping a merchant scare crows',
+  'digs {n} coins out of an old bird bath',
+  'spots {n} coins dropped by the toll bridge'
+];
+
+function buildQuestTimeline(q) {
+  const template = getExpeditionTemplate(q.templateId) || { beats: [], minutes: 5 };
+  const rng = seededRandom(q.seed);
+  const events = [];
+  const beats = template.beats || [];
+  beats.forEach((text, i) => {
+    events.push({ pct: beats.length > 1 ? Math.round((i / (beats.length - 1)) * 100) : 0, text: q.birdName + ' ' + text + '.', loot: null });
+  });
+  // Sprinkle extra generated moments between the beats
+  const extraCount = Math.min(9, 3 + Math.floor((template.minutes || 5) / 25));
+  const usedFlavour = new Set();
+  for (let i = 0; i < extraCount; i++) {
+    let idx = Math.floor(rng() * QUEST_LOG_FLAVOUR.length);
+    while (usedFlavour.has(idx)) idx = (idx + 1) % QUEST_LOG_FLAVOUR.length;
+    usedFlavour.add(idx);
+    events.push({ pct: 6 + Math.floor(rng() * 88), text: q.birdName + ' ' + QUEST_LOG_FLAVOUR[idx] + '.', loot: null });
+  }
+  // Split the coin reward across a few "found coins" moments
+  const totalCoins = (q.rewards && q.rewards.coins) || 0;
+  if (totalCoins > 0) {
+    const chunks = totalCoins >= 12 ? 3 : totalCoins >= 5 ? 2 : 1;
+    let remaining = totalCoins;
+    for (let i = 0; i < chunks; i++) {
+      const amount = i === chunks - 1 ? remaining : Math.max(1, Math.round(totalCoins / chunks + (rng() - 0.5) * 3));
+      remaining -= amount;
+      const line = QUEST_LOG_COIN_LINES[Math.floor(rng() * QUEST_LOG_COIN_LINES.length)];
+      events.push({ pct: 15 + Math.floor(rng() * 75), text: q.birdName + ' ' + line.replace('{n}', amount) + '.', loot: '+' + amount + ' 🪙' });
+    }
+  }
+  // Item finds
+  Object.entries((q.rewards && q.rewards.items) || {}).forEach(([key, count]) => {
+    if (count > 0) events.push({ pct: 20 + Math.floor(rng() * 70), text: q.birdName + ' tucks away ' + inventoryLabel(key).toLowerCase() + '.', loot: '+' + count + ' ' + inventoryIcon(key) });
+  });
+  if (q.story && q.story.clueId) {
+    events.push({ pct: 82 + Math.floor(rng() * 12), text: q.birdName + ' uncovers something important: ' + q.story.title + '!', loot: '📜' });
+  }
+  events.sort((a, b) => a.pct - b.pct);
+  events.push({ pct: 100, text: q.birdName + ' lands back at the Academy, mission complete.', loot: null });
+  return events;
+}
+
+let questLogRefreshTimer = null;
+function openQuestLog(expeditionId, silentRefresh) {
+  const raw = ensureBirdExpeditions().find(x => x.id === expeditionId);
+  if (!raw) return;
+  if (!silentRefresh) SFX.tap();
+  const q = window.BurbzAcademyCore.advanceBirdExpedition(raw, Date.now());
+  const el = questOverlayEl();
+  const bird = academyBirdById(q.birdId);
+  const art = bird ? birdOnlyImgHTML(bird, 'quest-log-art') : '<div class="quest-log-art">' + q.icon + '</div>';
+  const timeline = buildQuestTimeline(q);
+  const visible = timeline.filter(e => e.pct <= q.progressPct);
+  const done = q.status === 'complete';
+  const gathered = visible.filter(e => e.loot).map(e => '<span class="quest-log-loot-chip">' + e.loot + '</span>').join('');
+  const logRows = visible.map(e =>
+    '<div class="quest-log-row"><span class="quest-log-pct">' + String(e.pct).padStart(2, '0') + '%</span><span class="quest-log-text">' + escapeHtml(e.text) + '</span>' + (e.loot ? '<span class="quest-log-loot">' + e.loot + '</span>' : '') + '</div>'
+  ).join('') || '<div class="quest-log-row"><span class="quest-log-text">Setting off…</span></div>';
+
+  el.innerHTML = '<div class="quest-overlay-panel quest-log-panel">' +
+    '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
+    '<div class="quest-overlay-head">' + art +
+      '<div><div class="quest-overlay-title">' + q.icon + ' ' + escapeHtml(q.label) + '</div>' +
+      '<div class="quest-overlay-sub">' + escapeHtml(q.birdName) + ' · ' + (done ? 'Back home!' : questTimeLeftLabel(q)) + '</div></div></div>' +
+    '<div class="quest-progress-bar quest-log-progress"><div class="quest-progress-fill" style="width:' + q.progressPct + '%"></div></div>' +
+    (gathered ? '<div class="quest-log-gathered">Gathered so far: ' + gathered + '</div>' : '') +
+    '<div class="quest-log-list" id="questLogList">' + logRows + '</div>' +
+    (done ? '<button class="quest-send-btn claim" onclick="claimBirdExpedition(\'' + q.id + '\')">🎉 CLAIM REWARDS</button>'
+          : '<div class="quest-log-footnote">' + escapeHtml(q.birdName) + ' will keep reporting back as the journey unfolds…</div>') +
+  '</div>';
+  el.classList.add('open');
+  const list = document.getElementById('questLogList');
+  if (list) list.scrollTop = list.scrollHeight;
+  clearTimeout(questLogRefreshTimer);
+  if (!done) questLogRefreshTimer = setTimeout(() => { if (document.getElementById('questOverlay')?.classList.contains('open')) openQuestLog(expeditionId, true); }, 15000);
 }
 
 function renderAcademy() {
@@ -5650,7 +6098,7 @@ function applyBurbzCameraPadding() {
     liveMap.setPadding({ top: Math.round(h * 0.44), bottom: 0, left: 0, right: 0 });
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:76, attributionControl:true, fadeDuration:120, canvasContextAttributes:{ antialias:true } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
   if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
   if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
@@ -5676,10 +6124,13 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
   }
   if (/park|landcover|landuse|wood|forest|grass/i.test(id) && (layer.type === 'fill' || layer.type === 'background')) { if (liveMap.getPaintProperty(id, 'fill-color') !== undefined) liveMap.setPaintProperty(id, 'fill-color', '#274b2e'); if (liveMap.getPaintProperty(id, 'fill-opacity') !== undefined) liveMap.setPaintProperty(id, 'fill-opacity', .54); }
 } catch(e) {} }); }
-function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { if (!liveMap.getSource('burbz-terrain-dem')) liveMap.addSource('burbz-terrain-dem', { type:'raster-dem', tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding:'terrarium', tileSize:256, maxzoom:15, attribution:'Elevation tiles © AWS Open Data / Mapzen' }); liveMap.setTerrain({ source:'burbz-terrain-dem', exaggeration:1.22 }); if (!liveMap.getLayer('burbz-hillshade')) { const firstSymbol = (liveMap.getStyle().layers || []).find(layer => layer.type === 'symbol'); liveMap.addLayer({ id:'burbz-hillshade', type:'hillshade', source:'burbz-terrain-dem', paint:{ 'hillshade-shadow-color':'#2d2110', 'hillshade-highlight-color':'#ead794', 'hillshade-accent-color':'#5e7b45', 'hillshade-exaggeration':.32 } }, firstSymbol && firstSymbol.id); } liveMapTerrainEnabled = true; } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(enableBurbzTerrain, 220); return; } console.warn('BURBZ terrain setup failed', err); } }
+// 3D terrain + hillshade removed: the DEM tile downloads and terrain mesh were
+// the single biggest cause of the slow, jumpy map on phones. The painted
+// medieval styling carries the look without them.
+function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { liveMap.setTerrain(null); } catch (e) {} liveMapTerrainEnabled = true; }
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
-function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 1.2) liveMap.setPitch(targetPitch); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
+function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: you are pinned to your real
 // GPS position, cannot pan ("walk") the map, and a one-finger left/right swipe
 // spins the camera a full 360° around you so you can look in any direction.
@@ -5713,13 +6164,24 @@ function wireMapRotateOnly() {
 
 function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
 function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
-  function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.jumpTo({ zoom:z, pitch:burbzPitchForZoom(z) }); }
+  function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); } }
 function startLiveGeolocation() { if (!navigator.geolocation || liveMapWatchId !== null) { if (!navigator.geolocation) setMapLabels('Location unavailable', 'This browser cannot provide location, so Burbz will not pretend you are somewhere else.'); return; } navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Tap ⌖ and allow location to reveal the Bird Burbs realm around your own phone.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); liveMapWatchId = navigator.geolocation.watchPosition(pos => handleLivePosition(pos, false), () => {}, { enableHighAccuracy:true, timeout:15000, maximumAge:0 }); }
 function handleLivePosition(pos, fly) { const lat = pos.coords.latitude, lon = pos.coords.longitude; liveMapHasPrecisePosition = true; liveMapLastPosition = { lat, lon, source:'Your live position' }; updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true }); }
-async function updateLiveMapPosition(lat, lon, source, opts = {}) { const seq = ++liveMapUpdateSeq; liveMapLastPosition = { lat, lon, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (opts.precise) { try { liveMap.setCenter([lon, lat]); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return; const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
+let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
+async function updateLiveMapPosition(lat, lon, source, opts = {}) { liveMapLastPosition = { lat, lon, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return;
+  // Every GPS tick used to re-query Overpass and tear down + rebuild every marker
+  // on the map, which is what made walking feel laggy. Only rebuild after moving
+  // ~120 m or every 90 s, whichever comes first.
+  const last = liveMapLastSpawnFetch;
+  const movedFar = !last || mapDistanceMeters({ lat:last.lat, lon:last.lon }, { lat, lon }) > 120;
+  const staleAge = !last || (Date.now() - last.at) > 90000;
+  if (!movedFar && !staleAge && liveMapSpawns.length) { drawMapPickups(lat, lon); return; }
+  liveMapLastSpawnFetch = { lat, lon, at: Date.now() };
+  const seq = ++liveMapUpdateSeq;
+  const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
 async function fetchNearbyHabitatFeatures(lat, lon, radius = 1400) { radius = Math.max(300, Math.min(8000, Math.round(radius))); const query = `[out:json][timeout:8];(node(around:${radius},${lat},${lon})[natural];way(around:${radius},${lat},${lon})[natural];relation(around:${radius},${lat},${lon})[natural];node(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];way(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];relation(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];node(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];way(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];relation(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];node(around:${radius},${lat},${lon})[waterway];way(around:${radius},${lat},${lon})[waterway];node(around:${radius},${lat},${lon})[water];way(around:${radius},${lat},${lon})[water];);out center tags 70;`; const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body:'data=' + encodeURIComponent(query) }); if (!res.ok) throw new Error('Overpass ' + res.status); const data = await res.json(); return (data.elements || []).map(el => ({ lat:el.lat || (el.center && el.center.lat), lon:el.lon || (el.center && el.center.lon), tags:el.tags || {} })).filter(f => Number.isFinite(f.lat) && Number.isFinite(f.lon)); }
 function classifyHabitat(tags = {}) { const natural = tags.natural || '', landuse = tags.landuse || '', leisure = tags.leisure || '', waterway = tags.waterway || ''; if (natural === 'coastline' || tags.place === 'sea' || /beach|bay|strait/.test(natural)) return 'coast'; if (waterway || /water|river|stream|lake|pond|reservoir/.test(natural + ' ' + (tags.water || ''))) return 'water'; if (/wetland|marsh|reedbed|fen|bog/.test(natural)) return 'wetland'; if (/tree|wood|forest|scrub|heath/.test(natural) || /forest|orchard/.test(landuse)) return 'woodland'; if (/park|garden|nature_reserve|recreation_ground/.test(leisure + ' ' + landuse)) return 'park'; if (/farmland|farmyard|allotments/.test(landuse)) return 'farmland'; if (/grassland|meadow|grass/.test(natural + ' ' + landuse)) return 'grassland'; if (/peak|fell|scree/.test(natural)) return 'hills'; return 'urban'; }
 function mapRegionForCoords(lat, lon) {
@@ -5796,8 +6258,8 @@ function enablePlayerCompass() {
 function drawHabitatOverlayZones(spawns) { if (!liveMap || !liveMap.getSource('burbz-habitat-zones')) return; const features = liveMapOverlayOpen ? spawns.map(spawn => circleFeature(spawn.lat, spawn.lon, spawn.realFeature ? 135 : 90, { color:habitatColor(spawn.habitat), opacity:spawn.realFeature ? .16 : .10, habitat:spawn.habitat }, 36)) : []; liveMap.getSource('burbz-habitat-zones').setData({ type:'FeatureCollection', features }); }
 function makeHtmlMarker(className, html) { const el = document.createElement('div'); el.className = className; el.innerHTML = html; return el; }
 function isTreeHabitat(habitat) { return ['woodland','park','wetland','hills'].includes(habitat); }
-function treePlanForSpawn(spawn, index) { const count = spawn.realFeature ? (spawn.habitat === 'woodland' ? 6 : 4) : 2; const trees = []; for (let i=0;i<count;i++) { const seed = hashStr(`${spawn.seed}:tree:${i}`); const angle = ((seed % 360) * Math.PI) / 180; const dist = 28 + (seed % 95); const east = Math.sin(angle) * dist; const north = Math.cos(angle) * dist; const coords = metersToLonLat(spawn.lat, spawn.lon, east, north); trees.push({ lon:coords[0], lat:coords[1], scale:.72 + ((seed >> 3) % 38) / 100, delay:-((seed >> 6) % 20) / 10 }); } return trees; }
-function drawTreeMarkers(spawns) { if (!liveMap) return; liveMapTreeMarkers.forEach(marker => marker.remove()); liveMapTreeMarkers = []; (spawns || []).filter(spawn => isTreeHabitat(spawn.habitat)).slice(0,8).forEach((spawn, idx) => { treePlanForSpawn(spawn, idx).forEach(tree => { const el = makeHtmlMarker('burbz-tree-marker', '<div class="burbz-tree-crown"></div>'); el.style.zIndex = '1'; const crown = el.querySelector('.burbz-tree-crown'); if (crown) crown.style.transform = `scale(${tree.scale})`; el.style.animationDelay = `${tree.delay}s`; liveMapTreeMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([tree.lon, tree.lat]).addTo(liveMap)); }); }); }
+function treePlanForSpawn(spawn, index) { const count = spawn.realFeature ? (spawn.habitat === 'woodland' ? 4 : 3) : 1; const trees = []; for (let i=0;i<count;i++) { const seed = hashStr(`${spawn.seed}:tree:${i}`); const angle = ((seed % 360) * Math.PI) / 180; const dist = 28 + (seed % 95); const east = Math.sin(angle) * dist; const north = Math.cos(angle) * dist; const coords = metersToLonLat(spawn.lat, spawn.lon, east, north); trees.push({ lon:coords[0], lat:coords[1], scale:.72 + ((seed >> 3) % 38) / 100, delay:-((seed >> 6) % 20) / 10 }); } return trees; }
+function drawTreeMarkers(spawns) { if (!liveMap) return; liveMapTreeMarkers.forEach(marker => marker.remove()); liveMapTreeMarkers = []; (spawns || []).filter(spawn => isTreeHabitat(spawn.habitat)).slice(0,5).forEach((spawn, idx) => { treePlanForSpawn(spawn, idx).forEach(tree => { const el = makeHtmlMarker('burbz-tree-marker', '<div class="burbz-tree-crown"></div>'); el.style.zIndex = '1'; const crown = el.querySelector('.burbz-tree-crown'); if (crown) crown.style.transform = `scale(${tree.scale})`; el.style.animationDelay = `${tree.delay}s`; liveMapTreeMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([tree.lon, tree.lat]).addTo(liveMap)); }); }); }
 
 // Habitat-driven medieval set dressing: each real mapped feature seeds a small
 // prop (a well in the park, sheep on pasture, a coracle on the water...) so
@@ -5807,7 +6269,7 @@ function drawMedievalProps(spawns) {
   if (!liveMap) return;
   liveMapPropMarkers.forEach(m => m.remove());
   liveMapPropMarkers = [];
-  (spawns || []).slice(0, 14).forEach(spawn => {
+  (spawns || []).slice(0, 10).forEach(spawn => {
     const props = MEDIEVAL_HABITAT_PROPS[spawn.habitat];
     if (!props) return;
     const seed = hashStr(`${spawn.seed}:prop`);
@@ -5819,8 +6281,106 @@ function drawMedievalProps(spawns) {
     liveMapPropMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat(coords).addTo(liveMap));
   });
 }
+
+// ---- Map collectibles: tappable loot scattered around the player -----------
+// Fresh loot is seeded per ~250 m cell per day, so every walk turns up coins,
+// feathers and forage to grab. Everything respawns at midnight.
+const MAP_PICKUP_TYPES = [
+  { id:'coins',    glyph:'🪙', label:'Coin pouch',    weight:30, grant(r) { const n = 3 + Math.floor(r() * 7);  addCoins(n); return '+' + n + ' coins'; } },
+  { id:'purse',    glyph:'💰', label:'Lost purse',    weight:6,  grant(r) { const n = 15 + Math.floor(r() * 16); addCoins(n); return '+' + n + ' coins'; } },
+  { id:'feather',  glyph:'🪶', label:'Lucky feather', weight:14, grant() { gameState.inventory.items.lucky_feather = (gameState.inventory.items.lucky_feather || 0) + 1; return '+1 Lucky Feather'; } },
+  { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
+  { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
+  { id:'mushroom', glyph:'🍄', label:'Forest mushroom', weight:10, grant() { gameState.inventory.items.forest_mushroom = (gameState.inventory.items.forest_mushroom || 0) + 1; return '+1 Forest Mushroom'; } },
+  { id:'chest',    glyph:'🎁', label:'Old cache',     weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
+  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } }
+];
+const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
+const MAP_PICKUP_RANGE_M = 220;
+let liveMapPickupMarkers = [];
+
+function pickupDayKey() { return new Date().toISOString().split('T')[0]; }
+function ensureMapPickupState() {
+  if (!gameState) return { day: pickupDayKey(), collected: {} };
+  const day = pickupDayKey();
+  if (!gameState.mapPickups || gameState.mapPickups.day !== day) gameState.mapPickups = { day, collected: {} };
+  return gameState.mapPickups;
+}
+function pickupTypeForSeed(seed) {
+  const total = MAP_PICKUP_TYPES.reduce((s, t) => s + t.weight, 0);
+  let roll = seed % total;
+  for (const t of MAP_PICKUP_TYPES) { if (roll < t.weight) return t; roll -= t.weight; }
+  return MAP_PICKUP_TYPES[0];
+}
+function mapPickupsNear(lat, lon) {
+  const out = [], cs = MAP_PICKUP_CELL_DEG, day = pickupDayKey();
+  const ci = Math.floor(lat / cs), cj = Math.floor(lon / cs);
+  for (let di = -2; di <= 2; di++) {
+    for (let dj = -2; dj <= 2; dj++) {
+      const i = ci + di, j = cj + dj;
+      const cellSeed = burbzHash32('burbz-pickup:' + day + ':' + i + ':' + j);
+      const count = cellSeed % 5 === 0 ? 2 : 1; // most cells hold one item, some two
+      for (let k = 0; k < count; k++) {
+        const s = burbzHash32('burbz-pickup:' + day + ':' + i + ':' + j + ':' + k);
+        const r = villageRngFrom(s);
+        out.push({
+          key: i + ':' + j + ':' + k,
+          seed: s,
+          type: pickupTypeForSeed(s),
+          lat: (i + 0.1 + r() * 0.8) * cs,
+          lon: (j + 0.1 + r() * 0.8) * cs
+        });
+      }
+    }
+  }
+  return out;
+}
+function drawMapPickups(lat, lon) {
+  if (!liveMap || !window.maplibregl) return;
+  const state = ensureMapPickupState();
+  liveMapPickupMarkers.forEach(m => m.remove());
+  liveMapPickupMarkers = [];
+  mapPickupsNear(lat, lon)
+    .filter(p => !state.collected[p.key])
+    .sort((a, b) => mapDistanceMeters(a, { lat, lon }) - mapDistanceMeters(b, { lat, lon }))
+    .slice(0, 14)
+    .forEach(p => {
+      const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + p.type.glyph + '</div>');
+      el.addEventListener('click', ev => { ev.stopPropagation(); collectMapPickup(p, el); });
+      liveMapPickupMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([p.lon, p.lat]).addTo(liveMap));
+    });
+}
+function collectMapPickup(pickup, el) {
+  const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+  if (me && mapDistanceMeters(me, pickup) > MAP_PICKUP_RANGE_M) {
+    SFX.tap();
+    showToast(pickup.type.glyph + ' ' + pickup.type.label + ' — walk closer to gather it!');
+    return;
+  }
+  const state = ensureMapPickupState();
+  if (state.collected[pickup.key]) return;
+  state.collected[pickup.key] = true;
+  const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
+  const rewardText = pickup.type.grant(r);
+  saveState(); updateHeader();
+  SFX.questComplete(); vibrate(25);
+  // Pop a little reward flourish where the item stood, then fade the marker.
+  const shell = $('liveMapShell');
+  if (shell && el) {
+    const rect = el.getBoundingClientRect(), host = shell.getBoundingClientRect();
+    const burst = document.createElement('div');
+    burst.className = 'burbz-pickup-burst';
+    burst.style.left = (rect.left - host.left + rect.width / 2) + 'px';
+    burst.style.top = (rect.top - host.top) + 'px';
+    burst.innerHTML = '<span class="burbz-pickup-burst-glyph">' + pickup.type.glyph + '</span><span class="burbz-pickup-burst-text">' + escapeHtml(rewardText) + '</span>';
+    shell.appendChild(burst);
+    setTimeout(() => burst.remove(), 1500);
+  }
+  if (el) { el.classList.add('collected'); setTimeout(() => { const m = liveMapPickupMarkers.find(mk => mk.getElement() === el); if (m) m.remove(); }, 420); }
+  showToast(pickup.type.glyph + ' ' + rewardText);
+}
 function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); list.innerHTML = rows.slice(0,9).map(row => { const img = birdOnlyImgHTML(row.bird || { commonName:row.species }, 'map-area-bird-art'); return `<div class="map-area-bird" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>'; }
-function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawMedievalProps(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); }
+function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawMedievalProps(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); }
 function addMapBirdChip(coords, species, birdSymbol, spawn) { const shell = $('liveMapShell'); if (!shell || !liveMap) return; const point = liveMap.project(coords); const chip = makeHtmlMarker('burbz-map-bird-chip', `<div class="burbz-marker-orb">${birdSymbol}</div><div class="burbz-marker-label">${escapeHtml(species)}</div>`); chip.style.left = Math.max(56, Math.min(shell.clientWidth - 56, point.x)) + 'px'; chip.style.top = Math.max(190, Math.min(shell.clientHeight - 190, point.y)) + 'px'; chip.addEventListener('click', () => updateNearbyCard([spawn], 1)); shell.appendChild(chip); liveMapBirdChips.push(chip); }
 function createBirdSpawnPopup(spawn) { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const source = spawn.realFeature ? 'anchored to a real mapped habitat clue' : 'summoned from the local habitat estimate'; return `<div class="burbz-popup-title">${escapeHtml(species)}</div><div class="burbz-popup-copy">Likely around ${escapeHtml(habitat)} here — ${source}. In Bird Burbs this is a ${escapeHtml(habitatPoiName(spawn.habitat))} encounter.</div><button class="burbz-popup-btn" onclick="document.querySelector('[data-screen=scan]')?.click()">Scan this spot</button>`; }
 function updateNearbyCard(spawns, featureCount) { const first = spawns[0]; if (!first) return; const species = first.bird.commonName || first.bird.name || first.bird.species; const habitat = HABITAT_LABELS[first.habitat] || HABITAT_LABELS.default; if ($('mapNearbyIcon')) $('mapNearbyIcon').innerHTML = birdOnlyImgHTML(first.bird, 'map-nearby-art'); $('mapNearbyTitle').textContent = `${species} nearby`; $('mapNearbyCopy').textContent = `${habitat}: ${featureCount ? featureCount + ' mapped clues' : 'likely in this area'} — check the area list.`; }
@@ -5994,6 +6554,19 @@ const VILLAGE_PALETTES = [
   { sky: 0x0e1a14, ground: 0x1c3018, plaster: 0xcdd0ba, timber: 0x2a2410, stone: 0x5a6858, roofs: [0x7a3a2a, 0x6a6a24, 0x2a5a3a, 0x3a4a2a, 0x2e3630], hemiSky: 0x4a8a6a, hemiGround: 0x141c10, speck: [90,150,70] }
 ];
 
+// Not every settlement has every trade: the general store is guaranteed, the
+// rest come and go per village so exploring different villages actually matters.
+function villageShopKeysFor(seed) {
+  const r = villageRngFrom((seed >>> 0) ^ 0x2c1b3c6d);
+  const keys = ['general'];
+  ['potion', 'smith', 'tavern', 'guild'].forEach(k => { if (r() < 0.66) keys.push(k); });
+  for (const k of ['tavern', 'potion', 'smith', 'guild']) {
+    if (keys.length >= 3) break;
+    if (!keys.includes(k)) keys.push(k);
+  }
+  return keys;
+}
+
 // ---- Villages scattered on the live map ------------------------------------
 const VILLAGE_CELL_DEG = 0.02; // ~2.2 km cells; ~1 in 3 hosts a village
 let liveMapVillageMarkers = [], liveMapVillageRefreshTimer = null;
@@ -6022,8 +6595,14 @@ function nearestVillageTo(lat, lon) {
   return best;
 }
 
+let liveMapVillageKey = null;
 function drawVillageMarkers(lat, lon) {
   if (!liveMap || !window.maplibregl) return;
+  // Rotating/zooming fires moveend constantly; only rebuild the DOM markers
+  // when the player has actually crossed into a different village cell.
+  const key = Math.floor(lat / VILLAGE_CELL_DEG) + ':' + Math.floor(lon / VILLAGE_CELL_DEG);
+  if (key === liveMapVillageKey && liveMapVillageMarkers.length) return;
+  liveMapVillageKey = key;
   liveMapVillageMarkers.forEach(m => m.remove());
   liveMapVillageMarkers = [];
   villagesNearLatLng(lat, lon, 3).forEach(v => {
@@ -6098,7 +6677,7 @@ function renderVillage() {
 function renderVillageLegend() {
   const legend = $('villageLegend');
   if (!legend) return;
-  legend.innerHTML = Object.keys(VILLAGE_SHOPS).map(k =>
+  legend.innerHTML = villageShopKeysFor(currentVillage().seed).map(k =>
     '<button class="village-chip" onclick="villageOpenShop(\'' + k + '\')">' + VILLAGE_SHOPS[k].icon + ' ' + escapeHtml(VILLAGE_SHOPS[k].name) + '</button>'
   ).join('');
 }
@@ -6106,7 +6685,7 @@ function renderVillageLegend() {
 function renderVillageFallback() {
   const stage = $('villageStage');
   if (!stage) return;
-  stage.innerHTML = '<div class="village-fallback">' + Object.keys(VILLAGE_SHOPS).map(k => {
+  stage.innerHTML = '<div class="village-fallback">' + villageShopKeysFor(currentVillage().seed).map(k => {
     const s = VILLAGE_SHOPS[k];
     return '<button class="village-fallback-building" onclick="villageOpenShop(\'' + k + '\')">' +
       '<span class="vfb-icon">' + s.icon + '</span><span class="vfb-name">' + escapeHtml(s.name) + '</span>' +
@@ -6425,6 +7004,269 @@ function villageMakeWindmill(r, pal) {
   return g;
 }
 
+// A fortified manor house — the reeve's hall, with a little banner tower.
+function villageMakeManor(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const plasterMat = new THREE.MeshLambertMaterial({ color: pal.plaster });
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const hall = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.6, 3.0), stoneMat);
+  hall.position.y = 0.8; g.add(hall);
+  const upper = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.4, 3.2), plasterMat);
+  upper.position.y = 2.3; g.add(upper);
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.16, 3.3), beamMat);
+  belt.position.y = 1.6; g.add(belt);
+  const roofH = 1.5, W = 2.6;
+  const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
+  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 3.6, bevelEnabled: false }), roofMat);
+  roof.position.set(0, 3.0, -1.8); g.add(roof);
+  const tower = new THREE.Mesh(new THREE.BoxGeometry(1.4, 3.9, 1.4), stoneMat);
+  tower.position.set(2.5, 1.95, -0.6); g.add(tower);
+  const towerRoof = new THREE.Mesh(new THREE.ConeGeometry(1.05, 1.2, 4), roofMat);
+  towerRoof.position.set(2.5, 4.5, -0.6); towerRoof.rotation.y = Math.PI / 4; g.add(towerRoof);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 5), beamMat);
+  pole.position.set(2.5, 5.6, -0.6); g.add(pole);
+  const banner = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.34),
+    new THREE.MeshBasicMaterial({ color: pal.roofs[0], side: THREE.DoubleSide }));
+  banner.position.set(2.83, 5.8, -0.6); g.add(banner);
+  for (let i = 0; i < 3; i++) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.08), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+    win.position.set(-1.5 + i * 1.5, 2.3, 1.63); g.add(win);
+  }
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 0.1), beamMat);
+  door.position.set(0, 0.6, 1.53); g.add(door);
+  g.add(villageBlobShadow(3.4));
+  return g;
+}
+
+// A crumbling watchtower — older than the village, half swallowed by ivy.
+function villageMakeRuinTower(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.05) });
+  const h = 3.2 + r() * 1.2;
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.3, h, 10), stoneMat);
+  tower.position.y = h / 2; g.add(tower);
+  // Jagged broken rim — merlons with gaps
+  for (let i = 0; i < 7; i++) {
+    if (r() < 0.35) continue;
+    const a = (i / 7) * Math.PI * 2;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35 + r() * 0.45, 0.3), stoneMat);
+    m.position.set(Math.cos(a) * 0.92, h + 0.2, Math.sin(a) * 0.92);
+    m.rotation.y = -a; g.add(m);
+  }
+  const doorway = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.3), new THREE.MeshLambertMaterial({ color: 0x0c0c0e }));
+  doorway.position.set(0, 0.5, 1.18); g.add(doorway);
+  // Ivy clumps + tumbled stones
+  const ivyMat = new THREE.MeshLambertMaterial({ color: 0x2c4a1e });
+  for (let i = 0; i < 4; i++) {
+    const ivy = new THREE.Mesh(new THREE.SphereGeometry(0.3 + r() * 0.28, 6, 5), ivyMat);
+    const a = r() * Math.PI * 2;
+    ivy.position.set(Math.cos(a) * 1.1, 0.4 + r() * (h * 0.7), Math.sin(a) * 1.1);
+    g.add(ivy);
+  }
+  for (let i = 0; i < 4; i++) {
+    const rock = new THREE.Mesh(new THREE.SphereGeometry(0.16 + r() * 0.2, 5, 4), stoneMat);
+    const a = r() * Math.PI * 2, d = 1.5 + r() * 1.2;
+    rock.position.set(Math.cos(a) * d, 0.12, Math.sin(a) * d);
+    g.add(rock);
+  }
+  g.add(villageBlobShadow(1.8));
+  return g;
+}
+
+// A dovecote — a pigeon tower; only right for a bird-trainer realm.
+function villageMakeDovecote(r, pal) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 2.4, 10),
+    new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, -0.04) }));
+  body.position.y = 1.2; g.add(body);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.95, 10), new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+  roof.position.y = 2.85; g.add(roof);
+  const holeMat = new THREE.MeshBasicMaterial({ color: 0x141210 });
+  for (let row = 0; row < 2; row++) {
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + row * 0.6;
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(0.08, 8), holeMat);
+      hole.position.set(Math.cos(a) * 0.76, 1.6 + row * 0.5, Math.sin(a) * 0.76);
+      hole.lookAt(Math.cos(a) * 3, 1.6 + row * 0.5, Math.sin(a) * 3);
+      g.add(hole);
+    }
+  }
+  const doveMat = new THREE.MeshLambertMaterial({ color: 0xe8e6df });
+  for (let i = 0; i < 2 + Math.floor(r() * 2); i++) {
+    const dove = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 5), doveMat);
+    const a = r() * Math.PI * 2;
+    dove.position.set(Math.cos(a) * 0.8, 2.25 + r() * 0.3, Math.sin(a) * 0.8);
+    dove.scale.set(1, 0.85, 1.3);
+    g.add(dove);
+  }
+  g.add(villageBlobShadow(1.0));
+  return g;
+}
+
+// A duck pond ringed with reeds.
+function villageMakePond(r, pal) {
+  const g = new THREE.Group();
+  const water = new THREE.Mesh(new THREE.CircleGeometry(1.9 + r() * 0.9, 18), new THREE.MeshBasicMaterial({ color: 0x22405e }));
+  water.rotation.x = -Math.PI / 2; water.position.y = 0.012; water.scale.set(1, 0.72 + r() * 0.3, 1);
+  g.add(water);
+  const rim = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.15, 18), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, 0, 0.08) }));
+  rim.rotation.x = -Math.PI / 2; rim.position.y = 0.013; rim.scale.copy(water.scale);
+  g.add(rim);
+  const reedMat = new THREE.MeshLambertMaterial({ color: 0x3c5a22 });
+  for (let i = 0; i < 8; i++) {
+    const a = r() * Math.PI * 2, d = 1.75 + r() * 0.5;
+    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.035, 0.55 + r() * 0.4, 4), reedMat);
+    reed.position.set(Math.cos(a) * d, 0.3, Math.sin(a) * d * 0.8);
+    reed.rotation.z = (r() - 0.5) * 0.25;
+    g.add(reed);
+  }
+  const duckBody = new THREE.MeshLambertMaterial({ color: 0xe9e5da });
+  const duckHead = new THREE.MeshLambertMaterial({ color: 0x2e5a34 });
+  for (let i = 0; i < 2; i++) {
+    const a = r() * Math.PI * 2, d = r() * 1.1;
+    const duck = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 5), duckBody);
+    body.scale.set(1.4, 0.9, 1); duck.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 6, 5), duckHead);
+    head.position.set(0.16, 0.13, 0); duck.add(head);
+    duck.position.set(Math.cos(a) * d, 0.1, Math.sin(a) * d * 0.7);
+    duck.rotation.y = r() * Math.PI * 2;
+    g.add(duck);
+  }
+  return g;
+}
+
+// A wattle-fenced pen with a few sheep or geese.
+function villageMakePen(r, pal) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const w = 2.6 + r() * 1.2, d = 2.2 + r() * 1.0;
+  for (const [sx, sz, len, rot] of [[0, -d/2, w, 0], [0, d/2, w, 0], [-w/2, 0, d, Math.PI/2], [w/2, 0, d, Math.PI/2]]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, 0.07), beamMat);
+    rail.position.set(sx, 0.52, sz); rail.rotation.y = rot; g.add(rail);
+    const rail2 = rail.clone(); rail2.position.y = 0.28; g.add(rail2);
+  }
+  for (const sx of [-w/2, 0, w/2]) for (const sz of [-d/2, d/2]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.72, 0.09), beamMat);
+    post.position.set(sx, 0.36, sz); g.add(post);
+  }
+  const geese = r() < 0.4;
+  const bodyMat = new THREE.MeshLambertMaterial({ color: geese ? 0xf0eee6 : 0xe4ddcc });
+  const headMat = new THREE.MeshLambertMaterial({ color: geese ? 0xe8a53a : 0x2a241c });
+  for (let i = 0; i < 2 + Math.floor(r() * 3); i++) {
+    const critter = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.SphereGeometry(geese ? 0.16 : 0.26, 7, 5), bodyMat);
+    body.scale.set(1.25, 0.95, 1); body.position.y = geese ? 0.22 : 0.3; critter.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(geese ? 0.07 : 0.11, 6, 5), headMat);
+    head.position.set(geese ? 0.16 : 0.27, geese ? 0.42 : 0.42, 0); critter.add(head);
+    critter.position.set((r() - 0.5) * (w - 0.7), 0, (r() - 0.5) * (d - 0.7));
+    critter.rotation.y = r() * Math.PI * 2;
+    g.add(critter);
+  }
+  g.add(villageBlobShadow(Math.max(w, d) * 0.62));
+  return g;
+}
+
+// A hand cart resting by the square.
+function villageMakeCart(r, pal) {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06) });
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.32, 0.9), woodMat);
+  bed.position.y = 0.55; bed.rotation.z = -0.16; g.add(bed);
+  for (const sz of [-0.5, 0.5]) {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.08, 10), woodMat);
+    wheel.rotation.x = Math.PI / 2; wheel.position.set(0.25, 0.34, sz); g.add(wheel);
+  }
+  for (const sz of [-0.3, 0.3]) {
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 0.06), woodMat);
+    handle.position.set(-1.0, 0.34, sz); handle.rotation.z = 0.28; g.add(handle);
+  }
+  if (r() < 0.6) {
+    for (let i = 0; i < 3; i++) {
+      const sack = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 5), new THREE.MeshLambertMaterial({ color: 0xa38b5c }));
+      sack.scale.set(1, 1.25, 1); sack.position.set(0.1 - i * 0.28, 0.83 - i * 0.045, (r() - 0.5) * 0.4);
+      g.add(sack);
+    }
+  }
+  g.add(villageBlobShadow(0.9));
+  return g;
+}
+
+// Round hay bales near the fields.
+function villageMakeHay(r, pal) {
+  const g = new THREE.Group();
+  const hayMat = new THREE.MeshLambertMaterial({ color: 0xb8933e });
+  const n = 1 + Math.floor(r() * 3);
+  for (let i = 0; i < n; i++) {
+    const bale = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.6, 10), hayMat);
+    bale.rotation.z = Math.PI / 2;
+    bale.rotation.y = r() * Math.PI;
+    bale.position.set((r() - 0.5) * 1.8, 0.42, (r() - 0.5) * 1.8);
+    g.add(bale);
+  }
+  g.add(villageBlobShadow(1.0));
+  return g;
+}
+
+// A lantern post lighting the way (sprite glow only — cheap on phones).
+function villageMakeLampPost(r, pal) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 2.1, 6), beamMat);
+  pole.position.y = 1.05; g.add(pole);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.06), beamMat);
+  arm.position.set(0.2, 2.02, 0); g.add(arm);
+  const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+  lantern.position.set(0.42, 1.86, 0); g.add(lantern);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.7 }));
+  glow.scale.set(1.6, 1.6, 1); glow.position.set(0.42, 1.86, 0); g.add(glow);
+  g.add(villageBlobShadow(0.3));
+  return g;
+}
+
+// A patch of bright wildflowers.
+function villageMakeFlowers(r, pal) {
+  const g = new THREE.Group();
+  const colors = [0xd05a72, 0xe8c84a, 0xc8cdec, 0xd07a3a, 0xb05ac0];
+  const n = 5 + Math.floor(r() * 6);
+  for (let i = 0; i < n; i++) {
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.22 + r() * 0.16, 4),
+      new THREE.MeshLambertMaterial({ color: 0x3c5a22 }));
+    const x = (r() - 0.5) * 1.3, z = (r() - 0.5) * 1.3;
+    stem.position.set(x, 0.14, z); g.add(stem);
+    const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.05 + r() * 0.035, 5, 4),
+      new THREE.MeshBasicMaterial({ color: colors[Math.floor(r() * colors.length)] }));
+    bloom.position.set(x, 0.3 + r() * 0.12, z); g.add(bloom);
+  }
+  return g;
+}
+
+// A maypole wound with ribbons — festival centrepiece.
+function villageMakeMaypole(r, pal) {
+  const grp = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 4.2, 8), beamMat);
+  pole.position.y = 2.1; grp.add(pole);
+  const crown = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 6, 12), new THREE.MeshLambertMaterial({ color: 0x3c5a22 }));
+  crown.rotation.x = Math.PI / 2; crown.position.y = 4.0; grp.add(crown);
+  const ribbonColors = [0xc0392b, 0xe8c84a, 0x3a6ea8, 0x8a4aa0, 0x3e8a4a, 0xd07a3a];
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 3.6),
+      new THREE.MeshBasicMaterial({ color: ribbonColors[i], side: THREE.DoubleSide, transparent: true, opacity: 0.92 }));
+    ribbon.position.set(Math.cos(a) * 0.75, 2.1, Math.sin(a) * 0.75);
+    ribbon.rotation.y = -a;
+    ribbon.rotation.x = 0.18;
+    grp.add(ribbon);
+  }
+  const steps = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 0.25, 10), new THREE.MeshLambertMaterial({ color: pal.stone }));
+  steps.position.y = 0.12; grp.add(steps);
+  grp.add(villageBlobShadow(1.2));
+  return grp;
+}
+
 function villageMakeTree(r, pal) {
   const tree = new THREE.Group();
   const trunkMat = new THREE.MeshLambertMaterial({ color: pal.timber });
@@ -6486,6 +7328,7 @@ function villageMakeCentrepiece(r, pal) {
   const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
   const pick = r();
+  if (pick >= 0.78) return villageMakeMaypole(r, pal);
   if (pick < 0.4) {
     // Covered well
     const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 0.9, 10), stoneMat);
@@ -6510,7 +7353,7 @@ function villageMakeCentrepiece(r, pal) {
     crossV.position.y = 3.2; grp.add(crossV);
     const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.14, 0.14), stoneMat);
     crossH.position.y = 3.3; grp.add(crossH);
-  } else {
+  } else if (pick < 0.78) {
     // Old fountain
     const basin = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.55, 12), stoneMat);
     basin.position.y = 0.28; grp.add(basin);
@@ -6622,8 +7465,9 @@ function buildVillageScene(v) {
   plaza.material.map.repeat.set(3.4, 3.4);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
-  // Buildings on a ring with jittered spacing, radius and colours
-  const shopKeys = Object.keys(VILLAGE_SHOPS);
+  // Buildings on a ring with jittered spacing, radius and colours.
+  // Each village only has the trades its seed grants it.
+  const shopKeys = villageShopKeysFor(v.seed);
   const startAngle = r() * Math.PI * 2;
   const roofPool = pal.roofs.slice();
   villageBuildings = [];
@@ -6671,13 +7515,26 @@ function buildVillageScene(v) {
     villageScene.add(cottage);
   }
 
-  // A landmark for villages and towns — a church or a windmill on the edge.
-  if (tier >= 1 && r() < (tier === 2 ? 0.95 : 0.5)) {
-    const a = startAngle + Math.PI + (r() - 0.5) * 1.2, rad = 12 + r() * 3;
-    const landmark = (r() < 0.5) ? villageMakeChurch(r, pal) : villageMakeWindmill(r, pal);
+  // Landmarks — church, windmill, manor or a ruined watchtower. Villages get
+  // one (usually), towns often two, so no two settlements share a skyline.
+  const landmarkMakers = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower];
+  const landmarkCount = tier === 0 ? (r() < 0.25 ? 1 : 0) : tier === 1 ? (r() < 0.72 ? 1 : 0) : (r() < 0.6 ? 2 : 1);
+  const landmarkPool = landmarkMakers.slice();
+  for (let i = 0; i < landmarkCount; i++) {
+    const a = startAngle + Math.PI + (i === 0 ? 0 : Math.PI * 0.6) + (r() - 0.5) * 1.2, rad = 12 + r() * 3;
+    const maker = landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0];
+    const landmark = maker(r, pal);
     landmark.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
     landmark.rotation.y = -a + (r() - 0.5);
     villageScene.add(landmark);
+  }
+
+  // A dovecote suits a realm of bird trainers — most villages keep one.
+  if (r() < 0.6) {
+    const a = r() * Math.PI * 2, rad = 9.5 + r() * 3;
+    const dovecote = villageMakeDovecote(r, pal);
+    dovecote.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    villageScene.add(dovecote);
   }
 
   // Village centrepiece: well, market cross or fountain
@@ -6708,6 +7565,55 @@ function buildVillageScene(v) {
     const barrel = villageMakeBarrel(r, pal);
     barrel.position.set(near.position.x + (r() - 0.5) * 4.5, 0, near.position.z + (r() - 0.5) * 4.5);
     villageScene.add(barrel);
+  }
+
+  // Countryside set dressing — every piece rolls per village, so one place has
+  // a duck pond and geese, the next a hay field, a cart and a maypole.
+  if (r() < 0.55) {
+    const a = r() * Math.PI * 2, rad = 10 + r() * 4;
+    const pond = villageMakePond(r, pal);
+    pond.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    villageScene.add(pond);
+  }
+  if (r() < 0.55) {
+    const a = r() * Math.PI * 2, rad = 11 + r() * 4;
+    const pen = villageMakePen(r, pal);
+    pen.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    pen.rotation.y = r() * Math.PI;
+    villageScene.add(pen);
+  }
+  if (r() < 0.6) {
+    const a = r() * Math.PI * 2, rad = 5.5 + r() * 3;
+    const cart = villageMakeCart(r, pal);
+    cart.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    cart.rotation.y = r() * Math.PI * 2;
+    villageScene.add(cart);
+  }
+  if (tier >= 1 && r() < 0.5) {
+    const a = r() * Math.PI * 2, rad = 13 + r() * 4;
+    const hay = villageMakeHay(r, pal);
+    hay.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    villageScene.add(hay);
+  }
+
+  // Lantern posts along a couple of the cobbled paths
+  const lampCount = 2 + tier;
+  for (let i = 0; i < lampCount && villageBuildings.length; i++) {
+    const near = villageBuildings[Math.floor(r() * villageBuildings.length)];
+    const t = 0.45 + r() * 0.3;
+    const lamp = villageMakeLampPost(r, pal);
+    lamp.position.set(near.position.x * t + 0.9, 0, near.position.z * t + 0.9);
+    lamp.rotation.y = r() * Math.PI * 2;
+    villageScene.add(lamp);
+  }
+
+  // Wildflower patches brightening the green
+  const flowerCount = 3 + tier + Math.floor(r() * 3);
+  for (let i = 0; i < flowerCount; i++) {
+    const a = r() * Math.PI * 2, rad = 5.5 + r() * 7;
+    const flowers = villageMakeFlowers(r, pal);
+    flowers.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    villageScene.add(flowers);
   }
 
   // Trees ringing the village
@@ -8052,7 +8958,7 @@ function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').
 function addBattleLog(type, text) { const log = $('battleLog'); const entry = document.createElement('div'); entry.className = 'battle-log-entry ' + type; entry.textContent = text; log.insertBefore(entry, log.firstChild); while (log.children.length > 20) log.removeChild(log.lastChild); }
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay });
 
 // ============================================================================
 // PET COMPANION
@@ -8372,25 +9278,24 @@ function renderQuests() {
   container.innerHTML = '';
   renderBirdExpeditions();
 
-  function renderSection(title, quests) {
+  function renderSection(title, quests, emptyNote) {
+    // Claimed quests leave the board — only live goals stay visible.
+    const open = quests.filter(q => !(gameState.quests[q.id] && gameState.quests[q.id].claimed));
+    if (!open.length) {
+      if (emptyNote) container.innerHTML += `<div class="quest-section-title">${title}</div><div class="quest-all-done">✅ ${emptyNote}</div>`;
+      return;
+    }
     container.innerHTML += `<div class="quest-section-title">${title}</div>`;
-    quests.forEach(q => {
+    open.forEach(q => {
       const state = gameState.quests[q.id] || { progress: 0, claimed: false };
       const pct = Math.min(100, (state.progress / q.target) * 100);
       const complete = state.progress >= q.target;
-      const claimed = state.claimed;
-
-      let rightSide;
-      if (claimed) {
-        rightSide = '<div class="quest-reward" style="opacity:0.5;">Claimed</div>';
-      } else if (complete) {
-        rightSide = `<button class="quest-claim-btn" data-quest="${q.id}">CLAIM</button>`;
-      } else {
-        rightSide = `<div class="quest-reward">${q.reward} XP</div>`;
-      }
+      const rightSide = complete
+        ? `<button class="quest-claim-btn pulse" data-quest="${q.id}">CLAIM</button>`
+        : `<div class="quest-reward">${q.reward} XP</div>`;
 
       container.innerHTML += `
-        <div class="quest-card ${claimed ? 'completed' : ''}">
+        <div class="quest-card" data-quest-card="${q.id}">
           <div class="quest-icon">${q.icon}</div>
           <div class="quest-info">
             <div class="quest-name">${q.name}</div>
@@ -8404,25 +9309,29 @@ function renderQuests() {
     });
   }
 
-  renderSection('Daily Quests', DAILY_QUESTS);
-  renderSection('Weekly Quests', WEEKLY_QUESTS);
+  renderSection('Daily Quests', DAILY_QUESTS, 'All daily quests done — fresh ones at midnight!');
+  renderSection('Weekly Quests', WEEKLY_QUESTS, 'Weeklies cleared. New challenges on Monday.');
   renderSection('Achievements', ACHIEVEMENT_QUESTS);
 
-  // Attach claim handlers
+  // Attach claim handlers — claim pops a celebration, then the card slides away.
   container.querySelectorAll('.quest-claim-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const qId = btn.dataset.quest;
       const allQ = [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS];
       const q = allQ.find(x => x.id === qId);
-      if (q && gameState.quests[qId]) {
+      if (q && gameState.quests[qId] && !gameState.quests[qId].claimed) {
         gameState.quests[qId].claimed = true;
         addPlayerXp(q.reward);
-        SFX.questComplete();
-        vibrate(30);
-        showToast(`Quest complete! +${q.reward} XP`);
         saveState();
-        renderQuests();
+        playQuestClaimCelebration({ coins: 0, xp: q.reward, items: {} });
+        const card = container.querySelector(`[data-quest-card="${qId}"]`);
+        if (card) {
+          card.classList.add('claiming');
+          setTimeout(() => renderQuests(), 650);
+        } else {
+          renderQuests();
+        }
       }
     });
   });
