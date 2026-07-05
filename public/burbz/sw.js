@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-gui-medieval-polish-v8-20260704';
+const BURBZ_CACHE = 'burbz-no-cloud-fog-card-art-v9-20260705';
 const BURBZ_ASSETS = [
   './',
   './index.html',
