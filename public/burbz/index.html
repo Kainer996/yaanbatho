@@ -332,10 +332,20 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .burbz-prop-marker .burbz-prop { font-size:21px; line-height:1; filter:drop-shadow(0 4px 5px rgba(0,0,0,.5)) sepia(.14); animation:propSway 4.6s ease-in-out infinite; }
 .burbz-prop-marker:nth-child(2n) .burbz-prop { animation-duration:5.8s; animation-delay:-2.2s; }
 /* Tappable loot scattered on the map */
-.burbz-pickup-marker { display:grid; place-items:center; width:40px !important; height:44px !important; background:transparent; border:0; cursor:pointer; pointer-events:auto; z-index:3; transition:opacity .4s ease, transform .4s ease; }
-.burbz-pickup-marker .burbz-pickup-orb { width:32px; height:32px; display:grid; place-items:center; font-size:18px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(64,50,22,.92), rgba(24,18,8,.9) 78%); box-shadow:0 4px 10px rgba(0,0,0,.45), 0 0 0 2px rgba(240,199,103,.5), 0 0 16px rgba(240,199,103,.35); animation:pickupBob 2.6s ease-in-out infinite; }
+/* NOTE: MapLibre positions this marker every frame by writing `transform` on
+   THIS element. Never put a CSS transition on `transform` here — it makes the
+   icon lag/"catch up" behind the map on every pan or swipe. Only ever
+   transition/animate the inner .burbz-pickup-orb, which MapLibre doesn't touch. */
+.burbz-pickup-marker { display:grid; place-items:center; width:40px !important; height:44px !important; background:transparent; border:0; cursor:pointer; pointer-events:auto; z-index:3; transition:opacity .4s ease; }
+.burbz-pickup-marker .burbz-pickup-orb { width:32px; height:32px; display:grid; place-items:center; font-size:18px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(64,50,22,.92), rgba(24,18,8,.9) 78%); box-shadow:0 4px 10px rgba(0,0,0,.45), 0 0 0 2px rgba(240,199,103,.5), 0 0 16px rgba(240,199,103,.35); animation:pickupBob 2.6s ease-in-out infinite; transition:transform .4s ease; }
 .burbz-pickup-marker:active .burbz-pickup-orb { transform:scale(.9); }
-.burbz-pickup-marker.collected { opacity:0; transform:translateY(-14px) scale(.6); pointer-events:none; }
+.burbz-pickup-marker.collected { opacity:0; pointer-events:none; }
+.burbz-pickup-marker.collected .burbz-pickup-orb { transform:translateY(-14px) scale(.6); animation:none; }
+/* Out-of-reach collectibles/villages the player can see but must walk to. */
+.burbz-pickup-marker.locked .burbz-pickup-orb { filter:grayscale(.7) brightness(.7); opacity:.72; box-shadow:0 3px 8px rgba(0,0,0,.5), 0 0 0 2px rgba(150,150,160,.4); animation:none; }
+.burbz-village-marker.locked .burbz-village-icon { filter:grayscale(.55) brightness(.72); box-shadow:0 5px 12px rgba(0,0,0,.5), 0 0 0 2px rgba(150,150,160,.4); animation:none; }
+.burbz-village-marker.locked .burbz-village-name { opacity:.7; }
+.burbz-village-marker .burbz-village-lock { position:absolute; margin-top:-6px; font-size:12px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.7)); }
 @keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
 .burbz-pickup-burst { position:absolute; z-index:60; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none; animation:pickupBurst 1.5s ease-out forwards; }
 .burbz-pickup-burst-glyph { font-size:26px; filter:drop-shadow(0 0 12px rgba(240,199,103,.9)); }
@@ -1481,7 +1491,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 .map-village-orb { pointer-events: auto; width: 52px; height: 52px; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: linear-gradient(180deg, #3a2812, #241a0d); color: #f4ead4; box-shadow: 0 8px 20px rgba(0,0,0,0.38), 0 0 0 3px rgba(240,199,103,0.25); margin-left: 8px; }
 .map-village-orb:active { transform: scale(0.94); }
-.burbz-village-marker { display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
+.burbz-village-marker { position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
 .burbz-village-marker .burbz-village-icon { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #4a3418, #241a0d 78%); box-shadow: 0 6px 14px rgba(0,0,0,0.45), 0 0 0 2.5px rgba(240,199,103,0.4); animation: villageMarkerBob 3.2s ease-in-out infinite; }
 .burbz-village-marker .burbz-village-name { margin-top: 3px; padding: 2px 8px; border-radius: 999px; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 0.06em; color: #f4ead4; background: rgba(22,18,10,0.72); border: 1px solid rgba(240,199,103,0.35); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 .burbz-village-marker:active .burbz-village-icon { transform: scale(0.92); }
@@ -2093,20 +2103,27 @@ const WILD_BIRDS = [
   'Common Linnet',
   'Eurasian Tree Sparrow',
   'Grey Partridge',
-  'Sedge Warbler'
+  'Sedge Warbler',
   // regional_plus20_20260701
+  // higgsfield_manga_expansion_20260706
+  'Pheasant',
+  'Herring Gull',
+  'Green Woodpecker',
+  'Ring-necked Parakeet',
+  'White-tailed Eagle',
+  'Wedge-tailed Eagle'
 ];
 
 const HABITAT_BIRD_POOLS = {
   water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler'],
   wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler'],
-  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Tawny Owl','Red Crossbill'],
-  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge'],
-  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge'],
-  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Common Linnet'],
-  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','Red Crossbill'],
+  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant'],
+  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
+  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant'],
+  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant'],
+  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
+  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet'],
+  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill'],
   default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe'],
 };
 const REGIONAL_HABITAT_BIRD_POOLS = {
@@ -2134,7 +2151,7 @@ const REGION_BLOCKED_SPECIES = {
 // from WILD_BIRDS or HABITAT_BIRD_POOLS at runtime (those get extended).
 const REGION_AREA_SPECIES = {
   uk: [
-    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler'
+    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle'
   ],
   au: [
     'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon'
@@ -2147,12 +2164,14 @@ function speciesNativeToRegion(species, region) {
 }
 const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland:'woodland', park:'park / garden', farmland:'farmland edge', grassland:'grassland', urban:'town habitat', coast:'coast', hills:'moor / hill country', default:'local habitat' };
 const REAL_WORLD_COMMONNESS = {
-  'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':46,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32
+  'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':46,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32,
   // regional_plus20_20260701
+  // higgsfield_manga_expansion_20260706
+  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22
 };
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
-const BURBZ_MAP_VERSION = 'fast-map-pickups-quest-flow-v1-20260705';
+const BURBZ_MAP_VERSION = 'detailed-map-vicinity-visits-nolag-v2-20260706';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
@@ -2718,8 +2737,7 @@ const BURBZ_RARITY_GUIDE = {
   legendary: 'Iconic UK scarcity or apex-level species: extremely localised, difficult to encounter, or exceptional in real-world traits.'
 };
 
-const BURBZ_SPECIES_PROFILES = [
-  {
+const BURBZ_SPECIES_PROFILES = [{
     id: "carrion_crow", name: "Carrion Crow", rarity: "common", aliases: ["Crow"],
     stats: { hp: 6, stamina: 7, strength: 6, def: 8, spd: 6, int: 9 },
     traits: ["clever", "adaptable", "bold", "generalist"],
@@ -2732,7 +2750,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "raven", name: "Raven", rarity: "rare",
     stats: { hp: 8, stamina: 8, strength: 8, def: 8, spd: 7, int: 10 },
     traits: ["very intelligent", "large corvid", "problem solver", "soaring"],
@@ -2745,7 +2763,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 55.0, lon: -4.0
   },
-  {
+{
     id: "peregrine_falcon", name: "Peregrine Falcon", rarity: "epic",
     stats: { hp: 6, stamina: 7, strength: 7, def: 6, spd: 10, int: 6 },
     traits: ["fastest", "aerial specialist", "precise", "raptor"],
@@ -2758,7 +2776,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 52.0, lon: 0.0
   },
-  {
+{
     id: "golden_eagle", name: "Golden Eagle", rarity: "legendary",
     stats: { hp: 9, stamina: 8, strength: 10, def: 8, spd: 8, int: 6 },
     traits: ["large raptor", "powerful", "soaring", "high endurance"],
@@ -2771,7 +2789,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber (Least Concern globally, but localised threats)',
     lat: 57.0, lon: -5.0
   },
-  {
+{
     id: "robin", name: "Robin", rarity: "common", aliases: ["European Robin"],
     stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 5, int: 5 },
     traits: ["garden bird", "hardy singer", "small", "familiar"],
@@ -2784,7 +2802,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 51.5, lon: 0.0
   },
-  {
+{
     id: "blackbird", name: "Blackbird", rarity: "common", aliases: ["Common Blackbird", "Eurasian Blackbird"],
     stats: { hp: 5, stamina: 6, strength: 4, def: 6, spd: 5, int: 5 },
     traits: ["adaptable", "forager", "garden bird", "seasonal"],
@@ -2797,7 +2815,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 52.0, lon: 0.0
   },
-  {
+{
     id: "blue_tit", name: "Blue Tit", rarity: "common",
     stats: { hp: 3, stamina: 5, strength: 2, def: 5, spd: 7, int: 6 },
     traits: ["agile", "small", "clever forager", "feeder acrobat"],
@@ -2810,7 +2828,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 51.5, lon: 0.0
   },
-  {
+{
     id: "goldfinch", name: "Goldfinch", rarity: "common", aliases: ["European Goldfinch"],
     stats: { hp: 3, stamina: 5, strength: 2, def: 4, spd: 6, int: 5 },
     traits: ["sociable", "nimble", "seed specialist", "songbird"],
@@ -2823,9 +2841,9 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 51.5, lon: 0.0
   },
-  {
+{
     id: "mallard", name: "Mallard", rarity: "common",
-    stats: { hp: 7, stamina: 7, strength: 6, def: 7, spd: 6, int: 5 },
+    stats: { hp: 6, stamina: 6, strength: 5, def: 6, spd: 6, int: 5 },
     traits: ["waterbird", "adaptable", "strong flyer", "common"],
     rationale: "Large, heavy-looking duck with broad ecological range. Cornell notes mallards are familiar across parks, ponds, wetlands and estuaries.",
     sources: ["RSPB Mallard", "Cornell Mallard"],
@@ -2836,7 +2854,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "mute_swan", name: "Mute Swan", rarity: "uncommon",
     stats: { hp: 10, stamina: 7, strength: 9, def: 9, spd: 5, int: 5 },
     traits: ["very large", "waterbird", "robust", "protective presence"],
@@ -2849,7 +2867,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 52.0, lon: 0.0
   },
-  {
+{
     id: "tawny_owl", name: "Tawny Owl", rarity: "uncommon",
     stats: { hp: 6, stamina: 6, strength: 6, def: 7, spd: 6, int: 6 },
     traits: ["nocturnal", "silent flyer", "woodland specialist", "aware"],
@@ -2862,7 +2880,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 52.0, lon: -1.0
   },
-  {
+{
     id: "magpie", name: "Magpie", rarity: "common",
     stats: { hp: 6, stamina: 6, strength: 5, def: 8, spd: 6, int: 9 },
     traits: ["corvid", "intelligent", "adaptable", "social"],
@@ -2875,7 +2893,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "woodpigeon", name: "Woodpigeon", rarity: "common", aliases: ["Wood Pigeon"],
     stats: { hp: 7, stamina: 6, strength: 5, def: 7, spd: 5, int: 4 },
     traits: ["large pigeon", "common", "robust", "adaptable"],
@@ -2888,8 +2906,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green (Least Concern)',
     lat: 51.5, lon: 0.0
   },
-
-  {
+{
     id: "wren", name: "Wren", rarity: "common",
     stats: { hp: 2, stamina: 7, strength: 1, def: 6, spd: 7, int: 5 },
     traits: ["tiny", "loud singer", "hardy", "very common"],
@@ -2902,7 +2919,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber in UK, but very common and widespread',
     lat: 54.0, lon: -2.0
   },
-  {
+{
     id: "house_sparrow", name: "House Sparrow", rarity: "common",
     stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 5, int: 5 },
     traits: ["urban", "social", "garden bird", "declining"],
@@ -2915,7 +2932,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Red in UK due to steep decline',
     lat: 53.0, lon: -1.5
   },
-  {
+{
     id: "starling", name: "Starling", rarity: "common", aliases: ["European Starling", "Common Starling"],
     stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 7, int: 7 },
     traits: ["mimic", "flocking", "iridescent", "declining"],
@@ -2928,7 +2945,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Red in UK due to decline, but still commonly encountered',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "goldcrest", name: "Goldcrest", rarity: "uncommon",
     stats: { hp: 1, stamina: 6, strength: 1, def: 4, spd: 7, int: 5 },
     traits: ["UK smallest bird", "treetop", "nimble", "overlooked"],
@@ -2941,7 +2958,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green in UK',
     lat: 54.0, lon: -2.0
   },
-  {
+{
     id: "greenfinch", name: "Greenfinch", rarity: "uncommon", aliases: ["European Greenfinch"],
     stats: { hp: 4, stamina: 5, strength: 3, def: 4, spd: 6, int: 5 },
     traits: ["finch", "colourful", "wheezing song", "declining"],
@@ -2954,7 +2971,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Red in UK due to disease-linked decline',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "bullfinch", name: "Bullfinch", rarity: "uncommon",
     stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 5, int: 5 },
     traits: ["shy", "bright", "hedgerow", "quiet"],
@@ -2967,7 +2984,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber in UK',
     lat: 53.5, lon: -1.5
   },
-  {
+{
     id: "song_thrush", name: "Song Thrush", rarity: "uncommon",
     stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 5, int: 6 },
     traits: ["songster", "snail specialist", "declined", "garden"],
@@ -2980,7 +2997,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber in UK due to decline',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "meadow_pipit", name: "Meadow Pipit", rarity: "uncommon",
     stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
     traits: ["grassland", "streaked", "nimble", "open country"],
@@ -2993,7 +3010,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber in UK due to declines',
     lat: 54.5, lon: -2.0
   },
-  {
+{
     id: "nuthatch", name: "Nuthatch", rarity: "uncommon",
     stats: { hp: 4, stamina: 5, strength: 4, def: 6, spd: 6, int: 6 },
     traits: ["tree climber", "bold", "increasing", "woodland"],
@@ -3006,7 +3023,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green in UK; increasing',
     lat: 52.5, lon: -1.5
   },
-  {
+{
     id: "treecreeper", name: "Treecreeper", rarity: "uncommon",
     stats: { hp: 2, stamina: 6, strength: 1, def: 5, spd: 6, int: 5 },
     traits: ["camouflaged", "tree climber", "tiny", "woodland"],
@@ -3019,7 +3036,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green in UK',
     lat: 53.5, lon: -2.0
   },
-  {
+{
     id: "kingfisher", name: "Kingfisher", rarity: "rare",
     stats: { hp: 3, stamina: 6, strength: 3, def: 5, spd: 8, int: 6 },
     traits: ["river specialist", "bright", "fast", "fisher"],
@@ -3032,7 +3049,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green in UK',
     lat: 52.0, lon: -1.0
   },
-  {
+{
     id: "barn_owl", name: "Barn Owl", rarity: "rare",
     stats: { hp: 5, stamina: 6, strength: 6, def: 6, spd: 6, int: 6 },
     traits: ["silent flight", "nocturnal", "farmland", "ghostly"],
@@ -3045,7 +3062,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green in UK',
     lat: 52.5, lon: -1.5
   },
-  {
+{
     id: "red_kite", name: "Red Kite", rarity: "rare",
     stats: { hp: 6, stamina: 9, strength: 6, def: 6, spd: 8, int: 6 },
     traits: ["soaring", "forked tail", "recovered", "graceful"],
@@ -3058,7 +3075,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green in UK after strong recovery',
     lat: 52.2, lon: -0.9
   },
-  {
+{
     id: "sparrowhawk", name: "Sparrowhawk", rarity: "rare",
     stats: { hp: 5, stamina: 6, strength: 6, def: 5, spd: 9, int: 6 },
     traits: ["ambush", "raptor", "fast", "woodland"],
@@ -3071,7 +3088,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber in UK',
     lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "lapwing", name: "Lapwing", rarity: "rare",
     stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 7, int: 5 },
     traits: ["farmland", "crest", "display flight", "declining"],
@@ -3084,7 +3101,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Red in UK due to major decline',
     lat: 53.5, lon: -1.0
   },
-  {
+{
     id: "oystercatcher", name: "Oystercatcher", rarity: "rare",
     stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 5 },
     traits: ["coastal", "wader", "bold bill", "shoreline"],
@@ -3097,7 +3114,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber in UK',
     lat: 54.0, lon: -3.0
   },
-  {
+{
     id: "firecrest", name: "Firecrest", rarity: "epic",
     stats: { hp: 1, stamina: 6, strength: 1, def: 4, spd: 7, int: 5 },
     traits: ["tiny", "scarcer goldcrest cousin", "woodland", "stripe"],
@@ -3110,7 +3127,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Green but scarce/local in UK',
     lat: 51.2, lon: -0.5
   },
-  {
+{
     id: "osprey", name: "Osprey", rarity: "epic",
     stats: { hp: 6, stamina: 9, strength: 8, def: 6, spd: 8, int: 6 },
     traits: ["fish specialist", "migrant", "large raptor", "spectacular"],
@@ -3123,7 +3140,7 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Amber/local breeding in UK',
     lat: 56.5, lon: -4.0
   },
-  {
+{
     id: "swift", name: "Swift", rarity: "rare", aliases: ["Common Swift"],
     stats: { hp: 4, stamina: 10, strength: 2, def: 5, spd: 9, int: 5 },
     traits: ["superb flier", "extreme stamina", "fast", "aerial"],
@@ -3136,16 +3153,16 @@ const BURBZ_SPECIES_PROFILES = [
     conservation: 'Red (Conservation concern in UK, globally Least Concern)',
     lat: 51.5, lon: 0.0
   },
-  {
+{
     id: "sulphur_crested_cockatoo", name: "Sulphur-crested Cockatoo", rarity: "rare", aliases: ["Sulfur-crested Cockatoo", "Sulphur Crested Cockatoo", "Sulfur Crested Cockatoo", "Cockatoo", "Greater Sulphur-crested Cockatoo", "Cacatua galerita"],
-    stats: { hp: 7, stamina: 7, strength: 6, def: 6, spd: 5, int: 9 },
+    stats: { hp: 7, stamina: 7, strength: 6, def: 6, spd: 5, int: 8 },
     traits: ["golden crest", "mimic", "clever", "australasian", "ringing call"],
     rationale: "Australia-friendly scan target: a loud white cockatoo with a raised yellow crest, strong problem-solving ability and a far-carrying screech. BirdNET/photo outputs may say sulphur, sulfur, greater sulphur-crested cockatoo or Cacatua galerita, so every alias maps to this character.",
     sources: ["BirdLife International", "Australian Museum", "BirdLife Australia field guide"], origin: 'Australia, New Guinea and nearby islands',
     habitat: 'Woodland edges, open forest, parks, farms, towns and city gardens; often around big trees and feeding lawns', range: 'Common across much of eastern and northern Australia including Sydney, Melbourne parks, Queensland and New Guinea; local introduced/escaped flocks elsewhere',
     diet: 'Seeds, nuts, berries, fruit, roots, shoots, flowers and human-edge crops; uses its strong bill to crack tough food', conservation: 'Least Concern globally, familiar and often noisy in Australian cities', lat: -33.9, lon: 151.2
   },
-  {
+{
     id: "great_tit", name: "Great Tit", rarity: "common",
     stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 6, int: 6 },
     traits: ["bold", "garden bird", "loud call", "feeder regular"],
@@ -3154,7 +3171,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Gardens, parks, woodland and hedgerows', range: 'Common and widespread across the UK and Europe',
     diet: 'Insects, caterpillars, seeds and nuts', conservation: 'Green in UK', lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "coal_tit", name: "Coal Tit", rarity: "common",
     stats: { hp: 3, stamina: 5, strength: 2, def: 5, spd: 7, int: 6 },
     traits: ["tiny", "conifer", "feeder regular", "quick"],
@@ -3163,7 +3180,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Conifer woods, mixed woodland, parks and gardens', range: 'Widespread resident in the UK',
     diet: 'Insects, seeds and nuts', conservation: 'Green in UK', lat: 54.0, lon: -2.0
   },
-  {
+{
     id: "long_tailed_tit", name: "Long-tailed Tit", rarity: "common", aliases: ["Long Tailed Tit"],
     stats: { hp: 3, stamina: 6, strength: 1, def: 5, spd: 7, int: 5 },
     traits: ["flocking", "tiny", "long tail", "garden bird"],
@@ -3172,7 +3189,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Hedgerows, scrub, woodland edges, parks and gardens', range: 'Widespread across the UK',
     diet: 'Small insects and spiders', conservation: 'Green in UK', lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "dunnock", name: "Dunnock", rarity: "common", aliases: ["Hedge Accentor"],
     stats: { hp: 4, stamina: 5, strength: 2, def: 5, spd: 5, int: 5 },
     traits: ["hedgerow", "quiet", "garden bird", "skulker"],
@@ -3181,7 +3198,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Gardens, hedges, woodland edges and scrub', range: 'Widespread across the UK',
     diet: 'Insects, spiders, worms and seeds', conservation: 'Amber in UK', lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "chaffinch", name: "Chaffinch", rarity: "common", aliases: ["Common Chaffinch"],
     stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 6, int: 5 },
     traits: ["finch", "songbird", "garden", "woodland"],
@@ -3190,7 +3207,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Woodland, hedgerows, parks, gardens and farmland', range: 'Widespread resident across the UK',
     diet: 'Seeds and insects', conservation: 'Green in UK', lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "collared_dove", name: "Collared Dove", rarity: "common", aliases: ["Eurasian Collared Dove"],
     stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 4 },
     traits: ["dove", "urban", "garden", "soft call"],
@@ -3199,7 +3216,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Towns, villages, gardens and farmland', range: 'Widespread across the UK',
     diet: 'Seeds, grains and shoots', conservation: 'Green in UK', lat: 52.0, lon: -1.0
   },
-  {
+{
     id: "feral_pigeon", name: "Feral Pigeon", rarity: "common", aliases: ["Rock Dove", "Rock Pigeon"],
     stats: { hp: 6, stamina: 6, strength: 4, def: 6, spd: 6, int: 5 },
     traits: ["urban", "adaptable", "flocking", "street-smart"],
@@ -3208,7 +3225,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Towns, cities, cliffs and farms', range: 'Common in UK urban areas',
     diet: 'Seeds, scraps, grains and shoots', conservation: 'Common feral/domestic population', lat: 51.5, lon: 0.0
   },
-  {
+{
     id: "chiffchaff", name: "Chiffchaff", rarity: "common", aliases: ["Common Chiffchaff"],
     stats: { hp: 2, stamina: 7, strength: 1, def: 4, spd: 7, int: 5 },
     traits: ["warbler", "repetitive song", "migrant", "small"],
@@ -3217,7 +3234,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Woodland, scrub, parks and gardens', range: 'Widespread UK breeder with some wintering birds',
     diet: 'Insects and spiders', conservation: 'Green in UK', lat: 52.0, lon: -1.0
   },
-  {
+{
     id: "blackcap", name: "Blackcap", rarity: "common", aliases: ["Eurasian Blackcap"],
     stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
     traits: ["warbler", "rich song", "garden winterer", "scrub"],
@@ -3226,7 +3243,7 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Woodland, scrub, parks and gardens', range: 'Widespread UK breeder and winter visitor',
     diet: 'Insects, berries and fruit', conservation: 'Green in UK', lat: 52.0, lon: -1.0
   },
-  {
+{
     id: "pied_wagtail", name: "Pied Wagtail", rarity: "common", aliases: ["White Wagtail"],
     stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 8, int: 5 },
     traits: ["tail-bobbing", "urban", "insect hunter", "quick"],
@@ -3235,9 +3252,9 @@ const BURBZ_SPECIES_PROFILES = [
     habitat: 'Towns, farms, lawns, watersides and open ground', range: 'Common across the UK',
     diet: 'Insects and other small invertebrates', conservation: 'Green in UK', lat: 53.0, lon: -1.0
   },
-  {
+{
     id: "australian_magpie", name: "Australian Magpie", rarity: "common",
-    stats: { "hp": 6,"stamina": 7,"strength": 6,"def": 7,"spd": 6,"int": 8 },
+    stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 8 },
     traits: ["clever hunter", "bold voice"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 100 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3245,9 +3262,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "rainbow_lorikeet", name: "Rainbow Lorikeet", rarity: "common",
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 7, int: 7 },
     traits: ["colourful parrot", "noisy flock"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 98 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3255,9 +3272,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Nectar, pollen, blossoms, soft fruit and occasional seeds.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "tawny_frogmouth", name: "Tawny Frogmouth", rarity: "common",
-    stats: { "hp": 6,"stamina": 5,"strength": 5,"def": 7,"spd": 4,"int": 6 },
+    stats: { hp: 6, stamina: 5, strength: 5, def: 7, spd: 4, int: 6 },
     traits: ["Melbourne regular", "field-guide clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 96 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3265,9 +3282,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "noisy_miner", name: "Noisy Miner", rarity: "common",
-    stats: { "hp": 4,"stamina": 6,"strength": 3,"def": 5,"spd": 6,"int": 5 },
+    stats: { hp: 4, stamina: 6, strength: 4, def: 5, spd: 6, int: 6 },
     traits: ["garden regular", "quick forager"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 94 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3275,9 +3292,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects, nectar, seeds or small fruit depending on season and habitat.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "australian_wood_duck", name: "Australian Wood Duck", rarity: "common",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 6, stamina: 6, strength: 5, def: 6, spd: 5, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 92 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3285,9 +3302,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "pacific_black_duck", name: "Pacific Black Duck", rarity: "common",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 6, stamina: 6, strength: 5, def: 6, spd: 6, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 90 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3295,9 +3312,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "magpie_lark", name: "Magpie-lark", rarity: "common",
-    stats: { "hp": 6,"stamina": 7,"strength": 6,"def": 7,"spd": 6,"int": 8 },
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 6, int: 6 },
     traits: ["clever hunter", "bold voice"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 88 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3305,9 +3322,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "dusky_moorhen", name: "Dusky Moorhen", rarity: "common",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 86 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3315,9 +3332,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "superb_fairywren", name: "Superb Fairywren", rarity: "common",
-    stats: { "hp": 3,"stamina": 6,"strength": 2,"def": 4,"spd": 8,"int": 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 8, int: 6 },
     traits: ["garden regular", "quick forager"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 84 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3325,9 +3342,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects, nectar, seeds or small fruit depending on season and habitat.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "chestnut_teal", name: "Chestnut Teal", rarity: "common",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 82 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3335,9 +3352,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "laughing_kookaburra", name: "Laughing Kookaburra", rarity: "common",
-    stats: { "hp": 6,"stamina": 7,"strength": 6,"def": 7,"spd": 6,"int": 8 },
+    stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 8 },
     traits: ["clever hunter", "bold voice"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 80 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3345,9 +3362,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "eurasian_coot", name: "Eurasian Coot", rarity: "common",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 6, spd: 5, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 78 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3355,9 +3372,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "little_pied_cormorant", name: "Little Pied Cormorant", rarity: "common",
-    stats: { "hp": 6,"stamina": 8,"strength": 5,"def": 6,"spd": 6,"int": 5 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 5, spd: 6, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 76 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3365,9 +3382,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Small fish, frogs and aquatic invertebrates from waterways.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "australasian_swamphen", name: "Australasian Swamphen", rarity: "common",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 6, stamina: 6, strength: 5, def: 6, spd: 5, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 74 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3375,9 +3392,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
-    id: "red_wattlebird", name: "Red Wattlebird", rarity: "common",
-    stats: { "hp": 4,"stamina": 6,"strength": 3,"def": 5,"spd": 6,"int": 5 },
+{
+    id: "red_wattlebird", name: "Red Wattlebird", rarity: "uncommon",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 6 },
     traits: ["garden regular", "quick forager"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 72 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3385,9 +3402,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects, nectar, seeds or small fruit depending on season and habitat.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "spotted_dove", name: "Spotted Dove", rarity: "common",
-    stats: { "hp": 5,"stamina": 6,"strength": 4,"def": 5,"spd": 6,"int": 4 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4 },
     traits: ["Melbourne regular", "field-guide clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 70 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3395,9 +3412,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, grain and fallen native plant material.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "grey_butcherbird", name: "Grey Butcherbird", rarity: "uncommon",
-    stats: { "hp": 6,"stamina": 7,"strength": 6,"def": 7,"spd": 6,"int": 8 },
+    stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 8 },
     traits: ["clever hunter", "bold voice"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 68 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3405,9 +3422,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "white_faced_heron", name: "White-faced Heron", rarity: "uncommon",
-    stats: { "hp": 6,"stamina": 8,"strength": 5,"def": 6,"spd": 6,"int": 5 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 5, spd: 6, int: 6 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 66 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3415,9 +3432,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Small fish, frogs and aquatic invertebrates from waterways.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "pied_currawong", name: "Pied Currawong", rarity: "uncommon",
-    stats: { "hp": 6,"stamina": 7,"strength": 6,"def": 7,"spd": 6,"int": 8 },
+    stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 8 },
     traits: ["clever hunter", "bold voice"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 64 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3425,9 +3442,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "galah", name: "Galah", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 7, int: 8 },
     traits: ["colourful parrot", "noisy flock"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 62 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3435,19 +3452,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, fruit, flowers, buds, nuts and native grasses.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
-    id: "sulphur_crested_cockatoo", name: "Sulphur-crested Cockatoo", rarity: "uncommon", aliases: ["Sulphur Crested Cockatoo"],
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
-    traits: ["colourful parrot", "noisy flock"],
-    rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 60 keeps it likely around Melbourne habitats.",
-    sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
-    origin: "Australia / south-eastern Australia field-guide entry", habitat: "park, urban, woodland habitats around Melbourne",
-    range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
-    diet: "Seeds, fruit, flowers, buds, nuts and native grasses.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
-  },
-  {
+{
     id: "crested_pigeon", name: "Crested Pigeon", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 6,"strength": 4,"def": 5,"spd": 6,"int": 4 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4 },
     traits: ["Melbourne regular", "field-guide clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 58 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3455,9 +3462,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, grain and fallen native plant material.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "little_raven", name: "Little Raven", rarity: "uncommon",
-    stats: { "hp": 6,"stamina": 7,"strength": 6,"def": 7,"spd": 6,"int": 8 },
+    stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 9 },
     traits: ["clever hunter", "bold voice"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 56 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3465,9 +3472,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects and other small animals, plus fruit or scraps where appropriate.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "eastern_rosella", name: "Eastern Rosella", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 7, int: 7 },
     traits: ["colourful parrot", "noisy flock"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 54 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3475,9 +3482,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, fruit, flowers, buds, nuts and native grasses.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "common_myna", name: "Common Myna", rarity: "uncommon",
-    stats: { "hp": 4,"stamina": 6,"strength": 3,"def": 5,"spd": 6,"int": 5 },
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 6, int: 7 },
     traits: ["Melbourne regular", "field-guide clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 52 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3485,9 +3492,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects, nectar, seeds or small fruit depending on season and habitat.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "silver_gull", name: "Silver Gull", rarity: "uncommon",
-    stats: { "hp": 6,"stamina": 8,"strength": 5,"def": 6,"spd": 6,"int": 5 },
+    stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 6 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 50 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3495,9 +3502,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Fish, marine invertebrates and opportunistic scraps near water and towns.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "black_swan", name: "Black Swan", rarity: "uncommon",
-    stats: { "hp": 7,"stamina": 7,"strength": 6,"def": 7,"spd": 5,"int": 5 },
+    stats: { hp: 9, stamina: 7, strength: 8, def: 8, spd: 5, int: 5 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 48 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3505,9 +3512,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "crimson_rosella", name: "Crimson Rosella", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 7, int: 7 },
     traits: ["colourful parrot", "noisy flock"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 46 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3515,9 +3522,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, fruit, flowers, buds, nuts and native grasses.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "australian_king_parrot", name: "Australian King Parrot", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 7, int: 7 },
     traits: ["colourful parrot", "noisy flock"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 44 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3525,9 +3532,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, fruit, flowers, buds, nuts and native grasses.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "australian_white_ibis", name: "Australian White Ibis", rarity: "uncommon", aliases: ["Australian Ibis", "White Ibis", "Bin Chicken"],
-    stats: { "hp": 6,"stamina": 8,"strength": 5,"def": 6,"spd": 6,"int": 5 },
+    stats: { hp: 6, stamina: 7, strength: 5, def: 6, spd: 5, int: 6 },
     traits: ["melbourne waterbird", "wetland clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 42 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3535,9 +3542,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Aquatic invertebrates, insects and opportunistic urban scraps.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "red_rumped_parrot", name: "Red-rumped Parrot", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 7,"strength": 5,"def": 6,"spd": 7,"int": 7 },
+    stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 7, int: 7 },
     traits: ["colourful parrot", "noisy flock"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 40 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3545,9 +3552,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, fruit, flowers, buds, nuts and native grasses.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "rock_pigeon", name: "Rock Pigeon", rarity: "uncommon", aliases: ["Feral Pigeon", "Rock Dove"],
-    stats: { "hp": 5,"stamina": 6,"strength": 4,"def": 5,"spd": 6,"int": 4 },
+    stats: { hp: 6, stamina: 6, strength: 4, def: 6, spd: 6, int: 5 },
     traits: ["Melbourne regular", "field-guide clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 38 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3555,9 +3562,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, grain and fallen native plant material.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "common_bronzewing", name: "Common Bronzewing", rarity: "uncommon",
-    stats: { "hp": 5,"stamina": 6,"strength": 4,"def": 5,"spd": 6,"int": 4 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4 },
     traits: ["Melbourne regular", "field-guide clue"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 36 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3565,9 +3572,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Seeds, grain and fallen native plant material.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "brown_thornbill", name: "Brown Thornbill", rarity: "uncommon",
-    stats: { "hp": 3,"stamina": 6,"strength": 2,"def": 4,"spd": 8,"int": 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 8, int: 6 },
     traits: ["garden regular", "quick forager"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 34 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3575,9 +3582,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects, nectar, seeds or small fruit depending on season and habitat.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "grey_fantail", name: "Grey Fantail", rarity: "uncommon",
-    stats: { "hp": 3,"stamina": 6,"strength": 2,"def": 4,"spd": 8,"int": 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 8, int: 6 },
     traits: ["garden regular", "quick forager"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 32 keeps it likely around Melbourne habitats.",
     sources: ["iNaturalist Melbourne species counts", "Wikipedia field guide fallback"],
@@ -3585,9 +3592,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Commonly recorded around Melbourne, Victoria; use local parks, waterways, coast and urban habitats as clues.",
     diet: "Insects, nectar, seeds or small fruit depending on season and habitat.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "welcome_swallow", name: "Welcome Swallow", rarity: "common", aliases: ["Hirundo neoxena", "Welcome Swallow"],
-    stats: { hp: 5, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 3, stamina: 9, strength: 2, def: 4, spd: 8, int: 6 },
     traits: ["aerial insect hunter", "swift flight"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3595,9 +3602,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Flying insects caught on the wing.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "willie_wagtail", name: "Willie Wagtail", rarity: "common", aliases: ["Rhipidura leucophrys", "Willie Wagtail"],
-    stats: { hp: 5, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 8, int: 6 },
     traits: ["fan tail", "bold garden bird"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3605,9 +3612,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Small insects chased from lawns, paths and shrubs.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "new_holland_honeyeater", name: "New Holland Honeyeater", rarity: "uncommon", aliases: ["Phylidonyris novaehollandiae", "New Holland Honeyeater"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 7, int: 6 },
     traits: ["nectar feeder", "flowering gums"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3615,9 +3622,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Nectar, insects and lerps around flowering shrubs.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "eastern_spinebill", name: "Eastern Spinebill", rarity: "uncommon", aliases: ["Acanthorhynchus tenuirostris", "Eastern Spinebill"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 7, int: 6 },
     traits: ["curved bill", "nectar dart"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3625,9 +3632,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Nectar and small insects gathered from flowers.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "white_plumed_honeyeater", name: "White-plumed Honeyeater", rarity: "uncommon", aliases: ["Ptilotula penicillata", "White plumed Honeyeater"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
     traits: ["white plume", "river gums"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3635,9 +3642,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Nectar, insects and lerps in eucalypts.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "masked_lapwing", name: "Masked Lapwing", rarity: "uncommon", aliases: ["Vanellus miles", "Masked Lapwing"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 5 },
     traits: ["yellow mask", "open ground"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3645,9 +3652,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Insects and worms picked from open ground.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "royal_spoonbill", name: "Royal Spoonbill", rarity: "rare", aliases: ["Platalea regia", "Royal Spoonbill"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 6, stamina: 7, strength: 5, def: 6, spd: 5, int: 5 },
     traits: ["spoon bill", "shallow water"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3655,9 +3662,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Tiny fish, insects and crustaceans swept from shallows.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "australian_pelican", name: "Australian Pelican", rarity: "rare", aliases: ["Pelecanus conspicillatus", "Australian Pelican"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 9, stamina: 8, strength: 8, def: 7, spd: 5, int: 5 },
     traits: ["huge bill", "water giant"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3665,9 +3672,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Fish and aquatic animals scooped from open water.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "little_corella", name: "Little Corella", rarity: "uncommon", aliases: ["Cacatua sanguinea", "Little Corella"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 6, stamina: 7, strength: 5, def: 6, spd: 6, int: 8 },
     traits: ["white cockatoo", "playful flock"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3675,9 +3682,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Seeds, grains, roots and fruit.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "australian_raven", name: "Australian Raven", rarity: "uncommon", aliases: ["Corvus coronoides", "Australian Raven"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 7, stamina: 7, strength: 7, def: 7, spd: 6, int: 9 },
     traits: ["clever corvid", "deep call"],
     rationale: "Added in the regional_plus20_20260701 expansion as a Melbourne-area bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3685,9 +3692,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Melbourne and wider Victoria field-guide pool.",
     diet: "Insects, fruit, seeds and opportunistic scraps.", conservation: "Check current local status; included for Burbz learning", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "square_tailed_kite", name: "Square-tailed Kite", rarity: "rare", aliases: ["Lophoictinia isura", "Square tailed Kite", "Square-tailed Kite", "Australian kite", "kite"],
-    stats: { hp: 7, stamina: 9, strength: 7, def: 5, spd: 8, int: 7 },
+    stats: { hp: 6, stamina: 8, strength: 6, def: 5, spd: 8, int: 7 },
     traits: ["soaring raptor", "fingered wings", "square tail", "aerial hunter"],
     rationale: "Added after a real Burbz photo capture was misread as Carrion Crow; the app now treats distant Australian soaring-raptor silhouettes as possible Square-tailed Kites instead of UK corvids.",
     sources: ["Yaan field sighting", "Merlin comparison", "Burbz photo recognition fix 20260701"],
@@ -3695,9 +3702,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "Australian field-guide pool; especially useful for distant soaring raptors photographed against bright sky.",
     diet: "Small birds, nestlings, insects and arboreal prey taken in slow searching flight.", conservation: "Uncommon and locally patchy; check current Australian field guides for local status.", lat: -37.8136, lon: 144.9631
   },
-  {
+{
     id: "great_spotted_woodpecker", name: "Great Spotted Woodpecker", rarity: "uncommon", aliases: ["Dendrocopos major", "Great Spotted Woodpecker"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 5, stamina: 6, strength: 5, def: 6, spd: 6, int: 6 },
     traits: ["tree drummer", "red flash"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3705,9 +3712,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Insects under bark, seeds and nuts.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "little_grebe", name: "Little Grebe", rarity: "uncommon", aliases: ["Tachybaptus ruficollis", "Little Grebe"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 6, int: 5 },
     traits: ["tiny diver", "reedbed bird"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3715,19 +3722,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Aquatic insects, larvae and tiny fish.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
-    id: "peregrine_falcon", name: "Peregrine Falcon", rarity: "rare", aliases: ["Falco peregrinus", "Peregrine Falcon"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
-    traits: ["fast falcon", "cliff tower"],
-    rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
-    sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
-    origin: "UK / Europe field-guide entry", habitat: "coast, urban, hills habitats",
-    range: "UK field-guide pool.",
-    diet: "Medium birds caught in fast aerial chases.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
-  },
-  {
+{
     id: "bohemian_waxwing", name: "Bohemian Waxwing", rarity: "rare", aliases: ["Bombycilla garrulus", "Bohemian Waxwing"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 6, int: 5 },
     traits: ["winter visitor", "berry crest"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3735,9 +3732,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Berries, especially rowan and hawthorn in winter.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "red_crossbill", name: "Red Crossbill", rarity: "rare", aliases: ["Loxia curvirostra", "Red Crossbill"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 4, stamina: 6, strength: 4, def: 5, spd: 6, int: 6 },
     traits: ["crossed bill", "pine cone"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3745,9 +3742,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Conifer seeds prised from cones.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "common_snipe", name: "Common Snipe", rarity: "uncommon", aliases: ["Gallinago gallinago", "Common Snipe"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 7, int: 5 },
     traits: ["long bill", "bog wader"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3755,9 +3752,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Worms and insects probed from soft wet ground.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "common_linnet", name: "Common Linnet", rarity: "uncommon", aliases: ["Linaria cannabina", "Common Linnet"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
     traits: ["finch flock", "red breast"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3765,9 +3762,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Small weed seeds and insects for chicks.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "eurasian_tree_sparrow", name: "Eurasian Tree Sparrow", rarity: "uncommon", aliases: ["Passer montanus", "Eurasian Tree Sparrow"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 5, int: 5 },
     traits: ["chestnut cap", "farm edge"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3775,9 +3772,9 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Seeds, grains and small insects.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "grey_partridge", name: "Grey Partridge", rarity: "rare", aliases: ["Perdix perdix", "Grey Partridge"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 5, stamina: 6, strength: 4, def: 6, spd: 5, int: 4 },
     traits: ["farmland covey", "ground runner"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
@@ -3785,17 +3782,471 @@ const BURBZ_SPECIES_PROFILES = [
     range: "UK field-guide pool.",
     diet: "Seeds, shoots and insects.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
   },
-  {
+{
     id: "sedge_warbler", name: "Sedge Warbler", rarity: "uncommon", aliases: ["Acrocephalus schoenobaenus", "Sedge Warbler"],
-    stats: { hp: 6, stamina: 7, strength: 5, def: 5, spd: 7, int: 6 },
+    stats: { hp: 2, stamina: 7, strength: 1, def: 4, spd: 7, int: 5 },
     traits: ["reed singer", "restless song"],
     rationale: "Added in the regional_plus20_20260701 expansion as a UK bird for scans, map pools and Birdex learning.",
     sources: ["Regional plus-20 Burbz expansion", "Wikipedia field guide fallback"],
     origin: "UK / Europe field-guide entry", habitat: "wetland, water habitats",
     range: "UK field-guide pool.",
     diet: "Insects and spiders among reeds and scrub.", conservation: "Check current local status; included for Burbz learning", lat: 53.0, lon: -2.0
+  },
+  {
+    id: "jackdaw", name: "Jackdaw", rarity: "common",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 6, spd: 7, int: 9 },
+    traits: ["clever corvid","sociable","pale-eyed","agile"],
+    rationale: "Small corvid with striking pale eyes; part of the crow family whose members are among the most intelligent birds, capable of problem-solving and remembering faces.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, western Asia, North Africa",
+    habitat: "Farmland, parks, towns, cliffs",
+    range: "Widespread and common across the UK and Europe",
+    diet: "Omnivorous: insects, seeds, scraps, eggs",
+    conservation: "Green (Least Concern)",
+    lat: 53, lon: -1.5
+  },
+  {
+    id: "rook", name: "Rook", rarity: "common",
+    stats: { hp: 6, stamina: 7, strength: 5, def: 7, spd: 6, int: 9 },
+    traits: ["clever corvid","colonial","tool user","sociable"],
+    rationale: "Highly social corvid that nests in noisy rookeries; rooks show impressive problem-solving and tool-use in studies, sitting near the top of avian intelligence with other crows.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Farmland, open country with tall trees",
+    range: "Common resident across the UK and Europe",
+    diet: "Earthworms, grain, insects, carrion",
+    conservation: "Green (Least Concern)",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "jay", name: "Jay", rarity: "uncommon", aliases: ["Eurasian Jay"],
+    stats: { hp: 5, stamina: 6, strength: 4, def: 6, spd: 6, int: 9 },
+    traits: ["colourful corvid","acorn-hoarder","wary","clever"],
+    rationale: "The most colourful UK corvid; jays cache thousands of acorns each autumn and remember where, a feat of spatial memory typical of the highly intelligent crow family.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, North Africa, Asia",
+    habitat: "Woodland, especially oak",
+    range: "Widespread across the UK and Europe",
+    diet: "Acorns, nuts, insects, eggs, nestlings",
+    conservation: "Green (Least Concern)",
+    lat: 52, lon: -1
+  },
+  {
+    id: "swallow", name: "Swallow", rarity: "common", aliases: ["Barn Swallow"],
+    stats: { hp: 3, stamina: 9, strength: 2, def: 4, spd: 8, int: 6 },
+    traits: ["long migrant","aerial insectivore","fast","agile"],
+    rationale: "A supreme aerial flyer that migrates between Europe and Africa each year, catching insects on the wing with great speed and endurance.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Northern Hemisphere; winters in the Southern Hemisphere",
+    habitat: "Farmland, open country near water",
+    range: "Summer visitor across the UK and Europe",
+    diet: "Flying insects caught in flight",
+    conservation: "Green (Least Concern)",
+    lat: 52, lon: -1.5
+  },
+  {
+    id: "house_martin", name: "House Martin", rarity: "common",
+    stats: { hp: 3, stamina: 8, strength: 2, def: 4, spd: 8, int: 5 },
+    traits: ["aerial insectivore","migrant","colonial","agile"],
+    rationale: "A swallow relative that builds mud nests under eaves and feeds entirely on the wing; a strong, fast flier with high aerial stamina.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, North Africa",
+    habitat: "Towns, villages, farmland",
+    range: "Summer visitor across the UK and Europe",
+    diet: "Flying insects caught in flight",
+    conservation: "Amber",
+    lat: 52, lon: -1.5
+  },
+  {
+    id: "grey_wagtail", name: "Grey Wagtail", rarity: "common",
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 8, int: 5 },
+    traits: ["riverside","long-tailed","active","nimble"],
+    rationale: "A slender, constantly tail-bobbing bird of fast rivers; agile and quick over water despite its small size.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Fast-flowing rivers and streams",
+    range: "Widespread across the UK near water",
+    diet: "Aquatic insects and larvae",
+    conservation: "Amber",
+    lat: 53, lon: -2
+  },
+  {
+    id: "skylark", name: "Skylark", rarity: "common",
+    stats: { hp: 3, stamina: 8, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["songflight","farmland","high stamina","ground-nester"],
+    rationale: "Famous for its sustained song-flight, hovering high for minutes at a time — a feat of endurance for a small farmland bird.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, North Africa",
+    habitat: "Farmland, grassland, moorland",
+    range: "Widespread across the UK and Europe",
+    diet: "Seeds and insects",
+    conservation: "Red",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "yellowhammer", name: "Yellowhammer", rarity: "common",
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["farmland bunting","bright male","hedgerow","seed-eater"],
+    rationale: "A bright yellow bunting of hedgerows and farmland, its \"little-bit-of-bread-and-no-cheese\" song a classic countryside sound.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and western Asia",
+    habitat: "Farmland, hedgerows, scrub",
+    range: "Widespread but declining across the UK",
+    diet: "Seeds and insects",
+    conservation: "Red",
+    lat: 52.5, lon: -1
+  },
+  {
+    id: "reed_bunting", name: "Reed Bunting", rarity: "common",
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["wetland bunting","reedbed","black-headed male","skulker"],
+    rationale: "A wetland bunting; males have a smart black head and white collar. Found in reedbeds and damp scrub.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Reedbeds, wet scrub, farmland",
+    range: "Widespread across the UK",
+    diet: "Seeds and insects",
+    conservation: "Amber",
+    lat: 52.5, lon: -1
+  },
+  {
+    id: "stonechat", name: "Stonechat", rarity: "common",
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["heathland chat","perch-hunter","bold","upright"],
+    rationale: "A small, upright chat of heaths and coasts that calls like two stones tapped together; perches prominently to hunt insects.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, Africa",
+    habitat: "Heathland, coastal scrub, moorland",
+    range: "Widespread across the UK, mostly west and south",
+    diet: "Insects and small invertebrates",
+    conservation: "Green",
+    lat: 51.5, lon: -3
+  },
+  {
+    id: "kestrel", name: "Kestrel", rarity: "uncommon", aliases: ["Common Kestrel"],
+    stats: { hp: 4, stamina: 7, strength: 4, def: 4, spd: 7, int: 6 },
+    traits: ["hovering falcon","sharp-eyed","farmland raptor","precise"],
+    rationale: "The classic hovering falcon, holding station over verges to spot voles; a fast, precise small raptor but far lighter than the big eagles.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, Africa",
+    habitat: "Farmland, roadsides, moorland, towns",
+    range: "Widespread across the UK and Europe",
+    diet: "Voles, mice, large insects, small birds",
+    conservation: "Amber",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "buzzard", name: "Buzzard", rarity: "uncommon", aliases: ["Common Buzzard"],
+    stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 5 },
+    traits: ["soaring raptor","broad-winged","opportunist","powerful"],
+    rationale: "The UK’s commonest bird of prey, a broad-winged soarer that mews overhead; strong and capable, though outmatched in size by the true eagles.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Woodland edge, farmland, moorland",
+    range: "Widespread and increasing across the UK",
+    diet: "Small mammals, birds, carrion, worms",
+    conservation: "Green",
+    lat: 52.5, lon: -2
+  },
+  {
+    id: "little_owl", name: "Little Owl", rarity: "uncommon",
+    stats: { hp: 4, stamina: 5, strength: 4, def: 5, spd: 6, int: 6 },
+    traits: ["small owl","day-active","fierce","compact"],
+    rationale: "A tiny, fierce-looking owl often seen by day perched on posts; introduced to Britain and now widespread in farmland.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, North Africa (introduced to UK)",
+    habitat: "Farmland, parkland, orchards",
+    range: "Widespread in England and Wales",
+    diet: "Insects, worms, small mammals, birds",
+    conservation: "Green",
+    lat: 52.5, lon: -1
+  },
+  {
+    id: "cuckoo", name: "Cuckoo", rarity: "uncommon", aliases: ["Common Cuckoo"],
+    stats: { hp: 4, stamina: 8, strength: 3, def: 4, spd: 7, int: 6 },
+    traits: ["brood parasite","long migrant","cunning","secretive"],
+    rationale: "Famous brood parasite that lays its eggs in other birds’ nests; a cunning strategist and a long-distance migrant to Africa.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia; winters in Africa",
+    habitat: "Reedbeds, moorland, woodland edge",
+    range: "Summer visitor across the UK, declining",
+    diet: "Insects, especially hairy caterpillars",
+    conservation: "Red",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "heron", name: "Heron", rarity: "uncommon", aliases: ["Grey Heron"],
+    stats: { hp: 6, stamina: 7, strength: 6, def: 6, spd: 5, int: 6 },
+    traits: ["patient hunter","wader","long-legged","statuesque"],
+    rationale: "A tall, patient fish-hunter that stands motionless at the water’s edge before striking with lightning speed; a large, imposing waterbird.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, Africa",
+    habitat: "Rivers, lakes, marshes, coasts",
+    range: "Widespread across the UK",
+    diet: "Fish, amphibians, small mammals, birds",
+    conservation: "Green",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "canada_goose", name: "Canada Goose", rarity: "uncommon",
+    stats: { hp: 8, stamina: 8, strength: 7, def: 8, spd: 5, int: 5 },
+    traits: ["large goose","honking","gregarious","bold"],
+    rationale: "A big, bold introduced goose of parks and reservoirs; powerful and heavy, defending its young fiercely.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "North America (introduced to UK/Europe)",
+    habitat: "Lakes, rivers, parks, farmland",
+    range: "Widespread and common across the UK",
+    diet: "Grass, grain, aquatic plants",
+    conservation: "Green",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "cormorant", name: "Cormorant", rarity: "uncommon",
+    stats: { hp: 6, stamina: 8, strength: 6, def: 6, spd: 6, int: 5 },
+    traits: ["diving fisher","wing-drying","coastal & inland","strong swimmer"],
+    rationale: "A powerful underwater fisher that dives for fish and stands with wings spread to dry; equally at home on coasts and inland waters.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Worldwide",
+    habitat: "Coasts, estuaries, lakes, rivers",
+    range: "Widespread across the UK",
+    diet: "Fish caught by diving",
+    conservation: "Green",
+    lat: 53, lon: -3
+  },
+  {
+    id: "gannet", name: "Gannet", rarity: "rare", aliases: ["Northern Gannet"],
+    stats: { hp: 6, stamina: 8, strength: 6, def: 6, spd: 7, int: 5 },
+    traits: ["plunge-diver","seabird","huge colony","streamlined"],
+    rationale: "The UK’s largest seabird, plunge-diving from height into the sea at great speed; a superb long-range flier with high stamina.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "North Atlantic",
+    habitat: "Open sea, breeding on sea cliffs and stacks",
+    range: "Breeds at UK seabird colonies",
+    diet: "Fish caught by plunge-diving",
+    conservation: "Amber",
+    lat: 56, lon: -2.5
+  },
+  {
+    id: "razorbill", name: "Razorbill", rarity: "rare",
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 6, int: 5 },
+    traits: ["auk","cliff-nester","diver","stocky"],
+    rationale: "A stocky black-and-white auk that nests on sea cliffs and dives after fish, using its wings to “fly” underwater.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "North Atlantic",
+    habitat: "Sea cliffs, open sea",
+    range: "Breeds at UK seabird colonies",
+    diet: "Small fish caught by diving",
+    conservation: "Amber",
+    lat: 55, lon: -4.5
+  },
+  {
+    id: "puffin", name: "Puffin", rarity: "rare", aliases: ["Atlantic Puffin"],
+    stats: { hp: 4, stamina: 7, strength: 4, def: 6, spd: 6, int: 5 },
+    traits: ["auk","colourful bill","burrow-nester","diver"],
+    rationale: "The much-loved “sea parrot” with a colourful bill; nests in cliff-top burrows and dives for sandeels.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "North Atlantic",
+    habitat: "Sea cliffs and islands, open sea",
+    range: "Breeds at UK seabird colonies",
+    diet: "Sandeels and small fish",
+    conservation: "Red",
+    lat: 56, lon: -4
+  },
+  {
+    id: "merlin", name: "Merlin", rarity: "rare",
+    stats: { hp: 4, stamina: 7, strength: 4, def: 4, spd: 9, int: 6 },
+    traits: ["smallest falcon","low fast dash","upland raptor","agile"],
+    rationale: "The UK’s smallest falcon, hunting small birds in fast, low, dashing flight across open moorland; quick and agile but slower than the peregrine’s stoop.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Northern Hemisphere",
+    habitat: "Moorland, coasts in winter",
+    range: "Uplands in summer, lowlands and coasts in winter",
+    diet: "Small birds caught in flight",
+    conservation: "Red",
+    lat: 54.5, lon: -2.5
+  },
+  {
+    id: "dipper", name: "Dipper", rarity: "uncommon", aliases: ["White-throated Dipper"],
+    stats: { hp: 3, stamina: 7, strength: 3, def: 5, spd: 6, int: 5 },
+    traits: ["river specialist","underwater walker","white-bibbed","sturdy"],
+    rationale: "The only UK songbird that swims and walks underwater, feeding on the beds of fast streams; compact and strong for its size.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Fast, clean upland rivers and streams",
+    range: "Widespread in the north and west of the UK",
+    diet: "Aquatic insect larvae and small invertebrates",
+    conservation: "Amber",
+    lat: 54.5, lon: -3
+  },
+  {
+    id: "goosander", name: "Goosander", rarity: "uncommon", aliases: ["Common Merganser"],
+    stats: { hp: 6, stamina: 7, strength: 6, def: 6, spd: 6, int: 5 },
+    traits: ["sawbill duck","fish-eater","diver","streamlined"],
+    rationale: "A large sawbill duck with a serrated bill for gripping fish; dives well and is a strong swimmer on rivers and lakes.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Northern Hemisphere",
+    habitat: "Rivers, lakes, reservoirs",
+    range: "Widespread across the UK, mostly north",
+    diet: "Fish caught by diving",
+    conservation: "Green",
+    lat: 54.5, lon: -2.5
+  },
+  {
+    id: "willow_warbler", name: "Willow Warbler", rarity: "common",
+    stats: { hp: 2, stamina: 7, strength: 1, def: 4, spd: 7, int: 5 },
+    traits: ["leaf warbler","long migrant","sweet song","delicate"],
+    rationale: "A tiny leaf warbler with a cascading silvery song; makes an epic migration to sub-Saharan Africa each year.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia; winters in Africa",
+    habitat: "Young woodland, scrub, heath",
+    range: "Summer visitor across the UK",
+    diet: "Insects and spiders",
+    conservation: "Amber",
+    lat: 53, lon: -2
+  },
+  {
+    id: "sand_martin", name: "Sand Martin", rarity: "common",
+    stats: { hp: 3, stamina: 8, strength: 1, def: 4, spd: 8, int: 5 },
+    traits: ["colonial","burrow-nester","aerial insectivore","migrant"],
+    rationale: "The smallest European hirundine, nesting in colonies of burrows in sandy banks and feeding on the wing over water.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Northern Hemisphere; winters in Africa",
+    habitat: "Sandy riverbanks, gravel pits, water",
+    range: "Summer visitor across the UK",
+    diet: "Flying insects caught in flight",
+    conservation: "Green",
+    lat: 53, lon: -1.5
+  },
+  {
+    id: "common_redstart", name: "Common Redstart", rarity: "common",
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["woodland chat","quivering tail","migrant","colourful male"],
+    rationale: "A colourful woodland chat with a constantly quivering orange-red tail; a summer migrant from Africa.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe, Asia, North Africa; winters in Africa",
+    habitat: "Oak woodland, wood pasture, upland edge",
+    range: "Summer visitor, mostly west and north UK",
+    diet: "Insects and spiders",
+    conservation: "Amber",
+    lat: 53, lon: -3
+  },
+  {
+    id: "pied_flycatcher", name: "Pied Flycatcher", rarity: "common",
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["woodland flycatcher","box-nester","migrant","active"],
+    rationale: "A smart black-and-white woodland flycatcher that darts out to catch insects; a summer migrant that readily uses nest boxes.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe; winters in Africa",
+    habitat: "Western oak woodland",
+    range: "Summer visitor to western and northern UK",
+    diet: "Insects caught in flight and gleaned",
+    conservation: "Red",
+    lat: 52.5, lon: -3.5
+  },
+  {
+    id: "tree_pipit", name: "Tree Pipit", rarity: "uncommon",
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["song-flight pipit","woodland edge","migrant","streaky"],
+    rationale: "A streaky pipit that parachutes down in song-flight from a treetop; a summer migrant of woodland edges and heaths.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia; winters in Africa",
+    habitat: "Heathland, woodland edge, clearings",
+    range: "Summer visitor, mostly north and west UK",
+    diet: "Insects and seeds",
+    conservation: "Red",
+    lat: 53, lon: -2.5
+  },
+  {
+    id: "curlew", name: "Curlew", rarity: "uncommon",
+    stats: { hp: 5, stamina: 8, strength: 4, def: 5, spd: 6, int: 5 },
+    traits: ["largest wader","long down-curved bill","evocative call","far-carrying"],
+    rationale: "Europe’s largest wader, with a long down-curved bill and a bubbling, far-carrying call; probes mud and soft ground for food.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Moorland and wet grassland (breeding); estuaries (winter)",
+    range: "Widespread but rapidly declining across the UK",
+    diet: "Worms, shellfish, insects probed from mud",
+    conservation: "Red",
+    lat: 54.5, lon: -2
+  },
+  {
+    id: "wedge_tailed_eagle", name: "Wedge-tailed Eagle", rarity: "legendary", aliases: ["Wedgetail","Aquila audax"],
+    stats: { hp: 9, stamina: 9, strength: 10, def: 8, spd: 7, int: 6 },
+    traits: ["apex raptor","huge wingspan","powerful","soaring"],
+    rationale: "Australia’s largest bird of prey, with a wingspan over two metres and immense strength; an apex aerial predator to rival the Golden Eagle.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Australia and southern New Guinea",
+    habitat: "Ranges, open woodland, plains",
+    range: "Throughout mainland Australia and Tasmania",
+    diet: "Rabbits, hares, wallabies, carrion, reptiles",
+    conservation: "Least Concern (Tasmanian subspecies threatened)",
+    lat: -37, lon: 145
+  },
+  {
+    id: "white_tailed_eagle", name: "White-tailed Eagle", rarity: "legendary", aliases: ["White-tailed Sea Eagle","Sea Eagle","Haliaeetus albicilla"],
+    stats: { hp: 10, stamina: 8, strength: 10, def: 9, spd: 7, int: 6 },
+    traits: ["huge sea eagle","plank-winged","powerful","coastal"],
+    rationale: "A colossal sea eagle nicknamed the “flying barn door” for its broad wings; the UK’s largest bird of prey, reintroduced after extinction.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Eurasia",
+    habitat: "Coasts, sea lochs, large lakes",
+    range: "Scotland and reintroduction areas; widespread in Europe",
+    diet: "Fish, seabirds, waterfowl, carrion",
+    conservation: "Amber (recovering)",
+    lat: 57, lon: -6
+  },
+  {
+    id: "pheasant", name: "Pheasant", rarity: "uncommon", aliases: ["Common Pheasant","Ring-necked Pheasant"],
+    stats: { hp: 7, stamina: 6, strength: 6, def: 6, spd: 5, int: 4 },
+    traits: ["gamebird","long-tailed","ground-dweller","explosive flush"],
+    rationale: "A large, ornate gamebird introduced for centuries; spends most of its time on the ground and bursts into noisy flight when flushed.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Asia (introduced worldwide)",
+    habitat: "Farmland, woodland edge, hedgerows",
+    range: "Widespread and abundant across the UK",
+    diet: "Seeds, grain, shoots, insects",
+    conservation: "Introduced/Not assessed",
+    lat: 52.5, lon: -1
+  },
+  {
+    id: "herring_gull", name: "Herring Gull", rarity: "common", aliases: ["European Herring Gull"],
+    stats: { hp: 6, stamina: 7, strength: 6, def: 6, spd: 6, int: 7 },
+    traits: ["clever gull","coastal & urban","opportunist","bold"],
+    rationale: "A large, adaptable and notably clever gull; problem-solves for food in harbours and towns, and drops shellfish to break them open.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Northern Hemisphere",
+    habitat: "Coasts, harbours, towns, landfill",
+    range: "Widespread across the UK",
+    diet: "Fish, shellfish, scraps, eggs, chicks",
+    conservation: "Red (declining natural populations)",
+    lat: 54, lon: -1
+  },
+  {
+    id: "green_woodpecker", name: "Green Woodpecker", rarity: "uncommon", aliases: ["European Green Woodpecker"],
+    stats: { hp: 5, stamina: 6, strength: 5, def: 6, spd: 6, int: 6 },
+    traits: ["ground-feeding woodpecker","laughing call","ant specialist","strong bill"],
+    rationale: "The UK’s largest woodpecker, often seen on lawns and anthills; its loud “yaffle” laughing call carries across parkland.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Europe and western Asia",
+    habitat: "Parkland, old pasture, woodland edge",
+    range: "Widespread in England and Wales",
+    diet: "Ants and their larvae, other insects",
+    conservation: "Green",
+    lat: 52.5, lon: -1.5
+  },
+  {
+    id: "ring_necked_parakeet", name: "Ring-necked Parakeet", rarity: "uncommon", aliases: ["Rose-ringed Parakeet","Parakeet"],
+    stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 7, int: 7 },
+    traits: ["naturalised parrot","bright green","noisy flock","clever"],
+    rationale: "A bright green naturalised parrot now thriving in southern English parks and gardens; a clever, noisy and highly social parrot.",
+    sources: ["RSPB","Cornell Birds of the World"],
+    origin: "Africa and South Asia (naturalised in UK)",
+    habitat: "Parks, gardens, woodland edge, towns",
+    range: "Established across Greater London and the south-east",
+    diet: "Fruit, seeds, buds, nuts, scraps",
+    conservation: "Introduced/Naturalised",
+    lat: 51.5, lon: -0.2
   }
-  // regional_plus20_20260701
 ];
 
 const BIRD_INFO_MAP_CENTER = { lat: 54.5, lon: -2.5, zoom: 4 }; // Centered on UK, suitable for general bird info
@@ -4324,7 +4775,26 @@ const BUILT_IN_BIRD_ART = {
   'Wood Pigeon': '/burbz/bird-art-cache/woodpigeon_burbz_manga_20260624.png',
   'Woodpigeon': '/burbz/bird-art-cache/woodpigeon_burbz_manga_20260624.png',
   'Wren': '/burbz/bird-art-cache/wren_burbz_manga_20260624_v2.png',
-  'Yellowhammer': '/burbz/bird-art-cache/yellowhammer_burbz_manga_20260624_v2.png'
+  'Yellowhammer': '/burbz/bird-art-cache/yellowhammer_burbz_manga_20260624_v2.png',
+
+  // higgsfield_manga_expansion_20260706
+  'Square-tailed Kite': '/burbz/bird-art-cache/square_tailed_kite_burbz_manga_20260706.png',
+  'Square tailed Kite': '/burbz/bird-art-cache/square_tailed_kite_burbz_manga_20260706.png',
+  'Wedge-tailed Eagle': '/burbz/bird-art-cache/wedge_tailed_eagle_burbz_manga_20260706.png',
+  'Wedgetail': '/burbz/bird-art-cache/wedge_tailed_eagle_burbz_manga_20260706.png',
+  'White-tailed Eagle': '/burbz/bird-art-cache/white_tailed_eagle_burbz_manga_20260706.png',
+  'White-tailed Sea Eagle': '/burbz/bird-art-cache/white_tailed_eagle_burbz_manga_20260706.png',
+  'Sea Eagle': '/burbz/bird-art-cache/white_tailed_eagle_burbz_manga_20260706.png',
+  'Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
+  'Common Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
+  'Ring-necked Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
+  'Herring Gull': '/burbz/bird-art-cache/herring_gull_burbz_manga_20260706.png',
+  'European Herring Gull': '/burbz/bird-art-cache/herring_gull_burbz_manga_20260706.png',
+  'Green Woodpecker': '/burbz/bird-art-cache/green_woodpecker_burbz_manga_20260706.png',
+  'European Green Woodpecker': '/burbz/bird-art-cache/green_woodpecker_burbz_manga_20260706.png',
+  'Ring-necked Parakeet': '/burbz/bird-art-cache/ring_necked_parakeet_burbz_manga_20260706.png',
+  'Rose-ringed Parakeet': '/burbz/bird-art-cache/ring_necked_parakeet_burbz_manga_20260706.png',
+  'Parakeet': '/burbz/bird-art-cache/ring_necked_parakeet_burbz_manga_20260706.png'
 };
 
 const LEGACY_BIRD_ART_REPLACEMENTS = {
@@ -6127,7 +6597,17 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
     // Footpaths and tracks read as worn medieval trails.
     if (/path|track/i.test(id)) { try { liveMap.setPaintProperty(id, 'line-dasharray', [1.6, 1.4]); } catch (e2) {} }
   }
-  if (/building/i.test(id)) { if (layer.type === 'fill' || layer.type === 'fill-extrusion') liveMap.setLayoutProperty(id, 'visibility', 'none'); }
+  if (/building/i.test(id)) {
+    // Keep flat building footprints for a richer, more detailed map (they read
+    // as clustered timber/stone dwellings), but drop the modern 3D extrusions.
+    if (layer.type === 'fill-extrusion') { liveMap.setLayoutProperty(id, 'visibility', 'none'); }
+    else if (layer.type === 'fill') {
+      liveMap.setLayoutProperty(id, 'visibility', 'visible');
+      try { liveMap.setPaintProperty(id, 'fill-color', ['interpolate', ['linear'], ['zoom'], 14, '#3a3428', 17, '#463d2c']); } catch (e0) {}
+      try { liveMap.setPaintProperty(id, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0, 14.5, .55, 17, .82]); } catch (e0) {}
+      try { liveMap.setPaintProperty(id, 'fill-outline-color', '#6a5738'); } catch (e0) {}
+    }
+  }
   if (layer.type === 'symbol') {
     // No modern road furniture in a medieval realm: hide street names, road
     // numbers/shields, house numbers, transit and one-way arrows entirely.
@@ -6181,7 +6661,24 @@ function wireMapRotateOnly() {
   liveMap.on('rotate', () => applyPlayerHeading(liveMap.getBearing()));
 }
 
-function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
+function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); scheduleZoomCollectibleRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
+// Zooming in/out changes how much loot is revealed, so redraw the pickups when
+// the zoom band flips (debounced so a continuous pinch doesn't thrash the DOM).
+let liveMapZoomPickupBand = null, liveMapZoomPickupTimer = null;
+function scheduleZoomCollectibleRefresh() {
+  if (!liveMap) return;
+  clearTimeout(liveMapZoomPickupTimer);
+  liveMapZoomPickupTimer = setTimeout(() => {
+    try {
+      const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM;
+      const band = zoom < BURBZ_START_ZOOM - 0.5 ? 'wide' : 'near';
+      if (band === liveMapZoomPickupBand) return;
+      liveMapZoomPickupBand = band;
+      const p = liveMapLastPosition;
+      if (p && Number.isFinite(p.lat) && Number.isFinite(p.lon)) drawMapPickups(p.lat, p.lon);
+    } catch (e) {}
+  }, 320);
+}
 function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
   function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
@@ -6364,12 +6861,20 @@ function drawMapPickups(lat, lon) {
   const state = ensureMapPickupState();
   liveMapPickupMarkers.forEach(m => m.remove());
   liveMapPickupMarkers = [];
+  // Zoomed out you can see more of what's scattered around, but only loot
+  // within reach (MAP_PICKUP_RANGE_M) can actually be grabbed — the rest show
+  // greyed-out and locked until you walk over to them.
+  const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM;
+  const zoomedOut = zoom < BURBZ_START_ZOOM - 0.5;
   mapPickupsNear(lat, lon)
     .filter(p => !state.collected[p.key])
-    .sort((a, b) => mapDistanceMeters(a, { lat, lon }) - mapDistanceMeters(b, { lat, lon }))
-    .slice(0, 14)
-    .forEach(p => {
+    .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, zoomedOut ? 26 : 14)
+    .forEach(({ p, dist }) => {
+      const inReach = dist <= MAP_PICKUP_RANGE_M;
       const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + p.type.glyph + '</div>');
+      if (!inReach) el.classList.add('locked');
       el.addEventListener('click', ev => { ev.stopPropagation(); collectMapPickup(p, el); });
       liveMapPickupMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([p.lon, p.lat]).addTo(liveMap));
     });
@@ -6620,20 +7125,49 @@ function nearestVillageTo(lat, lon) {
 }
 
 let liveMapVillageKey = null;
+// How many of the nearest villages count as "in your vicinity" and can be
+// entered from the map, and how close a village must be (metres) to be walked
+// into once you've zoomed out to browse the wider realm.
+const VILLAGE_VISITABLE_COUNT = 3;
+const VILLAGE_VISIT_RANGE_M = 1200;
 function drawVillageMarkers(lat, lon) {
   if (!liveMap || !window.maplibregl) return;
-  // Rotating/zooming fires moveend constantly; only rebuild the DOM markers
-  // when the player has actually crossed into a different village cell.
-  const key = Math.floor(lat / VILLAGE_CELL_DEG) + ':' + Math.floor(lon / VILLAGE_CELL_DEG);
+  // Zoomed out, the player can survey more of the realm — reveal more distant
+  // villages, but they can only be *entered* once they're in the vicinity
+  // (walk there). At the natural zoom only the nearest few show, all enterable.
+  const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM;
+  const zoomedOut = zoom < BURBZ_START_ZOOM - 0.5;
+  // Rebuild only when the player crosses into a new cell OR the zoom band flips
+  // (natural ⇄ zoomed-out), since that changes which villages are shown.
+  const key = Math.floor(lat / VILLAGE_CELL_DEG) + ':' + Math.floor(lon / VILLAGE_CELL_DEG) + ':' + (zoomedOut ? 'wide' : 'near');
   if (key === liveMapVillageKey && liveMapVillageMarkers.length) return;
   liveMapVillageKey = key;
   liveMapVillageMarkers.forEach(m => m.remove());
   liveMapVillageMarkers = [];
-  villagesNearLatLng(lat, lon, 3).forEach(v => {
+  const villages = villagesNearLatLng(lat, lon, zoomedOut ? 4 : 2)
+    .map(v => ({ ...v, dist: mapDistanceMeters({ lat: v.lat, lon: v.lon }, { lat, lon }) }))
+    .sort((a, b) => a.dist - b.dist);
+  // At the natural zoom, cap the markers to the nearest handful so the board
+  // stays clean; zoomed out, show the wider spread the player is surveying.
+  const shown = zoomedOut ? villages.slice(0, 14) : villages.slice(0, VILLAGE_VISITABLE_COUNT + 1);
+  shown.forEach((v, idx) => {
+    // In the vicinity = one of the nearest few AND close enough to walk to.
+    // At natural zoom the nearest few always count as your vicinity; zoomed
+    // out, only villages you've genuinely walked near stay enterable.
+    const visitable = idx < VILLAGE_VISITABLE_COUNT && (!zoomedOut || v.dist <= VILLAGE_VISIT_RANGE_M);
     const el = makeHtmlMarker('burbz-village-marker',
-      '<div class="burbz-village-icon">🏰</div><div class="burbz-village-name">' + escapeHtml(v.name) + '</div>');
-    el.style.zIndex = '3';
-    el.addEventListener('click', e => { e.stopPropagation(); enterVillage(v); });
+      '<div class="burbz-village-icon">🏰</div>' +
+      (visitable ? '' : '<div class="burbz-village-lock">🔒</div>') +
+      '<div class="burbz-village-name">' + escapeHtml(v.name) + '</div>');
+    if (!visitable) el.classList.add('locked');
+    el.style.zIndex = visitable ? '3' : '2';
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      if (visitable) { enterVillage(v); return; }
+      SFX.tap();
+      const km = v.dist >= 1000 ? (v.dist / 1000).toFixed(1) + ' km' : Math.round(v.dist) + ' m';
+      showToast('🔒 ' + v.name + ' is ' + km + ' away — walk there to visit it.');
+    });
     liveMapVillageMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([v.lon, v.lat]).addTo(liveMap));
   });
 }
