@@ -2111,33 +2111,80 @@ const WILD_BIRDS = [
   'Green Woodpecker',
   'Ring-necked Parakeet',
   'White-tailed Eagle',
-  'Wedge-tailed Eagle'
+  'Wedge-tailed Eagle',
+  // fifty_set_completion_20260706 — stats + spawns wired now; Higgsfield manga
+  // art pending a credit top-up (emoji fallback renders until then). See
+  // bird-art-cache/REMAINING_BIRD_PROMPTS.md for the exact prompt template.
+  'Yellow Wagtail',
+  'Whitethroat',
+  'Garden Warbler',
+  'Spotted Flycatcher',
+  'Marsh Tit',
+  'Crested Tit',
+  'Hawfinch',
+  'Siskin',
+  'Brambling',
+  'Fieldfare',
+  'Redwing',
+  'Woodcock',
+  'Redshank',
+  'Ringed Plover',
+  'Turnstone',
+  'Kittiwake',
+  'Fulmar',
+  'Guillemot',
+  'Little Egret',
+  'Bittern',
+  'Marsh Harrier',
+  'Hobby',
+  'Goshawk',
+  'Short-eared Owl',
+  'Nightingale',
+  'Wheatear',
+  'Whistling Kite',
+  'Nankeen Kestrel',
+  'Australian Hobby',
+  'Powerful Owl',
+  'Southern Boobook',
+  'Rainbow Bee-eater',
+  'Sacred Kingfisher',
+  'Azure Kingfisher',
+  'White-throated Treecreeper',
+  'Eastern Yellow Robin',
+  'Scarlet Robin',
+  'Golden Whistler',
+  'Grey Shrikethrush',
+  'Zebra Finch',
+  'Red-browed Finch',
+  'Yellow-tailed Black Cockatoo',
+  'Gang-gang Cockatoo',
+  'Musk Lorikeet'
 ];
 
 const HABITAT_BIRD_POOLS = {
-  water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler'],
-  wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler'],
-  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant'],
-  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant'],
-  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant'],
-  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet'],
-  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill'],
+  water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler','Little Egret'],
+  wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler','Redshank','Little Egret','Bittern','Marsh Harrier','Yellow Wagtail'],
+  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant','Garden Warbler','Spotted Flycatcher','Marsh Tit','Crested Tit','Siskin','Hawfinch','Woodcock','Nightingale','Goshawk'],
+  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow','Siskin','Redwing','Spotted Flycatcher'],
+  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant','Whitethroat','Fieldfare','Brambling','Yellow Wagtail'],
+  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant','Wheatear','Hobby','Fieldfare'],
+  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow','Redwing'],
+  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet','Ringed Plover','Turnstone','Kittiwake','Fulmar','Guillemot','Redshank','Little Egret'],
+  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill','Short-eared Owl','Wheatear'],
   default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe'],
 };
 const REGIONAL_HABITAT_BIRD_POOLS = {
   au: {
-    water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan'],
-    wetland: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Australasian Swamphen','Masked Lapwing','White-faced Heron','Royal Spoonbill','Australian Pelican','Willie Wagtail'],
-    woodland: ['Australian Raven','Square-tailed Kite','Little Raven','Laughing Kookaburra','Grey Butcherbird','Pied Currawong','Eastern Rosella','Crimson Rosella','Australian King Parrot','Brown Thornbill','Grey Fantail','Eastern Spinebill','New Holland Honeyeater','White-plumed Honeyeater'],
-    park: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Little Corella','Galah','Crested Pigeon','Spotted Dove','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow','New Holland Honeyeater'],
-    farmland: ['Australian Magpie','Willie Wagtail','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Raven','Galah','Crested Pigeon','Common Bronzewing','Welcome Swallow'],
-    grassland: ['Willie Wagtail','Australian Magpie','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Corella','Galah','Magpie-lark','Crested Pigeon','Welcome Swallow'],
-    urban: ['Australian Magpie','Rainbow Lorikeet','Noisy Miner','Willie Wagtail','Common Myna','Rock Pigeon','Spotted Dove','Little Corella','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow'],
-    coast: ['Silver Gull','Australian Pelican','Little Pied Cormorant','White-faced Heron','Masked Lapwing','Royal Spoonbill','Australian Raven','Square-tailed Kite','Pacific Black Duck'],
-    hills: ['Australian Raven','Square-tailed Kite','Little Raven','Wedge-tailed Eagle','Peregrine Falcon','Grey Butcherbird','Pied Currawong'],
-    default: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Australian Raven','Square-tailed Kite','Little Corella','Welcome Swallow']
+    water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan','Azure Kingfisher','Sacred Kingfisher'],
+    wetland: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Australasian Swamphen','Masked Lapwing','White-faced Heron','Royal Spoonbill','Australian Pelican','Willie Wagtail','Whistling Kite','Rainbow Bee-eater'],
+    woodland: ['Australian Raven','Square-tailed Kite','Little Raven','Laughing Kookaburra','Grey Butcherbird','Pied Currawong','Eastern Rosella','Crimson Rosella','Australian King Parrot','Brown Thornbill','Grey Fantail','Eastern Spinebill','New Holland Honeyeater','White-plumed Honeyeater','Powerful Owl','Southern Boobook','Golden Whistler','Grey Shrikethrush','Eastern Yellow Robin','Scarlet Robin','White-throated Treecreeper','Sacred Kingfisher','Yellow-tailed Black Cockatoo','Gang-gang Cockatoo'],
+    park: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Little Corella','Galah','Crested Pigeon','Spotted Dove','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow','New Holland Honeyeater','Eastern Yellow Robin','Musk Lorikeet','Red-browed Finch','Grey Shrikethrush'],
+    farmland: ['Australian Magpie','Willie Wagtail','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Raven','Galah','Crested Pigeon','Common Bronzewing','Welcome Swallow','Nankeen Kestrel','Zebra Finch'],
+    grassland: ['Willie Wagtail','Australian Magpie','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Corella','Galah','Magpie-lark','Crested Pigeon','Welcome Swallow','Nankeen Kestrel','Rainbow Bee-eater','Zebra Finch','Red-browed Finch'],
+    urban: ['Australian Magpie','Rainbow Lorikeet','Noisy Miner','Willie Wagtail','Common Myna','Rock Pigeon','Spotted Dove','Little Corella','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow','Musk Lorikeet','Australian Hobby'],
+    coast: ['Silver Gull','Australian Pelican','Little Pied Cormorant','White-faced Heron','Masked Lapwing','Royal Spoonbill','Australian Raven','Square-tailed Kite','Pacific Black Duck','Whistling Kite'],
+    hills: ['Australian Raven','Square-tailed Kite','Little Raven','Wedge-tailed Eagle','Peregrine Falcon','Grey Butcherbird','Pied Currawong','Yellow-tailed Black Cockatoo','Gang-gang Cockatoo'],
+    default: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Australian Raven','Square-tailed Kite','Little Corella','Welcome Swallow','Eastern Yellow Robin']
   }
 };
 const REGION_BLOCKED_SPECIES = {
@@ -2151,10 +2198,12 @@ const REGION_BLOCKED_SPECIES = {
 // from WILD_BIRDS or HABITAT_BIRD_POOLS at runtime (those get extended).
 const REGION_AREA_SPECIES = {
   uk: [
-    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle'
+    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle',
+    'Yellow Wagtail','Whitethroat','Garden Warbler','Spotted Flycatcher','Marsh Tit','Crested Tit','Hawfinch','Siskin','Brambling','Fieldfare','Redwing','Woodcock','Redshank','Ringed Plover','Turnstone','Kittiwake','Fulmar','Guillemot','Little Egret','Bittern','Marsh Harrier','Hobby','Goshawk','Short-eared Owl','Nightingale','Wheatear'
   ],
   au: [
-    'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon'
+    'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon',
+    'Whistling Kite','Nankeen Kestrel','Australian Hobby','Powerful Owl','Southern Boobook','Rainbow Bee-eater','Sacred Kingfisher','Azure Kingfisher','White-throated Treecreeper','Eastern Yellow Robin','Scarlet Robin','Golden Whistler','Grey Shrikethrush','Zebra Finch','Red-browed Finch','Yellow-tailed Black Cockatoo','Gang-gang Cockatoo','Musk Lorikeet'
   ]
 };
 const REGION_AREA_SPECIES_SETS = Object.fromEntries(Object.entries(REGION_AREA_SPECIES).map(([region, list]) => [region, new Set(list.map(s => s.toLowerCase()))]));
@@ -2167,7 +2216,10 @@ const REAL_WORLD_COMMONNESS = {
   'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':46,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32,
   // regional_plus20_20260701
   // higgsfield_manga_expansion_20260706
-  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22
+  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22,
+  // fifty_set_completion_20260706
+  'Yellow Wagtail':26,'Whitethroat':48,'Garden Warbler':30,'Spotted Flycatcher':20,'Marsh Tit':24,'Crested Tit':8,'Hawfinch':6,'Siskin':32,'Brambling':18,'Fieldfare':28,'Redwing':30,'Woodcock':12,'Redshank':22,'Ringed Plover':16,'Turnstone':18,'Kittiwake':14,'Fulmar':12,'Guillemot':13,'Little Egret':20,'Bittern':3,'Marsh Harrier':8,'Hobby':9,'Goshawk':4,'Short-eared Owl':6,'Nightingale':5,'Wheatear':21,
+  'Whistling Kite':20,'Nankeen Kestrel':30,'Australian Hobby':14,'Powerful Owl':4,'Southern Boobook':24,'Rainbow Bee-eater':18,'Sacred Kingfisher':22,'Azure Kingfisher':10,'White-throated Treecreeper':26,'Eastern Yellow Robin':40,'Scarlet Robin':16,'Golden Whistler':24,'Grey Shrikethrush':38,'Zebra Finch':15,'Red-browed Finch':36,'Yellow-tailed Black Cockatoo':18,'Gang-gang Cockatoo':8,'Musk Lorikeet':30
 };
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
@@ -2204,10 +2256,10 @@ const FOODS = {
 // Order matters: first match wins, so more specific patterns go first.
 const BIRD_DIET_RULES = [
   // Raptors & owls
-  { match: /\b(eagle|hawk|kite|harrier|peregrine|falcon|kestrel|merlin|osprey|buzzard|sparrowhawk|goshawk)\b/i,
+  { match: /\b(eagle|hawk|kite|harrier|peregrine|falcon|kestrel|merlin|osprey|buzzard|sparrowhawk|goshawk|hobby)\b/i,
     pref: ['meat'], ok: ['carrion','fish'], avoid: ['seeds','berries','fruit','aquatic'],
     fact: 'Raptors are obligate carnivores — they need live prey, not seeds.' },
-  { match: /\bowl\b/i,
+  { match: /\b(owl|boobook)\b/i,
     pref: ['meat'], ok: ['insects'], avoid: ['seeds','fruit','fish','aquatic'],
     fact: 'Owls hunt voles, mice and small birds — they swallow prey whole and cough up pellets.' },
 
@@ -2215,7 +2267,7 @@ const BIRD_DIET_RULES = [
   { match: /\bkingfisher\b/i,
     pref: ['fish'], ok: ['insects'], avoid: ['seeds','berries','suet','meat'],
     fact: 'Kingfishers plunge-dive for minnows and sticklebacks from a riverside perch.' },
-  { match: /\b(heron|egret|gannet|cormorant|razorbill|puffin|tern)\b/i,
+  { match: /\b(heron|egret|bittern|gannet|cormorant|razorbill|puffin|tern|kittiwake|fulmar|guillemot|shag)\b/i,
     pref: ['fish'], ok: ['aquatic'], avoid: ['seeds','berries','suet','fruit'],
     fact: 'Seabirds and herons are fish-specialists — wrong food is wasted on them.' },
 
@@ -2236,7 +2288,7 @@ const BIRD_DIET_RULES = [
     fact: 'Jays cache thousands of acorns each autumn — they plant whole oak woodlands.' },
 
   // Aerial insectivores
-  { match: /\b(swift|swallow|martin)\b/i,
+  { match: /\b(swift|swallow|martin|nightjar|bee-eater)\b/i,
     pref: ['flying'], ok: ['insects'], avoid: ['seeds','suet','fish','meat','berries','aquatic'],
     fact: 'Swifts and martins feed on the wing — they can\'t take food from a feeder.' },
 
@@ -2267,7 +2319,7 @@ const BIRD_DIET_RULES = [
     fact: 'Coots, moorhens and swamphens graze pondweed, shoots, seeds and small water life around lakes.' },
 
   // Finches & sparrows
-  { match: /(?:\w*finch|\bsparrow|\bbunting|\byellowhammer|\bcrossbill|\blinnet|\bredpoll|\bsiskin)\b/i,
+  { match: /(?:\w*finch|\bsparrow|\bbunting|\byellowhammer|\bcrossbill|\blinnet|\bredpoll|\bsiskin|\bbrambling)\b/i,
     pref: ['seeds'], ok: ['berries','insects'], avoid: ['fish','aquatic','meat','carrion'],
     fact: 'Finch beaks are designed to husk small seeds — niger and sunflower are favourites.' },
 
@@ -2282,7 +2334,7 @@ const BIRD_DIET_RULES = [
     fact: 'Thrushes work lawns for worms in spring, then switch to hedgerow berries in autumn.' },
 
   // Robin, wren, dunnock, warblers, wagtails
-  { match: /\b(robin|wren|dunnock|warbler|chiffchaff|whitethroat|stonechat|wagtail|pipit|wheatear)\b/i,
+  { match: /\b(robin|wren|dunnock|warbler|chiffchaff|whitethroat|stonechat|wagtail|pipit|wheatear|nightingale|flycatcher|whistler|shrikethrush)\b/i,
     pref: ['insects','worms'], ok: ['suet','berries'], avoid: ['fish','aquatic','meat','carrion'],
     fact: 'Robins follow garden spades for the worms turned up — they\'re close-range insect hunters.' },
 
@@ -2300,7 +2352,7 @@ const BIRD_DIET_RULES = [
     fact: 'Waxwings irrupt south in cold years to strip rowan and cotoneaster berries.' },
 
   // Wading birds
-  { match: /\b(oystercatcher|curlew|sandpiper|plover|lapwing|godwit|turnstone|knot)\b/i,
+  { match: /\b(oystercatcher|curlew|sandpiper|plover|lapwing|godwit|turnstone|knot|woodcock|snipe|redshank|greenshank|dunlin)\b/i,
     pref: ['insects','worms'], ok: ['fish'], avoid: ['seeds','fruit','aquatic','suet'],
     fact: 'Waders probe mud and shore with long bills for worms, shellfish and crustaceans.' }
 ];
@@ -4246,6 +4298,449 @@ const BURBZ_SPECIES_PROFILES = [{
     diet: "Fruit, seeds, buds, nuts, scraps",
     conservation: "Introduced/Naturalised",
     lat: 51.5, lon: -0.2
+  },
+  // fifty_set_completion_20260706 — 44 species finishing the "50 new birds"
+  // request (26 UK, 18 AU). Stats follow the realistic rebalance; card art is
+  // pending a Higgsfield credit top-up (emoji fallback renders until then).
+  {
+    id: "yellow_wagtail", name: "Yellow Wagtail", rarity: "uncommon", aliases: ["Motacilla flava", "Western Yellow Wagtail"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 8, int: 5 },
+    traits: ["lemon-yellow", "cattle follower", "summer migrant"],
+    rationale: "A dazzling lemon-yellow wagtail of wet meadows that darts around the feet of grazing cattle, snapping up the insects they disturb.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and western Asia", habitat: "Wet meadows, marshes, farmland",
+    range: "Summer visitor to lowland England; declining", diet: "Insects picked from ground and livestock",
+    conservation: "Red", lat: 52.8, lon: -0.5
+  },
+  {
+    id: "whitethroat", name: "Whitethroat", rarity: "common", aliases: ["Sylvia communis", "Common Whitethroat"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["scratchy song", "hedgerow warbler", "song flight"],
+    rationale: "A hedgerow warbler that hurls a scratchy song from bramble tops, then launches into a bouncing display flight over the scrub.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and central Asia", habitat: "Hedgerows, scrub, farmland edge",
+    range: "Widespread UK summer visitor", diet: "Insects in summer, berries in autumn",
+    conservation: "Amber", lat: 52.5, lon: -1
+  },
+  {
+    id: "garden_warbler", name: "Garden Warbler", rarity: "uncommon", aliases: ["Sylvia borin"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["plain plumage", "rich song", "skulker"],
+    rationale: "The plainest bird with one of the richest songs — a mellow, hurried warble from deep cover that rivals the Blackcap's.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and western Asia", habitat: "Open woodland with thick undergrowth",
+    range: "Summer visitor across most of Britain", diet: "Insects and, in late summer, berries",
+    conservation: "Green", lat: 52.5, lon: -1.5
+  },
+  {
+    id: "spotted_flycatcher", name: "Spotted Flycatcher", rarity: "uncommon", aliases: ["Muscicapa striata"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 7, int: 5 },
+    traits: ["fly-catching sallies", "upright perch", "late migrant"],
+    rationale: "Perches bolt upright on a bare branch, sallies out to snap a fly in mid-air, and loops straight back to the same perch.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and western Asia", habitat: "Woodland edge, parks, mature gardens",
+    range: "Declining summer visitor across the UK", diet: "Flying insects caught in aerial sallies",
+    conservation: "Red", lat: 52.5, lon: -1.5
+  },
+  {
+    id: "marsh_tit", name: "Marsh Tit", rarity: "uncommon", aliases: ["Poecile palustris"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 6 },
+    traits: ["glossy black cap", "seed cacher", "pitchoo call"],
+    rationale: "A neat woodland tit with a glossy black cap that hides thousands of seeds each autumn and remembers where it stashed them.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe", habitat: "Broadleaf woodland (despite the name, not marshes)",
+    range: "England and Wales; fast declining", diet: "Insects, seeds and beech mast, many cached",
+    conservation: "Red", lat: 52, lon: -1.5
+  },
+  {
+    id: "crested_tit", name: "Crested Tit", rarity: "rare", aliases: ["Lophophanes cristatus"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 6 },
+    traits: ["spiky crest", "pinewood specialist", "Scottish"],
+    rationale: "The punk of the pinewoods — a tiny tit with a spiky barred crest, found in Britain only in the ancient Caledonian forests.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe", habitat: "Old Scots pine forest",
+    range: "Scottish Highlands only in the UK", diet: "Pine seeds and insects, cached for winter",
+    conservation: "Green (very restricted UK range)", lat: 57.3, lon: -3.8
+  },
+  {
+    id: "hawfinch", name: "Hawfinch", rarity: "rare", aliases: ["Coccothraustes coccothraustes"],
+    stats: { hp: 4, stamina: 6, strength: 4, def: 5, spd: 6, int: 5 },
+    traits: ["nutcracker bill", "kilo-force bite", "treetop shy"],
+    rationale: "Britain's most powerful finch — its massive bill cracks cherry stones with a force of around 50 kg, yet it stays shy in the treetops.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and Asia", habitat: "Mature broadleaf woodland, hornbeam and cherry",
+    range: "Scarce and local in England and Wales", diet: "Hard seeds, cherry and hornbeam stones",
+    conservation: "Red", lat: 52, lon: -1
+  },
+  {
+    id: "siskin", name: "Siskin", rarity: "uncommon", aliases: ["Spinus spinus", "Eurasian Siskin"],
+    stats: { hp: 2, stamina: 6, strength: 1, def: 4, spd: 7, int: 5 },
+    traits: ["streaky yellow-green", "alder feeder", "acrobatic"],
+    rationale: "A streaky yellow-green finch that dangles upside-down from alder cones like a tiny parrot, and swarms garden feeders in late winter.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and Asia", habitat: "Conifer woodland, alders, garden feeders",
+    range: "Breeds in Scotland and Wales; winters UK-wide", diet: "Alder, birch and conifer seeds",
+    conservation: "Green", lat: 56, lon: -4
+  },
+  {
+    id: "brambling", name: "Brambling", rarity: "uncommon", aliases: ["Fringilla montifringilla"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["orange breast", "winter visitor", "beech mast flocks"],
+    rationale: "The northern cousin of the Chaffinch, flooding in from Scandinavia each winter to feast on beech mast in flocks sometimes millions strong.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Northern Europe and Asia", habitat: "Beech woodland, farmland, feeders in winter",
+    range: "Winter visitor across the UK", diet: "Beech mast, seeds, some insects",
+    conservation: "Green (winter visitor)", lat: 53, lon: -1
+  },
+  {
+    id: "fieldfare", name: "Fieldfare", rarity: "uncommon", aliases: ["Turdus pilaris"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 6, int: 5 },
+    traits: ["chuckling flocks", "winter thrush", "berry raider"],
+    rationale: "A big, handsome winter thrush that arrives from Scandinavia in chuckling flocks and strips hawthorn hedges berry by berry.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Northern Europe and Asia", habitat: "Farmland hedges, orchards, open fields",
+    range: "Widespread UK winter visitor", diet: "Berries, windfall fruit, worms",
+    conservation: "Red (as a rare UK breeder)", lat: 53.5, lon: -1.5
+  },
+  {
+    id: "redwing", name: "Redwing", rarity: "uncommon", aliases: ["Turdus iliacus"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 4, spd: 6, int: 5 },
+    traits: ["rusty flanks", "night migrant", "seep call"],
+    rationale: "The UK's smallest true thrush, with rusty-red flanks; on autumn nights its thin 'seep' calls rain down from migrating flocks overhead.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Northern Europe and Iceland", habitat: "Fields, hedges, parks and gardens in winter",
+    range: "Widespread UK winter visitor", diet: "Berries and worms",
+    conservation: "Red (as a rare UK breeder)", lat: 53.5, lon: -1.5
+  },
+  {
+    id: "woodcock", name: "Woodcock", rarity: "rare", aliases: ["Scolopax rusticola", "Eurasian Woodcock"],
+    stats: { hp: 5, stamina: 7, strength: 3, def: 6, spd: 6, int: 4 },
+    traits: ["dead-leaf camouflage", "roding flight", "360° vision"],
+    rationale: "A woodland wader dressed as dead leaves, with eyes set so high it can see all around itself; males 'rode' over the canopy at dusk.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and Asia", habitat: "Damp woodland with open rides",
+    range: "Widespread but declining; numbers swell in winter", diet: "Earthworms probed from soft ground at night",
+    conservation: "Red", lat: 53, lon: -2
+  },
+  {
+    id: "redshank", name: "Redshank", rarity: "uncommon", aliases: ["Tringa totanus", "Common Redshank"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 7, int: 5 },
+    traits: ["bright red legs", "sentinel of the marsh", "noisy alarm"],
+    rationale: "Nicknamed the 'sentinel of the marsh' — first to spot danger and first to yell about it, flashing its bright red legs as it goes.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and Asia", habitat: "Saltmarsh, wet grassland, estuaries",
+    range: "Coasts and wet lowlands across the UK", diet: "Worms, shrimps and snails from mud",
+    conservation: "Amber", lat: 53.5, lon: 0
+  },
+  {
+    id: "ringed_plover", name: "Ringed Plover", rarity: "uncommon", aliases: ["Charadrius hiaticula"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 7, int: 5 },
+    traits: ["black breast band", "broken-wing act", "run-stop-peck"],
+    rationale: "A dumpy little shore plover that feigns a broken wing to lure predators away from its pebble-camouflaged eggs.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Northern Eurasia and Arctic", habitat: "Shingle beaches, sandflats",
+    range: "Breeds around the whole UK coast", diet: "Marine worms, crustaceans, insects",
+    conservation: "Red", lat: 54, lon: -3
+  },
+  {
+    id: "turnstone", name: "Turnstone", rarity: "uncommon", aliases: ["Arenaria interpres", "Ruddy Turnstone"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 6, int: 5 },
+    traits: ["flips stones", "harlequin pattern", "Arctic breeder"],
+    rationale: "Does exactly what its name says — marches along the tideline flipping stones and seaweed to grab whatever scuttles out.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Arctic (winters worldwide)", habitat: "Rocky shores, piers, tidelines",
+    range: "UK coasts outside the breeding season", diet: "Sandhoppers, shellfish, almost anything",
+    conservation: "Amber", lat: 54, lon: -3
+  },
+  {
+    id: "kittiwake", name: "Kittiwake", rarity: "rare", aliases: ["Rissa tridactyla", "Black-legged Kittiwake"],
+    stats: { hp: 4, stamina: 8, strength: 3, def: 5, spd: 7, int: 5 },
+    traits: ["cliff colonies", "kitti-wake call", "true seagull"],
+    rationale: "The gentlest and most oceanic of our gulls, nesting on sheer cliff ledges and shouting its own name — 'kitti-wa-ake!' — all summer.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "North Atlantic and Arctic", habitat: "Sea cliffs in summer, open ocean in winter",
+    range: "Breeding colonies around UK coasts", diet: "Small fish and plankton from the surface",
+    conservation: "Red", lat: 55, lon: -1.6
+  },
+  {
+    id: "fulmar", name: "Fulmar", rarity: "rare", aliases: ["Fulmarus glacialis", "Northern Fulmar"],
+    stats: { hp: 5, stamina: 9, strength: 4, def: 6, spd: 7, int: 4 },
+    traits: ["stiff-winged glider", "tube nose", "oil spitter"],
+    rationale: "A mini-albatross relative that glides for hours on stiff wings — and defends its cliff ledge by projectile-spitting foul stomach oil.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "North Atlantic and Arctic", habitat: "Sea cliffs and open ocean",
+    range: "Breeds on cliffs all around the UK", diet: "Fish waste, squid and plankton at sea",
+    conservation: "Amber", lat: 58, lon: -3
+  },
+  {
+    id: "guillemot", name: "Guillemot", rarity: "rare", aliases: ["Uria aalge", "Common Murre", "Common Guillemot"],
+    stats: { hp: 5, stamina: 7, strength: 4, def: 6, spd: 6, int: 4 },
+    traits: ["cliff cities", "deep diver", "penguin-like"],
+    rationale: "Packs onto cliff ledges in vast noisy 'seabird cities' and flies underwater like a penguin, diving tens of metres for fish.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "North Atlantic and North Pacific", habitat: "Sea cliffs and open sea",
+    range: "Big colonies around north and west UK coasts", diet: "Small fish caught in deep dives",
+    conservation: "Amber", lat: 57, lon: -2
+  },
+  {
+    id: "little_egret", name: "Little Egret", rarity: "uncommon", aliases: ["Egretta garzetta"],
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 5 },
+    traits: ["snow-white", "yellow feet", "recent colonist"],
+    rationale: "A snow-white heron with golden slippers — it shuffles those yellow feet in the shallows to spook small fish into striking range.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Southern Europe, Africa, Asia", habitat: "Estuaries, marshes, rivers",
+    range: "Colonised the UK in the 1990s; now widespread", diet: "Small fish, shrimps and frogs",
+    conservation: "Green", lat: 51, lon: -1
+  },
+  {
+    id: "bittern", name: "Bittern", rarity: "rare", aliases: ["Botaurus stellaris", "Eurasian Bittern", "Great Bittern"],
+    stats: { hp: 6, stamina: 6, strength: 5, def: 7, spd: 4, int: 5 },
+    traits: ["booming call", "reed camouflage", "sky-pointing freeze"],
+    rationale: "A heron disguised as reeds — when alarmed it points its bill skyward and sways with the stems, and the male's boom carries for miles.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and Asia", habitat: "Large reedbeds",
+    range: "Rare; recovering at wetland reserves in England", diet: "Fish, eels, amphibians in the reeds",
+    conservation: "Amber (recovering from near-extinction)", lat: 52.5, lon: 0.5
+  },
+  {
+    id: "marsh_harrier", name: "Marsh Harrier", rarity: "rare", aliases: ["Circus aeruginosus", "Western Marsh Harrier"],
+    stats: { hp: 6, stamina: 8, strength: 6, def: 6, spd: 7, int: 6 },
+    traits: ["low quartering flight", "V-shaped glide", "food pass"],
+    rationale: "Quarters low over reedbeds on up-tilted wings; pairs perform a mid-air 'food pass', the female flipping upside down to catch prey dropped by the male.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe, Asia, Africa", habitat: "Reedbeds, marshes, arable land",
+    range: "Recovered from one UK pair in 1971 to hundreds", diet: "Frogs, small mammals, waterbirds",
+    conservation: "Amber", lat: 52.5, lon: 0.5
+  },
+  {
+    id: "hobby", name: "Hobby", rarity: "rare", aliases: ["Falco subbuteo", "Eurasian Hobby"],
+    stats: { hp: 4, stamina: 8, strength: 4, def: 4, spd: 9, int: 6 },
+    traits: ["dragonfly hunter", "catches swifts", "scythe wings"],
+    rationale: "A dashing falcon agile enough to catch swifts and swallows in level flight, and to snatch dragonflies and eat them on the wing.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and Asia", habitat: "Heaths, wetlands, farmland with copses",
+    range: "Summer visitor to England and Wales", diet: "Dragonflies and small birds taken in flight",
+    conservation: "Green", lat: 51.5, lon: -1
+  },
+  {
+    id: "goshawk", name: "Goshawk", rarity: "epic", aliases: ["Accipiter gentilis", "Northern Goshawk"],
+    stats: { hp: 6, stamina: 7, strength: 8, def: 6, spd: 8, int: 6 },
+    traits: ["phantom of the forest", "ambush power", "fierce orange eyes"],
+    rationale: "The 'phantom of the forest' — a hawk with the bulk of a buzzard that threads full-speed through dense trees to ambush crows and squirrels.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Eurasia and North America", habitat: "Large mature forests",
+    range: "Scarce but recovering across the UK", diet: "Woodpigeons, corvids, squirrels, rabbits",
+    conservation: "Green (recovering)", lat: 52, lon: -3
+  },
+  {
+    id: "short_eared_owl", name: "Short-eared Owl", rarity: "rare", aliases: ["Asio flammeus"],
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 6, int: 6 },
+    traits: ["daylight hunter", "yellow glare", "moth-like flight"],
+    rationale: "An owl that hunts in broad daylight, floating moth-like over moor and marsh with blazing yellow eyes fixed on the grass below.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Worldwide across the north", habitat: "Moorland, rough grassland, coastal marsh",
+    range: "Breeds in northern uplands; winters more widely", diet: "Field voles above all else",
+    conservation: "Amber", lat: 55, lon: -2.5
+  },
+  {
+    id: "nightingale", name: "Nightingale", rarity: "rare", aliases: ["Luscinia megarhynchos", "Common Nightingale"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 6 },
+    traits: ["legendary song", "night singer", "thicket skulker"],
+    rationale: "The most celebrated songster on Earth — a plain brown skulker whose rich, whistling night-time song has over a thousand different sounds.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Europe and western Asia", habitat: "Dense scrub and coppiced woodland",
+    range: "South-east England only; declining fast", diet: "Insects and worms from leaf litter",
+    conservation: "Red", lat: 51.2, lon: 0.5
+  },
+  {
+    id: "wheatear", name: "Wheatear", rarity: "uncommon", aliases: ["Oenanthe oenanthe", "Northern Wheatear"],
+    stats: { hp: 3, stamina: 8, strength: 2, def: 4, spd: 7, int: 5 },
+    traits: ["white rump flash", "epic migrant", "stone bobber"],
+    rationale: "Flashes a bold white rump as it bounds between rocks; some wheatears migrate 15,000 km from Africa to Alaska — the longest hop of any songbird.",
+    sources: ["RSPB", "Cornell Birds of the World"],
+    origin: "Eurasia, Alaska and Greenland", habitat: "Upland pasture, moorland, coastal turf",
+    range: "Summer visitor to UK uplands and coasts", diet: "Insects chased across short turf",
+    conservation: "Amber", lat: 54.5, lon: -3
+  },
+  {
+    id: "whistling_kite", name: "Whistling Kite", rarity: "rare", aliases: ["Haliastur sphenurus"],
+    stats: { hp: 6, stamina: 8, strength: 6, def: 5, spd: 7, int: 6 },
+    traits: ["whistling call", "fire follower", "scavenging soarer"],
+    rationale: "A shaggy Australian kite that gives a loud descending whistle on the wing and famously patrols bushfire fronts for fleeing prey.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and New Guinea", habitat: "Wetlands, rivers, open woodland",
+    range: "Throughout mainland Australia", diet: "Carrion, fish, rabbits, insects",
+    conservation: "Least Concern", lat: -37, lon: 145
+  },
+  {
+    id: "nankeen_kestrel", name: "Nankeen Kestrel", rarity: "uncommon", aliases: ["Falco cenchroides", "Australian Kestrel"],
+    stats: { hp: 4, stamina: 7, strength: 4, def: 4, spd: 7, int: 6 },
+    traits: ["hovering hunter", "rusty back", "roadside falcon"],
+    rationale: "Australia's hovering specialist — hangs motionless into the wind above paddocks and road verges, then drops onto grasshoppers and mice.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and New Guinea", habitat: "Grassland, farmland, open country",
+    range: "Common across mainland Australia", diet: "Insects, mice, small reptiles",
+    conservation: "Least Concern", lat: -37.5, lon: 144.5
+  },
+  {
+    id: "australian_hobby", name: "Australian Hobby", rarity: "rare", aliases: ["Falco longipennis", "Little Falcon"],
+    stats: { hp: 4, stamina: 7, strength: 4, def: 4, spd: 9, int: 6 },
+    traits: ["dusk hunter", "swift chaser", "compact falcon"],
+    rationale: "A compact, fearless falcon that hunts into dusk, chasing swallows, lorikeets and even bats in fast, twisting pursuit flights.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia", habitat: "Open woodland, towns, coasts",
+    range: "Throughout mainland Australia and Tasmania", diet: "Small birds and flying insects taken mid-air",
+    conservation: "Least Concern", lat: -37.8, lon: 145
+  },
+  {
+    id: "powerful_owl", name: "Powerful Owl", rarity: "epic", aliases: ["Ninox strenua"],
+    stats: { hp: 7, stamina: 6, strength: 8, def: 7, spd: 6, int: 6 },
+    traits: ["possum hunter", "apex nightbird", "woo-hoo call"],
+    rationale: "Australia's largest owl — a night apex predator strong enough to carry off ringtail possums, often holding leftovers in its talons at the day roost.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "South-eastern Australia", habitat: "Tall forest, wooded gullies, leafy suburbs",
+    range: "East and south-east Australia including Melbourne", diet: "Possums, gliders, roosting birds",
+    conservation: "Vulnerable (Victoria)", lat: -37.8, lon: 145.2
+  },
+  {
+    id: "southern_boobook", name: "Southern Boobook", rarity: "uncommon", aliases: ["Ninox boobook", "Mopoke"],
+    stats: { hp: 4, stamina: 6, strength: 4, def: 5, spd: 6, int: 6 },
+    traits: ["boo-book call", "smallest AU owl", "mopoke"],
+    rationale: "Australia's smallest and most familiar owl, better known by its two-note night call — 'boo-book' — earning it the folk name mopoke.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and New Guinea", habitat: "Woodland, farmland trees, leafy suburbs",
+    range: "Throughout Australia", diet: "Moths, beetles, mice and small birds",
+    conservation: "Least Concern", lat: -37.8, lon: 145
+  },
+  {
+    id: "rainbow_bee_eater", name: "Rainbow Bee-eater", rarity: "uncommon", aliases: ["Merops ornatus"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 8, int: 5 },
+    traits: ["jewel colours", "bee de-stinger", "tunnel nester"],
+    rationale: "A jewel-coloured aerial hunter that catches bees on the wing, then rubs the sting out against a branch before swallowing.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and New Guinea", habitat: "Open country, sandy banks, river flats",
+    range: "Summer migrant to southern Australia", diet: "Bees, wasps and dragonflies caught in flight",
+    conservation: "Least Concern", lat: -37.5, lon: 144.8
+  },
+  {
+    id: "sacred_kingfisher", name: "Sacred Kingfisher", rarity: "uncommon", aliases: ["Todiramphus sanctus"],
+    stats: { hp: 3, stamina: 6, strength: 3, def: 4, spd: 7, int: 5 },
+    traits: ["turquoise back", "land kingfisher", "perch-and-pounce"],
+    rationale: "A turquoise kingfisher that rarely bothers with fish — it perches quietly, then pounces on lizards, insects and yabbies from dry land.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and the south-west Pacific", habitat: "Open woodland, river edges, mangroves",
+    range: "Spring–summer across south-east Australia", diet: "Insects, lizards, crustaceans; some fish",
+    conservation: "Least Concern", lat: -37.8, lon: 145
+  },
+  {
+    id: "azure_kingfisher", name: "Azure Kingfisher", rarity: "rare", aliases: ["Ceyx azureus"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 7, int: 5 },
+    traits: ["deep blue", "low river dart", "plunge diver"],
+    rationale: "A tiny deep-blue kingfisher that rockets low along shaded creeks and plunge-dives for fish from overhanging snags.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and New Guinea", habitat: "Shaded creeks, rivers, wetlands",
+    range: "Eastern and northern Australia", diet: "Small fish, yabbies, water insects",
+    conservation: "Least Concern", lat: -37.7, lon: 145.1
+  },
+  {
+    id: "white_throated_treecreeper", name: "White-throated Treecreeper", rarity: "uncommon", aliases: ["Cormobates leucophaea"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 5, spd: 5, int: 5 },
+    traits: ["spiral climber", "bark forager", "piping call"],
+    rationale: "Spirals up eucalypt trunks like a wind-up toy, probing bark for ants — then flies to the base of the next tree and starts again.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Eastern Australia", habitat: "Eucalypt forest and woodland",
+    range: "East coast and ranges including Victoria", diet: "Ants and bark insects",
+    conservation: "Least Concern", lat: -37.8, lon: 145.3
+  },
+  {
+    id: "eastern_yellow_robin", name: "Eastern Yellow Robin", rarity: "common", aliases: ["Eopsaltria australis"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["sideways trunk perch", "dawn chorister", "confiding"],
+    rationale: "A confiding yellow-breasted robin that clings sideways to tree trunks watching the ground, and is often the first voice in the dawn chorus.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Eastern Australia", habitat: "Forest understorey, gullies, shady gardens",
+    range: "East and south-east Australia", diet: "Insects pounced on from low perches",
+    conservation: "Least Concern", lat: -37.8, lon: 145.2
+  },
+  {
+    id: "scarlet_robin", name: "Scarlet Robin", rarity: "uncommon", aliases: ["Petroica boodang"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["scarlet breast", "white forehead spot", "winter visitor to farms"],
+    rationale: "A jet-black robin with a blazing scarlet breast and white forehead star; pairs drift from forest to farmland each autumn.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Southern Australia", habitat: "Open forest and woodland edges",
+    range: "South-east and south-west Australia, Tasmania", diet: "Insects taken from ground and low perches",
+    conservation: "Vulnerable (Victoria)", lat: -37.6, lon: 145.3
+  },
+  {
+    id: "golden_whistler", name: "Golden Whistler", rarity: "uncommon", aliases: ["Pachycephala pectoralis", "Australian Golden Whistler"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5 },
+    traits: ["golden breast", "ringing whistle", "thunder singer"],
+    rationale: "One of Australia's finest songsters — a golden-breasted whistler whose ringing calls burst out in reply to sudden loud sounds, even thunder.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and the south-west Pacific", habitat: "Forest, dense woodland, gullies",
+    range: "Southern and eastern Australia", diet: "Insects and spiders from foliage",
+    conservation: "Least Concern", lat: -37.8, lon: 145.3
+  },
+  {
+    id: "grey_shrikethrush", name: "Grey Shrikethrush", rarity: "common", aliases: ["Colluricincla harmonica", "Grey Shrike-thrush"],
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 5, int: 6 },
+    traits: ["harmonious song", "plain but mighty voice", "bold forager"],
+    rationale: "Plain grey but blessed with one of the most beautiful voices in Australia — its rich, ringing phrases earn its scientific name 'harmonica'.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia and New Guinea", habitat: "Woodland, gardens, farm shelterbelts",
+    range: "Throughout Australia", diet: "Insects, spiders, small lizards and nestlings",
+    conservation: "Least Concern", lat: -37.8, lon: 145
+  },
+  {
+    id: "zebra_finch", name: "Zebra Finch", rarity: "uncommon", aliases: ["Taeniopygia castanotis", "Australian Zebra Finch"],
+    stats: { hp: 2, stamina: 6, strength: 1, def: 3, spd: 6, int: 5 },
+    traits: ["beeping call", "desert survivor", "orange cheeks"],
+    rationale: "A tiny toy-trumpet of the outback — its beeping calls fill dry country, and it can breed within weeks of rain hitting the desert.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Australia", habitat: "Dry grassland and scrub near water",
+    range: "Most of mainland Australia away from wet coasts", diet: "Grass seeds taken on the ground",
+    conservation: "Least Concern", lat: -36.5, lon: 144.5
+  },
+  {
+    id: "red_browed_finch", name: "Red-browed Finch", rarity: "common", aliases: ["Neochmia temporalis", "Red-browed Firetail"],
+    stats: { hp: 2, stamina: 6, strength: 1, def: 3, spd: 6, int: 5 },
+    traits: ["scarlet eyebrow", "grass-seed flocks", "firetail rump"],
+    rationale: "A little firetail with a scarlet eyebrow and rump; busy flocks bounce along grassy creek edges, showering seed heads as they feed.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "Eastern Australia", habitat: "Grassy woodland edges, creeks, parks",
+    range: "East coast from Cape York to South Australia", diet: "Grass and herb seeds, some insects",
+    conservation: "Least Concern", lat: -37.8, lon: 145.1
+  },
+  {
+    id: "yellow_tailed_black_cockatoo", name: "Yellow-tailed Black Cockatoo", rarity: "rare", aliases: ["Zanda funerea", "Calyptorhynchus funereus"],
+    stats: { hp: 7, stamina: 8, strength: 7, def: 6, spd: 5, int: 8 },
+    traits: ["wailing flight call", "grub extractor", "slow deep wingbeats"],
+    rationale: "A huge black cockatoo that cruises over on slow, deep wingbeats, wailing eerily, and tears open banksia cones and grub-riddled wood with its massive bill.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "South-eastern Australia", habitat: "Eucalypt forest, pine plantations, coastal heath",
+    range: "South-east Australia and Tasmania", diet: "Banksia and hakea seeds, wood-boring grubs",
+    conservation: "Least Concern (declining locally)", lat: -37.9, lon: 145.3
+  },
+  {
+    id: "gang_gang_cockatoo", name: "Gang-gang Cockatoo", rarity: "rare", aliases: ["Callocephalon fimbriatum"],
+    stats: { hp: 5, stamina: 6, strength: 5, def: 6, spd: 5, int: 8 },
+    traits: ["creaky-door call", "scarlet head", "quiet canopy feeder"],
+    rationale: "A soft-grey cockatoo — the male with a wispy scarlet crest — whose call sounds exactly like a creaky door swinging in the canopy.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "South-eastern Australia", habitat: "Tall mountain forest; gardens in winter",
+    range: "Cool forests of Victoria and New South Wales", diet: "Eucalypt and wattle seeds, berries",
+    conservation: "Endangered", lat: -37.5, lon: 145.5
+  },
+  {
+    id: "musk_lorikeet", name: "Musk Lorikeet", rarity: "uncommon", aliases: ["Glossopsitta concinna"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 7, int: 7 },
+    traits: ["red ear patch", "blossom swarm", "screeching flocks"],
+    rationale: "A green blur with a red ear patch that swarms flowering gums in screeching flocks, mopping up nectar with its brush-tipped tongue.",
+    sources: ["Australian field guides", "Cornell Birds of the World"],
+    origin: "South-eastern Australia", habitat: "Flowering eucalypts in woodland and suburbs",
+    range: "South-east Australia and Tasmania", diet: "Nectar, pollen and soft fruit",
+    conservation: "Least Concern", lat: -37.8, lon: 145
   }
 ];
 

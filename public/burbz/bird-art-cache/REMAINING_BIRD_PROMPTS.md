@@ -1,16 +1,28 @@
-# Burbz — remaining new-bird art prompts (Higgsfield `z_image`, 1:1)
+# Burbz — remaining new-bird ART prompts (Higgsfield `z_image`, 1:1)
 
-The 2026-07-06 expansion added **7** new birds with real Higgsfield art
-(Square-tailed Kite, Wedge-tailed Eagle, White-tailed Eagle, Common Pheasant,
-Herring Gull, Green Woodpecker, Ring-necked Parakeet). The MCP credit balance
-(1.18) only covered those 7 at ~0.15 credits each.
+## Status (2026-07-06, fifty_set_completion pass)
 
-To finish the "50 new birds" set, top up Higgsfield credits, then generate the
-species below with the SAME prompt template so the style stays identical. Save
-each result to `public/burbz/bird-art-cache/<snake_name>_burbz_manga_YYYYMMDD.png`,
-downscale to 1024×1024, and add matching entries to `BUILT_IN_BIRD_ART`,
-`BURBZ_SPECIES_PROFILES`, `WILD_BIRDS`, and the regional whitelists in
-`public/burbz/index.html` (mirror how the 7 above were wired).
+The "50 new birds" set is now FULLY WIRED into the game data. The
+2026-07-06 expansions added:
+
+- **7 birds with real Higgsfield manga art** (Square-tailed Kite,
+  Wedge-tailed Eagle, White-tailed Eagle, Common Pheasant, Herring Gull,
+  Green Woodpecker, Ring-necked Parakeet).
+- **44 birds with full profiles but NO art yet** (26 UK + 18 AU, listed
+  below). Each has realistic rebalanced stats, diet rules, habitat pools,
+  commonness and regional whitelist entries in `public/burbz/index.html`
+  (marker comment: `fifty_set_completion_20260706`). They spawn and render
+  with the game's graceful emoji fallback until art exists.
+
+The Higgsfield MCP credit balance (0.13 remaining; ~0.15/image, so ~6.6
+credits for all 44) is the only thing blocking the art. Once topped up:
+
+1. Generate each species below with the prompt template (SAME style).
+2. Save to `public/burbz/bird-art-cache/<snake_name>_burbz_manga_YYYYMMDD.png`,
+   downscaled to 1024×1024 (~1.6 MB) to match the existing art footprint.
+3. Add matching entries (name + aliases) to `BUILT_IN_BIRD_ART` in
+   `public/burbz/index.html` — that is the ONLY remaining wiring step;
+   everything else is already done.
 
 ## Prompt template
 
@@ -24,22 +36,25 @@ downscale to 1024×1024, and add matching entries to `BUILT_IN_BIRD_ART`,
 > aesthetic. The bird is a real bird with wings and talons only — no human arms,
 > no hands, no weapons, no text, no letters, no watermark.
 
-## Candidate species (region-appropriate, ~44 to reach 50+)
+## Species awaiting art (44 — all already wired in-game)
 
-UK/EU: Grey Wagtail-relative Yellow Wagtail, Whitethroat, Garden Warbler,
-Spotted Flycatcher, Marsh Tit, Willow Tit, Crested Tit, Corn Bunting, Twite,
-Hawfinch, Siskin, Redpoll, Brambling, Fieldfare, Redwing, Waxwing (have),
-Woodcock, Snipe (have Common Snipe), Green Sandpiper, Redshank, Greenshank,
-Dunlin, Ringed Plover, Golden Plover, Turnstone, Kittiwake, Fulmar, Shag,
-Guillemot, Little Egret, Bittern, Water Rail, Marsh Harrier, Hen Harrier,
-Hobby, Goshawk, Short-eared Owl, Long-eared Owl, Nightjar, Nightingale,
-Whinchat, Wheatear, Ring Ouzel, Crossbill (have), Bearded Tit.
+UK (26): Yellow Wagtail, Whitethroat, Garden Warbler, Spotted Flycatcher,
+Marsh Tit, Crested Tit, Hawfinch, Siskin, Brambling, Fieldfare, Redwing,
+Woodcock, Redshank, Ringed Plover, Turnstone, Kittiwake, Fulmar, Guillemot,
+Little Egret, Bittern, Marsh Harrier, Hobby, Goshawk, Short-eared Owl,
+Nightingale, Wheatear.
 
-AU: Wedge-tailed Eagle (have), Square-tailed Kite (have), Whistling Kite,
-Nankeen Kestrel, Australian Hobby, Powerful Owl, Southern Boobook,
-Australian Owlet-nightjar, Rainbow Bee-eater, Sacred Kingfisher,
-Azure Kingfisher, White-throated Treecreeper, Eastern Yellow Robin,
-Scarlet Robin, Golden Whistler, Grey Shrikethrush, Australian Reed Warbler,
-Welcome Swallow (have), Fairy Martin, Zebra Finch, Red-browed Finch,
-Diamond Firetail, Yellow-tailed Black Cockatoo, Gang-gang Cockatoo,
-Musk Lorikeet, Purple Swamphen relatives.
+AU (18): Whistling Kite, Nankeen Kestrel, Australian Hobby, Powerful Owl,
+Southern Boobook, Rainbow Bee-eater, Sacred Kingfisher, Azure Kingfisher,
+White-throated Treecreeper, Eastern Yellow Robin, Scarlet Robin,
+Golden Whistler, Grey Shrikethrush, Zebra Finch, Red-browed Finch,
+Yellow-tailed Black Cockatoo, Gang-gang Cockatoo, Musk Lorikeet.
+
+## Spare candidates (not wired; use only if swapping a species)
+
+UK/EU: Willow Tit, Corn Bunting, Twite, Redpoll, Green Sandpiper,
+Greenshank, Dunlin, Golden Plover, Shag, Water Rail, Hen Harrier,
+Long-eared Owl, Nightjar, Whinchat, Ring Ouzel, Bearded Tit.
+
+AU: Australian Owlet-nightjar, Fairy Martin, Australian Reed Warbler,
+Diamond Firetail.
