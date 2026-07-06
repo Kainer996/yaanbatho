@@ -2126,6 +2126,25 @@ const REGIONAL_HABITAT_BIRD_POOLS = {
 const REGION_BLOCKED_SPECIES = {
   au: ['Nuthatch','European Robin','Robin','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Jackdaw','Rook','Sedge Warbler','Curlew','Eurasian Tree Sparrow','Grey Partridge','Common Linnet','Bohemian Waxwing','Red Crossbill','Dipper','Goosander','Puffin','Razorbill','Gannet','Oystercatcher']
 };
+// Hard regional whitelists for AREA SPAWNS and the "Area Birds" panel.
+// The scan/codex roster may contain world species (toucans, emus, macaws...)
+// so players can log exotic finds, but map spawns must only ever be birds a
+// player could genuinely meet at their real location. These lists are CLOSED
+// on purpose — never append world-roster species here, and never derive them
+// from WILD_BIRDS or HABITAT_BIRD_POOLS at runtime (those get extended).
+const REGION_AREA_SPECIES = {
+  uk: [
+    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler'
+  ],
+  au: [
+    'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon'
+  ]
+};
+const REGION_AREA_SPECIES_SETS = Object.fromEntries(Object.entries(REGION_AREA_SPECIES).map(([region, list]) => [region, new Set(list.map(s => s.toLowerCase()))]));
+function speciesNativeToRegion(species, region) {
+  const set = REGION_AREA_SPECIES_SETS[region] || REGION_AREA_SPECIES_SETS.uk;
+  return set.has(String(species || '').split('(')[0].trim().toLowerCase());
+}
 const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland:'woodland', park:'park / garden', farmland:'farmland edge', grassland:'grassland', urban:'town habitat', coast:'coast', hills:'moor / hill country', default:'local habitat' };
 const REAL_WORLD_COMMONNESS = {
   'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':46,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32
@@ -6197,8 +6216,13 @@ function habitatPoolForRegion(habitat, region) {
   return (regional && (regional[habitat] || regional.default)) || HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default;
 }
 function pickHabitatBird(habitat, seed, region = 'uk') {
-  let pool = habitatPoolForRegion(habitat, region).filter(species => speciesAllowedInRegion(species, region) && (findSpeciesProfile(species) || WILD_BIRDS.includes(species)));
-  if (!pool.length) pool = (HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default).filter(species => speciesAllowedInRegion(species, region));
+  // Spawns must pass the closed regional whitelist — the habitat pools can be
+  // extended with world-roster species for scanning, but an Emu must never
+  // appear as an "area bird" in Cheshire.
+  const native = species => speciesNativeToRegion(species, region) && speciesAllowedInRegion(species, region);
+  let pool = habitatPoolForRegion(habitat, region).filter(species => native(species) && (findSpeciesProfile(species) || WILD_BIRDS.includes(species)));
+  if (!pool.length) pool = (HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default).filter(native);
+  if (!pool.length) pool = REGION_AREA_SPECIES[region] || REGION_AREA_SPECIES.uk;
   const species = pool[Math.abs(seed) % pool.length];
   return findSpeciesProfile(species) || createRosterBird(species);
 }
