@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-economy-rebalance-v13-20260706';
+const BURBZ_CACHE = 'burbz-realistic-stats-v14-20260706';
 const BURBZ_ASSETS = [
   './',
   './index.html',
