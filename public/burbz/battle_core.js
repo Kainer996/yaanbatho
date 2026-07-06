@@ -150,20 +150,24 @@
 
   function generateOpponentBird(species, level, index) {
     const seed = hashString(`${species}_${level}_${index}`);
-    const base = 48 + (seed % 38) + level * 8;
+    // Rivals grow ~4.5% per level, mirroring player birds' multiplicative
+    // growth — the old flat +8/stat/level outpaced players hard past level 5.
+    const growth = 1 + (level - 1) * 0.045;
+    const base = 46 + (seed % 34);
+    const stat = (spread) => Math.round((base + spread) * growth);
     return {
       id: `op_${index}_${seed}`,
       species,
       commonName: species,
       level,
-      power: base * 2,
-      maxHp: base + 30,
-      hp: base + 30,
-      atk: base + ((seed >>> 3) % 30),
-      def: base + ((seed >>> 7) % 26),
-      spd: base + ((seed >>> 11) % 34),
-      int: base + ((seed >>> 15) % 28),
-      stamina: base + ((seed >>> 19) % 32)
+      power: Math.round(base * 2 * growth),
+      maxHp: stat(30),
+      hp: stat(30),
+      atk: stat((seed >>> 3) % 30),
+      def: stat((seed >>> 7) % 26),
+      spd: stat((seed >>> 11) % 34),
+      int: stat((seed >>> 15) % 28),
+      stamina: stat((seed >>> 19) % 32)
     };
   }
 

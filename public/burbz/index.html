@@ -1947,8 +1947,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=quest-xp-20260701"></script>
-<script src="battle_core.js?v=squad-league-20260624"></script>
+<script src="academy_treehouse_core.js?v=economy-rebalance-20260706"></script>
+<script src="battle_core.js?v=economy-rebalance-20260706"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -1979,7 +1979,14 @@ const SPECIAL_MOVES = [
   'Solar Flare','Night Howl','Tidal Surge','Quake Stomp','Venom Spit',
   'Shadow Claw','Blaze Rush','Ice Shard','Lightning Arc','Earthquake'
 ];
-const XP_PER_LEVEL = (lv) => Math.floor(80 + lv * 40 + Math.pow(lv, 1.5) * 10);
+// Trainer progression: 40 career ranks, Warhammer Online style — quick early
+// ranks so new players feel momentum, a steepening curve through the tiers
+// (T1 1-10, T2 11-20, T3 21-30, T4 31-40) so late ranks are earned.
+const TRAINER_LEVEL_CAP = 40;
+const XP_PER_LEVEL = (lv) => Math.floor(60 + lv * 30 + Math.pow(lv, 1.6) * 8);
+// Companions level from lots of small care/battle moments, so their curve is
+// gentler than the trainer's. Cap stays at 50.
+const BIRD_XP_PER_LEVEL = (lv) => Math.floor(30 + lv * 18 + Math.pow(lv, 1.4) * 5);
 const WILD_BIRDS = [
   'House Sparrow',
   'European Robin',
@@ -2422,7 +2429,7 @@ function vibrate(ms) {
 // GAME STATE
 // ============================================================================
 const DEFAULT_STATE = {
-  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 90 },
+  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 100 },
   flock: [],
   discoveredSpecies: {},
   inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, equipment: {}, giftsGiven: {} },
@@ -5051,9 +5058,8 @@ function createBirdEntry(speciesName, scientificName, confidence) {
 
 function levelUpBird(bird, xpGain) {
   bird.xp += xpGain;
-  const needed = XP_PER_LEVEL(bird.level);
-  while (bird.xp >= needed && bird.level < 50) {
-    bird.xp -= needed;
+  while (bird.xp >= BIRD_XP_PER_LEVEL(bird.level) && bird.level < 50) {
+    bird.xp -= BIRD_XP_PER_LEVEL(bird.level);
     bird.level++;
 
     // Recalculate base stats for the new level
@@ -6506,9 +6512,15 @@ window.__burbzAcademyDebug = {
 // PLAYER LEVEL
 // ============================================================================
 function addPlayerXp(amount) {
+  if (gameState.player.level >= TRAINER_LEVEL_CAP) {
+    gameState.player.xp = Math.min(gameState.player.xp + amount, XP_PER_LEVEL(TRAINER_LEVEL_CAP) - 1);
+    updateHeader();
+    saveState();
+    return;
+  }
   gameState.player.xp += amount;
   let leveledUp = false;
-  while (gameState.player.xp >= XP_PER_LEVEL(gameState.player.level)) {
+  while (gameState.player.level < TRAINER_LEVEL_CAP && gameState.player.xp >= XP_PER_LEVEL(gameState.player.level)) {
     gameState.player.xp -= XP_PER_LEVEL(gameState.player.level);
     gameState.player.level++;
     leveledUp = true;
@@ -6523,6 +6535,8 @@ function addPlayerXp(amount) {
 
 function getPlayerTitle() {
   const lv = gameState.player.level;
+  if (lv >= 40) return 'Grand Aviarch';
+  if (lv >= 35) return 'Warden of the Flock';
   if (lv >= 30) return 'Legendary Ornithologist';
   if (lv >= 25) return 'Master Falconer';
   if (lv >= 20) return 'Expert Birder';
@@ -6959,8 +6973,12 @@ function switchScreen(name) {
 // ============================================================================
 // RPG ECONOMY — discoveries are not the same as recruited companions
 // ============================================================================
-const RARITY_RECRUIT_COST = { common: 35, uncommon: 55, rare: 90, epic: 140, legendary: 220 };
-const RARITY_DISCOVERY_REWARD = { common: 14, uncommon: 22, rare: 34, epic: 55, legendary: 90 };
+// Recruit prices ramp harder at the top tiers so an epic or legendary is a
+// real savings goal (a few days of quests), while commons stay day-one cheap.
+// Discovery pays roughly 40% of the recruit price, so finding a bird always
+// funds a real chunk of hiring it.
+const RARITY_RECRUIT_COST = { common: 30, uncommon: 60, rare: 110, epic: 180, legendary: 300 };
+const RARITY_DISCOVERY_REWARD = { common: 12, uncommon: 24, rare: 45, epic: 70, legendary: 120 };
 
 function speciesKey(name) { return String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); }
 function canonicalSpeciesName(name) {
@@ -7023,7 +7041,7 @@ const VILLAGE_SHOPS = {
   smith: {
     name: 'Talon & Anvil', icon: '⚒️', desc: 'Blacksmith. Gear for hard-training birds.',
     stock: [
-      { id: 'drill_token', label: 'Drill whistle', detail: 'Your pet may drill again right now (clears training cooldown)', price: 30, effect: 'drill' },
+      { id: 'drill_token', label: 'Drill whistle', detail: 'Your pet may drill again right now (clears training cooldown)', price: 40, effect: 'drill' },
       { id: 'rest_token',  label: 'Feather pillow', detail: 'Your pet may Deep Rest again right now', price: 22, effect: 'rest' }
     ]
   },
@@ -8344,8 +8362,8 @@ function villageBuy(shopKey, itemId) {
   if (item.effect === 'rest')  { pet.academy = pet.academy || {}; pet.academy.lastRest = null; msg = '⚒️ ' + (pet.commonName || pet.species) + ' can Deep Rest again!'; }
   if (item.effect === 'rumor') {
     const rule = BIRD_DIET_RULES[Math.floor(Math.random() * BIRD_DIET_RULES.length)];
-    addPlayerXp(3);
-    msg = '🍻 A birder leans in: "' + (rule && rule.fact ? rule.fact : 'Feed the right food and any bird will trust you.') + '" (+3 XP)';
+    addPlayerXp(5);
+    msg = '🍻 A birder leans in: "' + (rule && rule.fact ? rule.fact : 'Feed the right food and any bird will trust you.') + '" (+5 XP)';
   }
   saveState(); updateHeader();
   showToast(msg || 'Purchased!');
@@ -9512,7 +9530,15 @@ $('battleStartBtn').addEventListener('click', () => { if (!getBattleSquad().memb
 function startSquadBattle() { const core = battleCore(); const playerSquad = getBattleSquad(); const avgLevel = playerSquad.members.length ? playerSquad.members.reduce((s, m) => s + (m.bird.level || 1), 0) / playerSquad.members.length : 1; const opponentFormationIds = Object.keys(BATTLE_FORMATIONS).filter(id => id !== selectedBattleFormation); const opponentFormation = opponentFormationIds[Math.floor(Math.random() * opponentFormationIds.length)] || 'balanced'; const opponentSquad = core.generateOpponentSquad(WILD_BIRDS.slice().sort(() => Math.random() - 0.5), avgLevel, opponentFormation); const seed = `${Date.now()}_${playerSquad.totalPower}_${opponentSquad.totalPower}`; const match = core.simulateSquadMatch(playerSquad, opponentSquad, seed); battleState = { match, playerSquad, opponentSquad, over: false }; $('battleSelect').style.display = 'none'; $('battleArena').style.display = 'block'; $('battleResult').style.display = 'none'; $('battleLog').innerHTML = ''; $('playerFormationLabel').textContent = playerSquad.formation.label; $('opponentFormationLabel').textContent = opponentSquad.formation.label; $('playerMatchScore').textContent = '0'; $('opponentMatchScore').textContent = '0'; const pitch = $('opponentPitch'); pitch.innerHTML = '<div class="pitch-half-label top">Rival flock</div><div class="pitch-half-label bottom">Your flock</div>'; renderSquadOnPitch(pitch, opponentSquad, 'opponent', true); renderSquadOnPitch(pitch, playerSquad, 'player', false); addBattleLog('system-msg', `Flock League kickoff: ${playerSquad.formation.label} vs ${opponentSquad.formation.label}.`); runSquadMatchPlayback(match); }
 function runSquadMatchPlayback(match) { let playerScore = 0; let opponentScore = 0; match.events.forEach((event, index) => { setTimeout(() => { const cls = event.side === 'player' ? 'player-action' : event.side === 'opponent' ? 'enemy-action' : 'system-msg'; addBattleLog(cls, event.text); if (event.side === 'player') playerScore += event.lane === 'attack' ? 2 : 1; if (event.side === 'opponent') opponentScore += event.lane === 'attack' ? 2 : 1; $('playerMatchScore').textContent = Math.min(playerScore, match.score.player); $('opponentMatchScore').textContent = Math.min(opponentScore, match.score.opponent); highlightSquadLane(event.side, event.lane); SFX.tap(); if (index === match.events.length - 1) setTimeout(() => endSquadBattle(match), 900); }, 650 + index * 820); }); }
 function highlightSquadLane(side, lane) { $$('.squad-slot').forEach(el => el.classList.remove('highlight')); const squad = side === 'opponent' ? battleState.opponentSquad : battleState.playerSquad; const member = squad.members.find(m => m.slot.lane === lane) || squad.members[0]; if (!member) return; const el = document.querySelector(`.squad-slot.${side}[data-bird-id="${CSS.escape(member.id)}"]`); if (el) el.classList.add('highlight'); }
-function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').textContent = match.score.player; $('opponentMatchScore').textContent = match.score.opponent; setTimeout(() => { $('battleArena').style.display = 'none'; $('battleResult').style.display = 'block'; const won = match.winner === 'player'; const draw = match.winner === 'draw'; $('battleResultTitle').textContent = won ? 'FLOCK WIN!' : draw ? 'DRAW!' : 'RIVAL WIN!'; $('battleResultTitle').className = 'battle-result-title ' + (won ? 'victory' : 'defeat'); $('battleResultEmoji').textContent = won ? '🏆' : draw ? '🤝' : '🪶'; const xpGain = won ? 45 + match.score.player * 8 : draw ? 24 : 12; $('battleResultXp').textContent = '+' + xpGain + ' XP for the squad'; $('battleResultXpFill').style.width = '0%'; battleState.playerSquad.members.forEach(member => { const origBird = gameState.flock.find(b => b.id === member.bird.id || b.species === member.bird.species); if (origBird) levelUpBird(origBird, Math.max(6, Math.floor(xpGain / battleState.playerSquad.members.length))); }); addPlayerXp(xpGain); if (won) { gameState.player.wins++; updateQuestProgress('win', 1); SFX.victory(); } else { gameState.player.losses++; SFX.defeat(); } gameState.battlePreset = gameState.battlePreset || {}; gameState.battlePreset.lastResult = { score: match.score, winner: match.winner, formation: selectedBattleFormation, at: new Date().toISOString() }; checkBadges(); saveState(); setTimeout(() => { const pct = Math.min(100, (gameState.player.xp / XP_PER_LEVEL(gameState.player.level)) * 100); $('battleResultXpFill').style.width = pct + '%'; }, 100); }, 450); }
+// War-spoils pacing: the first few league matches each day pay full rewards,
+// then payouts taper so battle spam can't outearn quests and expeditions.
+function battleRewardScale() {
+  const todayKey = new Date().toISOString().split('T')[0];
+  if (gameState.battleRewardDay !== todayKey) { gameState.battleRewardDay = todayKey; gameState.battleRewardCount = 0; }
+  const n = gameState.battleRewardCount || 0;
+  return n < 5 ? 1 : n < 10 ? 0.5 : 0.25;
+}
+function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').textContent = match.score.player; $('opponentMatchScore').textContent = match.score.opponent; setTimeout(() => { $('battleArena').style.display = 'none'; $('battleResult').style.display = 'block'; const won = match.winner === 'player'; const draw = match.winner === 'draw'; $('battleResultTitle').textContent = won ? 'FLOCK WIN!' : draw ? 'DRAW!' : 'RIVAL WIN!'; $('battleResultTitle').className = 'battle-result-title ' + (won ? 'victory' : 'defeat'); $('battleResultEmoji').textContent = won ? '🏆' : draw ? '🤝' : '🪶'; const scale = battleRewardScale(); gameState.battleRewardCount = (gameState.battleRewardCount || 0) + 1; const xpGain = Math.max(4, Math.round((won ? 30 + match.score.player * 4 : draw ? 15 : 8) * scale)); const coinGain = Math.round((won ? 15 + Math.floor((gameState.player.level || 1) * 1.5) + match.score.player * 2 : draw ? 6 : 2) * scale); addCoins(coinGain); $('battleResultXp').textContent = '+' + xpGain + ' XP' + (coinGain > 0 ? ' · +' + coinGain + ' \u{1FA99}' : '') + ' for the squad' + (scale < 1 ? ' · tired flock, rewards taper after 5 matches a day' : ''); $('battleResultXpFill').style.width = '0%'; battleState.playerSquad.members.forEach(member => { const origBird = gameState.flock.find(b => b.id === member.bird.id || b.species === member.bird.species); if (origBird) levelUpBird(origBird, Math.max(4, Math.floor(xpGain / battleState.playerSquad.members.length))); }); addPlayerXp(xpGain); if (won) { gameState.player.wins++; updateQuestProgress('win', 1); SFX.victory(); } else { gameState.player.losses++; SFX.defeat(); } gameState.battlePreset = gameState.battlePreset || {}; gameState.battlePreset.lastResult = { score: match.score, winner: match.winner, formation: selectedBattleFormation, at: new Date().toISOString() }; checkBadges(); saveState(); setTimeout(() => { const pct = Math.min(100, (gameState.player.xp / XP_PER_LEVEL(gameState.player.level)) * 100); $('battleResultXpFill').style.width = pct + '%'; }, 100); }, 450); }
 function addBattleLog(type, text) { const log = $('battleLog'); const entry = document.createElement('div'); entry.className = 'battle-log-entry ' + type; entry.textContent = text; log.insertBefore(entry, log.firstChild); while (log.children.length > 20) log.removeChild(log.lastChild); }
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
@@ -9727,26 +9753,28 @@ $('petCompanion').addEventListener('click', () => {
 // ============================================================================
 // QUESTS SYSTEM
 // ============================================================================
+// Daily/weekly goals pay both trainer XP and coins — quests are the steady
+// income of the game (battles taper daily, expeditions are slow-drip).
 const DAILY_QUESTS = [
-  { id: 'daily_capture_3', name: 'Field Work', desc: 'Capture 3 birds today', type: 'capture', target: 3, reward: 50, icon: '\u{1F426}' },
-  { id: 'daily_battle_2', name: 'Arena Fighter', desc: 'Win 2 battles', type: 'win', target: 2, reward: 40, icon: '\u{2694}\u{FE0F}' },
-  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}' },
-  { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 60, icon: '\u{1F37D}\u{FE0F}' }
+  { id: 'daily_capture_3', name: 'Field Work', desc: 'Capture 3 birds today', type: 'capture', target: 3, reward: 40, coins: 30, icon: '\u{1F426}' },
+  { id: 'daily_battle_2', name: 'Arena Fighter', desc: 'Win 2 battles', type: 'win', target: 2, reward: 35, coins: 25, icon: '\u{2694}\u{FE0F}' },
+  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 15, coins: 10, icon: '\u{1F3AF}' },
+  { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 45, coins: 35, icon: '\u{1F37D}\u{FE0F}' }
 ];
 
 const WEEKLY_QUESTS = [
-  { id: 'weekly_capture_10', name: 'Avid Collector', desc: 'Capture 10 birds this week', type: 'capture', target: 10, reward: 150, icon: '\u{1F4DA}' },
-  { id: 'weekly_win_5', name: 'Champion', desc: 'Win 5 battles this week', type: 'win', target: 5, reward: 120, icon: '\u{1F3C6}' },
-  { id: 'weekly_rare', name: 'Rare Find', desc: 'Discover a Rare or better species', type: 'capture_rare', target: 1, reward: 100, icon: '\u{2728}' }
+  { id: 'weekly_capture_10', name: 'Avid Collector', desc: 'Capture 10 birds this week', type: 'capture', target: 10, reward: 120, coins: 90, icon: '\u{1F4DA}' },
+  { id: 'weekly_win_5', name: 'Champion', desc: 'Win 5 battles this week', type: 'win', target: 5, reward: 100, coins: 75, icon: '\u{1F3C6}' },
+  { id: 'weekly_rare', name: 'Rare Find', desc: 'Discover a Rare or better species', type: 'capture_rare', target: 1, reward: 90, coins: 60, icon: '\u{2728}' }
 ];
 
 const ACHIEVEMENT_QUESTS = [
-  { id: 'ach_first_capture', name: 'First Discovery', desc: 'Capture your first bird', type: 'capture', target: 1, reward: 30, icon: '\u{1F331}' },
-  { id: 'ach_10_species', name: 'Budding Birder', desc: 'Discover 10 unique species', type: 'total_species', target: 10, reward: 100, icon: '\u{1F3C5}' },
-  { id: 'ach_first_win', name: 'First Victory', desc: 'Win your first battle', type: 'win', target: 1, reward: 30, icon: '\u{1F4AA}' },
-  { id: 'ach_legendary', name: 'Legendary Find', desc: 'Discover a Legendary bird', type: 'capture_legendary', target: 1, reward: 200, icon: '\u{1F451}' },
-  { id: 'ach_diet_5',  name: 'Real Birdkeeper', desc: 'Discover the true diets of 5 species', type: 'diets_known', target: 5,  reward: 75,  icon: '\u{1F37D}\u{FE0F}' },
-  { id: 'ach_diet_15', name: 'Field Naturalist', desc: 'Discover the true diets of 15 species', type: 'diets_known', target: 15, reward: 200, icon: '\u{1F4D6}' }
+  { id: 'ach_first_capture', name: 'First Discovery', desc: 'Capture your first bird', type: 'capture', target: 1, reward: 30, coins: 25, icon: '\u{1F331}' },
+  { id: 'ach_10_species', name: 'Budding Birder', desc: 'Discover 10 unique species', type: 'total_species', target: 10, reward: 100, coins: 75, icon: '\u{1F3C5}' },
+  { id: 'ach_first_win', name: 'First Victory', desc: 'Win your first battle', type: 'win', target: 1, reward: 30, coins: 25, icon: '\u{1F4AA}' },
+  { id: 'ach_legendary', name: 'Legendary Find', desc: 'Discover a Legendary bird', type: 'capture_legendary', target: 1, reward: 200, coins: 150, icon: '\u{1F451}' },
+  { id: 'ach_diet_5',  name: 'Real Birdkeeper', desc: 'Discover the true diets of 5 species', type: 'diets_known', target: 5,  reward: 75,  coins: 50, icon: '\u{1F37D}\u{FE0F}' },
+  { id: 'ach_diet_15', name: 'Field Naturalist', desc: 'Discover the true diets of 15 species', type: 'diets_known', target: 15, reward: 200, coins: 150, icon: '\u{1F4D6}' }
 ];
 
 function initQuests() {
@@ -9850,7 +9878,7 @@ function renderQuests() {
       const complete = state.progress >= q.target;
       const rightSide = complete
         ? `<button class="quest-claim-btn pulse" data-quest="${q.id}">CLAIM</button>`
-        : `<div class="quest-reward">${q.reward} XP</div>`;
+        : `<div class="quest-reward">${q.reward} XP${q.coins ? ' · ' + q.coins + ' \u{1FA99}' : ''}</div>`;
 
       container.innerHTML += `
         <div class="quest-card" data-quest-card="${q.id}">
@@ -9881,8 +9909,10 @@ function renderQuests() {
       if (q && gameState.quests[qId] && !gameState.quests[qId].claimed) {
         gameState.quests[qId].claimed = true;
         addPlayerXp(q.reward);
+        if (q.coins) addCoins(q.coins);
         saveState();
-        playQuestClaimCelebration({ coins: 0, xp: q.reward, items: {} });
+        updateHeader();
+        playQuestClaimCelebration({ coins: q.coins || 0, xp: q.reward, items: {} });
         const card = container.querySelector(`[data-quest-card="${qId}"]`);
         if (card) {
           card.classList.add('claiming');

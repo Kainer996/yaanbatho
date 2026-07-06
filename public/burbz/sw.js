@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-manga-expansion-stats-map-v12-20260706';
+const BURBZ_CACHE = 'burbz-economy-rebalance-v13-20260706';
 const BURBZ_ASSETS = [
   './',
   './index.html',
