@@ -5458,6 +5458,18 @@ function ensureBirdExpeditions() {
 function ensureBirdTrainingSessions() {
   if (!gameState) return [];
   gameState.birdTrainingSessions = Array.isArray(gameState.birdTrainingSessions) ? gameState.birdTrainingSessions : [];
+  // Heal sessions saved by older Academy builds (missing rewards/timestamps/
+  // labels) so one legacy entry can never crash the Training Hall render and
+  // blank the room screen.
+  gameState.birdTrainingSessions = gameState.birdTrainingSessions.filter(t => t && typeof t === 'object' && t.id);
+  gameState.birdTrainingSessions.forEach(t => {
+    if (!t.rewards || typeof t.rewards !== 'object') t.rewards = {};
+    if (!Number.isFinite(t.startMs)) t.startMs = Date.now() - 60000;
+    if (!Number.isFinite(t.endMs) || t.endMs <= t.startMs) t.endMs = t.startMs + 60000;
+    if (!t.birdName) t.birdName = 'A brave bird';
+    if (!t.label) t.label = 'Training drill';
+    if (!t.icon) t.icon = '🏋️';
+  });
   return gameState.birdTrainingSessions;
 }
 
@@ -6672,6 +6684,7 @@ function startBirdTrainingSession(birdId, templateId) {
   if (!isAcademyBuildingBuilt('training')) { showToast('Build the Training Hall first.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is already in training.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away questing right now.'); return; }
+  if (!window.BurbzAcademyCore || typeof window.BurbzAcademyCore.createTrainingSession !== 'function') { showToast('Training scrolls are still loading — try again in a moment.'); return; }
   ensureBirdAcademy(bird);
   bird.academy.room = 'training';
   bird.academy.lastMovedAt = new Date().toISOString();
@@ -6727,15 +6740,22 @@ function fmtTrainingTime(minutes) {
 }
 
 function renderTrainingHallPanel(birds, others) {
-  const sessions = ensureBirdTrainingSessions().map(s => window.BurbzAcademyCore.advanceTrainingSession(s, Date.now()));
+  const core = window.BurbzAcademyCore;
+  if (!core || typeof core.advanceTrainingSession !== 'function') {
+    return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">The training scrolls are still being carried up the tree — reopen this room in a moment.</div></div>';
+  }
+  const sessions = ensureBirdTrainingSessions().map(s => core.advanceTrainingSession(s, Date.now()));
   const active = sessions.filter(s => s.status !== 'claimed');
-  const templates = window.BurbzAcademyCore.getTrainingTemplates ? window.BurbzAcademyCore.getTrainingTemplates() : [];
+  const templates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
   const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id));
   const sessionHtml = active.length ? active.map(t => {
     const done = t.status === 'complete';
     const bird = academyBirdById(t.birdId) || { commonName:t.birdName };
     const artHtml = birdOnlyImgHTML(bird, 'academy-bird-art');
-    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + t.icon + ' ' + escapeHtml(t.birdName) + '</span><span>' + t.progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + t.progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label) + ' · +' + (t.rewards.bonus || 1) + ' ' + escapeHtml(t.rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (t.rewards.xp || 0) + ' XP</div><div class="training-session-log">' + t.events.slice(-4).map(e => '<div>• ' + escapeHtml(e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
+    const rewards = t.rewards || {};
+    const progressPct = Number.isFinite(t.progressPct) ? t.progressPct : 0;
+    const events = Array.isArray(t.events) ? t.events : [];
+    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
   }).join('') : '<div class="academy-empty">No birds are training yet. Tap the notice board below to assign a companion to a timed drill.</div>';
   const templateHtml = templates.map(t => {
     const buttons = availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(b.commonName || b.species) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>';
@@ -6749,15 +6769,24 @@ function renderAcademyRoomInterior() {
   if (!root) return;
   const room = academyInteriorRoom || academySelectedRoom || 'outdoors';
   const cfg = ACADEMY_ROOMS[room] || ACADEMY_ROOMS.outdoors;
-  const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room; });
-  const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room; });
-  const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
-  const addRows = others.length ? others.map(b => {
-    const img = birdOnlyImgHTML(b, 'room-bird-option-art');
-    return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(b.commonName || b.species) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
-  }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
-  const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
-  root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+  try {
+    const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room; });
+    const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room; });
+    const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
+    const addRows = others.length ? others.map(b => {
+      const img = birdOnlyImgHTML(b, 'room-bird-option-art');
+      return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(b.commonName || b.species) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
+    }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
+    const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+  } catch (err) {
+    // Never leave the player on a blank screen: draw the room scene (or a
+    // plain backdrop) with a working Back button and a friendly note instead.
+    console.warn('BURBZ academy room render failed:', err);
+    let sceneSvg = '';
+    try { sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label)); } catch (e2) { sceneSvg = ''; }
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">This room had trouble loading its furniture — the scene is safe to explore.</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div></div><div class="room-add-panel"><div class="room-add-title">Room details could not load</div><div class="academy-empty">Head back to the tree and reopen this room. If it keeps happening, tell Yaan — the room scene above still works.</div></div>';
+  }
   $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
   root.querySelectorAll('[data-action="room-add-bird"]').forEach(btn => btn.addEventListener('click', () => { academyMoveBird(btn.dataset.birdId, room); renderAcademyRoomInterior(); }));
 }
