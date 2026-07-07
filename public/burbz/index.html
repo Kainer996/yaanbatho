@@ -347,6 +347,28 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-village-marker.locked .burbz-village-icon { filter:grayscale(.55) brightness(.72); box-shadow:0 5px 12px rgba(0,0,0,.5), 0 0 0 2px rgba(150,150,160,.4); animation:none; }
 .burbz-village-marker.locked .burbz-village-name { opacity:.7; }
 .burbz-village-marker .burbz-village-lock { position:absolute; margin-top:-6px; font-size:12px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.7)); }
+.burbz-village-marker.owned .burbz-village-icon { box-shadow:0 5px 14px rgba(0,0,0,.5), 0 0 0 2px rgba(240,199,103,.85), 0 0 18px rgba(240,199,103,.45); }
+.burbz-village-marker.owned .burbz-village-name { color:#ffe9a8; }
+.burbz-village-marker .burbz-village-crown { position:absolute; margin-top:-14px; font-size:14px; filter:drop-shadow(0 1px 3px rgba(0,0,0,.8)); }
+#villageClaimBar { margin:0 14px 10px; }
+#villageClaimBar:empty { display:none; }
+.village-claim-btn { width:100%; min-height:54px; border-radius:15px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.06em; box-shadow:0 10px 24px rgba(0,0,0,.4); }
+.village-claim-btn:active { transform:scale(.98); }
+.village-claim-btn[disabled] { opacity:.55; }
+.village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
+#empirePanel { margin:14px; }
+.empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
+.empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
+.empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
+.empire-copy { font-size:12px; color:var(--text2); line-height:1.5; margin:0 2px 10px; }
+.empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:14px; border:1px solid rgba(120,166,109,.5); background:rgba(38,58,36,.85); color:#dff3d4; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; }
+.empire-tribute-btn[disabled] { opacity:.5; }
+.empire-village-list { display:grid; gap:8px; }
+.empire-village-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:13px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.09); }
+.empire-village-flag { font-size:20px; }
+.empire-village-name { flex:1; font-family:'Rajdhani',sans-serif; font-weight:800; color:var(--text); letter-spacing:.04em; }
+.empire-village-meta { font-size:11px; color:var(--text3); }
+.empire-empty { padding:14px; border-radius:13px; background:rgba(0,0,0,.3); border:1px dashed rgba(255,255,255,.14); color:var(--text3); font-size:12px; line-height:1.55; text-align:center; }
 @keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
 .burbz-pickup-burst { position:absolute; z-index:60; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none; animation:pickupBurst 1.5s ease-out forwards; }
 .burbz-pickup-burst-glyph { font-size:26px; filter:drop-shadow(0 0 12px rgba(240,199,103,.9)); }
@@ -1707,14 +1729,16 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div id="academyRoomInterior"></div>
     </div>
 
-    <!-- VILLAGE SCREEN — medieval 3D hub -->
+    <!-- VILLAGE / EMPIRE SCREEN — medieval 3D hub + conquest ledger -->
     <div class="screen" id="screen-village">
       <div class="screen-title" id="villageTitle">BURB VILLAGE</div>
       <div class="village-sub" id="villageSub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
+      <div id="villageClaimBar"></div>
       <div class="village-stage" id="villageStage">
         <div class="village-loading" id="villageLoading">Raising the timber frames…</div>
       </div>
       <div class="village-legend" id="villageLegend"></div>
+      <div id="empirePanel"></div>
     </div>
 
     <div class="screen" id="screen-quests">
@@ -1811,9 +1835,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3.6 5.8a1 1 0 0 0-.6.9v12.4l6-2 6 2 5.4-1.8a1 1 0 0 0 .6-.9V3.9l-6 2-6-1.9Z"/><path d="M9 4v13.1M15 5.9V19"/></svg></div>
       <div class="nav-label">Map</div>
     </button>
-    <button class="nav-item" data-screen="village" aria-label="Village">
+    <button class="nav-item" data-screen="village" aria-label="Empire">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-9.5L7 8V5h2.2v1.6h1.7V5h2.2v1.6h1.7V5H17v3l2 2.5V20"/><path d="M10 20v-3.2a2 2 0 0 1 4 0V20M3 20h18"/></svg></div>
-      <div class="nav-label">Village</div>
+      <div class="nav-label">Empire</div>
     </button>
     <button class="nav-item" data-screen="birdex" aria-label="Burbz codex">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.2C10 4.8 7.4 4.2 4.5 4.2V18c2.9 0 5.5.6 7.5 2 2-1.4 4.6-2 7.5-2V4.2c-2.9 0-5.5.6-7.5 2Z"/><path d="M12 6.2V20"/></svg></div>
@@ -2120,32 +2144,83 @@ const WILD_BIRDS = [
   'Green Woodpecker',
   'Ring-necked Parakeet',
   'White-tailed Eagle',
-  'Wedge-tailed Eagle'
+  'Wedge-tailed Eagle',
+  // uk_au_local_plus50_20260707 — 50 more real local species (25 UK + 25 AU)
+  "Tufted Duck",
+  "Greylag Goose",
+  "Lesser Black-backed Gull",
+  "Gadwall",
+  "Common Redshank",
+  "Northern Shoveler",
+  "Greater Whitethroat",
+  "Pink-footed Goose",
+  "Redwing",
+  "Northern Wheatear",
+  "Black-tailed Godwit",
+  "Stock Dove",
+  "Common Gull",
+  "Fieldfare",
+  "Western Marsh Harrier",
+  "Common Pochard",
+  "Common Goldeneye",
+  "Eurasian Siskin",
+  "Pied Avocet",
+  "Ruddy Turnstone",
+  "Red Grouse",
+  "Common Sandpiper",
+  "Red-legged Partridge",
+  "Dunlin",
+  "Green-winged Teal",
+  "White-browed Scrubwren",
+  "Yellow-tailed Black Cockatoo",
+  "Eastern Yellow Robin",
+  "Spotted Pardalote",
+  "Little Black Cormorant",
+  "Australasian Grebe",
+  "Long-billed Corella",
+  "Gang-gang Cockatoo",
+  "Golden Whistler",
+  "Musk Lorikeet",
+  "Hoary-headed Grebe",
+  "Grey Teal",
+  "Little Wattlebird",
+  "Australasian Darter",
+  "Straw-necked Ibis",
+  "Red-browed Finch",
+  "Gray Shrikethrush",
+  "Pied Stilt",
+  "Black-faced Cuckooshrike",
+  "Silvereye",
+  "Hardhead",
+  "Buff-banded Rail",
+  "Black-shouldered Kite",
+  "Blue-billed Duck",
+  "Nankeen Night Heron"
 ];
 
 const HABITAT_BIRD_POOLS = {
-  water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler'],
-  wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler'],
-  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant'],
-  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant'],
-  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant'],
-  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet'],
-  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill'],
+  water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler','Tufted Duck','Gadwall','Northern Shoveler','Common Pochard','Common Goldeneye','Greylag Goose','Common Sandpiper','Green-winged Teal'],
+  wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler','Common Redshank','Black-tailed Godwit','Pied Avocet','Western Marsh Harrier','Pink-footed Goose','Dunlin'],
+  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant','Eurasian Siskin','Stock Dove'],
+  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow','Fieldfare','Redwing','Stock Dove','Eurasian Siskin'],
+  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant','Red-legged Partridge','Fieldfare','Redwing','Stock Dove','Pink-footed Goose','Greater Whitethroat'],
+  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant','Northern Wheatear','Red-legged Partridge','Greater Whitethroat'],
+  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow','Lesser Black-backed Gull'],
+  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet','Ruddy Turnstone','Dunlin','Common Gull','Lesser Black-backed Gull','Pied Avocet'],
+  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill','Red Grouse','Northern Wheatear','Common Sandpiper'],
   default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe'],
 };
 const REGIONAL_HABITAT_BIRD_POOLS = {
   au: {
-    water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan'],
-    wetland: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Australasian Swamphen','Masked Lapwing','White-faced Heron','Royal Spoonbill','Australian Pelican','Willie Wagtail'],
-    woodland: ['Australian Raven','Square-tailed Kite','Little Raven','Laughing Kookaburra','Grey Butcherbird','Pied Currawong','Eastern Rosella','Crimson Rosella','Australian King Parrot','Brown Thornbill','Grey Fantail','Eastern Spinebill','New Holland Honeyeater','White-plumed Honeyeater'],
-    park: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Little Corella','Galah','Crested Pigeon','Spotted Dove','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow','New Holland Honeyeater'],
-    farmland: ['Australian Magpie','Willie Wagtail','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Raven','Galah','Crested Pigeon','Common Bronzewing','Welcome Swallow'],
-    grassland: ['Willie Wagtail','Australian Magpie','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Corella','Galah','Magpie-lark','Crested Pigeon','Welcome Swallow'],
-    urban: ['Australian Magpie','Rainbow Lorikeet','Noisy Miner','Willie Wagtail','Common Myna','Rock Pigeon','Spotted Dove','Little Corella','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow'],
-    coast: ['Silver Gull','Australian Pelican','Little Pied Cormorant','White-faced Heron','Masked Lapwing','Royal Spoonbill','Australian Raven','Square-tailed Kite','Pacific Black Duck'],
-    hills: ['Australian Raven','Square-tailed Kite','Little Raven','Wedge-tailed Eagle','Peregrine Falcon','Grey Butcherbird','Pied Currawong'],
+    water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan','Grey Teal','Hardhead','Australasian Grebe','Hoary-headed Grebe','Little Black Cormorant','Australasian Darter','Blue-billed Duck'],
+    wetland: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Australasian Swamphen','Masked Lapwing','White-faced Heron','Royal Spoonbill','Australian Pelican','Willie Wagtail','Straw-necked Ibis','Pied Stilt','Buff-banded Rail','Nankeen Night Heron','Grey Teal'],
+    woodland: ['Australian Raven','Square-tailed Kite','Little Raven','Laughing Kookaburra','Grey Butcherbird','Pied Currawong','Eastern Rosella','Crimson Rosella','Australian King Parrot','Brown Thornbill','Grey Fantail','Eastern Spinebill','New Holland Honeyeater','White-plumed Honeyeater','White-browed Scrubwren','Eastern Yellow Robin','Spotted Pardalote','Golden Whistler','Gray Shrikethrush','Yellow-tailed Black Cockatoo','Gang-gang Cockatoo','Musk Lorikeet','Red-browed Finch','Black-faced Cuckooshrike','Silvereye'],
+    park: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Little Corella','Galah','Crested Pigeon','Spotted Dove','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow','New Holland Honeyeater','Little Wattlebird','Musk Lorikeet','Long-billed Corella','Silvereye','Red-browed Finch','Black-faced Cuckooshrike'],
+    farmland: ['Australian Magpie','Willie Wagtail','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Raven','Galah','Crested Pigeon','Common Bronzewing','Welcome Swallow','Straw-necked Ibis','Black-shouldered Kite','Long-billed Corella','Black-faced Cuckooshrike'],
+    grassland: ['Willie Wagtail','Australian Magpie','Masked Lapwing','Australian Raven','Square-tailed Kite','Little Corella','Galah','Magpie-lark','Crested Pigeon','Welcome Swallow','Black-shouldered Kite','Straw-necked Ibis','Red-browed Finch'],
+    urban: ['Australian Magpie','Rainbow Lorikeet','Noisy Miner','Willie Wagtail','Common Myna','Rock Pigeon','Spotted Dove','Little Corella','Australian Raven','Square-tailed Kite','Magpie-lark','Welcome Swallow','Silvereye','Little Wattlebird','Musk Lorikeet','Long-billed Corella'],
+    coast: ['Silver Gull','Australian Pelican','Little Pied Cormorant','White-faced Heron','Masked Lapwing','Royal Spoonbill','Australian Raven','Square-tailed Kite','Pacific Black Duck','Little Black Cormorant','Pied Stilt'],
+    hills: ['Australian Raven','Square-tailed Kite','Little Raven','Wedge-tailed Eagle','Peregrine Falcon','Grey Butcherbird','Pied Currawong','Gang-gang Cockatoo','Yellow-tailed Black Cockatoo'],
     default: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Australian Raven','Square-tailed Kite','Little Corella','Welcome Swallow']
   }
 };
@@ -2160,10 +2235,12 @@ const REGION_BLOCKED_SPECIES = {
 // from WILD_BIRDS or HABITAT_BIRD_POOLS at runtime (those get extended).
 const REGION_AREA_SPECIES = {
   uk: [
-    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle'
+    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle',
+    'Tufted Duck','Greylag Goose','Lesser Black-backed Gull','Gadwall','Common Redshank','Northern Shoveler','Greater Whitethroat','Pink-footed Goose','Redwing','Northern Wheatear','Black-tailed Godwit','Stock Dove','Common Gull','Fieldfare','Western Marsh Harrier','Common Pochard','Common Goldeneye','Eurasian Siskin','Pied Avocet','Ruddy Turnstone','Red Grouse','Common Sandpiper','Red-legged Partridge','Dunlin'
   ],
   au: [
-    'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon'
+    'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon',
+    'White-browed Scrubwren','Yellow-tailed Black Cockatoo','Eastern Yellow Robin','Spotted Pardalote','Little Black Cormorant','Australasian Grebe','Long-billed Corella','Gang-gang Cockatoo','Golden Whistler','Musk Lorikeet','Hoary-headed Grebe','Grey Teal','Little Wattlebird','Australasian Darter','Straw-necked Ibis','Red-browed Finch','Gray Shrikethrush','Pied Stilt','Black-faced Cuckooshrike','Silvereye','Hardhead','Buff-banded Rail','Black-shouldered Kite','Blue-billed Duck','Nankeen Night Heron'
   ]
 };
 const REGION_AREA_SPECIES_SETS = Object.fromEntries(Object.entries(REGION_AREA_SPECIES).map(([region, list]) => [region, new Set(list.map(s => s.toLowerCase()))]));
@@ -2173,10 +2250,12 @@ function speciesNativeToRegion(species, region) {
 }
 const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland:'woodland', park:'park / garden', farmland:'farmland edge', grassland:'grassland', urban:'town habitat', coast:'coast', hills:'moor / hill country', default:'local habitat' };
 const REAL_WORLD_COMMONNESS = {
-  'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':46,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32,
+  'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':12,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32,
   // regional_plus20_20260701
   // higgsfield_manga_expansion_20260706
-  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22
+  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22,
+  // uk_au_local_plus50_20260707
+  'Tufted Duck':74,'Greylag Goose':72,'Lesser Black-backed Gull':70,'Gadwall':52,'Common Redshank':48,'Northern Shoveler':46,'Greater Whitethroat':70,'Pink-footed Goose':44,'Redwing':62,'Northern Wheatear':40,'Black-tailed Godwit':26,'Stock Dove':54,'Common Gull':56,'Fieldfare':60,'Western Marsh Harrier':22,'Common Pochard':30,'Common Goldeneye':40,'Eurasian Siskin':48,'Pied Avocet':24,'Ruddy Turnstone':42,'Red Grouse':44,'Common Sandpiper':40,'Red-legged Partridge':70,'Dunlin':70,'Green-winged Teal':20,'White-browed Scrubwren':72,'Yellow-tailed Black Cockatoo':54,'Eastern Yellow Robin':70,'Spotted Pardalote':52,'Little Black Cormorant':70,'Australasian Grebe':70,'Long-billed Corella':70,'Gang-gang Cockatoo':26,'Golden Whistler':70,'Musk Lorikeet':70,'Hoary-headed Grebe':48,'Grey Teal':76,'Little Wattlebird':70,'Australasian Darter':46,'Straw-necked Ibis':72,'Red-browed Finch':70,'Gray Shrikethrush':70,'Pied Stilt':70,'Black-faced Cuckooshrike':72,'Silvereye':78,'Hardhead':48,'Buff-banded Rail':28,'Black-shouldered Kite':50,'Blue-billed Duck':22,'Nankeen Night Heron':44
 };
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
@@ -2431,7 +2510,7 @@ function vibrate(ms) {
 // GAME STATE
 // ============================================================================
 const DEFAULT_STATE = {
-  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 90 },
+  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 90, branches: 0 },
   flock: [],
   discoveredSpecies: {},
   inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, equipment: {}, giftsGiven: {} },
@@ -3402,7 +3481,7 @@ const BURBZ_SPECIES_PROFILES = [{
     diet: "Aquatic plants, seeds, grasses and small aquatic invertebrates.", conservation: "Check current Australian status; common in Melbourne records", lat: -37.8136, lon: 144.9631
   },
 {
-    id: "red_wattlebird", name: "Red Wattlebird", rarity: "uncommon",
+    id: "red_wattlebird", name: "Red Wattlebird", rarity: "common",
     stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 6 },
     traits: ["garden regular", "quick forager"],
     rationale: "Added from iNaturalist Melbourne species counts (35 km around Melbourne CBD, 2026-06-30 import). Commonness score 72 keeps it likely around Melbourne habitats.",
@@ -4256,6 +4335,708 @@ const BURBZ_SPECIES_PROFILES = [{
     conservation: "Introduced/Naturalised",
     lat: 51.5, lon: -0.2
   }
+,
+// uk_au_local_plus50_20260707 — realistic local species batch (25 UK + 25 AU)
+{
+  id: "tufted_duck", name: "Tufted Duck", rarity: "common",
+  aliases: ["Aythya fuligula"],
+  stats: { hp: 6, stamina: 7, strength: 4, def: 6, spd: 6, int: 4 },
+  traits: ["diving duck", "gregarious", "waterbird"],
+  rationale: "A mid-sized diving duck: BTO counts it among the commonest UK diving ducks, so hp and defence sit mid-table while strength stays modest for a duck that dives rather than fights.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Widespread across Eurasia",
+  habitat: "Lakes, reservoirs, gravel pits and park ponds",
+  range: "Breeds across northern Eurasia; UK resident plus large winter influx",
+  diet: "Dives for molluscs, insect larvae and some plants",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "greylag_goose", name: "Greylag Goose", rarity: "common",
+  aliases: ["Anser anser"],
+  stats: { hp: 8, stamina: 8, strength: 7, def: 7, spd: 5, int: 5 },
+  traits: ["heavyweight", "grazer", "flock bird"],
+  rationale: "The bulkiest common UK goose and ancestor of farmyard geese \u2014 high hp and strength 7 reflect a 3-4 kg grazer that can face down a dog, while speed stays gooselike.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Eurasia; the ancestor of domestic geese",
+  habitat: "Lakes, gravel pits, meadows and town parks",
+  range: "Resident across Britain plus Icelandic winter visitors",
+  diet: "Grazes grass, roots, cereal stubble",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "lesser_black_backed_gull", name: "Lesser Black-backed Gull", rarity: "common",
+  aliases: ["Larus fuscus"],
+  stats: { hp: 6, stamina: 8, strength: 5, def: 6, spd: 6, int: 7 },
+  traits: ["opportunist", "clever", "long-distance"],
+  rationale: "A rangy, intelligent gull that commutes between UK rooftops and Iberian coasts \u2014 gull problem-solving earns int 7, stamina 8 for genuine migration, strength 5 for a mid-large gull.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "North-east Atlantic seaboard",
+  habitat: "Coasts, rooftops, tips and farmland",
+  range: "Breeds around UK coasts and cities; many winter in Iberia and Africa",
+  diet: "Omnivorous scavenger and predator",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "gadwall", name: "Gadwall", rarity: "uncommon",
+  aliases: ["Mareca strepera"],
+  stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4 },
+  traits: ["dabbling duck", "understated", "waterbird"],
+  rationale: "A subtle grey dabbling duck, scarcer than Mallard on most waters \u2014 balanced mid-low stats for a medium dabbler that grazes weed rather than dives or fights.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Holarctic wetlands",
+  habitat: "Gravel pits, reservoirs and quiet lakes",
+  range: "Breeds patchily in Britain; more widespread in winter",
+  diet: "Dabbles for leaves and stems of waterweed",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "common_redshank", name: "Common Redshank", rarity: "uncommon",
+  aliases: ["Redshank", "Tringa totanus"],
+  stats: { hp: 4, stamina: 8, strength: 3, def: 4, spd: 6, int: 4 },
+  traits: ["sentinel", "wader", "noisy"],
+  rationale: "The 'sentinel of the marsh' \u2014 a slim wader whose loud alarm and restless flights earn good stamina and speed, with the light build of a 110 g shorebird.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Eurasian wetlands",
+  habitat: "Saltmarsh, estuaries, wet grassland",
+  range: "Breeds on UK coasts and uplands; estuaries in winter",
+  diet: "Probes mud for worms, shrimps and snails",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "northern_shoveler", name: "Northern Shoveler", rarity: "uncommon",
+  aliases: ["Shoveler", "Spatula clypeata"],
+  stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 4 },
+  traits: ["spoon-billed", "filter feeder", "dabbling duck"],
+  rationale: "Instantly known by its huge spatula bill, swung like a sieve through shallow water \u2014 an average-strength dabbler with migrant stamina.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Holarctic wetlands",
+  habitat: "Shallow marshes, flooded grassland",
+  range: "Scarce UK breeder; commoner as a winter visitor",
+  diet: "Filters seeds and tiny invertebrates through comb-edged bill",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "greater_whitethroat", name: "Greater Whitethroat", rarity: "common",
+  aliases: ["Whitethroat", "Curruca communis", "Sylvia communis"],
+  stats: { hp: 2, stamina: 7, strength: 1, def: 4, spd: 6, int: 5 },
+  traits: ["scratchy songster", "hedgerow", "migrant"],
+  rationale: "A 15 g scrub warbler that still crosses the Sahara twice a year \u2014 featherweight strength and hp, but true migrant stamina.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Europe and western Asia",
+  habitat: "Hedgerows, scrub, bramble banks",
+  range: "Summer visitor to Britain; winters in the Sahel",
+  diet: "Insects in summer, berries before migration",
+  conservation: "Least Concern (IUCN)",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "pink_footed_goose", name: "Pink-footed Goose", rarity: "uncommon",
+  aliases: ["Anser brachyrhynchus"],
+  stats: { hp: 7, stamina: 9, strength: 6, def: 6, spd: 6, int: 5 },
+  traits: ["arctic migrant", "flock bird", "dawn flighter"],
+  rationale: "Winter skeins of pinkfeet arriving from Iceland and Greenland are a UK spectacle \u2014 stamina 9 for the sea crossings, solid goose bulk a notch under Greylag.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Breeds Iceland, Greenland and Svalbard",
+  habitat: "Estuaries, stubble fields, roost lakes",
+  range: "Vast numbers winter in Scotland and England",
+  diet: "Grazes stubble, grass, sugar-beet tops",
+  conservation: "Least Concern (IUCN); UK Amber list \u2014 internationally important wintering numbers",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "redwing", name: "Redwing", rarity: "common",
+  aliases: ["Turdus iliacus"],
+  stats: { hp: 3, stamina: 8, strength: 2, def: 4, spd: 6, int: 5 },
+  traits: ["winter thrush", "night migrant", "berry raider"],
+  rationale: "The small thrush whose thin 'tseep' passes overhead on October nights \u2014 a 60 g bird with real migration stamina but little muscle.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Northern Eurasia",
+  habitat: "Hedges, berry trees, open fields",
+  range: "Abundant winter visitor to Britain; tiny Scottish breeding population",
+  diet: "Berries in winter, worms and insects otherwise",
+  conservation: "Least Concern (IUCN); UK Red list (rare as a breeder)",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "northern_wheatear", name: "Northern Wheatear", rarity: "uncommon",
+  aliases: ["Wheatear", "Oenanthe oenanthe"],
+  stats: { hp: 3, stamina: 9, strength: 2, def: 4, spd: 7, int: 5 },
+  traits: ["flash of white", "champion migrant", "upland"],
+  rationale: "Greenland wheatears make one of the longest songbird sea-crossings on Earth, so stamina 9 is earned; a bouncy 25 g chat otherwise.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Breeds across the northern hemisphere",
+  habitat: "Moors, sheep pasture, coastal turf",
+  range: "Summer visitor to UK uplands and coasts; winters in Africa",
+  diet: "Insects snatched in dashing runs",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "black_tailed_godwit", name: "Black-tailed Godwit", rarity: "rare",
+  aliases: ["Limosa limosa"],
+  stats: { hp: 4, stamina: 9, strength: 3, def: 4, spd: 7, int: 4 },
+  traits: ["elegant wader", "long-billed", "estuary"],
+  rationale: "A tall cinnamon-and-black wader flying between Iceland and UK estuaries \u2014 endurance-built with long-haul stamina, light wader strength.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Iceland and temperate Eurasia",
+  habitat: "Estuaries, wet meadows, lagoons",
+  range: "Rare UK breeder; important wintering estuary flocks",
+  diet: "Deep-probes mud for worms and bivalves",
+  conservation: "Near Threatened (IUCN); UK Red list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "stock_dove", name: "Stock Dove", rarity: "uncommon",
+  aliases: ["Columba oenas"],
+  stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 7, int: 4 },
+  traits: ["quiet dove", "tree-hole nester", "overlooked"],
+  rationale: "The Wood Pigeon's neat, quieter cousin \u2014 smaller and lighter (hence a stat notch down) but a fast, direct flier.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Europe and western Asia",
+  habitat: "Parkland, farmland with old trees",
+  range: "Resident across most of England and Wales",
+  diet: "Seeds, grain, young shoots",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "common_gull", name: "Common Gull", rarity: "uncommon",
+  aliases: ["Mew Gull", "Larus canus"],
+  stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 7 },
+  traits: ["gentle-faced gull", "winter fields", "clever"],
+  rationale: "Despite the name it is only moderately common \u2014 a mid-sized gull of winter playing fields with the sharp gull intellect.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Northern Eurasia",
+  habitat: "Coasts, lakes, winter grasslands",
+  range: "Breeds mainly in Scotland; widespread in winter",
+  diet: "Worms, insects, fish scraps, scavenge",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "fieldfare", name: "Fieldfare", rarity: "common",
+  aliases: ["Turdus pilaris"],
+  stats: { hp: 4, stamina: 8, strength: 3, def: 4, spd: 6, int: 5 },
+  traits: ["winter thrush", "chacking flocks", "hardy"],
+  rationale: "Big chacking flocks strip hawthorns each winter \u2014 a burly thrush a size up from Redwing, hence slightly higher hp and strength.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Scandinavia and Russia",
+  habitat: "Hedgerows, orchards, open fields",
+  range: "Abundant winter visitor; has bred only a handful of times in Britain",
+  diet: "Berries, windfall fruit, soil invertebrates",
+  conservation: "Least Concern (IUCN); UK Red list (rare as a breeder)",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "western_marsh_harrier", name: "Western Marsh Harrier", rarity: "rare",
+  aliases: ["Marsh Harrier", "Circus aeruginosus"],
+  stats: { hp: 6, stamina: 7, strength: 6, def: 5, spd: 7, int: 6 },
+  traits: ["reedbed raptor", "v-winged glider", "comeback bird"],
+  rationale: "Britain's biggest harrier, back from a single 1971 nest \u2014 a genuine raptor so strength 6 and speed 7, but built for buoyant quartering rather than brute force.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Eurasian wetlands",
+  habitat: "Reedbeds and grazing marsh",
+  range: "Breeds mainly in eastern England; expanding",
+  diet: "Frogs, small mammals, waterbirds",
+  conservation: "Least Concern (IUCN); UK Amber list \u2014 famous conservation recovery",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "common_pochard", name: "Common Pochard", rarity: "rare",
+  aliases: ["Pochard", "Aythya ferina"],
+  stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4 },
+  traits: ["russet-headed", "diving duck", "declining"],
+  rationale: "A russet-headed diving duck in steep European decline \u2014 duck-average stats; its rare tier reflects genuine scarcity, not power.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Eurasian wetlands",
+  habitat: "Lakes and gravel pits with open water",
+  range: "Scarce UK breeder; larger winter numbers",
+  diet: "Dives for seeds, roots and small invertebrates",
+  conservation: "Vulnerable (IUCN); UK Red list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "common_goldeneye", name: "Common Goldeneye", rarity: "uncommon",
+  aliases: ["Goldeneye", "Bucephala clangula"],
+  stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 7, int: 4 },
+  traits: ["whistling wings", "tree-hole duck", "diver"],
+  rationale: "A compact northern diving duck whose wings whistle in flight \u2014 quick on the wing for a duck (spd 7) with hardy northern stamina.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Boreal forests of the northern hemisphere",
+  habitat: "Lochs, reservoirs, sheltered coasts",
+  range: "Winter visitor; small Scottish nestbox population",
+  diet: "Dives for mussels, crustaceans, insect larvae",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "eurasian_siskin", name: "Eurasian Siskin", rarity: "uncommon",
+  aliases: ["Siskin", "Spinus spinus"],
+  stats: { hp: 2, stamina: 6, strength: 1, def: 4, spd: 6, int: 5 },
+  traits: ["acrobatic finch", "alder feeder", "tiny"],
+  rationale: "A 13 g streaky finch that dangles tit-like from alder cones \u2014 featherweight stats with decent nomadic stamina.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Conifer forests across Eurasia",
+  habitat: "Conifers, alders, garden feeders",
+  range: "Resident in Scotland and Wales; widespread in winter",
+  diet: "Conifer, alder and birch seeds",
+  conservation: "Least Concern (IUCN)",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "pied_avocet", name: "Pied Avocet", rarity: "rare",
+  aliases: ["Avocet", "Recurvirostra avosetta"],
+  stats: { hp: 4, stamina: 7, strength: 3, def: 4, spd: 6, int: 5 },
+  traits: ["upswept bill", "conservation icon", "elegant"],
+  rationale: "The RSPB's emblem, sweeping its upturned bill through lagoon shallows \u2014 a graceful, lightly built wader; rarity honours a famous comeback.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Eurasia and Africa",
+  habitat: "Coastal lagoons and saline scrapes",
+  range: "Returned to breed in England in 1947 after a century away",
+  diet: "Sweeps shallow water for shrimps and worms",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "ruddy_turnstone", name: "Ruddy Turnstone", rarity: "uncommon",
+  aliases: ["Turnstone", "Arenaria interpres"],
+  stats: { hp: 3, stamina: 9, strength: 3, def: 5, spd: 6, int: 5 },
+  traits: ["stone flipper", "tideline", "tough"],
+  rationale: "Flips pebbles and wrack for sandhoppers and commutes from Arctic Canada \u2014 stocky and strong for its 100 g size with world-class stamina.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "High Arctic breeder",
+  habitat: "Rocky shores, piers, tidelines",
+  range: "Winters all around the UK coast",
+  diet: "Flips stones and weed for invertebrates",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "red_grouse", name: "Red Grouse", rarity: "uncommon",
+  aliases: ["Lagopus lagopus scotica", "Willow Ptarmigan (British race)"],
+  stats: { hp: 6, stamina: 5, strength: 5, def: 6, spd: 6, int: 3 },
+  traits: ["moorland icon", "explosive flusher", "go-back call"],
+  rationale: "The 'go-back, go-back' bird of heather moors \u2014 plump and strong with whirring burst speed, but a short-range flier (modest stamina) and simple gamebird brain.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Endemic to Britain and Ireland",
+  habitat: "Heather moorland",
+  range: "Resident on upland moors from Wales to Scotland",
+  diet: "Almost entirely heather shoots and seeds",
+  conservation: "Least Concern (IUCN); UK Amber list \u2014 endemic race of Willow Ptarmigan",
+  lat: 55.0, lon: -3.5
+},
+{
+  id: "common_sandpiper", name: "Common Sandpiper", rarity: "uncommon",
+  aliases: ["Actitis hypoleucos"],
+  stats: { hp: 3, stamina: 8, strength: 2, def: 4, spd: 6, int: 4 },
+  traits: ["tail-bobber", "riverside", "flicking flight"],
+  rationale: "Bobs along stony river edges then flickers low over the water on stiff wings \u2014 a 50 g migrant wader with light build and good endurance.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Breeds across Eurasia",
+  habitat: "Upland rivers, lake shores",
+  range: "Summer visitor to northern and western Britain; winters in Africa",
+  diet: "Picks insects from waterside stones",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.5, lon: -3.0
+},
+{
+  id: "red_legged_partridge", name: "Red-legged Partridge", rarity: "common",
+  aliases: ["French Partridge", "Alectoris rufa"],
+  stats: { hp: 5, stamina: 4, strength: 4, def: 5, spd: 6, int: 3 },
+  traits: ["frenchman", "runner", "farmland"],
+  rationale: "The 'French partridge', introduced to Britain in the 1700s \u2014 prefers sprinting to flying, so speed on the ground but low stamina aloft.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Native to south-west Europe; introduced to Britain",
+  habitat: "Arable farmland, hedgerow margins",
+  range: "Widely established across lowland England",
+  diet: "Seeds, leaves, roots; chicks take insects",
+  conservation: "Least Concern (IUCN); introduced and widely released",
+  lat: 52.5, lon: -0.5
+},
+{
+  id: "dunlin", name: "Dunlin", rarity: "common",
+  aliases: ["Calidris alpina"],
+  stats: { hp: 2, stamina: 9, strength: 2, def: 4, spd: 7, int: 4 },
+  traits: ["shoreline swarm", "aerial shoals", "little stint of the crowd"],
+  rationale: "The default small wader of UK estuaries, wheeling in smoke-like flocks \u2014 tiny but a phenomenal endurance flier.",
+  sources: ["Wikipedia species account", "BTO/RSPB species guides"],
+  origin: "Circumpolar Arctic and moorland breeder",
+  habitat: "Estuaries and moorland pools",
+  range: "Breeds on UK uplands; huge winter estuary flocks",
+  diet: "Probes mud for worms and tiny snails",
+  conservation: "Least Concern (IUCN); UK Amber list",
+  lat: 54.0, lon: -2.5
+},
+{
+  id: "green_winged_teal", name: "Green-winged Teal", rarity: "rare",
+  aliases: ["Teal", "Eurasian Teal", "Anas crecca", "Anas carolinensis"],
+  stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 8, int: 4 },
+  traits: ["pocket rocket", "tiny duck", "agile"],
+  rationale: "One of the smallest, most agile dabbling ducks \u2014 teal twist and spring from the water like waders, earning spd 8 despite featherweight strength. Rare here as the North American counterpart of the Eurasian Teal.",
+  sources: ["Wikipedia species account", "Cornell All About Birds"],
+  origin: "North America",
+  habitat: "Shallow marshes and flooded fields",
+  range: "North American breeder; a scarce but regular vagrant to Britain",
+  diet: "Dabbles for seeds and small invertebrates",
+  conservation: "Least Concern (IUCN)",
+  lat: 45.0, lon: -100.0
+},
+{
+  id: "white_browed_scrubwren", name: "White-browed Scrubwren", rarity: "common",
+  aliases: ["Sericornis frontalis"],
+  stats: { hp: 2, stamina: 5, strength: 1, def: 5, spd: 5, int: 5 },
+  traits: ["undergrowth skulker", "scolder", "tiny"],
+  rationale: "A scolding voice from the bottom of every damp Australian garden hedge \u2014 a 12 g skulker whose defence comes from never leaving cover.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Eastern and southern Australia",
+  habitat: "Dense understorey, gullies, gardens",
+  range: "Resident along Australia's east and south coasts",
+  diet: "Gleans insects from litter and low shrubs",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "yellow_tailed_black_cockatoo", name: "Yellow-tailed Black Cockatoo", rarity: "uncommon",
+  aliases: ["Zanda funerea", "Calyptorhynchus funereus"],
+  stats: { hp: 7, stamina: 7, strength: 6, def: 6, spd: 5, int: 8 },
+  traits: ["wailing flyer", "grub extractor", "forest giant"],
+  rationale: "A huge slow-flapping black cockatoo that tears open banksia and pine cones \u2014 real parrot power (str 6) and clever tool-like extraction (int 8, below the corvid crown).",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "South-eastern Australia",
+  habitat: "Eucalypt and pine forests, coastal heath",
+  range: "Resident from central Queensland to South Australia",
+  diet: "Wood-boring grubs, banksia and pine seeds",
+  conservation: "Least Concern (IUCN); declining in parts of its range",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "eastern_yellow_robin", name: "Eastern Yellow Robin", rarity: "common",
+  aliases: ["Eopsaltria australis"],
+  stats: { hp: 3, stamina: 5, strength: 1, def: 4, spd: 5, int: 5 },
+  traits: ["trunk percher", "dawn singer", "confiding"],
+  rationale: "Clings sideways to a trunk at head height watching for grubs \u2014 a confiding little forest robin with featherweight stats.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Eastern Australia",
+  habitat: "Forest, woodland, shaded gardens",
+  range: "Resident along the east coast and ranges",
+  diet: "Pounces on insects from low perches",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "spotted_pardalote", name: "Spotted Pardalote", rarity: "uncommon",
+  aliases: ["Pardalotus punctatus"],
+  stats: { hp: 1, stamina: 5, strength: 1, def: 4, spd: 6, int: 5 },
+  traits: ["jewel bird", "canopy speck", "tunnel nester"],
+  rationale: "One of Australia's smallest birds \u2014 a spangled 9 g canopy speck that nests in a burrow; minimum hp and strength, nimble in the leaves.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Southern and eastern Australia",
+  habitat: "Eucalypt canopy",
+  range: "Resident in eucalypt forest and leafy suburbs",
+  diet: "Lerps and tiny insects from eucalypt leaves",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "little_black_cormorant", name: "Little Black Cormorant", rarity: "common",
+  aliases: ["Phalacrocorax sulcirostris"],
+  stats: { hp: 5, stamina: 7, strength: 5, def: 5, spd: 5, int: 5 },
+  traits: ["pack fisher", "sleek diver", "waterbird"],
+  rationale: "Hunts fish in coordinated flotillas that herd shoals into corners \u2014 a sleek pursuit-diver with solid all-round waterbird stats.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia",
+  habitat: "Rivers, lakes, estuaries",
+  range: "Widespread across Australian waterways",
+  diet: "Pursues small fish underwater",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "australasian_grebe", name: "Australasian Grebe", rarity: "common",
+  aliases: ["Tachybaptus novaehollandiae"],
+  stats: { hp: 3, stamina: 6, strength: 2, def: 5, spd: 4, int: 4 },
+  traits: ["pond diver", "vanisher", "floating nest"],
+  rationale: "A dumpy little grebe that vanishes underwater the instant you look at it \u2014 weak and slow in the air but hard to catch (def 5).",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia",
+  habitat: "Farm dams, ponds, quiet lakes",
+  range: "Widespread; quick to colonise new dams",
+  diet: "Dives for small fish and water insects",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "long_billed_corella", name: "Long-billed Corella", rarity: "common",
+  aliases: ["Cacatua tenuirostris"],
+  stats: { hp: 5, stamina: 6, strength: 5, def: 5, spd: 5, int: 8 },
+  traits: ["digger", "comedian", "flock parrot"],
+  rationale: "Digs up roots and corms with its pickaxe bill and plays like a clown in park flocks \u2014 strong for its size and among the smartest non-corvids (int 8).",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "South-eastern Australia",
+  habitat: "Grasslands, parks, sports ovals",
+  range: "Expanding across Victoria and beyond",
+  diet: "Digs roots, corms, seeds and bulbs",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "gang_gang_cockatoo", name: "Gang-gang Cockatoo", rarity: "rare",
+  aliases: ["Callocephalon fimbriatum"],
+  stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 7 },
+  traits: ["creaky-door call", "mountain parrot", "red-crested"],
+  rationale: "The creaky-door call of cool mountain forests; males wear a scarlet wispy crest. Rarity reflects its 2022 endangered listing after the megafires.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "South-eastern Australia",
+  habitat: "Tall wet forests; cooler suburbs in winter",
+  range: "Australian Alps and ranges; some winter movement to lowlands",
+  diet: "Eucalypt and wattle seeds, berries",
+  conservation: "Endangered (Australia, 2022); Least Concern paused under review (IUCN)",
+  lat: -37.4, lon: 146.0
+},
+{
+  id: "golden_whistler", name: "Golden Whistler", rarity: "common",
+  aliases: ["Pachycephala pectoralis"],
+  stats: { hp: 3, stamina: 5, strength: 2, def: 4, spd: 5, int: 5 },
+  traits: ["ringing song", "golden flash", "canopy"],
+  rationale: "One of Australia's loudest, sweetest forest voices; males glow gold \u2014 an average-sized songbird with typical light build.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Eastern and southern Australia",
+  habitat: "Wet forest, dense woodland",
+  range: "Resident through the east-coast forests",
+  diet: "Insects gleaned from foliage and bark",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "musk_lorikeet", name: "Musk Lorikeet", rarity: "common",
+  aliases: ["Glossopsitta concinna"],
+  stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 7, int: 6 },
+  traits: ["blossom nomad", "screeching flock", "nectar feeder"],
+  rationale: "Small emerald lorikeets that arrive wherever eucalypts blossom \u2014 fast, darting flight (spd 7) and busy parrot smarts.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "South-eastern Australia",
+  habitat: "Flowering eucalypts in woodland and towns",
+  range: "Nomadic with the blossom across the south-east",
+  diet: "Nectar and pollen, some fruit",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "hoary_headed_grebe", name: "Hoary-headed Grebe", rarity: "uncommon",
+  aliases: ["Poliocephalus poliocephalus"],
+  stats: { hp: 3, stamina: 6, strength: 2, def: 5, spd: 4, int: 4 },
+  traits: ["silvery-headed", "open-water", "diver"],
+  rationale: "A grebe of bigger, more open waters than its Australasian cousin, with a silver-streaked head \u2014 same featherweight diver build.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia and New Zealand",
+  habitat: "Large open lakes and estuaries",
+  range: "Widespread but patchier than Australasian Grebe",
+  diet: "Dives for aquatic invertebrates",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "grey_teal", name: "Grey Teal", rarity: "common",
+  aliases: ["Anas gracilis"],
+  stats: { hp: 4, stamina: 8, strength: 3, def: 5, spd: 7, int: 4 },
+  traits: ["boom-and-bust nomad", "rain follower", "dabbling duck"],
+  rationale: "Australia's great nomad duck, riding rains across the continent \u2014 small and light but with huge wandering stamina and quick teal flight.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia and nearby islands",
+  habitat: "Any shallow fresh or brackish water",
+  range: "Continent-wide, tracking floods and rain",
+  diet: "Dabbles for seeds and invertebrates",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "little_wattlebird", name: "Little Wattlebird", rarity: "common",
+  aliases: ["Anthochaera chrysoptera"],
+  stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 6, int: 6 },
+  traits: ["banksia guard", "raspy caller", "honeyeater"],
+  rationale: "A rakish streaked honeyeater that noisily guards banksia clumps \u2014 honeyeaters fight above their weight, so str 3 and int 6.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "South-eastern and south-western Australia",
+  habitat: "Banksia heath, coastal scrub, gardens",
+  range: "Resident along the southern coasts",
+  diet: "Nectar, especially banksia; some insects",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "australasian_darter", name: "Australasian Darter", rarity: "uncommon",
+  aliases: ["Anhinga novaehollandiae", "Australian Darter"],
+  stats: { hp: 6, stamina: 7, strength: 6, def: 5, spd: 5, int: 5 },
+  traits: ["snakebird", "spear fisher", "wing dryer"],
+  rationale: "The 'snakebird' that swims with only its kinked neck above water and spears fish \u2014 a big, powerful waterbird (str 6) that dries its wings like a heraldic crest.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia",
+  habitat: "Rivers, lakes, estuaries",
+  range: "Widespread on deeper Australian waters",
+  diet: "Spears fish with a dagger bill",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "straw_necked_ibis", name: "Straw-necked Ibis", rarity: "common",
+  aliases: ["Threskiornis spinicollis"],
+  stats: { hp: 6, stamina: 8, strength: 5, def: 6, spd: 5, int: 6 },
+  traits: ["farmer's friend", "locust eater", "glossy"],
+  rationale: "The 'farmer's friend' that descends on plagues of locusts \u2014 a big rangy ibis with strong flight endurance and smart flock foraging.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia",
+  habitat: "Paddocks, wet grassland, floodplains",
+  range: "Highly mobile across inland and coastal Australia",
+  diet: "Grasshoppers, crickets, soil invertebrates",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "red_browed_finch", name: "Red-browed Finch", rarity: "common",
+  aliases: ["Neochmia temporalis", "Red-browed Firetail"],
+  stats: { hp: 2, stamina: 5, strength: 1, def: 4, spd: 6, int: 4 },
+  traits: ["firetail", "grass seeder", "waxbill"],
+  rationale: "A crimson-browed firetail that ripples along grassy edges in tinkling flocks \u2014 a 10 g seed-eater with matching featherweight stats.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Eastern Australia",
+  habitat: "Grassy forest edges, creeklines, gardens",
+  range: "Resident along the east coast",
+  diet: "Grass seeds; some insects when breeding",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "gray_shrikethrush", name: "Gray Shrikethrush", rarity: "common",
+  aliases: ["Grey Shrikethrush", "Grey Shrike-thrush", "Colluricincla harmonica"],
+  stats: { hp: 4, stamina: 5, strength: 3, def: 5, spd: 5, int: 6 },
+  traits: ["golden voice", "nest raider", "plain but mighty"],
+  rationale: "Plain grey but with one of Australia's finest voices \u2014 and a ruthless streak for raiding nests, hence a bold int 6 and wiry str 3.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia and New Guinea",
+  habitat: "Woodland, forest, gardens",
+  range: "Resident across most of Australia",
+  diet: "Insects, small vertebrates, eggs and nestlings",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "pied_stilt", name: "Pied Stilt", rarity: "common",
+  aliases: ["White-headed Stilt", "Black-winged Stilt", "Himantopus leucocephalus"],
+  stats: { hp: 3, stamina: 8, strength: 2, def: 4, spd: 6, int: 4 },
+  traits: ["impossible legs", "yapping wader", "elegant"],
+  rationale: "All pink legs and yapping calls over shallow lagoons \u2014 a delicate wader that nevertheless commutes vast distances between ephemeral wetlands.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia and south-east Asia",
+  habitat: "Shallow wetlands, saltworks, lagoons",
+  range: "Widespread across Australian wetlands",
+  diet: "Picks brine shrimps and insects from shallows",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "black_faced_cuckooshrike", name: "Black-faced Cuckooshrike", rarity: "common",
+  aliases: ["Shufflewing", "Coracina novaehollandiae"],
+  stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 6, int: 5 },
+  traits: ["shufflewing", "undulating flight", "summer drifter"],
+  rationale: "Known as the 'shufflewing' for resettling its wings on landing \u2014 a graceful part-migratory canopy bird with easy soaring endurance.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia and nearby islands",
+  habitat: "Open woodland, parks, roadside trees",
+  range: "Widespread; southern birds shift north in winter",
+  diet: "Caterpillars and other canopy insects",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "silvereye", name: "Silvereye", rarity: "common",
+  aliases: ["Zosterops lateralis", "Wax-eye"],
+  stats: { hp: 2, stamina: 7, strength: 1, def: 4, spd: 6, int: 5 },
+  traits: ["white-eye", "orchard visitor", "sea crosser"],
+  rationale: "A 10 g white-eye that somehow crosses the Tasman Sea \u2014 Tasmanian birds migrate to Queensland, earning stamina 7 on a featherweight frame.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia and south-west Pacific",
+  habitat: "Gardens, orchards, forest edge",
+  range: "Widespread; Tasmanian breeders migrate up the east coast",
+  diet: "Insects, nectar and soft fruit",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "hardhead", name: "Hardhead", rarity: "uncommon",
+  aliases: ["White-eyed Duck", "Aythya australis"],
+  stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 4 },
+  traits: ["white-eyed duck", "deep diver", "nomad"],
+  rationale: "Australia's only true diving duck of the Aythya line \u2014 compact, hard-flying and happiest on deep water; nomadic stamina.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia",
+  habitat: "Deep freshwater swamps and lakes",
+  range: "Widespread but mobile across Australia",
+  diet: "Dives for mussels, insects and weed",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "buff_banded_rail", name: "Buff-banded Rail", rarity: "rare",
+  aliases: ["Hypotaenidia philippensis", "Gallirallus philippensis"],
+  stats: { hp: 4, stamina: 6, strength: 3, def: 6, spd: 4, int: 5 },
+  traits: ["secretive", "edge creeper", "island coloniser"],
+  rationale: "A beautifully barred rail that creeps along wetland edges and vanishes \u2014 high defence for a bird that lives by not being seen; a surprising island coloniser.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia and Pacific islands",
+  habitat: "Dense wetland margins, mangrove edges",
+  range: "Widespread but seldom seen; reaches remote islands",
+  diet: "Snails, insects, seeds from cover",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "black_shouldered_kite", name: "Black-shouldered Kite", rarity: "uncommon",
+  aliases: ["Elanus axillaris"],
+  stats: { hp: 4, stamina: 6, strength: 4, def: 4, spd: 7, int: 6 },
+  traits: ["hover hunter", "ghost-grey", "mouse specialist"],
+  rationale: "A silver-white kite that hangs motionless on the wind before dropping onto mice \u2014 light for a raptor (str 4) but precise and quick.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australia",
+  habitat: "Grasslands, paddocks, roadside verges",
+  range: "Widespread wherever mice run",
+  diet: "Almost entirely rodents taken from hover",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "blue_billed_duck", name: "Blue-billed Duck", rarity: "rare",
+  aliases: ["Oxyura australis"],
+  stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 4 },
+  traits: ["stiff-tail", "cobalt bill", "deep swamp"],
+  rationale: "A stiff-tailed diving duck; displaying males flash a cobalt bill \u2014 almost never flies by day and is nationally uncommon, hence rare tier.",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Southern Australia",
+  habitat: "Deep, well-vegetated swamps",
+  range: "South-eastern and south-western wetlands",
+  diet: "Dives for midge larvae and seeds",
+  conservation: "Near Threatened (Australia)",
+  lat: -37.8, lon: 145.0
+},
+{
+  id: "nankeen_night_heron", name: "Nankeen Night Heron", rarity: "uncommon",
+  aliases: ["Rufous Night Heron", "Nycticorax caledonicus"],
+  stats: { hp: 5, stamina: 6, strength: 5, def: 6, spd: 4, int: 5 },
+  traits: ["dusk hunter", "cinnamon heron", "day rooster"],
+  rationale: "A cinnamon heron that roosts hunched in day-time trees and hunts after dusk \u2014 sturdy (str 5, def 6) but unhurried (spd 4).",
+  sources: ["Wikipedia species account", "Birdlife Australia species profiles"],
+  origin: "Australasia and western Pacific",
+  habitat: "Wooded wetlands, park lakes",
+  range: "Widespread; day roosts often in city parks",
+  diet: "Fish, frogs, yabbies taken at night",
+  conservation: "Least Concern (IUCN)",
+  lat: -37.8, lon: 145.0
+}
 ];
 
 const BIRD_INFO_MAP_CENTER = { lat: 54.5, lon: -2.5, zoom: 4 }; // Centered on UK, suitable for general bird info
@@ -5155,7 +5936,7 @@ function applyBirdTraining(bird, type) {
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
 const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', market:'assets/academy-buildings-manga/market.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
-const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
+const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
@@ -5200,6 +5981,12 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     gameState.player.coins = Math.max(Number(gameState.player.coins) || 0, 120);
     gameState.academyBuilderVersion = 2;
   }
+  // Branch economy grant: buildings now also cost branches (gathered on
+  // quests), so every save gets a one-time starter pile of timber.
+  if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 3) {
+    gameState.player.branches = Math.max(Number(gameState.player.branches) || 0, 25);
+    gameState.academyBuilderVersion = 3;
+  }
   Object.keys(ACADEMY_ROOMS).forEach(room => {
     if (room !== 'outdoors' && !isAcademyRoomBuilt(room)) {
       (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === room) b.academy.room = 'outdoors'; });
@@ -5225,9 +6012,12 @@ function academyBuildBuilding(id, opts = {}) {
     return true;
   }
   const level = Number(gameState.player.level) || 1;
+  const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
-  if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' coins to build ' + cfg.label); return false; }
+  if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' 🪙 to build ' + cfg.label); return false; }
+  if (playerBranches() < branchCost) { showToast('Need ' + branchCost + ' 🪵 branches for ' + cfg.label + ' — send birds on Branch Run or Timber Haul quests.'); return false; }
   addCoins(-cfg.cost);
+  addBranches(-branchCost);
   gameState.academyBuildings[id] = { built: true, builtAt: new Date().toISOString(), x: opts.position ? opts.position.x : cfg.x, y: opts.position ? opts.position.y : cfg.y };
   if (cfg.room) academySelectedRoom = cfg.room;
   updateQuestProgress('build_academy', 1);
@@ -5246,7 +6036,8 @@ function academyStartPlaceBuilding(id) {
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
-    if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' coins to build ' + cfg.label); return; }
+    if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' 🪙 to build ' + cfg.label); return; }
+    if (playerBranches() < (Number(cfg.branches) || 0)) { showToast('Need ' + cfg.branches + ' 🪵 branches for ' + cfg.label + ' — send birds on Branch Run or Timber Haul quests.'); return; }
   }
   academyPlacementTarget = id;
   SFX.tap();
@@ -5281,26 +6072,28 @@ function renderAcademyBuildPanel() {
   ensureAcademyBuildings(false);
   const builtCount = ACADEMY_BUILDING_ORDER.filter(id => isAcademyBuildingBuilt(id)).length;
   const wallet = gameState.player.coins || 0;
+  const branchWallet = playerBranches();
   const cards = ACADEMY_BUILDING_ORDER.filter(id => id !== 'outdoors').map(id => {
     const b = ACADEMY_BUILDINGS[id];
     const built = isAcademyBuildingBuilt(id);
     const locked = (gameState.player.level || 1) < b.unlockLevel;
-    const affordable = wallet >= b.cost;
+    const affordable = wallet >= b.cost && branchWallet >= (b.branches || 0);
     const placing = academyPlacementTarget === id;
     const cls = built ? ' built' : locked ? ' locked' : affordable ? ' buildable' : '';
+    const costLabel = b.cost + ' 🪙' + ((b.branches || 0) > 0 ? ' · ' + b.branches + ' 🪵' : '');
     const btn = built
       ? '<button class="academy-build-btn secondary" onclick="academyStartPlaceBuilding(\'' + id + '\')">Move</button><button class="academy-build-btn secondary" onclick="academySelectRoom(\'' + b.room + '\')">Open</button>'
       : locked
         ? '<button class="academy-build-btn" disabled>LV ' + b.unlockLevel + '</button>'
-        : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Place ' + b.cost) + '</button>';
+        : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Place') + '</button>';
     return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + '">' +
       '<img class="academy-building-art" src="' + b.asset + '" alt="' + escapeHtml(b.label) + ' sprite">' +
       '<div class="academy-building-name">' + b.icon + ' ' + escapeHtml(b.label) + '</div>' +
       '<div class="academy-building-effect">' + escapeHtml(b.effect) + '</div>' +
-      '<div class="academy-building-meta"><span class="academy-building-chip">' + (built ? 'BUILT · MOVE ANYTIME' : locked ? 'UNLOCK LV ' + b.unlockLevel : b.cost + ' COINS') + '</span>' + btn + '</div>' +
+      '<div class="academy-building-meta"><span class="academy-building-chip">' + (built ? 'BUILT · MOVE ANYTIME' : locked ? 'UNLOCK LV ' + b.unlockLevel : costLabel) + '</span>' + btn + '</div>' +
     '</div>';
   }).join('');
-  panel.innerHTML = '<div class="academy-builder-status"><div><div class="academy-builder-title">World buildings</div><div class="academy-builder-copy">The tree is your blank home base now: pick a building here, then tap the manga tree where you want it to live.</div></div><div class="academy-builder-wallet">' + wallet + '<br><span style="font-family:Rajdhani,sans-serif;font-size:10px;color:var(--text3);letter-spacing:.08em">COINS</span></div></div><div class="academy-build-grid">' + cards + '</div>';
+  panel.innerHTML = '<div class="academy-builder-status"><div><div class="academy-builder-title">World buildings</div><div class="academy-builder-copy">Pick a building here, then tap the manga tree where you want it to live. Coins come from quests and discoveries; branches come from Branch Run and Timber Haul quests.</div></div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵<br><span style="font-family:Rajdhani,sans-serif;font-size:10px;color:var(--text3);letter-spacing:.08em">COINS · BRANCHES</span></div></div><div class="academy-build-grid">' + cards + '</div>';
 }
 
 
@@ -5539,8 +6332,10 @@ function claimBirdExpedition(expeditionId) {
   q.status = 'claimed';
   const equipment = q.equipment || {};
   let coins = advanced.rewards.coins || 0;
-  if (equipment.provision) coins = Math.round(coins * 1.25); // well-fed birds haul more
+  let branches = Math.max(0, Math.floor(Number(advanced.rewards.branches) || 0));
+  if (equipment.provision) { coins = Math.round(coins * 1.25); branches = Math.round(branches * 1.25); } // well-fed birds haul more
   addCoins(coins);
+  addBranches(branches);
   const questXp = Math.max(0, Math.floor(Number(advanced.rewards.xp) || 0));
   if (questXp > 0) addPlayerXp(questXp);
   const items = { ...(advanced.rewards.items || {}) };
@@ -5559,7 +6354,7 @@ function claimBirdExpedition(expeditionId) {
   gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
   saveState();
   closeQuestOverlay();
-  playQuestClaimCelebration({ coins, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  playQuestClaimCelebration({ coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   renderBirdExpeditions(); renderInventory(); updateHeader();
 }
 
@@ -5580,7 +6375,7 @@ function playQuestClaimCelebration(rewards) {
     .map(([k, n]) => '<span class="qcc-item">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + (n > 1 ? ' ×' + n : '') + '</span>').join('');
   el.innerHTML = '<div class="qcc-center">' + bits.join('') +
     '<div class="qcc-badge">QUEST COMPLETE!</div>' +
-    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
+    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.branches > 0 ? '+' + rewards.branches + ' 🪵' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
     (itemBits ? '<div class="qcc-items">' + itemBits + '</div>' : '') +
     (rewards.clue ? '<div class="qcc-clue">📜 Merlin Clue: ' + escapeHtml(rewards.clue) + '</div>' : '') +
     '</div>';
@@ -5611,9 +6406,11 @@ function renderMerlinClueNotebook() {
 const QUEST_TEMPLATE_INFO = {
   find_seed:    'A quick hop around the gardens for spilt seed. The perfect first errand.',
   find_coins:   'Someone always drops a coin near the market lane. Send a sharp-eyed bird.',
+  branch_run:   'Fallen twigs litter the windfall thicket. Haul branches home — buildings need timber.',
   scavenge:     'Moss, twigs and berries for the Academy stores. Easy pickings.',
   short_forage: 'An hour among the hedgerows for berries and shiny finds.',
   supply_run:   'A two-hour supply route past the squirrel market. Fills the pantry.',
+  timber_haul:  'A heavy trip to the storm-fall clearing. The biggest branch payout for serious builders.',
   moon_scout:   'A three-hour night flight tracing Merlin runes. The best coin — and secrets.'
 };
 
@@ -5657,7 +6454,8 @@ function renderBirdExpeditions() {
   const boardHtml = '<div class="quest-section-title">Quest Board</div>' + templates.map(t => {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
-    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP';
+    const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
+    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP';
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
@@ -5751,11 +6549,11 @@ function renderQuestSendSheet() {
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
-      '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP</div></div></div>' +
+      '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + ((t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '') + ' · +' + (t.xp || 0) + ' XP</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + '</div>' +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
-    '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins</span></div>' +
+    '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins &amp; branches</span></div>' +
     '<div class="quest-equip-row">' + provisionChips + '</div>' +
     '<div class="quest-overlay-label">Charm <span class="quest-overlay-hint">+1 bonus find</span></div>' +
     '<div class="quest-equip-row">' + charmChips + '</div>' +
@@ -5837,6 +6635,11 @@ function buildQuestTimeline(q) {
       const line = QUEST_LOG_COIN_LINES[Math.floor(rng() * QUEST_LOG_COIN_LINES.length)];
       events.push({ pct: 15 + Math.floor(rng() * 75), text: q.birdName + ' ' + line.replace('{n}', amount) + '.', loot: '+' + amount + ' 🪙' });
     }
+  }
+  // Branch hauls get their own gathering moment in the log
+  const totalBranches = (q.rewards && q.rewards.branches) || 0;
+  if (totalBranches > 0) {
+    events.push({ pct: 25 + Math.floor(rng() * 55), text: q.birdName + ' lashes together a bundle of sturdy branches for the Academy builders.', loot: '+' + totalBranches + ' 🪵' });
   }
   // Item finds
   Object.entries((q.rewards && q.rewards.items) || {}).forEach(([key, count]) => {
@@ -6804,6 +7607,8 @@ function wireAcademyZones() {
 // expose the thin UI adapters deliberately; without this, tapping Build/Move
 // can appear to do nothing because the handler cannot resolve the function.
 Object.assign(window, {
+  claimCurrentVillage,
+  collectEmpireTribute,
   academyBuildBuilding,
   academyBuildAndMoveBird,
   academySelectRoom,
@@ -7321,6 +8126,8 @@ function discoveredSpeciesRecords() { return Object.values(gameState.discoveredS
 function recruitCostForBird(bird) { return RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common; }
 function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && bird.rarity) || 'common'] || RARITY_DISCOVERY_REWARD.common; }
 function addCoins(amount) { gameState.player.coins = Math.max(0, Math.floor((Number(gameState.player.coins) || 0) + amount)); return gameState.player.coins; }
+function addBranches(amount) { gameState.player.branches = Math.max(0, Math.floor((Number(gameState.player.branches) || 0) + amount)); return gameState.player.branches; }
+function playerBranches() { return Math.max(0, Math.floor(Number(gameState.player.branches) || 0)); }
 
 // ============================================================================
 // VILLAGE — procedurally generated medieval market squares (three.js)
@@ -7486,10 +8293,12 @@ function drawVillageMarkers(lat, lon) {
     // At natural zoom the nearest few always count as your vicinity; zoomed
     // out, only villages you've genuinely walked near stay enterable.
     const visitable = idx < VILLAGE_VISITABLE_COUNT && (!zoomedOut || v.dist <= VILLAGE_VISIT_RANGE_M);
+    const owned = empireOwnsVillage(v.seed);
     const el = makeHtmlMarker('burbz-village-marker',
       '<div class="burbz-village-icon">🏰</div>' +
-      (visitable ? '' : '<div class="burbz-village-lock">🔒</div>') +
+      (owned ? '<div class="burbz-village-crown">👑</div>' : (visitable ? '' : '<div class="burbz-village-lock">🔒</div>')) +
       '<div class="burbz-village-name">' + escapeHtml(v.name) + '</div>');
+    if (owned) el.classList.add('owned');
     if (!visitable) el.classList.add('locked');
     el.style.zIndex = visitable ? '3' : '2';
     el.addEventListener('click', e => {
@@ -7512,11 +8321,12 @@ function scheduleVillageMarkerRefresh() {
 }
 
 function enterVillage(v) {
-  villageActive = { seed: v.seed >>> 0, name: v.name };
+  villageActive = { seed: v.seed >>> 0, name: v.name, lat: Number(v.lat) || null, lon: Number(v.lon) || null };
   if (gameState) { gameState.lastVillage = villageActive; saveState(); }
   SFX.tap();
   switchScreen('village');
-  showToast('🏰 Welcome to ' + v.name);
+  renderVillage(); // switchScreen skips re-render when already on this screen
+  showToast(empireOwnsVillage(v.seed) ? '👑 Welcome back to your ' + v.name : '🏰 Welcome to ' + v.name);
 }
 
 function currentVillage() {
@@ -7531,6 +8341,111 @@ function currentVillage() {
   return villageActive;
 }
 
+// ============================================================================
+// EMPIRE — conquer the realm one village birdhouse at a time. Any village the
+// player walks to and enters can be claimed by building a birdhouse there;
+// claimed villages join the empire, wear a crown on the map, and pay tribute.
+// ============================================================================
+function ensureEmpireState() {
+  if (!gameState) return null;
+  if (!gameState.empire || typeof gameState.empire !== 'object' || Array.isArray(gameState.empire)) gameState.empire = {};
+  if (!gameState.empire.villages || typeof gameState.empire.villages !== 'object' || Array.isArray(gameState.empire.villages)) gameState.empire.villages = {};
+  return gameState.empire;
+}
+function empireVillages() { const e = ensureEmpireState(); return e ? Object.values(e.villages).filter(Boolean) : []; }
+function empireOwnsVillage(seed) { const e = ensureEmpireState(); return !!(e && e.villages[String(seed >>> 0)]); }
+const EMPIRE_RANKS = [[50, 'World Emperor'], [35, 'Kingdom Monarch'], [20, 'Realm Duke'], [10, 'Shire Count'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
+function empireRankTitle(count) { for (const [n, t] of EMPIRE_RANKS) { if (count >= n) return t; } return 'Wandering Trainer'; }
+// Each new conquest costs a little more than the last, so an empire is a
+// journey: the branch economy (Branch Run / Timber Haul quests) feeds this.
+function birdhouseCostForNextVillage() {
+  const owned = empireVillages().length;
+  return { coins: 60 + Math.min(owned, 12) * 15, branches: 15 + Math.min(owned, 12) * 5 };
+}
+const EMPIRE_TRIBUTE_INTERVAL_MS = 8 * 60 * 60 * 1000; // each village pays every 8h
+const EMPIRE_TRIBUTE_MAX_PERIODS = 3;                  // stores up to a day away
+const EMPIRE_TRIBUTE_COINS = 6;
+const EMPIRE_TRIBUTE_BRANCHES = 2;
+function empireVillageTributePeriods(v, now) {
+  const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
+  return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((now - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
+}
+function empireTributeReady() {
+  const now = Date.now();
+  let coins = 0, branches = 0;
+  empireVillages().forEach(v => {
+    const periods = empireVillageTributePeriods(v, now);
+    coins += periods * EMPIRE_TRIBUTE_COINS;
+    branches += periods * EMPIRE_TRIBUTE_BRANCHES;
+  });
+  return { coins, branches };
+}
+function collectEmpireTribute() {
+  const due = empireTributeReady();
+  if (due.coins <= 0 && due.branches <= 0) { showToast('No tribute ready yet — villages pay every 8 hours.'); return; }
+  const now = Date.now();
+  empireVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) v.lastTributeAt = now; });
+  addCoins(due.coins);
+  addBranches(due.branches);
+  saveState();
+  SFX.questComplete();
+  vibrate(40);
+  showToast('👑 Tribute collected: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵');
+  updateHeader(); renderEmpirePanel(); renderVillageClaimBar();
+}
+function claimCurrentVillage() {
+  const v = currentVillage();
+  const empire = ensureEmpireState();
+  if (!v || !empire) return;
+  const key = String(v.seed >>> 0);
+  if (empire.villages[key]) { showToast('👑 ' + v.name + ' is already part of your empire.'); return; }
+  const cost = birdhouseCostForNextVillage();
+  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 for a birdhouse in ' + v.name + '.'); return; }
+  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
+  addCoins(-cost.coins);
+  addBranches(-cost.branches);
+  empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: Number(v.lat) || null, lon: Number(v.lon) || null, claimedAt: new Date().toISOString(), lastTributeAt: Date.now() };
+  addPlayerXp(40);
+  saveState();
+  SFX.victory();
+  vibrate(80);
+  const count = empireVillages().length;
+  showToast('👑 Birdhouse built — ' + v.name + ' joins your empire! ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count));
+  liveMapVillageKey = null;
+  scheduleVillageMarkerRefresh();
+  updateHeader();
+  renderVillage();
+}
+function renderVillageClaimBar() {
+  const bar = $('villageClaimBar');
+  if (!bar) return;
+  const v = currentVillage();
+  if (!v) { bar.innerHTML = ''; return; }
+  if (empireOwnsVillage(v.seed)) {
+    const rec = ensureEmpireState().villages[String(v.seed >>> 0)];
+    const when = rec && rec.claimedAt ? new Date(rec.claimedAt).toLocaleDateString() : '';
+    bar.innerHTML = '<div class="village-owned-banner">👑 ' + escapeHtml(v.name) + ' is part of your empire' + (when ? ' · claimed ' + escapeHtml(when) : '') + '</div>';
+    return;
+  }
+  const cost = birdhouseCostForNextVillage();
+  bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🐦 BUILD BIRDHOUSE — CLAIM ' + escapeHtml(v.name.toUpperCase()) + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>';
+}
+function renderEmpirePanel() {
+  const panel = $('empirePanel');
+  if (!panel) return;
+  const villages = empireVillages().slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0));
+  const due = empireTributeReady();
+  const count = villages.length;
+  const hasTribute = due.coins > 0 || due.branches > 0;
+  const rows = count ? villages.map(v =>
+    '<div class="empire-village-row"><span class="empire-village-flag">👑</span><span class="empire-village-name">' + escapeHtml(v.name) + '</span><span class="empire-village-meta">claimed ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></div>'
+  ).join('') : '<div class="empire-empty">No villages conquered yet. Walk to a village on the map, step inside, and build a birdhouse to claim it — every village in the world can be yours.</div>';
+  panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 YOUR EMPIRE — ' + count + ' VILLAGE' + (count === 1 ? '' : 'S') + '</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
+    '<div class="empire-copy">Conquer the world map: every village you walk to can be claimed with a birdhouse. Claimed villages pay tribute of ' + EMPIRE_TRIBUTE_COINS + ' 🪙 and ' + EMPIRE_TRIBUTE_BRANCHES + ' 🪵 every 8 hours.</div>' +
+    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TRIBUTE: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' : '⏳ TRIBUTE GROWING — CHECK BACK LATER') + '</button>' : '') +
+    '<div class="empire-village-list">' + rows + '</div>';
+}
+
 // ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
@@ -7543,10 +8458,13 @@ function renderVillage() {
   const stage = $('villageStage');
   if (!stage) return;
   const v = currentVillage();
+  const owned = empireOwnsVillage(v.seed);
   const title = $('villageTitle');
-  if (title) title.textContent = v.name.toUpperCase();
+  if (title) title.textContent = (owned ? '👑 ' : '') + v.name.toUpperCase();
   const sub = $('villageSub');
-  if (sub) sub.textContent = 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside. Find more villages on the map.';
+  if (sub) sub.textContent = (owned ? 'Your village. ' : '') + 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside. Find more villages on the map.';
+  renderVillageClaimBar();
+  renderEmpirePanel();
   renderVillageLegend();
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {
@@ -8927,7 +9845,7 @@ function updateHeader() {
   const lv = gameState.player.level;
   const xpNeeded = XP_PER_LEVEL(lv);
   const pct = Math.min(100, (gameState.player.xp / xpNeeded) * 100);
-  $('headerLevel').textContent = 'TRAINER LV. ' + lv + ' · ' + (gameState.player.coins || 0) + ' COINS';
+  $('headerLevel').textContent = 'TRAINER LV. ' + lv + ' · ' + (gameState.player.coins || 0) + ' 🪙 · ' + playerBranches() + ' 🪵';
   $('headerXpFill').style.width = pct + '%';
   const cameraHudLevel = $('cameraHudLevel');
   if (cameraHudLevel) cameraHudLevel.textContent = 'LV. ' + lv;
