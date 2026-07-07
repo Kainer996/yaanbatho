@@ -98,7 +98,8 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .inventory-empty { grid-column:1/-1; padding:22px 16px; border:1px dashed rgba(255,255,255,.14); border-radius:16px; color:var(--text3); text-align:center; }
 .academy-room-hero { position:relative; margin:0 0 14px; min-height:360px; border-radius:18px; overflow:hidden; border:1px solid rgba(214,168,79,.24); background:#090807; box-shadow:inset 0 0 50px rgba(0,0,0,.45); }
 .academy-room-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.96) brightness(.82); }
-.academy-room-vignette { position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, transparent 0 44%, rgba(0,0,0,.56) 100%), linear-gradient(180deg,rgba(0,0,0,.20),rgba(0,0,0,.62)); pointer-events:none; }
+svg.academy-room-bg { display:block; filter:none; }
+.academy-room-vignette { position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, transparent 0 54%, rgba(0,0,0,.34) 100%), linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.34)); pointer-events:none; }
 .academy-room-stage { position:absolute; left:0; right:0; bottom:8%; height:46%; overflow:hidden; }
 .room-bird-sprite { position:absolute; bottom:0; left:8%; width:66px; height:66px; object-fit:contain; filter:drop-shadow(0 10px 10px rgba(0,0,0,.50)); transform-origin:50% 88%; translate:0 0; rotate:0deg; scale:-1 1; will-change:translate,transform; animation:roomBirdTravel 11s ease-in-out infinite, roomBirdBounce .82s ease-in-out infinite; }
 .room-bird-sprite.fallback-bg { -webkit-mask-image:radial-gradient(ellipse at 50% 50%, #000 0 58%, rgba(0,0,0,.65) 72%, transparent 100%); mask-image:radial-gradient(ellipse at 50% 50%, #000 0 58%, rgba(0,0,0,.65) 72%, transparent 100%); }
@@ -6338,11 +6339,304 @@ function academyGraduationOverlay(bird) {
 }
 
 let academyInteriorRoom = 'outdoors';
-const ACADEMY_ROOM_INTERIORS = {
-  dorm: 'assets/academy-interiors/roost-interior-manga-20260629.png',
-  training: 'assets/academy-interiors/training-interior.svg',
-  outdoors: 'assets/academy-interiors/gardens-interior.svg'
-};
+
+// ===== Academy room interiors — hand-drawn inline SVG scenes ================
+// Painted PNG/SVG interior assets were never shipped, so rooms opened onto a
+// black hero. Every room now draws its own manga-styled scene inline; nothing
+// external can 404 and blank the screen again.
+const ACADEMY_ROOM_SCENES = (() => {
+  const INK = '#140d06', TRIM = '#6b4a26', GOLD = '#d6a84f', GOLDHI = '#f0c767', CREAM = '#f4ead4', TEAL = '#2e7d86';
+  let uid = 0;
+
+  const DEFS = `<defs>
+    <linearGradient id="ri-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#11414e"/><stop offset=".55" stop-color="#0a2733"/><stop offset="1" stop-color="#06141c"/></linearGradient>
+    <linearGradient id="ri-floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#412d15"/><stop offset="1" stop-color="#1d1208"/></linearGradient>
+    <radialGradient id="ri-moon"><stop offset="0" stop-color="#fff8e1"/><stop offset=".45" stop-color="#fdf0c4" stop-opacity=".9"/><stop offset="1" stop-color="#fdf0c4" stop-opacity="0"/></radialGradient>
+    <radialGradient id="ri-gold"><stop offset="0" stop-color="#f0c767" stop-opacity=".8"/><stop offset="1" stop-color="#f0c767" stop-opacity="0"/></radialGradient>
+    <radialGradient id="ri-teal"><stop offset="0" stop-color="#5ed6de" stop-opacity=".5"/><stop offset="1" stop-color="#5ed6de" stop-opacity="0"/></radialGradient>
+    <radialGradient id="ri-green"><stop offset="0" stop-color="#7fd6a0" stop-opacity=".6"/><stop offset="1" stop-color="#7fd6a0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="ri-fire" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e2842f"/><stop offset="1" stop-color="#ffe9a8"/></linearGradient>
+    <radialGradient id="ri-vig"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></radialGradient>
+  </defs>`;
+
+  const mote = (x, y, r, dur, delay, color) =>
+    `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}"><animate attributeName="opacity" values=".1;.85;.1" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 -30;0 0" dur="${dur * 2}s" begin="${delay}s" repeatCount="indefinite"/></circle>`;
+  const motes = (color = '#ffe9a8') =>
+    mote(130, 320, 2.6, 5, 0, color) + mote(320, 190, 2, 6.4, 1.3, color) + mote(560, 300, 2.3, 5.6, 2.4, color) + mote(700, 170, 1.8, 7, .6, color) + mote(430, 380, 1.6, 6, 3.1, color);
+
+  const wall = () => {
+    let s = `<rect width="800" height="600" fill="#2d1f10"/>`;
+    for (let i = 0; i < 10; i++) s += `<rect x="${i * 80}" y="0" width="77" height="600" fill="${i % 2 ? '#372715' : '#312110'}"/>`;
+    s += `<path d="M118 150q20 30 0 62M338 250q18 26 0 54M582 130q20 30 0 62M660 330q16 24 0 50M42 380q16 24 0 50" stroke="#221507" stroke-width="4" fill="none"/>`;
+    s += `<ellipse cx="400" cy="170" rx="440" ry="280" fill="url(#ri-gold)" opacity=".14"/>`;
+    return s;
+  };
+  const beam = () =>
+    `<rect width="800" height="48" fill="#1d1309"/><rect y="44" width="800" height="10" fill="#0f0a04"/>`;
+  const RUNE_D = ['M5 0v14M0 4l5 4 5-4', 'M5 0v14M0 4h10', 'M0 0l10 14M10 0L0 14', 'M5 0v14M5 7l6-5M5 7l-6-5', 'M0 12Q5 0 10 12'];
+  const runes = (x, y, n, color = GOLDHI, op = .55, gap = 30) => {
+    let s = '';
+    for (let i = 0; i < n; i++) s += `<g transform="translate(${x + i * gap},${y})" stroke="${color}" stroke-width="2.2" fill="none" opacity="${op}" stroke-linecap="round"><path d="${RUNE_D[i % 5]}"/></g>`;
+    return s;
+  };
+  const floor = (y = 452) => {
+    let s = `<rect x="0" y="${y}" width="800" height="${600 - y}" fill="url(#ri-floor)"/><rect x="0" y="${y}" width="800" height="6" fill="#0f0a04"/>`;
+    s += `<path d="M0 ${y + 42}h800M0 ${y + 92}h800" stroke="#120b05" stroke-width="3"/>`;
+    for (const fx of [130, 300, 470, 650]) s += `<path d="M${fx} ${y + 6}l${(fx - 400) / 9} ${594 - y}" stroke="#120b05" stroke-width="3"/>`;
+    return s;
+  };
+  const lantern = (x, y, s = 1, cord = 40) =>
+    `<g transform="translate(${x},${y}) scale(${s})"><line x1="0" y1="${-cord}" x2="0" y2="0" stroke="#3d2c14" stroke-width="3"/><circle cx="0" cy="20" r="40" fill="url(#ri-gold)" opacity=".55"/><rect x="-9" y="-7" width="18" height="9" rx="3" fill="${TRIM}"/><rect x="-13" y="0" width="26" height="36" rx="7" fill="#1c1209" stroke="${TRIM}" stroke-width="3"/><rect x="-7" y="6" width="14" height="24" rx="4" fill="#ffdf9e"><animate attributeName="opacity" values=".7;.95;.78;.95;.7" dur="3.4s" repeatCount="indefinite"/></rect></g>`;
+  const roundWindow = (cx, cy, r) => {
+    const id = 'ri-win' + (++uid);
+    return `<circle cx="${cx}" cy="${cy}" r="${r + 12}" fill="#17100a"/><circle cx="${cx}" cy="${cy}" r="${r + 12}" fill="none" stroke="${TRIM}" stroke-width="5"/>
+      <clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+      <g clip-path="url(#${id})"><rect x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" fill="url(#ri-sky)"/>
+      <circle cx="${cx - r * .35}" cy="${cy - r * .4}" r="${r * .62}" fill="url(#ri-moon)"/><circle cx="${cx - r * .35}" cy="${cy - r * .4}" r="${r * .24}" fill="#fdf4d4"/>
+      <rect x="${cx + r * .3}" y="${cy - r}" width="${r * .26}" height="${r * 2}" rx="8" fill="#0a2027"/><rect x="${cx - r * .95}" y="${cy - r * .2}" width="${r * .2}" height="${r * 1.4}" rx="7" fill="#0a2027"/>
+      <ellipse cx="${cx}" cy="${cy + r * .45}" rx="${r * .95}" ry="${r * .3}" fill="#48a0a4" opacity=".16"/>
+      <circle cx="${cx + r * .45}" cy="${cy + r * .1}" r="2.4" fill="#ffe9a8" opacity=".85"/><circle cx="${cx + r * .1}" cy="${cy - r * .55}" r="1.8" fill="#ffe9a8" opacity=".6"/></g>
+      <path d="M${cx - r} ${cy}h${r * 2}M${cx} ${cy - r}v${r * 2}" stroke="#17100a" stroke-width="7"/>`;
+  };
+  const lightShaft = (x, y, spread, drop) =>
+    `<polygon points="${x},${y} ${x + spread * .2},${y} ${x + spread}, ${y + drop} ${x - spread * .6},${y + drop}" fill="#f0c767" opacity=".05"/>`;
+  const ivy = (x, y, flip = 1) => {
+    let s = `<g transform="translate(${x},${y}) scale(${flip},1)">`;
+    for (let i = 0; i < 3; i++) {
+      s += `<path d="M${i * 26} 0q${8 - i * 4} ${34 + i * 16} ${i * 10} ${52 + i * 20}" stroke="#1e4a2c" stroke-width="3" fill="none"/>`;
+      for (let j = 1; j <= 3; j++) s += `<ellipse cx="${i * 26 + j * 2}" cy="${j * (16 + i * 6)}" rx="7" ry="4.5" fill="${j % 2 ? '#2a5f38' : '#1e4a2c'}" transform="rotate(${j * 24} ${i * 26} ${j * 16})"/>`;
+    }
+    return s + '</g>';
+  };
+  const shelfPlank = (x, y, w) =>
+    `<rect x="${x}" y="${y}" width="${w}" height="10" rx="3" fill="#3a2a16" stroke="${INK}" stroke-width="2"/><path d="M${x + 8} ${y + 10}l8 14M${x + w - 16} ${y + 10}l8 14" stroke="#2b1e11" stroke-width="5"/>`;
+  const jar = (x, y, w, h, color, glow = '') =>
+    (glow ? `<circle cx="${x + w / 2}" cy="${y + h / 2}" r="${h}" fill="${glow}" opacity=".5"/>` : '') +
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w * .3}" fill="${color}" opacity=".88" stroke="${INK}" stroke-width="2"/><rect x="${x + w * .15}" y="${y - 4}" width="${w * .7}" height="6" rx="2" fill="${TRIM}"/><rect x="${x + w * .18}" y="${y + h * .18}" width="${w * .2}" height="${h * .5}" rx="${w * .1}" fill="#fff" opacity=".18"/>`;
+  const bunting = (y1, y2, colors = [GOLD, TEAL, '#8a2f2a']) => {
+    let s = `<path d="M0 ${y1}Q400 ${y2} 800 ${y1 - 6}" stroke="#3d2c14" stroke-width="3" fill="none"/>`;
+    for (let i = 0; i < 9; i++) {
+      const t = (i + .5) / 9, x = t * 800, y = y1 + (y2 - y1) * 4 * t * (1 - t) * .96 - 3;
+      s += `<polygon points="${x - 13},${y} ${x + 13},${y} ${x},${y + 26}" fill="${colors[i % colors.length]}" opacity=".85" stroke="${INK}" stroke-width="1.6"/>`;
+    }
+    return s;
+  };
+  const table = (x, y, w, h, skew = 30) =>
+    `<polygon points="${x},${y} ${x + w},${y} ${x + w + skew},${y + h} ${x - skew},${y + h}" fill="#4a3418" stroke="${INK}" stroke-width="3"/><polygon points="${x - skew},${y + h} ${x + w + skew},${y + h} ${x + w + skew},${y + h + 13} ${x - skew},${y + h + 13}" fill="#31210f" stroke="${INK}" stroke-width="2"/><rect x="${x - skew + 12}" y="${y + h + 13}" width="15" height="${560 - y - h}" fill="#2b1e11" stroke="${INK}" stroke-width="2"/><rect x="${x + w + skew - 27}" y="${y + h + 13}" width="15" height="${560 - y - h}" fill="#2b1e11" stroke="${INK}" stroke-width="2"/>`;
+  const nest = (cx, cy, rx, ry) => {
+    let s = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#4a3418" stroke="${INK}" stroke-width="3"/><ellipse cx="${cx}" cy="${cy - ry * .35}" rx="${rx * .78}" ry="${ry * .5}" fill="#241809"/>`;
+    for (let i = 0; i < 5; i++) s += `<path d="M${cx - rx + i * (rx / 2.5)} ${cy + ry * .2}q${rx / 5} ${-ry * .8} ${rx / 2.2} 0" stroke="#b98c3e" stroke-width="2.4" fill="none" opacity=".8"/>`;
+    return s;
+  };
+  const egg = (cx, cy, r, speckled = true) =>
+    `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 1.3}" fill="#efe6cd" stroke="${INK}" stroke-width="2"/>` +
+    (speckled ? `<circle cx="${cx - r * .3}" cy="${cy - r * .3}" r="1.6" fill="#9a825a"/><circle cx="${cx + r * .35}" cy="${cy + r * .2}" r="1.4" fill="#9a825a"/><circle cx="${cx}" cy="${cy + r * .6}" r="1.2" fill="#9a825a"/>` : '');
+  const perchBar = (x, y, len) =>
+    `<rect x="${x}" y="${y}" width="${len}" height="11" rx="5.5" fill="#58351d" stroke="${INK}" stroke-width="2.6"/><path d="M${x + 10} ${y - 4}l10 19M${x + 20} ${y - 4}l-10 19M${x + len - 20} ${y - 4}l10 19M${x + len - 10} ${y - 4}l-10 19" stroke="#8a6a3a" stroke-width="2.4"/>`;
+
+  const SCENES = {
+    outdoors() {
+      let s = `<rect width="800" height="600" fill="url(#ri-sky)"/>`;
+      s += `<circle cx="588" cy="108" r="95" fill="url(#ri-moon)"/><circle cx="588" cy="108" r="42" fill="#fdf4d4"/><circle cx="576" cy="98" r="7" fill="#e8dcb4"/><circle cx="600" cy="120" r="5" fill="#e8dcb4"/>`;
+      s += `<circle cx="340" cy="80" r="2" fill="#ffe9a8" opacity=".8"/><circle cx="520" cy="60" r="1.7" fill="#ffe9a8" opacity=".6"/><circle cx="600" cy="130" r="2.2" fill="#ffe9a8" opacity=".7"/><circle cx="260" cy="180" r="1.5" fill="#ffe9a8" opacity=".5"/>`;
+      s += `<rect x="255" y="150" width="26" height="330" rx="10" fill="#0e2833"/><rect x="420" y="150" width="34" height="330" rx="12" fill="#0e2833"/><rect x="335" y="190" width="20" height="290" rx="8" fill="#0b2028"/>`;
+      s += `<ellipse cx="380" cy="400" rx="300" ry="38" fill="#48a0a4" opacity=".08"/>`;
+      s += `<path d="M0 0h800v58q-96 44-208 30T404 106 190 92 0 116z" fill="#0d2418"/><path d="M0 0h800v34q-120 34-240 22T330 72 96 60 0 78z" fill="#122e1e"/>`;
+      s += `<path d="M652 600q-16-210 26-390T744 0h56v600z" fill="#1c1208"/><path d="M700 590q-10-190 22-360" stroke="#120b05" stroke-width="6" fill="none"/><path d="M756 580q-8-170 18-330" stroke="#120b05" stroke-width="5" fill="none"/>`;
+      s += runes(700, 200, 1) + runes(724, 280, 1) + runes(706, 360, 1) + runes(736, 150, 1);
+      s += `<path d="M0 470q140-26 300-12t340 4 160-10v148H0z" fill="#1c4022"/><path d="M0 512q170-24 360-10t300 2 140-8v104H0z" fill="#25522c"/>`;
+      s += `<ellipse cx="180" cy="546" rx="112" ry="27" fill="#0e2f3a" stroke="#071c22" stroke-width="4"/><ellipse cx="180" cy="546" rx="112" ry="27" fill="url(#ri-teal)" opacity=".5"/><path d="M110 542q36-10 78-4" stroke="#5ed6de" stroke-width="2.4" fill="none" opacity=".5"/>`;
+      s += `<path d="M96 522q-6-28 4-44M118 526q2-30 14-42" stroke="#2a5f38" stroke-width="4" fill="none"/><ellipse cx="100" cy="474" rx="5" ry="10" fill="#2a5f38"/><ellipse cx="134" cy="480" rx="5" ry="10" fill="#2a5f38"/>`;
+      s += `<ellipse cx="430" cy="588" rx="48" ry="13" fill="#565040" opacity=".95"/><ellipse cx="414" cy="558" rx="37" ry="10" fill="#615a47" opacity=".92"/><ellipse cx="404" cy="534" rx="28" ry="8" fill="#565040" opacity=".9"/>`;
+      for (const [px, py] of [[310, 470], [560, 462]]) s += `<rect x="${px - 4}" y="${py - 88}" width="8" height="92" fill="#241809" stroke="${INK}" stroke-width="2"/>` + lantern(px, py - 126, .9, 0);
+      for (const [fx, fy, fc] of [[240, 500, GOLDHI], [268, 512, '#5ed6de'], [498, 520, GOLDHI], [640, 540, '#5ed6de'], [672, 528, GOLDHI]])
+        s += `<line x1="${fx}" y1="${fy}" x2="${fx}" y2="${fy - 18}" stroke="#2a5f38" stroke-width="2.6"/><circle cx="${fx}" cy="${fy - 22}" r="9" fill="url(#ri-gold)"/><circle cx="${fx}" cy="${fy - 22}" r="4" fill="${fc}"/>`;
+      for (const [mx, my, mr] of [[712, 566, 9], [732, 574, 7], [696, 578, 6]]) s += `<path d="M${mx} ${my}v${mr * 1.5}" stroke="#c8b98f" stroke-width="3"/><path d="M${mx - mr} ${my}q${mr} ${-mr * 1.4} ${mr * 2} 0z" fill="#d6a84f" stroke="${INK}" stroke-width="1.6"/><circle cx="${mx}" cy="${my - 2}" r="${mr * 1.5}" fill="url(#ri-gold)" opacity=".5"/>`;
+      s += `<path d="M0 600v-64q60 8 96 40t44 24H0z" fill="#123018"/><path d="M800 600v-56q-64 4-100 32t-40 24z" fill="#123018"/>`;
+      return s + motes();
+    },
+    dorm() {
+      let s = wall() + beam() + runes(300, 16, 7);
+      s += roundWindow(240, 210, 108) + lightShaft(240, 320, 220, 210);
+      s += `<rect x="490" y="92" width="286" height="300" rx="14" fill="#1d1309" stroke="${TRIM}" stroke-width="4"/>`;
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
+        const nx = 522 + c * 134, ny = 116 + r * 96;
+        s += `<path d="M${nx} ${ny + 70}v-38q0-32 51-32t51 32v38z" fill="#120a05" stroke="#3a2a16" stroke-width="3"/>`;
+        s += `<path d="M${nx + 8} ${ny + 62}q22-14 44-2M${nx + 46} ${ny + 64}q26-12 48-2" stroke="#b98c3e" stroke-width="2.6" fill="none" opacity=".85"/>`;
+        if ((r + c) % 3 === 1) s += egg(nx + 51, ny + 54, 7);
+      }
+      s += lantern(430, 92, 1, 46);
+      s += floor();
+      s += `<ellipse cx="290" cy="522" rx="152" ry="34" fill="#3a2412" stroke="${INK}" stroke-width="3"/><ellipse cx="290" cy="522" rx="112" ry="24" fill="none" stroke="#58402266" stroke-width="6"/><ellipse cx="290" cy="522" rx="70" ry="15" fill="none" stroke="#58402266" stroke-width="5"/>`;
+      s += `<rect x="196" y="486" width="64" height="30" rx="13" fill="#2e5f66" stroke="${INK}" stroke-width="2.6"/><rect x="330" y="500" width="58" height="26" rx="12" fill="${TRIM}" stroke="${INK}" stroke-width="2.6"/>`;
+      s += shelfPlank(56, 402, 150);
+      s += `<rect x="76" y="374" width="44" height="26" rx="5" fill="#2e5f66" stroke="${INK}" stroke-width="2"/><rect x="82" y="360" width="44" height="16" rx="5" fill="${GOLD}" stroke="${INK}" stroke-width="2"/>`;
+      s += `<rect x="156" y="372" width="12" height="30" rx="3" fill="#e8dcb4" stroke="${INK}" stroke-width="2"/><ellipse cx="162" cy="366" rx="4" ry="7" fill="url(#ri-fire)"><animate attributeName="ry" values="7;9;6.5;9;7" dur="2.6s" repeatCount="indefinite"/></ellipse><circle cx="162" cy="366" r="18" fill="url(#ri-gold)" opacity=".6"/>`;
+      s += ivy(20, 52) + ivy(780, 52, -1);
+      return s + motes();
+    },
+    training() {
+      let s = wall() + beam() + runes(60, 16, 4) + runes(600, 16, 4);
+      s += bunting(84, 148);
+      s += `<circle cx="620" cy="250" r="66" fill="#20140a" stroke="${TRIM}" stroke-width="5"/><circle cx="620" cy="250" r="50" fill="${CREAM}"/><circle cx="620" cy="250" r="36" fill="#8a2f2a"/><circle cx="620" cy="250" r="22" fill="${CREAM}"/><circle cx="620" cy="250" r="9" fill="${GOLD}" stroke="${INK}" stroke-width="2"/>`;
+      s += `<rect x="94" y="128" width="188" height="128" rx="8" fill="#10201c" stroke="#4a3418" stroke-width="6"/><path d="M118 156v40M132 156v40M146 156v40M160 156v40M112 176l56 0" stroke="${CREAM}" stroke-width="3" opacity=".8"/><path d="M130 226q28-24 56 0t56 0" stroke="${GOLDHI}" stroke-width="2.6" fill="none" opacity=".8"/>`;
+      s += perchBar(80, 310, 190) + perchBar(140, 378, 220) + perchBar(96, 430, 170);
+      for (const [sx, slen] of [[352, 96], [438, 128]]) {
+        s += `<g><line x1="${sx}" y1="52" x2="${sx}" y2="${52 + slen}" stroke="#3d2c14" stroke-width="3.4"/><path d="M${sx} ${52 + slen}q-20 6-20 30t20 34 20-34-20-30z" fill="#7a5a2c" stroke="${INK}" stroke-width="2.6"/><path d="M${sx - 10} ${92 + slen}h20" stroke="#4a3418" stroke-width="2.4"/><animateTransform attributeName="transform" type="rotate" values="-2.4 ${sx} 52;2.4 ${sx} 52;-2.4 ${sx} 52" dur="${3 + slen / 90}s" repeatCount="indefinite"/></g>`;
+      }
+      s += floor();
+      s += `<rect x="238" y="474" width="330" height="72" rx="14" fill="#20150b" stroke="#0f0a04" stroke-width="4"/><rect x="252" y="486" width="302" height="48" rx="9" fill="none" stroke="#58402277" stroke-width="3" stroke-dasharray="10 8"/>`;
+      s += `<circle cx="700" cy="470" r="17" fill="#7a5a2c" stroke="${INK}" stroke-width="2.6"/><circle cx="726" cy="484" r="13" fill="#58351d" stroke="${INK}" stroke-width="2.4"/>`;
+      return s + motes();
+    },
+    hospital() {
+      let s = wall() + `<rect width="800" height="600" fill="${CREAM}" opacity=".035"/>` + beam() + runes(330, 16, 5, '#bff0cf');
+      s += roundWindow(596, 186, 92) + lightShaft(596, 282, 190, 180);
+      s += `<path d="M96 52h132v148l-66-30-66 30z" fill="#d9cbaa" opacity=".92" stroke="${INK}" stroke-width="3"/><circle cx="162" cy="112" r="34" fill="#2a5f38"/><path d="M162 92v40M142 112h40" stroke="${CREAM}" stroke-width="10" stroke-linecap="round"/>`;
+      s += floor();
+      s += nest(236, 496, 104, 34);
+      s += `<path d="M148 480q88-40 176 0l-10 22q-78-32-156 0z" fill="#8a4a3a" stroke="${INK}" stroke-width="2.6"/><path d="M180 470q56-20 112 0" stroke="#6b3428" stroke-width="2.4" fill="none"/><ellipse cx="158" cy="466" rx="24" ry="13" fill="${CREAM}" stroke="${INK}" stroke-width="2.2"/>`;
+      s += nest(508, 528, 96, 32);
+      s += `<path d="M428 512q80-36 160 0l-9 20q-72-28-142 0z" fill="#2e5f66" stroke="${INK}" stroke-width="2.6"/><ellipse cx="436" cy="500" rx="22" ry="12" fill="${CREAM}" stroke="${INK}" stroke-width="2.2"/>`;
+      s += table(330, 410, 70, 26, 14);
+      s += jar(330, 380, 22, 28, '#7fd6a0', 'url(#ri-green)') + jar(360, 384, 18, 24, GOLD, 'url(#ri-gold)') + jar(384, 382, 16, 26, '#bff0cf', 'url(#ri-green)');
+      for (const hx of [618, 664, 708]) s += `<line x1="${hx}" y1="52" x2="${hx}" y2="86" stroke="#3d2c14" stroke-width="2.6"/><path d="M${hx} 86q-13 26-6 46m6-46q0 28 4 46m-4-46q13 24 8 46" stroke="#2a5f38" stroke-width="3.4" fill="none"/><ellipse cx="${hx - 5}" cy="118" rx="5" ry="9" fill="#2a5f38"/><ellipse cx="${hx + 6}" cy="122" rx="5" ry="9" fill="#1e4a2c"/>`;
+      s += `<circle cx="368" cy="300" r="60" fill="url(#ri-green)" opacity=".35"/>`;
+      return s + motes('#bff0cf');
+    },
+    crowbar() {
+      let s = wall() + beam() + runes(64, 16, 3) + runes(640, 16, 3);
+      s += `<path d="M0 74Q400 130 800 66" stroke="#3d2c14" stroke-width="3" fill="none"/>`;
+      for (let i = 0; i < 6; i++) { const t = (i + .5) / 6, x = t * 800, y = 74 + 54 * 4 * t * (1 - t) - 4; s += `<circle cx="${x}" cy="${y + 8}" r="6" fill="#ffdf9e"><animate attributeName="opacity" values="${i % 2 ? '.5;1;.5' : '1;.45;1'}" dur="${2.8 + i * .3}s" repeatCount="indefinite"/></circle><circle cx="${x}" cy="${y + 8}" r="16" fill="url(#ri-gold)" opacity=".5"/>`; }
+      s += shelfPlank(470, 150, 280) + shelfPlank(470, 236, 280);
+      s += jar(488, 108, 20, 40, '#8a5a2c') + jar(516, 116, 16, 32, TEAL) + jar(540, 104, 22, 44, GOLD, 'url(#ri-gold)') + jar(572, 118, 16, 30, '#8a2f2a') + jar(596, 108, 20, 40, '#5ed6de') + jar(626, 114, 18, 34, '#8a5a2c') + jar(654, 106, 22, 42, GOLD) + jar(686, 118, 16, 30, TEAL);
+      s += jar(492, 200, 18, 34, TEAL) + jar(520, 194, 22, 40, '#8a5a2c') + jar(552, 202, 16, 32, GOLD, 'url(#ri-gold)') + jar(578, 196, 20, 38, '#8a2f2a') + jar(608, 204, 16, 30, '#5ed6de') + jar(634, 196, 22, 38, '#8a5a2c') + jar(668, 202, 18, 32, GOLD);
+      s += `<circle cx="190" cy="190" r="38" fill="#20140a" stroke="${TRIM}" stroke-width="4"/><circle cx="190" cy="190" r="27" fill="${CREAM}"/><circle cx="190" cy="190" r="17" fill="#2e7d86"/><circle cx="190" cy="190" r="6" fill="${GOLD}" stroke="${INK}" stroke-width="1.6"/>`;
+      s += floor(432);
+      for (const [bx, bs] of [[120, 1], [218, .82]]) s += `<g transform="translate(${bx},470) scale(${bs})"><path d="M-44-56q44-16 88 0 10 28 10 56t-10 56q-44 16-88 0Q-54 28-54 0t10-56z" fill="#4a3418" stroke="${INK}" stroke-width="3"/><path d="M-49-30h98M-52 0h104M-49 30h98" stroke="${GOLD}" stroke-width="4" opacity=".8"/><path d="M-8-56v112" stroke="#31210f" stroke-width="3"/></g>`;
+      s += `<polygon points="320,392 780,392 800,436 300,436" fill="#58402c" stroke="${INK}" stroke-width="3"/><rect x="300" y="436" width="500" height="164" fill="#2b1e11" stroke="${INK}" stroke-width="3"/><path d="M390 436v164M490 436v164M590 436v164M690 436v164" stroke="#1a1108" stroke-width="4"/><rect x="300" y="436" width="500" height="14" fill="#3a2a16"/>`;
+      s += `<g><rect x="420" y="360" width="30" height="32" rx="4" fill="${CREAM}" stroke="${INK}" stroke-width="2.6"/><path d="M450 368q14 2 12 12t-14 8" fill="none" stroke="${INK}" stroke-width="3"/><path d="M424 366q10 6 22 0" stroke="#e8c98a" stroke-width="5"/></g>`;
+      s += `<g><rect x="540" y="366" width="26" height="26" rx="4" fill="${CREAM}" stroke="${INK}" stroke-width="2.4"/><path d="M566 372q12 2 10 10t-12 7" fill="none" stroke="${INK}" stroke-width="2.8"/></g>`;
+      s += `<circle cx="640" cy="380" r="26" fill="url(#ri-gold)" opacity=".5"/>` + lantern(640, 344, .8, 0);
+      s += `<circle cx="400" cy="300" r="120" fill="url(#ri-gold)" opacity=".25"/>`;
+      return s + motes();
+    },
+    kitchen() {
+      let s = wall() + beam() + runes(80, 16, 3);
+      s += roundWindow(170, 168, 72);
+      s += `<path d="M470 452v-140q0-96 118-96t118 96v140z" fill="#3f3a34" stroke="${INK}" stroke-width="4"/><path d="M500 452v-130q0-72 88-72t88 72v130z" fill="#141312"/>`;
+      for (const [stx, sty] of [[482, 420], [478, 372], [488, 322], [516, 268], [560, 234], [616, 226], [664, 246], [694, 292], [704, 344], [702, 396], [706, 430]]) s += `<circle cx="${stx}" cy="${sty}" r="12" fill="#4a463c" stroke="#2c2a24" stroke-width="3"/>`;
+      s += `<path d="M540 446l30-14 24 16 26-14 22 12" stroke="#31210f" stroke-width="9" stroke-linecap="round" fill="none"/>`;
+      s += `<g><path d="M560 442q28-52 28-64t28 64z" fill="#e2842f" opacity=".9"><animateTransform attributeName="transform" type="scale" values="1 1;1 1.12;1 .96;1 1" dur="1.6s" repeatCount="indefinite" additive="sum"/></path><path d="M572 442q16-34 16-42t16 42z" fill="#ffe9a8"><animateTransform attributeName="transform" type="scale" values="1 1;1 .9;1 1.1;1 1" dur="1.3s" repeatCount="indefinite" additive="sum"/></path></g><circle cx="588" cy="400" r="60" fill="url(#ri-gold)" opacity=".55"/>`;
+      s += `<line x1="588" y1="236" x2="588" y2="290" stroke="#111" stroke-width="4"/><path d="M548 306q0-22 40-22t40 22l-6 26q-34 12-68 0z" fill="#1b1b1b" stroke="#000" stroke-width="3"/><ellipse cx="588" cy="304" rx="40" ry="9" fill="#2c2c2c"/>`;
+      s += `<path d="M574 268q-8-20 4-34M600 270q10-22-2-38" stroke="${CREAM}" stroke-width="4" fill="none" opacity=".4"><animate attributeName="opacity" values=".15;.5;.15" dur="3.2s" repeatCount="indefinite"/></path>`;
+      s += shelfPlank(60, 260, 200) + shelfPlank(60, 336, 200);
+      s += jar(76, 220, 24, 38, GOLD) + jar(110, 226, 20, 32, '#8a5a2c') + jar(140, 218, 24, 40, '#2a5f38') + jar(174, 228, 18, 30, '#8a2f2a') + jar(202, 222, 22, 36, TEAL);
+      s += `<ellipse cx="110" cy="330" rx="30" ry="9" fill="#9a825a" stroke="${INK}" stroke-width="2.4"/><ellipse cx="110" cy="320" rx="26" ry="8" fill="#b9a26a" stroke="${INK}" stroke-width="2.2"/><ellipse cx="182" cy="326" rx="24" ry="10" fill="#8a5a2c" stroke="${INK}" stroke-width="2.4"/>`;
+      for (const bx of [320, 368]) { s += `<line x1="${bx}" y1="52" x2="${bx}" y2="88" stroke="#3d2c14" stroke-width="2.6"/>`; for (let i = 0; i < 4; i++) s += `<circle cx="${bx}" cy="${100 + i * 22}" r="10" fill="${i % 2 ? GOLD : '#c98a3f'}" stroke="${INK}" stroke-width="2.2"/>`; }
+      s += `<line x1="420" y1="52" x2="420" y2="82" stroke="#3d2c14" stroke-width="2.6"/><path d="M420 82q-12 24-5 44m5-44q2 26 6 44m-6-44q14 22 9 44" stroke="#2a5f38" stroke-width="3.2" fill="none"/>`;
+      s += floor(452);
+      s += table(150, 470, 180, 30, 22);
+      s += `<rect x="180" y="452" width="120" height="18" rx="5" fill="#9a825a" stroke="${INK}" stroke-width="2.4"/><circle cx="212" cy="461" r="5" fill="#8a2f2a"/><circle cx="230" cy="459" r="4.4" fill="#8a2f2a"/><circle cx="246" cy="462" r="4.8" fill="#5a2f6e"/>`;
+      s += `<path d="M60 540q0-26 42-26t42 26l-8 34q-34 10-68 0z" fill="#7a5a2c" stroke="${INK}" stroke-width="3"/><path d="M66 534h72M62 552h80" stroke="#58351d" stroke-width="3"/><circle cx="92" cy="512" r="7" fill="#8a2f2a"/><circle cx="110" cy="508" r="7" fill="#5a2f6e"/><circle cx="126" cy="514" r="6" fill="#8a2f2a"/>`;
+      return s + motes();
+    },
+    workshop() {
+      let s = wall() + beam() + runes(340, 16, 4);
+      s += `<rect x="58" y="108" width="244" height="186" rx="9" fill="#201509" stroke="${TRIM}" stroke-width="4"/>`;
+      s += `<g stroke="${INK}" stroke-width="2.4"><rect x="86" y="130" width="12" height="64" rx="4" fill="#9a825a"/><rect x="74" y="122" width="36" height="18" rx="4" fill="#6e6a60"/></g>`;
+      s += `<g><path d="M150 128l14 10-6 64-14-2z" fill="#9a825a" stroke="${INK}" stroke-width="2.4"/><path d="M162 140l36 8-4 14-36-8zM194 150l-3 12 8 2 3-12z" fill="#6e6a60" stroke="${INK}" stroke-width="2"/><path d="M196 162l-2 8-30-6 2-8z" fill="none"/></g>`;
+      s += `<path d="M238 126q22 0 22 20l-8 58h-12l-8-58q0-20 6-20z" fill="#6e6a60" stroke="${INK}" stroke-width="2.4"/><rect x="240" y="204" width="10" height="42" rx="4" fill="#9a825a" stroke="${INK}" stroke-width="2.2"/>`;
+      s += `<path d="M100 232h56l-4 34h-48zM128 232v-14" stroke="${INK}" stroke-width="2.6" fill="#8a6a3a"/>`;
+      s += `<rect x="336" y="118" width="158" height="118" rx="6" fill="#14232b" stroke="#2e4a58" stroke-width="4"/><g stroke="${CREAM}" stroke-width="2" opacity=".7" fill="none"><path d="M360 206v-44l32-24 32 24v44z"/><circle cx="392" cy="176" r="9"/><path d="M348 214h120M430 148l28-10M356 138l20 8"/></g><circle cx="344" cy="126" r="4" fill="#8a2f2a"/><circle cx="486" cy="126" r="4" fill="#8a2f2a"/>`;
+      s += lantern(590, 92, 1, 46);
+      s += floor(446);
+      s += `<polygon points="212,406 590,406 622,452 180,452" fill="#4a3418" stroke="${INK}" stroke-width="3"/><polygon points="180,452 622,452 622,466 180,466" fill="#31210f" stroke="${INK}" stroke-width="2.4"/><rect x="196" y="466" width="17" height="106" fill="#2b1e11" stroke="${INK}" stroke-width="2.4"/><rect x="588" y="466" width="17" height="106" fill="#2b1e11" stroke="${INK}" stroke-width="2.4"/><path d="M196 500h409" stroke="#1a1108" stroke-width="6"/>`;
+      s += `<g stroke="${INK}" stroke-width="2.8"><rect x="266" y="352" width="86" height="54" fill="#8a6a3a"/><path d="M258 352l52-34 60 34z" fill="#58351d"/><circle cx="309" cy="378" r="13" fill="#120a05"/><rect x="352" y="330" width="10" height="24" fill="#58351d"/></g>`;
+      s += `<rect x="420" y="388" width="52" height="12" rx="5" fill="#9a825a" stroke="${INK}" stroke-width="2.2" transform="rotate(-8 446 394)"/><rect x="466" y="378" width="20" height="14" rx="3" fill="#6e6a60" stroke="${INK}" stroke-width="2.2" transform="rotate(-8 476 385)"/>`;
+      s += jar(508, 366, 26, 38, '#8a5a2c') + `<path d="M514 372l4 8M522 370l3 9M530 372l2 8" stroke="#c9c9c9" stroke-width="2"/>`;
+      for (let i = 0; i < 3; i++) s += `<rect x="${656 - i * 10}" y="${492 + i * 26}" width="${120 + i * 18}" height="20" rx="5" fill="${i % 2 ? '#58402c' : '#4a3418'}" stroke="${INK}" stroke-width="2.6"/>`;
+      s += `<path d="M262 528q14-12 6-24t8-20M330 544q16-10 8-24M574 500q12-10 6-22t6-18" stroke="#b98c3e" stroke-width="3" fill="none" opacity=".8"/>`;
+      return s + motes();
+    },
+    market() {
+      let s = wall() + beam() + bunting(72, 130);
+      s += `<rect x="84" y="112" width="330" height="240" rx="10" fill="#4a3418" stroke="${INK}" stroke-width="4"/><rect x="98" y="126" width="302" height="212" rx="6" fill="#3f2c15"/>`;
+      const poster = (px, py, rot, art) => `<g transform="rotate(${rot} ${px + 48} ${py + 60})"><rect x="${px}" y="${py}" width="96" height="120" rx="4" fill="#e5d5ae" opacity=".94" stroke="${INK}" stroke-width="2.4"/><circle cx="${px + 48}" cy="${py - 2}" r="5" fill="#8a2f2a" stroke="${INK}" stroke-width="1.6"/>${art}</g>`;
+      s += poster(116, 146, -3, `<path d="M144 196q10-22 32-14t8 30q18-2 18 12l-20 4q-24 6-38-8t0-24z" fill="#241809"/><circle cx="188" cy="188" r="3" fill="#241809"/><path d="M128 246h72M128 256h56" stroke="#8a6a3a" stroke-width="4"/>`);
+      s += poster(236, 142, 2.6, `<path d="M262 200q4-26 30-20t14 32l14 8-18 6q-26 8-40-10t0-16z" fill="#241809"/><path d="M248 246h72M248 256h48" stroke="#8a6a3a" stroke-width="4"/><circle cx="312" cy="152" r="10" fill="${GOLD}" stroke="${INK}" stroke-width="2"/>`);
+      s += poster(126, 226, 2, `<circle cx="174" cy="272" r="18" fill="${GOLD}" stroke="${INK}" stroke-width="2.4"/><path d="M168 272h12M174 266v12" stroke="${INK}" stroke-width="2.6"/><path d="M140 312h68" stroke="#8a6a3a" stroke-width="4"/>`);
+      s += poster(248, 224, -2.2, `<path d="M272 282q10-18 28-12t10 26l12 6-14 6q-22 8-36-8t0-18z" fill="#241809"/><path d="M262 322h64" stroke="#8a6a3a" stroke-width="4"/>`);
+      s += floor(440);
+      s += `<polygon points="470,398 780,398 800,444 450,444" fill="#58402c" stroke="${INK}" stroke-width="3"/><rect x="450" y="444" width="350" height="156" fill="#2b1e11" stroke="${INK}" stroke-width="3"/><path d="M530 444v156M620 444v156M710 444v156" stroke="#1a1108" stroke-width="4"/><rect x="450" y="444" width="350" height="13" fill="#3a2a16"/>`;
+      s += `<line x1="588" y1="316" x2="588" y2="392" stroke="#4a3418" stroke-width="7"/><path d="M508 330h160" stroke="#4a3418" stroke-width="6"/><path d="M588 316l-8-12h16z" fill="${GOLD}" stroke="${INK}" stroke-width="2"/>`;
+      for (const px of [508, 668]) s += `<path d="M${px} 330v26M${px - 12} 346l12 10 12-10" stroke="#8a6a3a" stroke-width="2.6" fill="none"/><path d="M${px - 24} 366q24 18 48 0l-6 14q-18 10-36 0z" fill="#9a825a" stroke="${INK}" stroke-width="2.4"/>`;
+      for (const [cx2, n] of [[500, 3], [540, 2]]) for (let i = 0; i < n; i++) s += `<ellipse cx="${cx2}" cy="${390 - i * 8}" rx="17" ry="6" fill="${GOLD}" stroke="${INK}" stroke-width="2"/><ellipse cx="${cx2}" cy="${388 - i * 8}" rx="17" ry="6" fill="${GOLDHI}" stroke="${INK}" stroke-width="1.6"/>`;
+      s += `<g transform="rotate(-4 730 384)"><rect x="700" y="372" width="60" height="26" rx="3" fill="${CREAM}" stroke="${INK}" stroke-width="2.4"/><path d="M730 372v26M708 380h14M708 388h12M738 380h14M738 388h12" stroke="#8a6a3a" stroke-width="2"/></g><path d="M762 352q18-24 6-44" stroke="${CREAM}" stroke-width="4" fill="none"/><path d="M762 352q14-20 6-38" stroke="#c8b98f" stroke-width="2" fill="none"/>`;
+      s += runes(560, 16, 6);
+      return s + motes();
+    },
+    nursery() {
+      let s = wall() + `<rect width="800" height="600" fill="${CREAM}" opacity=".04"/>` + beam() + runes(320, 16, 5, '#ffd9e0');
+      s += roundWindow(618, 168, 78);
+      s += `<line x1="360" y1="52" x2="360" y2="120" stroke="#3d2c14" stroke-width="3"/><g><path d="M300 128h120M330 120h60" stroke="#8a6a3a" stroke-width="4"/><line x1="310" y1="130" x2="310" y2="168" stroke="#3d2c14" stroke-width="2"/><line x1="360" y1="124" x2="360" y2="188" stroke="#3d2c14" stroke-width="2"/><line x1="410" y1="130" x2="410" y2="156" stroke="#3d2c14" stroke-width="2"/><path d="M310 168l7-12 7 12-12 8zM303 176l14-2-6 14z" fill="${GOLDHI}" stroke="${INK}" stroke-width="1.6" transform="rotate(8 310 176)"/><path d="M352 196q8-16 16 0t-8 18q-8-2-8-18z" fill="#fdf4d4" stroke="${INK}" stroke-width="1.8"/><ellipse cx="410" cy="166" rx="5" ry="12" fill="#5ed6de" stroke="${INK}" stroke-width="1.6" transform="rotate(14 410 166)"/><animateTransform attributeName="transform" type="rotate" values="-3 360 52;3 360 52;-3 360 52" dur="6s" repeatCount="indefinite"/></g>`;
+      s += shelfPlank(64, 320, 170);
+      s += `<path d="M120 318a26 26 0 1 1-20-42 22 22 0 0 0 20 42z" fill="${GOLDHI}" stroke="${INK}" stroke-width="2.4"/><circle cx="106" cy="296" r="34" fill="url(#ri-gold)" opacity=".7"/>`;
+      s += `<rect x="152" y="292" width="16" height="28" rx="3" fill="#2e5f66" stroke="${INK}" stroke-width="2"/><rect x="172" y="286" width="16" height="34" rx="3" fill="#8a4a3a" stroke="${INK}" stroke-width="2"/><rect x="192" y="296" width="14" height="24" rx="3" fill="${GOLD}" stroke="${INK}" stroke-width="2"/>`;
+      s += floor(450);
+      s += `<ellipse cx="400" cy="524" rx="215" ry="42" fill="#3a2820" stroke="${INK}" stroke-width="3"/><ellipse cx="400" cy="524" rx="165" ry="30" fill="none" stroke="#58402266" stroke-width="6"/>`;
+      s += nest(212, 492, 74, 26) + egg(196, 470, 10) + egg(226, 466, 9);
+      s += nest(414, 468, 82, 28) + `<g>${egg(414, 442, 12)}<path d="M402 436l8 6 6-8 7 7 7-6" stroke="${INK}" stroke-width="2" fill="none"/><circle cx="414" cy="438" r="20" fill="url(#ri-gold)"><animate attributeName="opacity" values=".3;.9;.3" dur="2.8s" repeatCount="indefinite"/></circle></g>` + egg(382, 448, 9);
+      s += nest(608, 504, 70, 25) + egg(600, 482, 9) + egg(622, 480, 8, false);
+      s += `<path d="M520 468q46-22 92 0l-7 16q-40-16-78 0z" fill="#b48ad6" opacity=".85" stroke="${INK}" stroke-width="2.4"/>`;
+      s += ivy(24, 52) + ivy(776, 52, -1);
+      return s + motes('#bfe8f0') + motes('#ffe9a8');
+    },
+    observatory() {
+      let s = `<rect width="800" height="600" fill="#0d0a05"/>` + wall().replace('<rect width="800" height="600" fill="#2d1f10"/>', '<rect width="800" height="600" fill="#201509" opacity=".94"/>');
+      s += `<path d="M148 452v-190a252 252 0 0 1 504 0v190z" fill="#17100a"/><path d="M170 452v-186a230 230 0 0 1 460 0v186z" fill="url(#ri-sky)"/>`;
+      const stars = [[260, 190, 2.4], [330, 130, 1.8], [420, 100, 2.6], [520, 140, 2], [560, 220, 1.6], [300, 260, 1.8], [480, 250, 2.2], [380, 180, 1.5], [600, 180, 2.4], [230, 280, 1.6], [560, 300, 1.8], [350, 320, 1.4]];
+      stars.forEach(([sx, sy, sr], i) => { s += `<circle cx="${sx}" cy="${sy}" r="${sr}" fill="#ffe9a8"${i % 3 === 0 ? `><animate attributeName="opacity" values="1;.25;1" dur="${2.4 + i * .4}s" repeatCount="indefinite"/></circle>` : '/>'}`; });
+      s += `<circle cx="480" cy="170" r="90" fill="url(#ri-moon)"/><circle cx="480" cy="170" r="44" fill="#fdf4d4"/><circle cx="466" cy="158" r="8" fill="#e8dcb4"/><circle cx="494" cy="182" r="6" fill="#e8dcb4"/><circle cx="488" cy="152" r="4" fill="#e8dcb4"/>`;
+      s += `<line x1="250" y1="120" x2="310" y2="150" stroke="#ffe9a8" stroke-width="2" opacity=".7"/>`;
+      s += `<path d="M148 452v-190a252 252 0 0 1 504 0v190" fill="none" stroke="${TRIM}" stroke-width="8"/><path d="M148 452h504" stroke="${TRIM}" stroke-width="6"/>`;
+      s += `<rect x="56" y="140" width="176" height="136" rx="7" fill="#0e2233" stroke="#2e4a58" stroke-width="4"/><g fill="#ffe9a8"><circle cx="92" cy="180" r="2.6"/><circle cx="130" cy="164" r="2.2"/><circle cx="168" cy="188" r="2.8"/><circle cx="196" cy="222" r="2.2"/><circle cx="122" cy="236" r="2.4"/></g><path d="M92 180 130 164l38 24 28 34M168 188l-46 48" stroke="${CREAM}" stroke-width="1.6" opacity=".6" fill="none"/>`;
+      s += `<circle cx="144" cy="364" r="38" fill="#17100a" stroke="${TRIM}" stroke-width="4"/>`;
+      for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 - Math.PI / 2, mx = 144 + Math.cos(a) * 24, my = 364 + Math.sin(a) * 24; s += `<circle cx="${mx}" cy="${my}" r="7" fill="#fdf4d4"/>` + (i > 0 ? `<circle cx="${mx + 4 - i}" cy="${my}" r="6" fill="#17100a"/>` : ''); }
+      s += `<line x1="144" y1="364" x2="144" y2="345" stroke="${GOLD}" stroke-width="3"/>`;
+      s += floor(452);
+      s += `<g stroke="${INK}"><line x1="340" y1="560" x2="392" y2="452" stroke-width="9"/><line x1="440" y1="560" x2="396" y2="452" stroke-width="9"/><line x1="392" y1="556" x2="394" y2="470" stroke-width="8"/><g transform="rotate(-38 394 448)"><rect x="330" y="430" width="170" height="36" rx="16" fill="#7a5a2c" stroke-width="3.4"/><rect x="478" y="426" width="26" height="44" rx="9" fill="${GOLD}" stroke-width="3"/><rect x="360" y="430" width="12" height="36" fill="${GOLD}" stroke-width="2.4"/><rect x="424" y="430" width="10" height="36" fill="${GOLD}" stroke-width="2.4"/><circle cx="504" cy="448" r="8" fill="#bfe8f0"/></g><circle cx="394" cy="452" r="12" fill="#4a3418" stroke-width="3"/></g>`;
+      s += table(600, 480, 120, 26, 16);
+      s += `<line x1="662" y1="480" x2="662" y2="440" stroke="${TRIM}" stroke-width="4"/><ellipse cx="662" cy="438" rx="42" ry="13" fill="none" stroke="${GOLD}" stroke-width="2.2"/><ellipse cx="662" cy="438" rx="24" ry="7" fill="none" stroke="${GOLD}" stroke-width="2"/><circle cx="662" cy="438" r="7" fill="${GOLDHI}"/><circle cx="700" cy="432" r="4.4" fill="#5ed6de"/><circle cx="640" cy="443" r="3.6" fill="#8a2f2a"/>`;
+      s += `<circle cx="400" cy="240" r="150" fill="url(#ri-teal)" opacity=".3"/>`;
+      return s + motes('#bfe8f0');
+    },
+    quest_roost() {
+      let s = wall() + beam() + runes(80, 16, 4);
+      s += `<polygon points="60,64 60,168 96,140 132,168 132,64" fill="${GOLD}" opacity=".9" stroke="${INK}" stroke-width="2.6"/><polygon points="148,64 148,150 178,126 208,150 208,64" fill="${TEAL}" opacity=".9" stroke="${INK}" stroke-width="2.6"/>`;
+      s += lantern(268, 88, .95, 42);
+      s += `<rect x="506" y="104" width="212" height="180" rx="9" fill="#4a3418" stroke="${INK}" stroke-width="4"/><rect x="518" y="116" width="188" height="156" rx="6" fill="#3f2c15"/>`;
+      for (let i = 0; i < 3; i++) { const sy = 132 + i * 46; s += `<rect x="534" y="${sy}" width="150" height="30" rx="5" fill="#e5d5ae" opacity=".93" stroke="${INK}" stroke-width="2.2"/><ellipse cx="534" cy="${sy + 15}" rx="7" ry="15" fill="#cbb68a" stroke="${INK}" stroke-width="2"/><ellipse cx="684" cy="${sy + 15}" rx="7" ry="15" fill="#cbb68a" stroke="${INK}" stroke-width="2"/><path d="M554 ${sy + 10}h96M554 ${sy + 19}h72" stroke="#8a6a3a" stroke-width="3"/><circle cx="670" cy="${sy + 15}" r="6" fill="${[GOLD, '#8a2f2a', TEAL][i]}" stroke="${INK}" stroke-width="1.8"/>`; }
+      s += `<circle cx="366" cy="150" r="52" fill="#201509" stroke="${TRIM}" stroke-width="4"/><g stroke="${GOLDHI}" stroke-width="2.6" fill="none"><circle cx="366" cy="150" r="38"/><path d="M366 116v68M332 150h68"/><path d="M366 122l10 22-10 34-10-34z" fill="${GOLD}"/></g><text x="366" y="106" text-anchor="middle" fill="${GOLDHI}" font-size="13" font-family="serif" opacity=".8">N</text>`;
+      s += `<line x1="470" y1="70" x2="470" y2="120" stroke="#3d2c14" stroke-width="3"/><path d="M446 120h48v14h-48zM450 134h40l-4 44q-16 10-32 0z" fill="${TRIM}" stroke="${INK}" stroke-width="2.6"/><rect x="462" y="140" width="16" height="12" rx="2" fill="${GOLD}" stroke="${INK}" stroke-width="1.8"/>`;
+      s += floor(444);
+      s += table(210, 400, 380, 46, 44);
+      s += `<polygon points="228,408 572,408 606,438 194,438" fill="#d9c493" opacity=".95" stroke="#8a6a3a" stroke-width="2.6"/>`;
+      s += `<path d="M262 430q42-14 84-4t92-8" stroke="#2e5f66" stroke-width="3" fill="none"/><path d="M300 414q30 6 58 2" stroke="#2e5f66" stroke-width="2" fill="none" opacity=".7"/>`;
+      s += `<path d="M270 424l30-5 26 6 28-8 34 6 30-6" stroke="#8a2f2a" stroke-width="2.6" stroke-dasharray="5 6" fill="none"/><path d="M472 411l10 10M482 411l-10 10" stroke="#8a2f2a" stroke-width="3.4"/>`;
+      s += `<path d="M330 418l7-9 7 9zM344 418l6-8 6 8zM508 428l7-9 7 9z" fill="#4a3418"/>`;
+      s += `<g transform="translate(548,420)"><circle r="13" fill="none" stroke="#8a6a3a" stroke-width="2.2"/><path d="M0-13 3 0l-3 13-3-13z" fill="#8a2f2a"/></g>`;
+      s += `<ellipse cx="140" cy="520" rx="40" ry="14" fill="none" stroke="#8a6a3a" stroke-width="7"/><ellipse cx="140" cy="512" rx="40" ry="14" fill="none" stroke="#9a825a" stroke-width="7"/><ellipse cx="140" cy="504" rx="40" ry="14" fill="none" stroke="#8a6a3a" stroke-width="7"/>`;
+      s += `<path d="M680 452l-6 60q30 14 60 0l-6-60z" fill="#6b4a26" stroke="${INK}" stroke-width="2.8"/><path d="M676 452h64" stroke="${INK}" stroke-width="3"/><rect x="688" y="430" width="14" height="60" rx="6" fill="#d9c493" stroke="${INK}" stroke-width="2.2" transform="rotate(-10 695 460)"/><rect x="712" y="426" width="14" height="64" rx="6" fill="#cbb68a" stroke="${INK}" stroke-width="2.2" transform="rotate(6 719 458)"/>`;
+      return s + motes();
+    }
+  };
+
+  return function(room, label) {
+    const body = (SCENES[room] || SCENES.outdoors)();
+    return `<svg class="academy-room-bg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label} interior">${DEFS}${body}<rect width="800" height="600" fill="url(#ri-vig)"/></svg>`;
+  };
+})();
 
 function openAcademyRoom(room) {
   if (!ACADEMY_ROOMS[room]) return;
@@ -6449,13 +6743,13 @@ function renderAcademyRoomInterior() {
   const cfg = ACADEMY_ROOMS[room] || ACADEMY_ROOMS.outdoors;
   const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room; });
   const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room; });
-  const bg = ACADEMY_ROOM_INTERIORS[room] || ACADEMY_ROOM_INTERIORS.outdoors;
+  const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
   const addRows = others.length ? others.map(b => {
     const img = birdOnlyImgHTML(b, 'room-bird-option-art');
     return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(b.commonName || b.species) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
   }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
   const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
-  root.innerHTML = '<div class="academy-room-hero"><img class="academy-room-bg" src="' + bg + '" alt="' + escapeHtml(cfg.label) + ' manga interior"><div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+  root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
   $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
   root.querySelectorAll('[data-action="room-add-bird"]').forEach(btn => btn.addEventListener('click', () => { academyMoveBird(btn.dataset.birdId, room); renderAcademyRoomInterior(); }));
 }
