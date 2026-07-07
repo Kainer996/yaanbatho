@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-manga-expansion-stats-map-v12-20260706';
+const BURBZ_CACHE = 'burbz-room-interiors-v13-20260707';
 const BURBZ_ASSETS = [
   './',
   './index.html',
@@ -22,9 +22,6 @@ const BURBZ_ASSETS = [
   './manifest.json',
   './privacy.html',
   './assets/burbz-logo-yaan-transparent-20260608.png',
-  './assets/academy-interiors/roost-interior-manga-20260629.png',
-  './assets/academy-interiors/training-interior.svg',
-  './assets/academy-interiors/gardens-interior.svg',
   './assets/cutscenes/burbz-intro-30s-seedance-20260629-discord.mp4',
   './assets/cutscenes/burbz-intro-part1-seedance-20260629-discord.mp4',
   './assets/cutscenes/burbz-intro-part2-seedance-20260629-discord.mp4',
