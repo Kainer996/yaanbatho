@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-room-interiors-v13-20260707';
+const BURBZ_CACHE = 'burbz-camera-max-quality-v14-20260707';
 const BURBZ_ASSETS = [
   './',
   './index.html',

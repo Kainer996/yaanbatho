@@ -806,6 +806,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .camera-zoom-value { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--text); min-width: 34px; text-align: right; }
 .camera-zoom-control input[type="range"] { flex: 1; height: 44px; accent-color: var(--accent2); touch-action: pan-y; }
 .camera-zoom-control input[type="range"]::-webkit-slider-thumb { width: 30px; height: 30px; }
+.camera-quality-note {
+  position: absolute; left: 18px; right: 18px; bottom: 148px; z-index: 4; text-align: center;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1.1px;
+  color: rgba(255,247,217,0.78); text-shadow: 0 1px 6px rgba(0,0,0,0.85); pointer-events: none;
+}
+.camera-quality-note:empty { display: none; }
 #imageScanArea .scan-upload-area { display: none; }
 #imageScanArea .scan-btn {
   position: absolute; left: 50%; bottom: 18px; z-index: 5; transform: translateX(-50%);
@@ -817,6 +823,7 @@ svg.academy-room-bg { display:block; filter:none; }
   #imageScanArea { min-height: calc(100dvh - var(--nav-height) - 94px); }
   .camera-viewfinder { height: calc(100dvh - var(--nav-height) - 96px); min-height: 390px; }
   .camera-zoom-control { bottom: 72px; }
+  .camera-quality-note { bottom: 142px; }
 }
 
 .scan-upload-area {
@@ -1617,6 +1624,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="camera-hud-label brand">BURBZ</div>
           <div class="camera-hud-label level" id="cameraHudLevel">LV. 1</div>
           <div class="camera-crosshair"></div>
+          <div class="camera-quality-note" id="cameraQualityNote" aria-live="polite"></div>
           <label class="camera-zoom-control" for="cameraZoomSlider">
             <span class="camera-zoom-label">ZOOM</span>
             <input type="range" id="cameraZoomSlider" min="1" max="3" step="0.1" value="1" aria-label="Camera zoom">
@@ -9442,7 +9450,13 @@ async function uploadRecording(blob) {
 }
 
 // Image scanning
-const cameraZoomState = { min: 1, max: 3, value: 1, optical: false };
+// Zoom is hybrid, like the phone's own camera app: the slider first drives the
+// hardware camera zoom (which auto-switches to the phone's telephoto lenses),
+// then extends past the hardware maximum with a digital crop of the full-res
+// still. digitalExtra tracks only the crop factor beyond what the lens did.
+const cameraZoomState = { min: 1, max: 3, value: 1, optical: false, opticalMax: 1, digitalExtra: 1, forceDigital: false };
+const CAMERA_DIGITAL_ONLY_MAX = 6;
+const CAMERA_DIGITAL_EXTRA_MAX = 2;
 
 function setCameraZoomUI(min, max, value, disabled) {
   const slider = $('cameraZoomSlider');
@@ -9465,26 +9479,25 @@ function getCameraTrack() {
 function configureCameraZoom() {
   const track = getCameraTrack();
   let min = 1;
-  let max = 3;
-  let value = Math.min(Math.max(cameraZoomState.value || 1, min), max);
+  let opticalMax = 1;
   let optical = false;
 
-  if (track && track.getCapabilities) {
+  if (!cameraZoomState.forceDigital && track && track.getCapabilities) {
     const capabilities = track.getCapabilities();
-    if (capabilities && capabilities.zoom) {
-      min = capabilities.zoom.min || 1;
-      max = capabilities.zoom.max || max;
-      const step = capabilities.zoom.step || 0.1;
-      const slider = $('cameraZoomSlider');
-      if (slider) slider.step = String(step);
+    if (capabilities && capabilities.zoom && Number(capabilities.zoom.max) > Number(capabilities.zoom.min || 1)) {
+      min = Number(capabilities.zoom.min) || 1;
+      opticalMax = Number(capabilities.zoom.max) || 1;
       optical = true;
-      value = Math.min(Math.max(value, min), max);
     }
   }
+
+  const max = optical ? opticalMax * CAMERA_DIGITAL_EXTRA_MAX : CAMERA_DIGITAL_ONLY_MAX;
+  const value = Math.min(Math.max(cameraZoomState.value || 1, min), max);
 
   cameraZoomState.min = min;
   cameraZoomState.max = max;
   cameraZoomState.optical = optical;
+  cameraZoomState.opticalMax = opticalMax;
   cameraZoomState.value = value;
   setCameraZoomUI(min, max, value, max <= min);
   applyCameraZoom(value);
@@ -9498,17 +9511,22 @@ async function applyCameraZoom(value) {
 
   const video = $('cameraVideo');
   const track = getCameraTrack();
+  let digitalExtra = zoom;
   if (cameraZoomState.optical && track && track.applyConstraints) {
+    const lensZoom = Math.min(Math.max(zoom, cameraZoomState.min), cameraZoomState.opticalMax);
     try {
-      await track.applyConstraints({ advanced: [{ zoom }] });
-      if (video) video.style.transform = '';
-      return;
+      await track.applyConstraints({ advanced: [{ zoom: lensZoom }] });
+      digitalExtra = zoom / lensZoom;
     } catch(e) {
-      console.log('Camera optical zoom failed, using digital zoom:', e);
-      cameraZoomState.optical = false;
+      console.log('Camera hardware zoom failed, using digital zoom:', e);
+      cameraZoomState.forceDigital = true;
+      configureCameraZoom();
+      return;
     }
   }
-  if (video) video.style.transform = zoom > 1 ? `scale(${zoom})` : '';
+  digitalExtra = Math.max(1, digitalExtra);
+  cameraZoomState.digitalExtra = digitalExtra;
+  if (video) video.style.transform = digitalExtra > 1.001 ? `scale(${digitalExtra})` : '';
 }
 
 const cameraZoomSlider = $('cameraZoomSlider');
@@ -9526,7 +9544,10 @@ $('captureBtn').addEventListener('click', async () => {
   await identifyImage(blob, 'camera');
 });
 
-const CAPTURE_MAX_SIDE = 2560;
+const CAPTURE_MAX_SIDE = 3072;
+// Cap what we ask the photo pipeline for so 100MP+ sensor modes don't produce
+// bitmaps too big to decode quickly; ~24MP is plenty for bird recognition.
+const CAPTURE_REQUEST_MAX_SIDE = 6144;
 
 // Crop (for digital zoom) and gently downscale a captured photo without
 // throwing away the phone camera's quality.
@@ -9556,14 +9577,35 @@ async function captureCameraFrame() {
     showToast('Camera is still starting — try again in a moment');
     return null;
   }
-  const digitalZoom = (!cameraZoomState.optical && cameraZoomState.value > 1) ? cameraZoomState.value : 1;
+  // Hardware lens zoom is already baked into the stream; only the digital
+  // portion beyond the lens maximum needs cropping out of the still.
+  const digitalZoom = Math.max(1, cameraZoomState.digitalExtra || 1);
 
   // Preferred path: a real still photo from the phone's photo pipeline
   // (full sensor resolution, proper processing) rather than a preview frame.
   const track = getCameraTrack();
   if (track && typeof window.ImageCapture === 'function') {
     try {
-      const photoBlob = await new ImageCapture(track).takePhoto();
+      const imageCapture = new ImageCapture(track);
+      let photoBlob = null;
+      try {
+        // Ask the photo pipeline for its maximum still size — without explicit
+        // photo settings many phones return a preview-sized JPEG instead of
+        // the multi-megapixel photo the native camera app would take.
+        const photoCaps = await imageCapture.getPhotoCapabilities();
+        const settings = {};
+        if (photoCaps && photoCaps.imageWidth && photoCaps.imageWidth.max) {
+          settings.imageWidth = Math.min(photoCaps.imageWidth.max, CAPTURE_REQUEST_MAX_SIDE);
+        }
+        if (photoCaps && photoCaps.imageHeight && photoCaps.imageHeight.max) {
+          settings.imageHeight = Math.min(photoCaps.imageHeight.max, CAPTURE_REQUEST_MAX_SIDE);
+        }
+        photoBlob = Object.keys(settings).length
+          ? await imageCapture.takePhoto(settings)
+          : await imageCapture.takePhoto();
+      } catch (settingsErr) {
+        photoBlob = await imageCapture.takePhoto();
+      }
       if (photoBlob) {
         const bitmap = await createImageBitmap(photoBlob, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(photoBlob));
         if (bitmap) {
@@ -9628,6 +9670,7 @@ async function startCamera() {
   if (!video) return false;
   if (video.srcObject) {
     configureCameraZoom();
+    updateCameraQualityNote();
     return true;
   }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -9637,19 +9680,22 @@ async function startCamera() {
   try {
     // Ask for the device's best rear camera stream instead of a low 1280x960
     // cap — the browser negotiates down to whatever the hardware supports, so
-    // flagship phones get their full-quality feed.
+    // flagship phones get their full-quality feed. 4:3 keeps the sensor's full
+    // field of view (16:9 previews throw away vertical pixels).
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: { ideal: 'environment' },
-        width: { ideal: 3840 }, height: { ideal: 2160 },
+        width: { ideal: 4096 }, height: { ideal: 3072 },
         frameRate: { ideal: 30 }
       },
       audio: false
     });
     video.srcObject = stream;
     await video.play();
+    await upgradeCameraStreamResolution();
     tuneCameraTrackQuality();
     configureCameraZoom();
+    updateCameraQualityNote();
     showToast('Camera ready — point at a live bird and capture');
     return true;
   } catch(e) {
@@ -9657,6 +9703,51 @@ async function startCamera() {
     showToast('Camera access needed for live photo capture');
     return false;
   }
+}
+
+// If the first negotiation landed below what the camera can actually stream,
+// renegotiate up to the hardware maximum so the preview (and the preview-frame
+// capture fallback) match the phone camera's real quality.
+async function upgradeCameraStreamResolution() {
+  const track = getCameraTrack();
+  if (!track || !track.getCapabilities || !track.applyConstraints) return;
+  try {
+    const caps = track.getCapabilities() || {};
+    const maxW = caps.width && caps.width.max;
+    const maxH = caps.height && caps.height.max;
+    if (!maxW || !maxH) return;
+    const current = track.getSettings ? track.getSettings() : {};
+    const targetW = Math.min(maxW, 4096);
+    const targetH = Math.min(maxH, 3072);
+    if ((current.width || 0) >= targetW && (current.height || 0) >= targetH) return;
+    await track.applyConstraints({ width: { ideal: targetW }, height: { ideal: targetH } });
+  } catch (e) { /* keep whatever the first negotiation gave us */ }
+}
+
+// Small HUD line so players can see the in-app camera is running at the
+// phone's real quality (live stream size, still-photo megapixels, lens zoom).
+async function updateCameraQualityNote() {
+  const note = $('cameraQualityNote');
+  if (!note) return;
+  const track = getCameraTrack();
+  if (!track) { note.textContent = ''; return; }
+  const parts = [];
+  try {
+    const s = track.getSettings ? track.getSettings() : {};
+    if (s.width && s.height) parts.push('LIVE ' + s.width + '×' + s.height);
+  } catch (e) {}
+  try {
+    if (typeof window.ImageCapture === 'function') {
+      const photoCaps = await new ImageCapture(track).getPhotoCapabilities();
+      const w = photoCaps && photoCaps.imageWidth && photoCaps.imageWidth.max;
+      const h = photoCaps && photoCaps.imageHeight && photoCaps.imageHeight.max;
+      if (w && h) parts.push('PHOTO ' + Math.max(1, Math.round(w * h / 1e6)) + 'MP');
+    }
+  } catch (e) {}
+  if (cameraZoomState.optical && cameraZoomState.opticalMax > 1) {
+    parts.push('LENS ZOOM ' + (Math.round(cameraZoomState.opticalMax * 10) / 10) + 'X');
+  }
+  if (getCameraTrack() === track) note.textContent = parts.join(' • ');
 }
 
 // Let the phone's own imaging pipeline do the work it is good at: continuous
@@ -9679,11 +9770,17 @@ function stopCamera() {
   if (video && video.srcObject) {
     video.srcObject.getTracks().forEach(t => t.stop());
     video.srcObject = null;
+    video.style.transform = '';
   }
   const viewfinder = $('cameraViewfinder');
   if (viewfinder) viewfinder.style.display = 'none';
   cameraZoomState.value = 1;
   cameraZoomState.optical = false;
+  cameraZoomState.opticalMax = 1;
+  cameraZoomState.digitalExtra = 1;
+  cameraZoomState.forceDigital = false;
+  const note = $('cameraQualityNote');
+  if (note) note.textContent = '';
   setCameraZoomUI(1, 3, 1, false);
 }
 
