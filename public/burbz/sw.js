@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-world-plus100-v17-20260707';
+const BURBZ_CACHE = 'burbz-merlin-tutorial-v18-20260707';
 const BURBZ_ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
   './academy_treehouse_core.js',
+  './assets/merlin-tutorial.png',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',
   './assets/academy-buildings-manga/roost.png',

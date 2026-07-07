@@ -1139,6 +1139,29 @@ svg.academy-room-bg { display:block; filter:none; }
 .intro-cutscene-btn { min-height:44px; border-radius:13px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
 .intro-cutscene-btn.primary { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--legendary)); border:0; }
 
+/* ========== MERLIN TUTORIAL ========== */
+.merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
+.merlin-tutorial-overlay.show { display:block; }
+.merlin-tutorial-spotlight { position:fixed; border-radius:16px; border:2px solid rgba(240,199,103,.9); box-shadow:0 0 0 200vmax rgba(0,0,0,.8), 0 0 24px rgba(240,199,103,.5), inset 0 0 18px rgba(240,199,103,.22); transition:top .4s ease, left .4s ease, width .4s ease, height .4s ease; pointer-events:none; animation:merlinSpotPulse 1.6s ease-in-out infinite; }
+@keyframes merlinSpotPulse { 0%,100%{ border-color:rgba(240,199,103,.95);} 50%{ border-color:rgba(214,168,79,.45);} }
+.merlin-tutorial-spotlight.none { border-color:transparent; animation:none; }
+.merlin-tutorial-stage { position:absolute; left:0; right:0; bottom:calc(var(--nav-height) + 46px + var(--safe-bottom)); padding:0 14px; pointer-events:none; }
+.merlin-tutorial-merlin { position:absolute; left:12px; bottom:0; width:88px; height:88px; object-fit:cover; border-radius:18px; border:2px solid var(--accent); box-shadow:0 10px 26px rgba(0,0,0,.65), 0 0 18px rgba(214,168,79,.4); animation:merlinBob 3.2s ease-in-out infinite; }
+@keyframes merlinBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.merlin-tutorial-bubble { position:relative; margin-left:108px; background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:16px; padding:12px 14px 10px; box-shadow:0 14px 40px rgba(0,0,0,.55), 0 0 22px rgba(214,168,79,.18); }
+.merlin-tutorial-bubble::after { content:''; position:absolute; left:-13px; bottom:20px; width:0; height:0; border-top:9px solid transparent; border-bottom:7px solid transparent; border-right:14px solid #f5eeda; filter:drop-shadow(-2px 1px 0 rgba(143,111,42,.55)); }
+.merlin-tutorial-speaker { font-family:'Russo One',sans-serif; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:#8f6f2a; margin-bottom:4px; }
+.merlin-tutorial-text { font-family:'Inter',sans-serif; font-size:14.5px; line-height:1.45; font-weight:500; min-height:4.4em; }
+.merlin-tutorial-continue { margin-top:6px; text-align:right; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#8f6f2a; opacity:0; }
+.merlin-tutorial-continue.show { animation:merlinBlink 1.1s ease-in-out infinite; }
+@keyframes merlinBlink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.merlin-tutorial-footer { position:absolute; left:0; right:0; bottom:calc(10px + var(--safe-bottom)); display:flex; align-items:center; justify-content:space-between; padding:0 16px; pointer-events:none; }
+.merlin-tutorial-dots { display:flex; gap:5px; flex-wrap:wrap; max-width:72%; }
+.merlin-tutorial-dot { width:7px; height:7px; border-radius:50%; background:rgba(244,234,212,.22); transition:background .25s ease, transform .25s ease; }
+.merlin-tutorial-dot.on { background:var(--legendary); transform:scale(1.3); box-shadow:0 0 8px rgba(240,199,103,.7); }
+.merlin-tutorial-dot.done { background:rgba(214,168,79,.55); }
+.merlin-tutorial-skip { pointer-events:auto; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.45); color:var(--text2); border-radius:11px; padding:8px 13px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; }
+
 /* ========== SETTINGS MODAL ========== */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.8);
@@ -1927,6 +1950,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-label">Replay Intro Cutscene</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
+      <div class="settings-row" id="replayTutorialBtn" role="button" tabindex="0">
+        <div class="settings-label">Merlin's Tutorial</div>
+        <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
+      </div>
       <div class="settings-danger" id="resetDataBtn">RESET ALL DATA</div>
     </div>
   </div>
@@ -1950,6 +1977,23 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="intro-cutscene-btn" id="introSkipBtn">Skip</button>
         <button class="intro-cutscene-btn primary" id="introPlayAgainBtn">Play</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Merlin Tutorial Overlay -->
+  <div class="merlin-tutorial-overlay" id="merlinTutorialOverlay" aria-modal="true" role="dialog" aria-label="Merlin's tutorial">
+    <div class="merlin-tutorial-spotlight none" id="merlinTutorialSpotlight"></div>
+    <div class="merlin-tutorial-stage">
+      <img class="merlin-tutorial-merlin" src="assets/merlin-tutorial.png" alt="Merlin the wizard falcon">
+      <div class="merlin-tutorial-bubble">
+        <div class="merlin-tutorial-speaker">Merlin &#10022; Wizard of Burbz</div>
+        <div class="merlin-tutorial-text" id="merlinTutorialText"></div>
+        <div class="merlin-tutorial-continue" id="merlinTutorialContinue">Tap to continue &#9654;</div>
+      </div>
+    </div>
+    <div class="merlin-tutorial-footer">
+      <div class="merlin-tutorial-dots" id="merlinTutorialDots"></div>
+      <button class="merlin-tutorial-skip" id="merlinTutorialSkip">Skip</button>
     </div>
   </div>
 
@@ -12857,13 +12901,165 @@ function closeIntroCutscene() {
   if (video) video.pause();
   if (overlay) overlay.classList.remove('show');
   try { localStorage.setItem(BURBZ_INTRO_SEEN_KEY, '1'); } catch(e) {}
+  maybeStartMerlinTutorial(450);
 }
 function maybeShowIntroCutscene() {
   try {
-    if (localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1') return;
+    if (localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1') { maybeStartMerlinTutorial(800); return; }
     setTimeout(() => showIntroCutscene({ autoplay:false }), 450);
   } catch(e) {}
 }
+
+// ============================================================================
+// MERLIN'S TUTORIAL — first-flight guided tour of every mechanic
+// ============================================================================
+const BURBZ_TUTORIAL_SEEN_KEY = 'burbzTutorialSeen:merlin-grand-tour-20260707';
+const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:merlin-grand-tour-20260707';
+
+const MERLIN_TUTORIAL_STEPS = [
+  { screen:'map',
+    text:"Hoot-hooray — the spell worked! Greetings, human! I am MERLIN: wizard of the Kingdom of Burbz and, naturally, a Merlin falcon. The device in your hands is my enchanted tablet, sent across dimensions to find you." },
+  { text:"Burbz was once a bright kingdom of song and colour... until a cruel usurper seized the throne and scattered our flocks. The last free birds chose YOU to help us win it back. But first — let me show you how my tablet works." },
+  { target:'.header',
+    text:"Up here sits your trainer badge. Discovering birds and completing deeds earns XP — raise your TRAINER LEVEL and the whole realm takes notice. Tap the little portrait any time to see your profile, stats and achievements." },
+  { target:'.nav-item.nav-scan',
+    text:"The heart of the magic: the SCAN spell! Tap this golden orb whenever you meet a real bird out in YOUR world. The tablet hears birdsong through my listening spell, or peers through your camera with my sight spell." },
+  { screen:'scan', target:'#scanBtn',
+    text:"Hear a song? Use Sound mode — hold still and let the tablet listen. See a bird? Switch to Image mode and photograph it. Already know the species? Log it yourself below. Every NEW discovery fills your Birdex and earns coins!" },
+  { screen:'birdex', target:'#birdexDiscovered',
+    text:"Every bird you find is recorded here in the BIRDEX — the living archive of Burbz. But discovery is only half the magic: spend coins to RECRUIT a discovered bird, and it joins your flock as a true companion." },
+  { screen:'map', target:'.nav-item[data-screen="map"]',
+    text:"The MAP is my realm-locator: your world, seen through Burbz eyes. Clouds hide the lands you haven't explored yet, and the Likely Birds panel divines which species are near. Walk about — adventure never comes to a bird that stays on its perch!" },
+  { target:'.nav-item[data-screen="village"]',
+    text:"Spot a village on the map? Walk there in the real world and step inside! Browse its shops... then build a birdhouse to CLAIM it for your EMPIRE. Claimed villages pay tribute — coins and branches — every 8 hours. From Hamlet Keeper to World Emperor!" },
+  { screen:'academy', target:'#academyTreehouse',
+    text:"Behold the ACADEMY — our rebuilt base, a great magical treehouse! Spend coins and branches to raise rooms: the Roost, the Training Hall, the Bird Hospital... even our tavern, The Crowbar. Choose a room from the menu, then tap the tree to place it." },
+  { screen:'quests', target:'#expeditionQuestList',
+    text:"From the Quest Roost you may send companions on REAL expeditions. They fly off and return after real minutes — or hours — carrying coins, branches, XP and treasures. The bravest night flights may even uncover my hidden CLUES..." },
+  { screen:'battle', target:'#battleSelect',
+    text:"The FLOCK LEAGUE! Pick five companions, set your formation — attack, midfield, defence — and clash with a rival flock in a grand arena trial. No feathers harmed! The realm watches these contests to judge who shall lead the restoration." },
+  { screen:'inventory', target:'.nav-item[data-screen="inventory"]',
+    text:"Your BAG — the satchel within the spell. Coins, branches, seeds, berries and gifts all live here. Keep the pantry stocked: a well-fed bird trains harder, flies farther, and plays a finer match in the arena." },
+  { screen:'leaderboards', target:'.nav-item[data-screen="leaderboards"]',
+    text:"You are not the only human my spell has reached! The RANKS show bird-finders across your whole world. Climb the boards by discovering species and mastering the realm's arts. Friendly rivalry only... mostly." },
+  { screen:'map', target:'#petCompanion',
+    text:"One more thing: recruit a companion and a little friend will follow you everywhere. Feed it, train it, keep it merry. Now go, chosen human — find birds, grow the flock, and help us take back Burbz! Here, a gift for your journey." },
+];
+
+let merlinTutStep = -1;
+let merlinTutTyping = false;
+let merlinTutTimer = null;
+let merlinTutActive = false;
+
+function startMerlinTutorial() {
+  const overlay = $('merlinTutorialOverlay');
+  const dots = $('merlinTutorialDots');
+  if (!overlay || merlinTutActive) return;
+  merlinTutActive = true;
+  dots.innerHTML = MERLIN_TUTORIAL_STEPS.map(() => '<div class="merlin-tutorial-dot"></div>').join('');
+  overlay.classList.add('show');
+  merlinTutShowStep(0);
+}
+
+function merlinTutSpotlightTarget(selector) {
+  const spot = $('merlinTutorialSpotlight');
+  if (!spot) return;
+  const el = selector ? document.querySelector(selector) : null;
+  const rect = el ? el.getBoundingClientRect() : null;
+  if (!rect || rect.width < 2 || rect.height < 2) {
+    spot.classList.add('none');
+    spot.style.top = '50%'; spot.style.left = '50%';
+    spot.style.width = '0px'; spot.style.height = '0px';
+    return;
+  }
+  const pad = 8;
+  spot.classList.remove('none');
+  spot.style.top = (rect.top - pad) + 'px';
+  spot.style.left = (rect.left - pad) + 'px';
+  spot.style.width = (rect.width + pad * 2) + 'px';
+  spot.style.height = (rect.height + pad * 2) + 'px';
+}
+
+function merlinTutShowStep(i) {
+  const step = MERLIN_TUTORIAL_STEPS[i];
+  const text = $('merlinTutorialText');
+  const cont = $('merlinTutorialContinue');
+  const dots = $('merlinTutorialDots');
+  if (!step || !text) return;
+  merlinTutStep = i;
+  Array.from(dots.children).forEach((d, j) => {
+    d.classList.toggle('on', j === i);
+    d.classList.toggle('done', j < i);
+  });
+  if (step.screen && step.screen !== currentScreen) switchScreen(step.screen);
+  // let the screen render before aiming the spotlight
+  setTimeout(() => { if (merlinTutActive && merlinTutStep === i) merlinTutSpotlightTarget(step.target); }, step.screen ? 340 : 60);
+  clearInterval(merlinTutTimer);
+  cont.classList.remove('show');
+  text.textContent = '';
+  merlinTutTyping = true;
+  let n = 0;
+  merlinTutTimer = setInterval(() => {
+    n += 2;
+    text.textContent = step.text.slice(0, n);
+    if (n >= step.text.length) {
+      clearInterval(merlinTutTimer);
+      merlinTutTyping = false;
+      cont.classList.add('show');
+    }
+  }, 22);
+}
+
+function merlinTutAdvance() {
+  if (!merlinTutActive) return;
+  SFX.tap();
+  const step = MERLIN_TUTORIAL_STEPS[merlinTutStep];
+  if (merlinTutTyping) {
+    clearInterval(merlinTutTimer);
+    merlinTutTyping = false;
+    $('merlinTutorialText').textContent = step.text;
+    $('merlinTutorialContinue').classList.add('show');
+    return;
+  }
+  if (merlinTutStep >= MERLIN_TUTORIAL_STEPS.length - 1) { endMerlinTutorial(true); return; }
+  merlinTutShowStep(merlinTutStep + 1);
+}
+
+function endMerlinTutorial(completed) {
+  const overlay = $('merlinTutorialOverlay');
+  merlinTutActive = false;
+  merlinTutTyping = false;
+  clearInterval(merlinTutTimer);
+  if (overlay) overlay.classList.remove('show');
+  merlinTutSpotlightTarget(null);
+  try { localStorage.setItem(BURBZ_TUTORIAL_SEEN_KEY, '1'); } catch(e) {}
+  if (currentScreen !== 'map') switchScreen('map');
+  let gifted = false;
+  try { gifted = localStorage.getItem(BURBZ_TUTORIAL_GIFT_KEY) === '1'; } catch(e) {}
+  if (completed && !gifted) {
+    try { localStorage.setItem(BURBZ_TUTORIAL_GIFT_KEY, '1'); } catch(e) {}
+    addCoins(50);
+    addBranches(25);
+    saveState();
+    updateHeader();
+    showToast("\u{1F381} Merlin's gift: +50 \u{1FA99} coins and +25 \u{1FAB5} branches!");
+  } else if (completed) {
+    showToast('Merlin nods. "You know the way, friend."');
+  }
+}
+
+function maybeStartMerlinTutorial(delay = 600) {
+  try { if (localStorage.getItem(BURBZ_TUTORIAL_SEEN_KEY) === '1') return; } catch(e) { return; }
+  setTimeout(() => { if (!merlinTutActive) startMerlinTutorial(); }, delay);
+}
+
+$('merlinTutorialOverlay')?.addEventListener('click', (e) => {
+  if (e.target.closest('#merlinTutorialSkip')) { endMerlinTutorial(false); return; }
+  merlinTutAdvance();
+});
+window.addEventListener('resize', () => {
+  if (merlinTutActive && merlinTutStep >= 0) merlinTutSpotlightTarget(MERLIN_TUTORIAL_STEPS[merlinTutStep].target);
+});
 
 // ============================================================================
 // SETTINGS
@@ -12873,6 +13069,7 @@ $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
 $('introPlayAgainBtn')?.addEventListener('click', () => showIntroCutscene({ replay:true }));
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
 $('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
+$('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial(); });
 
 $('settingsBtn').addEventListener('click', () => {
   $('settingsModal').classList.add('show');
