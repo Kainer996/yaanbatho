@@ -8,29 +8,31 @@
   const TREEHOUSE_ROOMS = [
     { id:'outdoors', label:'Aviary Gardens', icon:'🌱', cost:0, branches:0, unlockLevel:1, floor:0, branch:'trunk', x:50, y:92, role:'roam', effect:'Starter gardens: free roaming, foraging and happiness recovery.' },
     { id:'dorm', label:'The Roost', icon:'🏠', cost:50, branches:10, unlockLevel:1, floor:1, branch:'left', x:24, y:78, role:'housing', effect:'Bird housing: rest, feed, groom and assign companions.' },
-    { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:70, y:65, role:'training', effect:'Permanent stat drills and passive XP.' },
-    { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:3, floor:3, branch:'left', x:26, y:53, role:'healing', effect:'Future: recovery care and status cures.' },
-    { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:160, branches:35, unlockLevel:4, floor:4, branch:'right', x:72, y:42, role:'social', effect:'Social buffs, rumours, visitor birds and morale.' },
-    { id:'kitchen', label:'Kitchen & Pantry', icon:'🥣', cost:130, branches:25, unlockLevel:3, floor:3, branch:'trunk', x:50, y:52, role:'food', effect:'Cook species-friendly snacks and expand pantry.' },
-    { id:'workshop', label:'Nest Workshop', icon:'🛠️', cost:180, branches:45, unlockLevel:5, floor:5, branch:'left', x:25, y:31, role:'craft', effect:'Craft perches, gear, habitats and upgrades.' },
+    { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:70, y:65, role:'training', trainStat:'atk', effect:'Permanent stat drills, passive XP, and slow ATK growth for birds stationed here.' },
+    { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:3, floor:3, branch:'left', x:26, y:53, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
+    { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:160, branches:35, unlockLevel:4, floor:4, branch:'right', x:72, y:42, role:'social', trainStat:'cha', effect:'The bird bar: companions perched here grow Personality (PER) and morale — charm pays out on social quests.' },
+    { id:'kitchen', label:'Kitchen & Pantry', icon:'🥣', cost:130, branches:25, unlockLevel:3, floor:3, branch:'trunk', x:50, y:52, role:'food', trainStat:'stamina', effect:'Hearty meals: birds stationed here grow Stamina and stay fed.' },
+    { id:'workshop', label:'Nest Workshop', icon:'🛠️', cost:180, branches:45, unlockLevel:5, floor:5, branch:'left', x:25, y:31, role:'craft', trainStat:'def', effect:'Nest engineering: birds stationed here toughen up and grow DEF.' },
     { id:'market', label:'Recruitment Roost', icon:'🪶', cost:210, branches:50, unlockLevel:6, floor:5, branch:'right', x:73, y:29, role:'recruit', effect:'Recruit discovered Birdex species for coins when you are ready.' },
     { id:'nursery', label:'Hatchery Nursery', icon:'🥚', cost:240, branches:60, unlockLevel:7, floor:6, branch:'left', x:36, y:18, role:'bond', effect:'Baby-bird care and bonding progression.' },
-    { id:'observatory', label:'Moon Observatory', icon:'🔭', cost:260, branches:70, unlockLevel:8, floor:6, branch:'right', x:64, y:14, role:'forecast', effect:'Forecast spawns, migrations and night encounters.' },
+    { id:'observatory', label:'Moon Observatory', icon:'🔭', cost:260, branches:70, unlockLevel:8, floor:6, branch:'right', x:64, y:14, role:'forecast', trainStat:'int', effect:'Stargazing study: birds stationed here grow INT while charting spawns and migrations.' },
     { id:'quest_roost', label:'Quest Roost', icon:'🧭', cost:110, branches:15, unlockLevel:2, floor:2, branch:'trunk', x:50, y:66, role:'quests', effect:'Send birds out on real-time expeditions for coins, branches and items.' }
   ];
 
   // Quest economy: short starter errands teach the loop with small, frequent
   // payouts; long quests pay clearly better totals so timers feel worth it.
   // branches:[min,max] is the timber payout used for Academy building.
+  // chaWeight marks social quests: a bird's Personality (cha) adds bonus coins
+  // there — charmers talk squirrels, traders and passers-by into better deals.
   const QUEST_TEMPLATES = {
     find_seed: { id:'find_seed', label:'Find Seed', minutes:3, icon:'🌾', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:6, items:['seed_satchel'], beats:['hops straight from the garden path','checks the soft grass for fallen seed','tucks a tiny seed satchel under one wing','returns ready for another quick errand'] },
-    find_coins: { id:'find_coins', label:'Find Coins', minutes:4, icon:'🪙', minLevel:1, starter:true, coins:[6,16], branches:[0,1], xp:8, items:['shiny_pebble'], beats:['flutters toward a sunny lane','spots a glint beside an old root','trades a bright pebble for pocket coins','returns jingling with tiny treasure'] },
+    find_coins: { id:'find_coins', label:'Find Coins', minutes:4, icon:'🪙', minLevel:1, chaWeight:1, starter:true, coins:[6,16], branches:[0,1], xp:8, items:['shiny_pebble'], beats:['flutters toward a sunny lane','spots a glint beside an old root','trades a bright pebble for pocket coins','returns jingling with tiny treasure'] },
     branch_run: { id:'branch_run', label:'Branch Run', minutes:5, icon:'🪵', minLevel:1, starter:true, coins:[0,5], branches:[4,7], xp:8, items:['soft_moss'], beats:['glides down to the windfall thicket','tugs loose the driest fallen twigs','stacks a neat bundle of branches','hauls the timber home for the builders'] },
     scavenge: { id:'scavenge', label:'Scavenge', minutes:5, icon:'🧺', minLevel:1, starter:true, coins:[2,10], branches:[2,4], xp:10, items:['soft_moss','berry_bundle'], beats:['sets off on a quick cosy scavenge','checks mossy twigs and berry leaves','bundles useful bits for the Academy','returns with simple supplies'] },
-    short_forage: { id:'short_forage', label:'Hedgerow Forage', minutes:60, icon:'🌿', minLevel:1, coins:[22,44], branches:[5,10], xp:25, items:['berry_bundle','shiny_pebble','soft_moss'], beats:['sets off beneath the safe branches','finds a singing hedgerow path','checks a glittering hollow','returns with a beakful of useful things'] },
-    supply_run: { id:'supply_run', label:'Pantry Supply Run', minutes:120, icon:'🥣', minLevel:2, coins:[50,95], branches:[8,14], xp:55, items:['seed_satchel','worm_tin','berry_bundle'], beats:['sets off with a tiny satchel','trades gossip at a squirrel market','spots a cache of field snacks','returns to the tree with supplies'] },
+    short_forage: { id:'short_forage', label:'Hedgerow Forage', minutes:60, icon:'🌿', minLevel:1, chaWeight:0.5, coins:[22,44], branches:[5,10], xp:25, items:['berry_bundle','shiny_pebble','soft_moss'], beats:['sets off beneath the safe branches','finds a singing hedgerow path','checks a glittering hollow','returns with a beakful of useful things'] },
+    supply_run: { id:'supply_run', label:'Pantry Supply Run', minutes:120, icon:'🥣', minLevel:2, chaWeight:1.5, coins:[50,95], branches:[8,14], xp:55, items:['seed_satchel','worm_tin','berry_bundle'], beats:['sets off with a tiny satchel','trades gossip at a squirrel market','spots a cache of field snacks','returns to the tree with supplies'] },
     timber_haul: { id:'timber_haul', label:'Timber Haul', minutes:150, icon:'🌳', minLevel:3, coins:[20,45], branches:[22,38], xp:75, items:['soft_moss','old_map'], beats:['flies out to the storm-fall clearing','marks the straightest fallen boughs','ropes a heavy bundle with vine loops','hauls the timber back for the high floors'] },
-    moon_scout: { id:'moon_scout', label:'Moonlit Scout', minutes:180, icon:'🌙', minLevel:4, coins:[95,170], branches:[10,18], xp:90, items:['moon_feather','old_map','shiny_pebble'], clueId:'moon_branch_map', beats:['sets off as the leaves glow silver','follows Merlin runes through the canopy','marks a safe route past the shadow woods','returns with a new clue for Bird Burbs'] }
+    moon_scout: { id:'moon_scout', label:'Moonlit Scout', minutes:180, icon:'🌙', minLevel:4, chaWeight:0.75, coins:[95,170], branches:[10,18], xp:90, items:['moon_feather','old_map','shiny_pebble'], clueId:'moon_branch_map', beats:['sets off as the leaves glow silver','follows Merlin runes through the canopy','marks a safe route past the shadow woods','returns with a new clue for Bird Burbs'] }
   };
 
   const TRAINING_TEMPLATES = {
@@ -106,6 +108,8 @@
     const endMs = nowMs + durationMs;
     const baseCoins = rand(seed, template.coins[0], template.coins[1]);
     const powerBonus = Math.floor(((bird.power || 80) + (bird.int || 40) + (bird.spd || 40) + (bird.stamina || 40)) / 90);
+    // Personality pays on social quests: charming birds haggle better prices.
+    const charmBonus = template.chaWeight ? Math.floor(((bird.cha || 40) * template.chaWeight) / 60) : 0;
     // Branch (timber) payout: stronger, steadier birds haul a little extra.
     const branchRange = Array.isArray(template.branches) ? template.branches : [0, 0];
     const baseBranches = rand(seed + 7, branchRange[0], branchRange[1]);
@@ -113,7 +117,9 @@
     const item = template.items[seed % template.items.length];
     const bonusItem = template.items[(seed + 1) % template.items.length];
     const rewardItems = { [item]: 1 };
-    if (seed % 3 === 0) rewardItems[bonusItem] = (rewardItems[bonusItem] || 0) + 1;
+    // Charmers (high Personality) make friends out there and get gifts more often.
+    const bonusRoll = (bird.cha || 0) >= 120 ? 2 : 3;
+    if (seed % bonusRoll === 0) rewardItems[bonusItem] = (rewardItems[bonusItem] || 0) + 1;
     const clue = template.clueId ? MERLIN_CLUES[template.clueId] : null;
     return {
       id: `exp_${nowMs}_${String(bird.id || birdName).replace(/[^a-z0-9]+/gi,'_')}`,
@@ -125,7 +131,7 @@
       startMs: nowMs,
       endMs,
       status: 'active',
-      rewards: { coins: baseCoins + powerBonus, branches: baseBranches + branchBonus, xp: template.xp || (10 + Math.floor(template.minutes / 10)), items: rewardItems },
+      rewards: { coins: baseCoins + powerBonus + charmBonus, charmBonus, branches: baseBranches + branchBonus, xp: template.xp || (10 + Math.floor(template.minutes / 10)), items: rewardItems },
       story: clue ? { clueId: clue.id, title: clue.title, copy: clue.copy, unlocksTrial: clue.unlocksTrial } : null,
       seed
     };

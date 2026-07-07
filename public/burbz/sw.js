@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-merlin-tutorial-v18-20260707';
+const BURBZ_CACHE = 'burbz-personality-rooms-v19-20260707';
 const BURBZ_ASSETS = [
   './',
   './index.html',

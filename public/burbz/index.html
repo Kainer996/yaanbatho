@@ -2777,6 +2777,8 @@ function loadState() {
     if (!b.rarity) b.rarity = 'common';
     if (!b.care || typeof b.care !== 'object') b.care = JSON.parse(JSON.stringify(DEFAULT_STATE.birdCare));
     if (!b.training || typeof b.training !== 'object') b.training = { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
+    if (b.training.chaBonus == null) b.training.chaBonus = 0;
+    if (b.cha == null) b.cha = generateBirdStats(b.species || b.commonName || 'Unknown Bird', b.basePower || b.power || 50, b.rarity || 'common').cha || 40;
     b.care.lastFed = b.care.lastFed || null;
     b.care.lastTrained = b.care.lastTrained || null;
     b.int = b.int || 50;
@@ -2957,7 +2959,8 @@ const BURBZ_STAT_RUBRIC = {
     strength: "Physical power from size, beak, legs, talons, or body mass.",
     def: "Survivability, adaptability, awareness, and environmental resilience.",
     spd: "Real-world flight speed, agility, or pursuit speed.",
-    int: "Problem solving, learning, memory, social complexity, adaptability."
+    int: "Problem solving, learning, memory, social complexity, adaptability.",
+    cha: "Personality & charisma: how confiding, bold and sociable the species is around people. Robins hop up to gardeners; dunnocks skulk in the hedge bottom."
   },
   bands: {
     1: "Very low", 2: "Low", 3: "Below average", 4: "Slightly below average",
@@ -6812,6 +6815,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-stat"><span class="bird-info-stat-label">SPD</span><span class="bird-info-stat-value">${bird.spd || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">INT</span><span class="bird-info-stat-value">${bird.int || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">STAM</span><span class="bird-info-stat-value">${bird.stamina || 0}</span></div>
+      <div class="bird-info-stat"><span class="bird-info-stat-label">PER</span><span class="bird-info-stat-value">${bird.cha || 0}</span></div>
     </div>
     <div class="bird-info-section">
       <div class="bird-info-section-title">Natural range</div>
@@ -6841,6 +6845,74 @@ function closeBirdInfo() {
   $('birdInfoModal').classList.remove('show');
 }
 
+// ============================================================================
+// PERSONALITY (PER / cha): how confiding, bold and people-friendly each species
+// really is. 10 = famously tame (robins perch on spade handles, feral pigeons
+// eat from hands); 1-2 = shy skulkers and wary raptors that keep well away.
+// Species without an entry fall back to a trait-based estimate.
+// ============================================================================
+const BURBZ_PERSONALITY = {
+  robin: 10, feral_pigeon: 10, rock_pigeon: 10,
+  australian_magpie: 9, willie_wagtail: 9, common_myna: 9, silver_gull: 9,
+  laughing_kookaburra: 9, rainbow_lorikeet: 9, australian_white_ibis: 9,
+  herring_gull: 9, sulphur_crested_cockatoo: 9,
+  house_sparrow: 8, starling: 8, blue_tit: 8, great_tit: 8, jackdaw: 8,
+  mallard: 8, canada_goose: 8, noisy_miner: 8, galah: 8, little_corella: 8,
+  grey_butcherbird: 8, grey_fantail: 8, australian_king_parrot: 8,
+  australian_pelican: 8, eastern_yellow_robin: 8, ring_necked_parakeet: 8,
+  blackbird: 7, magpie: 7, woodpigeon: 7, chaffinch: 7, collared_dove: 7,
+  pied_wagtail: 7, mute_swan: 7, black_swan: 7, greylag_goose: 7, puffin: 7,
+  pacific_black_duck: 7, magpie_lark: 7, pied_currawong: 7, crimson_rosella: 7,
+  superb_fairywren: 7, ruddy_turnstone: 7, long_billed_corella: 7,
+  lesser_black_backed_gull: 7,
+  goldfinch: 6, coal_tit: 6, long_tailed_tit: 6, carrion_crow: 6, swallow: 6,
+  house_martin: 6, stonechat: 6, pheasant: 6, common_gull: 6, eurasian_siskin: 6,
+  bohemian_waxwing: 6, spotted_dove: 6, crested_pigeon: 6, red_wattlebird: 6,
+  new_holland_honeyeater: 6, white_plumed_honeyeater: 6, masked_lapwing: 6,
+  australian_wood_duck: 6, australasian_swamphen: 6, straw_necked_ibis: 6,
+  gang_gang_cockatoo: 6, musk_lorikeet: 6, little_wattlebird: 6, silvereye: 6,
+  gray_shrikethrush: 6, welcome_swallow: 6,
+  greenfinch: 5, song_thrush: 5, nuthatch: 5, oystercatcher: 5, heron: 5,
+  rook: 5, red_kite: 5, eurasian_tree_sparrow: 5, tufted_duck: 5,
+  eurasian_coot: 5, dusky_moorhen: 5, little_raven: 5, australian_raven: 5,
+  eastern_rosella: 5, red_rumped_parrot: 5, red_browed_finch: 5,
+  yellow_tailed_black_cockatoo: 5, golden_whistler: 5,
+  wren: 4, goldcrest: 4, chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
+  grey_wagtail: 4, kestrel: 4, little_owl: 4, lapwing: 4, swift: 4,
+  great_spotted_woodpecker: 4, cormorant: 4, gannet: 4, razorbill: 4,
+  dipper: 4, sand_martin: 4, pied_flycatcher: 4, yellowhammer: 4,
+  common_linnet: 4, redwing: 4, fieldfare: 4, northern_wheatear: 4,
+  stock_dove: 4, gadwall: 4, northern_shoveler: 4, greater_whitethroat: 4,
+  common_pochard: 4, pied_avocet: 4, dunlin: 4, grey_teal: 4,
+  chestnut_teal: 4, little_pied_cormorant: 4, little_black_cormorant: 4,
+  white_faced_heron: 4, brown_thornbill: 4, eastern_spinebill: 4,
+  spotted_pardalote: 4, white_browed_scrubwren: 4, pied_stilt: 4,
+  black_faced_cuckooshrike: 4, buff_banded_rail: 4, hardhead: 4,
+  red_crossbill: 4,
+  tawny_owl: 3, treecreeper: 3, kingfisher: 3, barn_owl: 3, bullfinch: 3,
+  firecrest: 3, osprey: 3, meadow_pipit: 3, skylark: 3, reed_bunting: 3,
+  sedge_warbler: 3, willow_warbler: 3, common_redstart: 3, tree_pipit: 3,
+  peregrine_falcon: 3, buzzard: 3, white_tailed_eagle: 3, goosander: 3,
+  little_grebe: 3, common_sandpiper: 3, red_legged_partridge: 3, red_grouse: 3,
+  common_redshank: 3, black_tailed_godwit: 3, pink_footed_goose: 3,
+  green_woodpecker: 3, common_goldeneye: 3, green_winged_teal: 3,
+  tawny_frogmouth: 3, common_bronzewing: 3, royal_spoonbill: 3,
+  australasian_grebe: 3, hoary_headed_grebe: 3, australasian_darter: 3,
+  black_shouldered_kite: 3, nankeen_night_heron: 3,
+  dunnock: 2, sparrowhawk: 2, golden_eagle: 2, merlin: 2, cuckoo: 2,
+  common_snipe: 2, curlew: 2, grey_partridge: 2, western_marsh_harrier: 2,
+  wedge_tailed_eagle: 2, square_tailed_kite: 2, blue_billed_duck: 2
+};
+
+function speciesPersonalityBase(profile) {
+  if (profile && BURBZ_PERSONALITY[profile.id] != null) return BURBZ_PERSONALITY[profile.id];
+  const traits = ((profile && profile.traits) || []).join(' ').toLowerCase();
+  let score = 5;
+  if (/bold|tame|confiding|social|curious|urban|gregarious|noisy|cheeky|garden/.test(traits)) score += 2;
+  if (/shy|secretive|wary|elusive|skulk|solitary|nocturnal|remote/.test(traits)) score -= 2;
+  return clamp(score, 1, 10);
+}
+
 function generateBirdStats(speciesName, basePower, rarity) {
   const profile = findSpeciesProfile(speciesName);
   if (profile) {
@@ -6856,6 +6928,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
     const def = Math.floor(baseStats.def * 10 * mult * powerMult);
     const spd = Math.floor(baseStats.spd * 10 * mult * powerMult);
     const int = Math.floor(baseStats.int * 10 * mult * powerMult);
+    const cha = Math.floor(speciesPersonalityBase(profile) * 10 * mult * powerMult);
 
     const specialMoveIndex = hashStr(speciesName + '_move') % SPECIAL_MOVES.length;
     const specialMove = SPECIAL_MOVES[specialMoveIndex];
@@ -6870,6 +6943,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
       def: clamp(def, 10, 999),
       spd: clamp(spd, 10, 999),
       int: clamp(int, 10, 999), // New stat
+      cha: clamp(cha, 10, 999), // Personality (PER)
       stamina: clamp(stamina, 10, 999), // New stat
       specialMove,
       emoji,
@@ -6889,11 +6963,13 @@ function generateBirdStats(speciesName, basePower, rarity) {
     const atkBase = 15 + Math.floor(rng() * 50);
     const defBase = 15 + Math.floor(rng() * 50);
     const spdBase = 15 + Math.floor(rng() * 50);
+    const chaBase = 15 + Math.floor(rng() * 45);
 
     const hp = Math.floor(hpBase * mult * (bp / 60));
     const atk = Math.floor(atkBase * mult * (bp / 60));
     const def = Math.floor(defBase * mult * (bp / 60));
     const spd = Math.floor(spdBase * mult * (bp / 60));
+    const cha = Math.floor(chaBase * mult * (bp / 60));
 
     const moveIndex = seed % SPECIAL_MOVES.length;
     const specialMove = SPECIAL_MOVES[moveIndex];
@@ -6907,6 +6983,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
       atk: clamp(atk, 10, 120),
       def: clamp(def, 10, 120),
       spd: clamp(spd, 10, 120),
+      cha: clamp(cha, 10, 120),
       specialMove,
       emoji,
       power: clamp(power, 20, 999),
@@ -7492,15 +7569,15 @@ const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
   dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'A cosy branch home. Birds resting here heal up while you feed, groom and tuck them in.', perk:'Passive: heals HP, hunger grows slowly', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
-  training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP.', perk:'Passive: slow XP trickle, hunger grows faster', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
+  training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
-  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery room for tired or hurt companions. Full care mechanics come next.', perk:'Future: faster healing and status care', perches:[[26,53],[22,57],[30,57]] },
-  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'A cosy bird bar for rumours, morale and rare visitors.', perk:'Future: social buffs and visitors', perches:[[72,42],[68,46],[76,46]] },
-  kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'Cook species-friendly snacks and expand the pantry.', perk:'Future: bigger pantry and recipes', perches:[[50,52],[46,56],[54,56]] },
-  workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Craft perches, gear, decorations and habitat upgrades.', perk:'Future: crafting', perches:[[25,31],[21,35],[29,35]] },
+  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
+  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar. Regulars swap rumours, make friends and come out of their shells — Personality grows here, and charming birds earn bonus coins on social quests.', perk:'Passive: +1 PER every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
+  kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'Hearty species-friendly cooking. Birds stationed here build Stamina one good meal at a time.', perk:'Passive: +1 STAM every 30 min', perches:[[50,52],[46,56],[54,56]] },
+  workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
   market: { label:'RECRUITMENT ROOST', icon:'🪶', buildingId:'market', desc:'Recruit discovered Birdex species here for coins. Discover first, hire later when you can afford them.', perk:'Active: Birdex recruitment', perches:[[73,29],[69,33],[77,33]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
-  observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Forecast spawns, migration events and rare night encounters.', perk:'Future: forecasts', perches:[[64,14],[60,18],[68,18]] },
+  observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
 let academySelectedRoom = 'outdoors';
@@ -8006,7 +8083,7 @@ function renderBirdExpeditions() {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
-    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP';
+    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + (t.chaWeight ? ' · 🗣️ PER pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
@@ -8075,7 +8152,7 @@ function renderQuestSendSheet() {
     const training = birdHasActiveTraining(b.id);
     const tooLow = (b.level || 1) < (t.minLevel || 1);
     const disabled = away || training || tooLow;
-    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1);
+    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · PER ' + (b.cha || 0) : '');
     const sel = questSendState.birdId === b.id ? ' selected' : '';
     return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
@@ -8101,7 +8178,7 @@ function renderQuestSendSheet() {
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
       '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + ((t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '') + ' · +' + (t.xp || 0) + ' XP</div></div></div>' +
-    '<div class="quest-overlay-copy">' + escapeHtml(info) + '</div>' +
+    '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🗣️ A social quest — birds with high Personality (PER) charm bonus coins and extra finds.</span>' : '') + '</div>' +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
     '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins &amp; branches</span></div>' +
@@ -8669,19 +8746,55 @@ function academyForage(birdId) {
 }
 
 // Passive per-room effects, runs on the same 60s cadence as pet care
+// Fallout Shelter-style room jobs: a bird stationed in a stat room slowly and
+// permanently grows that stat. The Crowbar is the Personality (PER) room.
+const ACADEMY_ROOM_STAT_EFFECTS = {
+  training:    { stat:'atk',     label:'ATK' },
+  crowbar:     { stat:'cha',     label:'PER' },
+  kitchen:     { stat:'stamina', label:'STAM' },
+  workshop:    { stat:'def',     label:'DEF' },
+  observatory: { stat:'int',     label:'INT' }
+};
+const ACADEMY_STAT_MINUTES = 30;   // minutes stationed per +1 stat point
+const ACADEMY_ROOM_STAT_CAP = 400; // passive growth stops here; drills go further
+
 function tickAcademy() {
   if (!gameState || !Array.isArray(gameState.flock) || gameState.flock.length === 0) return;
+  const now = Date.now();
+  // Rooms keep working while the app is closed, capped so a week away is not a jackpot.
+  const elapsedMin = clamp(Math.round((now - (gameState.academyLastTickMs || now)) / 60000) || 1, 1, 240);
+  gameState.academyLastTickMs = now;
   gameState.flock.forEach(b => {
     ensureBirdAcademy(b);
     const room = isAcademyRoomBuilt(b.academy.room) ? b.academy.room : 'outdoors';
     b.academy.room = room;
+    const fx = ACADEMY_ROOM_STAT_EFFECTS[room];
+    if (fx) {
+      if (b.academy.statRoom !== room) { b.academy.statRoom = room; b.academy.statMinutes = 0; }
+      b.academy.statMinutes = (b.academy.statMinutes || 0) + elapsedMin;
+      const gained = Math.floor(b.academy.statMinutes / ACADEMY_STAT_MINUTES);
+      if (gained > 0) {
+        b.academy.statMinutes -= gained * ACADEMY_STAT_MINUTES;
+        if ((b[fx.stat] || 0) < ACADEMY_ROOM_STAT_CAP) {
+          b[fx.stat] = clamp((b[fx.stat] || 10) + gained, 10, ACADEMY_ROOM_STAT_CAP);
+          recalcBirdPower(b);
+        }
+      }
+    }
     if (room === 'dorm') {
       b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04)), 1, b.maxHp || 100);
+      b.care.hunger = clamp((b.care.hunger || 0) + 1, 0, 100);
+    } else if (room === 'hospital') {
+      b.hp = clamp((b.hp || b.maxHp) + Math.max(2, Math.round((b.maxHp || 100) * 0.10)), 1, b.maxHp || 100);
       b.care.hunger = clamp((b.care.hunger || 0) + 1, 0, 100);
     } else if (room === 'training') {
       b.xp = (b.xp || 0) + 1;
       b.care.hunger = clamp((b.care.hunger || 0) + 4, 0, 100);
       b.care.happiness = clamp((b.care.happiness || 80) - 1, 0, 100);
+    } else if (room === 'crowbar') {
+      // The bar is fun: morale climbs alongside Personality.
+      b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
+      b.care.hunger = clamp((b.care.hunger || 0) + 2, 0, 100);
     } else {
       b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
       b.care.hunger = clamp((b.care.hunger || 0) + 2, 0, 100);
