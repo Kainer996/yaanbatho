@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-academy-room-never-blank-v15-20260707';
+const BURBZ_CACHE = 'burbz-crows-perch-personality-50-birds-v16-20260707';
 const BURBZ_ASSETS = [
   './',
   './index.html',

@@ -1185,6 +1185,8 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .bird-info-stat-label { display:block; color: var(--text3); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
 .bird-info-stat-value { display:block; font-family:'Rajdhani', sans-serif; font-size: 18px; font-weight: 800; color: var(--accent2); }
+.bird-info-stat-pers { grid-column: 1 / -1; }
+.bird-info-stat-hint { display:block; margin-top:2px; color: var(--text3); font-size: 9px; letter-spacing: 0.02em; }
 .bird-info-section { margin-top: 12px; }
 .bird-info-section-title { font-family:'Rajdhani', sans-serif; font-weight: 800; color: var(--accent); font-size: 13px; margin-bottom: 5px; }
 .bird-info-section-body { color: var(--text2); font-size: 12px; line-height: 1.42; }
@@ -2120,20 +2122,71 @@ const WILD_BIRDS = [
   'Green Woodpecker',
   'Ring-necked Parakeet',
   'White-tailed Eagle',
-  'Wedge-tailed Eagle'
+  'Wedge-tailed Eagle',
+  // crows_perch_expansion_20260707 — 50 new species
+  'Moorhen',
+  'Great Crested Grebe',
+  'Greylag Goose',
+  'Shelduck',
+  'Wigeon',
+  'Teal',
+  'Tufted Duck',
+  'Eider',
+  'Whooper Swan',
+  'Little Egret',
+  'Bittern',
+  'Avocet',
+  'Ringed Plover',
+  'Golden Plover',
+  'Dunlin',
+  'Turnstone',
+  'Redshank',
+  'Woodcock',
+  'Common Crane',
+  'Black-headed Gull',
+  'Great Black-backed Gull',
+  'Kittiwake',
+  'Arctic Tern',
+  'Fulmar',
+  'Manx Shearwater',
+  'Guillemot',
+  'Shag',
+  'Red Grouse',
+  'Ptarmigan',
+  'Black Grouse',
+  'Capercaillie',
+  'Red-legged Partridge',
+  'Goshawk',
+  'Hen Harrier',
+  'Marsh Harrier',
+  'Hobby',
+  'Short-eared Owl',
+  'Nightjar',
+  'Turtle Dove',
+  'Stock Dove',
+  'Hooded Crow',
+  'Chough',
+  'Nightingale',
+  'Fieldfare',
+  'Redwing',
+  'Mistle Thrush',
+  'Wheatear',
+  'Whitethroat',
+  'Spotted Flycatcher',
+  'Siskin'
 ];
 
 const HABITAT_BIRD_POOLS = {
-  water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler'],
-  wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler'],
-  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant'],
-  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant'],
-  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant'],
-  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow'],
-  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet'],
-  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill'],
-  default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe'],
+  water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler','Moorhen','Great Crested Grebe','Tufted Duck','Little Egret','Greylag Goose'],
+  wetland: ['Reed Bunting','Lapwing','Heron','Grey Wagtail','Goosander','Sand Martin','Little Grebe','Common Snipe','Sedge Warbler','Moorhen','Little Egret','Redshank','Teal','Wigeon','Bittern','Marsh Harrier','Common Crane'],
+  woodland: ['Nuthatch','Treecreeper','Blackcap','Chiffchaff','Willow Warbler','Common Redstart','Pied Flycatcher','Great Spotted Woodpecker','Green Woodpecker','Tawny Owl','Red Crossbill','Pheasant','Woodcock','Goshawk','Spotted Flycatcher','Siskin','Nightingale'],
+  park: ['European Robin','Blackbird','Blue Tit','Great Tit','Goldfinch','Song Thrush','Blackcap','Nuthatch','Green Woodpecker','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow','Moorhen','Tufted Duck','Mistle Thrush','Siskin','Black-headed Gull'],
+  farmland: ['Skylark','Meadow Pipit','Yellowhammer','Kestrel','Lapwing','Rook','Curlew','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Pheasant','Red-legged Partridge','Stock Dove','Fieldfare','Redwing','Turtle Dove','Whitethroat'],
+  grassland: ['Meadow Pipit','Skylark','Stonechat','Kestrel','Pied Wagtail','Yellowhammer','Curlew','Common Snipe','Common Linnet','Grey Partridge','Pheasant','Wheatear','Golden Plover','Short-eared Owl','Red-legged Partridge'],
+  urban: ['House Sparrow','Starling','Swift','Pied Wagtail','Blackbird','Magpie','Jackdaw','Peregrine Falcon','Herring Gull','Ring-necked Parakeet','Bohemian Waxwing','Eurasian Tree Sparrow','Black-headed Gull','Mistle Thrush'],
+  coast: ['Oystercatcher','Cormorant','Gannet','Razorbill','Puffin','Mallard','Peregrine Falcon','Herring Gull','White-tailed Eagle','Common Linnet','Eider','Turnstone','Dunlin','Ringed Plover','Kittiwake','Fulmar','Guillemot','Shag','Great Black-backed Gull','Arctic Tern','Shelduck','Chough'],
+  hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill','Red Grouse','Golden Plover','Wheatear','Hen Harrier','Short-eared Owl','Ptarmigan','Black Grouse'],
+  default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe','Mistle Thrush','Stock Dove'],
 };
 const REGIONAL_HABITAT_BIRD_POOLS = {
   au: {
@@ -2160,7 +2213,9 @@ const REGION_BLOCKED_SPECIES = {
 // from WILD_BIRDS or HABITAT_BIRD_POOLS at runtime (those get extended).
 const REGION_AREA_SPECIES = {
   uk: [
-    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle'
+    'House Sparrow','European Robin','Wren','Blackbird','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Magpie','Jackdaw','Rook','Goldfinch','Chaffinch','Chiffchaff','Starling','Dunnock','Long-tailed Tit','Coal Tit','Goldcrest','Treecreeper','Nuthatch','Jay','Song Thrush','Greenfinch','Bullfinch','Swift','Swallow','House Martin','Pied Wagtail','Grey Wagtail','Skylark','Meadow Pipit','Yellowhammer','Reed Bunting','Stonechat','Kestrel','Sparrowhawk','Buzzard','Tawny Owl','Little Owl','Barn Owl','Kingfisher','Red Kite','Lapwing','Cuckoo','Heron','Grey Heron','Mallard','Mute Swan','Canada Goose','Cormorant','Oystercatcher','Gannet','Razorbill','Puffin','Merlin','Osprey','Golden Eagle','Raven','Firecrest','Dipper','Goosander','Willow Warbler','Sand Martin','Common Redstart','Pied Flycatcher','Tree Pipit','Curlew','Blackcap','Great Spotted Woodpecker','Little Grebe','Peregrine Falcon','Bohemian Waxwing','Red Crossbill','Common Snipe','Common Linnet','Eurasian Tree Sparrow','Grey Partridge','Sedge Warbler','Pheasant','Herring Gull','Green Woodpecker','Ring-necked Parakeet','White-tailed Eagle',
+    // crows_perch_expansion_20260707 — all genuine UK species
+    'Moorhen','Great Crested Grebe','Greylag Goose','Shelduck','Wigeon','Teal','Tufted Duck','Eider','Whooper Swan','Little Egret','Bittern','Avocet','Ringed Plover','Golden Plover','Dunlin','Turnstone','Redshank','Woodcock','Common Crane','Black-headed Gull','Great Black-backed Gull','Kittiwake','Arctic Tern','Fulmar','Manx Shearwater','Guillemot','Shag','Red Grouse','Ptarmigan','Black Grouse','Capercaillie','Red-legged Partridge','Goshawk','Hen Harrier','Marsh Harrier','Hobby','Short-eared Owl','Nightjar','Turtle Dove','Stock Dove','Hooded Crow','Chough','Nightingale','Fieldfare','Redwing','Mistle Thrush','Wheatear','Whitethroat','Spotted Flycatcher','Siskin'
   ],
   au: [
     'Australian Magpie','Rainbow Lorikeet','Tawny Frogmouth','Noisy Miner','Australian Wood Duck','Pacific Black Duck','Magpie-lark','Dusky Moorhen','Superb Fairywren','Chestnut Teal','Laughing Kookaburra','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','Red Wattlebird','Spotted Dove','Grey Butcherbird','White-faced Heron','Pied Currawong','Galah','Sulphur-crested Cockatoo','Crested Pigeon','Little Raven','Eastern Rosella','Common Myna','Silver Gull','Black Swan','Crimson Rosella','Australian King Parrot','Australian White Ibis','Red-rumped Parrot','Rock Pigeon','Common Bronzewing','Brown Thornbill','Grey Fantail','Welcome Swallow','Willie Wagtail','New Holland Honeyeater','Eastern Spinebill','White-plumed Honeyeater','Masked Lapwing','Royal Spoonbill','Australian Pelican','Little Corella','Australian Raven','Square-tailed Kite','Wedge-tailed Eagle','Peregrine Falcon'
@@ -2176,7 +2231,13 @@ const REAL_WORLD_COMMONNESS = {
   'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':46,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32,
   // regional_plus20_20260701
   // higgsfield_manga_expansion_20260706
-  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22
+  'Pheasant':64,'Herring Gull':58,'Green Woodpecker':40,'Ring-necked Parakeet':36,'White-tailed Eagle':4,'Wedge-tailed Eagle':22,
+  // crows_perch_expansion_20260707
+  'Moorhen':68,'Black-headed Gull':66,'Greylag Goose':60,'Tufted Duck':56,'Stock Dove':54,'Mistle Thrush':52,'Redwing':50,'Fieldfare':48,'Siskin':46,'Red-legged Partridge':44,
+  'Whitethroat':42,'Great Crested Grebe':40,'Little Egret':38,'Shelduck':36,'Wigeon':34,'Teal':33,'Wheatear':31,'Spotted Flycatcher':30,'Red Grouse':28,'Hooded Crow':27,
+  'Great Black-backed Gull':26,'Dunlin':25,'Golden Plover':24,'Turnstone':23,'Redshank':22,'Ringed Plover':21,'Kittiwake':20,'Guillemot':19,'Fulmar':18,'Shag':17,'Eider':16,
+  'Arctic Tern':11,'Whooper Swan':10,'Avocet':10,'Manx Shearwater':9,'Woodcock':9,'Hobby':8,'Marsh Harrier':8,'Short-eared Owl':7,'Nightingale':6,'Black Grouse':5,'Nightjar':5,
+  'Turtle Dove':4,'Common Crane':3,'Hen Harrier':3,'Goshawk':3,'Chough':3,'Ptarmigan':2,'Bittern':2,'Capercaillie':1
 };
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
@@ -2213,7 +2274,7 @@ const FOODS = {
 // Order matters: first match wins, so more specific patterns go first.
 const BIRD_DIET_RULES = [
   // Raptors & owls
-  { match: /\b(eagle|hawk|kite|harrier|peregrine|falcon|kestrel|merlin|osprey|buzzard|sparrowhawk|goshawk)\b/i,
+  { match: /\b(eagle|hawk|kite|harrier|peregrine|falcon|kestrel|merlin|hobby|osprey|buzzard|sparrowhawk|goshawk)\b/i,
     pref: ['meat'], ok: ['carrion','fish'], avoid: ['seeds','berries','fruit','aquatic'],
     fact: 'Raptors are obligate carnivores — they need live prey, not seeds.' },
   { match: /\bowl\b/i,
@@ -2224,14 +2285,34 @@ const BIRD_DIET_RULES = [
   { match: /\bkingfisher\b/i,
     pref: ['fish'], ok: ['insects'], avoid: ['seeds','berries','suet','meat'],
     fact: 'Kingfishers plunge-dive for minnows and sticklebacks from a riverside perch.' },
-  { match: /\b(heron|egret|gannet|cormorant|razorbill|puffin|tern)\b/i,
+  { match: /\b(heron|egret|gannet|cormorant|shag|razorbill|puffin|tern|guillemot|grebe|diver|bittern|shearwater|petrel|fulmar|spoonbill|goosander|merganser)\b/i,
     pref: ['fish'], ok: ['aquatic'], avoid: ['seeds','berries','suet','fruit'],
-    fact: 'Seabirds and herons are fish-specialists — wrong food is wasted on them.' },
+    fact: 'Seabirds, grebes and herons are fish-specialists — wrong food is wasted on them.' },
+
+  // Gulls and skuas — the great coastal opportunists
+  { match: /\b(gull|kittiwake|skua)\b/i,
+    pref: ['fish','carrion'], ok: ['insects','worms'], avoid: ['aquatic'],
+    fact: 'Gulls are supreme opportunists — fish and scraps first, but they\'ll paddle lawns to charm up worms too.' },
 
   // Dabbling / grazing waterfowl
-  { match: /\b(mallard|duck|teal|gadwall|wigeon|shoveler|pochard|goose|swan)\b/i,
+  { match: /\b(mallard|duck|teal|gadwall|wigeon|shoveler|pochard|goose|swan|eider|goldeneye|smew|scoter|shelduck)\b/i,
     pref: ['aquatic'], ok: ['seeds'], avoid: ['meat','fish','suet'],
     fact: 'Bread is bad for ducks. They want pondweed, grain, and aquatic invertebrates.' },
+
+  // Grouse, partridges and other gamebirds — plant browsers
+  { match: /\b(grouse|ptarmigan|capercaillie|partridge|quail)\b/i,
+    pref: ['berries','seeds'], ok: ['insects'], avoid: ['fish','meat','carrion','aquatic'],
+    fact: 'Grouse browse heather shoots and berries — red grouse eat little else but heather.' },
+
+  // Cranes, rails and crakes — wetland omnivores
+  { match: /\b(crane|rail|crake)\b/i,
+    pref: ['insects','seeds'], ok: ['worms','aquatic'], avoid: ['suet'],
+    fact: 'Cranes and rails work wetland edges for seeds, roots, insects and whatever wriggles.' },
+
+  // Chough — the one insect-specialist corvid (before the general crow rule)
+  { match: /\bchough\b/i,
+    pref: ['insects','worms'], ok: ['seeds'], avoid: ['fish','aquatic'],
+    fact: 'Choughs probe short clifftop turf for ants and beetle larvae — an insect-eating corvid.' },
 
   // Crow family (mostly omnivorous, with a scavenging tilt)
   { match: /\b(raven|crow|rook|jackdaw)\b/i,
@@ -2245,9 +2326,9 @@ const BIRD_DIET_RULES = [
     fact: 'Jays cache thousands of acorns each autumn — they plant whole oak woodlands.' },
 
   // Aerial insectivores
-  { match: /\b(swift|swallow|martin)\b/i,
+  { match: /\b(swift|swallow|martin|nightjar|flycatcher)\b/i,
     pref: ['flying'], ok: ['insects'], avoid: ['seeds','suet','fish','meat','berries','aquatic'],
-    fact: 'Swifts and martins feed on the wing — they can\'t take food from a feeder.' },
+    fact: 'Aerial hunters feed on the wing — nightjars hawk moths at dusk, flycatchers sally from a perch.' },
 
   // Bark-clinging insectivores
   { match: /\bwoodpecker\b/i,
@@ -2291,7 +2372,7 @@ const BIRD_DIET_RULES = [
     fact: 'Thrushes work lawns for worms in spring, then switch to hedgerow berries in autumn.' },
 
   // Robin, wren, dunnock, warblers, wagtails
-  { match: /\b(robin|wren|dunnock|warbler|chiffchaff|whitethroat|stonechat|wagtail|pipit|wheatear)\b/i,
+  { match: /\b(robin|wren|dunnock|warbler|chiffchaff|whitethroat|stonechat|wagtail|pipit|wheatear|nightingale)\b/i,
     pref: ['insects','worms'], ok: ['suet','berries'], avoid: ['fish','aquatic','meat','carrion'],
     fact: 'Robins follow garden spades for the worms turned up — they\'re close-range insect hunters.' },
 
@@ -2309,7 +2390,7 @@ const BIRD_DIET_RULES = [
     fact: 'Waxwings irrupt south in cold years to strip rowan and cotoneaster berries.' },
 
   // Wading birds
-  { match: /\b(oystercatcher|curlew|sandpiper|plover|lapwing|godwit|turnstone|knot)\b/i,
+  { match: /\b(oystercatcher|curlew|sandpiper|plover|lapwing|godwit|turnstone|knot|snipe|woodcock|redshank|greenshank|dunlin|sanderling|avocet|whimbrel|stint)\b/i,
     pref: ['insects','worms'], ok: ['fish'], avoid: ['seeds','fruit','aquatic','suet'],
     fact: 'Waders probe mud and shore with long bills for worms, shellfish and crustaceans.' }
 ];
@@ -2548,11 +2629,17 @@ function loadState() {
     if (!b.commonName) b.commonName = b.species;
     if (!b.rarity) b.rarity = 'common';
     if (!b.care || typeof b.care !== 'object') b.care = JSON.parse(JSON.stringify(DEFAULT_STATE.birdCare));
-    if (!b.training || typeof b.training !== 'object') b.training = { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
+    if (!b.training || typeof b.training !== 'object') b.training = { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0, personalityBonus: 0 };
     b.care.lastFed = b.care.lastFed || null;
     b.care.lastTrained = b.care.lastTrained || null;
     b.int = b.int || 50;
     b.stamina = b.stamina || 50;
+    // Personality migration: birds captured before The Crow's Perch update get
+    // their species' charm rating (plus any social growth already banked).
+    if (!Number.isFinite(b.personality)) {
+      const rarityMult = { common: 1.0, uncommon: 1.2, rare: 1.5, epic: 1.8, legendary: 2.2 }[b.rarity] || 1.0;
+      b.personality = clamp(Math.floor(profilePersonalityScore(findSpeciesProfile(b.commonName || b.species)) * 10 * rarityMult) + (b.training.personalityBonus || 0), 10, 999);
+    }
     syncBirdArtUrl(b);
     return b;
   });
@@ -2729,7 +2816,8 @@ const BURBZ_STAT_RUBRIC = {
     strength: "Physical power from size, beak, legs, talons, or body mass.",
     def: "Survivability, adaptability, awareness, and environmental resilience.",
     spd: "Real-world flight speed, agility, or pursuit speed.",
-    int: "Problem solving, learning, memory, social complexity, adaptability."
+    int: "Problem solving, learning, memory, social complexity, adaptability.",
+    personality: "Charm, sociability and boldness around other birds: flocking, courtship displays, mimicry, curiosity toward strangers. Drives social quests and grows at The Crow's Perch."
   },
   bands: {
     1: "Very low", 2: "Low", 3: "Below average", 4: "Slightly below average",
@@ -4255,6 +4343,662 @@ const BURBZ_SPECIES_PROFILES = [{
     diet: "Fruit, seeds, buds, nuts, scraps",
     conservation: "Introduced/Naturalised",
     lat: 51.5, lon: -0.2
+  },
+  // ==========================================================================
+  // crows_perch_expansion_20260707 — 50 new species. Every profile carries a
+  // curated stats.personality (PERS, 1-10 rubric): charm and sociability around
+  // other birds, used by social quests and trained at The Crow's Perch.
+  // Art: placeholder emoji glyphs for now (no bird-art-cache entries yet).
+  // ==========================================================================
+  {
+    id: "moorhen", name: "Moorhen", rarity: "common", aliases: ["Common Moorhen"],
+    stats: { hp: 4, stamina: 4, strength: 3, def: 5, spd: 4, int: 5, personality: 5 },
+    traits: ["waterside rail","red-and-yellow bill","flicking tail","plucky neighbour"],
+    rationale: "A blackish waterside rail with a red bill shield, constantly flicking its white tail. Weak, fluttery flight but a hardy, adaptable resident of almost any pond; older chicks famously help feed their parents' next brood.",
+    sources: ["RSPB Moorhen", "Cornell Birds of the World"],
+    origin: "Europe, Asia and Africa",
+    habitat: "Ponds, lakes, slow rivers, park waters, ditches",
+    range: "Widespread across the UK except upland north-west Scotland",
+    diet: "Water plants, seeds, berries, insects, snails, worms",
+    conservation: "Amber",
+    lat: 52.2, lon: -0.9
+  },
+  {
+    id: "great_crested_grebe", name: "Great Crested Grebe", rarity: "uncommon",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 5, personality: 7 },
+    traits: ["elegant diver","weed-dance courtship","chick ferry","ornate ruff"],
+    rationale: "An elegant diving waterbird with an ornate head ruff, nearly hunted to extinction in Victorian Britain for its plumage — the outcry helped found the RSPB. Pairs perform a famous synchronised 'weed dance' and carry humbug-striped chicks on their backs.",
+    sources: ["RSPB Great Crested Grebe", "Cornell Birds of the World"],
+    origin: "Europe, Asia, Africa and Australasia",
+    habitat: "Lakes, gravel pits, reservoirs, slow rivers",
+    range: "Widespread in lowland England, Wales and southern Scotland",
+    diet: "Fish, aquatic insects, small crustaceans",
+    conservation: "Green",
+    lat: 52.5, lon: -1.2
+  },
+  {
+    id: "greylag_goose", name: "Greylag Goose", rarity: "common", aliases: ["Greylag"],
+    stats: { hp: 7, stamina: 8, strength: 6, def: 6, spd: 6, int: 6, personality: 7 },
+    traits: ["ancestral goose","loyal flock","honking skeins","imprinting classic"],
+    rationale: "The bulky ancestor of the farmyard goose and the largest native UK goose. Konrad Lorenz's famous imprinting studies used greylags — goslings bond to the first parent-figure they see. Strong flocks fly in honking V-shaped skeins.",
+    sources: ["RSPB Greylag Goose", "Cornell Birds of the World"],
+    origin: "Northern and eastern Europe, Asia",
+    habitat: "Lakes, gravel pits, marshes, farmland, town parks",
+    range: "Resident across much of the UK; wild winter flocks in Scotland",
+    diet: "Grass, roots, cereal leaves, spilled grain, aquatic plants",
+    conservation: "Amber",
+    lat: 55.5, lon: -3.5
+  },
+  {
+    id: "shelduck", name: "Shelduck", rarity: "uncommon", aliases: ["Common Shelduck"],
+    stats: { hp: 6, stamina: 7, strength: 5, def: 6, spd: 6, int: 5, personality: 6 },
+    traits: ["goose-sized duck","burrow nester","moult migration","estuary bold"],
+    rationale: "A large, handsome goose-like duck of estuaries that nests underground in old rabbit burrows. Most UK adults make a spectacular late-summer moult migration to the Helgoland Bight, leaving crèches of ducklings with a few guardian adults.",
+    sources: ["RSPB Shelduck", "Cornell Birds of the World"],
+    origin: "Europe and central Asia",
+    habitat: "Estuaries, sandy coasts, saltmarsh; increasingly inland waters",
+    range: "Around virtually the whole UK coastline",
+    diet: "Small shellfish, aquatic snails, marine worms, crustaceans",
+    conservation: "Amber",
+    lat: 53.4, lon: -3.0
+  },
+  {
+    id: "wigeon", name: "Wigeon", rarity: "uncommon", aliases: ["Eurasian Wigeon"],
+    stats: { hp: 5, stamina: 7, strength: 4, def: 5, spd: 6, int: 4, personality: 7 },
+    traits: ["whistling drake","grazing duck","tight winter flocks","chestnut head"],
+    rationale: "A compact grazing duck; drakes give an unmistakable cheerful 'wheeoo' whistle. Hundreds of thousands arrive from Iceland, Scandinavia and Russia each winter to graze eelgrass and saltmarsh in dense, sociable flocks.",
+    sources: ["RSPB Wigeon", "Cornell Birds of the World"],
+    origin: "Northern Europe and Asia",
+    habitat: "Estuaries, wet grassland, flooded meadows, lakes",
+    range: "Winter visitor throughout the UK; scarce northern breeder",
+    diet: "Grass, eelgrass, aquatic plants, some seeds",
+    conservation: "Amber",
+    lat: 54.0, lon: -2.8
+  },
+  {
+    id: "teal", name: "Teal", rarity: "uncommon", aliases: ["Eurasian Teal", "Common Teal"],
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 8, int: 4, personality: 6 },
+    traits: ["smallest UK duck","vertical take-off","agile flocks","green speculum"],
+    rationale: "The UK's smallest duck, barely bigger than a pigeon. Teal spring almost vertically from the water when startled and fly in fast, twisting, wader-like flocks — the collective noun is a 'spring' of teal. Speed 8 reflects that agility.",
+    sources: ["RSPB Teal", "Cornell Birds of the World"],
+    origin: "Northern Europe and Asia",
+    habitat: "Reedy pools, wet marshes, estuaries in winter",
+    range: "Winters throughout the UK; breeds thinly in northern moorland pools",
+    diet: "Seeds of aquatic plants, small invertebrates sieved from mud",
+    conservation: "Amber",
+    lat: 55.0, lon: -3.8
+  },
+  {
+    id: "tufted_duck", name: "Tufted Duck", rarity: "common",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4, personality: 6 },
+    traits: ["diving duck","head tuft","park lake regular","buoyant bobber"],
+    rationale: "The UK's commonest diving duck — a neat black-and-white drake with a jaunty pigtail tuft. Dives with a little jump and bobs back up like a cork; happy on town park lakes, which makes it one of the easiest diving ducks to meet.",
+    sources: ["RSPB Tufted Duck", "Cornell Birds of the World"],
+    origin: "Northern Europe and Asia",
+    habitat: "Lakes, gravel pits, reservoirs, park ponds",
+    range: "Widespread across the UK all year",
+    diet: "Freshwater mussels, insects, some plants — caught in dives",
+    conservation: "Amber",
+    lat: 52.8, lon: -1.5
+  },
+  {
+    id: "eider", name: "Eider", rarity: "uncommon", aliases: ["Common Eider", "Cuddy's Duck"],
+    stats: { hp: 7, stamina: 7, strength: 6, def: 7, spd: 7, int: 4, personality: 7 },
+    traits: ["heaviest UK duck","eiderdown maker","crooning colonies","crèche carer"],
+    rationale: "The UK's heaviest and fastest-flying duck, a burly sea duck that crunches whole mussels. Famed for eiderdown — females line nests with their own down — and for communal crèches where 'auntie' females guard everyone's ducklings. Associated with St Cuthbert since the 7th century.",
+    sources: ["RSPB Eider", "Cornell Birds of the World"],
+    origin: "Circumpolar northern coasts",
+    habitat: "Rocky sea coasts, estuaries, mussel beds",
+    range: "Breeds on Scottish and Northumberland coasts; winters south to Wales",
+    diet: "Mussels, crabs, shellfish swallowed whole and crushed",
+    conservation: "Amber",
+    lat: 55.7, lon: -1.8
+  },
+  {
+    id: "whooper_swan", name: "Whooper Swan", rarity: "rare",
+    stats: { hp: 9, stamina: 9, strength: 8, def: 7, spd: 6, int: 6, personality: 7 },
+    traits: ["bugling wild swan","Iceland migrant","family fidelity","yellow bill wedge"],
+    rationale: "A huge wild swan with a bugling, trumpet-like call, arriving each autumn from Iceland — a sea crossing of 800–1,400 km, among the longest of any swan. Families migrate and winter together, and pairs mate for life. Size and journey justify HP 9 / stamina 9.",
+    sources: ["RSPB Whooper Swan", "Cornell Birds of the World", "WWT"],
+    origin: "Iceland and northern Eurasia",
+    habitat: "Flooded fields, lochs, wetland reserves",
+    range: "Winter visitor, mainly Scotland, Northern Ireland and northern England",
+    diet: "Aquatic plants, grass, winter cereals, potatoes and grain",
+    conservation: "Amber",
+    lat: 56.4, lon: -3.4
+  },
+  {
+    id: "little_egret", name: "Little Egret", rarity: "uncommon",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 5, int: 5, personality: 4 },
+    traits: ["snow-white heron","yellow feet","dash-and-stab hunter","new colonist"],
+    rationale: "A dazzling white heron with black legs and startling yellow feet, which it shimmies in the water to spook prey. First bred in Britain only in 1996 (Brownsea Island) and has since colonised much of the country — a climate-era success story.",
+    sources: ["RSPB Little Egret", "Cornell Birds of the World"],
+    origin: "Southern Europe, Africa and Asia; recent UK colonist",
+    habitat: "Estuaries, marshes, rivers, lake margins",
+    range: "England, Wales and Ireland; spreading north",
+    diet: "Small fish, shrimps, amphibians, aquatic insects",
+    conservation: "Green",
+    lat: 50.7, lon: -2.0
+  },
+  {
+    id: "bittern", name: "Bittern", rarity: "epic", aliases: ["Great Bittern", "Eurasian Bittern"],
+    stats: { hp: 6, stamina: 5, strength: 5, def: 8, spd: 4, int: 5, personality: 2 },
+    traits: ["booming voice","reedbed phantom","sky-pointing camouflage","solitary skulker"],
+    rationale: "A gold-and-brown heron so cryptic it vanishes among reeds by sky-pointing and swaying with the stems — DEF 8 for near-perfect camouflage. Males 'boom' like a foghorn, audible up to 5 km. Down to 11 booming males in 1997, now recovering; famously solitary, hence PERS 2.",
+    sources: ["RSPB Bittern", "Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Large wet reedbeds",
+    range: "East Anglia, Somerset Levels, a few northern wetlands",
+    diet: "Fish (especially eels), amphibians, insects",
+    conservation: "Amber (recovering)",
+    lat: 52.6, lon: 1.5
+  },
+  {
+    id: "avocet", name: "Avocet", rarity: "rare", aliases: ["Pied Avocet"],
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 6, int: 5, personality: 6 },
+    traits: ["upswept bill","RSPB emblem","scything feeder","colony defender"],
+    rationale: "An elegant black-and-white wader with a unique upcurved bill swept side-to-side through shallow water. Extinct in Britain for a century until it recolonised in 1947; its comeback made it the RSPB's emblem. Nests in noisy, fiercely defensive colonies.",
+    sources: ["RSPB Avocet", "Cornell Birds of the World"],
+    origin: "Europe and central Asia",
+    habitat: "Shallow coastal lagoons, saltmarsh scrapes",
+    range: "East and south-east England coasts; winters on south-west estuaries",
+    diet: "Aquatic insects, crustaceans, worms sieved from brackish water",
+    conservation: "Amber",
+    lat: 52.0, lon: 1.0
+  },
+  {
+    id: "ringed_plover", name: "Ringed Plover", rarity: "uncommon", aliases: ["Common Ringed Plover"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 5, spd: 6, int: 5, personality: 5 },
+    traits: ["broken-wing actor","beach nester","stop-run-peck","banded chest"],
+    rationale: "A dumpy little shore plover that feeds in a clockwork stop-run-peck rhythm. Best known for its 'broken-wing' distraction display, dragging a wing to lure foxes away from its camouflaged beach eggs — clever protective acting worth INT 5.",
+    sources: ["RSPB Ringed Plover", "Cornell Birds of the World"],
+    origin: "Northern Eurasia and Arctic coasts",
+    habitat: "Shingle and sandy beaches, estuaries, gravel pits",
+    range: "Breeds around UK coasts; more widespread in winter",
+    diet: "Marine worms, small crustaceans, insects",
+    conservation: "Red",
+    lat: 53.2, lon: 0.3
+  },
+  {
+    id: "golden_plover", name: "Golden Plover", rarity: "uncommon", aliases: ["European Golden Plover"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 8, int: 4, personality: 7 },
+    traits: ["gold-spangled","record-book bird","huge winter flocks","moorland piper"],
+    rationale: "A gold-spangled moorland wader whose speed sparked the 1951 shooting-party argument that inspired the Guinness Book of Records. Genuinely fast — around 60 mph in direct flight, SPD 8 — and highly gregarious in winter, packing fields in thousand-strong flocks with lapwings.",
+    sources: ["RSPB Golden Plover", "Cornell Birds of the World"],
+    origin: "Iceland, northern Europe and Russia",
+    habitat: "Upland moors (breeding); lowland fields and estuaries (winter)",
+    range: "Breeds on northern UK moorland; winters across lowland UK",
+    diet: "Beetles, earthworms, insects, some berries and seeds",
+    conservation: "Green",
+    lat: 54.6, lon: -2.2
+  },
+  {
+    id: "dunlin", name: "Dunlin", rarity: "uncommon",
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 7, int: 4, personality: 8 },
+    traits: ["estuary swarms","aerial murmurations","sewing-machine feeder","arctic traveller"],
+    rationale: "The classic small wader of UK estuaries and the most numerous, wintering in hundreds of thousands. Flies in vast, synchronised silver-flashing flocks that twist like smoke — supreme flock coordination earns PERS 8. Feeds with rapid 'sewing machine' stitching of the mud.",
+    sources: ["RSPB Dunlin", "Cornell Birds of the World", "BTO"],
+    origin: "Arctic and sub-Arctic breeding grounds",
+    habitat: "Estuaries and mudflats; upland bogs in summer",
+    range: "Winters on all large UK estuaries; breeds on northern moors",
+    diet: "Marine worms, tiny snails, crustaceans, insects",
+    conservation: "Red",
+    lat: 53.5, lon: -3.0
+  },
+  {
+    id: "turnstone", name: "Turnstone", rarity: "uncommon", aliases: ["Ruddy Turnstone"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 6, int: 6, personality: 6 },
+    traits: ["stone flipper","tortoiseshell plumage","fearless forager","promenade regular"],
+    rationale: "A stocky shorebird that does exactly what its name says — flips stones, shells and seaweed with its wedge bill to grab whatever hides beneath. One of the boldest and most resourceful waders, famous for eating almost anything, and happy working harbour walls at close range.",
+    sources: ["RSPB Turnstone", "Cornell Birds of the World"],
+    origin: "Breeds in Arctic Scandinavia, Greenland and Canada",
+    habitat: "Rocky shores, piers, strandlines, harbours",
+    range: "Non-breeding visitor to virtually all UK coasts",
+    diet: "Insects, crustaceans, molluscs, carrion — a famously broad menu",
+    conservation: "Amber",
+    lat: 55.0, lon: -1.5
+  },
+  {
+    id: "redshank", name: "Redshank", rarity: "uncommon", aliases: ["Common Redshank"],
+    stats: { hp: 4, stamina: 6, strength: 3, def: 5, spd: 6, int: 5, personality: 5 },
+    traits: ["marsh sentinel","scarlet legs","piping alarm","first to flush"],
+    rationale: "The noisy 'sentinel of the marsh' — always the first bird to spot danger and pipe a ringing alarm that empties the whole estuary, a vigilance service other birds rely on. Bright orange-red legs and a fast, flickering flight with white wing wedges.",
+    sources: ["RSPB Redshank", "Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Saltmarsh, wet grassland, estuaries",
+    range: "Breeds and winters widely around UK coasts and wet meadows",
+    diet: "Insects, earthworms, marine snails, crustaceans",
+    conservation: "Amber",
+    lat: 53.9, lon: 0.0
+  },
+  {
+    id: "woodcock", name: "Woodcock", rarity: "rare", aliases: ["Eurasian Woodcock"],
+    stats: { hp: 5, stamina: 6, strength: 3, def: 7, spd: 5, int: 4, personality: 2 },
+    traits: ["dead-leaf camouflage","360° vision","roding flights","twilight loner"],
+    rationale: "A plump woodland wader dressed in perfect dead-leaf camouflage (DEF 7), with eyes set so high it can see almost 360° — including directly behind. Males patrol dusk treetop circuits in 'roding' display flights. Solitary and crepuscular, hence PERS 2.",
+    sources: ["RSPB Woodcock", "Cornell Birds of the World", "GWCT"],
+    origin: "Europe and Asia",
+    habitat: "Damp woodland with open rides and bracken",
+    range: "Breeds across the UK; big winter influx from Russia and Finland",
+    diet: "Earthworms probed from soft ground, beetles, insect larvae",
+    conservation: "Red",
+    lat: 52.9, lon: -1.8
+  },
+  {
+    id: "common_crane", name: "Common Crane", rarity: "epic", aliases: ["Crane", "Eurasian Crane"],
+    stats: { hp: 8, stamina: 9, strength: 7, def: 6, spd: 6, int: 6, personality: 8 },
+    traits: ["dancing giant","bugling duets","family migrant","fenland returnee"],
+    rationale: "Britain's tallest bird at up to 1.2 m, absent as a breeder for ~400 years until a tiny flock settled in Norfolk in 1979. Famous for leaping, bowing courtship dances and far-carrying bugled duets; travels and winters in close family parties — deeply social, PERS 8.",
+    sources: ["RSPB Common Crane", "Cornell Birds of the World", "WWT"],
+    origin: "Northern Europe and Asia",
+    habitat: "Big open wetlands, fens, wet grassland",
+    range: "East Anglia, Somerset (reintroduced), slowly spreading",
+    diet: "Seeds, roots, potatoes, insects, worms, small vertebrates",
+    conservation: "Amber",
+    lat: 52.7, lon: 1.4
+  },
+  {
+    id: "black_headed_gull", name: "Black-headed Gull", rarity: "common",
+    stats: { hp: 5, stamina: 7, strength: 4, def: 6, spd: 6, int: 7, personality: 8 },
+    traits: ["chocolate hood","raucous colonies","park opportunist","never far from friends"],
+    rationale: "The small, sociable gull of parks and playing fields — its 'black' summer hood is actually chocolate-brown. Nests in packed, deafening colonies and exploits every feeding chance from ploughs to sandwiches, quick social learning earning INT 7 and PERS 8.",
+    sources: ["RSPB Black-headed Gull", "Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Parks, farmland, lakes, coasts, rubbish tips",
+    range: "Abundant across the whole UK all year",
+    diet: "Worms, insects, fish scraps, seeds, food waste",
+    conservation: "Amber",
+    lat: 53.0, lon: -1.0
+  },
+  {
+    id: "great_black_backed_gull", name: "Great Black-backed Gull", rarity: "uncommon",
+    stats: { hp: 8, stamina: 7, strength: 8, def: 7, spd: 5, int: 7, personality: 5 },
+    traits: ["world's largest gull","seabird predator","king of the tip","heavy bruiser"],
+    rationale: "The largest gull on Earth, with a 1.7 m wingspan and a massive bill — a genuine predator that can swallow a puffin or rabbit whole. Dominates every mixed gull gathering; strength 8 is deserved. Less colonial than smaller gulls, so a middling PERS 5.",
+    sources: ["RSPB Great Black-backed Gull", "Cornell Birds of the World"],
+    origin: "North Atlantic coasts",
+    habitat: "Rocky coasts, islands, estuaries, landfill",
+    range: "Breeds around UK coasts; widespread in winter",
+    diet: "Seabirds, fish, carrion, shellfish, refuse",
+    conservation: "Amber",
+    lat: 50.5, lon: -5.0
+  },
+  {
+    id: "kittiwake", name: "Kittiwake", rarity: "uncommon", aliases: ["Black-legged Kittiwake"],
+    stats: { hp: 4, stamina: 8, strength: 3, def: 5, spd: 6, int: 5, personality: 8 },
+    traits: ["name-shouting colonies","cliff-ledge nests","true ocean gull","gentle face"],
+    rationale: "The most ocean-going UK gull, only touching land to breed on sheer cliff ledges in vast colonies that scream 'kitti-wa-ake!' — the bird literally shouts its own name. Spends winters far out in the Atlantic. Colonial to its core (PERS 8) but declining badly with warming seas.",
+    sources: ["RSPB Kittiwake", "Cornell Birds of the World"],
+    origin: "North Atlantic and Arctic",
+    habitat: "Sea cliffs in summer; open ocean in winter",
+    range: "Breeds on cliff coasts from Cornwall to Shetland; famous Tyne Bridge colony",
+    diet: "Sandeels, small fish, marine invertebrates",
+    conservation: "Red (globally Vulnerable)",
+    lat: 55.0, lon: -1.6
+  },
+  {
+    id: "arctic_tern", name: "Arctic Tern", rarity: "rare",
+    stats: { hp: 4, stamina: 10, strength: 3, def: 5, spd: 7, int: 5, personality: 7 },
+    traits: ["longest migration on Earth","two summers a year","dive-bombing defender","sea swallow"],
+    rationale: "Holder of the longest migration of any animal: pole to pole and back, up to ~90,000 km a year, seeing more daylight than any creature alive — stamina 10 is the benchmark. Colonies dive-bomb intruders fearlessly, drawing blood from heads on Farne Islands paths.",
+    sources: ["RSPB Arctic Tern", "Cornell Birds of the World"],
+    origin: "Circumpolar Arctic and sub-Arctic",
+    habitat: "Coastal shingle, machair and islands (breeding)",
+    range: "Breeds mainly Scotland, Northumberland, Anglesey; passage elsewhere",
+    diet: "Sandeels and small fish caught in plunge-dives",
+    conservation: "Amber",
+    lat: 55.6, lon: -1.7
+  },
+  {
+    id: "fulmar", name: "Fulmar", rarity: "uncommon", aliases: ["Northern Fulmar"],
+    stats: { hp: 5, stamina: 9, strength: 4, def: 7, spd: 6, int: 4, personality: 6 },
+    traits: ["mini albatross","stiff-winged glider","projectile oil defence","decades-long pairs"],
+    rationale: "A tube-nosed relative of the albatrosses that glides on stiff wings along cliff faces for hours — stamina 9. Defends its nest by spitting foul, sticky stomach oil at intruders (DEF 7), can live 40+ years, and pairs reunite at the same ledge each spring.",
+    sources: ["RSPB Fulmar", "Cornell Birds of the World"],
+    origin: "North Atlantic and Arctic seas",
+    habitat: "Sea cliffs (breeding); open ocean otherwise",
+    range: "Breeds on cliffs right around the UK, strongholds in Scotland",
+    diet: "Fish waste, crustaceans, squid, carrion at sea",
+    conservation: "Amber",
+    lat: 57.5, lon: -6.0
+  },
+  {
+    id: "manx_shearwater", name: "Manx Shearwater", rarity: "rare",
+    stats: { hp: 4, stamina: 10, strength: 3, def: 6, spd: 7, int: 5, personality: 6 },
+    traits: ["ocean wanderer","record-breaking lifespan","night-time burrow colonies","wave skimmer"],
+    rationale: "A cigar-shaped seabird that shears the waves on stiff wings to Argentina and back every year — a ringed Manx is among the oldest known wild birds (50+ years, millions of miles flown), earning stamina 10. The UK hosts ~80% of the world population; visits island burrow colonies only in darkness.",
+    sources: ["RSPB Manx Shearwater", "Cornell Birds of the World"],
+    origin: "North Atlantic islands",
+    habitat: "Burrows on offshore islands; open ocean",
+    range: "Skomer, Skokholm, Rum and other western isles; at sea offshore",
+    diet: "Small fish, especially herrings, sardines and sprats; squid",
+    conservation: "Amber",
+    lat: 51.7, lon: -5.3
+  },
+  {
+    id: "guillemot", name: "Guillemot", rarity: "uncommon", aliases: ["Common Guillemot", "Common Murre"],
+    stats: { hp: 5, stamina: 7, strength: 4, def: 6, spd: 7, int: 4, personality: 8 },
+    traits: ["cliff city dweller","deep diver","pear-shaped egg","shoulder-to-shoulder"],
+    rationale: "The 'penguin of the north', breeding shoulder-to-shoulder in the densest colonies of any UK seabird — full ledges hold dozens of birds per square metre, PERS 8. Flies with whirring wings at up to 80 km/h and dives astonishingly deep, with records beyond 150 m.",
+    sources: ["RSPB Guillemot", "Cornell Birds of the World"],
+    origin: "North Atlantic and North Pacific",
+    habitat: "Sheer sea-cliff ledges; winters at sea",
+    range: "Cliff coasts of Scotland, northern England, Wales and the south-west",
+    diet: "Sandeels, sprats and other small shoaling fish",
+    conservation: "Amber",
+    lat: 54.1, lon: -0.1
+  },
+  {
+    id: "shag", name: "Shag", rarity: "uncommon", aliases: ["European Shag"],
+    stats: { hp: 6, stamina: 6, strength: 5, def: 6, spd: 5, int: 4, personality: 6 },
+    traits: ["emerald sheen","punk crest","kelp-forest hunter","wing-drying pose"],
+    rationale: "A slim, oil-green relative of the cormorant with startling emerald eyes and a jaunty spring crest. A specialist marine diver working kelp forests and sandy bays, then standing wings-outstretched to dry. Nests in loose cliff colonies lined with seaweed.",
+    sources: ["RSPB Shag", "Cornell Birds of the World"],
+    origin: "Coasts of Europe and North Africa",
+    habitat: "Rocky coasts and inshore seas; rarely inland",
+    range: "Breeds on rocky coasts of Scotland, Wales and south-west England",
+    diet: "Sandeels and other small fish caught in dives",
+    conservation: "Red",
+    lat: 56.0, lon: -2.6
+  },
+  {
+    id: "red_grouse", name: "Red Grouse", rarity: "uncommon",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 6, spd: 7, int: 3, personality: 4 },
+    traits: ["'go-back go-back' call","heather specialist","explosive flusher","uniquely British"],
+    rationale: "A plump moorland gamebird found nowhere in the world outside Britain and Ireland — an endemic race of the willow ptarmigan. Bursts from heather with whirring wings and a cackling 'go-back go-back-back', hitting over 100 km/h in short explosive flights (SPD 7).",
+    sources: ["RSPB Red Grouse", "Cornell Birds of the World", "GWCT"],
+    origin: "Endemic to Britain and Ireland",
+    habitat: "Heather moorland",
+    range: "Uplands of Scotland, northern England, Wales, Northern Ireland",
+    diet: "Heather shoots, seeds and flowers; insects for chicks",
+    conservation: "Amber",
+    lat: 55.3, lon: -3.2
+  },
+  {
+    id: "ptarmigan", name: "Ptarmigan", rarity: "epic", aliases: ["Rock Ptarmigan"],
+    stats: { hp: 5, stamina: 7, strength: 4, def: 8, spd: 6, int: 3, personality: 5 },
+    traits: ["turns white in winter","three plumages a year","mountain hermit","feathered feet"],
+    rationale: "Britain's hardiest bird and the only one that turns white for winter, moulting three camouflage plumages a year to match rock, heather and snow — DEF 8. Lives year-round above 800 m in the Cairngorms with feathered snowshoe feet, shrugging off Arctic blizzards.",
+    sources: ["RSPB Ptarmigan", "Cornell Birds of the World"],
+    origin: "Circumpolar Arctic and high mountains",
+    habitat: "High mountain plateaus and boulder fields",
+    range: "Scottish Highlands only, mostly above 800 m",
+    diet: "Shoots, leaves and berries of mountain plants",
+    conservation: "Red",
+    lat: 57.1, lon: -3.7
+  },
+  {
+    id: "black_grouse", name: "Black Grouse", rarity: "epic",
+    stats: { hp: 6, stamina: 6, strength: 5, def: 6, spd: 6, int: 4, personality: 7 },
+    traits: ["dawn lek dancer","lyre tail","bubbling song","communal showman"],
+    rationale: "Glossy blue-black males gather at dawn on traditional 'lek' arenas to fan lyre-shaped tails, bubble, hiss and leap for watching females — one of Britain's great wildlife spectacles and a genuinely communal display culture (PERS 7). Severely declined and now a conservation priority.",
+    sources: ["RSPB Black Grouse", "Cornell Birds of the World", "GWCT"],
+    origin: "Northern Europe and Asia",
+    habitat: "Moorland edge with scattered trees and rough pasture",
+    range: "Scotland, northern England Pennines, parts of Wales",
+    diet: "Buds, shoots, catkins, berries; insects for chicks",
+    conservation: "Red",
+    lat: 55.0, lon: -2.5
+  },
+  {
+    id: "capercaillie", name: "Capercaillie", rarity: "legendary", aliases: ["Western Capercaillie"],
+    stats: { hp: 8, stamina: 5, strength: 7, def: 6, spd: 5, int: 3, personality: 4 },
+    traits: ["turkey-sized grouse","pinewood giant","cork-pop song","on the brink"],
+    rationale: "The world's largest grouse — males weigh over 4 kg and strut like turkeys (HP 8, STR 7), singing a bizarre clicking song that ends with a champagne-cork pop. Went extinct in Britain in 1785, was reintroduced in 1837, and now clings on with only hundreds left in Scots pinewoods: a true legendary encounter.",
+    sources: ["RSPB Capercaillie", "Cornell Birds of the World", "NatureScot"],
+    origin: "Northern Europe and Asia",
+    habitat: "Old Scots pine forest with blaeberry understorey",
+    range: "Strathspey pinewoods, Scotland only",
+    diet: "Pine needles, blaeberry shoots and berries; insects for chicks",
+    conservation: "Red (UK extinction risk)",
+    lat: 57.3, lon: -3.8
+  },
+  {
+    id: "red_legged_partridge", name: "Red-legged Partridge", rarity: "common", aliases: ["French Partridge"],
+    stats: { hp: 5, stamina: 5, strength: 4, def: 5, spd: 6, int: 3, personality: 6 },
+    traits: ["covey runner","barred flanks","prefers to sprint","1770s settler"],
+    rationale: "A handsome gamebird introduced from France in the 1770s, now widespread on lowland farmland. Sprints along tracks and hedgerows rather than flying, living in sociable family coveys that scatter with whirring wings only at the last moment.",
+    sources: ["RSPB Red-legged Partridge", "Cornell Birds of the World"],
+    origin: "South-west Europe (introduced to UK)",
+    habitat: "Arable farmland, hedgerows, open scrub",
+    range: "Widespread in England, especially the east; patchy elsewhere",
+    diet: "Seeds, leaves, roots; insects when breeding",
+    conservation: "Introduced/Not assessed",
+    lat: 52.3, lon: 0.5
+  },
+  {
+    id: "goshawk", name: "Goshawk", rarity: "epic", aliases: ["Northern Goshawk"],
+    stats: { hp: 7, stamina: 6, strength: 8, def: 6, spd: 8, int: 6, personality: 2 },
+    traits: ["phantom of the forest","woodland ambusher","fierce orange eye","ghost recluse"],
+    rationale: "A buzzard-sized super-hawk that threads full-speed through dense trees to ambush crows, pigeons and squirrels — SPD 8 and STR 8 among woodland raptors. Persecuted to UK extinction by the 1880s, quietly re-established from falconry stock. So secretive it's called the 'phantom of the forest' (PERS 2).",
+    sources: ["RSPB Goshawk", "Cornell Birds of the World"],
+    origin: "Forests across the Northern Hemisphere",
+    habitat: "Large mature forests and forestry plantations",
+    range: "Thinly scattered across UK forests; Kielder and Wales strongholds",
+    diet: "Woodpigeons, corvids, squirrels, rabbits",
+    conservation: "Green",
+    lat: 55.2, lon: -2.5
+  },
+  {
+    id: "hen_harrier", name: "Hen Harrier", rarity: "epic",
+    stats: { hp: 5, stamina: 7, strength: 6, def: 6, spd: 7, int: 6, personality: 5 },
+    traits: ["skydancer","ghostly grey male","food-pass duet","moorland icon"],
+    rationale: "The 'skydancer' — males perform breathtaking rollercoaster display flights over spring moorland, and pairs exchange prey in mid-air food passes, a genuine aerial duet (PERS 5). England's most persecuted bird of prey per the RSPB, making every sighting special.",
+    sources: ["RSPB Hen Harrier", "Cornell Birds of the World"],
+    origin: "Northern Europe and Asia",
+    habitat: "Heather moorland (breeding); coastal marsh and farmland (winter)",
+    range: "Upland Scotland, Wales, northern England; lowland roosts in winter",
+    diet: "Voles and small moorland birds like meadow pipits",
+    conservation: "Red",
+    lat: 55.8, lon: -4.5
+  },
+  {
+    id: "marsh_harrier", name: "Marsh Harrier", rarity: "rare", aliases: ["Western Marsh Harrier"],
+    stats: { hp: 6, stamina: 7, strength: 6, def: 6, spd: 6, int: 6, personality: 4 },
+    traits: ["reedbed V-glide","back-from-one-nest","cream-crowned","low quarterer"],
+    rationale: "The UK's largest harrier, quartering reedbeds on wings held in a shallow V. Reduced to a single nesting female in 1971, it has rebuilt to hundreds of pairs — one of Britain's best raptor recoveries. Males sometimes run two nests, delivering food to both in aerial passes.",
+    sources: ["RSPB Marsh Harrier", "Cornell Birds of the World"],
+    origin: "Europe, Asia and Africa",
+    habitat: "Large reedbeds, coastal marshes, arable edges",
+    range: "East Anglia, south-east England, expanding north and west",
+    diet: "Frogs, small mammals, waterbird chicks, small birds",
+    conservation: "Amber",
+    lat: 52.5, lon: 0.7
+  },
+  {
+    id: "hobby", name: "Hobby", rarity: "rare", aliases: ["Eurasian Hobby"],
+    stats: { hp: 4, stamina: 7, strength: 5, def: 5, spd: 9, int: 5, personality: 4 },
+    traits: ["catches swifts","dragonfly snacks on the wing","scythe wings","summer dasher"],
+    rationale: "A dashing little falcon fast and agile enough to catch swifts and swallows in level flight — only a stooping peregrine clearly beats it, so SPD 9. Snatches dragonflies over lakes and eats them one-footed without landing. A summer migrant from Africa.",
+    sources: ["RSPB Hobby", "Cornell Birds of the World"],
+    origin: "Europe and Asia; winters in southern Africa",
+    habitat: "Heathland, farmland with copses, wetlands rich in dragonflies",
+    range: "Summer visitor to England and Wales, expanding north",
+    diet: "Dragonflies, swallows, martins, swifts, small bats",
+    conservation: "Green",
+    lat: 51.3, lon: -1.0
+  },
+  {
+    id: "short_eared_owl", name: "Short-eared Owl", rarity: "rare",
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 6, int: 6, personality: 4 },
+    traits: ["daylight hunter","yellow-eyed glare","vole nomad","moth-like flight"],
+    rationale: "One of the few owls that hunts in broad daylight, floating moth-like over rough grass with piercing yellow eyes. A genuine nomad — numbers and breeding sites shift year to year tracking vole population booms, with Scandinavian birds flooding in some winters.",
+    sources: ["RSPB Short-eared Owl", "Cornell Birds of the World"],
+    origin: "Open country across the Northern Hemisphere",
+    habitat: "Moorland, rough grassland, saltmarsh, young forestry",
+    range: "Breeds northern uplands; winters on lowland coasts and marshes",
+    diet: "Field voles above all; small birds and other rodents",
+    conservation: "Amber",
+    lat: 55.9, lon: -2.9
+  },
+  {
+    id: "nightjar", name: "Nightjar", rarity: "epic", aliases: ["European Nightjar"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 8, spd: 6, int: 4, personality: 3 },
+    traits: ["churring at dusk","bark-perfect camouflage","wing-clap display","goatsucker myth"],
+    rationale: "A crepuscular enigma dressed as a piece of dead bark — by day it vanishes lengthways along a branch, DEF 8. At dusk males 'churr' mechanically for minutes on end and clap their wings in display. Folklore blamed it for milking goats dry, hence the old name 'goatsucker'.",
+    sources: ["RSPB Nightjar", "Cornell Birds of the World"],
+    origin: "Europe and Asia; winters in sub-Saharan Africa",
+    habitat: "Heathland, moorland edge, young conifer clearings",
+    range: "Summer visitor: southern heaths, Thetford Forest, scattered north",
+    diet: "Moths and beetles caught in silent night flight",
+    conservation: "Amber",
+    lat: 50.8, lon: -1.6
+  },
+  {
+    id: "turtle_dove", name: "Turtle Dove", rarity: "epic", aliases: ["European Turtle Dove"],
+    stats: { hp: 4, stamina: 7, strength: 3, def: 4, spd: 6, int: 4, personality: 6 },
+    traits: ["purring song","devoted pairs","Sahara crosser","fastest-declining UK bird"],
+    rationale: "The gentle, purring dove of summer hedgerows and a symbol of devotion since the Song of Solomon. Now the UK's fastest-declining bird — down ~98% since 1970 — after crossing the Sahara twice a year from the Sahel. Finding one should feel genuinely epic.",
+    sources: ["RSPB Turtle Dove", "Cornell Birds of the World", "Operation Turtle Dove"],
+    origin: "Europe and central Asia; winters in the African Sahel",
+    habitat: "Scrubby hedgerows, woodland edge, arable margins",
+    range: "Now mainly East Anglia and the south-east in summer",
+    diet: "Small seeds of arable weeds like fumitory",
+    conservation: "Red (globally Vulnerable)",
+    lat: 52.2, lon: 0.9
+  },
+  {
+    id: "stock_dove", name: "Stock Dove", rarity: "common",
+    stats: { hp: 5, stamina: 6, strength: 4, def: 5, spd: 6, int: 4, personality: 6 },
+    traits: ["hole nester","iridescent neck patch","quiet double-coo","underrated regular"],
+    rationale: "The overlooked wild dove: neater than a woodpigeon, with two black wing bars and an emerald neck patch. Nests in tree holes and old buildings, and the UK holds over half of the entire European population — a quietly important British bird.",
+    sources: ["RSPB Stock Dove", "Cornell Birds of the World", "BTO"],
+    origin: "Europe, western Asia and North Africa",
+    habitat: "Parkland, farmland with old trees, woodland edge",
+    range: "Widespread in England and Wales; thinner in Scotland",
+    diet: "Seeds, grain, shoots and buds",
+    conservation: "Amber",
+    lat: 52.4, lon: -1.4
+  },
+  {
+    id: "hooded_crow", name: "Hooded Crow", rarity: "uncommon", aliases: ["Hoodie"],
+    stats: { hp: 6, stamina: 7, strength: 6, def: 8, spd: 6, int: 9, personality: 8 },
+    traits: ["grey-mantled corvid","shellfish dropper","clever coastal forager","gossipy roosts"],
+    rationale: "The carrion crow's grey-and-black northern twin, only recognised as a separate species in 2002. Matches its cousin's brainpower (INT 9): hoodies drop mussels onto rocks to crack them and cache food for later. Highly social in winter roosts and loose flocks, PERS 8.",
+    sources: ["RSPB Hooded Crow", "Cornell Birds of the World"],
+    origin: "Northern and eastern Europe, hybrid zone with carrion crow",
+    habitat: "Coasts, crofts, moorland, towns in the north-west",
+    range: "North-west Scotland, Hebrides, Northern Ireland, Isle of Man",
+    diet: "Omnivorous: shellfish, carrion, eggs, insects, grain, scraps",
+    conservation: "Green",
+    lat: 57.5, lon: -5.5
+  },
+  {
+    id: "chough", name: "Chough", rarity: "epic", aliases: ["Red-billed Chough"],
+    stats: { hp: 5, stamina: 7, strength: 5, def: 6, spd: 8, int: 8, personality: 9 },
+    traits: ["fire-red bill and legs","aerobatic show-off","playful flock spirit","Cornwall's emblem"],
+    rationale: "The acrobat of the crow family: glossy black with fire-red bill and legs, surfing cliff updraughts in tumbling, playful flocks that seem to fly for sheer joy — the most exuberantly sociable UK corvid, PERS 9. Cornwall's emblem bird, back since 2001 after 28 years away; legend says King Arthur's soul lives on in one.",
+    sources: ["RSPB Chough", "Cornell Birds of the World"],
+    origin: "Mountains and sea cliffs of Europe, Asia and North Africa",
+    habitat: "Sea cliffs with short grazed turf",
+    range: "West Wales, Cornwall, Isle of Man, Islay and Irish coasts",
+    diet: "Ants, beetle larvae and other soil invertebrates probed from turf",
+    conservation: "Green",
+    lat: 51.9, lon: -5.3
+  },
+  {
+    id: "nightingale", name: "Nightingale", rarity: "rare", aliases: ["Common Nightingale"],
+    stats: { hp: 3, stamina: 7, strength: 2, def: 4, spd: 5, int: 6, personality: 4 },
+    traits: ["legendary songster","1000-phrase repertoire","sings in the dark","thicket hermit"],
+    rationale: "Plain brown and almost impossible to see, but owner of the most celebrated song in European nature — rich, fluty and explosive, with hundreds of phrases, poured out day and (famously) night. The voice of a thousand poems; a shy thicket-skulker in person, PERS 4.",
+    sources: ["RSPB Nightingale", "Cornell Birds of the World", "BTO"],
+    origin: "Europe and western Asia; winters in West Africa",
+    habitat: "Dense scrub, coppice and thickets",
+    range: "Summer visitor to south-east England, contracting range",
+    diet: "Insects, beetles, ants; berries in late summer",
+    conservation: "Red",
+    lat: 51.2, lon: 0.5
+  },
+  {
+    id: "fieldfare", name: "Fieldfare", rarity: "common",
+    stats: { hp: 5, stamina: 7, strength: 4, def: 6, spd: 5, int: 5, personality: 7 },
+    traits: ["chuckling winter flocks","berry raider","dive-bomb defence","nomad thrush"],
+    rationale: "A big, handsome grey-headed thrush that pours into Britain each autumn from Scandinavia in chuckling nomadic flocks (PERS 7). Famously defends berry trees and nests by dive-bombing intruders and bombarding them with droppings — a genuinely effective deterrent (DEF 6).",
+    sources: ["RSPB Fieldfare", "Cornell Birds of the World"],
+    origin: "Scandinavia and northern Europe",
+    habitat: "Open farmland, hedgerows, orchards, berry bushes",
+    range: "Winter visitor throughout the UK; a handful breed",
+    diet: "Hawthorn and rowan berries, windfall apples, worms",
+    conservation: "Red",
+    lat: 53.8, lon: -1.2
+  },
+  {
+    id: "redwing", name: "Redwing", rarity: "common",
+    stats: { hp: 4, stamina: 7, strength: 3, def: 5, spd: 5, int: 5, personality: 7 },
+    traits: ["smallest UK thrush","night-flight 'tseep'","rusty underwings","hedgerow flocks"],
+    rationale: "The UK's smallest true thrush, arriving on autumn nights from Iceland and Scandinavia — listen for thin 'tseep' calls overhead in the dark. Winters in busy mixed flocks with fieldfares, stripping hedgerows berry by berry; hard frosts push them into gardens.",
+    sources: ["RSPB Redwing", "Cornell Birds of the World"],
+    origin: "Iceland, Scandinavia and northern Russia",
+    habitat: "Fields, hedgerows, parks and gardens in cold snaps",
+    range: "Winter visitor across the whole UK; tiny Scottish breeding population",
+    diet: "Berries, windfall fruit, earthworms",
+    conservation: "Amber",
+    lat: 54.5, lon: -1.5
+  },
+  {
+    id: "mistle_thrush", name: "Mistle Thrush", rarity: "common", aliases: ["Stormcock"],
+    stats: { hp: 5, stamina: 6, strength: 5, def: 6, spd: 5, int: 5, personality: 4 },
+    traits: ["sings into gales","berry-tree guardian","football-rattle call","treetop defiance"],
+    rationale: "The 'stormcock' — the UK's biggest thrush, famous for singing its wild, far-carrying song from the tallest treetop straight into winter gales. Fiercely guards a single holly or mistletoe tree all winter against all comers, rattling like a football rattle; bold but a loner, PERS 4.",
+    sources: ["RSPB Mistle Thrush", "Cornell Birds of the World"],
+    origin: "Europe, North Africa and Asia",
+    habitat: "Parkland, orchards, large gardens, open woodland",
+    range: "Resident across almost all of the UK",
+    diet: "Worms, slugs, insects; holly, mistletoe and rowan berries in winter",
+    conservation: "Red",
+    lat: 53.0, lon: -2.0
+  },
+  {
+    id: "wheatear", name: "Wheatear", rarity: "uncommon", aliases: ["Northern Wheatear"],
+    stats: { hp: 3, stamina: 8, strength: 2, def: 5, spd: 6, int: 5, personality: 4 },
+    traits: ["white-rumped flasher","epic sea crossings","stone-wall percher","early spring herald"],
+    rationale: "A perky upland chat whose flashing white rump gave it its name (from Old English for 'white arse'). Greenland-bound birds make one of the longest songbird sea crossings anywhere — up to 30 hours and ~2,400 km non-stop over the Atlantic — earning stamina 8.",
+    sources: ["RSPB Wheatear", "Cornell Birds of the World"],
+    origin: "Breeds across the Northern Hemisphere; all winter in Africa",
+    habitat: "Upland pasture, stone walls, coastal turf, rabbit warrens",
+    range: "Summer visitor to UK uplands and coasts; passage everywhere",
+    diet: "Beetles, caterpillars, flies and other ground insects",
+    conservation: "Amber",
+    lat: 54.4, lon: -3.0
+  },
+  {
+    id: "whitethroat", name: "Whitethroat", rarity: "uncommon", aliases: ["Common Whitethroat"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 5, int: 5, personality: 5 },
+    traits: ["scratchy hedge song","dancing song-flight","Sahel survivor","nettle-bed nester"],
+    rationale: "A rusty-winged warbler that hurls a fast, scratchy song from hedge-tops and leaps into a brief dancing song-flight. Its population famously crashed overnight in 1969 when Sahel drought hit its African wintering grounds — a textbook lesson in migration ecology.",
+    sources: ["RSPB Whitethroat", "Cornell Birds of the World", "BTO"],
+    origin: "Europe and western Asia; winters in the Sahel",
+    habitat: "Hedgerows, scrub, nettle beds, field margins",
+    range: "Widespread summer visitor across the UK",
+    diet: "Insects and spiders; berries before migration",
+    conservation: "Amber",
+    lat: 52.6, lon: -0.6
+  },
+  {
+    id: "spotted_flycatcher", name: "Spotted Flycatcher", rarity: "uncommon",
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 7, int: 6, personality: 4 },
+    traits: ["sallying hunter","returns to same perch","upright poise","late arriver"],
+    rationale: "An unassuming grey-brown bird with a party trick: it launches from an exposed perch, seizes a fly in an audible snap of aerial acrobatics, and loops back to the exact same spot (SPD 7, INT 6 for judging erratic insect flight). One of the last summer migrants to arrive.",
+    sources: ["RSPB Spotted Flycatcher", "Cornell Birds of the World"],
+    origin: "Europe and western Asia; winters in tropical Africa",
+    habitat: "Gardens, churchyards, woodland edges and glades",
+    range: "Summer visitor throughout the UK, much declined",
+    diet: "Flying insects — flies, wasps, butterflies, moths",
+    conservation: "Red",
+    lat: 52.0, lon: -1.8
+  },
+  {
+    id: "siskin", name: "Siskin", rarity: "common", aliases: ["Eurasian Siskin"],
+    stats: { hp: 3, stamina: 6, strength: 2, def: 4, spd: 6, int: 5, personality: 8 },
+    traits: ["acrobatic tit-like finch","twittering flocks","alder specialist","feeder gatecrasher"],
+    rationale: "A tiny lime-and-black finch that feeds upside-down like a tit, teasing seeds from alder cones in constantly twittering, tight-knit flocks (PERS 8). Spread hugely with conifer planting and now gatecrashes garden feeders in late winter when natural seed runs low.",
+    sources: ["RSPB Siskin", "Cornell Birds of the World"],
+    origin: "Europe and Asia",
+    habitat: "Conifer and alder woodland, streamside trees, gardens",
+    range: "Resident breeder in Scotland and Wales; UK-wide in winter",
+    diet: "Seeds of alder, birch and conifers; garden nyjer and sunflower hearts",
+    conservation: "Green",
+    lat: 56.6, lon: -4.2
   }
 ];
 
@@ -4480,6 +5224,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-stat"><span class="bird-info-stat-label">SPD</span><span class="bird-info-stat-value">${bird.spd || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">INT</span><span class="bird-info-stat-value">${bird.int || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">STAM</span><span class="bird-info-stat-value">${bird.stamina || 0}</span></div>
+      <div class="bird-info-stat bird-info-stat-pers"><span class="bird-info-stat-label">💬 PERSONALITY</span><span class="bird-info-stat-value">${bird.personality || 0}</span><span class="bird-info-stat-hint">Social skill — grows at The Crow's Perch, unlocks friend quests</span></div>
     </div>
     <div class="bird-info-section">
       <div class="bird-info-section-title">Natural range</div>
@@ -4509,6 +5254,20 @@ function closeBirdInfo() {
   $('birdInfoModal').classList.remove('show');
 }
 
+// Personality (PERS) on the 1-10 rubric for a species profile. Newer profiles
+// carry a curated stats.personality; older ones derive a stable score from
+// their intelligence plus sociable/shy keywords in their traits, so every
+// species has a sensible charm rating without rewriting the whole codex.
+function profilePersonalityScore(profile) {
+  if (!profile) return 4;
+  if (profile.stats && Number.isFinite(profile.stats.personality)) return clamp(profile.stats.personality, 1, 10);
+  const traitText = ((profile.traits || []).join(' ') + ' ' + (profile.rationale || '')).toLowerCase();
+  let score = Math.round(((profile.stats && profile.stats.int) || 5) * 0.7) + 1;
+  if (/(social|sociable|flock|gregarious|noisy|gossip|colon|playful|bold|curious|mimic|familiar|friendly|garden bird)/.test(traitText)) score += 2;
+  if (/(solitary|secretive|shy|skulk|elusive|nocturnal|camouflage|lone)/.test(traitText)) score -= 2;
+  return clamp(score, 1, 10);
+}
+
 function generateBirdStats(speciesName, basePower, rarity) {
   const profile = findSpeciesProfile(speciesName);
   if (profile) {
@@ -4524,6 +5283,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
     const def = Math.floor(baseStats.def * 10 * mult * powerMult);
     const spd = Math.floor(baseStats.spd * 10 * mult * powerMult);
     const int = Math.floor(baseStats.int * 10 * mult * powerMult);
+    const personality = Math.floor(profilePersonalityScore(profile) * 10 * mult * powerMult);
 
     const specialMoveIndex = hashStr(speciesName + '_move') % SPECIAL_MOVES.length;
     const specialMove = SPECIAL_MOVES[specialMoveIndex];
@@ -4539,6 +5299,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
       spd: clamp(spd, 10, 999),
       int: clamp(int, 10, 999), // New stat
       stamina: clamp(stamina, 10, 999), // New stat
+      personality: clamp(personality, 10, 999), // Social skill: quests + The Crow's Perch
       specialMove,
       emoji,
       power: clamp(finalPower, 20, 9999),
@@ -4580,7 +5341,8 @@ function generateBirdStats(speciesName, basePower, rarity) {
       power: clamp(power, 20, 999),
       basePower: bp,
       int: 50, // Default for fallback
-      stamina: 50 // Default for fallback
+      stamina: 50, // Default for fallback
+      personality: 40 // Default for fallback: unknown species start a little shy
     };
   }
 }
@@ -5075,6 +5837,7 @@ function levelUpBird(bird, xpGain) {
     bird.spd = clamp(Math.floor(base.spd * mult), 10, 999);
     bird.int = clamp(Math.floor((base.int || 50) * mult), 10, 999); // Ensure int stat exists
     bird.stamina = clamp(Math.floor((base.stamina || 50) * mult), 10, 999); // Ensure stamina stat exists
+    bird.personality = clamp(Math.floor((base.personality || 40) * mult), 10, 999); // Ensure personality stat exists
 
     // Apply training bonuses *after* base stat calculation
     bird.maxHp = clamp(bird.maxHp + (bird.training?.hpBonus || 0), 50, 999);
@@ -5083,6 +5846,7 @@ function levelUpBird(bird, xpGain) {
     bird.spd = clamp(bird.spd + (bird.training?.spdBonus || 0), 10, 999);
     bird.int = clamp(bird.int + (bird.training?.intBonus || 0), 10, 999);
     bird.stamina = clamp(bird.stamina + (bird.training?.staminaBonus || 0), 10, 999);
+    bird.personality = clamp(bird.personality + (bird.training?.personalityBonus || 0), 10, 999);
 
     // Recalculate power based on new stats
     bird.power = Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def * 1.0 + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (mult * 0.7));
@@ -5094,7 +5858,7 @@ function levelUpBird(bird, xpGain) {
 
 function applyBirdTraining(bird, type) {
   if (!bird) return null;
-  bird.training = bird.training || { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
+  bird.training = bird.training || { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0, personalityBonus: 0 };
 
   if (type === 'feed') {
     // Cooldown logic for feeding
@@ -5163,7 +5927,7 @@ const ACADEMY_ROOMS = {
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP.', perk:'Passive: slow XP trickle, hunger grows faster', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery room for tired or hurt companions. Full care mechanics come next.', perk:'Future: faster healing and status care', perches:[[26,53],[22,57],[30,57]] },
-  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'A cosy bird bar for rumours, morale and rare visitors.', perk:'Future: social buffs and visitors', perches:[[72,42],[68,46],[76,46]] },
+  crowbar: { label:"THE CROW'S PERCH", icon:'🐦‍⬛', buildingId:'crowbar', desc:'The social roost. Birds chat, swap rumours and befriend visitors here — every session grows their Personality skill, which social quests run on.', perk:'Active: Personality (PERS) training and social quests', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'Cook species-friendly snacks and expand the pantry.', perk:'Future: bigger pantry and recipes', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Craft perches, gear, decorations and habitat upgrades.', perk:'Future: crafting', perches:[[25,31],[21,35],[29,35]] },
   market: { label:'RECRUITMENT ROOST', icon:'🪶', buildingId:'market', desc:'Recruit discovered Birdex species here for coins. Discover first, hire later when you can afford them.', perk:'Active: Birdex recruitment', perches:[[73,29],[69,33],[77,33]] },
@@ -5507,8 +6271,16 @@ function birdHasActiveExpedition(birdId) {
 function startBirdExpedition(birdId, templateId, loadout) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
+  const template = getExpeditionTemplate(templateId);
   const starterQuest = isStarterExpeditionTemplate(templateId);
-  if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
+  if (template && template.social) {
+    // Befriending/talking quests come from The Crow's Perch, not the Quest Roost.
+    if (!isAcademyBuildingBuilt('crowbar')) { showToast("Build The Crow's Perch first."); return; }
+    if ((template.minPersonality || 0) > 0 && (bird.personality || 0) < template.minPersonality) {
+      showToast((bird.commonName || bird.species) + ' is too shy for that — needs PERS ' + template.minPersonality + '+. Try a Crow\'s Perch session first.');
+      return;
+    }
+  } else if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now());
@@ -5554,12 +6326,20 @@ function claimBirdExpedition(expeditionId) {
   });
   const foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
   const bird = academyBirdById(q.birdId);
+  // Social quests grow Personality permanently: banked as a training bonus so
+  // level-ups recalculating base stats never wipe the friendships made.
+  const persGain = Math.max(0, Math.floor(Number(advanced.rewards.personality) || 0));
+  if (bird && persGain > 0) {
+    bird.training = bird.training || { feedCount: 0, trainCount: 0 };
+    bird.training.personalityBonus = clamp((bird.training.personalityBonus || 0) + persGain, 0, 30);
+    bird.personality = clamp((bird.personality || 10) + persGain, 10, 999);
+  }
   if (bird) levelUpBird(bird, questXp || 10);
   // A claimed quest leaves the board for good.
   gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
   saveState();
   closeQuestOverlay();
-  playQuestClaimCelebration({ coins, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  playQuestClaimCelebration({ coins, xp: questXp, items, personality: bird ? persGain : 0, clue: foundNewClue ? advanced.story.title : null });
   renderBirdExpeditions(); renderInventory(); updateHeader();
 }
 
@@ -5580,7 +6360,7 @@ function playQuestClaimCelebration(rewards) {
     .map(([k, n]) => '<span class="qcc-item">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + (n > 1 ? ' ×' + n : '') + '</span>').join('');
   el.innerHTML = '<div class="qcc-center">' + bits.join('') +
     '<div class="qcc-badge">QUEST COMPLETE!</div>' +
-    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
+    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null, rewards.personality > 0 ? '+' + rewards.personality + ' PERS 💬' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
     (itemBits ? '<div class="qcc-items">' + itemBits + '</div>' : '') +
     (rewards.clue ? '<div class="qcc-clue">📜 Merlin Clue: ' + escapeHtml(rewards.clue) + '</div>' : '') +
     '</div>';
@@ -5614,7 +6394,10 @@ const QUEST_TEMPLATE_INFO = {
   scavenge:     'Moss, twigs and berries for the Academy stores. Easy pickings.',
   short_forage: 'An hour among the hedgerows for berries and shiny finds.',
   supply_run:   'A two-hour supply route past the squirrel market. Fills the pantry.',
-  moon_scout:   'A three-hour night flight tracing Merlin runes. The best coin — and secrets.'
+  moon_scout:   'A three-hour night flight tracing Merlin runes. The best coin — and secrets.',
+  befriend_stranger: 'A lonely bird sits on the far fence. Go say hello — kindness grows Personality.',
+  wing_natter:  'Join the hedgerow gossip circle and talk with the other birds. Chatty birds earn more.',
+  flock_summit: 'The great mixed-flock summit needs a diplomat. Only a truly charming bird will do.'
 };
 
 function questDurationLabel(minutes) {
@@ -5636,6 +6419,7 @@ function renderBirdExpeditions() {
     .map(q => window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now()));
   const templates = window.BurbzAcademyCore.getQuestTemplates();
   const roostBuilt = isAcademyBuildingBuilt('quest_roost');
+  const perchBuilt = isAcademyBuildingBuilt('crowbar');
 
   // Birds currently away (tap for the adventure log)
   const activeHtml = rows.length ? '<div class="quest-section-title">Birds on Quests</div>' + rows.map(q => {
@@ -5655,15 +6439,19 @@ function renderBirdExpeditions() {
 
   // The quest board itself — info only, birds are chosen after tapping
   const boardHtml = '<div class="quest-section-title">Quest Board</div>' + templates.map(t => {
-    const locked = t.starter !== true && !roostBuilt;
+    // Social (befriend/talk) quests unlock with The Crow's Perch; the rest with the Quest Roost.
+    const locked = t.social ? !perchBuilt : (t.starter !== true && !roostBuilt);
+    const lockedText = t.social ? "🔒 Build The Crow's Perch in the Academy to unlock" : '🔒 Build the Quest Roost in the Academy to unlock';
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
-    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP';
+    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP' +
+      (t.personality ? ' · +' + t.personality + ' PERS 💬' : '') +
+      (t.minPersonality ? ' · needs PERS ' + t.minPersonality + '+' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
         '<div class="quest-name">' + escapeHtml(t.label) + ' <span class="quest-duration">' + questDurationLabel(t.minutes) + '</span></div>' +
         '<div class="quest-desc">' + escapeHtml(info) + '</div>' +
-        '<div class="quest-progress-text">' + (locked ? '🔒 Build the Quest Roost in the Academy to unlock' : rewardHint) + '</div>' +
+        '<div class="quest-progress-text">' + (locked ? lockedText : rewardHint) + '</div>' +
       '</div>' +
       (locked ? '' : '<div class="quest-board-go">SEND ›</div>') +
     '</div>';
@@ -5725,8 +6513,9 @@ function renderQuestSendSheet() {
     const away = birdHasActiveExpedition(b.id);
     const training = birdHasActiveTraining(b.id);
     const tooLow = (b.level || 1) < (t.minLevel || 1);
-    const disabled = away || training || tooLow;
-    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1);
+    const tooShy = (t.minPersonality || 0) > 0 && (b.personality || 0) < t.minPersonality;
+    const disabled = away || training || tooLow || tooShy;
+    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : tooShy ? 'PERS ' + t.minPersonality + '+' : t.social ? 'PERS ' + (b.personality || 0) : 'Lv ' + (b.level || 1);
     const sel = questSendState.birdId === b.id ? ' selected' : '';
     return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
@@ -5751,7 +6540,7 @@ function renderQuestSendSheet() {
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
-      '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP</div></div></div>' +
+      '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙 · +' + (t.xp || 0) + ' XP' + (t.personality ? ' · +' + t.personality + ' PERS 💬' : '') + (t.minPersonality ? ' · needs PERS ' + t.minPersonality + '+' : '') + '</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + '</div>' +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
@@ -5992,6 +6781,11 @@ function renderAcademyRoomPanel(birds) {
       actions = '<button class="academy-btn primary" onclick="startBirdExpedition(\'' + b.id + '\',\'short_forage\')">🧭 1h Forage</button>' +
         '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'supply_run\')">🥣 2h Supplies</button>' +
         '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'moon_scout\')">🌙 3h Scout</button>';
+    } else if (academySelectedRoom === 'crowbar') {
+      const socialCd = academyCdLeft(b.care.lastTrained, 90*60*1000);
+      actions = academyDrillBtn(b.id, 'personality', '💬 Socialise', socialCd) +
+        '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'befriend_stranger\')">🤝 45m Befriend</button>' +
+        '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'wing_natter\')">💬 1.5h Natter</button>';
     } else if (academySelectedRoom === 'market') {
       actions = '<button class="academy-btn primary" onclick="renderAcademyRecruitmentPanel()">🪶 Open recruits</button>';
     } else {
@@ -6270,8 +7064,10 @@ function academyRest(birdId) {
 
 function academyDrill(birdId, stat) {
   const bird = academyBirdById(birdId);
-  if (!bird || !['atk','def','spd','int'].includes(stat)) return;
+  if (!bird || !['atk','def','spd','int','personality'].includes(stat)) return;
   ensureBirdAcademy(bird);
+  // Personality only grows socially — at The Crow's Perch, never in the gym.
+  if (stat === 'personality' && !isAcademyBuildingBuilt('crowbar')) { showToast("Build The Crow's Perch first — personality grows over a natter, not in the gym."); return; }
   if (academyCdLeft(bird.care.lastTrained, 90*60*1000) > 0) { showToast('Needs a breather between drills!'); return; }
 
   const bonusKey = stat + 'Bonus';
@@ -6280,7 +7076,8 @@ function academyDrill(birdId, stat) {
   bird.training[bonusKey] = clamp((bird.training[bonusKey] || 0) + 1, 0, 30);
   bird[stat] = clamp((bird[stat] || 10) + 1, 10, 999);
   bird.care.lastTrained = new Date().toISOString();
-  bird.care.hunger = clamp((bird.care.hunger || 0) + 10, 0, 100);
+  bird.care.hunger = clamp((bird.care.hunger || 0) + (stat === 'personality' ? 5 : 10), 0, 100);
+  if (stat === 'personality') bird.care.happiness = clamp((bird.care.happiness || 80) + 4, 0, 100); // a good natter cheers birds up
   recalcBirdPower(bird);
   levelUpBird(bird, 8);
 
@@ -6293,7 +7090,7 @@ function academyDrill(birdId, stat) {
   }
 
   saveState();
-  showToast('🏋️ Drill complete! +1 ' + stat.toUpperCase() + ', +8 XP' + (bird.training.trainCount % 10 === 0 ? ' · ' + bird.training.trainCount + ' drills total' : ''));
+  showToast((stat === 'personality' ? '💬 Social hour! +1 PERS' : '🏋️ Drill complete! +1 ' + stat.toUpperCase()) + ', +8 XP' + (bird.training.trainCount % 10 === 0 ? ' · ' + bird.training.trainCount + ' drills total' : ''));
   SFX.tap();
   renderAcademy();
 }
@@ -6681,20 +7478,23 @@ function roomBirdSpriteHTML(bird) {
 function startBirdTrainingSession(birdId, templateId) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
-  if (!isAcademyBuildingBuilt('training')) { showToast('Build the Training Hall first.'); return; }
+  // Social sessions live at The Crow's Perch; stat drills in the Training Hall.
+  const template = trainingTemplateById(templateId);
+  const room = (template && template.room) || 'training';
+  if (!isAcademyBuildingBuilt(room)) { showToast(room === 'crowbar' ? "Build The Crow's Perch first." : 'Build the Training Hall first.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is already in training.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away questing right now.'); return; }
   if (!window.BurbzAcademyCore || typeof window.BurbzAcademyCore.createTrainingSession !== 'function') { showToast('Training scrolls are still loading — try again in a moment.'); return; }
   ensureBirdAcademy(bird);
-  bird.academy.room = 'training';
+  bird.academy.room = room;
   bird.academy.lastMovedAt = new Date().toISOString();
   const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now());
   ensureBirdTrainingSessions().unshift(session);
-  academySelectedRoom = 'training';
-  academyInteriorRoom = 'training';
+  academySelectedRoom = room;
+  academyInteriorRoom = room;
   saveState();
   SFX.tap();
-  showToast('🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
+  showToast((room === 'crowbar' ? '💬 ' : '🏋️ ') + (bird.commonName || bird.species) + ' started ' + session.label);
   renderAcademyRoomInterior();
   renderAcademy();
 }
@@ -6744,9 +7544,11 @@ function renderTrainingHallPanel(birds, others) {
   if (!core || typeof core.advanceTrainingSession !== 'function') {
     return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">The training scrolls are still being carried up the tree — reopen this room in a moment.</div></div>';
   }
+  const allTemplates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
+  const socialTemplateIds = new Set(allTemplates.filter(t => t.room === 'crowbar').map(t => t.id));
   const sessions = ensureBirdTrainingSessions().map(s => core.advanceTrainingSession(s, Date.now()));
-  const active = sessions.filter(s => s.status !== 'claimed');
-  const templates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
+  const active = sessions.filter(s => s.status !== 'claimed' && !socialTemplateIds.has(s.templateId));
+  const templates = allTemplates.filter(t => t.room !== 'crowbar');
   const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id));
   const sessionHtml = active.length ? active.map(t => {
     const done = t.status === 'complete';
@@ -6761,7 +7563,36 @@ function renderTrainingHallPanel(birds, others) {
     const buttons = availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(b.commonName || b.species) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>';
     return '<div class="training-template-card"><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Mobile idle games work best when early actions are readable and timers become check-back rituals: 2h wing drills, 3h strength work, and 5h focus training. Birds already training appear here first; if nobody is training, use the notice board to assign them.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Mobile idle games work best when early actions are readable and timers become check-back rituals: 2h wing drills, 3h strength work, and 5h focus training. Birds already training appear here first; if nobody is training, use the notice board to assign them. Looking to raise Personality? That happens over at The Crow\'s Perch, not in the gym.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+}
+
+// The Crow's Perch — social sessions that permanently grow Personality (PERS).
+// Same timed-session machinery as the Training Hall, filtered to social drills.
+function renderCrowsPerchPanel(birds, others) {
+  const core = window.BurbzAcademyCore;
+  if (!core || typeof core.advanceTrainingSession !== 'function') {
+    return '<div class="training-hall-panel" data-feature="crows-perch-sessions"><div class="training-hall-title">The Crow\'s Perch</div><div class="training-hall-copy">The bar is still setting out its perches — reopen this room in a moment.</div></div>';
+  }
+  const allTemplates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
+  const templates = allTemplates.filter(t => t.room === 'crowbar');
+  const socialTemplateIds = new Set(templates.map(t => t.id));
+  const sessions = ensureBirdTrainingSessions().map(s => core.advanceTrainingSession(s, Date.now()));
+  const active = sessions.filter(s => s.status !== 'claimed' && socialTemplateIds.has(s.templateId));
+  const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id));
+  const sessionHtml = active.length ? active.map(t => {
+    const done = t.status === 'complete';
+    const bird = academyBirdById(t.birdId) || { commonName:t.birdName };
+    const artHtml = birdOnlyImgHTML(bird, 'academy-bird-art');
+    const rewards = t.rewards || {};
+    const progressPct = Number.isFinite(t.progressPct) ? t.progressPct : 0;
+    const events = Array.isArray(t.events) ? t.events : [];
+    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '💬') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Social session') + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'PERS') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM SESSION</button>' : '<button class="academy-btn" disabled>Socialising</button>') + '</div></div>';
+  }).join('') : '<div class="academy-empty">Nobody is mid-natter yet. Pick a social session below and send a bird up to the bar.</div>';
+  const templateHtml = templates.map(t => {
+    const buttons = availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(b.commonName || b.species) + ' (PERS ' + (b.personality || 0) + ')</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current sessions, or wait for quests to finish.</div>';
+    return '<div class="training-template-card"><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || 'PERS') + ', +' + (t.xp || 0) + ' XP.</div>' + buttons + '</div>';
+  }).join('');
+  return '<div class="training-hall-panel" data-feature="crows-perch-sessions"><div class="training-hall-title">🐦‍⬛ The Crow\'s Perch</div><div class="training-hall-copy">Personality (PERS) is a bird\'s charm and confidence around other birds. It only grows here — over introductions, gossip and lantern-lit stories — and it powers the social quests on the Quest Board: befriending strangers, talking with other birds, and the great Flock Summit. Charming birds also haul more coins from every social quest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">🍸 The Perch Board</div><div class="training-hall-copy">Choose a social session, then send an available bird. It settles onto a bar perch, makes friends on a timer, and banks a permanent PERS boost when you claim.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function renderAcademyRoomInterior() {
@@ -6777,7 +7608,7 @@ function renderAcademyRoomInterior() {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(b.commonName || b.species) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
-    const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
+    const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : room === 'crowbar' ? renderCrowsPerchPanel(birds, others) : '';
     root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a

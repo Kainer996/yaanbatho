@@ -5,12 +5,27 @@ The 2026-07-06 expansion added **7** new birds with real Higgsfield art
 Herring Gull, Green Woodpecker, Ring-necked Parakeet). The MCP credit balance
 (1.18) only covered those 7 at ~0.15 credits each.
 
-To finish the "50 new birds" set, top up Higgsfield credits, then generate the
-species below with the SAME prompt template so the style stays identical. Save
+**Update 2026-07-07 (crows_perch_expansion):** a full set of **50 new birds**
+is now wired into the game DATA — complete `BURBZ_SPECIES_PROFILES` entries
+(including the new `personality` stat), `WILD_BIRDS`, `REAL_WORLD_COMMONNESS`
+and UK whitelist entries in `public/burbz/index.html`. They render with the
+automatic emoji-glyph placeholder until art exists. To give them real art:
+top up Higgsfield credits, generate with the SAME prompt template below, save
 each result to `public/burbz/bird-art-cache/<snake_name>_burbz_manga_YYYYMMDD.png`,
-downscale to 1024×1024, and add matching entries to `BUILT_IN_BIRD_ART`,
-`BURBZ_SPECIES_PROFILES`, `WILD_BIRDS`, and the regional whitelists in
-`public/burbz/index.html` (mirror how the 7 above were wired).
+downscale to 1024×1024, and add ONLY a matching `BUILT_IN_BIRD_ART` entry —
+everything else is already wired.
+
+## The 50 wired species awaiting art (crows_perch_expansion_20260707)
+
+Moorhen, Great Crested Grebe, Greylag Goose, Shelduck, Wigeon, Teal,
+Tufted Duck, Eider, Whooper Swan, Little Egret, Bittern, Avocet,
+Ringed Plover, Golden Plover, Dunlin, Turnstone, Redshank, Woodcock,
+Common Crane, Black-headed Gull, Great Black-backed Gull, Kittiwake,
+Arctic Tern, Fulmar, Manx Shearwater, Guillemot, Shag, Red Grouse,
+Ptarmigan, Black Grouse, Capercaillie, Red-legged Partridge, Goshawk,
+Hen Harrier, Marsh Harrier, Hobby, Short-eared Owl, Nightjar, Turtle Dove,
+Stock Dove, Hooded Crow, Chough, Nightingale, Fieldfare, Redwing,
+Mistle Thrush, Wheatear, Whitethroat, Spotted Flycatcher, Siskin.
 
 ## Prompt template
 
