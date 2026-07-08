@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-native-camera-v24-20260708';
+const BURBZ_CACHE = 'burbz-quest-tap-hardening-v25-20260708';
 const BURBZ_ASSETS = [
   './',
   './index.html',

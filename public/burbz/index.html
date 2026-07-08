@@ -2670,6 +2670,28 @@ function escapeHtml(value) { return String(value == null ? '' : value).replace(/
 let audioCtx = null;
 let sfxEnabled = true;
 
+// Silent-failure reporter: quest taps (and anything else) that die in an
+// exception get logged server-side so device-only bugs are visible in
+// data/client-errors.jsonl instead of just "nothing happens" on a phone.
+const BURBZ_ERR_BEACON = { sent: 0 };
+function reportClientError(context, err) {
+  try {
+    if (BURBZ_ERR_BEACON.sent >= 8) return;
+    BURBZ_ERR_BEACON.sent++;
+    const body = JSON.stringify({
+      context: String(context || '').slice(0, 120),
+      message: String((err && err.message) || err || '').slice(0, 500),
+      stack: String((err && err.stack) || '').slice(0, 1500),
+      url: location.href.slice(0, 300),
+      ua: navigator.userAgent.slice(0, 300)
+    });
+    if (navigator.sendBeacon) navigator.sendBeacon('api/client-log', new Blob([body], { type: 'application/json' }));
+    else fetch('api/client-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  } catch (e) {}
+}
+window.addEventListener('error', e => reportClientError('window', (e && e.error) || (e && e.message)));
+window.addEventListener('unhandledrejection', e => reportClientError('promise', e && e.reason));
+
 function getAudioCtx() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -8670,6 +8692,18 @@ function renderAcademyTreehouse(byRoom) {
 function ensureBirdExpeditions() {
   if (!gameState) return [];
   gameState.birdExpeditions = Array.isArray(gameState.birdExpeditions) ? gameState.birdExpeditions : [];
+  // Heal expeditions saved by older builds (missing timestamps/labels/rewards)
+  // so one legacy entry can never kill quest-board taps or the send sheet.
+  gameState.birdExpeditions = gameState.birdExpeditions.filter(q => q && typeof q === 'object' && q.id);
+  gameState.birdExpeditions.forEach(q => {
+    if (!Number.isFinite(q.startMs)) q.startMs = Date.now() - 60000;
+    if (!Number.isFinite(q.endMs) || q.endMs <= q.startMs) q.endMs = q.startMs + 60000;
+    if (!q.birdName) q.birdName = 'A brave bird';
+    if (!q.label) q.label = 'Expedition';
+    if (!q.icon) q.icon = '\u{1F9ED}';
+    if (!q.status) q.status = 'active';
+    if (!q.rewards || typeof q.rewards !== 'object') q.rewards = {};
+  });
   return gameState.birdExpeditions;
 }
 
@@ -13469,6 +13503,20 @@ $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSel
 
 Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz });
 
+// Quest taps must never fail silently: surface + report any exception so a
+// bad saved state shows a toast (and a server log line) instead of a dead tap.
+['openQuestSend', 'openQuestLog', 'claimBirdExpedition', 'confirmQuestSend', 'selectQuestBird', 'toggleQuestEquip', 'startBirdExpedition'].forEach(fnName => {
+  const fn = window[fnName];
+  if (typeof fn !== 'function') return;
+  window[fnName] = function(...args) {
+    try { return fn.apply(this, args); }
+    catch (err) {
+      console.error('BURBZ quest UI error in ' + fnName, err);
+      reportClientError('quest:' + fnName, err);
+      try { showToast('\u26A0\uFE0F Quest hiccup logged \u2014 try the tap again.'); } catch (e) {}
+    }
+  };
+});
 // ============================================================================
 // PET COMPANION
 // ============================================================================
