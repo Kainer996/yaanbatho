@@ -834,7 +834,17 @@ svg.academy-room-bg { display:block; filter:none; }
   color: rgba(255,247,217,0.78); text-shadow: 0 1px 6px rgba(0,0,0,0.85); pointer-events: none;
 }
 .camera-quality-note:empty { display: none; }
-#imageScanArea .scan-upload-area { display: none; }
+#imageScanArea .scan-upload-area {
+  max-width: 420px; margin: 10px auto 0;
+  min-height: calc(100dvh - var(--nav-height) - 260px);
+  border-color: rgba(214,168,79,0.5); color: var(--text);
+}
+#imageScanArea .scan-upload-icon { font-size: 46px; }
+.scan-upload-subtext { font-size: 12px; font-weight: 600; color: var(--text3); }
+#nativePhotoPreview {
+  max-width: 100%; max-height: 38dvh; border-radius: 12px; object-fit: contain;
+  border: 1px solid rgba(214,168,79,0.45);
+}
 #imageScanArea .scan-btn {
   position: absolute; left: 50%; bottom: 18px; z-index: 5; transform: translateX(-50%);
   width: calc(100% - 42px); max-width: 420px; min-height: 60px; margin: 0;
@@ -1377,6 +1387,22 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .quest-log-text { color:var(--text2); flex:1; }
 .quest-log-loot { flex:none; font-weight:800; color:#ffe9ad; font-size:11.5px; }
 .quest-log-footnote { margin-top:12px; font-size:11.5px; color:var(--text3); text-align:center; font-style:italic; }
+/* Bird knowledge quiz — NPCs, villages and quest returns */
+.bird-quiz-overlay { position:fixed; inset:0; z-index:920; display:none; align-items:center; justify-content:center; padding:18px; background:radial-gradient(circle at 50% 38%, rgba(214,168,79,.20), rgba(4,6,5,.78)); backdrop-filter:blur(7px); }
+.bird-quiz-overlay.open { display:flex; }
+.bird-quiz-card { width:min(520px,100%); border-radius:22px; padding:18px; background:linear-gradient(180deg,#221c10,#0d0c08); border:1px solid rgba(240,199,103,.42); box-shadow:0 18px 54px rgba(0,0,0,.66), 0 0 26px rgba(214,168,79,.16); animation:questSheetUp .26s ease-out; }
+.bird-quiz-kicker { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent2); display:flex; justify-content:space-between; gap:10px; }
+.bird-quiz-title { margin:5px 0 6px; font-family:'Russo One',sans-serif; font-size:20px; color:#fff2c4; }
+.bird-quiz-copy { font-size:12.5px; line-height:1.45; color:var(--text2); margin-bottom:12px; }
+.bird-quiz-question { padding:12px; border-radius:16px; background:rgba(0,0,0,.32); border:1px solid rgba(255,255,255,.10); color:#f7ecd3; font-weight:800; line-height:1.38; }
+.bird-quiz-options { display:grid; gap:8px; margin-top:12px; }
+.bird-quiz-option { width:100%; min-height:46px; padding:10px 12px; border-radius:14px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.08); color:var(--text); text-align:left; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; letter-spacing:.03em; }
+.bird-quiz-option:active { transform:scale(.985); }
+.bird-quiz-option.correct { border-color:rgba(81,207,102,.82); background:rgba(81,207,102,.16); color:#d8ffd9; }
+.bird-quiz-option.wrong { border-color:rgba(255,107,107,.75); background:rgba(255,107,107,.13); color:#ffdada; }
+.bird-quiz-result { margin-top:12px; padding:11px 12px; border-radius:14px; background:rgba(0,0,0,.36); border:1px solid rgba(255,255,255,.10); color:var(--text2); line-height:1.45; font-size:12.5px; }
+.bird-quiz-result strong { color:#ffe9ad; }
+.bird-quiz-close { width:100%; margin-top:12px; min-height:44px; border:0; border-radius:14px; background:linear-gradient(135deg,#f0c767,#c99a3f); color:#241a08; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; letter-spacing:.08em; }
 /* Claim celebration burst */
 .quest-claim-celebration { position:fixed; inset:0; z-index:900; display:grid; place-items:center; background:radial-gradient(circle at 50% 45%, rgba(214,168,79,.16), rgba(4,6,5,.55)); pointer-events:none; transition:opacity .45s ease; }
 .quest-claim-celebration.fading { opacity:0; }
@@ -1677,10 +1703,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           </label>
         </div>
         <div class="scan-upload-area" id="uploadArea">
+          <img id="nativePhotoPreview" alt="Your last bird photo" style="display:none;">
           <div class="scan-upload-icon">&#128247;</div>
-          <div class="scan-upload-text">Camera only — live bird capture required</div>
+          <div class="scan-upload-text">Tap to open your phone's camera app<br><span class="scan-upload-subtext">Full native quality — every lens and megapixel your phone has</span></div>
         </div>
-        <button class="scan-btn" id="captureBtn">CAPTURE IMAGE</button>
+        <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
+        <button class="scan-btn" id="captureBtn">OPEN CAMERA</button>
       </div>
 
       <div class="scan-result" id="scanResult">
@@ -2732,6 +2760,7 @@ const DEFAULT_STATE = {
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // Flock League squad setup
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
+  knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
   mapExploredCells: [] // Fog-of-discovery map cells the player has physically revealed
 };
 
@@ -3201,7 +3230,7 @@ const BURBZ_SPECIES_PROFILES = [{
     lat: 51.5, lon: 0.0
   },
 {
-    id: "wren", name: "Wren", rarity: "common",
+    id: "wren", name: "Wren", rarity: "common", aliases: ["Eurasian Wren", "European Wren"],
     stats: { hp: 2, stamina: 7, strength: 1, def: 6, spd: 7, int: 5 },
     traits: ["tiny", "loud singer", "hardy", "very common"],
     rationale: "Corrected from rare: RSPB explicitly calls the wren the most common UK breeding bird, though it is Amber-listed because hard winters can affect numbers.",
@@ -7962,6 +7991,12 @@ const BUILT_IN_BIRD_ART = {
   'Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
   'Common Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
   'Ring-necked Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
+  'Northern Pintail': '/burbz/bird-art-cache/northern_pintail_burbz_manga_20260706T0200.png',
+  'Pintail': '/burbz/bird-art-cache/northern_pintail_burbz_manga_20260706T0200.png',
+  'Reed Warbler': '/burbz/bird-art-cache/reed_warbler_burbz_manga_20260707.png',
+  'Common Reed Warbler': '/burbz/bird-art-cache/reed_warbler_burbz_manga_20260707.png',
+  'European Reed Warbler': '/burbz/bird-art-cache/reed_warbler_burbz_manga_20260707.png',
+  'Corn Bunting': '/burbz/bird-art-cache/corn_bunting_burbz_manga_20260707.png',
   'Herring Gull': '/burbz/bird-art-cache/herring_gull_burbz_manga_20260706.png',
   'European Herring Gull': '/burbz/bird-art-cache/herring_gull_burbz_manga_20260706.png',
   'Green Woodpecker': '/burbz/bird-art-cache/green_woodpecker_burbz_manga_20260706.png',
@@ -8177,7 +8212,13 @@ const MAP_BIRD_CUTOUT_ART = {
   'Common Redstart': '/burbz/bird-art-cache/cutouts/common_redstart_burbz_manga_20260630_cutout.png',
   'Pied Flycatcher': '/burbz/bird-art-cache/cutouts/pied_flycatcher_burbz_manga_20260630_cutout.png',
   'Tree Pipit': '/burbz/bird-art-cache/cutouts/meadow_pipit_burbz_manga_20260624_v2_cutout.png',
-  'Curlew': '/burbz/bird-art-cache/cutouts/curlew_burbz_manga_20260630_clean_cutout.png'
+  'Curlew': '/burbz/bird-art-cache/cutouts/curlew_burbz_manga_20260630_clean_cutout.png',
+  // area_birds_manga_patch_20260707 — use real PNG art instead of blue emoji placeholders.
+  'Pheasant': '/burbz/bird-art-cache/pheasant_burbz_manga_20260706.png',
+  'Northern Pintail': '/burbz/bird-art-cache/northern_pintail_burbz_manga_20260706T0200.png',
+  'Reed Warbler': '/burbz/bird-art-cache/reed_warbler_burbz_manga_20260707.png',
+  'Eurasian Tree Sparrow': '/burbz/bird-art-cache/eurasian_tree_sparrow_burbz_manga_20260701.png',
+  'Corn Bunting': '/burbz/bird-art-cache/corn_bunting_burbz_manga_20260707.png'
 };
 
 
@@ -8739,6 +8780,7 @@ function claimBirdExpedition(expeditionId) {
   saveState();
   closeQuestOverlay();
   playQuestClaimCelebration({ coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  maybeOpenQuestKnowledgeQuiz(advanced, coins);
   renderBirdExpeditions(); renderInventory(); updateHeader();
 }
 
@@ -10550,6 +10592,114 @@ function addBranches(amount) { gameState.player.branches = Math.max(0, Math.floo
 function playerBranches() { return Math.max(0, Math.floor(Number(gameState.player.branches) || 0)); }
 
 // ============================================================================
+// BIRD KNOWLEDGE QUIZ — repeatable learning dopamine for quests and villages
+// ============================================================================
+const BIRD_KNOWLEDGE_QUIZ_MARKER = 'bird-knowledge-quiz-v1-20260707';
+const BIRD_KNOWLEDGE_QUESTIONS = [
+  { species:'Robin', q:'Which food is a European Robin most likely to grab first in a garden?', choices:['Mealworms and insects','Whole acorns','Only fish','Large carrion'], answer:0, fact:'Robins are insect and worm specialists. Mealworms are a perfect garden treat.' },
+  { species:'Blue Tit', q:'Blue Tits are famous for feeding chicks mostly with what?', choices:['Caterpillars','Seaweed','Fish scales','Grain only'], answer:0, fact:'Blue Tit parents time breeding around caterpillar season, because chicks need masses of soft insects.' },
+  { species:'Kingfisher', q:'Why does a Kingfisher need clear water?', choices:['To spot fish before diving','To build a floating nest','To drink salt water','To hide from worms'], answer:0, fact:'Kingfishers hunt by watching from a perch, then diving at small fish they can see.' },
+  { species:'Swift', q:'What makes Swifts so extraordinary?', choices:['They spend most of life in the air','They cannot fly far','They hunt underwater','They nest in burrows underground'], answer:0, fact:'Swifts eat, drink, mate and even sleep on the wing. Absolute sky goblins.' },
+  { species:'Woodpecker', q:'What helps woodpeckers cling to tree trunks?', choices:['Strong claws and stiff tail feathers','Webbed feet','Flat duck bills','Long swimming legs'], answer:0, fact:'Woodpeckers brace with stiff tails and gripping feet while they hammer bark.' },
+  { species:'Barn Owl', q:'What is a Barn Owl especially adapted for?', choices:['Silent night hunting','Diving for fish','Eating only berries','Long-distance sea swimming'], answer:0, fact:'Barn Owls have soft-edged flight feathers and amazing hearing for hunting quietly at night.' },
+  { species:'Goldfinch', q:'A Goldfinch’s fine pointed bill is brilliant for eating what?', choices:['Tiny seeds from teasels and thistles','Large fish','Mammal bones','Acorns whole'], answer:0, fact:'Goldfinches are seed specialists, especially on teasels, thistles and other fine seed heads.' },
+  { species:'Puffin', q:'What are Puffins famous for carrying?', choices:['Several small fish crosswise in the bill','Whole apples','Branches for dams','Pebbles as currency'], answer:0, fact:'A Puffin can hold multiple fish at once thanks to spines in its mouth and tongue.' },
+  { species:'Magpie', q:'Magpies belong to which clever bird family?', choices:['Corvids','Ducks','Owls','Warblers'], answer:0, fact:'Magpies are corvids, related to crows, ravens, rooks and jays — proper brainy birds.' },
+  { species:'Lapwing', q:'The Lapwing is also known for what display flight?', choices:['A tumbling, wavering spring display','Hovering like a kestrel all day','Diving like a gannet','Flying backwards'], answer:0, fact:'Lapwings tumble and call over farmland and wet grassland in spring.' },
+  { species:'Dipper', q:'What unusual thing does a Dipper do?', choices:['Walks underwater in fast streams','Sleeps hanging upside down','Migrates to the moon','Builds nests from metal'], answer:0, fact:'Dippers feed by walking underwater against the current, hunting aquatic insects.' },
+  { species:'Herring Gull', q:'Why do gulls often thrive around towns?', choices:['They are adaptable omnivores','They only eat one rare plant','They avoid buildings completely','They cannot learn new food sources'], answer:0, fact:'Gulls are clever, adaptable omnivores, which is why towns and coasts both suit them.' },
+  { species:'Pheasant', q:'Where would you most expect to flush a Pheasant?', choices:['Farmland edges and cover','Deep open ocean','A city rooftop colony only','High Arctic ice'], answer:0, fact:'Pheasants like farmland, woodland edges, hedges and rough cover.' },
+  { species:'Parakeet', q:'Ring-necked Parakeets in the UK are mostly found where?', choices:['Parks, gardens and urban trees','Only mountain cliffs','Underground caves','Open ocean'], answer:0, fact:'Ring-necked Parakeets are now common in many parks and leafy urban areas, especially around London.' },
+  { species:'White-tailed Eagle', q:'A White-tailed Eagle is often called what?', choices:['A sea eagle','A garden finch','A reed warbler','A tiny tit'], answer:0, fact:'White-tailed Eagles are huge sea eagles, often hunting fish and waterbirds around coasts and lochs.' }
+];
+let activeBirdKnowledgeQuiz = null;
+
+function ensureKnowledgeQuizState() {
+  if (!gameState.knowledgeQuiz || typeof gameState.knowledgeQuiz !== 'object') gameState.knowledgeQuiz = { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null };
+  return gameState.knowledgeQuiz;
+}
+function birdKnowledgeQuestionFor(context, seedText) {
+  const seed = burbzHash32(String(context || 'quiz') + '|' + String(seedText || Date.now()) + '|' + BIRD_KNOWLEDGE_QUIZ_MARKER);
+  const src = BIRD_KNOWLEDGE_QUESTIONS[seed % BIRD_KNOWLEDGE_QUESTIONS.length];
+  const order = src.choices.map((_, i) => i).sort((a, b) => ((seed >> ((a % 4) * 4)) & 15) - ((seed >> ((b % 4) * 4)) & 15));
+  return { ...src, choices: order.map(i => src.choices[i]), answer: order.indexOf(src.answer) };
+}
+function birdQuizOverlayEl() {
+  let el = document.getElementById('birdKnowledgeQuizOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'birdKnowledgeQuizOverlay';
+    el.className = 'bird-quiz-overlay';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function openBirdKnowledgeQuiz(opts = {}) {
+  ensureKnowledgeQuizState();
+  const reward = Math.max(4, Math.floor(Number(opts.rewardCoins) || 10));
+  const question = birdKnowledgeQuestionFor(opts.context || 'wild', opts.seed || Date.now());
+  activeBirdKnowledgeQuiz = { question, reward, source: opts.source || 'A local birder', context: opts.context || 'wild' };
+  const el = birdQuizOverlayEl();
+  el.innerHTML = '<div class="bird-quiz-card" data-quiz-marker="' + BIRD_KNOWLEDGE_QUIZ_MARKER + '">' +
+    '<div class="bird-quiz-kicker"><span>🧠 Bird Wisdom Check</span><span>+' + reward + ' 🪙</span></div>' +
+    '<div class="bird-quiz-title">' + escapeHtml(activeBirdKnowledgeQuiz.source) + '</div>' +
+    '<div class="bird-quiz-copy">Answer correctly to earn coins and build real bird knowledge as you play.</div>' +
+    '<div class="bird-quiz-question">' + escapeHtml(question.q) + '</div>' +
+    '<div class="bird-quiz-options">' + question.choices.map((choice, idx) => '<button class="bird-quiz-option" onclick="answerBirdKnowledgeQuiz(' + idx + ')">' + escapeHtml(choice) + '</button>').join('') + '</div>' +
+  '</div>';
+  el.classList.add('open');
+  SFX.tap();
+}
+function closeBirdKnowledgeQuiz() {
+  const el = document.getElementById('birdKnowledgeQuizOverlay');
+  if (el) el.classList.remove('open');
+  activeBirdKnowledgeQuiz = null;
+}
+function answerBirdKnowledgeQuiz(choiceIdx) {
+  if (!activeBirdKnowledgeQuiz) return;
+  const q = activeBirdKnowledgeQuiz.question;
+  const correct = Number(choiceIdx) === q.answer;
+  const reward = activeBirdKnowledgeQuiz.reward;
+  const state = ensureKnowledgeQuizState();
+  state.answered = (Number(state.answered) || 0) + 1;
+  if (correct) {
+    state.correct = (Number(state.correct) || 0) + 1;
+    state.coinsEarned = (Number(state.coinsEarned) || 0) + reward;
+    addCoins(reward);
+    addPlayerXp(5);
+    if (typeof initQuests === 'function') initQuests();
+    updateQuestProgress('bird_quiz_correct', 1);
+    SFX.questComplete();
+    vibrate(45);
+  } else {
+    SFX.tap();
+    vibrate(20);
+  }
+  saveState();
+  updateHeader();
+  const el = birdQuizOverlayEl();
+  el.querySelectorAll('.bird-quiz-option').forEach((btn, idx) => {
+    btn.disabled = true;
+    if (idx === q.answer) btn.classList.add('correct');
+    if (idx === Number(choiceIdx) && !correct) btn.classList.add('wrong');
+  });
+  const card = el.querySelector('.bird-quiz-card');
+  if (card && !card.querySelector('.bird-quiz-result')) {
+    card.insertAdjacentHTML('beforeend', '<div class="bird-quiz-result"><strong>' + (correct ? 'Correct! +' + reward + ' 🪙 +5 XP' : 'Not quite — no coins this time') + '</strong><br>' + escapeHtml(q.fact) + '</div><button class="bird-quiz-close" onclick="closeBirdKnowledgeQuiz()">CONTINUE</button>');
+  }
+}
+function openVillageKnowledgeQuiz() {
+  const v = currentVillage ? currentVillage() : null;
+  const name = v && v.name ? v.name : 'this village';
+  const ownedBonus = v ? empireOwnsVillage(v.seed) : false;
+  openBirdKnowledgeQuiz({ context:'village', seed:(v && v.seed) || name, source:'A birder in ' + name + ' asks...', rewardCoins:12 + (ownedBonus ? 4 : 0) });
+}
+function maybeOpenQuestKnowledgeQuiz(expedition, coinsEarned) {
+  const seed = expedition && (expedition.id || expedition.seed || expedition.label);
+  setTimeout(() => openBirdKnowledgeQuiz({ context:'quest', seed, source:'Quest debrief: ' + ((expedition && expedition.birdName) || 'Your bird') + ' brings a question...', rewardCoins:Math.max(8, Math.round((Number(coinsEarned) || 0) * 0.22)) }), 950);
+}
+
+// ============================================================================
 // VILLAGE — procedurally generated medieval market squares (three.js)
 // Every village on the map has its own seed: layout, palette, roofs, props
 // and name are all grown from it, so no two villages look quite the same
@@ -10831,6 +10981,7 @@ function claimCurrentVillage() {
   vibrate(80);
   const count = empireVillages().length;
   showToast('👑 Birdhouse built — ' + v.name + ' joins your empire! ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count));
+  setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
   updateHeader();
@@ -10906,7 +11057,7 @@ function renderVillageLegend() {
   if (!legend) return;
   legend.innerHTML = villageShopKeysFor(currentVillage().seed).map(k =>
     '<button class="village-chip" onclick="villageOpenShop(\'' + k + '\')">' + VILLAGE_SHOPS[k].icon + ' ' + escapeHtml(VILLAGE_SHOPS[k].name) + '</button>'
-  ).join('');
+  ).join('') + '<button class="village-chip" onclick="openVillageKnowledgeQuiz()">🧠 Birder Question · earn coins</button>';
 }
 
 function renderVillageFallback() {
@@ -12569,7 +12720,6 @@ $('scanImageBtn').addEventListener('click', async () => {
   $('soundScanArea').style.display = 'none';
   $('imageScanArea').style.display = 'block';
   $('screen-scan').classList.add('camera-mode');
-  await startCamera();
   SFX.tap();
 });
 
@@ -12901,15 +13051,58 @@ if (cameraZoomSlider) {
   cameraZoomSlider.addEventListener('input', e => applyCameraZoom(e.target.value));
 }
 
-$('uploadArea').addEventListener('click', async () => {
-  await startCamera();
+// Native camera capture: photo-taking is handed to the phone's own camera app
+// (via the capture input) so players get its full quality — every lens, HDR,
+// night mode, real optical zoom — instead of the browser's capped video stream.
+const nativeCameraInput = $('nativeCameraInput');
+
+function openNativeCamera() {
+  if (!nativeCameraInput) return;
+  nativeCameraInput.value = '';
+  nativeCameraInput.click();
+}
+
+$('uploadArea').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });
+$('captureBtn').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });
+
+nativeCameraInput?.addEventListener('change', async () => {
+  const file = nativeCameraInput.files && nativeCameraInput.files[0];
+  if (!file) return;
+  showNativePhotoPreview(file);
+  const blob = await prepareNativePhotoForUpload(file);
+  await identifyImage(blob || file, 'camera');
 });
 
-$('captureBtn').addEventListener('click', async () => {
-  const blob = await captureCameraFrame();
-  if (!blob) return;
-  await identifyImage(blob, 'camera');
-});
+function showNativePhotoPreview(file) {
+  const img = $('nativePhotoPreview');
+  if (!img) return;
+  if (img.dataset.url) URL.revokeObjectURL(img.dataset.url);
+  const url = URL.createObjectURL(file);
+  img.dataset.url = url;
+  img.src = url;
+  img.style.display = 'block';
+}
+
+// Downscale huge native photos (50MP+) to the upload cap while keeping the
+// detail Photo ID needs; if the browser can't decode the file (e.g. an exotic
+// format), upload the original untouched and let the server handle it.
+async function prepareNativePhotoForUpload(file) {
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      .catch(() => createImageBitmap(file));
+    if (!bitmap) return null;
+    if (Math.max(bitmap.width, bitmap.height) <= CAPTURE_MAX_SIDE && file.size < 8 * 1024 * 1024) {
+      bitmap.close && bitmap.close();
+      return null;
+    }
+    const out = await normalizeCapturedPhoto(bitmap, bitmap.width, bitmap.height, 1);
+    bitmap.close && bitmap.close();
+    return out;
+  } catch (e) {
+    console.log('Native photo decode failed, uploading original:', e);
+    return null;
+  }
+}
 
 const CAPTURE_MAX_SIDE = 3072;
 // Cap what we ask the photo pipeline for so 100MP+ sensor modes don't produce
@@ -13026,7 +13219,7 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
     showToast('Photo ID could not analyse that image yet');
   }
 
-  $('captureBtn').textContent = 'CAPTURE IMAGE';
+  $('captureBtn').textContent = 'OPEN CAMERA';
   $('captureBtn').disabled = false;
 }
 
@@ -13274,7 +13467,7 @@ function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').
 function addBattleLog(type, text) { const log = $('battleLog'); const entry = document.createElement('div'); entry.className = 'battle-log-entry ' + type; entry.textContent = text; log.insertBefore(entry, log.firstChild); while (log.children.length > 20) log.removeChild(log.lastChild); }
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz });
 
 // ============================================================================
 // PET COMPANION
@@ -13489,7 +13682,8 @@ const DAILY_QUESTS = [
   { id: 'daily_capture_3', name: 'Field Work', desc: 'Capture 3 birds today', type: 'capture', target: 3, reward: 50, icon: '\u{1F426}' },
   { id: 'daily_battle_2', name: 'Arena Fighter', desc: 'Win 2 battles', type: 'win', target: 2, reward: 40, icon: '\u{2694}\u{FE0F}' },
   { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}' },
-  { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 60, icon: '\u{1F37D}\u{FE0F}' }
+  { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 60, icon: '\u{1F37D}\u{FE0F}' },
+  { id: 'daily_bird_brain', name: 'Bird Brain Bonus', desc: 'Answer 1 bird question correctly', type: 'bird_quiz_correct', target: 1, reward: 35, icon: '\u{1F9E0}' }
 ];
 
 const WEEKLY_QUESTS = [

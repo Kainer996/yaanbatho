@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-personality-rooms-v19-20260707';
+const BURBZ_CACHE = 'burbz-native-camera-v24-20260708';
 const BURBZ_ASSETS = [
   './',
   './index.html',
@@ -137,6 +137,9 @@ const BURBZ_ASSETS = [
   './bird-art-cache/eurasian_tree_sparrow_burbz_manga_20260701.png',
   './bird-art-cache/grey_partridge_burbz_manga_20260701.png',
   './bird-art-cache/sedge_warbler_burbz_manga_20260701.png',
+  './bird-art-cache/northern_pintail_burbz_manga_20260706T0200.png',
+  './bird-art-cache/reed_warbler_burbz_manga_20260707.png',
+  './bird-art-cache/corn_bunting_burbz_manga_20260707.png',
   './data/bird-education.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
