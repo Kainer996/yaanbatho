@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-quest-tap-hardening-v25-20260708';
+const BURBZ_CACHE = 'burbz-photo-crop-frame-v29-20260708';
 const BURBZ_ASSETS = [
   './',
   './index.html',
@@ -140,6 +140,12 @@ const BURBZ_ASSETS = [
   './bird-art-cache/northern_pintail_burbz_manga_20260706T0200.png',
   './bird-art-cache/reed_warbler_burbz_manga_20260707.png',
   './bird-art-cache/corn_bunting_burbz_manga_20260707.png',
+  './bird-art-cache/greylag_goose_burbz_manga_upload_20260707.png',
+  './bird-art-cache/lapwing_burbz_manga_upload_20260707.png',
+  './bird-art-cache/whitethroat_burbz_manga_upload_20260707.png',
+  './bird-art-cache/great_crested_grebe_burbz_manga_20260706T0200.png',
+  './bird-art-cache/fieldfare_burbz_manga_upload_20260707.png',
+  './bird-art-cache/barnacle_goose_burbz_manga_upload_20260707.png',
   './data/bird-education.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
