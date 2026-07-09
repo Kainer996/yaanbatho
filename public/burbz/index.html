@@ -10962,6 +10962,7 @@ async function startWalkingQuestFromOffer(offer) {
   updateWalkQuestHud();
   switchScreen('map');
   SFX.levelUp();
+  vibrate(QUEST_BUZZ.start);
   showQuestNpcDialog(quest.npcName, 'A quest, adventurer! Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
 }
 
@@ -11009,9 +11010,47 @@ function drawWalkingQuestOnMap() {
   drawTrailExtrasOnMap(quest);
   updateWalkQuestHud();
 }
+// Pocket-strength haptics: long, distinct patterns so quest events can be felt
+// through fabric without looking at the screen (navigator.vibrate is ignored on
+// iOS Safari, where the SFX remain the only cue).
+const QUEST_BUZZ = {
+  start:    [200, 100, 200],
+  npc:      [150, 80, 150],
+  flag:     [300, 120, 300],
+  chest:    [100, 60, 100, 60, 400],
+  tavern:   [100, 60, 100, 60, 100],
+  blocked:  [400, 150, 400],
+  complete: [200, 100, 200, 100, 600]
+};
+
+// Keep the screen awake while a walking quest is active: once the screen turns
+// off the browser suspends JS and geolocation, so no marker alert could ever
+// fire. With the wake lock held the phone can sit in a pocket and still buzz.
+let questWakeLock = null;
+let questWakeLockWanted = false;
+function acquireQuestWakeLock() {
+  questWakeLockWanted = true;
+  if (!('wakeLock' in navigator) || questWakeLock || document.visibilityState !== 'visible') return;
+  navigator.wakeLock.request('screen').then(lock => {
+    questWakeLock = lock;
+    lock.addEventListener('release', () => { if (questWakeLock === lock) questWakeLock = null; });
+    if (!questWakeLockWanted) releaseQuestWakeLock(); // quest ended while the request was in flight
+  }).catch(() => {});
+}
+function releaseQuestWakeLock() {
+  questWakeLockWanted = false;
+  if (questWakeLock) { try { questWakeLock.release(); } catch (e) {} questWakeLock = null; }
+}
+// The OS drops the lock whenever the tab is hidden — take it back the moment
+// the player returns mid-quest.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && questWakeLockWanted && activeWalkingQuest()) acquireQuestWakeLock();
+});
+
 function updateWalkQuestHud() {
   const hud = $('mapQuestHud'), btnLabel = $('mapQuestBtnLabel'), btn = $('mapQuestBtn');
   const quest = activeWalkingQuest();
+  if (quest) acquireQuestWakeLock(); else releaseQuestWakeLock();
   if (btnLabel) btnLabel.textContent = quest ? 'Quest Log' : 'Begin Quest';
   if (btn) btn.classList.toggle('on-quest', !!quest);
   if (!hud) return;
@@ -11032,22 +11071,24 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
     if (ev.type === 'npc') {
       addPlayerXp(10);
       SFX.levelUp();
+      vibrate(QUEST_BUZZ.npc);
       showQuestNpcDialog(quest.npcName, 'Well met, adventurer! The path of "' + quest.name + '" lies before you. May your wings stay swift and your scanner sharp. (+10 XP)');
     } else if (ev.type === 'chest') {
       const loot = ev.checkpoint.loot || { coins: 25, label: 'a pouch of 25 coins' };
       if (loot.coins) addCoins(loot.coins);
       if (loot.xp) addPlayerXp(loot.xp);
       SFX.capture();
+      vibrate(QUEST_BUZZ.chest);
       playQuestClaimCelebration({ coins: loot.coins || 0, xp: loot.xp || 0, items: {} });
       showToast('🎁 Treasure chest opened — ' + loot.label + '!');
     } else if (ev.type === 'flag') {
       SFX.tap();
-      vibrate(30);
+      vibrate(QUEST_BUZZ.flag);
       showToast('🚩 ' + (ev.checkpoint.label || 'Waymarker') + ' reached!');
     } else if (ev.type === 'trail-npc') {
       addPlayerXp(15);
       SFX.capture();
-      vibrate(40);
+      vibrate(QUEST_BUZZ.npc);
       addTavernPatron(ev.npc, quest);
       const metCount = window.BurbzQuestCore.questMetTrailNpcs(quest).length;
       const tavern = window.BurbzQuestCore.questMaybeSpawnTavern(quest, lat, lon);
@@ -11059,12 +11100,13 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       }
     } else if (ev.type === 'tavern') {
       SFX.levelUp();
-      vibrate(60);
+      vibrate(QUEST_BUZZ.tavern);
       drawTrailExtrasOnMap(quest);
       openTrailTavernSheet(quest, { firstVisit: true });
     } else if (ev.type === 'finish') {
       completeWalkingQuest();
     } else if (ev.type === 'finish-blocked') {
+      vibrate(QUEST_BUZZ.blocked);
       showToast('🏁 The quest banner waits — ' + ev.pending + ' waymarker' + (ev.pending === 1 ? '' : 's') + ' still to visit!');
     }
     if (ev.checkpoint) {
@@ -11091,6 +11133,7 @@ function completeWalkingQuest() {
   wq.active = null;
   saveState();
   clearWalkingQuestFromMap();
+  vibrate(QUEST_BUZZ.complete);
   playQuestClaimCelebration({ coins: bonusCoins, xp: summary.xp, items: {} });
   setTimeout(() => showWalkQuestSummarySheet(summary, true), 1400);
 }
