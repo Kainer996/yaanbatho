@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-carryon-fable-v37-20260709';
+const BURBZ_CACHE = 'burbz-quest-photos-v38-20260709';
 const BURBZ_ASSETS = [
   './',
   './index.html',

@@ -1666,6 +1666,15 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-quest-hud .mqh-body { min-width:0; flex:1; }
 .map-quest-hud .mqh-name { font-size:12px; font-weight:800; color:#f0c767; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .map-quest-hud .mqh-stats { font-size:11px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mqh-photo-btn { flex:none; width:34px; height:34px; border-radius:12px; border:1px solid rgba(214,168,79,.45); background:rgba(214,168,79,.14); color:#f0c767; font-size:17px; display:grid; place-items:center; }
+.quest-photo-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.quest-photo-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; }
+.quest-photo-card { border-radius:13px; overflow:hidden; background:rgba(214,168,79,.08); border:1px solid rgba(214,168,79,.20); }
+.quest-photo-card img { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#0d0c08; }
+.quest-photo-body { padding:7px 8px; }
+.quest-photo-caption { font-size:11px; line-height:1.25; color:var(--text2); }
+.quest-photo-meta { margin-top:3px; font-size:9.5px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.quest-photo-empty { padding:12px; border-radius:13px; border:1px dashed rgba(214,168,79,.32); color:var(--text3); font-size:12px; line-height:1.35; background:rgba(214,168,79,.06); }
 .walk-quest-offer { display:flex; align-items:center; gap:12px; width:100%; text-align:left; margin:8px 0; padding:12px; border-radius:14px; border:1px solid rgba(214,168,79,.3); background:linear-gradient(180deg,rgba(46,38,22,.6),rgba(20,17,10,.6)); color:var(--text); font-family:inherit; }
 .walk-quest-offer .wqo-icon { font-size:26px; flex:none; width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.3); }
 .walk-quest-offer .wqo-name { font-weight:800; font-size:14px; color:#f0c767; }
@@ -1774,7 +1783,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="map-quest-btn" id="mapQuestBtn" aria-label="Begin a walking quest">⚔️ <span id="mapQuestBtnLabel">Begin Quest</span></button>
         <button class="map-quest-overview-btn" id="mapQuestOverviewBtn" aria-label="Show quest trails on the map">🥾 Quests</button>
-        <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div></div>
+        <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
         <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><div class="map-area-birds-title">Area birds</div><div class="map-area-birds-sub">Revealed here · common → rare</div><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
@@ -11113,6 +11122,94 @@ function updateWalkQuestHud() {
   if (st) st.textContent = (quest.distanceWalkedM / 1000).toFixed(2) + ' km · ' + hit + '/' + total + ' markers · ' + quest.birdsCaptured.length + ' 🐦 · ' + quest.chestsOpened + ' 🎁';
 }
 
+
+let lastWalkQuestSummaryView = null;
+function questPhotoRefFor(item) {
+  if (!item) return '';
+  const ref = String(item.ref || '').trim();
+  if (/^[a-z][a-z-]{0,23}\/[A-Za-z0-9+.,\-]{1,80}$/.test(ref)) return ref;
+  const start = Array.isArray(item.routeStart) ? item.routeStart : (Array.isArray(item.route) && item.route[0] ? item.route[0] : null);
+  if (Array.isArray(start) && isFinite(start[0]) && isFinite(start[1])) return 'loc/' + Number(start[0]).toFixed(3) + ',' + Number(start[1]).toFixed(3);
+  if (item.checkpoints && item.checkpoints[0] && isFinite(item.checkpoints[0].lat) && isFinite(item.checkpoints[0].lon)) return 'loc/' + Number(item.checkpoints[0].lat).toFixed(3) + ',' + Number(item.checkpoints[0].lon).toFixed(3);
+  return '';
+}
+function questPhotoItem(which) {
+  if (which === 'summary') return lastWalkQuestSummaryView;
+  return activeWalkingQuest();
+}
+async function fetchQuestPhotos(ref) {
+  const res = await fetch('api/quests/photos?ref=' + encodeURIComponent(ref), { cache:'no-store' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Could not load trail photos');
+  return data.photos || [];
+}
+function questPhotoCardHTML(p) {
+  const date = p.uploadedAt ? new Date(p.uploadedAt).toLocaleDateString() : 'trail photo';
+  const who = p.playerName || 'A fellow adventurer';
+  return '<div class="quest-photo-card"><img src="' + escapeHtml(p.src || '') + '" alt="Trail photo"><div class="quest-photo-body"><div class="quest-photo-caption">' + escapeHtml(p.caption || 'A point of interest on this quest trail.') + '</div><div class="quest-photo-meta">' + escapeHtml(who) + ' · ' + escapeHtml(date) + '</div></div></div>';
+}
+async function openQuestPhotoBook(which) {
+  const item = questPhotoItem(which);
+  const ref = questPhotoRefFor(item);
+  const el = walkQuestSheetEl();
+  if (!item || !ref) { showToast('This quest needs a trail before photos can be shared'); return; }
+  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">📸</div><div><div class="quest-name">Trail Photos</div><div class="quest-desc">' + escapeHtml(item.name || 'Walking quest') + ' · shared points of interest from this route</div></div></div>' +
+    '<div class="quest-photo-actions"><button class="wq-npc-ok" onclick="pickQuestPhoto(\'' + which + '\')">📷 Add photo from this walk</button><button class="wq-npc-ok" onclick="openActiveWalkQuestSheet()">Back to quest</button></div>' +
+    '<div id="questPhotoList" class="quest-photo-empty">Loading shared trail photos…</div></div>';
+  el.classList.add('open');
+  try {
+    const photos = await fetchQuestPhotos(ref);
+    const list = $('questPhotoList');
+    if (list) {
+      list.className = photos.length ? 'quest-photo-grid' : 'quest-photo-empty';
+      list.innerHTML = photos.length ? photos.map(questPhotoCardHTML).join('') : 'No photos on this trail yet. Take a photo of a viewpoint, signpost, feather clue, landmark, or lovely bird spot so the next player sees your route memory.';
+    }
+  } catch (e) {
+    const list = $('questPhotoList');
+    if (list) { list.className = 'quest-photo-empty'; list.textContent = e.message || 'Trail photos could not load.'; }
+  }
+}
+function pickQuestPhoto(which) {
+  const item = questPhotoItem(which);
+  const ref = questPhotoRefFor(item);
+  if (!item || !ref) return;
+  let input = $('questPhotoInput');
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'questPhotoInput';
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+  input.onchange = () => uploadQuestPhoto(input.files && input.files[0], item, ref, which);
+  input.value = '';
+  input.click();
+}
+async function uploadQuestPhoto(file, item, ref, which) {
+  if (!file) return;
+  const caption = prompt('Caption this trail photo for future adventurers', 'Point of interest on the quest trail') || '';
+  const form = new FormData();
+  form.append('image', file, file.name || 'quest-photo.jpg');
+  form.append('ref', ref);
+  form.append('questName', item.name || 'Walking quest');
+  form.append('caption', caption.slice(0, 140));
+  if (liveMapLastPosition) { form.append('lat', liveMapLastPosition.lat); form.append('lon', liveMapLastPosition.lon); }
+  const headers = apiHeaders(); delete headers['Content-Type'];
+  showToast('Uploading trail photo…');
+  try {
+    const res = await fetch('api/quests/photos', { method:'POST', headers, body: form });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Photo upload failed');
+    showToast('📸 Trail photo pinned for future players');
+    openQuestPhotoBook(which);
+  } catch (e) {
+    showToast(e.message || 'Photo upload failed');
+  }
+}
+
 function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const quest = activeWalkingQuest();
   if (!quest) return;
@@ -11222,6 +11319,7 @@ function openActiveWalkQuestSheet() {
         '<div class="wq-history-birds">' + quest.likelyBirds.map(lb => '<span class="wq-bird-chip' + (got.has(lb.species) ? ' got' : '') + '">' + (got.has(lb.species) ? '✅ ' : '') + escapeHtml(lb.species) + '</span>').join('') + '</div>';
     })() : '') +
     '<div class="quest-desc">Follow the golden dashed path on the map. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m of each marker to claim it, then reach the 🏁 banner to complete the quest. Worth ~' + (window.BurbzQuestCore.questXpFor(quest) + window.BurbzQuestCore.questTrailBirdBonus(quest).xp) + ' XP so far.</div>' +
+    '<button class="wq-npc-ok" onclick="openQuestPhotoBook(\'active\')">📸 Trail photos</button> ' +
     '<button class="wq-npc-ok" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">View on map</button> ' +
     '<button class="wq-npc-ok" style="border-color:rgba(255,120,120,.5); color:#ff9d9d; background:rgba(255,120,120,.1)" onclick="abandonWalkingQuest()">Abandon</button>' +
     '</div>';
@@ -11239,6 +11337,7 @@ function showQuestNpcDialog(npcName, text) {
 }
 
 function showWalkQuestSummarySheet(summary, celebrate) {
+  lastWalkQuestSummaryView = summary;
   const meta = WALK_QUEST_KIND_META[summary.type] || WALK_QUEST_KIND_META.path;
   const birdChips = (summary.birds || []).map(b => '<span class="wq-bird-chip">' + escapeHtml(b.name || b.species || 'Bird') + '</span>').join('') || '<span class="quest-desc">No birds captured this time — keep that scanner ready!</span>';
   const el = walkQuestSheetEl();
@@ -11260,6 +11359,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
     (summary.tavern && summary.tavern.boon ? '<div class="quest-desc" style="margin:6px 0">🍻 Tavern toast: ' + escapeHtml(summary.tavern.boon) + '</div>' : '') +
     (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — they\'re waiting at 🍺 The Thirsty Owl in your Academy!</div>' : '') +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
+    (questPhotoRefFor(summary) ? '<div class="quest-photo-actions"><button class="wq-npc-ok" onclick="openQuestPhotoBook(\'summary\')">📸 View trail photos</button></div>' : '') +
     '</div>';
   el.classList.add('open');
 }

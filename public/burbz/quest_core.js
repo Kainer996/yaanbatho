@@ -702,6 +702,8 @@
       id: quest.id,
       name: quest.name,
       type: quest.type,
+      ref: quest.ref || null,
+      routeStart: quest.route && quest.route[0] ? quest.route[0].slice() : null,
       npcName: quest.npcName,
       completedAt: now,
       startedAt: quest.startedAt,
