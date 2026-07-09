@@ -757,6 +757,23 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 @keyframes recordPulse { 0%,100%{box-shadow:0 4px 20px rgba(214,168,79,0.30)} 50%{box-shadow:0 4px 30px rgba(214,168,79,0.58)} }
 
+.bird-pickup-pop {
+  position: absolute; top: 4px; left: 50%;
+  transform: translateX(-50%) translateY(-8px) scale(0.9);
+  background: rgba(20,20,34,0.94); border: 1px solid var(--accent);
+  color: var(--accent2); font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 8px 16px; border-radius: 999px; white-space: nowrap;
+  opacity: 0; pointer-events: none; z-index: 3;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 4px 18px rgba(214,168,79,0.35);
+}
+.bird-pickup-pop.show {
+  opacity: 1; transform: translateX(-50%) translateY(0) scale(1);
+  animation: birdPickupPulse 1s ease-in-out infinite;
+}
+@keyframes birdPickupPulse { 0%,100%{box-shadow:0 4px 18px rgba(214,168,79,0.35)} 50%{box-shadow:0 4px 28px rgba(214,168,79,0.70)} }
+
 .scan-result {
   margin-top: 16px; padding: 16px; background: var(--bg2); border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.05); display: none;
@@ -1808,21 +1825,22 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
 
     <!-- SCAN SCREEN -->
-    <div class="screen" id="screen-scan">
+    <div class="screen camera-mode" id="screen-scan">
       <div class="screen-title">SCAN</div>
       <div class="scan-mode-toggle">
-        <button class="scan-mode-btn active" id="scanSoundBtn" data-mode="sound">&#127925; Sound</button>
-        <button class="scan-mode-btn" id="scanImageBtn" data-mode="image">&#128247; Image</button>
+        <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image">&#128247; Camera</button>
+        <button class="scan-mode-btn" id="scanSoundBtn" data-mode="sound">&#127925; Sound</button>
       </div>
 
       <!-- Sound scan area -->
-      <div id="soundScanArea">
+      <div id="soundScanArea" style="display:none;">
         <div class="scan-area" id="scanArea">
           <div class="scan-ring"></div>
           <div class="scan-ring"></div>
           <div class="scan-ring"></div>
           <div class="scan-ring"></div>
           <div class="scan-center-icon" id="scanCenterIcon">&#127925;</div>
+          <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Bird sound picked up!</div>
         </div>
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
@@ -1831,7 +1849,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
 
       <!-- Image scan area -->
-      <div id="imageScanArea" style="display:none;">
+      <div id="imageScanArea">
         <div class="camera-viewfinder" id="cameraViewfinder">
           <video id="cameraVideo" autoplay playsinline></video>
           <div class="vf-corner tl"></div>
@@ -2102,8 +2120,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <div class="recruit-overlay" id="recruitOverlay">
     <div class="recruit-sheet">
       <div class="modal-handle"></div>
-      <div class="recruit-title">Choose who joins the quest</div>
-      <div class="recruit-copy" id="recruitCopy">New birds discovered. Spend coins to convince one to become a companion.</div>
+      <div class="recruit-title">New birds in the Birdex</div>
+      <div class="recruit-copy" id="recruitCopy">New birds discovered. They now wait at 🍺 The Thirsty Owl tavern in your Academy — buy them a drink there to recruit them.</div>
       <div class="recruit-wallet" id="recruitWallet">Coins: 0</div>
       <div class="recruit-list" id="recruitList"></div>
       <button class="recruit-close" id="recruitClose">Keep exploring</button>
@@ -7788,9 +7806,10 @@ function openBirdInfo(birdId) {
     <div class="bird-info-hero">
       <div class="bird-info-art">${art}</div>
       <div>
-        <div class="bird-info-name">${escapeHTML(bird.commonName || bird.species)}</div>
-        <div class="bird-info-sci">${escapeHTML(bird.scientificName || bird.species)}</div>
+        <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
+        <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
         <div class="bird-info-rarity" style="color:${rarityColor}">${escapeHTML(bird.rarity || 'common')} · Power ${bird.power || 0}</div>
+        ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>`}
       </div>
     </div>
     <div class="bird-info-summary">${escapeHTML(summary)}</div>
@@ -8582,20 +8601,19 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/crowbar.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', market:'assets/academy-buildings-manga/market.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/crowbar.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
   dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'A cosy branch home. Birds resting here heal up while you feed, groom and tuck them in.', perk:'Passive: heals HP, hunger grows slowly', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
-  tavern: { label:'THE THIRSTY OWL', icon:'🍺', buildingId:'tavern', desc:'The trainers\' taproom. Birds you befriend as NPCs on real-world walking quests fly here afterwards — buy them a drink and they\'ll join your flock.', perk:'Active: recruit trail birds', perches:[[76,84],[72,88],[80,88]] },
+  tavern: { label:'THE THIRSTY OWL', icon:'🍺', buildingId:'tavern', desc:'The trainers\' taproom, and the only place birds get hired. Every species in your Birdex — scanned discoveries and trail birds you befriend on walking quests — waits at the bar. Buy them a drink and they\'ll join your flock.', perk:'Active: Birdex + trail bird recruitment', perches:[[76,84],[72,88],[80,88]] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
   crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar. Regulars swap rumours, make friends and come out of their shells — Personality grows here, and charming birds earn bonus coins on social quests.', perk:'Passive: +1 PER every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'Hearty species-friendly cooking. Birds stationed here build Stamina one good meal at a time.', perk:'Passive: +1 STAM every 30 min', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
-  market: { label:'RECRUITMENT ROOST', icon:'🪶', buildingId:'market', desc:'Recruit discovered Birdex species here for coins. Discover first, hire later when you can afford them.', perk:'Active: Birdex recruitment', perches:[[73,29],[69,33],[77,33]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
@@ -8634,6 +8652,16 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
   if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 3) {
     gameState.player.branches = Math.max(Number(gameState.player.branches) || 0, 25);
     gameState.academyBuilderVersion = 3;
+  }
+  // Recruitment moved to The Thirsty Owl tavern: retire the old Recruitment
+  // Roost and refund anyone who built it (it cost 210 coins + 50 branches).
+  if (gameState.academyBuildings.market) {
+    if (gameState.academyBuildings.market.built) {
+      gameState.player.coins = (Number(gameState.player.coins) || 0) + 210;
+      gameState.player.branches = (Number(gameState.player.branches) || 0) + 50;
+      (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === 'market') b.academy.room = 'outdoors'; });
+    }
+    delete gameState.academyBuildings.market;
   }
   Object.keys(ACADEMY_ROOMS).forEach(room => {
     if (room !== 'outdoors' && !isAcademyRoomBuilt(room)) {
@@ -9417,11 +9445,6 @@ function renderAcademyRoomPanel(birds) {
     '<span class="academy-room-perk">' + room.perk + '</span></div>' +
     '<div class="academy-room-desc">' + room.desc + '</div>';
 
-  if (academySelectedRoom === 'market') {
-    panel.innerHTML = html + renderAcademyRecruitmentPanelHTML();
-    return;
-  }
-
   if (academySelectedRoom === 'tavern') {
     panel.innerHTML = html + renderAcademyTavernPanelHTML();
     return;
@@ -9461,8 +9484,6 @@ function renderAcademyRoomPanel(birds) {
       actions = '<button class="academy-btn primary" onclick="startBirdExpedition(\'' + b.id + '\',\'short_forage\')">🧭 1h Forage</button>' +
         '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'supply_run\')">🥣 2h Supplies</button>' +
         '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'moon_scout\')">🌙 3h Scout</button>';
-    } else if (academySelectedRoom === 'market') {
-      actions = '<button class="academy-btn primary" onclick="renderAcademyRecruitmentPanel()">🪶 Open recruits</button>';
     } else {
       actions = academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
     }
@@ -9507,21 +9528,34 @@ function recruitableBirdexRecords() {
 
 function renderAcademyRecruitmentPanelHTML() {
   const records = recruitableBirdexRecords();
-  if (!records.length) return '<div class="academy-empty">No unrecruited Birdex discoveries yet. Scan birds first; every discovery is saved here even if you do not hire it straight away.</div>';
-  return '<div class="academy-builder-copy">Discovered birds wait here until you spend coins to recruit them as companions.</div>' + records.map(record => {
+  if (!records.length) return '<div class="academy-empty">No unrecruited Birdex discoveries yet. Scan birds first; every discovery lands at the bar even if you do not hire it straight away.</div>';
+  return records.map(record => {
     const bird = createBirdFromDiscovery(record);
     const cost = recruitCostForBird(bird);
     const canAfford = (gameState.player.coins || 0) >= cost;
     const artHtml = birdOnlyImgHTML(bird, 'academy-bird-art');
-    return '<div class="academy-bird-row recruit-row">' + artHtml + '<div class="academy-bird-main"><div class="academy-bird-name">' + escapeHtml(bird.commonName || bird.species) + '</div><div class="academy-bird-meta">Birdex discovery · ' + (bird.rarity || 'common').toUpperCase() + ' · PWR ' + (bird.power || '?') + '</div></div><div class="academy-actions"><button class="academy-btn primary" onclick="academyRecruitBird(\'' + (record.key || speciesKey(bird.commonName || bird.species)) + '\')" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? 'Recruit · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
+    return '<div class="academy-bird-row recruit-row">' + artHtml + '<div class="academy-bird-main"><div class="academy-bird-name">' + escapeHtml(bird.commonName || bird.species) + '</div><div class="academy-bird-meta">Birdex discovery · ' + (bird.rarity || 'common').toUpperCase() + ' · PWR ' + (bird.power || '?') + '</div></div><div class="academy-actions"><button class="academy-btn primary" onclick="academyRecruitBird(\'' + (record.key || speciesKey(bird.commonName || bird.species)) + '\')" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? '🍻 Buy a drink · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
   }).join('');
 }
 
-function renderAcademyRecruitmentPanel() { renderAcademy(); }
-
 function academyRecruitBird(key) {
   const ok = recruitDiscoveredBird(key);
-  if (ok) { academySelectedRoom = 'market'; renderAcademy(); }
+  if (ok) { academySelectedRoom = 'tavern'; renderAcademy(); }
+}
+
+// Jump from Birdex cards / discovery overlays to the recruitment tavern.
+function gotoTavernRecruit() {
+  $('recruitOverlay')?.classList.remove('show');
+  if (isAcademyRoomBuilt('tavern')) {
+    academySelectedRoom = 'tavern';
+  } else {
+    const cfg = ACADEMY_BUILDINGS.tavern;
+    showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 2)
+      ? '🍺 The Thirsty Owl tavern unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — keep playing to open it'
+      : '🍺 Build The Thirsty Owl tavern here — birds are recruited at the bar');
+  }
+  switchScreen('academy');
+  renderAcademy();
 }
 
 // ---- The Thirsty Owl: Academy tavern where befriended trail birds wait ----
@@ -9558,10 +9592,9 @@ function renderAcademyTavernPanelHTML() {
   const fact = tavernBirdFactFor(patrons.map(p => p.species), seed);
   let html = '<div class="academy-builder-copy">🍺 <b>' + escapeHtml(keeper) + '</b>: "' + escapeHtml(chatter) + '"</div>' +
     '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(fact) + '</div>';
-  if (!patrons.length) {
-    return html + '<div class="academy-empty">No trail birds waiting yet. On a walking quest, every bird you find lands on your route as an NPC — walk up and say hello, and it will meet you here afterwards.</div>';
-  }
-  html += patrons.map(p => {
+  html += '<div class="academy-room-desc" style="margin-top:10px"><b>🥾 Trail regulars</b> — birds you befriended on walking quests.</div>';
+  if (!patrons.length) html += '<div class="academy-empty">No trail birds waiting yet. On a walking quest, every bird you find lands on your route as an NPC — walk up and say hello, and it will meet you here afterwards.</div>';
+  else html += patrons.map(p => {
     const bird = createBirdEntry(p.species, '', 0.9);
     const cost = recruitCostForBird({ rarity: p.rarity });
     const canAfford = (gameState.player.coins || 0) >= cost;
@@ -9572,6 +9605,9 @@ function renderAcademyTavernPanelHTML() {
       '<div class="academy-actions"><button class="academy-btn primary" onclick="academyTavernRecruit(\'' + p.key + '\')" ' + (canAfford ? '' : 'disabled') + '>' +
       (canAfford ? '🍻 Buy a drink · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
   }).join('');
+  // The Birdex recruits drink at the same bar: every discovered-but-unrecruited
+  // species waits here, since the tavern is the only place birds get hired.
+  html += '<div class="academy-room-desc" style="margin-top:12px"><b>📖 Birdex recruits</b> — discovered species waiting for an offer.</div>' + renderAcademyRecruitmentPanelHTML();
   return html;
 }
 
@@ -11762,6 +11798,23 @@ function getDiscoveredRecordForSpecies(name) {
 function inventoryItemCount() { return Object.values((gameState.inventory && gameState.inventory.items) || {}).reduce((sum, n) => sum + (Number(n) || 0), 0); }
 function giftItemCount() { return Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([k]) => /berry|pebble|seed|gift|feather/i.test(k)).reduce((sum, [, n]) => sum + (Number(n) || 0), 0); }
 function companionForSpecies(species) { const keys = discoveryKeysForSpecies(species); return (gameState.flock || []).find(b => discoveryKeysForSpecies(b.species || b.commonName).some(k => keys.includes(k))) || null; }
+function birdDisplayName(bird) { return (bird && String(bird.customName || '').trim()) || (bird && (bird.commonName || bird.species)) || 'Unknown Bird'; }
+function birdSpeciesLabel(bird) { return (bird && (bird.commonName || bird.species)) || 'Unknown species'; }
+function renameCompanionBird(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!bird) return;
+  const current = String(bird.customName || '').trim();
+  const next = prompt('Name this companion bird', current || bird.commonName || bird.species || '');
+  if (next === null) return;
+  const clean = String(next).trim().replace(/\s+/g, ' ').slice(0, 32);
+  bird.customName = clean || null;
+  saveState();
+  renderBirdex();
+  renderAcademy();
+  renderPetCompanion();
+  updateHeader();
+  showToast(clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
+}
 function discoveredSpeciesRecords() { return Object.values(gameState.discoveredSpecies || {}).filter(Boolean); }
 function recruitCostForBird(bird) { return RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common; }
 function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && bird.rarity) || 'common'] || RARITY_DISCOVERY_REWARD.common; }
@@ -13398,6 +13451,14 @@ function createBirdFromDiscovery(record) {
 }
 
 function recruitDiscoveredBird(key) {
+  // Hiring only happens over a drink: the tavern is the one recruitment venue.
+  if (!isAcademyRoomBuilt('tavern')) {
+    const cfg = ACADEMY_BUILDINGS.tavern;
+    showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 2)
+      ? '🍺 The Thirsty Owl tavern unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — birds are recruited there'
+      : '🍺 Build The Thirsty Owl tavern in your Academy to recruit birds');
+    return false;
+  }
   const record = (gameState.discoveredSpecies || {})[key];
   if (!record) return false;
   if (companionForSpecies(record.species || record.commonName)) { showToast('Already travelling with ' + (record.commonName || record.species)); return false; }
@@ -13497,7 +13558,7 @@ function correctScanDiscovery(chosenName) {
   const wrongLabel = (wrongNames[0] && speciesKey(canonicalSpeciesName(wrongNames[0])) !== chosenKey) ? ' instead of ' + wrongNames[0] : '';
   showToast('✓ Logged ' + bird.commonName + wrongLabel);
   scanCorrectContext = { names: [bird.commonName] };
-  showRecruitChoiceOverlay([bird], 'Corrected — ' + bird.commonName + ' is in your Birdex. Recruit it if you want it as a companion.', { correctable: true });
+  showRecruitChoiceOverlay([bird], 'Corrected — ' + bird.commonName + ' is in your Birdex and waits at The Thirsty Owl tavern. Recruit it there if you want it as a companion.', { correctable: true });
 }
 
 function showRecruitChoiceOverlay(birds, message, opts = {}) {
@@ -13509,8 +13570,8 @@ function showRecruitChoiceOverlay(birds, message, opts = {}) {
   if (!choices.length) return;
   const overlay = $('recruitOverlay'), list = $('recruitList');
   if (!overlay || !list) return;
-  $('recruitCopy').textContent = message || 'You discovered birds nearby. The Birdex remembers them, but only recruited birds become companions.';
-  $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0) + ' · choose carefully — discoveries stay in the Birdex.';
+  $('recruitCopy').textContent = message || 'You discovered birds nearby. They wait at The Thirsty Owl tavern in your Academy — recruit them there to make companions.';
+  $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0) + ' · discoveries stay in the Birdex until you hire them at the tavern.';
   list.innerHTML = choices.map((bird, idx) => createKnownSpeciesCardHTML(bird, idx)).join('');
   // "Wrong bird?" correction affordance for scan results.
   const closeBtn = $('recruitClose');
@@ -13548,12 +13609,12 @@ function handleBirdCandidates(primary, detections = []) {
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex, but you can only afford/recruit the ones you choose.' : 'Species discovered. Spend coins if you want this bird as a companion.', { correctable: true });
+    showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex and head to The Thirsty Owl tavern — recruit the ones you want there.' : 'Species discovered. It now waits at The Thirsty Owl tavern in your Academy — buy it a drink there to make it a companion.', { correctable: true });
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   } else if (top) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it when you can afford it.', { correctable: true }); }
+    else { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at The Thirsty Owl tavern when you can afford it.', { correctable: true }); }
   }
 }
 
@@ -13631,7 +13692,7 @@ function renderBirdex() {
     if (currentFilter !== 'all') companions = companions.filter(b => b.rarity === currentFilter);
     companions.sort((a, b) => (b.power || 0) - (a.power || 0));
     if (!companions.length) {
-      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Listen or use the camera to discover birds for your Birdex. Discoveries stay recorded, but only birds you recruit with coins become companions for Academy, quests and Flock League.</div></div>';
+      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Listen or use the camera to discover birds for your Birdex. Discoveries wait at 🍺 The Thirsty Owl tavern in your Academy — recruit them there with coins to gain companions for Academy, quests and Flock League.</div></div>';
       return;
     }
     companions.forEach((bird, idx) => { grid.innerHTML += createBirdCardHTML(bird, idx); });
@@ -13670,17 +13731,22 @@ function renderBirdex() {
   // Attach card and pet-selection events. Locked codex cards do not reveal species.
   grid.querySelectorAll('.bird-card:not(.undiscovered):not(.locked-card)').forEach(card => {
     card.addEventListener('click', (e) => {
-      const recruitBtn = e.target.closest('[data-action="recruit-bird"]');
+      const recruitBtn = e.target.closest('[data-action="goto-tavern"]');
       if (recruitBtn) {
         e.stopPropagation();
-        const ok = recruitDiscoveredBird(recruitBtn.dataset.discoveryKey);
-        if (ok) $('recruitOverlay')?.classList.remove('show');
+        gotoTavernRecruit();
         return;
       }
       const petBtn = e.target.closest('[data-action="make-pet"]');
       if (petBtn) {
         e.stopPropagation();
         selectPet(petBtn.dataset.birdId);
+        return;
+      }
+      const renameBtn = e.target.closest('[data-action="rename-bird"]');
+      if (renameBtn) {
+        e.stopPropagation();
+        renameCompanionBird(renameBtn.dataset.birdId);
         return;
       }
       const roomBtn = e.target.closest('[data-action="send-room"]');
@@ -13728,8 +13794,8 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
           <button class="card-pet-front ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Walking Pet' : 'Choose as Pet'}</button>
           <div class="card-info">
-            <div class="card-name">${bird.commonName || bird.species}</div>
-            <div class="card-species">${bird.scientificName || bird.species}</div>
+            <div class="card-name">${birdDisplayName(bird)}</div>
+            <div class="card-species">${bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)}</div>
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
             <div class="card-stats-row">
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
@@ -13754,6 +13820,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-actions">
             ${academyRoomButtonsHTML(bird)}
             <button class="card-pet-btn ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Pet' : 'Make Pet'}</button>
+            <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
           </div>
           <div class="card-back-hint">Tap empty card space to flip back.</div>
@@ -13775,7 +13842,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
   const key = bird.discoveryKey || speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
   const cost = recruitCostForBird(bird);
   const alreadyCompanion = !!companionForSpecies(bird.species || bird.commonName);
-  const canAfford = (gameState.player.coins || 0) >= cost;
+  const tavernBuilt = isAcademyRoomBuilt('tavern');
   return `
     <div class="bird-card known-species" data-rarity="${bird.rarity}" data-idx="known-${idx}" data-bird-id="preview:${bird.commonName || bird.species}">
       <div class="bird-card-inner">
@@ -13796,8 +13863,8 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
             </div>
-            <button class="recruit-btn" data-action="recruit-bird" data-discovery-key="${key}" ${alreadyCompanion || !canAfford ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : canAfford ? 'Recruit for ' + cost : 'Need ' + cost + ' coins'}</button>
-            <div class="card-info-hint" data-action="open-info" data-bird-id="preview:${bird.commonName || bird.species}">Discovery counts on leaderboard · recruit to quest</div>
+            <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🍺 Recruit at The Thirsty Owl' : '🍺 Unlock the tavern to recruit'}</button>
+            <div class="card-info-hint" data-action="open-info" data-bird-id="preview:${bird.commonName || bird.species}">Discovery counts on leaderboard · hire at the Academy tavern for ${cost} coins</div>
           </div>
         </div>
       </div>
@@ -13867,13 +13934,15 @@ $('burbzModeTabs')?.addEventListener('click', e => {
 // ============================================================================
 // SCAN SCREEN
 // ============================================================================
-let scanMode = 'sound';
+let scanMode = 'image';
 let isRecording = false;
 let mediaRecorder = null;
 let audioChunks = [];
 let analyserNode = null;
 let animFrameId = null;
 let mediaStream = null;
+let continuousSoundScanWanted = false;
+let soundScanChunkTimer = null;
 
 // Mode toggle
 $('scanSoundBtn').addEventListener('click', () => {
@@ -13889,6 +13958,8 @@ $('scanSoundBtn').addEventListener('click', () => {
 
 $('scanImageBtn').addEventListener('click', async () => {
   scanMode = 'image';
+  continuousSoundScanWanted = false;
+  if (isRecording) stopRecording({ userStop: true });
   $('scanImageBtn').classList.add('active');
   $('scanSoundBtn').classList.remove('active');
   $('soundScanArea').style.display = 'none';
@@ -13899,9 +13970,10 @@ $('scanImageBtn').addEventListener('click', async () => {
 
 // Sound recording
 $('scanBtn').addEventListener('click', async () => {
-  if (isRecording) {
-    stopRecording();
+  if (isRecording || continuousSoundScanWanted) {
+    stopRecording({ userStop: true });
   } else {
+    continuousSoundScanWanted = true;
     startRecording();
   }
 });
@@ -13945,14 +14017,18 @@ async function startRecording() {
     $('scanCenterIcon').classList.add('scanning');
     $$('.scan-ring').forEach(r => r.classList.add('scanning'));
 
-    // Auto-stop after 15 seconds so BirdNET has more context, closer to Merlin-style listening.
-    setTimeout(() => { if (isRecording) stopRecording(); }, 15000);
+    // Keep listening indefinitely in 15-second Merlin-style chunks until the player turns it off.
+    if (soundScanChunkTimer) clearTimeout(soundScanChunkTimer);
+    soundScanChunkTimer = setTimeout(() => { if (isRecording && continuousSoundScanWanted) stopRecording({ autoChunk: true }); }, 15000);
   } catch(e) {
     showToast('Microphone access denied');
   }
 }
 
-function stopRecording() {
+function stopRecording(opts = {}) {
+  if (opts.userStop) continuousSoundScanWanted = false;
+  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
+  const shouldContinue = !!opts.autoChunk && continuousSoundScanWanted;
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop();
   }
@@ -13963,10 +14039,48 @@ function stopRecording() {
   if (animFrameId) cancelAnimationFrame(animFrameId);
 
   isRecording = false;
-  $('scanBtn').textContent = 'START LISTENING';
+  resetBirdPickup();
+  $('scanBtn').textContent = shouldContinue ? 'ANALYSING BIRDSONG…' : 'START LISTENING';
   $('scanBtn').classList.remove('recording');
   $('scanCenterIcon').classList.remove('scanning');
   $$('.scan-ring').forEach(r => r.classList.remove('scanning'));
+}
+
+// Live "bird being picked up" indicator: birds sing mostly in the 2-9 kHz
+// band, well above wind/traffic rumble. When that band carries sustained
+// energy that beats the low-frequency noise floor, pop the indicator so the
+// player knows the mic is catching a bird right now.
+let birdPickupFrames = 0;
+let birdPickupHideTimer = null;
+function updateBirdPickup() {
+  if (!analyserNode || !isRecording) return;
+  const freq = new Uint8Array(analyserNode.frequencyBinCount);
+  analyserNode.getByteFrequencyData(freq);
+  const nyquist = (getAudioCtx().sampleRate || 48000) / 2;
+  const hzPerBin = nyquist / freq.length;
+  const lo = Math.max(1, Math.round(2000 / hzPerBin));
+  const hi = Math.min(freq.length - 1, Math.round(9000 / hzPerBin));
+  let band = 0;
+  for (let i = lo; i <= hi; i++) band += freq[i];
+  band /= (hi - lo + 1);
+  let low = 0;
+  const lowEnd = Math.max(1, Math.round(800 / hzPerBin));
+  for (let i = 0; i < lowEnd; i++) low += freq[i];
+  low /= lowEnd;
+  const birdy = band > 55 && band > low * 1.15;
+  birdPickupFrames = birdy ? Math.min(birdPickupFrames + 1, 40) : Math.max(birdPickupFrames - 1, 0);
+  if (birdPickupFrames >= 12) {
+    const pop = $('birdPickupPop');
+    // Visual only — a sound effect here would bleed into the recording.
+    if (pop) pop.classList.add('show');
+    if (birdPickupHideTimer) clearTimeout(birdPickupHideTimer);
+    birdPickupHideTimer = setTimeout(() => $('birdPickupPop')?.classList.remove('show'), 1600);
+  }
+}
+function resetBirdPickup() {
+  birdPickupFrames = 0;
+  if (birdPickupHideTimer) { clearTimeout(birdPickupHideTimer); birdPickupHideTimer = null; }
+  $('birdPickupPop')?.classList.remove('show');
 }
 
 function drawWaveform() {
@@ -13981,6 +14095,7 @@ function drawWaveform() {
   function draw() {
     animFrameId = requestAnimationFrame(draw);
     if (!analyserNode) return;
+    updateBirdPickup();
 
     const data = new Uint8Array(analyserNode.frequencyBinCount);
     analyserNode.getByteTimeDomainData(data);
@@ -14014,9 +14129,10 @@ function drawWaveform() {
 
 async function processRecording() {
   const blob = new Blob(audioChunks, { type: 'audio/webm' });
+  const keepListening = continuousSoundScanWanted && scanMode === 'sound';
 
-  $('scanBtn').textContent = 'ANALYZING...';
-  $('scanBtn').disabled = true;
+  $('scanBtn').textContent = keepListening ? 'ANALYSING BIRDSONG…' : 'ANALYZING...';
+  $('scanBtn').disabled = !keepListening;
 
   try {
     // Upload the native browser recording; the server converts WebM/Opus to BirdNET-ready WAV.
@@ -14024,16 +14140,23 @@ async function processRecording() {
 
     if (result && result.species) {
       handleBirdCandidates(result, result.allDetections || []);
-    } else {
+      if (keepListening) showToast('🐦 Picked up ' + result.species + ' — still listening');
+    } else if (!keepListening) {
       showToast(result && result.message ? result.message : 'No bird sound detected — try a clearer 10 second recording');
     }
   } catch(e) {
     console.log('Sound ID failed:', e);
-    showToast('Sound ID could not analyse that recording yet');
+    if (!keepListening) showToast('Sound ID could not analyse that recording yet');
   }
 
-  $('scanBtn').textContent = 'START LISTENING';
-  $('scanBtn').disabled = false;
+  if (continuousSoundScanWanted && scanMode === 'sound') {
+    $('scanBtn').textContent = 'STOP LISTENING';
+    $('scanBtn').disabled = false;
+    setTimeout(() => { if (continuousSoundScanWanted && scanMode === 'sound' && !isRecording) startRecording(); }, 500);
+  } else {
+    $('scanBtn').textContent = 'START LISTENING';
+    $('scanBtn').disabled = false;
+  }
 }
 
 function handleBirdIdentified(species, scientificName, confidence) {
@@ -15577,11 +15700,10 @@ $('birdInfoModal').addEventListener('click', (e) => {
 $('recruitClose')?.addEventListener('click', () => $('recruitOverlay')?.classList.remove('show'));
 $('recruitOverlay')?.addEventListener('click', (e) => {
   if (e.target === $('recruitOverlay')) $('recruitOverlay').classList.remove('show');
-  const btn = e.target.closest('[data-action="recruit-bird"]');
+  const btn = e.target.closest('[data-action="goto-tavern"]');
   if (btn) {
     e.stopPropagation();
-    const ok = recruitDiscoveredBird(btn.dataset.discoveryKey);
-    if (ok) $('recruitOverlay').classList.remove('show');
+    gotoTavernRecruit();
   }
 });
 $('speciesPickerClose')?.addEventListener('click', () => $('speciesPickerOverlay')?.classList.remove('show'));
