@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-quest-overview-loops-v31-20260709';
+const BURBZ_CACHE = 'burbz-expedition-art-fix-v32-20260709';
 const BURBZ_ASSETS = [
   './',
   './index.html',

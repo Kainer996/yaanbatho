@@ -2969,6 +2969,7 @@ function loadState() {
   gameState.quests = (gameState.quests && typeof gameState.quests === 'object' && !Array.isArray(gameState.quests)) ? gameState.quests : {};
   gameState.badges = (gameState.badges && typeof gameState.badges === 'object' && !Array.isArray(gameState.badges)) ? gameState.badges : {};
   gameState.discoveredSpecies = (gameState.discoveredSpecies && typeof gameState.discoveredSpecies === 'object' && !Array.isArray(gameState.discoveredSpecies)) ? gameState.discoveredSpecies : {};
+  Object.values(gameState.discoveredSpecies).forEach(rec => { if (rec && typeof rec === 'object' && rec.artUrl != null && typeof rec.artUrl !== 'string') rec.artUrl = null; });
   gameState.inventory = (gameState.inventory && typeof gameState.inventory === 'object' && !Array.isArray(gameState.inventory)) ? gameState.inventory : JSON.parse(JSON.stringify(DEFAULT_STATE.inventory));
   gameState.inventory.items = (gameState.inventory.items && typeof gameState.inventory.items === 'object' && !Array.isArray(gameState.inventory.items)) ? gameState.inventory.items : {};
   gameState.inventory.equipment = (gameState.inventory.equipment && typeof gameState.inventory.equipment === 'object' && !Array.isArray(gameState.inventory.equipment)) ? gameState.inventory.equipment : {};
@@ -3009,6 +3010,7 @@ function loadState() {
     if (!b.species) b.species = b.commonName || b.name || 'Unknown Bird';
     if (!b.commonName) b.commonName = b.species;
     if (!b.rarity) b.rarity = 'common';
+    if (b.artUrl != null && typeof b.artUrl !== 'string') b.artUrl = null; // heal poisoned art refs for good
     if (!b.care || typeof b.care !== 'object') b.care = JSON.parse(JSON.stringify(DEFAULT_STATE.birdCare));
     if (!b.training || typeof b.training !== 'object') b.training = { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
     if (b.training.chaBonus == null) b.training.chaBonus = 0;
@@ -8265,7 +8267,10 @@ function resolveBuiltInBirdArt(speciesName, fallbackName) {
 function getBirdArtUrl(bird) {
   if (!bird) return null;
   const name = bird.commonName || bird.name || bird.species;
-  return resolveBuiltInBirdArt(name, bird.species || bird.name) || replaceLegacyBirdArtUrl(bird.artUrl) || bird.artUrl || null;
+  // Old saves can hold non-string artUrl values (objects/booleans); passing one
+  // through crashed birdCutoutUrlFor and took the whole Quests tab down with it.
+  const saved = typeof bird.artUrl === 'string' ? bird.artUrl : null;
+  return resolveBuiltInBirdArt(name, bird.species || bird.name) || replaceLegacyBirdArtUrl(saved) || saved || null;
 }
 
 // ---- Bird-only artwork -----------------------------------------------------
@@ -8276,7 +8281,7 @@ function getBirdArtUrl(bird) {
 // cutout first, then fall back per context — the full painting only inside
 // static framed cards, or an emoji glyph for sprites that move over the world.
 function birdCutoutUrlFor(art) {
-  if (!art || !art.includes('/bird-art-cache/') || art.includes('/cutouts/')) return null;
+  if (!art || typeof art !== 'string' || !art.includes('/bird-art-cache/') || art.includes('/cutouts/')) return null;
   const file = art.split('/').pop();
   if (!/\.png$/i.test(file)) return null;
   return '/burbz/bird-art-cache/cutouts/' + file.replace(/\.png$/i, '_cutout.png');
