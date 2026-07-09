@@ -313,13 +313,51 @@
     { coins: 20, xp: 25, label: '20 coins and an old map scrap (+25 XP)' }
   ];
 
+  // Players should end where they started whenever possible. Routes whose ends
+  // already meet are natural loops; linear paths become out-and-back walks with
+  // the banner back at the start (one-way leg capped so the round trip stays sane).
+  var LOOP_ENDS_MEET_M = 180;
+  var OUT_AND_BACK_ONE_WAY_CAP_M = 2800;
+
+  function offerLoopStyle(points) {
+    if (!points || points.length < 2) return 'loop';
+    var a = points[0], b = points[points.length - 1];
+    return questHaversine(a.lat, a.lon, b.lat, b.lon) <= LOOP_ENDS_MEET_M ? 'loop' : 'out-and-back';
+  }
+
+  function trimRouteToLength(pts, maxLenM) {
+    if (routeLengthM(pts) <= maxLenM) return pts;
+    var out = [pts[0]], acc = 0;
+    for (var i = 1; i < pts.length; i++) {
+      var seg = questHaversine(pts[i - 1].lat, pts[i - 1].lon, pts[i].lat, pts[i].lon);
+      if (acc + seg >= maxLenM) {
+        // OSM nodes on straight tracks can be hundreds of metres apart — cut the
+        // final segment at the exact cap instead of overshooting past it.
+        var f = seg > 0 ? (maxLenM - acc) / seg : 0;
+        out.push({
+          lat: pts[i - 1].lat + (pts[i].lat - pts[i - 1].lat) * f,
+          lon: pts[i - 1].lon + (pts[i].lon - pts[i - 1].lon) * f
+        });
+        break;
+      }
+      acc += seg;
+      out.push(pts[i]);
+    }
+    return out;
+  }
+
   function buildQuestFromOffer(offer, opts) {
     opts = opts || {};
     var rand = opts.rand || Math.random;
-    var pts = decimateRoute(offer.points, 160);
-    var lenM = routeLengthM(pts);
-    // Flags roughly every 350m, 3..8 of them, chests on 2-3 random flags.
-    var nFlags = Math.max(3, Math.min(8, Math.round(lenM / 350)));
+    var rawPts = offer.points;
+    var loopStyle = offer.kind === 'adventure' ? 'loop' : offerLoopStyle(rawPts);
+    if (loopStyle === 'out-and-back') rawPts = trimRouteToLength(rawPts, OUT_AND_BACK_ONE_WAY_CAP_M);
+    var pts = decimateRoute(rawPts, 160);
+    var oneWayM = routeLengthM(pts);
+    var lenM = loopStyle === 'out-and-back' ? oneWayM * 2 : oneWayM; // walking distance incl. return leg
+    // Flags roughly every 350m of the polyline they sit on (the one-way leg for
+    // out-and-backs), 3..8 of them, chests on 2-3 random flags.
+    var nFlags = Math.max(3, Math.min(8, Math.round(oneWayM / 350)));
     var checkpoints = [];
     var npcName = QUEST_GIVER_NAMES[Math.floor(rand() * QUEST_GIVER_NAMES.length)];
     var start = pts[0];
@@ -339,7 +377,9 @@
         label: 'Treasure Chest', reached: false, loot: loot
       };
     }
-    var end = pts[pts.length - 1];
+    // Loops and out-and-back walks both finish back at the start; nudge the
+    // banner ~15m aside so it doesn't sit exactly on top of the quest giver.
+    var end = loopStyle === 'out-and-back' ? destPoint(pts[0].lat, pts[0].lon, 90, 15) : pts[pts.length - 1];
     checkpoints.push({ kind: 'finish', lat: end.lat, lon: end.lon, label: 'Quest Banner', reached: false });
 
     return {
@@ -348,6 +388,7 @@
       name: offer.name,
       ref: offer.ref || null,
       npcName: npcName,
+      loopStyle: loopStyle,           // loop | out-and-back
       route: pts.map(function (p) { return [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]; }),
       lengthM: Math.round(lenM),
       checkpoints: checkpoints,
@@ -388,6 +429,7 @@
         cp.reachedAt = now;
         if (cp.kind === 'chest') quest.chestsOpened++;
         events.push({ type: cp.kind, checkpoint: cp, index: idx });
+        quest._finishNudged = false; // fresh progress re-arms the missed-waymarker nudge
       }
     });
 
@@ -399,7 +441,10 @@
         fin.reached = true;
         fin.reachedAt = now;
         events.push({ type: 'finish', checkpoint: fin, index: quest.checkpoints.length - 1 });
-      } else if (!quest._finishNudged) {
+      } else if (!quest._finishNudged && quest.distanceWalkedM >= 150) {
+        // Loops and out-and-backs start inside the finish radius — stay quiet until
+        // the player has actually walked, so the nudge only ever means "you came
+        // back but a waymarker is still missing".
         quest._finishNudged = true;
         events.push({ type: 'finish-blocked', pending: pending });
       }
@@ -496,6 +541,8 @@
     generateAdventureRoute: generateAdventureRoute,
     fetchAdventureRoute: fetchAdventureRoute,
     buildQuestFromOffer: buildQuestFromOffer,
+    offerLoopStyle: offerLoopStyle,
+    trimRouteToLength: trimRouteToLength,
     questProcessFix: questProcessFix,
     questPendingCheckpoints: questPendingCheckpoints,
     questIsComplete: questIsComplete,
