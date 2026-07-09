@@ -463,6 +463,44 @@
 
   // ---------------- Rewards ----------------
 
+  // "Trail birdwatch" bonus: each quest carries the species likely to be seen
+  // or heard along its route (quest.likelyBirds, habitat + region accurate).
+  // Capturing them during the quest pays escalating bonus XP/coins, with
+  // milestone jackpots for spotting several and a Master Birdwatcher prize for
+  // the full set.
+  var TRAIL_BIRD_BONUS = {
+    common: { xp: 35, coins: 12 },
+    regular: { xp: 45, coins: 16 },
+    uncommon: { xp: 60, coins: 22 },
+    scarce: { xp: 90, coins: 35 },
+    rare: { xp: 140, coins: 60 }
+  };
+
+  function normSpeciesName(s) {
+    return String(s || '').split('(')[0].trim().toLowerCase();
+  }
+
+  function questTrailBirdBonus(quest) {
+    var likely = (quest && quest.likelyBirds) || [];
+    var captured = {};
+    ((quest && quest.birdsCaptured) || []).forEach(function (b) {
+      var s = normSpeciesName(b.species); if (s) captured[s] = true;
+      var n = normSpeciesName(b.name); if (n) captured[n] = true;
+    });
+    // Skip blank/unnamed likely birds so an empty name can never self-match.
+    var matched = likely.filter(function (lb) { var k = normSpeciesName(lb.species); return k && captured[k]; });
+    var xp = 0, coins = 0;
+    matched.forEach(function (lb) {
+      var tier = TRAIL_BIRD_BONUS[lb.rarity] || TRAIL_BIRD_BONUS.regular;
+      xp += tier.xp; coins += tier.coins;
+    });
+    if (matched.length >= 2) xp += 50;
+    if (matched.length >= 4) { xp += 150; coins += 50; }
+    var fullSet = likely.length >= 5 && matched.length === likely.length;
+    if (fullSet) { xp += 250; coins += 100; }
+    return { matched: matched, xp: xp, coins: coins, fullSet: fullSet, total: likely.length };
+  }
+
   function questXpFor(quest) {
     var flags = quest.checkpoints.filter(function (c) { return c.kind === 'flag' && c.reached; }).length;
     var km = quest.distanceWalkedM / 1000;
@@ -477,7 +515,16 @@
 
   function questSummary(quest, now) {
     now = now || Date.now();
+    var tb = questTrailBirdBonus(quest);
     return {
+      trailBirds: {
+        total: tb.total,
+        matched: tb.matched.length,
+        matchedNames: tb.matched.map(function (m) { return m.species; }),
+        xp: tb.xp,
+        coins: tb.coins,
+        fullSet: tb.fullSet
+      },
       id: quest.id,
       name: quest.name,
       type: quest.type,
@@ -491,7 +538,7 @@
       chestsOpened: quest.chestsOpened,
       checkpointsHit: quest.checkpoints.filter(function (c) { return c.reached; }).length,
       checkpointsTotal: quest.checkpoints.length,
-      xp: questXpFor(quest)
+      xp: questXpFor(quest) + tb.xp // trail-bird bonus included in the headline XP
     };
   }
 
@@ -547,6 +594,7 @@
     questPendingCheckpoints: questPendingCheckpoints,
     questIsComplete: questIsComplete,
     questXpFor: questXpFor,
+    questTrailBirdBonus: questTrailBirdBonus,
     questSummary: questSummary,
     fetchTrailOffers: fetchTrailOffers,
     REACH_RADIUS_M: REACH_RADIUS_M

@@ -1670,6 +1670,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .wq-summary-stat .lbl { font-size:10px; color:var(--text3); letter-spacing:.4px; text-transform:uppercase; margin-top:2px; }
 .wq-history-birds { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
 .wq-history-birds .wq-bird-chip { font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(126,217,131,.12); border:1px solid rgba(126,217,131,.3); color:#9fe8a4; }
+.wq-history-birds .wq-bird-chip.got { background:rgba(240,199,103,.16); border-color:rgba(240,199,103,.5); color:#f0c767; font-weight:800; }
+.wq-detail-birds { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin:6px 0; }
+.wq-trail-bird { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 4px; border-radius:12px; border:1px solid rgba(126,217,131,.25); background:rgba(10,22,12,.55); color:var(--text); font-family:inherit; cursor:pointer; }
+.wq-trail-bird .wq-trail-bird-art { width:38px; height:38px; object-fit:contain; font-size:28px; display:grid; place-items:center; }
+.wq-trail-bird .wq-trail-bird-name { font-size:10px; font-weight:800; color:#c9edc9; text-align:center; line-height:1.15; }
+.wq-trail-bird .wq-trail-bird-rarity { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; }
+.wq-bonus-blurb { margin:8px 0; padding:8px 10px; border-radius:12px; background:rgba(240,199,103,.08); border:1px solid rgba(240,199,103,.25); }
 /* Tap an area bird to see it big with its full name */
 .map-area-bird { cursor:pointer; }
 .map-area-bird:active { transform:scale(.96); }
@@ -2178,7 +2185,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-xp-20260701"></script>
 <script src="battle_core.js?v=squad-league-20260624"></script>
-<script src="quest_core.js?v=walking-quests-2-20260709"></script>
+<script src="quest_core.js?v=walking-quests-3-20260709"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -10541,7 +10548,7 @@ function openQuestOfferSheet() {
       // distance the player will actually cover, matching the overview sheet.
       const walkKm = isLoop ? o.lengthM / 1000 : Math.min(o.lengthM, 2800) * 2 / 1000;
       b.innerHTML = '<div class="wqo-icon">' + meta.icon + '</div><div><div class="wqo-name">' + escapeHtml(o.name) + '</div><div class="wqo-sub">' + meta.label + ' · ' + (isLoop ? '' : '~') + walkKm.toFixed(1) + ' km walk · ' + (isLoop ? '↺ loop' : '↔ out & back') + ' · starts ' + Math.round(o.startDistM) + ' m away</div></div>';
-      b.addEventListener('click', () => startWalkingQuestFromOffer(walkQuestOffersCache[i]));
+      b.addEventListener('click', () => openQuestOfferDetail(walkQuestOffersCache[i]));
       list.appendChild(b);
     });
     renderAdventureOffers();
@@ -10552,6 +10559,33 @@ function openQuestOfferSheet() {
   });
 }
 let walkQuestOffersCache = [];
+
+// Birds likely to be seen or heard along a quest route: reuse the map's
+// habitat engine (OSM features + regional species pools) but sample the
+// route's own corridor, so a riverside path advertises river birds even when
+// the player is standing in town.
+const questLikelyBirdCache = new Map();
+async function fetchQuestLikelyBirds(offer) {
+  // Always key on the route's start coordinates: offer.ref values like
+  // 'footpath-cluster/0' repeat across locations, so a coords-free key would
+  // serve one area's birds for a same-index cluster somewhere else.
+  const key = (offer.ref || offer.name) + '@' + offer.points[0].lat.toFixed(4) + ',' + offer.points[0].lon.toFixed(4);
+  if (questLikelyBirdCache.has(key)) return questLikelyBirdCache.get(key);
+  const pts = window.BurbzQuestCore.decimateRoute(offer.points, 60);
+  let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+  pts.forEach(p => { minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat); minLon = Math.min(minLon, p.lon); maxLon = Math.max(maxLon, p.lon); });
+  const cLat = (minLat + maxLat) / 2, cLon = (minLon + maxLon) / 2;
+  const radius = Math.min(2600, Math.max(700, Math.round(mapDistanceMeters({ lat: minLat, lon: minLon }, { lat: maxLat, lon: maxLon }) / 2 + 320)));
+  const features = await fetchNearbyHabitatFeatures(cLat, cLon, radius).catch(() => []);
+  const corridor = features.filter(f => pts.some(p => mapDistanceMeters(p, f) < 300));
+  const spawns = buildBirdSpawns(cLat, cLon, corridor.length >= 4 ? corridor : features);
+  const rows = likelyBirdRows(spawns).slice(0, 8);
+  questLikelyBirdCache.set(key, rows);
+  return rows;
+}
+function likelyRowsToQuestBirds(rows) {
+  return (rows || []).map(r => ({ species: r.species, rarity: r.rarityLabel || realWorldRarityLabel(r.species) }));
+}
 
 function startAdventureWalkQuest(lenM, label) {
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location needed to chart an adventure'); return; }
@@ -10568,9 +10602,18 @@ function startWalkingQuestFromOffer(offer) {
   const wq = ensureWalkingQuestState();
   if (wq.active) { showToast('Finish or abandon your current quest first'); return; }
   const quest = window.BurbzQuestCore.buildQuestFromOffer(offer);
+  quest.likelyBirds = Array.isArray(offer.likelyBirds) ? offer.likelyBirds.slice(0, 8) : [];
   wq.active = quest;
   walkQuestLastSave = Date.now();
   saveState();
+  if (!quest.likelyBirds.length) {
+    // Started without opening the info sheet (e.g. charted adventure) — scout
+    // the route's birds in the background so the bonus still applies.
+    fetchQuestLikelyBirds(offer).then(rows => {
+      const act = activeWalkingQuest();
+      if (act && act.id === quest.id) { act.likelyBirds = likelyRowsToQuestBirds(rows); saveState(); }
+    }).catch(() => {});
+  }
   closeWalkQuestSheet();
   setQuestOverview(false);
   drawWalkingQuestOnMap();
@@ -10677,14 +10720,16 @@ function completeWalkingQuest() {
   const wq = ensureWalkingQuestState();
   const quest = wq.active;
   if (!quest) return;
-  const summary = window.BurbzQuestCore.questSummary(quest);
+  const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
   addPlayerXp(summary.xp);
+  const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
+  if (bonusCoins) addCoins(bonusCoins);
   wq.history.unshift(summary);
   if (wq.history.length > 60) wq.history.length = 60;
   wq.active = null;
   saveState();
   clearWalkingQuestFromMap();
-  playQuestClaimCelebration({ coins: 0, xp: summary.xp, items: {} });
+  playQuestClaimCelebration({ coins: bonusCoins, xp: summary.xp, items: {} });
   setTimeout(() => showWalkQuestSummarySheet(summary, true), 1400);
 }
 
@@ -10715,7 +10760,13 @@ function openActiveWalkQuestSheet() {
     '<div class="wq-summary-stat"><div class="num">' + quest.birdsCaptured.length + '</div><div class="lbl">birds captured</div></div>' +
     '<div class="wq-summary-stat"><div class="num">' + quest.chestsOpened + '</div><div class="lbl">chests opened</div></div>' +
     '</div>' +
-    '<div class="quest-desc">Follow the golden dashed path on the map. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m of each marker to claim it, then reach the 🏁 banner to complete the quest. Worth ~' + window.BurbzQuestCore.questXpFor(quest) + ' XP so far.</div>' +
+    (quest.likelyBirds && quest.likelyBirds.length ? (() => {
+      const tb = window.BurbzQuestCore.questTrailBirdBonus(quest);
+      const got = new Set(tb.matched.map(m => m.species));
+      return '<div class="quest-desc" style="margin:4px 0 2px">🐦 Trail birds captured: <b>' + tb.matched.length + '/' + quest.likelyBirds.length + '</b>' + (tb.xp ? ' (bonus so far +' + tb.xp + ' XP, +' + tb.coins + ' 🪙)' : '') + '</div>' +
+        '<div class="wq-history-birds">' + quest.likelyBirds.map(lb => '<span class="wq-bird-chip' + (got.has(lb.species) ? ' got' : '') + '">' + (got.has(lb.species) ? '✅ ' : '') + escapeHtml(lb.species) + '</span>').join('') + '</div>';
+    })() : '') +
+    '<div class="quest-desc">Follow the golden dashed path on the map. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m of each marker to claim it, then reach the 🏁 banner to complete the quest. Worth ~' + (window.BurbzQuestCore.questXpFor(quest) + window.BurbzQuestCore.questTrailBirdBonus(quest).xp) + ' XP so far.</div>' +
     '<button class="wq-npc-ok" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">View on map</button> ' +
     '<button class="wq-npc-ok" style="border-color:rgba(255,120,120,.5); color:#ff9d9d; background:rgba(255,120,120,.1)" onclick="abandonWalkingQuest()">Abandon</button>' +
     '</div>';
@@ -10746,6 +10797,11 @@ function showWalkQuestSummarySheet(summary, celebrate) {
     '<div class="wq-summary-stat"><div class="num">' + (summary.birds || []).length + '</div><div class="lbl">birds captured</div></div>' +
     '<div class="wq-summary-stat"><div class="num">+' + summary.xp + '</div><div class="lbl">XP earned</div></div>' +
     '</div>' +
+    (summary.trailBirds && summary.trailBirds.total ?
+      '<div class="quest-desc" style="margin:6px 0">🐦 Trail birds spotted: <b>' + summary.trailBirds.matched + '/' + summary.trailBirds.total + '</b>' +
+      (summary.trailBirds.xp ? ' — bonus +' + summary.trailBirds.xp + ' XP, +' + summary.trailBirds.coins + ' 🪙' : ' — no bonus this time') +
+      (summary.trailBirds.fullSet ? '<div style="color:#f0c767;font-weight:800;margin-top:4px">🏅 MASTER BIRDWATCHER — full set captured!</div>' : '') + '</div>'
+      : '') +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
     '</div>';
   el.classList.add('open');
@@ -10778,7 +10834,7 @@ function renderWalkingQuestSection() {
       const meta = WALK_QUEST_KIND_META[s.type] || WALK_QUEST_KIND_META.path;
       html += '<div class="quest-card" data-walk-history="' + i + '"><div class="quest-icon">' + meta.icon + '</div><div class="quest-info">' +
         '<div class="quest-name">' + escapeHtml(s.name) + '</div>' +
-        '<div class="quest-desc">' + new Date(s.completedAt).toLocaleDateString() + ' · ' + s.distanceKm.toFixed(2) + ' km · ' + s.durationMin + ' min · ' + (s.birds || []).length + ' 🐦 · ' + s.chestsOpened + ' 🎁 · +' + s.xp + ' XP</div>' +
+        '<div class="quest-desc">' + new Date(s.completedAt).toLocaleDateString() + ' · ' + s.distanceKm.toFixed(2) + ' km · ' + s.durationMin + ' min · ' + (s.birds || []).length + ' 🐦 · ' + s.chestsOpened + ' 🎁 · +' + s.xp + ' XP' + (s.trailBirds && s.trailBirds.total ? ' · trail birds ' + s.trailBirds.matched + '/' + s.trailBirds.total + (s.trailBirds.fullSet ? ' 🏅' : '') : '') + '</div>' +
         '</div></div>';
     });
   }
@@ -10870,25 +10926,52 @@ function toggleQuestOverview() { SFX.tap(); setQuestOverview(!questOverview.on);
 
 function openQuestOverviewOffer(idx) {
   const o = questOverview.offers[idx];
-  if (!o) return;
-  const meta = WALK_QUEST_KIND_META[o.kind] || WALK_QUEST_KIND_META.path;
-  const loopStyle = window.BurbzQuestCore.offerLoopStyle(o.points);
-  const oneWayKm = o.lengthM / 1000;
+  if (o) openQuestOfferDetail(o);
+}
+
+// Quest information sheet shown BEFORE starting: route facts + the birds the
+// player is likely to see or hear along it, with the trail-birdwatch bonus.
+function openQuestOfferDetail(offer) {
+  const meta = WALK_QUEST_KIND_META[offer.kind] || WALK_QUEST_KIND_META.path;
+  const loopStyle = offer.kind === 'adventure' ? 'loop' : window.BurbzQuestCore.offerLoopStyle(offer.points);
   const loopLabel = loopStyle === 'loop'
     ? '↺ loop — ends back at the start'
-    : '↔ out & back — walk it, then return to the start (~' + (Math.min(o.lengthM, 2800) * 2 / 1000).toFixed(1) + ' km round trip)';
+    : '↔ out & back — walk it, then return to the start (~' + (Math.min(offer.lengthM || 0, 2800) * 2 / 1000).toFixed(1) + ' km round trip)';
+  const distLine = (offer.lengthM ? (loopStyle === 'loop' ? (offer.lengthM / 1000).toFixed(1) : (Math.min(offer.lengthM, 2800) * 2 / 1000).toFixed(1)) + ' km walk · ' : '') +
+    (offer.startDistM != null ? 'starts ' + Math.round(offer.startDistM) + ' m away' : 'starts right here');
   const active = activeWalkingQuest();
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + meta.icon + '</div><div><div class="quest-name">' + escapeHtml(o.name) + '</div><div class="quest-desc">' + meta.label + ' · ' + oneWayKm.toFixed(1) + ' km of path · starts ' + Math.round(o.startDistM) + ' m away</div></div></div>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + meta.icon + '</div><div><div class="quest-name">' + escapeHtml(offer.name) + '</div><div class="quest-desc">' + meta.label + ' · ' + distLine + '</div></div></div>' +
     '<div class="quest-desc" style="margin:8px 0">' + loopLabel + '</div>' +
+    '<div class="quest-section-title" style="margin:10px 0 4px">🐦 Birds on this trail</div>' +
+    '<div class="wq-detail-birds" id="wqDetailBirds"><div class="quest-desc">The scouts are reading the habitats along this route...</div></div>' +
+    '<div class="quest-desc wq-bonus-blurb">Capture trail birds during the quest for bonus XP and coins — rarer birds pay more, spotting several pays extra, and capturing the <b>full set</b> earns the 🏅 Master Birdwatcher jackpot!</div>' +
     (active ? '<div class="quest-desc" style="margin:8px 0;color:#ffb86b">You are already on "' + escapeHtml(active.name) + '" — finish or abandon it first.</div>' : '') +
-    '<button class="wq-npc-ok" id="wqOverviewBeginBtn">' + (active ? 'View current quest' : '⚔️ Begin this quest') + '</button> ' +
-    '<button class="wq-npc-ok" style="opacity:.75" onclick="closeWalkQuestSheet()">Keep exploring</button>' +
+    '<button class="wq-npc-ok" id="wqOfferBeginBtn">' + (active ? 'View current quest' : '⚔️ Begin this quest') + '</button> ' +
+    '<button class="wq-npc-ok" style="opacity:.75" onclick="closeWalkQuestSheet()">Not yet</button>' +
     '<div class="wq-attribution">Trail data © OpenStreetMap contributors</div></div>';
   el.classList.add('open');
-  const btn = $('wqOverviewBeginBtn');
-  if (btn) btn.addEventListener('click', () => { if (activeWalkingQuest()) { openActiveWalkQuestSheet(); } else { startWalkingQuestFromOffer(o); } });
+  const btn = $('wqOfferBeginBtn');
+  if (btn) btn.addEventListener('click', () => { if (activeWalkingQuest()) { openActiveWalkQuestSheet(); } else { startWalkingQuestFromOffer(offer); } });
+  fetchQuestLikelyBirds(offer).then(rows => {
+    offer.likelyBirds = likelyRowsToQuestBirds(rows);
+    const box = $('wqDetailBirds');
+    if (!box || !el.classList.contains('open')) return;
+    if (!rows.length) { box.innerHTML = '<div class="quest-desc">The habitat scouts came back empty — but keep your scanner ready anyway!</div>'; return; }
+    box.innerHTML = rows.map((row, i) => '<button class="wq-trail-bird" data-trail-bird="' + i + '">' +
+      birdOnlyImgHTML(row.bird || { commonName: row.species }, 'wq-trail-bird-art') +
+      '<div class="wq-trail-bird-name">' + escapeHtml(row.species) + '</div>' +
+      '<div class="wq-trail-bird-rarity">' + escapeHtml(row.rarityLabel || '') + '</div></button>').join('');
+    box.querySelectorAll('[data-trail-bird]').forEach(card => card.addEventListener('click', () => {
+      const row = rows[Number(card.dataset.trailBird)];
+      if (row) { SFX.tap(); showMapBirdPreview(row); }
+    }));
+  }).catch(err => {
+    console.warn('BURBZ quest likely birds failed', err);
+    const box = $('wqDetailBirds');
+    if (box) box.innerHTML = '<div class="quest-desc">The habitat scouts got lost — bird bonuses will still count during the quest.</div>';
+  });
 }
 
 // The game runs inside an IIFE, so inline onclick handlers (and QA harnesses)

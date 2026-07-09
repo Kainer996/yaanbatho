@@ -1,11 +1,11 @@
-const BURBZ_CACHE = 'burbz-expedition-art-fix-v32-20260709';
+const BURBZ_CACHE = 'burbz-trail-birds-v33-20260709';
 const BURBZ_ASSETS = [
   './',
   './index.html',
   './lib/three.min.js?v=0.158.0',
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
-  './quest_core.js?v=walking-quests-2-20260709',
+  './quest_core.js?v=walking-quests-3-20260709',
   './academy_treehouse_core.js',
   './assets/merlin-tutorial.png',
   './assets/academy-tree-manga-20260629.png',
