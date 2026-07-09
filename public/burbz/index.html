@@ -636,13 +636,26 @@ svg.academy-room-bg { display:block; filter:none; }
   display: none;
 }
 .pet-companion.show { display: block; }
-.pet-companion::before {
+/* The perch is its own fixed element so it stays put while the bird flies. */
+.pet-perch {
+  position: fixed;
+  top: calc(var(--safe-top) + 76px);
+  right: 14px;
+  width: 62px;
+  height: 72px;
+  z-index: 179;
+  pointer-events: none;
+  display: none;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,0.42));
+}
+.pet-perch.show { display: block; }
+.pet-perch::before {
   content:''; position:absolute; left:13px; right:13px; bottom:11px; height:18px; z-index:1;
   background:linear-gradient(90deg, transparent 0 8%, rgba(96,57,26,.95) 9% 17%, transparent 18% 82%, rgba(96,57,26,.95) 83% 91%, transparent 92%), linear-gradient(180deg, rgba(139,92,45,.98), rgba(67,39,18,.98));
   clip-path:polygon(0 36%,100% 36%,94% 62%,62% 68%,58% 100%,42% 100%,38% 68%,6% 62%);
   filter:drop-shadow(0 7px 8px rgba(0,0,0,.52));
 }
-.pet-companion::after {
+.pet-perch::after {
   content: '';
   position: absolute;
   left: 3px; right: 3px; bottom: 23px; height: 7px; border-radius: 999px; z-index:2;
@@ -663,7 +676,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .pet-name, .pet-mood, .pet-bars, .pet-actions { display: none; }
 .pet-speech {
   position: absolute; right: 6px; top: 54px; transform: translateY(-4px); z-index: 6;
-  min-width: 76px; max-width: 128px; padding: 6px 7px; border-radius: 10px; background: rgba(255,255,255,0.94);
+  min-width: 76px; max-width: 156px; padding: 6px 7px; border-radius: 10px; background: rgba(255,255,255,0.94);
   color: #17130b; font-size: 10px; font-weight: 800; text-align: center; opacity: 0; pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
@@ -2181,7 +2194,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
   </div>
 
-  <!-- Pet Companion -->
+  <!-- Pet Companion (the perch is a separate element so it never flies with the bird) -->
+  <div class="pet-perch" id="petPerch"></div>
   <div class="pet-companion" id="petCompanion" aria-live="polite">
     <div class="pet-speech" id="petSpeech">Chirp!</div>
     <div class="pet-sprite" id="petSprite"><div class="pet-emoji" id="petEmoji">&#128038;</div></div>
@@ -14840,10 +14854,13 @@ function renderPetCompanion() {
   if (!companion) return;
   ensureActivePetStillExists();
   const bird = getActivePet();
+  const perch = $('petPerch');
   if (!bird) {
     companion.classList.remove('show');
+    if (perch) perch.classList.remove('show');
     return;
   }
+  if (perch) perch.classList.add('show');
 
   const pet = bird.care || DEFAULT_STATE.birdCare; // Use the bird's individual care
   const sprite = $('petSprite');
@@ -14954,12 +14971,68 @@ function petSay(msg) {
   bubble.textContent = msg;
   bubble.classList.add('show');
   clearTimeout(petSpeechTimer);
-  petSpeechTimer = setTimeout(() => bubble.classList.remove('show'), 1800);
+  // Longer lines stay up longer so facts are actually readable.
+  const holdMs = Math.min(6500, 2000 + msg.length * 45);
+  petSpeechTimer = setTimeout(() => bubble.classList.remove('show'), holdMs);
 }
 
+// 20 funny lines + 10 bird facts. Picked at random, never repeating any of the
+// last 8, so each session feels different.
+const PET_CHATTER_LINES = [
+  'I saw a worm this morning. I let him live. He knows why.',
+  'Early bird gets the worm? I prefer brunch.',
+  'I don’t sing for free after 9am.',
+  'Statues are just humans who lost a staring contest with a pigeon.',
+  'My nest isn’t messy, it’s rustic.',
+  'The cat asked permission to enter this garden. As it should.',
+  'Migration is just a group chat that got wildly out of hand.',
+  'I could fly south for winter… or you could turn the heating up.',
+  'That scarecrow? We use it as a coat rack.',
+  'Tweet tweet. That’s copyrighted, by the way.',
+  'Bathed in a puddle today. It’s called self-care.',
+  'Seagulls don’t share chips. Don’t be a seagull.',
+  'I’m on a seafood diet. I see food and scream like a gull.',
+  'Your alarm goes off at 6am? Cute. I AM the alarm.',
+  'Feathers: 10/10, would preen again.',
+  'If I stare at the window long enough, snacks appear. Science.',
+  'The pecking order? I invented it. Look it up.',
+  'I’m not chubby, I’m fluffed for winter.',
+  'Told an owl a joke once. He didn’t give a hoot.',
+  'Free bird? Mate, this bird costs three sunflower seeds minimum.',
+  'Fact: hummingbirds are the only birds that can fly backwards.',
+  'Fact: an ostrich’s eye is bigger than its brain.',
+  'Fact: wrens can sing around 10 notes a second. Show-offs.',
+  'Fact: crows recognise human faces — and hold grudges.',
+  'Fact: swifts can stay airborne for 10 months without landing.',
+  'Fact: owls can’t move their eyes — that’s why they swivel their heads.',
+  'Fact: a robin’s red breast is for territory battles, not romance.',
+  'Fact: peregrine falcons dive at over 240 mph — fastest animal on Earth.',
+  'Fact: some ducks sleep with one eye open, half the brain on watch.',
+  'Fact: puffins can carry a dozen fish in their beak at once.'
+];
+let petRecentLines = [];
 function randomPetLine() {
-  const lines = ['Chirp!', 'Found any birds?', 'Let’s explore!', 'Tweet tweet!', 'Best flock ever'];
-  return lines[Math.floor(Math.random() * lines.length)];
+  const fresh = PET_CHATTER_LINES.filter(l => !petRecentLines.includes(l));
+  const pool = fresh.length ? fresh : PET_CHATTER_LINES;
+  const line = pool[Math.floor(Math.random() * pool.length)];
+  petRecentLines.push(line);
+  if (petRecentLines.length > 8) petRecentLines.shift();
+  return line;
+}
+
+// Ambient chatter: roughly every 30s (jittered 24-42s so it never feels
+// scripted), the pet pipes up with a random line while it's on screen.
+let petChatterTimer = null;
+function startPetChatterLoop() {
+  clearTimeout(petChatterTimer);
+  const delay = 24000 + Math.random() * 18000;
+  petChatterTimer = setTimeout(() => {
+    const companion = $('petCompanion');
+    if (companion && companion.classList.contains('show') && !document.hidden) {
+      petSay(randomPetLine());
+    }
+    startPetChatterLoop();
+  }, delay);
 }
 
 function makePetSparkles(count) {
@@ -15588,6 +15661,7 @@ function init() {
   maybeShowIntroCutscene();
   startPetWander();
   startPetCareLoop();
+  startPetChatterLoop();
   initCloudAuth();
 
   // Backfill/correct manga art for saved birds so names and images stay paired.
