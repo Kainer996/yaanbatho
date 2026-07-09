@@ -1653,6 +1653,28 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .quest-marker.qm-npc.reached::after { content:''; }
 .quest-marker.qm-chest { animation:questBounce 2.1s ease-in-out infinite; }
 .quest-marker.qm-chest.reached { animation:none; }
+/* Trail bird NPCs: birds you found mid-quest, perched ahead on the route */
+.quest-marker.qm-birdnpc { width:46px; height:46px; border-radius:50%; overflow:visible; border:2.5px solid #7ee08a; background:radial-gradient(circle at 40% 30%, #1d3a22, #0b140d); box-shadow:0 0 12px rgba(126,224,138,.55); }
+.quest-marker.qm-birdnpc img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.quest-marker.qm-birdnpc .qm-bird-emoji { font-size:24px; }
+.quest-marker.qm-birdnpc::after { content:'💬'; position:absolute; top:-14px; right:-6px; font-size:14px; animation:questBounce 1.4s ease-in-out infinite; }
+.quest-marker.qm-birdnpc.reached { opacity:.6; transform:scale(.85); }
+.quest-marker.qm-birdnpc.reached::after { content:'🤝'; animation:none; }
+/* The Wandering Perch — pop-up trail tavern */
+.quest-marker.qm-tavern { width:54px; height:54px; border-radius:14px; border:2.5px solid #f0c767; background:linear-gradient(180deg,#3a2c12,#1c150a); font-size:30px; box-shadow:0 0 18px rgba(240,199,103,.65); animation:questBounce 1.8s ease-in-out infinite; }
+.quest-marker.qm-tavern.visited { animation:none; opacity:.9; }
+/* Tavern sheet */
+.tavern-lines { margin:8px 0 4px; }
+.tavern-line { margin:4px 0; }
+.tavern-fact { margin:8px 0; padding:8px 10px; border-radius:10px; background:rgba(126,224,138,.09); border-left:2px solid #7ee08a; color:var(--text2); font-size:12.5px; line-height:1.5; }
+.tavern-drink { display:flex; align-items:center; gap:10px; width:100%; margin:6px 0; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.30); color:var(--text1); text-align:left; }
+.tavern-drink:active { transform:scale(.985); }
+.tavern-drink[disabled] { opacity:.45; filter:grayscale(.4); }
+.tavern-drink-icon { font-size:26px; }
+.tavern-drink-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; color:var(--accent2); }
+.tavern-drink-desc { font-size:11.5px; color:var(--text3); line-height:1.35; }
+.tavern-bought { margin:10px 0; padding:8px 10px; border-radius:10px; background:rgba(240,199,103,.10); border:1px solid rgba(240,199,103,.28); }
+.wq-npc-emoji { font-size:34px; display:grid; place-items:center; width:100%; height:100%; }
 .wq-offer-pin { cursor:pointer; display:flex; flex-direction:column; align-items:center; pointer-events:auto; }
 .wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:38px; height:38px; border-radius:50%; font-size:19px; background:radial-gradient(circle at 36% 30%, #1f4423, #0c1c0e 78%); border:2px solid #58d858; box-shadow:0 0 12px rgba(88,216,88,.5), 0 4px 10px rgba(0,0,0,.5); animation:questBounce 2.6s ease-in-out infinite; }
 .wq-offer-pin .wq-offer-name { max-width:120px; margin-top:3px; padding:2px 7px; border-radius:9px; font-size:9px; font-weight:800; text-align:center; color:#bdf3bd; background:rgba(6,18,8,.82); border:1px solid rgba(88,216,88,.4); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -2183,9 +2205,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=quest-xp-20260701"></script>
+<script src="academy_treehouse_core.js?v=thirsty-owl-20260709"></script>
 <script src="battle_core.js?v=squad-league-20260624"></script>
-<script src="quest_core.js?v=walking-quests-3-20260709"></script>
+<script src="quest_core.js?v=trail-tavern-loops-20260709"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -2916,7 +2938,8 @@ const DEFAULT_STATE = {
   walkingQuests: { active: null, history: [] }, // Real-world walking adventures on the live map
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
   knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
-  mapExploredCells: [] // Fog-of-discovery map cells the player has physically revealed
+  mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
+  tavernPatrons: [] // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
 };
 
 let gameState;
@@ -2991,6 +3014,7 @@ function loadState() {
   if (!Array.isArray(gameState.walkingQuests.history)) gameState.walkingQuests.history = [];
   if (gameState.walkingQuests.active && typeof gameState.walkingQuests.active !== 'object') gameState.walkingQuests.active = null;
   gameState.merlinCluesFound = Array.isArray(gameState.merlinCluesFound) ? [...new Set(gameState.merlinCluesFound.filter(Boolean))] : [];
+  gameState.tavernPatrons = Array.isArray(gameState.tavernPatrons) ? gameState.tavernPatrons.filter(p => p && typeof p === 'object' && p.species) : [];
   gameState.mapExploredCells = Array.isArray(gameState.mapExploredCells) ? [...new Set(gameState.mapExploredCells.filter(Boolean))].slice(-180) : [];
   selectedBattleFormation = (gameState.battlePreset && BATTLE_FORMATIONS[gameState.battlePreset.formation]) ? gameState.battlePreset.formation : 'balanced';
 
@@ -8541,12 +8565,13 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', market:'assets/academy-buildings-manga/market.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/crowbar.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', market:'assets/academy-buildings-manga/market.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
   dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'A cosy branch home. Birds resting here heal up while you feed, groom and tuck them in.', perk:'Passive: heals HP, hunger grows slowly', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
+  tavern: { label:'THE THIRSTY OWL', icon:'🍺', buildingId:'tavern', desc:'The trainers\' taproom. Birds you befriend as NPCs on real-world walking quests fly here afterwards — buy them a drink and they\'ll join your flock.', perk:'Active: recruit trail birds', perches:[[76,84],[72,88],[80,88]] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
@@ -9380,6 +9405,11 @@ function renderAcademyRoomPanel(birds) {
     return;
   }
 
+  if (academySelectedRoom === 'tavern') {
+    panel.innerHTML = html + renderAcademyTavernPanelHTML();
+    return;
+  }
+
   if (!birds || birds.length === 0) {
     html += '<div class="academy-empty">' + (gameState.flock.length === 0
       ? 'No birds yet — go scan some real birds and your captures will move in here.'
@@ -9475,6 +9505,78 @@ function renderAcademyRecruitmentPanel() { renderAcademy(); }
 function academyRecruitBird(key) {
   const ok = recruitDiscoveredBird(key);
   if (ok) { academySelectedRoom = 'market'; renderAcademy(); }
+}
+
+// ---- The Thirsty Owl: Academy tavern where befriended trail birds wait ----
+function ensureTavernPatrons() {
+  if (!Array.isArray(gameState.tavernPatrons)) gameState.tavernPatrons = [];
+  return gameState.tavernPatrons;
+}
+
+function addTavernPatron(npc, quest) {
+  const list = ensureTavernPatrons();
+  const canonical = canonicalSpeciesName(npc.species);
+  const key = speciesKey(canonical);
+  if (!key || list.some(p => p.key === key)) return false;
+  if (companionForSpecies(canonical)) return false; // already in the flock
+  list.push({ key, species: canonical, rarity: npc.rarity || 'common', metAt: new Date().toISOString(), questName: (quest && quest.name) || null });
+  return true;
+}
+
+function removeTavernPatronForSpecies(name) {
+  const keys = new Set(discoveryKeysForSpecies(name));
+  const list = ensureTavernPatrons();
+  const before = list.length;
+  gameState.tavernPatrons = list.filter(p => !keys.has(p.key));
+  return gameState.tavernPatrons.length !== before;
+}
+
+function renderAcademyTavernPanelHTML() {
+  const patrons = ensureTavernPatrons().filter(p => !companionForSpecies(p.species));
+  const seed = hashStr('thirsty-owl:' + patrons.map(p => p.key).join(',') + ':' + new Date().toDateString());
+  const keeper = TAVERN_KEEPER_NAMES[seed % TAVERN_KEEPER_NAMES.length];
+  const chatter = patrons.length
+    ? TAVERN_ACADEMY_CHATTER[seed % TAVERN_ACADEMY_CHATTER.length].replace('{bird}', patrons[seed % patrons.length].species)
+    : 'Quiet in here today. Befriend bird NPCs out on your walking quests and they\'ll flock in for a drink.';
+  const fact = tavernBirdFactFor(patrons.map(p => p.species), seed);
+  let html = '<div class="academy-builder-copy">🍺 <b>' + escapeHtml(keeper) + '</b>: "' + escapeHtml(chatter) + '"</div>' +
+    '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(fact) + '</div>';
+  if (!patrons.length) {
+    return html + '<div class="academy-empty">No trail birds waiting yet. On a walking quest, every bird you find lands on your route as an NPC — walk up and say hello, and it will meet you here afterwards.</div>';
+  }
+  html += patrons.map(p => {
+    const bird = createBirdEntry(p.species, '', 0.9);
+    const cost = recruitCostForBird({ rarity: p.rarity });
+    const canAfford = (gameState.player.coins || 0) >= cost;
+    const met = p.questName ? 'Met on "' + p.questName + '"' : 'Met on a walking quest';
+    return '<div class="academy-bird-row recruit-row">' + birdOnlyImgHTML(bird, 'academy-bird-art') +
+      '<div class="academy-bird-main"><div class="academy-bird-name">' + escapeHtml(p.species) + '</div>' +
+      '<div class="academy-bird-meta">' + escapeHtml(met) + ' · ' + (p.rarity || 'common').toUpperCase() + '</div></div>' +
+      '<div class="academy-actions"><button class="academy-btn primary" onclick="academyTavernRecruit(\'' + p.key + '\')" ' + (canAfford ? '' : 'disabled') + '>' +
+      (canAfford ? '🍻 Buy a drink · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
+  }).join('');
+  return html;
+}
+
+function academyTavernRecruit(patronKey) {
+  const patron = ensureTavernPatrons().find(p => p.key === patronKey);
+  if (!patron) return;
+  // Make sure the Birdex has a record to recruit from (it normally does — the
+  // NPC only spawned because the bird was discovered on the quest).
+  let record = getDiscoveredRecordForSpecies(patron.species);
+  if (!record) {
+    rememberDiscoveredBird({ species: patron.species, rarity: patron.rarity }, { silent: true });
+    record = getDiscoveredRecordForSpecies(patron.species);
+  }
+  if (!record) { showToast('The ' + patron.species + ' slipped out the back door — try scanning one again.'); return; }
+  const ok = recruitDiscoveredBird(record.key);
+  if (ok) {
+    removeTavernPatronForSpecies(patron.species);
+    saveState();
+    showToast('🍻 One drink later, ' + patron.species + ' joins your flock!');
+    academySelectedRoom = 'tavern';
+    renderAcademy();
+  }
 }
 
 function academyMeter(label, pct, cls) {
@@ -10483,7 +10585,222 @@ const WALK_QUEST_KIND_META = {
   adventure: { icon: '🧭', label: 'Charted Adventure' }
 };
 let questMapMarkers = [];
+let questExtraMarkers = []; // trail bird NPCs + the wandering tavern (mid-quest spawns)
 let walkQuestLastSave = 0;
+
+// ---- Trail bird NPCs, the wandering tavern, and drink boons ----------------
+const TAVERN_KEEPER_NAMES = ['Barkeep Bramblefinch', 'Old Peckwood', 'Merry Wrenhild', 'Tapmaster Corvus', 'Goodwife Sedgewhistle'];
+const TRAIL_TAVERN_DRINKS = [
+  { id:'ale', name:'Waymarker Wheat Ale', icon:'🍺', cost:12, desc:'+50% quest XP when you reach the banner', boon:{ id:'ale', label:'Waymarker Wheat Ale · +50% quest XP', xpMult:1.5 } },
+  { id:'mead', name:'Honeyed Mead', icon:'🍯', cost:18, desc:'Trail-bird bonus coins pay DOUBLE at the banner', boon:{ id:'mead', label:'Honeyed Mead · trail-bird coins ×2', tbCoinMult:2 } },
+  { id:'cordial', name:'Elderberry Cordial', icon:'🫐', cost:8, desc:'A round for the flock: full HP and +20 happiness right now', boon:{ id:'cordial', label:'Elderberry Cordial · flock refreshed', instant:'flockRefresh' } }
+];
+const TRAIL_NPC_GREETINGS = [
+  'You found me back there, didn\'t you? Sharp eyes, adventurer! I\'ll fly along your trail a while.',
+  'A trainer who actually walks the land — how refreshing. Well met on this fine path!',
+  'I heard your scanner chirp from three hedgerows away. Couldn\'t resist landing to say hello.',
+  'The waymarkers whisper about you, you know. Keep walking — this trail has more secrets.',
+  'Splendid day for a wander! Mind the mud past the next bend, it nearly took my tail feathers.'
+];
+const TAVERN_GREETINGS = [
+  'Welcome, welcome! Word travels fast on the wind — {count} feathered friends flew ahead to tell me you were coming.',
+  'Ah, the walking trainer! Your trail companions are already perched at the bar. First visit\'s the warmest.',
+  'Come in out of the weather! {bird} here has been chirping about you all afternoon.',
+  'A human who befriends birds on public footpaths? You\'ll fit right in at The Wandering Perch.'
+];
+const TAVERN_GOSSIP = [
+  'The {bird} swears the next stretch of your trail has the best foraging this side of the valley.',
+  'Rumour at the bar is a {bird} once drank three thimbles of elderberry cordial here and sang until dawn.',
+  'Between us — the {bird} has been telling everyone you\'re the kindest trainer on these paths.',
+  'The regulars reckon a storm chased a {bird} in here last spring and it simply never left.'
+];
+const TAVERN_TOASTS = [
+  'Raise a thimble — to muddy boots and open skies!',
+  'To every waymarker reached and every chest cracked open!',
+  'May your loops always bring you home by a new path!',
+  'To the birds of the trail — long may they sing!'
+];
+const TAVERN_ACADEMY_CHATTER = [
+  'The {bird} at the end of the bar keeps asking when you\'ll take it adventuring.',
+  'Busy night! Every bird in here met you out on the trails — they only need a drink and a handshake.',
+  'A {bird} told the whole taproom about your walk together. You\'ve got admirers, trainer.',
+  'The {bird} has already picked its favourite perch at your Academy. Just saying.'
+];
+const TAVERN_BIRD_FACTS = [
+  'A Wren sings around 700 notes a minute — one of the loudest songs per gram of bird in Britain.',
+  'Robins hold winter territories and sing all year round — even at night under streetlights.',
+  'Starling flocks (murmurations) can number over 100,000 birds moving as one.',
+  'Blue Tits can eat 100 caterpillars a day when feeding chicks.',
+  'Swifts can stay airborne for ten months without landing once.',
+  'Magpies can recognise themselves in a mirror — a rare sign of self-awareness.',
+  'Barn Owls fly almost silently thanks to comb-like fringes on their wing feathers.',
+  'A Goldcrest, Britain\'s smallest bird, weighs about the same as a 20p coin.',
+  'Jays plant thousands of oak trees a year by forgetting where they buried their acorns.',
+  'Kingfishers judge the refraction of water so precisely they can strike a fish 25cm below the surface.',
+  'Skylarks can sing continuously for several minutes while hovering high over their territory.',
+  'Kookaburras sing in family choruses at dawn and dusk to mark their territory.',
+  'Woodpeckers have shock-absorbing skulls and tongues that wrap around their brains.',
+  'Tawny Owls duet at night — the famous "twit twoo" is actually two owls calling.'
+];
+function tavernBirdFactFor(speciesList, seed) {
+  const names = (speciesList || []).filter(Boolean);
+  // Prefer a fact about a bird actually at the bar (from the quiz bank), else general lore.
+  for (const name of names) {
+    const clean = String(name).toLowerCase();
+    const match = BIRD_KNOWLEDGE_QUESTIONS.find(q => clean.includes(q.species.toLowerCase()) || q.species.toLowerCase().includes(clean.split(' ').pop()));
+    if (match) return match.fact;
+  }
+  return TAVERN_BIRD_FACTS[Math.abs(seed || 0) % TAVERN_BIRD_FACTS.length];
+}
+
+// A bird found mid-quest (scanned, corrected or recruited) lands ahead of the
+// player on the route as an NPC to go and meet.
+function questRegisterBirdEncounter(bird) {
+  const quest = activeWalkingQuest();
+  if (!quest || !bird) return;
+  const pos = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+  const npc = window.BurbzQuestCore.questAddTrailNpc(
+    quest,
+    { species: canonicalSpeciesName(bird.species || bird.commonName || bird.name), rarity: bird.rarity || 'common' },
+    pos ? pos.lat : null, pos ? pos.lon : null
+  );
+  if (!npc) return;
+  try { fetchBirdArt(npc.species); } catch (e) {}
+  saveState();
+  drawTrailExtrasOnMap(quest);
+  showToast('🐦 A ' + npc.species + ' has landed on your trail ahead — go and say hello!');
+}
+
+function clearTrailExtraMarkers() {
+  questExtraMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+  questExtraMarkers = [];
+}
+
+function drawTrailExtrasOnMap(quest) {
+  clearTrailExtraMarkers();
+  quest = quest || activeWalkingQuest();
+  if (!quest || !liveMap || !window.maplibregl) return;
+  (quest.trailNpcs || []).forEach(npc => {
+    const el = document.createElement('div');
+    el.className = 'quest-marker-pin';
+    const face = document.createElement('div');
+    face.className = 'quest-marker qm-birdnpc' + (npc.met ? ' reached' : '');
+    const art = getBirdArtUrl({ commonName: npc.species, species: npc.species });
+    face.innerHTML = art ? '<img src="' + escapeHtml(art) + '" alt="' + escapeHtml(npc.species) + '">' : '<span class="qm-bird-emoji">' + getBirdMarkerEmoji(npc.species) + '</span>';
+    el.appendChild(face);
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (npc.met) { showMapBirdPreview({ species: npc.species, bird: { commonName: npc.species } }); return; }
+      const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, npc)) : null;
+      showToast('🐦 A ' + npc.species + ' is waiting on your trail' + (me !== null ? ' — ' + me + ' m away. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m to meet it!' : '!'));
+    });
+    questExtraMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([npc.lon, npc.lat]).addTo(liveMap));
+  });
+  const tav = quest.trailTavern;
+  if (tav) {
+    const el = document.createElement('div');
+    el.className = 'quest-marker-pin';
+    const face = document.createElement('div');
+    face.className = 'quest-marker qm-tavern' + (tav.visited ? ' visited' : '');
+    face.textContent = '🍻';
+    el.appendChild(face);
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (tav.visited) { openTrailTavernSheet(quest); return; }
+      const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, tav)) : null;
+      showToast('🍻 ' + tav.name + ' has set up on your trail' + (me !== null ? ' — ' + me + ' m away. Walk there for a drink!' : '!'));
+    });
+    questExtraMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
+  }
+}
+
+// Procedural meet-and-greet when the player walks up to a trail bird NPC.
+function showTrailBirdDialog(npc, quest, metCount) {
+  const seed = hashStr(quest.id + ':' + npc.species);
+  let text = TRAIL_NPC_GREETINGS[seed % TRAIL_NPC_GREETINGS.length];
+  const needed = window.BurbzQuestCore.TRAIL_TAVERN_NPCS_NEEDED;
+  if (quest.trailTavern) text += ' See you at ' + quest.trailTavern.name + ' — mine\'s a thimble of mead!';
+  else if (metCount >= 1 && metCount < needed) text += ' They say when ' + needed + ' of us gather on one trail, the wandering tavern sets up shop... ' + (needed - metCount) + ' more to go!';
+  text += ' (I\'ll wait for you at the Academy tavern afterwards — +15 XP)';
+  document.getElementById('wqNpcDialog')?.remove();
+  const art = getBirdArtUrl({ commonName: npc.species, species: npc.species });
+  const el = document.createElement('div');
+  el.id = 'wqNpcDialog';
+  el.className = 'wq-npc-dialog';
+  el.innerHTML = '<div class="wq-npc-panel"><div class="wq-npc-face">' + (art ? '<img src="' + escapeHtml(art) + '" alt="' + escapeHtml(npc.species) + '">' : '<div class="wq-npc-emoji">' + getBirdMarkerEmoji(npc.species) + '</div>') + '</div><div><div class="wq-npc-name">' + escapeHtml(npc.species) + '</div><div class="wq-npc-text">' + escapeHtml(text) + '</div><button class="wq-npc-ok">Safe travels!</button></div></div>';
+  el.addEventListener('click', ev => { if (ev.target === el || ev.target.classList.contains('wq-npc-ok')) el.remove(); });
+  document.body.appendChild(el);
+}
+
+// The Wandering Perch: procedural dialogue, a bird fact, and a drink to buy.
+function buildTavernDialogue(quest) {
+  const met = window.BurbzQuestCore.questMetTrailNpcs(quest);
+  const names = met.map(n => n.species);
+  const seed = hashStr(quest.id + ':tavern:' + names.join(','));
+  const pickBird = names.length ? names[seed % names.length] : 'Wren';
+  const fill = s => s.replace('{bird}', pickBird).replace('{count}', String(names.length));
+  return {
+    keeper: TAVERN_KEEPER_NAMES[seed % TAVERN_KEEPER_NAMES.length],
+    lines: [
+      fill(TAVERN_GREETINGS[seed % TAVERN_GREETINGS.length]),
+      fill(TAVERN_GOSSIP[(seed >> 3) % TAVERN_GOSSIP.length]),
+      TAVERN_TOASTS[(seed >> 6) % TAVERN_TOASTS.length]
+    ],
+    fact: tavernBirdFactFor(names, seed)
+  };
+}
+
+function openTrailTavernSheet(quest, opts = {}) {
+  quest = quest || activeWalkingQuest();
+  if (!quest || !quest.trailTavern) return;
+  const tav = quest.trailTavern;
+  const talk = buildTavernDialogue(quest);
+  const met = window.BurbzQuestCore.questMetTrailNpcs(quest);
+  const patrons = met.map(n => '<span class="wq-bird-chip got">🍺 ' + escapeHtml(n.species) + '</span>').join('');
+  const bought = tav.drinkBought ? TRAIL_TAVERN_DRINKS.find(d => d.id === tav.drinkBought) : null;
+  const drinksHtml = bought
+    ? '<div class="quest-desc tavern-bought">🍻 You raised a glass of <b>' + escapeHtml(bought.name) + '</b>' + (quest.tavernBoon ? ' — ' + escapeHtml(quest.tavernBoon.label) : '') + '. One round per quest — enjoy the walk home!</div>'
+    : '<div class="quest-section-title" style="margin:10px 0 4px">🍺 Buy a drink (one per quest)</div>' + TRAIL_TAVERN_DRINKS.map(d => {
+        const afford = (gameState.player.coins || 0) >= d.cost;
+        return '<button class="tavern-drink" data-drink="' + d.id + '" ' + (afford ? '' : 'disabled') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙</div><div class="tavern-drink-desc">' + escapeHtml(d.desc) + '</div></div></button>';
+      }).join('');
+  const el = walkQuestSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍻</div><div><div class="quest-name">' + escapeHtml(tav.name) + '</div><div class="quest-desc">A pop-up tavern of the bird roads · kept by ' + escapeHtml(talk.keeper) + '</div></div></div>' +
+    '<div class="tavern-lines">' + talk.lines.map(l => '<div class="wq-npc-text tavern-line">“' + escapeHtml(l) + '”</div>').join('') + '</div>' +
+    '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(talk.fact) + '</div>' +
+    (patrons ? '<div class="quest-section-title" style="margin:10px 0 4px">At the bar</div><div class="wq-history-birds">' + patrons + '</div>' : '') +
+    drinksHtml +
+    '<div class="quest-desc" style="margin-top:8px">Your trail friends will wait at 🍺 The Thirsty Owl in your Academy — buy them a drink there to recruit them.</div>' +
+    '<button class="wq-npc-ok" onclick="closeWalkQuestSheet()">Back to the trail</button></div>';
+  el.classList.add('open');
+  el.querySelectorAll('[data-drink]').forEach(btn => btn.addEventListener('click', () => buyTrailTavernDrink(btn.dataset.drink)));
+}
+
+function buyTrailTavernDrink(drinkId) {
+  const quest = activeWalkingQuest();
+  if (!quest || !quest.trailTavern || quest.trailTavern.drinkBought) return;
+  const drink = TRAIL_TAVERN_DRINKS.find(d => d.id === drinkId);
+  if (!drink) return;
+  if ((gameState.player.coins || 0) < drink.cost) { showToast('Not enough coins for ' + drink.name); return; }
+  addCoins(-drink.cost);
+  quest.trailTavern.drinkBought = drink.id;
+  if (drink.boon.instant === 'flockRefresh') {
+    (gameState.flock || []).forEach(b => {
+      b.hp = b.maxHp || b.hp;
+      if (b.care) b.care.happiness = clamp((b.care.happiness || 0) + 20, 0, 100);
+    });
+    quest.tavernBoon = { id: drink.id, label: drink.boon.label };
+    showToast('🫐 A round for the flock! Everyone is healed and happier.');
+  } else {
+    quest.tavernBoon = { ...drink.boon };
+    showToast(drink.icon + ' ' + drink.name + ' — ' + drink.desc + '!');
+  }
+  SFX.capture();
+  saveState();
+  updateHeader();
+  openTrailTavernSheet(quest); // re-render with the bought state
+}
 
 function ensureWalkingQuestState() {
   if (!gameState.walkingQuests || typeof gameState.walkingQuests !== 'object') gameState.walkingQuests = { active: null, history: [] };
@@ -10547,7 +10864,7 @@ function openQuestOfferSheet() {
       // Out-and-backs are capped at 2.8km one-way and walked both ways — show the
       // distance the player will actually cover, matching the overview sheet.
       const walkKm = isLoop ? o.lengthM / 1000 : Math.min(o.lengthM, 2800) * 2 / 1000;
-      b.innerHTML = '<div class="wqo-icon">' + meta.icon + '</div><div><div class="wqo-name">' + escapeHtml(o.name) + '</div><div class="wqo-sub">' + meta.label + ' · ' + (isLoop ? '' : '~') + walkKm.toFixed(1) + ' km walk · ' + (isLoop ? '↺ loop' : '↔ out & back') + ' · starts ' + Math.round(o.startDistM) + ' m away</div></div>';
+      b.innerHTML = '<div class="wqo-icon">' + meta.icon + '</div><div><div class="wqo-name">' + escapeHtml(o.name) + '</div><div class="wqo-sub">' + meta.label + ' · ' + (isLoop ? '' : '~') + walkKm.toFixed(1) + ' km walk · ' + (isLoop ? '↺ loop' : '↺ loops home when paths allow') + ' · starts ' + Math.round(o.startDistM) + ' m away</div></div>';
       b.addEventListener('click', () => openQuestOfferDetail(walkQuestOffersCache[i]));
       list.appendChild(b);
     });
@@ -10597,11 +10914,33 @@ function startAdventureWalkQuest(lenM, label) {
   });
 }
 
-function startWalkingQuestFromOffer(offer) {
+// Linear trails get a routed RETURN leg along different paths so the player
+// walks one continuous loop home instead of retracing their steps.
+function ensureOfferLoopBack(offer) {
+  if (!offer || offer.kind === 'adventure' || offer.loopedBack) return Promise.resolve(offer._loop || null);
+  if (window.BurbzQuestCore.offerLoopStyle(offer.points) === 'loop') return Promise.resolve(null);
+  if (!offer._loopPromise) {
+    offer._loopPromise = window.BurbzQuestCore.fetchLoopBackRoute(offer.points)
+      .then(loop => { offer._loop = loop || null; return offer._loop; })
+      .catch(() => { offer._loop = null; return null; });
+  }
+  return offer._loopPromise;
+}
+
+async function startWalkingQuestFromOffer(offer) {
   if (!offer) return;
-  const wq = ensureWalkingQuestState();
+  let wq = ensureWalkingQuestState();
   if (wq.active) { showToast('Finish or abandon your current quest first'); return; }
-  const quest = window.BurbzQuestCore.buildQuestFromOffer(offer);
+  if (offer.kind !== 'adventure' && offer._loop === undefined && window.BurbzQuestCore.offerLoopStyle(offer.points) === 'out-and-back') {
+    showToast('🧭 The cartographers are charting a loop home along different paths...');
+    try { await ensureOfferLoopBack(offer); } catch (e) { offer._loop = null; }
+    wq = ensureWalkingQuestState();
+    if (wq.active) return; // another quest started while the loop was charting
+  }
+  const questOffer = (offer._loop && offer._loop.loopedBack)
+    ? { ...offer, points: offer._loop.points.map(p => ({ lat: p.lat, lon: p.lon })), loopedBack: true }
+    : offer;
+  const quest = window.BurbzQuestCore.buildQuestFromOffer(questOffer);
   quest.likelyBirds = Array.isArray(offer.likelyBirds) ? offer.likelyBirds.slice(0, 8) : [];
   wq.active = quest;
   walkQuestLastSave = Date.now();
@@ -10634,6 +10973,7 @@ function drawWalkingQuestRoute() {
 function clearWalkingQuestFromMap() {
   questMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
   questMapMarkers = [];
+  clearTrailExtraMarkers();
   drawWalkingQuestRoute();
   updateWalkQuestHud();
 }
@@ -10663,6 +11003,7 @@ function drawWalkingQuestOnMap() {
     const mk = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
     questMapMarkers.push(mk);
   });
+  drawTrailExtrasOnMap(quest);
   updateWalkQuestHud();
 }
 function updateWalkQuestHud() {
@@ -10700,6 +11041,24 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       SFX.tap();
       vibrate(30);
       showToast('🚩 ' + (ev.checkpoint.label || 'Waymarker') + ' reached!');
+    } else if (ev.type === 'trail-npc') {
+      addPlayerXp(15);
+      SFX.capture();
+      vibrate(40);
+      addTavernPatron(ev.npc, quest);
+      const metCount = window.BurbzQuestCore.questMetTrailNpcs(quest).length;
+      const tavern = window.BurbzQuestCore.questMaybeSpawnTavern(quest, lat, lon);
+      showTrailBirdDialog(ev.npc, quest, metCount);
+      drawTrailExtrasOnMap(quest);
+      if (tavern) {
+        SFX.levelUp();
+        setTimeout(() => showToast('🍻 ' + tavern.name + ' has appeared on your trail ahead — the birds are gathering for a drink!'), 900);
+      }
+    } else if (ev.type === 'tavern') {
+      SFX.levelUp();
+      vibrate(60);
+      drawTrailExtrasOnMap(quest);
+      openTrailTavernSheet(quest, { firstVisit: true });
     } else if (ev.type === 'finish') {
       completeWalkingQuest();
     } else if (ev.type === 'finish-blocked') {
@@ -10753,7 +11112,7 @@ function openActiveWalkQuestSheet() {
   const hit = quest.checkpoints.filter(c => c.reached).length;
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + meta.icon + '</div><div><div class="quest-name">' + escapeHtml(quest.name) + '</div><div class="quest-desc">' + meta.label + (quest.loopStyle ? ' · ' + (quest.loopStyle === 'loop' ? '↺ loop' : '↔ out & back') : '') + ' · given by ' + escapeHtml(quest.npcName) + '</div></div></div>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + meta.icon + '</div><div><div class="quest-name">' + escapeHtml(quest.name) + '</div><div class="quest-desc">' + meta.label + (quest.loopStyle ? ' · ' + (quest.loopStyle === 'loop' ? (quest.loopedBack ? '↺ loop · new paths home' : '↺ loop') : '↔ out & back') : '') + ' · given by ' + escapeHtml(quest.npcName) + '</div></div></div>' +
     '<div class="wq-summary-grid">' +
     '<div class="wq-summary-stat"><div class="num">' + (quest.distanceWalkedM / 1000).toFixed(2) + '</div><div class="lbl">km walked</div></div>' +
     '<div class="wq-summary-stat"><div class="num">' + hit + '/' + total + '</div><div class="lbl">markers</div></div>' +
@@ -10802,6 +11161,8 @@ function showWalkQuestSummarySheet(summary, celebrate) {
       (summary.trailBirds.xp ? ' — bonus +' + summary.trailBirds.xp + ' XP, +' + summary.trailBirds.coins + ' 🪙' : ' — no bonus this time') +
       (summary.trailBirds.fullSet ? '<div style="color:#f0c767;font-weight:800;margin-top:4px">🏅 MASTER BIRDWATCHER — full set captured!</div>' : '') + '</div>'
       : '') +
+    (summary.tavern && summary.tavern.boon ? '<div class="quest-desc" style="margin:6px 0">🍻 Tavern toast: ' + escapeHtml(summary.tavern.boon) + '</div>' : '') +
+    (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — they\'re waiting at 🍺 The Thirsty Owl in your Academy!</div>' : '') +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
     '</div>';
   el.classList.add('open');
@@ -10936,14 +11297,16 @@ function openQuestOfferDetail(offer) {
   const loopStyle = offer.kind === 'adventure' ? 'loop' : window.BurbzQuestCore.offerLoopStyle(offer.points);
   const loopLabel = loopStyle === 'loop'
     ? '↺ loop — ends back at the start'
-    : '↔ out & back — walk it, then return to the start (~' + (Math.min(offer.lengthM || 0, 2800) * 2 / 1000).toFixed(1) + ' km round trip)';
+    : (offer._loop && offer._loop.loopedBack)
+      ? '↺ loop — home along different paths (~' + (offer._loop.totalLenM / 1000).toFixed(1) + ' km round)'
+      : '🧭 The cartographers are charting a loop home along different footpaths... (out & back ~' + (Math.min(offer.lengthM || 0, 2800) * 2 / 1000).toFixed(1) + ' km if none exists)';
   const distLine = (offer.lengthM ? (loopStyle === 'loop' ? (offer.lengthM / 1000).toFixed(1) : (Math.min(offer.lengthM, 2800) * 2 / 1000).toFixed(1)) + ' km walk · ' : '') +
     (offer.startDistM != null ? 'starts ' + Math.round(offer.startDistM) + ' m away' : 'starts right here');
   const active = activeWalkingQuest();
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + meta.icon + '</div><div><div class="quest-name">' + escapeHtml(offer.name) + '</div><div class="quest-desc">' + meta.label + ' · ' + distLine + '</div></div></div>' +
-    '<div class="quest-desc" style="margin:8px 0">' + loopLabel + '</div>' +
+    '<div class="quest-desc" style="margin:8px 0" id="wqLoopLabel">' + loopLabel + '</div>' +
     '<div class="quest-section-title" style="margin:10px 0 4px">🐦 Birds on this trail</div>' +
     '<div class="wq-detail-birds" id="wqDetailBirds"><div class="quest-desc">The scouts are reading the habitats along this route...</div></div>' +
     '<div class="quest-desc wq-bonus-blurb">Capture trail birds during the quest for bonus XP and coins — rarer birds pay more, spotting several pays extra, and capturing the <b>full set</b> earns the 🏅 Master Birdwatcher jackpot!</div>' +
@@ -10954,6 +11317,16 @@ function openQuestOfferDetail(offer) {
   el.classList.add('open');
   const btn = $('wqOfferBeginBtn');
   if (btn) btn.addEventListener('click', () => { if (activeWalkingQuest()) { openActiveWalkQuestSheet(); } else { startWalkingQuestFromOffer(offer); } });
+  // Chart the loop home in the background so it's ready the moment they tap Begin.
+  if (loopStyle === 'out-and-back') {
+    ensureOfferLoopBack(offer).then(loop => {
+      const lbl = $('wqLoopLabel');
+      if (!lbl || !el.classList.contains('open')) return;
+      lbl.textContent = (loop && loop.loopedBack)
+        ? '↺ loop — the cartographers found a way home along different paths (~' + (loop.totalLenM / 1000).toFixed(1) + ' km round)'
+        : '↔ out & back — no loop home exists here, so the trail is walked both ways (~' + (Math.min(offer.lengthM || 0, 2800) * 2 / 1000).toFixed(1) + ' km round trip)';
+    });
+  }
   fetchQuestLikelyBirds(offer).then(rows => {
     offer.likelyBirds = likelyRowsToQuestBirds(rows);
     const box = $('wqDetailBirds');
@@ -10978,6 +11351,7 @@ function openQuestOfferDetail(offer) {
 // only see explicitly window-exported functions.
 Object.assign(window, {
   openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
+  openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit,
   __burbzQuestDebug: {
     getState: () => gameState,
     getActive: () => activeWalkingQuest(),
@@ -10989,7 +11363,12 @@ Object.assign(window, {
     overview: () => ({ on: questOverview.on, offers: questOverview.offers.length, markers: questOverview.markers.length }),
     overviewFeatures: () => { try { const s = liveMap.getSource('burbz-quest-offers'); const d = (s.serialize ? s.serialize().data : s._data); return d.features.length; } catch (e) { return -1; } },
     questMarkers: () => questMapMarkers,
-    setOverview: on => setQuestOverview(on)
+    setOverview: on => setQuestOverview(on),
+    registerBird: b => questRegisterBirdEncounter(b),
+    startOffer: o => startWalkingQuestFromOffer(o),
+    extras: () => { const q = activeWalkingQuest(); return q ? { npcs: (q.trailNpcs || []).length, met: window.BurbzQuestCore.questMetTrailNpcs(q).length, tavern: !!q.trailTavern, boon: q.tavernBoon, markers: questExtraMarkers.length } : null; },
+    patrons: () => ensureTavernPatrons(),
+    openTavern: () => openTrailTavernSheet()
   }
 });
 
@@ -12974,7 +13353,8 @@ function recruitDiscoveredBird(key) {
   updateQuestProgress('capture', 1);
   updateQuestProgress('capture_' + bird.rarity, 1);
   const walkQ = activeWalkingQuest();
-  if (walkQ) { walkQ.birdsCaptured.push({ name: bird.commonName || bird.species, species: bird.species, rarity: bird.rarity, at: Date.now() }); updateWalkQuestHud(); showToast('🐦 ' + (bird.commonName || bird.species) + ' logged on your quest (+20 XP at the banner)'); }
+  if (walkQ) { walkQ.birdsCaptured.push({ name: bird.commonName || bird.species, species: bird.species, rarity: bird.rarity, at: Date.now() }); updateWalkQuestHud(); showToast('🐦 ' + (bird.commonName || bird.species) + ' logged on your quest (+20 XP at the banner)'); try { questRegisterBirdEncounter(bird); } catch (err) {} }
+  removeTavernPatronForSpecies(bird.species || bird.commonName); // recruited elsewhere → no longer waits at the tavern
   checkBadges();
   saveState();
   SFX.capture();
@@ -13051,6 +13431,7 @@ function correctScanDiscovery(chosenName) {
   });
   const bird = createBirdEntry(chosenName, '', 1);
   rememberDiscoveredBird(bird);
+  try { questRegisterBirdEncounter(bird); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
   fetchBirdArt(chosenName);
   saveState(); updateHeader(); renderBirdex(); renderProfile();
   const wrongLabel = (wrongNames[0] && speciesKey(canonicalSpeciesName(wrongNames[0])) !== chosenKey) ? ' instead of ' + wrongNames[0] : '';
@@ -13103,6 +13484,7 @@ function handleBirdCandidates(primary, detections = []) {
     $('scanResultSci').textContent = top.scientificName || top.species;
     $('scanResultConf').textContent = `${Math.round((top.confidence || 0) * 100)}% confidence | ${top.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
   }
+  if (top) { try { questRegisterBirdEncounter(top); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); } }
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();

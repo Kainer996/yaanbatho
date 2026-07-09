@@ -269,17 +269,14 @@
     return pts;
   }
 
-  // Snap a generated loop onto real walkable paths via the free BRouter public
-  // instance (no key, CORS *, hiking profile). Falls back to the raw waypoint
-  // loop if the router is unreachable — the quest still works as GPS targets.
-  function fetchAdventureRoute(lat, lon, targetLenM, opts) {
+  // Route a set of waypoints along real walkable paths via the free BRouter
+  // public instance (no key, CORS *, hiking profile). Resolves to the snapped
+  // polyline, or null when the router is unreachable or returns nothing.
+  function brouterRoute(waypoints, opts) {
     opts = opts || {};
-    var raw = generateAdventureRoute(lat, lon, targetLenM, opts.rand);
     var fetchFn = opts.fetchFn || (typeof fetch !== 'undefined' ? fetch.bind(window) : null);
-    if (!fetchFn) return Promise.resolve(raw);
-    // 4 corner waypoints + home keeps the URL small and the loop shape intact.
-    var wp = [raw[0], raw[Math.floor(raw.length * 0.25)], raw[Math.floor(raw.length * 0.5)], raw[Math.floor(raw.length * 0.75)], raw[raw.length - 1]];
-    var lonlats = wp.map(function (p) { return p.lon.toFixed(6) + ',' + p.lat.toFixed(6); }).join('|');
+    if (!fetchFn || !waypoints || waypoints.length < 2) return Promise.resolve(null);
+    var lonlats = waypoints.map(function (p) { return p.lon.toFixed(6) + ',' + p.lat.toFixed(6); }).join('|');
     var url = (opts.brouterBase || 'https://brouter.de/brouter') +
       '?lonlats=' + encodeURIComponent(lonlats) + '&profile=hiking-mountain&alternativeidx=0&format=geojson';
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -290,17 +287,93 @@
       return r.json();
     }).then(function (gj) {
       var coords = gj && gj.features && gj.features[0] && gj.features[0].geometry && gj.features[0].geometry.coordinates;
-      if (!coords || coords.length < 2) throw new Error('brouter empty route');
-      var pts = coords.map(function (c) { return { lat: c[1], lon: c[0] }; });
+      if (!coords || coords.length < 2) return null;
+      return coords.map(function (c) { return { lat: c[1], lon: c[0] }; });
+    }).catch(function (err) {
+      if (timer) clearTimeout(timer);
+      console.warn('BURBZ quest brouter unreachable:', err && err.message);
+      return null;
+    });
+  }
+
+  // Snap a generated loop onto real walkable paths. Falls back to the raw
+  // waypoint loop if the router is unreachable — the quest still works as GPS targets.
+  function fetchAdventureRoute(lat, lon, targetLenM, opts) {
+    opts = opts || {};
+    var raw = generateAdventureRoute(lat, lon, targetLenM, opts.rand);
+    // 4 corner waypoints + home keeps the URL small and the loop shape intact.
+    var wp = [raw[0], raw[Math.floor(raw.length * 0.25)], raw[Math.floor(raw.length * 0.5)], raw[Math.floor(raw.length * 0.75)], raw[raw.length - 1]];
+    return brouterRoute(wp, opts).then(function (pts) {
+      if (!pts) return raw;
       // Sanity: keep the snapped route only if it stayed roughly loop-sized.
       var len = routeLengthM(pts);
       if (len < targetLenM * 0.4 || len > targetLenM * 3.2) return raw;
       return pts;
-    }).catch(function (err) {
-      if (timer) clearTimeout(timer);
-      console.warn('BURBZ quest brouter fallback to raw loop:', err && err.message);
-      return raw;
     });
+  }
+
+  function bearingBetween(a, b) {
+    var la1 = toRad(a.lat), la2 = toRad(b.lat), dLon = toRad(b.lon - a.lon);
+    var y = Math.sin(dLon) * Math.cos(la2);
+    var x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLon);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+
+  // Fraction of polyline A that runs within thresholdM of polyline B — used to
+  // reject "loops" that mostly retrace the outward path.
+  function routeOverlapFraction(aPts, bPts, thresholdM) {
+    thresholdM = thresholdM || 40;
+    var a = decimateRoute(aPts, 50), b = decimateRoute(bPts, 60);
+    if (!a.length || !b.length) return 0;
+    var hits = 0;
+    a.forEach(function (p) {
+      for (var i = 0; i < b.length; i++) {
+        if (questHaversine(p.lat, p.lon, b[i].lat, b[i].lon) <= thresholdM) { hits++; return; }
+      }
+    });
+    return hits / a.length;
+  }
+
+  // A linear trail no longer has to mean walking back the way you came: ask
+  // the router for a RETURN leg from the trail's end to its start that bows
+  // away from the outward path, turning the whole walk into one loop. The via
+  // point sits off to the side of the start-end chord (opposite the outward
+  // path where possible) so the router is pushed onto DIFFERENT footpaths home.
+  // Resolves null when no sane loop exists — callers keep the out-and-back.
+  function fetchLoopBackRoute(points, opts) {
+    opts = opts || {};
+    var outward = trimRouteToLength(points, opts.oneWayCapM || OUT_AND_BACK_ONE_WAY_CAP_M);
+    if (!outward || outward.length < 2) return Promise.resolve(null);
+    var start = outward[0], end = outward[outward.length - 1];
+    var directD = questHaversine(end.lat, end.lon, start.lat, start.lon);
+    if (directD <= LOOP_ENDS_MEET_M) return Promise.resolve(null); // already a natural loop
+    var outwardLen = routeLengthM(outward);
+    var chordMid = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+    var routeMid = pointAtFraction(outward, 0.5);
+    // Bow the return leg away from wherever the outward path bulges; on a
+    // dead-straight trail just pick a perpendicular side (both get tried).
+    var awayBearing = questHaversine(routeMid.lat, routeMid.lon, chordMid.lat, chordMid.lon) > 40
+      ? bearingBetween(routeMid, chordMid)
+      : (bearingBetween(end, start) + 90) % 360;
+    var offset = Math.max(150, Math.min(800, directD * 0.45));
+    var vias = [
+      destPoint(chordMid.lat, chordMid.lon, awayBearing, offset),
+      destPoint(chordMid.lat, chordMid.lon, (awayBearing + 180) % 360, offset)
+    ];
+    function tryVia(i) {
+      if (i >= vias.length) return Promise.resolve(null);
+      return brouterRoute([end, vias[i], start], opts).then(function (legPts) {
+        if (!legPts || legPts.length < 2) return tryVia(i + 1);
+        var legLen = routeLengthM(legPts);
+        // Reject silly detours (return leg way longer than the walk out) and
+        // legs that mostly retrace the outward trail.
+        if (legLen > Math.max(outwardLen * 1.5, directD * 2.5) + 600) return tryVia(i + 1);
+        if (routeOverlapFraction(legPts, outward, 40) > 0.6) return tryVia(i + 1);
+        var combined = outward.concat(legPts.slice(1));
+        return { points: combined, loopedBack: true, returnLenM: Math.round(legLen), totalLenM: Math.round(outwardLen + legLen) };
+      });
+    }
+    return tryVia(0);
   }
 
   // ---------------- Quest assembly ----------------
@@ -389,6 +462,7 @@
       ref: offer.ref || null,
       npcName: npcName,
       loopStyle: loopStyle,           // loop | out-and-back
+      loopedBack: !!offer.loopedBack, // loop returns home along DIFFERENT paths
       route: pts.map(function (p) { return [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]; }),
       lengthM: Math.round(lenM),
       checkpoints: checkpoints,
@@ -396,8 +470,82 @@
       distanceWalkedM: 0,
       lastFix: null,
       birdsCaptured: [],
-      chestsOpened: 0
+      chestsOpened: 0,
+      trailNpcs: [],                  // birds found mid-quest, perched ahead on the route
+      trailTavern: null,              // appears once enough trail birds are befriended
+      tavernBoon: null                // drink bought at the trail tavern
     };
+  }
+
+  // ---------------- Trail bird NPCs + the wandering tavern ----------------
+
+  // Find a bird on your quest and it lands ahead of you on the route as an
+  // NPC. Befriend enough of them and a tavern appears further along the trail.
+  var TRAIL_TAVERN_NPCS_NEEDED = 3;
+
+  function questRoutePoints(quest) {
+    return ((quest && quest.route) || []).map(function (p) { return { lat: p[0], lon: p[1] }; });
+  }
+
+  // Fraction [0..1] along the quest route nearest to the given position.
+  function questNearestRouteFraction(quest, lat, lon) {
+    var pts = questRoutePoints(quest);
+    if (pts.length < 2 || !isFinite(lat) || !isFinite(lon)) return 0;
+    var total = routeLengthM(pts);
+    if (total <= 0) return 0;
+    var acc = 0, bestFrac = 0, bestD = Infinity;
+    for (var i = 0; i < pts.length; i++) {
+      if (i > 0) acc += questHaversine(pts[i - 1].lat, pts[i - 1].lon, pts[i].lat, pts[i].lon);
+      var d = questHaversine(lat, lon, pts[i].lat, pts[i].lon);
+      if (d < bestD) { bestD = d; bestFrac = acc / total; }
+    }
+    return Math.max(0, Math.min(1, bestFrac));
+  }
+
+  // A spot AHEAD of the player on the route — minFrac..maxFrac of the route
+  // length beyond wherever they currently are, capped before the finish.
+  function questPlaceAhead(quest, lat, lon, minFrac, maxFrac, rand) {
+    rand = rand || Math.random;
+    var f0 = questNearestRouteFraction(quest, lat, lon);
+    var f = Math.min(0.96, f0 + minFrac + (maxFrac - minFrac) * rand());
+    var p = pointAtFraction(questRoutePoints(quest), f);
+    return p ? { lat: +p.lat.toFixed(6), lon: +p.lon.toFixed(6), frac: f } : null;
+  }
+
+  // Register a bird found mid-quest: it appears as an NPC ahead on the route.
+  // One NPC per species per quest. Returns the npc, or null if skipped.
+  function questAddTrailNpc(quest, bird, lat, lon, rand) {
+    if (!quest || quest.completedAt || !bird) return null;
+    quest.trailNpcs = Array.isArray(quest.trailNpcs) ? quest.trailNpcs : [];
+    var key = normSpeciesName(bird.species || bird.name);
+    if (!key) return null;
+    if (quest.trailNpcs.some(function (n) { return normSpeciesName(n.species) === key; })) return null;
+    var spot = questPlaceAhead(quest, lat, lon, 0.08, 0.28, rand);
+    if (!spot) return null;
+    var npc = {
+      id: 'tnpc_' + quest.trailNpcs.length + '_' + Math.floor((rand || Math.random)() * 1e6).toString(36),
+      species: bird.species || bird.name,
+      rarity: bird.rarity || 'common',
+      lat: spot.lat, lon: spot.lon,
+      met: false
+    };
+    quest.trailNpcs.push(npc);
+    return npc;
+  }
+
+  function questMetTrailNpcs(quest) {
+    return ((quest && quest.trailNpcs) || []).filter(function (n) { return n && n.met; });
+  }
+
+  // Once enough trail birds are befriended, the wandering tavern sets up ahead
+  // on the route. Returns the tavern when it (newly) appears, else null.
+  function questMaybeSpawnTavern(quest, lat, lon, rand) {
+    if (!quest || quest.completedAt || quest.trailTavern) return null;
+    if (questMetTrailNpcs(quest).length < TRAIL_TAVERN_NPCS_NEEDED) return null;
+    var spot = questPlaceAhead(quest, lat, lon, 0.1, 0.22, rand);
+    if (!spot) return null;
+    quest.trailTavern = { name: 'The Wandering Perch', lat: spot.lat, lon: spot.lon, visited: false, drinkBought: null };
+    return quest.trailTavern;
   }
 
   // ---------------- Progress tracking ----------------
@@ -432,6 +580,23 @@
         quest._finishNudged = false; // fresh progress re-arms the missed-waymarker nudge
       }
     });
+
+    // Trail bird NPCs and the wandering tavern are bonus stops — they never
+    // gate the finish banner, so they're checked outside the checkpoint list.
+    (Array.isArray(quest.trailNpcs) ? quest.trailNpcs : []).forEach(function (npc) {
+      if (!npc || npc.met) return;
+      if (questHaversine(lat, lon, npc.lat, npc.lon) <= REACH_RADIUS_M) {
+        npc.met = true;
+        npc.metAt = now;
+        events.push({ type: 'trail-npc', npc: npc });
+      }
+    });
+    var tav = quest.trailTavern;
+    if (tav && !tav.visited && questHaversine(lat, lon, tav.lat, tav.lon) <= REACH_RADIUS_M) {
+      tav.visited = true;
+      tav.visitedAt = now;
+      events.push({ type: 'tavern', tavern: tav });
+    }
 
     var fin = quest.checkpoints[quest.checkpoints.length - 1];
     if (fin && fin.kind === 'finish' && !fin.reached &&
@@ -516,14 +681,23 @@
   function questSummary(quest, now) {
     now = now || Date.now();
     var tb = questTrailBirdBonus(quest);
+    // Tavern drink boons: bought mid-quest at the wandering tavern, paid out here.
+    var boon = quest.tavernBoon || null;
+    var xpMult = (boon && Number(boon.xpMult)) || 1;
+    var tbCoinMult = (boon && Number(boon.tbCoinMult)) || 1;
     return {
       trailBirds: {
         total: tb.total,
         matched: tb.matched.length,
         matchedNames: tb.matched.map(function (m) { return m.species; }),
         xp: tb.xp,
-        coins: tb.coins,
+        coins: Math.round(tb.coins * tbCoinMult),
         fullSet: tb.fullSet
+      },
+      tavern: {
+        boon: boon ? (boon.label || boon.id || null) : null,
+        npcsMet: questMetTrailNpcs(quest).length,
+        visited: !!(quest.trailTavern && quest.trailTavern.visited)
       },
       id: quest.id,
       name: quest.name,
@@ -538,7 +712,8 @@
       chestsOpened: quest.chestsOpened,
       checkpointsHit: quest.checkpoints.filter(function (c) { return c.reached; }).length,
       checkpointsTotal: quest.checkpoints.length,
-      xp: questXpFor(quest) + tb.xp // trail-bird bonus included in the headline XP
+      // Headline XP includes the trail-bird bonus, then the tavern drink multiplier.
+      xp: Math.round((questXpFor(quest) + tb.xp) * xpMult)
     };
   }
 
@@ -587,6 +762,14 @@
     normaliseTrailForPlayer: normaliseTrailForPlayer,
     generateAdventureRoute: generateAdventureRoute,
     fetchAdventureRoute: fetchAdventureRoute,
+    brouterRoute: brouterRoute,
+    fetchLoopBackRoute: fetchLoopBackRoute,
+    routeOverlapFraction: routeOverlapFraction,
+    questNearestRouteFraction: questNearestRouteFraction,
+    questAddTrailNpc: questAddTrailNpc,
+    questMetTrailNpcs: questMetTrailNpcs,
+    questMaybeSpawnTavern: questMaybeSpawnTavern,
+    TRAIL_TAVERN_NPCS_NEEDED: TRAIL_TAVERN_NPCS_NEEDED,
     buildQuestFromOffer: buildQuestFromOffer,
     offerLoopStyle: offerLoopStyle,
     trimRouteToLength: trimRouteToLength,
