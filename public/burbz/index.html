@@ -14195,14 +14195,15 @@ function updateBirdPickup() {
   const hzPerBin = nyquist / freq.length;
   const lo = Math.max(1, Math.round(2000 / hzPerBin));
   const hi = Math.min(freq.length - 1, Math.round(9000 / hzPerBin));
-  let band = 0;
-  for (let i = lo; i <= hi; i++) band += freq[i];
-  band /= (hi - lo + 1);
+  // Bird song is narrowband (a whistle, not broadband noise), so look for a
+  // strong PEAK in the band rather than high average energy across it.
+  let bandPeak = 0;
+  for (let i = lo; i <= hi; i++) if (freq[i] > bandPeak) bandPeak = freq[i];
   let low = 0;
   const lowEnd = Math.max(1, Math.round(800 / hzPerBin));
   for (let i = 0; i < lowEnd; i++) low += freq[i];
   low /= lowEnd;
-  const birdy = band > 55 && band > low * 1.15;
+  const birdy = bandPeak > 105 && bandPeak > low * 1.35;
   birdPickupFrames = birdy ? Math.min(birdPickupFrames + 1, 40) : Math.max(birdPickupFrames - 1, 0);
   if (birdPickupFrames >= 12) {
     const pop = $('birdPickupPop');

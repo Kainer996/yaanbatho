@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-loop-home-v39-20260710';
+const BURBZ_CACHE = 'burbz-scan-bird-pickup-v40-20260710';
 const BURBZ_ASSETS = [
   './',
   './index.html',
