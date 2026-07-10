@@ -1,11 +1,11 @@
-const BURBZ_CACHE = 'burbz-quest-photos-v38-20260709';
+const BURBZ_CACHE = 'burbz-loop-home-v39-20260710';
 const BURBZ_ASSETS = [
   './',
   './index.html',
   './lib/three.min.js?v=0.158.0',
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
-  './quest_core.js?v=trail-tavern-loops-20260709',
+  './quest_core.js?v=loop-home-20260710',
   './academy_treehouse_core.js?v=thirsty-owl-20260709',
   './assets/merlin-tutorial.png',
   './assets/academy-tree-manga-20260629.png',

@@ -336,10 +336,16 @@
 
   // A linear trail no longer has to mean walking back the way you came: ask
   // the router for a RETURN leg from the trail's end to its start that bows
-  // away from the outward path, turning the whole walk into one loop. The via
-  // point sits off to the side of the start-end chord (opposite the outward
-  // path where possible) so the router is pushed onto DIFFERENT footpaths home.
-  // Resolves null when no sane loop exists — callers keep the out-and-back.
+  // away from the outward path, turning the whole walk into one loop. Several
+  // via points are tried — both sides of the start-end chord at growing
+  // offsets — because the nearest detour often has no footpaths while a wider
+  // one does, plus a final no-via leg (the path network sometimes loops home
+  // by itself). A leg that mostly retraces the outward trail is rejected; a
+  // clearly-different leg is accepted on the spot, otherwise the least
+  // retracing candidate found within the time budget wins.
+  // Resolves null only when no sane loop exists — callers keep the out-and-back.
+  var LOOP_ACCEPT_OVERLAP = 0.45; // different enough to stop searching
+  var LOOP_MAX_OVERLAP = 0.8;     // above this the way home is basically a retrace
   function fetchLoopBackRoute(points, opts) {
     opts = opts || {};
     var outward = trimRouteToLength(points, opts.oneWayCapM || OUT_AND_BACK_ONE_WAY_CAP_M);
@@ -355,22 +361,33 @@
     var awayBearing = questHaversine(routeMid.lat, routeMid.lon, chordMid.lat, chordMid.lon) > 40
       ? bearingBetween(routeMid, chordMid)
       : (bearingBetween(end, start) + 90) % 360;
-    var offset = Math.max(150, Math.min(800, directD * 0.45));
-    var vias = [
-      destPoint(chordMid.lat, chordMid.lon, awayBearing, offset),
-      destPoint(chordMid.lat, chordMid.lon, (awayBearing + 180) % 360, offset)
-    ];
+    var vias = [];
+    [0.45, 0.75, 0.25, 1.1].forEach(function (f) {
+      var off = Math.max(140, Math.min(1100, directD * f));
+      vias.push([destPoint(chordMid.lat, chordMid.lon, awayBearing, off)]);
+      vias.push([destPoint(chordMid.lat, chordMid.lon, (awayBearing + 180) % 360, off)]);
+    });
+    vias.push([]); // straight end→start: fine when the network differs anyway
+    var maxLegLen = Math.max(outwardLen * 1.8, directD * 3) + 800;
+    var deadline = Date.now() + (opts.maxTotalMs || 20000);
+    var best = null;
+    function finish(cand) {
+      if (!cand) return null;
+      var combined = outward.concat(cand.pts.slice(1));
+      return { points: combined, loopedBack: true, returnLenM: Math.round(cand.len), totalLenM: Math.round(outwardLen + cand.len) };
+    }
     function tryVia(i) {
-      if (i >= vias.length) return Promise.resolve(null);
-      return brouterRoute([end, vias[i], start], opts).then(function (legPts) {
-        if (!legPts || legPts.length < 2) return tryVia(i + 1);
-        var legLen = routeLengthM(legPts);
-        // Reject silly detours (return leg way longer than the walk out) and
-        // legs that mostly retrace the outward trail.
-        if (legLen > Math.max(outwardLen * 1.5, directD * 2.5) + 600) return tryVia(i + 1);
-        if (routeOverlapFraction(legPts, outward, 40) > 0.6) return tryVia(i + 1);
-        var combined = outward.concat(legPts.slice(1));
-        return { points: combined, loopedBack: true, returnLenM: Math.round(legLen), totalLenM: Math.round(outwardLen + legLen) };
+      if (i >= vias.length || Date.now() > deadline) return Promise.resolve(finish(best));
+      return brouterRoute([end].concat(vias[i]).concat([start]), opts).then(function (legPts) {
+        if (legPts && legPts.length >= 2) {
+          var legLen = routeLengthM(legPts);
+          if (legLen <= maxLegLen) {
+            var overlap = routeOverlapFraction(legPts, outward, 40);
+            if (overlap <= LOOP_ACCEPT_OVERLAP) return finish({ pts: legPts, len: legLen, overlap: overlap });
+            if (overlap <= LOOP_MAX_OVERLAP && (!best || overlap < best.overlap)) best = { pts: legPts, len: legLen, overlap: overlap };
+          }
+        }
+        return tryVia(i + 1);
       });
     }
     return tryVia(0);
@@ -475,6 +492,22 @@
       trailTavern: null,              // appears once enough trail birds are befriended
       tavernBoon: null                // drink bought at the trail tavern
     };
+  }
+
+  // Convert a running out-and-back quest into a loop once a return leg turns
+  // up mid-walk. Checkpoints stay put — they all sit on the outward leg and
+  // the finish banner is already back at the start — only the drawn route and
+  // the round distance change. Returns true when the quest was upgraded.
+  function upgradeQuestWithLoop(quest, loop) {
+    if (!quest || quest.completedAt) return false;
+    if (quest.loopStyle !== 'out-and-back' || quest.loopedBack) return false;
+    if (!loop || !loop.loopedBack || !loop.points || loop.points.length < 2) return false;
+    var pts = decimateRoute(loop.points, 160);
+    quest.route = pts.map(function (p) { return [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]; });
+    quest.loopStyle = 'loop';
+    quest.loopedBack = true;
+    quest.lengthM = Math.round(loop.totalLenM || routeLengthM(pts));
+    return true;
   }
 
   // ---------------- Trail bird NPCs + the wandering tavern ----------------
@@ -773,6 +806,7 @@
     questMaybeSpawnTavern: questMaybeSpawnTavern,
     TRAIL_TAVERN_NPCS_NEEDED: TRAIL_TAVERN_NPCS_NEEDED,
     buildQuestFromOffer: buildQuestFromOffer,
+    upgradeQuestWithLoop: upgradeQuestWithLoop,
     offerLoopStyle: offerLoopStyle,
     trimRouteToLength: trimRouteToLength,
     questProcessFix: questProcessFix,

@@ -2251,7 +2251,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=thirsty-owl-20260709"></script>
 <script src="battle_core.js?v=squad-league-20260624"></script>
-<script src="quest_core.js?v=trail-tavern-loops-20260709"></script>
+<script src="quest_core.js?v=loop-home-20260710"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -11019,6 +11019,7 @@ async function startWalkingQuestFromOffer(offer) {
   setQuestOverview(false);
   drawWalkingQuestOnMap();
   updateWalkQuestHud();
+  maybeChartLoopHome(quest, { immediate: true });
   switchScreen('map');
   SFX.levelUp();
   vibrate(QUEST_BUZZ.start);
@@ -11210,9 +11211,43 @@ async function uploadQuestPhoto(file, item, ref, which) {
   }
 }
 
+// An out-and-back quest keeps hunting for a loop home while it's walked: the
+// router is retried in the background (once at start, then every couple of
+// minutes off position fixes) so even when the first charting attempt failed
+// or the router was unreachable, the player still gets routed home along
+// different footpaths before they turn around. Also covers quests restored
+// from a save that started life as out-and-backs.
+let walkQuestLoopRetry = { questId: null, nextAt: 0, tries: 0, inFlight: false };
+function maybeChartLoopHome(quest, opts) {
+  if (!quest || quest.loopStyle !== 'out-and-back' || quest.loopedBack) return;
+  const core = window.BurbzQuestCore;
+  if (!core || !core.fetchLoopBackRoute || !core.upgradeQuestWithLoop) return;
+  const r = walkQuestLoopRetry;
+  if (r.questId !== quest.id) { r.questId = quest.id; r.tries = 0; r.nextAt = 0; r.inFlight = false; }
+  if (r.inFlight) return;
+  const now = Date.now();
+  if (!(opts && opts.immediate) && (now < r.nextAt || r.tries >= 10)) return;
+  const oneWay = quest.route.map(p => ({ lat: p[0], lon: p[1] }));
+  // Past the turn-around and most of the way home again — nothing left to gain.
+  if (quest.distanceWalkedM > core.routeLengthM(oneWay) * 1.6) { r.tries = 99; return; }
+  r.inFlight = true; r.tries++; r.nextAt = now + 150000;
+  core.fetchLoopBackRoute(oneWay).then(loop => {
+    r.inFlight = false;
+    const act = activeWalkingQuest();
+    if (!act || act.id !== quest.id) return;
+    if (core.upgradeQuestWithLoop(act, loop)) {
+      saveState();
+      drawWalkingQuestOnMap();
+      SFX.tap();
+      showToast('🧭 The cartographers charted you a loop home — new footpaths, no backtracking!');
+    }
+  }).catch(() => { r.inFlight = false; });
+}
+
 function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const quest = activeWalkingQuest();
   if (!quest) return;
+  maybeChartLoopHome(quest);
   const events = window.BurbzQuestCore.questProcessFix(quest, lat, lon, accuracy, tOverride);
   events.forEach(ev => {
     if (ev.type === 'npc') {
