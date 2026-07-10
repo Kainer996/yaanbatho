@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-chest-economy-v43-20260710';
+const BURBZ_CACHE = 'burbz-perch-league-v44-20260710';
 const BURBZ_ASSETS = [
   './',
   './index.html',
