@@ -1794,7 +1794,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="map-quest-btn" id="mapQuestBtn" aria-label="Begin a walking quest">⚔️ <span id="mapQuestBtnLabel">Begin Quest</span></button>
         <button class="map-quest-overview-btn" id="mapQuestOverviewBtn" aria-label="Show quest trails on the map">🥾 Quests</button>
-        <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
+        <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
         <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><div class="map-area-birds-title">Area birds</div><div class="map-area-birds-sub">Revealed here · common → rare</div><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
@@ -11595,7 +11595,7 @@ function openQuestOfferDetail(offer) {
 // only see explicitly window-exported functions.
 Object.assign(window, {
   openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
-  openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit,
+  openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
   __burbzQuestDebug: {
     getState: () => gameState,
     getActive: () => activeWalkingQuest(),
