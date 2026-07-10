@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-scan-bird-pickup-v40-20260710';
+const BURBZ_CACHE = 'burbz-bird-rename-v42-20260710';
 const BURBZ_ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,8 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
   './quest_core.js?v=loop-home-20260710',
-  './academy_treehouse_core.js?v=thirsty-owl-20260709',
+  './academy_treehouse_core.js?v=bird-rename-20260710',
+  './scan_economy_core.js',
   './assets/merlin-tutorial.png',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',

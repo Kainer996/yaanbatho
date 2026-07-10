@@ -67,7 +67,7 @@
 
   function createTrainingSession(bird, templateId='wing_sprints', nowMs=Date.now()) {
     const template = TRAINING_TEMPLATES[templateId] || TRAINING_TEMPLATES.wing_sprints;
-    const birdName = bird.commonName || bird.species || 'A brave bird';
+    const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
     const durationMs = template.minutes * 60 * 1000;
     return {
       id: `train_${nowMs}_${String(bird.id || birdName).replace(/[^a-z0-9]+/gi,'_')}`,
@@ -102,7 +102,7 @@
 
   function createBirdExpedition(bird, templateId='short_forage', nowMs=Date.now()) {
     const template = QUEST_TEMPLATES[templateId] || QUEST_TEMPLATES.short_forage;
-    const birdName = bird.commonName || bird.species || 'A brave bird';
+    const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
     const seed = hashString(`${bird.id || birdName}|${template.id}|${nowMs}`);
     const durationMs = template.minutes * 60 * 1000;
     const endMs = nowMs + durationMs;

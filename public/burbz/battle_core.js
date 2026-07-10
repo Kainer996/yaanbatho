@@ -78,7 +78,7 @@
   }
 
   function birdName(bird) {
-    return bird.commonName || bird.species || bird.name || 'Burb';
+    return String(bird.customName || '').trim() || bird.commonName || bird.species || bird.name || 'Burb';
   }
 
   function deriveRole(bird) {

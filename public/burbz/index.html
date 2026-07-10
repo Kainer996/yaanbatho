@@ -784,6 +784,17 @@ svg.academy-room-bg { display:block; filter:none; }
 .scan-result-sci { font-size: 12px; color: var(--text3); font-style: italic; margin-bottom: 8px; }
 .scan-result-conf { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--accent2); }
 
+/* Non-blocking continuous-listen discoveries: each confident bird gets a small
+   card while the microphone immediately carries on with the next chunk. */
+.scan-encounter-stack { position:fixed; top:calc(var(--safe-top) + 72px); left:12px; right:12px; z-index:1080; display:grid; gap:8px; pointer-events:none; }
+.scan-encounter-card { display:grid; grid-template-columns:64px minmax(0,1fr); gap:10px; align-items:center; max-width:430px; width:100%; margin:0 auto; padding:9px; border-radius:15px; background:linear-gradient(135deg,rgba(22,19,14,.97),rgba(7,7,7,.96)); border:1px solid rgba(240,199,103,.5); box-shadow:0 12px 34px rgba(0,0,0,.55),0 0 22px rgba(214,168,79,.16); opacity:0; transform:translateY(-16px) scale(.97); transition:opacity .22s ease,transform .22s ease; overflow:hidden; }
+.scan-encounter-card.show { opacity:1; transform:translateY(0) scale(1); }
+.scan-encounter-card img,.scan-encounter-fallback { width:64px; height:64px; object-fit:cover; border-radius:11px; background:rgba(255,255,255,.05); display:grid; place-items:center; font-size:34px; }
+.scan-encounter-kicker { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:900; letter-spacing:.1em; text-transform:uppercase; color:var(--legendary); }
+.scan-encounter-name { font-family:'Russo One',sans-serif; font-size:15px; color:#fff7d9; line-height:1.1; margin:2px 0; }
+.scan-encounter-meta { font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:800; color:var(--text2); line-height:1.25; }
+.scan-encounter-price { margin-top:3px; color:var(--accent2); }
+
 /* Camera viewfinder */
 #imageScanArea {
   position: relative;
@@ -2244,14 +2255,16 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <div class="village-shop-overlay" id="villageShopOverlay"></div>
 
   <!-- Toast container -->
+  <div class="scan-encounter-stack" id="scanEncounterStack" aria-live="polite" aria-label="Birds heard while listening"></div>
   <div class="toast-container" id="toastContainer"></div>
 </div>
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=thirsty-owl-20260709"></script>
-<script src="battle_core.js?v=squad-league-20260624"></script>
+<script src="academy_treehouse_core.js?v=bird-rename-20260710"></script>
+<script src="battle_core.js?v=bird-rename-20260710"></script>
 <script src="quest_core.js?v=loop-home-20260710"></script>
+<script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -8920,7 +8933,7 @@ function renderAcademyTreehouse(byRoom) {
     const perches = (ACADEMY_ROOMS[r.id] && ACADEMY_ROOMS[r.id].perches) || [[pos.x,pos.y]];
     list.slice(0, 120).forEach((b, i) => {
       const perch = r.id === 'outdoors' ? [pos.x + ((i % 7) - 3) * 5, pos.y + (Math.floor(i / 7) % 3) * 3] : [pos.x + ((i % 5) - 2) * 3, pos.y + 7 + (Math.floor(i / 5) % 2) * 3];
-      birdHtml += '<div class="treehouse-bird" title="' + escapeHtml(b.commonName || b.species) + '" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + miniBirdSVG(b.commonName || b.species) + '</div>';
+      birdHtml += '<div class="treehouse-bird" title="' + escapeHtml(birdDisplayName(b)) + '" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + miniBirdSVG(b.commonName || b.species) + '</div>';
     });
   });
   birds.innerHTML = birdHtml;
@@ -9226,7 +9239,7 @@ function renderQuestSendSheet() {
     const sel = questSendState.birdId === b.id ? ' selected' : '';
     return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
-      '<span class="quest-bird-chip-name">' + escapeHtml(b.commonName || b.species) + '</span>' +
+      '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
     '</button>';
   }).join('') : '<div class="academy-empty">No companions yet — scan and recruit a bird first.</div>';
@@ -9508,7 +9521,7 @@ function renderAcademyRoomPanel(birds) {
 
     return '<div class="academy-bird-row">' + artHtml +
       '<div class="academy-bird-main">' +
-        '<div class="academy-bird-name">' + (b.academy.honor === 'star_pupil' ? '⭐ ' : '') + escapeHtml(b.commonName || b.species) + '</div>' +
+        '<div class="academy-bird-name">' + (b.academy.honor === 'star_pupil' ? '⭐ ' : '') + escapeHtml(birdDisplayName(b)) + '</div>' +
         '<div class="academy-bird-meta">Lv ' + b.level + ' · ' + (b.rarity || 'common').toUpperCase() + ' · PWR ' + (b.power || '?') + (b.training.trainCount ? ' · ' + b.training.trainCount + ' drills done' : '') + (b.academy.honor === 'star_pupil' ? ' · Star Pupil' : '') + '</div>' +
         academyMeter('HP', hpPct, 'hp') +
         academyMeter('HUNGER', hungerPct, 'hunger') +
@@ -10380,7 +10393,7 @@ function renderTrainingHallPanel(birds, others) {
     return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
   }).join('') : '<div class="academy-empty">No birds are training yet. Tap the notice board below to assign a companion to a timed drill.</div>';
   const templateHtml = templates.map(t => {
-    const buttons = availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(b.commonName || b.species) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>';
+    const buttons = availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(birdDisplayName(b)) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>';
     return '<div class="training-template-card"><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + buttons + '</div>';
   }).join('');
   return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Mobile idle games work best when early actions are readable and timers become check-back rituals: 2h wing drills, 3h strength work, and 5h focus training. Birds already training appear here first; if nobody is training, use the notice board to assign them.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
@@ -10397,7 +10410,7 @@ function renderAcademyRoomInterior() {
     const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
     const addRows = others.length ? others.map(b => {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
-      return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(b.commonName || b.species) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
+      return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
@@ -11908,6 +11921,7 @@ function switchScreen(name) {
 // ============================================================================
 const RARITY_RECRUIT_COST = { common: 35, uncommon: 55, rare: 90, epic: 140, legendary: 220 };
 const RARITY_DISCOVERY_REWARD = { common: 14, uncommon: 22, rare: 34, epic: 55, legendary: 90 };
+const CONTINUOUS_SOUND_DISCOVERY_MARKER = 'continuous-sound-discovery-v2-20260709';
 
 function speciesKey(name) { return String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); }
 function canonicalSpeciesName(name) {
@@ -11948,10 +11962,15 @@ function renameCompanionBird(birdId) {
   renderAcademy();
   renderPetCompanion();
   updateHeader();
+  // Refresh the field-guide sheet in place if it is showing this bird.
+  if ($('birdInfoModal')?.classList.contains('show') && $('birdInfoContent')?.dataset.currentBirdId === String(bird.id)) openBirdInfo(bird.id);
   showToast(clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
 }
 function discoveredSpeciesRecords() { return Object.values(gameState.discoveredSpecies || {}).filter(Boolean); }
-function recruitCostForBird(bird) { return RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common; }
+function recruitCostForBird(bird) {
+  if (window.BurbzScanEconomy && typeof BurbzScanEconomy.recruitCostForBird === 'function') return BurbzScanEconomy.recruitCostForBird(bird);
+  return RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common;
+}
 function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && bird.rarity) || 'common'] || RARITY_DISCOVERY_REWARD.common; }
 function addCoins(amount) { gameState.player.coins = Math.max(0, Math.floor((Number(gameState.player.coins) || 0) + amount)); return gameState.player.coins; }
 function addBranches(amount) { gameState.player.branches = Math.max(0, Math.floor((Number(gameState.player.branches) || 0) + amount)); return gameState.player.branches; }
@@ -13720,6 +13739,32 @@ function showRecruitChoiceOverlay(birds, message, opts = {}) {
   overlay.classList.add('show');
 }
 
+function showScanEncounterCard(bird, isNewDiscovery) {
+  const stack = $('scanEncounterStack');
+  if (!stack || !bird) return;
+  const cost = recruitCostForBird(bird);
+  const breakdown = window.BurbzScanEconomy ? BurbzScanEconomy.recruitCostBreakdown(bird) : null;
+  const art = getBirdArtUrl(bird);
+  const media = art
+    ? '<img src="' + escapeHtml(art) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
+    : '<div class="scan-encounter-fallback">' + escapeHtml(bird.emoji || '🐦') + '</div>';
+  const card = document.createElement('div');
+  card.className = 'scan-encounter-card';
+  card.dataset.marker = CONTINUOUS_SOUND_DISCOVERY_MARKER;
+  card.innerHTML = media + '<div><div class="scan-encounter-kicker">' +
+    (isNewDiscovery ? 'New bird heard · Always added to Birdex' : 'Bird heard again · Already in Birdex') +
+    '</div><div class="scan-encounter-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
+    '<div class="scan-encounter-meta">' + Math.round((bird.confidence || 0) * 100) + '% confidence · ' +
+    escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · Power ' + Math.round(Number(bird.power) || 0) +
+    '<div class="scan-encounter-price">Recruitment value ' + cost + ' coins' +
+    (breakdown ? ' · strength +' + (breakdown.powerPremium + breakdown.statPremium + breakdown.specialistPremium) : '') +
+    '</div></div></div>';
+  stack.prepend(card);
+  while (stack.children.length > 3) stack.lastElementChild.remove();
+  requestAnimationFrame(() => card.classList.add('show'));
+  setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 260); }, 6500);
+}
+
 function handleBirdCandidates(primary, detections = []) {
   const candidates = [];
   if (primary && primary.species) candidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
@@ -13727,11 +13772,15 @@ function handleBirdCandidates(primary, detections = []) {
     const name = d.name || d.commonName || d.species;
     if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
   });
+  const top = candidates[0];
   const newDiscoveries = [];
-  candidates.forEach(bird => { if (rememberDiscoveredBird(bird)) newDiscoveries.push(bird); fetchBirdArt(bird.species); });
+  // Only the backend's confident winner is an automatic Birdex discovery. The
+  // weaker ranked detections stay available for correction, but never become
+  // accidental catches of their own.
+  if (top && rememberDiscoveredBird(top)) newDiscoveries.push(top);
+  if (top) fetchBirdArt(top.species);
   // Remember what the scanner guessed so the player can correct a wrong ID.
   scanCorrectContext = { names: candidates.map(b => b.commonName || b.species).filter(Boolean) };
-  const top = candidates[0];
   if (top) {
     const resultEl = $('scanResult');
     resultEl.classList.add('show');
@@ -13739,17 +13788,18 @@ function handleBirdCandidates(primary, detections = []) {
     $('scanResultName').style.color = RARITY_COLORS[top.rarity];
     $('scanResultSci').textContent = top.scientificName || top.species;
     $('scanResultConf').textContent = `${Math.round((top.confidence || 0) * 100)}% confidence | ${top.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
+    showScanEncounterCard(top, newDiscoveries.some(b => speciesKey(canonicalSpeciesName(b.species || b.commonName)) === speciesKey(canonicalSpeciesName(top.species || top.commonName))));
   }
   if (top) { try { questRegisterBirdEncounter(top); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); } }
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex and head to The Thirsty Owl tavern — recruit the ones you want there.' : 'Species discovered. It now waits at The Thirsty Owl tavern in your Academy — buy it a drink there to make it a companion.', { correctable: true });
+    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex and head to The Thirsty Owl tavern — recruit the ones you want there.' : 'Species discovered. It now waits at The Thirsty Owl tavern in your Academy — buy it a drink there to make it a companion.', { correctable: true });
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   } else if (top) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at The Thirsty Owl tavern when you can afford it.', { correctable: true }); }
+    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at The Thirsty Owl tavern when you can afford it.', { correctable: true }); }
   }
 }
 
@@ -13929,8 +13979,8 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
           <button class="card-pet-front ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Walking Pet' : 'Choose as Pet'}</button>
           <div class="card-info">
-            <div class="card-name">${birdDisplayName(bird)}</div>
-            <div class="card-species">${bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)}</div>
+            <div class="card-name">${escapeHtml(birdDisplayName(bird))}</div>
+            <div class="card-species">${escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species))}</div>
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
             <div class="card-stats-row">
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
@@ -13941,7 +13991,7 @@ function createBirdCardHTML(bird, idx) {
           </div>
         </div>
         <div class="card-back">
-          <div class="card-back-title" style="color:${rarityColor}">${bird.commonName || bird.species}</div>
+          <div class="card-back-title" style="color:${rarityColor}">${escapeHtml(birdDisplayName(bird))}</div>
           <div class="card-back-stats">
             <div class="card-back-stat">HP <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.maxHp||100)/2.5)}%;background:var(--hp-green)"></div></div> ${bird.maxHp || 100}</div>
             <div class="card-back-stat">ATK <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.atk||50)/1.2)}%;background:var(--accent)"></div></div> ${bird.atk || 0}</div>
@@ -15077,7 +15127,7 @@ function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').
 function addBattleLog(type, text) { const log = $('battleLog'); const entry = document.createElement('div'); entry.className = 'battle-log-entry ' + type; entry.textContent = text; log.insertBefore(entry, log.firstChild); while (log.children.length > 20) log.removeChild(log.lastChild); }
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -15170,7 +15220,7 @@ function renderPetCompanion() {
   // a square painted scene.
   sprite.innerHTML = birdOnlyImgHTML(bird, 'pet-art');
 
-  $('petName').textContent = bird.commonName || bird.species;
+  $('petName').textContent = birdDisplayName(bird);
   $('petMood').textContent = `${getPetMood(bird)} · Lv.${bird.level || 1} · Tr.${(bird.training?.trainCount || 0)}`;
   $('petHungerFill').style.width = `${Math.max(0, 100 - (pet.hunger || 0))}%`;
   $('petHappyFill').style.width = `${pet.happiness || 0}%`;
