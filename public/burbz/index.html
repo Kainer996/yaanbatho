@@ -1706,6 +1706,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .quest-marker.qm-npc.reached::after { content:''; }
 .quest-marker.qm-chest { animation:questBounce 2.1s ease-in-out infinite; }
 .quest-marker.qm-chest.reached { animation:none; }
+
+/* Inline-SVG RPG treasure chests (quest checkpoints + map loot) */
+.rpg-chest { display:inline-block; vertical-align:-0.12em; filter:drop-shadow(0 1px 2px rgba(0,0,0,.55)); }
+.quest-marker .rpg-chest { width:1.35em; height:1.2em; }
 /* Trail bird NPCs: birds you found mid-quest, perched ahead on the route */
 .quest-marker.qm-birdnpc { width:46px; height:46px; border-radius:50%; overflow:visible; border:2.5px solid #7ee08a; background:radial-gradient(circle at 40% 30%, #1d3a22, #0b140d); box-shadow:0 0 12px rgba(126,224,138,.55); }
 .quest-marker.qm-birdnpc img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
@@ -11069,7 +11073,8 @@ function drawWalkingQuestOnMap() {
     const face = document.createElement('div');
     face.className = 'quest-marker qm-' + cp.kind + (cp.reached ? ' reached' : '');
     if (cp.kind === 'npc') face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
-    else face.textContent = cp.kind === 'chest' ? (cp.reached ? '🪙' : '🎁') : cp.kind === 'finish' ? '🏁' : (cp.reached ? '✅' : '🚩');
+    else if (cp.kind === 'chest') face.innerHTML = cp.reached ? CHEST_OPEN_SVG : CHEST_SVG;
+    else face.textContent = cp.kind === 'finish' ? '🏁' : (cp.reached ? '✅' : '🚩');
     el.appendChild(face);
     el.addEventListener('click', ev => {
       ev.stopPropagation(); // keep the tap off the map's quest-offers hit layer underneath
@@ -11307,7 +11312,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
     if (ev.checkpoint) {
       const mk = questMapMarkers[ev.index];
       const face = mk && mk.getElement ? mk.getElement().querySelector('.quest-marker') : null;
-      if (face) { face.classList.add('reached'); if (ev.checkpoint.kind === 'chest') face.textContent = '🪙'; else if (ev.checkpoint.kind === 'flag') face.textContent = '✅'; }
+      if (face) { face.classList.add('reached'); if (ev.checkpoint.kind === 'chest') face.innerHTML = CHEST_OPEN_SVG; else if (ev.checkpoint.kind === 'flag') face.textContent = '✅'; }
     }
   });
   updateWalkQuestHud();
@@ -11743,6 +11748,28 @@ function drawMedievalProps(spawns) {
   });
 }
 
+// ---- Proper RPG treasure-chest icons (inline SVG — there is no chest emoji) --
+const CHEST_SVG =
+  '<svg class="rpg-chest" viewBox="0 0 32 28" width="1.2em" height="1.05em" aria-hidden="true">' +
+    '<path d="M4 12 Q4 4 16 4 Q28 4 28 12 L28 14 L4 14 Z" fill="#a3622a" stroke="#42250e" stroke-width="1.6"/>' +
+    '<path d="M6.5 11.5 Q7 6.8 16 6.2 Q25 6.8 25.5 11.5" fill="none" stroke="#c07a35" stroke-width="1.4" opacity="0.8"/>' +
+    '<rect x="4" y="14" width="24" height="11.5" rx="1.5" fill="#8a4f21" stroke="#42250e" stroke-width="1.6"/>' +
+    '<rect x="13" y="4.6" width="6" height="20.6" fill="#e8b64c" stroke="#7a5314" stroke-width="1.2"/>' +
+    '<rect x="14.4" y="12" width="3.2" height="5.6" rx="1.3" fill="#f6d878" stroke="#7a5314" stroke-width="1"/>' +
+    '<circle cx="16" cy="14" r="1" fill="#42250e"/>' +
+  '</svg>';
+const CHEST_OPEN_SVG =
+  '<svg class="rpg-chest" viewBox="0 0 32 28" width="1.2em" height="1.05em" aria-hidden="true">' +
+    '<path d="M4 8 Q4 1.5 16 1.5 Q28 1.5 28 8 L28 9.5 L4 9.5 Z" fill="#a3622a" stroke="#42250e" stroke-width="1.6"/>' +
+    '<rect x="13" y="2" width="6" height="7.5" fill="#e8b64c" stroke="#7a5314" stroke-width="1.2"/>' +
+    '<ellipse cx="16" cy="13" rx="11" ry="3.6" fill="#f6d878" stroke="#c9971d" stroke-width="1"/>' +
+    '<circle cx="10.5" cy="12.4" r="1.8" fill="#ffe9a0" stroke="#c9971d" stroke-width=".8"/>' +
+    '<circle cx="16.5" cy="13.6" r="1.8" fill="#ffe9a0" stroke="#c9971d" stroke-width=".8"/>' +
+    '<circle cx="22" cy="12.2" r="1.8" fill="#ffe9a0" stroke="#c9971d" stroke-width=".8"/>' +
+    '<rect x="4" y="14.5" width="24" height="11" rx="1.5" fill="#8a4f21" stroke="#42250e" stroke-width="1.6"/>' +
+    '<rect x="13" y="14.5" width="6" height="11" fill="#e8b64c" stroke="#7a5314" stroke-width="1.2"/>' +
+  '</svg>';
+
 // ---- Map collectibles: tappable loot scattered around the player -----------
 // Fresh loot is seeded per ~250 m cell per day, so every walk turns up coins,
 // feathers and forage to grab. Everything respawns at midnight.
@@ -11753,7 +11780,7 @@ const MAP_PICKUP_TYPES = [
   { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
   { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
   { id:'mushroom', glyph:'🍄', label:'Forest mushroom', weight:10, grant() { gameState.inventory.items.forest_mushroom = (gameState.inventory.items.forest_mushroom || 0) + 1; return '+1 Forest Mushroom'; } },
-  { id:'chest',    glyph:'🎁', label:'Old cache',     weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
+  { id:'chest',    glyph:CHEST_SVG, label:'Treasure chest', weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
   { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } }
 ];
 const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
@@ -11919,7 +11946,10 @@ function switchScreen(name) {
 // ============================================================================
 // RPG ECONOMY — discoveries are not the same as recruited companions
 // ============================================================================
-const RARITY_RECRUIT_COST = { common: 35, uncommon: 55, rare: 90, epic: 140, legendary: 220 };
+// Birds are very easy to DISCOVER but deliberately expensive to RECRUIT: a
+// common costs a solid session of quests and pickups, while a Peregrine-class
+// epic or a legendary is a long-term saving goal players work towards.
+const RARITY_RECRUIT_COST = { common: 150, uncommon: 400, rare: 1000, epic: 2500, legendary: 6000 };
 const RARITY_DISCOVERY_REWARD = { common: 14, uncommon: 22, rare: 34, epic: 55, legendary: 90 };
 const CONTINUOUS_SOUND_DISCOVERY_MARKER = 'continuous-sound-discovery-v2-20260709';
 
