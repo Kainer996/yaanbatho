@@ -949,6 +949,90 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-log-entry.player-action { background: rgba(214,168,79,0.08); border-left: 2px solid var(--accent2); }
 .battle-log-entry.enemy-action { background: rgba(151,117,250,0.08); border-left: 2px solid var(--epic); }
 .battle-log-entry.system-msg { background: rgba(255,212,59,0.06); border-left: 2px solid var(--legendary); color: var(--legendary); }
+/* ========== PERCH LEAGUE (turn-based battles) ========== */
+.league-header { display:flex; align-items:center; gap:12px; padding:12px; background:linear-gradient(135deg, var(--bg3), var(--bg2)); border:1px solid rgba(214,168,79,0.25); border-radius:14px; margin-bottom:12px; }
+.league-tier-icon { font-size:34px; line-height:1; }
+.league-tier-name { font-family:'Russo One', sans-serif; font-size:15px; color:var(--accent); }
+.league-tier-copy { font-size:11px; color:var(--text3); margin-top:2px; }
+.league-progress { margin-left:auto; text-align:right; font-size:11px; color:var(--text2); white-space:nowrap; }
+.league-pips { display:flex; gap:4px; justify-content:flex-end; margin-top:4px; }
+.league-pip { width:10px; height:10px; border-radius:50%; background:var(--bg4); border:1px solid rgba(255,255,255,0.12); }
+.league-pip.won { background:var(--accent); box-shadow:0 0 6px rgba(214,168,79,0.6); }
+.league-rival { padding:10px 12px; background:var(--bg2); border:1px solid rgba(255,255,255,0.06); border-radius:12px; margin-bottom:12px; }
+.league-rival-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
+.league-rival-row { display:flex; gap:8px; }
+.rival-card { flex:1; text-align:center; padding:8px 4px; background:var(--bg3); border-radius:10px; border:1px solid rgba(255,255,255,0.05); }
+.rival-card .rc-art { width:52px; height:52px; border-radius:10px; object-fit:cover; margin:0 auto 4px; display:block; background:var(--bg4); }
+.rival-card .rc-emoji { font-size:34px; line-height:52px; }
+.rival-card .rc-name { font-size:10px; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rival-card .rc-lv { font-size:9px; color:var(--text3); }
+.type-chip { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; border:1px solid; margin-top:3px; text-transform:uppercase; letter-spacing:0.5px; }
+.battle-team-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:10px 0; }
+.pick-card { position:relative; text-align:center; padding:10px 6px 8px; background:var(--bg2); border:1.5px solid rgba(255,255,255,0.07); border-radius:12px; transition:border-color .15s, transform .1s; }
+.pick-card:active { transform:scale(0.96); }
+.pick-card.picked { border-color:var(--accent); background:linear-gradient(180deg, rgba(214,168,79,0.12), var(--bg2)); }
+.pick-card.tired { opacity:0.55; }
+.pick-card .pk-art { width:56px; height:56px; border-radius:10px; object-fit:cover; margin:0 auto 4px; display:block; background:var(--bg4); }
+.pick-card .pk-emoji { font-size:36px; line-height:56px; }
+.pick-card .pk-name { font-size:10px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pick-card .pk-meta { font-size:9px; color:var(--text3); margin-top:1px; }
+.pick-card .pk-order { position:absolute; top:5px; left:6px; width:18px; height:18px; border-radius:50%; background:var(--accent); color:#000; font-size:11px; font-weight:800; line-height:18px; }
+.pick-card .pk-hp { height:3px; border-radius:2px; background:var(--bg4); margin-top:5px; overflow:hidden; }
+.pick-card .pk-hp > div { height:100%; border-radius:2px; background:var(--hp-green); }
+.type-wheel { margin-top:16px; padding:12px; background:var(--bg2); border-radius:12px; border:1px solid rgba(255,255,255,0.05); }
+.type-wheel-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
+.type-wheel-row { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text2); padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.05); }
+.type-wheel-row:last-child { border-bottom:none; }
+/* Arena */
+.arena-fighter { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); margin-bottom:10px; position:relative; overflow:visible; }
+.arena-fighter.player { border-color:rgba(214,168,79,0.35); }
+.arena-fighter.opponent { border-color:rgba(160,106,232,0.35); }
+.arena-fighter .af-art { width:74px; height:74px; border-radius:12px; object-fit:cover; background:var(--bg4); flex-shrink:0; }
+.arena-fighter .af-emoji { font-size:48px; line-height:74px; width:74px; text-align:center; flex-shrink:0; }
+.arena-fighter.shake { animation:arenaShake .4s ease; }
+@keyframes arenaShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 50%{transform:translateX(6px)} 75%{transform:translateX(-3px)} }
+.af-main { flex:1; min-width:0; }
+.af-name-row { display:flex; align-items:center; gap:6px; }
+.af-name { font-family:'Russo One', sans-serif; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.af-lv { font-size:10px; color:var(--text3); }
+.af-hpbar { height:9px; border-radius:5px; background:var(--bg4); margin-top:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); }
+.af-hpbar > div { height:100%; border-radius:5px; background:var(--hp-green); transition:width .45s ease, background .3s; }
+.af-hptext { font-size:10px; color:var(--text2); margin-top:3px; display:flex; justify-content:space-between; }
+.af-energy { height:5px; border-radius:3px; background:var(--bg4); margin-top:4px; overflow:hidden; }
+.af-energy > div { height:100%; border-radius:3px; background:linear-gradient(90deg,#4aa8e0,#43c6a8); transition:width .35s ease; }
+.af-status { display:flex; gap:4px; margin-top:4px; flex-wrap:wrap; }
+.af-status span { font-size:9px; padding:1px 6px; border-radius:8px; background:var(--bg4); color:var(--text2); }
+.dmg-float { position:absolute; right:16px; top:6px; font-family:'Russo One', sans-serif; font-size:22px; color:var(--hp-red); text-shadow:0 2px 8px rgba(0,0,0,0.8); animation:dmgFloat 1s ease forwards; pointer-events:none; z-index:5; }
+.dmg-float.heal { color:var(--hp-green); }
+.dmg-float.crit { color:var(--legendary); font-size:26px; }
+@keyframes dmgFloat { 0%{opacity:0; transform:translateY(8px) scale(0.8)} 20%{opacity:1; transform:translateY(0) scale(1.1)} 100%{opacity:0; transform:translateY(-26px) scale(1)} }
+.arena-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.move-btn { position:relative; text-align:left; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg, var(--bg3), var(--bg2)); border:1.5px solid rgba(255,255,255,0.1); min-height:56px; transition:transform .1s; }
+.move-btn:active { transform:scale(0.96); }
+.move-btn:disabled { opacity:0.38; }
+.move-btn .mv-name { font-size:12px; font-weight:800; color:var(--text); }
+.move-btn .mv-meta { font-size:10px; color:var(--text3); margin-top:2px; }
+.move-btn .mv-cost { position:absolute; top:8px; right:10px; font-size:10px; font-weight:700; color:#43c6a8; }
+.move-btn.signature { border-color:rgba(214,168,79,0.5); background:linear-gradient(180deg, rgba(214,168,79,0.14), var(--bg2)); }
+.move-btn.switch-btn { border-color:rgba(160,106,232,0.4); text-align:center; }
+.move-btn.switch-btn .mv-name { color:var(--epic); }
+.arena-bench { display:none; margin-top:10px; padding:10px; background:var(--bg3); border-radius:12px; border:1px solid rgba(160,106,232,0.3); }
+.arena-bench.show { display:block; }
+.arena-bench .bench-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
+.bench-row { display:flex; gap:8px; }
+.bench-card { flex:1; text-align:center; padding:8px 4px; background:var(--bg2); border-radius:10px; border:1.5px solid rgba(255,255,255,0.08); }
+.bench-card:active { transform:scale(0.96); }
+.bench-card.fainted { opacity:0.35; pointer-events:none; }
+.bench-card .bc-art { width:44px; height:44px; border-radius:8px; object-fit:cover; margin:0 auto 4px; display:block; background:var(--bg4); }
+.bench-card .bc-emoji { font-size:30px; line-height:44px; }
+.bench-card .bc-name { font-size:9px; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bench-card .bc-hp { height:3px; border-radius:2px; background:var(--bg4); margin-top:4px; overflow:hidden; }
+.bench-card .bc-hp > div { height:100%; background:var(--hp-green); }
+.battle-log-entry.fact-msg { background:rgba(67,198,168,0.08); border-left:2px solid #43c6a8; color:#7fdcc6; font-style:italic; }
+.battle-result-rewards { margin:10px auto 16px; max-width:280px; text-align:left; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:12px 16px; }
+.battle-result-rewards .rw-row { display:flex; justify-content:space-between; font-size:13px; color:var(--text2); padding:4px 0; }
+.battle-result-rewards .rw-row b { color:var(--accent); }
+.battle-result-rewards .rw-note { font-size:10px; color:var(--text3); margin-top:6px; }
 .battle-result-screen { text-align: center; padding-top: 30px; }
 .battle-result-title { font-family: 'Russo One', sans-serif; font-size: 34px; margin-bottom: 8px; }
 .battle-result-title.victory { color: var(--legendary); text-shadow: 0 0 30px rgba(255,212,59,0.5); }
@@ -1928,42 +2012,37 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
     </div>
 
-    <!-- BATTLE SCREEN -->
+    <!-- BATTLE SCREEN — Perch League (Pokémon-style turn battles) -->
     <div class="screen" id="screen-battle">
-      <div class="screen-title">FLOCK LEAGUE</div>
+      <div class="screen-title">PERCH LEAGUE</div>
 
-      <!-- Squad setup -->
+      <!-- League home: ladder status, rival preview, team select -->
       <div class="battle-select" id="battleSelect">
-        <div class="battle-select-title">Build your five-bird formation</div>
-        <div class="battle-select-copy">Train birds in the Academy, then set a football-style flock: attackers press high, midfielders link play, defenders guard the nest. Multiplayer will use saved rival squads; this first playable version simulates an async rival lineup.</div>
-        <div class="battle-formation-bar" id="battleFormationBtns"></div>
-        <div class="battle-squad-summary" id="battleSquadSummary"></div>
+        <div class="league-header" id="leagueHeader"></div>
+        <div class="league-rival" id="leagueRival"></div>
+        <div class="battle-select-title">Pick your three-bird team</div>
+        <div class="battle-select-copy" id="battleSelectCopy">Tap birds to add them. Counter the rival's wing classes — the wheel below shows who beats whom.</div>
         <div class="battle-team-grid" id="battleTeamGrid"></div>
-        <div class="battle-pitch" id="battlePitch"><div class="pitch-half-label bottom">Your flock</div></div>
-        <button class="battle-start-btn" id="battleStartBtn" disabled>START FLOCK MATCH</button>
+        <button class="battle-start-btn" id="battleStartBtn" disabled>START BATTLE</button>
+        <div class="type-wheel" id="typeWheel"></div>
       </div>
 
-      <!-- Match arena -->
+      <!-- Turn-based arena -->
       <div class="battle-arena" id="battleArena">
-        <div class="battle-match-head">
-          <span id="playerFormationLabel">Your formation</span>
-          <div class="battle-scoreboard"><span id="playerMatchScore">0</span><span>—</span><span id="opponentMatchScore">0</span></div>
-          <span id="opponentFormationLabel">Rival formation</span>
-        </div>
-        <div class="battle-pitch" id="opponentPitch">
-          <div class="pitch-half-label top">Rival flock</div>
-          <div class="pitch-half-label bottom">Your flock</div>
-        </div>
+        <div class="arena-fighter opponent" id="arenaOpponent"></div>
         <div class="battle-log" id="battleLog"></div>
+        <div class="arena-fighter player" id="arenaPlayer"></div>
+        <div class="arena-actions" id="arenaActions"></div>
+        <div class="arena-bench" id="arenaBench"></div>
       </div>
 
-      <!-- Match result -->
+      <!-- Result -->
       <div class="battle-result-screen" id="battleResult">
-        <div class="battle-result-title" id="battleResultTitle">FLOCK WIN!</div>
+        <div class="battle-result-title" id="battleResultTitle">VICTORY!</div>
         <div style="font-size:64px; margin: 16px 0;" id="battleResultEmoji">🏆</div>
-        <div class="battle-result-xp" id="battleResultXp">+50 XP</div>
+        <div class="battle-result-rewards" id="battleResultRewards"></div>
         <div class="battle-result-xp-bar"><div class="battle-result-xp-fill" id="battleResultXpFill" style="width:0%"></div></div>
-        <button class="battle-again-btn" id="battleAgainBtn">SET NEXT FORMATION</button>
+        <button class="battle-again-btn" id="battleAgainBtn">BACK TO THE LEAGUE</button>
       </div>
     </div>
 
@@ -2265,8 +2344,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=bird-rename-20260710"></script>
-<script src="battle_core.js?v=bird-rename-20260710"></script>
+<script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
+<script src="battle_core.js?v=perch-league-20260710"></script>
 <script src="quest_core.js?v=loop-home-20260710"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script>
@@ -2994,7 +3073,8 @@ const DEFAULT_STATE = {
   pantryLastRefill: null, // For pantry restocking
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // Campus building ownership
   academyBuilderVersion: 3,
-  battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // Flock League squad setup
+  battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
+  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // Perch League ladder
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
   walkingQuests: { active: null, history: [] }, // Real-world walking adventures on the live map
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
@@ -3077,7 +3157,7 @@ function loadState() {
   gameState.merlinCluesFound = Array.isArray(gameState.merlinCluesFound) ? [...new Set(gameState.merlinCluesFound.filter(Boolean))] : [];
   gameState.tavernPatrons = Array.isArray(gameState.tavernPatrons) ? gameState.tavernPatrons.filter(p => p && typeof p === 'object' && p.species) : [];
   gameState.mapExploredCells = Array.isArray(gameState.mapExploredCells) ? [...new Set(gameState.mapExploredCells.filter(Boolean))].slice(-180) : [];
-  selectedBattleFormation = (gameState.battlePreset && BATTLE_FORMATIONS[gameState.battlePreset.formation]) ? gameState.battlePreset.formation : 'balanced';
+  gameState.league = (gameState.league && typeof gameState.league === 'object' && !Array.isArray(gameState.league)) ? gameState.league : {}; // Perch League ladder (fully healed in ensureLeagueState)
 
   // Diet-discovery achievement: any save with already-known diets should reflect
   // the current count at boot so the badge unlocks aren't gated behind a future feed.
@@ -8804,6 +8884,13 @@ function ensureBirdAcademy(bird) {
   if (!bird.care || typeof bird.care !== 'object') bird.care = { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null };
   if (!bird.training || typeof bird.training !== 'object') bird.training = { feedCount: 0, trainCount: 0 };
   if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null };
+  if (!bird.academy.disciplines || typeof bird.academy.disciplines !== 'object') {
+    // Migrate old drill investment into Perch League move disciplines so
+    // already-trained birds arrive with their moves unlocked.
+    const tb = bird.training || {};
+    const seedFrom = b => (b >= 12 ? 6 : b >= 5 ? 3 : b >= 1 ? 1 : 0);
+    bird.academy.disciplines = { strike: seedFrom(tb.atkBonus || 0), guard: seedFrom(tb.defBonus || 0), aero: seedFrom(tb.spdBonus || 0), mind: seedFrom(tb.intBonus || 0), song: seedFrom(tb.chaBonus || 0), endure: seedFrom(tb.staminaBonus || 0) };
+  }
   if (!ACADEMY_ROOMS[bird.academy.room] || !isAcademyRoomBuilt(bird.academy.room)) bird.academy.room = 'outdoors';
   return bird;
 }
@@ -10320,17 +10407,20 @@ function roomBirdSpriteHTML(bird) {
 function startBirdTrainingSession(birdId, templateId) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
+  const tpl = trainingTemplateById(templateId);
+  const tplRoom = (tpl && tpl.room) || 'training';
   if (!isAcademyBuildingBuilt('training')) { showToast('Build the Training Hall first.'); return; }
+  if (tplRoom !== 'training' && !isAcademyBuildingBuilt(tplRoom)) { showToast('Build the ' + ((tpl && tpl.roomLabel) || tplRoom) + ' to unlock ' + ((tpl && tpl.label) || 'this drill') + '.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is already in training.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away questing right now.'); return; }
   if (!window.BurbzAcademyCore || typeof window.BurbzAcademyCore.createTrainingSession !== 'function') { showToast('Training scrolls are still loading — try again in a moment.'); return; }
   ensureBirdAcademy(bird);
-  bird.academy.room = 'training';
+  bird.academy.room = tplRoom;
   bird.academy.lastMovedAt = new Date().toISOString();
   const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now());
   ensureBirdTrainingSessions().unshift(session);
-  academySelectedRoom = 'training';
-  academyInteriorRoom = 'training';
+  academySelectedRoom = tplRoom;
+  academyInteriorRoom = tplRoom;
   saveState();
   SFX.tap();
   showToast('🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
@@ -10353,6 +10443,21 @@ function claimBirdTrainingSession(sessionId) {
   bird.training.trainCount = (bird.training.trainCount || 0) + 1;
   bird.training[bonusKey] = clamp((bird.training[bonusKey] || 0) + bonus, 0, 30);
   bird[stat] = clamp((bird[stat] || 10) + bonus, 10, 999);
+  // Perch League: each claimed session advances this discipline's move tier.
+  const school = rewards.school || (trainingTemplateById(session.templateId) || {}).school;
+  if (school) {
+    bird.academy.disciplines = (bird.academy.disciplines && typeof bird.academy.disciplines === 'object') ? bird.academy.disciplines : {};
+    const before = Number(bird.academy.disciplines[school]) || 0;
+    bird.academy.disciplines[school] = before + 1;
+    if (window.BurbzBattleCore) {
+      const tierBefore = window.BurbzBattleCore.disciplineTier(before);
+      const tierAfter = window.BurbzBattleCore.disciplineTier(before + 1);
+      const line = window.BurbzBattleCore.MOVE_LINES[school];
+      if (tierAfter > tierBefore && line && line[tierAfter - 1]) {
+        setTimeout(() => showToast('🥊 ' + (bird.commonName || bird.species) + ' learned ' + line[tierAfter - 1].label + ' for the Perch League!'), 900);
+      }
+    }
+  }
   bird.care.lastTrained = new Date().toISOString();
   bird.care.hunger = clamp((bird.care.hunger || 0) + (rewards.hunger || 10), 0, 100);
   bird.care.happiness = clamp((bird.care.happiness || 80) + (rewards.happiness || -2), 0, 100);
@@ -10397,10 +10502,14 @@ function renderTrainingHallPanel(birds, others) {
     return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
   }).join('') : '<div class="academy-empty">No birds are training yet. Tap the notice board below to assign a companion to a timed drill.</div>';
   const templateHtml = templates.map(t => {
-    const buttons = availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(birdDisplayName(b)) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>';
-    return '<div class="training-template-card"><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + buttons + '</div>';
+    const roomBuilt = !t.room || t.room === 'training' || isAcademyBuildingBuilt(t.room);
+    const moveLine = t.moveLine ? '<div class="training-session-meta">Move line: ' + escapeHtml(t.moveLine) + '</div>' : '';
+    const buttons = !roomBuilt
+      ? '<div class="academy-empty">🔒 Build the ' + escapeHtml(t.roomLabel || t.room) + ' to unlock this discipline.</div>'
+      : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(birdDisplayName(b)) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
+    return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Mobile idle games work best when early actions are readable and timers become check-back rituals: 2h wing drills, 3h strength work, and 5h focus training. Birds already training appear here first; if nobody is training, use the notice board to assign them.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Six disciplines, one per Academy room: each timed session raises a stat AND teaches Perch League battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function renderAcademyRoomInterior() {
@@ -15135,29 +15244,418 @@ $('captureOverlay').addEventListener('click', (e) => {
 });
 
 // ============================================================================
-// BATTLE SYSTEM
+// BATTLE SYSTEM — PERCH LEAGUE
+// Pokémon-style turn battles on real birds: wing classes from real biology,
+// moves learned through Academy training, a habitat ladder for the economy.
 // ============================================================================
-let battleState = null;
-let selectedBattleFormation = 'balanced';
-const BATTLE_FORMATIONS = (window.BurbzBattleCore && window.BurbzBattleCore.BATTLE_FORMATIONS) || {};
+let battleState = null;        // { battle, busy }
+let battleSelectedIds = [];    // picked team, in order
+let leagueRivalCache = null;   // deterministic rival preview per league moment
 
 function battleCore() { if (!window.BurbzBattleCore) throw new Error('BurbzBattleCore not loaded'); return window.BurbzBattleCore; }
-function renderBattleSelect() { $('battleSelect').style.display = 'block'; $('battleArena').style.display = 'none'; $('battleResult').style.display = 'none'; renderBattleFormationButtons(); renderBattleSquadPreview(); }
-function renderBattleFormationButtons() { const bar = $('battleFormationBtns'); if (!bar) return; bar.innerHTML = ''; Object.values(BATTLE_FORMATIONS).forEach(formation => { const btn = document.createElement('button'); btn.className = 'formation-btn' + (formation.id === selectedBattleFormation ? ' active' : ''); btn.dataset.formation = formation.id; btn.innerHTML = `${formation.icon || '•'} ${escapeHtml(formation.label)}`; btn.title = formation.summary || ''; btn.addEventListener('click', () => { selectedBattleFormation = formation.id; SFX.tap(); renderBattleFormationButtons(); renderBattleSquadPreview(); saveBattlePreset(); }); bar.appendChild(btn); }); }
-function saveBattlePreset() { gameState.battlePreset = gameState.battlePreset || {}; gameState.battlePreset.formation = selectedBattleFormation; gameState.battlePreset.updatedAt = new Date().toISOString(); saveState(); }
+
+function ensureLeagueState() {
+  const def = { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } };
+  if (!gameState.league || typeof gameState.league !== 'object' || Array.isArray(gameState.league)) gameState.league = {};
+  gameState.league = { ...def, ...gameState.league };
+  if (!gameState.league.daily || typeof gameState.league.daily !== 'object') gameState.league.daily = { ...def.daily };
+  const maxTier = window.BurbzBattleCore ? window.BurbzBattleCore.LEAGUE_TIERS.length - 1 : 6;
+  gameState.league.tier = clamp(Math.round(Number(gameState.league.tier) || 0), 0, maxTier);
+  gameState.league.winsInTier = Math.max(0, Math.round(Number(gameState.league.winsInTier) || 0));
+  const today = new Date().toISOString().slice(0, 10);
+  if (gameState.league.daily.date !== today) gameState.league.daily = { date: today, wins: 0 };
+  if (!Array.isArray(gameState.league.teamIds)) gameState.league.teamIds = [];
+  return gameState.league;
+}
+
 function getBattleFlock() { return Array.isArray(gameState.flock) ? gameState.flock.map(ensureBirdAcademy) : []; }
-function getBattleSquad() { return battleCore().buildSquad(getBattleFlock(), selectedBattleFormation, { maxSize: 5 }); }
-function renderBattleSquadPreview() { const squad = getBattleSquad(); const grid = $('battleTeamGrid'); const pitch = $('battlePitch'); const summary = $('battleSquadSummary'); grid.innerHTML = ''; pitch.innerHTML = '<div class="pitch-half-label bottom">Your flock</div>'; const canStart = squad.members.length > 0; $('battleStartBtn').disabled = !canStart; if (!canStart) { summary.innerHTML = '<div class="battle-squad-stat" style="grid-column:1/-1"><strong>0</strong><span>scan birds first</span></div>'; grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px 0; color:var(--text3);">📡 Scan or identify a bird, then bring it to the Flock League.</div>'; return; } summary.innerHTML = `<div class="battle-squad-stat"><strong>${squad.members.length}/5</strong><span>starters</span></div><div class="battle-squad-stat"><strong>${squad.totalPower}</strong><span>squad power</span></div><div class="battle-squad-stat"><strong>${escapeHtml(squad.formation.label.split(' ')[0])}</strong><span>shape</span></div>`; squad.members.forEach(member => { const bird = member.bird; const card = document.createElement('div'); card.className = 'battle-team-card'; const icon = birdOnlyImgHTML(bird, 'btc-emoji'); card.innerHTML = `${icon}<div class="btc-name">${escapeHtml(member.name)}</div><div class="btc-power">⚡${member.score} · ${member.role}</div>`; grid.appendChild(card); }); renderSquadOnPitch(pitch, squad, 'player', false); }
-function renderSquadOnPitch(pitch, squad, side, mirror) { squad.members.forEach(member => { const slot = member.slot; const bird = member.bird; const div = document.createElement('div'); div.className = 'squad-slot ' + side; div.dataset.birdId = member.id; const x = mirror ? 100 - slot.x : slot.x; const y = side === 'opponent' ? 4 + slot.y * 0.42 : 58 + slot.y * 0.38; div.style.left = x + '%'; div.style.top = y + '%'; const orb = `<div class="squad-orb">${birdOnlyImgHTML(bird, 'squad-orb-art')}</div>`; div.innerHTML = `${orb}<div class="squad-name">${escapeHtml(member.name)}</div><div class="squad-role">${escapeHtml(member.role)}</div>`; pitch.appendChild(div); }); }
-$('battleStartBtn').addEventListener('click', () => { if (!getBattleSquad().members.length) return; startSquadBattle(); });
-function startSquadBattle() { const core = battleCore(); const playerSquad = getBattleSquad(); const avgLevel = playerSquad.members.length ? playerSquad.members.reduce((s, m) => s + (m.bird.level || 1), 0) / playerSquad.members.length : 1; const opponentFormationIds = Object.keys(BATTLE_FORMATIONS).filter(id => id !== selectedBattleFormation); const opponentFormation = opponentFormationIds[Math.floor(Math.random() * opponentFormationIds.length)] || 'balanced'; const opponentSquad = core.generateOpponentSquad(WILD_BIRDS.slice().sort(() => Math.random() - 0.5), avgLevel, opponentFormation); const seed = `${Date.now()}_${playerSquad.totalPower}_${opponentSquad.totalPower}`; const match = core.simulateSquadMatch(playerSquad, opponentSquad, seed); battleState = { match, playerSquad, opponentSquad, over: false }; $('battleSelect').style.display = 'none'; $('battleArena').style.display = 'block'; $('battleResult').style.display = 'none'; $('battleLog').innerHTML = ''; $('playerFormationLabel').textContent = playerSquad.formation.label; $('opponentFormationLabel').textContent = opponentSquad.formation.label; $('playerMatchScore').textContent = '0'; $('opponentMatchScore').textContent = '0'; const pitch = $('opponentPitch'); pitch.innerHTML = '<div class="pitch-half-label top">Rival flock</div><div class="pitch-half-label bottom">Your flock</div>'; renderSquadOnPitch(pitch, opponentSquad, 'opponent', true); renderSquadOnPitch(pitch, playerSquad, 'player', false); addBattleLog('system-msg', `Flock League kickoff: ${playerSquad.formation.label} vs ${opponentSquad.formation.label}.`); runSquadMatchPlayback(match); }
-function runSquadMatchPlayback(match) { let playerScore = 0; let opponentScore = 0; match.events.forEach((event, index) => { setTimeout(() => { const cls = event.side === 'player' ? 'player-action' : event.side === 'opponent' ? 'enemy-action' : 'system-msg'; addBattleLog(cls, event.text); if (event.side === 'player') playerScore += event.lane === 'attack' ? 2 : 1; if (event.side === 'opponent') opponentScore += event.lane === 'attack' ? 2 : 1; $('playerMatchScore').textContent = Math.min(playerScore, match.score.player); $('opponentMatchScore').textContent = Math.min(opponentScore, match.score.opponent); highlightSquadLane(event.side, event.lane); SFX.tap(); if (index === match.events.length - 1) setTimeout(() => endSquadBattle(match), 900); }, 650 + index * 820); }); }
-function highlightSquadLane(side, lane) { $$('.squad-slot').forEach(el => el.classList.remove('highlight')); const squad = side === 'opponent' ? battleState.opponentSquad : battleState.playerSquad; const member = squad.members.find(m => m.slot.lane === lane) || squad.members[0]; if (!member) return; const el = document.querySelector(`.squad-slot.${side}[data-bird-id="${CSS.escape(member.id)}"]`); if (el) el.classList.add('highlight'); }
-function endSquadBattle(match) { battleState.over = true; $('playerMatchScore').textContent = match.score.player; $('opponentMatchScore').textContent = match.score.opponent; setTimeout(() => { $('battleArena').style.display = 'none'; $('battleResult').style.display = 'block'; const won = match.winner === 'player'; const draw = match.winner === 'draw'; $('battleResultTitle').textContent = won ? 'FLOCK WIN!' : draw ? 'DRAW!' : 'RIVAL WIN!'; $('battleResultTitle').className = 'battle-result-title ' + (won ? 'victory' : 'defeat'); $('battleResultEmoji').textContent = won ? '🏆' : draw ? '🤝' : '🪶'; const xpGain = won ? 45 + match.score.player * 8 : draw ? 24 : 12; $('battleResultXp').textContent = '+' + xpGain + ' XP for the squad'; $('battleResultXpFill').style.width = '0%'; battleState.playerSquad.members.forEach(member => { const origBird = gameState.flock.find(b => b.id === member.bird.id || b.species === member.bird.species); if (origBird) levelUpBird(origBird, Math.max(6, Math.floor(xpGain / battleState.playerSquad.members.length))); }); addPlayerXp(xpGain); if (won) { gameState.player.wins++; updateQuestProgress('win', 1); SFX.victory(); } else { gameState.player.losses++; SFX.defeat(); } gameState.battlePreset = gameState.battlePreset || {}; gameState.battlePreset.lastResult = { score: match.score, winner: match.winner, formation: selectedBattleFormation, at: new Date().toISOString() }; checkBadges(); saveState(); setTimeout(() => { const pct = Math.min(100, (gameState.player.xp / XP_PER_LEVEL(gameState.player.level)) * 100); $('battleResultXpFill').style.width = pct + '%'; }, 100); }, 450); }
-function addBattleLog(type, text) { const log = $('battleLog'); const entry = document.createElement('div'); entry.className = 'battle-log-entry ' + type; entry.textContent = text; log.insertBefore(entry, log.firstChild); while (log.children.length > 20) log.removeChild(log.lastChild); }
+
+function typeChipHTML(typeId) {
+  const t = battleCore().BIRD_TYPES[typeId] || battleCore().BIRD_TYPES.songbird;
+  return '<span class="type-chip" style="color:' + t.color + '; border-color:' + t.color + '55; background:' + t.color + '14;">' + t.icon + ' ' + t.label + '</span>';
+}
+
+function fighterArtHTML(f, base) {
+  if (f.artUrl) return '<img class="' + base + '-art" src="' + escapeHtml(f.artUrl) + '" alt="" loading="lazy">';
+  return '<div class="' + base + '-art ' + base + '-emoji">' + escapeHtml(f.emoji || '🐦') + '</div>';
+}
+
+// Deterministic rival for this exact league moment (re-rolls after every match).
+function leagueRivalOpponents() {
+  const core = battleCore();
+  const league = ensureLeagueState();
+  const tier = core.LEAGUE_TIERS[league.tier];
+  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses);
+  if (leagueRivalCache && leagueRivalCache.key === key) return leagueRivalCache;
+  const rng = core.seededRandom('rival_' + key);
+  const pool = BURBZ_SPECIES_PROFILES.filter(p => tier.rarities.includes(p.rarity));
+  const favored = tier.favoredTypes ? pool.filter(p => tier.favoredTypes.includes(core.classifySpecies(p.name))) : [];
+  const picks = [];
+  const used = new Set();
+  let attempts = 0;
+  while (picks.length < 3 && attempts++ < 80) {
+    const useFavored = favored.length > 0 && (picks.length < 2 ? rng() < 0.7 : rng() < 0.35);
+    const src = (useFavored ? favored : pool);
+    const p = src[Math.floor(rng() * src.length)];
+    if (!p || used.has(p.id)) continue;
+    used.add(p.id);
+    picks.push(p);
+  }
+  const flock = getBattleFlock();
+  const top = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 3);
+  const avgLevel = top.length ? top.reduce((s, b) => s + (b.level || 1), 0) / top.length : 1;
+  const opponents = picks.map((p, i) => {
+    const level = Math.max(1, Math.round(avgLevel) + tier.levelBoost + (i === 2 ? 1 : 0) - (i === 0 ? 1 : 0));
+    const stats = generateBirdStats(p.name, null, p.rarity);
+    const lv = 1 + level * 0.04;
+    const bird = {
+      id: 'rival_' + p.id + '_' + i, species: p.name, commonName: p.name, rarity: p.rarity, level,
+      maxHp: clamp(Math.floor(stats.maxHp * lv), 50, 999),
+      atk: clamp(Math.floor(stats.atk * lv), 10, 999), def: clamp(Math.floor(stats.def * lv), 10, 999),
+      spd: clamp(Math.floor(stats.spd * lv), 10, 999), int: clamp(Math.floor(stats.int * lv), 10, 999),
+      cha: clamp(Math.floor((stats.cha || 50) * lv), 10, 999), stamina: clamp(Math.floor(stats.stamina * lv), 10, 999),
+      emoji: stats.emoji, artUrl: resolveBuiltInBirdArt(p.name) || null
+    };
+    bird.hp = bird.maxHp;
+    return bird;
+  });
+  leagueRivalCache = { key, opponents };
+  return leagueRivalCache;
+}
+
+function renderBattleSelect() {
+  $('battleSelect').style.display = 'block';
+  $('battleArena').style.display = 'none';
+  $('battleResult').style.display = 'none';
+  if (!window.BurbzBattleCore) { $('leagueHeader').innerHTML = '<div class="league-tier-copy">Battle scrolls still loading — try again in a moment.</div>'; return; }
+  const core = battleCore();
+  const league = ensureLeagueState();
+  const tier = core.LEAGUE_TIERS[league.tier];
+  const flock = getBattleFlock();
+
+  // Header: current tier, record, promotion pips.
+  const pips = tier.promoteWins > 0
+    ? '<div class="league-pips">' + Array.from({ length: tier.promoteWins }, (_, i) => '<div class="league-pip' + (i < league.winsInTier ? ' won' : '') + '"></div>').join('') + '</div>'
+    : '<div class="league-pips">👑</div>';
+  $('leagueHeader').innerHTML =
+    '<div class="league-tier-icon">' + tier.icon + '</div>' +
+    '<div><div class="league-tier-name">' + escapeHtml(tier.label) + ' <span style="color:var(--text3); font-size:11px;">· Tier ' + (league.tier + 1) + '/' + core.LEAGUE_TIERS.length + '</span></div>' +
+    '<div class="league-tier-copy">' + escapeHtml(tier.copy) + '</div></div>' +
+    '<div class="league-progress">' + league.wins + 'W · ' + league.losses + 'L' +
+    (tier.promoteWins > 0 ? '<br>' + league.winsInTier + '/' + tier.promoteWins + ' to promote' : '<br>Summit league') + pips + '</div>';
+
+  // Rival preview — this is where counter-picking happens.
+  const rival = leagueRivalOpponents();
+  $('leagueRival').innerHTML =
+    '<div class="league-rival-title">Today\'s rival flock — counter their classes!</div>' +
+    '<div class="league-rival-row">' + rival.opponents.map(b =>
+      '<div class="rival-card">' + fighterArtHTML(b, 'rc') +
+      '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
+      '<div class="rc-lv">Lv ' + b.level + '</div>' +
+      typeChipHTML(core.classifySpecies(b.species)) + '</div>').join('') + '</div>';
+
+  // Team select grid.
+  const grid = $('battleTeamGrid');
+  battleSelectedIds = (league.teamIds || []).filter(id => flock.some(b => b.id === id)).slice(0, 3);
+  if (!battleSelectedIds.length && flock.length) {
+    battleSelectedIds = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 3).map(b => b.id);
+  }
+  if (!flock.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px 0; color:var(--text3);">📡 Scan or identify a bird, then bring it to the Perch League.</div>';
+  } else {
+    grid.innerHTML = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).map(b => {
+      const order = battleSelectedIds.indexOf(b.id);
+      const hpPct = Math.round(clamp((b.hp || b.maxHp) / (b.maxHp || 1), 0, 1) * 100);
+      const moves = core.trainedMoves(b.academy && b.academy.disciplines).length;
+      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
+        (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
+        fighterArtHTML(b, 'pk') +
+        '<div class="pk-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
+        '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + '</div>' +
+        typeChipHTML(core.classifySpecies(b.species)) +
+        '<div class="pk-hp"><div style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div>' +
+        '</button>';
+    }).join('');
+  }
+  const need = Math.min(3, flock.length);
+  $('battleStartBtn').disabled = !flock.length || battleSelectedIds.length < need;
+  $('battleStartBtn').textContent = flock.length ? (battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '') : 'START BATTLE') : 'SCAN A BIRD FIRST';
+
+  // The teaching wheel — real facts, always visible.
+  $('typeWheel').innerHTML = '<div class="type-wheel-title">The wing-class wheel (all real bird behaviour)</div>' +
+    Object.keys(core.BIRD_TYPES).map(t => {
+      const meta = core.BIRD_TYPES[t];
+      const beats = Object.keys(core.TYPE_CHART[t]).filter(u => core.TYPE_CHART[t][u] > 1);
+      const weak = Object.keys(core.TYPE_CHART[t]).filter(u => core.TYPE_CHART[t][u] < 1);
+      const chips = ids => ids.map(u => core.BIRD_TYPES[u].icon).join(' ');
+      return '<div class="type-wheel-row"><span style="min-width:96px; color:' + meta.color + '; font-weight:700;">' + meta.icon + ' ' + meta.label + '</span><span>beats ' + chips(beats) + ' · weak to ' + chips(weak) + '</span></div>';
+    }).join('');
+}
+
+function battlePickToggle(birdId) {
+  const flock = getBattleFlock();
+  if (!flock.some(b => b.id === birdId)) return;
+  const idx = battleSelectedIds.indexOf(birdId);
+  if (idx >= 0) battleSelectedIds.splice(idx, 1);
+  else {
+    if (battleSelectedIds.length >= 3) battleSelectedIds.shift();
+    battleSelectedIds.push(birdId);
+  }
+  ensureLeagueState().teamIds = battleSelectedIds.slice();
+  saveState();
+  SFX.tap();
+  renderBattleSelect();
+}
+
+function startPerchBattle() {
+  const core = battleCore();
+  const league = ensureLeagueState();
+  const flock = getBattleFlock();
+  const team = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
+  if (!team.length) return;
+  const rival = leagueRivalOpponents();
+  const playerFighters = team.map(b => core.buildFighter(b));
+  const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
+  const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
+  battleState = { battle, busy: false };
+  $('battleSelect').style.display = 'none';
+  $('battleResult').style.display = 'none';
+  $('battleArena').style.display = 'block';
+  $('battleLog').innerHTML = '';
+  $('arenaBench').classList.remove('show');
+  const tier = core.LEAGUE_TIERS[league.tier];
+  addBattleLog('system-msg', tier.icon + ' ' + tier.label + ' — a rival flock lands on the perch!');
+  addBattleLog('enemy-action', 'Rival sends out ' + battle.teams.opponent[0].name + '!');
+  addBattleLog('player-action', 'You send out ' + battle.teams.player[0].name + '!');
+  renderArena();
+  SFX.tap();
+}
+
+function hpBarColor(pct) { return pct < 25 ? 'var(--hp-red)' : pct < 55 ? 'var(--hp-yellow)' : 'var(--hp-green)'; }
+
+function arenaFighterHTML(f, core) {
+  const pct = Math.round(clamp(f.hp / f.maxHp, 0, 1) * 100);
+  const buffs = (f.mods || []).map(m => '<span>' + (m.pct > 0 ? '▲' : '▼') + ' ' + m.stat.toUpperCase() + '</span>').join('') +
+    (f.shield ? '<span>🛡️ ' + Math.round(f.shield.pct * 100) + '%</span>' : '');
+  return fighterArtHTML(f, 'af') +
+    '<div class="af-main">' +
+    '<div class="af-name-row"><span class="af-name">' + escapeHtml(f.name) + '</span><span class="af-lv">Lv ' + f.level + '</span>' + typeChipHTML(f.type) + '</div>' +
+    '<div class="af-hpbar"><div style="width:' + pct + '%; background:' + hpBarColor(pct) + ';"></div></div>' +
+    '<div class="af-hptext"><span>' + f.hp + '/' + f.maxHp + ' HP</span><span>⚡ ' + f.energy + '</span></div>' +
+    '<div class="af-energy"><div style="width:' + f.energy + '%;"></div></div>' +
+    (buffs ? '<div class="af-status">' + buffs + '</div>' : '') +
+    '</div>';
+}
+
+function renderArena() {
+  if (!battleState) return;
+  const core = battleCore();
+  const b = battleState.battle;
+  const me = core.activeFighter(b, 'player');
+  const foe = core.activeFighter(b, 'opponent');
+  $('arenaOpponent').innerHTML = arenaFighterHTML(foe, core);
+  $('arenaPlayer').innerHTML = arenaFighterHTML(me, core);
+
+  const actions = $('arenaActions');
+  if (b.phase === 'over') { actions.innerHTML = ''; return; }
+  const disabled = battleState.busy || b.phase !== 'choose';
+  actions.innerHTML = me.moves.map((m, i) => {
+    const usable = (m.cost || 0) <= me.energy;
+    const schoolMeta = m.school === 'signature' ? null : core.MOVE_SCHOOLS[m.school];
+    const metaLine = m.kind === 'attack'
+      ? 'PWR ' + m.power + (m.priority ? ' · first' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'steal' ? ' · steals ⚡' : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-guard' : '')
+      : m.kind === 'shield' ? 'Block ' + Math.round(m.shieldPct * 100) + '% · ' + m.shieldTurns + ' turns'
+      : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP'
+      : 'Team rally' + (m.healPct ? ' + heal' : '');
+    return '<button class="move-btn' + (m.school === 'signature' ? ' signature' : '') + '"' + (disabled || !usable ? ' disabled' : '') + ' onclick="battleChooseMove(' + i + ')">' +
+      '<div class="mv-name">' + (m.icon || (schoolMeta && schoolMeta.icon) || '🐤') + ' ' + escapeHtml(m.label) + (m.tier ? ' ' + ['I','II','III'][m.tier - 1] : '') + '</div>' +
+      '<div class="mv-meta">' + metaLine + '</div>' +
+      (m.cost ? '<div class="mv-cost">⚡' + m.cost + '</div>' : '<div class="mv-cost">+⚡' + (m.gain || 0) + '</div>') +
+      '</button>';
+  }).join('') +
+  '<button class="move-btn switch-btn" style="grid-column:1/-1;"' + (battleState.busy || !core.benchAlive(b, 'player').length ? ' disabled' : '') + ' onclick="battleOpenSwitch()"><div class="mv-name">🔄 SWITCH BIRD</div></button>';
+}
+
+function renderBench(replaceMode) {
+  const core = battleCore();
+  const b = battleState.battle;
+  const bench = $('arenaBench');
+  bench.innerHTML = '<div class="bench-title">' + (replaceMode ? 'Your bird is down — choose the next!' : 'Switch to... (uses your turn)') + '</div>' +
+    '<div class="bench-row">' + b.teams.player.map((f, i) => {
+      if (i === b.active.player) return '';
+      const pct = Math.round(clamp(f.hp / f.maxHp, 0, 1) * 100);
+      return '<button class="bench-card' + (f.fainted ? ' fainted' : '') + '" onclick="battleBenchPick(' + i + ')">' +
+        fighterArtHTML(f, 'bc') + '<div class="bc-name">' + escapeHtml(f.name) + '</div>' +
+        '<div class="bc-hp"><div style="width:' + pct + '%; background:' + hpBarColor(pct) + ';"></div></div></button>';
+    }).join('') + '</div>';
+  bench.classList.add('show');
+}
+
+function battleOpenSwitch() {
+  if (!battleState || battleState.busy) return;
+  const bench = $('arenaBench');
+  if (bench.classList.contains('show')) { bench.classList.remove('show'); return; }
+  renderBench(false);
+  SFX.tap();
+}
+
+function battleBenchPick(index) {
+  if (!battleState || battleState.busy) return;
+  const core = battleCore();
+  const b = battleState.battle;
+  try {
+    if (b.phase === 'replace') {
+      const events = core.resolveReplacement(b, index);
+      $('arenaBench').classList.remove('show');
+      playBattleEvents(events);
+    } else if (b.phase === 'choose') {
+      $('arenaBench').classList.remove('show');
+      playBattleEvents(core.resolveTurn(b, { kind: 'switch', index }));
+    }
+  } catch (e) { showToast('That bird cannot battle right now.'); }
+}
+
+function battleChooseMove(moveIndex) {
+  if (!battleState || battleState.busy) return;
+  const b = battleState.battle;
+  if (b.phase !== 'choose') return;
+  $('arenaBench').classList.remove('show');
+  playBattleEvents(battleCore().resolveTurn(b, { kind: 'move', moveIndex }));
+}
+
+function battleLogClassFor(ev) {
+  if (ev.type === 'fact') return 'fact-msg';
+  if (ev.side === 'player') return 'player-action';
+  if (ev.side === 'opponent') return 'enemy-action';
+  return 'system-msg';
+}
+
+function spawnDamageFloat(side, text, cls) {
+  const host = $(side === 'player' ? 'arenaPlayer' : 'arenaOpponent');
+  if (!host) return;
+  const el = document.createElement('div');
+  el.className = 'dmg-float' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 1050);
+}
+
+function playBattleEvents(events) {
+  battleState.busy = true;
+  renderArena();
+  const b = battleState.battle;
+  let delay = 120;
+  events.forEach(ev => {
+    setTimeout(() => {
+      addBattleLog(battleLogClassFor(ev), ev.text);
+      if (ev.type === 'damage') {
+        spawnDamageFloat(ev.side, '-' + ev.dmg, ev.crit ? 'crit' : '');
+        const card = $(ev.side === 'player' ? 'arenaPlayer' : 'arenaOpponent');
+        if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+        SFX.tap();
+      }
+      if (ev.type === 'heal' && ev.healed) spawnDamageFloat(ev.side, '+' + ev.healed, 'heal');
+      if (ev.type === 'faint') SFX.defeat && SFX.tap();
+      renderArena();
+    }, delay);
+    delay += ev.type === 'fact' ? 450 : 650;
+  });
+  setTimeout(() => {
+    battleState.busy = false;
+    if (b.phase === 'over') { endPerchBattle(); return; }
+    if (b.phase === 'replace') renderBench(true);
+    renderArena();
+  }, delay + 250);
+}
+
+function endPerchBattle() {
+  const core = battleCore();
+  const b = battleState.battle;
+  const league = ensureLeagueState();
+  const tierIndex = league.tier;
+  const tier = core.LEAGUE_TIERS[tierIndex];
+  const won = b.winner === 'player';
+  const rewards = core.battleRewards(tierIndex, b.winner, { winsToday: league.daily.wins, firstWinOfDay: won && league.daily.wins === 0 });
+
+  let promoted = false;
+  if (won) {
+    league.wins += 1;
+    league.daily.wins += 1;
+    gameState.player.wins++;
+    if (tier.promoteWins > 0) {
+      league.winsInTier += 1;
+      if (league.winsInTier >= tier.promoteWins && tierIndex < core.LEAGUE_TIERS.length - 1) {
+        promoted = true;
+        league.tier = tierIndex + 1;
+        league.winsInTier = 0;
+        addCoins(tier.promoCoins);
+        addBranches(tier.promoBranches);
+      }
+    }
+    updateQuestProgress('win', 1);
+    SFX.victory();
+  } else {
+    league.losses += 1;
+    gameState.player.losses++;
+    SFX.defeat();
+  }
+  addCoins(rewards.coins);
+  addBranches(rewards.branches);
+  addPlayerXp(rewards.playerXp);
+
+  // Battle fatigue closes the care loop: damage persists, birds get hungry,
+  // and the Hospital / Kitchen / Roost become the places to recover.
+  b.teams.player.forEach(f => {
+    const bird = gameState.flock.find(x => x.id === f.birdId);
+    if (!bird) return;
+    bird.hp = clamp(Math.max(1, Math.round(f.hp)), 1, bird.maxHp);
+    bird.care = bird.care || { hunger: 20, happiness: 80 };
+    bird.care.hunger = clamp((bird.care.hunger || 0) + 12, 0, 100);
+    bird.care.happiness = clamp((bird.care.happiness || 80) + (won ? 4 : -3), 0, 100);
+    levelUpBird(bird, rewards.birdXp);
+  });
+  leagueRivalCache = null; // next rival rolls fresh
+  checkBadges();
+  saveState();
+
+  $('battleArena').style.display = 'none';
+  $('battleResult').style.display = 'block';
+  $('battleResultTitle').textContent = won ? 'VICTORY!' : 'DEFEAT';
+  $('battleResultTitle').className = 'battle-result-title ' + (won ? 'victory' : 'defeat');
+  $('battleResultEmoji').textContent = promoted ? '🎖️' : won ? '🏆' : '🪶';
+  const rows = [];
+  rows.push('<div class="rw-row"><span>Coins' + (rewards.firstWinBonus ? ' (first win ×2!)' : '') + '</span><b>+' + rewards.coins + ' 🪙</b></div>');
+  if (rewards.branches) rows.push('<div class="rw-row"><span>Branches</span><b>+' + rewards.branches + ' 🪵</b></div>');
+  rows.push('<div class="rw-row"><span>Each bird</span><b>+' + rewards.birdXp + ' XP</b></div>');
+  rows.push('<div class="rw-row"><span>Trainer</span><b>+' + rewards.playerXp + ' XP</b></div>');
+  if (promoted) {
+    const next = core.LEAGUE_TIERS[league.tier];
+    rows.push('<div class="rw-row"><span>PROMOTED! ' + tier.icon + '→' + next.icon + '</span><b>+' + tier.promoCoins + ' 🪙 +' + tier.promoBranches + ' 🪵</b></div>');
+  }
+  if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
+  if (!won) rows.push('<div class="rw-note">Tip: counter the rival\'s wing classes, and train new moves in the Academy.</div>');
+  rows.push('<div class="rw-note">Your birds are tired and a little hungry — the Kitchen, Hospital and Roost will fix them up.</div>');
+  $('battleResultRewards').innerHTML = rows.join('');
+  $('battleResultXpFill').style.width = '0%';
+  setTimeout(() => {
+    const pct = Math.min(100, (gameState.player.xp / XP_PER_LEVEL(gameState.player.level)) * 100);
+    $('battleResultXpFill').style.width = pct + '%';
+  }, 120);
+}
+
+function addBattleLog(type, text) {
+  const log = $('battleLog');
+  const entry = document.createElement('div');
+  entry.className = 'battle-log-entry ' + type;
+  entry.textContent = text;
+  log.insertBefore(entry, log.firstChild);
+  while (log.children.length > 24) log.removeChild(log.lastChild);
+}
+
+$('battleStartBtn').addEventListener('click', () => { if (battleSelectedIds.length) startPerchBattle(); });
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, battlePickToggle, battleChooseMove, battleOpenSwitch, battleBenchPick });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -15764,7 +16262,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { screen:'quests', target:'#expeditionQuestList',
     text:"From the Quest Roost you may send companions on REAL expeditions. They fly off and return after real minutes — or hours — carrying coins, branches, XP and treasures. The bravest night flights may even uncover my hidden CLUES..." },
   { screen:'battle', target:'#battleSelect',
-    text:"The FLOCK LEAGUE! Pick five companions, set your formation — attack, midfield, defence — and clash with a rival flock in a grand arena trial. No feathers harmed! The realm watches these contests to judge who shall lead the restoration." },
+    text:"The PERCH LEAGUE! Pick three companions and battle turn by turn — every bird fights by its TRUE nature. Raptors hunt songbirds... corvids mob raptors... swifts outfly falcons! Train moves in the Academy rooms, counter the rival's wing classes, and climb from the Garden Perch to the legendary Sky Court!" },
   { screen:'inventory', target:'.nav-item[data-screen="inventory"]',
     text:"Your BAG — the satchel within the spell. Coins, branches, seeds, berries and gifts all live here. Keep the pantry stocked: a well-fed bird trains harder, flies farther, and plays a finer match in the arena." },
   { screen:'leaderboards', target:'.nav-item[data-screen="leaderboards"]',

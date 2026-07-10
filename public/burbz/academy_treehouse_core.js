@@ -35,10 +35,16 @@
     moon_scout: { id:'moon_scout', label:'Moonlit Scout', minutes:180, icon:'🌙', minLevel:4, chaWeight:0.75, coins:[95,170], branches:[10,18], xp:90, items:['moon_feather','old_map','shiny_pebble'], clueId:'moon_branch_map', beats:['sets off as the leaves glow silver','follows Merlin runes through the canopy','marks a safe route past the shadow woods','returns with a new clue for Bird Burbs'] }
   };
 
+  // Six battle disciplines, one per Academy room. Each claimed session raises
+  // the stat AND counts toward that discipline's Perch League move tier
+  // (1 session = move I, 3 = move II, 6 = move III — see battle_core.js).
   const TRAINING_TEMPLATES = {
-    wing_sprints: { id:'wing_sprints', label:'Wing Training', minutes:120, icon:'🪽', stat:'spd', statLabel:'SPD', xp:38, bonus:1, hunger:10, happiness:-2, copy:'A focused two-hour mobile session: quick to understand, long enough to check back later.', beats:['warms up on the lantern perch','runs short wing-burst laps','practises soft landings','finishes with brighter reactions'] },
-    perch_strength: { id:'perch_strength', label:'Perch Strength', minutes:180, icon:'🪵', stat:'atk', statLabel:'ATK', xp:58, bonus:1, hunger:14, happiness:-3, copy:'A three-hour mid-length drill, good for an afternoon check-in and clear stat growth.', beats:['tests balance on the training rail','pulls weighted seed pouches','works through safe target strikes','rests after a stronger session'] },
-    focus_roost: { id:'focus_roost', label:'Focus Roost', minutes:300, icon:'🎯', stat:'int', statLabel:'INT', xp:92, bonus:2, hunger:18, happiness:-4, copy:'A five-hour deeper training block for idle-game style progress while you are away.', beats:['studies target calls on the notice board','tracks moving feather markers','solves a tiny route puzzle','returns sharper and calmer'] }
+    wing_sprints: { id:'wing_sprints', label:'Wing Sprints', minutes:120, icon:'🪽', stat:'spd', statLabel:'SPD', school:'aero', moveLine:'Quick Dart → Wind Slash → Sonic Dive', room:'training', roomLabel:'Training Hall', xp:38, bonus:1, hunger:10, happiness:-2, copy:'Two-hour agility drills. Teaches AERO battle moves — fast strikes that always go first.', beats:['warms up on the lantern perch','runs short wing-burst laps','practises soft landings','finishes with brighter reactions'] },
+    perch_strength: { id:'perch_strength', label:'Perch Strength', minutes:180, icon:'⚔️', stat:'atk', statLabel:'ATK', school:'strike', moveLine:'Talon Jab → Power Strike → Tempest Talons', room:'training', roomLabel:'Training Hall', xp:58, bonus:1, hunger:14, happiness:-3, copy:'Three-hour power work. Teaches STRIKE battle moves — the heaviest raw damage.', beats:['tests balance on the training rail','pulls weighted seed pouches','works through safe target strikes','rests after a stronger session'] },
+    guard_drills: { id:'guard_drills', label:'Guard Drills', minutes:150, icon:'🛡️', stat:'def', statLabel:'DEF', school:'guard', moveLine:'Feather Guard → Nest Wall → Iron Plumage', room:'workshop', roomLabel:'Nest Workshop', xp:48, bonus:1, hunger:12, happiness:-2, copy:'Nest-engineering toughness work. Teaches GUARD battle moves — shields that soak damage.', beats:['weaves a practice nest wall','holds steady against gusty bellows','learns to tuck and brace','emerges with sturdier plumage'] },
+    focus_roost: { id:'focus_roost', label:'Focus Roost', minutes:300, icon:'🧠', stat:'int', statLabel:'INT', school:'mind', moveLine:'Sharp Eyes → Outsmart → Master Plan', room:'observatory', roomLabel:'Moon Observatory', xp:92, bonus:2, hunger:18, happiness:-4, copy:'Five-hour stargazing study. Teaches MIND battle moves — clever attacks that expose weak points.', beats:['studies target calls on the notice board','tracks moving feather markers','solves a tiny route puzzle','returns sharper and calmer'] },
+    song_circle: { id:'song_circle', label:'Song Circle', minutes:90, icon:'🎵', stat:'cha', statLabel:'PER', school:'song', moveLine:'Rally Chirp → Morale Anthem → Dawn Chorus', room:'crowbar', roomLabel:'The Crowbar', xp:32, bonus:1, hunger:8, happiness:3, copy:'A merry session at the bird bar. Teaches SONG battle moves — anthems that rally the whole team.', beats:['takes the open-mic perch at The Crowbar','trades verses with the regulars','leads a rousing chorus','flies home with new confidence'] },
+    pantry_gauntlet: { id:'pantry_gauntlet', label:'Pantry Gauntlet', minutes:240, icon:'🌰', stat:'stamina', statLabel:'STAM', school:'endure', moveLine:'Second Wind → Deep Roost → Marathon Heart', room:'kitchen', roomLabel:'Kitchen & Pantry', xp:70, bonus:1, hunger:-10, happiness:1, copy:'Four hours of hearty meals and endurance laps. Teaches ENDURE battle moves — mid-fight recovery.', beats:['carb-loads at the seed counter','runs pantry supply relays','holds a long soaring circuit','returns full and unshakeable'] }
   };
 
   const MERLIN_CLUES = {
@@ -78,10 +84,12 @@
       icon: template.icon,
       stat: template.stat,
       statLabel: template.statLabel,
+      school: template.school || null,
+      room: template.room || 'training',
       startMs: nowMs,
       endMs: nowMs + durationMs,
       status: 'active',
-      rewards: { xp: template.xp, stat: template.stat, statLabel: template.statLabel, bonus: template.bonus, hunger: template.hunger, happiness: template.happiness },
+      rewards: { xp: template.xp, stat: template.stat, statLabel: template.statLabel, bonus: template.bonus, hunger: template.hunger, happiness: template.happiness, school: template.school || null },
       seed: hashString(`${bird.id || birdName}|${template.id}|${nowMs}`)
     };
   }
