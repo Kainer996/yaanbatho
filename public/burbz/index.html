@@ -2272,6 +2272,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-label">Merlin's Tutorial</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
+      <div class="settings-row" id="sendFeedbackBtn" role="button" tabindex="0">
+        <div class="settings-label">Send Feedback / Report a Bird</div>
+        <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
+      </div>
       <div class="settings-danger" id="resetDataBtn">RESET ALL DATA</div>
     </div>
   </div>
@@ -10651,7 +10655,7 @@ function showToast(msg) {
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapPropMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, simulateScan(name, sci, conf) { return handleBirdCandidates({ species: name, scientificName: sci || '', confidence: conf || 0.4 }, []); }, correctScan(name) { return correctScanDiscovery(name); }, pickerSpecies() { return allSpeciesForPicker(); } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, simulateScan(name, sci, conf, opts) { return handleBirdCandidates({ species: name, scientificName: sci || '', confidence: conf || 0.4 }, [], opts || {}); }, correctScan(name) { return correctScanDiscovery(name); }, pickerSpecies() { return allSpeciesForPicker(); } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -12060,6 +12064,10 @@ function switchScreen(name) {
 // epic or a legendary is a long-term saving goal players work towards.
 const RARITY_RECRUIT_COST = { common: 150, uncommon: 400, rare: 1000, epic: 2500, legendary: 6000 };
 const RARITY_DISCOVERY_REWARD = { common: 14, uncommon: 22, rare: 34, epic: 55, legendary: 90 };
+// A "pioneer" find — a real bird that isn't in Burbz yet. Deliberately a huge,
+// celebratory payout (worth several common recruits) so finding an uncharted
+// species feels like a genuine achievement. Reported to the Burbz team inbox.
+const PIONEER_DISCOVERY_REWARD = { coins: 500, xp: 100, keepsake: 'golden_feather' };
 const CONTINUOUS_SOUND_DISCOVERY_MARKER = 'continuous-sound-discovery-v2-20260709';
 
 function speciesKey(name) { return String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); }
@@ -13904,7 +13912,7 @@ function showScanEncounterCard(bird, isNewDiscovery) {
   setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 260); }, 6500);
 }
 
-function handleBirdCandidates(primary, detections = []) {
+function handleBirdCandidates(primary, detections = [], opts = {}) {
   const candidates = [];
   if (primary && primary.species) candidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
   (detections || []).forEach(d => {
@@ -13912,11 +13920,15 @@ function handleBirdCandidates(primary, detections = []) {
     if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
   });
   const top = candidates[0];
+  // A "pioneer" bird is one the game has never seen: the backend confirms it is
+  // not in the species catalogue AND the front-end has no profile for it. Those
+  // get the big celebration + a report to the team instead of the normal flow.
+  const pioneer = !!(top && isNewToGameSpecies(top.species, opts.catalogMatched));
   const newDiscoveries = [];
   // Only the backend's confident winner is an automatic Birdex discovery. The
   // weaker ranked detections stay available for correction, but never become
   // accidental catches of their own.
-  if (top && rememberDiscoveredBird(top)) newDiscoveries.push(top);
+  if (top && rememberDiscoveredBird(top, { silent: pioneer })) newDiscoveries.push(top);
   if (top) fetchBirdArt(top.species);
   // Remember what the scanner guessed so the player can correct a wrong ID.
   scanCorrectContext = { names: candidates.map(b => b.commonName || b.species).filter(Boolean) };
@@ -13930,6 +13942,8 @@ function handleBirdCandidates(primary, detections = []) {
     showScanEncounterCard(top, newDiscoveries.some(b => speciesKey(canonicalSpeciesName(b.species || b.commonName)) === speciesKey(canonicalSpeciesName(top.species || top.commonName))));
   }
   if (top) { try { questRegisterBirdEncounter(top); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); } }
+  // Uncharted bird → its own celebration + team report; skip the normal overlay.
+  if (pioneer) { handlePioneerDiscovery(top, opts); return; }
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
@@ -13939,6 +13953,190 @@ function handleBirdCandidates(primary, detections = []) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
     else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at The Thirsty Owl tavern when you can afford it.', { correctable: true }); }
+  }
+}
+
+// ============================================================================
+// PIONEER DISCOVERIES — a real bird that isn't in Bird Burbz yet
+// ============================================================================
+// The scanner recognised a genuine species we have never added to the game.
+// That is a rare, special thing: we reward it lavishly and quietly report it to
+// the Burbz team so the bird can be added. A species only counts as "new" when
+// BOTH oracles agree it is unknown — the backend catalogue (birds.json) and the
+// front-end profile list — which keeps false positives from paying out.
+function isNewToGameSpecies(species, catalogMatched) {
+  if (catalogMatched !== false) return false; // only when the server is sure it's not catalogued
+  return !findSpeciesProfile(species);
+}
+
+function handlePioneerDiscovery(bird, opts = {}) {
+  if (!bird) return;
+  if (!gameState.pioneerFinds || typeof gameState.pioneerFinds !== 'object') gameState.pioneerFinds = {};
+  const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
+  fetchBirdArt(bird.species); // even an uncharted bird gets manga art generated for it
+
+  if (gameState.pioneerFinds[key]) {
+    // Already celebrated this one — don't re-pay or re-report (the server dedupes too).
+    saveState(); updateHeader(); renderBirdex(); renderProfile();
+    showToast('🗺️ ' + (bird.commonName || bird.species) + ' — still uncharted, already in your Birdex.');
+    return;
+  }
+
+  const reward = PIONEER_DISCOVERY_REWARD;
+  gameState.pioneerFinds[key] = { species: canonicalSpeciesName(bird.species || bird.commonName), at: new Date().toISOString() };
+  gameState.player.pioneerCount = (gameState.player.pioneerCount || 0) + 1;
+  addCoins(reward.coins);
+  addPlayerXp(reward.xp);
+  gameState.inventory = gameState.inventory || { items: {} };
+  gameState.inventory.items = gameState.inventory.items || {};
+  gameState.inventory.items[reward.keepsake] = (gameState.inventory.items[reward.keepsake] || 0) + 1;
+  try { SFX.capture(); } catch (e) {}
+  saveState(); updateHeader(); renderBirdex(); renderProfile();
+  showPioneerOverlay(bird, reward);
+  reportNewBird(bird, opts);
+}
+
+function showPioneerOverlay(bird, reward) {
+  if (!document.getElementById('pioneerOverlayStyles')) {
+    const style = document.createElement('style');
+    style.id = 'pioneerOverlayStyles';
+    style.textContent = `
+      .pioneer-overlay{position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;padding:22px;
+        background:radial-gradient(circle at 50% 30%, rgba(70,54,10,.86), rgba(6,10,20,.94));backdrop-filter:blur(4px);
+        opacity:0;transition:opacity .25s ease;overflow:hidden}
+      .pioneer-overlay.show{opacity:1}
+      .pioneer-card{position:relative;max-width:420px;width:100%;text-align:center;border-radius:22px;padding:26px 22px 22px;
+        background:linear-gradient(180deg, rgba(31,26,12,.96), rgba(18,16,26,.98));
+        border:1px solid rgba(255,210,90,.55);box-shadow:0 0 0 1px rgba(255,210,90,.18),0 24px 70px rgba(0,0,0,.6),inset 0 0 40px rgba(255,196,64,.08);
+        transform:translateY(18px) scale(.96);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+      .pioneer-overlay.show .pioneer-card{transform:translateY(0) scale(1)}
+      .pioneer-kicker{font-size:12px;letter-spacing:2.5px;font-weight:800;color:#ffd770;text-transform:uppercase}
+      .pioneer-badge{width:104px;height:104px;margin:14px auto 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+        font-size:52px;background:radial-gradient(circle at 50% 38%, #fff2c2, #f4b93c 55%, #b9781a);
+        box-shadow:0 0 34px rgba(255,196,64,.65),inset 0 -6px 14px rgba(120,70,0,.4);animation:pioneerPulse 1.8s ease-in-out infinite}
+      @keyframes pioneerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+      .pioneer-name{font-size:26px;font-weight:800;color:#fff;margin:8px 0 2px;line-height:1.15}
+      .pioneer-sci{font-size:13px;font-style:italic;color:#d9c48a;margin-bottom:12px}
+      .pioneer-blurb{font-size:14px;color:#e8e4d6;line-height:1.5;margin:0 auto 14px;max-width:330px}
+      .pioneer-rewards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+      .pioneer-chip{background:rgba(255,210,90,.12);border:1px solid rgba(255,210,90,.4);color:#ffe9a8;font-weight:800;
+        font-size:14px;padding:8px 12px;border-radius:12px}
+      .pioneer-note{font-size:12px;color:#b9b3a0;line-height:1.45;margin:0 auto 16px;max-width:320px}
+      .pioneer-note b{color:#ffd770}
+      .pioneer-dismiss{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:.5px;cursor:pointer;
+        color:#241a05;background:linear-gradient(180deg,#ffe08a,#f2b53a);box-shadow:0 8px 22px rgba(242,181,58,.4)}
+      .pioneer-confetti{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;opacity:.9;animation:pioneerFall linear forwards}
+      @keyframes pioneerFall{to{transform:translateY(115vh) rotate(540deg);opacity:.2}}
+    `;
+    document.head.appendChild(style);
+  }
+  const prev = document.getElementById('pioneerOverlay');
+  if (prev) prev.remove();
+  const art = getBirdArtUrl(bird);
+  const badgeInner = art ? '<img src="' + escapeHtml(art) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : (bird.emoji || '🪶');
+  const overlay = document.createElement('div');
+  overlay.className = 'pioneer-overlay';
+  overlay.id = 'pioneerOverlay';
+  overlay.innerHTML =
+    '<div class="pioneer-card">' +
+      '<div class="pioneer-kicker">🗺️ Uncharted Discovery</div>' +
+      '<div class="pioneer-badge">' + badgeInner + '</div>' +
+      '<div class="pioneer-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
+      '<div class="pioneer-sci">' + escapeHtml(bird.scientificName || bird.species || '') + '</div>' +
+      '<div class="pioneer-blurb">You are the <b>first Burbz explorer</b> to find this bird — it isn\'t in the game yet! A true pioneer of the flock.</div>' +
+      '<div class="pioneer-rewards">' +
+        '<div class="pioneer-chip">+' + reward.coins + ' 🪙</div>' +
+        '<div class="pioneer-chip">+' + reward.xp + ' XP</div>' +
+        '<div class="pioneer-chip">🪶 Golden Feather</div>' +
+      '</div>' +
+      '<div class="pioneer-note">Your discovery has been <b>sent to the Burbz team</b> so this species can be added to the game. Thank you, explorer!</div>' +
+      '<button class="pioneer-dismiss" id="pioneerDismiss">AMAZING!</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  // Gold confetti burst.
+  const colors = ['#ffd770', '#f2b53a', '#fff2c2', '#ffb347'];
+  for (let i = 0; i < 24; i++) {
+    const c = document.createElement('div');
+    c.className = 'pioneer-confetti';
+    c.style.left = Math.round(Math.random() * 100) + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.8 + Math.random() * 1.6).toFixed(2) + 's';
+    c.style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
+    overlay.appendChild(c);
+  }
+  const close = () => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 300); };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay || (e.target.id === 'pioneerDismiss')) close(); });
+  requestAnimationFrame(() => overlay.classList.add('show'));
+  setTimeout(() => { if (document.body.contains(overlay)) close(); }, 12000);
+}
+
+async function reportNewBird(bird, opts = {}) {
+  try {
+    const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
+    gameState.reportedNewSpecies = gameState.reportedNewSpecies || {};
+    if (gameState.reportedNewSpecies[key]) return; // one report per species per device
+    const form = new FormData();
+    form.append('species', bird.commonName || bird.species || '');
+    form.append('scientificName', bird.scientificName || bird.species || '');
+    form.append('confidence', String(bird.confidence || 0));
+    form.append('source', opts.source || '');
+    try {
+      const pos = await getCurrentPositionForBirdnet();
+      if (pos && pos.coords) { form.append('lat', pos.coords.latitude); form.append('lon', pos.coords.longitude); }
+    } catch (e) {}
+    if (opts.blob) {
+      const isAudio = opts.source === 'sound';
+      try { form.append('media', opts.blob, isAudio ? 'sighting.webm' : 'sighting.jpg'); } catch (e) {}
+    }
+    const headers = {};
+    if (typeof cloudAuth !== 'undefined' && cloudAuth.token) headers.Authorization = 'Bearer ' + cloudAuth.token;
+    const res = await fetch('api/report/new-bird', { method: 'POST', body: form, headers });
+    if (res && res.ok) { gameState.reportedNewSpecies[key] = Date.now(); saveState(); }
+  } catch (e) {
+    console.warn('new-bird report failed', e);
+  }
+}
+
+// ---- Player feedback (also lands in the private Burbz inbox) ----------------
+function openFeedbackPrompt() {
+  const prev = document.getElementById('feedbackOverlay');
+  if (prev) prev.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'recruit-overlay';
+  overlay.id = 'feedbackOverlay';
+  overlay.style.zIndex = '3600';
+  overlay.innerHTML =
+    '<div class="recruit-sheet">' +
+      '<div class="modal-handle"></div>' +
+      '<div class="recruit-title">Send feedback to the Burbz team</div>' +
+      '<div class="recruit-copy">Found a bug, love something, or spotted a bird that isn\'t in the game? Tell us — it goes straight to the developers.</div>' +
+      '<textarea id="feedbackText" rows="5" placeholder="Your message…" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;resize:vertical"></textarea>' +
+      '<input id="feedbackContact" type="text" placeholder="Email or name (optional)" autocomplete="off" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;margin-top:10px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit">' +
+      '<button class="recruit-close" id="feedbackSend" style="margin-top:12px">Send feedback</button>' +
+      '<button class="recruit-close" id="feedbackCancel" style="margin-top:8px;opacity:.7">Cancel</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  const close = () => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 250); };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.id === 'feedbackCancel') close(); });
+  document.getElementById('feedbackSend').addEventListener('click', async () => {
+    const msg = (document.getElementById('feedbackText').value || '').trim();
+    if (!msg) { showToast('Type a message first'); return; }
+    const contact = (document.getElementById('feedbackContact').value || '').trim();
+    close();
+    await sendBurbzFeedback(msg, contact);
+  });
+  requestAnimationFrame(() => overlay.classList.add('show'));
+  setTimeout(() => { try { document.getElementById('feedbackText').focus(); } catch (e) {} }, 120);
+}
+
+async function sendBurbzFeedback(message, contact) {
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (typeof cloudAuth !== 'undefined' && cloudAuth.token) headers.Authorization = 'Bearer ' + cloudAuth.token;
+    const res = await fetch('api/feedback', { method: 'POST', headers, body: JSON.stringify({ message, contact }) });
+    showToast(res && res.ok ? '💌 Thanks! Your feedback was sent to the team.' : 'Could not send feedback — try again later.');
+  } catch (e) {
+    showToast('Could not send feedback — check your connection.');
   }
 }
 
@@ -14464,7 +14662,7 @@ async function processRecording() {
     const result = await uploadRecording(blob);
 
     if (result && result.species) {
-      handleBirdCandidates(result, result.allDetections || []);
+      handleBirdCandidates(result, result.allDetections || [], { source: 'sound', blob, catalogMatched: result.catalogMatched });
       if (keepListening) showToast('🐦 Picked up ' + result.species + ' — still listening');
     } else if (!keepListening) {
       showToast(result && result.message ? result.message : 'No bird sound detected — try a clearer 10 second recording');
@@ -14579,6 +14777,7 @@ async function uploadRecording(blob) {
       species: data.bird.name,
       scientificName: data.bird.scientificName,
       confidence: data.bird.confidence,
+      catalogMatched: (data.bird.catalogMatched != null ? data.bird.catalogMatched : data.catalogMatched),
       allDetections: data.allDetections || []
     };
   }
@@ -15009,7 +15208,7 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
     }));
 
     if (result && result.found && result.species) {
-      handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, []);
+      handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
     } else {
       showToast(result && result.message ? result.message : 'No bird found in that photo');
     }
@@ -16395,6 +16594,7 @@ $('introPlayAgainBtn')?.addEventListener('click', () => showIntroCutscene({ repl
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
 $('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
 $('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial(); });
+$('sendFeedbackBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackPrompt(); });
 
 $('settingsBtn').addEventListener('click', () => {
   $('settingsModal').classList.add('show');

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bird Burbz · Inbox</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3346;
+    --text:#e6edf3; --muted:#9aa7b8; --accent:#f2b53a; --accent2:#4fd1c5;
+    --good:#3fb950; --danger:#f85149; --chip:#233043;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f4f6fa; --panel:#ffffff; --panel2:#f0f3f8; --line:#dce3ee;
+      --text:#1a2230; --muted:#5a6577; --chip:#eaf0f8; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.45;-webkit-font-smoothing:antialiased}
+  header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,var(--panel),rgba(22,27,34,.9));
+    border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;backdrop-filter:blur(6px)}
+  header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+  header h1 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  .wrap{max-width:900px;margin:0 auto;padding:20px}
+  .tabs{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .tab{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 14px;border-radius:999px;
+    cursor:pointer;font-weight:700;font-size:13px}
+  .tab.active{background:var(--accent);color:#20160a;border-color:var(--accent)}
+  .tab .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:rgba(0,0,0,.18);
+    font-size:11px;text-align:center}
+  .toolbar{display:flex;gap:10px;align-items:center;margin:0 0 16px;flex-wrap:wrap}
+  .toolbar label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
+  .btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 12px;border-radius:10px;
+    cursor:pointer;font-weight:700;font-size:13px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.ghost{background:transparent}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;
+    display:flex;gap:14px;align-items:flex-start}
+  .card.resolved{opacity:.55}
+  .thumb{width:96px;height:96px;border-radius:12px;object-fit:cover;background:var(--panel2);flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--muted);border:1px solid var(--line)}
+  .card-body{flex:1;min-width:0}
+  .card-title{font-size:18px;font-weight:800;margin:0 0 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .sci{font-style:italic;color:var(--muted);font-size:13px}
+  .meta{color:var(--muted);font-size:13px;margin:6px 0}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+  .chip.count{background:var(--accent);color:#20160a;border-color:var(--accent)}
+  .note{background:var(--panel2);border-left:3px solid var(--accent2);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px;white-space:pre-wrap;word-break:break-word}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .actions .btn{font-size:12px;padding:7px 11px}
+  .btn.primary{background:var(--accent);color:#20160a;border-color:var(--accent)}
+  .btn.copied{background:var(--good);color:#04210c;border-color:var(--good)}
+  .btn.danger{color:var(--danger);border-color:transparent}
+  .btn.danger:hover{border-color:var(--danger)}
+  a{color:var(--accent2)}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:15px}
+  .gate{max-width:420px;margin:14vh auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}
+  .gate h2{margin:0 0 6px;font-size:20px}
+  .gate p{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .gate input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit}
+  .gate .btn{width:100%;margin-top:12px;padding:12px;background:var(--accent);color:#20160a;border-color:var(--accent);font-size:15px}
+  .err{color:var(--danger);font-size:13px;margin-top:10px;min-height:16px}
+  .hide{display:none!important}
+  footer{color:var(--muted);font-size:12px;text-align:center;padding:24px}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate hide">
+  <h2>🐦 Burbz Inbox</h2>
+  <p>Enter the admin token to view reports and feedback sent from Bird Burbz.</p>
+  <input id="tokenInput" type="password" placeholder="Admin token" autocomplete="off">
+  <button class="btn" id="tokenBtn">Unlock</button>
+  <div class="err" id="gateErr"></div>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <h1><span class="dot"></span> Bird Burbz Inbox</h1>
+    <div class="tabs">
+      <button class="tab active" data-tab="new_bird">New Birds <span class="badge" id="badgeBirds">0</span></button>
+      <button class="tab" data-tab="feedback">Feedback <span class="badge" id="badgeFeedback">0</span></button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="toolbar">
+      <button class="btn" id="refreshBtn">↻ Refresh</button>
+      <label><input type="checkbox" id="showResolved"> Show resolved</label>
+      <button class="btn ghost" id="logoutBtn" style="margin-left:auto">Lock</button>
+    </div>
+    <div id="list"></div>
+    <footer>Reports auto-arrive when a player finds a bird that isn't in the game yet. Deduped by species.</footer>
+  </div>
+</div>
+
+<script>
+const API = '/burbz/api';
+let TOKEN = localStorage.getItem('burbz_admin_token') || '';
+let ALL = [];
+let TAB = 'new_bird';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function fmtTime(sec){
+  if(!sec) return '';
+  const d = new Date(sec * 1000);
+  return d.toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+async function api(path, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({'X-Burbz-Admin': TOKEN}, opts.headers || {});
+  const res = await fetch(API + path, opts);
+  if(res.status === 401){ throw new Error('unauthorised'); }
+  return res;
+}
+
+async function load(){
+  try{
+    const res = await api('/admin/reports');
+    const data = await res.json();
+    ALL = data.reports || [];
+    $('badgeBirds').textContent = (data.summary && data.summary.newBirdsOpen) || 0;
+    $('badgeFeedback').textContent = (data.summary && data.summary.feedbackOpen) || 0;
+    render();
+  }catch(e){
+    if(String(e.message) === 'unauthorised'){ showGate('That token was rejected.'); }
+    else { $('list').innerHTML = '<div class="empty">Could not load reports. Is the server up?</div>'; }
+  }
+}
+
+function claudeInstruction(r){
+  const bits = [];
+  bits.push('Please add this bird to Bird Burbz: ' + (r.species || '') + (r.scientificName ? ' (' + r.scientificName + ')' : '') + '.');
+  bits.push('A player identified it via ' + (r.source || 'the scanner') + ' ID at ' + Math.round((r.confidence||0)*100) + '% confidence.');
+  if(r.lat != null && r.lon != null) bits.push('Found near ' + r.lat + ', ' + r.lon + '.');
+  bits.push('It is NOT in public/burbz/data/birds.json or the front-end species profiles yet.');
+  bits.push('Add it to the catalogue (birds.json + BURBZ_SPECIES_PROFILES), give it stats/rarity, and generate its manga art.');
+  if(r.media) bits.push('Player photo: ' + location.origin + API + '/admin/report-media/' + r.id + '?token=YOUR_TOKEN');
+  return bits.join(' ');
+}
+
+function birdCard(r){
+  const media = r.media
+    ? '<img class="thumb" src="' + esc(API + '/admin/report-media/' + r.id + '?token=' + encodeURIComponent(TOKEN)) + '" alt="capture">'
+    : '<div class="thumb">🐦</div>';
+  const who = (r.reporter && (r.reporter.name || r.reporter.email)) ? esc(r.reporter.name || r.reporter.email) : 'Anonymous explorer';
+  const coords = (r.lat != null && r.lon != null)
+    ? ' · <a href="https://www.google.com/maps?q=' + r.lat + ',' + r.lon + '" target="_blank" rel="noopener">' + r.lat + ', ' + r.lon + '</a>' : '';
+  return '<div class="card ' + (r.status==='resolved'?'resolved':'') + '" data-id="' + esc(r.id) + '">' +
+    media +
+    '<div class="card-body">' +
+      '<div class="card-title">' + esc(r.species || 'Unknown bird') +
+        (r.count > 1 ? ' <span class="chip count">×' + r.count + ' found</span>' : '') + '</div>' +
+      '<div class="sci">' + esc(r.scientificName || '') + '</div>' +
+      '<div class="chips">' +
+        '<span class="chip">' + Math.round((r.confidence||0)*100) + '% conf</span>' +
+        '<span class="chip">' + esc(r.source || 'scan') + '</span>' +
+        (r.status==='resolved' ? '<span class="chip">✓ added</span>' : '') +
+      '</div>' +
+      '<div class="meta">' + who + ' · ' + fmtTime(r.lastSeenAt || r.createdAt) + coords + '</div>' +
+      (r.note ? '<div class="note">' + esc(r.note) + '</div>' : '') +
+      '<div class="actions">' +
+        '<button class="btn primary copy-btn" data-id="' + esc(r.id) + '">📋 Copy for Claude</button>' +
+        (r.status==='resolved'
+          ? '<button class="btn act" data-act="reopen" data-id="' + esc(r.id) + '">Reopen</button>'
+          : '<button class="btn act" data-act="resolve" data-id="' + esc(r.id) + '">✓ Mark added</button>') +
+        '<button class="btn danger act" data-act="delete" data-id="' + esc(r.id) + '">Delete</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function feedbackCard(r){
+  const who = (r.reporter && (r.reporter.name || r.reporter.email)) ? esc(r.reporter.name || r.reporter.email) : 'Anonymous';
+  const contact = r.contact ? ' · ' + esc(r.contact) : '';
+  return '<div class="card ' + (r.status==='resolved'?'resolved':'') + '" data-id="' + esc(r.id) + '">' +
+    '<div class="thumb">💬</div>' +
+    '<div class="card-body">' +
+      '<div class="note" style="border-left-color:var(--accent)">' + esc(r.message || '') + '</div>' +
+      '<div class="meta">' + who + contact + ' · ' + fmtTime(r.createdAt) + '</div>' +
+      '<div class="actions">' +
+        (r.status==='resolved'
+          ? '<button class="btn act" data-act="reopen" data-id="' + esc(r.id) + '">Reopen</button>'
+          : '<button class="btn act" data-act="resolve" data-id="' + esc(r.id) + '">✓ Done</button>') +
+        '<button class="btn danger act" data-act="delete" data-id="' + esc(r.id) + '">Delete</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function render(){
+  const showResolved = $('showResolved').checked;
+  let rows = ALL.filter(r => r.type === TAB);
+  if(!showResolved) rows = rows.filter(r => r.status !== 'resolved');
+  const listEl = $('list');
+  if(!rows.length){
+    listEl.innerHTML = '<div class="empty">' + (TAB==='new_bird'
+      ? '🌱 No new-bird discoveries yet. When a player finds a species that isn\'t in the game, it lands here.'
+      : '💬 No feedback yet.') + '</div>';
+    return;
+  }
+  listEl.innerHTML = rows.map(r => TAB==='new_bird' ? birdCard(r) : feedbackCard(r)).join('');
+}
+
+async function act(id, action){
+  if(action === 'delete' && !confirm('Delete this report permanently?')) return;
+  try{
+    await api('/admin/reports/' + encodeURIComponent(id), {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action})
+    });
+    await load();
+  }catch(e){ alert('Action failed.'); }
+}
+
+// ---- events ----
+document.addEventListener('click', async (e) => {
+  const copy = e.target.closest('.copy-btn');
+  if(copy){
+    const r = ALL.find(x => x.id === copy.dataset.id);
+    if(r){
+      try{ await navigator.clipboard.writeText(claudeInstruction(r)); }
+      catch(_){ const t=document.createElement('textarea'); t.value=claudeInstruction(r); document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+      copy.classList.add('copied'); const old = copy.textContent; copy.textContent = '✓ Copied!';
+      setTimeout(()=>{ copy.classList.remove('copied'); copy.textContent = old; }, 1500);
+    }
+    return;
+  }
+  const b = e.target.closest('.act');
+  if(b){ act(b.dataset.id, b.dataset.act); }
+});
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active'); TAB = t.dataset.tab; render();
+}));
+$('showResolved').addEventListener('change', render);
+$('refreshBtn').addEventListener('click', load);
+$('logoutBtn').addEventListener('click', () => { localStorage.removeItem('burbz_admin_token'); TOKEN=''; showGate(''); });
+
+function showApp(){ $('gate').classList.add('hide'); $('app').classList.remove('hide'); load(); }
+function showGate(msg){ $('app').classList.add('hide'); $('gate').classList.remove('hide'); $('gateErr').textContent = msg || ''; }
+
+$('tokenBtn').addEventListener('click', async () => {
+  const val = $('tokenInput').value.trim();
+  if(!val){ $('gateErr').textContent = 'Enter a token.'; return; }
+  TOKEN = val;
+  try{
+    const res = await fetch(API + '/admin/reports', { headers:{'X-Burbz-Admin': TOKEN} });
+    if(res.status === 401){ $('gateErr').textContent = 'Token rejected.'; return; }
+    localStorage.setItem('burbz_admin_token', TOKEN);
+    showApp();
+  }catch(e){ $('gateErr').textContent = 'Could not reach the server.'; }
+});
+$('tokenInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('tokenBtn').click(); });
+
+if(TOKEN) showApp(); else showGate('');
+</script>
+</body>
+</html>
