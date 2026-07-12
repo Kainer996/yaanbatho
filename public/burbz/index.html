@@ -8541,6 +8541,16 @@ Object.assign(BUILT_IN_BIRD_ART, {
   "Wood Duck": "/burbz/bird-art-cache/wood_duck_burbz_manga_rpg_20260711.png"
 });
 
+// The generated 2026-07-09/11 card set is stored in Git LFS. The VPS syncs
+// GitHub source archives (which contain LFS pointers), so serve these images
+// from GitHub's media endpoint to deliver the real PNG bytes in production.
+const BIRD_ART_LFS_MEDIA_BASE = 'https://media.githubusercontent.com/media/Kainer996/yaanbatho/main';
+for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
+  if (/_202607(?:09|11)\.png$/i.test(artUrl)) {
+    BUILT_IN_BIRD_ART[species] = BIRD_ART_LFS_MEDIA_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
+  }
+}
+
 const LEGACY_BIRD_ART_REPLACEMENTS = {
   'barn_owl_ava_20260608.png': BUILT_IN_BIRD_ART['Barn Owl'],
   'barn_owl_be22c8cba871.png': BUILT_IN_BIRD_ART['Barn Owl'],
