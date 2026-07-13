@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-map-codex-village-v47-20260709';
+const BURBZ_CACHE = 'burbz-barracks-recruit-v48-20260713';
 const BURBZ_ASSETS = [
   './',
   './index.html',

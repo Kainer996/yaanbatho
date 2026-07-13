@@ -8,7 +8,7 @@
   const TREEHOUSE_ROOMS = [
     { id:'outdoors', label:'Aviary Gardens', icon:'🌱', cost:0, branches:0, unlockLevel:1, floor:0, branch:'trunk', x:50, y:92, role:'roam', effect:'Starter gardens: free roaming, foraging and happiness recovery.' },
     { id:'dorm', label:'The Roost', icon:'🏠', cost:50, branches:10, unlockLevel:1, floor:1, branch:'left', x:24, y:78, role:'housing', effect:'Bird housing: rest, feed, groom and assign companions.' },
-    { id:'tavern', label:'The Thirsty Owl', icon:'🍺', cost:60, branches:8, unlockLevel:2, floor:1, branch:'right', x:76, y:80, role:'tavern', effect:'The Academy taproom: every Birdex discovery and befriended trail bird waits at the bar — buy them a drink to recruit them.' },
+    { id:'tavern', label:'Barracks', icon:'🪶', cost:60, branches:8, unlockLevel:2, floor:1, branch:'right', x:76, y:80, role:'recruitment', effect:'The Academy recruitment office: review discovered and befriended birds, inspect their full cards, and invite them into the flock.' },
     { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:70, y:65, role:'training', trainStat:'atk', effect:'Permanent stat drills, passive XP, and slow ATK growth for birds stationed here.' },
     { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:3, floor:3, branch:'left', x:26, y:53, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
     { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:160, branches:35, unlockLevel:4, floor:4, branch:'right', x:72, y:42, role:'social', trainStat:'cha', effect:'The bird bar: companions perched here grow Personality (PER) and morale — charm pays out on social quests.' },

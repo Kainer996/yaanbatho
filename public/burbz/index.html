@@ -1295,6 +1295,39 @@ svg.academy-room-bg { display:block; filter:none; }
 .recruit-close { width:100%; min-height:44px; margin-top:12px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
 .recruit-correct-btn { width:100%; min-height:46px; margin-top:10px; border-radius:12px; background:linear-gradient(180deg,#3a2c12,#241a0d); color:#f4ead4; border:1px solid rgba(214,168,79,.42); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13.5px; text-transform:uppercase; letter-spacing:.03em; }
 .recruit-correct-btn:active { transform:scale(.985); }
+
+/* Barracks recruitment: condensed Birdex roster -> full-card inspector. */
+.barracks-recruit-launch { display:flex; align-items:center; justify-content:center; gap:10px; width:calc(100% - 28px); min-height:58px; margin:14px; border-radius:16px; border:1px solid rgba(240,199,103,.48); background:linear-gradient(135deg,#d6a84f,#8b6325); color:#100c06; font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.05em; text-transform:uppercase; box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 20px rgba(214,168,79,.16); }
+.barracks-recruit-launch:active { transform:scale(.985); }
+.barracks-recruit-overlay { position:fixed; inset:0; z-index:1360; display:none; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.88); backdrop-filter:blur(10px); }
+.barracks-recruit-overlay.show { display:flex; }
+.barracks-recruit-sheet { width:100%; max-width:520px; height:min(88dvh,760px); display:flex; flex-direction:column; overflow:hidden; border-radius:24px 24px 0 0; background:linear-gradient(180deg,#1d1911 0,#0a0907 42%,#050504 100%); border:1px solid rgba(214,168,79,.34); box-shadow:0 -24px 70px rgba(0,0,0,.7); padding:12px 12px calc(12px + var(--safe-bottom)); }
+.barracks-recruit-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:4px 4px 12px; }
+.barracks-recruit-title { font-family:'Russo One',sans-serif; font-size:18px; color:#f0c767; letter-spacing:.07em; text-transform:uppercase; }
+.barracks-recruit-sub { margin-top:4px; font-size:11px; color:var(--text3); line-height:1.35; }
+.barracks-recruit-close,.barracks-detail-back { min-height:42px; padding:0 13px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); border:1px solid rgba(255,255,255,.1); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
+.barracks-recruit-wallet { margin:0 4px 9px; padding:8px 10px; border-radius:11px; background:rgba(214,168,79,.1); border:1px solid rgba(214,168,79,.2); color:#f4ead4; font-family:'Rajdhani',sans-serif; font-weight:900; }
+.barracks-recruit-list { display:grid; gap:7px; overflow:auto; padding:2px 3px 18px; -webkit-overflow-scrolling:touch; }
+.barracks-recruit-row { display:grid; grid-template-columns:48px minmax(0,1fr) auto; gap:10px; align-items:center; width:100%; min-height:62px; padding:6px 9px; border-radius:14px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); color:#fff; text-align:left; }
+.barracks-recruit-row:active { background:rgba(214,168,79,.14); border-color:rgba(240,199,103,.55); }
+.barracks-recruit-row img { width:48px; height:48px; border-radius:10px; object-fit:cover; border:1px solid rgba(214,168,79,.22); }
+.barracks-recruit-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.barracks-recruit-meta { margin-top:2px; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; }
+.barracks-recruit-cost { color:#f0c767; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; white-space:nowrap; }
+.barracks-recruit-detail { display:none; min-height:0; flex:1; overflow:auto; padding:0 3px 12px; }
+.barracks-recruit-detail.show { display:block; }
+.barracks-detail-top { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+.barracks-detail-card { overflow:hidden; border-radius:18px; background:linear-gradient(180deg,#241d10,#0d0b08); border:1px solid rgba(240,199,103,.36); box-shadow:0 16px 38px rgba(0,0,0,.48); }
+.barracks-detail-art { width:100%; height:240px; display:block; object-fit:cover; background:#111; }
+.barracks-detail-body { padding:13px; }
+.barracks-detail-name { font-family:'Russo One',sans-serif; font-size:20px; color:#f4ead4; }
+.barracks-detail-species { margin:3px 0 10px; color:var(--text3); font-size:11px; font-style:italic; }
+.barracks-detail-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+.barracks-detail-stat { padding:7px 2px; border-radius:9px; background:rgba(255,255,255,.06); text-align:center; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; color:#fff; }
+.barracks-detail-stat span { display:block; font-size:8px; color:var(--text3); letter-spacing:.05em; }
+.barracks-detail-copy { margin:11px 0; color:var(--text2); font-size:12px; line-height:1.5; }
+.barracks-detail-recruit { width:100%; min-height:52px; border-radius:14px; background:linear-gradient(135deg,#f0c767,#b37a25); color:#100c06; font-family:'Russo One',sans-serif; font-size:14px; text-transform:uppercase; }
+.barracks-detail-recruit[disabled] { opacity:.42; filter:grayscale(.5); }
 .species-picker-search { width:100%; margin:10px 0; padding:12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(214,168,79,.32); color:#fff; font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700; }
 .species-picker-search:focus { outline:none; border-color:var(--legendary); }
 .species-picker-list { display:grid; gap:7px; max-height:52vh; overflow:auto; -webkit-overflow-scrolling:touch; }
@@ -2232,10 +2265,24 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="recruit-sheet">
       <div class="modal-handle"></div>
       <div class="recruit-title">New birds in the Birdex</div>
-      <div class="recruit-copy" id="recruitCopy">New birds discovered. They now wait at 🍺 The Thirsty Owl tavern in your Academy — buy them a drink there to recruit them.</div>
+      <div class="recruit-copy" id="recruitCopy">New birds discovered. They are now registered at the 🪶 Barracks in your Academy, where you can inspect their cards and recruit them.</div>
       <div class="recruit-wallet" id="recruitWallet">Coins: 0</div>
       <div class="recruit-list" id="recruitList"></div>
       <button class="recruit-close" id="recruitClose">Keep exploring</button>
+    </div>
+  </div>
+
+  <!-- Barracks: compact discovered-bird roster and full recruitment card -->
+  <div class="barracks-recruit-overlay" id="barracksRecruitOverlay" role="dialog" aria-modal="true" aria-label="Barracks recruitment">
+    <div class="barracks-recruit-sheet">
+      <div class="modal-handle"></div>
+      <div class="barracks-recruit-head">
+        <div><div class="barracks-recruit-title">🪶 Recruit Birds</div><div class="barracks-recruit-sub">Discovered and befriended birds awaiting an invitation to your flock.</div></div>
+        <button class="barracks-recruit-close" id="barracksRecruitClose">Close</button>
+      </div>
+      <div class="barracks-recruit-wallet" id="barracksRecruitWallet">Coins: 0</div>
+      <div class="barracks-recruit-list" id="barracksRecruitList"></div>
+      <div class="barracks-recruit-detail" id="barracksRecruitDetail"></div>
     </div>
   </div>
 
@@ -3084,7 +3131,7 @@ const DEFAULT_STATE = {
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // Campus building ownership
-  academyBuilderVersion: 3,
+  academyBuilderVersion: 4,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
   league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // Perch League ladder
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
@@ -8707,12 +8754,11 @@ function birdOnlyImgHTML(bird, className) {
   const species = String((bird && (bird.commonName || bird.name || bird.species)) || '');
   const emoji = getBirdMarkerEmoji(species) || '🐦';
   const known = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())];
-  // Prefer a transparent hand-cut asset when one exists. Every other map/pet/
-  // Academy icon uses the bird's full manga painting rather than an emoji.
-  const visual = known || art;
-  if (!visual) return '<span class="' + escapeHtml(className) + ' bird-emoji-glyph">' + emoji + '</span>';
-  const fallback = known && art && known !== art ? ' data-fallback-art="' + escapeHtml(art) + '"' : '';
-  return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(visual) + '"' + fallback + ' data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '">';
+  // Compact moving birds must be transparent sprites: never let a full square
+  // card painting run around a room, perch or map.
+  const cutout = known || birdCutoutUrlFor(art);
+  if (!cutout) return '<span class="' + escapeHtml(className) + ' bird-emoji-glyph">' + emoji + '</span>';
+  return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '">';
 }
 
 // Bird image for FRAMED contexts (Birdex cards, thumbnails): cutout first,
@@ -8934,13 +8980,13 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/crowbar.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
   dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'A cosy branch home. Birds resting here heal up while you feed, groom and tuck them in.', perk:'Passive: heals HP, hunger grows slowly', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
-  tavern: { label:'THE THIRSTY OWL', icon:'🍺', buildingId:'tavern', desc:'The trainers\' taproom, and the only place birds get hired. Every species in your Birdex — scanned discoveries and trail birds you befriend on walking quests — waits at the bar. Buy them a drink and they\'ll join your flock.', perk:'Active: Birdex + trail bird recruitment', perches:[[76,84],[72,88],[80,88]] },
+  tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
@@ -8986,7 +9032,13 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     gameState.player.branches = Math.max(Number(gameState.player.branches) || 0, 25);
     gameState.academyBuilderVersion = 3;
   }
-  // Recruitment moved to The Thirsty Owl tavern: retire the old Recruitment
+  // Barracks is a recruitment office, not housing. Move companions that old
+  // saves left in the former tavern safely back to the Aviary Gardens.
+  if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 4) {
+    (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === 'tavern') b.academy.room = 'outdoors'; });
+    gameState.academyBuilderVersion = 4;
+  }
+  // Recruitment moved to the Barracks: retire the old Recruitment
   // Roost and refund anyone who built it (it cost 210 coins + 50 branches).
   if (gameState.academyBuildings.market) {
     if (gameState.academyBuildings.market.built) {
@@ -9118,6 +9170,7 @@ function ensureBirdAcademy(bird) {
     const seedFrom = b => (b >= 12 ? 6 : b >= 5 ? 3 : b >= 1 ? 1 : 0);
     bird.academy.disciplines = { strike: seedFrom(tb.atkBonus || 0), guard: seedFrom(tb.defBonus || 0), aero: seedFrom(tb.spdBonus || 0), mind: seedFrom(tb.intBonus || 0), song: seedFrom(tb.chaBonus || 0), endure: seedFrom(tb.staminaBonus || 0) };
   }
+  if (bird.academy.room === 'tavern') bird.academy.room = 'outdoors';
   if (!ACADEMY_ROOMS[bird.academy.room] || !isAcademyRoomBuilt(bird.academy.room)) bird.academy.room = 'outdoors';
   return bird;
 }
@@ -9240,9 +9293,10 @@ function renderAcademyTreehouse(byRoom) {
   layer.innerHTML = placedRooms.map(r => {
     const pos = academyRoomPosition(r.id, r);
     const count = byRoom[r.id] ? byRoom[r.id].length : 0;
-    const meta = count + ' birds';
+    const countLabel = r.id === 'tavern' ? '🪶' : count;
+    const meta = r.id === 'tavern' ? 'Recruitment' : count + ' birds';
     return '<button class="treehouse-room-node built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' +
-      '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building"><div class="treehouse-room-count">' + count + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
+      '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building"><div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
   }).join('');
   let birdHtml = '';
   rooms.forEach(r => {
@@ -9787,6 +9841,7 @@ function renderAcademyRoomPanel(birds) {
 
   if (academySelectedRoom === 'tavern') {
     panel.innerHTML = html + renderAcademyTavernPanelHTML();
+    panel.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
     return;
   }
 
@@ -9828,7 +9883,7 @@ function renderAcademyRoomPanel(birds) {
       actions = academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
     }
 
-    const moves = Object.keys(ACADEMY_ROOMS).filter(r => r !== academySelectedRoom).map(r => {
+    const moves = Object.keys(ACADEMY_ROOMS).filter(r => r !== academySelectedRoom && r !== 'tavern').map(r => {
       const target = ACADEMY_ROOMS[r];
       const built = isAcademyRoomBuilt(r);
       const building = ACADEMY_BUILDINGS[target.buildingId || r];
@@ -9866,39 +9921,138 @@ function recruitableBirdexRecords() {
   }).sort((a, b) => (a.commonName || a.species).localeCompare(b.commonName || b.species));
 }
 
-function renderAcademyRecruitmentPanelHTML() {
-  const records = recruitableBirdexRecords();
-  if (!records.length) return '<div class="academy-empty">No unrecruited Birdex discoveries yet. Scan birds first; every discovery lands at the bar even if you do not hire it straight away.</div>';
-  return records.map(record => {
+function barracksRecruitCandidates() {
+  const byKey = new Map();
+  recruitableBirdexRecords().forEach(record => {
     const bird = createBirdFromDiscovery(record);
+    const canonical = canonicalSpeciesName(bird.commonName || bird.species);
+    const key = record.key || speciesKey(canonical);
+    if (key) byKey.set(key, { key, bird, source:'Birdex discovery', patron:false });
+  });
+  ensureTavernPatrons().filter(p => !companionForSpecies(p.species)).forEach(p => {
+    const canonical = canonicalSpeciesName(p.species);
+    const existing = [...byKey.values()].find(c => canonicalSpeciesName(c.bird.commonName || c.bird.species) === canonical);
+    if (existing) { existing.patron = true; existing.source = p.questName ? 'Birdex · met on ' + p.questName : 'Birdex · trail friend'; return; }
+    const bird = createBirdEntry(canonical, '', 0.9);
+    bird.rarity = p.rarity || bird.rarity || 'common';
+    byKey.set(p.key || speciesKey(canonical), { key:p.key || speciesKey(canonical), bird, source:p.questName ? 'Met on ' + p.questName : 'Befriended on a walking quest', patron:true });
+  });
+  return [...byKey.values()].sort((a,b) => String(a.bird.commonName || a.bird.species).localeCompare(String(b.bird.commonName || b.bird.species)));
+}
+
+function barracksCandidateForKey(key) {
+  return barracksRecruitCandidates().find(c => c.key === key) || null;
+}
+
+function renderAcademyRecruitmentPanelHTML() {
+  const count = barracksRecruitCandidates().length;
+  return '<div class="academy-builder-copy">The Barracks keeps companions out of the paperwork room. Open the recruitment register to review ' + count + ' discovered bird' + (count === 1 ? '' : 's') + ' awaiting an invitation.</div>' +
+    '<button class="barracks-recruit-launch" data-action="open-barracks-recruits">🪶 Recruit Birds' + (count ? ' · ' + count : '') + '</button>';
+}
+
+function renderBarracksRecruitList() {
+  const list = $('barracksRecruitList');
+  const detail = $('barracksRecruitDetail');
+  const wallet = $('barracksRecruitWallet');
+  if (!list || !detail) return;
+  const candidates = barracksRecruitCandidates();
+  if (wallet) wallet.textContent = 'Trainer funds: ' + (gameState.player.coins || 0) + ' coins · ' + candidates.length + ' awaiting recruitment';
+  detail.classList.remove('show');
+  detail.innerHTML = '';
+  list.style.display = 'grid';
+  list.innerHTML = candidates.length ? candidates.map(candidate => {
+    const bird = candidate.bird;
+    const art = getBirdArtUrl(bird);
+    const visual = art ? '<img src="' + escapeHtml(art) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">' : '<span class="sp-emoji">' + (bird.emoji || '🐦') + '</span>';
     const cost = recruitCostForBird(bird);
-    const canAfford = (gameState.player.coins || 0) >= cost;
-    const artHtml = birdOnlyImgHTML(bird, 'academy-bird-art');
-    return '<div class="academy-bird-row recruit-row">' + artHtml + '<div class="academy-bird-main"><div class="academy-bird-name">' + escapeHtml(bird.commonName || bird.species) + '</div><div class="academy-bird-meta">Birdex discovery · ' + (bird.rarity || 'common').toUpperCase() + ' · PWR ' + (bird.power || '?') + '</div></div><div class="academy-actions"><button class="academy-btn primary" onclick="academyRecruitBird(\'' + (record.key || speciesKey(bird.commonName || bird.species)) + '\')" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? '🍻 Buy a drink · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
-  }).join('');
+    return '<button class="barracks-recruit-row" data-barracks-key="' + escapeHtml(candidate.key) + '">' + visual +
+      '<span><span class="barracks-recruit-name">' + escapeHtml(bird.commonName || bird.species) + '</span><span class="barracks-recruit-meta">' + escapeHtml(candidate.source) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + '</span></span>' +
+      '<span class="barracks-recruit-cost">' + cost + ' 🪙</span></button>';
+  }).join('') : '<div class="academy-empty">No birds are waiting right now. Use the camera or sound scanner to discover a species, then return to the Barracks.</div>';
+  list.querySelectorAll('[data-barracks-key]').forEach(btn => btn.addEventListener('click', () => openBarracksRecruitCard(btn.dataset.barracksKey)));
 }
 
-function academyRecruitBird(key) {
-  const ok = recruitDiscoveredBird(key);
-  if (ok) { academySelectedRoom = 'tavern'; renderAcademy(); }
+function openBarracksRecruitOverlay() {
+  const overlay = $('barracksRecruitOverlay');
+  if (!overlay) return;
+  renderBarracksRecruitList();
+  overlay.classList.add('show');
+  SFX.tap();
 }
 
-// Jump from Birdex cards / discovery overlays to the recruitment tavern.
+function closeBarracksRecruitOverlay() {
+  $('barracksRecruitOverlay')?.classList.remove('show');
+}
+
+$('barracksRecruitClose')?.addEventListener('click', closeBarracksRecruitOverlay);
+$('barracksRecruitOverlay')?.addEventListener('click', e => { if (e.target === $('barracksRecruitOverlay')) closeBarracksRecruitOverlay(); });
+
+function openBarracksRecruitCard(key) {
+  const candidate = barracksCandidateForKey(key);
+  const list = $('barracksRecruitList');
+  const detail = $('barracksRecruitDetail');
+  if (!candidate || !detail || !list) return;
+  const bird = candidate.bird;
+  const cost = recruitCostForBird(bird);
+  const canAfford = (gameState.player.coins || 0) >= cost;
+  const art = getBirdArtUrl(bird);
+  const artHtml = art ? '<img class="barracks-detail-art" src="' + escapeHtml(art) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">' : '<div class="barracks-detail-art bird-emoji-glyph">' + (bird.emoji || '🐦') + '</div>';
+  const description = bird.description || bird.bio || bird.personality || 'A real bird discovered through Merlin’s field tablet, ready to bring its own strengths and personality to your flock.';
+  list.style.display = 'none';
+  detail.classList.add('show');
+  detail.innerHTML = '<div class="barracks-detail-top"><button class="barracks-detail-back" data-action="barracks-back">← Roster</button><div class="barracks-recruit-meta">' + escapeHtml(candidate.source) + '</div></div>' +
+    '<div class="barracks-detail-card">' + artHtml + '<div class="barracks-detail-body"><div class="barracks-detail-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
+    '<div class="barracks-detail-species">' + escapeHtml(bird.scientificName || bird.species || '') + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + '</div>' +
+    '<div class="barracks-detail-stats">' + [['ATK',bird.atk],['DEF',bird.def],['SPD',bird.spd],['INT',bird.int],['STAM',bird.stamina]].map(s => '<div class="barracks-detail-stat"><span>' + s[0] + '</span>' + (s[1] || 0) + '</div>').join('') + '</div>' +
+    '<div class="barracks-detail-copy">' + escapeHtml(description) + '</div>' +
+    '<button class="barracks-detail-recruit" data-action="barracks-recruit" data-barracks-key="' + escapeHtml(candidate.key) + '" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? 'Recruit · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
+  detail.querySelector('[data-action="barracks-back"]')?.addEventListener('click', renderBarracksRecruitList);
+  detail.querySelector('[data-action="barracks-recruit"]')?.addEventListener('click', e => barracksRecruitBird(e.currentTarget.dataset.barracksKey));
+}
+
+function barracksRecruitBird(key) {
+  const candidate = barracksCandidateForKey(key);
+  if (!candidate) { showToast('That bird is no longer waiting in the Barracks.'); renderBarracksRecruitList(); return false; }
+  const species = canonicalSpeciesName(candidate.bird.commonName || candidate.bird.species);
+  let record = getDiscoveredRecordForSpecies(species);
+  if (!record) {
+    rememberDiscoveredBird({ species, commonName:species, rarity:candidate.bird.rarity }, { silent:true });
+    record = getDiscoveredRecordForSpecies(species);
+  }
+  if (!record) { showToast('The Barracks record needs refreshing — scan this bird once more.'); return false; }
+  const ok = recruitDiscoveredBird(record.key || key);
+  if (!ok) return false;
+  removeTavernPatronForSpecies(species);
+  const recruited = companionForSpecies(species);
+  if (recruited) { ensureBirdAcademy(recruited); recruited.academy.room = 'outdoors'; }
+  saveState();
+  showToast('🪶 ' + species + ' reported for duty and joined your flock!');
+  renderBarracksRecruitList();
+  renderAcademy();
+  return true;
+}
+
+function academyRecruitBird(key) { return barracksRecruitBird(key); }
+
+// Jump from Birdex cards / discovery overlays to the Barracks register.
 function gotoTavernRecruit() {
   $('recruitOverlay')?.classList.remove('show');
   if (isAcademyRoomBuilt('tavern')) {
     academySelectedRoom = 'tavern';
+    academyInteriorRoom = 'tavern';
+    switchScreen('academy-room');
+    setTimeout(openBarracksRecruitOverlay, 80);
   } else {
     const cfg = ACADEMY_BUILDINGS.tavern;
     showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 2)
-      ? '🍺 The Thirsty Owl tavern unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — keep playing to open it'
-      : '🍺 Build The Thirsty Owl tavern here — birds are recruited at the bar');
+      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — keep playing to open it'
+      : '🪶 Build the Barracks in the Academy to recruit discovered birds');
+    switchScreen('academy');
+    renderAcademy();
   }
-  switchScreen('academy');
-  renderAcademy();
 }
 
-// ---- The Thirsty Owl: Academy tavern where befriended trail birds wait ----
+// ---- Barracks queue: Birdex discoveries plus birds befriended on trails ----
 function ensureTavernPatrons() {
   if (!Array.isArray(gameState.tavernPatrons)) gameState.tavernPatrons = [];
   return gameState.tavernPatrons;
@@ -9923,53 +10077,11 @@ function removeTavernPatronForSpecies(name) {
 }
 
 function renderAcademyTavernPanelHTML() {
-  const patrons = ensureTavernPatrons().filter(p => !companionForSpecies(p.species));
-  const seed = hashStr('thirsty-owl:' + patrons.map(p => p.key).join(',') + ':' + new Date().toDateString());
-  const keeper = TAVERN_KEEPER_NAMES[seed % TAVERN_KEEPER_NAMES.length];
-  const chatter = patrons.length
-    ? TAVERN_ACADEMY_CHATTER[seed % TAVERN_ACADEMY_CHATTER.length].replace('{bird}', patrons[seed % patrons.length].species)
-    : 'Quiet in here today. Befriend bird NPCs out on your walking quests and they\'ll flock in for a drink.';
-  const fact = tavernBirdFactFor(patrons.map(p => p.species), seed);
-  let html = '<div class="academy-builder-copy">🍺 <b>' + escapeHtml(keeper) + '</b>: "' + escapeHtml(chatter) + '"</div>' +
-    '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(fact) + '</div>';
-  html += '<div class="academy-room-desc" style="margin-top:10px"><b>🥾 Trail regulars</b> — birds you befriended on walking quests.</div>';
-  if (!patrons.length) html += '<div class="academy-empty">No trail birds waiting yet. On a walking quest, every bird you find lands on your route as an NPC — walk up and say hello, and it will meet you here afterwards.</div>';
-  else html += patrons.map(p => {
-    const bird = createBirdEntry(p.species, '', 0.9);
-    const cost = recruitCostForBird({ rarity: p.rarity });
-    const canAfford = (gameState.player.coins || 0) >= cost;
-    const met = p.questName ? 'Met on "' + p.questName + '"' : 'Met on a walking quest';
-    return '<div class="academy-bird-row recruit-row">' + birdOnlyImgHTML(bird, 'academy-bird-art') +
-      '<div class="academy-bird-main"><div class="academy-bird-name">' + escapeHtml(p.species) + '</div>' +
-      '<div class="academy-bird-meta">' + escapeHtml(met) + ' · ' + (p.rarity || 'common').toUpperCase() + '</div></div>' +
-      '<div class="academy-actions"><button class="academy-btn primary" onclick="academyTavernRecruit(\'' + p.key + '\')" ' + (canAfford ? '' : 'disabled') + '>' +
-      (canAfford ? '🍻 Buy a drink · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
-  }).join('');
-  // The Birdex recruits drink at the same bar: every discovered-but-unrecruited
-  // species waits here, since the tavern is the only place birds get hired.
-  html += '<div class="academy-room-desc" style="margin-top:12px"><b>📖 Birdex recruits</b> — discovered species waiting for an offer.</div>' + renderAcademyRecruitmentPanelHTML();
-  return html;
+  return renderAcademyRecruitmentPanelHTML();
 }
 
 function academyTavernRecruit(patronKey) {
-  const patron = ensureTavernPatrons().find(p => p.key === patronKey);
-  if (!patron) return;
-  // Make sure the Birdex has a record to recruit from (it normally does — the
-  // NPC only spawned because the bird was discovered on the quest).
-  let record = getDiscoveredRecordForSpecies(patron.species);
-  if (!record) {
-    rememberDiscoveredBird({ species: patron.species, rarity: patron.rarity }, { silent: true });
-    record = getDiscoveredRecordForSpecies(patron.species);
-  }
-  if (!record) { showToast('The ' + patron.species + ' slipped out the back door — try scanning one again.'); return; }
-  const ok = recruitDiscoveredBird(record.key);
-  if (ok) {
-    removeTavernPatronForSpecies(patron.species);
-    saveState();
-    showToast('🍻 One drink later, ' + patron.species + ' joins your flock!');
-    academySelectedRoom = 'tavern';
-    renderAcademy();
-  }
+  return barracksRecruitBird(patronKey);
 }
 
 function academyMeter(label, pct, cls) {
@@ -10001,6 +10113,7 @@ function academySelectRoom(room) {
 function academyMoveBird(birdId, room) {
   const bird = academyBirdById(birdId);
   if (!bird || !ACADEMY_ROOMS[room]) return;
+  if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
   ensureBirdAcademy(bird);
   if (!isAcademyRoomBuilt(room)) {
     const building = ACADEMY_BUILDINGS[ACADEMY_ROOMS[room].buildingId || room];
@@ -10034,7 +10147,7 @@ function cardSendBirdToRoom(birdId, room) {
 
 function academyRoomButtonsHTML(bird) {
   ensureBirdAcademy(bird);
-  return Object.keys(ACADEMY_ROOMS).map(room => {
+  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern').map(room => {
     const cfg = ACADEMY_ROOMS[room];
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
@@ -10532,7 +10645,7 @@ const ACADEMY_ROOM_SCENES = (() => {
       s += `<path d="M262 528q14-12 6-24t8-20M330 544q16-10 8-24M574 500q12-10 6-22t6-18" stroke="#b98c3e" stroke-width="3" fill="none" opacity=".8"/>`;
       return s + motes();
     },
-    market() {
+    tavern() {
       let s = wall() + beam() + bunting(72, 130);
       s += `<rect x="84" y="112" width="330" height="240" rx="10" fill="#4a3418" stroke="${INK}" stroke-width="4"/><rect x="98" y="126" width="302" height="212" rx="6" fill="#3f2c15"/>`;
       const poster = (px, py, rot, art) => `<g transform="rotate(${rot} ${px + 48} ${py + 60})"><rect x="${px}" y="${py}" width="96" height="120" rx="4" fill="#e5d5ae" opacity=".94" stroke="${INK}" stroke-width="2.4"/><circle cx="${px + 48}" cy="${py - 2}" r="5" fill="#8a2f2a" stroke="${INK}" stroke-width="1.6"/>${art}</g>`;
@@ -10748,6 +10861,14 @@ function renderAcademyRoomInterior() {
     const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room; });
     const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room; });
     const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
+    if (room === 'tavern') {
+      const waiting = barracksRecruitCandidates().length;
+      root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage"></div></div>' +
+        '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div><div class="academy-room-desc">Open a compact list of your discovered and befriended birds. Tap a name to inspect its full manga card, stats and recruitment cost.</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
+      $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
+      root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
+      return;
+    }
     const addRows = others.length ? others.map(b => {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
@@ -11186,7 +11307,7 @@ function openTrailTavernSheet(quest, opts = {}) {
     '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(talk.fact) + '</div>' +
     (patrons ? '<div class="quest-section-title" style="margin:10px 0 4px">At the bar</div><div class="wq-history-birds">' + patrons + '</div>' : '') +
     drinksHtml +
-    '<div class="quest-desc" style="margin-top:8px">Your trail friends will wait at 🍺 The Thirsty Owl in your Academy — buy them a drink there to recruit them.</div>' +
+    '<div class="quest-desc" style="margin-top:8px">Your trail friends will be registered at the 🪶 Barracks in your Academy, ready for you to inspect and recruit.</div>' +
     '<button class="wq-npc-ok" onclick="closeWalkQuestSheet()">Back to the trail</button></div>';
   el.classList.add('open');
   el.querySelectorAll('[data-drink]').forEach(btn => btn.addEventListener('click', () => buyTrailTavernDrink(btn.dataset.drink)));
@@ -11746,7 +11867,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
       (summary.trailBirds.fullSet ? '<div style="color:#f0c767;font-weight:800;margin-top:4px">🏅 MASTER BIRDWATCHER — full set captured!</div>' : '') + '</div>'
       : '') +
     (summary.tavern && summary.tavern.boon ? '<div class="quest-desc" style="margin:6px 0">🍻 Tavern toast: ' + escapeHtml(summary.tavern.boon) + '</div>' : '') +
-    (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — they\'re waiting at 🍺 The Thirsty Owl in your Academy!</div>' : '') +
+    (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — now registered at the 🪶 Barracks in your Academy!</div>' : '') +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
     (questPhotoRefFor(summary) ? '<div class="quest-photo-actions"><button class="wq-npc-ok" onclick="openQuestPhotoBook(\'summary\')">📸 View trail photos</button></div>' : '') +
     '</div>';
@@ -13977,12 +14098,12 @@ function createBirdFromDiscovery(record) {
 }
 
 function recruitDiscoveredBird(key) {
-  // Hiring only happens over a drink: the tavern is the one recruitment venue.
+  // Recruitment is handled only through the Academy Barracks register.
   if (!isAcademyRoomBuilt('tavern')) {
     const cfg = ACADEMY_BUILDINGS.tavern;
     showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 2)
-      ? '🍺 The Thirsty Owl tavern unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — birds are recruited there'
-      : '🍺 Build The Thirsty Owl tavern in your Academy to recruit birds');
+      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — birds are recruited there'
+      : '🪶 Build the Barracks in your Academy to recruit birds');
     return false;
   }
   const record = (gameState.discoveredSpecies || {})[key];
@@ -14001,14 +14122,14 @@ function recruitDiscoveredBird(key) {
   updateQuestProgress('capture_' + bird.rarity, 1);
   const walkQ = activeWalkingQuest();
   if (walkQ) { walkQ.birdsCaptured.push({ name: bird.commonName || bird.species, species: bird.species, rarity: bird.rarity, at: Date.now() }); updateWalkQuestHud(); showToast('🐦 ' + (bird.commonName || bird.species) + ' logged on your quest (+20 XP at the banner)'); try { questRegisterBirdEncounter(bird); } catch (err) {} }
-  removeTavernPatronForSpecies(bird.species || bird.commonName); // recruited elsewhere → no longer waits at the tavern
+  removeTavernPatronForSpecies(bird.species || bird.commonName); // no longer waits in the Barracks queue
   checkBadges();
   saveState();
   SFX.capture();
   showCaptureOverlay(bird);
   if (!gameState.activePetId) selectPet(bird.id); else renderPetCompanion();
   renderBirdex(); updateHeader(); renderProfile();
-  showToast(bird.commonName + ' joined your quest! -' + cost + ' coins');
+  showToast(bird.commonName + ' joined your flock! -' + cost + ' coins');
   return true;
 }
 
@@ -14084,7 +14205,7 @@ function correctScanDiscovery(chosenName) {
   const wrongLabel = (wrongNames[0] && speciesKey(canonicalSpeciesName(wrongNames[0])) !== chosenKey) ? ' instead of ' + wrongNames[0] : '';
   showToast('✓ Logged ' + bird.commonName + wrongLabel);
   scanCorrectContext = { names: [bird.commonName] };
-  showRecruitChoiceOverlay([bird], 'Corrected — ' + bird.commonName + ' is in your Birdex and waits at The Thirsty Owl tavern. Recruit it there if you want it as a companion.', { correctable: true });
+  showRecruitChoiceOverlay([bird], 'Corrected — ' + bird.commonName + ' is in your Birdex and registered at the Barracks. Inspect its card there if you want to recruit it.', { correctable: true });
 }
 
 function showRecruitChoiceOverlay(birds, message, opts = {}) {
@@ -14096,8 +14217,8 @@ function showRecruitChoiceOverlay(birds, message, opts = {}) {
   if (!choices.length) return;
   const overlay = $('recruitOverlay'), list = $('recruitList');
   if (!overlay || !list) return;
-  $('recruitCopy').textContent = message || 'You discovered birds nearby. They wait at The Thirsty Owl tavern in your Academy — recruit them there to make companions.';
-  $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0) + ' · discoveries stay in the Birdex until you hire them at the tavern.';
+  $('recruitCopy').textContent = message || 'You discovered birds nearby. They are registered at the Barracks in your Academy — inspect and recruit them there.';
+  $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0) + ' · discoveries stay safely in the Birdex until you recruit them.';
   list.innerHTML = choices.map((bird, idx) => createKnownSpeciesCardHTML(bird, idx)).join('');
   // "Wrong bird?" correction affordance for scan results.
   const closeBtn = $('recruitClose');
@@ -14172,12 +14293,12 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex and head to The Thirsty Owl tavern — recruit the ones you want there.' : 'Species discovered. It now waits at The Thirsty Owl tavern in your Academy — buy it a drink there to make it a companion.', { correctable: true });
+    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex and are registered at the Barracks — recruit the ones you want there.' : 'Species discovered. It is now registered at the Barracks in your Academy, ready for card inspection and recruitment.', { correctable: true });
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   } else if (top) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at The Thirsty Owl tavern when you can afford it.', { correctable: true }); }
+    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at the Barracks when you can afford it.', { correctable: true }); }
   }
 }
 
@@ -14449,7 +14570,7 @@ function renderBirdex() {
     if (currentFilter !== 'all') companions = companions.filter(b => b.rarity === currentFilter);
     companions.sort((a, b) => (b.power || 0) - (a.power || 0));
     if (!companions.length) {
-      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Listen or use the camera to discover birds for your Birdex. Discoveries wait at 🍺 The Thirsty Owl tavern in your Academy — recruit them there with coins to gain companions for Academy, quests and Flock League.</div></div>';
+      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Listen or use the camera to discover birds for your Birdex. Then visit the 🪶 Barracks in your Academy to inspect their cards and recruit companions for Academy, quests and Perch League.</div></div>';
       return;
     }
     companions.forEach((bird, idx) => { grid.innerHTML += createBirdCardHTML(bird, idx); });
@@ -14628,8 +14749,8 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
             </div>
-            <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🍺 Recruit at The Thirsty Owl' : '🍺 Unlock the tavern to recruit'}</button>
-            <div class="card-info-hint" data-action="open-info" data-bird-id="preview:${bird.commonName || bird.species}">Discovery counts on leaderboard · hire at the Academy tavern for ${cost} coins</div>
+            <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🪶 Inspect at the Barracks' : '🪶 Unlock the Barracks to recruit'}</button>
+            <div class="card-info-hint" data-action="open-info" data-bird-id="preview:${bird.commonName || bird.species}">Discovery counts on leaderboard · recruit at the Academy Barracks for ${cost} coins</div>
           </div>
         </div>
       </div>
