@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-barracks-recruit-v48-20260713';
+const BURBZ_CACHE = 'burbz-barracks-sort-v49-20260713';
 const BURBZ_ASSETS = [
   './',
   './index.html',

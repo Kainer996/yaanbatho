@@ -1307,13 +1307,18 @@ svg.academy-room-bg { display:block; filter:none; }
 .barracks-recruit-sub { margin-top:4px; font-size:11px; color:var(--text3); line-height:1.35; }
 .barracks-recruit-close,.barracks-detail-back { min-height:42px; padding:0 13px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); border:1px solid rgba(255,255,255,.1); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
 .barracks-recruit-wallet { margin:0 4px 9px; padding:8px 10px; border-radius:11px; background:rgba(214,168,79,.1); border:1px solid rgba(214,168,79,.2); color:#f4ead4; font-family:'Rajdhani',sans-serif; font-weight:900; }
+.barracks-recruit-sort { display:grid; grid-template-columns:auto repeat(3,minmax(0,1fr)); gap:6px; align-items:center; margin:0 4px 10px; }
+.barracks-recruit-sort-label { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.barracks-recruit-sort-btn { min-height:36px; padding:0 8px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.055); color:var(--text2); font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
+.barracks-recruit-sort-btn.active { color:#171006; background:linear-gradient(135deg,#f0c767,#b9822c); border-color:#f0c767; box-shadow:0 4px 14px rgba(214,168,79,.2); }
 .barracks-recruit-list { display:grid; gap:7px; overflow:auto; padding:2px 3px 18px; -webkit-overflow-scrolling:touch; }
-.barracks-recruit-row { display:grid; grid-template-columns:48px minmax(0,1fr) auto; gap:10px; align-items:center; width:100%; min-height:62px; padding:6px 9px; border-radius:14px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); color:#fff; text-align:left; }
+.barracks-recruit-row { display:grid; grid-template-columns:48px minmax(0,1fr) 58px; gap:10px; align-items:center; width:100%; min-height:68px; padding:7px 9px; border-radius:14px; background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09); color:#fff; text-align:left; }
 .barracks-recruit-row:active { background:rgba(214,168,79,.14); border-color:rgba(240,199,103,.55); }
 .barracks-recruit-row img { width:48px; height:48px; border-radius:10px; object-fit:cover; border:1px solid rgba(214,168,79,.22); }
-.barracks-recruit-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.barracks-recruit-meta { margin-top:2px; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; }
-.barracks-recruit-cost { color:#f0c767; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; white-space:nowrap; }
+.barracks-recruit-main { min-width:0; display:block; }
+.barracks-recruit-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; line-height:1.08; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.barracks-recruit-meta { display:block; margin-top:5px; font-size:9px; line-height:1.2; color:var(--text3); text-transform:uppercase; letter-spacing:.035em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.barracks-recruit-cost { color:#f0c767; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; white-space:nowrap; text-align:right; }
 .barracks-recruit-detail { display:none; min-height:0; flex:1; overflow:auto; padding:0 3px 12px; }
 .barracks-recruit-detail.show { display:block; }
 .barracks-detail-top { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
@@ -2281,6 +2286,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="barracks-recruit-close" id="barracksRecruitClose">Close</button>
       </div>
       <div class="barracks-recruit-wallet" id="barracksRecruitWallet">Coins: 0</div>
+      <div class="barracks-recruit-sort" id="barracksRecruitSort" role="group" aria-label="Sort recruitable birds">
+        <span class="barracks-recruit-sort-label">Sort</span>
+        <button class="barracks-recruit-sort-btn active" data-barracks-sort="rarity" aria-label="Sort by rarity, highest first" aria-pressed="true">Rarity ↓</button>
+        <button class="barracks-recruit-sort-btn" data-barracks-sort="value" aria-label="Sort by recruitment value, highest first" aria-pressed="false">Value ↓</button>
+        <button class="barracks-recruit-sort-btn" data-barracks-sort="power" aria-label="Sort by power, highest first" aria-pressed="false">Power ↓</button>
+      </div>
       <div class="barracks-recruit-list" id="barracksRecruitList"></div>
       <div class="barracks-recruit-detail" id="barracksRecruitDetail"></div>
     </div>
@@ -9921,6 +9932,32 @@ function recruitableBirdexRecords() {
   }).sort((a, b) => (a.commonName || a.species).localeCompare(b.commonName || b.species));
 }
 
+let barracksRecruitSort = 'rarity';
+
+function barracksRecruitPower(bird) {
+  const savedPower = Number(bird && bird.power);
+  if (Number.isFinite(savedPower) && savedPower > 0) return Math.round(savedPower);
+  const stats = ['hp','atk','strength','def','spd','int','stamina'].map(k => Number(bird && bird[k]) || 0);
+  return Math.round(stats.reduce((sum, value) => sum + value, 0));
+}
+
+function sortBarracksCandidates(candidates, mode) {
+  const rarityRank = { legendary:5, epic:4, rare:3, uncommon:2, common:1 };
+  const selected = ['rarity','value','power'].includes(mode) ? mode : 'rarity';
+  return [...(candidates || [])].sort((a, b) => {
+    const aBird = a.bird || {};
+    const bBird = b.bird || {};
+    let delta = 0;
+    if (selected === 'value') delta = recruitCostForBird(bBird) - recruitCostForBird(aBird);
+    else if (selected === 'power') delta = barracksRecruitPower(bBird) - barracksRecruitPower(aBird);
+    else delta = (rarityRank[String(bBird.rarity || 'common').toLowerCase()] || 0) - (rarityRank[String(aBird.rarity || 'common').toLowerCase()] || 0);
+    if (delta) return delta;
+    const powerDelta = barracksRecruitPower(bBird) - barracksRecruitPower(aBird);
+    if (powerDelta) return powerDelta;
+    return String(aBird.commonName || aBird.species || '').localeCompare(String(bBird.commonName || bBird.species || ''));
+  });
+}
+
 function barracksRecruitCandidates() {
   const byKey = new Map();
   recruitableBirdexRecords().forEach(record => {
@@ -9954,9 +9991,20 @@ function renderBarracksRecruitList() {
   const list = $('barracksRecruitList');
   const detail = $('barracksRecruitDetail');
   const wallet = $('barracksRecruitWallet');
+  const sortBar = $('barracksRecruitSort');
   if (!list || !detail) return;
-  const candidates = barracksRecruitCandidates();
+  const candidates = sortBarracksCandidates(barracksRecruitCandidates(), barracksRecruitSort);
   if (wallet) wallet.textContent = 'Trainer funds: ' + (gameState.player.coins || 0) + ' coins · ' + candidates.length + ' awaiting recruitment';
+  if (sortBar) sortBar.querySelectorAll('[data-barracks-sort]').forEach(btn => {
+    const active = btn.dataset.barracksSort === barracksRecruitSort;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    btn.onclick = () => {
+      barracksRecruitSort = btn.dataset.barracksSort || 'rarity';
+      SFX.tap();
+      renderBarracksRecruitList();
+    };
+  });
   detail.classList.remove('show');
   detail.innerHTML = '';
   list.style.display = 'grid';
@@ -9965,8 +10013,9 @@ function renderBarracksRecruitList() {
     const art = getBirdArtUrl(bird);
     const visual = art ? '<img src="' + escapeHtml(art) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">' : '<span class="sp-emoji">' + (bird.emoji || '🐦') + '</span>';
     const cost = recruitCostForBird(bird);
+    const power = barracksRecruitPower(bird);
     return '<button class="barracks-recruit-row" data-barracks-key="' + escapeHtml(candidate.key) + '">' + visual +
-      '<span><span class="barracks-recruit-name">' + escapeHtml(bird.commonName || bird.species) + '</span><span class="barracks-recruit-meta">' + escapeHtml(candidate.source) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + '</span></span>' +
+      '<span class="barracks-recruit-main"><span class="barracks-recruit-name">' + escapeHtml(bird.commonName || bird.species) + '</span><span class="barracks-recruit-meta">' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · PWR ' + power + ' · ' + escapeHtml(candidate.source) + '</span></span>' +
       '<span class="barracks-recruit-cost">' + cost + ' 🪙</span></button>';
   }).join('') : '<div class="academy-empty">No birds are waiting right now. Use the camera or sound scanner to discover a species, then return to the Barracks.</div>';
   list.querySelectorAll('[data-barracks-key]').forEach(btn => btn.addEventListener('click', () => openBarracksRecruitCard(btn.dataset.barracksKey)));

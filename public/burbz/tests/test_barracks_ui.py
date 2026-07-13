@@ -38,6 +38,45 @@ def test_recruit_list_is_condensed_and_card_reveals_stats():
         assert marker in HTML
 
 
+def test_recruit_roster_has_rarity_value_and_power_sort_controls():
+    assert 'id="barracksRecruitSort"' in HTML
+    for mode in ["rarity", "value", "power"]:
+        assert f'data-barracks-sort="{mode}"' in HTML
+    assert "let barracksRecruitSort = 'rarity';" in HTML
+    assert "function sortBarracksCandidates(" in HTML
+
+
+def test_recruit_sort_orders_highest_rarity_value_and_power_first():
+    assert "function sortBarracksCandidates(" in HTML
+    power_fn = _function_source("barracksRecruitPower")
+    sort_fn = _function_source("sortBarracksCandidates")
+    output = _run_node(
+        """
+        function recruitCostForBird(b){ return b.cost; }
+        const rows = [
+          {key:'common-strong',bird:{commonName:'Common Strong',rarity:'common',cost:90,power:80}},
+          {key:'legendary',bird:{commonName:'Legendary',rarity:'legendary',cost:300,power:70}},
+          {key:'epic',bird:{commonName:'Epic',rarity:'epic',cost:220,power:95}},
+          {key:'uncommon',bird:{commonName:'Uncommon',rarity:'uncommon',cost:120,power:40}},
+          {key:'rare',bird:{commonName:'Rare',rarity:'rare',cost:180,power:60}}
+        ];
+        """ + power_fn + "\n" + sort_fn + "\n" +
+        "console.log(JSON.stringify(['rarity','value','power'].map(m=>sortBarracksCandidates(rows,m).map(r=>r.key))));"
+    )
+    import json
+    rarity, value, power = json.loads(output)
+    assert rarity == ["legendary", "epic", "rare", "uncommon", "common-strong"]
+    assert value == ["legendary", "epic", "rare", "uncommon", "common-strong"]
+    assert power == ["epic", "common-strong", "legendary", "rare", "uncommon"]
+
+
+def test_recruit_rows_keep_name_and_metadata_in_separate_mobile_lines():
+    assert 'class="barracks-recruit-main"' in HTML
+    assert ".barracks-recruit-main { min-width:0; display:block; }" in HTML
+    assert ".barracks-recruit-name { display:block;" in HTML
+    assert ".barracks-recruit-meta { display:block;" in HTML
+
+
 def test_compact_sprites_prefer_transparent_cutouts_not_square_paintings():
     start = HTML.index("function birdOnlyImgHTML")
     end = HTML.index("// Bird image for FRAMED contexts", start)
@@ -48,7 +87,7 @@ def test_compact_sprites_prefer_transparent_cutouts_not_square_paintings():
 
 
 def test_pwa_cache_bumped_for_barracks_release():
-    assert "burbz-barracks-recruit-v48-20260713" in SW
+    assert "burbz-barracks-sort-v49-20260713" in SW
 
 
 def test_every_mapped_bird_has_a_real_transparent_cutout():
