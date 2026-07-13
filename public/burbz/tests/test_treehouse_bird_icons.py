@@ -60,12 +60,17 @@ def test_treehouse_uses_real_species_cutouts_when_available():
     assert 'data-fallback-mini-bird="Blue Tit"' in result
 
 
-def test_treehouse_fallback_is_an_obvious_perched_bird_not_a_fish_shape():
+def test_treehouse_fallback_is_a_front_facing_spread_wing_bird_not_a_fish_shape():
+    svg = _function_source("miniBirdSVG")
+    assert 'viewBox="0 0 32 30"' in svg
+    assert 'class="mini-bird-body"' in svg
     assert 'class="mini-bird-head"' in HTML
     assert 'class="mini-bird-tail"' in HTML
     assert 'class="mini-bird-leg"' in HTML
-    assert 'class="mini-bird-wing"' in HTML
-    assert 'M5.2 9.2 1.2 6.6' not in _function_source("miniBirdSVG")
+    assert 'class="mini-bird-wing-left"' in svg
+    assert 'class="mini-bird-wing-right"' in svg
+    assert 'cx="16" cy="16" rx="5.2" ry="7.6"' in svg
+    assert 'cx="12.7" cy="14.1" rx="7.2" ry="5.7"' not in svg
 
 
 def test_fallback_plumage_uses_the_species_palette():
@@ -90,9 +95,9 @@ def test_treehouse_renderer_calls_the_new_icon_helper():
 
 
 def test_treehouse_icons_are_large_enough_to_read_on_mobile():
-    assert ".treehouse-bird { position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px;" in HTML
+    assert ".treehouse-bird { position:absolute; width:30px; height:30px; margin:-15px 0 0 -15px;" in HTML
     assert ".treehouse-bird-cutout { width:100%; height:100%; object-fit:contain; display:block;" in HTML
 
 
 def test_treehouse_bird_icon_release_bumps_the_pwa_cache():
-    assert "burbz-treehouse-birds-v51-20260713" in SW
+    assert "burbz-treehouse-birds-v52-20260713" in SW

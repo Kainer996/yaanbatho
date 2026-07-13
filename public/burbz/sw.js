@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-treehouse-birds-v51-20260713';
+const BURBZ_CACHE = 'burbz-treehouse-birds-v52-20260713';
 const BURBZ_ASSETS = [
   './',
   './index.html',
