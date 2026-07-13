@@ -83,13 +83,9 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   border-radius:10px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
   font-size:17px; color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
-.card-back { justify-content:flex-start; gap:6px; overflow:auto; }
-.card-back-actions { margin-top:8px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
-.card-back-actions .card-pet-btn, .card-back-actions .academy-send-btn { min-height:34px; margin:0; }
 .academy-send-btn { border-radius:8px; padding:6px 7px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.28); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
 .academy-send-btn.ready { background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; }
 .academy-send-btn.current { background:rgba(81,207,102,.16); border-color:rgba(81,207,102,.40); color:#b7f5c3; }
-.card-back-hint { margin-top:6px; color:var(--text3); font-size:10px; text-align:center; line-height:1.25; }
 .inventory-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .inventory-card { padding:14px; border-radius:16px; border:1px solid rgba(214,168,79,.18); background:linear-gradient(135deg,rgba(214,168,79,.10),rgba(0,0,0,.24)); min-height:112px; }
 .inventory-card-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; letter-spacing:.07em; color:var(--accent2); }
@@ -490,7 +486,8 @@ svg.academy-room-bg { display:block; filter:none; }
   background: var(--bg2); border: 2px solid rgba(255,255,255,0.08);
 }
 .card-front { display: flex; flex-direction: column; }
-.card-back { transform: rotateY(180deg); padding: 12px; display: flex; flex-direction: column; justify-content: center; }
+.card-back { transform:rotateY(180deg); padding:9px; display:flex; flex-direction:column; justify-content:flex-start; gap:7px; overflow:hidden; }
+.card-back { box-sizing:border-box; }
 
 /* Rarity borders */
 .bird-card[data-rarity="common"] .card-front,
@@ -577,21 +574,23 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .card-stat-label { font-size: 8px; color: var(--text3); display: block; }
 
-/* Card back details */
-.card-back-title { font-family: 'Russo One', sans-serif; font-size: 14px; margin-bottom: 8px; text-align: center; }
-.card-back-stats { display: flex; flex-direction: column; gap: 6px; }
-.card-back-stat {
-  display: flex; justify-content: space-between; align-items: center;
-  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
-}
-.card-back-stat-bar { flex: 1; height: 6px; background: var(--bg4); border-radius: 3px; margin: 0 8px; overflow: hidden; }
-.card-back-stat-fill { height: 100%; border-radius: 3px; }
-.card-back-special {
-  margin-top: 8px; padding: 6px; background: rgba(214,168,79,0.10); border-radius: 6px;
-  border: 1px solid rgba(214,168,79,0.22); text-align: center;
-  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent);
-}
-.card-back-date { margin-top: 4px; font-size: 10px; color: var(--text3); text-align: center; }
+/* Card back details — compact enough for a two-column mobile card. */
+.card-back-head { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:6px; min-height:24px; }
+.card-back-title { min-width:0; font-family:'Russo One',sans-serif; font-size:11px; line-height:1.08; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-back-meta { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:7.5px; font-weight:800; line-height:1.15; text-align:right; text-transform:uppercase; white-space:nowrap; }
+.card-back-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+.card-back-stat { display:grid; grid-template-columns:1fr auto; align-items:center; gap:2px 5px; min-width:0; min-height:34px; padding:4px 5px; border-radius:7px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.065); font-family:'Rajdhani',sans-serif; }
+.card-back-stat-label { color:var(--text3); font-size:8px; font-weight:900; letter-spacing:.05em; }
+.card-back-stat-value { color:var(--text); font-size:10px; font-weight:900; }
+.card-back-stat-bar { grid-column:1/-1; width:100%; height:3px; background:var(--bg4); border-radius:3px; overflow:hidden; }
+.card-back-stat-fill { height:100%; border-radius:3px; }
+.card-back-special { min-height:28px; padding:4px 6px; display:grid; place-items:center; background:rgba(214,168,79,.10); border-radius:7px; border:1px solid rgba(214,168,79,.22); text-align:center; font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:800; line-height:1.1; color:var(--accent); }
+.card-back-section-label { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:7.5px; font-weight:900; line-height:1; letter-spacing:.09em; text-transform:uppercase; }
+.card-back-rooms { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.card-back-rooms .academy-send-btn { min-width:0; min-height:28px; margin:0; padding:3px 2px; font-size:8px; line-height:1.05; white-space:nowrap; overflow:hidden; }
+.card-back-utilities { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.card-back-utilities .card-pet-btn { min-width:0; min-height:30px; margin:0; padding:4px 2px; font-size:8px; line-height:1.05; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-back-hint { margin:0; color:var(--text3); font-size:7.5px; line-height:1; text-align:center; }
 
 /* Silhouette / undiscovered cards */
 .bird-card.undiscovered .card-front { background: var(--bg3); border-color: rgba(255,255,255,0.03); }
@@ -10201,8 +10200,9 @@ function academyRoomButtonsHTML(bird) {
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
     const cls = current ? ' current' : built ? ' ready' : '';
-    const label = current ? 'In ' + cfg.label : built ? 'Send ' + cfg.icon + ' ' + cfg.label : 'Locked ' + cfg.icon;
-    return '<button class="academy-send-btn' + cls + '" data-action="send-room" data-bird-id="' + bird.id + '" data-room="' + room + '">' + label + '</button>';
+    const label = current ? 'In ' + cfg.label : built ? 'Send to ' + cfg.label : cfg.label + ' locked';
+    const shortLabel = current ? cfg.icon + ' Here' : built ? cfg.icon + ' Send' : '🔒 ' + cfg.icon;
+    return '<button class="academy-send-btn' + cls + '" data-action="send-room" data-bird-id="' + bird.id + '" data-room="' + room + '" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label) + '">' + shortLabel + '</button>';
   }).join('');
 }
 
@@ -14741,24 +14741,27 @@ function createBirdCardHTML(bird, idx) {
           </div>
         </div>
         <div class="card-back">
-          <div class="card-back-title" style="color:${rarityColor}">${escapeHtml(birdDisplayName(bird))}</div>
+          <div class="card-back-head">
+            <div class="card-back-title" style="color:${rarityColor}">${escapeHtml(birdDisplayName(bird))}</div>
+            <div class="card-back-meta">${bird.rarity ? bird.rarity.toUpperCase() : 'COMMON'}<br>${bird.captureDate ? new Date(bird.captureDate).toLocaleDateString() : 'Unknown'}</div>
+          </div>
           <div class="card-back-stats">
-            <div class="card-back-stat">HP <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.maxHp||100)/2.5)}%;background:var(--hp-green)"></div></div> ${bird.maxHp || 100}</div>
-            <div class="card-back-stat">ATK <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.atk||50)/1.2)}%;background:var(--accent)"></div></div> ${bird.atk || 0}</div>
-            <div class="card-back-stat">DEF <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.def||50)/1.2)}%;background:var(--accent2)"></div></div> ${bird.def || 0}</div>
-            <div class="card-back-stat">SPD <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.spd||50)/1.2)}%;background:var(--uncommon)"></div></div> ${bird.spd || 0}</div>
-            <div class="card-back-stat">INT <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.int||50)/1.2)}%;background:var(--rare)"></div></div> ${bird.int || 0}</div>
-            <div class="card-back-stat">STAM <div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.stamina||50)/1.2)}%;background:var(--legendary)"></div></div> ${bird.stamina || 0}</div>
+            <div class="card-back-stat"><span class="card-back-stat-label">HP</span><strong class="card-back-stat-value">${bird.maxHp || 100}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.maxHp||100)/2.5)}%;background:var(--hp-green)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">ATK</span><strong class="card-back-stat-value">${bird.atk || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.atk||50)/1.2)}%;background:var(--accent)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">DEF</span><strong class="card-back-stat-value">${bird.def || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.def||50)/1.2)}%;background:var(--accent2)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">SPD</span><strong class="card-back-stat-value">${bird.spd || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.spd||50)/1.2)}%;background:var(--uncommon)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">INT</span><strong class="card-back-stat-value">${bird.int || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.int||50)/1.2)}%;background:var(--rare)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">STAM</span><strong class="card-back-stat-value">${bird.stamina || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.stamina||50)/1.2)}%;background:var(--legendary)"></div></div></div>
           </div>
           <div class="card-back-special">&#10024; ${bird.specialMove || 'Unknown'}</div>
-          <div class="card-back-date">${bird.rarity ? bird.rarity.toUpperCase() : 'COMMON'} &bull; ${bird.captureDate ? new Date(bird.captureDate).toLocaleDateString() : 'Unknown'}</div>
-          <div class="card-back-actions">
-            ${academyRoomButtonsHTML(bird)}
+          <div class="card-back-section-label">Academy placement</div>
+          <div class="card-back-rooms">${academyRoomButtonsHTML(bird)}</div>
+          <div class="card-back-utilities">
             <button class="card-pet-btn ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Pet' : 'Make Pet'}</button>
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
           </div>
-          <div class="card-back-hint">Tap empty card space to flip back.</div>
+          <div class="card-back-hint">Tap empty space to flip back</div>
         </div>
       </div>
     </div>

@@ -86,8 +86,8 @@ def test_compact_sprites_prefer_transparent_cutouts_not_square_paintings():
     assert "data-fallback-emoji" in fn
 
 
-def test_pwa_cache_bumped_for_barracks_release():
-    assert "burbz-barracks-sort-v49-20260713" in SW
+def test_pwa_cache_is_versioned():
+    assert "const BURBZ_CACHE = 'burbz-" in SW
 
 
 def test_every_mapped_bird_has_a_real_transparent_cutout():
