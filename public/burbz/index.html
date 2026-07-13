@@ -2421,6 +2421,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="quest_core.js?v=loop-home-20260710"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
+<script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
+<script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -2433,6 +2435,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 // Source-backed British expansion loaded separately so legacy saves and the
 // closed Australian area roster remain untouched.
 const UK50 = window.BURBZ_UK_BIRD_EXPANSION_50;
+// Wave-2 British expansion (26 more real UK species) layered on the same rules.
+const UK26 = window.BURBZ_UK_BIRD_EXPANSION_26;
+// Australian expansion (70 more real AU species) using the closed AU region rules.
+const AU_EXP = window.BURBZ_AU_BIRD_EXPANSION;
 
 // ============================================================================
 // CONSTANTS
@@ -2793,6 +2799,8 @@ const WILD_BIRDS = [
   "Pied Butcherbird",
 ];
 WILD_BIRDS.push(...UK50.names);
+WILD_BIRDS.push(...UK26.names);
+WILD_BIRDS.push(...AU_EXP.names);
 
 const HABITAT_BIRD_POOLS = {
   water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler','Tufted Duck','Gadwall','Northern Shoveler','Common Pochard','Common Goldeneye','Greylag Goose','Common Sandpiper','Green-winged Teal','Great Crested Grebe','Eurasian Wigeon','Northern Pintail','Mandarin Duck','Whooper Swan','Egyptian Goose','Common Moorhen','Reed Warbler','Ringed Plover','Little Ringed Plover','European Shag','Water Rail'],
@@ -2807,6 +2815,7 @@ const HABITAT_BIRD_POOLS = {
   default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe'],
 };
 UK50.addToHabitatPools(HABITAT_BIRD_POOLS);
+UK26.addToHabitatPools(HABITAT_BIRD_POOLS);
 const REGIONAL_HABITAT_BIRD_POOLS = {
   au: {
     water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan','Grey Teal','Hardhead','Australasian Grebe','Hoary-headed Grebe','Little Black Cormorant','Australasian Darter','Blue-billed Duck','Great Egret','Whistling Kite'],
@@ -2843,6 +2852,9 @@ const REGION_AREA_SPECIES = {
     'Torresian Crow','Noisy Friarbird','Blue-faced Honeyeater','Brown Honeyeater','Lewin\'s Honeyeater','Yellow-faced Honeyeater','Bell Miner','Eastern Whipbird','Satin Bowerbird','Australasian Figbird','Olive-backed Oriole','Spangled Drongo','Mistletoebird','Striated Pardalote','Yellow-rumped Thornbill','Sacred Kingfisher','Dollarbird','Nankeen Kestrel','Southern Boobook','Whistling Kite','Bush Stone-curlew','Rufous Whistler','White-winged Chough','Grey Currawong','Pied Butcherbird']
 };
 REGION_AREA_SPECIES.uk.push(...UK50.names);
+REGION_AREA_SPECIES.uk.push(...UK26.names);
+REGION_AREA_SPECIES.au.push(...AU_EXP.names);
+AU_EXP.addToRegionalPools(REGIONAL_HABITAT_BIRD_POOLS.au);
 const REGION_AREA_SPECIES_SETS = Object.fromEntries(Object.entries(REGION_AREA_SPECIES).map(([region, list]) => [region, new Set(list.map(s => s.toLowerCase()))]));
 function speciesNativeToRegion(species, region) {
   const set = REGION_AREA_SPECIES_SETS[region] || REGION_AREA_SPECIES_SETS.uk;
@@ -2863,6 +2875,8 @@ const REAL_WORLD_COMMONNESS = {
 
 };
 Object.assign(REAL_WORLD_COMMONNESS, UK50.commonness);
+Object.assign(REAL_WORLD_COMMONNESS, UK26.commonness);
+Object.assign(REAL_WORLD_COMMONNESS, AU_EXP.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
 const BURBZ_MAP_VERSION = 'detailed-map-vicinity-visits-nolag-v2-20260706';
@@ -7784,6 +7798,8 @@ const BURBZ_SPECIES_PROFILES = [{
 }
 ];
 BURBZ_SPECIES_PROFILES.push(...UK50.profiles);
+BURBZ_SPECIES_PROFILES.push(...UK26.profiles);
+BURBZ_SPECIES_PROFILES.push(...AU_EXP.profiles);
 
 const BIRD_INFO_MAP_CENTER = { lat: 54.5, lon: -2.5, zoom: 4 }; // Centered on UK, suitable for general bird info
 const BIRD_INFO = {}; // Populated dynamically from BURBZ_SPECIES_PROFILES for quick lookup
@@ -7822,7 +7838,7 @@ function escapeHTML(value) {
 let birdEducationCache = null;
 let birdEducationLoading = null;
 const BIRD_EDUCATION_URL = '/burbz/data/bird-education.json?v=recruitment-roost-20260701';
-const BIRD_EDUCATION_UK50_URL = '/burbz/data/uk-bird-education-50.json?v=uk50-source-backed-20260713';
+const BIRD_EDUCATION_UK50_URL = '/burbz/data/uk-bird-education-50.json?v=au-source-backed-20260713';
 
 async function fetchBirdEducationDataset(url, required = false) {
   try {
@@ -8433,6 +8449,8 @@ const BUILT_IN_BIRD_ART = {
   'Parakeet': '/burbz/bird-art-cache/ring_necked_parakeet_burbz_manga_20260706.png'
 };
 Object.assign(BUILT_IN_BIRD_ART, UK50.art);
+Object.assign(BUILT_IN_BIRD_ART, UK26.art);
+Object.assign(BUILT_IN_BIRD_ART, AU_EXP.art);
 
 // Complete manga RPG artwork for species that previously used simple placeholders.
 Object.assign(BUILT_IN_BIRD_ART, {
@@ -12251,7 +12269,7 @@ function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, m
   // appear as an "area bird" in Cheshire. UK50 adds season and coarse-range
   // checks only for its own species, and deliberately fails open for old saves.
   const native = species => speciesNativeToRegion(species, region) && speciesAllowedInRegion(species, region);
-  const eligible = species => region !== 'uk' || UK50.isEligible(species, lat, lon, month, habitat);
+  const eligible = species => region !== 'uk' || (UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat));
   let pool = habitatPoolForRegion(habitat, region).filter(species => native(species) && eligible(species) && (findSpeciesProfile(species) || WILD_BIRDS.includes(species)));
   if (!pool.length) pool = (HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default).filter(species => native(species) && eligible(species));
   if (!pool.length) pool = (REGION_AREA_SPECIES[region] || REGION_AREA_SPECIES.uk).filter(eligible);

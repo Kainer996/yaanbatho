@@ -1,12 +1,17 @@
 importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
+importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
+importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 
-const BURBZ_CACHE = 'burbz-uk50-education-resilience-v57-20260713';
+const BURBZ_CACHE = 'burbz-au-expansion-v59-20260713';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
+const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
+const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
 const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
-const UK50_REMOTE_ART = Object.values(UK50_SW.art).map(path =>
+const ALL_EXPANSION_ART = { ...UK50_SW.art, ...UK26_SW.art, ...AU_SW.art };
+const UK50_REMOTE_ART = Object.values(ALL_EXPANSION_ART).map(path =>
   BIRD_ART_GITHUB_RAW_BASE + path.replace(/^\/burbz\//, '/public/burbz/')
 );
-const UK50_REMOTE_CUTOUTS = Object.values(UK50_SW.art).map(path => {
+const UK50_REMOTE_CUTOUTS = Object.values(ALL_EXPANSION_ART).map(path => {
   const filename = path.split('/').pop().replace(/\.png$/i, '_cutout.png');
   return BIRD_ART_GITHUB_RAW_BASE + '/public/burbz/bird-art-cache/cutouts/' + filename;
 });
@@ -20,7 +25,9 @@ const BURBZ_ASSETS = [
   './academy_treehouse_core.js?v=bird-rename-20260710',
   './scan_economy_core.js',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
-  './data/uk-bird-education-50.json?v=uk50-source-backed-20260713',
+  './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
+  './au_bird_expansion.js?v=au-source-backed-20260713',
+  './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './assets/merlin-tutorial.png',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',
@@ -70,7 +77,9 @@ const BURBZ_CORE = [
   './academy_treehouse_core.js',
   './battle_core.js',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
-  './data/uk-bird-education-50.json?v=uk50-source-backed-20260713',
+  './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
+  './au_bird_expansion.js?v=au-source-backed-20260713',
+  './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './manifest.json'
 ];
 
