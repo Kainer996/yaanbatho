@@ -2,7 +2,7 @@ importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
 importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
 importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 
-const BURBZ_CACHE = 'burbz-au-expansion-v59-20260713';
+const BURBZ_CACHE = 'burbz-questphoto-fix-v60-20260713';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
