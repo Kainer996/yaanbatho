@@ -1,4 +1,4 @@
-const BURBZ_CACHE = 'burbz-real-manga-art-v46-20260709';
+const BURBZ_CACHE = 'burbz-map-codex-village-v47-20260709';
 const BURBZ_ASSETS = [
   './',
   './index.html',

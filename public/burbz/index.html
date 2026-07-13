@@ -400,8 +400,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .live-map-shell.clean-cloud-map .map-area-birds-title { font-size:10px; color:#fff7d9; text-shadow:0 2px 8px rgba(0,0,0,.86); }
 .live-map-shell.clean-cloud-map .map-area-birds-sub { font-size:8px; margin:2px 0 5px; color:#efe2bd; text-shadow:0 2px 8px rgba(0,0,0,.86); }
 .live-map-shell.clean-cloud-map .map-area-birds-list { gap:5px; max-height:calc(100% - 34px); }
-.live-map-shell.clean-cloud-map .map-area-bird { grid-template-columns:30px minmax(0,1fr); gap:6px; min-height:38px; padding:4px; border-radius:10px; background:rgba(3,10,9,.6); border-color:rgba(240,199,103,.16); box-shadow:0 5px 12px rgba(0,0,0,.3); }
-.live-map-shell.clean-cloud-map .map-area-bird img { width:30px; height:30px; }
+.live-map-shell.clean-cloud-map .map-area-bird { grid-template-columns:40px minmax(0,1fr); gap:7px; min-height:48px; padding:4px; border-radius:10px; background:rgba(3,10,9,.6); border-color:rgba(240,199,103,.16); box-shadow:0 5px 12px rgba(0,0,0,.3); }
+.live-map-shell.clean-cloud-map .map-area-bird img { width:40px; height:40px; border-radius:8px; object-fit:cover; }
 .live-map-shell.clean-cloud-map .map-area-bird-name { font-size:10px; }
 .live-map-shell.clean-cloud-map .map-area-bird-rarity { font-size:7.5px; }
 .live-map-shell.clean-cloud-map .map-player-ring { display:none; }
@@ -448,6 +448,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .filter-btn[data-rarity="rare"].active { border-color: var(--rare); color: var(--rare); }
 .filter-btn[data-rarity="epic"].active { border-color: var(--epic); color: var(--epic); }
 .filter-btn[data-rarity="legendary"].active { border-color: var(--legendary); color: var(--legendary); }
+.birdex-discovery-row { margin-top:10px; padding:6px; border-radius:12px; background:rgba(214,168,79,.06); border:1px solid rgba(214,168,79,.14); }
+.birdex-discovery-row .filter-btn { flex:1; justify-content:center; min-width:max-content; }
+.birdex-discovery-row .filter-btn.active { background:linear-gradient(135deg,rgba(214,168,79,.26),rgba(244,234,212,.12)); color:#f4ead4; }
 
 .bird-grid {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
@@ -1920,6 +1923,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="burbz-mode-tabs" id="burbzModeTabs">
         <button class="burbz-mode-btn active" data-mode="companions">Companions</button>
         <button class="burbz-mode-btn" data-mode="birdex">Birdex</button>
+      </div>
+      <div class="filter-row birdex-discovery-row" id="birdexDiscoveryRow" style="display:none">
+        <button class="filter-btn active" data-discovery="discovered">Discovered</button>
+        <button class="filter-btn" data-discovery="undiscovered">Undiscovered</button>
+        <button class="filter-btn" data-discovery="all">All · discovered first</button>
       </div>
       <div class="filter-row" id="filterRow">
         <button class="filter-btn active" data-rarity="all">All</button>
@@ -8692,16 +8700,19 @@ function wireBirdArtFallbacks() {
   }, true);
 }
 
-// Bird image for MOVING contexts (map markers, walking pets, room sprites):
-// transparent cutout or emoji — never the square painted scene.
+// Bird image for compact/moving contexts (map list, walking pet, room sprite):
+// transparent cutout when available, otherwise the real manga painting.
 function birdOnlyImgHTML(bird, className) {
   const art = getBirdArtUrl(bird);
   const species = String((bird && (bird.commonName || bird.name || bird.species)) || '');
   const emoji = getBirdMarkerEmoji(species) || '🐦';
   const known = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())];
-  const cutout = known || birdCutoutUrlFor(art);
-  if (!cutout) return '<span class="' + escapeHtml(className) + ' bird-emoji-glyph">' + emoji + '</span>';
-  return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '">';
+  // Prefer a transparent hand-cut asset when one exists. Every other map/pet/
+  // Academy icon uses the bird's full manga painting rather than an emoji.
+  const visual = known || art;
+  if (!visual) return '<span class="' + escapeHtml(className) + ' bird-emoji-glyph">' + emoji + '</span>';
+  const fallback = known && art && known !== art ? ' data-fallback-art="' + escapeHtml(art) + '"' : '';
+  return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(visual) + '"' + fallback + ' data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '">';
 }
 
 // Bird image for FRAMED contexts (Birdex cards, thumbnails): cutout first,
@@ -12885,8 +12896,9 @@ function villageMakeSign(text) {
   x.fillStyle = '#f4ead4'; x.font = 'bold 28px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(text, 128, 50);
   const tex = new THREE.CanvasTexture(c);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, fog: false }));
   sprite.scale.set(3.4, 1.28, 1);
+  sprite.renderOrder = 999;
   return sprite;
 }
 
@@ -13031,7 +13043,8 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), beamMat);
   bracket.position.set(-w / 2 + 0.5, baseH + upH + 0.55, d / 2 + 0.4); g.add(bracket);
   const sign = villageMakeSign(cfg.icon + ' ' + cfg.name.replace(/^The /, ''));
-  sign.position.set(-w / 2 + 0.5, baseH + upH + 0.1, d / 2 + 0.75);
+  // Keep shop labels above and in front of roof geometry on the mobile camera.
+  sign.position.set(-w / 2 + 0.5, baseH + upH + 0.78, d / 2 + 1.15);
   sign.userData.baseY = sign.position.y;
   g.add(sign);
   villageSigns.push(sign);
@@ -14397,6 +14410,7 @@ function updateHeader() {
 // ============================================================================
 let currentFilter = 'all';
 let currentBurbzMode = 'companions';
+let currentBirdexDiscovery = 'discovered';
 
 function discoveredSpeciesSet() {
   const discovered = new Set(Object.values(gameState.discoveredSpecies || {}).map(r => canonicalSpeciesName(r.species || r.commonName)).filter(Boolean));
@@ -14416,6 +14430,15 @@ function renderBirdex() {
   renderRpgHud();
   const title = $('burbzScreenTitle'); if (title) title.textContent = currentBurbzMode === 'companions' ? 'COMPANIONS' : 'BIRDEX';
   $$('#burbzModeTabs .burbz-mode-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === currentBurbzMode));
+  const discoveryRow = $('birdexDiscoveryRow');
+  if (discoveryRow) {
+    discoveryRow.style.display = currentBurbzMode === 'birdex' ? 'flex' : 'none';
+    discoveryRow.querySelectorAll('[data-discovery]').forEach(btn => btn.classList.toggle('active', btn.dataset.discovery === currentBirdexDiscovery));
+    const discoveredBtn = discoveryRow.querySelector('[data-discovery="discovered"]');
+    const undiscoveredBtn = discoveryRow.querySelector('[data-discovery="undiscovered"]');
+    if (discoveredBtn) discoveredBtn.textContent = 'Discovered · ' + unlockedCount;
+    if (undiscoveredBtn) undiscoveredBtn.textContent = 'Undiscovered · ' + Math.max(0, WILD_BIRDS.length - unlockedCount);
+  }
 
   const grid = $('birdGrid');
   grid.innerHTML = '';
@@ -14431,35 +14454,43 @@ function renderBirdex() {
     }
     companions.forEach((bird, idx) => { grid.innerHTML += createBirdCardHTML(bird, idx); });
   } else {
-    const codexBirds = WILD_BIRDS.map(species => createRosterBird(species))
-      .filter(b => currentFilter === 'all' || b.rarity === currentFilter)
-      .sort((a, b) => {
-        const ar = ['common','uncommon','rare','epic','legendary'].indexOf(a.rarity);
-        const br = ['common','uncommon','rare','epic','legendary'].indexOf(b.rarity);
-        return ar - br || a.commonName.localeCompare(b.commonName);
-      });
-    const renderedKeys = new Set();
-    codexBirds.forEach((bird, idx) => {
-      const owned = companionForSpecies(bird.species || bird.commonName);
-      const discoveredRecord = getDiscoveredRecordForSpecies(bird.species || bird.commonName);
-      if (owned) {
-        renderedKeys.add(speciesKey(canonicalSpeciesName(bird.species || bird.commonName)));
-        grid.innerHTML += createBirdCardHTML(owned, idx);
-      }
-      else if (discoveredRecord) {
-        renderedKeys.add(speciesKey(canonicalSpeciesName(bird.species || bird.commonName)));
-        grid.innerHTML += createKnownSpeciesCardHTML(createBirdFromDiscovery(discoveredRecord), idx);
-      }
-      else grid.innerHTML += createLockedBirdexCardHTML(bird, idx);
-    });
-    discoveredSpeciesRecords().forEach((record, extraIdx) => {
+    const rarityOrder = ['common','uncommon','rare','epic','legendary'];
+    const codexBirds = WILD_BIRDS.map(species => createRosterBird(species));
+    const rosterKeys = new Set(codexBirds.map(b => speciesKey(canonicalSpeciesName(b.species || b.commonName))));
+
+    // Real discoveries outside the original roster belong in the codex too.
+    discoveredSpeciesRecords().forEach(record => {
       const bird = createBirdFromDiscovery(record);
       const key = speciesKey(canonicalSpeciesName(bird.commonName || bird.species));
-      if (!key || renderedKeys.has(key)) return;
-      if (currentFilter !== 'all' && bird.rarity !== currentFilter) return;
-      renderedKeys.add(key);
-      grid.innerHTML += createKnownSpeciesCardHTML(bird, codexBirds.length + extraIdx);
+      if (key && !rosterKeys.has(key)) { rosterKeys.add(key); codexBirds.push(bird); }
     });
+
+    const visibleBirds = codexBirds.map(bird => {
+      const owned = companionForSpecies(bird.species || bird.commonName);
+      const discoveredRecord = getDiscoveredRecordForSpecies(bird.species || bird.commonName);
+      return { bird, owned, discoveredRecord, discovered: !!(owned || discoveredRecord) };
+    }).filter(row => {
+      if (currentFilter !== 'all' && row.bird.rarity !== currentFilter) return false;
+      if (currentBirdexDiscovery === 'discovered') return row.discovered;
+      if (currentBirdexDiscovery === 'undiscovered') return !row.discovered;
+      return true;
+    }).sort((a, b) => {
+      // “All” still keeps everything the player has found at the very top.
+      if (a.discovered !== b.discovered) return a.discovered ? -1 : 1;
+      const ar = rarityOrder.indexOf(a.bird.rarity);
+      const br = rarityOrder.indexOf(b.bird.rarity);
+      return ar - br || String(a.bird.commonName || a.bird.species || '').localeCompare(String(b.bird.commonName || b.bird.species || ''));
+    });
+
+    if (!visibleBirds.length) {
+      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">Nothing in this view yet</div><div class="companions-empty-copy">Try another discovery or rarity filter — then head outside with the scanner to reveal more real birds.</div></div>';
+    } else {
+      visibleBirds.forEach((row, idx) => {
+        if (row.owned) grid.innerHTML += createBirdCardHTML(row.owned, idx);
+        else if (row.discoveredRecord) grid.innerHTML += createKnownSpeciesCardHTML(createBirdFromDiscovery(row.discoveredRecord), idx);
+        else grid.innerHTML += createLockedBirdexCardHTML(row.bird, idx);
+      });
+    }
   }
 
   // Attach card and pet-selection events. Locked codex cards do not reveal species.
@@ -14651,9 +14682,17 @@ $('filterRow').addEventListener('click', e => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
   SFX.tap();
-  $$('.filter-btn').forEach(b => b.classList.remove('active'));
+  $$('#filterRow .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentFilter = btn.dataset.rarity;
+  renderBirdex();
+});
+
+$('birdexDiscoveryRow')?.addEventListener('click', e => {
+  const btn = e.target.closest('[data-discovery]');
+  if (!btn) return;
+  SFX.tap();
+  currentBirdexDiscovery = btn.dataset.discovery || 'discovered';
   renderBirdex();
 });
 
