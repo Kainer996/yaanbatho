@@ -1,4 +1,15 @@
-const BURBZ_CACHE = 'burbz-treehouse-birds-v52-20260713';
+importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
+
+const BURBZ_CACHE = 'burbz-uk50-card-release-v55-20260713';
+const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
+const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
+const UK50_REMOTE_ART = Object.values(UK50_SW.art).map(path =>
+  BIRD_ART_GITHUB_RAW_BASE + path.replace(/^\/burbz\//, '/public/burbz/')
+);
+const UK50_REMOTE_CUTOUTS = Object.values(UK50_SW.art).map(path => {
+  const filename = path.split('/').pop().replace(/\.png$/i, '_cutout.png');
+  return BIRD_ART_GITHUB_RAW_BASE + '/public/burbz/bird-art-cache/cutouts/' + filename;
+});
 const BURBZ_ASSETS = [
   './',
   './index.html',
@@ -8,6 +19,8 @@ const BURBZ_ASSETS = [
   './quest_core.js?v=loop-home-20260710',
   './academy_treehouse_core.js?v=bird-rename-20260710',
   './scan_economy_core.js',
+  './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
+  './data/uk-bird-education-50.json?v=uk50-source-backed-20260713',
   './assets/merlin-tutorial.png',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',
@@ -46,6 +59,7 @@ const BURBZ_ASSETS = [
   './icons/maskable-192.png',
   './icons/maskable-512.png'
 ];
+BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS);
 
 // The app shell must cache or the install fails; artwork/video are best-effort
 // so one missing file can never knock out offline support for the whole game.
@@ -55,6 +69,8 @@ const BURBZ_CORE = [
   './lib/three.min.js?v=0.158.0',
   './academy_treehouse_core.js',
   './battle_core.js',
+  './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
+  './data/uk-bird-education-50.json?v=uk50-source-backed-20260713',
   './manifest.json'
 ];
 
@@ -90,7 +106,8 @@ self.addEventListener('fetch', event => {
     fetch(request)
       .then(response => {
         const copy = response.clone();
-        if (response.ok && url.origin === self.location.origin) {
+        const cacheableArtHost = url.hostname === 'github.com' || url.hostname === 'raw.githubusercontent.com';
+        if (response.ok && (url.origin === self.location.origin || cacheableArtHost)) {
           caches.open(BURBZ_CACHE).then(cache => cache.put(request, copy));
         }
         return response;

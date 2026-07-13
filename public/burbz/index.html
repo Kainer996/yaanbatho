@@ -2420,6 +2420,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=perch-league-20260710"></script>
 <script src="quest_core.js?v=loop-home-20260710"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
+<script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -2428,6 +2429,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 (function() {
 'use strict';
+
+// Source-backed British expansion loaded separately so legacy saves and the
+// closed Australian area roster remain untouched.
+const UK50 = window.BURBZ_UK_BIRD_EXPANSION_50;
 
 // ============================================================================
 // CONSTANTS
@@ -2787,6 +2792,7 @@ const WILD_BIRDS = [
   "Grey Currawong",
   "Pied Butcherbird",
 ];
+WILD_BIRDS.push(...UK50.names);
 
 const HABITAT_BIRD_POOLS = {
   water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler','Tufted Duck','Gadwall','Northern Shoveler','Common Pochard','Common Goldeneye','Greylag Goose','Common Sandpiper','Green-winged Teal','Great Crested Grebe','Eurasian Wigeon','Northern Pintail','Mandarin Duck','Whooper Swan','Egyptian Goose','Common Moorhen','Reed Warbler','Ringed Plover','Little Ringed Plover','European Shag','Water Rail'],
@@ -2800,6 +2806,7 @@ const HABITAT_BIRD_POOLS = {
   hills: ['Raven','Buzzard','Kestrel','Meadow Pipit','Stonechat','Tree Pipit','Curlew','Peregrine Falcon','White-tailed Eagle','Red Crossbill','Red Grouse','Northern Wheatear','Common Sandpiper'],
   default: ['European Robin','Blackbird','Wren','Blue Tit','Wood Pigeon','Goldfinch','Chiffchaff','Great Spotted Woodpecker','Little Grebe'],
 };
+UK50.addToHabitatPools(HABITAT_BIRD_POOLS);
 const REGIONAL_HABITAT_BIRD_POOLS = {
   au: {
     water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan','Grey Teal','Hardhead','Australasian Grebe','Hoary-headed Grebe','Little Black Cormorant','Australasian Darter','Blue-billed Duck','Great Egret','Whistling Kite'],
@@ -2835,12 +2842,13 @@ const REGION_AREA_SPECIES = {
     'Emu','Superb Lyrebird','Rainbow Bee-eater','Asian Koel','Great Egret',
     'Torresian Crow','Noisy Friarbird','Blue-faced Honeyeater','Brown Honeyeater','Lewin\'s Honeyeater','Yellow-faced Honeyeater','Bell Miner','Eastern Whipbird','Satin Bowerbird','Australasian Figbird','Olive-backed Oriole','Spangled Drongo','Mistletoebird','Striated Pardalote','Yellow-rumped Thornbill','Sacred Kingfisher','Dollarbird','Nankeen Kestrel','Southern Boobook','Whistling Kite','Bush Stone-curlew','Rufous Whistler','White-winged Chough','Grey Currawong','Pied Butcherbird']
 };
+REGION_AREA_SPECIES.uk.push(...UK50.names);
 const REGION_AREA_SPECIES_SETS = Object.fromEntries(Object.entries(REGION_AREA_SPECIES).map(([region, list]) => [region, new Set(list.map(s => s.toLowerCase()))]));
 function speciesNativeToRegion(species, region) {
   const set = REGION_AREA_SPECIES_SETS[region] || REGION_AREA_SPECIES_SETS.uk;
   return set.has(String(species || '').split('(')[0].trim().toLowerCase());
 }
-const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland:'woodland', park:'park / garden', farmland:'farmland edge', grassland:'grassland', urban:'town habitat', coast:'coast', hills:'moor / hill country', default:'local habitat' };
+const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland:'woodland', heath:'heathland', park:'park / garden', farmland:'farmland edge', grassland:'grassland', urban:'town habitat', coast:'coast', hills:'moor / hill country', default:'local habitat' };
 const REAL_WORLD_COMMONNESS = {
   'Blackbird':96,'European Robin':94,'Blue Tit':93,'Wood Pigeon':92,'Wren':91,'Great Tit':90,'Magpie':88,'Chaffinch':86,'Goldfinch':84,'House Sparrow':82,'Starling':80,'Jackdaw':78,'Carrion Crow':76,'Rook':74,'Dunnock':72,'Chiffchaff':70,'Nuthatch':62,'Long-tailed Tit':61,'Coal Tit':60,'Song Thrush':58,'Greenfinch':55,'Blackcap':54,'Pied Wagtail':52,'Grey Wagtail':46,'Treecreeper':44,'Meadow Pipit':42,'Skylark':40,'Kestrel':38,'Buzzard':36,'Jay':35,'Tawny Owl':32,'Yellowhammer':30,'Stonechat':28,'Kingfisher':26,'Lapwing':24,'Sand Martin':23,'Willow Warbler':22,'Dipper':18,'Goosander':16,'Curlew':14,'Common Redstart':10,'Pied Flycatcher':8,'Tree Pipit':7,'Raven':6,'Golden Eagle':1,'Australian Magpie':100,'Rainbow Lorikeet':98,'Tawny Frogmouth':96,'Noisy Miner':94,'Australian Wood Duck':92,'Pacific Black Duck':90,'Magpie-lark':88,'Dusky Moorhen':86,'Superb Fairywren':84,'Chestnut Teal':82,'Laughing Kookaburra':80,'Eurasian Coot':78,'Little Pied Cormorant':76,'Australasian Swamphen':74,'Red Wattlebird':72,'Spotted Dove':70,'Grey Butcherbird':68,'White-faced Heron':66,'Pied Currawong':64,'Galah':62,'Sulphur-crested Cockatoo':60,'Crested Pigeon':58,'Little Raven':56,'Eastern Rosella':54,'Common Myna':52,'Silver Gull':50,'Black Swan':48,'Crimson Rosella':46,'Australian King Parrot':44,'Australian White Ibis':42,'Red-rumped Parrot':40,'Rock Pigeon':38,'Common Bronzewing':36,'Brown Thornbill':34,'Grey Fantail':32,'Welcome Swallow':59,'Willie Wagtail':57,'New Holland Honeyeater':55,'Eastern Spinebill':53,'White-plumed Honeyeater':51,'Masked Lapwing':49,'Royal Spoonbill':47,'Australian Pelican':45,'Little Corella':43,'Australian Raven':41,'Square-tailed Kite':18,'Great Spotted Woodpecker':50,'Little Grebe':48,'Peregrine Falcon':12,'Bohemian Waxwing':44,'Red Crossbill':42,'Common Snipe':40,'Common Linnet':38,'Eurasian Tree Sparrow':36,'Grey Partridge':34,'Sedge Warbler':32,
   // regional_plus20_20260701
@@ -2854,6 +2862,7 @@ const REAL_WORLD_COMMONNESS = {
   'Collared Dove':78,'Common Moorhen':74,'Mistle Thrush':56,'Great Black-backed Gull':48,'Common Whitethroat':52,'Garden Warbler':42,'Reed Warbler':40,'Spotted Flycatcher':36,'Brambling':40,'Lesser Redpoll':44,'Marsh Tit':38,'Willow Tit':26,'Hawfinch':18,'Yellow Wagtail':36,'Ringed Plover':38,'Little Ringed Plover':30,'Kittiwake':42,'Northern Fulmar':36,'European Shag':38,'Water Rail':22,'Turtle Dove':14,'Corn Bunting':30,'Sanderling':40,'Barnacle Goose':46,'Brent Goose':40,'Torresian Crow':80,'Noisy Friarbird':66,'Blue-faced Honeyeater':64,'Brown Honeyeater':62,'Lewin\'s Honeyeater':54,'Yellow-faced Honeyeater':52,'Bell Miner':44,'Eastern Whipbird':46,'Satin Bowerbird':48,'Australasian Figbird':62,'Olive-backed Oriole':52,'Spangled Drongo':54,'Mistletoebird':56,'Striated Pardalote':58,'Yellow-rumped Thornbill':60,'Sacred Kingfisher':56,'Dollarbird':48,'Nankeen Kestrel':58,'Southern Boobook':54,'Whistling Kite':50,'Bush Stone-curlew':38,'Rufous Whistler':52,'White-winged Chough':54,'Grey Currawong':48,'Pied Butcherbird':58
 
 };
+Object.assign(REAL_WORLD_COMMONNESS, UK50.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
 const BURBZ_MAP_VERSION = 'detailed-map-vicinity-visits-nolag-v2-20260706';
@@ -7774,6 +7783,7 @@ const BURBZ_SPECIES_PROFILES = [{
   lat: -27.5, lon: 152.9
 }
 ];
+BURBZ_SPECIES_PROFILES.push(...UK50.profiles);
 
 const BIRD_INFO_MAP_CENTER = { lat: 54.5, lon: -2.5, zoom: 4 }; // Centered on UK, suitable for general bird info
 const BIRD_INFO = {}; // Populated dynamically from BURBZ_SPECIES_PROFILES for quick lookup
@@ -7812,6 +7822,19 @@ function escapeHTML(value) {
 let birdEducationCache = null;
 let birdEducationLoading = null;
 const BIRD_EDUCATION_URL = '/burbz/data/bird-education.json?v=recruitment-roost-20260701';
+const BIRD_EDUCATION_UK50_URL = '/burbz/data/uk-bird-education-50.json?v=uk50-source-backed-20260713';
+
+async function fetchBirdEducationDataset(url, required = false) {
+  try {
+    const res = await fetch(url, { cache:'no-store' });
+    if (!res.ok) throw new Error('Could not load bird education: ' + res.status);
+    return await res.json();
+  } catch (err) {
+    if (required) throw err;
+    console.warn('BURBZ: optional education dataset unavailable', url, err);
+    return {};
+  }
+}
 
 function getEducationKey(name) {
   return normaliseSpeciesKey(String(name || '').split('(')[0].trim());
@@ -7820,20 +7843,17 @@ function getEducationKey(name) {
 async function loadBirdEducation() {
   if (birdEducationCache) return birdEducationCache;
   if (!birdEducationLoading) {
-    birdEducationLoading = fetch(BIRD_EDUCATION_URL, { cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error('Could not load bird education: ' + res.status);
-        return res.json();
-      })
-      .then(data => {
-        birdEducationCache = data || {};
-        return birdEducationCache;
-      })
-      .catch(err => {
-        console.warn('BURBZ: education dataset unavailable', err);
-        birdEducationCache = {};
-        return birdEducationCache;
-      });
+    birdEducationLoading = Promise.all([
+      fetchBirdEducationDataset(BIRD_EDUCATION_URL, false),
+      fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, true)
+    ]).then(([base, uk50]) => {
+      birdEducationCache = { ...(base || {}), ...(uk50 || {}) };
+      return birdEducationCache;
+    }).catch(err => {
+      console.warn('BURBZ: UK50 education dataset unavailable', err);
+      birdEducationCache = {};
+      return birdEducationCache;
+    });
   }
   return birdEducationLoading;
 }
@@ -8412,6 +8432,7 @@ const BUILT_IN_BIRD_ART = {
   'Rose-ringed Parakeet': '/burbz/bird-art-cache/ring_necked_parakeet_burbz_manga_20260706.png',
   'Parakeet': '/burbz/bird-art-cache/ring_necked_parakeet_burbz_manga_20260706.png'
 };
+Object.assign(BUILT_IN_BIRD_ART, UK50.art);
 
 // Complete manga RPG artwork for species that previously used simple placeholders.
 Object.assign(BUILT_IN_BIRD_ART, {
@@ -12161,9 +12182,35 @@ function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn 
   const questHud = $('mapQuestHud'); if (questHud && !questHud.dataset.wired) { questHud.dataset.wired = '1'; questHud.addEventListener('click', () => { SFX.tap(); openActiveWalkQuestSheet(); }); }
   const questOverviewBtn = $('mapQuestOverviewBtn'); if (questOverviewBtn && !questOverviewBtn.dataset.wired) { questOverviewBtn.dataset.wired = '1'; questOverviewBtn.addEventListener('click', () => { try { toggleQuestOverview(); } catch (err) { console.error('BURBZ quest overview failed', err); showToast('Quest scouting jammed — try again'); } }); } }
 function startLiveGeolocation() { if (!navigator.geolocation || liveMapWatchId !== null) { if (!navigator.geolocation) setMapLabels('Location unavailable', 'This browser cannot provide location, so Burbz will not pretend you are somewhere else.'); return; } navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Tap ⌖ and allow location to reveal the Bird Burbs realm around your own phone.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); liveMapWatchId = navigator.geolocation.watchPosition(pos => handleLivePosition(pos, false), () => {}, { enableHighAccuracy:true, timeout:15000, maximumAge:0 }); }
-function handleLivePosition(pos, fly) { const lat = pos.coords.latitude, lon = pos.coords.longitude; liveMapHasPrecisePosition = true; liveMapLastPosition = { lat, lon, source:'Your live position' }; updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true }); try { questOnPositionFix(lat, lon, pos.coords.accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); } }
+function validLivePosition(pos) {
+  const coords = pos && pos.coords;
+  if (!coords) return false;
+  const lat = Number(coords.latitude), lon = Number(coords.longitude), accuracy = Number(coords.accuracy);
+  return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180 && Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 500;
+}
+function handleLivePosition(pos, fly) {
+  if (!validLivePosition(pos)) {
+    const accuracy = Number(pos && pos.coords && pos.coords.accuracy);
+    setMapLabels('Location too imprecise', Number.isFinite(accuracy) && accuracy > 500 ? 'Waiting for GPS accuracy better than 500 metres before placing you or nearby birds.' : 'Waiting for a valid GPS fix before placing you or nearby birds.');
+    return false;
+  }
+  const lat = Number(pos.coords.latitude), lon = Number(pos.coords.longitude);
+  liveMapHasPrecisePosition = true;
+  liveMapLastPosition = { lat, lon, source:'Your live position' };
+  updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true });
+  try { questOnPositionFix(lat, lon, Number(pos.coords.accuracy)); } catch (err) { console.warn('BURBZ quest fix failed', err); }
+  return true;
+}
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
 async function updateLiveMapPosition(lat, lon, source, opts = {}) { liveMapLastPosition = { lat, lon, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return;
+  if (mapRegionForCoords(lat, lon) === 'unsupported') {
+    liveMapSpawns = [];
+    liveMapFeatureCount = 0;
+    drawBirdSpawns([]);
+    updateNearbyCard([], 0);
+    setMapLabels(source, 'Burbz currently supports local bird spawning in the UK and Australia; your exact player marker remains here.');
+    return;
+  }
   // Every GPS tick used to re-query Overpass and tear down + rebuild every marker
   // on the map, which is what made walking feel laggy. Only rebuild after moving
   // ~120 m or every 90 s, whichever comes first.
@@ -12175,10 +12222,9 @@ async function updateLiveMapPosition(lat, lon, source, opts = {}) { liveMapLastP
   const seq = ++liveMapUpdateSeq;
   const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
 async function fetchNearbyHabitatFeatures(lat, lon, radius = 1400) { radius = Math.max(300, Math.min(8000, Math.round(radius))); const query = `[out:json][timeout:8];(node(around:${radius},${lat},${lon})[natural];way(around:${radius},${lat},${lon})[natural];relation(around:${radius},${lat},${lon})[natural];node(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];way(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];relation(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];node(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];way(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];relation(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];node(around:${radius},${lat},${lon})[waterway];way(around:${radius},${lat},${lon})[waterway];node(around:${radius},${lat},${lon})[water];way(around:${radius},${lat},${lon})[water];);out center tags 70;`; const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body:'data=' + encodeURIComponent(query) }); if (!res.ok) throw new Error('Overpass ' + res.status); const data = await res.json(); return (data.elements || []).map(el => ({ lat:el.lat || (el.center && el.center.lat), lon:el.lon || (el.center && el.center.lon), tags:el.tags || {} })).filter(f => Number.isFinite(f.lat) && Number.isFinite(f.lon)); }
-function classifyHabitat(tags = {}) { const natural = tags.natural || '', landuse = tags.landuse || '', leisure = tags.leisure || '', waterway = tags.waterway || ''; if (natural === 'coastline' || tags.place === 'sea' || /beach|bay|strait/.test(natural)) return 'coast'; if (waterway || /water|river|stream|lake|pond|reservoir/.test(natural + ' ' + (tags.water || ''))) return 'water'; if (/wetland|marsh|reedbed|fen|bog/.test(natural)) return 'wetland'; if (/tree|wood|forest|scrub|heath/.test(natural) || /forest|orchard/.test(landuse)) return 'woodland'; if (/park|garden|nature_reserve|recreation_ground/.test(leisure + ' ' + landuse)) return 'park'; if (/farmland|farmyard|allotments/.test(landuse)) return 'farmland'; if (/grassland|meadow|grass/.test(natural + ' ' + landuse)) return 'grassland'; if (/peak|fell|scree/.test(natural)) return 'hills'; return 'urban'; }
+function classifyHabitat(tags = {}) { const natural = tags.natural || '', landuse = tags.landuse || '', leisure = tags.leisure || '', waterway = tags.waterway || ''; if (natural === 'coastline' || tags.place === 'sea' || /beach|bay|strait/.test(natural)) return 'coast'; if (waterway || /water|river|stream|lake|pond|reservoir/.test(natural + ' ' + (tags.water || ''))) return 'water'; if (/wetland|marsh|reedbed|fen|bog/.test(natural)) return 'wetland'; if (/heath/.test(natural)) return 'heath'; if (/tree|wood|forest|scrub/.test(natural) || /forest|orchard/.test(landuse)) return 'woodland'; if (/park|garden|nature_reserve|recreation_ground/.test(leisure + ' ' + landuse)) return 'park'; if (/farmland|farmyard|allotments/.test(landuse)) return 'farmland'; if (/grassland|meadow|grass/.test(natural + ' ' + landuse)) return 'grassland'; if (/peak|fell|scree/.test(natural)) return 'hills'; return 'urban'; }
 function mapRegionForCoords(lat, lon) {
-  if (lat >= -45 && lat <= -9 && lon >= 112 && lon <= 154) return 'au';
-  return 'uk';
+  return UK50.supportedRegionForCoords(lat, lon);
 }
 function speciesAllowedInRegion(species, region) {
   const blocked = REGION_BLOCKED_SPECIES[region] || [];
@@ -12188,18 +12234,56 @@ function habitatPoolForRegion(habitat, region) {
   const regional = REGIONAL_HABITAT_BIRD_POOLS[region] || null;
   return (regional && (regional[habitat] || regional.default)) || HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default;
 }
-function pickHabitatBird(habitat, seed, region = 'uk') {
+function pickWeightedHabitatSpecies(pool, seed) {
+  if (!pool.length) return null;
+  const weights = pool.map(species => Math.max(1, Number(realWorldRarityScore(species)) || 1));
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  let roll = (Math.abs(Number(seed) || 0) >>> 0) % total;
+  for (let i = 0; i < pool.length; i++) {
+    if (roll < weights[i]) return pool[i];
+    roll -= weights[i];
+  }
+  return pool[pool.length - 1];
+}
+function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, month = new Date().getMonth() + 1) {
   // Spawns must pass the closed regional whitelist — the habitat pools can be
   // extended with world-roster species for scanning, but an Emu must never
-  // appear as an "area bird" in Cheshire.
+  // appear as an "area bird" in Cheshire. UK50 adds season and coarse-range
+  // checks only for its own species, and deliberately fails open for old saves.
   const native = species => speciesNativeToRegion(species, region) && speciesAllowedInRegion(species, region);
-  let pool = habitatPoolForRegion(habitat, region).filter(species => native(species) && (findSpeciesProfile(species) || WILD_BIRDS.includes(species)));
-  if (!pool.length) pool = (HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default).filter(native);
-  if (!pool.length) pool = REGION_AREA_SPECIES[region] || REGION_AREA_SPECIES.uk;
-  const species = pool[Math.abs(seed) % pool.length];
+  const eligible = species => region !== 'uk' || UK50.isEligible(species, lat, lon, month, habitat);
+  let pool = habitatPoolForRegion(habitat, region).filter(species => native(species) && eligible(species) && (findSpeciesProfile(species) || WILD_BIRDS.includes(species)));
+  if (!pool.length) pool = (HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default).filter(species => native(species) && eligible(species));
+  if (!pool.length) pool = (REGION_AREA_SPECIES[region] || REGION_AREA_SPECIES.uk).filter(eligible);
+  const species = pickWeightedHabitatSpecies(pool, seed);
   return findSpeciesProfile(species) || createRosterBird(species);
 }
-function buildBirdSpawns(lat, lon, features) { const region = mapRegionForCoords(lat, lon); const useful = features.slice(0,18).map((feature,i) => { const habitat = classifyHabitat(feature.tags); const seed = hashStr(`${feature.lat.toFixed(5)},${feature.lon.toFixed(5)},${habitat},${region},${i}`); return { lat:feature.lat, lon:feature.lon, habitat, bird:pickHabitatBird(habitat, seed, region), seed, realFeature:true, region }; }); const seenHabitats = new Set(useful.map(s => s.habitat)); ['urban','park','woodland','grassland','water','wetland','farmland'].forEach((habitat,i) => { if (useful.length >= 10 && seenHabitats.has(habitat)) return; const angle = (-70 + i * 43) * Math.PI / 180; const dist = .0026 + i * .00045; const spawnLat = lat + Math.cos(angle) * dist; const spawnLon = lon + Math.sin(angle) * dist / Math.max(.35, Math.cos(lat * Math.PI / 180)); const seed = hashStr(`${spawnLat.toFixed(5)},${spawnLon.toFixed(5)},${habitat},${region}`); useful.push({ lat:spawnLat, lon:spawnLon, habitat, bird:pickHabitatBird(habitat, seed, region), seed, realFeature:false, region }); }); if (region === 'au' && !useful.some(spawn => (spawn.bird.commonName || spawn.bird.name || spawn.bird.species) === 'Australian Raven')) { const seed = hashStr(`${lat.toFixed(5)},${lon.toFixed(5)},australian-raven,${region}`); const ravenSpawn = { lat:lat + .0012, lon:lon - .0012 / Math.max(.35, Math.cos(lat * Math.PI / 180)), habitat:'urban', bird:findSpeciesProfile('Australian Raven') || createRosterBird('Australian Raven'), seed, realFeature:false, region }; if (useful.length >= 12) useful[11] = ravenSpawn; else useful.push(ravenSpawn); } return useful.slice(0,12); }
+function buildBirdSpawns(lat, lon, features) {
+  const region = mapRegionForCoords(lat, lon);
+  if (region === 'unsupported') return [];
+  const month = new Date().getMonth() + 1;
+  const useful = features.slice(0,18).map((feature,i) => {
+    const habitat = classifyHabitat(feature.tags);
+    const seed = hashStr(`${feature.lat.toFixed(5)},${feature.lon.toFixed(5)},${habitat},${region},${i}`);
+    return { lat:feature.lat, lon:feature.lon, habitat, bird:pickHabitatBird(habitat, seed, region, feature.lat, feature.lon, month), seed, realFeature:true, region };
+  });
+  const seenHabitats = new Set(useful.map(s => s.habitat));
+  ['urban','park','woodland','grassland','water','wetland','farmland'].forEach((habitat,i) => {
+    if (useful.length >= 10 && seenHabitats.has(habitat)) return;
+    const angle = (-70 + i * 43) * Math.PI / 180;
+    const dist = .0026 + i * .00045;
+    const spawnLat = lat + Math.cos(angle) * dist;
+    const spawnLon = lon + Math.sin(angle) * dist / Math.max(.35, Math.cos(lat * Math.PI / 180));
+    const seed = hashStr(`${spawnLat.toFixed(5)},${spawnLon.toFixed(5)},${habitat},${region}`);
+    useful.push({ lat:spawnLat, lon:spawnLon, habitat, bird:pickHabitatBird(habitat, seed, region, spawnLat, spawnLon, month), seed, realFeature:false, region });
+  });
+  if (region === 'au' && !useful.some(spawn => (spawn.bird.commonName || spawn.bird.name || spawn.bird.species) === 'Australian Raven')) {
+    const seed = hashStr(`${lat.toFixed(5)},${lon.toFixed(5)},australian-raven,${region}`);
+    const ravenSpawn = { lat:lat + .0012, lon:lon - .0012 / Math.max(.35, Math.cos(lat * Math.PI / 180)), habitat:'urban', bird:findSpeciesProfile('Australian Raven') || createRosterBird('Australian Raven'), seed, realFeature:false, region };
+    if (useful.length >= 12) useful[11] = ravenSpawn; else useful.push(ravenSpawn);
+  }
+  return useful.slice(0,12);
+}
 function getBirdMarkerEmoji(species) { if (/owl/i.test(species)) return '🦉'; if (/duck|mallard|swan|goose|gannet|cormorant|puffin|razorbill|oystercatcher/i.test(species)) return '🦆'; if (/eagle|kite|buzzard|kestrel|hawk|falcon|osprey|merlin/i.test(species)) return '🦅'; return '🐦'; }
 function habitatColor(habitat) { return ({ water:'#58c7ff', wetland:'#63d78a', woodland:'#4fca64', park:'#d6c84f', farmland:'#e0a64b', grassland:'#a6d66a', coast:'#80d8d8', hills:'#c9c9c9', urban:'#b48ad6' })[habitat] || '#d6a84f'; }
 function habitatPoiIcon(habitat) { return ({ water:'🌉', wetland:'🌾', woodland:'🌲', park:'🏵️', farmland:'🌾', grassland:'🪶', coast:'⚓', hills:'🗻', urban:'🏰' })[habitat] || '🏰'; }

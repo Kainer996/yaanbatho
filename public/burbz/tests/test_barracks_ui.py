@@ -1,3 +1,5 @@
+import json
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -112,10 +114,18 @@ def test_every_mapped_bird_has_a_real_transparent_cutout():
         for value in final_paths.values()
         if value.startswith("/burbz/bird-art-cache/") and "/cutouts/" not in value and value.lower().endswith(".png")
     }
+    uk50 = subprocess.run(
+        ["node", "-e", "const x=require('./uk_bird_expansion_50.js'); console.log(JSON.stringify(Object.values(x.art)))"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+    assert uk50.returncode == 0, uk50.stderr
+    expected.update(Path(value).stem + "_cutout.png" for value in json.loads(uk50.stdout))
     cutout_dir = ROOT / "bird-art-cache" / "cutouts"
     actual = {path.name for path in cutout_dir.glob("*_cutout.png")}
     assert expected == actual
-    assert len(actual) == 329
+    assert len(actual) == 378
     for path in cutout_dir.glob("*_cutout.png"):
         with Image.open(path) as image:
             assert image.mode == "RGBA", path.name
