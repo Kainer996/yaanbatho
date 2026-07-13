@@ -1499,8 +1499,11 @@ svg.academy-room-bg { display:block; filter:none; }
 .treehouse-room-count { position:absolute; right:-7px; top:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--legendary); color:#11100d; font-weight:900; font-size:11px; border:2px solid #11100d; }
 .treehouse-placement-hint { position:absolute; left:50%; top:18px; transform:translateX(-50%); z-index:9; max-width:86%; padding:9px 12px; border-radius:999px; background:rgba(214,168,79,.95); color:#11100d; font-weight:900; font-family:'Rajdhani',sans-serif; letter-spacing:.06em; text-transform:uppercase; box-shadow:0 10px 24px rgba(0,0,0,.4); pointer-events:none; }
 .treehouse-bird-layer { position:absolute; inset:0; z-index:8; pointer-events:none; }
-.treehouse-bird { position:absolute; width:19px; height:19px; margin:-10px 0 0 -10px; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 2px 3px rgba(0,0,0,.55)); animation:treeBirdHop 2.4s ease-in-out infinite; }
-.treehouse-bird svg { width:100%; height:100%; display:block; }
+.treehouse-bird { position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 3px 4px rgba(0,0,0,.62)); animation:treeBirdHop 2.4s ease-in-out infinite; }
+.treehouse-bird-cutout { width:100%; height:100%; object-fit:contain; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.42)); }
+.treehouse-bird-svg-fallback { width:100%; height:100%; display:block; }
+.treehouse-bird svg { width:100%; height:100%; display:block; overflow:visible; }
+.treehouse-bird .mini-bird-leg { stroke:#bd7a35; stroke-width:1.25; stroke-linecap:round; fill:none; }
 .treehouse-bird:nth-child(3n) { animation-duration:2.9s; }
 .treehouse-bird:nth-child(4n) { animation-duration:2.1s; }
 @keyframes treeBirdHop { 0%,100%{ translate:0 0; } 30%{ translate:0 -8px; } 48%{ translate:0 -1px; } 62%{ translate:0 -5px; } 76%{ translate:0 0; } }
@@ -8748,6 +8751,13 @@ function wireBirdArtFallbacks() {
       img.src = img.dataset.fallbackArt;
       return;
     }
+    if (img.dataset.fallbackMiniBird) {
+      const span = document.createElement('span');
+      span.className = (img.className ? img.className + ' ' : '') + 'treehouse-bird-svg-fallback';
+      span.innerHTML = miniBirdSVG(img.dataset.fallbackMiniBird);
+      img.replaceWith(span);
+      return;
+    }
     if (img.dataset.fallbackEmoji) {
       const span = document.createElement('span');
       span.className = (img.className ? img.className + ' ' : '') + 'bird-emoji-glyph';
@@ -9277,17 +9287,31 @@ function birdTintFor(species) {
   const h = burbzHash32('tint:' + s.toLowerCase()) % 360;
   return ['hsl(' + h + ',44%,56%)', 'hsl(' + ((h + 42) % 360) + ',38%,36%)'];
 }
-// Tiny perched-bird glyph, tinted per species (emoji can't be recoloured).
+// Tiny perched-bird glyph used only when a transparent species cutout is not
+// available. A separate head, feathered tail, wing and visible feet keep the
+// silhouette unmistakably avian even at treehouse-icon size.
 function miniBirdSVG(species) {
   const [body, wing] = birdTintFor(species);
-  return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-    '<path d="M5.2 9.2 1.2 6.6l1.5 5.3-1.3 4.7 4.6-2.5z" fill="' + body + '" opacity=".82"/>' +
-    '<ellipse cx="11.6" cy="12" rx="7.3" ry="6.6" fill="' + body + '"/>' +
-    '<path d="M18.3 10.4 22.6 12l-4.3 1.7z" fill="#e8a53a"/>' +
-    '<ellipse cx="10.6" cy="13" rx="4.2" ry="3.2" fill="' + wing + '" opacity=".92"/>' +
-    '<circle cx="15.2" cy="9.5" r="1.15" fill="#10100e"/>' +
-    '<circle cx="15.55" cy="9.15" r=".4" fill="#fff"/>' +
+  return '<svg viewBox="0 0 28 24" aria-hidden="true">' +
+    '<path class="mini-bird-leg" d="M11.6 18.2v3.1m0 0-2 1.1m2-1.1 2 1.1M15.6 18.1v3m0 0-1.8 1m1.8-1 2 1"/>' +
+    '<path class="mini-bird-tail" d="M8.1 14.2 1.2 16.8l6.6 1.1z" fill="' + body + '"/>' +
+    '<path class="mini-bird-tail" d="M8.3 16.1 2.5 20.1l7-1.7z" fill="' + wing + '"/>' +
+    '<ellipse cx="12.7" cy="14.1" rx="7.2" ry="5.7" fill="' + body + '" transform="rotate(-8 12.7 14.1)"/>' +
+    '<circle class="mini-bird-head" cx="19.2" cy="8.5" r="4.25" fill="' + body + '"/>' +
+    '<path class="mini-bird-wing" d="M8.3 11.8q5.1-2.7 9.2 1.3-2.1 5.1-7.8 4.5-2.2-2.6-1.4-5.8z" fill="' + wing + '"/>' +
+    '<path d="M22.7 7.7 27 9.3l-4.1 1.5z" fill="#d89032"/>' +
+    '<circle cx="20.1" cy="7.5" r=".95" fill="#11110f"/>' +
+    '<circle cx="20.35" cy="7.2" r=".3" fill="#fff"/>' +
   '</svg>';
+}
+
+function treehouseBirdIconHTML(bird) {
+  const species = String((bird && (bird.commonName || bird.name || bird.species)) || 'Bird');
+  const art = getBirdArtUrl(bird);
+  const known = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())];
+  const cutout = known || birdCutoutUrlFor(art);
+  if (!cutout) return miniBirdSVG(species);
+  return '<img class="treehouse-bird-cutout" src="' + escapeHtml(cutout) + '" data-fallback-mini-bird="' + escapeHtml(species) + '" alt="" aria-hidden="true">';
 }
 
 function renderAcademyTreehouse(byRoom) {
@@ -9315,7 +9339,7 @@ function renderAcademyTreehouse(byRoom) {
     const perches = (ACADEMY_ROOMS[r.id] && ACADEMY_ROOMS[r.id].perches) || [[pos.x,pos.y]];
     list.slice(0, 120).forEach((b, i) => {
       const perch = r.id === 'outdoors' ? [pos.x + ((i % 7) - 3) * 5, pos.y + (Math.floor(i / 7) % 3) * 3] : [pos.x + ((i % 5) - 2) * 3, pos.y + 7 + (Math.floor(i / 5) % 2) * 3];
-      birdHtml += '<div class="treehouse-bird" title="' + escapeHtml(birdDisplayName(b)) + '" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + miniBirdSVG(b.commonName || b.species) + '</div>';
+      birdHtml += '<div class="treehouse-bird" title="' + escapeHtml(birdDisplayName(b)) + '" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + treehouseBirdIconHTML(b) + '</div>';
     });
   });
   birds.innerHTML = birdHtml;

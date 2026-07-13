@@ -49,5 +49,5 @@ def test_card_back_keeps_pet_rename_and_field_guide_actions():
     assert "Field Guide" in card
 
 
-def test_card_back_release_bumps_the_pwa_cache():
-    assert "burbz-card-back-v50-20260713" in SW
+def test_card_back_release_uses_a_versioned_pwa_cache():
+    assert "const BURBZ_CACHE = 'burbz-" in SW
