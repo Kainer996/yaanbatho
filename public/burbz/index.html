@@ -1283,6 +1283,7 @@ svg.academy-room-bg { display:block; filter:none; }
   position: relative; z-index: 2;
   animation: captureTitle 0.5s 1s ease backwards;
 }
+.capture-name-btn { margin-top: 14px; background: linear-gradient(180deg,#3a2c12,#241a0d); border: 1px solid rgba(214,168,79,.42); color: #f4ead4; }
 .recruit-overlay { position:fixed; inset:0; z-index:1100; display:none; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.84); backdrop-filter:blur(8px); }
 .recruit-overlay.show { display:flex; }
 .recruit-sheet { width:100%; max-width:460px; max-height:82vh; overflow:auto; padding:18px 14px calc(18px + var(--safe-bottom)); border-radius:20px 20px 0 0; background:linear-gradient(180deg,#171512,#070706); border:1px solid rgba(214,168,79,.28); box-shadow:0 -20px 60px rgba(0,0,0,.55); }
@@ -2264,6 +2265,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="capture-particles" id="captureParticles"></div>
     <div class="capture-title">NEW SPECIES DISCOVERED!</div>
     <div class="capture-card-wrapper" id="captureCardWrapper"></div>
+    <button class="capture-dismiss capture-name-btn" id="captureNameBtn" style="display:none">✏️ NAME YOUR BIRD</button>
     <button class="capture-dismiss" id="captureDismiss">TAP TO CONTINUE</button>
   </div>
 
@@ -14210,12 +14212,12 @@ function villageBuy(shopKey, itemId) {
 
   addCoins(-item.price);
   let msg = '';
-  if (item.effect === 'heal')  { pet.hp = pet.maxHp; msg = '🧪 ' + (pet.commonName || pet.species) + ' is fully healed!'; }
-  if (item.effect === 'happy') { pet.care = pet.care || {}; pet.care.happiness = clamp((pet.care.happiness || 80) + 30, 0, 100); msg = '🧪 ' + (pet.commonName || pet.species) + ' is delighted! +30 happiness'; }
-  if (item.effect === 'xp')    { levelUpBird(pet, 40); msg = '📜 ' + (pet.commonName || pet.species) + ' studies the scroll — +40 XP!'; }
-  if (item.effect === 'feast') { pet.care = pet.care || {}; pet.care.hunger = 0; msg = '🧪 ' + (pet.commonName || pet.species) + ' is completely full!'; }
-  if (item.effect === 'drill') { pet.care = pet.care || {}; pet.care.lastTrained = null; msg = '⚒️ The whistle sounds — ' + (pet.commonName || pet.species) + ' can drill again!'; }
-  if (item.effect === 'rest')  { pet.academy = pet.academy || {}; pet.academy.lastRest = null; msg = '⚒️ ' + (pet.commonName || pet.species) + ' can Deep Rest again!'; }
+  if (item.effect === 'heal')  { pet.hp = pet.maxHp; msg = '🧪 ' + birdDisplayName(pet) + ' is fully healed!'; }
+  if (item.effect === 'happy') { pet.care = pet.care || {}; pet.care.happiness = clamp((pet.care.happiness || 80) + 30, 0, 100); msg = '🧪 ' + birdDisplayName(pet) + ' is delighted! +30 happiness'; }
+  if (item.effect === 'xp')    { levelUpBird(pet, 40); msg = '📜 ' + birdDisplayName(pet) + ' studies the scroll — +40 XP!'; }
+  if (item.effect === 'feast') { pet.care = pet.care || {}; pet.care.hunger = 0; msg = '🧪 ' + birdDisplayName(pet) + ' is completely full!'; }
+  if (item.effect === 'drill') { pet.care = pet.care || {}; pet.care.lastTrained = null; msg = '⚒️ The whistle sounds — ' + birdDisplayName(pet) + ' can drill again!'; }
+  if (item.effect === 'rest')  { pet.academy = pet.academy || {}; pet.academy.lastRest = null; msg = '⚒️ ' + birdDisplayName(pet) + ' can Deep Rest again!'; }
   if (item.effect === 'rumor') {
     const rule = BIRD_DIET_RULES[Math.floor(Math.random() * BIRD_DIET_RULES.length)];
     addPlayerXp(3);
@@ -15969,12 +15971,31 @@ function showCaptureOverlay(bird) {
     particles.appendChild(p);
   }
 
+  // Freshly recruited companions can be named straight from the celebration.
+  const nameBtn = $('captureNameBtn');
+  if (nameBtn) {
+    const owned = (gameState.flock || []).some(b => b.id === bird.id);
+    nameBtn.style.display = owned ? '' : 'none';
+    nameBtn.dataset.birdId = owned ? bird.id : '';
+  }
+
   overlay.classList.add('show');
 
   // Rarity title color
   overlay.querySelector('.capture-title').style.color = rarityColor;
   overlay.querySelector('.capture-title').style.textShadow = `0 0 20px ${rarityColor}80`;
 }
+
+$('captureNameBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const id = $('captureNameBtn').dataset.birdId;
+  if (!id) return;
+  renameCompanionBird(id);
+  const bird = (gameState.flock || []).find(b => b.id === id);
+  const cardName = $('captureCardWrapper')?.querySelector('.card-name');
+  if (bird && cardName) cardName.textContent = birdDisplayName(bird);
+  SFX.tap();
+});
 
 $('captureDismiss').addEventListener('click', () => {
   const wrapper = $('captureCardWrapper');
@@ -16405,7 +16426,7 @@ function addBattleLog(type, text) {
 $('battleStartBtn').addEventListener('click', () => { if (battleSelectedIds.length) startPerchBattle(); });
 $('battleAgainBtn').addEventListener('click', () => { SFX.tap(); renderBattleSelect(); });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, battlePickToggle, battleChooseMove, battleOpenSwitch, battleBenchPick });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleChooseMove, battleOpenSwitch, battleBenchPick });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -16453,7 +16474,7 @@ function selectPet(birdId) {
   saveState();
   renderPetCompanion();
   renderBirdex();
-  petSay(`${bird.commonName || bird.species} is your buddy!`);
+  petSay(`${birdDisplayName(bird)} is your buddy!`);
   SFX.questComplete();
   vibrate(25);
 }
