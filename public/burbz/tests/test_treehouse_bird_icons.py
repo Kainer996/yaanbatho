@@ -100,4 +100,4 @@ def test_treehouse_icons_are_large_enough_to_read_on_mobile():
 
 
 def test_treehouse_bird_icon_release_bumps_the_pwa_cache():
-    assert "burbz-uk50-card-release-v55-20260713" in SW
+    assert "burbz-uk50-education-resilience-v57-20260713" in SW

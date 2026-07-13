@@ -152,16 +152,34 @@ def test_expansion_script_is_a_versioned_offline_core_asset():
 
 
 def test_all_fifty_have_complete_deep_field_guide_entries():
+    birds = {bird["name"]: bird for bird in load_expansion()["species"]}
     education = json.loads(EDUCATION_PATH.read_text(encoding="utf-8"))
     assert set(education) == set(EXPECTED_ORDER)
     required = {"title", "scientificName", "summary", "taxonomy", "identification", "behaviour", "habitat", "diet", "breeding", "range", "conservation", "wikipediaDeepDive", "learningNotes", "sources"}
     for name, entry in education.items():
         assert required <= set(entry), name
         assert entry["title"] == name
+        assert entry["scientificName"] == birds[name]["scientificName"], name
         assert len(entry["summary"]) >= 100, name
         assert len(entry["wikipediaDeepDive"]) >= 200, name
         assert len(entry["learningNotes"]) >= 4, name
         assert any(source.get("url", "").startswith("https://www.bto.org/") for source in entry["sources"]), name
+
+
+def test_existing_field_guides_survive_a_uk50_dataset_failure():
+    html = HTML_PATH.read_text(encoding="utf-8")
+    start = html.index("let birdEducationCache = null;")
+    end = html.index("function getCachedBirdEducation", start)
+    loader = html[start:end]
+    source = """
+    global.fetch = async url => {
+      if (url.includes('uk-bird-education-50')) throw new Error('temporary UK50 failure');
+      return { ok:true, status:200, json:async () => ({'European Robin':{title:'European Robin'}}) };
+    };
+    """ + loader + "\nloadBirdEducation().then(data => console.log(JSON.stringify(data))).catch(err => { console.error(err); process.exit(1); });"
+    result = subprocess.run(["node", "-e", source], cwd=ROOT, text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == {"European Robin": {"title": "European Robin"}}
 
 
 def test_uk50_field_guide_is_loaded_and_cached_as_a_core_asset():
@@ -169,7 +187,7 @@ def test_uk50_field_guide_is_loaded_and_cached_as_a_core_asset():
     sw = SW_PATH.read_text(encoding="utf-8")
     marker = "/burbz/data/uk-bird-education-50.json?v=uk50-source-backed-20260713"
     assert marker in html
-    assert "fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, true)" in html
+    assert "fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, false)" in html
     assert "{ ...(base || {}), ...(uk50 || {}) }" in html
     assert "./data/uk-bird-education-50.json?v=uk50-source-backed-20260713" in sw
 

@@ -1,6 +1,6 @@
 importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
 
-const BURBZ_CACHE = 'burbz-uk50-card-release-v55-20260713';
+const BURBZ_CACHE = 'burbz-uk50-education-resilience-v57-20260713';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
 const UK50_REMOTE_ART = Object.values(UK50_SW.art).map(path =>

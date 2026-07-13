@@ -7845,7 +7845,7 @@ async function loadBirdEducation() {
   if (!birdEducationLoading) {
     birdEducationLoading = Promise.all([
       fetchBirdEducationDataset(BIRD_EDUCATION_URL, false),
-      fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, true)
+      fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, false)
     ]).then(([base, uk50]) => {
       birdEducationCache = { ...(base || {}), ...(uk50 || {}) };
       return birdEducationCache;
