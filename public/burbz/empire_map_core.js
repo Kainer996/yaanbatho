@@ -8,7 +8,7 @@
 
   const EARTH_RADIUS_M = 6371008.8;
   const DEFAULT_TERRITORY_RADIUS_M = 2200;
-  const GOLD = '#f0c767';
+  const LIBERATED_GREEN = '#8ee39a';
 
   function validClaim(v) {
     if (!v || v.lat === null || v.lat === undefined || v.lon === null || v.lon === undefined) return false;
@@ -46,10 +46,10 @@
       type: 'Feature',
       properties: {
         seed: Number(village.seed) || 0,
-        name: String(village.name || 'Captured territory'),
+        name: String(village.name || 'Liberated territory'),
         claimedAt: village.claimedAt || '',
         radiusM: radius,
-        color: GOLD
+        color: LIBERATED_GREEN
       },
       geometry: { type: 'Polygon', coordinates: [ring] }
     };
@@ -64,7 +64,7 @@
       type: 'FeatureCollection',
       features: validClaims(villages).map(v => ({
         type: 'Feature',
-        properties: { seed: Number(v.seed) || 0, name: String(v.name || 'Captured village'), claimedAt: v.claimedAt || '' },
+        properties: { seed: Number(v.seed) || 0, name: String(v.name || 'Liberated village'), claimedAt: v.claimedAt || '' },
         geometry: { type: 'Point', coordinates: [Number(v.lon), Number(v.lat)] }
       }))
     };
@@ -104,7 +104,7 @@
   return {
     EARTH_RADIUS_M,
     DEFAULT_TERRITORY_RADIUS_M,
-    GOLD,
+    LIBERATED_GREEN,
     validClaim,
     validClaims,
     destination,

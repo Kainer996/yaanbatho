@@ -15,7 +15,7 @@ def run_core(expression: str):
     return json.loads(result.stdout)
 
 
-def test_claimed_villages_become_closed_gold_territory_polygons():
+def test_liberated_villages_become_closed_light_green_territory_polygons():
     villages = [
         {"seed": 1, "name": "Delamere", "lat": 53.228, "lon": -2.684},
         {"seed": 2, "name": "Kelsall", "lat": 53.207, "lon": -2.712},
@@ -25,7 +25,7 @@ def test_claimed_villages_become_closed_gold_territory_polygons():
     assert len(result["features"]) == 2
     for feature in result["features"]:
         ring = feature["geometry"]["coordinates"][0]
-        assert feature["properties"]["color"] == "#f0c767"
+        assert feature["properties"]["color"] == "#8ee39a"
         assert len(ring) == 49
         assert ring[0] == ring[-1]
         assert feature["properties"]["radiusM"] == 2200
@@ -69,7 +69,7 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert 'id="empireWorldMap"' in html
     assert 'id="empireMapWorldBtn"' in html
     assert 'id="empireMapRealmBtn"' in html
-    assert 'aria-label="Interactive map of your captured territories"' in html
+    assert 'aria-label="Interactive map of your liberated territories"' in html
     assert "new maplibregl.Map" in html
     assert "dragPan:true" in html
     assert "scrollZoom:true" in html
@@ -81,10 +81,34 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert 'class="empire-map-attribution"' in html
     assert "empire-territory-fill" in html
     assert "empire-territory-line" in html
-    assert "padding:{ top:70, right:58, bottom:112, left:58 }" in html
+    assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
     assert "showMarker = zoom >= 6" in html
     assert "is-visible" in html
+
+
+def test_unexplored_world_is_dark_green_with_liberated_map_windows():
+    html = HTML.read_text(encoding="utf-8")
+    assert 'id="empireFogOverlay"' in html
+    assert 'id="empireFogHoles"' in html
+    assert "#0a2b1d" in html
+    assert "function updateEmpireFogMask(" in html
+    assert "map.on('move', updateEmpireFogMask)" in html
+    assert "map.on('resize', updateEmpireFogMask)" in html
+    assert "core.destination" in html
+
+
+def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():
+    html = HTML.read_text(encoding="utf-8")
+    screen_start = html.index('id="screen-village"')
+    screen_end = html.index('id="screen-quests"', screen_start)
+    empire_logic_start = html.index("// EMPIRE —")
+    empire_logic_end = html.index("// ---- Scene state", empire_logic_start)
+    copy = (html[screen_start:screen_end] + html[empire_logic_start:empire_logic_end]).lower()
+    assert "liberat" in copy
+    assert "captured territor" not in copy
+    assert "glowing gold" not in copy
+    assert "conquer" not in copy
 
 
 def test_claiming_or_opening_a_village_refreshes_and_focuses_the_empire_map():
@@ -125,7 +149,7 @@ def test_legacy_null_coordinates_stay_missing_instead_of_becoming_zero():
 def test_empire_map_assets_are_versioned_offline_and_cache_bumped():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "empire_map_core.js?v=territory-map-v2-20260714"
+    marker = "empire_map_core.js?v=liberation-map-v3-20260714"
     assert marker in html
     assert "./" + marker in sw
-    assert "burbz-empire-world-map-v65-20260714" in sw
+    assert "burbz-liberation-world-v66-20260714" in sw
