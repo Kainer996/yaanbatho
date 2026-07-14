@@ -97,21 +97,36 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 svg.academy-room-bg { display:block; filter:none; }
 .academy-room-vignette { position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, transparent 0 54%, rgba(0,0,0,.34) 100%), linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.34)); pointer-events:none; }
 .academy-room-stage { position:absolute; left:0; right:0; bottom:8%; height:46%; overflow:hidden; }
-.room-bird-sprite { position:absolute; bottom:0; left:8%; width:66px; height:66px; object-fit:contain; filter:drop-shadow(0 10px 10px rgba(0,0,0,.50)); transform-origin:50% 88%; translate:0 0; rotate:0deg; scale:-1 1; will-change:translate,transform; animation:roomBirdTravel 11s ease-in-out infinite, roomBirdBounce .82s ease-in-out infinite; }
+.room-bird-actor { position:absolute; bottom:0; left:8%; width:66px; height:66px; translate:0 0; will-change:translate; animation:roomBirdTravel 11s ease-in-out infinite; }
+.room-bird-sprite { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 10px 10px rgba(0,0,0,.50)); transform-origin:50% 88%; rotate:0deg; scale:1 1; will-change:scale,transform; animation:roomBirdFacing 11s ease-in-out infinite, roomBirdBounce .82s ease-in-out infinite; }
 .room-bird-sprite.fallback-bg { -webkit-mask-image:radial-gradient(ellipse at 50% 50%, #000 0 58%, rgba(0,0,0,.65) 72%, transparent 100%); mask-image:radial-gradient(ellipse at 50% 50%, #000 0 58%, rgba(0,0,0,.65) 72%, transparent 100%); }
-.room-bird-sprite:nth-child(2n) { animation-duration:12.6s,.74s; animation-delay:-3.1s,-.18s; width:61px; height:61px; }
-.room-bird-sprite:nth-child(3n) { animation-duration:9.8s,.9s; animation-delay:-6.2s,-.35s; width:58px; height:58px; }
-/* Travel across the room on the GPU (translate, not `left`) and glide the
-   turn-around instead of hard-flipping mid-hop. */
+.room-bird-actor:nth-child(2n) { width:61px; height:61px; animation-duration:12.6s; animation-delay:-3.1s; }
+.room-bird-actor:nth-child(2n) .room-bird-sprite { animation-duration:12.6s,.74s; animation-delay:-3.1s,-.18s; }
+.room-bird-actor:nth-child(3n) { width:58px; height:58px; animation-duration:9.8s; animation-delay:-6.2s; }
+.room-bird-actor:nth-child(3n) .room-bird-sprite { animation-duration:9.8s,.9s; animation-delay:-6.2s,-.35s; }
+.room-bird-health { position:absolute; z-index:4; left:50%; bottom:calc(100% - 3px); translate:-50% 0; width:58px; height:11px; overflow:hidden; border:1px solid rgba(255,255,255,.84); border-radius:7px; background:rgba(7,10,8,.92); box-shadow:0 2px 5px rgba(0,0,0,.72); pointer-events:none; }
+.room-bird-health-fill { position:absolute; inset:1px auto 1px 1px; border-radius:5px; background:linear-gradient(90deg,#43b96b,#79df75); transition:width .35s ease; }
+.room-bird-health[data-hp-state="mid"] .room-bird-health-fill { background:linear-gradient(90deg,#d49a35,#f0cf59); }
+.room-bird-health[data-hp-state="low"] .room-bird-health-fill { background:linear-gradient(90deg,#c64642,#f06d58); }
+.room-bird-health-text { position:absolute; inset:0; display:grid; place-items:center; font-family:'Rajdhani',sans-serif; font-size:8px; line-height:1; font-weight:900; color:#fff; text-shadow:0 1px 2px #000,0 0 2px #000; }
+/* The actor travels across the room. Its bird sprite flips independently so
+   the health bar stays upright and the beak always points in the walk direction. */
 @keyframes roomBirdTravel {
-  0%{translate:0 0; scale:-1 1; rotate:-2deg}
-  46%{translate:min(64vw,520px) 0; scale:-1 1; rotate:2deg}
-  50%{translate:min(66vw,540px) 0; scale:1 1; rotate:0deg}
-  96%{translate:2vw 0; scale:1 1; rotate:-2deg}
-  100%{translate:0 0; scale:-1 1; rotate:0deg}
+  0%{translate:0 0}
+  46%{translate:min(64vw,520px) 0}
+  50%{translate:min(66vw,540px) 0}
+  96%{translate:2vw 0}
+  100%{translate:0 0}
 }
-/* The bounce rides on `transform`, which composes with the individual
-   translate/scale properties used by roomBirdTravel — no property clash. */
+@keyframes roomBirdFacing {
+  0%{scale:1 1}
+  46%{scale:1 1}
+  50%{scale:-1 1}
+  96%{scale:-1 1}
+  100%{scale:1 1}
+}
+/* Bounce uses `transform`, independently composing with the `scale` property
+   controlled by roomBirdFacing. */
 @keyframes roomBirdBounce {
   0%,100%{transform:translateY(0)}
   40%{transform:translateY(-12px)}
@@ -10852,10 +10867,20 @@ function openAcademyRoom(room) {
 }
 
 
-function roomBirdSpriteHTML(bird) {
+function roomBirdHealthHTML(bird) {
+  const maxHp = Math.max(1, Math.round(Number(bird && bird.maxHp) || Number(bird && bird.hp) || 1));
+  const rawHp = Number(bird && bird.hp);
+  const hp = Number.isFinite(rawHp) ? clamp(Math.round(rawHp), 0, maxHp) : maxHp;
+  const pct = clamp(Math.round((hp / maxHp) * 100), 0, 100);
+  const state = pct <= 30 ? 'low' : (pct <= 60 ? 'mid' : 'healthy');
+  return '<div class="room-bird-health" data-hp-state="' + state + '" role="progressbar" aria-label="Health ' + hp + ' of ' + maxHp + '" aria-valuemin="0" aria-valuemax="' + maxHp + '" aria-valuenow="' + hp + '"><div class="room-bird-health-fill" style="width:' + pct + '%"></div><span class="room-bird-health-text">♥ ' + hp + '/' + maxHp + '</span></div>';
+}
+
+function roomBirdSpriteHTML(bird, index, room) {
   // Bird-only art: the transparent cutout, or an emoji glyph. Never the full
   // painting — a square scene sliding around the room looks broken.
-  return birdOnlyImgHTML(bird, 'room-bird-sprite');
+  const health = room === 'hospital' ? roomBirdHealthHTML(bird) : '';
+  return '<div class="room-bird-actor" data-bird-index="' + index + '">' + health + birdOnlyImgHTML(bird, 'room-bird-sprite') + '</div>';
 }
 
 
@@ -10989,7 +11014,7 @@ function renderAcademyRoomInterior() {
       return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map(roomBirdSpriteHTML).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.

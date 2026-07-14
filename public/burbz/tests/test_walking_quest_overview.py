@@ -44,5 +44,6 @@ def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
     assert "quest trails revealed in green" not in html
 
 
-def test_quest_route_clarity_release_bumps_the_pwa_cache():
-    assert "burbz-quest-loop-clarity-v" in SW.read_text(encoding="utf-8")
+def test_quest_route_clarity_release_is_cached_offline():
+    sw = SW.read_text(encoding="utf-8")
+    assert "./quest_core.js?v=loop-clarity-20260713" in sw
