@@ -2,7 +2,7 @@ importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
 importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
 importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 
-const BURBZ_CACHE = 'burbz-merlin-wand-listener-v71-20260714';
+const BURBZ_CACHE = 'burbz-merlin-wand-privacy-v72-20260714';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -25,7 +25,7 @@ const BURBZ_ASSETS = [
   './quest_core.js?v=show-local-quests-v6-20260714',
   './academy_treehouse_core.js?v=bird-rename-20260710',
   './scan_economy_core.js',
-  './sound_listener_core.js?v=merlin-wand-listener-v1-20260714',
+  './sound_listener_core.js?v=merlin-wand-listener-v2-20260714',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
   './au_bird_expansion.js?v=au-source-backed-20260713',

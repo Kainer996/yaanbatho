@@ -58,5 +58,14 @@
     return { enqueue, clear, close, snapshot };
   }
 
-  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue });
+  function filenameForMime(mimeType) {
+    const mime = String(mimeType || '').toLowerCase();
+    if (mime.includes('webm')) return 'recording.webm';
+    if (mime.includes('ogg')) return 'recording.ogg';
+    if (mime.includes('mp4') || mime.includes('m4a')) return 'recording.m4a';
+    if (mime.includes('wav')) return 'recording.wav';
+    return 'recording.audio';
+  }
+
+  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, filenameForMime });
 })(typeof window !== 'undefined' ? window : globalThis);

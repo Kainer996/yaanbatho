@@ -42,7 +42,8 @@ def test_sound_tab_starts_one_continuous_listener_and_has_an_explicit_stop():
     assert "function startContinuousSoundListening" in html
     assert "function stopContinuousSoundListening" in html
     assert "startContinuousSoundListening();" in html
-    assert 'id="scanBtn">START MERLIN’S WAND<' in html
+    assert 'id="scanBtn"' in html
+    assert '>START MERLIN’S WAND<' in html
     assert 'id="merlinDockStop"' in html
     assert "STOP LISTENING" in html
 
@@ -98,6 +99,37 @@ def test_local_frequency_energy_is_labelled_possible_until_birdnet_confirms_spec
     assert "randomBird" not in html
 
 
+def test_audio_upload_and_optional_location_are_disclosed_before_capture():
+    html = HTML.read_text(encoding="utf-8")
+    assert "Sound windows are sent to the Burbz server for BirdNET analysis" in html
+    assert 'id="merlinLocationAssist"' in html
+    assert "Use my location to improve local bird matches" in html
+    assert "function soundLocationAssistEnabled" in html
+    geo = html.split("async function getCurrentPositionForBirdnet", 1)[1].split("async function uploadRecording", 1)[0]
+    assert "if (!soundLocationAssistEnabled()) return null" in geo
+    assert "window.__burbzSoundTestDeps?.getCurrentPosition" in geo
+
+
+def test_stop_aborts_active_analysis_and_late_results_cannot_mutate_birdex():
+    html = HTML.read_text(encoding="utf-8")
+    analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("function handleBirdIdentified", 1)[0]
+    stop = html.split("function stopContinuousSoundListening", 1)[1].split("// Live", 1)[0]
+    assert "windowData.generation" in analyse
+    assert "generation !== soundListenerGeneration" in analyse
+    assert "new AbortController()" in analyse
+    assert "soundAnalysisAbortController.abort()" in stop
+    assert "generation" in html.split("queueSoundWindowForAnalysis({", 1)[1].split("})", 1)[0]
+
+
+def test_success_copy_calls_the_result_a_birdnet_match_not_objective_confirmation():
+    html = HTML.read_text(encoding="utf-8")
+    analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("function handleBirdIdentified", 1)[0]
+    assert "BirdNET match:" in analyse
+    assert "BirdNET identified" in analyse
+    assert "Heard ' + result.species" not in analyse
+    assert "Merlin heard" not in analyse
+
+
 def test_analysis_queue_keeps_only_the_latest_waiting_window():
     result = run_core(
         "let release; const first=new Promise(r=>release=r); const seen=[]; "
@@ -108,6 +140,11 @@ def test_analysis_queue_keeps_only_the_latest_waiting_window():
     assert result["before"] == {"active": 1, "pending": 1, "dropped": 1, "completed": 0}
     assert result["after"] == {"active": 0, "pending": 0, "dropped": 1, "completed": 2}
     assert result["seen"] == ["a", "c"]
+
+
+def test_recording_filename_follows_the_browser_selected_mime_type():
+    result = run_core("console.log(JSON.stringify(['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4','audio/wav',''].map(q.filenameForMime))); ")
+    assert result == ["recording.webm", "recording.ogg", "recording.m4a", "recording.wav", "recording.audio"]
 
 
 def test_listener_dependencies_are_injectable_for_real_browser_lifecycle_proof():
@@ -150,7 +187,7 @@ def test_permission_track_end_and_api_failures_have_truthful_recoverable_states(
 def test_continuous_listener_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert 'sound_listener_core.js?v=merlin-wand-listener-v1-20260714' in html
-    assert './sound_listener_core.js?v=merlin-wand-listener-v1-20260714' in sw
+    assert 'sound_listener_core.js?v=merlin-wand-listener-v2-20260714' in html
+    assert './sound_listener_core.js?v=merlin-wand-listener-v2-20260714' in sw
     assert './assets/ui/merlin-wand-listener.webp' in sw
-    assert 'burbz-merlin-wand-listener-v71-20260714' in sw
+    assert 'burbz-merlin-wand-privacy-v72-20260714' in sw

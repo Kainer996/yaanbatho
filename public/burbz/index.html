@@ -796,7 +796,7 @@ svg.academy-room-bg { display:block; filter:none; }
 
 /* Merlin's continuous wand listener: the character stays on the left and the
    real microphone energy originates at the wand tip, not a fake analyse orb. */
-.merlin-listener-stage { position:relative; min-height:350px; margin:0 auto 12px; max-width:430px; overflow:hidden; border-radius:24px; border:1px solid rgba(240,199,103,.34); background:radial-gradient(circle at 82% 22%,rgba(74,221,186,.16),transparent 28%),linear-gradient(155deg,rgba(29,25,17,.96),rgba(6,13,11,.98)); box-shadow:inset 0 1px rgba(255,255,255,.07),0 16px 38px rgba(0,0,0,.46); }
+.merlin-listener-stage { position:relative; min-height:320px; margin:0 auto 12px; max-width:430px; overflow:hidden; border-radius:24px; border:1px solid rgba(240,199,103,.34); background:radial-gradient(circle at 82% 22%,rgba(74,221,186,.16),transparent 28%),linear-gradient(155deg,rgba(29,25,17,.96),rgba(6,13,11,.98)); box-shadow:inset 0 1px rgba(255,255,255,.07),0 16px 38px rgba(0,0,0,.46); }
 .merlin-listener-art { position:absolute; left:-32px; bottom:-18px; width:108%; height:auto; object-fit:contain; pointer-events:none; filter:drop-shadow(0 16px 20px rgba(0,0,0,.62)); }
 .merlin-wand-tip { position:absolute; left:82.5%; top:21.5%; width:18px; height:18px; border-radius:50%; transform:translate(-50%,-50%); background:#f6d878; box-shadow:0 0 0 5px rgba(91,224,185,.15),0 0 16px rgba(91,224,185,.72),0 0 28px rgba(240,199,103,.58); opacity:.58; transition:opacity .2s ease,transform .2s ease; }
 .merlin-wand-tip::before,.merlin-wand-tip::after { content:''; position:absolute; inset:-13px; border:2px solid rgba(97,237,196,.55); border-left-color:transparent; border-bottom-color:transparent; border-radius:50%; transform:rotate(45deg); opacity:0; }
@@ -811,6 +811,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-listener-status { margin-top:5px; color:#fff1c5; font:900 14px/1.08 'Russo One',sans-serif; }
 .merlin-listener-activity { margin-top:6px; min-height:31px; color:#c7c1b2; font-size:11px; line-height:1.35; }
 .merlin-listener-privacy { margin-top:7px; color:#9be8cd; font:800 9px/1.25 'Rajdhani',sans-serif; letter-spacing:.04em; text-transform:uppercase; }
+.merlin-data-note { margin:-4px 0 12px; padding:9px 11px; border:1px solid rgba(105,224,184,.24); border-radius:13px; background:rgba(10,21,17,.76); color:#bdb7a7; font-size:10px; line-height:1.35; }
+.merlin-location-opt { display:flex; align-items:center; gap:8px; min-height:44px; margin-top:5px; color:#e8ddbc; font:800 10px/1.2 'Rajdhani',sans-serif; }
+.merlin-location-opt input { width:18px; height:18px; accent-color:#62dab3; flex:0 0 auto; }
 .merlin-listening-dock { position:fixed; left:10px; right:10px; bottom:calc(var(--nav-height) + var(--safe-bottom) + 10px); z-index:1070; display:none; grid-template-columns:48px minmax(0,1fr) auto; gap:9px; align-items:center; max-width:430px; margin:auto; padding:7px 8px; border-radius:17px; background:linear-gradient(145deg,rgba(15,26,20,.97),rgba(8,11,9,.98)); border:1px solid rgba(105,224,184,.48); box-shadow:0 14px 34px rgba(0,0,0,.58),0 0 20px rgba(76,206,160,.11); }
 .merlin-listening-dock.show { display:grid; }
 .merlin-listening-dock img { width:48px; height:48px; object-fit:cover; border-radius:13px; background:#08100d; border:1px solid rgba(240,199,103,.45); }
@@ -858,7 +861,7 @@ svg.academy-room-bg { display:block; filter:none; }
   animation: birdPickupPulse 1s ease-in-out infinite;
 }
 @keyframes birdPickupPulse { 0%,100%{box-shadow:0 4px 18px rgba(214,168,79,0.35)} 50%{box-shadow:0 4px 28px rgba(214,168,79,0.70)} }
-@media (max-width:380px) { .merlin-listener-stage{min-height:330px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} .merlin-listening-dock{grid-template-columns:42px minmax(0,1fr) auto}.merlin-listening-dock img{width:42px;height:42px} }
+@media (max-width:380px) { .merlin-listener-stage{min-height:305px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} .merlin-listening-dock{grid-template-columns:42px minmax(0,1fr) auto}.merlin-listening-dock img{width:42px;height:42px} }
 @media (prefers-reduced-motion:reduce) { .merlin-listener-stage.listening .merlin-wand-tip,.merlin-listener-stage.listening .merlin-wand-tip::before,.merlin-listener-stage.listening .merlin-wand-tip::after { animation:none !important; } }
 
 .scan-result {
@@ -2138,7 +2141,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
         </div>
-        <button class="scan-btn" id="scanBtn">START MERLIN’S WAND</button>
+        <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for BirdNET analysis until you tap Stop. Audio is not stored in your game.
+          <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox"> Use my location to improve local bird matches</label>
+        </div>
+        <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
       </div>
 
       <!-- Image scan area -->
@@ -2584,7 +2590,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=show-local-quests-v6-20260714"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
-<script src="sound_listener_core.js?v=merlin-wand-listener-v1-20260714"></script>
+<script src="sound_listener_core.js?v=merlin-wand-listener-v2-20260714"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
@@ -15777,9 +15783,17 @@ let soundListenerGeneration = 0;
 let soundListenerState = 'stopped';
 let soundListenerDetail = 'Tap once and Merlin will keep listening while you explore Burbz.';
 let listenerSampleRate = 48000;
+let soundAnalysisAbortController = null;
 const SOUND_WINDOW_MS = 12000;
+const SOUND_LOCATION_PREF_KEY = 'burbzSoundLocationAssist:v1';
 const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(analyseContinuousSoundWindow, {
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
+});
+
+function soundLocationAssistEnabled() { return !!$('merlinLocationAssist')?.checked; }
+try { $('merlinLocationAssist').checked = localStorage.getItem(SOUND_LOCATION_PREF_KEY) === '1'; } catch (_) {}
+$('merlinLocationAssist').addEventListener('change', event => {
+  try { localStorage.setItem(SOUND_LOCATION_PREF_KEY, event.target.checked ? '1' : '0'); } catch (_) {}
 });
 
 function showSoundScanMode() {
@@ -15858,7 +15872,7 @@ function updateMerlinListeningUI() {
   }
   const awayFromSound = currentScreen !== 'scan' || scanMode !== 'sound';
   dock?.classList.toggle('show', active && awayFromSound);
-  if (dockStatus) dockStatus.textContent = soundListenerState === 'confirmed' ? soundListenerDetail : 'Listening across Burbz';
+  if (dockStatus) dockStatus.textContent = soundListenerState === 'match' ? soundListenerDetail : 'Listening across Burbz';
 }
 
 function soundListenerDependencies() {
@@ -15930,6 +15944,7 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   if (!continuousSoundScanWanted || generation !== soundListenerGeneration) return;
   soundListenerGeneration += 1;
   continuousSoundScanWanted = false;
+  if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
   const recorder = mediaRecorder;
   mediaRecorder = null;
@@ -15967,7 +15982,7 @@ function startSoundRecorderWindow(generation = soundListenerGeneration) {
     const durationMs = Date.now() - startedAt;
     const beginNextWindowBeforeAnalysis = continuousSoundScanWanted && generation === soundListenerGeneration && mediaStream && listenerTrack?.readyState !== 'ended';
     if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);
-    if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) queueSoundWindowForAnalysis({ blob, sequence, durationMs });
+    if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) queueSoundWindowForAnalysis({ blob, sequence, durationMs, generation });
   };
   try { recorder.start(); }
   catch (error) { handleSoundRecorderFailure(generation, error); return false; }
@@ -16003,6 +16018,7 @@ function queueSoundWindowForAnalysis(windowData) {
 function stopContinuousSoundListening(opts = {}) {
   soundListenerGeneration += 1;
   continuousSoundScanWanted = false;
+  if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
   const recorder = mediaRecorder;
   mediaRecorder = null;
@@ -16112,26 +16128,35 @@ function drawWaveform() {
 
 async function analyseContinuousSoundWindow(windowData) {
   const blob = windowData && windowData.blob;
-  if (!blob || !blob.size) return;
-  if (continuousSoundScanWanted) setMerlinListenerState('listening', 'Listening live · checking the latest sound window in the background.');
+  const generation = windowData && windowData.generation;
+  if (!blob || !blob.size || generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+  soundAnalysisAbortController = controller;
+  setMerlinListenerState('listening', 'Listening live · checking the latest sound window in the background.');
   try {
     // BirdNET on the server is the only species oracle. Local frequency energy
     // may animate the wand, but it never logs or names a bird by itself.
-    const result = await uploadRecording(blob);
+    const result = await uploadRecording(blob, { signal:controller.signal });
+    if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
     if (result && result.species) {
       handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
       const confidence = Math.round((Number(result.confidence) || 0) * 100);
-      setMerlinListenerState('confirmed', 'Heard ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
-      showToast('🐦 Merlin heard ' + result.species + ' — still listening');
+      setMerlinListenerState('match', 'BirdNET match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
+      showToast('🐦 BirdNET identified ' + result.species + ' — still listening');
       setTimeout(() => {
-        if (continuousSoundScanWanted && soundListenerState === 'confirmed') setMerlinListenerState('listening', 'Merlin is listening continuously for the next bird.');
+        if (continuousSoundScanWanted && generation === soundListenerGeneration && soundListenerState === 'match') setMerlinListenerState('listening', 'Merlin is listening continuously for the next bird.');
       }, 5200);
-    } else if (continuousSoundScanWanted) {
-      setMerlinListenerState('listening', 'No confident bird in the latest window · still listening.');
+    } else {
+      setMerlinListenerState('listening', 'No confident BirdNET match in the latest window · still listening.');
     }
   } catch (error) {
+    if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
     console.warn('BURBZ Sound ID failed:', error);
-    if (continuousSoundScanWanted) setMerlinListenerState('listening', 'Sound check failed — still listening. Merlin will try the next window.');
+    setMerlinListenerState('listening', error?.name === 'AbortError' ? 'Sound check timed out — still listening. Merlin will try the next window.' : 'Sound check failed — still listening. Merlin will try the next window.');
+  } finally {
+    clearTimeout(timeout);
+    if (soundAnalysisAbortController === controller) soundAnalysisAbortController = null;
   }
 }
 
@@ -16194,9 +16219,11 @@ function audioBufferToWav(buffer) {
 }
 
 async function getCurrentPositionForBirdnet() {
-  if (!navigator.geolocation) return null;
+  if (!soundLocationAssistEnabled()) return null;
+  const getCurrentPosition = window.__burbzSoundTestDeps?.getCurrentPosition || navigator.geolocation?.getCurrentPosition?.bind(navigator.geolocation);
+  if (!getCurrentPosition) return null;
   return new Promise(resolve => {
-    navigator.geolocation.getCurrentPosition(
+    getCurrentPosition(
       pos => resolve(pos),
       () => resolve(null),
       { enableHighAccuracy: false, timeout: 3000, maximumAge: 60 * 60 * 1000 }
@@ -16204,9 +16231,9 @@ async function getCurrentPositionForBirdnet() {
   });
 }
 
-async function uploadRecording(blob) {
+async function uploadRecording(blob, opts = {}) {
   const formData = new FormData();
-  const filename = (blob.type && blob.type.includes('webm')) ? 'recording.webm' : 'recording.wav';
+  const filename = window.BurbzSoundListenerCore.filenameForMime(blob.type);
   formData.append('audio', blob, filename);
 
   const pos = await getCurrentPositionForBirdnet();
@@ -16217,7 +16244,8 @@ async function uploadRecording(blob) {
 
   const response = await fetch('api/identify/sound', {
     method: 'POST',
-    body: formData
+    body: formData,
+    signal: opts.signal
   });
 
   const data = await response.json().catch(() => ({
