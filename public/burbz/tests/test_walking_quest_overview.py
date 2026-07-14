@@ -133,6 +133,21 @@ def test_map_quest_focus_moves_keyboard_focus_and_restores_it_on_close():
     assert "mapQuestBtn.focus" in html
 
 
+def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_above_it():
+    html = HTML.read_text(encoding="utf-8")
+    card_css = html.split(".map-quest-focus-card {", 1)[1].split("}", 1)[0]
+    attribution_css = html.split(".live-map-shell.quest-focused .maplibregl-ctrl-bottom-right {", 1)[1].split("}", 1)[0]
+    assert "var(--quest-focus-lift" in card_css
+    assert "var(--safe-bottom)" in card_css
+    assert "var(--quest-focus-attribution-bottom" in attribution_css
+    assert "function syncQuestMapFocusLayout" in html
+    layout = html.split("function syncQuestMapFocusLayout", 1)[1].split("function closeQuestMapFocus", 1)[0]
+    assert "document.querySelector('.bottom-nav')" in layout
+    assert "--quest-focus-card-height" in layout
+    assert "--quest-focus-lift" in layout
+    assert "burbz-quest-card-clearance-v73-20260714" in SW.read_text(encoding="utf-8")
+
+
 def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():
     html = HTML.read_text(encoding="utf-8")
     assert html.count('id="mapQuestShowBtn"') == 1

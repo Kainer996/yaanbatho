@@ -1925,7 +1925,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .quest-board-title { color:#fff2c8; font:900 20px/1.08 'Russo One',sans-serif; }
 .quest-board-intro { margin-top:5px; color:#bdb7a8; font-size:12px; line-height:1.35; }
 .quest-board-distance-note { margin:10px 0; padding:9px 11px; border-radius:12px; border-left:3px solid #65d6ae; background:rgba(70,185,143,.09); color:#d9f8eb; font-size:12px; line-height:1.35; }
-.map-quest-focus-card { position:absolute; left:12px; right:12px; bottom:calc(14px + var(--safe-bottom)); z-index:46; display:none; max-width:470px; margin:auto; padding:13px; border-radius:21px; background:radial-gradient(circle at 7% 8%,rgba(66,148,115,.22),transparent 32%),linear-gradient(155deg,rgba(30,25,15,.97),rgba(7,13,10,.98)); border:1px solid rgba(240,199,103,.56); box-shadow:0 15px 40px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08); pointer-events:auto; }
+.map-quest-focus-card { position:absolute; left:12px; right:12px; bottom:calc(14px + var(--safe-bottom) + var(--quest-focus-lift, 0px)); z-index:46; display:none; max-width:470px; max-height:var(--quest-focus-max-height,calc(100% - var(--safe-bottom) - 28px)); margin:auto; padding:13px; overflow-y:auto; overscroll-behavior:contain; border-radius:21px; background:radial-gradient(circle at 7% 8%,rgba(66,148,115,.22),transparent 32%),linear-gradient(155deg,rgba(30,25,15,.97),rgba(7,13,10,.98)); border:1px solid rgba(240,199,103,.56); box-shadow:0 15px 40px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08); pointer-events:auto; }
 .map-quest-focus-card.show { display:block; animation:questFocusRise .28s ease-out; }
 @keyframes questFocusRise { from{transform:translateY(22px);opacity:0} to{transform:none;opacity:1} }
 .map-quest-focus-head { display:grid; grid-template-columns:48px minmax(0,1fr) 32px; gap:10px; align-items:center; }
@@ -1945,7 +1945,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .live-map-shell.quest-focused .map-quest-btn-art { width:38px; height:38px; border-radius:11px; }
 .live-map-shell.quest-focused .map-quest-show-btn { opacity:0; pointer-events:none; transform:translateY(-5px); }
 .live-map-shell.quest-focused .map-zoom-controls { top:124px; bottom:auto; opacity:.52; }
-.live-map-shell.quest-focused .maplibregl-ctrl-bottom-right { bottom:245px; }
+.live-map-shell.quest-focused .maplibregl-ctrl-bottom-right { bottom:var(--quest-focus-attribution-bottom, 265px); }
 .wq-chain-pin { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:rgba(5,18,14,.9); border:1px solid rgba(101,214,174,.55); color:#84e1c0; font-size:12px; box-shadow:0 5px 14px rgba(0,0,0,.45); }
 @media (max-width:380px) { .map-quest-btn,.map-quest-show-btn { min-width:162px; } .map-quest-btn-label{font-size:12px} .map-quest-btn-art{width:45px;height:45px} }
 @media (prefers-reduced-motion:reduce) { .map-quest-btn::after,.wq-offer-pin .wq-offer-badge { animation:none !important; } .map-quest-focus-card.show { animation:none; } }
@@ -12398,11 +12398,31 @@ function drawQuestOverviewMarkers() {
     questOverview.chainMarker = new maplibregl.Marker({ element:chainEl, anchor:'center' }).setLngLat([end.lon, end.lat]).addTo(liveMap);
   }
 }
+let questFocusResizeObserver = null;
+function syncQuestMapFocusLayout() {
+  const card = $('mapQuestFocusCard'), shell = $('liveMapShell');
+  const nav = document.querySelector('.bottom-nav');
+  if (!card || !shell || !nav || !card.classList.contains('show')) return;
+  const shellRect = shell.getBoundingClientRect(), navRect = nav.getBoundingClientRect();
+  shell.style.setProperty('--quest-focus-max-height', Math.max(180, Math.floor(navRect.top - shellRect.top - 24)) + 'px');
+  const cardHeight = card.offsetHeight, cardTop = shellRect.top + card.offsetTop, cardBottom = cardTop + cardHeight;
+  const currentLift = Number.parseFloat(shell.style.getPropertyValue('--quest-focus-lift')) || 0;
+  const lift = Math.max(0, Math.ceil(currentLift + cardBottom - navRect.top + 12));
+  const projectedTop = cardTop - (lift - currentLift);
+  shell.style.setProperty('--quest-focus-card-height', Math.ceil(cardHeight) + 'px');
+  shell.style.setProperty('--quest-focus-lift', lift + 'px');
+  shell.style.setProperty('--quest-focus-attribution-bottom', Math.ceil(shellRect.bottom - projectedTop + 14) + 'px');
+}
 function closeQuestMapFocus(opts = {}) {
   const card = $('mapQuestFocusCard'), shell = $('liveMapShell');
   const wasShown = !!card?.classList.contains('show');
+  if (card && questFocusResizeObserver) questFocusResizeObserver.unobserve(card);
   if (card) card.classList.remove('show');
   shell?.classList.remove('quest-focused');
+  shell?.style.removeProperty('--quest-focus-card-height');
+  shell?.style.removeProperty('--quest-focus-lift');
+  shell?.style.removeProperty('--quest-focus-max-height');
+  shell?.style.removeProperty('--quest-focus-attribution-bottom');
   if (opts.restoreBirds !== false && questOverview.areaBirdsWasOpen != null) setAreaBirdsOpen(questOverview.areaBirdsWasOpen, false);
   questOverview.areaBirdsWasOpen = null;
   questOverview.selectedIndex = null;
@@ -12517,9 +12537,12 @@ function renderQuestMapFocusCard(moveFocus = false) {
     begin.textContent = activeWalkingQuest() ? 'VIEW CURRENT QUEST' : 'BEGIN THIS QUEST';
     begin.onclick = () => activeWalkingQuest() ? openActiveWalkQuestSheet() : startWalkingQuestFromOffer(offer);
   }
+  card.scrollTop = 0;
   card.classList.add('show');
   $('liveMapShell')?.classList.add('quest-focused');
-  if (moveFocus) requestAnimationFrame(focusQuestMapPrimaryAction);
+  if (!questFocusResizeObserver && typeof ResizeObserver === 'function') questFocusResizeObserver = new ResizeObserver(syncQuestMapFocusLayout);
+  if (questFocusResizeObserver) questFocusResizeObserver.observe(card);
+  requestAnimationFrame(() => { syncQuestMapFocusLayout(); if (moveFocus) focusQuestMapPrimaryAction(); });
 }
 function focusQuestOnMap(idx) {
   const offer = questOverview.offers[Number(idx)];
