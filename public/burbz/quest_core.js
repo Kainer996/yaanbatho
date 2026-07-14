@@ -125,8 +125,8 @@
   // kumi.systems mirror was unreliable in testing (90s timeouts); the VK mirror
   // answered in <0.5s with CORS *. Both honour OSM ODbL attribution requirements.
   var OVERPASS_ENDPOINTS = [
-    'https://overpass-api.de/api/interpreter',
-    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+    'https://overpass-api.de/api/interpreter'
   ];
 
   function buildOverpassQuery(lat, lon, radiusM) {
@@ -142,7 +142,7 @@
       'way[highway~"^(path|footway|bridleway|track)$"][name](' + around + ');' +
       'way[designation~"public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic",i](' + around + ');' +
       'way[highway~"^(path|footway)$"][foot~"^(designated|yes)$"](' + around + ');' +
-      'way[highway~"^(path|footway|bridleway|track)$"][access!~"^(private|no)$",i][foot!~"^(private|no)$",i](' + around + ');' +
+      'way[highway~"^(path|footway|bridleway|track)$"][access!~"^(private|no)$"][foot!~"^(private|no)$"](' + around + ');' +
       ');out geom(' + clip + ') 400;'; // body verbosity: keeps relation members (tags verbosity drops them)
   }
 
