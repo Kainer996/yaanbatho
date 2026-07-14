@@ -113,7 +113,7 @@ def test_quest_board_prioritises_start_distance_and_focuses_a_selection_on_the_m
 
 def test_premium_quest_asset_and_release_are_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-premium-quest-board-v68-20260714" in sw
+    assert "burbz-premium-quest-board-v69-20260714" in sw
     assert "./assets/ui/quest-compass-emblem.webp" in sw
 
 

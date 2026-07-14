@@ -169,4 +169,4 @@ def test_empire_map_assets_are_versioned_offline_and_cache_bumped():
     marker = "empire_map_core.js?v=liberation-map-v3-20260714"
     assert marker in html
     assert "./" + marker in sw
-    assert "burbz-premium-quest-board-v68-20260714" in sw
+    assert "burbz-premium-quest-board-v69-20260714" in sw

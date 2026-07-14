@@ -1943,17 +1943,40 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 /* The Wandering Perch — pop-up trail tavern */
 .quest-marker.qm-tavern { width:54px; height:54px; border-radius:14px; border:2.5px solid #f0c767; background:linear-gradient(180deg,#3a2c12,#1c150a); font-size:30px; box-shadow:0 0 18px rgba(240,199,103,.65); animation:questBounce 1.8s ease-in-out infinite; }
 .quest-marker.qm-tavern.visited { animation:none; opacity:.9; }
-/* Tavern sheet */
-.tavern-lines { margin:8px 0 4px; }
-.tavern-line { margin:4px 0; }
-.tavern-fact { margin:8px 0; padding:8px 10px; border-radius:10px; background:rgba(126,224,138,.09); border-left:2px solid #7ee08a; color:var(--text2); font-size:12.5px; line-height:1.5; }
-.tavern-drink { display:flex; align-items:center; gap:10px; width:100%; margin:6px 0; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.30); color:var(--text1); text-align:left; }
-.tavern-drink:active { transform:scale(.985); }
+/* Tavern sheet — a snappy roadside stop: animated hanging sign, one line, three drinks */
+.tavern-panel { text-align:center; background:radial-gradient(circle at 50% -8%,rgba(243,186,92,.2),transparent 46%),linear-gradient(180deg,#241b0d,#0d0c08); }
+.tavern-hero { display:flex; flex-direction:column; align-items:center; }
+.tavern-sign-svg { width:152px; height:auto; overflow:visible; filter:drop-shadow(0 9px 18px rgba(0,0,0,.55)); }
+.tavern-sign-swing { transform-box:view-box; transform-origin:70px 10px; animation:tavernSway 3.8s ease-in-out infinite; }
+@keyframes tavernSway { 0%,100% { transform:rotate(-2.6deg); } 50% { transform:rotate(2.6deg); } }
+.tavern-bird { transform-box:fill-box; transform-origin:center bottom; animation:tavernBirdBob 2.4s ease-in-out infinite; }
+@keyframes tavernBirdBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-1.8px); } }
+.tavern-bub { opacity:0; transform-box:fill-box; transform-origin:center; animation:tavernBub 3s ease-out infinite; }
+.tavern-bub.b2 { animation-delay:1s; } .tavern-bub.b3 { animation-delay:1.9s; }
+@keyframes tavernBub { 0% { opacity:0; transform:translateY(5px); } 22% { opacity:.95; } 100% { opacity:0; transform:translateY(-15px); } }
+.tavern-spark { opacity:.15; animation:tavernSpark 2.6s ease-in-out infinite; }
+.tavern-spark.s2 { animation-delay:1.3s; }
+@keyframes tavernSpark { 0%,100% { opacity:.12; } 50% { opacity:.95; } }
+.tavern-title { margin-top:6px; font:900 21px/1.1 'Russo One',sans-serif; color:#ffe9ad; text-shadow:0 2px 10px rgba(240,180,80,.3); }
+.tavern-keeper { margin-top:3px; font-size:11.5px; color:var(--text3); }
+.tavern-say { margin:11px auto 2px; max-width:420px; padding:9px 13px; border-radius:15px; background:rgba(240,199,103,.09); border:1px solid rgba(240,199,103,.24); color:var(--text2); font-size:13px; font-style:italic; line-height:1.42; }
+.tavern-patrons { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; margin:9px 0 0; }
+.tavern-drinks-title { display:flex; align-items:center; gap:8px; margin:14px 0 2px; font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--text3); }
+.tavern-drinks-title::before, .tavern-drinks-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(214,168,79,.4)); }
+.tavern-drinks-title::after { background:linear-gradient(90deg,rgba(214,168,79,.4),transparent); }
+.tavern-fact { margin:10px 0 0; padding:8px 11px; border-radius:12px; background:rgba(126,224,138,.09); border:1px solid rgba(126,224,138,.22); color:var(--text2); font-size:12.5px; line-height:1.5; text-align:left; }
+.tavern-drink { display:flex; align-items:center; gap:11px; width:100%; margin:7px 0; padding:11px 12px; border-radius:14px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.30); color:var(--text); text-align:left; transition:transform .12s ease; }
+.tavern-drink:active { transform:scale(.975); }
 .tavern-drink[disabled] { opacity:.45; filter:grayscale(.4); }
-.tavern-drink-icon { font-size:26px; }
-.tavern-drink-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; color:var(--accent2); }
-.tavern-drink-desc { font-size:11.5px; color:var(--text3); line-height:1.35; }
-.tavern-bought { margin:10px 0; padding:8px 10px; border-radius:10px; background:rgba(240,199,103,.10); border:1px solid rgba(240,199,103,.28); }
+.tavern-drink-icon { flex:none; width:44px; height:44px; display:grid; place-items:center; font-size:26px; border-radius:12px; background:rgba(240,199,103,.12); border:1px solid rgba(240,199,103,.25); }
+.tavern-drink-main { min-width:0; flex:1; }
+.tavern-drink-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14.5px; color:#f0c767; }
+.tavern-drink-boon { margin-top:2px; font:800 12.5px/1.3 'Rajdhani',sans-serif; color:#8be7b9; }
+.tavern-bought { margin:12px 0 0; padding:11px 12px; border-radius:14px; background:rgba(240,199,103,.10); border:1px solid rgba(240,199,103,.28); font-size:13px; line-height:1.45; }
+.tavern-bought .tavern-toast { display:block; margin-top:4px; font-style:italic; color:var(--text3); font-size:12px; }
+.tavern-cta { width:100%; margin-top:14px; min-height:47px; padding:12px 18px; border:none; border-radius:14px; background:linear-gradient(135deg,#f0c767,#cf9540); color:#171007; font:900 13px/1 'Russo One',sans-serif; box-shadow:0 7px 16px rgba(0,0,0,.35); }
+.tavern-cta:active { transform:scale(.98); }
+@media (prefers-reduced-motion:reduce) { .tavern-sign-swing,.tavern-bird,.tavern-bub,.tavern-spark { animation:none; } .tavern-bub { opacity:.5; } }
 .wq-npc-emoji { font-size:34px; display:grid; place-items:center; width:100%; height:100%; }
 .wq-offer-pin { --quest-route-color:#58d858; cursor:pointer; display:flex; flex-direction:column; align-items:center; pointer-events:auto; }
 .wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:38px; height:38px; border-radius:50%; font-size:19px; background:radial-gradient(circle at 36% 30%, #1f3429, #091411 78%); border:2px solid var(--quest-route-color); box-shadow:0 0 0 2px rgba(0,0,0,.45), 0 4px 10px rgba(0,0,0,.55); animation:questBounce 2.6s ease-in-out infinite; }
@@ -11371,9 +11394,9 @@ let walkQuestLastSave = 0;
 // ---- Trail bird NPCs, the wandering tavern, and drink boons ----------------
 const TAVERN_KEEPER_NAMES = ['Barkeep Bramblefinch', 'Old Peckwood', 'Merry Wrenhild', 'Tapmaster Corvus', 'Goodwife Sedgewhistle'];
 const TRAIL_TAVERN_DRINKS = [
-  { id:'ale', name:'Waymarker Wheat Ale', icon:'🍺', cost:12, desc:'+50% quest XP when you reach the banner', boon:{ id:'ale', label:'Waymarker Wheat Ale · +50% quest XP', xpMult:1.5 } },
-  { id:'mead', name:'Honeyed Mead', icon:'🍯', cost:18, desc:'Trail-bird bonus coins pay DOUBLE at the banner', boon:{ id:'mead', label:'Honeyed Mead · trail-bird coins ×2', tbCoinMult:2 } },
-  { id:'cordial', name:'Elderberry Cordial', icon:'🫐', cost:8, desc:'A round for the flock: full HP and +20 happiness right now', boon:{ id:'cordial', label:'Elderberry Cordial · flock refreshed', instant:'flockRefresh' } }
+  { id:'ale', name:'Waymarker Wheat Ale', icon:'🍺', cost:12, desc:'+50% quest XP', boon:{ id:'ale', label:'Waymarker Wheat Ale · +50% quest XP', xpMult:1.5 } },
+  { id:'mead', name:'Honeyed Mead', icon:'🍯', cost:18, desc:'2× trail-bird coins', boon:{ id:'mead', label:'Honeyed Mead · trail-bird coins ×2', tbCoinMult:2 } },
+  { id:'cordial', name:'Elderberry Cordial', icon:'🫐', cost:8, desc:'Heals & cheers your flock now', boon:{ id:'cordial', label:'Elderberry Cordial · flock refreshed', instant:'flockRefresh' } }
 ];
 const TRAIL_NPC_GREETINGS = [
   'You found me back there, didn\'t you? Sharp eyes, adventurer! I\'ll fly along your trail a while.',
@@ -11383,28 +11406,16 @@ const TRAIL_NPC_GREETINGS = [
   'Splendid day for a wander! Mind the mud past the next bend, it nearly took my tail feathers.'
 ];
 const TAVERN_GREETINGS = [
-  'Welcome, welcome! Word travels fast on the wind — {count} feathered friends flew ahead to tell me you were coming.',
-  'Ah, the walking trainer! Your trail companions are already perched at the bar. First visit\'s the warmest.',
-  'Come in out of the weather! {bird} here has been chirping about you all afternoon.',
-  'A human who befriends birds on public footpaths? You\'ll fit right in at The Wandering Perch.'
-];
-const TAVERN_GOSSIP = [
-  'The {bird} swears the next stretch of your trail has the best foraging this side of the valley.',
-  'Rumour at the bar is a {bird} once drank three thimbles of elderberry cordial here and sang until dawn.',
-  'Between us — the {bird} has been telling everyone you\'re the kindest trainer on these paths.',
-  'The regulars reckon a storm chased a {bird} in here last spring and it simply never left.'
+  'Word flies fast — {count} feathered friends said you were coming!',
+  'The walking trainer! {bird} has been chirping about you all day.',
+  'Muddy boots and kind hands? You\'ll fit right in here.',
+  'Come in, come in — the flock saved you a perch.'
 ];
 const TAVERN_TOASTS = [
-  'Raise a thimble — to muddy boots and open skies!',
-  'To every waymarker reached and every chest cracked open!',
-  'May your loops always bring you home by a new path!',
+  'To muddy boots and open skies!',
+  'To every waymarker reached!',
+  'May your loops bring you home by a new path!',
   'To the birds of the trail — long may they sing!'
-];
-const TAVERN_ACADEMY_CHATTER = [
-  'The {bird} at the end of the bar keeps asking when you\'ll take it adventuring.',
-  'Busy night! Every bird in here met you out on the trails — they only need a drink and a handshake.',
-  'A {bird} told the whole taproom about your walk together. You\'ve got admirers, trainer.',
-  'The {bird} has already picked its favourite perch at your Academy. Just saying.'
 ];
 const TAVERN_BIRD_FACTS = [
   'A Wren sings around 700 notes a minute — one of the loudest songs per gram of bird in Britain.',
@@ -11512,7 +11523,53 @@ function showTrailBirdDialog(npc, quest, metCount) {
   document.body.appendChild(el);
 }
 
-// The Wandering Perch: procedural dialogue, a bird fact, and a drink to buy.
+// The Wandering Perch's hanging sign: a foaming tankard with a wren perched on
+// the handle. Hand-drawn inline SVG (like the RPG chests) so it can swing,
+// bubble and sparkle with pure CSS — no asset to load out on the trail.
+const TAVERN_SIGN_SVG =
+  '<svg class="tavern-sign-svg" viewBox="0 0 140 126" aria-hidden="true">' +
+    '<defs>' +
+      '<radialGradient id="tvGlow" cx="50%" cy="55%" r="52%"><stop offset="0%" stop-color="#f0c767" stop-opacity=".34"/><stop offset="100%" stop-color="#f0c767" stop-opacity="0"/></radialGradient>' +
+      '<linearGradient id="tvWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9a5f28"/><stop offset="100%" stop-color="#63380f"/></linearGradient>' +
+      '<linearGradient id="tvBrew" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f6c355"/><stop offset="100%" stop-color="#c07a2b"/></linearGradient>' +
+    '</defs>' +
+    '<circle cx="70" cy="72" r="54" fill="url(#tvGlow)"/>' +
+    '<path d="M10 10 H130" stroke="#3d2c14" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M10 10 H130" stroke="#6b4a1e" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<circle cx="10" cy="10" r="4.5" fill="#8a5c22" stroke="#42250e" stroke-width="1.4"/>' +
+    '<circle cx="130" cy="10" r="4.5" fill="#8a5c22" stroke="#42250e" stroke-width="1.4"/>' +
+    '<path class="tavern-spark" d="M22 40 l2.2 5 5 2.2 -5 2.2 -2.2 5 -2.2 -5 -5 -2.2 5 -2.2 z" fill="#ffe9a0"/>' +
+    '<path class="tavern-spark s2" d="M118 76 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z" fill="#ffe9a0"/>' +
+    '<g class="tavern-sign-swing">' +
+      '<path d="M42 12 L48 34" stroke="#c9a54e" stroke-width="2.4" stroke-dasharray="4 3" fill="none"/>' +
+      '<path d="M98 12 L92 34" stroke="#c9a54e" stroke-width="2.4" stroke-dasharray="4 3" fill="none"/>' +
+      '<rect x="28" y="34" width="84" height="82" rx="14" fill="url(#tvWood)" stroke="#42250e" stroke-width="3"/>' +
+      '<rect x="34" y="40" width="72" height="70" rx="10" fill="none" stroke="#f0c767" stroke-width="1.7" opacity=".6"/>' +
+      '<path d="M90 74 q14 0 14 11 q0 11 -14 11" fill="none" stroke="#e8b64c" stroke-width="5"/>' +
+      '<rect x="54" y="66" width="36" height="38" rx="6" fill="url(#tvBrew)" stroke="#7a5314" stroke-width="2.5"/>' +
+      '<rect x="59" y="71" width="5" height="28" rx="2.5" fill="#ffe9a0" opacity=".5"/>' +
+      '<circle cx="58" cy="64" r="6.5" fill="#fff6e6" stroke="#d8c8a8" stroke-width="1.3"/>' +
+      '<circle cx="71" cy="61" r="8" fill="#fff6e6" stroke="#d8c8a8" stroke-width="1.3"/>' +
+      '<circle cx="85" cy="64" r="6.5" fill="#fff6e6" stroke="#d8c8a8" stroke-width="1.3"/>' +
+      '<rect x="54" y="62" width="36" height="7" rx="3" fill="#fff6e6"/>' +
+      '<g class="tavern-bird">' +
+        '<path d="M64 50 L55 41 L61 52 z" fill="#8a5c2c" stroke="#5d3a14" stroke-width="1.2"/>' +
+        '<ellipse cx="71" cy="51" rx="7.5" ry="6" fill="#a9723d" stroke="#5d3a14" stroke-width="1.4"/>' +
+        '<ellipse cx="69.5" cy="53" rx="4.4" ry="3.4" fill="#e8cf9d"/>' +
+        '<ellipse cx="73" cy="50" rx="4" ry="2.9" fill="#8a5c2c" opacity=".75"/>' +
+        '<circle cx="78.5" cy="45.5" r="4.6" fill="#a9723d" stroke="#5d3a14" stroke-width="1.4"/>' +
+        '<path d="M83 45 l5.4 1.4 -5.2 1.9 z" fill="#e8b64c" stroke="#7a5314" stroke-width=".8"/>' +
+        '<circle cx="79.8" cy="44.6" r="1.1" fill="#1c1208"/>' +
+        '<circle cx="80.1" cy="44.3" r=".35" fill="#fff"/>' +
+      '</g>' +
+      '<circle class="tavern-bub b1" cx="50" cy="56" r="2.3" fill="#ffe9a0"/>' +
+      '<circle class="tavern-bub b2" cx="93" cy="52" r="1.8" fill="#ffe9a0"/>' +
+      '<circle class="tavern-bub b3" cx="70" cy="46" r="1.5" fill="#ffe9a0"/>' +
+    '</g>' +
+  '</svg>';
+
+// The Wandering Perch: one warm line from the keeper, three drinks, done.
+// The toast and bird lore are saved for after you buy — less to read mid-walk.
 function buildTavernDialogue(quest) {
   const met = window.BurbzQuestCore.questMetTrailNpcs(quest);
   const names = met.map(n => n.species);
@@ -11521,11 +11578,8 @@ function buildTavernDialogue(quest) {
   const fill = s => s.replace('{bird}', pickBird).replace('{count}', String(names.length));
   return {
     keeper: TAVERN_KEEPER_NAMES[seed % TAVERN_KEEPER_NAMES.length],
-    lines: [
-      fill(TAVERN_GREETINGS[seed % TAVERN_GREETINGS.length]),
-      fill(TAVERN_GOSSIP[(seed >> 3) % TAVERN_GOSSIP.length]),
-      TAVERN_TOASTS[(seed >> 6) % TAVERN_TOASTS.length]
-    ],
+    line: fill(TAVERN_GREETINGS[seed % TAVERN_GREETINGS.length]),
+    toast: TAVERN_TOASTS[(seed >> 6) % TAVERN_TOASTS.length],
     fact: tavernBirdFactFor(names, seed)
   };
 }
@@ -11539,20 +11593,22 @@ function openTrailTavernSheet(quest, opts = {}) {
   const patrons = met.map(n => '<span class="wq-bird-chip got">🍺 ' + escapeHtml(n.species) + '</span>').join('');
   const bought = tav.drinkBought ? TRAIL_TAVERN_DRINKS.find(d => d.id === tav.drinkBought) : null;
   const drinksHtml = bought
-    ? '<div class="quest-desc tavern-bought">🍻 You raised a glass of <b>' + escapeHtml(bought.name) + '</b>' + (quest.tavernBoon ? ' — ' + escapeHtml(quest.tavernBoon.label) : '') + '. One round per quest — enjoy the walk home!</div>'
-    : '<div class="quest-section-title" style="margin:10px 0 4px">🍺 Buy a drink (one per quest)</div>' + TRAIL_TAVERN_DRINKS.map(d => {
+    ? '<div class="tavern-bought">' + bought.icon + ' <b>' + escapeHtml(bought.name) + '</b> — ' + escapeHtml(bought.desc) +
+      '<span class="tavern-toast">“' + escapeHtml(talk.toast) + '”</span></div>' +
+      '<div class="tavern-fact">🪶 ' + escapeHtml(talk.fact) + '</div>'
+    : '<div class="tavern-drinks-title">🍺 One drink per quest</div>' + TRAIL_TAVERN_DRINKS.map(d => {
         const afford = (gameState.player.coins || 0) >= d.cost;
-        return '<button class="tavern-drink" data-drink="' + d.id + '" ' + (afford ? '' : 'disabled') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙</div><div class="tavern-drink-desc">' + escapeHtml(d.desc) + '</div></div></button>';
+        return '<button class="tavern-drink" data-drink="' + d.id + '" ' + (afford ? '' : 'disabled') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙</div><div class="tavern-drink-boon">' + escapeHtml(d.desc) + '</div></div></button>';
       }).join('');
   const el = walkQuestSheetEl();
-  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍻</div><div><div class="quest-name">' + escapeHtml(tav.name) + '</div><div class="quest-desc">A pop-up tavern of the bird roads · kept by ' + escapeHtml(talk.keeper) + '</div></div></div>' +
-    '<div class="tavern-lines">' + talk.lines.map(l => '<div class="wq-npc-text tavern-line">“' + escapeHtml(l) + '”</div>').join('') + '</div>' +
-    '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(talk.fact) + '</div>' +
-    (patrons ? '<div class="quest-section-title" style="margin:10px 0 4px">At the bar</div><div class="wq-history-birds">' + patrons + '</div>' : '') +
+  el.innerHTML = '<div class="quest-overlay-panel tavern-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
+    '<div class="tavern-hero">' + TAVERN_SIGN_SVG +
+      '<div class="tavern-title">' + escapeHtml(tav.name) + '</div>' +
+      '<div class="tavern-keeper">Pop-up trail tavern · kept by ' + escapeHtml(talk.keeper) + '</div></div>' +
+    '<div class="tavern-say">“' + escapeHtml(talk.line) + '”</div>' +
+    (patrons ? '<div class="tavern-patrons">' + patrons + '</div>' : '') +
     drinksHtml +
-    '<div class="quest-desc" style="margin-top:8px">Your trail friends will be registered at the 🪶 Barracks in your Academy, ready for you to inspect and recruit.</div>' +
-    '<button class="wq-npc-ok" onclick="closeWalkQuestSheet()">Back to the trail</button></div>';
+    '<button class="tavern-cta" onclick="closeWalkQuestSheet()">Back to the trail →</button></div>';
   el.classList.add('open');
   el.querySelectorAll('[data-drink]').forEach(btn => btn.addEventListener('click', () => buyTrailTavernDrink(btn.dataset.drink)));
 }
