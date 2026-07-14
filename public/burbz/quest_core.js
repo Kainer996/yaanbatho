@@ -224,18 +224,27 @@
     return chains.length ? chains[0] : [];
   }
 
-  // Long trails can span hundreds of km — clip a walkable slice (max ~6km)
-  // starting from the trail point nearest the player, and make the route begin there.
+  // Start every offer at the point nearest the player. Preserve a complete natural
+  // loop instead of cutting it in half; only linear/very long trails are sliced.
   function normaliseTrailForPlayer(pts, playerLat, playerLon, maxLenM) {
     maxLenM = maxLenM || 6000;
     if (pts.length < 2) return pts;
+    var closesM = questHaversine(pts[0].lat, pts[0].lon, pts[pts.length - 1].lat, pts[pts.length - 1].lon);
+    var naturalLoop = closesM <= 180 && routeLengthM(pts) <= maxLenM * 1.5;
+    var ring = pts.slice();
+    if (naturalLoop && closesM <= 5) ring.pop(); // discard duplicate closing node before rotating
     var bestI = 0, bestD = Infinity;
-    for (var i = 0; i < pts.length; i++) {
-      var d = questHaversine(playerLat, playerLon, pts[i].lat, pts[i].lon);
+    for (var i = 0; i < ring.length; i++) {
+      var d = questHaversine(playerLat, playerLon, ring[i].lat, ring[i].lon);
       if (d < bestD) { bestD = d; bestI = i; }
     }
+    if (naturalLoop) {
+      var rotated = ring.slice(bestI).concat(ring.slice(0, bestI));
+      rotated.push({ lat: rotated[0].lat, lon: rotated[0].lon });
+      return rotated;
+    }
     // Walk outward from the nearest point in the longer direction until maxLen.
-    var fwd = pts.slice(bestI), back = pts.slice(0, bestI + 1).reverse();
+    var fwd = ring.slice(bestI), back = ring.slice(0, bestI + 1).reverse();
     var pick = routeLengthM(fwd) >= routeLengthM(back) ? fwd : back;
     var out = [pick[0]], acc = 0;
     for (var j = 1; j < pick.length; j++) {

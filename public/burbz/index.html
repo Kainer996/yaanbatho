@@ -1860,9 +1860,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .tavern-drink-desc { font-size:11.5px; color:var(--text3); line-height:1.35; }
 .tavern-bought { margin:10px 0; padding:8px 10px; border-radius:10px; background:rgba(240,199,103,.10); border:1px solid rgba(240,199,103,.28); }
 .wq-npc-emoji { font-size:34px; display:grid; place-items:center; width:100%; height:100%; }
-.wq-offer-pin { cursor:pointer; display:flex; flex-direction:column; align-items:center; pointer-events:auto; }
-.wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:38px; height:38px; border-radius:50%; font-size:19px; background:radial-gradient(circle at 36% 30%, #1f4423, #0c1c0e 78%); border:2px solid #58d858; box-shadow:0 0 12px rgba(88,216,88,.5), 0 4px 10px rgba(0,0,0,.5); animation:questBounce 2.6s ease-in-out infinite; }
-.wq-offer-pin .wq-offer-name { max-width:120px; margin-top:3px; padding:2px 7px; border-radius:9px; font-size:9px; font-weight:800; text-align:center; color:#bdf3bd; background:rgba(6,18,8,.82); border:1px solid rgba(88,216,88,.4); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wq-offer-pin { --quest-route-color:#58d858; cursor:pointer; display:flex; flex-direction:column; align-items:center; pointer-events:auto; }
+.wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:38px; height:38px; border-radius:50%; font-size:19px; background:radial-gradient(circle at 36% 30%, #1f3429, #091411 78%); border:2px solid var(--quest-route-color); box-shadow:0 0 0 2px rgba(0,0,0,.45), 0 4px 10px rgba(0,0,0,.55); animation:questBounce 2.6s ease-in-out infinite; }
+.wq-offer-pin .wq-offer-name { max-width:120px; margin-top:3px; padding:2px 7px; border-radius:9px; font-size:9px; font-weight:800; text-align:center; color:#f5f3e9; background:rgba(6,13,11,.88); border:1px solid var(--quest-route-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 @keyframes questBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
 .wq-npc-dialog { position:fixed; inset:0; z-index:640; display:flex; align-items:flex-end; justify-content:center; background:rgba(4,6,5,.55); }
 .wq-npc-panel { width:100%; max-width:520px; margin:0 10px calc(84px + var(--safe-bottom,0px)); padding:14px 16px; border-radius:18px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.45); display:flex; gap:12px; align-items:flex-start; animation:questSheetUp .25s ease-out; }
@@ -2420,7 +2420,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
 <script src="battle_core.js?v=perch-league-20260710"></script>
-<script src="quest_core.js?v=loop-home-20260710"></script>
+<script src="quest_core.js?v=loop-clarity-20260713"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
@@ -11173,7 +11173,7 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
 function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { liveMap.setTerrain(null); } catch (e) {} liveMapTerrainEnabled = true; }
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
-  if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#58d858', 'line-width':10, 'line-opacity':.2, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#58d858', 'line-width':3.4, 'line-opacity':.95 } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#58d858', 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) openQuestOverviewOffer(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
+  if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':8, 'line-opacity':.16, 'line-blur':2.5, 'line-offset':['get','offset'] } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':6.2, 'line-opacity':.72, 'line-offset':['get','offset'] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':3.5, 'line-opacity':.98, 'line-offset':['get','offset'] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02, 'line-offset':['get','offset'] } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) openQuestOverviewOffer(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
   if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':9, 'line-opacity':.18, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':3.2, 'line-opacity':.92, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: you are pinned to your real
@@ -12038,15 +12038,18 @@ function resumeWalkingQuestIfAny() {
   drawWalkingQuestOnMap();
 }
 
-// ---- Quest overview: survey every nearby quest trail in green from above ----
+// ---- Quest overview: distinct, calm route colours from above ----
 let questOverview = { on: false, offers: [], markers: [], prevZoom: null, fetchedAt: 0, at: null };
 const QUEST_OVERVIEW_ZOOM = 12.6;
+const QUEST_OVERVIEW_COLORS = ['#63e6be','#74c0fc','#ffd166','#da77f2','#ff8f70','#66d9e8','#a9e34b','#f783ac'];
+function questOverviewColor(i) { return QUEST_OVERVIEW_COLORS[Math.abs(Number(i) || 0) % QUEST_OVERVIEW_COLORS.length]; }
+function questOverviewOffset(i) { return ((Math.abs(Number(i) || 0) % 3) - 1) * 2.25; }
 
 function questOverviewGeoJSON() {
   if (!questOverview.on) return { type: 'FeatureCollection', features: [] };
   return { type: 'FeatureCollection', features: questOverview.offers.map((o, i) => ({
     type: 'Feature',
-    properties: { offerIdx: i, name: o.name },
+    properties: { offerIdx: i, name: o.name, color: questOverviewColor(i), offset: questOverviewOffset(i) },
     geometry: { type: 'LineString', coordinates: window.BurbzQuestCore.decimateRoute(o.points, 80).map(p => [p.lon, p.lat]) }
   })) };
 }
@@ -12065,6 +12068,7 @@ function drawQuestOverviewMarkers() {
     const meta = WALK_QUEST_KIND_META[o.kind] || WALK_QUEST_KIND_META.path;
     const el = document.createElement('div');
     el.className = 'wq-offer-pin';
+    el.style.setProperty('--quest-route-color', questOverviewColor(i));
     el.innerHTML = '<div class="wq-offer-badge">' + meta.icon + '</div><div class="wq-offer-name">' + escapeHtml(o.name) + '</div>';
     el.addEventListener('click', ev => { ev.stopPropagation(); openQuestOverviewOffer(i); });
     const start = o.points[0];
@@ -12089,7 +12093,7 @@ function setQuestOverview(on) {
   if (liveMap && questOverview.prevZoom == null) { try { questOverview.prevZoom = liveMap.getZoom(); } catch (e) { questOverview.prevZoom = BURBZ_START_ZOOM; } }
   if (liveMap) { try { liveMap.easeTo({ zoom: QUEST_OVERVIEW_ZOOM, pitch: burbzPitchForZoom(QUEST_OVERVIEW_ZOOM), duration: 900 }); } catch (e) {} }
   const fresh = questOverview.at && mapDistanceMeters(questOverview.at, { lat, lon }) < 250 && (Date.now() - questOverview.fetchedAt) < 300000;
-  if (fresh && questOverview.offers.length) { drawQuestOverviewLines(); drawQuestOverviewMarkers(); showToast(questOverview.offers.length + ' quest trails revealed in green'); return; }
+  if (fresh && questOverview.offers.length) { drawQuestOverviewLines(); drawQuestOverviewMarkers(); showToast(questOverview.offers.length + ' colour-coded quest routes revealed'); return; }
   showToast('Scouting quest trails around you...');
   window.BurbzQuestCore.fetchTrailOffers(lat, lon, { radiusM: 3000 }).then(offers => {
     if (!questOverview.on) return;
@@ -12098,7 +12102,7 @@ function setQuestOverview(on) {
     questOverview.at = { lat, lon };
     drawQuestOverviewLines();
     drawQuestOverviewMarkers();
-    showToast(offers.length ? offers.length + ' quest trails revealed in green — tap one to read it' : 'No known trails here — use ⚔️ Begin Quest to chart your own adventure');
+    showToast(offers.length ? offers.length + ' colour-coded quest routes revealed — tap one to read it' : 'No known trails here — use ⚔️ Begin Quest to chart your own adventure');
   }).catch(err => {
     console.warn('BURBZ quest overview scout failed', err);
     showToast('The scouts could not reach the trail archives — try again soon');

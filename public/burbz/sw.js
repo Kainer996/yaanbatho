@@ -2,7 +2,7 @@ importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
 importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
 importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 
-const BURBZ_CACHE = 'burbz-companion-naming-v61-20260713';
+const BURBZ_CACHE = 'burbz-quest-loop-clarity-v62-20260713';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -21,7 +21,7 @@ const BURBZ_ASSETS = [
   './lib/three.min.js?v=0.158.0',
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
-  './quest_core.js?v=loop-home-20260710',
+  './quest_core.js?v=loop-clarity-20260713',
   './academy_treehouse_core.js?v=bird-rename-20260710',
   './scan_economy_core.js',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
