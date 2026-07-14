@@ -33,13 +33,13 @@ def test_nearby_natural_loop_keeps_the_full_loop_when_rotated_to_player():
     assert result["out"][0] == result["out"][-1]
 
 
-def test_nearby_quest_routes_use_distinct_palette_and_subtle_overlap_offsets():
+def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
     html = HTML.read_text(encoding="utf-8")
     assert "const QUEST_OVERVIEW_COLORS =" in html
     assert "color: questOverviewColor(i)" in html
-    assert "offset: questOverviewOffset(i)" in html
+    assert "offset: questOverviewOffset(i)" not in html
     assert "'line-color':['get','color']" in html
-    assert "'line-offset':['get','offset']" in html
+    assert "'line-offset'" not in html
     assert "--quest-route-color" in html
     assert "quest trails revealed in green" not in html
 
