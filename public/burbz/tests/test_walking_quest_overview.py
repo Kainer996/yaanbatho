@@ -123,3 +123,11 @@ def test_stale_nearby_quest_requests_cannot_replace_newer_location_results():
     assert "const requestId = ++questOfferRequestSeq" in html
     assert "requestId !== questOfferRequestSeq" in html
     assert "return discoverNearbyQuestOffers(true)" in html
+
+
+def test_map_quest_focus_moves_keyboard_focus_and_restores_it_on_close():
+    html = HTML.read_text(encoding="utf-8")
+    assert "focusQuestMapPrimaryAction" in html
+    assert "mapQuestFocusBegin.focus" in html
+    assert "restoreQuestMapFocus" in html
+    assert "mapQuestBtn.focus" in html

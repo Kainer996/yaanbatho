@@ -12289,11 +12289,17 @@ function drawQuestOverviewMarkers() {
 }
 function closeQuestMapFocus(opts = {}) {
   const card = $('mapQuestFocusCard'), shell = $('liveMapShell');
+  const wasShown = !!card?.classList.contains('show');
   if (card) card.classList.remove('show');
   shell?.classList.remove('quest-focused');
   if (opts.restoreBirds !== false && questOverview.areaBirdsWasOpen != null) setAreaBirdsOpen(questOverview.areaBirdsWasOpen, false);
   questOverview.areaBirdsWasOpen = null;
   questOverview.selectedIndex = null;
+  if (wasShown && opts.restoreFocus !== false) requestAnimationFrame(restoreQuestMapFocus);
+}
+function restoreQuestMapFocus() {
+  const mapQuestBtn = $('mapQuestBtn');
+  if (mapQuestBtn && mapQuestBtn.offsetParent !== null) mapQuestBtn.focus({ preventScroll:true });
 }
 function setQuestOverview(on) {
   questOverview.on = !!on;
@@ -12335,7 +12341,11 @@ function fitSelectedQuestRoute(offer) {
     liveMap.easeTo({ center:[start.lon,start.lat], zoom:QUEST_OVERVIEW_ZOOM, pitch:0, duration:850 });
   }
 }
-function renderQuestMapFocusCard() {
+function focusQuestMapPrimaryAction() {
+  const mapQuestFocusBegin = $('mapQuestFocusBegin');
+  if (mapQuestFocusBegin && mapQuestFocusBegin.offsetParent !== null) mapQuestFocusBegin.focus({ preventScroll:true });
+}
+function renderQuestMapFocusCard(moveFocus = false) {
   const offer = questOverview.offers[questOverview.selectedIndex];
   const card = $('mapQuestFocusCard');
   if (!offer || !card) { closeQuestMapFocus(); return; }
@@ -12354,6 +12364,7 @@ function renderQuestMapFocusCard() {
   }
   card.classList.add('show');
   $('liveMapShell')?.classList.add('quest-focused');
+  if (moveFocus) requestAnimationFrame(focusQuestMapPrimaryAction);
 }
 function focusQuestOnMap(idx) {
   const offer = questOverview.offers[Number(idx)];
@@ -12368,7 +12379,7 @@ function focusQuestOnMap(idx) {
   setAreaBirdsOpen(false, false);
   drawQuestOverviewLines();
   drawQuestOverviewMarkers();
-  renderQuestMapFocusCard();
+  renderQuestMapFocusCard(true);
   setTimeout(() => fitSelectedQuestRoute(offer), 80);
   ensureOfferLoopBack(offer).then(loop => {
     if (!loop || !loop.loopedBack || questOverview.offers[questOverview.selectedIndex] !== offer) return;
