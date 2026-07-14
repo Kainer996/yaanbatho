@@ -474,11 +474,20 @@
     return out;
   }
 
+  // Offer kinds whose route is already the full walk: charted adventures,
+  // side-quest scroll rings, and retraced free wanders. They never get the
+  // out-and-back doubling and never need a routed loop home.
+  var SELF_CONTAINED_KINDS = { adventure: 1, side: 1, retrace: 1 };
+
+  function offerIsSelfContained(offer) {
+    return !!(offer && SELF_CONTAINED_KINDS[offer.kind]);
+  }
+
   function buildQuestFromOffer(offer, opts) {
     opts = opts || {};
     var rand = opts.rand || Math.random;
     var rawPts = offer.points;
-    var loopStyle = offer.kind === 'adventure' ? 'loop' : offerLoopStyle(rawPts);
+    var loopStyle = offerIsSelfContained(offer) ? 'loop' : offerLoopStyle(rawPts);
     if (loopStyle === 'out-and-back') rawPts = trimRouteToLength(rawPts, OUT_AND_BACK_ONE_WAY_CAP_M);
     var pts = decimateRoute(rawPts, 160);
     var oneWayM = routeLengthM(pts);
@@ -846,6 +855,7 @@
     questMaybeSpawnTavern: questMaybeSpawnTavern,
     TRAIL_TAVERN_NPCS_NEEDED: TRAIL_TAVERN_NPCS_NEEDED,
     buildQuestFromOffer: buildQuestFromOffer,
+    offerIsSelfContained: offerIsSelfContained,
     upgradeQuestWithLoop: upgradeQuestWithLoop,
     offerLoopStyle: offerLoopStyle,
     trimRouteToLength: trimRouteToLength,

@@ -2539,7 +2539,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
 <script src="battle_core.js?v=perch-league-20260710"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=premium-quest-board-v4-20260714"></script>
+<script src="quest_core.js?v=roam-discovery-v1-20260714"></script>
+<script src="side_quest_core.js?v=roam-discovery-v1-20260714"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
@@ -11303,7 +11304,10 @@ function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; t
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
-  if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':9, 'line-opacity':.18, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':3.2, 'line-opacity':.92, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
+  if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':9, 'line-opacity':.18, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':3.2, 'line-opacity':.92, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); }
+  // Free-roam breadcrumb: the silver trail of wherever you've wandered off-quest,
+  // ready to be turned into a quest of your own from the quest board.
+  if (!liveMap.getSource('burbz-roam-trail')) { liveMap.addSource('burbz-roam-trail', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-roam-trail-glow', type:'line', source:'burbz-roam-trail', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#bcd3c2', 'line-width':6, 'line-opacity':.12, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-roam-trail-line', type:'line', source:'burbz-roam-trail', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#bcd3c2', 'line-width':2.2, 'line-opacity':.55, 'line-dasharray':[.15, 1.9] } }); drawRoamTrail(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: you are pinned to your real
 // GPS position, cannot pan ("walk") the map, and a one-finger left/right swipe
@@ -11362,7 +11366,9 @@ const WALK_QUEST_KIND_META = {
   trail: { icon: '🏔️', label: 'Legendary Trail' },
   footpath: { icon: '🥾', label: 'Public Footpath' },
   path: { icon: '🌿', label: 'Wild Path' },
-  adventure: { icon: '🧭', label: 'Charted Adventure' }
+  adventure: { icon: '🧭', label: 'Charted Adventure' },
+  side: { icon: '📜', label: 'Side Quest' },
+  retrace: { icon: '🥾', label: 'Your Own Trail' }
 };
 let questMapMarkers = [];
 let questExtraMarkers = []; // trail bird NPCs + the wandering tavern (mid-quest spawns)
@@ -11611,6 +11617,7 @@ function openQuestBoard() {
     '<div class="quest-board-distance-note">Closest trailheads come first. Tap any quest to jump straight to its map, route and full field brief.</div>' +
     '<div id="walkQuestOfferList"><div class="quest-all-done">Reading the enchanted trail map…</div></div>' +
     '<div class="quest-section-title">🧭 Chart your own route</div><div id="walkQuestAdventureList"></div>' +
+    '<div class="quest-section-title">🥾 Retrace your wander</div><div id="walkQuestRetraceList"></div>' +
     '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
   el.classList.add('open');
   const adventureList = $('walkQuestAdventureList');
@@ -11621,6 +11628,23 @@ function openQuestBoard() {
     b.addEventListener('click', () => startAdventureWalkQuest(opt[1], opt[0]));
     adventureList?.appendChild(b);
   });
+  // Everything walked off-quest (the silver breadcrumb trail) can become a
+  // quest of its own — checkpoints and chests laid along your real footsteps.
+  const retraceList = $('walkQuestRetraceList');
+  if (retraceList && window.BurbzSideQuestCore) {
+    const roamCore = window.BurbzSideQuestCore;
+    const roam = ensureRoamWalkState();
+    const walkedM = Math.round(roamCore.roamPathLengthM(roam));
+    if (roamCore.walkQuestReady(roam)) {
+      const rb = document.createElement('button');
+      rb.className = 'walk-quest-offer';
+      rb.innerHTML = '<div class="wqo-icon">🥾</div><div class="wqo-body"><div class="wqo-distance">STARTS HERE</div><div class="wqo-name">Turn My Wander Into a Quest</div><div class="wqo-meta"><span>' + (walkedM / 1000).toFixed(1) + ' km wandered</span><span>retrace your own silver trail</span></div></div><span aria-hidden="true">›</span>';
+      rb.addEventListener('click', () => startRoamRetraceQuest());
+      retraceList.appendChild(rb);
+    } else {
+      retraceList.innerHTML = '<div class="quest-all-done">Wander ' + Math.max(1, roamCore.WALK_QUEST_MIN_M - walkedM) + ' m more off-quest and the silver trail behind you can become a quest of its own.</div>';
+    }
+  }
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
     const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'Allow location from the map to discover exactly how far away each real quest begins.';
     const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. Your charted adventures are still ready below.</div>';
@@ -11682,7 +11706,7 @@ function startAdventureWalkQuest(lenM, label) {
 // Linear trails get a routed RETURN leg along different paths so the player
 // walks one continuous loop home instead of retracing their steps.
 function ensureOfferLoopBack(offer) {
-  if (!offer || offer.kind === 'adventure' || offer.loopedBack) return Promise.resolve(offer._loop || null);
+  if (!offer || window.BurbzQuestCore.offerIsSelfContained(offer) || offer.loopedBack) return Promise.resolve(offer._loop || null);
   if (window.BurbzQuestCore.offerLoopStyle(offer.points) === 'loop') return Promise.resolve(null);
   if (!offer._loopPromise) {
     offer._loopPromise = window.BurbzQuestCore.fetchLoopBackRoute(offer.points)
@@ -11696,7 +11720,7 @@ async function startWalkingQuestFromOffer(offer) {
   if (!offer) return;
   let wq = ensureWalkingQuestState();
   if (wq.active) { showToast('Finish or abandon your current quest first'); return; }
-  if (offer.kind !== 'adventure' && offer._loop === undefined && window.BurbzQuestCore.offerLoopStyle(offer.points) === 'out-and-back') {
+  if (!window.BurbzQuestCore.offerIsSelfContained(offer) && offer._loop === undefined && window.BurbzQuestCore.offerLoopStyle(offer.points) === 'out-and-back') {
     showToast('🧭 The cartographers are charting a loop home along different paths...');
     try { await ensureOfferLoopBack(offer); } catch (e) { offer._loop = null; }
     wq = ensureWalkingQuestState();
@@ -11706,9 +11730,11 @@ async function startWalkingQuestFromOffer(offer) {
     ? { ...offer, points: offer._loop.points.map(p => ({ lat: p.lat, lon: p.lon })), loopedBack: true }
     : offer;
   const quest = window.BurbzQuestCore.buildQuestFromOffer(questOffer);
+  if (offer.giver) { quest.npcName = offer.giver; quest.checkpoints[0].label = offer.giver; } // scroll quests keep their poster as quest giver
   quest.likelyBirds = Array.isArray(offer.likelyBirds) ? offer.likelyBirds.slice(0, 8) : [];
   wq.active = quest;
   walkQuestLastSave = Date.now();
+  resetRoamWalk(); // the wander is over — a quest owns the walk now
   saveState();
   if (!quest.likelyBirds.length) {
     // Started without opening the info sheet (e.g. charted adventure) — scout
@@ -11726,7 +11752,7 @@ async function startWalkingQuestFromOffer(offer) {
   switchScreen('map');
   SFX.levelUp();
   vibrate(QUEST_BUZZ.start);
-  showQuestNpcDialog(quest.npcName, 'A quest, adventurer! Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
+  showQuestNpcDialog(quest.npcName, (offer.brief ? offer.brief + ' ' : 'A quest, adventurer! ') + 'Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
 }
 
 function walkQuestRouteGeoJSON(quest) {
@@ -11948,9 +11974,60 @@ function maybeChartLoopHome(quest, opts) {
   }).catch(() => { r.inFlight = false; });
 }
 
+// ---------------- Free-roam wandering: off-quest discovery ----------------
+// While NO quest is active the walk is still an adventure: the path is recorded
+// as a silver breadcrumb trail, side-quest scrolls and loot wait on the map
+// (see MAP_PICKUP_TYPES), and the wander itself can be turned into a quest.
+let roamLastSave = 0;
+function ensureRoamWalkState() {
+  const core = window.BurbzSideQuestCore;
+  if (!gameState) return core.createRoamState(Date.now());
+  if (core.roamStateStale(gameState.roamWalk, Date.now())) gameState.roamWalk = core.createRoamState(Date.now());
+  return gameState.roamWalk;
+}
+function resetRoamWalk() {
+  if (gameState) gameState.roamWalk = window.BurbzSideQuestCore.createRoamState(Date.now());
+  drawRoamTrail();
+}
+function roamTrailGeoJSON() {
+  const roam = gameState && gameState.roamWalk;
+  const path = (roam && !activeWalkingQuest() && Array.isArray(roam.path)) ? roam.path : [];
+  if (path.length < 2) return { type: 'FeatureCollection', features: [] };
+  return { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: path.map(p => [p[1], p[0]]) } }] };
+}
+function drawRoamTrail() {
+  if (!liveMap) return;
+  try { const src = liveMap.getSource('burbz-roam-trail'); if (src) src.setData(roamTrailGeoJSON()); } catch (e) {}
+}
+function roamOnPositionFix(lat, lon, accuracy, tOverride) {
+  const core = window.BurbzSideQuestCore;
+  if (!core || !gameState) return;
+  const roam = ensureRoamWalkState();
+  const res = core.recordRoamFix(roam, lat, lon, accuracy, tOverride || Date.now());
+  if (res.pathChanged) drawRoamTrail();
+  if (res.becameQuestReady) {
+    SFX.tap();
+    showToast('🥾 Quite the wander! Open the quest board to turn your own trail into a quest.');
+  }
+  const now = Date.now();
+  if (res.becameQuestReady || (res.pathChanged && now - roamLastSave > 20000)) { roamLastSave = now; saveState(); }
+}
+function roamWanderName() {
+  const h = new Date().getHours();
+  const part = h < 12 ? 'Morning' : h < 18 ? 'Afternoon' : 'Evening';
+  return 'My ' + part + ' Wander';
+}
+function startRoamRetraceQuest() {
+  if (activeWalkingQuest()) { showToast('Finish or abandon your current quest first'); return; }
+  const pos = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : {};
+  const offer = window.BurbzSideQuestCore.walkedPathToOffer(ensureRoamWalkState(), pos.lat, pos.lon, { name: roamWanderName() });
+  if (!offer) { showToast('Wander a little further first — your trail becomes a quest after ~350 m.'); return; }
+  startWalkingQuestFromOffer(offer);
+}
+
 function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const quest = activeWalkingQuest();
-  if (!quest) return;
+  if (!quest) { roamOnPositionFix(lat, lon, accuracy, tOverride); return; }
   maybeChartLoopHome(quest);
   const events = window.BurbzQuestCore.questProcessFix(quest, lat, lon, accuracy, tOverride);
   events.forEach(ev => {
@@ -12693,6 +12770,18 @@ const CHEST_OPEN_SVG =
     '<rect x="4" y="14.5" width="24" height="11" rx="1.5" fill="#8a4f21" stroke="#42250e" stroke-width="1.6"/>' +
     '<rect x="13" y="14.5" width="6" height="11" fill="#e8b64c" stroke="#7a5314" stroke-width="1.2"/>' +
   '</svg>';
+// Sealed side-quest scroll — a wax-sealed parchment waiting to be found.
+const SCROLL_SVG =
+  '<svg class="rpg-chest" viewBox="0 0 32 28" width="1.2em" height="1.05em" aria-hidden="true">' +
+    '<rect x="6" y="4" width="20" height="20" rx="2" fill="#f2e3bb" stroke="#7a5c26" stroke-width="1.6"/>' +
+    '<path d="M6 6 Q4 6 4 8.5 Q4 11 6.5 11 L8 11 L8 6 Z" fill="#d9c48f" stroke="#7a5c26" stroke-width="1.2"/>' +
+    '<path d="M26 17 Q28 17 28 19.5 Q28 22 25.5 22 L24 22 L24 17 Z" fill="#d9c48f" stroke="#7a5c26" stroke-width="1.2"/>' +
+    '<line x1="10" y1="9.5" x2="22" y2="9.5" stroke="#8a6c31" stroke-width="1.3" opacity=".75"/>' +
+    '<line x1="10" y1="13" x2="22" y2="13" stroke="#8a6c31" stroke-width="1.3" opacity=".75"/>' +
+    '<line x1="10" y1="16.5" x2="18" y2="16.5" stroke="#8a6c31" stroke-width="1.3" opacity=".75"/>' +
+    '<circle cx="21.5" cy="20" r="3.4" fill="#b23a2e" stroke="#6e1f18" stroke-width="1.2"/>' +
+    '<circle cx="21.5" cy="20" r="1.4" fill="#d8564a"/>' +
+  '</svg>';
 
 // ---- Map collectibles: tappable loot scattered around the player -----------
 // Fresh loot is seeded per ~250 m cell per day, so every walk turns up coins,
@@ -12705,7 +12794,11 @@ const MAP_PICKUP_TYPES = [
   { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
   { id:'mushroom', glyph:'🍄', label:'Forest mushroom', weight:10, grant() { gameState.inventory.items.forest_mushroom = (gameState.inventory.items.forest_mushroom || 0) + 1; return '+1 Forest Mushroom'; } },
   { id:'chest',    glyph:CHEST_SVG, label:'Treasure chest', weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
-  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } }
+  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
+  // Side-quest scrolls are handled specially in collectMapPickup: instead of an
+  // instant reward they unfurl into a small walkable quest the player can take
+  // up on the spot — or leave sealed on the map for later.
+  { id:'sidequest', glyph:SCROLL_SVG, label:'Side-quest scroll', weight:5, grant() { return 'A side quest awaits'; } }
 ];
 const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
 const MAP_PICKUP_RANGE_M = 220;
@@ -12759,6 +12852,9 @@ function drawMapPickups(lat, lon) {
   const zoomedOut = zoom < BURBZ_START_ZOOM - 0.5;
   mapPickupsNear(lat, lon)
     .filter(p => !state.collected[p.key])
+    // Side-quest scrolls belong to the free wander — they stay rolled up
+    // (hidden) while a walking quest already owns the map.
+    .filter(p => p.type.id !== 'sidequest' || !activeWalkingQuest())
     .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
     .sort((a, b) => a.dist - b.dist)
     .slice(0, zoomedOut ? 26 : 14)
@@ -12779,6 +12875,7 @@ function collectMapPickup(pickup, el) {
   }
   const state = ensureMapPickupState();
   if (state.collected[pickup.key]) return;
+  if (pickup.type.id === 'sidequest') { openSideQuestScrollSheet(pickup); return; } // stays sealed until taken up
   state.collected[pickup.key] = true;
   const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
   const rewardText = pickup.type.grant(r);
@@ -12798,6 +12895,42 @@ function collectMapPickup(pickup, el) {
   }
   if (el) { el.classList.add('collected'); setTimeout(() => { const m = liveMapPickupMarkers.find(mk => mk.getElement() === el); if (m) m.remove(); }, 420); }
   showToast(pickup.type.glyph + ' ' + rewardText);
+}
+
+// ---- Side-quest scrolls: found loot that unfurls into a walkable quest ------
+// The scroll's contents are deterministic from its map seed, so the same spot
+// holds the same side quest all day. Declining keeps it sealed on the map.
+let pendingSideQuestPickup = null;
+function openSideQuestScrollSheet(pickup) {
+  const core = window.BurbzSideQuestCore;
+  if (!core) return;
+  SFX.tap(); vibrate(20);
+  pendingSideQuestPickup = pickup;
+  const scroll = core.sideQuestForSeed(pickup.seed);
+  const km = ((scroll.lenM || 900) / 1000).toFixed(1);
+  const el = walkQuestSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close side quest scroll">✕</button>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + SCROLL_SVG + '</div><div><div class="quest-name">' + escapeHtml(scroll.name) + '</div><div class="quest-desc">A sealed side quest, posted by ' + escapeHtml(scroll.giver) + '</div></div></div>' +
+    '<div class="quest-desc" style="margin:10px 2px">“' + escapeHtml(scroll.brief) + '”</div>' +
+    '<div class="quest-desc" style="margin:0 2px 12px">📜 Side Quest · ~' + km + ' km loop from the scroll · waymarkers, treasure chests and trail birds included</div>' +
+    '<div class="quest-photo-actions"><button class="wq-npc-ok" onclick="acceptSideQuestScroll()">📜 TAKE UP THIS QUEST</button><button class="wq-npc-ok" onclick="closeWalkQuestSheet()">Leave it sealed for later</button></div></div>';
+  el.classList.add('open');
+}
+function acceptSideQuestScroll() {
+  const pickup = pendingSideQuestPickup;
+  pendingSideQuestPickup = null;
+  const core = window.BurbzSideQuestCore;
+  if (!pickup || !core) { closeWalkQuestSheet(); return; }
+  if (activeWalkingQuest()) { showToast('Finish or abandon your current quest first'); closeWalkQuestSheet(); return; }
+  const state = ensureMapPickupState();
+  if (state.collected[pickup.key]) { closeWalkQuestSheet(); return; }
+  state.collected[pickup.key] = true;
+  const scroll = { ...core.sideQuestForSeed(pickup.seed), lat: pickup.lat, lon: pickup.lon, key: pickup.key };
+  const offer = core.sideQuestOffer(scroll, villageRngFrom(pickup.seed ^ 0x51ed270b));
+  saveState();
+  if (liveMapHasPrecisePosition && liveMapLastPosition) drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon);
+  if (!offer) { showToast('The scroll crumbled — try another'); closeWalkQuestSheet(); return; }
+  startWalkingQuestFromOffer(offer);
 }
 let liveMapAreaRows = [];
 const BURBZ_AREA_BIRDS_OPEN_KEY = 'burbz_area_birds_open';
