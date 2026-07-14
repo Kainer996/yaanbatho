@@ -382,7 +382,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-attribution a { color:inherit; text-decoration:none; }
 .empire-map-empty { position:absolute; z-index:4; inset:64px 24px 58px; display:none; place-items:center; color:#eadcac; font-size:12px; line-height:1.5; text-align:center; pointer-events:none; }
 .empire-map-card.is-empty .empire-map-empty { display:grid; }
-.empire-map-marker { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; filter:drop-shadow(0 4px 7px rgba(0,0,0,.72)); }
+.empire-map-marker { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transition:opacity .18s ease; filter:drop-shadow(0 4px 7px rgba(0,0,0,.72)); }
+.empire-map-marker.is-visible { opacity:1; pointer-events:auto; }
 .empire-map-marker-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:50% 50% 50% 8px; transform:rotate(-45deg); border:2px solid #fff0b3; background:radial-gradient(circle at 36% 32%,#ffd977,#9b671e 76%); box-shadow:0 0 0 3px rgba(240,199,103,.18),0 0 18px rgba(240,199,103,.62); }
 .empire-map-marker-icon > span { transform:rotate(45deg); font-size:17px; }
 .empire-map-marker-label { display:none; max-width:126px; margin-top:4px; padding:3px 7px; border-radius:9px; border:1px solid rgba(240,199,103,.5); background:rgba(7,14,10,.9); color:#fff0bd; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -2467,7 +2468,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
 <script src="battle_core.js?v=perch-league-20260710"></script>
-<script src="empire_map_core.js?v=territory-map-20260714"></script>
+<script src="empire_map_core.js?v=territory-map-v2-20260714"></script>
 <script src="quest_core.js?v=loop-clarity-20260713"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -13005,8 +13006,14 @@ function scheduleVillageMarkerRefresh() {
   }, 350);
 }
 
+function normaliseVillageCoordinate(value, min, max) {
+  if (value === null || value === undefined || value === '') return null;
+  const coordinate = Number(value);
+  return Number.isFinite(coordinate) && coordinate >= min && coordinate <= max ? coordinate : null;
+}
+
 function enterVillage(v) {
-  villageActive = { seed: v.seed >>> 0, name: v.name, lat: Number.isFinite(Number(v.lat)) ? Number(v.lat) : null, lon: Number.isFinite(Number(v.lon)) ? Number(v.lon) : null };
+  villageActive = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180) };
   if (gameState) { gameState.lastVillage = villageActive; saveState(); }
   SFX.tap();
   switchScreen('village');
@@ -13040,7 +13047,18 @@ function ensureEmpireState() {
 function empireVillages() { const e = ensureEmpireState(); return e ? Object.values(e.villages).filter(Boolean) : []; }
 function empireOwnsVillage(seed) { const e = ensureEmpireState(); return !!(e && e.villages[String(seed >>> 0)]); }
 const EMPIRE_TERRITORY_RADIUS_M = 2200;
+const EMPIRE_MAP_LOAD_TIMEOUT_MS = 12000;
 let empireMap = null, empireMapReady = false, empireMapInitPromise = null, empireMapMarkers = [], empireMapHasFramed = false;
+
+function resetEmpireMapAfterFailure(mapToRemove) {
+  clearEmpireMapMarkers();
+  const doomedMap = mapToRemove || empireMap;
+  try { doomedMap?.remove(); } catch (e) {}
+  if (!mapToRemove || empireMap === mapToRemove) empireMap = null;
+  empireMapReady = false;
+  empireMapInitPromise = null;
+  empireMapHasFramed = false;
+}
 
 function empireMappableVillages() {
   const core = window.BurbzEmpireMapCore;
@@ -13054,8 +13072,17 @@ function clearEmpireMapMarkers() {
 
 function updateEmpireMarkerDetail() {
   if (!empireMap) return;
-  const show = empireMap.getZoom() >= 8;
-  empireMapMarkers.forEach(marker => marker.getElement()?.classList.toggle('show-label', show));
+  const zoom = empireMap.getZoom();
+  const showMarker = zoom >= 6;
+  const showLabel = zoom >= 8;
+  empireMapMarkers.forEach(marker => {
+    const element = marker.getElement();
+    if (!element) return;
+    element.classList.toggle('is-visible', showMarker);
+    element.classList.toggle('show-label', showLabel);
+    element.setAttribute('aria-hidden', showMarker ? 'false' : 'true');
+    element.tabIndex = showMarker ? 0 : -1;
+  });
 }
 
 function frameEmpireTerritory() {
@@ -13124,30 +13151,52 @@ function refreshEmpireMap(options = {}) {
 }
 
 function initialiseEmpireMap() {
-  if (empireMap) return Promise.resolve(empireMap);
+  if (empireMap && empireMapReady) return Promise.resolve(empireMap);
   if (empireMapInitPromise) return empireMapInitPromise;
-  empireMapInitPromise = loadMapLibreIfNeeded().then(() => {
+  empireMapInitPromise = loadMapLibreIfNeeded().then(() => new Promise((resolve, reject) => {
     if (!window.maplibregl || !$('empireWorldMap')) throw new Error('MapLibre unavailable for Empire map');
-    empireMap = new maplibregl.Map({
+    const map = new maplibregl.Map({
       container:'empireWorldMap', style:burbzMapStyle(), center:[0,22], zoom:1.45,
       minZoom:1, maxZoom:17, dragPan:true, scrollZoom:true, touchZoomRotate:true,
       pitchWithRotate:false, attributionControl:false
     });
-    empireMap.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'bottom-right');
-    empireMap.on('load', () => {
-      empireMap.addSource('empire-territories', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
-      empireMap.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
-      empireMap.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territories', paint:{ 'fill-color':['get','color'], 'fill-opacity':.24 } });
-      empireMap.addLayer({ id:'empire-territory-line', type:'line', source:'empire-territories', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f7d575', 'line-width':['interpolate',['linear'],['zoom'],2,1.2,11,3.2], 'line-opacity':.94, 'line-blur':.35 } });
-      empireMap.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#f0c767', 'circle-opacity':.24, 'circle-blur':.45 } });
-      empireMap.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#fff0af', 'circle-stroke-color':'#7c5118', 'circle-stroke-width':1.4 } });
-      empireMapReady = true;
-      refreshEmpireMap({ frame:true });
+    empireMap = map;
+    let settled = false;
+    let loadTimeout = null;
+    const fail = error => {
+      if (settled) return;
+      settled = true;
+      if (loadTimeout) clearTimeout(loadTimeout);
+      resetEmpireMapAfterFailure(map);
+      reject(error instanceof Error ? error : new Error(String(error || 'Empire map failed to load')));
+    };
+    map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'bottom-right');
+    map.once('load', () => {
+      if (settled) return;
+      try {
+        map.addSource('empire-territories', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+        map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+        map.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territories', paint:{ 'fill-color':['get','color'], 'fill-opacity':.24 } });
+        map.addLayer({ id:'empire-territory-line', type:'line', source:'empire-territories', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f7d575', 'line-width':['interpolate',['linear'],['zoom'],2,1.2,11,3.2], 'line-opacity':.94, 'line-blur':.35 } });
+        map.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#f0c767', 'circle-opacity':.24, 'circle-blur':.45 } });
+        map.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#fff0af', 'circle-stroke-color':'#7c5118', 'circle-stroke-width':1.4 } });
+        empireMapReady = true;
+        settled = true;
+        if (loadTimeout) clearTimeout(loadTimeout);
+        refreshEmpireMap({ frame:true });
+        resolve(map);
+      } catch (error) { fail(error); }
     });
-    empireMap.on('zoom', updateEmpireMarkerDetail);
-    empireMap.on('error', event => { if (event && event.error) console.warn('BURBZ empire map warning', event.error.message || event.error); });
-    return empireMap;
-  }).catch(err => {
+    map.on('zoom', updateEmpireMarkerDetail);
+    map.on('error', event => {
+      const error = event && event.error;
+      const message = String(error && (error.message || error) || 'Unknown map error');
+      if (!empireMapReady && /style|failed to fetch|load failed|network|http status/i.test(message)) fail(error || message);
+      else if (error) console.warn('BURBZ empire map warning', message);
+    });
+    loadTimeout = setTimeout(() => fail(new Error('Empire map style load timed out')), EMPIRE_MAP_LOAD_TIMEOUT_MS);
+  })).catch(err => {
+    if (empireMap && !empireMapReady) resetEmpireMapAfterFailure(empireMap);
     empireMapInitPromise = null;
     const status = $('empireMapStatus');
     if (status) status.textContent = 'The world atlas could not open — check your connection and try the Empire tab again.';
@@ -13217,7 +13266,7 @@ function claimCurrentVillage() {
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
-  empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: Number.isFinite(Number(v.lat)) ? Number(v.lat) : null, lon: Number.isFinite(Number(v.lon)) ? Number(v.lon) : null, claimedAt: new Date().toISOString(), lastTributeAt: Date.now() };
+  empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: new Date().toISOString(), lastTributeAt: Date.now() };
   addPlayerXp(40);
   saveState();
   SFX.victory();

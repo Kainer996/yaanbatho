@@ -28,7 +28,11 @@
     const sinDelta = Math.sin(delta), cosDelta = Math.cos(delta);
     const phi2 = Math.asin(sinPhi1 * cosDelta + cosPhi1 * sinDelta * Math.cos(bearingRad));
     const lambda2 = lambda1 + Math.atan2(Math.sin(bearingRad) * sinDelta * cosPhi1, cosDelta - sinPhi1 * Math.sin(phi2));
-    return [((lambda2 * 180 / Math.PI + 540) % 360) - 180, phi2 * 180 / Math.PI];
+    // Keep this longitude unwrapped around the claim's own longitude. MapLibre
+    // accepts longitudes just beyond ±180 and renders the short dateline arc;
+    // normalising each point independently would turn a 2.2 km circle into a
+    // nearly 360° polygon.
+    return [lambda2 * 180 / Math.PI, phi2 * 180 / Math.PI];
   }
 
   function territoryCircle(village, radiusM, steps) {
@@ -69,12 +73,31 @@
   function claimBounds(villages) {
     const claims = validClaims(villages);
     if (!claims.length) return null;
-    let west = Infinity, south = Infinity, east = -Infinity, north = -Infinity;
+    let south = Infinity, north = -Infinity;
+    const longitudes = [];
     claims.forEach(v => {
       const lat = Number(v.lat), lon = Number(v.lon);
-      west = Math.min(west, lon); south = Math.min(south, lat);
-      east = Math.max(east, lon); north = Math.max(north, lat);
+      longitudes.push(((lon % 360) + 360) % 360);
+      south = Math.min(south, lat);
+      north = Math.max(north, lat);
     });
+    if (longitudes.length === 1) {
+      const lon = Number(claims[0].lon);
+      return [[lon, south], [lon, north]];
+    }
+    longitudes.sort((a, b) => a - b);
+    let largestGap = -1, gapAfter = 0;
+    for (let i = 0; i < longitudes.length; i++) {
+      const next = i === longitudes.length - 1 ? longitudes[0] + 360 : longitudes[i + 1];
+      const gap = next - longitudes[i];
+      if (gap > largestGap) { largestGap = gap; gapAfter = i; }
+    }
+    let west = longitudes[(gapAfter + 1) % longitudes.length];
+    let east = longitudes[gapAfter];
+    while (east < west) east += 360;
+    if (west > 180) { west -= 360; east -= 360; }
+    west = Number(west.toFixed(12));
+    east = Number(east.toFixed(12));
     return [[west, south], [east, north]];
   }
 

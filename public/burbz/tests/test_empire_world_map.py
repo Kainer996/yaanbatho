@@ -53,6 +53,17 @@ def test_empire_bounds_span_all_valid_claims():
     assert run_core(f"core.claimBounds({json.dumps(villages)})") == [[-2.712, 53.207], [-2.684, 53.228]]
 
 
+def test_dateline_claims_do_not_create_world_spanning_geometry_or_bounds():
+    expression = (
+        "(()=>{const ring=core.territoryCircle({seed:1,name:'Dateline',lat:0,lon:179.99},2200,56).geometry.coordinates[0];"
+        "const bounds=core.claimBounds([{seed:1,name:'East',lat:0,lon:179.9},{seed:2,name:'West',lat:0,lon:-179.9}]);"
+        "return {ringSpan:Math.max(...ring.map(p=>p[0]))-Math.min(...ring.map(p=>p[0])),boundsSpan:bounds[1][0]-bounds[0][0]};})()"
+    )
+    result = run_core(expression)
+    assert result["ringSpan"] < 1
+    assert result["boundsSpan"] < 1
+
+
 def test_empire_tab_contains_an_interactive_world_map_and_controls():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="empireWorldMap"' in html
@@ -64,12 +75,16 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert "scrollZoom:true" in html
     assert "touchZoomRotate:true" in html
     assert "new maplibregl.NavigationControl" in html
+    assert "EMPIRE_MAP_LOAD_TIMEOUT_MS" in html
+    assert "resetEmpireMapAfterFailure" in html
     assert "attributionControl:false" in html
     assert 'class="empire-map-attribution"' in html
     assert "empire-territory-fill" in html
     assert "empire-territory-line" in html
     assert "padding:{ top:70, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
+    assert "showMarker = zoom >= 6" in html
+    assert "is-visible" in html
 
 
 def test_claiming_or_opening_a_village_refreshes_and_focuses_the_empire_map():
@@ -92,16 +107,25 @@ def test_claim_coordinates_preserve_valid_equator_and_prime_meridian_locations()
     enter_end = html.index("\nfunction currentVillage", enter_start)
     claim_start = html.index("function claimCurrentVillage(")
     claim_end = html.index("\nfunction renderVillageClaimBar", claim_start)
-    assert "Number.isFinite(Number(v.lat))" in html[enter_start:enter_end]
-    assert "Number.isFinite(Number(v.lon))" in html[enter_start:enter_end]
-    assert "Number.isFinite(Number(v.lat))" in html[claim_start:claim_end]
-    assert "Number.isFinite(Number(v.lon))" in html[claim_start:claim_end]
+    assert "normaliseVillageCoordinate(v.lat, -90, 90)" in html[enter_start:enter_end]
+    assert "normaliseVillageCoordinate(v.lon, -180, 180)" in html[enter_start:enter_end]
+    assert "normaliseVillageCoordinate(v.lat, -90, 90)" in html[claim_start:claim_end]
+    assert "normaliseVillageCoordinate(v.lon, -180, 180)" in html[claim_start:claim_end]
+
+
+def test_legacy_null_coordinates_stay_missing_instead_of_becoming_zero():
+    html = HTML.read_text(encoding="utf-8")
+    start = html.index("function normaliseVillageCoordinate(")
+    end = html.index("\nfunction enterVillage", start)
+    helper = html[start:end]
+    assert "value === null" in helper
+    assert "value === undefined" in helper
 
 
 def test_empire_map_assets_are_versioned_offline_and_cache_bumped():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "empire_map_core.js?v=territory-map-20260714"
+    marker = "empire_map_core.js?v=territory-map-v2-20260714"
     assert marker in html
     assert "./" + marker in sw
-    assert "burbz-empire-world-map-v64-20260714" in sw
+    assert "burbz-empire-world-map-v65-20260714" in sw
