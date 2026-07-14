@@ -368,6 +368,27 @@ svg.academy-room-bg { display:block; filter:none; }
 .village-claim-btn[disabled] { opacity:.55; }
 .village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
 #empirePanel { margin:14px; }
+.empire-map-card { position:relative; height:390px; margin:12px 14px 6px; overflow:hidden; border-radius:19px; border:1px solid rgba(240,199,103,.38); background:#0c1712; box-shadow:0 14px 34px rgba(0,0,0,.42), inset 0 0 32px rgba(240,199,103,.08); }
+#empireWorldMap { position:absolute; inset:0; }
+#empireWorldMap .maplibregl-canvas { filter:saturate(.82) brightness(.82); }
+.empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
+.empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); }
+.empire-map-vignette { position:absolute; inset:0; z-index:2; pointer-events:none; box-shadow:inset 0 0 42px rgba(2,8,5,.72); background:linear-gradient(180deg,rgba(5,13,9,.14),transparent 32%,transparent 72%,rgba(5,12,8,.36)); }
+.empire-map-tools { position:absolute; z-index:5; top:10px; left:10px; display:flex; gap:7px; }
+.empire-map-btn { min-height:35px; padding:0 11px; border-radius:11px; border:1px solid rgba(240,199,103,.5); background:rgba(11,20,15,.9); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.4); }
+.empire-map-btn:active { transform:scale(.97); }
+.empire-map-status { position:absolute; z-index:5; left:10px; right:10px; bottom:26px; min-height:34px; display:flex; align-items:center; justify-content:center; padding:7px 10px; border-radius:11px; border:1px solid rgba(240,199,103,.3); background:rgba(8,16,11,.88); color:#f8e7b2; font-size:10px; font-weight:800; letter-spacing:.04em; text-align:center; pointer-events:none; backdrop-filter:blur(8px); }
+.empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:7px; line-height:1; color:rgba(22,29,24,.72); text-align:center; white-space:nowrap; pointer-events:auto; }
+.empire-map-attribution a { color:inherit; text-decoration:none; }
+.empire-map-empty { position:absolute; z-index:4; inset:64px 24px 58px; display:none; place-items:center; color:#eadcac; font-size:12px; line-height:1.5; text-align:center; pointer-events:none; }
+.empire-map-card.is-empty .empire-map-empty { display:grid; }
+.empire-map-marker { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; filter:drop-shadow(0 4px 7px rgba(0,0,0,.72)); }
+.empire-map-marker-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:50% 50% 50% 8px; transform:rotate(-45deg); border:2px solid #fff0b3; background:radial-gradient(circle at 36% 32%,#ffd977,#9b671e 76%); box-shadow:0 0 0 3px rgba(240,199,103,.18),0 0 18px rgba(240,199,103,.62); }
+.empire-map-marker-icon > span { transform:rotate(45deg); font-size:17px; }
+.empire-map-marker-label { display:none; max-width:126px; margin-top:4px; padding:3px 7px; border-radius:9px; border:1px solid rgba(240,199,103,.5); background:rgba(7,14,10,.9); color:#fff0bd; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.empire-map-marker.show-label .empire-map-marker-label { display:block; }
+.empire-village-hub { margin:14px; padding:12px; border-radius:18px; border:1px solid rgba(240,199,103,.18); background:rgba(10,15,11,.58); }
+.empire-village-hub-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 .empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 .empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
@@ -375,7 +396,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:14px; border:1px solid rgba(120,166,109,.5); background:rgba(38,58,36,.85); color:#dff3d4; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; }
 .empire-tribute-btn[disabled] { opacity:.5; }
 .empire-village-list { display:grid; gap:8px; }
-.empire-village-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:13px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.09); }
+.empire-village-row { width:100%; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:13px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.09); color:inherit; text-align:left; }
+.empire-village-row:active { transform:scale(.99); border-color:rgba(240,199,103,.38); }
 .empire-village-flag { font-size:20px; }
 .empire-village-name { flex:1; font-family:'Rajdhani',sans-serif; font-weight:800; color:var(--text); letter-spacing:.04em; }
 .empire-village-meta { font-size:11px; color:var(--text3); }
@@ -2133,16 +2155,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div id="academyRoomInterior"></div>
     </div>
 
-    <!-- VILLAGE / EMPIRE SCREEN — medieval 3D hub + conquest ledger -->
+    <!-- EMPIRE SCREEN — interactive territory map + medieval village hub -->
     <div class="screen" id="screen-village">
-      <div class="screen-title" id="villageTitle">BURB VILLAGE</div>
-      <div class="village-sub" id="villageSub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
-      <div id="villageClaimBar"></div>
-      <div class="village-stage" id="villageStage">
-        <div class="village-loading" id="villageLoading">Raising the timber frames…</div>
+      <div class="screen-title">YOUR EMPIRE</div>
+      <div class="village-sub">Drag, pinch and zoom across the world. Captured territory glows gold; zoom in for each town and village birdhouse.</div>
+      <div class="empire-map-card" id="empireMapCard">
+        <div id="empireWorldMap" role="application" aria-label="Interactive map of your captured territories"></div>
+        <div class="empire-map-vignette"></div>
+        <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
+        <div class="empire-map-empty">Claim a town or village from the real-world map and its territory will ignite here in gold.</div>
+        <div class="empire-map-status" id="empireMapStatus">Charting your realm…</div>
+        <div class="empire-map-attribution"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
       </div>
-      <div class="village-legend" id="villageLegend"></div>
       <div id="empirePanel"></div>
+      <div class="empire-village-hub" id="empireVillageHub">
+        <div class="empire-village-hub-title" id="villageTitle">BURB VILLAGE</div>
+        <div class="village-sub" id="villageSub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
+        <div id="villageClaimBar"></div>
+        <div class="village-stage" id="villageStage"><div class="village-loading" id="villageLoading">Raising the timber frames…</div></div>
+        <div class="village-legend" id="villageLegend"></div>
+      </div>
     </div>
 
     <div class="screen" id="screen-quests">
@@ -2435,6 +2467,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
 <script src="battle_core.js?v=perch-league-20260710"></script>
+<script src="empire_map_core.js?v=territory-map-20260714"></script>
 <script src="quest_core.js?v=loop-clarity-20260713"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -12973,7 +13006,7 @@ function scheduleVillageMarkerRefresh() {
 }
 
 function enterVillage(v) {
-  villageActive = { seed: v.seed >>> 0, name: v.name, lat: Number(v.lat) || null, lon: Number(v.lon) || null };
+  villageActive = { seed: v.seed >>> 0, name: v.name, lat: Number.isFinite(Number(v.lat)) ? Number(v.lat) : null, lon: Number.isFinite(Number(v.lon)) ? Number(v.lon) : null };
   if (gameState) { gameState.lastVillage = villageActive; saveState(); }
   SFX.tap();
   switchScreen('village');
@@ -13006,6 +13039,134 @@ function ensureEmpireState() {
 }
 function empireVillages() { const e = ensureEmpireState(); return e ? Object.values(e.villages).filter(Boolean) : []; }
 function empireOwnsVillage(seed) { const e = ensureEmpireState(); return !!(e && e.villages[String(seed >>> 0)]); }
+const EMPIRE_TERRITORY_RADIUS_M = 2200;
+let empireMap = null, empireMapReady = false, empireMapInitPromise = null, empireMapMarkers = [], empireMapHasFramed = false;
+
+function empireMappableVillages() {
+  const core = window.BurbzEmpireMapCore;
+  return core && core.validClaims ? core.validClaims(empireVillages()) : [];
+}
+
+function clearEmpireMapMarkers() {
+  empireMapMarkers.forEach(marker => { try { marker.remove(); } catch (e) {} });
+  empireMapMarkers = [];
+}
+
+function updateEmpireMarkerDetail() {
+  if (!empireMap) return;
+  const show = empireMap.getZoom() >= 8;
+  empireMapMarkers.forEach(marker => marker.getElement()?.classList.toggle('show-label', show));
+}
+
+function frameEmpireTerritory() {
+  if (!empireMap) return;
+  const core = window.BurbzEmpireMapCore;
+  const villages = empireMappableVillages();
+  const bounds = core && core.claimBounds ? core.claimBounds(villages) : null;
+  if (!bounds) {
+    empireMap.easeTo({ center:[0, 22], zoom:1.45, duration:900 });
+  } else if (villages.length === 1 || (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])) {
+    empireMap.easeTo({ center:[Number(villages[0].lon), Number(villages[0].lat)], zoom:11.1, duration:900 });
+  } else {
+    empireMap.fitBounds(bounds, { padding:{ top:70, right:58, bottom:112, left:58 }, maxZoom:11.3, duration:900 });
+  }
+  empireMapHasFramed = true;
+}
+
+function showEmpireWorld() {
+  if (!empireMap) return;
+  empireMap.easeTo({ center:[0, 22], zoom:1.45, duration:1000 });
+}
+
+function focusEmpireVillage(seed) {
+  const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
+  if (!village || !window.BurbzEmpireMapCore || !window.BurbzEmpireMapCore.validClaim(village) || !empireMap) return;
+  empireMap.flyTo({ center:[Number(village.lon), Number(village.lat)], zoom:Math.max(11.5, empireMap.getZoom()), duration:850 });
+}
+
+function openEmpireVillage(seed) {
+  const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
+  if (!village) return;
+  villageActive = { seed:village.seed >>> 0, name:village.name, lat:village.lat, lon:village.lon };
+  if (gameState) { gameState.lastVillage = villageActive; saveState(); }
+  focusEmpireVillage(village.seed);
+  renderVillage();
+  setTimeout(() => $('empireVillageHub')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260);
+}
+
+function refreshEmpireMap(options = {}) {
+  if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
+  const villages = empireMappableVillages();
+  const core = window.BurbzEmpireMapCore;
+  try {
+    empireMap.getSource('empire-territories')?.setData(core.territoryFeatureCollection(villages, EMPIRE_TERRITORY_RADIUS_M, 56));
+    empireMap.getSource('empire-claims')?.setData(core.claimFeatureCollection(villages));
+  } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
+  clearEmpireMapMarkers();
+  villages.forEach(village => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'empire-map-marker';
+    el.setAttribute('aria-label', 'Open captured village ' + village.name);
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>👑</span></span><span class="empire-map-marker-label">' + escapeHtml(village.name) + '</span>';
+    el.addEventListener('click', ev => { ev.stopPropagation(); openEmpireVillage(village.seed); });
+    const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(village.lon), Number(village.lat)]).addTo(empireMap);
+    empireMapMarkers.push(marker);
+  });
+  updateEmpireMarkerDetail();
+  const card = $('empireMapCard');
+  card?.classList.toggle('is-empty', villages.length === 0);
+  const status = $('empireMapStatus');
+  if (status) status.textContent = villages.length
+    ? villages.length + ' captured territor' + (villages.length === 1 ? 'y' : 'ies') + ' glowing gold · zoom in and tap a crown'
+    : 'No captured territory yet · claim a real town or village from the Map tab';
+  if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
+}
+
+function initialiseEmpireMap() {
+  if (empireMap) return Promise.resolve(empireMap);
+  if (empireMapInitPromise) return empireMapInitPromise;
+  empireMapInitPromise = loadMapLibreIfNeeded().then(() => {
+    if (!window.maplibregl || !$('empireWorldMap')) throw new Error('MapLibre unavailable for Empire map');
+    empireMap = new maplibregl.Map({
+      container:'empireWorldMap', style:burbzMapStyle(), center:[0,22], zoom:1.45,
+      minZoom:1, maxZoom:17, dragPan:true, scrollZoom:true, touchZoomRotate:true,
+      pitchWithRotate:false, attributionControl:false
+    });
+    empireMap.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'bottom-right');
+    empireMap.on('load', () => {
+      empireMap.addSource('empire-territories', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+      empireMap.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+      empireMap.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territories', paint:{ 'fill-color':['get','color'], 'fill-opacity':.24 } });
+      empireMap.addLayer({ id:'empire-territory-line', type:'line', source:'empire-territories', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f7d575', 'line-width':['interpolate',['linear'],['zoom'],2,1.2,11,3.2], 'line-opacity':.94, 'line-blur':.35 } });
+      empireMap.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#f0c767', 'circle-opacity':.24, 'circle-blur':.45 } });
+      empireMap.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#fff0af', 'circle-stroke-color':'#7c5118', 'circle-stroke-width':1.4 } });
+      empireMapReady = true;
+      refreshEmpireMap({ frame:true });
+    });
+    empireMap.on('zoom', updateEmpireMarkerDetail);
+    empireMap.on('error', event => { if (event && event.error) console.warn('BURBZ empire map warning', event.error.message || event.error); });
+    return empireMap;
+  }).catch(err => {
+    empireMapInitPromise = null;
+    const status = $('empireMapStatus');
+    if (status) status.textContent = 'The world atlas could not open — check your connection and try the Empire tab again.';
+    console.warn('BURBZ empire map init failed', err);
+    return null;
+  });
+  return empireMapInitPromise;
+}
+
+function renderEmpireWorldMap() {
+  const realmBtn = $('empireMapRealmBtn');
+  const worldBtn = $('empireMapWorldBtn');
+  if (realmBtn) realmBtn.onclick = frameEmpireTerritory;
+  if (worldBtn) worldBtn.onclick = showEmpireWorld;
+  initialiseEmpireMap().then(map => {
+    if (!map) return;
+    setTimeout(() => { try { map.resize(); refreshEmpireMap(); } catch (e) {} }, 80);
+  });
+}
 const EMPIRE_RANKS = [[50, 'World Emperor'], [35, 'Kingdom Monarch'], [20, 'Realm Duke'], [10, 'Shire Count'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
 function empireRankTitle(count) { for (const [n, t] of EMPIRE_RANKS) { if (count >= n) return t; } return 'Wandering Trainer'; }
 // Each new conquest costs a little more than the last, so an empire is a
@@ -13056,7 +13217,7 @@ function claimCurrentVillage() {
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
-  empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: Number(v.lat) || null, lon: Number(v.lon) || null, claimedAt: new Date().toISOString(), lastTributeAt: Date.now() };
+  empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: Number.isFinite(Number(v.lat)) ? Number(v.lat) : null, lon: Number.isFinite(Number(v.lon)) ? Number(v.lon) : null, claimedAt: new Date().toISOString(), lastTributeAt: Date.now() };
   addPlayerXp(40);
   saveState();
   SFX.victory();
@@ -13066,6 +13227,7 @@ function claimCurrentVillage() {
   setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
+  refreshEmpireMap({ frame:true });
   updateHeader();
   renderVillage();
 }
@@ -13091,12 +13253,13 @@ function renderEmpirePanel() {
   const count = villages.length;
   const hasTribute = due.coins > 0 || due.branches > 0;
   const rows = count ? villages.map(v =>
-    '<div class="empire-village-row"><span class="empire-village-flag">👑</span><span class="empire-village-name">' + escapeHtml(v.name) + '</span><span class="empire-village-meta">claimed ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></div>'
+    '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '"><span class="empire-village-flag">👑</span><span class="empire-village-name">' + escapeHtml(v.name) + '</span><span class="empire-village-meta">claimed ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></button>'
   ).join('') : '<div class="empire-empty">No villages conquered yet. Walk to a village on the map, step inside, and build a birdhouse to claim it — every village in the world can be yours.</div>';
   panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 YOUR EMPIRE — ' + count + ' VILLAGE' + (count === 1 ? '' : 'S') + '</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
     '<div class="empire-copy">Conquer the world map: every village you walk to can be claimed with a birdhouse. Claimed villages pay tribute of ' + EMPIRE_TRIBUTE_COINS + ' 🪙 and ' + EMPIRE_TRIBUTE_BRANCHES + ' 🪵 every 8 hours.</div>' +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TRIBUTE: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' : '⏳ TRIBUTE GROWING — CHECK BACK LATER') + '</button>' : '') +
     '<div class="empire-village-list">' + rows + '</div>';
+  panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
 }
 
 // ---- Scene state ------------------------------------------------------------
@@ -13118,6 +13281,7 @@ function renderVillage() {
   if (sub) sub.textContent = (owned ? 'Your village. ' : '') + 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside. Find more villages on the map.';
   renderVillageClaimBar();
   renderEmpirePanel();
+  renderEmpireWorldMap();
   renderVillageLegend();
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {

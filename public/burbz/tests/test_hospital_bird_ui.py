@@ -69,6 +69,7 @@ def test_room_renderer_passes_room_context_to_each_bird_actor():
     assert "birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('')" in render
 
 
-def test_hospital_bird_ui_release_bumps_the_cache():
+def test_hospital_bird_ui_is_part_of_the_offline_app_shell():
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert "burbz-hospital-bird-ui-v63-20260714" in sw
+    assert "'./index.html'" in sw
+    assert "const BURBZ_CACHE = 'burbz-" in sw
