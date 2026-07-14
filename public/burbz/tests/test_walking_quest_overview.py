@@ -46,7 +46,7 @@ def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
 
 def test_quest_route_clarity_release_is_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "./quest_core.js?v=public-path-trigger-v5-20260714" in sw
+    assert "./quest_core.js?v=show-local-quests-v6-20260714" in sw
 
 
 def test_nearby_quests_are_sorted_by_distance_to_their_start():
@@ -113,7 +113,7 @@ def test_quest_board_prioritises_start_distance_and_focuses_a_selection_on_the_m
 
 def test_premium_quest_asset_and_release_are_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-public-path-trigger-v69-20260714" in sw
+    assert "burbz-show-local-quests-v70-20260714" in sw
     assert "./assets/ui/quest-compass-emblem.webp" in sw
 
 
@@ -131,3 +131,51 @@ def test_map_quest_focus_moves_keyboard_focus_and_restores_it_on_close():
     assert "mapQuestFocusBegin.focus" in html
     assert "restoreQuestMapFocus" in html
     assert "mapQuestBtn.focus" in html
+
+
+def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():
+    html = HTML.read_text(encoding="utf-8")
+    assert html.count('id="mapQuestShowBtn"') == 1
+    assert 'class="map-quest-show-btn"' in html
+    assert 'aria-pressed="false"' in html
+    assert '>Show Quests<' in html
+    assert html.index('id="mapQuestBtn"') < html.index('id="mapQuestShowBtn"')
+    show_button_css = html.split(".map-quest-show-btn {", 1)[1].split("}", 1)[0]
+    assert "height:44px" in show_button_css
+
+
+def test_show_quests_reveals_and_frames_every_local_offer():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function showAllLocalQuests()" in html
+    assert "discoverNearbyQuestOffers()" in html
+    assert "function fitAllLocalQuestRoutes" in html
+    assert "liveMap.fitBounds" in html
+    assert "showBtn.addEventListener('click', showAllLocalQuests)" in html
+    assert "updateShowQuestsButton" in html
+
+
+def test_overview_markers_are_distance_labelled_circles_that_open_the_full_brief():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function questMarkerDistanceText" in html
+    assert 'class="wq-offer-distance"' in html
+    assert 'class="wq-offer-badge"' in html
+    assert "questMarkerDistanceText(o)" in html
+    assert "focusQuestOnMap(i)" in html
+
+
+def test_distance_markers_use_inner_visual_offsets_without_moving_maplibre_anchors():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function questPinDisplayOffset" in html
+    assert 'class="wq-offer-stack"' in html
+    assert "--quest-pin-x" in html
+    assert "--quest-pin-y" in html
+    assert ".wq-offer-stack { transform:translate" in html
+
+
+def test_show_quests_release_is_query_busted_and_cached_offline():
+    html = HTML.read_text(encoding="utf-8")
+    sw = SW.read_text(encoding="utf-8")
+    marker = "quest_core.js?v=show-local-quests-v6-20260714"
+    assert marker in html
+    assert "./" + marker in sw
+    assert "burbz-show-local-quests-v70-20260714" in sw
