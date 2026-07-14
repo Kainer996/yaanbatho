@@ -2539,7 +2539,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
 <script src="battle_core.js?v=perch-league-20260710"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=premium-quest-board-v4-20260714"></script>
+<script src="quest_core.js?v=public-path-trigger-v5-20260714"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
@@ -11726,7 +11726,11 @@ async function startWalkingQuestFromOffer(offer) {
   switchScreen('map');
   SFX.levelUp();
   vibrate(QUEST_BUZZ.start);
-  showQuestNpcDialog(quest.npcName, 'A quest, adventurer! Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
+  const current = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+  const start = quest.checkpoints[0];
+  const atStart = current && start && mapDistanceMeters(current, start) <= window.BurbzQuestCore.REACH_RADIUS_M;
+  const startEvents = atStart ? questOnPositionFix(liveMapLastPosition.lat, liveMapLastPosition.lon, Number.isFinite(current.accuracy) ? current.accuracy : 10) : [];
+  if (!startEvents.some(ev => ev.type === 'npc')) showQuestNpcDialog(quest.npcName, 'A quest, adventurer! Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
 }
 
 function walkQuestRouteGeoJSON(quest) {
@@ -11751,6 +11755,7 @@ function drawWalkingQuestOnMap() {
   drawWalkingQuestRoute();
   if (!quest || !liveMap || !window.maplibregl) return;
   quest.checkpoints.forEach((cp, idx) => {
+    if (cp.kind === 'finish' && !window.BurbzQuestCore.questFinishIsReady(quest)) return;
     // Outer pin belongs to MapLibre (inline transform positioning); all visuals,
     // transitions and bounce animations live on the inner .quest-marker child.
     const el = document.createElement('div');
@@ -11769,7 +11774,7 @@ function drawWalkingQuestOnMap() {
       showToast(meta + (cp.reached ? ' — claimed!' : me !== null ? ' — ' + me + ' m away. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m!' : ''));
     });
     const mk = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
-    questMapMarkers.push(mk);
+    questMapMarkers[idx] = mk;
   });
   drawTrailExtrasOnMap(quest);
   updateWalkQuestHud();
@@ -11950,8 +11955,9 @@ function maybeChartLoopHome(quest, opts) {
 
 function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const quest = activeWalkingQuest();
-  if (!quest) return;
+  if (!quest) return [];
   maybeChartLoopHome(quest);
+  const finishWasReady = window.BurbzQuestCore.questFinishIsReady(quest);
   const events = window.BurbzQuestCore.questProcessFix(quest, lat, lon, accuracy, tOverride);
   events.forEach(ev => {
     if (ev.type === 'npc') {
@@ -12001,9 +12007,11 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       if (face) { face.classList.add('reached'); if (ev.checkpoint.kind === 'chest') face.innerHTML = CHEST_OPEN_SVG; else if (ev.checkpoint.kind === 'flag') face.textContent = '✅'; }
     }
   });
+  if (!finishWasReady && activeWalkingQuest() === quest && window.BurbzQuestCore.questFinishIsReady(quest)) drawWalkingQuestOnMap();
   updateWalkQuestHud();
   const now = Date.now();
   if (events.length || now - walkQuestLastSave > 20000) { walkQuestLastSave = now; saveState(); }
+  return events;
 }
 
 function completeWalkingQuest() {
@@ -12222,6 +12230,35 @@ function renderQuestOfferCards(container, offers, onChoose) {
   container.innerHTML = offers.length ? offers.map((o, i) => questOfferCardMarkup(o, i, offers)).join('') : '<div class="quest-all-done">No mapped trail starts are available here yet. You can still chart your own adventure.</div>';
   container.querySelectorAll('[data-quest-offer]').forEach(card => card.addEventListener('click', () => onChoose(Number(card.dataset.questOffer))));
 }
+function visibleMapWalkingQuestOffers(lat, lon) {
+  if (!liveMap || !window.BurbzQuestCore.parseMapWalkableFeatures) return [];
+  const features = [], seen = new Set();
+  try {
+    const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {});
+    sources.forEach(sourceId => {
+      let rows = [];
+      try { rows = liveMap.querySourceFeatures(sourceId, { sourceLayer:'transportation' }) || []; } catch (e) {}
+      rows.forEach(feature => {
+        const key = JSON.stringify(feature.geometry) + '|' + String(feature.properties?.name || '') + '|' + String(feature.properties?.class || '') + '|' + String(feature.properties?.subclass || '');
+        if (!seen.has(key)) { seen.add(key); features.push(feature); }
+      });
+    });
+  } catch (e) { console.warn('BURBZ visible path read failed', e); }
+  return window.BurbzQuestCore.parseMapWalkableFeatures(features.slice(0, 500), lat, lon);
+}
+function mergeQuestOffers(primary, visible) {
+  const merged = (primary || []).slice();
+  (visible || []).forEach(candidate => {
+    const cp = candidate.points || [], cs = cp[0], ce = cp[cp.length - 1];
+    if (!cs || !ce) return;
+    const duplicate = merged.some(existing => {
+      const ep = existing.points || [], es = ep[0], ee = ep[ep.length - 1];
+      return es && ee && mapDistanceMeters(cs, es) < 20 && mapDistanceMeters(ce, ee) < 35;
+    });
+    if (!duplicate) merged.push(candidate);
+  });
+  return merged.slice(0, 18);
+}
 function discoverNearbyQuestOffers(force = false) {
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) return Promise.resolve([]);
   const { lat, lon } = liveMapLastPosition;
@@ -12233,7 +12270,7 @@ function discoverNearbyQuestOffers(force = false) {
     if (liveMapLastPosition && window.BurbzQuestCore.questHaversine(lat, lon, liveMapLastPosition.lat, liveMapLastPosition.lon) > 120) {
       return discoverNearbyQuestOffers(true);
     }
-    questOverview.offers = prepareQuestOffers(offers);
+    questOverview.offers = prepareQuestOffers(mergeQuestOffers(offers, visibleMapWalkingQuestOffers(lat, lon)));
     questOverview.fetchedAt = Date.now();
     questOverview.at = { lat, lon };
     walkQuestOffersCache = questOverview.offers;
@@ -12503,15 +12540,15 @@ function handleLivePosition(pos, fly) {
     setMapLabels('Location too imprecise', Number.isFinite(accuracy) && accuracy > 500 ? 'Waiting for GPS accuracy better than 500 metres before placing you or nearby birds.' : 'Waiting for a valid GPS fix before placing you or nearby birds.');
     return false;
   }
-  const lat = Number(pos.coords.latitude), lon = Number(pos.coords.longitude);
+  const lat = Number(pos.coords.latitude), lon = Number(pos.coords.longitude), accuracy = Number(pos.coords.accuracy);
   liveMapHasPrecisePosition = true;
-  liveMapLastPosition = { lat, lon, source:'Your live position' };
-  updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true });
-  try { questOnPositionFix(lat, lon, Number(pos.coords.accuracy)); } catch (err) { console.warn('BURBZ quest fix failed', err); }
+  liveMapLastPosition = { lat, lon, accuracy, source:'Your live position' };
+  updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy });
+  try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
-async function updateLiveMapPosition(lat, lon, source, opts = {}) { liveMapLastPosition = { lat, lon, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return;
+async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return;
   if (mapRegionForCoords(lat, lon) === 'unsupported') {
     liveMapSpawns = [];
     liveMapFeatureCount = 0;

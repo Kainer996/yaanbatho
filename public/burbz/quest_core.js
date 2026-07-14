@@ -90,6 +90,27 @@
     return pts[pts.length - 1];
   }
 
+  // Closest point on the actual polyline, not merely its nearest OSM node.
+  function nearestPointOnRoute(pts, lat, lon, closed) {
+    if (!pts || !pts.length) return null;
+    if (pts.length === 1) return { point: pts[0], segmentIndex: 0, distanceM: questHaversine(lat, lon, pts[0].lat, pts[0].lon) };
+    var best = null;
+    var count = closed ? pts.length : pts.length - 1;
+    var cosLat = Math.max(0.2, Math.cos(toRad(lat)));
+    for (var i = 0; i < count; i++) {
+      var a = pts[i], b = pts[(i + 1) % pts.length];
+      var ax = (a.lon - lon) * cosLat, ay = a.lat - lat;
+      var bx = (b.lon - lon) * cosLat, by = b.lat - lat;
+      var vx = bx - ax, vy = by - ay;
+      var denom = vx * vx + vy * vy;
+      var t = denom > 0 ? Math.max(0, Math.min(1, -(ax * vx + ay * vy) / denom)) : 0;
+      var point = { lat: a.lat + (b.lat - a.lat) * t, lon: a.lon + (b.lon - a.lon) * t };
+      var distanceM = questHaversine(lat, lon, point.lat, point.lon);
+      if (!best || distanceM < best.distanceM) best = { point: point, segmentIndex: i, distanceM: distanceM };
+    }
+    return best;
+  }
+
   // Keep payload small: decimate a polyline to at most maxPts evenly spaced points.
   function decimateRoute(pts, maxPts) {
     maxPts = maxPts || 160;
@@ -121,6 +142,7 @@
       'way[highway~"^(path|footway|bridleway|track)$"][name](' + around + ');' +
       'way[designation~"public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic",i](' + around + ');' +
       'way[highway~"^(path|footway)$"][foot~"^(designated|yes)$"](' + around + ');' +
+      'way[highway~"^(path|footway|bridleway|track)$"][access!~"^(private|no)$",i][foot!~"^(private|no)$",i](' + around + ');' +
       ');out geom(' + clip + ') 400;'; // body verbosity: keeps relation members (tags verbosity drops them)
   }
 
@@ -137,7 +159,7 @@
     var els = (json && json.elements) || [];
     var offers = [];
     var wayGroups = {};
-    var unnamedPublicWays = [];
+    var unnamedWalkableWays = [];
     els.forEach(function (el) {
       if (el.type === 'relation' && el.tags) {
         // Geometry arrives clipped to the query bbox, so member ways can be
@@ -160,15 +182,20 @@
           });
         }
       } else if (el.type === 'way' && el.tags && el.geometry && el.geometry.length >= 2) {
-        var isPublic = /public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic/i.test(el.tags.designation || '');
+        var highway = String(el.tags.highway || '').toLowerCase();
+        var forbidden = /^(private|no)$/i.test(el.tags.access || '') || /^(private|no)$/i.test(el.tags.foot || '');
+        var isWalkable = /^(path|footway|bridleway|track)$/.test(highway) && !forbidden;
+        if (!isWalkable) return;
+        var isPublic = /public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic/i.test(el.tags.designation || '') ||
+          /^(designated|yes|permissive)$/i.test(el.tags.foot || '') || /^(footway|bridleway)$/.test(highway);
         var nm = el.tags.name;
         if (nm) {
           var key = nm.toLowerCase();
           if (!wayGroups[key]) wayGroups[key] = { name: nm, ways: [], isPublic: isPublic };
           wayGroups[key].ways.push(el);
           if (isPublic) wayGroups[key].isPublic = true;
-        } else if (isPublic) {
-          unnamedPublicWays.push(el);
+        } else {
+          unnamedWalkableWays.push(el);
         }
       }
     });
@@ -186,14 +213,15 @@
       });
     });
 
-    // Unnamed public footpaths: every connected cluster is its own quest.
+    // Unnamed walkable paths from the basemap: every real connected cluster is
+    // a quest. Never bridge disconnected paths with a cross-field shortcut.
     var ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-    clusterChains(unnamedPublicWays.map(wayToPoints)).slice(0, 10).forEach(function (pts, i) {
+    clusterChains(unnamedWalkableWays.map(wayToPoints)).slice(0, 10).forEach(function (pts, i) {
       if (pts.length < 2) return;
       offers.push({
         kind: 'footpath',
         ref: 'footpath-cluster/' + i,
-        name: 'Public Footpath ' + (ROMAN[i] || (i + 1)),
+        name: 'Mapped Footpath ' + (ROMAN[i] || (i + 1)),
         points: pts,
         tags: {}
       });
@@ -225,7 +253,7 @@
       while (joined && segs.length && guard++ < 500) {
         joined = false;
         var head = chain[0], tail = chain[chain.length - 1];
-        var bestI = -1, bestMode = null, bestD = 61; // join ends within 60m
+        var bestI = -1, bestMode = null, bestD = 13; // true OSM endpoint joins only
         for (var i = 0; i < segs.length; i++) {
           var s = segs[i];
           var d;
@@ -262,18 +290,17 @@
     var naturalLoop = closesM <= 180 && routeLengthM(pts) <= maxLenM * 1.5;
     var ring = pts.slice();
     if (naturalLoop && closesM <= 5) ring.pop(); // discard duplicate closing node before rotating
-    var bestI = 0, bestD = Infinity;
-    for (var i = 0; i < ring.length; i++) {
-      var d = questHaversine(playerLat, playerLon, ring[i].lat, ring[i].lon);
-      if (d < bestD) { bestD = d; bestI = i; }
-    }
+    var nearest = nearestPointOnRoute(ring, playerLat, playerLon, naturalLoop);
+    var bestI = nearest ? nearest.segmentIndex : 0;
+    var startPoint = nearest ? nearest.point : ring[bestI];
     if (naturalLoop) {
-      var rotated = ring.slice(bestI).concat(ring.slice(0, bestI));
-      rotated.push({ lat: rotated[0].lat, lon: rotated[0].lon });
+      var rotated = [startPoint].concat(ring.slice(bestI + 1), ring.slice(0, bestI + 1));
+      rotated.push({ lat: startPoint.lat, lon: startPoint.lon });
       return rotated;
     }
     // Walk outward from the nearest point in the longer direction until maxLen.
-    var fwd = ring.slice(bestI), back = ring.slice(0, bestI + 1).reverse();
+    var fwd = [startPoint].concat(ring.slice(bestI + 1));
+    var back = [startPoint].concat(ring.slice(0, bestI + 1).reverse());
     var pick = routeLengthM(fwd) >= routeLengthM(back) ? fwd : back;
     var out = [pick[0]], acc = 0;
     for (var j = 1; j < pick.length; j++) {
@@ -282,6 +309,32 @@
       if (acc >= maxLenM) break;
     }
     return out;
+  }
+
+  // Turn the walkable path geometry already visible in MapLibre into offers.
+  function parseMapWalkableFeatures(features, playerLat, playerLon) {
+    var elements = [];
+    (features || []).forEach(function (feature, fi) {
+      var props = feature && feature.properties || {};
+      var cls = String(props.subclass || props.class || props.type || '').toLowerCase();
+      if (!/path|footway|bridleway|track/.test(cls)) return;
+      if (/^(private|no)$/i.test(props.access || '') || /^(private|no)$/i.test(props.foot || '')) return;
+      var geom = feature.geometry || {};
+      var lines = geom.type === 'LineString' ? [geom.coordinates] : geom.type === 'MultiLineString' ? geom.coordinates : [];
+      lines.forEach(function (coords, li) {
+        var geometry = (coords || []).filter(function (c) { return c && isFinite(c[0]) && isFinite(c[1]); })
+          .map(function (c) { return { lat: Number(c[1]), lon: Number(c[0]) }; });
+        if (geometry.length < 2) return;
+        elements.push({ type: 'way', id: 'map_' + fi + '_' + li,
+          tags: { highway: /bridleway/.test(cls) ? 'bridleway' : /track/.test(cls) ? 'track' : 'footway', foot: 'yes', name: props.name || props.ref || '' },
+          geometry: geometry });
+      });
+    });
+    return parseOverpassTrails({ elements: elements }, playerLat, playerLon).map(function (offer, i) {
+      offer.source = 'visible-map';
+      offer.ref = 'map-path/' + i + '-' + Math.abs(Math.round((offer.points[0].lat * 1e5) + (offer.points[0].lon * 1e5)));
+      return offer;
+    });
   }
 
   // ---------------- Fallback: game-generated adventure loop ----------------
@@ -623,22 +676,24 @@
 
   var REACH_RADIUS_M = 45;
   var MAX_FIX_JUMP_M = 150;   // GPS glitch guard per fix
-  var MAX_FIX_ACCURACY_M = 60;
+  var MAX_DISTANCE_ACCURACY_M = 60;
+  var MAX_CHECKPOINT_ACCURACY_M = 120;
 
   // Feed a geolocation fix into the active quest. Mutates quest; returns events.
   function questProcessFix(quest, lat, lon, accuracy, now) {
     var events = [];
     if (!quest || quest.completedAt) return events;
     now = now || Date.now();
-    if (typeof accuracy === 'number' && accuracy > MAX_FIX_ACCURACY_M) return events;
-    if (quest.lastFix) {
+    if (typeof accuracy === 'number' && accuracy > MAX_CHECKPOINT_ACCURACY_M) return events;
+    var accurateForDistance = typeof accuracy !== 'number' || accuracy <= MAX_DISTANCE_ACCURACY_M;
+    if (quest.lastFix && accurateForDistance && (typeof quest.lastFix.accuracy !== 'number' || quest.lastFix.accuracy <= MAX_DISTANCE_ACCURACY_M)) {
       var d = questHaversine(quest.lastFix.lat, quest.lastFix.lon, lat, lon);
       var dt = Math.max(1, (now - quest.lastFix.t) / 1000);
       if (d <= MAX_FIX_JUMP_M && d / dt < 5.5 && d >= 2) {
         quest.distanceWalkedM += d;
       }
     }
-    quest.lastFix = { lat: lat, lon: lon, t: now };
+    quest.lastFix = { lat: lat, lon: lon, t: now, accuracy: accuracy };
 
     quest.checkpoints.forEach(function (cp, idx) {
       if (cp.reached) return;
@@ -690,6 +745,10 @@
 
   function questPendingCheckpoints(quest) {
     return quest.checkpoints.filter(function (c) { return c.kind !== 'finish' && !c.reached; }).length;
+  }
+
+  function questFinishIsReady(quest) {
+    return !!quest && questPendingCheckpoints(quest) === 0;
   }
 
   function questIsComplete(quest) {
@@ -833,8 +892,10 @@
     decimateRoute: decimateRoute,
     buildOverpassQuery: buildOverpassQuery,
     parseOverpassTrails: parseOverpassTrails,
+    parseMapWalkableFeatures: parseMapWalkableFeatures,
     chainWays: chainWays,
     normaliseTrailForPlayer: normaliseTrailForPlayer,
+    nearestPointOnRoute: nearestPointOnRoute,
     generateAdventureRoute: generateAdventureRoute,
     fetchAdventureRoute: fetchAdventureRoute,
     brouterRoute: brouterRoute,
@@ -851,6 +912,7 @@
     trimRouteToLength: trimRouteToLength,
     questProcessFix: questProcessFix,
     questPendingCheckpoints: questPendingCheckpoints,
+    questFinishIsReady: questFinishIsReady,
     questIsComplete: questIsComplete,
     questXpFor: questXpFor,
     questTrailBirdBonus: questTrailBirdBonus,

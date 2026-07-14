@@ -2,7 +2,7 @@ importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
 importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
 importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 
-const BURBZ_CACHE = 'burbz-premium-quest-board-v68-20260714';
+const BURBZ_CACHE = 'burbz-public-path-trigger-v69-20260714';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -22,7 +22,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
-  './quest_core.js?v=premium-quest-board-v4-20260714',
+  './quest_core.js?v=public-path-trigger-v5-20260714',
   './academy_treehouse_core.js?v=bird-rename-20260710',
   './scan_economy_core.js',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
