@@ -440,6 +440,16 @@ svg.academy-room-bg { display:block; filter:none; }
 .live-map-shell.clean-cloud-map .map-locate-btn,
 .live-map-shell.clean-cloud-map .map-nearby-card { display:none !important; }
 .live-map-shell.clean-cloud-map .map-area-birds-panel { z-index:42; left:7px; top:16px; bottom:calc(18px + var(--safe-bottom)); width:124px; max-width:32vw; background:transparent; border:0; box-shadow:none; backdrop-filter:none; padding:2px; }
+.map-area-birds-toggle { width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:5px; padding:0; color:inherit; text-align:left; }
+.map-area-birds-heading { min-width:0; }
+.map-area-birds-title,.map-area-birds-sub { display:block; }
+.map-area-birds-count { flex:none; min-width:22px; height:22px; display:grid; place-items:center; border-radius:999px; border:1px solid rgba(240,199,103,.34); background:rgba(5,13,10,.76); color:#f0c767; font:900 10px/1 'Rajdhani',sans-serif; box-shadow:0 4px 12px rgba(0,0,0,.35); }
+.map-area-birds-chevron { display:block; font-size:10px; transition:transform .22s ease; }
+.map-area-birds-panel.collapsed { right:auto; bottom:auto !important; width:auto !important; max-width:none !important; padding:7px 9px !important; border:1px solid rgba(240,199,103,.26) !important; border-radius:14px !important; background:rgba(3,10,9,.78) !important; box-shadow:0 8px 20px rgba(0,0,0,.38) !important; backdrop-filter:blur(9px) !important; }
+.map-area-birds-panel.collapsed .map-area-birds-sub,
+.map-area-birds-panel.collapsed .map-area-birds-list { display:none; }
+.map-area-birds-panel.collapsed .map-area-birds-title { font-size:9px; white-space:nowrap; }
+.map-area-birds-panel.collapsed .map-area-birds-chevron { transform:rotate(-90deg); }
 .live-map-shell.clean-cloud-map .map-area-birds-title { font-size:10px; color:#fff7d9; text-shadow:0 2px 8px rgba(0,0,0,.86); }
 .live-map-shell.clean-cloud-map .map-area-birds-sub { font-size:8px; margin:2px 0 5px; color:#efe2bd; text-shadow:0 2px 8px rgba(0,0,0,.86); }
 .live-map-shell.clean-cloud-map .map-area-birds-list { gap:5px; max-height:calc(100% - 34px); }
@@ -1839,12 +1849,17 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   .nav-icon { font-size: 17px; }
 }
 /* ---- Walking quests (real-world adventure) ---- */
-.map-quest-btn { position:absolute; right:12px; top:70px; z-index:30; min-width:44px; height:44px; padding:0 14px; border-radius:22px; border:1px solid rgba(214,168,79,.55); background:linear-gradient(180deg,#2a2113,#171107); color:#f0c767; font-family:inherit; font-weight:800; font-size:13px; letter-spacing:.4px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 14px rgba(0,0,0,.45); }
-.map-quest-btn.on-quest { border-color:rgba(126,217,131,.6); color:#9fe8a4; }
-.map-quest-overview-btn { position:absolute; right:12px; top:122px; z-index:30; min-width:44px; height:40px; padding:0 14px; border-radius:20px; border:1px solid rgba(88,216,88,.45); background:linear-gradient(180deg,#152a17,#0a150b); color:#8fe08f; font-family:inherit; font-weight:800; font-size:12px; letter-spacing:.4px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 14px rgba(0,0,0,.45); }
-.map-quest-overview-btn.active { background:linear-gradient(180deg,#245c2a,#12300f); color:#d2ffd2; border-color:#58d858; box-shadow:0 0 14px rgba(88,216,88,.45); }
-/* Starts right of the Area Birds column (left:7px + min(124px,32vw) wide) so the
-   two never overlap; sits below the Quest Log/Quests buttons which end at y162. */
+.map-quest-btn { position:absolute; right:12px; top:64px; z-index:44; min-width:178px; height:62px; padding:5px 12px 5px 6px; border-radius:19px; border:1px solid rgba(240,199,103,.64); background:radial-gradient(circle at 14% 30%,rgba(52,111,86,.34),transparent 34%),linear-gradient(145deg,rgba(39,31,17,.96),rgba(10,18,14,.97)); color:#fff6d7; font-family:inherit; display:flex; align-items:center; gap:9px; box-shadow:0 12px 28px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.1),0 0 22px rgba(75,196,153,.10); overflow:hidden; }
+.map-quest-btn::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.10) 47%,transparent 67%); transform:translateX(-110%); animation:questControlSheen 5.2s ease-in-out infinite; }
+@keyframes questControlSheen { 0%,70%{transform:translateX(-110%)} 88%,100%{transform:translateX(120%)} }
+.map-quest-btn-art { position:relative; z-index:1; width:49px; height:49px; flex:none; object-fit:cover; border-radius:14px; border:1px solid rgba(240,199,103,.54); box-shadow:0 0 0 2px rgba(0,0,0,.4),0 0 18px rgba(87,215,173,.25); }
+.map-quest-btn-copy { position:relative; z-index:1; min-width:0; text-align:left; line-height:1; }
+.map-quest-btn-kicker { display:block; margin-bottom:4px; color:#75dcb8; font:800 9px/1 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+.map-quest-btn-label { display:block; color:#fff2c6; font:900 14px/1 'Russo One',sans-serif; letter-spacing:.025em; white-space:nowrap; }
+.map-quest-btn-arrow { position:relative; z-index:1; margin-left:auto; color:#f0c767; font-size:18px; }
+.map-quest-btn.on-quest { border-color:rgba(126,217,131,.72); box-shadow:0 12px 28px rgba(0,0,0,.5),0 0 22px rgba(126,217,131,.2); }
+.map-quest-btn:focus-visible,.map-area-birds-toggle:focus-visible,.map-quest-focus-card button:focus-visible,.walk-quest-offer:focus-visible { outline:3px solid #fff7dc; outline-offset:3px; }
+/* Starts right of the Area Birds column so the two never overlap. */
 .map-quest-hud { position:absolute; left:calc(15px + min(124px, 32vw)); right:12px; top:174px; z-index:43; display:none; align-items:center; gap:10px; padding:8px 12px; border-radius:14px; background:linear-gradient(180deg,rgba(27,24,16,.92),rgba(13,12,8,.92)); border:1px solid rgba(214,168,79,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
 @media (max-height:720px) { .map-quest-hud { left:calc(15px + min(116px, 32vw)); } }
 .map-quest-hud.active { display:flex; }
@@ -1865,6 +1880,39 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .walk-quest-offer .wqo-icon { font-size:26px; flex:none; width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.3); }
 .walk-quest-offer .wqo-name { font-weight:800; font-size:14px; color:#f0c767; }
 .walk-quest-offer .wqo-sub { font-size:12px; color:var(--text3); margin-top:2px; }
+.walk-quest-offer .wqo-body { min-width:0; flex:1; }
+.walk-quest-offer .wqo-distance { display:inline-flex; align-items:center; min-height:24px; margin-bottom:5px; padding:3px 8px; border-radius:999px; background:rgba(91,219,178,.13); border:1px solid rgba(91,219,178,.35); color:#a6f5d5; font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.walk-quest-offer .wqo-meta { display:flex; flex-wrap:wrap; gap:5px 9px; margin-top:5px; font-size:10.5px; color:#c9c1ad; }
+.quest-chain-link { display:inline-flex; align-items:center; gap:4px; color:#83dfc0; opacity:.82; font-size:10px; }
+.quest-board-panel { background:radial-gradient(circle at 10% 0,rgba(63,139,108,.2),transparent 34%),linear-gradient(180deg,#1d1910,#0c100d 48%,#080b09); }
+.quest-board-hero { display:flex; gap:12px; align-items:center; margin:0 34px 12px 0; }
+.quest-board-art { width:68px; height:68px; flex:none; border-radius:19px; object-fit:cover; border:1px solid rgba(240,199,103,.5); box-shadow:0 8px 22px rgba(0,0,0,.45),0 0 20px rgba(81,203,161,.18); }
+.quest-board-title { color:#fff2c8; font:900 20px/1.08 'Russo One',sans-serif; }
+.quest-board-intro { margin-top:5px; color:#bdb7a8; font-size:12px; line-height:1.35; }
+.quest-board-distance-note { margin:10px 0; padding:9px 11px; border-radius:12px; border-left:3px solid #65d6ae; background:rgba(70,185,143,.09); color:#d9f8eb; font-size:12px; line-height:1.35; }
+.map-quest-focus-card { position:absolute; left:12px; right:12px; bottom:calc(14px + var(--safe-bottom)); z-index:46; display:none; max-width:470px; margin:auto; padding:13px; border-radius:21px; background:radial-gradient(circle at 7% 8%,rgba(66,148,115,.22),transparent 32%),linear-gradient(155deg,rgba(30,25,15,.97),rgba(7,13,10,.98)); border:1px solid rgba(240,199,103,.56); box-shadow:0 15px 40px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08); pointer-events:auto; }
+.map-quest-focus-card.show { display:block; animation:questFocusRise .28s ease-out; }
+@keyframes questFocusRise { from{transform:translateY(22px);opacity:0} to{transform:none;opacity:1} }
+.map-quest-focus-head { display:grid; grid-template-columns:48px minmax(0,1fr) 32px; gap:10px; align-items:center; }
+.map-quest-focus-art { width:48px; height:48px; border-radius:14px; object-fit:cover; border:1px solid rgba(240,199,103,.44); }
+.map-quest-focus-distance { color:#7fe0bd; font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+.map-quest-focus-name { margin-top:4px; color:#fff1c7; font:900 15px/1.08 'Russo One',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.map-quest-focus-close { width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.13); background:rgba(0,0,0,.26); color:#d7d1c2; }
+.map-quest-focus-brief { margin:10px 0; color:#ddd7c7; font-size:12px; line-height:1.43; }
+.map-quest-focus-meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.map-quest-focus-chip { padding:5px 8px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#d4cebd; font-size:10px; }
+.map-quest-focus-actions { display:flex; gap:8px; }
+.map-quest-focus-primary { flex:1; min-height:43px; border-radius:13px; background:linear-gradient(135deg,#f0c767,#cf9540); color:#171007; font:900 12px/1 'Russo One',sans-serif; box-shadow:0 7px 16px rgba(0,0,0,.35); }
+.map-quest-focus-secondary { min-width:45px; min-height:43px; border-radius:13px; border:1px solid rgba(102,219,179,.35); background:rgba(48,135,105,.12); color:#91e4c6; font-size:18px; }
+.live-map-shell.quest-focused .map-area-birds-panel:not(.collapsed) { opacity:.16; pointer-events:none; }
+.live-map-shell.quest-focused .map-quest-btn { min-width:0; width:48px; height:48px; padding:4px; border-radius:15px; opacity:.72; }
+.live-map-shell.quest-focused .map-quest-btn-copy,.live-map-shell.quest-focused .map-quest-btn-arrow { display:none; }
+.live-map-shell.quest-focused .map-quest-btn-art { width:38px; height:38px; border-radius:11px; }
+.live-map-shell.quest-focused .map-zoom-controls { top:124px; bottom:auto; opacity:.52; }
+.live-map-shell.quest-focused .maplibregl-ctrl-bottom-right { bottom:245px; }
+.wq-chain-pin { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:rgba(5,18,14,.9); border:1px solid rgba(101,214,174,.55); color:#84e1c0; font-size:12px; box-shadow:0 5px 14px rgba(0,0,0,.45); }
+@media (max-width:380px) { .map-quest-btn { min-width:162px; } .map-quest-btn-label{font-size:12px} .map-quest-btn-art{width:45px;height:45px} }
+@media (prefers-reduced-motion:reduce) { .map-quest-btn::after,.wq-offer-pin .wq-offer-badge { animation:none !important; } .map-quest-focus-card.show { animation:none; } }
 .walk-quest-offer.legendary-trail { border-color:rgba(190,120,255,.45); }
 .walk-quest-offer.legendary-trail .wqo-name { color:#d9a8ff; }
 .wq-attribution { font-size:10px; color:var(--text3); opacity:.8; margin-top:10px; text-align:center; }
@@ -1910,6 +1958,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .wq-offer-pin { --quest-route-color:#58d858; cursor:pointer; display:flex; flex-direction:column; align-items:center; pointer-events:auto; }
 .wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:38px; height:38px; border-radius:50%; font-size:19px; background:radial-gradient(circle at 36% 30%, #1f3429, #091411 78%); border:2px solid var(--quest-route-color); box-shadow:0 0 0 2px rgba(0,0,0,.45), 0 4px 10px rgba(0,0,0,.55); animation:questBounce 2.6s ease-in-out infinite; }
 .wq-offer-pin .wq-offer-name { max-width:120px; margin-top:3px; padding:2px 7px; border-radius:9px; font-size:9px; font-weight:800; text-align:center; color:#f5f3e9; background:rgba(6,13,11,.88); border:1px solid var(--quest-route-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wq-offer-pin.muted .wq-offer-badge { width:17px; height:17px; font-size:0; border-width:1px; animation:none; opacity:.42; }
+.wq-offer-pin.muted .wq-offer-name { display:none; }
+.wq-offer-pin.selected .wq-offer-badge { width:44px; height:44px; box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 22px var(--quest-route-color); }
 @keyframes questBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
 .wq-npc-dialog { position:fixed; inset:0; z-index:640; display:flex; align-items:flex-end; justify-content:center; background:rgba(4,6,5,.55); }
 .wq-npc-panel { width:100%; max-width:520px; margin:0 10px calc(84px + var(--safe-bottom,0px)); padding:14px 16px; border-radius:18px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.45); display:flex; gap:12px; align-items:flex-start; animation:questSheetUp .25s ease-out; }
@@ -1971,11 +2022,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Kingdom of Burbz field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Real roads, woods and hills, enchanted into a medieval bird realm.</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
-        <button class="map-quest-btn" id="mapQuestBtn" aria-label="Begin a walking quest">⚔️ <span id="mapQuestBtnLabel">Begin Quest</span></button>
-        <button class="map-quest-overview-btn" id="mapQuestOverviewBtn" aria-label="Show quest trails on the map">🥾 Quests</button>
+        <button class="map-quest-btn" id="mapQuestBtn" aria-label="Explore nearby quests"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-kicker">Field board</span><span class="map-quest-btn-label" id="mapQuestBtnLabel">Explore Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
+        <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
-        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><div class="map-area-birds-title">Area birds</div><div class="map-area-birds-sub">Revealed here · common → rare</div><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
+        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><button class="map-area-birds-toggle" id="mapAreaBirdsToggle" aria-controls="mapAreaBirdsList" aria-expanded="true"><span class="map-area-birds-heading"><span class="map-area-birds-title">Area birds</span><span class="map-area-birds-sub">Revealed here · common → rare</span></span><span class="map-area-birds-count" id="mapAreaBirdsCount"><span id="mapAreaBirdsCountValue">0</span><span class="map-area-birds-chevron" aria-hidden="true">⌄</span></span></button><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
         <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy">Tap Likely birds for a habitat overlay, or tap a marker for details.</div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button><button class="map-village-orb" id="mapVillageBtn" aria-label="Enter the village">&#127984;</button></div>
@@ -2488,7 +2539,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
 <script src="battle_core.js?v=perch-league-20260710"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=loop-clarity-20260713"></script>
+<script src="quest_core.js?v=premium-quest-board-v4-20260714"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
@@ -9678,7 +9729,7 @@ function renderBirdExpeditions() {
   }).join('') : '';
 
   // The quest board itself — info only, birds are chosen after tapping
-  const boardHtml = '<div class="quest-section-title">Quest Board</div>' + templates.map(t => {
+  const boardHtml = '<div class="quest-section-title">Kingdom Errands</div>' + templates.map(t => {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
@@ -11251,7 +11302,7 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
 function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { liveMap.setTerrain(null); } catch (e) {} liveMapTerrainEnabled = true; }
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
-  if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':8, 'line-opacity':.16, 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':6.2, 'line-opacity':.72 } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':3.5, 'line-opacity':.98 } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) openQuestOverviewOffer(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
+  if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
   if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':9, 'line-opacity':.18, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':3.2, 'line-opacity':.92, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: you are pinned to your real
@@ -11551,60 +11602,45 @@ function walkQuestSheetEl() {
 }
 function closeWalkQuestSheet() { const el = $('walkQuestSheet'); if (el) el.classList.remove('open'); }
 
-function openQuestOfferSheet() {
+function openQuestBoard() {
   SFX.tap();
   if (activeWalkingQuest()) { openActiveWalkQuestSheet(); return; }
   const el = walkQuestSheetEl();
-  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">⚔️</div><div><div class="quest-name">Begin a Quest</div><div class="quest-desc" id="walkQuestSheetStatus">Scouting the realm for legendary trails and public footpaths near you...</div></div></div>' +
-    '<div id="walkQuestOfferList"></div>' +
-    '<div class="wq-attribution">Real-world walk — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
+    '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="quest-board-title">Nearby Quests</div><div class="quest-board-intro" id="walkQuestSheetStatus">Scouting real trails and public footpaths around you…</div></div></div>' +
+    '<div class="quest-board-distance-note">Closest trailheads come first. Tap any quest to jump straight to its map, route and full field brief.</div>' +
+    '<div id="walkQuestOfferList"><div class="quest-all-done">Reading the enchanted trail map…</div></div>' +
+    '<div class="quest-section-title">🧭 Chart your own route</div><div id="walkQuestAdventureList"></div>' +
+    '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
   el.classList.add('open');
-  const renderAdventureOffers = () => {
-    const list = $('walkQuestOfferList'); if (!list) return;
-    [['Short stroll', 1200, '~1.2 km loop'], ['Explorer loop', 2500, '~2.5 km loop'], ['Grand expedition', 4500, '~4.5 km loop']].forEach((opt, i) => {
-      const b = document.createElement('button');
-      b.className = 'walk-quest-offer';
-      b.innerHTML = '<div class="wqo-icon">🧭</div><div><div class="wqo-name">Chart My Own Adventure — ' + opt[0] + '</div><div class="wqo-sub">' + opt[2] + ' of waymarkers conjured around you</div></div>';
-      b.addEventListener('click', () => startAdventureWalkQuest(opt[1], opt[0]));
-      list.appendChild(b);
-    });
-  };
+  const adventureList = $('walkQuestAdventureList');
+  [['Short stroll', 1200, '~1.2 km loop'], ['Explorer loop', 2500, '~2.5 km loop'], ['Grand expedition', 4500, '~4.5 km loop']].forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'walk-quest-offer';
+    b.innerHTML = '<div class="wqo-icon">🧭</div><div class="wqo-body"><div class="wqo-distance">STARTS HERE</div><div class="wqo-name">Chart My Own Adventure — ' + opt[0] + '</div><div class="wqo-meta"><span>' + opt[2] + '</span><span>↺ returns home</span></div></div><span aria-hidden="true">›</span>';
+    b.addEventListener('click', () => startAdventureWalkQuest(opt[1], opt[0]));
+    adventureList?.appendChild(b);
+  });
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
-    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'Location needed — tap ⌖ and allow location, then try again.';
-    renderAdventureOffers();
+    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'Allow location from the map to discover exactly how far away each real quest begins.';
+    const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. Your charted adventures are still ready below.</div>';
     return;
   }
-  const { lat, lon } = liveMapLastPosition;
-  window.BurbzQuestCore.fetchTrailOffers(lat, lon, { radiusM: 3000 }).then(offers => {
-    const sheet = $('walkQuestSheet'); if (!sheet || !sheet.classList.contains('open')) return;
-    const list = $('walkQuestOfferList'); if (!list) return;
-    const st = $('walkQuestSheetStatus');
-    if (st) st.textContent = offers.length
-      ? offers.length + ' real trail' + (offers.length === 1 ? '' : 's') + ' discovered near you. Every public footpath is a quest!'
-      : 'No known trails here — but a Burbz adventure can be charted anywhere.';
-    list.innerHTML = '';
+  discoverNearbyQuestOffers().then(offers => {
+    const sheet = $('walkQuestSheet'); if (!offers || !sheet || !sheet.classList.contains('open')) return;
     walkQuestOffersCache = offers;
-    offers.forEach((o, i) => {
-      const meta = WALK_QUEST_KIND_META[o.kind] || WALK_QUEST_KIND_META.path;
-      const b = document.createElement('button');
-      b.className = 'walk-quest-offer' + (o.kind === 'trail' ? ' legendary-trail' : '');
-      const isLoop = window.BurbzQuestCore.offerLoopStyle(o.points) === 'loop';
-      // Out-and-backs are capped at 2.8km one-way and walked both ways — show the
-      // distance the player will actually cover, matching the overview sheet.
-      const walkKm = isLoop ? o.lengthM / 1000 : Math.min(o.lengthM, 2800) * 2 / 1000;
-      b.innerHTML = '<div class="wqo-icon">' + meta.icon + '</div><div><div class="wqo-name">' + escapeHtml(o.name) + '</div><div class="wqo-sub">' + meta.label + ' · ' + (isLoop ? '' : '~') + walkKm.toFixed(1) + ' km walk · ' + (isLoop ? '↺ loop' : '↺ loops home when paths allow') + ' · starts ' + Math.round(o.startDistM) + ' m away</div></div>';
-      b.addEventListener('click', () => openQuestOfferDetail(walkQuestOffersCache[i]));
-      list.appendChild(b);
-    });
-    renderAdventureOffers();
+    const st = $('walkQuestSheetStatus');
+    if (st) st.textContent = offers.length ? offers.length + ' nearby quest' + (offers.length === 1 ? '' : 's') + ', ordered by distance to the start.' : 'No mapped trail starts nearby — chart your own route below.';
+    renderQuestOfferCards($('walkQuestOfferList'), offers, focusQuestOnMap);
   }).catch(err => {
     console.warn('BURBZ walking quest discovery failed', err);
-    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'The scouts could not reach the trail archives — chart your own adventure instead.';
-    renderAdventureOffers();
+    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'The trail archive is resting. You can still chart an adventure from your position.';
+    const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Nearby trails could not be loaded just now.</div>';
   });
 }
+function openQuestOfferSheet() { return openQuestBoard(); }
 let walkQuestOffersCache = [];
+let questOfferRequestSeq = 0;
 
 // Birds likely to be seen or heard along a quest route: reuse the map's
 // habitat engine (OSM features + regional species pools) but sample the
@@ -11779,7 +11815,7 @@ function updateWalkQuestHud() {
   const hud = $('mapQuestHud'), btnLabel = $('mapQuestBtnLabel'), btn = $('mapQuestBtn');
   const quest = activeWalkingQuest();
   if (quest) acquireQuestWakeLock(); else releaseQuestWakeLock();
-  if (btnLabel) btnLabel.textContent = quest ? 'Quest Log' : 'Begin Quest';
+  if (btnLabel) btnLabel.textContent = quest ? 'Quest Log' : 'Explore Quests';
   if (btn) btn.classList.toggle('on-quest', !!quest);
   if (!hud) return;
   if (!quest) { hud.classList.remove('active'); return; }
@@ -12086,9 +12122,10 @@ function renderWalkingQuestSection() {
       '<div class="quest-progress-text">' + hit + '/' + q.checkpoints.length + ' markers</div></div>' +
       '<button class="quest-claim-btn" onclick="switchScreen(\'map\')">MAP</button></div>';
   }
+  html += '<div class="quest-section-title">🧭 Nearby Quests</div><div class="quest-board-distance-note">Ordered by distance from you to each trailhead.</div><div id="walkingQuestNearbyList"><div class="quest-all-done">Reading nearby trail starts…</div></div>';
   html += '<div class="quest-section-title">🏆 Completed Adventures</div>';
   if (!wq.history.length) {
-    html += '<div class="quest-all-done">No adventures completed yet — tap ⚔️ Begin Quest on the map and take a real walk!</div>';
+    html += '<div class="quest-all-done">No adventures completed yet — open Explore Quests and take a real walk!</div>';
   } else {
     wq.history.slice(0, 25).forEach((s, i) => {
       const meta = WALK_QUEST_KIND_META[s.type] || WALK_QUEST_KIND_META.path;
@@ -12107,6 +12144,22 @@ function renderWalkingQuestSection() {
   });
   const activeCard = container.querySelector('[data-walk-active]');
   if (activeCard) activeCard.addEventListener('click', ev => { if (!ev.target.classList.contains('quest-claim-btn')) openActiveWalkQuestSheet(); });
+  renderQuestScreenNearbyOffers();
+}
+
+function renderQuestScreenNearbyOffers() {
+  const box = $('walkingQuestNearbyList');
+  if (!box) return;
+  if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
+    box.innerHTML = '<div class="quest-all-done">Open the map and allow location to rank quests by distance to their start.</div>';
+    return;
+  }
+  discoverNearbyQuestOffers().then(offers => {
+    if (!offers || !$('walkingQuestNearbyList')) return;
+    renderQuestOfferCards($('walkingQuestNearbyList'), offers, focusQuestOnMap);
+  }).catch(() => {
+    if ($('walkingQuestNearbyList')) $('walkingQuestNearbyList').innerHTML = '<div class="quest-all-done">Nearby quests could not be loaded just now.</div>';
+  });
 }
 
 function resumeWalkingQuestIfAny() {
@@ -12117,17 +12170,83 @@ function resumeWalkingQuestIfAny() {
 }
 
 // ---- Quest overview: distinct, calm route colours from above ----
-let questOverview = { on: false, offers: [], markers: [], prevZoom: null, fetchedAt: 0, at: null };
+let questOverview = { on: false, offers: [], markers: [], chainMarker: null, prevZoom: null, fetchedAt: 0, at: null, selectedIndex: null, areaBirdsWasOpen: null };
 const QUEST_OVERVIEW_ZOOM = 12.6;
 const QUEST_OVERVIEW_COLORS = ['#63e6be','#74c0fc','#ffd166','#da77f2','#ff8f70','#66d9e8','#a9e34b','#f783ac'];
 function questOverviewColor(i) { return QUEST_OVERVIEW_COLORS[Math.abs(Number(i) || 0) % QUEST_OVERVIEW_COLORS.length]; }
+
+function questStartDistanceText(offer) {
+  const raw = offer && offer.startDistM;
+  if (raw == null || raw === '') return 'START DISTANCE UNKNOWN';
+  const meters = Number(raw);
+  if (!Number.isFinite(meters)) return 'START DISTANCE UNKNOWN';
+  if (meters < 25) return 'STARTS HERE';
+  if (meters < 1000) return 'STARTS ' + Math.max(10, Math.round(meters / 10) * 10) + ' M FROM YOU';
+  return 'STARTS ' + (meters / 1000).toFixed(1) + ' KM FROM YOU';
+}
+function questOfferWalkKm(offer) {
+  if (offer && offer._loop && offer._loop.loopedBack && Array.isArray(offer._loop.points)) {
+    return { loop:'loop', km:Math.max(0, Number(offer._loop.totalLenM || window.BurbzQuestCore.routeLengthM(offer._loop.points)) / 1000) };
+  }
+  const loop = window.BurbzQuestCore.offerLoopStyle(offer.points || []);
+  const metres = loop === 'loop' ? Number(offer.lengthM || 0) : Math.min(Number(offer.lengthM || 0), 2800) * 2;
+  return { loop, km: Math.max(0, metres / 1000) };
+}
+function questOfferDisplayPoints(offer) {
+  return (offer && offer._loop && offer._loop.loopedBack && Array.isArray(offer._loop.points) && offer._loop.points.length > 1) ? offer._loop.points : ((offer && offer.points) || []);
+}
+function refreshQuestChainLinks(offers) {
+  const displayOffers = (offers || []).map(offer => ({ ...offer, points:questOfferDisplayPoints(offer) }));
+  const links = window.BurbzQuestCore.questChainTargetIndices(displayOffers, 120);
+  (offers || []).forEach((offer, i) => { offer._chainNextIndex = links[i]; });
+  return offers || [];
+}
+function prepareQuestOffers(offers) {
+  const sorted = window.BurbzQuestCore.sortOffersByStartDistance(offers || []);
+  return refreshQuestChainLinks(sorted);
+}
+function questChainMarkup(offer, offers) {
+  const idx = offer && offer._chainNextIndex;
+  const next = Number.isInteger(idx) && offers && offers[idx] ? offers[idx] : null;
+  return next ? '<span class="quest-chain-link" title="This trail ends near another quest start">⌁ continues into ' + escapeHtml(next.name) + '</span>' : '';
+}
+function questOfferCardMarkup(offer, i, offers) {
+  const meta = WALK_QUEST_KIND_META[offer.kind] || WALK_QUEST_KIND_META.path;
+  const walk = questOfferWalkKm(offer);
+  return '<button class="walk-quest-offer' + (offer.kind === 'trail' ? ' legendary-trail' : '') + '" data-quest-offer="' + i + '">' +
+    '<div class="wqo-icon">' + meta.icon + '</div><div class="wqo-body"><div class="wqo-distance">' + questStartDistanceText(offer) + '</div>' +
+    '<div class="wqo-name">' + escapeHtml(offer.name) + '</div><div class="wqo-meta"><span>' + escapeHtml(meta.label) + '</span><span>' + walk.km.toFixed(1) + ' km</span><span>' + (walk.loop === 'loop' ? '↺ loop' : '↔ return route') + '</span>' + questChainMarkup(offer, offers) + '</div></div><span aria-hidden="true">›</span></button>';
+}
+function renderQuestOfferCards(container, offers, onChoose) {
+  if (!container) return;
+  container.innerHTML = offers.length ? offers.map((o, i) => questOfferCardMarkup(o, i, offers)).join('') : '<div class="quest-all-done">No mapped trail starts are available here yet. You can still chart your own adventure.</div>';
+  container.querySelectorAll('[data-quest-offer]').forEach(card => card.addEventListener('click', () => onChoose(Number(card.dataset.questOffer))));
+}
+function discoverNearbyQuestOffers(force = false) {
+  if (!liveMapHasPrecisePosition || !liveMapLastPosition) return Promise.resolve([]);
+  const { lat, lon } = liveMapLastPosition;
+  const fresh = !force && questOverview.at && mapDistanceMeters(questOverview.at, { lat, lon }) < 250 && (Date.now() - questOverview.fetchedAt) < 300000;
+  if (fresh && questOverview.offers.length) return Promise.resolve(questOverview.offers);
+  const requestId = ++questOfferRequestSeq;
+  return window.BurbzQuestCore.fetchTrailOffers(lat, lon, { radiusM: 3000 }).then(offers => {
+    if (requestId !== questOfferRequestSeq) return null;
+    if (liveMapLastPosition && window.BurbzQuestCore.questHaversine(lat, lon, liveMapLastPosition.lat, liveMapLastPosition.lon) > 120) {
+      return discoverNearbyQuestOffers(true);
+    }
+    questOverview.offers = prepareQuestOffers(offers);
+    questOverview.fetchedAt = Date.now();
+    questOverview.at = { lat, lon };
+    walkQuestOffersCache = questOverview.offers;
+    return questOverview.offers;
+  });
+}
 
 function questOverviewGeoJSON() {
   if (!questOverview.on) return { type: 'FeatureCollection', features: [] };
   return { type: 'FeatureCollection', features: questOverview.offers.map((o, i) => ({
     type: 'Feature',
-    properties: { offerIdx: i, name: o.name, color: questOverviewColor(i) },
-    geometry: { type: 'LineString', coordinates: window.BurbzQuestCore.decimateRoute(o.points, 80).map(p => [p.lon, p.lat]) }
+    properties: { offerIdx: i, name: o.name, color: questOverviewColor(i), selected: questOverview.selectedIndex === i },
+    geometry: { type: 'LineString', coordinates: window.BurbzQuestCore.decimateRoute(questOfferDisplayPoints(o), 80).map(p => [p.lon, p.lat]) }
   })) };
 }
 function drawQuestOverviewLines() {
@@ -12137,26 +12256,49 @@ function drawQuestOverviewLines() {
 function clearQuestOverviewMarkers() {
   questOverview.markers.forEach(m => { try { m.remove(); } catch (e) {} });
   questOverview.markers = [];
+  if (questOverview.chainMarker) { try { questOverview.chainMarker.remove(); } catch (e) {} questOverview.chainMarker = null; }
 }
 function drawQuestOverviewMarkers() {
   clearQuestOverviewMarkers();
   if (!questOverview.on || !liveMap || !window.maplibregl) return;
   questOverview.offers.forEach((o, i) => {
     const meta = WALK_QUEST_KIND_META[o.kind] || WALK_QUEST_KIND_META.path;
-    const el = document.createElement('div');
-    el.className = 'wq-offer-pin';
+    const el = document.createElement('button');
+    const selected = questOverview.selectedIndex === i;
+    el.type = 'button';
+    el.className = 'wq-offer-pin' + (selected ? ' selected' : (questOverview.selectedIndex != null ? ' muted' : ''));
+    el.setAttribute('aria-label', 'View ' + o.name + ', ' + questStartDistanceText(o).toLowerCase());
     el.style.setProperty('--quest-route-color', questOverviewColor(i));
     el.innerHTML = '<div class="wq-offer-badge">' + meta.icon + '</div><div class="wq-offer-name">' + escapeHtml(o.name) + '</div>';
-    el.addEventListener('click', ev => { ev.stopPropagation(); openQuestOverviewOffer(i); });
+    el.addEventListener('click', ev => { ev.stopPropagation(); focusQuestOnMap(i); });
     const start = o.points[0];
     questOverview.markers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([start.lon, start.lat]).addTo(liveMap));
   });
+  const selected = questOverview.selectedIndex == null ? null : questOverview.offers[questOverview.selectedIndex];
+  const chainIdx = selected && selected._chainNextIndex;
+  if (selected && Number.isInteger(chainIdx) && questOverview.offers[chainIdx]) {
+    const selectedPoints = questOfferDisplayPoints(selected);
+    const end = selectedPoints[selectedPoints.length - 1];
+    const chainEl = document.createElement('div');
+    chainEl.className = 'wq-chain-pin';
+    chainEl.title = 'This quest ends near the start of ' + questOverview.offers[chainIdx].name;
+    chainEl.setAttribute('aria-label', chainEl.title);
+    chainEl.textContent = '⌁';
+    questOverview.chainMarker = new maplibregl.Marker({ element:chainEl, anchor:'center' }).setLngLat([end.lon, end.lat]).addTo(liveMap);
+  }
+}
+function closeQuestMapFocus(opts = {}) {
+  const card = $('mapQuestFocusCard'), shell = $('liveMapShell');
+  if (card) card.classList.remove('show');
+  shell?.classList.remove('quest-focused');
+  if (opts.restoreBirds !== false && questOverview.areaBirdsWasOpen != null) setAreaBirdsOpen(questOverview.areaBirdsWasOpen, false);
+  questOverview.areaBirdsWasOpen = null;
+  questOverview.selectedIndex = null;
 }
 function setQuestOverview(on) {
   questOverview.on = !!on;
-  const btn = $('mapQuestOverviewBtn');
-  if (btn) btn.classList.toggle('active', questOverview.on);
   if (!questOverview.on) {
+    closeQuestMapFocus();
     drawQuestOverviewLines();
     clearQuestOverviewMarkers();
     if (liveMap && questOverview.prevZoom != null) {
@@ -12165,21 +12307,13 @@ function setQuestOverview(on) {
     }
     return;
   }
-  if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location needed to scout quest trails'); questOverview.on = false; if (btn) btn.classList.remove('active'); return; }
-  const { lat, lon } = liveMapLastPosition;
+  if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location needed to scout quest trails'); questOverview.on = false; return; }
   if (liveMap && questOverview.prevZoom == null) { try { questOverview.prevZoom = liveMap.getZoom(); } catch (e) { questOverview.prevZoom = BURBZ_START_ZOOM; } }
-  if (liveMap) { try { liveMap.easeTo({ zoom: QUEST_OVERVIEW_ZOOM, pitch: burbzPitchForZoom(QUEST_OVERVIEW_ZOOM), duration: 900 }); } catch (e) {} }
-  const fresh = questOverview.at && mapDistanceMeters(questOverview.at, { lat, lon }) < 250 && (Date.now() - questOverview.fetchedAt) < 300000;
-  if (fresh && questOverview.offers.length) { drawQuestOverviewLines(); drawQuestOverviewMarkers(); showToast(questOverview.offers.length + ' colour-coded quest routes revealed'); return; }
-  showToast('Scouting quest trails around you...');
-  window.BurbzQuestCore.fetchTrailOffers(lat, lon, { radiusM: 3000 }).then(offers => {
-    if (!questOverview.on) return;
-    questOverview.offers = offers;
-    questOverview.fetchedAt = Date.now();
-    questOverview.at = { lat, lon };
+  discoverNearbyQuestOffers().then(offers => {
+    if (!offers || !questOverview.on) return;
     drawQuestOverviewLines();
     drawQuestOverviewMarkers();
-    showToast(offers.length ? offers.length + ' colour-coded quest routes revealed — tap one to read it' : 'No known trails here — use ⚔️ Begin Quest to chart your own adventure');
+    if (!offers.length) showToast('No mapped trail starts here yet — chart your own adventure from the quest board');
   }).catch(err => {
     console.warn('BURBZ quest overview scout failed', err);
     showToast('The scouts could not reach the trail archives — try again soon');
@@ -12187,10 +12321,67 @@ function setQuestOverview(on) {
 }
 function toggleQuestOverview() { SFX.tap(); setQuestOverview(!questOverview.on); }
 
-function openQuestOverviewOffer(idx) {
-  const o = questOverview.offers[idx];
-  if (o) openQuestOfferDetail(o);
+function fitSelectedQuestRoute(offer) {
+  const displayPoints = questOfferDisplayPoints(offer);
+  if (!liveMap || !offer || !displayPoints.length || !window.maplibregl) return;
+  try {
+    const bounds = new maplibregl.LngLatBounds();
+    displayPoints.forEach(p => bounds.extend([p.lon, p.lat]));
+    if (liveMapHasPrecisePosition && liveMapLastPosition) bounds.extend([liveMapLastPosition.lon, liveMapLastPosition.lat]);
+    const mapHeight = Math.max(320, Number(liveMap.getContainer && liveMap.getContainer().clientHeight) || 600);
+    liveMap.fitBounds(bounds, { padding:34, offset:[0, -Math.min(115, Math.round(mapHeight * .16))], maxZoom:14.2, pitch:0, retainPadding:false, duration:950 });
+  } catch (e) {
+    const start = displayPoints[0];
+    liveMap.easeTo({ center:[start.lon,start.lat], zoom:QUEST_OVERVIEW_ZOOM, pitch:0, duration:850 });
+  }
 }
+function renderQuestMapFocusCard() {
+  const offer = questOverview.offers[questOverview.selectedIndex];
+  const card = $('mapQuestFocusCard');
+  if (!offer || !card) { closeQuestMapFocus(); return; }
+  const meta = WALK_QUEST_KIND_META[offer.kind] || WALK_QUEST_KIND_META.path;
+  const walk = questOfferWalkKm(offer);
+  const chainIdx = offer._chainNextIndex;
+  const next = Number.isInteger(chainIdx) ? questOverview.offers[chainIdx] : null;
+  $('mapQuestFocusDistance').textContent = questStartDistanceText(offer);
+  $('mapQuestFocusName').textContent = offer.name;
+  $('mapQuestFocusBrief').textContent = 'Travel to the highlighted trailhead, then follow ' + walk.km.toFixed(1) + ' km of real mapped paths through the Kingdom of Burbz.' + (next ? ' This trail finishes beside the start of “' + next.name + '”, so your adventure can continue.' : ' Your route, waymarkers and trail rewards are shown clearly on the map.');
+  $('mapQuestFocusMeta').innerHTML = '<span class="map-quest-focus-chip">' + escapeHtml(meta.label) + '</span><span class="map-quest-focus-chip">' + (walk.loop === 'loop' ? '↺ loop route' : '↔ routed return') + '</span>' + (next ? '<span class="map-quest-focus-chip quest-chain-link">⌁ links to next quest</span>' : '');
+  const begin = $('mapQuestFocusBegin');
+  if (begin) {
+    begin.textContent = activeWalkingQuest() ? 'VIEW CURRENT QUEST' : 'BEGIN THIS QUEST';
+    begin.onclick = () => activeWalkingQuest() ? openActiveWalkQuestSheet() : startWalkingQuestFromOffer(offer);
+  }
+  card.classList.add('show');
+  $('liveMapShell')?.classList.add('quest-focused');
+}
+function focusQuestOnMap(idx) {
+  const offer = questOverview.offers[Number(idx)];
+  if (!offer) return;
+  SFX.tap();
+  closeWalkQuestSheet();
+  switchScreen('map');
+  questOverview.on = true;
+  questOverview.selectedIndex = Number(idx);
+  if (questOverview.prevZoom == null && liveMap) { try { questOverview.prevZoom = liveMap.getZoom(); } catch (e) {} }
+  if (questOverview.areaBirdsWasOpen == null) questOverview.areaBirdsWasOpen = areaBirdsOpenPreference();
+  setAreaBirdsOpen(false, false);
+  drawQuestOverviewLines();
+  drawQuestOverviewMarkers();
+  renderQuestMapFocusCard();
+  setTimeout(() => fitSelectedQuestRoute(offer), 80);
+  ensureOfferLoopBack(offer).then(loop => {
+    if (!loop || !loop.loopedBack || questOverview.offers[questOverview.selectedIndex] !== offer) return;
+    refreshQuestChainLinks(questOverview.offers);
+    drawQuestOverviewLines();
+    drawQuestOverviewMarkers();
+    renderQuestMapFocusCard();
+    fitSelectedQuestRoute(offer);
+  }).catch(() => {});
+  fetchQuestLikelyBirds(offer).then(rows => { offer.likelyBirds = likelyRowsToQuestBirds(rows); }).catch(() => {});
+}
+
+function openQuestOverviewOffer(idx) { focusQuestOnMap(idx); }
 
 // Quest information sheet shown BEFORE starting: route facts + the birds the
 // player is likely to see or hear along it, with the trail-birdwatch bonus.
@@ -12252,7 +12443,7 @@ function openQuestOfferDetail(offer) {
 // The game runs inside an IIFE, so inline onclick handlers (and QA harnesses)
 // only see explicitly window-exported functions.
 Object.assign(window, {
-  openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
+  openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
   __burbzQuestDebug: {
     getState: () => gameState,
@@ -12262,10 +12453,14 @@ Object.assign(window, {
     redraw: () => drawWalkingQuestOnMap(),
     save: () => saveState(),
     routeFeatures: () => { try { const s = liveMap.getSource('burbz-quest-route'); const d = (s.serialize ? s.serialize().data : s._data); return d.features.length; } catch (e) { return -1; } },
-    overview: () => ({ on: questOverview.on, offers: questOverview.offers.length, markers: questOverview.markers.length }),
+    overview: () => ({ on:questOverview.on, offers:questOverview.offers.length, names:questOverview.offers.map(o => o.name), markers:questOverview.markers.length }),
     overviewFeatures: () => { try { const s = liveMap.getSource('burbz-quest-offers'); const d = (s.serialize ? s.serialize().data : s._data); return d.features.length; } catch (e) { return -1; } },
     questMarkers: () => questMapMarkers,
     setOverview: on => setQuestOverview(on),
+    setOffers: offers => { questOverview.offers = prepareQuestOffers(offers || []); walkQuestOffersCache = questOverview.offers; questOverview.fetchedAt = Date.now(); if (liveMapLastPosition) questOverview.at = { lat:liveMapLastPosition.lat, lon:liveMapLastPosition.lon }; return questOverview.offers; },
+    setLocation: (lat, lon) => { liveMapHasPrecisePosition = true; liveMapLastPosition = { lat:Number(lat), lon:Number(lon), source:'QA position' }; return liveMapLastPosition; },
+    discoverOffers: force => discoverNearbyQuestOffers(!!force),
+    focusOffer: idx => focusQuestOnMap(idx),
     registerBird: b => questRegisterBirdEncounter(b),
     startOffer: o => startWalkingQuestFromOffer(o),
     extras: () => { const q = activeWalkingQuest(); return q ? { npcs: (q.trailNpcs || []).length, met: window.BurbzQuestCore.questMetTrailNpcs(q).length, tavern: !!q.trailTavern, boon: q.tavernBoon, markers: questExtraMarkers.length } : null; },
@@ -12279,9 +12474,11 @@ function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn 
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); }
-  const questBtn = $('mapQuestBtn'); if (questBtn && !questBtn.dataset.wired) { questBtn.dataset.wired = '1'; questBtn.addEventListener('click', () => { try { openQuestOfferSheet(); } catch (err) { console.error('BURBZ quest sheet failed', err); showToast('Quest board jammed — try again'); } }); }
+  const questBtn = $('mapQuestBtn'); if (questBtn && !questBtn.dataset.wired) { questBtn.dataset.wired = '1'; questBtn.addEventListener('click', () => { try { openQuestBoard(); } catch (err) { console.error('BURBZ quest board failed', err); showToast('Quest board jammed — try again'); } }); }
   const questHud = $('mapQuestHud'); if (questHud && !questHud.dataset.wired) { questHud.dataset.wired = '1'; questHud.addEventListener('click', () => { SFX.tap(); openActiveWalkQuestSheet(); }); }
-  const questOverviewBtn = $('mapQuestOverviewBtn'); if (questOverviewBtn && !questOverviewBtn.dataset.wired) { questOverviewBtn.dataset.wired = '1'; questOverviewBtn.addEventListener('click', () => { try { toggleQuestOverview(); } catch (err) { console.error('BURBZ quest overview failed', err); showToast('Quest scouting jammed — try again'); } }); } }
+  const areaBirdsToggle = $('mapAreaBirdsToggle'); if (areaBirdsToggle && !areaBirdsToggle.dataset.wired) { areaBirdsToggle.dataset.wired = '1'; setAreaBirdsOpen(areaBirdsOpenPreference(), false); areaBirdsToggle.addEventListener('click', () => { SFX.tap(); setAreaBirdsOpen(!areaBirdsToggle.getAttribute('aria-expanded').includes('true')); }); }
+  const focusClose = $('mapQuestFocusClose'); if (focusClose && !focusClose.dataset.wired) { focusClose.dataset.wired = '1'; focusClose.addEventListener('click', () => setQuestOverview(false)); }
+  const focusBoard = $('mapQuestFocusBoard'); if (focusBoard && !focusBoard.dataset.wired) { focusBoard.dataset.wired = '1'; focusBoard.addEventListener('click', () => { setQuestOverview(false); openQuestBoard(); }); } }
 function startLiveGeolocation() { if (!navigator.geolocation || liveMapWatchId !== null) { if (!navigator.geolocation) setMapLabels('Location unavailable', 'This browser cannot provide location, so Burbz will not pretend you are somewhere else.'); return; } navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Tap ⌖ and allow location to reveal the Kingdom of Burbz around your own phone.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); liveMapWatchId = navigator.geolocation.watchPosition(pos => handleLivePosition(pos, false), () => {}, { enableHighAccuracy:true, timeout:15000, maximumAge:0 }); }
 function validLivePosition(pos) {
   const coords = pos && pos.coords;
@@ -12592,7 +12789,21 @@ function collectMapPickup(pickup, el) {
   showToast(pickup.type.glyph + ' ' + rewardText);
 }
 let liveMapAreaRows = [];
-function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); liveMapAreaRows = rows.slice(0,9); list.innerHTML = liveMapAreaRows.map((row, i) => { const img = birdOnlyImgHTML(row.bird || { commonName:row.species }, 'map-area-bird-art'); return `<div class="map-area-bird" data-area-bird="${i}" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>';
+const BURBZ_AREA_BIRDS_OPEN_KEY = 'burbz_area_birds_open';
+function areaBirdsOpenPreference() {
+  try { return localStorage.getItem(BURBZ_AREA_BIRDS_OPEN_KEY) !== '0'; } catch (e) { return true; }
+}
+function setAreaBirdsOpen(open, persist = true) {
+  const panel = $('mapAreaBirdsPanel'), toggle = $('mapAreaBirdsToggle');
+  open = !!open;
+  panel?.classList.toggle('collapsed', !open);
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Hide area birds' : 'Show area birds');
+  }
+  if (persist) { try { localStorage.setItem(BURBZ_AREA_BIRDS_OPEN_KEY, open ? '1' : '0'); } catch (e) {} }
+}
+function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); liveMapAreaRows = rows.slice(0,9); const count = $('mapAreaBirdsCountValue'); if (count) count.textContent = String(liveMapAreaRows.length); list.innerHTML = liveMapAreaRows.map((row, i) => { const img = birdOnlyImgHTML(row.bird || { commonName:row.species }, 'map-area-bird-art'); return `<div class="map-area-bird" data-area-bird="${i}" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>';
   if (!list.dataset.wired) { list.dataset.wired = '1'; list.addEventListener('click', ev => { const card = ev.target.closest('[data-area-bird]'); if (!card) return; const row = liveMapAreaRows[Number(card.dataset.areaBird)]; if (row) { SFX.tap(); showMapBirdPreview(row); } }); } }
 
 // Tap a potential bird on the map screen → big art + its full name.

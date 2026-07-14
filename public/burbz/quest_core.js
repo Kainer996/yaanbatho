@@ -35,6 +35,40 @@
     return t;
   }
 
+  // Nearby quest choice is first and foremost about how far the player must
+  // travel before the walk begins. Preserve kind only as a stable tie-breaker.
+  function sortOffersByStartDistance(offers) {
+    var rank = { trail: 0, footpath: 1, path: 2, adventure: 3 };
+    return (offers || []).slice().sort(function (a, b) {
+      var ra = a && a.startDistM, rb = b && b.startDistM;
+      var da = (ra == null || ra === '') ? Infinity : Number(ra);
+      var db = (rb == null || rb === '') ? Infinity : Number(rb);
+      if (!isFinite(da)) da = Infinity;
+      if (!isFinite(db)) db = Infinity;
+      if (da !== db) return da - db;
+      return (rank[a && a.kind] == null ? 9 : rank[a.kind]) - (rank[b && b.kind] == null ? 9 : rank[b.kind]);
+    });
+  }
+
+  // If one route ends close to another route's start, surface that as a quiet
+  // onward-adventure hint. One nearest target per offer; self-links are ignored.
+  function questChainTargetIndices(offers, thresholdM) {
+    offers = offers || [];
+    thresholdM = isFinite(thresholdM) ? Math.max(1, Number(thresholdM)) : 120;
+    return offers.map(function (offer, i) {
+      var pts = offer && offer.points;
+      if (!pts || !pts.length) return null;
+      var end = pts[pts.length - 1], best = null, bestD = thresholdM + 1;
+      offers.forEach(function (candidate, j) {
+        if (i === j || !candidate || !candidate.points || !candidate.points.length) return;
+        var start = candidate.points[0];
+        var d = questHaversine(end.lat, end.lon, start.lat, start.lon);
+        if (d <= thresholdM && d < bestD) { best = j; bestD = d; }
+      });
+      return best;
+    });
+  }
+
   // Point along a polyline at a fraction [0..1] of its total length.
   function pointAtFraction(pts, frac) {
     if (!pts.length) return null;
@@ -175,12 +209,7 @@
     // Playable filter: at least ~350m of walking, start within 2.5km.
     offers = offers.filter(function (o) { return o.lengthM >= 350 && o.startDistM <= 2500; });
 
-    offers.sort(function (a, b) {
-      var rank = { trail: 0, footpath: 1, path: 2 };
-      if (rank[a.kind] !== rank[b.kind]) return rank[a.kind] - rank[b.kind];
-      return a.startDistM - b.startDistM;
-    });
-    return offers.slice(0, 12);
+    return sortOffersByStartDistance(offers).slice(0, 12);
   }
 
   // Greedy end-to-end chaining of way fragments. Returns ALL connected chains,
@@ -798,6 +827,8 @@
     questHaversine: questHaversine,
     destPoint: destPoint,
     routeLengthM: routeLengthM,
+    sortOffersByStartDistance: sortOffersByStartDistance,
+    questChainTargetIndices: questChainTargetIndices,
     pointAtFraction: pointAtFraction,
     decimateRoute: decimateRoute,
     buildOverpassQuery: buildOverpassQuery,
