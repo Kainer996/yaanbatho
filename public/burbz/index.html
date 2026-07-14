@@ -794,6 +794,32 @@ svg.academy-room-bg { display:block; filter:none; }
 .scan-center-icon.scanning { animation: scanBounce 0.6s ease-in-out infinite; }
 @keyframes scanBounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
 
+/* Merlin's continuous wand listener: the character stays on the left and the
+   real microphone energy originates at the wand tip, not a fake analyse orb. */
+.merlin-listener-stage { position:relative; min-height:350px; margin:0 auto 12px; max-width:430px; overflow:hidden; border-radius:24px; border:1px solid rgba(240,199,103,.34); background:radial-gradient(circle at 82% 22%,rgba(74,221,186,.16),transparent 28%),linear-gradient(155deg,rgba(29,25,17,.96),rgba(6,13,11,.98)); box-shadow:inset 0 1px rgba(255,255,255,.07),0 16px 38px rgba(0,0,0,.46); }
+.merlin-listener-art { position:absolute; left:-32px; bottom:-18px; width:108%; height:auto; object-fit:contain; pointer-events:none; filter:drop-shadow(0 16px 20px rgba(0,0,0,.62)); }
+.merlin-wand-tip { position:absolute; left:82.5%; top:21.5%; width:18px; height:18px; border-radius:50%; transform:translate(-50%,-50%); background:#f6d878; box-shadow:0 0 0 5px rgba(91,224,185,.15),0 0 16px rgba(91,224,185,.72),0 0 28px rgba(240,199,103,.58); opacity:.58; transition:opacity .2s ease,transform .2s ease; }
+.merlin-wand-tip::before,.merlin-wand-tip::after { content:''; position:absolute; inset:-13px; border:2px solid rgba(97,237,196,.55); border-left-color:transparent; border-bottom-color:transparent; border-radius:50%; transform:rotate(45deg); opacity:0; }
+.merlin-listener-stage.listening .merlin-wand-tip { opacity:1; animation:merlinWandGlow 1.6s ease-in-out infinite; }
+.merlin-listener-stage.listening .merlin-wand-tip::before { animation:merlinSoundRing 1.65s ease-out infinite; }
+.merlin-listener-stage.listening .merlin-wand-tip::after { animation:merlinSoundRing 1.65s .7s ease-out infinite; }
+.merlin-listener-stage.possible-bird .merlin-wand-tip { transform:translate(-50%,-50%) scale(1.34); background:#fff0a9; box-shadow:0 0 0 8px rgba(91,224,185,.22),0 0 24px #69ebc2,0 0 44px rgba(240,199,103,.9); }
+@keyframes merlinWandGlow { 0%,100%{filter:brightness(.92)} 50%{filter:brightness(1.35)} }
+@keyframes merlinSoundRing { 0%{opacity:.78;transform:rotate(45deg) scale(.45)} 100%{opacity:0;transform:rotate(45deg) scale(2.1)} }
+.merlin-listener-copy { position:absolute; right:12px; bottom:12px; width:54%; padding:11px 12px; border-radius:16px; background:linear-gradient(150deg,rgba(8,17,14,.92),rgba(19,29,22,.88)); border:1px solid rgba(105,224,184,.34); box-shadow:0 8px 22px rgba(0,0,0,.42); }
+.merlin-listener-kicker { color:#78e2bd; font:900 9px/1 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+.merlin-listener-status { margin-top:5px; color:#fff1c5; font:900 14px/1.08 'Russo One',sans-serif; }
+.merlin-listener-activity { margin-top:6px; min-height:31px; color:#c7c1b2; font-size:11px; line-height:1.35; }
+.merlin-listener-privacy { margin-top:7px; color:#9be8cd; font:800 9px/1.25 'Rajdhani',sans-serif; letter-spacing:.04em; text-transform:uppercase; }
+.merlin-listening-dock { position:fixed; left:10px; right:10px; bottom:calc(var(--nav-height) + var(--safe-bottom) + 10px); z-index:1070; display:none; grid-template-columns:48px minmax(0,1fr) auto; gap:9px; align-items:center; max-width:430px; margin:auto; padding:7px 8px; border-radius:17px; background:linear-gradient(145deg,rgba(15,26,20,.97),rgba(8,11,9,.98)); border:1px solid rgba(105,224,184,.48); box-shadow:0 14px 34px rgba(0,0,0,.58),0 0 20px rgba(76,206,160,.11); }
+.merlin-listening-dock.show { display:grid; }
+.merlin-listening-dock img { width:48px; height:48px; object-fit:cover; border-radius:13px; background:#08100d; border:1px solid rgba(240,199,103,.45); }
+.merlin-dock-kicker { color:#79e0bc; font:900 8px/1 'Rajdhani',sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+.merlin-dock-status { margin-top:4px; color:#fff1c8; font:900 11px/1.1 'Russo One',sans-serif; }
+.merlin-dock-actions { display:flex; gap:5px; }
+.merlin-dock-actions button { min-width:44px; min-height:44px; padding:5px 8px; border-radius:12px; border:1px solid rgba(240,199,103,.34); background:rgba(240,199,103,.1); color:#f8e5ad; font:900 9px/1 'Rajdhani',sans-serif; text-transform:uppercase; }
+.merlin-dock-actions .stop { color:#ffd0c8; border-color:rgba(255,132,110,.38); background:rgba(158,44,31,.16); }
+
 .scan-waveform {
   width: 100%; height: 60px; margin-bottom: 16px; position: relative;
   background: var(--bg2); border-radius: 8px; overflow: hidden;
@@ -832,6 +858,8 @@ svg.academy-room-bg { display:block; filter:none; }
   animation: birdPickupPulse 1s ease-in-out infinite;
 }
 @keyframes birdPickupPulse { 0%,100%{box-shadow:0 4px 18px rgba(214,168,79,0.35)} 50%{box-shadow:0 4px 28px rgba(214,168,79,0.70)} }
+@media (max-width:380px) { .merlin-listener-stage{min-height:330px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} .merlin-listening-dock{grid-template-columns:42px minmax(0,1fr) auto}.merlin-listening-dock img{width:42px;height:42px} }
+@media (prefers-reduced-motion:reduce) { .merlin-listener-stage.listening .merlin-wand-tip,.merlin-listener-stage.listening .merlin-wand-tip::before,.merlin-listener-stage.listening .merlin-wand-tip::after { animation:none !important; } }
 
 .scan-result {
   margin-top: 16px; padding: 16px; background: var(--bg2); border-radius: 12px;
@@ -2096,18 +2124,21 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
       <!-- Sound scan area -->
       <div id="soundScanArea" style="display:none;">
-        <div class="scan-area" id="scanArea">
-          <div class="scan-ring"></div>
-          <div class="scan-ring"></div>
-          <div class="scan-ring"></div>
-          <div class="scan-ring"></div>
-          <div class="scan-center-icon" id="scanCenterIcon">&#127925;</div>
-          <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Bird sound picked up!</div>
+        <div class="merlin-listener-stage" id="merlinListenerStage">
+          <img class="merlin-listener-art" src="assets/ui/merlin-wand-listener.webp" alt="Merlin holding his glowing listening wand">
+          <div class="merlin-wand-tip" id="merlinWandTip" aria-hidden="true"></div>
+          <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Possible birdsong</div>
+          <div class="merlin-listener-copy">
+            <div class="merlin-listener-kicker">Merlin’s wand</div>
+            <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
+            <div class="merlin-listener-activity" id="merlinListenActivity">Tap once and Merlin will keep listening while you explore Burbz.</div>
+            <div class="merlin-listener-privacy">Microphone active only while the green listening light is shown</div>
+          </div>
         </div>
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
         </div>
-        <button class="scan-btn" id="scanBtn">START LISTENING</button>
+        <button class="scan-btn" id="scanBtn">START MERLIN’S WAND</button>
       </div>
 
       <!-- Image scan area -->
@@ -2538,6 +2569,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
   <!-- Toast container -->
   <div class="scan-encounter-stack" id="scanEncounterStack" aria-live="polite" aria-label="Birds heard while listening"></div>
+  <aside class="merlin-listening-dock" id="merlinListeningDock" aria-label="Merlin sound listener" aria-live="polite">
+    <img src="assets/ui/merlin-wand-listener.webp" alt="">
+    <div><div class="merlin-dock-kicker">Merlin’s wand · microphone live</div><div class="merlin-dock-status" id="merlinDockStatus">Listening across Burbz</div></div>
+    <div class="merlin-dock-actions"><button id="merlinDockReturn" type="button">View</button><button class="stop" id="merlinDockStop" type="button">Stop</button></div>
+  </aside>
   <div class="toast-container" id="toastContainer"></div>
 </div>
 
@@ -2548,6 +2584,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=show-local-quests-v6-20260714"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
+<script src="sound_listener_core.js?v=merlin-wand-listener-v1-20260714"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
@@ -12980,6 +13017,7 @@ function switchScreen(name) {
   if (navItem) navItem.classList.add('active');
 
   currentScreen = name;
+  updateMerlinListeningUI();
 
   // Screen-specific init
   if (name === 'map') renderLiveMap();
@@ -15727,15 +15765,24 @@ $('burbzModeTabs')?.addEventListener('click', e => {
 let scanMode = 'image';
 let isRecording = false;
 let mediaRecorder = null;
-let audioChunks = [];
 let analyserNode = null;
+let listenerSourceNode = null;
+let listenerTrack = null;
 let animFrameId = null;
 let mediaStream = null;
 let continuousSoundScanWanted = false;
 let soundScanChunkTimer = null;
+let soundWindowSequence = 0;
+let soundListenerGeneration = 0;
+let soundListenerState = 'stopped';
+let soundListenerDetail = 'Tap once and Merlin will keep listening while you explore Burbz.';
+let listenerSampleRate = 48000;
+const SOUND_WINDOW_MS = 12000;
+const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(analyseContinuousSoundWindow, {
+  onError: error => console.warn('BURBZ sound analysis queue failed', error)
+});
 
-// Mode toggle
-$('scanSoundBtn').addEventListener('click', () => {
+function showSoundScanMode() {
   scanMode = 'sound';
   $('scanSoundBtn').classList.add('active');
   $('scanImageBtn').classList.remove('active');
@@ -15743,97 +15790,234 @@ $('scanSoundBtn').addEventListener('click', () => {
   $('imageScanArea').style.display = 'none';
   $('screen-scan').classList.remove('camera-mode');
   stopCamera();
+  updateMerlinListeningUI();
+}
+
+// Entering Sound is the one clear user gesture that authorises the microphone.
+$('scanSoundBtn').addEventListener('click', () => {
+  showSoundScanMode();
   SFX.tap();
+  if (!continuousSoundScanWanted) startContinuousSoundListening();
 });
 
 $('scanImageBtn').addEventListener('click', async () => {
   scanMode = 'image';
-  continuousSoundScanWanted = false;
-  if (isRecording) stopRecording({ userStop: true });
   $('scanImageBtn').classList.add('active');
   $('scanSoundBtn').classList.remove('active');
   $('soundScanArea').style.display = 'none';
   $('imageScanArea').style.display = 'block';
   $('screen-scan').classList.add('camera-mode');
+  updateMerlinListeningUI();
   SFX.tap();
 });
 
-// Sound recording
-$('scanBtn').addEventListener('click', async () => {
-  if (isRecording || continuousSoundScanWanted) {
-    stopRecording({ userStop: true });
+$('scanBtn').addEventListener('click', () => {
+  if (continuousSoundScanWanted) stopContinuousSoundListening({ userStop:true });
+  else startContinuousSoundListening();
+});
+$('merlinDockStop').addEventListener('click', () => { SFX.tap(); stopContinuousSoundListening({ userStop:true }); });
+$('merlinDockReturn').addEventListener('click', () => { SFX.tap(); switchScreen('scan'); showSoundScanMode(); });
+
+// CONTINUOUS_MERLIN_VISIBILITY: browser tabs may throttle timers, but the
+// recorder and microphone stream remain alive while Burbz itself stays open.
+document.addEventListener('visibilitychange', () => {
+  if (!continuousSoundScanWanted) return;
+  if (document.hidden) {
+    setMerlinListenerState('listening', 'Listening in the background while Burbz stays open.');
   } else {
-    continuousSoundScanWanted = true;
-    startRecording();
+    if (mediaStream && listenerTrack?.readyState !== 'ended' && (!mediaRecorder || mediaRecorder.state === 'inactive')) startSoundRecorderWindow();
+    setMerlinListenerState('listening', 'Merlin kept listening while you were away.');
   }
 });
 
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-        channelCount: 1,
-        sampleRate: 48000
-      }
-    });
-    mediaStream = stream;
+function setMerlinListenerState(state, detail) {
+  soundListenerState = state;
+  if (detail) soundListenerDetail = detail;
+  updateMerlinListeningUI();
+}
 
-    // Set up analyser for waveform
-    const ctx = getAudioCtx();
-    const source = ctx.createMediaStreamSource(stream);
+function updateMerlinListeningUI() {
+  const active = !!(continuousSoundScanWanted && mediaStream && listenerTrack && listenerTrack.readyState !== 'ended');
+  const stage = $('merlinListenerStage');
+  const button = $('scanBtn');
+  const status = $('merlinListenStatus');
+  const activity = $('merlinListenActivity');
+  const dock = $('merlinListeningDock');
+  const dockStatus = $('merlinDockStatus');
+  stage?.classList.toggle('listening', active);
+  if (status) {
+    status.textContent = soundListenerState === 'requesting' ? 'Opening the microphone…'
+      : soundListenerState === 'error' ? 'Listening paused'
+      : active ? 'Listening live' : 'Ready to listen';
+  }
+  if (activity) activity.textContent = soundListenerDetail;
+  if (button) {
+    button.disabled = soundListenerState === 'requesting';
+    button.textContent = active ? 'STOP LISTENING' : (soundListenerState === 'requesting' ? 'OPENING MICROPHONE…' : 'START MERLIN’S WAND');
+    button.classList.toggle('recording', active);
+  }
+  const awayFromSound = currentScreen !== 'scan' || scanMode !== 'sound';
+  dock?.classList.toggle('show', active && awayFromSound);
+  if (dockStatus) dockStatus.textContent = soundListenerState === 'confirmed' ? soundListenerDetail : 'Listening across Burbz';
+}
+
+function soundListenerDependencies() {
+  const deps = window.__burbzSoundTestDeps || {};
+  return {
+    getUserMedia: deps.getUserMedia || (constraints => navigator.mediaDevices.getUserMedia(constraints)),
+    MediaRecorder: deps.MediaRecorder || window.MediaRecorder,
+    audioContext: deps.audioContext || null
+  };
+}
+
+async function startContinuousSoundListening() {
+  const deps = soundListenerDependencies();
+  if (continuousSoundScanWanted && mediaStream && listenerTrack?.readyState !== 'ended') { updateMerlinListeningUI(); return true; }
+  if ((!navigator.mediaDevices?.getUserMedia && !window.__burbzSoundTestDeps?.getUserMedia) || !deps.MediaRecorder) {
+    continuousSoundScanWanted = false;
+    setMerlinListenerState('error', 'Microphone unavailable in this browser.');
+    showToast('Microphone unavailable');
+    return false;
+  }
+  const generation = ++soundListenerGeneration;
+  continuousSoundScanWanted = true;
+  setMerlinListenerState('requesting', 'Waiting for microphone permission…');
+  try {
+    const stream = await deps.getUserMedia({
+      audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1, sampleRate:48000 }
+    });
+    if (!continuousSoundScanWanted || generation !== soundListenerGeneration) { stream.getTracks().forEach(track => track.stop()); return false; }
+    mediaStream = stream;
+    listenerTrack = stream.getAudioTracks()[0] || stream.getTracks()[0] || null;
+    if (!listenerTrack) throw new Error('No audio track');
+    listenerTrack.onended = () => handleContinuousSoundTrackEnded(generation);
+    const ctx = deps.audioContext || getAudioCtx();
+    if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
+    listenerSampleRate = Number(ctx.sampleRate) || 48000;
+    listenerSourceNode = ctx.createMediaStreamSource(stream);
     analyserNode = ctx.createAnalyser();
     analyserNode.fftSize = 256;
-    source.connect(analyserNode);
+    listenerSourceNode.connect(analyserNode);
+    resetBirdPickup();
     drawWaveform();
-
-    // MediaRecorder
-    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? { mimeType: 'audio/webm;codecs=opus' }
-      : {};
-    mediaRecorder = new MediaRecorder(stream, options);
-    audioChunks = [];
-
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = () => processRecording();
-
-    mediaRecorder.start();
-    isRecording = true;
-
-    $('scanBtn').textContent = 'STOP LISTENING';
-    $('scanBtn').classList.add('recording');
-    $('scanCenterIcon').classList.add('scanning');
-    $$('.scan-ring').forEach(r => r.classList.add('scanning'));
-
-    // Keep listening indefinitely in 15-second Merlin-style chunks until the player turns it off.
-    if (soundScanChunkTimer) clearTimeout(soundScanChunkTimer);
-    soundScanChunkTimer = setTimeout(() => { if (isRecording && continuousSoundScanWanted) stopRecording({ autoChunk: true }); }, 15000);
-  } catch(e) {
-    showToast('Microphone access denied');
+    setMerlinListenerState('listening', 'Merlin is listening continuously. Completed sound windows are checked in the background.');
+    startSoundRecorderWindow(generation);
+    return true;
+  } catch (error) {
+    if (generation !== soundListenerGeneration) return false;
+    continuousSoundScanWanted = false;
+    cleanupFailedSoundStart();
+    const denied = error && (error.name === 'NotAllowedError' || error.name === 'SecurityError');
+    setMerlinListenerState('error', denied ? 'Microphone permission needed. Tap Merlin’s wand and allow access.' : 'Microphone unavailable. Check this device and try again.');
+    showToast(denied ? 'Microphone permission needed' : 'Microphone unavailable');
+    return false;
   }
 }
 
-function stopRecording(opts = {}) {
-  if (opts.userStop) continuousSoundScanWanted = false;
-  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const shouldContinue = !!opts.autoChunk && continuousSoundScanWanted;
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
-  }
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(t => t.stop());
-    mediaStream = null;
-  }
-  if (animFrameId) cancelAnimationFrame(animFrameId);
-
+function cleanupFailedSoundStart() {
+  if (listenerTrack) listenerTrack.onended = null;
+  if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+  mediaStream = null;
+  listenerTrack = null;
+  mediaRecorder = null;
   isRecording = false;
+  if (listenerSourceNode) { try { listenerSourceNode.disconnect(); } catch (_) {} listenerSourceNode = null; }
+  if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+}
+
+function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
+  if (!continuousSoundScanWanted || generation !== soundListenerGeneration) return;
+  soundListenerGeneration += 1;
+  continuousSoundScanWanted = false;
+  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
+  const recorder = mediaRecorder;
+  mediaRecorder = null;
+  if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
+  if (listenerTrack) listenerTrack.onended = null;
+  if (mediaStream) mediaStream.getTracks().forEach(track => { track.onended = null; if (track.readyState !== 'ended') track.stop(); });
+  mediaStream = null;
+  listenerTrack = null;
+  isRecording = false;
+  if (listenerSourceNode) { try { listenerSourceNode.disconnect(); } catch (_) {} listenerSourceNode = null; }
+  if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  soundAnalysisQueue.clear();
   resetBirdPickup();
-  $('scanBtn').textContent = shouldContinue ? 'ANALYSING BIRDSONG…' : 'START LISTENING';
-  $('scanBtn').classList.remove('recording');
-  $('scanCenterIcon').classList.remove('scanning');
-  $$('.scan-ring').forEach(r => r.classList.remove('scanning'));
+  setMerlinListenerState('error', 'Listening paused by this device. Tap Merlin’s wand to resume.');
+}
+
+function startSoundRecorderWindow(generation = soundListenerGeneration) {
+  if (!continuousSoundScanWanted || generation !== soundListenerGeneration || !mediaStream || listenerTrack?.readyState === 'ended') return false;
+  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
+  const chunks = [];
+  const sequence = ++soundWindowSequence;
+  const startedAt = Date.now();
+  const Recorder = soundListenerDependencies().MediaRecorder;
+  const options = Recorder.isTypeSupported?.('audio/webm;codecs=opus') ? { mimeType:'audio/webm;codecs=opus' } : {};
+  let recorder;
+  try { recorder = new Recorder(mediaStream, options); }
+  catch (error) { handleSoundRecorderFailure(generation, error); return false; }
+  mediaRecorder = recorder;
+  recorder.ondataavailable = event => { if (event.data && event.data.size > 0) chunks.push(event.data); };
+  recorder.onstop = () => {
+    if (mediaRecorder === recorder) mediaRecorder = null;
+    isRecording = false;
+    const blob = new Blob(chunks, { type:recorder.mimeType || 'audio/webm' });
+    const durationMs = Date.now() - startedAt;
+    const beginNextWindowBeforeAnalysis = continuousSoundScanWanted && generation === soundListenerGeneration && mediaStream && listenerTrack?.readyState !== 'ended';
+    if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);
+    if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) queueSoundWindowForAnalysis({ blob, sequence, durationMs });
+  };
+  try { recorder.start(); }
+  catch (error) { handleSoundRecorderFailure(generation, error); return false; }
+  isRecording = true;
+  soundScanChunkTimer = setTimeout(rotateContinuousSoundWindow, SOUND_WINDOW_MS);
+  updateMerlinListeningUI();
+  return true;
+}
+
+function handleSoundRecorderFailure(generation, error) {
+  console.warn('BURBZ sound recorder failed', error);
+  if (generation !== soundListenerGeneration) return;
+  handleContinuousSoundTrackEnded(generation);
+  setMerlinListenerState('error', 'Microphone unavailable. Tap Merlin’s wand to try again.');
+}
+
+function rotateContinuousSoundWindow() {
+  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
+  const recorder = mediaRecorder;
+  if (!continuousSoundScanWanted || !recorder || recorder.state === 'inactive') return false;
+  try { recorder.stop(); return true; } catch (error) {
+    console.warn('BURBZ sound window rotation failed', error);
+    const generation = soundListenerGeneration;
+    if (continuousSoundScanWanted) setTimeout(() => startSoundRecorderWindow(generation), 250);
+    return false;
+  }
+}
+
+function queueSoundWindowForAnalysis(windowData) {
+  return soundAnalysisQueue.enqueue(windowData);
+}
+
+function stopContinuousSoundListening(opts = {}) {
+  soundListenerGeneration += 1;
+  continuousSoundScanWanted = false;
+  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
+  const recorder = mediaRecorder;
+  mediaRecorder = null;
+  if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
+  if (listenerTrack) listenerTrack.onended = null;
+  if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+  mediaStream = null;
+  listenerTrack = null;
+  isRecording = false;
+  if (listenerSourceNode) { try { listenerSourceNode.disconnect(); } catch (_) {} listenerSourceNode = null; }
+  if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  soundAnalysisQueue.clear();
+  resetBirdPickup();
+  setMerlinListenerState('stopped', opts.userStop ? 'Merlin’s wand is resting. Tap to listen again.' : 'Listening stopped.');
 }
 
 // Live "bird being picked up" indicator: birds sing mostly in the 2-9 kHz
@@ -15843,10 +16027,10 @@ function stopRecording(opts = {}) {
 let birdPickupFrames = 0;
 let birdPickupHideTimer = null;
 function updateBirdPickup() {
-  if (!analyserNode || !isRecording) return;
+  if (!analyserNode || !continuousSoundScanWanted) return;
   const freq = new Uint8Array(analyserNode.frequencyBinCount);
   analyserNode.getByteFrequencyData(freq);
-  const nyquist = (getAudioCtx().sampleRate || 48000) / 2;
+  const nyquist = listenerSampleRate / 2;
   const hzPerBin = nyquist / freq.length;
   const lo = Math.max(1, Math.round(2000 / hzPerBin));
   const hi = Math.min(freq.length - 1, Math.round(9000 / hzPerBin));
@@ -15862,16 +16046,24 @@ function updateBirdPickup() {
   birdPickupFrames = birdy ? Math.min(birdPickupFrames + 1, 40) : Math.max(birdPickupFrames - 1, 0);
   if (birdPickupFrames >= 12) {
     const pop = $('birdPickupPop');
+    const stage = $('merlinListenerStage');
     // Visual only — a sound effect here would bleed into the recording.
     if (pop) pop.classList.add('show');
+    stage?.classList.add('possible-bird');
+    if ($('merlinListenActivity')) $('merlinListenActivity').textContent = 'Possible birdsong at the wand tip — waiting for BirdNET confirmation.';
     if (birdPickupHideTimer) clearTimeout(birdPickupHideTimer);
-    birdPickupHideTimer = setTimeout(() => $('birdPickupPop')?.classList.remove('show'), 1600);
+    birdPickupHideTimer = setTimeout(() => {
+      $('birdPickupPop')?.classList.remove('show');
+      stage?.classList.remove('possible-bird');
+      if (continuousSoundScanWanted && $('merlinListenActivity')) $('merlinListenActivity').textContent = soundListenerDetail;
+    }, 1600);
   }
 }
 function resetBirdPickup() {
   birdPickupFrames = 0;
   if (birdPickupHideTimer) { clearTimeout(birdPickupHideTimer); birdPickupHideTimer = null; }
   $('birdPickupPop')?.classList.remove('show');
+  $('merlinListenerStage')?.classList.remove('possible-bird');
 }
 
 function drawWaveform() {
@@ -15918,35 +16110,28 @@ function drawWaveform() {
   draw();
 }
 
-async function processRecording() {
-  const blob = new Blob(audioChunks, { type: 'audio/webm' });
-  const keepListening = continuousSoundScanWanted && scanMode === 'sound';
-
-  $('scanBtn').textContent = keepListening ? 'ANALYSING BIRDSONG…' : 'ANALYZING...';
-  $('scanBtn').disabled = !keepListening;
-
+async function analyseContinuousSoundWindow(windowData) {
+  const blob = windowData && windowData.blob;
+  if (!blob || !blob.size) return;
+  if (continuousSoundScanWanted) setMerlinListenerState('listening', 'Listening live · checking the latest sound window in the background.');
   try {
-    // Upload the native browser recording; the server converts WebM/Opus to BirdNET-ready WAV.
+    // BirdNET on the server is the only species oracle. Local frequency energy
+    // may animate the wand, but it never logs or names a bird by itself.
     const result = await uploadRecording(blob);
-
     if (result && result.species) {
-      handleBirdCandidates(result, result.allDetections || [], { source: 'sound', blob, catalogMatched: result.catalogMatched });
-      if (keepListening) showToast('🐦 Picked up ' + result.species + ' — still listening');
-    } else if (!keepListening) {
-      showToast(result && result.message ? result.message : 'No bird sound detected — try a clearer 10 second recording');
+      handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
+      const confidence = Math.round((Number(result.confidence) || 0) * 100);
+      setMerlinListenerState('confirmed', 'Heard ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
+      showToast('🐦 Merlin heard ' + result.species + ' — still listening');
+      setTimeout(() => {
+        if (continuousSoundScanWanted && soundListenerState === 'confirmed') setMerlinListenerState('listening', 'Merlin is listening continuously for the next bird.');
+      }, 5200);
+    } else if (continuousSoundScanWanted) {
+      setMerlinListenerState('listening', 'No confident bird in the latest window · still listening.');
     }
-  } catch(e) {
-    console.log('Sound ID failed:', e);
-    if (!keepListening) showToast('Sound ID could not analyse that recording yet');
-  }
-
-  if (continuousSoundScanWanted && scanMode === 'sound') {
-    $('scanBtn').textContent = 'STOP LISTENING';
-    $('scanBtn').disabled = false;
-    setTimeout(() => { if (continuousSoundScanWanted && scanMode === 'sound' && !isRecording) startRecording(); }, 500);
-  } else {
-    $('scanBtn').textContent = 'START LISTENING';
-    $('scanBtn').disabled = false;
+  } catch (error) {
+    console.warn('BURBZ Sound ID failed:', error);
+    if (continuousSoundScanWanted) setMerlinListenerState('listening', 'Sound check failed — still listening. Merlin will try the next window.');
   }
 }
 
@@ -16051,6 +16236,28 @@ async function uploadRecording(blob) {
   }
   return data;
 }
+
+window.__burbzSoundDebug = {
+  state: () => ({
+    wanted: continuousSoundScanWanted,
+    recording: isRecording,
+    listenerState: soundListenerState,
+    detail: soundListenerDetail,
+    screen: currentScreen,
+    mode: scanMode,
+    stream: !!mediaStream,
+    trackState: listenerTrack?.readyState || null,
+    recorderState: mediaRecorder?.state || null,
+    windowSequence: soundWindowSequence,
+    queue: soundAnalysisQueue.snapshot()
+  }),
+  start: () => startContinuousSoundListening(),
+  stop: () => stopContinuousSoundListening({ userStop:true }),
+  rotate: () => rotateContinuousSoundWindow(),
+  showSound: () => showSoundScanMode(),
+  setState: (state, detail) => setMerlinListenerState(state, detail),
+  queueSnapshot: () => soundAnalysisQueue.snapshot()
+};
 
 // Image scanning
 // Zoom is hybrid, like the phone's own camera app: the slider first drives the

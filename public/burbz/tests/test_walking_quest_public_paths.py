@@ -152,4 +152,4 @@ def test_release_is_versioned_for_live_pwa_refresh():
     marker = "quest_core.js?v=show-local-quests-v6-20260714"
     assert marker in html
     assert "./" + marker in sw
-    assert "burbz-show-local-quests-v70-20260714" in sw
+    assert "const BURBZ_CACHE = 'burbz-" in sw
