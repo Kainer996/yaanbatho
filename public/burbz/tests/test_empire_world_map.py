@@ -79,7 +79,7 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert "resetEmpireMapAfterFailure" in html
     assert "attributionControl:false" in html
     assert 'class="empire-map-attribution"' in html
-    assert "empire-territory-fill" in html
+    assert "empire-liberated-wash" in html
     assert "empire-territory-line" in html
     assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
@@ -91,11 +91,28 @@ def test_unexplored_world_is_dark_green_with_liberated_map_windows():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="empireFogOverlay"' in html
     assert 'id="empireFogHoles"' in html
+    assert 'id="empireLiberatedHoles"' in html
+    assert 'id="empireLiberatedMask"' in html
+    assert 'class="empire-liberated-wash"' in html
     assert "#0a2b1d" in html
     assert "function updateEmpireFogMask(" in html
     assert "map.on('move', updateEmpireFogMask)" in html
     assert "map.on('resize', updateEmpireFogMask)" in html
     assert "core.destination" in html
+    assert "wrappedLongitudeNear" in html
+    assert "empireMap.getCenter().lng" in html
+
+
+def test_map_keyboard_controls_and_markers_have_visible_focus():
+    html = HTML.read_text(encoding="utf-8")
+    assert ".empire-map-btn:focus-visible" in html
+    assert ".empire-map-marker:focus-visible" in html
+
+
+def test_liberated_green_wash_is_unioned_not_alpha_stacked_per_polygon():
+    html = HTML.read_text(encoding="utf-8")
+    assert "empire-liberated-wash" in html
+    assert "map.addLayer({ id:'empire-territory-fill'" not in html
 
 
 def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():
@@ -152,4 +169,4 @@ def test_empire_map_assets_are_versioned_offline_and_cache_bumped():
     marker = "empire_map_core.js?v=liberation-map-v3-20260714"
     assert marker in html
     assert "./" + marker in sw
-    assert "burbz-liberation-world-v66-20260714" in sw
+    assert "burbz-liberation-hardening-v67-20260714" in sw

@@ -372,12 +372,14 @@ svg.academy-room-bg { display:block; filter:none; }
 #empireWorldMap { position:absolute; inset:0; }
 #empireWorldMap .maplibregl-canvas { filter:saturate(.82) brightness(.82); }
 .empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; }
+.empire-liberated-wash { mix-blend-mode:normal; }
 .empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
 .empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); }
 .empire-map-vignette { position:absolute; inset:0; z-index:2; pointer-events:none; box-shadow:inset 0 0 42px rgba(2,8,5,.72); background:linear-gradient(180deg,rgba(5,13,9,.14),transparent 32%,transparent 72%,rgba(5,12,8,.36)); }
 .empire-map-tools { position:absolute; z-index:5; top:10px; left:10px; display:flex; gap:7px; }
 .empire-map-btn { min-height:35px; padding:0 11px; border-radius:11px; border:1px solid rgba(240,199,103,.5); background:rgba(11,20,15,.9); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.4); }
 .empire-map-btn:active { transform:scale(.97); }
+.empire-map-btn:focus-visible, .empire-map-marker:focus-visible { outline:3px solid #f4fff5; outline-offset:3px; }
 .empire-map-status { position:absolute; z-index:5; left:10px; right:10px; bottom:26px; min-height:34px; display:flex; align-items:center; justify-content:center; padding:7px 10px; border-radius:11px; border:1px solid rgba(240,199,103,.3); background:rgba(8,16,11,.88); color:#f8e7b2; font-size:10px; font-weight:800; letter-spacing:.04em; text-align:center; pointer-events:none; backdrop-filter:blur(8px); }
 .empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:7px; line-height:1; color:rgba(226,244,226,.82); text-align:center; white-space:nowrap; pointer-events:auto; text-shadow:0 1px 3px rgba(0,20,12,.98); }
 .empire-map-attribution a { color:inherit; text-decoration:none; }
@@ -395,6 +397,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-story-callout strong { display:block; margin-bottom:3px; color:#a7e9ad; font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:.06em; text-transform:uppercase; }
 .liberation-battle-banner { margin:0 0 12px; padding:13px 14px; border-radius:14px; border:1px solid rgba(126,217,131,.44); background:linear-gradient(135deg,rgba(25,79,45,.88),rgba(9,29,18,.92)); color:#d8f7dc; font-size:12px; line-height:1.45; }
 .liberation-battle-banner strong { color:#9fe8a4; font-family:'Russo One',sans-serif; font-size:14px; }
+.liberation-cancel-btn { display:block; width:100%; margin-top:10px; min-height:40px; border-radius:10px; border:1px solid rgba(216,247,220,.45); background:rgba(5,20,12,.76); color:#d8f7dc; font-family:'Rajdhani',sans-serif; font-weight:900; letter-spacing:.05em; }
+.liberation-cancel-btn:focus-visible { outline:3px solid #fff; outline-offset:3px; }
 .empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 .empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
@@ -2170,7 +2174,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div id="empireWorldMap" role="application" aria-label="Interactive map of your liberated territories"></div>
         <div class="empire-map-vignette"></div>
         <svg class="empire-fog-overlay" id="empireFogOverlay" aria-hidden="true" preserveAspectRatio="none">
-          <defs><mask id="empireFogMask"><rect width="100%" height="100%" fill="white"></rect><g id="empireFogHoles"></g></mask></defs>
+          <defs>
+            <mask id="empireLiberatedMask"><rect width="100%" height="100%" fill="black"></rect><g id="empireLiberatedHoles"></g></mask>
+            <mask id="empireFogMask"><rect width="100%" height="100%" fill="white"></rect><g id="empireFogHoles"></g></mask>
+          </defs>
+          <rect class="empire-liberated-wash" width="100%" height="100%" fill="#8ee39a" fill-opacity="0.34" mask="url(#empireLiberatedMask)"></rect>
           <rect width="100%" height="100%" fill="#0a2b1d" fill-opacity="0.9" mask="url(#empireFogMask)"></rect>
         </svg>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
@@ -13049,13 +13057,25 @@ function currentVillage() {
 // travels to a town, frees it in a Liberation Battle, then builds a birdhouse;
 // liberated sanctuaries wake in green on the map and support the wider realm.
 // ============================================================================
+function validPendingLiberation(pending) {
+  if (!pending || typeof pending !== 'object' || Array.isArray(pending)) return false;
+  if (typeof pending.name !== 'string' || !pending.name.trim()) return false;
+  const seed = Number(pending.seed);
+  const lat = normaliseVillageCoordinate(pending.lat, -90, 90);
+  const lon = normaliseVillageCoordinate(pending.lon, -180, 180);
+  return Number.isFinite(seed) && seed >= 0 && lat !== null && lon !== null;
+}
 function ensureEmpireState() {
   if (!gameState) return null;
   if (!gameState.empire || typeof gameState.empire !== 'object' || Array.isArray(gameState.empire)) gameState.empire = {};
   if (!gameState.empire.villages || typeof gameState.empire.villages !== 'object' || Array.isArray(gameState.empire.villages)) gameState.empire.villages = {};
   if (!gameState.empire.liberationVictories || typeof gameState.empire.liberationVictories !== 'object' || Array.isArray(gameState.empire.liberationVictories)) gameState.empire.liberationVictories = {};
-  if (gameState.empire.pendingLiberation && typeof gameState.empire.pendingLiberation !== 'object') gameState.empire.pendingLiberation = null;
-  return gameState.empire;
+  const empire = gameState.empire;
+  if (empire.pendingLiberation && (Array.isArray(empire.pendingLiberation) || !validPendingLiberation(empire.pendingLiberation))) {
+    empire.pendingLiberation = null;
+    saveState();
+  }
+  return empire;
 }
 function empireVillages() { const e = ensureEmpireState(); return e ? Object.values(e.villages).filter(Boolean) : []; }
 function empireOwnsVillage(seed) { const e = ensureEmpireState(); return !!(e && e.villages[String(seed >>> 0)]); }
@@ -13083,7 +13103,17 @@ function beginVillageLiberation(village) {
   saveState();
   switchScreen('battle');
   renderBattleSelect();
-  showToast('⚔️ Liberation Battle: free ' + empire.pendingLiberation.name + '!');
+  showToast('🕊️ Liberation Battle: free ' + empire.pendingLiberation.name + '!');
+}
+
+function cancelEmpireLiberation() {
+  const empire = ensureEmpireState();
+  if (!empire || !empire.pendingLiberation) return;
+  const townName = empire.pendingLiberation.name;
+  empire.pendingLiberation = null;
+  saveState();
+  showToast('Liberation of ' + townName + ' paused — Perch League restored.');
+  renderBattleSelect();
 }
 
 function completeEmpireLiberationVictory() {
@@ -13146,29 +13176,44 @@ function updateEmpireMarkerDetail() {
   });
 }
 
+function wrappedLongitudeNear(lon, referenceLon) {
+  const longitude = Number(lon);
+  const reference = Number(referenceLon);
+  if (!Number.isFinite(longitude) || !Number.isFinite(reference)) return longitude;
+  return longitude + 360 * Math.round((reference - longitude) / 360);
+}
+
 function updateEmpireFogMask() {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const overlay = $('empireFogOverlay');
-  const holes = $('empireFogHoles');
+  const fogHoles = $('empireFogHoles');
+  const liberatedHoles = $('empireLiberatedHoles');
   const container = $('empireWorldMap');
-  if (!overlay || !holes || !container) return;
+  if (!overlay || !fogHoles || !liberatedHoles || !container) return;
   const width = Math.max(1, container.clientWidth);
   const height = Math.max(1, container.clientHeight);
   overlay.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-  holes.replaceChildren();
+  fogHoles.replaceChildren();
+  liberatedHoles.replaceChildren();
   const core = window.BurbzEmpireMapCore;
+  const referenceLon = empireMap.getCenter().lng;
   empireMappableVillages().forEach(village => {
     try {
-      const centre = empireMap.project([Number(village.lon), Number(village.lat)]);
-      const east = core.destination(Number(village.lat), Number(village.lon), Math.PI / 2, EMPIRE_TERRITORY_RADIUS_M);
-      const edge = empireMap.project(east);
+      const villageLon = Number(village.lon);
+      const wrappedLon = wrappedLongitudeNear(villageLon, referenceLon);
+      const centre = empireMap.project([wrappedLon, Number(village.lat)]);
+      const east = core.destination(Number(village.lat), villageLon, Math.PI / 2, EMPIRE_TERRITORY_RADIUS_M);
+      const wrappedEast = [wrappedLon + (Number(east[0]) - villageLon), Number(east[1])];
+      const edge = empireMap.project(wrappedEast);
       const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 4, 1400);
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', centre.x.toFixed(2));
-      circle.setAttribute('cy', centre.y.toFixed(2));
-      circle.setAttribute('r', radius.toFixed(2));
-      circle.setAttribute('fill', 'black');
-      holes.appendChild(circle);
+      [[fogHoles, 'black'], [liberatedHoles, 'white']].forEach(([group, fill]) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', centre.x.toFixed(2));
+        circle.setAttribute('cy', centre.y.toFixed(2));
+        circle.setAttribute('r', radius.toFixed(2));
+        circle.setAttribute('fill', fill);
+        group.appendChild(circle);
+      });
     } catch (e) {}
   });
 }
@@ -13265,7 +13310,6 @@ function initialiseEmpireMap() {
       try {
         map.addSource('empire-territories', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
-        map.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territories', paint:{ 'fill-color':['get','color'], 'fill-opacity':.34 } });
         map.addLayer({ id:'empire-territory-line', type:'line', source:'empire-territories', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#b8f4bd', 'line-width':['interpolate',['linear'],['zoom'],2,1.2,11,3.2], 'line-opacity':.94, 'line-blur':.35 } });
         map.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#7ed983', 'circle-opacity':.28, 'circle-blur':.45 } });
         map.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#dfffe2', 'circle-stroke-color':'#2c693f', 'circle-stroke-width':1.4 } });
@@ -13387,7 +13431,7 @@ function renderVillageClaimBar() {
   const cost = birdhouseCostForNextVillage();
   bar.innerHTML = empireHasLiberationVictory(v.seed)
     ? '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>'
-    : '<button class="village-claim-btn" onclick="claimCurrentVillage()">⚔️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
+    : '<button class="village-claim-btn" onclick="claimCurrentVillage()">🕊️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
 }
 function renderEmpirePanel() {
   const panel = $('empirePanel');
@@ -13400,7 +13444,7 @@ function renderEmpirePanel() {
     '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '"><span class="empire-village-flag">🕊️</span><span class="empire-village-name">' + escapeHtml(v.name) + '</span><span class="empire-village-meta">liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></button>'
   ).join('') : '<div class="empire-empty">No villages liberated yet. Walk to a real town, win its Liberation Battle and build a sanctuary birdhouse — travelling farther can awaken the whole world.</div>';
   panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 YOUR EMPIRE — ' + count + ' VILLAGE' + (count === 1 ? '' : 'S') + '</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
-    '<div class="empire-copy">Liberate the world map: travel to a real town, defeat its shadow-bound occupying flock, then build a sanctuary birdhouse. Liberated villages support the realm with ' + EMPIRE_TRIBUTE_COINS + ' 🪙 and ' + EMPIRE_TRIBUTE_BRANCHES + ' 🪵 every 8 hours.</div>' +
+    '<div class="empire-copy">Liberate the world map: travel to a real town, outmatch and free its shadow-bound occupying flock, then build a sanctuary birdhouse. Liberated villages support the realm with ' + EMPIRE_TRIBUTE_COINS + ' 🪙 and ' + EMPIRE_TRIBUTE_BRANCHES + ' 🪵 every 8 hours.</div>' +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TRIBUTE: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' : '⏳ TRIBUTE GROWING — CHECK BACK LATER') + '</button>' : '') +
     '<div class="empire-village-list">' + rows + '</div>';
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
@@ -16444,8 +16488,9 @@ function renderBattleSelect() {
   const liberation = pendingEmpireLiberation();
   const liberationBanner = $('liberationBattleBanner');
   if (liberationBanner) liberationBanner.innerHTML = liberation
-    ? '<div class="liberation-battle-banner"><strong>⚔️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A shadow-bound occupying flock guards this town. Win to break the usurper\'s hold, then return and build its sanctuary birdhouse.</div>'
+    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A shadow-bound occupying flock guards this town. Outmatch them to break the usurper\'s hold and free the flock, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">PAUSE LIBERATION · PLAY PERCH LEAGUE</button></div>'
     : '';
+  $('liberationCancelBtn')?.addEventListener('click', cancelEmpireLiberation, { once:true });
   const selectCopy = $('battleSelectCopy');
   if (selectCopy) selectCopy.textContent = liberation
     ? 'Choose the three birds who will free this town. Counter the occupying flock\'s wing classes before you begin.'
@@ -16543,7 +16588,7 @@ function startPerchBattle() {
   $('battleLog').innerHTML = '';
   $('arenaBench').classList.remove('show');
   const tier = core.LEAGUE_TIERS[league.tier];
-  addBattleLog('system-msg', liberation ? '⚔️ Liberation Battle for ' + liberation.name + ' — the shadow-bound occupying flock blocks the sanctuary!' : tier.icon + ' ' + tier.label + ' — a rival flock lands on the perch!');
+  addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — outmatch the shadow-bound flock and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a rival flock lands on the perch!');
   addBattleLog('enemy-action', 'Rival sends out ' + battle.teams.opponent[0].name + '!');
   addBattleLog('player-action', 'You send out ' + battle.teams.player[0].name + '!');
   renderArena();
@@ -16668,13 +16713,17 @@ function playBattleEvents(events) {
     setTimeout(() => {
       addBattleLog(battleLogClassFor(ev), ev.text);
       if (ev.type === 'damage') {
-        spawnDamageFloat(ev.side, '-' + ev.dmg, ev.crit ? 'crit' : '');
-        const card = $(ev.side === 'player' ? 'arenaPlayer' : 'arenaOpponent');
-        if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+        if (battleState.liberation) {
+          spawnDamageFloat(ev.side, '-' + ev.dmg + ' resolve', '');
+        } else {
+          spawnDamageFloat(ev.side, '-' + ev.dmg, ev.crit ? 'crit' : '');
+          const card = $(ev.side === 'player' ? 'arenaPlayer' : 'arenaOpponent');
+          if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+        }
         SFX.tap();
       }
       if (ev.type === 'heal' && ev.healed) spawnDamageFloat(ev.side, '+' + ev.healed, 'heal');
-      if (ev.type === 'faint') SFX.defeat && SFX.tap();
+      if (ev.type === 'faint' && !battleState.liberation) SFX.defeat && SFX.tap();
       renderArena();
     }, delay);
     delay += ev.type === 'fact' ? 450 : 650;
@@ -16767,11 +16816,21 @@ function endPerchBattle() {
   }, 120);
 }
 
+function liberationFriendlyBattleText(text) {
+  if (!battleState || !battleState.liberation) return String(text || '');
+  return String(text || '')
+    .replace(/takes (\d+) damage/gi, 'loses $1 resolve')
+    .replace(/critical hit/gi, 'brilliant move')
+    .replace(/\bdamage\b/gi, 'impact')
+    .replace(/ is out of the match!/gi, ' is freed from the shadow spell!')
+    .replace(/fainted/gi, 'resting');
+}
+
 function addBattleLog(type, text) {
   const log = $('battleLog');
   const entry = document.createElement('div');
   entry.className = 'battle-log-entry ' + type;
-  entry.textContent = text;
+  entry.textContent = liberationFriendlyBattleText(text);
   log.insertBefore(entry, log.firstChild);
   while (log.children.length > 24) log.removeChild(log.lastChild);
 }

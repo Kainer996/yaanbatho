@@ -28,6 +28,8 @@ def test_unclaimed_town_requires_a_liberation_battle_before_birdhouse():
     assert claim.index("beginVillageLiberation") < claim.index("addCoins")
     assert "LIBERATION BATTLE" in logic
     assert "BUILD LIBERATION BIRDHOUSE" in logic
+    assert "cancelEmpireLiberation" in logic
+    assert "liberationCancelBtn" in html
 
 
 def test_victory_records_liberation_and_returns_to_the_town():
@@ -38,6 +40,24 @@ def test_victory_records_liberation_and_returns_to_the_town():
     assert "TOWN LIBERATED!" in battle
     assert "RETURN TO" in battle
     assert "returnToLiberatedVillage" in battle
+
+
+def test_malformed_pending_liberation_state_is_healed_before_rendering():
+    html = HTML.read_text(encoding="utf-8")
+    empire = empire_logic(html)
+    assert "Array.isArray(empire.pendingLiberation)" in empire
+    assert "validPendingLiberation" in empire
+    assert "typeof pending.name !== 'string'" in empire
+
+
+def test_liberation_battle_copy_uses_non_destructive_resolve_language():
+    html = HTML.read_text(encoding="utf-8")
+    empire = empire_logic(html)
+    battle = battle_logic(html)
+    assert "outmatch and free its shadow-bound occupying flock" in empire
+    assert "liberationFriendlyBattleText" in battle
+    assert "loses $1 resolve" in battle
+    assert "⚔️ BEGIN LIBERATION BATTLE" not in empire
 
 
 def test_liberation_battle_has_story_context_in_team_select_and_arena():
