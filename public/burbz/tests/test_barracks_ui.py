@@ -114,18 +114,24 @@ def test_every_mapped_bird_has_a_real_transparent_cutout():
         for value in final_paths.values()
         if value.startswith("/burbz/bird-art-cache/") and "/cutouts/" not in value and value.lower().endswith(".png")
     }
-    uk50 = subprocess.run(
-        ["node", "-e", "const x=require('./uk_bird_expansion_50.js'); console.log(JSON.stringify(Object.values(x.art)))"],
+    expansions = subprocess.run(
+        ["node", "-e", "const mods=['uk_bird_expansion_50.js','uk_bird_expansion_2.js','au_bird_expansion.js','uk_bird_expansion_3.js','au_bird_expansion_2.js']; console.log(JSON.stringify(mods.flatMap(m=>Object.values(require('./'+m).art))))"],
         cwd=ROOT,
         text=True,
         capture_output=True,
     )
-    assert uk50.returncode == 0, uk50.stderr
-    expected.update(Path(value).stem + "_cutout.png" for value in json.loads(uk50.stdout))
+    assert expansions.returncode == 0, expansions.stderr
+    expected.update(Path(value).stem + "_cutout.png" for value in json.loads(expansions.stdout))
     cutout_dir = ROOT / "bird-art-cache" / "cutouts"
     actual = {path.name for path in cutout_dir.glob("*_cutout.png")}
-    assert expected == actual
-    assert len(actual) == 378
+    # Keep all mapped sprites complete while allowing the two retained legacy
+    # UK variants that are still used by older save data.
+    assert expected <= actual
+    assert actual - expected == {
+        "lapwing_burbz_manga_20260624_v2_cutout.png",
+        "magpie_burbz_manga_20260624_cutout.png",
+    }
+    assert len(actual) == 561
     for path in cutout_dir.glob("*_cutout.png"):
         with Image.open(path) as image:
             assert image.mode == "RGBA", path.name

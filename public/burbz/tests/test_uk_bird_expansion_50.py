@@ -154,9 +154,13 @@ def test_expansion_script_is_a_versioned_offline_core_asset():
 def test_all_fifty_have_complete_deep_field_guide_entries():
     birds = {bird["name"]: bird for bird in load_expansion()["species"]}
     education = json.loads(EDUCATION_PATH.read_text(encoding="utf-8"))
-    assert set(education) == set(EXPECTED_ORDER)
+    # Later regional waves intentionally share this field-guide payload; the
+    # original UK50 contract is that all fifty survive, not that no future bird
+    # may be added to the same source-backed dataset.
+    assert set(EXPECTED_ORDER) <= set(education)
     required = {"title", "scientificName", "summary", "taxonomy", "identification", "behaviour", "habitat", "diet", "breeding", "range", "conservation", "wikipediaDeepDive", "learningNotes", "sources"}
-    for name, entry in education.items():
+    for name in EXPECTED_ORDER:
+        entry = education[name]
         assert required <= set(entry), name
         assert entry["title"] == name
         assert entry["scientificName"] == birds[name]["scientificName"], name
@@ -185,11 +189,11 @@ def test_existing_field_guides_survive_a_uk50_dataset_failure():
 def test_uk50_field_guide_is_loaded_and_cached_as_a_core_asset():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    marker = "/burbz/data/uk-bird-education-50.json?v=uk50-source-backed-20260713"
+    marker = "/burbz/data/uk-bird-education-50.json?v=au-source-backed-20260713"
     assert marker in html
     assert "fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, false)" in html
     assert "{ ...(base || {}), ...(uk50 || {}) }" in html
-    assert "./data/uk-bird-education-50.json?v=uk50-source-backed-20260713" in sw
+    assert "./data/uk-bird-education-50.json?v=au-source-backed-20260713" in sw
 
 
 def _eligibility(cases):
@@ -309,7 +313,7 @@ def test_service_worker_precaches_remote_lfs_resolved_cards_and_cutouts():
         "importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');",
         "UK50_REMOTE_ART",
         "UK50_REMOTE_CUTOUTS",
-        "BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS);",
+        "BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, ...NEW_LOCAL_CUTOUTS);",
         "url.hostname === 'github.com'",
     ):
         assert marker in sw
