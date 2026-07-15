@@ -61,7 +61,7 @@ def _norm(value: str) -> str:
 def test_exact_fifty_new_australian_species_and_all_remaining_regular_uk_taxa():
     au = _load(AU_MODULE)
     uk = _load(UK_MODULE)
-    assert au["version"] == "au50-source-backed-20260715"
+    assert au["version"] == "au50-source-backed-r2-20260715"
     assert uk["version"] == "uk-regular-completion-20260715"
     assert au["names"] == AU_EXPECTED and len(au["species"]) == 50
     assert uk["names"] == UK_EXPECTED and len(uk["species"]) == 35
@@ -95,6 +95,12 @@ def test_new_species_have_realistic_coordinate_season_and_habitat_gates():
         ["Carnaby's Black Cockatoo", -33.9, 151.2, 8, "woodland", False],
         ["Sahul Sunbird", -16.9, 145.8, 6, "coast", True],
         ["Sahul Sunbird", -37.8, 145.0, 6, "park", False],
+        ["Fan-tailed Cuckoo", -32.0, 116.0, 7, "woodland", True],
+        ["Glossy Black Cockatoo", -35.8, 137.3, 7, "woodland", True],
+        ["Glossy Black Cockatoo", -31.9, 115.9, 7, "woodland", False],
+        ["Forest Kingfisher", -12.5, 130.9, 7, "woodland", True],
+        ["Forest Kingfisher", -33.0, 151.0, 7, "woodland", False],
+        ["Forest Kingfisher", -33.0, 151.0, 12, "woodland", True],
     ]
     source = "const x=require('./au_bird_expansion_2.js');const c=" + json.dumps(cases) + ";console.log(JSON.stringify(c.map(r=>x.isEligible(...r.slice(0,5)))));"
     result = subprocess.run(["node", "-e", source], cwd=ROOT, text=True, capture_output=True)
@@ -122,6 +128,8 @@ def test_authoritative_source_fixtures_cover_the_release_without_hybrids_or_dupl
     assert all(row["rank"] == "species" and row["observations"] > 0 for row in au["species"])
     assert uk["source"].startswith("https://www.rspb.org.uk/") and uk["count"] >= 265
     assert all(row.get("appName") for row in uk["species"])
+    assert all(re.fullmatch(r"[A-Z][A-Za-z-]+(?: [a-z-]+){1,2}", row["scientific"]) for row in uk["species"])
+    assert all("`" not in row["scientific"] for row in uk["species"])
     assert len({_norm(row["scientific"]) for row in au["species"]}) == 50
 
 
@@ -158,6 +166,19 @@ def test_placeholders_are_honest_unique_usable_cards_and_transparent_cutouts():
     assert len(hashes) == 85
 
 
+def test_placeholder_cutouts_use_the_same_origin_offline_cache_path():
+    html = HTML.read_text()
+    start = html.index("function birdCutoutUrlFor(art)")
+    end = html.index("// Delegated <img> error handling", start)
+    function_source = html[start:end]
+    source = "const BIRD_ART_GITHUB_RAW_BASE='https://github.example/raw';" + function_source + "console.log(JSON.stringify([birdCutoutUrlFor('/burbz/bird-art-cache/red_capped_plover_burbz_placeholder_20260715.png'),birdCutoutUrlFor('/burbz/bird-art-cache/robin_yaan_20260608.png')]));"
+    result = subprocess.run(["node", "-e", source], cwd=ROOT, text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    placeholder, established = json.loads(result.stdout)
+    assert placeholder == "/burbz/bird-art-cache/cutouts/red_capped_plover_burbz_placeholder_20260715_cutout.png"
+    assert established == "https://github.example/raw/public/burbz/bird-art-cache/cutouts/robin_yaan_20260608_cutout.png"
+
+
 def test_no_new_common_or_scientific_name_collides_with_existing_catalog():
     old = []
     for module in (ROOT / "uk_bird_expansion_50.js", ROOT / "uk_bird_expansion_2.js", ROOT / "au_bird_expansion.js"):
@@ -176,7 +197,7 @@ def test_index_and_service_worker_integrate_every_projection_and_new_cache():
     sw = SW.read_text()
     for marker in (
         '<script src="uk_bird_expansion_3.js?v=uk-regular-completion-20260715"></script>',
-        '<script src="au_bird_expansion_2.js?v=au50-source-backed-20260715"></script>',
+        '<script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>',
         "WILD_BIRDS.push(...UK_FINAL.names, ...AU50.names);",
         "REGION_AREA_SPECIES.uk.push(...UK_FINAL.names, ...UK_FINAL.regionalAliases);",
         "REGION_AREA_SPECIES.au.push(...AU50.names);",
@@ -189,9 +210,9 @@ def test_index_and_service_worker_integrate_every_projection_and_new_cache():
     ):
         assert marker in html
     for marker in (
-        "burbz-regional-birds-v75-20260715",
+        "burbz-regional-birds-review-fixes-v76-20260715",
         "importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');",
-        "importScripts('./au_bird_expansion_2.js?v=au50-source-backed-20260715');",
+        "importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');",
         "./data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715",
     ):
         assert marker in sw

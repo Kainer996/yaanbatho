@@ -145,7 +145,7 @@ def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_abov
     assert "document.querySelector('.bottom-nav')" in layout
     assert "--quest-focus-card-height" in layout
     assert "--quest-focus-lift" in layout
-    assert "burbz-regional-birds-v75-20260715" in SW.read_text(encoding="utf-8")
+    assert "burbz-regional-birds-review-fixes-v76-20260715" in SW.read_text(encoding="utf-8")
 
 
 def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():

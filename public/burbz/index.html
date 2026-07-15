@@ -2598,7 +2598,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
 <script src="uk_bird_expansion_3.js?v=uk-regular-completion-20260715"></script>
-<script src="au_bird_expansion_2.js?v=au50-source-backed-20260715"></script>
+<script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -8966,6 +8966,9 @@ function birdCutoutUrlFor(art) {
   if (!art || typeof art !== 'string' || !art.includes('/bird-art-cache/') || art.includes('/cutouts/')) return null;
   const file = art.split('/').pop();
   if (!/\.png$/i.test(file)) return null;
+  if (file.includes('placeholder_20260715')) {
+    return '/burbz/bird-art-cache/cutouts/' + file.replace(/\.png$/i, '_cutout.png');
+  }
   return BIRD_ART_GITHUB_RAW_BASE + '/public/burbz/bird-art-cache/cutouts/' + file.replace(/\.png$/i, '_cutout.png');
 }
 

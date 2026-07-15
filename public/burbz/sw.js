@@ -2,9 +2,9 @@ importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
 importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
 importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
-importScripts('./au_bird_expansion_2.js?v=au50-source-backed-20260715');
+importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 
-const BURBZ_CACHE = 'burbz-regional-birds-v75-20260715';
+const BURBZ_CACHE = 'burbz-regional-birds-review-fixes-v76-20260715';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -40,7 +40,7 @@ const BURBZ_ASSETS = [
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
   './au_bird_expansion.js?v=au-source-backed-20260713',
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
-  './au_bird_expansion_2.js?v=au50-source-backed-20260715',
+  './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
   './assets/merlin-tutorial.png',
@@ -97,7 +97,7 @@ const BURBZ_CORE = [
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
   './au_bird_expansion.js?v=au-source-backed-20260713',
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
-  './au_bird_expansion_2.js?v=au50-source-backed-20260715',
+  './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
   './manifest.json'

@@ -118,7 +118,7 @@ def test_world_palette_keeps_blue_water_and_readable_dark_land_beneath_the_veil(
     assert "dark but readable" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
     assert "Dark land remains visible beneath the veil" in html
-    assert "burbz-regional-birds-v75-20260715" in SW.read_text(encoding="utf-8")
+    assert "burbz-regional-birds-review-fixes-v76-20260715" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
