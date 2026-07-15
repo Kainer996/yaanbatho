@@ -114,11 +114,8 @@ def test_world_palette_keeps_blue_water_and_readable_dark_land_beneath_the_veil(
     shade = html.split('class="empire-unexplored-shade"', 1)[1].split('></rect>', 1)[0]
     assert 'fill="#07100d"' in shade
     assert 'fill-opacity="0.2"' in shade
-    assert "Sea stays blue" in html
-    assert "dark but readable" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
-    assert "Dark land remains visible beneath the veil" in html
-    assert "burbz-realm-union-v77-20260715" in SW.read_text(encoding="utf-8")
+    assert "burbz-tutorial-overhaul-v78-20260715" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
@@ -160,6 +157,7 @@ def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():
     assert "captured territor" not in copy
     assert "glowing gold" not in copy
     assert "conquer" not in copy
+    assert 'class="empire-story-callout"' not in copy
 
 
 def test_claiming_or_opening_a_village_refreshes_and_focuses_the_empire_map():

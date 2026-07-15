@@ -190,4 +190,4 @@ def test_continuous_listener_release_is_query_busted_and_cached_offline():
     assert 'sound_listener_core.js?v=merlin-wand-listener-v2-20260714' in html
     assert './sound_listener_core.js?v=merlin-wand-listener-v2-20260714' in sw
     assert './assets/ui/merlin-wand-listener.webp' in sw
-    assert 'burbz-realm-union-v77-20260715' in sw
+    assert 'burbz-tutorial-overhaul-v78-20260715' in sw

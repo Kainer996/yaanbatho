@@ -396,8 +396,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-marker.show-label .empire-map-marker-label { display:block; }
 .empire-village-hub { margin:14px; padding:12px; border-radius:18px; border:1px solid rgba(240,199,103,.18); background:rgba(10,15,11,.58); }
 .empire-village-hub-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
-.empire-story-callout { margin:10px 14px 4px; padding:12px 14px; border-radius:15px; border:1px solid rgba(126,217,131,.30); background:linear-gradient(135deg,rgba(17,59,35,.82),rgba(7,24,15,.88)); color:#caefce; font-size:11px; line-height:1.45; box-shadow:inset 0 0 22px rgba(126,217,131,.06); }
-.empire-story-callout strong { display:block; margin-bottom:3px; color:#a7e9ad; font-family:'Rajdhani',sans-serif; font-size:13px; letter-spacing:.06em; text-transform:uppercase; }
+
 .liberation-battle-banner { margin:0 0 12px; padding:13px 14px; border-radius:14px; border:1px solid rgba(126,217,131,.44); background:linear-gradient(135deg,rgba(25,79,45,.88),rgba(9,29,18,.92)); color:#d8f7dc; font-size:12px; line-height:1.45; }
 .liberation-battle-banner strong { color:#9fe8a4; font-family:'Russo One',sans-serif; font-size:14px; }
 .liberation-cancel-btn { display:block; width:100%; margin-top:10px; min-height:40px; border-radius:10px; border:1px solid rgba(216,247,220,.45); background:rgba(5,20,12,.76); color:#d8f7dc; font-family:'Rajdhani',sans-serif; font-weight:900; letter-spacing:.05em; }
@@ -405,7 +404,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 .empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
-.empire-copy { font-size:12px; color:var(--text2); line-height:1.5; margin:0 2px 10px; }
+
 .empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:14px; border:1px solid rgba(120,166,109,.5); background:rgba(38,58,36,.85); color:#dff3d4; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; }
 .empire-tribute-btn[disabled] { opacity:.5; }
 .empire-village-list { display:grid; gap:8px; }
@@ -1275,7 +1274,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .leaderboard-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px; }
 .leaderboard-tab { min-height:46px; border-radius:12px; border:1px solid rgba(255,255,255,.08); background:var(--bg2); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
 .leaderboard-tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#11100d; }
-.leaderboard-intro { color:var(--text3); font-size:12px; line-height:1.45; margin-bottom:12px; }
+
 .leaderboard-list { display:flex; flex-direction:column; gap:8px; }
 .leaderboard-row { display:grid; grid-template-columns:34px 1fr auto; gap:10px; align-items:center; padding:10px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.24); border-radius:13px; }
 .leaderboard-rank { font-family:'Russo One',sans-serif; color:var(--accent2); text-align:center; }
@@ -1451,22 +1450,36 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-tutorial-spotlight { position:fixed; border-radius:16px; border:2px solid rgba(240,199,103,.9); box-shadow:0 0 0 200vmax rgba(0,0,0,.8), 0 0 24px rgba(240,199,103,.5), inset 0 0 18px rgba(240,199,103,.22); transition:top .4s ease, left .4s ease, width .4s ease, height .4s ease; pointer-events:none; animation:merlinSpotPulse 1.6s ease-in-out infinite; }
 @keyframes merlinSpotPulse { 0%,100%{ border-color:rgba(240,199,103,.95);} 50%{ border-color:rgba(214,168,79,.45);} }
 .merlin-tutorial-spotlight.none { border-color:transparent; animation:none; }
-.merlin-tutorial-stage { position:absolute; left:0; right:0; bottom:calc(var(--nav-height) + 46px + var(--safe-bottom)); padding:0 14px; pointer-events:none; }
-.merlin-tutorial-merlin { position:absolute; left:12px; bottom:0; width:88px; height:88px; object-fit:cover; border-radius:18px; border:2px solid var(--accent); box-shadow:0 10px 26px rgba(0,0,0,.65), 0 0 18px rgba(214,168,79,.4); animation:merlinBob 3.2s ease-in-out infinite; }
+.merlin-tutorial-stage { position:absolute; left:0; right:0; bottom:calc(var(--nav-height) + 46px + var(--safe-bottom)); padding:0 14px; pointer-events:auto; transition:top .24s ease,bottom .24s ease; }
+.merlin-tutorial-stage.is-top { top:calc(74px + var(--safe-top)); bottom:auto; }
+.merlin-tutorial-merlin { position:absolute; left:12px; bottom:0; width:82px; height:82px; object-fit:cover; border-radius:18px; border:2px solid var(--accent); box-shadow:0 10px 26px rgba(0,0,0,.65), 0 0 18px rgba(214,168,79,.4); animation:merlinBob 3.2s ease-in-out infinite; }
 @keyframes merlinBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-.merlin-tutorial-bubble { position:relative; margin-left:108px; background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:16px; padding:12px 14px 10px; box-shadow:0 14px 40px rgba(0,0,0,.55), 0 0 22px rgba(214,168,79,.18); }
+.merlin-tutorial-bubble { position:relative; margin-left:100px; background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:16px; padding:11px 12px 10px; box-shadow:0 14px 40px rgba(0,0,0,.55), 0 0 22px rgba(214,168,79,.18); }
 .merlin-tutorial-bubble::after { content:''; position:absolute; left:-13px; bottom:20px; width:0; height:0; border-top:9px solid transparent; border-bottom:7px solid transparent; border-right:14px solid #f5eeda; filter:drop-shadow(-2px 1px 0 rgba(143,111,42,.55)); }
-.merlin-tutorial-speaker { font-family:'Russo One',sans-serif; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:#8f6f2a; margin-bottom:4px; }
-.merlin-tutorial-text { font-family:'Inter',sans-serif; font-size:14.5px; line-height:1.45; font-weight:500; min-height:4.4em; }
-.merlin-tutorial-continue { margin-top:6px; text-align:right; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#8f6f2a; opacity:0; }
-.merlin-tutorial-continue.show { animation:merlinBlink 1.1s ease-in-out infinite; }
-@keyframes merlinBlink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.merlin-tutorial-speaker { font-family:'Russo One',sans-serif; font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:#8f6f2a; }
+.merlin-tutorial-chapter { margin-top:3px; color:#9a7a34; font:900 10px/1.2 'Rajdhani',sans-serif; letter-spacing:.11em; text-transform:uppercase; }
+.merlin-tutorial-title { margin-top:2px; color:#211a0e; font:900 17px/1.12 'Russo One',sans-serif; }
+.merlin-tutorial-text { margin-top:6px; max-height:min(28vh,190px); overflow:auto; font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.42; font-weight:500; }
+.merlin-tutorial-actions { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:8px; margin-top:9px; }
+.merlin-tutorial-nav { min-width:62px; min-height:42px; padding:0 11px; border-radius:11px; border:1px solid rgba(143,111,42,.4); background:rgba(143,111,42,.09); color:#6f551f; font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.merlin-tutorial-nav.primary { color:#fffdf6; border-color:#8f6f2a; background:linear-gradient(135deg,#a78335,#74541d); }
+.merlin-tutorial-nav:disabled { opacity:.35; }
+.merlin-tutorial-counter { text-align:center; color:#806a3b; font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.08em; }
 .merlin-tutorial-footer { position:absolute; left:0; right:0; bottom:calc(10px + var(--safe-bottom)); display:flex; align-items:center; justify-content:space-between; padding:0 16px; pointer-events:none; }
-.merlin-tutorial-dots { display:flex; gap:5px; flex-wrap:wrap; max-width:72%; }
-.merlin-tutorial-dot { width:7px; height:7px; border-radius:50%; background:rgba(244,234,212,.22); transition:background .25s ease, transform .25s ease; }
-.merlin-tutorial-dot.on { background:var(--legendary); transform:scale(1.3); box-shadow:0 0 8px rgba(240,199,103,.7); }
-.merlin-tutorial-dot.done { background:rgba(214,168,79,.55); }
+.merlin-tutorial-hint { color:rgba(244,234,212,.72); font:800 10px/1.2 'Rajdhani',sans-serif; letter-spacing:.06em; text-transform:uppercase; }
 .merlin-tutorial-skip { pointer-events:auto; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.45); color:var(--text2); border-radius:11px; padding:8px 13px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; }
+@media (max-width:430px) {
+  .merlin-tutorial-stage { padding:0 9px; }
+  .merlin-tutorial-merlin { left:8px; width:62px; height:62px; border-radius:14px; }
+  .merlin-tutorial-bubble { margin-left:72px; padding:10px; }
+  .merlin-tutorial-title { font-size:15px; }
+  .merlin-tutorial-text { font-size:12.5px; max-height:min(25vh,170px); }
+  .merlin-tutorial-footer { justify-content:flex-end; }
+  .merlin-tutorial-hint { display:none; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .merlin-tutorial-merlin,.merlin-tutorial-spotlight { animation:none; transition:none; }
+}
 
 /* ========== SETTINGS MODAL ========== */
 .modal-overlay {
@@ -1577,7 +1590,7 @@ svg.academy-room-bg { display:block; filter:none; }
 @keyframes toastIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(-10px)} }
 /* ========== ACADEMY ========== */
-.academy-sub strong { color: var(--legendary); }
+
 .academy-treehouse { position:relative; margin:0 10px 14px; min-height:680px; border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:linear-gradient(180deg,rgba(7,16,24,.22),rgba(7,16,24,.92)), url('assets/academy-tree-manga-20260629.png') center bottom / cover no-repeat; box-shadow:inset 0 -110px 130px rgba(0,0,0,.54), 0 18px 44px rgba(0,0,0,.42); touch-action:manipulation; }
 .academy-treehouse.placing { outline:2px solid rgba(214,168,79,.78); box-shadow:0 0 0 4px rgba(214,168,79,.14), inset 0 -110px 130px rgba(0,0,0,.42); cursor:crosshair; }
 .academy-treehouse::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 18%,rgba(214,168,79,.12),transparent 28%), linear-gradient(180deg,rgba(255,255,255,.03),transparent 34%,rgba(0,0,0,.32)); pointer-events:none; }
@@ -1599,7 +1612,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .treehouse-bird:nth-child(3n) { animation-duration:2.9s; }
 .treehouse-bird:nth-child(4n) { animation-duration:2.1s; }
 @keyframes treeBirdHop { 0%,100%{ translate:0 0; } 30%{ translate:0 -8px; } 48%{ translate:0 -1px; } 62%{ translate:0 -5px; } 76%{ translate:0 0; } }
-.treehouse-help { position:absolute; left:12px; right:12px; bottom:12px; z-index:8; padding:10px 12px; border-radius:16px; background:rgba(0,0,0,.56); border:1px solid rgba(214,168,79,.22); color:var(--text2); font-size:11px; line-height:1.35; backdrop-filter:blur(8px); }
+
 .expedition-panel { margin:0 10px 14px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.09),rgba(0,0,0,.25)); }
 .expedition-title { font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
 .expedition-card { padding:10px; border-radius:13px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.08); margin-top:8px; }
@@ -1718,7 +1731,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .starter-bird-btn { min-height:32px; border-radius:999px; padding:0 10px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.13); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; }
 .starter-bird-btn[disabled] { opacity:.42; filter:grayscale(.5); }
 
-.academy-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 12px; line-height: 1.5; }
+
 .academy-campus { margin: 0 10px 14px; border: 1px solid var(--bg4); border-radius: 14px; overflow: hidden; background: #0a0805; }
 .academy-campus svg { display: block; width: 100%; height: auto; }
 .academy-zone { cursor: pointer; }
@@ -1927,7 +1940,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .quest-board-art { width:68px; height:68px; flex:none; border-radius:19px; object-fit:cover; border:1px solid rgba(240,199,103,.5); box-shadow:0 8px 22px rgba(0,0,0,.45),0 0 20px rgba(81,203,161,.18); }
 .quest-board-title { color:#fff2c8; font:900 20px/1.08 'Russo One',sans-serif; }
 .quest-board-intro { margin-top:5px; color:#bdb7a8; font-size:12px; line-height:1.35; }
-.quest-board-distance-note { margin:10px 0; padding:9px 11px; border-radius:12px; border-left:3px solid #65d6ae; background:rgba(70,185,143,.09); color:#d9f8eb; font-size:12px; line-height:1.35; }
+
 .map-quest-focus-card { position:absolute; left:12px; right:12px; bottom:calc(14px + var(--safe-bottom) + var(--quest-focus-lift, 0px)); z-index:46; display:none; max-width:470px; max-height:var(--quest-focus-max-height,calc(100% - var(--safe-bottom) - 28px)); margin:auto; padding:13px; overflow-y:auto; overscroll-behavior:contain; border-radius:21px; background:radial-gradient(circle at 7% 8%,rgba(66,148,115,.22),transparent 32%),linear-gradient(155deg,rgba(30,25,15,.97),rgba(7,13,10,.98)); border:1px solid rgba(240,199,103,.56); box-shadow:0 15px 40px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08); pointer-events:auto; }
 .map-quest-focus-card.show { display:block; animation:questFocusRise .28s ease-out; }
 @keyframes questFocusRise { from{transform:translateY(22px);opacity:0} to{transform:none;opacity:1} }
@@ -2058,8 +2071,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="screen active" id="screen-map">
       <div class="live-map-shell clean-cloud-map" id="liveMapShell">
         <div id="burbzLiveMap" aria-label="Live Burbz habitat map"></div><div class="map-fallback-grid" id="mapFallbackGrid" aria-hidden="true"></div>
-        <div class="map-sky-haze"></div><div class="map-playfield-vignette"></div><div class="map-medieval-banner">Merlin tablet field view</div>
-        <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Kingdom of Burbz field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Real roads, woods and hills, enchanted into a medieval bird realm.</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
+        <div class="map-sky-haze"></div><div class="map-playfield-vignette"></div>
+        <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Live conditions</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="map-quest-btn" id="mapQuestBtn" aria-label="Explore nearby quests"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-kicker">Field board</span><span class="map-quest-btn-label" id="mapQuestBtnLabel">Explore Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
@@ -2067,10 +2080,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
-        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><button class="map-area-birds-toggle" id="mapAreaBirdsToggle" aria-controls="mapAreaBirdsList" aria-expanded="true"><span class="map-area-birds-heading"><span class="map-area-birds-title">Area birds</span><span class="map-area-birds-sub">Revealed here · common → rare</span></span><span class="map-area-birds-count" id="mapAreaBirdsCount"><span id="mapAreaBirdsCountValue">0</span><span class="map-area-birds-chevron" aria-hidden="true">⌄</span></span></button><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
+        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><button class="map-area-birds-toggle" id="mapAreaBirdsToggle" aria-controls="mapAreaBirdsList" aria-expanded="true"><span class="map-area-birds-heading"><span class="map-area-birds-title">Area birds</span><span class="map-area-birds-sub">Common → rare</span></span><span class="map-area-birds-count" id="mapAreaBirdsCount"><span id="mapAreaBirdsCountValue">0</span><span class="map-area-birds-chevron" aria-hidden="true">⌄</span></span></button><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
-        <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy">Tap Likely birds for a habitat overlay, or tap a marker for details.</div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button><button class="map-village-orb" id="mapVillageBtn" aria-label="Enter the village">&#127984;</button></div>
+        <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy"></div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button><button class="map-village-orb" id="mapVillageBtn" aria-label="Enter the village">&#127984;</button></div>
       </div>
     </div>
 
@@ -2137,7 +2150,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="merlin-listener-copy">
             <div class="merlin-listener-kicker">Merlin’s wand</div>
             <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
-            <div class="merlin-listener-activity" id="merlinListenActivity">Tap once and Merlin will keep listening while you explore Burbz.</div>
+            <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
             <div class="merlin-listener-privacy">Microphone active only while the green listening light is shown</div>
           </div>
         </div>
@@ -2171,7 +2184,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="scan-upload-area" id="uploadArea">
           <img id="nativePhotoPreview" alt="Your last bird photo" style="display:none;">
           <div class="scan-upload-icon">&#128247;</div>
-          <div class="scan-upload-text">Tap to open your phone's camera app<br><span class="scan-upload-subtext">Full native quality — every lens and megapixel your phone has</span></div>
+          <div class="scan-upload-text">Choose a bird photo</div>
         </div>
         <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
         <button class="scan-btn" id="captureBtn">OPEN CAMERA</button>
@@ -2187,7 +2200,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- BIRD PHOTO CROPPER (Merlin-style: fill the square with the bird) -->
     <div class="bird-crop-overlay" id="birdCropOverlay" role="dialog" aria-modal="true" aria-label="Frame the bird">
       <div class="bird-crop-title">Frame the bird</div>
-      <div class="bird-crop-sub">Pinch or use the slider to zoom in, drag to move &mdash; fill the square with the bird so it can be recognised.</div>
+      <div class="bird-crop-sub">Zoom and drag until the bird fills the square.</div>
       <div class="bird-crop-stage" id="birdCropStage">
         <img class="bird-crop-img" id="birdCropImg" alt="">
         <div class="bird-crop-frame">
@@ -2216,7 +2229,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="league-header" id="leagueHeader"></div>
         <div class="league-rival" id="leagueRival"></div>
         <div class="battle-select-title">Pick your three-bird team</div>
-        <div class="battle-select-copy" id="battleSelectCopy">Tap birds to add them. Counter the rival's wing classes — the wheel below shows who beats whom.</div>
+        <div class="battle-select-copy" id="battleSelectCopy">Choose 3 birds · matchup wheel below</div>
         <div class="battle-team-grid" id="battleTeamGrid"></div>
         <button class="battle-start-btn" id="battleStartBtn" disabled>START BATTLE</button>
         <div class="type-wheel" id="typeWheel"></div>
@@ -2245,13 +2258,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- ACADEMY SCREEN -->
     <div class="screen" id="screen-academy">
       <div class="screen-title">BURB ACADEMY</div>
-      <div class="academy-sub">Manga tree home base. Pick a building below, then tap the tree to place it exactly where you want.</div>
-
       <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
         <div id="treehouseBranchLayer"></div>
         <div id="treehouseRoomLayer"></div>
         <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
-        <div class="treehouse-help" data-feature="quest-roost"><strong>Treehouse Academy:</strong> choose a building below, tap the tree to place it, then tap placed buildings to manage or move them.</div>
+
       </div>
 
       <div id="academyBuildPanel"></div>
@@ -2267,7 +2278,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- EMPIRE SCREEN — interactive territory map + medieval village hub -->
     <div class="screen" id="screen-village">
       <div class="screen-title">YOUR EMPIRE</div>
-      <div class="village-sub">Drag, pinch and zoom across the whole atlas. Sea stays blue; unexplored land is dark but readable; every town you liberate awakens in light green with its sanctuary icon.</div>
       <div class="empire-map-card" id="empireMapCard">
         <div id="empireWorldMap" role="application" aria-label="Interactive map of your liberated territories"></div>
         <div class="empire-map-vignette"></div>
@@ -2287,15 +2297,14 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <g id="empireLiberatedOutlineShape" filter="url(#empireTerritoryOuterOutline)"></g>
         </svg>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
-        <div class="empire-map-empty">The whole world remains visible beneath the veil. Travel to a real town, win its Liberation Battle and build a birdhouse; that sanctuary will wake in light green with its own icon.</div>
+        <div class="empire-map-empty"></div>
         <div class="empire-map-status" id="empireMapStatus">Reading the veil over the world…</div>
         <div class="empire-map-attribution"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
       </div>
-      <div class="empire-story-callout"><strong>🌿 Liberate the world</strong>Each real town you free breaks the usurper's hold on the Kingdom of Burbz. Travel farther, battle the occupying flocks, and wake the map one green sanctuary at a time.</div>
       <div id="empirePanel"></div>
       <div class="empire-village-hub" id="empireVillageHub">
         <div class="empire-village-hub-title" id="villageTitle">BURB VILLAGE</div>
-        <div class="village-sub" id="villageSub">A medieval market square for bird trainers. Drag to look around — tap a building to step inside.</div>
+        <div class="village-sub" id="villageSub"></div>
         <div id="villageClaimBar"></div>
         <div class="village-stage" id="villageStage"><div class="village-loading" id="villageLoading">Raising the timber frames…</div></div>
         <div class="village-legend" id="villageLegend"></div>
@@ -2336,7 +2345,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <button class="cloud-btn secondary" id="cloudSignOutBtn" style="display:none;">Sign out</button>
         </div>
         <div class="cloud-google-slot" id="googleSignInSlot"></div>
-        <div class="cloud-setup-hint" id="cloudSetupHint" style="display:none;">Google sign-in needs a client ID on the server. Add it to <code>burbz/data/google-client-id.txt</code> or <code>BURBZ_GOOGLE_CLIENT_ID</code>, then reload.</div>
+        <div class="cloud-setup-hint" id="cloudSetupHint" style="display:none;">Cloud save unavailable · progress remains on this device.</div>
       </div>
       <div class="profile-stats-grid">
         <div class="profile-stat-card">
@@ -2379,7 +2388,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- LEADERBOARDS SCREEN -->
     <div class="screen" id="screen-leaderboards">
       <div class="screen-title">LEADERBOARDS</div>
-      <div class="leaderboard-intro">Two boards for testing: collectors score species count with rarity weight; league score tracks Flock League wins, level, training and squad strength.</div>
       <div class="leaderboard-tabs">
         <button class="leaderboard-tab active" data-board="collection">Collection</button>
         <button class="leaderboard-tab" data-board="mechanics">Flock League</button>
@@ -2458,7 +2466,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="barracks-recruit-sheet">
       <div class="modal-handle"></div>
       <div class="barracks-recruit-head">
-        <div><div class="barracks-recruit-title">🪶 Recruit Birds</div><div class="barracks-recruit-sub">Discovered and befriended birds awaiting an invitation to your flock.</div></div>
+        <div class="barracks-recruit-title">🪶 Recruit Birds</div>
         <button class="barracks-recruit-close" id="barracksRecruitClose">Close</button>
       </div>
       <div class="barracks-recruit-wallet" id="barracksRecruitWallet">Coins: 0</div>
@@ -2511,7 +2519,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
       <div class="settings-row" id="replayTutorialBtn" role="button" tabindex="0">
-        <div class="settings-label">Merlin's Tutorial</div>
+        <div class="settings-label">Replay Complete Tutorial</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
       <div class="settings-row" id="sendFeedbackBtn" role="button" tabindex="0">
@@ -2545,19 +2553,25 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
   <!-- Merlin Tutorial Overlay -->
-  <div class="merlin-tutorial-overlay" id="merlinTutorialOverlay" aria-modal="true" role="dialog" aria-label="Merlin's tutorial">
+  <div class="merlin-tutorial-overlay" id="merlinTutorialOverlay" aria-modal="true" role="dialog" aria-labelledby="merlinTutorialTitle" aria-hidden="true">
     <div class="merlin-tutorial-spotlight none" id="merlinTutorialSpotlight"></div>
-    <div class="merlin-tutorial-stage">
+    <div class="merlin-tutorial-stage" id="merlinTutorialStage">
       <img class="merlin-tutorial-merlin" src="assets/merlin-tutorial.png" alt="Merlin the wizard falcon">
       <div class="merlin-tutorial-bubble">
         <div class="merlin-tutorial-speaker">Merlin &#10022; Wizard of Burbz</div>
-        <div class="merlin-tutorial-text" id="merlinTutorialText"></div>
-        <div class="merlin-tutorial-continue" id="merlinTutorialContinue">Tap to continue &#9654;</div>
+        <div class="merlin-tutorial-chapter" id="merlinTutorialChapter"></div>
+        <div class="merlin-tutorial-title" id="merlinTutorialTitle"></div>
+        <div class="merlin-tutorial-text" id="merlinTutorialText" aria-live="polite"></div>
+        <div class="merlin-tutorial-actions">
+          <button class="merlin-tutorial-nav" id="merlinTutorialBack" type="button">Back</button>
+          <div class="merlin-tutorial-counter" id="merlinTutorialCounter"></div>
+          <button class="merlin-tutorial-nav primary" id="merlinTutorialNext" type="button">Next</button>
+        </div>
       </div>
     </div>
     <div class="merlin-tutorial-footer">
-      <div class="merlin-tutorial-dots" id="merlinTutorialDots"></div>
-      <button class="merlin-tutorial-skip" id="merlinTutorialSkip">Skip</button>
+      <div class="merlin-tutorial-hint">← → keys also work</div>
+      <button class="merlin-tutorial-skip" id="merlinTutorialSkip">Skip tour</button>
     </div>
   </div>
 
@@ -3517,8 +3531,8 @@ function updateCloudUi(message) {
   const nameEl = $('cloudName'), statusEl = $('cloudStatus'), avatarEl = $('cloudAvatar'), signOut = $('cloudSignOutBtn'), hint = $('cloudSetupHint');
   if (!nameEl || !statusEl) return;
   if (!cloudAuth.configured) {
-    nameEl.textContent = 'Google sign-in not configured';
-    statusEl.textContent = 'Local saves still work. Add a Google client ID to enable cloud testing.';
+    nameEl.textContent = 'Cloud save unavailable';
+    statusEl.textContent = 'Cloud save unavailable · progress remains on this device.';
     if (hint) hint.style.display = 'block';
     if (signOut) signOut.style.display = 'none';
     return;
@@ -9414,7 +9428,7 @@ function renderAcademyBuildPanel() {
       '<div class="academy-building-meta"><span class="academy-building-chip">' + (built ? 'BUILT · MOVE ANYTIME' : locked ? 'UNLOCK LV ' + b.unlockLevel : costLabel) + '</span>' + btn + '</div>' +
     '</div>';
   }).join('');
-  panel.innerHTML = '<div class="academy-builder-status"><div><div class="academy-builder-title">World buildings</div><div class="academy-builder-copy">Pick a building here, then tap the manga tree where you want it to live. Coins come from quests and discoveries; branches come from Branch Run and Timber Haul quests.</div></div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵<br><span style="font-family:Rajdhani,sans-serif;font-size:10px;color:var(--text3);letter-spacing:.08em">COINS · BRANCHES</span></div></div><div class="academy-build-grid">' + cards + '</div>';
+  panel.innerHTML = '<div class="academy-builder-status"><div class="academy-builder-title">World buildings</div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵</div></div><div class="academy-build-grid">' + cards + '</div>';
 }
 
 
@@ -9751,10 +9765,10 @@ function renderMerlinClueNotebook() {
     const known = found.includes(clue.id);
     return '<div class="merlin-clue-card' + (known ? '' : ' locked') + '">' +
       '<div class="merlin-clue-name">' + (known ? '✨ ' + escapeHtml(clue.title) : '???') + '</div>' +
-      '<div class="merlin-clue-copy">' + (known ? escapeHtml(clue.copy) + ' · Teases Arena Trial: ' + escapeHtml(clue.unlocksTrial || 'future_trial') : 'A hidden Merlin Clue. Send birds from the Quest Roost to uncover it.') + '</div>' +
+      '<div class="merlin-clue-copy">' + (known ? escapeHtml(clue.copy) : 'A hidden Merlin Clue. Send birds from the Quest Roost to uncover it.') + '</div>' +
     '</div>';
   }).join('');
-  return '<div class="merlin-clue-notebook"><div class="merlin-clue-title">Merlin\'s Clues</div><div class="academy-builder-copy">Recovered story clues make the Academy feel remembered. The Moon-Branch Route Map points toward moon_branch_trial when found.</div><div class="merlin-clue-grid">' + cards + '</div></div>';
+  return '<div class="merlin-clue-notebook"><div class="merlin-clue-title">Merlin\'s Clues</div><div class="merlin-clue-grid">' + cards + '</div></div>';
 }
 
 // ---- Fallout Shelter-style quest board --------------------------------------
@@ -10247,8 +10261,7 @@ function barracksCandidateForKey(key) {
 
 function renderAcademyRecruitmentPanelHTML() {
   const count = barracksRecruitCandidates().length;
-  return '<div class="academy-builder-copy">The Barracks keeps companions out of the paperwork room. Open the recruitment register to review ' + count + ' discovered bird' + (count === 1 ? '' : 's') + ' awaiting an invitation.</div>' +
-    '<button class="barracks-recruit-launch" data-action="open-barracks-recruits">🪶 Recruit Birds' + (count ? ' · ' + count : '') + '</button>';
+  return '<button class="barracks-recruit-launch" data-action="open-barracks-recruits">🪶 Recruit Birds' + (count ? ' · ' + count : '') + '</button>';
 }
 
 function renderBarracksRecruitList() {
@@ -11188,7 +11201,7 @@ function renderAcademyRoomInterior() {
     if (room === 'tavern') {
       const waiting = barracksRecruitCandidates().length;
       root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage"></div></div>' +
-        '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div><div class="academy-room-desc">Open a compact list of your discovered and befriended birds. Tap a name to inspect its full manga card, stats and recruitment cost.</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
+        '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
       $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
       root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
       return;
@@ -11688,7 +11701,7 @@ function openQuestBoard() {
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
     '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="quest-board-title">Nearby Quests</div><div class="quest-board-intro" id="walkQuestSheetStatus">Scouting real trails and public footpaths around you…</div></div></div>' +
-    '<div class="quest-board-distance-note">Closest trailheads come first. Tap any quest to jump straight to its map, route and full field brief.</div>' +
+
     '<div id="walkQuestOfferList"><div class="quest-all-done">Reading the enchanted trail map…</div></div>' +
     '<div class="quest-section-title">🧭 Chart your own route</div><div id="walkQuestAdventureList"></div>' +
     '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
@@ -13047,12 +13060,12 @@ function showMapBirdPreview(row) {
 }
 function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawMedievalProps(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); }
 function addMapBirdChip(coords, species, birdSymbol, spawn) { const shell = $('liveMapShell'); if (!shell || !liveMap) return; const point = liveMap.project(coords); const chip = makeHtmlMarker('burbz-map-bird-chip', `<div class="burbz-marker-orb">${birdSymbol}</div><div class="burbz-marker-label">${escapeHtml(species)}</div>`); chip.style.left = Math.max(56, Math.min(shell.clientWidth - 56, point.x)) + 'px'; chip.style.top = Math.max(190, Math.min(shell.clientHeight - 190, point.y)) + 'px'; chip.addEventListener('click', () => updateNearbyCard([spawn], 1)); shell.appendChild(chip); liveMapBirdChips.push(chip); }
-function createBirdSpawnPopup(spawn) { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const source = spawn.realFeature ? 'anchored to a real mapped habitat clue' : 'summoned from the local habitat estimate'; return `<div class="burbz-popup-title">${escapeHtml(species)}</div><div class="burbz-popup-copy">Likely around ${escapeHtml(habitat)} here — ${source}. In the Kingdom of Burbz this is a ${escapeHtml(habitatPoiName(spawn.habitat))} encounter.</div><button class="burbz-popup-btn" onclick="document.querySelector('[data-screen=scan]')?.click()">Scan this spot</button>`; }
+function createBirdSpawnPopup(spawn) { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const source = spawn.realFeature ? 'mapped habitat clue' : 'local habitat estimate'; return `<div class="burbz-popup-title">${escapeHtml(species)}</div><div class="burbz-popup-copy">${escapeHtml(habitat)} · ${source}</div><button class="burbz-popup-btn" onclick="document.querySelector('[data-screen=scan]')?.click()">Scan this spot</button>`; }
 function updateNearbyCard(spawns, featureCount) { const first = spawns[0]; if (!first) return; const species = first.bird.commonName || first.bird.name || first.bird.species; const habitat = HABITAT_LABELS[first.habitat] || HABITAT_LABELS.default; if ($('mapNearbyIcon')) $('mapNearbyIcon').innerHTML = birdOnlyImgHTML(first.bird, 'map-nearby-art'); $('mapNearbyTitle').textContent = `${species} nearby`; $('mapNearbyCopy').textContent = `${habitat}: ${featureCount ? featureCount + ' mapped clues' : 'likely in this area'} — check the area list.`; }
 function mapDistanceMeters(a, b) { const lat1 = (a.lat ?? a[1]) * Math.PI/180, lat2 = (b.lat ?? b[1]) * Math.PI/180; const dLat = lat2-lat1, dLon = ((b.lng ?? b.lon ?? b[0]) - (a.lng ?? a.lon ?? a[0])) * Math.PI/180; const x = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2; return 6371000 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x)); }
 function mapViewRadiusMeters() { if (!liveMap) return 1400; const c = liveMap.getCenter(); const b = liveMap.getBounds(); const n = b.getNorthEast(); const meters = mapDistanceMeters(c, n) * .75; return Math.max(500, Math.min(8000, meters)); }
 function likelyBirdRows(spawns) { const bySpecies = new Map(); spawns.forEach(spawn => { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const existing = bySpecies.get(species) || { species, bird:spawn.bird, habitats:new Set(), mapped:0, fallback:0, emoji:getBirdMarkerEmoji(species), commonness:realWorldRarityScore(species), rarityLabel:realWorldRarityLabel(species) }; existing.habitats.add(habitat); if (spawn.realFeature) existing.mapped++; else existing.fallback++; bySpecies.set(species, existing); }); return [...bySpecies.values()].sort((a,b) => (b.commonness - a.commonness) || (b.mapped - a.mapped) || a.species.localeCompare(b.species)); }
-function renderLikelyBirdOverlay(spawns = liveMapSpawns, featureCount = liveMapFeatureCount, source = 'Current map view') { const overlay = $('mapBirdOverlay'); if (!overlay) return; if (!spawns || !spawns.length) spawns = buildBirdSpawns((liveMapLastPosition || getFallbackMapCenter()).lat, (liveMapLastPosition || getFallbackMapCenter()).lon, []); const habitats = [...new Set(spawns.map(s => s.habitat))]; const rows = likelyBirdRows(spawns); overlay.innerHTML = `<div class="map-overlay-head"><div><div class="map-overlay-title">Likely birds</div><div class="map-overlay-sub">${escapeHtml(source)} · ${featureCount ? featureCount + ' OpenStreetMap habitat clues' : 'fallback habitat estimate'} · the tilted field map keeps real places but dresses them as the Kingdom of Burbz.</div></div><button class="map-overlay-close" id="mapOverlayClose" aria-label="Close likely birds overlay">×</button></div><div class="map-habitat-chip-row">${habitats.map(h => `<span class="map-habitat-chip" style="border-color:${habitatColor(h)}66;color:${habitatColor(h)}">${escapeHtml(HABITAT_LABELS[h] || h)}</span>`).join('')}</div><div class="map-likely-grid">${rows.slice(0,10).map((row, i) => `<div class="map-likely-card" data-likely-bird="${i}" style="cursor:pointer"><div class="map-likely-species">${row.emoji} ${escapeHtml(row.species)}</div><div class="map-likely-why">Likely near ${escapeHtml([...row.habitats].slice(0,2).join(' + '))} in this area.</div><span class="map-likely-tag">${escapeHtml(row.rarityLabel)} · ${row.mapped ? row.mapped + ' real clues' : 'smart fallback'}</span></div>`).join('')}</div>`; $('mapOverlayClose')?.addEventListener('click', () => toggleLikelyBirdOverlay(false), { once:true }); overlay.querySelectorAll('[data-likely-bird]').forEach(card => card.addEventListener('click', () => { const row = rows[Number(card.dataset.likelyBird)]; if (row) { SFX.tap(); showMapBirdPreview(row); } })); drawHabitatOverlayZones(spawns); }
+function renderLikelyBirdOverlay(spawns = liveMapSpawns, featureCount = liveMapFeatureCount, source = 'Current map view') { const overlay = $('mapBirdOverlay'); if (!overlay) return; if (!spawns || !spawns.length) spawns = buildBirdSpawns((liveMapLastPosition || getFallbackMapCenter()).lat, (liveMapLastPosition || getFallbackMapCenter()).lon, []); const habitats = [...new Set(spawns.map(s => s.habitat))]; const rows = likelyBirdRows(spawns); overlay.innerHTML = `<div class="map-overlay-head"><div><div class="map-overlay-title">Likely birds</div><div class="map-overlay-sub">${escapeHtml(source)} · ${featureCount ? featureCount + ' mapped habitat clues' : 'habitat estimate'}</div></div><button class="map-overlay-close" id="mapOverlayClose" aria-label="Close likely birds overlay">×</button></div><div class="map-habitat-chip-row">${habitats.map(h => `<span class="map-habitat-chip" style="border-color:${habitatColor(h)}66;color:${habitatColor(h)}">${escapeHtml(HABITAT_LABELS[h] || h)}</span>`).join('')}</div><div class="map-likely-grid">${rows.slice(0,10).map((row, i) => `<div class="map-likely-card" data-likely-bird="${i}" style="cursor:pointer"><div class="map-likely-species">${row.emoji} ${escapeHtml(row.species)}</div><div class="map-likely-why">Near ${escapeHtml([...row.habitats].slice(0,2).join(' + '))}</div><span class="map-likely-tag">${escapeHtml(row.rarityLabel)} · ${row.mapped ? row.mapped + ' mapped' : 'estimated'}</span></div>`).join('')}</div>`; $('mapOverlayClose')?.addEventListener('click', () => toggleLikelyBirdOverlay(false), { once:true }); overlay.querySelectorAll('[data-likely-bird]').forEach(card => card.addEventListener('click', () => { const row = rows[Number(card.dataset.likelyBird)]; if (row) { SFX.tap(); showMapBirdPreview(row); } })); drawHabitatOverlayZones(spawns); }
 async function refreshLikelyBirdOverlay(opts = {}) { if (!liveMapOverlayOpen) return; const overlay = $('mapBirdOverlay'); if (overlay) overlay.innerHTML = '<div class="map-overlay-title">Likely birds</div><div class="map-overlay-sub">Reading real habitat clues around this enchanted map view...</div>'; const center = (opts.useMapView && liveMap) ? liveMap.getCenter() : (liveMapLastPosition || getFallbackMapCenter()); const lat = center.lat, lon = center.lng ?? center.lon; const radius = opts.useMapView ? mapViewRadiusMeters() : 1400; const features = await fetchNearbyHabitatFeatures(lat, lon, radius).catch(() => []); const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); renderLikelyBirdOverlay(spawns, features.length, opts.reason || (opts.useMapView ? 'Current map view' : 'Your live position')); }
 function toggleLikelyBirdOverlay(force) { liveMapOverlayOpen = typeof force === 'boolean' ? force : !liveMapOverlayOpen; const overlay = $('mapBirdOverlay'), btn = $('mapLikelyBtn'); overlay?.classList.toggle('show', liveMapOverlayOpen); btn?.classList.toggle('active', liveMapOverlayOpen); if (!liveMapOverlayOpen) { drawHabitatOverlayZones([]); return; } renderLikelyBirdOverlay(); refreshLikelyBirdOverlay({ useMapView: !!liveMap, reason:'Current map view' }); }
 function setMapLabels(place, status) { if ($('mapPlaceLabel')) $('mapPlaceLabel').textContent = place || 'Live map'; if ($('mapStatusLabel')) $('mapStatusLabel').textContent = status || ''; }
@@ -13764,8 +13777,8 @@ function refreshEmpireMap(options = {}) {
   card?.classList.toggle('is-empty', villages.length === 0);
   const status = $('empireMapStatus');
   if (status) status.textContent = villages.length
-    ? villages.length + ' liberated territor' + (villages.length === 1 ? 'y' : 'ies') + ' awake in light green · zoom in and tap a sanctuary'
-    : 'Dark land remains visible beneath the veil · blue sea marks the wider world · liberate a real town to wake its sanctuary';
+    ? villages.length + ' village' + (villages.length === 1 ? '' : 's') + ' · tap a sanctuary'
+    : 'No liberated villages yet';
   if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
 }
 
@@ -13933,9 +13946,8 @@ function renderEmpirePanel() {
   const hasTribute = due.coins > 0 || due.branches > 0;
   const rows = count ? villages.map(v =>
     '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '"><span class="empire-village-flag">🕊️</span><span class="empire-village-name">' + escapeHtml(v.name) + '</span><span class="empire-village-meta">liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></button>'
-  ).join('') : '<div class="empire-empty">No villages liberated yet. Walk to a real town, win its Liberation Battle and build a sanctuary birdhouse — travelling farther can awaken the whole world.</div>';
+  ).join('') : '<div class="empire-empty">No villages yet · open a nearby town from Map</div>';
   panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 YOUR EMPIRE — ' + count + ' VILLAGE' + (count === 1 ? '' : 'S') + '</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
-    '<div class="empire-copy">Liberate the world map: travel to a real town, outmatch and free its shadow-bound occupying flock, then build a sanctuary birdhouse. Liberated villages support the realm with ' + EMPIRE_TRIBUTE_COINS + ' 🪙 and ' + EMPIRE_TRIBUTE_BRANCHES + ' 🪵 every 8 hours.</div>' +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TRIBUTE: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' : '⏳ TRIBUTE GROWING — CHECK BACK LATER') + '</button>' : '') +
     '<div class="empire-village-list">' + rows + '</div>';
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
@@ -15254,7 +15266,7 @@ function correctScanDiscovery(chosenName) {
   const wrongLabel = (wrongNames[0] && speciesKey(canonicalSpeciesName(wrongNames[0])) !== chosenKey) ? ' instead of ' + wrongNames[0] : '';
   showToast('✓ Logged ' + bird.commonName + wrongLabel);
   scanCorrectContext = { names: [bird.commonName] };
-  showRecruitChoiceOverlay([bird], 'Corrected — ' + bird.commonName + ' is in your Birdex and registered at the Barracks. Inspect its card there if you want to recruit it.', { correctable: true });
+  showRecruitChoiceOverlay([bird], 'Corrected · ' + bird.commonName + ' added to Birdex · recruit at Barracks.', { correctable: true });
 }
 
 function showRecruitChoiceOverlay(birds, message, opts = {}) {
@@ -15266,8 +15278,8 @@ function showRecruitChoiceOverlay(birds, message, opts = {}) {
   if (!choices.length) return;
   const overlay = $('recruitOverlay'), list = $('recruitList');
   if (!overlay || !list) return;
-  $('recruitCopy').textContent = message || 'You discovered birds nearby. They are registered at the Barracks in your Academy — inspect and recruit them there.';
-  $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0) + ' · discoveries stay safely in the Birdex until you recruit them.';
+  $('recruitCopy').textContent = message || 'Added to Birdex · recruit at the Academy Barracks.';
+  $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0);
   list.innerHTML = choices.map((bird, idx) => createKnownSpeciesCardHTML(bird, idx)).join('');
   // "Wrong bird?" correction affordance for scan results.
   const closeBtn = $('recruitClose');
@@ -15342,12 +15354,12 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Multiple birds discovered. They all enter your Birdex and are registered at the Barracks — recruit the ones you want there.' : 'Species discovered. It is now registered at the Barracks in your Academy, ready for card inspection and recruitment.', { correctable: true });
+    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.', { correctable: true });
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   } else if (top) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in your Birdex. Recruit it at the Barracks when you can afford it.', { correctable: true }); }
+    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.', { correctable: true }); }
   }
 }
 
@@ -15555,10 +15567,10 @@ function renderInventory() {
   if (!grid) return;
   const items = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
   if (!items.length) {
-    grid.innerHTML = '<div class="inventory-empty">Your bag is empty for now. Discover birds, complete quests and visit the Academy to earn food, gifts and gear.</div>';
+    grid.innerHTML = '<div class="inventory-empty">Bag empty · earn items from quests and discoveries.</div>';
     return;
   }
-  grid.innerHTML = items.map(([key, count]) => '<div class="inventory-card"><div class="inventory-card-title">' + inventoryIcon(key) + ' ' + escapeHtml(inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div><div class="inventory-card-copy">Useful for recruiting, feeding, gifting and future building upgrades.</div></div>').join('');
+  grid.innerHTML = items.map(([key, count]) => '<div class="inventory-card"><div class="inventory-card-title">' + inventoryIcon(key) + ' ' + escapeHtml(inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>').join('');
 }
 
 // ============================================================================
@@ -15619,7 +15631,7 @@ function renderBirdex() {
     if (currentFilter !== 'all') companions = companions.filter(b => b.rarity === currentFilter);
     companions.sort((a, b) => (b.power || 0) - (a.power || 0));
     if (!companions.length) {
-      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Listen or use the camera to discover birds for your Birdex. Then visit the 🪶 Barracks in your Academy to inspect their cards and recruit companions for Academy, quests and Perch League.</div></div>';
+      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Discover a bird, then recruit it at the Academy Barracks.</div></div>';
       return;
     }
     companions.forEach((bird, idx) => { grid.innerHTML += createBirdCardHTML(bird, idx); });
@@ -15653,7 +15665,7 @@ function renderBirdex() {
     });
 
     if (!visibleBirds.length) {
-      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">Nothing in this view yet</div><div class="companions-empty-copy">Try another discovery or rarity filter — then head outside with the scanner to reveal more real birds.</div></div>';
+      grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">Nothing in this view yet</div><div class="companions-empty-copy">Try another filter.</div></div>';
     } else {
       visibleBirds.forEach((row, idx) => {
         if (row.owned) grid.innerHTML += createBirdCardHTML(row.owned, idx);
@@ -16026,7 +16038,7 @@ async function startContinuousSoundListening() {
     listenerSourceNode.connect(analyserNode);
     resetBirdPickup();
     drawWaveform();
-    setMerlinListenerState('listening', 'Merlin is listening continuously. Completed sound windows are checked in the background.');
+    setMerlinListenerState('listening', 'Listening…');
     startSoundRecorderWindow(generation);
     return true;
   } catch (error) {
@@ -16245,7 +16257,7 @@ async function analyseContinuousSoundWindow(windowData) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25000);
   soundAnalysisAbortController = controller;
-  setMerlinListenerState('listening', 'Listening live · checking the latest sound window in the background.');
+  setMerlinListenerState('listening', 'Checking sound…');
   try {
     // BirdNET on the server is the only species oracle. Local frequency energy
     // may animate the wand, but it never logs or names a bird by itself.
@@ -16257,10 +16269,10 @@ async function analyseContinuousSoundWindow(windowData) {
       setMerlinListenerState('match', 'BirdNET match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
       showToast('🐦 BirdNET identified ' + result.species + ' — still listening');
       setTimeout(() => {
-        if (continuousSoundScanWanted && generation === soundListenerGeneration && soundListenerState === 'match') setMerlinListenerState('listening', 'Merlin is listening continuously for the next bird.');
+        if (continuousSoundScanWanted && generation === soundListenerGeneration && soundListenerState === 'match') setMerlinListenerState('listening', 'Listening…');
       }, 5200);
     } else {
-      setMerlinListenerState('listening', 'No confident BirdNET match in the latest window · still listening.');
+      setMerlinListenerState('listening', 'No match · still listening');
     }
   } catch (error) {
     if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
@@ -17227,7 +17239,7 @@ function renderBattleSelect() {
   $('battleStartBtn').textContent = flock.length ? (battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '') : liberation ? 'LIBERATE ' + liberation.name.toUpperCase() : 'START BATTLE') : 'SCAN A BIRD FIRST';
 
   // The teaching wheel — real facts, always visible.
-  $('typeWheel').innerHTML = '<div class="type-wheel-title">The wing-class wheel (all real bird behaviour)</div>' +
+  $('typeWheel').innerHTML = '<div class="type-wheel-title">Wing-class matchups</div>' +
     Object.keys(core.BIRD_TYPES).map(t => {
       const meta = core.BIRD_TYPES[t];
       const beats = Object.keys(core.TYPE_CHART[t]).filter(u => core.TYPE_CHART[t][u] > 1);
@@ -18108,52 +18120,85 @@ function maybeShowIntroCutscene() {
 // ============================================================================
 // MERLIN'S TUTORIAL — first-flight guided tour of every mechanic
 // ============================================================================
-const BURBZ_TUTORIAL_SEEN_KEY = 'burbzTutorialSeen:merlin-grand-tour-20260707';
+const BURBZ_TUTORIAL_VERSION = 'merlin-complete-tour-v2-20260715';
+const BURBZ_TUTORIAL_SEEN_KEY = 'burbzTutorialSeen:' + BURBZ_TUTORIAL_VERSION;
+const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:merlin-grand-tour-20260707';
+const MERLIN_TUTORIAL_ESSENTIAL_INDICES = [0, 1, 4, 8, 21];
 
 const MERLIN_TUTORIAL_STEPS = [
-  { screen:'map',
-    text:"Hoot-hooray — the spell worked! Greetings, human! I am MERLIN: wizard of the Kingdom of Burbz and, naturally, a Merlin falcon. The device in your hands is my enchanted tablet, sent across dimensions to find you." },
-  { text:"Burbz was once a bright kingdom of song and colour... until a cruel usurper seized the throne and scattered our flocks. The last free birds chose YOU to help us win it back. But first — let me show you how my tablet works." },
-  { target:'.header',
-    text:"Up here sits your trainer badge. Discovering birds and completing deeds earns XP — raise your TRAINER LEVEL and the whole realm takes notice. Tap the little portrait any time to see your profile, stats and achievements." },
-  { target:'.nav-item.nav-scan',
-    text:"The heart of the magic: the SCAN spell! Tap this golden orb whenever you meet a real bird out in YOUR world. The tablet hears birdsong through my listening spell, or peers through your camera with my sight spell." },
-  { screen:'scan', target:'#scanBtn',
-    text:"Hear a song? Use Sound mode — hold still and let the tablet listen. See a bird? Switch to Image mode and photograph it. Already know the species? Log it yourself below. Every NEW discovery fills your Birdex and earns coins!" },
-  { screen:'birdex', target:'#birdexDiscovered',
-    text:"Every bird you find is recorded here in the BIRDEX — the living archive of Burbz. But discovery is only half the magic: spend coins to RECRUIT a discovered bird, and it joins your flock as a true companion." },
-  { screen:'map', target:'.nav-item[data-screen="map"]',
-    text:"The MAP is my realm-locator: your world, seen through Burbz eyes. Clouds hide the lands you haven't explored yet, and the Likely Birds panel divines which species are near. Walk about — adventure never comes to a bird that stays on its perch!" },
-  { target:'.nav-item[data-screen="village"]',
-    text:"Spot a village on the map? Walk there in the real world and step inside! Browse its shops... then build a birdhouse to CLAIM it for your EMPIRE. Claimed villages pay tribute — coins and branches — every 8 hours. From Hamlet Keeper to World Emperor!" },
-  { screen:'academy', target:'#academyTreehouse',
-    text:"Behold the ACADEMY — our rebuilt base, a great magical treehouse! Spend coins and branches to raise rooms: the Roost, the Training Hall, the Bird Hospital... even our tavern, The Crowbar. Choose a room from the menu, then tap the tree to place it." },
-  { screen:'quests', target:'#expeditionQuestList',
-    text:"From the Quest Roost you may send companions on REAL expeditions. They fly off and return after real minutes — or hours — carrying coins, branches, XP and treasures. The bravest night flights may even uncover my hidden CLUES..." },
-  { screen:'battle', target:'#battleSelect',
-    text:"The PERCH LEAGUE! Pick three companions and battle turn by turn — every bird fights by its TRUE nature. Raptors hunt songbirds... corvids mob raptors... swifts outfly falcons! Train moves in the Academy rooms, counter the rival's wing classes, and climb from the Garden Perch to the legendary Sky Court!" },
-  { screen:'inventory', target:'.nav-item[data-screen="inventory"]',
-    text:"Your BAG — the satchel within the spell. Coins, branches, seeds, berries and gifts all live here. Keep the pantry stocked: a well-fed bird trains harder, flies farther, and plays a finer match in the arena." },
-  { screen:'leaderboards', target:'.nav-item[data-screen="leaderboards"]',
-    text:"You are not the only human my spell has reached! The RANKS show bird-finders across your whole world. Climb the boards by discovering species and mastering the realm's arts. Friendly rivalry only... mostly." },
-  { screen:'map', target:'#petCompanion',
-    text:"One more thing: recruit a companion and a little friend will follow you everywhere. Feed it, train it, keep it merry. Now go, chosen human — find birds, grow the flock, and help us take back Burbz! Here, a gift for your journey." },
+  { chapter:'Welcome', title:'The living field guide', screen:'map', target:'.header', text:'I am Merlin. Real birdwatching restores Burbz. Start with these essentials; the complete systems tour is always available in Settings. Back, Next and Skip are always here.' },
+  { chapter:'Explore', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The live map follows your real position and shows mapped habitat clues. Use the locate control to return to yourself; bird and village markers can be opened directly.' },
+  { chapter:'Explore', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'Likely Birds estimates what may be nearby from habitat, season, range and local map features. It is a field clue, never a guaranteed identification.' },
+  { chapter:'Explore', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
+  { chapter:'Discover', title:'Scan three ways', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera for a photo, Sound for Merlin’s listener, or manual correction when you already know the bird. A confident match records a discovery in your Birdex.' },
+  { chapter:'Discover', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Camera opens your phone’s native camera. Frame the bird closely, confirm the crop and review the suggested match before adding it to your discoveries.' },
+  { chapter:'Discover', title:'Sound and BirdNET', screen:'scan', target:'#scanSoundBtn', text:'Sound keeps listening across screens until Stop; the green light means your microphone is live. Short windows are uploaded for BirdNET analysis, not stored in your game. Location help is optional and off by default.' },
+  { chapter:'Discover', title:'Manual correction', screen:'scan', target:'#scanResult', text:'If an automatic result is wrong—or you recognised the bird yourself—use the manual species picker. Your chosen species replaces the guess before it enters the Birdex.' },
+  { chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
+  { chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
+  { chapter:'Collection', title:'Active companion', screen:'map', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed from the pantry, train it and watch its hunger, happiness and health rather than treating every bird as identical.' },
+  { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world and your liberated area. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary to join that place to the realm.' },
+  { chapter:'Realm', title:'Liberation Battle', screen:'battle', target:'.nav-item[data-screen="battle"]', text:'A town’s Liberation Battle uses your chosen flock against its occupying birds. Victory frees the town; returning there lets you build its sanctuary birdhouse.' },
+  { chapter:'Realm', title:'Sanctuaries and tribute', screen:'village', target:'#empirePanel', text:'Nearby sanctuary areas merge into one green realm. Each village pin remains tappable, and liberated villages grow coin and branch tribute every eight hours.' },
+  { chapter:'Battle', title:'Perch League', screen:'battle', target:'#battleSelect', text:'Perch League is the repeatable three-bird arena. Read the matchup wheel, choose a balanced team, use learned moves and climb the ranks through turn-based battles.' },
+  { chapter:'Academy', title:'Build the Academy', screen:'academy', target:'#academyTreehouse', text:'Spend coins and branches on Academy buildings. Choose Place, tap the tree, then open or move built rooms whenever your campus needs changing.' },
+  { chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
+  { chapter:'Academy', title:'Training and pantry', screen:'academy', target:'#academyTreehouse', text:'Training rooms unlock and improve battle disciplines. Food comes from your pantry: species-appropriate feeding supports care and progression, while cooldowns prevent instant repetition.' },
+  { chapter:'Quests', title:'Expeditions', screen:'quests', target:'#expeditionQuestList', text:'Companion expeditions run for real time; the Quest Roost unlocks longer journeys. Requirements, duration and rewards appear before departure, and finished flights can return resources and Merlin clues.' },
+  { chapter:'Resources', title:'Your Bag', screen:'inventory', target:'#inventoryGrid', text:'The Bag holds quest items, gifts and gear. Food for companion care is managed through the Academy pantry. Quantities and usable actions stay visible whenever a decision needs them.' },
+  { chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Ranks compares collection progress and Perch League performance. Collection rewards broad discovery; League rewards wins, training and squad strength.' },
+  { chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your profile holds level, achievements and optional cloud save. Settings controls sound, vibration, privacy links, feedback, the intro and this complete tutorial. You can replay it at any time.' },
 ];
 
 let merlinTutStep = -1;
-let merlinTutTyping = false;
-let merlinTutTimer = null;
 let merlinTutActive = false;
+let merlinTutOriginScreen = 'map';
+let merlinTutPreviousFocus = null;
+let merlinTutSequence = MERLIN_TUTORIAL_ESSENTIAL_INDICES.slice();
+let merlinTutMode = 'essentials';
 
-function startMerlinTutorial() {
+function readMerlinTutorialState() {
+  try { return JSON.parse(localStorage.getItem(BURBZ_TUTORIAL_STATE_KEY) || 'null'); } catch (e) { return null; }
+}
+
+function saveMerlinTutorialState(status, currentStep = merlinTutStep) {
+  try {
+    localStorage.setItem(BURBZ_TUTORIAL_STATE_KEY, JSON.stringify({
+      version:BURBZ_TUTORIAL_VERSION,
+      status,
+      mode:merlinTutMode,
+      currentStep:Math.max(0, currentStep),
+      updatedAt:new Date().toISOString(),
+    }));
+  } catch (e) {}
+}
+
+function setMerlinTutorialBackgroundInert(inert) {
+  document.querySelectorAll('.header, .main, .bottom-nav').forEach(element => {
+    element.inert = inert;
+    if (inert) element.setAttribute('aria-hidden', 'true');
+    else element.removeAttribute('aria-hidden');
+  });
+}
+
+function startMerlinTutorial(options = {}) {
   const overlay = $('merlinTutorialOverlay');
-  const dots = $('merlinTutorialDots');
   if (!overlay || merlinTutActive) return;
+  merlinTutMode = options.full ? 'full' : 'essentials';
+  merlinTutSequence = options.full ? MERLIN_TUTORIAL_STEPS.map((_, index) => index) : MERLIN_TUTORIAL_ESSENTIAL_INDICES.slice();
+  const saved = options.resume === false ? null : readMerlinTutorialState();
+  const resumeStep = saved && saved.status === 'in_progress' && saved.mode === merlinTutMode
+    ? Math.max(0, Math.min(merlinTutSequence.length - 1, Number(saved.currentStep) || 0))
+    : 0;
+  merlinTutOriginScreen = currentScreen || 'map';
+  merlinTutPreviousFocus = document.activeElement;
   merlinTutActive = true;
-  dots.innerHTML = MERLIN_TUTORIAL_STEPS.map(() => '<div class="merlin-tutorial-dot"></div>').join('');
+  setMerlinTutorialBackgroundInert(true);
   overlay.classList.add('show');
-  merlinTutShowStep(0);
+  overlay.setAttribute('aria-hidden', 'false');
+  saveMerlinTutorialState('in_progress', resumeStep);
+  merlinTutShowStep(resumeStep);
 }
 
 function merlinTutSpotlightTarget(selector) {
@@ -18169,66 +18214,69 @@ function merlinTutSpotlightTarget(selector) {
   }
   const pad = 8;
   spot.classList.remove('none');
-  spot.style.top = (rect.top - pad) + 'px';
-  spot.style.left = (rect.left - pad) + 'px';
-  spot.style.width = (rect.width + pad * 2) + 'px';
-  spot.style.height = (rect.height + pad * 2) + 'px';
+  const left = Math.max(6, rect.left - pad);
+  const top = Math.max(6, rect.top - pad);
+  const right = Math.min(window.innerWidth - 6, rect.right + pad);
+  const bottom = Math.min(window.innerHeight - 6, rect.bottom + pad);
+  spot.style.top = top + 'px';
+  spot.style.left = left + 'px';
+  spot.style.width = Math.max(0, right - left) + 'px';
+  spot.style.height = Math.max(0, bottom - top) + 'px';
+}
+
+function positionMerlinTutorialStage(selector) {
+  const stage = $('merlinTutorialStage');
+  if (!stage) return;
+  const target = selector ? document.querySelector(selector) : null;
+  const rect = target ? target.getBoundingClientRect() : null;
+  stage.classList.toggle('is-top', !!(rect && rect.top > window.innerHeight * .48));
 }
 
 function merlinTutShowStep(i) {
-  const step = MERLIN_TUTORIAL_STEPS[i];
+  const step = MERLIN_TUTORIAL_STEPS[merlinTutSequence[i]];
   const text = $('merlinTutorialText');
-  const cont = $('merlinTutorialContinue');
-  const dots = $('merlinTutorialDots');
   if (!step || !text) return;
   merlinTutStep = i;
-  Array.from(dots.children).forEach((d, j) => {
-    d.classList.toggle('on', j === i);
-    d.classList.toggle('done', j < i);
-  });
+  saveMerlinTutorialState('in_progress');
   if (step.screen && step.screen !== currentScreen) switchScreen(step.screen);
-  // let the screen render before aiming the spotlight
-  setTimeout(() => { if (merlinTutActive && merlinTutStep === i) merlinTutSpotlightTarget(step.target); }, step.screen ? 340 : 60);
-  clearInterval(merlinTutTimer);
-  cont.classList.remove('show');
-  text.textContent = '';
-  merlinTutTyping = true;
-  let n = 0;
-  merlinTutTimer = setInterval(() => {
-    n += 2;
-    text.textContent = step.text.slice(0, n);
-    if (n >= step.text.length) {
-      clearInterval(merlinTutTimer);
-      merlinTutTyping = false;
-      cont.classList.add('show');
-    }
-  }, 22);
+  $('merlinTutorialChapter').textContent = step.chapter;
+  $('merlinTutorialTitle').textContent = step.title;
+  text.textContent = step.text;
+  $('merlinTutorialCounter').textContent = (i + 1) + ' / ' + merlinTutSequence.length;
+  $('merlinTutorialBack').disabled = i === 0;
+  $('merlinTutorialNext').textContent = i === merlinTutSequence.length - 1 ? 'Finish' : 'Next';
+  setTimeout(() => {
+    if (!merlinTutActive || merlinTutStep !== i) return;
+    merlinTutSpotlightTarget(step.target);
+    positionMerlinTutorialStage(step.target);
+    $('merlinTutorialNext')?.focus({ preventScroll:true });
+  }, step.screen ? 360 : 70);
 }
 
 function merlinTutAdvance() {
   if (!merlinTutActive) return;
   SFX.tap();
-  const step = MERLIN_TUTORIAL_STEPS[merlinTutStep];
-  if (merlinTutTyping) {
-    clearInterval(merlinTutTimer);
-    merlinTutTyping = false;
-    $('merlinTutorialText').textContent = step.text;
-    $('merlinTutorialContinue').classList.add('show');
-    return;
-  }
-  if (merlinTutStep >= MERLIN_TUTORIAL_STEPS.length - 1) { endMerlinTutorial(true); return; }
+  if (merlinTutStep >= merlinTutSequence.length - 1) { endMerlinTutorial(true); return; }
   merlinTutShowStep(merlinTutStep + 1);
+}
+
+function merlinTutBack() {
+  if (!merlinTutActive || merlinTutStep <= 0) return;
+  SFX.tap();
+  merlinTutShowStep(merlinTutStep - 1);
 }
 
 function endMerlinTutorial(completed) {
   const overlay = $('merlinTutorialOverlay');
   merlinTutActive = false;
-  merlinTutTyping = false;
-  clearInterval(merlinTutTimer);
   if (overlay) overlay.classList.remove('show');
+  if (overlay) overlay.setAttribute('aria-hidden', 'true');
+  setMerlinTutorialBackgroundInert(false);
   merlinTutSpotlightTarget(null);
+  positionMerlinTutorialStage(null);
   try { localStorage.setItem(BURBZ_TUTORIAL_SEEN_KEY, '1'); } catch(e) {}
-  if (currentScreen !== 'map') switchScreen('map');
+  saveMerlinTutorialState(completed ? 'completed' : 'skipped');
+  if (currentScreen !== merlinTutOriginScreen) switchScreen(merlinTutOriginScreen);
   let gifted = false;
   try { gifted = localStorage.getItem(BURBZ_TUTORIAL_GIFT_KEY) === '1'; } catch(e) {}
   if (completed && !gifted) {
@@ -18241,20 +18289,43 @@ function endMerlinTutorial(completed) {
   } else if (completed) {
     showToast('Merlin nods. "You know the way, friend."');
   }
+  if (merlinTutPreviousFocus && typeof merlinTutPreviousFocus.focus === 'function') merlinTutPreviousFocus.focus({ preventScroll:true });
+  merlinTutPreviousFocus = null;
 }
 
 function maybeStartMerlinTutorial(delay = 600) {
   try { if (localStorage.getItem(BURBZ_TUTORIAL_SEEN_KEY) === '1') return; } catch(e) { return; }
-  setTimeout(() => { if (!merlinTutActive) startMerlinTutorial(); }, delay);
+  setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ full:false, resume:true }); }, delay);
 }
 
-$('merlinTutorialOverlay')?.addEventListener('click', (e) => {
-  if (e.target.closest('#merlinTutorialSkip')) { endMerlinTutorial(false); return; }
-  merlinTutAdvance();
+$('merlinTutorialBack')?.addEventListener('click', merlinTutBack);
+$('merlinTutorialNext')?.addEventListener('click', merlinTutAdvance);
+$('merlinTutorialSkip')?.addEventListener('click', () => endMerlinTutorial(false));
+window.addEventListener('keydown', event => {
+  if (!merlinTutActive) return;
+  if (event.key === 'Tab') {
+    const controls = [$('merlinTutorialBack'), $('merlinTutorialNext'), $('merlinTutorialSkip')].filter(button => button && !button.disabled);
+    const current = controls.indexOf(document.activeElement);
+    const next = event.shiftKey ? (current <= 0 ? controls.length - 1 : current - 1) : (current + 1) % controls.length;
+    event.preventDefault();
+    controls[next]?.focus();
+  }
+  else if (event.key === 'Escape') { event.preventDefault(); endMerlinTutorial(false); }
+  else if (event.key === 'ArrowLeft') { event.preventDefault(); merlinTutBack(); }
+  else if (event.key === 'ArrowRight') { event.preventDefault(); merlinTutAdvance(); }
+  else if (event.key === 'Enter' && !event.target.closest?.('button')) { event.preventDefault(); merlinTutAdvance(); }
 });
-window.addEventListener('resize', () => {
-  if (merlinTutActive && merlinTutStep >= 0) merlinTutSpotlightTarget(MERLIN_TUTORIAL_STEPS[merlinTutStep].target);
-});
+function refreshMerlinTutorialPosition() {
+  if (merlinTutActive && merlinTutStep >= 0) {
+    const target = MERLIN_TUTORIAL_STEPS[merlinTutSequence[merlinTutStep]].target;
+    merlinTutSpotlightTarget(target);
+    positionMerlinTutorialStage(target);
+  }
+}
+window.addEventListener('resize', refreshMerlinTutorialPosition);
+window.addEventListener('scroll', refreshMerlinTutorialPosition, true);
+window.visualViewport?.addEventListener('resize', refreshMerlinTutorialPosition);
+window.visualViewport?.addEventListener('scroll', refreshMerlinTutorialPosition);
 
 // ============================================================================
 // SETTINGS
@@ -18264,7 +18335,14 @@ $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
 $('introPlayAgainBtn')?.addEventListener('click', () => showIntroCutscene({ replay:true }));
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
 $('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
-$('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial(); });
+$('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial({ full:true, resume:false }); });
+$('replayTutorialBtn')?.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  $('settingsModal')?.classList.remove('show');
+  SFX.tap();
+  startMerlinTutorial({ full:true, resume:false });
+});
 $('sendFeedbackBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackPrompt(); });
 
 $('settingsBtn').addEventListener('click', () => {

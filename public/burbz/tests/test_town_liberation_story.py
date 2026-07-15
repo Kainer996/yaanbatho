@@ -52,12 +52,13 @@ def test_malformed_pending_liberation_state_is_healed_before_rendering():
 
 def test_liberation_battle_copy_uses_non_destructive_resolve_language():
     html = HTML.read_text(encoding="utf-8")
-    empire = empire_logic(html)
     battle = battle_logic(html)
-    assert "outmatch and free its shadow-bound occupying flock" in empire
+    tutorial = html[html.index("const MERLIN_TUTORIAL_STEPS = ["):html.index("\n];", html.index("const MERLIN_TUTORIAL_STEPS = ["))]
+    assert "Victory frees the town" in tutorial
+    assert "Liberation Battle" in tutorial
     assert "liberationFriendlyBattleText" in battle
     assert "loses $1 resolve" in battle
-    assert "⚔️ BEGIN LIBERATION BATTLE" not in empire
+    assert "destroy the town" not in tutorial.lower()
 
 
 def test_liberation_battle_has_story_context_in_team_select_and_arena():
@@ -87,11 +88,12 @@ def test_story_canon_connects_real_world_liberation_to_the_kingdom_of_burbz():
     assert "kingdom of birds" not in story
 
 
-def test_empire_screen_surfaces_the_liberation_story_to_players():
+def test_tutorial_surfaces_liberation_story_without_repeating_it_on_empire_screen():
     html = HTML.read_text(encoding="utf-8")
     screen_start = html.index('id="screen-village"')
     screen_end = html.index('id="screen-quests"', screen_start)
     screen = html[screen_start:screen_end]
-    assert 'class="empire-story-callout"' in screen
-    assert "Kingdom of Burbz" in screen
-    assert "liberated" in screen.lower()
+    tutorial = html[html.index("const MERLIN_TUTORIAL_STEPS = ["):html.index("\n];", html.index("const MERLIN_TUTORIAL_STEPS = ["))]
+    assert 'class="empire-story-callout"' not in screen
+    assert "Real birdwatching restores Burbz" in tutorial
+    assert "Liberation Battle" in tutorial
