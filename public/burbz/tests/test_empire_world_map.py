@@ -83,7 +83,7 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert "empire-territory-line" in html
     assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
-    assert "showMarker = zoom >= 6" in html
+    assert "showMarker = zoom >= 1" in html
     assert "is-visible" in html
 
 
@@ -94,13 +94,42 @@ def test_unexplored_world_is_dark_green_with_liberated_map_windows():
     assert 'id="empireLiberatedHoles"' in html
     assert 'id="empireLiberatedMask"' in html
     assert 'class="empire-liberated-wash"' in html
-    assert "#0a2b1d" in html
+    assert "#1f2a24" in html
     assert "function updateEmpireFogMask(" in html
     assert "map.on('move', updateEmpireFogMask)" in html
     assert "map.on('resize', updateEmpireFogMask)" in html
     assert "core.destination" in html
     assert "wrappedLongitudeNear" in html
     assert "empireMap.getCenter().lng" in html
+
+
+def test_world_palette_keeps_blue_water_and_readable_dark_land_beneath_the_veil():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function applyEmpireAtlasPalette(" in html
+    assert "natural_earth" in html
+    assert "setLayoutProperty(layer.id, 'visibility', 'none')" in html
+    assert "#2f79a8" in html  # sea and lakes remain visibly blue
+    assert "#1f2a24" in html  # unexplored land stays dark, not black
+    assert 'class="empire-unexplored-shade"' in html
+    shade = html.split('class="empire-unexplored-shade"', 1)[1].split('></rect>', 1)[0]
+    assert 'fill="#07100d"' in shade
+    assert 'fill-opacity="0.2"' in shade
+    assert "Sea stays blue" in html
+    assert "dark but readable" in html
+    assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
+    assert "Dark land remains visible beneath the veil" in html
+    assert "burbz-realm-atlas-v74-20260714" in SW.read_text(encoding="utf-8")
+
+
+def test_liberated_icons_remain_visible_at_world_zoom():
+    html = HTML.read_text(encoding="utf-8")
+    assert "const showMarker = zoom >= 1" in html
+    assert "const worldPin = zoom < 5" in html
+    assert "is-world-pin" in html
+    assert ".empire-map-marker.is-world-pin" in html
+    world_pin_css = html.split(".empire-map-marker.is-world-pin {", 1)[1].split("}", 1)[0]
+    assert "min-width:44px" in world_pin_css
+    assert "min-height:44px" in world_pin_css
 
 
 def test_map_keyboard_controls_and_markers_have_visible_focus():

@@ -370,12 +370,12 @@ svg.academy-room-bg { display:block; filter:none; }
 #empirePanel { margin:14px; }
 .empire-map-card { position:relative; height:390px; margin:12px 14px 6px; overflow:hidden; border-radius:19px; border:1px solid rgba(126,217,131,.42); background:#071b12; box-shadow:0 14px 34px rgba(0,0,0,.42), inset 0 0 32px rgba(126,217,131,.09); }
 #empireWorldMap { position:absolute; inset:0; }
-#empireWorldMap .maplibregl-canvas { filter:saturate(.82) brightness(.82); }
+#empireWorldMap .maplibregl-canvas { filter:saturate(.94) brightness(.96) contrast(1.04); }
 .empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; }
 .empire-liberated-wash { mix-blend-mode:normal; }
 .empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
 .empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); }
-.empire-map-vignette { position:absolute; inset:0; z-index:2; pointer-events:none; box-shadow:inset 0 0 42px rgba(2,8,5,.72); background:linear-gradient(180deg,rgba(5,13,9,.14),transparent 32%,transparent 72%,rgba(5,12,8,.36)); }
+.empire-map-vignette { position:absolute; inset:0; z-index:2; pointer-events:none; box-shadow:inset 0 0 34px rgba(2,8,5,.42); background:linear-gradient(180deg,rgba(5,13,9,.08),transparent 34%,transparent 76%,rgba(5,12,8,.2)); }
 .empire-map-tools { position:absolute; z-index:5; top:10px; left:10px; display:flex; gap:7px; }
 .empire-map-btn { min-height:35px; padding:0 11px; border-radius:11px; border:1px solid rgba(240,199,103,.5); background:rgba(11,20,15,.9); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.4); }
 .empire-map-btn:active { transform:scale(.97); }
@@ -384,11 +384,14 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:7px; line-height:1; color:rgba(226,244,226,.82); text-align:center; white-space:nowrap; pointer-events:auto; text-shadow:0 1px 3px rgba(0,20,12,.98); }
 .empire-map-attribution a { color:inherit; text-decoration:none; }
 .empire-map-empty { position:absolute; z-index:4; inset:64px 24px 58px; display:none; place-items:center; color:#eadcac; font-size:12px; line-height:1.5; text-align:center; pointer-events:none; }
-.empire-map-card.is-empty .empire-map-empty { display:grid; }
+.empire-map-card.is-empty .empire-map-empty { display:none; }
 .empire-map-marker { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transition:opacity .18s ease; filter:drop-shadow(0 4px 7px rgba(0,0,0,.72)); }
 .empire-map-marker.is-visible { opacity:1; pointer-events:auto; }
 .empire-map-marker-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:50% 50% 50% 8px; transform:rotate(-45deg); border:2px solid #dcffe1; background:radial-gradient(circle at 36% 32%,#b9f5bd,#3d8d58 76%); box-shadow:0 0 0 3px rgba(126,217,131,.20),0 0 18px rgba(126,217,131,.68); }
 .empire-map-marker-icon > span { transform:rotate(45deg); font-size:17px; }
+.empire-map-marker.is-world-pin { min-width:44px; min-height:44px; justify-content:flex-end; }
+.empire-map-marker.is-world-pin .empire-map-marker-icon { width:23px; height:23px; border-width:1.5px; box-shadow:0 0 0 2px rgba(126,217,131,.22),0 0 12px rgba(126,217,131,.72); }
+.empire-map-marker.is-world-pin .empire-map-marker-icon > span { font-size:12px; }
 .empire-map-marker-label { display:none; max-width:126px; margin-top:4px; padding:3px 7px; border-radius:9px; border:1px solid rgba(126,217,131,.58); background:rgba(6,22,14,.92); color:#dcffe1; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .empire-map-marker.show-label .empire-map-marker-label { display:block; }
 .empire-village-hub { margin:14px; padding:12px; border-radius:18px; border:1px solid rgba(240,199,103,.18); background:rgba(10,15,11,.58); }
@@ -2264,7 +2267,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- EMPIRE SCREEN — interactive territory map + medieval village hub -->
     <div class="screen" id="screen-village">
       <div class="screen-title">YOUR EMPIRE</div>
-      <div class="village-sub">Drag, pinch and zoom across the veiled world. Unexplored land lies dark green; every town you liberate awakens in light green.</div>
+      <div class="village-sub">Drag, pinch and zoom across the whole atlas. Sea stays blue; unexplored land is dark but readable; every town you liberate awakens in light green with its sanctuary icon.</div>
       <div class="empire-map-card" id="empireMapCard">
         <div id="empireWorldMap" role="application" aria-label="Interactive map of your liberated territories"></div>
         <div class="empire-map-vignette"></div>
@@ -2273,11 +2276,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
             <mask id="empireLiberatedMask"><rect width="100%" height="100%" fill="black"></rect><g id="empireLiberatedHoles"></g></mask>
             <mask id="empireFogMask"><rect width="100%" height="100%" fill="white"></rect><g id="empireFogHoles"></g></mask>
           </defs>
-          <rect class="empire-liberated-wash" width="100%" height="100%" fill="#8ee39a" fill-opacity="0.34" mask="url(#empireLiberatedMask)"></rect>
-          <rect width="100%" height="100%" fill="#0a2b1d" fill-opacity="0.9" mask="url(#empireFogMask)"></rect>
+          <rect class="empire-liberated-wash" width="100%" height="100%" fill="#8ee39a" fill-opacity="0.5" mask="url(#empireLiberatedMask)"></rect>
+          <rect class="empire-unexplored-shade" width="100%" height="100%" fill="#07100d" fill-opacity="0.2" mask="url(#empireFogMask)"></rect>
         </svg>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
-        <div class="empire-map-empty">Travel to a real town, win its Liberation Battle and build a birdhouse. Its corner of the world will wake in light green.</div>
+        <div class="empire-map-empty">The whole world remains visible beneath the veil. Travel to a real town, win its Liberation Battle and build a birdhouse; that sanctuary will wake in light green with its own icon.</div>
         <div class="empire-map-status" id="empireMapStatus">Reading the veil over the world…</div>
         <div class="empire-map-attribution"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
       </div>
@@ -13563,16 +13566,66 @@ function clearEmpireMapMarkers() {
   empireMapMarkers = [];
 }
 
+function applyEmpireAtlasPalette(map) {
+  if (!map || !map.getStyle) return;
+  const layers = map.getStyle()?.layers || [];
+  const setPaint = (layer, property, value) => { try { map.setPaintProperty(layer.id, property, value); } catch (_) {} };
+  layers.forEach(layer => {
+    const id = String(layer.id || '');
+    const sourceLayer = String(layer['source-layer'] || '');
+    const role = (id + ' ' + sourceLayer).toLowerCase();
+    if (id === 'natural_earth') { try { map.setLayoutProperty(layer.id, 'visibility', 'none'); } catch (_) {} return; }
+    if (layer.type === 'background') { setPaint(layer, 'background-color', '#1f2a24'); return; }
+    if (layer.type === 'raster') { setPaint(layer, 'raster-opacity', 0); return; }
+    const water = /(^|[_ -])water|waterway|ocean|sea|river|lake/.test(role);
+    if (layer.type === 'fill') {
+      if (water) { setPaint(layer, 'fill-color', '#2f79a8'); setPaint(layer, 'fill-opacity', .96); return; }
+      let land = '#27312b';
+      if (/wood|forest|park/.test(role)) land = '#243a2d';
+      else if (/grass|pitch|farmland/.test(role)) land = '#303c31';
+      else if (/wetland/.test(role)) land = '#2c3d36';
+      else if (/sand/.test(role)) land = '#4a4737';
+      else if (/ice/.test(role)) land = '#536965';
+      else if (/building|residential/.test(role)) land = '#303733';
+      setPaint(layer, 'fill-color', land);
+      setPaint(layer, 'fill-opacity', .88);
+      return;
+    }
+    if (layer.type === 'fill-extrusion') {
+      setPaint(layer, 'fill-extrusion-color', '#303a34');
+      setPaint(layer, 'fill-extrusion-opacity', .72);
+      return;
+    }
+    if (layer.type === 'line') {
+      if (water) { setPaint(layer, 'line-color', '#55a7cf'); setPaint(layer, 'line-opacity', .88); }
+      else if (/boundary/.test(role)) { setPaint(layer, 'line-color', '#718078'); setPaint(layer, 'line-opacity', .66); }
+      else if (/transportation|road|bridge|tunnel/.test(role)) {
+        setPaint(layer, 'line-color', /casing|hatching/.test(role) ? '#18201c' : '#525d56');
+        setPaint(layer, 'line-opacity', .72);
+      }
+      return;
+    }
+    if (layer.type === 'symbol') {
+      setPaint(layer, 'text-color', water ? '#9ed8f0' : '#b6c2b9');
+      setPaint(layer, 'text-halo-color', water ? '#174d68' : '#17211c');
+      setPaint(layer, 'text-halo-width', 1.15);
+      setPaint(layer, 'icon-opacity', .78);
+    }
+  });
+}
+
 function updateEmpireMarkerDetail() {
   if (!empireMap) return;
   const zoom = empireMap.getZoom();
-  const showMarker = zoom >= 6;
+  const showMarker = zoom >= 1;
   const showLabel = zoom >= 8;
+  const worldPin = zoom < 5;
   empireMapMarkers.forEach(marker => {
     const element = marker.getElement();
     if (!element) return;
     element.classList.toggle('is-visible', showMarker);
     element.classList.toggle('show-label', showLabel);
+    element.classList.toggle('is-world-pin', worldPin);
     element.setAttribute('aria-hidden', showMarker ? 'false' : 'true');
     element.tabIndex = showMarker ? 0 : -1;
   });
@@ -13682,7 +13735,7 @@ function refreshEmpireMap(options = {}) {
   const status = $('empireMapStatus');
   if (status) status.textContent = villages.length
     ? villages.length + ' liberated territor' + (villages.length === 1 ? 'y' : 'ies') + ' awake in light green · zoom in and tap a sanctuary'
-    : 'The world is still veiled · visit a real town and begin its Liberation Battle';
+    : 'Dark land remains visible beneath the veil · blue sea marks the wider world · liberate a real town to wake its sanctuary';
   if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
 }
 
@@ -13710,6 +13763,7 @@ function initialiseEmpireMap() {
     map.once('load', () => {
       if (settled) return;
       try {
+        applyEmpireAtlasPalette(map);
         map.addSource('empire-territories', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-territory-line', type:'line', source:'empire-territories', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#b8f4bd', 'line-width':['interpolate',['linear'],['zoom'],2,1.2,11,3.2], 'line-opacity':.94, 'line-blur':.35 } });
@@ -13753,6 +13807,13 @@ function renderEmpireWorldMap() {
     setTimeout(() => { try { map.resize(); refreshEmpireMap(); } catch (e) {} }, 80);
   });
 }
+window.__burbzEmpireMapDebug = {
+  get map() { return empireMap; },
+  get ready() { return empireMapReady; },
+  refresh: options => refreshEmpireMap(options || {}),
+  palette: () => applyEmpireAtlasPalette(empireMap),
+  markers: () => empireMapMarkers.map(marker => marker.getElement())
+};
 const EMPIRE_RANKS = [[50, 'World Emperor'], [35, 'Kingdom Monarch'], [20, 'Realm Duke'], [10, 'Shire Count'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
 function empireRankTitle(count) { for (const [n, t] of EMPIRE_RANKS) { if (count >= n) return t; } return 'Wandering Trainer'; }
 // Each new sanctuary costs a little more than the last, so an empire is a
