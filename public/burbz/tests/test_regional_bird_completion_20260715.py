@@ -210,7 +210,7 @@ def test_index_and_service_worker_integrate_every_projection_and_new_cache():
     ):
         assert marker in html
     for marker in (
-        "burbz-regional-birds-review-fixes-v76-20260715",
+        "burbz-realm-union-v77-20260715",
         "importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');",
         "importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');",
         "./data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715",

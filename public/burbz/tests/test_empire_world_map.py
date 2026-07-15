@@ -80,7 +80,7 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert "attributionControl:false" in html
     assert 'class="empire-map-attribution"' in html
     assert "empire-liberated-wash" in html
-    assert "empire-territory-line" in html
+    assert "empireLiberatedOutlineShape" in html
     assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
     assert "showMarker = zoom >= 1" in html
@@ -118,7 +118,7 @@ def test_world_palette_keeps_blue_water_and_readable_dark_land_beneath_the_veil(
     assert "dark but readable" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
     assert "Dark land remains visible beneath the veil" in html
-    assert "burbz-regional-birds-review-fixes-v76-20260715" in SW.read_text(encoding="utf-8")
+    assert "burbz-realm-union-v77-20260715" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
@@ -141,7 +141,12 @@ def test_map_keyboard_controls_and_markers_have_visible_focus():
 def test_liberated_green_wash_is_unioned_not_alpha_stacked_per_polygon():
     html = HTML.read_text(encoding="utf-8")
     assert "empire-liberated-wash" in html
+    assert 'id="empireLiberatedOutlineShape"' in html
+    assert 'id="empireTerritoryOuterOutline"' in html
+    assert "[fogHoles, 'black'], [liberatedHoles, 'white'], [outlineShape, 'white']" in html
     assert "map.addLayer({ id:'empire-territory-fill'" not in html
+    assert "map.addLayer({ id:'empire-territory-line'" not in html
+    assert "map.addSource('empire-territories'" not in html
 
 
 def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():

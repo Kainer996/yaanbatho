@@ -2275,9 +2275,16 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <defs>
             <mask id="empireLiberatedMask"><rect width="100%" height="100%" fill="black"></rect><g id="empireLiberatedHoles"></g></mask>
             <mask id="empireFogMask"><rect width="100%" height="100%" fill="white"></rect><g id="empireFogHoles"></g></mask>
+            <filter id="empireTerritoryOuterOutline" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+              <feMorphology in="SourceAlpha" operator="dilate" radius="2.4" result="expanded"></feMorphology>
+              <feComposite in="expanded" in2="SourceAlpha" operator="out" result="outerRing"></feComposite>
+              <feFlood flood-color="#b8f4bd" flood-opacity="0.94" result="outlineColour"></feFlood>
+              <feComposite in="outlineColour" in2="outerRing" operator="in"></feComposite>
+            </filter>
           </defs>
           <rect class="empire-liberated-wash" width="100%" height="100%" fill="#8ee39a" fill-opacity="0.5" mask="url(#empireLiberatedMask)"></rect>
           <rect class="empire-unexplored-shade" width="100%" height="100%" fill="#07100d" fill-opacity="0.2" mask="url(#empireFogMask)"></rect>
+          <g id="empireLiberatedOutlineShape" filter="url(#empireTerritoryOuterOutline)"></g>
         </svg>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
         <div class="empire-map-empty">The whole world remains visible beneath the veil. Travel to a real town, win its Liberation Battle and build a birdhouse; that sanctuary will wake in light green with its own icon.</div>
@@ -13665,13 +13672,15 @@ function updateEmpireFogMask() {
   const overlay = $('empireFogOverlay');
   const fogHoles = $('empireFogHoles');
   const liberatedHoles = $('empireLiberatedHoles');
+  const outlineShape = $('empireLiberatedOutlineShape');
   const container = $('empireWorldMap');
-  if (!overlay || !fogHoles || !liberatedHoles || !container) return;
+  if (!overlay || !fogHoles || !liberatedHoles || !outlineShape || !container) return;
   const width = Math.max(1, container.clientWidth);
   const height = Math.max(1, container.clientHeight);
   overlay.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
   fogHoles.replaceChildren();
   liberatedHoles.replaceChildren();
+  outlineShape.replaceChildren();
   const core = window.BurbzEmpireMapCore;
   const referenceLon = empireMap.getCenter().lng;
   empireMappableVillages().forEach(village => {
@@ -13683,7 +13692,7 @@ function updateEmpireFogMask() {
       const wrappedEast = [wrappedLon + (Number(east[0]) - villageLon), Number(east[1])];
       const edge = empireMap.project(wrappedEast);
       const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 4, 1400);
-      [[fogHoles, 'black'], [liberatedHoles, 'white']].forEach(([group, fill]) => {
+      [[fogHoles, 'black'], [liberatedHoles, 'white'], [outlineShape, 'white']].forEach(([group, fill]) => {
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', centre.x.toFixed(2));
         circle.setAttribute('cy', centre.y.toFixed(2));
@@ -13736,7 +13745,6 @@ function refreshEmpireMap(options = {}) {
   const villages = empireMappableVillages();
   const core = window.BurbzEmpireMapCore;
   try {
-    empireMap.getSource('empire-territories')?.setData(core.territoryFeatureCollection(villages, EMPIRE_TERRITORY_RADIUS_M, 56));
     empireMap.getSource('empire-claims')?.setData(core.claimFeatureCollection(villages));
   } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
   clearEmpireMapMarkers();
@@ -13786,9 +13794,7 @@ function initialiseEmpireMap() {
       if (settled) return;
       try {
         applyEmpireAtlasPalette(map);
-        map.addSource('empire-territories', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
-        map.addLayer({ id:'empire-territory-line', type:'line', source:'empire-territories', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#b8f4bd', 'line-width':['interpolate',['linear'],['zoom'],2,1.2,11,3.2], 'line-opacity':.94, 'line-blur':.35 } });
         map.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#7ed983', 'circle-opacity':.28, 'circle-blur':.45 } });
         map.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#dfffe2', 'circle-stroke-color':'#2c693f', 'circle-stroke-width':1.4 } });
         empireMapReady = true;
