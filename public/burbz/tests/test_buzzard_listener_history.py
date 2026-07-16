@@ -77,3 +77,42 @@ def test_merlin_sound_results_render_as_a_persistent_accessible_session_list():
     assert "soundDiscoveryHistory.reset()" not in stop
     assert ".scan-result-list" in html
     assert ".scan-session-discovery" in html
+
+
+def test_sound_discovery_cards_show_real_artwork_and_have_an_accessible_flip_front():
+    html = HTML.read_text(encoding="utf-8")
+    assert "const discoveryBird = createRosterBird(row.name);" in html
+    assert "const artUrl = resolveBuiltInBirdArt(row.name, discoveryBird.commonName) || getBirdArtUrl(discoveryBird);" in html
+    assert 'class="scan-session-discovery-art"' in html
+    assert 'data-action="flip-discovery"' in html
+    assert 'aria-expanded="\' + (flipped ? \'true\' : \'false\')' in html
+    assert "function setSoundDiscoveryCardFlipped(card, flipped)" in html
+    assert ".scan-session-discovery-inner" in html
+    assert "transform:rotateY(180deg)" in html
+
+
+def test_flipped_sound_discovery_card_shows_bird_information_and_birdex_action():
+    html = HTML.read_text(encoding="utf-8")
+    assert 'class="scan-session-discovery-back"' in html
+    assert "info.summary || info.rationale" in html
+    assert "info.habitat" in html
+    assert "info.diet" in html
+    assert 'data-action="show-in-birdex"' in html
+    assert ">Show in Birdex<" in html
+    assert 'data-action="flip-discovery-back"' in html
+    assert 'aria-hidden="true" inert' in html
+
+
+def test_show_in_birdex_opens_discovered_species_and_focuses_its_card():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function showSpeciesInBirdex" in html
+    function = html.split("function showSpeciesInBirdex", 1)[1].split("function ", 1)[0]
+    assert "currentBurbzMode = 'birdex'" in function
+    assert "currentBirdexDiscovery = 'discovered'" in function
+    assert "currentFilter = 'all'" in function
+    assert "switchScreen('birdex')" in function
+    assert "renderBirdex()" in function
+    assert "dataset.speciesKey === key" in function
+    assert "scrollIntoView" in function
+    assert "target.focus" in function
+    assert 'data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}"' in html

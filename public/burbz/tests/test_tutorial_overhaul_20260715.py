@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-footpath-ring-v83-20260716" in sw
+    assert "burbz-footpath-ring-v84-20260716" in sw

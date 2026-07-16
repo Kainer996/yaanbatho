@@ -137,4 +137,4 @@ def test_ring_release_is_versioned_for_live_pwa_refresh():
     marker = "quest_core.js?v=footpath-ring-quests-v1-20260716"
     assert marker in html
     assert "./" + marker in sw
-    assert "burbz-footpath-ring-v83-20260716" in sw
+    assert "burbz-footpath-ring-v84-20260716" in sw

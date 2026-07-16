@@ -867,18 +867,41 @@ svg.academy-room-bg { display:block; filter:none; }
 .scan-result { margin-top:16px; display:none; }
 .scan-result.show { display: block; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-.scan-result-latest,.scan-session-discovery { padding:16px; background:var(--bg2); border-radius:12px; border:1px solid rgba(255,255,255,.05); }
+.scan-result-latest { padding:16px; background:var(--bg2); border-radius:12px; border:1px solid rgba(255,255,255,.05); }
 .scan-result-session-head { display:none; align-items:center; justify-content:space-between; gap:12px; margin:0 3px 9px; color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.09em; text-transform:uppercase; }
 .scan-result.sound-session .scan-result-session-head { display:flex; }
 .scan-result-count { min-width:28px; padding:3px 8px; border-radius:999px; border:1px solid rgba(126,217,131,.5); color:#b9f5bd; background:rgba(126,217,131,.14); text-align:center; }
-.scan-result-list { display:none; gap:10px; }
+.scan-result-list { display:none; gap:12px; }
 .scan-result.sound-session .scan-result-list { display:grid; }
 .scan-result.sound-session .scan-result-latest { display:none; }
-.scan-session-discovery { position:relative; overflow:hidden; box-shadow:inset 3px 0 0 var(--discovery-colour,var(--green)); }
-.scan-session-discovery-name { font-family:'Russo One',sans-serif; font-size:18px; color:var(--discovery-colour,var(--green)); }
-.scan-session-discovery-sci { margin-top:2px; color:var(--text3); font-size:12px; font-style:italic; }
-.scan-session-discovery-meta { margin-top:9px; color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:800; }
+.scan-session-discovery { position:relative; min-height:194px; perspective:900px; }
+.scan-session-discovery-inner { position:relative; min-height:194px; transform-style:preserve-3d; transition:transform .46s cubic-bezier(.22,.74,.22,1); }
+.scan-session-discovery.is-flipped .scan-session-discovery-inner { transform:rotateY(180deg); }
+.scan-session-discovery-front,.scan-session-discovery-back { width:100%; min-height:194px; box-sizing:border-box; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:linear-gradient(145deg,rgba(18,18,17,.99),rgba(5,7,6,.99)); box-shadow:inset 3px 0 0 var(--discovery-colour,var(--green)),0 8px 26px rgba(0,0,0,.28); backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+.scan-session-discovery-front { display:grid; grid-template-columns:108px minmax(0,1fr); gap:14px; align-items:center; padding:12px; color:inherit; text-align:left; cursor:pointer; appearance:none; }
+.scan-session-discovery-front:focus-visible,.scan-session-discovery-back button:focus-visible { outline:3px solid var(--legendary); outline-offset:3px; }
+.scan-session-discovery-art { position:relative; width:108px; height:164px; border-radius:12px; overflow:hidden; display:grid; place-items:center; background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--discovery-colour,var(--green)) 24%,transparent),rgba(255,255,255,.025)); }
+.scan-session-discovery-art img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.scan-session-discovery-fallback { font-size:50px; opacity:.72; }
+.scan-session-discovery-copy { min-width:0; }
+.scan-session-discovery-name { font-family:'Russo One',sans-serif; font-size:20px; line-height:1.08; color:var(--discovery-colour,var(--green)); }
+.scan-session-discovery-sci { display:block; margin-top:4px; color:var(--text3); font-size:12px; font-style:italic; }
+.scan-session-discovery-meta { display:block; margin-top:12px; color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:800; line-height:1.3; }
 .scan-session-discovery-repeat { color:var(--text2); }
+.scan-session-discovery-tap { display:block; margin-top:12px; color:#b9f5bd; font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+.scan-session-discovery-back { position:absolute; inset:0; transform:rotateY(180deg); display:flex; flex-direction:column; justify-content:center; padding:15px 16px; overflow:hidden; }
+.scan-session-discovery-back-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.scan-session-discovery-back-name { font-family:'Russo One',sans-serif; font-size:18px; color:var(--discovery-colour,var(--green)); }
+.scan-session-discovery-back-rarity { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.scan-session-discovery-summary { margin-top:8px; color:var(--text2); font-size:12px; line-height:1.36; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+.scan-session-discovery-facts { display:grid; gap:3px; margin-top:8px; color:var(--text3); font-size:10.5px; line-height:1.25; }
+.scan-session-discovery-facts strong { color:var(--text2); }
+.scan-session-discovery-actions { display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:8px; margin-top:10px; }
+.scan-session-birdex-btn,.scan-session-flip-back { min-height:44px; border-radius:11px; font-family:'Rajdhani',sans-serif; font-weight:900; }
+.scan-session-birdex-btn { background:linear-gradient(135deg,#f0c767,#b37a25); color:#100c06; text-transform:uppercase; letter-spacing:.04em; }
+.scan-session-flip-back { background:rgba(255,255,255,.08); color:var(--text2); font-size:20px; }
+.bird-card.birdex-target-card { outline:3px solid var(--legendary); outline-offset:4px; box-shadow:0 0 34px rgba(240,199,103,.42); }
+@media (prefers-reduced-motion:reduce) { .scan-session-discovery-inner { transition:none; } }
 .scan-result-name { font-family: 'Russo One', sans-serif; font-size: 18px; }
 .scan-result-sci { font-size: 12px; color: var(--text3); font-style: italic; margin-bottom: 8px; }
 .scan-result-conf { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--accent2); }
@@ -16424,6 +16447,11 @@ function villageBuy(shopKey, itemId) {
   }
 })();
 
+function nextDiscoverySightingCount(existing, opts = {}) {
+  const previous = Math.max(1, Number(existing && existing.sightingCount) || 1);
+  return existing && !opts.silent ? previous + 1 : previous;
+}
+
 function rememberDiscoveredBird(bird, opts = {}) {
   if (!bird) return false;
   if (!gameState.discoveredSpecies || typeof gameState.discoveredSpecies !== 'object') gameState.discoveredSpecies = {};
@@ -16441,6 +16469,7 @@ function rememberDiscoveredBird(bird, opts = {}) {
     artUrl: getBirdArtUrl(bird) || (existing && existing.artUrl) || null,
     discoveredAt: (existing && existing.discoveredAt) || new Date().toISOString(),
     lastSeenAt: new Date().toISOString(),
+    sightingCount: nextDiscoverySightingCount(existing, opts),
     recruitCost: recruitCostForBird(bird),
   };
   gameState.discoveredSpecies[key] = record;
@@ -16552,14 +16581,68 @@ function renderSoundSessionDiscoveries() {
   list.innerHTML = discoveries.map(row => {
     const colour = RARITY_COLORS[row.rarity] || RARITY_COLORS.common;
     const heardCount = row.count > 1 ? ' · Heard ' + row.count + ' times' : '';
-    return '<article class="scan-session-discovery" data-species-key="' + escapeHtml(row.key) + '" style="--discovery-colour:' + escapeHtml(colour) + '">' +
-      '<div class="scan-session-discovery-name">' + escapeHtml(row.name) + '</div>' +
-      '<div class="scan-session-discovery-sci">' + escapeHtml(row.scientificName || '') + '</div>' +
-      '<div class="scan-session-discovery-meta">' + Math.round((Number(row.confidence) || 0) * 100) + '% confidence · ' +
-      escapeHtml(String(row.rarity || 'common').toUpperCase()) + ' · ' + (row.isNew ? 'New discovery' : 'Known bird') +
-      '<span class="scan-session-discovery-repeat">' + heardCount + '</span></div></article>';
+    const discoveryBird = createRosterBird(row.name);
+    discoveryBird.scientificName = row.scientificName || discoveryBird.scientificName;
+    discoveryBird.rarity = row.rarity || discoveryBird.rarity;
+    const info = getBirdInfo(discoveryBird) || {};
+    const artUrl = resolveBuiltInBirdArt(row.name, discoveryBird.commonName) || getBirdArtUrl(discoveryBird);
+    const summary = info.summary || info.rationale || row.name + ' is now recorded in your Birdex.';
+    const habitat = info.habitat || 'Habitat information coming soon';
+    const diet = info.diet || 'Diet information coming soon';
+    const flipped = soundDiscoveryFlippedKeys.has(row.key);
+    const backState = flipped ? 'aria-hidden="false"' : 'aria-hidden="true" inert';
+    const art = '<div class="scan-session-discovery-art"><span class="scan-session-discovery-fallback">' + (discoveryBird.emoji || '&#128038;') + '</span>' +
+      (artUrl ? '<img src="' + escapeHtml(artUrl) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>';
+    return '<article class="scan-session-discovery' + (flipped ? ' is-flipped' : '') + '" data-species-key="' + escapeHtml(row.key) + '" data-species-name="' + escapeHtml(row.name) + '" style="--discovery-colour:' + escapeHtml(colour) + '">' +
+      '<div class="scan-session-discovery-inner">' +
+        '<button type="button" class="scan-session-discovery-front" data-action="flip-discovery" aria-expanded="' + (flipped ? 'true' : 'false') + '" aria-label="Show information about ' + escapeHtml(row.name) + '"' + (flipped ? ' aria-hidden="true" tabindex="-1"' : '') + '>' +
+          art + '<span class="scan-session-discovery-copy"><span class="scan-session-discovery-name">' + escapeHtml(row.name) + '</span>' +
+          '<span class="scan-session-discovery-sci">' + escapeHtml(row.scientificName || '') + '</span>' +
+          '<span class="scan-session-discovery-meta">' + Math.round((Number(row.confidence) || 0) * 100) + '% confidence · ' +
+          escapeHtml(String(row.rarity || 'common').toUpperCase()) + ' · ' + (row.isNew ? 'New discovery' : 'Known bird') +
+          '<span class="scan-session-discovery-repeat">' + heardCount + '</span></span><span class="scan-session-discovery-tap">Tap card for bird facts ↻</span></span></button>' +
+        '<div class="scan-session-discovery-back" ' + backState + '>' +
+          '<div class="scan-session-discovery-back-head"><div class="scan-session-discovery-back-name">' + escapeHtml(row.name) + '</div><div class="scan-session-discovery-back-rarity">' + escapeHtml(String(row.rarity || 'common')) + '</div></div>' +
+          '<div class="scan-session-discovery-summary">' + escapeHtml(summary) + '</div>' +
+          '<div class="scan-session-discovery-facts"><div><strong>Habitat:</strong> ' + escapeHtml(habitat) + '</div><div><strong>Diet:</strong> ' + escapeHtml(diet) + '</div></div>' +
+          '<div class="scan-session-discovery-actions"><button type="button" class="scan-session-birdex-btn" data-action="show-in-birdex">Show in Birdex</button><button type="button" class="scan-session-flip-back" data-action="flip-discovery-back" aria-label="Flip ' + escapeHtml(row.name) + ' card back">↩</button></div>' +
+        '</div></div></article>';
   }).join('');
+  list.onclick = event => {
+    const card = event.target.closest('.scan-session-discovery');
+    if (!card) return;
+    if (event.target.closest('[data-action="show-in-birdex"]')) {
+      showSpeciesInBirdex(card.dataset.speciesName);
+      return;
+    }
+    if (event.target.closest('[data-action="flip-discovery-back"]')) {
+      setSoundDiscoveryCardFlipped(card, false);
+      return;
+    }
+    if (event.target.closest('[data-action="flip-discovery"]')) setSoundDiscoveryCardFlipped(card, true);
+  };
   resultEl.classList.toggle('show', !!discoveries.length && currentScreen === 'scan' && scanMode === 'sound');
+}
+
+function setSoundDiscoveryCardFlipped(card, flipped) {
+  if (!card) return;
+  const key = card.dataset.speciesKey;
+  if (flipped) soundDiscoveryFlippedKeys.add(key); else soundDiscoveryFlippedKeys.delete(key);
+  card.classList.toggle('is-flipped', flipped);
+  const front = card.querySelector('[data-action="flip-discovery"]');
+  const back = card.querySelector('.scan-session-discovery-back');
+  if (front) {
+    front.setAttribute('aria-expanded', String(flipped));
+    front.toggleAttribute('aria-hidden', flipped);
+    front.tabIndex = flipped ? -1 : 0;
+  }
+  if (back) {
+    back.setAttribute('aria-hidden', String(!flipped));
+    back.toggleAttribute('inert', !flipped);
+  }
+  const nextFocus = flipped ? back?.querySelector('[data-action="show-in-birdex"]') : front;
+  requestAnimationFrame(() => nextFocus?.focus());
+  SFX.tap();
 }
 
 function recordSoundSessionDiscovery(bird, isNewDiscovery) {
@@ -16579,8 +16662,9 @@ function recordSoundSessionDiscovery(bird, isNewDiscovery) {
 }
 window.__burbzSoundDiscoveryDebug = {
   add: (bird, isNewDiscovery = true) => recordSoundSessionDiscovery(bird, isNewDiscovery),
-  reset: () => { soundDiscoveryHistory.reset(); renderSoundSessionDiscoveries(); },
-  snapshot: () => soundDiscoveryHistory.snapshot()
+  reset: () => { soundDiscoveryHistory.reset(); soundDiscoveryFlippedKeys.clear(); renderSoundSessionDiscoveries(); },
+  snapshot: () => soundDiscoveryHistory.snapshot(),
+  showInBirdex: species => showSpeciesInBirdex(species)
 };
 
 function handleBirdCandidates(primary, detections = [], opts = {}) {
@@ -16626,6 +16710,7 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
     else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.'); }
   }
+  if (top) checkBadges();
 }
 
 function showCatalogUnmatchedRecognition(bird) {
@@ -16733,6 +16818,27 @@ let currentBurbzMode = 'companions';
 let currentBirdexDiscovery = 'discovered';
 const BIRDEX_PAGE_SIZE = 80;
 let birdexVisibleLimit = BIRDEX_PAGE_SIZE;
+
+function showSpeciesInBirdex(speciesName) {
+  const canonical = canonicalSpeciesName(speciesName);
+  const key = speciesKey(canonical);
+  currentBurbzMode = 'birdex';
+  currentBirdexDiscovery = 'discovered';
+  currentFilter = 'all';
+  birdexVisibleLimit = Math.max(BIRDEX_PAGE_SIZE, discoveredSpeciesSet().size + 8);
+  switchScreen('birdex');
+  renderBirdex();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const target = [...document.querySelectorAll('#birdGrid .bird-card')].find(card => card.dataset.speciesKey === key);
+    if (!target) return;
+    target.classList.add('birdex-target-card');
+    target.tabIndex = -1;
+    target.setAttribute('aria-label', canonical + ' in Birdex');
+    target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center' });
+    target.focus({ preventScroll:true });
+    setTimeout(() => target.classList.remove('birdex-target-card'), 3200);
+  }));
+}
 
 function discoveredSpeciesSet() {
   const discovered = new Set(Object.values(gameState.discoveredSpecies || {}).map(r => canonicalSpeciesName(r.species || r.commonName)).filter(Boolean));
@@ -16883,7 +16989,7 @@ function createBirdCardHTML(bird, idx) {
     : `<div class="bird-emoji">${bird.emoji || '&#128038;'}</div>`;
 
   return `
-    <div class="bird-card ${isActivePet ? 'active-pet-card' : ''}" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}">
+    <div class="bird-card ${isActivePet ? 'active-pet-card' : ''}" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
       <div class="bird-card-inner">
         <div class="card-front">
           <div class="card-art">
@@ -16948,7 +17054,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
   const alreadyCompanion = !!companionForSpecies(bird.species || bird.commonName);
   const tavernBuilt = isAcademyRoomBuilt('tavern');
   return `
-    <div class="bird-card known-species" data-rarity="${bird.rarity}" data-idx="known-${idx}" data-bird-id="preview:${bird.commonName || bird.species}">
+    <div class="bird-card known-species" data-rarity="${bird.rarity}" data-idx="known-${idx}" data-bird-id="preview:${bird.commonName || bird.species}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
       <div class="bird-card-inner">
         <div class="card-front">
           <div class="card-art">
@@ -17071,6 +17177,7 @@ const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(a
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
 });
 const soundDiscoveryHistory = window.BurbzSoundListenerCore.createDiscoveryHistory();
+const soundDiscoveryFlippedKeys = new Set();
 
 function soundLocationAssistEnabled() { return !!$('merlinLocationAssist')?.checked; }
 try { $('merlinLocationAssist').checked = localStorage.getItem(SOUND_LOCATION_PREF_KEY) === '1'; } catch (_) {}
@@ -17190,6 +17297,7 @@ async function startContinuousSoundListening() {
     listenerTrack = stream.getAudioTracks()[0] || stream.getTracks()[0] || null;
     if (!listenerTrack) throw new Error('No audio track');
     soundDiscoveryHistory.reset();
+    soundDiscoveryFlippedKeys.clear();
     renderSoundSessionDiscoveries();
     listenerTrack.onended = () => handleContinuousSoundTrackEnded(generation);
     const ctx = deps.audioContext || getAudioCtx();
@@ -19155,6 +19263,7 @@ function renderQuests() {
 // ============================================================================
 const BADGES = [
   { id: 'first_bird', name: 'Spotter', icon: '\u{1F426}', condition: () => gameState.player.totalCaptures >= 1 },
+  { id: 'pair_of_tits', name: 'A Pair of Tits', icon: '🐦🐦', condition: () => { const greatTit = getDiscoveredRecordForSpecies('Great Tit'); return greatTit && Number(greatTit.sightingCount || 0) >= 2; } },
   { id: 'five_species', name: 'Collector', icon: '\u{1F4DA}', condition: () => new Set(gameState.flock.map(b=>b.species)).size >= 5 },
   { id: 'ten_species', name: 'Birder', icon: '\u{1F3C5}', condition: () => new Set(gameState.flock.map(b=>b.species)).size >= 10 },
   { id: 'first_win', name: 'Fighter', icon: '\u{2694}\u{FE0F}', condition: () => gameState.player.wins >= 1 },
