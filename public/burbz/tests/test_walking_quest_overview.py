@@ -46,7 +46,7 @@ def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
 
 def test_quest_route_clarity_release_is_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "./quest_core.js?v=show-local-quests-v6-20260714" in sw
+    assert "./quest_core.js?v=footpath-ring-quests-v1-20260716" in sw
 
 
 def test_nearby_quests_are_sorted_by_distance_to_their_start():
@@ -145,7 +145,7 @@ def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_abov
     assert "document.querySelector('.bottom-nav')" in layout
     assert "--quest-focus-card-height" in layout
     assert "--quest-focus-lift" in layout
-    assert "burbz-discovery-flip-cards-v83-20260716" in SW.read_text(encoding="utf-8")
+    assert "burbz-footpath-ring-v84-20260716" in SW.read_text(encoding="utf-8")
 
 
 def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():
@@ -190,7 +190,7 @@ def test_distance_markers_use_inner_visual_offsets_without_moving_maplibre_ancho
 def test_show_quests_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=show-local-quests-v6-20260714"
+    marker = "quest_core.js?v=footpath-ring-quests-v1-20260716"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

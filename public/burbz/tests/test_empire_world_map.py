@@ -116,7 +116,7 @@ def test_world_palette_is_a_medieval_atlas_with_town_names_and_no_roads():
     assert "/transportation|highway|road|rail|bridge|tunnel|aeroway|aerodrome|ferry|oneway/" in html
     assert "/poi|housenumber/" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
-    assert "burbz-discovery-flip-cards-v83-20260716" in SW.read_text(encoding="utf-8")
+    assert "burbz-footpath-ring-v84-20260716" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():

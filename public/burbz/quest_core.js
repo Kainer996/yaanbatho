@@ -160,6 +160,7 @@
     var offers = [];
     var wayGroups = {};
     var unnamedWalkableWays = [];
+    var walkableWays = []; // every walkable geometry, fuel for the footpath ring network
     els.forEach(function (el) {
       if (el.type === 'relation' && el.tags) {
         // Geometry arrives clipped to the query bbox, so member ways can be
@@ -168,7 +169,7 @@
         (el.members || []).forEach(function (m) {
           if (m.type === 'way' && m.geometry) {
             var seg = wayToPoints(m); // strips nulls left by bbox clipping
-            if (seg.length >= 2) memberSegs.push(seg);
+            if (seg.length >= 2) { memberSegs.push(seg); walkableWays.push(seg); }
           }
         });
         var pts = chainWays(memberSegs);
@@ -186,6 +187,7 @@
         var forbidden = /^(private|no)$/i.test(el.tags.access || '') || /^(private|no)$/i.test(el.tags.foot || '');
         var isWalkable = /^(path|footway|bridleway|track)$/.test(highway) && !forbidden;
         if (!isWalkable) return;
+        walkableWays.push(wayToPoints(el));
         var isPublic = /public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic/i.test(el.tags.designation || '') ||
           /^(designated|yes|permissive)$/i.test(el.tags.foot || '') || /^(footway|bridleway)$/.test(highway);
         var nm = el.tags.name;
@@ -237,7 +239,11 @@
     // Playable filter: at least ~350m of walking, start within 2.5km.
     offers = offers.filter(function (o) { return o.lengthM >= 350 && o.startDistM <= 2500; });
 
-    return sortOffersByStartDistance(offers).slice(0, 12);
+    offers = sortOffersByStartDistance(offers).slice(0, 12);
+    // Footpaths right next to the player ALWAYS yield a quest — a ring around
+    // the path network when one exists, a straight walk otherwise. Added after
+    // the playable filter so short-but-adjacent paths can't be filtered away.
+    return ensureFootpathQuestNearPlayer(offers, walkableWays, playerLat, playerLon);
   }
 
   // Greedy end-to-end chaining of way fragments. Returns ALL connected chains,
@@ -308,6 +314,319 @@
       out.push(pick[j]);
       if (acc >= maxLenM) break;
     }
+    return out;
+  }
+
+  // ---------------- Footpath ring quests (graph loops, no routing server) ----------------
+
+  // Build a node/edge graph from walkable way geometries. Ways are split where
+  // another way's endpoint touches them (junctions), then endpoints within
+  // joinM merge into shared nodes. Edges keep their full geometry.
+  function buildPathNetwork(ways, joinM) {
+    joinM = joinM || 20;
+    var segs = (ways || []).filter(function (w) { return w && w.length >= 2; });
+    var cellDeg = Math.max(joinM, 1) / 111320;
+    function gridCell(lat, lon) {
+      var cosLat = Math.max(0.2, Math.cos(toRad(lat)));
+      return [Math.round(lon * cosLat / cellDeg), Math.round(lat / cellDeg)];
+    }
+    function gridPush(grid, lat, lon, val) {
+      var c = gridCell(lat, lon), k = c[0] + '_' + c[1];
+      (grid[k] = grid[k] || []).push(val);
+    }
+    function gridNear(grid, lat, lon) {
+      var c = gridCell(lat, lon), out = [];
+      for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
+        var arr = grid[(c[0] + dx) + '_' + (c[1] + dy)];
+        if (arr) out = out.concat(arr);
+      }
+      return out;
+    }
+
+    // Junction detection: split a way wherever another way's endpoint sits on it.
+    var endGrid = {};
+    segs.forEach(function (w) {
+      gridPush(endGrid, w[0].lat, w[0].lon, w[0]);
+      gridPush(endGrid, w[w.length - 1].lat, w[w.length - 1].lon, w[w.length - 1]);
+    });
+    var pieces = [];
+    segs.forEach(function (w) {
+      var cur = [w[0]];
+      for (var i = 1; i < w.length; i++) {
+        cur.push(w[i]);
+        if (i === w.length - 1) break;
+        var touches = gridNear(endGrid, w[i].lat, w[i].lon).some(function (p) {
+          return p !== w[i] && questHaversine(p.lat, p.lon, w[i].lat, w[i].lon) <= joinM;
+        });
+        if (touches) { pieces.push(cur); cur = [w[i]]; }
+      }
+      if (cur.length >= 2) pieces.push(cur);
+    });
+
+    var nodes = [], edges = [], nodeGrid = {};
+    function nodeIdFor(p) {
+      var cands = gridNear(nodeGrid, p.lat, p.lon);
+      for (var i = 0; i < cands.length; i++) {
+        if (questHaversine(nodes[cands[i]].lat, nodes[cands[i]].lon, p.lat, p.lon) <= joinM) return cands[i];
+      }
+      var id = nodes.length;
+      nodes.push({ lat: p.lat, lon: p.lon, edges: [] });
+      gridPush(nodeGrid, p.lat, p.lon, id);
+      return id;
+    }
+    pieces.forEach(function (pts) {
+      var lenM = routeLengthM(pts);
+      if (!(lenM > 0)) return;
+      var a = nodeIdFor(pts[0]), b = nodeIdFor(pts[pts.length - 1]);
+      var e = { id: edges.length, a: a, b: b, pts: pts, lenM: lenM };
+      edges.push(e);
+      nodes[a].edges.push(e.id);
+      if (b !== a) nodes[b].edges.push(e.id);
+    });
+    return { nodes: nodes, edges: edges };
+  }
+
+  // Snap a position onto the nearest edge and split the edge at that point, so
+  // ring searches start exactly where the player joins the path network.
+  function insertNetworkStart(net, lat, lon, maxSnapM) {
+    var best = null;
+    net.edges.forEach(function (e) {
+      var n = nearestPointOnRoute(e.pts, lat, lon, false);
+      if (n && (!best || n.distanceM < best.hit.distanceM)) best = { edge: e, hit: n };
+    });
+    if (!best || best.hit.distanceM > (maxSnapM || 400)) return null;
+    var e = best.edge, hit = best.hit;
+    var p = { lat: hit.point.lat, lon: hit.point.lon };
+    var dA = questHaversine(p.lat, p.lon, net.nodes[e.a].lat, net.nodes[e.a].lon);
+    var dB = questHaversine(p.lat, p.lon, net.nodes[e.b].lat, net.nodes[e.b].lon);
+    if (Math.min(dA, dB) <= 15) return { nodeId: dA <= dB ? e.a : e.b, snapDistM: hit.distanceM };
+    var id = net.nodes.length;
+    net.nodes.push({ lat: p.lat, lon: p.lon, edges: [] });
+    var firstPts = e.pts.slice(0, hit.segmentIndex + 1).concat([p]);
+    var secondPts = [p].concat(e.pts.slice(hit.segmentIndex + 1));
+    var oldB = e.b;
+    e.b = id; e.pts = firstPts; e.lenM = routeLengthM(firstPts);
+    if (oldB !== e.a) {
+      var listB = net.nodes[oldB].edges;
+      var at = listB.indexOf(e.id);
+      if (at >= 0) listB.splice(at, 1);
+    }
+    net.nodes[id].edges.push(e.id);
+    var e2 = { id: net.edges.length, a: id, b: oldB, pts: secondPts, lenM: routeLengthM(secondPts) };
+    net.edges.push(e2);
+    net.nodes[id].edges.push(e2.id);
+    net.nodes[oldB].edges.push(e2.id);
+    return { nodeId: id, snapDistM: hit.distanceM };
+  }
+
+  function edgePointsFrom(net, edgeId, fromNode) {
+    var e = net.edges[edgeId];
+    return e.a === fromNode ? e.pts.slice() : e.pts.slice().reverse();
+  }
+
+  // Dijkstra over the (small) footpath network. excludedEdges (a map of
+  // edgeId -> true) keeps a ring search from walking straight back along
+  // edges it already used.
+  function networkShortestPath(net, fromNode, toNode, excludedEdges) {
+    excludedEdges = excludedEdges || {};
+    var n = net.nodes.length;
+    var dist = new Array(n), prevEdge = new Array(n), done = new Array(n);
+    for (var i = 0; i < n; i++) { dist[i] = Infinity; prevEdge[i] = -1; done[i] = false; }
+    dist[fromNode] = 0;
+    for (var iter = 0; iter < n; iter++) {
+      var u = -1, bd = Infinity;
+      for (var j = 0; j < n; j++) if (!done[j] && dist[j] < bd) { bd = dist[j]; u = j; }
+      if (u < 0) break;
+      done[u] = true;
+      if (u === toNode) break;
+      net.nodes[u].edges.forEach(function (eid) {
+        if (excludedEdges[eid]) return;
+        var e = net.edges[eid];
+        var v = e.a === u ? e.b : e.a;
+        if (done[v]) return;
+        var nd = dist[u] + e.lenM;
+        if (nd < dist[v]) { dist[v] = nd; prevEdge[v] = eid; }
+      });
+    }
+    if (!isFinite(dist[toNode])) return null;
+    var seq = [], cur = toNode, guard = 0;
+    while (cur !== fromNode && guard++ < net.edges.length + 2) {
+      var eid = prevEdge[cur];
+      if (eid < 0) return null;
+      seq.unshift(eid);
+      var e = net.edges[eid];
+      cur = e.a === cur ? e.b : e.a;
+    }
+    return { lenM: dist[toNode], edgeIds: seq };
+  }
+
+  function pathPointsAlongEdges(net, fromNode, edgeIds, startPts) {
+    var pts = startPts ? startPts.slice() : [{ lat: net.nodes[fromNode].lat, lon: net.nodes[fromNode].lon }];
+    var cur = fromNode;
+    edgeIds.forEach(function (eid) {
+      var seg = edgePointsFrom(net, eid, cur);
+      pts = pts.concat(seg.slice(1));
+      var e = net.edges[eid];
+      cur = e.a === cur ? e.b : e.a;
+    });
+    return pts;
+  }
+
+  // Planar shoelace area of a closed ring, m². An "out and back along the same
+  // line" pseudo-ring encloses ~nothing — this is how those get rejected.
+  function ringAreaM2(pts) {
+    if (!pts || pts.length < 3) return 0;
+    var lat0 = pts[0].lat, lon0 = pts[0].lon;
+    var cosLat = Math.max(0.2, Math.cos(toRad(lat0)));
+    var area = 0;
+    for (var i = 0; i < pts.length; i++) {
+      var a = pts[i], b = pts[(i + 1) % pts.length];
+      var ax = (a.lon - lon0) * 111320 * cosLat, ay = (a.lat - lat0) * 111320;
+      var bx = (b.lon - lon0) * 111320 * cosLat, by = (b.lat - lat0) * 111320;
+      area += ax * by - bx * ay;
+    }
+    return Math.abs(area) / 2;
+  }
+
+  var RING_MIN_LEN_M = 450;
+  var RING_MAX_LEN_M = 6500;
+  var RING_TARGET_LEN_M = 2500;
+  var RING_MIN_MEAN_WIDTH_M = 12; // require area >= lenM * this
+
+  // Cycle through startNode: leave along each incident edge in turn and ask
+  // Dijkstra for a way home that doesn't reuse that edge. Closest-to-target
+  // length wins; degenerate there-and-back "rings" fail the area check.
+  function findFootpathRing(net, startNode, opts) {
+    opts = opts || {};
+    var minLen = opts.minLenM || RING_MIN_LEN_M;
+    var maxLen = opts.maxLenM || RING_MAX_LEN_M;
+    var target = opts.targetLenM || RING_TARGET_LEN_M;
+    var node = net.nodes[startNode];
+    if (!node) return null;
+    var best = null, tried = {};
+    function consider(pts, lenM) {
+      if (lenM < minLen || lenM > maxLen) return false;
+      if (ringAreaM2(pts) < lenM * (opts.minMeanWidthM || RING_MIN_MEAN_WIDTH_M)) return false;
+      var score = Math.abs(lenM - target);
+      if (!best || score < best.score) best = { points: pts, lengthM: lenM, score: score };
+      return true;
+    }
+    node.edges.forEach(function (eid) {
+      if (tried[eid]) return;
+      tried[eid] = true;
+      var e = net.edges[eid];
+      if (e.a === e.b) { // a way that is itself a closed loop
+        consider(edgePointsFrom(net, eid, startNode), e.lenM);
+        return;
+      }
+      var other = e.a === startNode ? e.b : e.a;
+      // The shortest cycle can be a too-small city block or a too-thin
+      // there-and-back — when it is, ban that home path and look wider.
+      var excluded = {};
+      excluded[eid] = true;
+      for (var attempt = 0; attempt < 4; attempt++) {
+        var home = networkShortestPath(net, other, startNode, excluded);
+        if (!home) return;
+        var lenM = e.lenM + home.lenM;
+        if (lenM > maxLen) return;
+        var pts = pathPointsAlongEdges(net, other, home.edgeIds, edgePointsFrom(net, eid, startNode));
+        if (consider(pts, lenM)) return;
+        home.edgeIds.forEach(function (id) { excluded[id] = true; });
+      }
+    });
+    if (!best) return null;
+    var s = net.nodes[startNode];
+    var last = best.points[best.points.length - 1];
+    if (questHaversine(last.lat, last.lon, s.lat, s.lon) > 1) best.points.push({ lat: s.lat, lon: s.lon });
+    return { points: best.points, lengthM: best.lengthM };
+  }
+
+  // A ring straight through the player's spot, or — when they stand on a
+  // dead-end spur — a lollipop: connector out to a junction, ring around it,
+  // same connector home. Either way the walk ends exactly where it began.
+  function findFootpathLoopFrom(net, startNode, opts) {
+    opts = opts || {};
+    var direct = findFootpathRing(net, startNode, opts);
+    if (direct) return { points: direct.points, lengthM: direct.lengthM, viaSpur: false };
+    var maxLen = opts.maxLenM || RING_MAX_LEN_M;
+    var junctions = [];
+    for (var t = 0; t < net.nodes.length; t++) {
+      if (t !== startNode && net.nodes[t].edges.length >= 3) junctions.push(t);
+    }
+    var reachable = junctions.map(function (t) {
+      var path = networkShortestPath(net, startNode, t);
+      return path ? { node: t, path: path } : null;
+    }).filter(function (r) { return r && r.path.lenM * 2 < maxLen; })
+      .sort(function (x, y) { return x.path.lenM - y.path.lenM; });
+    for (var i = 0; i < Math.min(reachable.length, 12); i++) {
+      var r = reachable[i];
+      var ring = findFootpathRing(net, r.node, Object.assign({}, opts, {
+        minLenM: Math.max(250, (opts.minLenM || RING_MIN_LEN_M) - r.path.lenM * 2),
+        maxLenM: maxLen - r.path.lenM * 2
+      }));
+      if (!ring) continue;
+      var outPts = pathPointsAlongEdges(net, startNode, r.path.edgeIds);
+      var backPts = outPts.slice().reverse();
+      var pts = outPts.concat(ring.points.slice(1)).concat(backPts.slice(1));
+      return { points: pts, lengthM: r.path.lenM * 2 + ring.lengthM, viaSpur: true };
+    }
+    return null;
+  }
+
+  // Whenever public footpaths run near the player there is ALWAYS a quest that
+  // starts on them: a ring back to the start when the network allows one,
+  // otherwise a straight out-and-back walk along the nearest connected paths.
+  var FOOTPATH_NEARBY_M = 400;
+  function ensureFootpathQuestNearPlayer(offers, walkableWays, playerLat, playerLon, opts) {
+    opts = opts || {};
+    offers = offers || [];
+    var nearM = opts.nearM || FOOTPATH_NEARBY_M;
+    var segs = (walkableWays || []).filter(function (w) { return w && w.length >= 2; });
+    if (!segs.length || !isFinite(playerLat) || !isFinite(playerLon)) return offers;
+    var net = buildPathNetwork(segs, opts.joinM);
+    var start = insertNetworkStart(net, playerLat, playerLon, nearM);
+    if (!start) return offers; // no footpath near the player
+    var out = offers.slice();
+    var loop = findFootpathLoopFrom(net, start.nodeId, opts);
+    if (loop && loop.points.length >= 3) {
+      var sp = loop.points[0];
+      out.unshift({
+        kind: 'footpath',
+        ref: 'footpath-ring/' + sp.lat.toFixed(5) + ',' + sp.lon.toFixed(5),
+        name: 'Footpath Ring',
+        points: loop.points,
+        tags: {},
+        ring: true,
+        lengthM: routeLengthM(loop.points),
+        startDistM: questHaversine(playerLat, playerLon, sp.lat, sp.lon)
+      });
+      return out;
+    }
+    // No ring anywhere in this network — guarantee a straight quest instead,
+    // but only if nothing else already starts within reach.
+    var hasNearbyStart = out.some(function (o) {
+      var d = Number(o && o.startDistM);
+      return isFinite(d) && d <= nearM;
+    });
+    if (hasNearbyStart) return out;
+    var chains = clusterChains(segs.map(function (w) { return w.slice(); }));
+    var bestChain = null, bestD = Infinity;
+    chains.forEach(function (chain) {
+      var n = nearestPointOnRoute(chain, playerLat, playerLon, false);
+      if (n && n.distanceM < bestD) { bestD = n.distanceM; bestChain = chain; }
+    });
+    if (!bestChain || bestD > nearM) return out;
+    var pts = normaliseTrailForPlayer(bestChain, playerLat, playerLon);
+    if (pts.length < 2 || routeLengthM(pts) < (opts.minStraightM || 120)) return out;
+    out.unshift({
+      kind: 'footpath',
+      ref: 'footpath-near/' + pts[0].lat.toFixed(5) + ',' + pts[0].lon.toFixed(5),
+      name: 'Nearby Footpath Walk',
+      points: pts,
+      tags: {},
+      lengthM: routeLengthM(pts),
+      startDistM: questHaversine(playerLat, playerLon, pts[0].lat, pts[0].lon)
+    });
     return out;
   }
 
@@ -894,6 +1213,13 @@
     parseOverpassTrails: parseOverpassTrails,
     parseMapWalkableFeatures: parseMapWalkableFeatures,
     chainWays: chainWays,
+    buildPathNetwork: buildPathNetwork,
+    insertNetworkStart: insertNetworkStart,
+    networkShortestPath: networkShortestPath,
+    ringAreaM2: ringAreaM2,
+    findFootpathRing: findFootpathRing,
+    findFootpathLoopFrom: findFootpathLoopFrom,
+    ensureFootpathQuestNearPlayer: ensureFootpathQuestNearPlayer,
     normaliseTrailForPlayer: normaliseTrailForPlayer,
     nearestPointOnRoute: nearestPointOnRoute,
     generateAdventureRoute: generateAdventureRoute,
