@@ -16447,6 +16447,11 @@ function villageBuy(shopKey, itemId) {
   }
 })();
 
+function nextDiscoverySightingCount(existing, opts = {}) {
+  const previous = Math.max(1, Number(existing && existing.sightingCount) || 1);
+  return existing && !opts.silent ? previous + 1 : previous;
+}
+
 function rememberDiscoveredBird(bird, opts = {}) {
   if (!bird) return false;
   if (!gameState.discoveredSpecies || typeof gameState.discoveredSpecies !== 'object') gameState.discoveredSpecies = {};
@@ -16464,6 +16469,7 @@ function rememberDiscoveredBird(bird, opts = {}) {
     artUrl: getBirdArtUrl(bird) || (existing && existing.artUrl) || null,
     discoveredAt: (existing && existing.discoveredAt) || new Date().toISOString(),
     lastSeenAt: new Date().toISOString(),
+    sightingCount: nextDiscoverySightingCount(existing, opts),
     recruitCost: recruitCostForBird(bird),
   };
   gameState.discoveredSpecies[key] = record;
@@ -16704,6 +16710,7 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
     else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.'); }
   }
+  if (top) checkBadges();
 }
 
 function showCatalogUnmatchedRecognition(bird) {
@@ -19256,6 +19263,7 @@ function renderQuests() {
 // ============================================================================
 const BADGES = [
   { id: 'first_bird', name: 'Spotter', icon: '\u{1F426}', condition: () => gameState.player.totalCaptures >= 1 },
+  { id: 'pair_of_tits', name: 'A Pair of Tits', icon: '🐦🐦', condition: () => { const greatTit = getDiscoveredRecordForSpecies('Great Tit'); return greatTit && Number(greatTit.sightingCount || 0) >= 2; } },
   { id: 'five_species', name: 'Collector', icon: '\u{1F4DA}', condition: () => new Set(gameState.flock.map(b=>b.species)).size >= 5 },
   { id: 'ten_species', name: 'Birder', icon: '\u{1F3C5}', condition: () => new Set(gameState.flock.map(b=>b.species)).size >= 10 },
   { id: 'first_win', name: 'Fighter', icon: '\u{2694}\u{FE0F}', condition: () => gameState.player.wins >= 1 },
