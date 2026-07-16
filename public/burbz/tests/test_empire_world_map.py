@@ -79,43 +79,44 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert "resetEmpireMapAfterFailure" in html
     assert "attributionControl:false" in html
     assert 'class="empire-map-attribution"' in html
-    assert "empire-liberated-wash" in html
-    assert "empireLiberatedOutlineShape" in html
+    assert 'id="empireFogCanvas"' in html
     assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
     assert "showMarker = zoom >= 1" in html
     assert "is-visible" in html
 
 
-def test_unexplored_world_is_dark_green_with_liberated_map_windows():
+def test_unexplored_world_is_hidden_beneath_drifting_cloud_with_liberated_windows():
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="empireFogOverlay"' in html
-    assert 'id="empireFogHoles"' in html
-    assert 'id="empireLiberatedHoles"' in html
-    assert 'id="empireLiberatedMask"' in html
-    assert 'class="empire-liberated-wash"' in html
-    assert "#1f2a24" in html
+    assert 'id="empireFogCanvas"' in html
+    assert "function buildEmpireCloudTile(" in html
     assert "function updateEmpireFogMask(" in html
+    assert "function empireFogDriftTick(" in html
     assert "map.on('move', updateEmpireFogMask)" in html
     assert "map.on('resize', updateEmpireFogMask)" in html
     assert "core.destination" in html
     assert "wrappedLongitudeNear" in html
     assert "empireMap.getCenter().lng" in html
+    # The reveal erases cloud instead of painting a wash over the map.
+    assert "'destination-out'" in html
+    assert "empire-liberated-wash" not in html
+    assert "empire-unexplored-shade" not in html
+    # The cloud canvas rides inside MapLibre's canvas container so markers stay above it.
+    assert "map.getCanvasContainer().appendChild(fogCanvas)" in html
 
 
-def test_world_palette_keeps_blue_water_and_readable_dark_land_beneath_the_veil():
+def test_world_palette_is_a_medieval_atlas_with_town_names_and_no_roads():
     html = HTML.read_text(encoding="utf-8")
     assert "function applyEmpireAtlasPalette(" in html
     assert "natural_earth" in html
     assert "setLayoutProperty(layer.id, 'visibility', 'none')" in html
-    assert "#2f79a8" in html  # sea and lakes remain visibly blue
-    assert "#1f2a24" in html  # unexplored land stays dark, not black
-    assert 'class="empire-unexplored-shade"' in html
-    shade = html.split('class="empire-unexplored-shade"', 1)[1].split('></rect>', 1)[0]
-    assert 'fill="#07100d"' in shade
-    assert 'fill-opacity="0.2"' in shade
+    assert "#69a1c0" in html  # sea, lakes and rivers keep a scribe's blue
+    assert "#e7d7ac" in html  # unexplored land renders as aged parchment
+    assert "#41301a" in html  # town names lettered in ink stay readable
+    assert "/transportation|highway|road|rail|bridge|tunnel|aeroway|aerodrome|ferry|oneway/" in html
+    assert "/poi|housenumber/" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
-    assert "burbz-buzzard-history-v80-20260716" in SW.read_text(encoding="utf-8")
+    assert "burbz-cloud-atlas-v82-20260716" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
@@ -135,12 +136,13 @@ def test_map_keyboard_controls_and_markers_have_visible_focus():
     assert ".empire-map-marker:focus-visible" in html
 
 
-def test_liberated_green_wash_is_unioned_not_alpha_stacked_per_polygon():
+def test_liberated_cloud_windows_union_into_one_soft_edged_reveal():
     html = HTML.read_text(encoding="utf-8")
-    assert "empire-liberated-wash" in html
-    assert 'id="empireLiberatedOutlineShape"' in html
-    assert 'id="empireTerritoryOuterOutline"' in html
-    assert "[fogHoles, 'black'], [liberatedHoles, 'white'], [outlineShape, 'white']" in html
+    fog = html[html.index("function updateEmpireFogMask("):html.index("function empireFogDriftTick(")]
+    # Rim glow strokes first, then the destination-out punch erases rim segments that
+    # fall inside neighbouring holes — overlapping territories share one unioned outline.
+    assert fog.index("ctx.stroke()") < fog.index("'destination-out'")
+    assert "createRadialGradient" in fog  # soft feathered cloud edges, not hard circles
     assert "map.addLayer({ id:'empire-territory-fill'" not in html
     assert "map.addLayer({ id:'empire-territory-line'" not in html
     assert "map.addSource('empire-territories'" not in html

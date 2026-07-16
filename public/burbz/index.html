@@ -368,14 +368,13 @@ svg.academy-room-bg { display:block; filter:none; }
 .village-claim-btn[disabled] { opacity:.55; }
 .village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
 #empirePanel { margin:14px; }
-.empire-map-card { position:relative; height:390px; margin:12px 14px 6px; overflow:hidden; border-radius:19px; border:1px solid rgba(126,217,131,.42); background:#071b12; box-shadow:0 14px 34px rgba(0,0,0,.42), inset 0 0 32px rgba(126,217,131,.09); }
+.empire-map-card { position:relative; height:390px; margin:12px 14px 6px; overflow:hidden; border-radius:19px; border:1px solid rgba(214,178,110,.48); background:#18222a; box-shadow:0 14px 34px rgba(0,0,0,.42), inset 0 0 32px rgba(240,199,103,.07); }
 #empireWorldMap { position:absolute; inset:0; }
-#empireWorldMap .maplibregl-canvas { filter:saturate(.94) brightness(.96) contrast(1.04); }
+#empireWorldMap .maplibregl-canvas { filter:saturate(.9) sepia(.16) brightness(1.02) contrast(1.03); }
 .empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; }
-.empire-liberated-wash { mix-blend-mode:normal; }
 .empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
 .empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); }
-.empire-map-vignette { position:absolute; inset:0; z-index:2; pointer-events:none; box-shadow:inset 0 0 34px rgba(2,8,5,.42); background:linear-gradient(180deg,rgba(5,13,9,.08),transparent 34%,transparent 76%,rgba(5,12,8,.2)); }
+.empire-map-vignette { position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 34px rgba(6,10,14,.44); background:linear-gradient(180deg,rgba(8,12,16,.1),transparent 34%,transparent 76%,rgba(8,12,16,.22)); }
 .empire-map-tools { position:absolute; z-index:5; top:10px; left:10px; display:flex; gap:7px; }
 .empire-map-btn { min-height:35px; padding:0 11px; border-radius:11px; border:1px solid rgba(240,199,103,.5); background:rgba(11,20,15,.9); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.4); }
 .empire-map-btn:active { transform:scale(.97); }
@@ -2283,24 +2282,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="empire-map-card" id="empireMapCard">
         <div id="empireWorldMap" role="application" aria-label="Interactive map of your liberated territories"></div>
         <div class="empire-map-vignette"></div>
-        <svg class="empire-fog-overlay" id="empireFogOverlay" aria-hidden="true" preserveAspectRatio="none">
-          <defs>
-            <mask id="empireLiberatedMask"><rect width="100%" height="100%" fill="black"></rect><g id="empireLiberatedHoles"></g></mask>
-            <mask id="empireFogMask"><rect width="100%" height="100%" fill="white"></rect><g id="empireFogHoles"></g></mask>
-            <filter id="empireTerritoryOuterOutline" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
-              <feMorphology in="SourceAlpha" operator="dilate" radius="2.4" result="expanded"></feMorphology>
-              <feComposite in="expanded" in2="SourceAlpha" operator="out" result="outerRing"></feComposite>
-              <feFlood flood-color="#b8f4bd" flood-opacity="0.94" result="outlineColour"></feFlood>
-              <feComposite in="outlineColour" in2="outerRing" operator="in"></feComposite>
-            </filter>
-          </defs>
-          <rect class="empire-liberated-wash" width="100%" height="100%" fill="#8ee39a" fill-opacity="0.5" mask="url(#empireLiberatedMask)"></rect>
-          <rect class="empire-unexplored-shade" width="100%" height="100%" fill="#07100d" fill-opacity="0.2" mask="url(#empireFogMask)"></rect>
-          <g id="empireLiberatedOutlineShape" filter="url(#empireTerritoryOuterOutline)"></g>
-        </svg>
+        <canvas class="empire-fog-overlay" id="empireFogCanvas" aria-hidden="true"></canvas>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
         <div class="empire-map-empty"></div>
-        <div class="empire-map-status" id="empireMapStatus">Reading the veil over the world…</div>
+        <div class="empire-map-status" id="empireMapStatus">Gathering the clouds over the world…</div>
         <div class="empire-map-attribution"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
       </div>
       <div id="empirePanel"></div>
@@ -13732,6 +13717,11 @@ let empireMap = null, empireMapReady = false, empireMapInitPromise = null, empir
 
 function resetEmpireMapAfterFailure(mapToRemove) {
   clearEmpireMapMarkers();
+  if (empireFogRafId) { cancelAnimationFrame(empireFogRafId); empireFogRafId = null; }
+  // Rescue the fog canvas before map.remove() clears the map container, so a retry keeps it.
+  const fogCanvas = $('empireFogCanvas');
+  const card = $('empireMapCard');
+  if (fogCanvas && card && fogCanvas.parentElement !== card) card.appendChild(fogCanvas);
   const doomedMap = mapToRemove || empireMap;
   try { doomedMap?.remove(); } catch (e) {}
   if (!mapToRemove || empireMap === mapToRemove) empireMap = null;
@@ -13750,50 +13740,53 @@ function clearEmpireMapMarkers() {
   empireMapMarkers = [];
 }
 
+/* Crusader-Kings-style medieval atlas: parchment land, ink lettering, scribe-blue
+   water, no modern roads. Town and village names stay — they ARE the mediaeval map. */
 function applyEmpireAtlasPalette(map) {
   if (!map || !map.getStyle) return;
   const layers = map.getStyle()?.layers || [];
   const setPaint = (layer, property, value) => { try { map.setPaintProperty(layer.id, property, value); } catch (_) {} };
+  const hideLayer = layer => { try { map.setLayoutProperty(layer.id, 'visibility', 'none'); } catch (_) {} };
   layers.forEach(layer => {
     const id = String(layer.id || '');
     const sourceLayer = String(layer['source-layer'] || '');
     const role = (id + ' ' + sourceLayer).toLowerCase();
-    if (id === 'natural_earth') { try { map.setLayoutProperty(layer.id, 'visibility', 'none'); } catch (_) {} return; }
-    if (layer.type === 'background') { setPaint(layer, 'background-color', '#1f2a24'); return; }
+    if (id === 'natural_earth') { hideLayer(layer); return; }
+    if (/transportation|highway|road|rail|bridge|tunnel|aeroway|aerodrome|ferry|oneway/.test(role)) { hideLayer(layer); return; }
+    if (/poi|housenumber/.test(role)) { hideLayer(layer); return; }
+    if (layer.type === 'background') { setPaint(layer, 'background-color', '#e7d7ac'); return; }
     if (layer.type === 'raster') { setPaint(layer, 'raster-opacity', 0); return; }
     const water = /(^|[_ -])water|waterway|ocean|sea|river|lake/.test(role);
     if (layer.type === 'fill') {
-      if (water) { setPaint(layer, 'fill-color', '#2f79a8'); setPaint(layer, 'fill-opacity', .96); return; }
-      let land = '#27312b';
-      if (/wood|forest|park/.test(role)) land = '#243a2d';
-      else if (/grass|pitch|farmland/.test(role)) land = '#303c31';
-      else if (/wetland/.test(role)) land = '#2c3d36';
-      else if (/sand/.test(role)) land = '#4a4737';
-      else if (/ice/.test(role)) land = '#536965';
-      else if (/building|residential/.test(role)) land = '#303733';
+      if (water) { setPaint(layer, 'fill-color', '#69a1c0'); setPaint(layer, 'fill-opacity', .95); return; }
+      let land = '#e0cfa2';
+      if (/wood|forest/.test(role)) land = '#a7bb82';
+      else if (/park|grass|pitch|meadow|farmland/.test(role)) land = '#c8cc96';
+      else if (/wetland/.test(role)) land = '#b0c19c';
+      else if (/sand|beach/.test(role)) land = '#e2d09e';
+      else if (/ice|glacier/.test(role)) land = '#eef0e6';
+      else if (/building/.test(role)) land = '#c2ab7d';
+      else if (/residential|suburb|neighbourhood/.test(role)) land = '#d9c697';
       setPaint(layer, 'fill-color', land);
-      setPaint(layer, 'fill-opacity', .88);
+      setPaint(layer, 'fill-opacity', .92);
       return;
     }
     if (layer.type === 'fill-extrusion') {
-      setPaint(layer, 'fill-extrusion-color', '#303a34');
-      setPaint(layer, 'fill-extrusion-opacity', .72);
+      setPaint(layer, 'fill-extrusion-color', '#c2ab7d');
+      setPaint(layer, 'fill-extrusion-opacity', .55);
       return;
     }
     if (layer.type === 'line') {
-      if (water) { setPaint(layer, 'line-color', '#55a7cf'); setPaint(layer, 'line-opacity', .88); }
-      else if (/boundary/.test(role)) { setPaint(layer, 'line-color', '#718078'); setPaint(layer, 'line-opacity', .66); }
-      else if (/transportation|road|bridge|tunnel/.test(role)) {
-        setPaint(layer, 'line-color', /casing|hatching/.test(role) ? '#18201c' : '#525d56');
-        setPaint(layer, 'line-opacity', .72);
-      }
+      if (water) { setPaint(layer, 'line-color', '#69a1c0'); setPaint(layer, 'line-opacity', .9); }
+      else if (/boundary/.test(role)) { setPaint(layer, 'line-color', '#8a6134'); setPaint(layer, 'line-opacity', .68); }
+      else { setPaint(layer, 'line-color', '#b39d6e'); setPaint(layer, 'line-opacity', .3); }
       return;
     }
     if (layer.type === 'symbol') {
-      setPaint(layer, 'text-color', water ? '#9ed8f0' : '#b6c2b9');
-      setPaint(layer, 'text-halo-color', water ? '#174d68' : '#17211c');
-      setPaint(layer, 'text-halo-width', 1.15);
-      setPaint(layer, 'icon-opacity', .78);
+      setPaint(layer, 'text-color', water ? '#2e5e7d' : '#41301a');
+      setPaint(layer, 'text-halo-color', water ? '#cfe0dd' : '#ecdcb0');
+      setPaint(layer, 'text-halo-width', 1.25);
+      setPaint(layer, 'icon-opacity', .55);
     }
   });
 }
@@ -13822,22 +13815,88 @@ function wrappedLongitudeNear(lon, referenceLon) {
   return longitude + 360 * Math.round((reference - longitude) / 360);
 }
 
+/* Cloud cover over the undiscovered Earth. The whole world starts wrapped in a
+   drifting cloud blanket; each liberated town punches a soft-edged window through
+   it so the real medieval map shows beneath — nothing is painted over the map. */
+const EMPIRE_CLOUD_TILE = 320;
+let empireCloudTileCanvas = null, empireCloudPattern = null;
+let empireFogRafId = null, empireFogDriftMs = 0, empireFogLastFrame = 0;
+
+function buildEmpireCloudTile() {
+  const size = EMPIRE_CLOUD_TILE;
+  const tile = document.createElement('canvas');
+  tile.width = size; tile.height = size;
+  const tctx = tile.getContext('2d');
+  if (!tctx) return null;
+  const image = tctx.createImageData(size, size);
+  const lattice = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+  const fade = t => t * t * (3 - 2 * t);
+  // Tileable value noise: lattice coordinates wrap at each octave's cell count.
+  const noise = (u, v, cells) => {
+    const gx = u * cells, gy = v * cells;
+    const x0 = Math.floor(gx), y0 = Math.floor(gy);
+    const fx = fade(gx - x0), fy = fade(gy - y0);
+    const wrap = n => ((n % cells) + cells) % cells;
+    const v00 = lattice(wrap(x0), wrap(y0)), v10 = lattice(wrap(x0 + 1), wrap(y0));
+    const v01 = lattice(wrap(x0), wrap(y0 + 1)), v11 = lattice(wrap(x0 + 1), wrap(y0 + 1));
+    const top = v00 + (v10 - v00) * fx;
+    const bottom = v01 + (v11 - v01) * fx;
+    return top + (bottom - top) * fy;
+  };
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const u = px / size, v = py / size;
+      let total = 0, weight = 0, amp = 1;
+      for (const cells of [4, 8, 16, 32]) {
+        total += noise(u, v, cells) * amp;
+        weight += amp;
+        amp *= .55;
+      }
+      const cloud = Math.min(1, Math.max(0, (total / weight - .16) / .68));
+      const idx = (py * size + px) * 4;
+      image.data[idx] = Math.round(150 + (243 - 150) * cloud);
+      image.data[idx + 1] = Math.round(163 + (246 - 163) * cloud);
+      image.data[idx + 2] = Math.round(173 + (247 - 173) * cloud);
+      // Mostly opaque so the undiscovered Earth stays hidden, but the darker
+      // crevices stay faintly translucent — you can sense a world underneath.
+      image.data[idx + 3] = Math.round(255 * (.9 + .1 * cloud));
+    }
+  }
+  tctx.putImageData(image, 0, 0);
+  return tile;
+}
+
 function updateEmpireFogMask() {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
-  const overlay = $('empireFogOverlay');
-  const fogHoles = $('empireFogHoles');
-  const liberatedHoles = $('empireLiberatedHoles');
-  const outlineShape = $('empireLiberatedOutlineShape');
+  const canvas = $('empireFogCanvas');
   const container = $('empireWorldMap');
-  if (!overlay || !fogHoles || !liberatedHoles || !outlineShape || !container) return;
+  if (!canvas || !container) return;
   const width = Math.max(1, container.clientWidth);
   const height = Math.max(1, container.clientHeight);
-  overlay.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-  fogHoles.replaceChildren();
-  liberatedHoles.replaceChildren();
-  outlineShape.replaceChildren();
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+  }
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  if (!empireCloudTileCanvas) empireCloudTileCanvas = buildEmpireCloudTile();
+  if (!empireCloudTileCanvas) return;
+  if (!empireCloudPattern) empireCloudPattern = ctx.createPattern(empireCloudTileCanvas, 'repeat');
+  if (empireCloudPattern) {
+    const driftX = (empireFogDriftMs * .0052) % EMPIRE_CLOUD_TILE;
+    const driftY = (empireFogDriftMs * .0021) % EMPIRE_CLOUD_TILE;
+    ctx.save();
+    ctx.translate(-driftX, -driftY);
+    ctx.fillStyle = empireCloudPattern;
+    ctx.fillRect(0, 0, width + EMPIRE_CLOUD_TILE, height + EMPIRE_CLOUD_TILE);
+    ctx.restore();
+  }
   const core = window.BurbzEmpireMapCore;
   const referenceLon = empireMap.getCenter().lng;
+  const holes = [];
   empireMappableVillages().forEach(village => {
     try {
       const villageLon = Number(village.lon);
@@ -13847,16 +13906,43 @@ function updateEmpireFogMask() {
       const wrappedEast = [wrappedLon + (Number(east[0]) - villageLon), Number(east[1])];
       const edge = empireMap.project(wrappedEast);
       const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 4, 1400);
-      [[fogHoles, 'black'], [liberatedHoles, 'white'], [outlineShape, 'white']].forEach(([group, fill]) => {
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', centre.x.toFixed(2));
-        circle.setAttribute('cy', centre.y.toFixed(2));
-        circle.setAttribute('r', radius.toFixed(2));
-        circle.setAttribute('fill', fill);
-        group.appendChild(circle);
-      });
+      if (centre.x + radius < -80 || centre.x - radius > width + 80 || centre.y + radius < -80 || centre.y - radius > height + 80) return;
+      holes.push({ x: centre.x, y: centre.y, r: radius });
     } catch (e) {}
   });
+  // Liberated rim glow, stroked before the punch: the destination-out pass below
+  // erases any rim segment that falls inside a neighbouring hole, so overlapping
+  // territories keep a single unioned outline instead of alpha-stacked circles.
+  ctx.save();
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = 'rgba(142,227,154,.9)';
+  ctx.shadowColor = 'rgba(142,227,154,.85)';
+  ctx.shadowBlur = 9;
+  holes.forEach(hole => { ctx.beginPath(); ctx.arc(hole.x, hole.y, hole.r, 0, Math.PI * 2); ctx.stroke(); });
+  ctx.restore();
+  ctx.globalCompositeOperation = 'destination-out';
+  holes.forEach(hole => {
+    const reveal = ctx.createRadialGradient(hole.x, hole.y, 0, hole.x, hole.y, hole.r);
+    reveal.addColorStop(0, 'rgba(0,0,0,1)');
+    reveal.addColorStop(.78, 'rgba(0,0,0,1)');
+    reveal.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = reveal;
+    ctx.beginPath();
+    ctx.arc(hole.x, hole.y, hole.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function empireFogDriftTick(ts) {
+  empireFogRafId = requestAnimationFrame(empireFogDriftTick);
+  if (!empireMapReady || document.hidden) return;
+  const canvas = $('empireFogCanvas');
+  if (!canvas || !canvas.offsetParent) return;
+  if (ts - empireFogLastFrame < 100) return; // a slow ~10fps drift keeps the clouds alive cheaply
+  empireFogLastFrame = ts;
+  empireFogDriftMs = ts;
+  updateEmpireFogMask();
 }
 
 function frameEmpireTerritory() {
@@ -13919,8 +14005,8 @@ function refreshEmpireMap(options = {}) {
   card?.classList.toggle('is-empty', villages.length === 0);
   const status = $('empireMapStatus');
   if (status) status.textContent = villages.length
-    ? villages.length + ' village' + (villages.length === 1 ? '' : 's') + ' · tap a sanctuary'
-    : 'No liberated villages yet';
+    ? 'Clouds parted over ' + villages.length + ' village' + (villages.length === 1 ? '' : 's') + ' · tap a sanctuary'
+    : 'The whole world sleeps under cloud — liberate your first town to part it';
   if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
 }
 
@@ -13949,6 +14035,11 @@ function initialiseEmpireMap() {
       if (settled) return;
       try {
         applyEmpireAtlasPalette(map);
+        // Slot the cloud canvas inside MapLibre's canvas container: it paints above
+        // the map tiles, while village markers (appended afterwards) stay above the clouds.
+        const fogCanvas = $('empireFogCanvas');
+        if (fogCanvas) map.getCanvasContainer().appendChild(fogCanvas);
+        if (!empireFogRafId) empireFogRafId = requestAnimationFrame(empireFogDriftTick);
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#7ed983', 'circle-opacity':.28, 'circle-blur':.45 } });
         map.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#dfffe2', 'circle-stroke-color':'#2c693f', 'circle-stroke-width':1.4 } });
@@ -18564,7 +18655,7 @@ function endPerchBattle() {
     const next = core.LEAGUE_TIERS[league.tier];
     rows.push('<div class="rw-row"><span>PROMOTED! ' + tier.icon + '→' + next.icon + '</span><b>+' + tier.promoCoins + ' 🪙 +' + tier.promoBranches + ' 🪵</b></div>');
   }
-  if (liberatedTown) rows.push('<div class="rw-note">The shadow lifts from ' + escapeHtml(liberatedTown.name) + '. Return to build its sanctuary birdhouse and wake this land in light green.</div>');
+  if (liberatedTown) rows.push('<div class="rw-note">The shadow lifts from ' + escapeHtml(liberatedTown.name) + '. Return to build its sanctuary birdhouse and part the clouds over this land.</div>');
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
   if (!won) rows.push('<div class="rw-note">Tip: counter the rival\'s wing classes, and train new moves in the Academy.</div>');
@@ -19208,9 +19299,9 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
   { chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
   { chapter:'Collection', title:'Active companion', screen:'map', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed from the pantry, train it and watch its hunger, happiness and health rather than treating every bird as identical.' },
-  { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world and your liberated area. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary to join that place to the realm.' },
+  { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map keeps the undiscovered world hidden beneath cloud. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary — the clouds part there and reveal the true map.' },
   { chapter:'Realm', title:'Liberation Battle', screen:'battle', target:'.nav-item[data-screen="battle"]', text:'A town’s Liberation Battle uses your chosen flock against its occupying birds. Victory frees the town; returning there lets you build its sanctuary birdhouse.' },
-  { chapter:'Realm', title:'Sanctuaries and tribute', screen:'village', target:'#empirePanel', text:'Nearby sanctuary areas merge into one green realm. Each village pin remains tappable, and liberated villages grow coin and branch tribute every eight hours.' },
+  { chapter:'Realm', title:'Sanctuaries and tribute', screen:'village', target:'#empirePanel', text:'Nearby sanctuary areas merge into one cloud-free realm. Each village pin remains tappable, and liberated villages grow coin and branch tribute every eight hours.' },
   { chapter:'Battle', title:'Perch League', screen:'battle', target:'#battleSelect', text:'Perch League is the repeatable three-bird arena. Read the matchup wheel, choose a balanced team, use learned moves and climb the ranks through turn-based battles.' },
   { chapter:'Academy', title:'Build the Academy', screen:'academy', target:'#academyTreehouse', text:'Spend coins and branches on Academy buildings. Choose Place, tap the tree, then open or move built rooms whenever your campus needs changing.' },
   { chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
