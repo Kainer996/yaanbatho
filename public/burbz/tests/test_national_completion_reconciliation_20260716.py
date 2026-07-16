@@ -13,7 +13,7 @@ def test_reconciled_national_catalogue_runtime_survives_the_buzzard_release():
     assert "NATIONAL.names.forEach(addUniqueWildBird);" in html
     assert "addNationalSpeciesProfiles(BURBZ_SPECIES_PROFILES, NATIONAL.profiles);" in html
     assert "importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');" in sw
-    assert "burbz-cloud-atlas-v82-20260716" in sw
+    assert "burbz-footpath-ring-v83-20260716" in sw
 
     required = {
         ROOT / "national_bird_completion_20260715.js": 4_000_000,
