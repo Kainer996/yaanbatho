@@ -190,4 +190,4 @@ def test_continuous_listener_release_is_query_busted_and_cached_offline():
     assert 'sound_listener_core.js?v=merlin-discovery-history-v3-20260716' in html
     assert './sound_listener_core.js?v=merlin-discovery-history-v3-20260716' in sw
     assert './assets/ui/merlin-wand-listener.webp' in sw
-    assert 'burbz-cloud-atlas-v82-20260716' in sw
+    assert 'burbz-discovery-flip-cards-v83-20260716' in sw

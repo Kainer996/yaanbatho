@@ -100,4 +100,4 @@ def test_treehouse_icons_are_large_enough_to_read_on_mobile():
 
 
 def test_treehouse_bird_icon_release_bumps_the_pwa_cache():
-    assert "burbz-cloud-atlas-v82-20260716" in SW
+    assert "burbz-discovery-flip-cards-v83-20260716" in SW

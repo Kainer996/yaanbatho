@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-cloud-atlas-v82-20260716" in sw
+    assert "burbz-discovery-flip-cards-v83-20260716" in sw
