@@ -67,5 +67,39 @@
     return 'recording.audio';
   }
 
-  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, filenameForMime });
+  function createDiscoveryHistory() {
+    const entries = new Map();
+    let order = [];
+
+    function add(discovery) {
+      if (!discovery || !String(discovery.key || '').trim()) return null;
+      const key = String(discovery.key).trim().toLowerCase();
+      const previous = entries.get(key);
+      const next = {
+        key,
+        name: String(discovery.name || previous?.name || key),
+        scientificName: String(discovery.scientificName || previous?.scientificName || ''),
+        confidence: Math.max(Number(previous?.confidence) || 0, Number(discovery.confidence) || 0),
+        rarity: String(discovery.rarity || previous?.rarity || 'common'),
+        isNew: !!(previous?.isNew || discovery.isNew),
+        count: (previous?.count || 0) + 1
+      };
+      entries.set(key, next);
+      order = [key, ...order.filter(existingKey => existingKey !== key)];
+      return { ...next };
+    }
+
+    function reset() {
+      entries.clear();
+      order = [];
+    }
+
+    function snapshot() {
+      return order.map(key => ({ ...entries.get(key) }));
+    }
+
+    return { add, reset, snapshot };
+  }
+
+  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, createDiscoveryHistory, filenameForMime });
 })(typeof window !== 'undefined' ? window : globalThis);

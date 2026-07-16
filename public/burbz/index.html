@@ -599,7 +599,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-team-card span.btc-emoji { display: grid; place-items: center; font-size: 20px; }
 .squad-orb .bird-emoji-glyph { font-size: 27px; }
 .room-bird-option .bird-emoji-glyph { width: 48px; height: 48px; font-size: 30px; }
-.species-picker-row .bird-emoji-glyph { width: 40px; height: 40px; font-size: 26px; }
 .card-art .bird-emoji-glyph { position: absolute; inset: 0; font-size: 56px; }
 
 .card-level {
@@ -866,12 +865,21 @@ svg.academy-room-bg { display:block; filter:none; }
 @media (max-width:380px) { .merlin-listener-stage{min-height:305px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} .merlin-listening-dock{grid-template-columns:42px minmax(0,1fr) auto}.merlin-listening-dock img{width:42px;height:42px} }
 @media (prefers-reduced-motion:reduce) { .merlin-listener-stage.listening .merlin-wand-tip,.merlin-listener-stage.listening .merlin-wand-tip::before,.merlin-listener-stage.listening .merlin-wand-tip::after { animation:none !important; } }
 
-.scan-result {
-  margin-top: 16px; padding: 16px; background: var(--bg2); border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.05); display: none;
-}
+.scan-result { margin-top:16px; display:none; }
 .scan-result.show { display: block; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.scan-result-latest,.scan-session-discovery { padding:16px; background:var(--bg2); border-radius:12px; border:1px solid rgba(255,255,255,.05); }
+.scan-result-session-head { display:none; align-items:center; justify-content:space-between; gap:12px; margin:0 3px 9px; color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.09em; text-transform:uppercase; }
+.scan-result.sound-session .scan-result-session-head { display:flex; }
+.scan-result-count { min-width:28px; padding:3px 8px; border-radius:999px; border:1px solid rgba(126,217,131,.5); color:#b9f5bd; background:rgba(126,217,131,.14); text-align:center; }
+.scan-result-list { display:none; gap:10px; }
+.scan-result.sound-session .scan-result-list { display:grid; }
+.scan-result.sound-session .scan-result-latest { display:none; }
+.scan-session-discovery { position:relative; overflow:hidden; box-shadow:inset 3px 0 0 var(--discovery-colour,var(--green)); }
+.scan-session-discovery-name { font-family:'Russo One',sans-serif; font-size:18px; color:var(--discovery-colour,var(--green)); }
+.scan-session-discovery-sci { margin-top:2px; color:var(--text3); font-size:12px; font-style:italic; }
+.scan-session-discovery-meta { margin-top:9px; color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:800; }
+.scan-session-discovery-repeat { color:var(--text2); }
 .scan-result-name { font-family: 'Russo One', sans-serif; font-size: 18px; }
 .scan-result-sci { font-size: 12px; color: var(--text3); font-style: italic; margin-bottom: 8px; }
 .scan-result-conf { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--accent2); }
@@ -1383,8 +1391,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .recruit-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .recruit-list .bird-card { min-height:338px; }
 .recruit-close { width:100%; min-height:44px; margin-top:12px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
-.recruit-correct-btn { width:100%; min-height:46px; margin-top:10px; border-radius:12px; background:linear-gradient(180deg,#3a2c12,#241a0d); color:#f4ead4; border:1px solid rgba(214,168,79,.42); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13.5px; text-transform:uppercase; letter-spacing:.03em; }
-.recruit-correct-btn:active { transform:scale(.985); }
+
 
 /* Barracks recruitment: condensed Birdex roster -> full-card inspector. */
 .barracks-recruit-launch { display:flex; align-items:center; justify-content:center; gap:10px; width:calc(100% - 28px); min-height:58px; margin:14px; border-radius:16px; border:1px solid rgba(240,199,103,.48); background:linear-gradient(135deg,#d6a84f,#8b6325); color:#100c06; font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.05em; text-transform:uppercase; box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 20px rgba(214,168,79,.16); }
@@ -1423,16 +1430,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .barracks-detail-copy { margin:11px 0; color:var(--text2); font-size:12px; line-height:1.5; }
 .barracks-detail-recruit { width:100%; min-height:52px; border-radius:14px; background:linear-gradient(135deg,#f0c767,#b37a25); color:#100c06; font-family:'Russo One',sans-serif; font-size:14px; text-transform:uppercase; }
 .barracks-detail-recruit[disabled] { opacity:.42; filter:grayscale(.5); }
-.species-picker-search { width:100%; margin:10px 0; padding:12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(214,168,79,.32); color:#fff; font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700; }
-.species-picker-search:focus { outline:none; border-color:var(--legendary); }
-.species-picker-list { display:grid; gap:7px; max-height:52vh; overflow:auto; -webkit-overflow-scrolling:touch; }
-.species-picker-row { display:grid; grid-template-columns:40px minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px 9px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); text-align:left; color:#fff; cursor:pointer; }
-.species-picker-row:active { border-color:var(--legendary); background:rgba(214,168,79,.12); }
-.species-picker-row img { width:40px; height:40px; object-fit:contain; filter:drop-shadow(0 3px 5px rgba(0,0,0,.5)); }
-.species-picker-row .sp-emoji { font-size:26px; text-align:center; }
-.species-picker-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.species-picker-sub { font-size:9.5px; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.species-picker-rarity { font-size:9px; font-weight:900; text-transform:uppercase; }
+
 
 /* ========== INTRO CUTSCENE ========== */
 .intro-cutscene-overlay { position:fixed; inset:0; z-index:1400; display:none; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 18%, rgba(25,51,60,.72), rgba(0,0,0,.94) 68%); backdrop-filter:blur(10px); padding:calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom)); }
@@ -2191,9 +2189,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
 
       <div class="scan-result" id="scanResult">
-        <div class="scan-result-name" id="scanResultName"></div>
-        <div class="scan-result-sci" id="scanResultSci"></div>
-        <div class="scan-result-conf" id="scanResultConf"></div>
+        <div class="scan-result-session-head"><span>Discoveries this listen</span><span class="scan-result-count" id="scanResultCount">0</span></div>
+        <div class="scan-result-list" id="scanResultList" role="log" aria-live="polite" aria-relevant="additions text"></div>
+        <div class="scan-result-latest" id="scanResultLatest">
+          <div class="scan-result-name" id="scanResultName"></div>
+          <div class="scan-result-sci" id="scanResultSci"></div>
+          <div class="scan-result-conf" id="scanResultConf"></div>
+        </div>
       </div>
     </div>
 
@@ -2481,17 +2483,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
   </div>
 
-  <!-- Species picker: correct a wrong auto-ID / log a bird you already know -->
-  <div class="recruit-overlay species-picker-overlay" id="speciesPickerOverlay">
-    <div class="recruit-sheet">
-      <div class="modal-handle"></div>
-      <div class="recruit-title">What did you hear?</div>
-      <div class="recruit-copy">Pick the bird you actually saw or heard. It goes into your Birdex and replaces the auto-guess.</div>
-      <input type="search" id="speciesPickerSearch" class="species-picker-search" placeholder="Search e.g. Song Thrush" autocomplete="off" autocorrect="off" spellcheck="false">
-      <div class="species-picker-list" id="speciesPickerList"></div>
-      <button class="recruit-close" id="speciesPickerClose">Cancel</button>
-    </div>
-  </div>
 
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
@@ -2614,12 +2605,14 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=show-local-quests-v6-20260714"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
-<script src="sound_listener_core.js?v=merlin-wand-listener-v2-20260714"></script>
+<script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
 <script src="uk_bird_expansion_3.js?v=uk-regular-completion-20260715"></script>
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
+<script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
+<script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -2639,6 +2632,15 @@ const AU_EXP = window.BURBZ_AU_BIRD_EXPANSION;
 // Complete the practical RSPB/BTO UK field-guide scope and add 50 more source-backed Australian birds.
 const UK_FINAL = window.BURBZ_UK_BIRD_EXPANSION_FINAL;
 const AU50 = window.BURBZ_AU_BIRD_EXPANSION_50;
+const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
+  names: [], profiles: [], commonness: {}, regions: {},
+  addToRegionalPools() {},
+  addToHabitatPools() {},
+  isEligible() { return false; }
+};
+const SPAIN_BOUNDARY = window.BURBZ_SPAIN_BOUNDARY_20260715 || {
+  contains() { return false; }
+};
 
 // ============================================================================
 // CONSTANTS
@@ -3002,6 +3004,11 @@ WILD_BIRDS.push(...UK50.names);
 WILD_BIRDS.push(...UK26.names);
 WILD_BIRDS.push(...AU_EXP.names);
 WILD_BIRDS.push(...UK_FINAL.names, ...AU50.names);
+function addUniqueWildBird(name) {
+  if (!name) return;
+  if (!WILD_BIRDS.some(existing => normaliseSpeciesKey(existing) === normaliseSpeciesKey(name))) WILD_BIRDS.push(name);
+}
+NATIONAL.names.forEach(addUniqueWildBird);
 
 const HABITAT_BIRD_POOLS = {
   water: ['Kingfisher','Grey Wagtail','Dipper','Goosander','Heron','Sand Martin','Mallard','Little Grebe','Common Snipe','Sedge Warbler','Tufted Duck','Gadwall','Northern Shoveler','Common Pochard','Common Goldeneye','Greylag Goose','Common Sandpiper','Green-winged Teal','Great Crested Grebe','Eurasian Wigeon','Northern Pintail','Mandarin Duck','Whooper Swan','Egyptian Goose','Common Moorhen','Reed Warbler','Ringed Plover','Little Ringed Plover','European Shag','Water Rail'],
@@ -3018,7 +3025,14 @@ const HABITAT_BIRD_POOLS = {
 UK50.addToHabitatPools(HABITAT_BIRD_POOLS);
 UK26.addToHabitatPools(HABITAT_BIRD_POOLS);
 UK_FINAL.addToHabitatPools(HABITAT_BIRD_POOLS);
+function makeNationalRegionalHabitatPools() {
+  return { water:[], wetland:[], woodland:[], heath:[], park:[], farmland:[], grassland:[], urban:[], coast:[], hills:[], default:[] };
+}
+function cloneRegionalHabitatPools(source) {
+  return Object.fromEntries(Object.entries(source || {}).map(([habitat, names]) => [habitat, Array.isArray(names) ? names.slice() : []]));
+}
 const REGIONAL_HABITAT_BIRD_POOLS = {
+  uk: cloneRegionalHabitatPools(HABITAT_BIRD_POOLS),
   au: {
     water: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Eurasian Coot','Little Pied Cormorant','Australasian Swamphen','White-faced Heron','Royal Spoonbill','Australian Pelican','Black Swan','Grey Teal','Hardhead','Australasian Grebe','Hoary-headed Grebe','Little Black Cormorant','Australasian Darter','Blue-billed Duck','Great Egret','Whistling Kite'],
     wetland: ['Pacific Black Duck','Australian Wood Duck','Dusky Moorhen','Australasian Swamphen','Masked Lapwing','White-faced Heron','Royal Spoonbill','Australian Pelican','Willie Wagtail','Straw-necked Ibis','Pied Stilt','Buff-banded Rail','Nankeen Night Heron','Grey Teal','Great Egret','Sacred Kingfisher','Whistling Kite'],
@@ -3030,7 +3044,8 @@ const REGIONAL_HABITAT_BIRD_POOLS = {
     coast: ['Silver Gull','Australian Pelican','Little Pied Cormorant','White-faced Heron','Masked Lapwing','Royal Spoonbill','Australian Raven','Square-tailed Kite','Pacific Black Duck','Little Black Cormorant','Pied Stilt'],
     hills: ['Australian Raven','Square-tailed Kite','Little Raven','Wedge-tailed Eagle','Peregrine Falcon','Grey Butcherbird','Pied Currawong','Gang-gang Cockatoo','Yellow-tailed Black Cockatoo','Emu','Superb Lyrebird','Grey Currawong'],
     default: ['Australian Magpie','Willie Wagtail','Noisy Miner','Rainbow Lorikeet','Australian Raven','Square-tailed Kite','Little Corella','Welcome Swallow']
-  }
+  },
+  es: makeNationalRegionalHabitatPools()
 };
 const REGION_BLOCKED_SPECIES = {
   au: ['Nuthatch','European Robin','Robin','Blue Tit','Great Tit','Wood Pigeon','Carrion Crow','Jackdaw','Rook','Sedge Warbler','Curlew','Eurasian Tree Sparrow','Grey Partridge','Common Linnet','Bohemian Waxwing','Red Crossbill','Dipper','Goosander','Puffin','Razorbill','Gannet','Oystercatcher']
@@ -3060,9 +3075,22 @@ AU_EXP.addToRegionalPools(REGIONAL_HABITAT_BIRD_POOLS.au);
 REGION_AREA_SPECIES.uk.push(...UK_FINAL.names, ...UK_FINAL.regionalAliases);
 REGION_AREA_SPECIES.au.push(...AU50.names);
 AU50.addToRegionalPools(REGIONAL_HABITAT_BIRD_POOLS.au);
+REGION_AREA_SPECIES.es = [];
+function addUniqueToList(list, name) {
+  if (Array.isArray(list) && name && !list.includes(name)) list.push(name);
+}
+function addNationalSpawnableAreaSpecies(profile) {
+  if (!profile || !profile.regionData) return;
+  Object.entries(profile.regionData).forEach(([region, row]) => {
+    if (row && row.spawnable === true && REGION_AREA_SPECIES[region]) addUniqueToList(REGION_AREA_SPECIES[region], profile.name);
+  });
+}
+NATIONAL.profiles.forEach(addNationalSpawnableAreaSpecies);
+NATIONAL.addToRegionalPools(REGIONAL_HABITAT_BIRD_POOLS);
 const REGION_AREA_SPECIES_SETS = Object.fromEntries(Object.entries(REGION_AREA_SPECIES).map(([region, list]) => [region, new Set(list.map(s => s.toLowerCase()))]));
 function speciesNativeToRegion(species, region) {
-  const set = REGION_AREA_SPECIES_SETS[region] || REGION_AREA_SPECIES_SETS.uk;
+  const set = REGION_AREA_SPECIES_SETS[region];
+  if (!set) return false;
   return set.has(String(species || '').split('(')[0].trim().toLowerCase());
 }
 const HABITAT_LABELS = { water:'water / river edge', wetland:'wetland', woodland:'woodland', heath:'heathland', park:'park / garden', farmland:'farmland edge', grassland:'grassland', urban:'town habitat', coast:'coast', hills:'moor / hill country', default:'local habitat' };
@@ -3083,6 +3111,7 @@ Object.assign(REAL_WORLD_COMMONNESS, UK50.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, UK26.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, AU_EXP.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, UK_FINAL.commonness, AU50.commonness);
+Object.assign(REAL_WORLD_COMMONNESS, NATIONAL.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
 const BURBZ_MAP_VERSION = 'detailed-map-vicinity-visits-nolag-v2-20260706';
@@ -3386,7 +3415,7 @@ const DEFAULT_STATE = {
 
 let gameState;
 let cloudAuth = { configured: false, clientId: '', token: localStorage.getItem('burbz_cloud_token') || '', user: null, saveTimer: null, saving: false };
-let leaderboardState = { board: 'collection', data: { collection: [], mechanics: [] }, loaded: false };
+let leaderboardState = { board: 'collection', data: { collection: [], mechanics: [] }, loaded: false, ranked: false, message: '' };
 
 function clearBurbzLocalProgress() {
   try {
@@ -3487,7 +3516,8 @@ function loadState() {
     if (!b.care || typeof b.care !== 'object') b.care = JSON.parse(JSON.stringify(DEFAULT_STATE.birdCare));
     if (!b.training || typeof b.training !== 'object') b.training = { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
     if (b.training.chaBonus == null) b.training.chaBonus = 0;
-    if (b.cha == null) b.cha = generateBirdStats(b.species || b.commonName || 'Unknown Bird', b.basePower || b.power || 50, b.rarity || 'common').cha || 40;
+    b = migrateBirdToBiologyStats(b);
+    if (b.cha == null) b.cha = generateBirdStats(b.species || b.commonName || 'Unknown Bird', null, b.rarity || 'common').cha || 40;
     b.care.lastFed = b.care.lastFed || null;
     b.care.lastTrained = b.care.lastTrained || null;
     b.int = b.int || 50;
@@ -3545,7 +3575,7 @@ function updateCloudUi(message) {
     if (signOut) signOut.style.display = 'block';
   } else {
     nameEl.textContent = 'Cloud save';
-    statusEl.textContent = message || 'Sign in with Google to save progress and join leaderboards.';
+    statusEl.textContent = message || 'Sign in with Google to back up and sync your progress.';
     if (avatarEl) avatarEl.textContent = '☁️';
     if (signOut) signOut.style.display = 'none';
   }
@@ -4885,7 +4915,7 @@ const BURBZ_SPECIES_PROFILES = [{
     lat: 52.5, lon: -1.5
   },
   {
-    id: "buzzard", name: "Buzzard", rarity: "uncommon", aliases: ["Common Buzzard"],
+    id: "buzzard", name: "Buzzard", scientificName: "Buteo buteo", rarity: "uncommon", aliases: ["Common Buzzard","Buteo buteo"],
     stats: { hp: 6, stamina: 7, strength: 6, def: 7, spd: 6, int: 5 },
     traits: ["soaring raptor","broad-winged","opportunist","powerful"],
     rationale: "The UK’s commonest bird of prey, a broad-winged soarer that mews overhead; strong and capable, though outmatched in size by the true eagles.",
@@ -8007,6 +8037,19 @@ BURBZ_SPECIES_PROFILES.push(...UK50.profiles);
 BURBZ_SPECIES_PROFILES.push(...UK26.profiles);
 BURBZ_SPECIES_PROFILES.push(...AU_EXP.profiles);
 BURBZ_SPECIES_PROFILES.push(...UK_FINAL.profiles, ...AU50.profiles);
+function addNationalSpeciesProfiles(targetProfiles, nationalProfiles) {
+  const seenNames = new Set(targetProfiles.map(p => normaliseSpeciesKey(p && p.name)));
+  const seenScientific = new Set(targetProfiles.map(p => normaliseSpeciesKey((p && (p.scientificName || p.scientific)) || '')).filter(Boolean));
+  (nationalProfiles || []).forEach(profile => {
+    const nameKey = normaliseSpeciesKey(profile && profile.name);
+    const scientificKey = normaliseSpeciesKey((profile && (profile.scientificName || profile.scientific)) || '');
+    if (!nameKey || seenNames.has(nameKey) || (scientificKey && seenScientific.has(scientificKey))) return;
+    seenNames.add(nameKey);
+    if (scientificKey) seenScientific.add(scientificKey);
+    targetProfiles.push(profile);
+  });
+}
+addNationalSpeciesProfiles(BURBZ_SPECIES_PROFILES, NATIONAL.profiles);
 
 const BIRD_INFO_MAP_CENTER = { lat: 54.5, lon: -2.5, zoom: 4 }; // Centered on UK, suitable for general bird info
 const BIRD_INFO = {}; // Populated dynamically from BURBZ_SPECIES_PROFILES for quick lookup
@@ -8015,11 +8058,25 @@ function normaliseSpeciesKey(name) {
   return String(name || '').split('(')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+function registerBirdInfoKey(key, profile) {
+  if (!key) return;
+  const existing = BIRD_INFO[key];
+  const existingTaxon = existing && (existing.scientificName || existing.scientific || existing.name);
+  const incomingTaxon = profile && (profile.scientificName || profile.scientific || profile.name);
+  if (existing && existing !== profile && normaliseSpeciesKey(existingTaxon) !== normaliseSpeciesKey(incomingTaxon)) {
+    console.warn('Burbz catalogue alias collision rejected', key, existingTaxon, incomingTaxon);
+    return;
+  }
+  BIRD_INFO[key] = profile;
+}
+
 BURBZ_SPECIES_PROFILES.forEach(profile => {
-  BIRD_INFO[profile.name] = profile;
-  BIRD_INFO[normaliseSpeciesKey(profile.name)] = profile;
-  (profile.aliases || []).forEach(alias => { BIRD_INFO[alias] = profile; });
-  (profile.aliases || []).forEach(alias => { BIRD_INFO[normaliseSpeciesKey(alias)] = profile; });
+  registerBirdInfoKey(profile.name, profile);
+  registerBirdInfoKey(normaliseSpeciesKey(profile.name), profile);
+  (profile.aliases || []).forEach(alias => {
+    registerBirdInfoKey(alias, profile);
+    registerBirdInfoKey(normaliseSpeciesKey(alias), profile);
+  });
 });
 
 function findSpeciesProfile(speciesName) {
@@ -8047,6 +8104,7 @@ let birdEducationLoading = null;
 const BIRD_EDUCATION_URL = '/burbz/data/bird-education.json?v=recruitment-roost-20260701';
 const BIRD_EDUCATION_UK50_URL = '/burbz/data/uk-bird-education-50.json?v=au-source-backed-20260713';
 const BIRD_EDUCATION_REGIONAL_20260715_URL = '/burbz/data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715';
+const BIRD_EDUCATION_NATIONAL_20260715_URL = '/burbz/data/national-bird-completion/education.json?v=national-completion-20260715';
 
 async function fetchBirdEducationDataset(url, required = false) {
   try {
@@ -8070,10 +8128,11 @@ async function loadBirdEducation() {
     birdEducationLoading = Promise.all([
       fetchBirdEducationDataset(BIRD_EDUCATION_URL, false),
       fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, false),
-      fetchBirdEducationDataset(BIRD_EDUCATION_REGIONAL_20260715_URL, false)
-    ]).then(([base, uk50, regional20260715]) => {
+      fetchBirdEducationDataset(BIRD_EDUCATION_REGIONAL_20260715_URL, false),
+      fetchBirdEducationDataset(BIRD_EDUCATION_NATIONAL_20260715_URL, false)
+    ]).then(([base, uk50, regional20260715, national20260715]) => {
       const mergedExistingEducation = { ...(base || {}), ...(uk50 || {}) };
-      birdEducationCache = { ...mergedExistingEducation, ...(regional20260715 || {}) };
+      birdEducationCache = { ...mergedExistingEducation, ...(regional20260715 || {}), ...(national20260715 || {}) };
       return birdEducationCache;
     }).catch(err => {
       console.warn('BURBZ: UK50 education dataset unavailable', err);
@@ -8197,7 +8256,7 @@ function createRosterBird(speciesName) {
     xp: 0,
     captureDate: null,
     confidence: 0,
-    artUrl: resolveBuiltInBirdArt(speciesName) || null,
+    artUrl: (profile && profile.art) || resolveBuiltInBirdArt(speciesName) || null,
     previewOnly: true,
     ...stats
   };
@@ -8345,39 +8404,38 @@ function speciesPersonalityBase(profile) {
 function generateBirdStats(speciesName, basePower, rarity) {
   const profile = findSpeciesProfile(speciesName);
   if (profile) {
-    const rarityMult = { common: 1.0, uncommon: 1.2, rare: 1.5, epic: 1.8, legendary: 2.2 };
-    const mult = rarityMult[rarity] || 1.0;
-
+    // Biology owns combat ability. Rarity changes encounters, framing and
+    // rewards only; it must never turn a tiny vagrant into a heavyweight.
+    // Legacy basePower is intentionally ignored for canonical profiles.
     const baseStats = profile.stats;
-    const powerMult = basePower ? (basePower / 60) : 1; // Scale based on basePower if provided, otherwise default
-
-    const hp = Math.floor(baseStats.hp * 10 * mult * powerMult);
-    const stamina = Math.floor(baseStats.stamina * 10 * mult * powerMult);
-    const strength = Math.floor(baseStats.strength * 10 * mult * powerMult);
-    const def = Math.floor(baseStats.def * 10 * mult * powerMult);
-    const spd = Math.floor(baseStats.spd * 10 * mult * powerMult);
-    const int = Math.floor(baseStats.int * 10 * mult * powerMult);
-    const cha = Math.floor(speciesPersonalityBase(profile) * 10 * mult * powerMult);
+    const hp = 40 + Math.round(baseStats.hp * 10);
+    const stamina = Math.round(baseStats.stamina * 10);
+    const strength = Math.round(baseStats.strength * 10);
+    const def = Math.round(baseStats.def * 10);
+    const spd = Math.round(baseStats.spd * 10);
+    const int = Math.round(baseStats.int * 10);
+    const cha = Math.round(speciesPersonalityBase(profile) * 10);
 
     const specialMoveIndex = hashStr(speciesName + '_move') % SPECIAL_MOVES.length;
     const specialMove = SPECIAL_MOVES[specialMoveIndex];
     const emoji = BIRD_EMOJIS[hashStr(speciesName + '_emoji') % BIRD_EMOJIS.length];
 
-    const finalPower = Math.floor((hp * 0.2 + strength * 1.5 + def * 1.0 + spd * 1.2 + int * 0.8 + stamina * 0.7) * mult * 0.7);
+    const finalPower = Math.floor((hp * 0.2 + strength * 1.5 + def * 1.0 + spd * 1.2 + int * 0.8 + stamina * 0.7) * 0.7);
+    const biologicalBasePower = Math.round((hp + strength + def + spd + int + stamina) / 6);
 
     return {
       hp: clamp(hp, 50, 999),
       maxHp: clamp(hp, 50, 999),
-      atk: clamp(strength, 10, 999), // Using strength for ATK
+      atk: clamp(strength, 10, 999),
       def: clamp(def, 10, 999),
       spd: clamp(spd, 10, 999),
-      int: clamp(int, 10, 999), // New stat
-      cha: clamp(cha, 10, 999), // Personality (PER)
-      stamina: clamp(stamina, 10, 999), // New stat
+      int: clamp(int, 10, 999),
+      cha: clamp(cha, 10, 999),
+      stamina: clamp(stamina, 10, 999),
       specialMove,
       emoji,
       power: clamp(finalPower, 20, 9999),
-      basePower: basePower || Math.floor((hp+strength+def+spd+int+stamina)/6)
+      basePower: biologicalBasePower
     };
   } else {
     // Fallback to existing random generation if species not found in profiles
@@ -8421,6 +8479,34 @@ function generateBirdStats(speciesName, basePower, rarity) {
       stamina: 50 // Default for fallback
     };
   }
+}
+
+const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v2-20260715';
+
+function migrateBirdToBiologyStats(bird) {
+  if (!bird || bird.biologyStatsVersion === BIRD_BIOLOGY_STATS_VERSION) return bird;
+  const species = bird.species || bird.commonName || bird.name || '';
+  if (!findSpeciesProfile(species)) return bird; // Preserve unknown legacy companions.
+
+  const previousMaxHp = Math.max(1, Number(bird.maxHp || bird.hp || 1));
+  const healthRatio = clamp(Number(bird.hp || previousMaxHp) / previousMaxHp, 0, 1);
+  const base = generateBirdStats(species, null, bird.rarity || 'common');
+  const level = Math.max(1, Number(bird.level || 1));
+  const levelMult = level > 1 ? 1 + level * 0.04 : 1;
+  const training = bird.training || {};
+
+  bird.maxHp = clamp(Math.floor(base.hp * levelMult) + Number(training.hpBonus || 0), 50, 999);
+  bird.hp = clamp(Math.round(bird.maxHp * healthRatio), 0, bird.maxHp);
+  bird.atk = clamp(Math.floor(base.atk * levelMult) + Number(training.atkBonus || 0), 10, 999);
+  bird.def = clamp(Math.floor(base.def * levelMult) + Number(training.defBonus || 0), 10, 999);
+  bird.spd = clamp(Math.floor(base.spd * levelMult) + Number(training.spdBonus || 0), 10, 999);
+  bird.int = clamp(Math.floor(base.int * levelMult) + Number(training.intBonus || 0), 10, 999);
+  bird.stamina = clamp(Math.floor(base.stamina * levelMult) + Number(training.staminaBonus || 0), 10, 999);
+  bird.cha = clamp(Math.floor(base.cha * levelMult) + Number(training.chaBonus || 0), 10, 999);
+  bird.basePower = base.basePower;
+  bird.power = clamp(Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (levelMult * 0.7)), 20, 9999);
+  bird.biologyStatsVersion = BIRD_BIOLOGY_STATS_VERSION;
+  return bird;
 }
 
 function determineBirdRarity(speciesName, confidence) {
@@ -9137,23 +9223,27 @@ function syncFlockArtUrls() {
 
 
 function createBirdEntry(speciesName, scientificName, confidence) {
-  const rarity = determineBirdRarity(speciesName, confidence);
-  const stats = generateBirdStats(speciesName, null, rarity);
+  const profile = findSpeciesProfile(speciesName) || findSpeciesProfile(scientificName);
+  const canonicalName = profile?.name || String(speciesName || '').split('(')[0].trim();
+  const canonicalScientificName = profile?.scientificName || scientificName || '';
+  const rarity = determineBirdRarity(canonicalName, confidence);
+  const stats = generateBirdStats(canonicalName, null, rarity);
 
   return {
-    id: Date.now() + '_' + hashStr(speciesName),
-    species: speciesName,
-    scientificName: scientificName || '',
-    commonName: speciesName.split('(')[0].trim(),
+    id: Date.now() + '_' + hashStr(canonicalName),
+    species: canonicalName,
+    scientificName: canonicalScientificName,
+    commonName: canonicalName,
     rarity,
     level: 1,
     xp: 0,
     captureDate: new Date().toISOString(),
     confidence: confidence || 0,
-    artUrl: resolveBuiltInBirdArt(speciesName) || null,
+    artUrl: resolveBuiltInBirdArt(canonicalName) || null,
     care: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null }, // Per-bird care state
     training: { feedCount: 0, trainCount: 0 }, // Per-bird training state
     academy: { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null }, // Starts unlocked for Academy play
+    biologyStatsVersion: BIRD_BIOLOGY_STATS_VERSION,
     ...stats
   };
 }
@@ -11336,7 +11426,7 @@ function showToast(msg) {
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapPropMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, simulateScan(name, sci, conf, opts) { return handleBirdCandidates({ species: name, scientificName: sci || '', confidence: conf || 0.4 }, [], opts || {}); }, correctScan(name) { return correctScanDiscovery(name); }, pickerSpecies() { return allSpeciesForPicker(); } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -12739,7 +12829,7 @@ async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accura
     liveMapFeatureCount = 0;
     drawBirdSpawns([]);
     updateNearbyCard([], 0);
-    setMapLabels(source, 'Burbz currently supports local bird spawning in the UK and Australia; your exact player marker remains here.');
+    setMapLabels(source, 'Burbz currently supports local bird spawning in the UK, Australia, mainland Spain and the Balearics; your exact player marker remains here.');
     return;
   }
   // Every GPS tick used to re-query Overpass and tear down + rebuild every marker
@@ -12754,8 +12844,50 @@ async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accura
   const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
 async function fetchNearbyHabitatFeatures(lat, lon, radius = 1400) { radius = Math.max(300, Math.min(8000, Math.round(radius))); const query = `[out:json][timeout:8];(node(around:${radius},${lat},${lon})[natural];way(around:${radius},${lat},${lon})[natural];relation(around:${radius},${lat},${lon})[natural];node(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];way(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];relation(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];node(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];way(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];relation(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];node(around:${radius},${lat},${lon})[waterway];way(around:${radius},${lat},${lon})[waterway];node(around:${radius},${lat},${lon})[water];way(around:${radius},${lat},${lon})[water];);out center tags 70;`; const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body:'data=' + encodeURIComponent(query) }); if (!res.ok) throw new Error('Overpass ' + res.status); const data = await res.json(); return (data.elements || []).map(el => ({ lat:el.lat || (el.center && el.center.lat), lon:el.lon || (el.center && el.center.lon), tags:el.tags || {} })).filter(f => Number.isFinite(f.lat) && Number.isFinite(f.lon)); }
 function classifyHabitat(tags = {}) { const natural = tags.natural || '', landuse = tags.landuse || '', leisure = tags.leisure || '', waterway = tags.waterway || ''; if (natural === 'coastline' || tags.place === 'sea' || /beach|bay|strait/.test(natural)) return 'coast'; if (waterway || /water|river|stream|lake|pond|reservoir/.test(natural + ' ' + (tags.water || ''))) return 'water'; if (/wetland|marsh|reedbed|fen|bog/.test(natural)) return 'wetland'; if (/heath/.test(natural)) return 'heath'; if (/tree|wood|forest|scrub/.test(natural) || /forest|orchard/.test(landuse)) return 'woodland'; if (/park|garden|nature_reserve|recreation_ground/.test(leisure + ' ' + landuse)) return 'park'; if (/farmland|farmyard|allotments/.test(landuse)) return 'farmland'; if (/grassland|meadow|grass/.test(natural + ' ' + landuse)) return 'grassland'; if (/peak|fell|scree/.test(natural)) return 'hills'; return 'urban'; }
+function coordInBox(lat, lon, box) {
+  return Number.isFinite(lat) && Number.isFinite(lon) && lat >= box.latMin && lat <= box.latMax && lon >= box.lonMin && lon <= box.lonMax;
+}
+function coordInPolygon(lat, lon, polygon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const yi = polygon[i][0], xi = polygon[i][1], yj = polygon[j][0], xj = polygon[j][1];
+    const crosses = ((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-9) + xi);
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+const AUSTRALIA_MAINLAND_POLYGON = [
+  [-10.3,142.0],[-11.4,132.0],[-13.8,126.0],[-17.7,122.0],[-22.5,113.5],[-30.5,114.7],
+  [-34.9,115.7],[-35.1,118.6],[-34.9,123.5],[-32.2,128.8],[-31.8,133.7],[-35.2,138.6],
+  [-38.7,145.0],[-37.7,150.3],[-34.0,151.5],[-28.2,153.7],[-24.5,152.0],[-20.0,148.7],
+  [-15.6,145.3]
+];
+const AUSTRALIA_TASMANIA_POLYGON = [[-40.5,144.5],[-41.0,148.4],[-43.7,148.5],[-43.9,145.7],[-43.2,144.2],[-41.2,143.8]];
+const AUSTRALIA_EXTERNAL_TERRITORY_BOXES = [
+  { latMin:-10.7, latMax:-10.3, lonMin:105.4, lonMax:105.8 },
+  { latMin:-12.4, latMax:-11.7, lonMin:96.6, lonMax:97.2 },
+  { latMin:-29.2, latMax:-28.8, lonMin:167.8, lonMax:168.1 },
+  { latMin:-31.8, latMax:-31.4, lonMin:159.0, lonMax:159.2 },
+  { latMin:-54.9, latMax:-54.4, lonMin:158.7, lonMax:159.1 }
+];
+function supportedAustraliaCoords(lat, lon) {
+  return coordInPolygon(lat, lon, AUSTRALIA_MAINLAND_POLYGON)
+    || coordInPolygon(lat, lon, AUSTRALIA_TASMANIA_POLYGON)
+    || AUSTRALIA_EXTERNAL_TERRITORY_BOXES.some(box => coordInBox(lat, lon, box));
+}
+
+// Move the region mapping logic after the boundary scripts are loaded
 function mapRegionForCoords(lat, lon) {
-  return UK50.supportedRegionForCoords(lat, lon);
+  lat = Number(lat);
+  lon = Number(lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return 'unsupported';
+  const legacyRegion = UK50.supportedRegionForCoords(lat, lon);
+  if (legacyRegion === 'uk') return 'uk';
+  if (SPAIN_BOUNDARY.contains(lat, lon)) return 'es';
+  if (legacyRegion === 'au' && supportedAustraliaCoords(lat, lon)) return 'au';
+  return 'unsupported';
 }
 function speciesAllowedInRegion(species, region) {
   const blocked = REGION_BLOCKED_SPECIES[region] || [];
@@ -12763,7 +12895,8 @@ function speciesAllowedInRegion(species, region) {
 }
 function habitatPoolForRegion(habitat, region) {
   const regional = REGIONAL_HABITAT_BIRD_POOLS[region] || null;
-  return (regional && (regional[habitat] || regional.default)) || HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default;
+  if (!regional) return [];
+  return regional[habitat] || regional.default || [];
 }
 function pickWeightedHabitatSpecies(pool, seed) {
   if (!pool.length) return null;
@@ -12781,13 +12914,18 @@ function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, m
   // extended with world-roster species for scanning, but an Emu must never
   // appear as an "area bird" in Cheshire. UK50 adds season and coarse-range
   // checks only for its own species, and deliberately fails open for old saves.
+  if (!region || region === 'unsupported') return null;
   const native = species => speciesNativeToRegion(species, region) && speciesAllowedInRegion(species, region);
-  const eligible = species => region === 'uk'
-    ? (UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat))
-    : (region === 'au' ? AU50.isEligible(species, lat, lon, month, habitat) : true);
+  const eligible = species => {
+    if (NATIONAL.isEligible(region, species, lat, lon, month, habitat)) return true;
+    if (NATIONAL.names.some(name => normaliseSpeciesKey(name) === normaliseSpeciesKey(species))) return false;
+    if (region === 'uk') return UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat);
+    if (region === 'au') return AU50.isEligible(species, lat, lon, month, habitat);
+    return false;
+  };
   let pool = habitatPoolForRegion(habitat, region).filter(species => native(species) && eligible(species) && (findSpeciesProfile(species) || WILD_BIRDS.includes(species)));
-  if (!pool.length) pool = (HABITAT_BIRD_POOLS[habitat] || HABITAT_BIRD_POOLS.default).filter(species => native(species) && eligible(species));
-  if (!pool.length) pool = (REGION_AREA_SPECIES[region] || REGION_AREA_SPECIES.uk).filter(eligible);
+  if (!pool.length) pool = (REGION_AREA_SPECIES[region] || []).filter(eligible);
+  if (!pool.length) return null;
   const species = pickWeightedHabitatSpecies(pool, seed);
   return findSpeciesProfile(species) || createRosterBird(species);
 }
@@ -12798,8 +12936,9 @@ function buildBirdSpawns(lat, lon, features) {
   const useful = features.slice(0,18).map((feature,i) => {
     const habitat = classifyHabitat(feature.tags);
     const seed = hashStr(`${feature.lat.toFixed(5)},${feature.lon.toFixed(5)},${habitat},${region},${i}`);
-    return { lat:feature.lat, lon:feature.lon, habitat, bird:pickHabitatBird(habitat, seed, region, feature.lat, feature.lon, month), seed, realFeature:true, region };
-  });
+    const bird = pickHabitatBird(habitat, seed, region, feature.lat, feature.lon, month);
+    return bird ? { lat:feature.lat, lon:feature.lon, habitat, bird, seed, realFeature:true, region } : null;
+  }).filter(Boolean);
   const seenHabitats = new Set(useful.map(s => s.habitat));
   ['urban','park','woodland','grassland','water','wetland','farmland'].forEach((habitat,i) => {
     if (useful.length >= 10 && seenHabitats.has(habitat)) return;
@@ -12808,7 +12947,8 @@ function buildBirdSpawns(lat, lon, features) {
     const spawnLat = lat + Math.cos(angle) * dist;
     const spawnLon = lon + Math.sin(angle) * dist / Math.max(.35, Math.cos(lat * Math.PI / 180));
     const seed = hashStr(`${spawnLat.toFixed(5)},${spawnLon.toFixed(5)},${habitat},${region}`);
-    useful.push({ lat:spawnLat, lon:spawnLon, habitat, bird:pickHabitatBird(habitat, seed, region, spawnLat, spawnLon, month), seed, realFeature:false, region });
+    const bird = pickHabitatBird(habitat, seed, region, spawnLat, spawnLon, month);
+    if (bird) useful.push({ lat:spawnLat, lon:spawnLon, habitat, bird, seed, realFeature:false, region });
   });
   if (region === 'au' && !useful.some(spawn => (spawn.bird.commonName || spawn.bird.name || spawn.bird.species) === 'Australian Raven')) {
     const seed = hashStr(`${lat.toFixed(5)},${lon.toFixed(5)},australian-raven,${region}`);
@@ -13114,10 +13254,6 @@ function switchScreen(name) {
 // epic or a legendary is a long-term saving goal players work towards.
 const RARITY_RECRUIT_COST = { common: 150, uncommon: 400, rare: 1000, epic: 2500, legendary: 6000 };
 const RARITY_DISCOVERY_REWARD = { common: 14, uncommon: 22, rare: 34, epic: 55, legendary: 90 };
-// A "pioneer" find — a real bird that isn't in Burbz yet. Deliberately a huge,
-// celebratory payout (worth several common recruits) so finding an uncharted
-// species feels like a genuine achievement. Reported to the Burbz team inbox.
-const PIONEER_DISCOVERY_REWARD = { coins: 500, xp: 100, keepsake: 'golden_feather' };
 const CONTINUOUS_SOUND_DISCOVERY_MARKER = 'continuous-sound-discovery-v2-20260709';
 
 function speciesKey(name) { return String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); }
@@ -15201,75 +15337,7 @@ function renderRpgHud() {
   [['burbzCoins', gameState.player.coins || 0], ['burbzCompanions', companions], ['burbzInventory', items], ['profileCoins', gameState.player.coins || 0], ['profileInventory', items], ['profileGifts', giftItemCount()], ['inventoryCoins', gameState.player.coins || 0], ['inventoryItems', items], ['inventoryGifts', giftItemCount()]].forEach(([id, val]) => { const el = $(id); if (el) el.textContent = val; });
 }
 
-// ---- Correct a wrong auto-ID (the sound/photo scanner's top guess) ----------
-// Field bird ID is never perfect, so let the player confirm the species — the
-// way Merlin makes you confirm — instead of silently trusting one guess.
-let scanCorrectContext = null;
-
-function removeDiscoveredSpecies(name) {
-  if (!gameState.discoveredSpecies) return false;
-  const canonical = canonicalSpeciesName(name);
-  const keys = new Set([speciesKey(canonical), ...discoveryKeysForSpecies(canonical)]);
-  let removed = false;
-  keys.forEach(k => { if (k && gameState.discoveredSpecies[k]) { delete gameState.discoveredSpecies[k]; removed = true; } });
-  return removed;
-}
-
-function allSpeciesForPicker() {
-  const areaFirst = new Set((likelyBirdRows(liveMapSpawns || []) || []).map(r => speciesKey(canonicalSpeciesName(r.species))));
-  const seen = new Set(), list = [];
-  (BURBZ_SPECIES_PROFILES || []).forEach(p => {
-    const key = speciesKey(p.name);
-    if (!key || seen.has(key)) return; seen.add(key);
-    list.push({ name: p.name, rarity: p.rarity || 'common', habitat: p.habitat || '', near: areaFirst.has(key) });
-  });
-  list.sort((a, b) => (b.near - a.near) || a.name.localeCompare(b.name));
-  return list;
-}
-
-function openSpeciesPicker(onPick) {
-  const overlay = $('speciesPickerOverlay'), listEl = $('speciesPickerList'), search = $('speciesPickerSearch');
-  if (!overlay || !listEl) return;
-  const all = allSpeciesForPicker();
-  const render = q => {
-    const query = (q || '').trim().toLowerCase();
-    const rows = all.filter(s => !query || s.name.toLowerCase().includes(query)).slice(0, 60);
-    listEl.innerHTML = rows.map(s => {
-      const media = birdOnlyImgHTML({ commonName: s.name }, 'sp-art');
-      const col = RARITY_COLORS[s.rarity] || RARITY_COLORS.common;
-      const sub = s.near ? 'Seen in this area' : (s.habitat || '').split(',')[0];
-      return `<button class="species-picker-row" data-name="${escapeHtml(s.name)}">${media}<div><div class="species-picker-name">${escapeHtml(s.name)}</div><div class="species-picker-sub">${escapeHtml(sub)}</div></div><div class="species-picker-rarity" style="color:${col}">${escapeHtml(s.rarity)}</div></button>`;
-    }).join('') || '<div class="map-area-birds-sub" style="padding:14px">No match — try another name.</div>';
-    listEl.querySelectorAll('.species-picker-row').forEach(btn => btn.addEventListener('click', () => { overlay.classList.remove('show'); onPick(btn.dataset.name); }));
-  };
-  if (search) { search.value = ''; search.oninput = () => render(search.value); }
-  render('');
-  overlay.classList.add('show');
-  setTimeout(() => { try { search && search.focus(); } catch (_) {} }, 120);
-}
-
-
-function correctScanDiscovery(chosenName) {
-  const wrongNames = (scanCorrectContext && scanCorrectContext.names) || [];
-  const chosenKey = speciesKey(canonicalSpeciesName(chosenName));
-  // Drop the wrong auto-logged species (but keep any the player already recruited).
-  wrongNames.forEach(wrong => {
-    if (speciesKey(canonicalSpeciesName(wrong)) === chosenKey) return;
-    if (companionForSpecies(wrong)) return;
-    removeDiscoveredSpecies(wrong);
-  });
-  const bird = createBirdEntry(chosenName, '', 1);
-  rememberDiscoveredBird(bird);
-  try { questRegisterBirdEncounter(bird); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
-  fetchBirdArt(chosenName);
-  saveState(); updateHeader(); renderBirdex(); renderProfile();
-  const wrongLabel = (wrongNames[0] && speciesKey(canonicalSpeciesName(wrongNames[0])) !== chosenKey) ? ' instead of ' + wrongNames[0] : '';
-  showToast('✓ Logged ' + bird.commonName + wrongLabel);
-  scanCorrectContext = { names: [bird.commonName] };
-  showRecruitChoiceOverlay([bird], 'Corrected · ' + bird.commonName + ' added to Birdex · recruit at Barracks.', { correctable: true });
-}
-
-function showRecruitChoiceOverlay(birds, message, opts = {}) {
+function showRecruitChoiceOverlay(birds, message) {
   const choices = (birds || []).filter(Boolean).reduce((acc, bird) => {
     const key = speciesKey(bird.species || bird.commonName);
     if (key && !acc.some(b => speciesKey(b.species || b.commonName) === key)) acc.push(bird);
@@ -15281,15 +15349,6 @@ function showRecruitChoiceOverlay(birds, message, opts = {}) {
   $('recruitCopy').textContent = message || 'Added to Birdex · recruit at the Academy Barracks.';
   $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0);
   list.innerHTML = choices.map((bird, idx) => createKnownSpeciesCardHTML(bird, idx)).join('');
-  // "Wrong bird?" correction affordance for scan results.
-  const closeBtn = $('recruitClose');
-  let correctBtn = $('recruitCorrectBtn');
-  if (opts.correctable && closeBtn) {
-    if (!correctBtn) { correctBtn = document.createElement('button'); correctBtn.id = 'recruitCorrectBtn'; correctBtn.className = 'recruit-correct-btn'; closeBtn.parentNode.insertBefore(correctBtn, closeBtn); }
-    correctBtn.textContent = '🔍 Not the right bird? Pick what you heard';
-    correctBtn.style.display = '';
-    correctBtn.onclick = () => { overlay.classList.remove('show'); openSpeciesPicker(name => correctScanDiscovery(name)); };
-  } else if (correctBtn) { correctBtn.style.display = 'none'; }
   overlay.classList.add('show');
 }
 
@@ -15319,6 +15378,48 @@ function showScanEncounterCard(bird, isNewDiscovery) {
   setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 260); }, 6500);
 }
 
+function renderSoundSessionDiscoveries() {
+  const resultEl = $('scanResult');
+  const list = $('scanResultList');
+  const count = $('scanResultCount');
+  if (!resultEl || !list) return;
+  const discoveries = soundDiscoveryHistory.snapshot();
+  resultEl.classList.add('sound-session');
+  if (count) count.textContent = String(discoveries.length);
+  list.innerHTML = discoveries.map(row => {
+    const colour = RARITY_COLORS[row.rarity] || RARITY_COLORS.common;
+    const heardCount = row.count > 1 ? ' · Heard ' + row.count + ' times' : '';
+    return '<article class="scan-session-discovery" data-species-key="' + escapeHtml(row.key) + '" style="--discovery-colour:' + escapeHtml(colour) + '">' +
+      '<div class="scan-session-discovery-name">' + escapeHtml(row.name) + '</div>' +
+      '<div class="scan-session-discovery-sci">' + escapeHtml(row.scientificName || '') + '</div>' +
+      '<div class="scan-session-discovery-meta">' + Math.round((Number(row.confidence) || 0) * 100) + '% confidence · ' +
+      escapeHtml(String(row.rarity || 'common').toUpperCase()) + ' · ' + (row.isNew ? 'New discovery' : 'Known bird') +
+      '<span class="scan-session-discovery-repeat">' + heardCount + '</span></div></article>';
+  }).join('');
+  resultEl.classList.toggle('show', !!discoveries.length && currentScreen === 'scan' && scanMode === 'sound');
+}
+
+function recordSoundSessionDiscovery(bird, isNewDiscovery) {
+  if (!bird) return null;
+  const canonical = canonicalSpeciesName(bird.species || bird.commonName);
+  const profile = findSpeciesProfile(canonical) || findSpeciesProfile(bird.scientificName);
+  const recorded = soundDiscoveryHistory.add({
+    key: speciesKey(canonical),
+    name: profile?.name || bird.commonName || canonical,
+    scientificName: profile?.scientificName || bird.scientificName || '',
+    confidence: Number(bird.confidence) || 0,
+    rarity: profile?.rarity || bird.rarity || 'common',
+    isNew: !!isNewDiscovery
+  });
+  renderSoundSessionDiscoveries();
+  return recorded;
+}
+window.__burbzSoundDiscoveryDebug = {
+  add: (bird, isNewDiscovery = true) => recordSoundSessionDiscovery(bird, isNewDiscovery),
+  reset: () => { soundDiscoveryHistory.reset(); renderSoundSessionDiscoveries(); },
+  snapshot: () => soundDiscoveryHistory.snapshot()
+};
+
 function handleBirdCandidates(primary, detections = [], opts = {}) {
   const candidates = [];
   if (primary && primary.species) candidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
@@ -15327,181 +15428,55 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
   });
   const top = candidates[0];
-  // A "pioneer" bird is one the game has never seen: the backend confirms it is
-  // not in the species catalogue AND the front-end has no profile for it. Those
-  // get the big celebration + a report to the team instead of the normal flow.
-  const pioneer = !!(top && isNewToGameSpecies(top.species, opts.catalogMatched));
+  const catalogMatched = opts.catalogMatched !== false;
+  if (top && !catalogMatched) {
+    showCatalogUnmatchedRecognition(top);
+    return;
+  }
   const newDiscoveries = [];
-  // Only the backend's confident winner is an automatic Birdex discovery. The
-  // weaker ranked detections stay available for correction, but never become
-  // accidental catches of their own.
-  if (top && rememberDiscoveredBird(top, { silent: pioneer })) newDiscoveries.push(top);
+  // Only the backend's confident winner is an automatic Birdex discovery.
+  if (top && rememberDiscoveredBird(top)) newDiscoveries.push(top);
   if (top) fetchBirdArt(top.species);
-  // Remember what the scanner guessed so the player can correct a wrong ID.
-  scanCorrectContext = { names: candidates.map(b => b.commonName || b.species).filter(Boolean) };
   if (top) {
-    const resultEl = $('scanResult');
-    resultEl.classList.add('show');
-    $('scanResultName').textContent = top.commonName;
-    $('scanResultName').style.color = RARITY_COLORS[top.rarity];
-    $('scanResultSci').textContent = top.scientificName || top.species;
-    $('scanResultConf').textContent = `${Math.round((top.confidence || 0) * 100)}% confidence | ${top.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
-    showScanEncounterCard(top, newDiscoveries.some(b => speciesKey(canonicalSpeciesName(b.species || b.commonName)) === speciesKey(canonicalSpeciesName(top.species || top.commonName))));
+    const isNewDiscovery = newDiscoveries.some(b => speciesKey(canonicalSpeciesName(b.species || b.commonName)) === speciesKey(canonicalSpeciesName(top.species || top.commonName)));
+    if (opts.source === 'sound' && continuousSoundScanWanted) {
+      recordSoundSessionDiscovery(top, isNewDiscovery);
+    } else {
+      const resultEl = $('scanResult');
+      resultEl.classList.remove('sound-session');
+      resultEl.classList.add('show');
+      $('scanResultName').textContent = top.commonName;
+      $('scanResultName').style.color = RARITY_COLORS[top.rarity];
+      $('scanResultSci').textContent = top.scientificName || top.species;
+      $('scanResultConf').textContent = `${Math.round((top.confidence || 0) * 100)}% confidence | ${top.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
+    }
+    showScanEncounterCard(top, isNewDiscovery);
   }
   if (top) { try { questRegisterBirdEncounter(top); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); } }
-  // Uncharted bird → its own celebration + team report; skip the normal overlay.
-  if (pioneer) { handlePioneerDiscovery(top, opts); return; }
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.', { correctable: true });
+    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   } else if (top) {
     const existing = companionForSpecies(top.species);
     if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.', { correctable: true }); }
+    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.'); }
   }
 }
 
-// ============================================================================
-// PIONEER DISCOVERIES — a real bird that isn't in Bird Burbz yet
-// ============================================================================
-// The scanner recognised a genuine species we have never added to the game.
-// That is a rare, special thing: we reward it lavishly and quietly report it to
-// the Burbz team so the bird can be added. A species only counts as "new" when
-// BOTH oracles agree it is unknown — the backend catalogue (birds.json) and the
-// front-end profile list — which keeps false positives from paying out.
-function isNewToGameSpecies(species, catalogMatched) {
-  if (catalogMatched !== false) return false; // only when the server is sure it's not catalogued
-  return !findSpeciesProfile(species);
-}
-
-function handlePioneerDiscovery(bird, opts = {}) {
+function showCatalogUnmatchedRecognition(bird) {
   if (!bird) return;
-  if (!gameState.pioneerFinds || typeof gameState.pioneerFinds !== 'object') gameState.pioneerFinds = {};
-  const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
-  fetchBirdArt(bird.species); // even an uncharted bird gets manga art generated for it
-
-  if (gameState.pioneerFinds[key]) {
-    // Already celebrated this one — don't re-pay or re-report (the server dedupes too).
-    saveState(); updateHeader(); renderBirdex(); renderProfile();
-    showToast('🗺️ ' + (bird.commonName || bird.species) + ' — still uncharted, already in your Birdex.');
-    return;
+  fetchBirdArt(bird.species);
+  const resultEl = $('scanResult');
+  if (resultEl) {
+    resultEl.classList.add('show');
+    $('scanResultName').textContent = bird.commonName || bird.species;
+    $('scanResultName').style.color = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
+    $('scanResultSci').textContent = bird.scientificName || bird.species;
+    $('scanResultConf').textContent = `${Math.round((bird.confidence || 0) * 100)}% confidence | Not in the Burbz catalogue yet`;
   }
-
-  const reward = PIONEER_DISCOVERY_REWARD;
-  gameState.pioneerFinds[key] = { species: canonicalSpeciesName(bird.species || bird.commonName), at: new Date().toISOString() };
-  gameState.player.pioneerCount = (gameState.player.pioneerCount || 0) + 1;
-  addCoins(reward.coins);
-  addPlayerXp(reward.xp);
-  gameState.inventory = gameState.inventory || { items: {} };
-  gameState.inventory.items = gameState.inventory.items || {};
-  gameState.inventory.items[reward.keepsake] = (gameState.inventory.items[reward.keepsake] || 0) + 1;
-  try { SFX.capture(); } catch (e) {}
-  saveState(); updateHeader(); renderBirdex(); renderProfile();
-  showPioneerOverlay(bird, reward);
-  reportNewBird(bird, opts);
-}
-
-function showPioneerOverlay(bird, reward) {
-  if (!document.getElementById('pioneerOverlayStyles')) {
-    const style = document.createElement('style');
-    style.id = 'pioneerOverlayStyles';
-    style.textContent = `
-      .pioneer-overlay{position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;padding:22px;
-        background:radial-gradient(circle at 50% 30%, rgba(70,54,10,.86), rgba(6,10,20,.94));backdrop-filter:blur(4px);
-        opacity:0;transition:opacity .25s ease;overflow:hidden}
-      .pioneer-overlay.show{opacity:1}
-      .pioneer-card{position:relative;max-width:420px;width:100%;text-align:center;border-radius:22px;padding:26px 22px 22px;
-        background:linear-gradient(180deg, rgba(31,26,12,.96), rgba(18,16,26,.98));
-        border:1px solid rgba(255,210,90,.55);box-shadow:0 0 0 1px rgba(255,210,90,.18),0 24px 70px rgba(0,0,0,.6),inset 0 0 40px rgba(255,196,64,.08);
-        transform:translateY(18px) scale(.96);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
-      .pioneer-overlay.show .pioneer-card{transform:translateY(0) scale(1)}
-      .pioneer-kicker{font-size:12px;letter-spacing:2.5px;font-weight:800;color:#ffd770;text-transform:uppercase}
-      .pioneer-badge{width:104px;height:104px;margin:14px auto 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-        font-size:52px;background:radial-gradient(circle at 50% 38%, #fff2c2, #f4b93c 55%, #b9781a);
-        box-shadow:0 0 34px rgba(255,196,64,.65),inset 0 -6px 14px rgba(120,70,0,.4);animation:pioneerPulse 1.8s ease-in-out infinite}
-      @keyframes pioneerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-      .pioneer-name{font-size:26px;font-weight:800;color:#fff;margin:8px 0 2px;line-height:1.15}
-      .pioneer-sci{font-size:13px;font-style:italic;color:#d9c48a;margin-bottom:12px}
-      .pioneer-blurb{font-size:14px;color:#e8e4d6;line-height:1.5;margin:0 auto 14px;max-width:330px}
-      .pioneer-rewards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
-      .pioneer-chip{background:rgba(255,210,90,.12);border:1px solid rgba(255,210,90,.4);color:#ffe9a8;font-weight:800;
-        font-size:14px;padding:8px 12px;border-radius:12px}
-      .pioneer-note{font-size:12px;color:#b9b3a0;line-height:1.45;margin:0 auto 16px;max-width:320px}
-      .pioneer-note b{color:#ffd770}
-      .pioneer-dismiss{width:100%;padding:14px;border:none;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:.5px;cursor:pointer;
-        color:#241a05;background:linear-gradient(180deg,#ffe08a,#f2b53a);box-shadow:0 8px 22px rgba(242,181,58,.4)}
-      .pioneer-confetti{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;opacity:.9;animation:pioneerFall linear forwards}
-      @keyframes pioneerFall{to{transform:translateY(115vh) rotate(540deg);opacity:.2}}
-    `;
-    document.head.appendChild(style);
-  }
-  const prev = document.getElementById('pioneerOverlay');
-  if (prev) prev.remove();
-  const art = getBirdArtUrl(bird);
-  const badgeInner = art ? '<img src="' + escapeHtml(art) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : (bird.emoji || '🪶');
-  const overlay = document.createElement('div');
-  overlay.className = 'pioneer-overlay';
-  overlay.id = 'pioneerOverlay';
-  overlay.innerHTML =
-    '<div class="pioneer-card">' +
-      '<div class="pioneer-kicker">🗺️ Uncharted Discovery</div>' +
-      '<div class="pioneer-badge">' + badgeInner + '</div>' +
-      '<div class="pioneer-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
-      '<div class="pioneer-sci">' + escapeHtml(bird.scientificName || bird.species || '') + '</div>' +
-      '<div class="pioneer-blurb">You are the <b>first Burbz explorer</b> to find this bird — it isn\'t in the game yet! A true pioneer of the flock.</div>' +
-      '<div class="pioneer-rewards">' +
-        '<div class="pioneer-chip">+' + reward.coins + ' 🪙</div>' +
-        '<div class="pioneer-chip">+' + reward.xp + ' XP</div>' +
-        '<div class="pioneer-chip">🪶 Golden Feather</div>' +
-      '</div>' +
-      '<div class="pioneer-note">Your discovery has been <b>sent to the Burbz team</b> so this species can be added to the game. Thank you, explorer!</div>' +
-      '<button class="pioneer-dismiss" id="pioneerDismiss">AMAZING!</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
-  // Gold confetti burst.
-  const colors = ['#ffd770', '#f2b53a', '#fff2c2', '#ffb347'];
-  for (let i = 0; i < 24; i++) {
-    const c = document.createElement('div');
-    c.className = 'pioneer-confetti';
-    c.style.left = Math.round(Math.random() * 100) + '%';
-    c.style.background = colors[i % colors.length];
-    c.style.animationDuration = (1.8 + Math.random() * 1.6).toFixed(2) + 's';
-    c.style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
-    overlay.appendChild(c);
-  }
-  const close = () => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 300); };
-  overlay.addEventListener('click', (e) => { if (e.target === overlay || (e.target.id === 'pioneerDismiss')) close(); });
-  requestAnimationFrame(() => overlay.classList.add('show'));
-  setTimeout(() => { if (document.body.contains(overlay)) close(); }, 12000);
-}
-
-async function reportNewBird(bird, opts = {}) {
-  try {
-    const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
-    gameState.reportedNewSpecies = gameState.reportedNewSpecies || {};
-    if (gameState.reportedNewSpecies[key]) return; // one report per species per device
-    const form = new FormData();
-    form.append('species', bird.commonName || bird.species || '');
-    form.append('scientificName', bird.scientificName || bird.species || '');
-    form.append('confidence', String(bird.confidence || 0));
-    form.append('source', opts.source || '');
-    try {
-      const pos = await getCurrentPositionForBirdnet();
-      if (pos && pos.coords) { form.append('lat', pos.coords.latitude); form.append('lon', pos.coords.longitude); }
-    } catch (e) {}
-    if (opts.blob) {
-      const isAudio = opts.source === 'sound';
-      try { form.append('media', opts.blob, isAudio ? 'sighting.webm' : 'sighting.jpg'); } catch (e) {}
-    }
-    const headers = {};
-    if (typeof cloudAuth !== 'undefined' && cloudAuth.token) headers.Authorization = 'Bearer ' + cloudAuth.token;
-    const res = await fetch('api/report/new-bird', { method: 'POST', body: form, headers });
-    if (res && res.ok) { gameState.reportedNewSpecies[key] = Date.now(); saveState(); }
-  } catch (e) {
-    console.warn('new-bird report failed', e);
-  }
+  showToast((bird.commonName || bird.species) + ' is not in the Burbz catalogue yet.');
 }
 
 // ---- Player feedback (also lands in the private Burbz inbox) ----------------
@@ -15593,6 +15568,8 @@ function updateHeader() {
 let currentFilter = 'all';
 let currentBurbzMode = 'companions';
 let currentBirdexDiscovery = 'discovered';
+const BIRDEX_PAGE_SIZE = 80;
+let birdexVisibleLimit = BIRDEX_PAGE_SIZE;
 
 function discoveredSpeciesSet() {
   const discovered = new Set(Object.values(gameState.discoveredSpecies || {}).map(r => canonicalSpeciesName(r.species || r.commonName)).filter(Boolean));
@@ -15664,14 +15641,22 @@ function renderBirdex() {
       return ar - br || String(a.bird.commonName || a.bird.species || '').localeCompare(String(b.bird.commonName || b.bird.species || ''));
     });
 
+    const visibleTotal = visibleBirds.length;
+    const displayedBirds = visibleBirds.slice(0, birdexVisibleLimit);
     if (!visibleBirds.length) {
       grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">Nothing in this view yet</div><div class="companions-empty-copy">Try another filter.</div></div>';
     } else {
-      visibleBirds.forEach((row, idx) => {
+      displayedBirds.forEach((row, idx) => {
         if (row.owned) grid.innerHTML += createBirdCardHTML(row.owned, idx);
         else if (row.discoveredRecord) grid.innerHTML += createKnownSpeciesCardHTML(createBirdFromDiscovery(row.discoveredRecord), idx);
         else grid.innerHTML += createLockedBirdexCardHTML(row.bird, idx);
       });
+      const shown = displayedBirds.length;
+      if (visibleTotal > shown) {
+        grid.innerHTML += `<div class="birdex-window-control" role="status" aria-live="polite"><div class="birdex-window-count">Showing ${shown} of ${visibleTotal} species</div><button type="button" id="birdexLoadMore" class="filter-btn" aria-label="Load more Birdex species">Load More</button></div>`;
+      } else {
+        grid.innerHTML += `<div class="birdex-window-control" role="status" aria-live="polite"><div class="birdex-window-count">Showing ${shown} of ${visibleTotal} species</div></div>`;
+      }
     }
   }
 
@@ -15711,6 +15696,12 @@ function renderBirdex() {
       card.classList.toggle('flipped');
     });
   });
+  const loadMore = $('birdexLoadMore');
+  if (loadMore) loadMore.addEventListener('click', () => {
+    SFX.tap();
+    birdexVisibleLimit += BIRDEX_PAGE_SIZE;
+    renderBirdex();
+  }, { once:true });
 }
 
 
@@ -15870,6 +15861,7 @@ $('filterRow').addEventListener('click', e => {
   $$('#filterRow .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentFilter = btn.dataset.rarity;
+  birdexVisibleLimit = BIRDEX_PAGE_SIZE;
   renderBirdex();
 });
 
@@ -15878,6 +15870,7 @@ $('birdexDiscoveryRow')?.addEventListener('click', e => {
   if (!btn) return;
   SFX.tap();
   currentBirdexDiscovery = btn.dataset.discovery || 'discovered';
+  birdexVisibleLimit = BIRDEX_PAGE_SIZE;
   renderBirdex();
 });
 
@@ -15886,6 +15879,7 @@ $('burbzModeTabs')?.addEventListener('click', e => {
   if (!btn) return;
   SFX.tap();
   currentBurbzMode = btn.dataset.mode || 'companions';
+  birdexVisibleLimit = BIRDEX_PAGE_SIZE;
   renderBirdex();
 });
 
@@ -15913,6 +15907,7 @@ const SOUND_LOCATION_PREF_KEY = 'burbzSoundLocationAssist:v1';
 const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(analyseContinuousSoundWindow, {
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
 });
+const soundDiscoveryHistory = window.BurbzSoundListenerCore.createDiscoveryHistory();
 
 function soundLocationAssistEnabled() { return !!$('merlinLocationAssist')?.checked; }
 try { $('merlinLocationAssist').checked = localStorage.getItem(SOUND_LOCATION_PREF_KEY) === '1'; } catch (_) {}
@@ -15929,6 +15924,7 @@ function showSoundScanMode() {
   $('screen-scan').classList.remove('camera-mode');
   stopCamera();
   updateMerlinListeningUI();
+  renderSoundSessionDiscoveries();
 }
 
 // Entering Sound is the one clear user gesture that authorises the microphone.
@@ -15945,6 +15941,8 @@ $('scanImageBtn').addEventListener('click', async () => {
   $('soundScanArea').style.display = 'none';
   $('imageScanArea').style.display = 'block';
   $('screen-scan').classList.add('camera-mode');
+  if ($('scanResult')?.classList.contains('sound-session')) $('scanResult').classList.remove('show');
+  $('scanResult')?.classList.remove('sound-session');
   updateMerlinListeningUI();
   SFX.tap();
 });
@@ -16028,6 +16026,8 @@ async function startContinuousSoundListening() {
     mediaStream = stream;
     listenerTrack = stream.getAudioTracks()[0] || stream.getTracks()[0] || null;
     if (!listenerTrack) throw new Error('No audio track');
+    soundDiscoveryHistory.reset();
+    renderSoundSessionDiscoveries();
     listenerTrack.onended = () => handleContinuousSoundTrackEnded(generation);
     const ctx = deps.audioContext || getAudioCtx();
     if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
@@ -16282,10 +16282,6 @@ async function analyseContinuousSoundWindow(windowData) {
     clearTimeout(timeout);
     if (soundAnalysisAbortController === controller) soundAnalysisAbortController = null;
   }
-}
-
-function handleBirdIdentified(species, scientificName, confidence) {
-  handleBirdCandidates({ species, scientificName, confidence }, []);
 }
 
 // WAV conversion (from BirdNET logic)
@@ -18029,6 +18025,8 @@ async function fetchLeaderboards() {
   try {
     const data = await fetch('./api/leaderboards').then(r => r.json());
     leaderboardState.data = { collection: data.collection || [], mechanics: data.mechanics || [] };
+    leaderboardState.ranked = data.ranked === true;
+    leaderboardState.message = data.message || '';
     leaderboardState.loaded = true;
   } catch (err) {
     if (list) list.innerHTML = '<div class="leaderboard-meta">Could not load leaderboards yet. Try again in a moment.</div>';
@@ -18042,7 +18040,7 @@ async function renderLeaderboards(force) {
   if (!list) return;
   const rows = leaderboardState.data[leaderboardState.board] || [];
   if (!rows.length) {
-    list.innerHTML = '<div class="leaderboard-meta">No signed-in cloud saves yet. Be the first tester on the board.</div>';
+    list.innerHTML = `<div class="leaderboard-meta">${escapeHtml(leaderboardState.message || 'Public rankings are paused while verified server-side scoring is built.')}</div>`;
     return;
   }
   const collection = leaderboardState.board === 'collection';
@@ -18124,17 +18122,17 @@ const BURBZ_TUTORIAL_VERSION = 'merlin-complete-tour-v2-20260715';
 const BURBZ_TUTORIAL_SEEN_KEY = 'burbzTutorialSeen:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:merlin-grand-tour-20260707';
-const MERLIN_TUTORIAL_ESSENTIAL_INDICES = [0, 1, 4, 8, 21];
+const MERLIN_TUTORIAL_ESSENTIAL_INDICES = [0, 1, 4, 7, 20];
 
 const MERLIN_TUTORIAL_STEPS = [
   { chapter:'Welcome', title:'The living field guide', screen:'map', target:'.header', text:'I am Merlin. Real birdwatching restores Burbz. Start with these essentials; the complete systems tour is always available in Settings. Back, Next and Skip are always here.' },
   { chapter:'Explore', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The live map follows your real position and shows mapped habitat clues. Use the locate control to return to yourself; bird and village markers can be opened directly.' },
   { chapter:'Explore', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'Likely Birds estimates what may be nearby from habitat, season, range and local map features. It is a field clue, never a guaranteed identification.' },
   { chapter:'Explore', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
-  { chapter:'Discover', title:'Scan three ways', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera for a photo, Sound for Merlin’s listener, or manual correction when you already know the bird. A confident match records a discovery in your Birdex.' },
+  { chapter:'Discover', title:'Scan two ways', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera for a photo or Sound for Merlin’s listener. Only recognition-backed matches enter your Birdex, protecting discoveries, rewards and rankings from self-reported species.' },
   { chapter:'Discover', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Camera opens your phone’s native camera. Frame the bird closely, confirm the crop and review the suggested match before adding it to your discoveries.' },
   { chapter:'Discover', title:'Sound and BirdNET', screen:'scan', target:'#scanSoundBtn', text:'Sound keeps listening across screens until Stop; the green light means your microphone is live. Short windows are uploaded for BirdNET analysis, not stored in your game. Location help is optional and off by default.' },
-  { chapter:'Discover', title:'Manual correction', screen:'scan', target:'#scanResult', text:'If an automatic result is wrong—or you recognised the bird yourself—use the manual species picker. Your chosen species replaces the guess before it enters the Birdex.' },
+
   { chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
   { chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
   { chapter:'Collection', title:'Active companion', screen:'map', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed from the pantry, train it and watch its hunger, happiness and health rather than treating every bird as identical.' },
@@ -18369,8 +18367,6 @@ $('recruitOverlay')?.addEventListener('click', (e) => {
     gotoTavernRecruit();
   }
 });
-$('speciesPickerClose')?.addEventListener('click', () => $('speciesPickerOverlay')?.classList.remove('show'));
-$('speciesPickerOverlay')?.addEventListener('click', (e) => { if (e.target === $('speciesPickerOverlay')) e.currentTarget.classList.remove('show'); });
 
 $('toggleSfx').addEventListener('click', () => {
   const el = $('toggleSfx');

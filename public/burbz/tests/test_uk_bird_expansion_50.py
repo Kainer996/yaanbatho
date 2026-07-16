@@ -234,7 +234,10 @@ def test_player_fix_and_spawn_path_use_the_same_validated_coordinates():
         "liveMapUserMarker.setLngLat([lon, lat])",
         "const region = mapRegionForCoords(lat, lon);",
         "if (region === 'unsupported') return [];",
-        "return UK50.supportedRegionForCoords(lat, lon);",
+        "const legacyRegion = UK50.supportedRegionForCoords(lat, lon);",
+        "if (legacyRegion === 'uk') return 'uk';",
+        "if (SPAIN_BOUNDARY.contains(lat, lon)) return 'es';",
+        "if (legacyRegion === 'au' && supportedAustraliaCoords(lat, lon)) return 'au';",
     ):
         assert marker in html
 

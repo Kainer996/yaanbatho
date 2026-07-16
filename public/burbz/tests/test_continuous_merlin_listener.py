@@ -187,7 +187,7 @@ def test_permission_track_end_and_api_failures_have_truthful_recoverable_states(
 def test_continuous_listener_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert 'sound_listener_core.js?v=merlin-wand-listener-v2-20260714' in html
-    assert './sound_listener_core.js?v=merlin-wand-listener-v2-20260714' in sw
+    assert 'sound_listener_core.js?v=merlin-discovery-history-v3-20260716' in html
+    assert './sound_listener_core.js?v=merlin-discovery-history-v3-20260716' in sw
     assert './assets/ui/merlin-wand-listener.webp' in sw
-    assert 'burbz-tutorial-overhaul-v78-20260715' in sw
+    assert 'burbz-buzzard-history-v80-20260716' in sw

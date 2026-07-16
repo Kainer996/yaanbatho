@@ -28,13 +28,13 @@ def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
     copy = " ".join((step["title"] + " " + step["text"]).lower() for step in steps)
     required = [
         "live map", "likely birds", "walking quest", "sound", "birdnet", "microphone",
-        "camera", "manual", "birdex", "recruit", "companion", "empire", "liberation battle",
+        "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
         "sanctuary", "tribute", "perch league", "academy", "hospital", "training",
         "pantry", "expedition", "bag", "rank", "settings",
     ]
     assert all(term in copy for term in required), [term for term in required if term not in copy]
     assert "uploaded" in copy and "location" in copy and "optional" in copy
-    assert "const MERLIN_TUTORIAL_ESSENTIAL_INDICES = [0, 1, 4, 8, 21];" in html
+    assert "const MERLIN_TUTORIAL_ESSENTIAL_INDICES = [0, 1, 4, 7, 20];" in html
     assert "startMerlinTutorial({ full:false, resume:true })" in html
     assert "startMerlinTutorial({ full:true, resume:false })" in html
 
@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-tutorial-overhaul-v78-20260715" in sw
+    assert "burbz-buzzard-history-v80-20260716" in sw

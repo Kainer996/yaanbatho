@@ -3,13 +3,15 @@ importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
 importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
+importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-tutorial-overhaul-v78-20260715';
+const BURBZ_CACHE = 'burbz-buzzard-history-v80-20260716';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
 const UK_FINAL_SW = self.BURBZ_UK_BIRD_EXPANSION_FINAL;
 const AU50_SW = self.BURBZ_AU_BIRD_EXPANSION_50;
+const NATIONAL_SW = self.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;
 const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
 const ALL_EXPANSION_ART = { ...UK50_SW.art, ...UK26_SW.art, ...AU_SW.art };
 const NEW_LOCAL_PLACEHOLDER_ART = { ...UK_FINAL_SW.art, ...AU50_SW.art };
@@ -35,14 +37,17 @@ const BURBZ_ASSETS = [
   './quest_core.js?v=show-local-quests-v6-20260714',
   './academy_treehouse_core.js?v=bird-rename-20260710',
   './scan_economy_core.js',
-  './sound_listener_core.js?v=merlin-wand-listener-v2-20260714',
+  './sound_listener_core.js?v=merlin-discovery-history-v3-20260716',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
   './au_bird_expansion.js?v=au-source-backed-20260713',
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
+  './national_bird_completion_20260715.js?v=national-completion-20260715',
+  './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
+  './data/national-bird-completion/manifest.json?v=national-completion-20260715',
   './assets/merlin-tutorial.png',
   './assets/ui/quest-compass-emblem.webp',
   './assets/ui/merlin-wand-listener.webp',
@@ -88,7 +93,6 @@ BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, 
 // The app shell must cache or the install fails; artwork/video are best-effort
 // so one missing file can never knock out offline support for the whole game.
 const BURBZ_CORE = [
-  './',
   './index.html',
   './lib/three.min.js?v=0.158.0',
   './academy_treehouse_core.js',
@@ -98,15 +102,20 @@ const BURBZ_CORE = [
   './au_bird_expansion.js?v=au-source-backed-20260713',
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
+  './national_bird_completion_20260715.js?v=national-completion-20260715',
+  './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
+  './data/national-bird-completion/manifest.json?v=national-completion-20260715',
   './manifest.json'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(BURBZ_CACHE)
-      .then(cache => Promise.all(BURBZ_ASSETS.map(asset =>
+      // Only the compact app shell is eager. Large education/art datasets are
+      // fetched and cached when the player actually opens them.
+      .then(cache => Promise.all(BURBZ_CORE.map(asset =>
         cache.add(asset).catch(err => {
           if (BURBZ_CORE.includes(asset)) throw err;
           console.warn('BURBZ SW: optional asset skipped', asset);
@@ -119,7 +128,8 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.map(key => key === BURBZ_CACHE ? null : caches.delete(key))))
+      .then(keys => Promise.all(keys.filter(key => key.startsWith('burbz-') && key !== BURBZ_CACHE)
+        .map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });

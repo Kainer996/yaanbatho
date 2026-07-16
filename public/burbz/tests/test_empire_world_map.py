@@ -115,7 +115,7 @@ def test_world_palette_keeps_blue_water_and_readable_dark_land_beneath_the_veil(
     assert 'fill="#07100d"' in shade
     assert 'fill-opacity="0.2"' in shade
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
-    assert "burbz-tutorial-overhaul-v78-20260715" in SW.read_text(encoding="utf-8")
+    assert "burbz-buzzard-history-v80-20260716" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
