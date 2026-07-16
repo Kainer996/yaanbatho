@@ -13489,24 +13489,30 @@ function villageNameFromSeed(seed) {
   return VILLAGE_NAME_HEADS[Math.floor(r() * VILLAGE_NAME_HEADS.length)] + VILLAGE_NAME_TAILS[Math.floor(r() * VILLAGE_NAME_TAILS.length)];
 }
 
-// Twilight palettes — one is picked per village seed
+// Twilight palettes — one is picked per village seed. `weather` sets the
+// ambient particle effect and `leaf` the base foliage colour, so a frost
+// village snows over dark pines while an amber one sheds autumn leaves.
 const VILLAGE_PALETTES = [
   // moonlit blue
-  { sky: 0x181430, ground: 0x24331a, plaster: 0xd9cbb0, timber: 0x3a2812, stone: 0x6b675e, roofs: [0x8f2f2a, 0x6e552a, 0x2f2a6e, 0x365a2a, 0x2b2b30], hemiSky: 0x6a7ab0, hemiGround: 0x2a2112, speck: [120,150,60] },
+  { sky: 0x181430, ground: 0x24331a, plaster: 0xd9cbb0, timber: 0x3a2812, stone: 0x6b675e, roofs: [0x8f2f2a, 0x6e552a, 0x2f2a6e, 0x365a2a, 0x2b2b30], hemiSky: 0x6a7ab0, hemiGround: 0x2a2112, speck: [120,150,60], weather: 'fireflies', leaf: 0x2c3a18 },
   // violet dusk
-  { sky: 0x241530, ground: 0x2b3418, plaster: 0xe2d4ba, timber: 0x2e1f0e, stone: 0x74695c, roofs: [0xa03a2e, 0x7a5c2e, 0x513a78, 0x3e6630, 0x37373d], hemiSky: 0x8a6a9a, hemiGround: 0x2c1f10, speck: [130,155,70] },
+  { sky: 0x241530, ground: 0x2b3418, plaster: 0xe2d4ba, timber: 0x2e1f0e, stone: 0x74695c, roofs: [0xa03a2e, 0x7a5c2e, 0x513a78, 0x3e6630, 0x37373d], hemiSky: 0x8a6a9a, hemiGround: 0x2c1f10, speck: [130,155,70], weather: 'fireflies', leaf: 0x33401c },
   // cold starlit teal
-  { sky: 0x101c34, ground: 0x233028, plaster: 0xd2cfc2, timber: 0x33261a, stone: 0x5e6068, roofs: [0x7e2c3a, 0x8a7020, 0x2a3f78, 0x2f5638, 0x3a3a44], hemiSky: 0x5a78c0, hemiGround: 0x1c2014, speck: [110,150,90] },
+  { sky: 0x101c34, ground: 0x233028, plaster: 0xd2cfc2, timber: 0x33261a, stone: 0x5e6068, roofs: [0x7e2c3a, 0x8a7020, 0x2a3f78, 0x2f5638, 0x3a3a44], hemiSky: 0x5a78c0, hemiGround: 0x1c2014, speck: [110,150,90], weather: 'fireflies', leaf: 0x24382a },
   // misty green
-  { sky: 0x162018, ground: 0x273a1c, plaster: 0xd6c8a8, timber: 0x3c2a14, stone: 0x6a6a58, roofs: [0x96402a, 0x6d5426, 0x3a2f6e, 0x2f5a2e, 0x2e2e34], hemiSky: 0x5a8a78, hemiGround: 0x241c0c, speck: [120,160,70] },
+  { sky: 0x162018, ground: 0x273a1c, plaster: 0xd6c8a8, timber: 0x3c2a14, stone: 0x6a6a58, roofs: [0x96402a, 0x6d5426, 0x3a2f6e, 0x2f5a2e, 0x2e2e34], hemiSky: 0x5a8a78, hemiGround: 0x241c0c, speck: [120,160,70], weather: 'fireflies', leaf: 0x2c421c },
   // warm sunset ember
-  { sky: 0x2a1a1a, ground: 0x2f2f18, plaster: 0xe8cfa6, timber: 0x2c1c10, stone: 0x7a6a58, roofs: [0xb0492c, 0x8a5a24, 0x6e3a2a, 0x94702a, 0x4a3a2e], hemiSky: 0xc07a5a, hemiGround: 0x33200f, speck: [150,150,60] },
-  // autumn amber (brown ground, warm roofs)
-  { sky: 0x1e1a24, ground: 0x3a2e16, plaster: 0xe0c69a, timber: 0x33230f, stone: 0x726352, roofs: [0xa85a2a, 0x8a6520, 0xb0742a, 0x7a4a24, 0x5a4a30], hemiSky: 0x9a7a6a, hemiGround: 0x38260e, speck: [170,130,50] },
-  // frostbitten pale (snowy feel, cool grey-blue ground)
-  { sky: 0x1c2438, ground: 0x3c4650, plaster: 0xeef0f4, timber: 0x2a2a30, stone: 0x8a929c, roofs: [0x6a4a6e, 0x3a5a7a, 0x5a5a66, 0x7a3a3a, 0x4a6a6a], hemiSky: 0x9ab0d0, hemiGround: 0x3a4048, speck: [200,210,225] },
+  { sky: 0x2a1a1a, ground: 0x2f2f18, plaster: 0xe8cfa6, timber: 0x2c1c10, stone: 0x7a6a58, roofs: [0xb0492c, 0x8a5a24, 0x6e3a2a, 0x94702a, 0x4a3a2e], hemiSky: 0xc07a5a, hemiGround: 0x33200f, speck: [150,150,60], weather: 'fireflies', leaf: 0x3c3a14 },
+  // autumn amber (brown ground, warm roofs, drifting leaves)
+  { sky: 0x1e1a24, ground: 0x3a2e16, plaster: 0xe0c69a, timber: 0x33230f, stone: 0x726352, roofs: [0xa85a2a, 0x8a6520, 0xb0742a, 0x7a4a24, 0x5a4a30], hemiSky: 0x9a7a6a, hemiGround: 0x38260e, speck: [170,130,50], weather: 'leaves', leaf: 0x6e4618 },
+  // frostbitten pale (snowfall, snow-capped pines, maybe a snowman)
+  { sky: 0x1c2438, ground: 0x3c4650, plaster: 0xeef0f4, timber: 0x2a2a30, stone: 0x8a929c, roofs: [0x6a4a6e, 0x3a5a7a, 0x5a5a66, 0x7a3a3a, 0x4a6a6a], hemiSky: 0x9ab0d0, hemiGround: 0x3a4048, speck: [200,210,225], weather: 'snow', leaf: 0x28383a },
   // deep forest emerald
-  { sky: 0x0e1a14, ground: 0x1c3018, plaster: 0xcdd0ba, timber: 0x2a2410, stone: 0x5a6858, roofs: [0x7a3a2a, 0x6a6a24, 0x2a5a3a, 0x3a4a2a, 0x2e3630], hemiSky: 0x4a8a6a, hemiGround: 0x141c10, speck: [90,150,70] }
+  { sky: 0x0e1a14, ground: 0x1c3018, plaster: 0xcdd0ba, timber: 0x2a2410, stone: 0x5a6858, roofs: [0x7a3a2a, 0x6a6a24, 0x2a5a3a, 0x3a4a2a, 0x2e3630], hemiSky: 0x4a8a6a, hemiGround: 0x141c10, speck: [90,150,70], weather: 'fireflies', leaf: 0x1e3416 },
+  // rose-dusk afterglow
+  { sky: 0x2a1626, ground: 0x2c3220, plaster: 0xe6d2b8, timber: 0x33210f, stone: 0x776657, roofs: [0x9a3a4a, 0x7a5a28, 0x4a3a7a, 0x3a5e34, 0x3c3040], hemiSky: 0xb06a8a, hemiGround: 0x2c2010, speck: [150,140,70], weather: 'fireflies', leaf: 0x36401a },
+  // stormlit slate (soft rain over the rooftops)
+  { sky: 0x141a22, ground: 0x22301e, plaster: 0xccc8b8, timber: 0x2c2214, stone: 0x5c626c, roofs: [0x6e3a44, 0x5a5a2a, 0x2e4a6e, 0x2f5238, 0x34343c], hemiSky: 0x5a6a88, hemiGround: 0x1e2214, speck: [100,140,80], weather: 'rain', leaf: 0x263a1c }
 ];
 
 // Not every settlement has every trade: the general store is guaranteed, the
@@ -14092,6 +14098,8 @@ function renderEmpirePanel() {
 // ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
+let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
+let villageWeatherFx = null, villageShootingStar = null;
 let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
@@ -14203,6 +14211,39 @@ function villageSmokeTexture() {
   x.fillStyle = g; x.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(c);
 }
+// Moonlit water with drifting highlight streaks (offset animated per frame)
+function villageWaterTexture(r, baseCss) {
+  return villageCanvasTex(128, (x, s) => {
+    x.fillStyle = baseCss || '#22405e'; x.fillRect(0, 0, s, s);
+    for (let i = 0; i < 26; i++) {
+      x.fillStyle = 'rgba(190,215,255,' + (0.06 + r() * 0.12) + ')';
+      x.fillRect(r() * s, r() * s, 10 + r() * 34, 1 + r() * 1.6);
+    }
+  });
+}
+// Animated water material — registered so villageAnimate can drift the streaks
+function villageWaterMaterial(r, baseCss) {
+  const mat = new THREE.MeshBasicMaterial({ map: villageWaterTexture(r, baseCss) });
+  villageWaterMats.push(mat);
+  return mat;
+}
+// A tiny perched songbird — roofs, signs, scarecrows and wells all get them.
+// Registered in villageRoofBirds so it bobs and flicks its tail in animate().
+function villageMakeRoofBird(r, color) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: color || [0x2a2a30, 0xc8b8a0, 0x8a4a3a, 0x4a5a8a][Math.floor(r() * 4)] });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 5), mat);
+  body.scale.set(1, 0.9, 1.35); body.position.y = 0.08; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 6, 5), mat);
+  head.position.set(0, 0.15, 0.09); g.add(head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.06, 5), new THREE.MeshLambertMaterial({ color: 0xd8a03a }));
+  beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.15, 0.16); g.add(beak);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.12), mat);
+  tail.position.set(0, 0.09, -0.14); g.add(tail);
+  g.userData.phase = r() * 6.28; g.userData.baseY = 0;
+  villageRoofBirds.push(g);
+  return g;
+}
 
 function villageMakeSign(text) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 96;
@@ -14274,8 +14315,12 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
     }
   }
 
-  // Glowing (or dark) windows on the upper storey
-  const litMat = new THREE.MeshBasicMaterial({ color: 0xffd98a });
+  // Glowing (or dark) windows on the upper storey. Each trade keeps its own
+  // hour-glow: violet at the potion shop, forge-orange at the smith.
+  const winTint = shopKey === 'potion' ? { hex: 0xc9a0ff, rgb: '190,150,255' }
+    : shopKey === 'smith' ? { hex: 0xffab52, rgb: '255,150,70' }
+    : { hex: 0xffd98a, rgb: '255,205,120' };
+  const litMat = new THREE.MeshBasicMaterial({ color: winTint.hex });
   const darkMat = new THREE.MeshLambertMaterial({ color: 0x1c1812 });
   const winCount = Math.max(2, Math.round(uw / 1.7));
   for (let i = 0; i < winCount; i++) {
@@ -14285,7 +14330,7 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
     win.position.set(wx, baseH + upH / 2 + 0.05, ud / 2 + 0.06);
     g.add(win);
     if (lit) {
-      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,205,120'), transparent: true, depthWrite: false, opacity: 0.5 }));
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(winTint.rgb), transparent: true, depthWrite: false, opacity: 0.5 }));
       glow.scale.set(1.5, 1.5, 1); glow.position.set(wx, baseH + upH / 2 + 0.05, ud / 2 + 0.3);
       g.add(glow);
     }
@@ -14297,6 +14342,27 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
         g.add(sh);
       }
     }
+    // window box spilling blooms under a lit window
+    if (lit && r() < 0.6) {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.12, 0.14), beamMat);
+      box.position.set(wx, baseH + upH / 2 - 0.32, ud / 2 + 0.1); g.add(box);
+      const bloomCols = [0xd05a72, 0xe8c84a, 0xc8cdec, 0xd07a3a];
+      for (let bi = 0; bi < 3; bi++) {
+        const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4),
+          new THREE.MeshBasicMaterial({ color: bloomCols[Math.floor(r() * bloomCols.length)] }));
+        bloom.position.set(wx - 0.18 + bi * 0.18, baseH + upH / 2 - 0.24, ud / 2 + 0.14);
+        g.add(bloom);
+      }
+    }
+  }
+  // Small stone-lit windows on the ground floor too
+  const loWins = Math.max(1, Math.round(w / 2.4));
+  for (let i = 0; i < loWins; i++) {
+    const wx = -w / 2 + (i + 0.5) * w / loWins + (r() - 0.5) * 0.3;
+    if (Math.abs(wx) < 0.9) continue; // keep clear of the door
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.5, 0.08), r() < 0.6 ? litMat : darkMat);
+    win.position.set(wx, baseH * 0.55, d / 2 + 0.05);
+    g.add(win);
   }
 
   // Arched door + warm lantern beside it
@@ -14310,6 +14376,17 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   const lGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.75 }));
   lGlow.scale.set(1.9, 1.9, 1); lGlow.position.copy(lantern.position).z += 0.15;
   g.add(lGlow);
+  // Worn doorstep, and sometimes a little shingled porch over the door
+  const step = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.5), baseMat);
+  step.position.set(0, 0.05, d / 2 + 0.28); g.add(step);
+  if (r() < 0.5) {
+    const awning = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.07, 0.85), roofMat);
+    awning.position.set(0, 1.62, d / 2 + 0.42); awning.rotation.x = 0.3; g.add(awning);
+    for (const sx of [-0.62, 0.62]) {
+      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.5, 0.07), beamMat);
+      strut.position.set(sx, 1.32, d / 2 + 0.62); strut.rotation.x = -0.5; g.add(strut);
+    }
+  }
 
   // Roof: gable, pyramid or hipped — with overhang and a ridge beam
   const roofH = 1.45 + r() * 0.7;
@@ -14332,6 +14409,22 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
         line.rotation.z = -s * slope;
         g.add(line);
       }
+    }
+    // Dormer windows peeking out of the roof slopes (ridge runs along z,
+    // so the slopes face ±x and each dormer turns to face its own side)
+    const dormers = r() < 0.55 ? 1 + Math.floor(r() * 2) : 0;
+    for (let di = 0; di < dormers; di++) {
+      const side = dormers === 1 ? (r() < 0.5 ? -1 : 1) : (di === 0 ? -1 : 1);
+      const dorm = new THREE.Group();
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.55, 0.6), bodyMat);
+      cube.position.y = 0.27; dorm.add(cube);
+      const dRoof = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.42, 4), shingleMat);
+      dRoof.position.y = 0.76; dRoof.rotation.y = Math.PI / 4; dorm.add(dRoof);
+      const dWin = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.32, 0.06), r() < 0.7 ? litMat : darkMat);
+      dWin.position.set(0, 0.28, 0.32); dorm.add(dWin);
+      dorm.rotation.y = side * Math.PI / 2;
+      dorm.position.set(side * W * 0.55, baseH + upH + roofH * 0.3, (r() - 0.5) * ud * 0.5);
+      g.add(dorm);
     }
   } else if (roofStyle < 0.8) {
     const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(uw, ud) * 0.72, roofH + 0.3, 4), roofMat);
@@ -14367,8 +14460,111 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   g.add(sign);
   villageSigns.push(sign);
 
+  // Every trade dresses its own doorstep, so shops read at a glance
+  villageShopDressing(shopKey, g, w, d, r, pal);
+
+  // A songbird often keeps watch from the ridge — it is a bird realm, after all
+  if (r() < 0.5) {
+    const bird = villageMakeRoofBird(r);
+    bird.position.set((r() - 0.5) * uw * 0.5, baseH + upH + roofH + 0.05, (r() - 0.5) * ud * 0.4);
+    bird.rotation.y = r() * Math.PI * 2;
+    g.add(bird);
+  }
+
   g.add(villageBlobShadow(Math.max(uw, ud) * 0.72));
   return g;
+}
+
+// Trade-specific clutter placed by each shop's door (local +z = shopfront)
+function villageShopDressing(shopKey, g, w, d, r, pal) {
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.07) });
+  const sideX = (r() < 0.5 ? -1 : 1) * (w / 2 + 0.55);
+  if (shopKey === 'general') {
+    // Stacked crates and a pair of plump grain sacks
+    for (let i = 0; i < 3; i++) {
+      const crate = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.42), woodMat);
+      crate.position.set(sideX + (i === 2 ? 0.05 : (i - 0.5) * 0.46), i === 2 ? 0.65 : 0.21, d / 2 + 0.5 + (r() - 0.5) * 0.2);
+      crate.rotation.y = (r() - 0.5) * 0.5; g.add(crate);
+    }
+    for (let i = 0; i < 2; i++) {
+      const sack = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5), new THREE.MeshLambertMaterial({ color: 0xa38b5c }));
+      sack.scale.set(1, 1.3, 1); sack.position.set(-sideX + (r() - 0.5) * 0.4, 0.24, d / 2 + 0.5);
+      g.add(sack);
+    }
+  } else if (shopKey === 'potion') {
+    // A bubbling cauldron on a tripod, ringed by toadstools
+    const cauldron = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.62), new THREE.MeshLambertMaterial({ color: 0x26262c }));
+    cauldron.rotation.x = Math.PI; cauldron.position.set(sideX, 0.5, d / 2 + 0.6); g.add(cauldron);
+    const brew = new THREE.Mesh(new THREE.CircleGeometry(0.26, 10), new THREE.MeshBasicMaterial({ color: 0x6ee87a }));
+    brew.rotation.x = -Math.PI / 2; brew.position.set(sideX, 0.52, d / 2 + 0.6); g.add(brew);
+    const brewGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('120,235,130'), transparent: true, depthWrite: false, opacity: 0.6 }));
+    brewGlow.scale.set(1.5, 1.5, 1); brewGlow.position.set(sideX, 0.75, d / 2 + 0.6); g.add(brewGlow);
+    for (let i = 0; i < 3; i++) {
+      const a = r() * Math.PI * 2;
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.16, 5), new THREE.MeshLambertMaterial({ color: 0xd8d2c0 }));
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xa04a86 }));
+      const mx = sideX + Math.cos(a) * 0.7, mz = d / 2 + 0.6 + Math.sin(a) * 0.5;
+      stem.position.set(mx, 0.08, mz); cap.position.set(mx, 0.16, mz);
+      g.add(stem); g.add(cap);
+    }
+  } else if (shopKey === 'smith') {
+    // Anvil on a stump and a quenching trough, lit by the forge
+    const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.4, 8), woodMat);
+    stump.position.set(sideX, 0.2, d / 2 + 0.55); g.add(stump);
+    const anvil = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.2), new THREE.MeshLambertMaterial({ color: 0x3a3a42 }));
+    anvil.position.set(sideX, 0.5, d / 2 + 0.55); g.add(anvil);
+    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.24, 6), anvil.material);
+    horn.rotation.z = -Math.PI / 2; horn.position.set(sideX + 0.34, 0.5, d / 2 + 0.55); g.add(horn);
+    const trough = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.36), woodMat);
+    trough.position.set(-sideX, 0.15, d / 2 + 0.5); g.add(trough);
+    const troughWater = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.26), new THREE.MeshBasicMaterial({ color: 0x24405e }));
+    troughWater.rotation.x = -Math.PI / 2; troughWater.position.set(-sideX, 0.31, d / 2 + 0.5); g.add(troughWater);
+    const forgeGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,120,40'), transparent: true, depthWrite: false, opacity: 0.6 }));
+    forgeGlow.scale.set(2.2, 2.2, 1); forgeGlow.position.set(sideX, 0.7, d / 2 + 0.7); g.add(forgeGlow);
+  } else if (shopKey === 'tavern') {
+    // A bench, ale barrels, and a string of festival lanterns over the door
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.08, 0.34), woodMat);
+    bench.position.set(sideX, 0.4, d / 2 + 0.5); g.add(bench);
+    for (const bx of [-0.42, 0.42]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.3), woodMat);
+      leg.position.set(sideX + bx, 0.2, d / 2 + 0.5); g.add(leg);
+    }
+    for (let i = 0; i < 2; i++) {
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, 0.5, 9), woodMat);
+      barrel.position.set(-sideX + (i - 0.5) * 0.55, 0.25, d / 2 + 0.5); g.add(barrel);
+    }
+    const lanternCols = ['255,120,80', '255,205,120', '150,220,120'];
+    for (let i = 0; i < 3; i++) {
+      const lx = -w / 2 + (i + 0.5) * w / 3;
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, 0.1), new THREE.MeshBasicMaterial({ color: [0xff8a5a, 0xffd98a, 0x9ae87a][i] }));
+      cube.position.set(lx, 1.9 - Math.sin((i + 0.5) / 3 * Math.PI) * 0.18, d / 2 + 0.32); g.add(cube);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(lanternCols[i]), transparent: true, depthWrite: false, opacity: 0.55 }));
+      gl.scale.set(0.9, 0.9, 1); gl.position.copy(cube.position); g.add(gl);
+    }
+  } else if (shopKey === 'guild') {
+    // A parchment-pinned notice board and a pennant pole
+    const board = new THREE.Group();
+    for (const bx of [-0.55, 0.55]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.1), beamMat);
+      post.position.set(bx, 0.75, 0); board.add(post);
+    }
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.8, 0.07), woodMat);
+    panel.position.y = 1.0; board.add(panel);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.1, 0.16), beamMat);
+    cap.position.y = 1.46; board.add(cap);
+    for (let i = 0; i < 4; i++) {
+      const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.26), new THREE.MeshBasicMaterial({ color: 0xe8dcc0 }));
+      paper.position.set(-0.42 + i * 0.28, 1.0 + (r() - 0.5) * 0.2, 0.05);
+      paper.rotation.z = (r() - 0.5) * 0.3; board.add(paper);
+    }
+    board.position.set(sideX, 0, d / 2 + 0.6); board.rotation.y = (r() - 0.5) * 0.5;
+    g.add(board);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 2.6, 6), beamMat);
+    pole.position.set(-sideX, 1.3, d / 2 + 0.45); g.add(pole);
+    const pennant = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.26), new THREE.MeshBasicMaterial({ color: pal.roofs[0], side: THREE.DoubleSide }));
+    pennant.position.set(-sideX + 0.36, 2.45, d / 2 + 0.45); g.add(pennant);
+  }
 }
 
 // ---- Props -------------------------------------------------------------------
@@ -14430,6 +14626,39 @@ function villageMakeChurch(r, pal) {
   win.position.set(0, 2.5, 4.61); g.add(win);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,205,120'), transparent: true, depthWrite: false, opacity: 0.5 }));
   glow.scale.set(2, 2, 1); glow.position.set(0, 2.5, 4.9); g.add(glow);
+  // Lancet windows glowing down the nave flanks
+  for (const sx of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      const lw = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.7, 0.3), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+      lw.position.set(sx * 1.31, 1.35, -1.4 + i * 1.4); g.add(lw);
+    }
+  }
+  // A hushed churchyard: leaning gravestones behind a low stone wall
+  const graveMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.08) });
+  for (let i = 0; i < 4 + Math.floor(r() * 3); i++) {
+    const gx = -2.6 + (r() - 0.5) * 1.6, gz = -1.5 + r() * 3.4;
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5 + r() * 0.3, 0.1), graveMat);
+    slab.position.set(gx, 0.26, gz);
+    slab.rotation.z = (r() - 0.5) * 0.3; slab.rotation.y = (r() - 0.5) * 0.8;
+    g.add(slab);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.1, 8, 1, false, 0, Math.PI), graveMat);
+    top.rotation.x = Math.PI / 2; top.rotation.z = slab.rotation.z;
+    top.position.set(gx, 0.26 + (slab.geometry.parameters.height / 2), gz);
+    g.add(top);
+  }
+  const wallMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  for (let i = 0; i < 5; i++) {
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.4, 0.24), wallMat);
+    seg.position.set(-3.6, 0.2, -2.2 + i * 1.15);
+    seg.rotation.y = (r() - 0.5) * 0.12;
+    g.add(seg);
+  }
+  // A raven often haunts the spire cross
+  if (r() < 0.6) {
+    const raven = villageMakeRoofBird(r, 0x1c1c22);
+    raven.position.set(0, 7.45, 2.7); raven.rotation.y = r() * Math.PI * 2;
+    g.add(raven);
+  }
   g.add(villageBlobShadow(2.6));
   return g;
 }
@@ -14453,6 +14682,18 @@ function villageMakeWindmill(r, pal) {
   sails.position.set(0, 4.0, 1.35);
   g.add(sails);
   villageWindmills.push(sails);
+  // The miller's yard: a spare millstone against the wall and flour sacks
+  const millstone = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.16, 12), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, 0.05) }));
+  millstone.rotation.x = Math.PI / 2 - 0.3; millstone.position.set(1.5, 0.5, 0.4); g.add(millstone);
+  for (let i = 0; i < 3; i++) {
+    const sack = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5), new THREE.MeshLambertMaterial({ color: 0xcbb98a }));
+    sack.scale.set(1, 1.25, 1); sack.position.set(-1.3 - r() * 0.5, 0.24, 0.5 + (r() - 0.5) * 1.2);
+    g.add(sack);
+  }
+  const millDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.1), new THREE.MeshLambertMaterial({ color: pal.timber }));
+  millDoor.position.set(0, 0.55, 1.32); g.add(millDoor);
+  const millWin = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.4, 0.1), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+  millWin.position.set(0, 2.4, 1.16); g.add(millWin);
   g.add(villageBlobShadow(1.7));
   return g;
 }
@@ -14489,6 +14730,16 @@ function villageMakeManor(r, pal) {
   }
   const door = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 0.1), beamMat);
   door.position.set(0, 0.6, 1.53); g.add(door);
+  // A clipped hedge walk with topiary orbs guarding the entrance
+  const hedgeMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL(0, 0.05, 0.02) });
+  for (const sx of [-1, 1]) {
+    const hedge = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 1.8), hedgeMat);
+    hedge.position.set(sx * 1.1, 0.3, 2.8); g.add(hedge);
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.4, 7, 6), hedgeMat);
+    orb.position.set(sx * 1.1, 1.0, 3.8); g.add(orb);
+    const orbBase = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.6, 6), beamMat);
+    orbBase.position.set(sx * 1.1, 0.3, 3.8); g.add(orbBase);
+  }
   g.add(villageBlobShadow(3.4));
   return g;
 }
@@ -14524,6 +14775,10 @@ function villageMakeRuinTower(r, pal) {
     rock.position.set(Math.cos(a) * d, 0.12, Math.sin(a) * d);
     g.add(rock);
   }
+  // A carrion crow claims the broken rim
+  const crow = villageMakeRoofBird(r, 0x18181e);
+  crow.position.set(0.6, h + 0.45, 0.4); crow.rotation.y = r() * Math.PI * 2;
+  g.add(crow);
   g.add(villageBlobShadow(1.8));
   return g;
 }
@@ -14561,31 +14816,47 @@ function villageMakeDovecote(r, pal) {
 // A duck pond ringed with reeds.
 function villageMakePond(r, pal) {
   const g = new THREE.Group();
-  const water = new THREE.Mesh(new THREE.CircleGeometry(1.9 + r() * 0.9, 18), new THREE.MeshBasicMaterial({ color: 0x22405e }));
+  const water = new THREE.Mesh(new THREE.CircleGeometry(1.9 + r() * 0.9, 18), villageWaterMaterial(r));
   water.rotation.x = -Math.PI / 2; water.position.y = 0.012; water.scale.set(1, 0.72 + r() * 0.3, 1);
   g.add(water);
   const rim = new THREE.Mesh(new THREE.RingGeometry(1.9, 2.15, 18), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, 0, 0.08) }));
   rim.rotation.x = -Math.PI / 2; rim.position.y = 0.013; rim.scale.copy(water.scale);
   g.add(rim);
   const reedMat = new THREE.MeshLambertMaterial({ color: 0x3c5a22 });
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     const a = r() * Math.PI * 2, d = 1.75 + r() * 0.5;
     const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.035, 0.55 + r() * 0.4, 4), reedMat);
     reed.position.set(Math.cos(a) * d, 0.3, Math.sin(a) * d * 0.8);
     reed.rotation.z = (r() - 0.5) * 0.25;
     g.add(reed);
+    if (r() < 0.4) { // bulrush head
+      const rush = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.16, 5), new THREE.MeshLambertMaterial({ color: 0x5a3a1e }));
+      rush.position.set(reed.position.x + reed.rotation.z * -0.3, 0.62, reed.position.z);
+      g.add(rush);
+    }
+  }
+  // Lily pads drifting near the edge
+  const padMat = new THREE.MeshLambertMaterial({ color: 0x2e5a2e });
+  for (let i = 0; i < 3 + Math.floor(r() * 3); i++) {
+    const a = r() * Math.PI * 2, d = 0.5 + r() * 1.2;
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(0.14 + r() * 0.1, 8), padMat);
+    pad.rotation.x = -Math.PI / 2; pad.position.set(Math.cos(a) * d, 0.02, Math.sin(a) * d * 0.7);
+    g.add(pad);
   }
   const duckBody = new THREE.MeshLambertMaterial({ color: 0xe9e5da });
   const duckHead = new THREE.MeshLambertMaterial({ color: 0x2e5a34 });
-  for (let i = 0; i < 2; i++) {
-    const a = r() * Math.PI * 2, d = r() * 1.1;
+  for (let i = 0; i < 2 + Math.floor(r() * 2); i++) {
     const duck = new THREE.Group();
     const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 5), duckBody);
     body.scale.set(1.4, 0.9, 1); duck.add(body);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 6, 5), duckHead);
     head.position.set(0.16, 0.13, 0); duck.add(head);
-    duck.position.set(Math.cos(a) * d, 0.1, Math.sin(a) * d * 0.7);
-    duck.rotation.y = r() * Math.PI * 2;
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.08, 5), new THREE.MeshLambertMaterial({ color: 0xd8a03a }));
+    beak.rotation.z = -Math.PI / 2; beak.position.set(0.26, 0.12, 0); duck.add(beak);
+    duck.position.y = 0.1;
+    // Paddles a slow seeded circuit around the pond — animated in villageAnimate
+    duck.userData = { rad: 0.4 + r() * 0.9, phase: r() * 6.28, speed: (0.1 + r() * 0.12) * (r() < 0.5 ? -1 : 1), squash: 0.7 };
+    villageDucks.push(duck);
     g.add(duck);
   }
   return g;
@@ -14722,20 +14993,46 @@ function villageMakeMaypole(r, pal) {
 
 function villageMakeTree(r, pal) {
   const tree = new THREE.Group();
-  const trunkMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const leafHue = new THREE.Color(0x2c3a18).offsetHSL((r() - 0.5) * 0.06, 0, (r() - 0.5) * 0.08);
+  const birch = r() < 0.18;
+  const dead = !birch && r() < 0.08;
+  const trunkMat = new THREE.MeshLambertMaterial({ color: birch ? 0xd8d4c8 : pal.timber });
+  const leafHue = new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL((r() - 0.5) * 0.06, 0, (r() - 0.5) * 0.08);
   const leafMat = new THREE.MeshLambertMaterial({ color: leafHue });
   const s = 0.8 + r() * 0.8;
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.26 * s, 1.5 * s, 6), trunkMat);
   trunk.position.y = 0.75 * s; tree.add(trunk);
-  if (r() < 0.5) {
+  if (dead) {
+    // A bare, wind-bent snag — some crows like it better than any leafy bough
+    trunk.scale.y = 1.5; trunk.position.y = 1.1 * s; trunk.rotation.z = (r() - 0.5) * 0.2;
+    for (let i = 0; i < 3; i++) {
+      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.07 * s, 1.0 * s, 5), trunkMat);
+      branch.position.set((r() - 0.5) * 0.7 * s, (1.5 + r() * 0.8) * s, (r() - 0.5) * 0.7 * s);
+      branch.rotation.z = (r() - 0.5) * 1.8; branch.rotation.x = (r() - 0.5) * 1.2;
+      tree.add(branch);
+    }
+    if (r() < 0.5) {
+      const crow = villageMakeRoofBird(r, 0x18181e);
+      crow.position.set(0, 2.3 * s, 0); tree.add(crow);
+    }
+  } else if (r() < 0.5) {
+    // Pine — with a snow-dusted tip in frostbitten villages
     const crown = new THREE.Mesh(new THREE.ConeGeometry(1.15 * s, 2.6 * s, 7), leafMat);
     crown.position.y = 2.5 * s; tree.add(crown);
+    if (pal.weather === 'snow') {
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.55 * s, 1.0 * s, 7), new THREE.MeshLambertMaterial({ color: 0xe8ecf4 }));
+      cap.position.y = 3.35 * s; tree.add(cap);
+    }
   } else {
     for (let i = 0; i < 3; i++) {
       const blob = new THREE.Mesh(new THREE.SphereGeometry((0.75 + r() * 0.4) * s, 7, 6), leafMat);
       blob.position.set((r() - 0.5) * 0.9 * s, (1.9 + r() * 0.8) * s, (r() - 0.5) * 0.9 * s);
       tree.add(blob);
+    }
+    if (birch) { // bark bands
+      for (let i = 0; i < 3; i++) {
+        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.165 * s, 0.165 * s, 0.08 * s, 6), new THREE.MeshLambertMaterial({ color: 0x3a382e }));
+        band.position.y = (0.4 + i * 0.4) * s; tree.add(band);
+      }
     }
   }
   tree.add(villageBlobShadow(1.0 * s));
@@ -14781,20 +15078,30 @@ function villageMakeCentrepiece(r, pal) {
   const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
   const pick = r();
-  if (pick >= 0.78) return villageMakeMaypole(r, pal);
-  if (pick < 0.4) {
-    // Covered well
+  if (pick >= 0.86) return villageMakeMaypole(r, pal);
+  if (pick < 0.28) {
+    // Covered well — with a bucket on its rope and maybe a thirsty sparrow
     const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 0.9, 10), stoneMat);
     wellBase.position.y = 0.45; grp.add(wellBase);
-    const water = new THREE.Mesh(new THREE.CircleGeometry(0.86, 12), new THREE.MeshBasicMaterial({ color: 0x24406e }));
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.86, 12), villageWaterMaterial(r));
     water.rotation.x = -Math.PI / 2; water.position.y = 0.92; grp.add(water);
     for (const dx of [-1.05, 1.05]) {
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.6, 0.14), beamMat);
       post.position.set(dx, 1.35, 0); grp.add(post);
     }
+    const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.1, 6), beamMat);
+    axle.rotation.z = Math.PI / 2; axle.position.y = 1.9; grp.add(axle);
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.8, 4), new THREE.MeshLambertMaterial({ color: 0xa38b5c }));
+    rope.position.y = 1.5; grp.add(rope);
+    const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.1, 0.2, 8), beamMat);
+    bucket.position.y = 1.05; grp.add(bucket);
     const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.0, 6), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
     wellRoof.position.y = 2.35; grp.add(wellRoof);
-  } else if (pick < 0.7) {
+    if (r() < 0.5) {
+      const sparrow = villageMakeRoofBird(r, 0x8a7a5a);
+      sparrow.position.set(0.6, 0.94, 0.4); grp.add(sparrow);
+    }
+  } else if (pick < 0.5) {
     // Market cross on steps
     for (let i = 0; i < 3; i++) {
       const step = new THREE.Mesh(new THREE.CylinderGeometry(1.5 - i * 0.4, 1.5 - i * 0.4, 0.24, 8), stoneMat);
@@ -14806,16 +15113,36 @@ function villageMakeCentrepiece(r, pal) {
     crossV.position.y = 3.2; grp.add(crossV);
     const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.14, 0.14), stoneMat);
     crossH.position.y = 3.3; grp.add(crossH);
-  } else if (pick < 0.78) {
-    // Old fountain
+  } else if (pick < 0.68) {
+    // Old fountain, moonlight caught in the drifting water
     const basin = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.55, 12), stoneMat);
     basin.position.y = 0.28; grp.add(basin);
-    const water = new THREE.Mesh(new THREE.CircleGeometry(1.32, 16), new THREE.MeshBasicMaterial({ color: 0x2a4a7a }));
+    const water = new THREE.Mesh(new THREE.CircleGeometry(1.32, 16), villageWaterMaterial(r, '#2a4a7a'));
     water.rotation.x = -Math.PI / 2; water.position.y = 0.57; grp.add(water);
     const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.22, 1.3, 8), stoneMat);
     spire.position.y = 1.2; grp.add(spire);
     const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.36, 0.2, 10), stoneMat);
     bowl.position.y = 1.9; grp.add(bowl);
+  } else {
+    // The Great Birdbath — pride of any Burbz square, songbirds in attendance
+    for (let i = 0; i < 2; i++) {
+      const step = new THREE.Mesh(new THREE.CylinderGeometry(1.3 - i * 0.35, 1.3 - i * 0.35, 0.22, 10), stoneMat);
+      step.position.y = 0.11 + i * 0.22; grp.add(step);
+    }
+    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.28, 1.1, 8), stoneMat);
+    pillar.position.y = 1.0; grp.add(pillar);
+    const bath = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.6, 0.28, 12), stoneMat);
+    bath.position.y = 1.65; grp.add(bath);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.82, 12), villageWaterMaterial(r));
+    water.rotation.x = -Math.PI / 2; water.position.y = 1.8; grp.add(water);
+    const nBirds = 2 + Math.floor(r() * 3);
+    for (let i = 0; i < nBirds; i++) {
+      const a = r() * Math.PI * 2;
+      const bird = villageMakeRoofBird(r);
+      bird.position.set(Math.cos(a) * 0.85, 1.78, Math.sin(a) * 0.85);
+      bird.rotation.y = -a + Math.PI; // face the water
+      grp.add(bird);
+    }
   }
   grp.add(villageBlobShadow(1.7));
   return grp;
@@ -14839,6 +15166,427 @@ function villageMakeGarland(r, pal, from, to) {
     grp.add(flag);
   }
   return grp;
+}
+
+// ---- New landmarks -----------------------------------------------------------
+// The Great Perch — a stone monument to the first bird of Burbz, garlanded
+// with votive lanterns. The proudest thing a settlement can raise.
+function villageMakeGreatPerch(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, 0.04) });
+  for (let i = 0; i < 3; i++) {
+    const step = new THREE.Mesh(new THREE.CylinderGeometry(1.9 - i * 0.45, 1.9 - i * 0.45, 0.26, 10), stoneMat);
+    step.position.y = 0.13 + i * 0.26; g.add(step);
+  }
+  const column = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, 2.6, 9), stoneMat);
+  column.position.y = 2.1; g.add(column);
+  const capital = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.34, 0.3, 9), stoneMat);
+  capital.position.y = 3.5; g.add(capital);
+  // The bird itself: breast puffed, head high, wings folded
+  const statue = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 9, 7), stoneMat);
+  body.scale.set(0.9, 1, 1.3); statue.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 6), stoneMat);
+  head.position.set(0, 0.62, 0.4); statue.add(head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.34, 6), stoneMat);
+  beak.rotation.x = Math.PI / 2 - 0.25; beak.position.set(0, 0.68, 0.76); statue.add(beak);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.85), stoneMat);
+  tail.rotation.x = 0.5; tail.position.set(0, 0.1, -0.75); statue.add(tail);
+  for (const sx of [-1, 1]) {
+    const wing = new THREE.Mesh(new THREE.SphereGeometry(0.36, 7, 5), stoneMat);
+    wing.scale.set(0.45, 0.8, 1.15); wing.position.set(sx * 0.45, 0.05, -0.05);
+    statue.add(wing);
+  }
+  statue.position.y = 4.15; statue.rotation.y = r() * Math.PI * 2;
+  g.add(statue);
+  // Votive lanterns left by pilgrims
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.18, 0.14), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+    cube.position.set(Math.cos(a) * 1.5, 0.85, Math.sin(a) * 1.5); g.add(cube);
+    const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.6 }));
+    gl.scale.set(1.1, 1.1, 1); gl.position.copy(cube.position); g.add(gl);
+  }
+  g.add(villageBlobShadow(2.1));
+  return g;
+}
+
+// A ring of mossy standing stones, older than any road that reaches them.
+function villageMakeStoneCircle(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06) });
+  const mossMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.leaf || 0x2c4a1e).offsetHSL(0, 0.08, 0.02) });
+  const n = 6 + Math.floor(r() * 3);
+  for (let i = 0; i < n; i++) {
+    if (r() < 0.14) continue; // a stone lost to time
+    const a = (i / n) * Math.PI * 2;
+    const h = 1.1 + r() * 0.9;
+    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.55 + r() * 0.25, h, 0.4), stoneMat);
+    stone.position.set(Math.cos(a) * 2.3, h / 2 - 0.05, Math.sin(a) * 2.3);
+    stone.rotation.y = a + (r() - 0.5) * 0.6;
+    stone.rotation.z = (r() - 0.5) * 0.22;
+    g.add(stone);
+    if (r() < 0.6) {
+      const moss = new THREE.Mesh(new THREE.SphereGeometry(0.16 + r() * 0.1, 5, 4), mossMat);
+      moss.position.set(stone.position.x, 0.1 + r() * h * 0.5, stone.position.z + 0.18);
+      g.add(moss);
+    }
+  }
+  const altar = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.7, 0.3, 8), stoneMat);
+  altar.position.y = 0.15; g.add(altar);
+  if (r() < 0.6) { // an owl keeps the old watch from the altar stone
+    const owl = villageMakeRoofBird(r, 0x9a8a70);
+    owl.scale.set(1.5, 1.5, 1.5);
+    owl.position.set(0.2, 0.3, 0.15); g.add(owl);
+  }
+  g.add(villageBlobShadow(2.9));
+  return g;
+}
+
+// The royal aviary — a gilded cage-dome where honoured birds convalesce.
+function villageMakeAviary(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const gildMat = new THREE.MeshBasicMaterial({ color: 0xc8a84a, wireframe: true });
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.8, 0.7, 12), stoneMat);
+  wall.position.y = 0.35; g.add(wall);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(1.7, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), gildMat);
+  dome.position.y = 0.7; g.add(dome);
+  const finial = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 6), new THREE.MeshBasicMaterial({ color: 0xf0d98a }));
+  finial.position.y = 2.55; g.add(finial);
+  // A cross-perch inside with resting birds
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.5, 6), beamMat);
+  post.position.y = 1.05; g.add(post);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 5), beamMat);
+  bar.rotation.z = Math.PI / 2; bar.position.y = 1.7; g.add(bar);
+  for (let i = 0; i < 2 + Math.floor(r() * 2); i++) {
+    const bird = villageMakeRoofBird(r);
+    bird.position.set(-0.6 + r() * 1.2, 1.72, (r() - 0.5) * 0.1);
+    bird.rotation.y = r() * Math.PI * 2;
+    g.add(bird);
+  }
+  const gate = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.66, 0.08), beamMat);
+  gate.position.set(0, 0.35, 1.76); g.add(gate);
+  g.add(villageBlobShadow(2.0));
+  return g;
+}
+
+// A freestanding bell tower that rings the flocks home at dusk.
+function villageMakeBellTower(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.5, 4.2, 1.5), stoneMat);
+  shaft.position.y = 2.1; g.add(shaft);
+  // Open belfry: four corner posts under a pyramid cap
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.1, 0.2), stoneMat);
+    post.position.set(sx * 0.62, 4.75, sz * 0.62); g.add(post);
+  }
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(1.25, 1.1, 4), roofMat);
+  cap.position.y = 5.85; cap.rotation.y = Math.PI / 4; g.add(cap);
+  const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.4, 0.5, 8), new THREE.MeshLambertMaterial({ color: 0xc8a84a }));
+  bell.position.y = 4.7; g.add(bell);
+  const clapper = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 5), new THREE.MeshLambertMaterial({ color: 0x8a6a2a }));
+  clapper.position.y = 4.42; g.add(clapper);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.1), new THREE.MeshLambertMaterial({ color: pal.timber }));
+  door.position.set(0, 0.5, 0.78); g.add(door);
+  const slit = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.6, 0.08), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+  slit.position.set(0, 2.6, 0.78); g.add(slit);
+  if (r() < 0.5) {
+    const bird = villageMakeRoofBird(r);
+    bird.position.set(0.4, 6.0, 0.3); g.add(bird);
+  }
+  g.add(villageBlobShadow(1.4));
+  return g;
+}
+
+// ---- New props ----------------------------------------------------------------
+// A scarecrow the local birds treat as a public perch — the farmer despairs.
+function villageMakeScarecrow(r, pal) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const strawMat = new THREE.MeshLambertMaterial({ color: 0xb8933e });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 1.9, 6), beamMat);
+  pole.position.y = 0.95; g.add(pole);
+  const arms = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.5, 5), beamMat);
+  arms.rotation.z = Math.PI / 2; arms.position.y = 1.35; g.add(arms);
+  const coat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.8, 7), new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+  coat.position.y = 1.0; g.add(coat);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 7, 6), strawMat);
+  head.position.y = 1.68; g.add(head);
+  const hat = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.3, 7), beamMat);
+  hat.position.y = 1.92; g.add(hat);
+  // The perched jury
+  const nBirds = 1 + Math.floor(r() * 3);
+  for (let i = 0; i < nBirds; i++) {
+    const bird = villageMakeRoofBird(r);
+    bird.position.set(-0.6 + r() * 1.2, 1.42, 0);
+    bird.rotation.y = r() * Math.PI * 2;
+    g.add(bird);
+  }
+  g.add(villageBlobShadow(0.5));
+  return g;
+}
+
+// A birdhouse pole — the roadside shrines of the Kingdom of Burbz.
+function villageMakeBirdhousePole(r, pal) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const houseMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, -0.06) });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 2.2, 6), beamMat);
+  pole.position.y = 1.1; g.add(pole);
+  const n = 1 + Math.floor(r() * 2);
+  for (let i = 0; i < n; i++) {
+    const hy = 2.2 - i * 0.7;
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), houseMat);
+    box.position.set(i === 0 ? 0 : (r() - 0.5) * 0.5, hy, i === 0 ? 0 : (r() - 0.5) * 0.5);
+    g.add(box);
+    const lid = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.3, 4), roofMat);
+    lid.rotation.y = Math.PI / 4; lid.position.set(box.position.x, hy + 0.35, box.position.z); g.add(lid);
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.06, 8), new THREE.MeshBasicMaterial({ color: 0x141210 }));
+    hole.position.set(box.position.x, hy, box.position.z + 0.21); g.add(hole);
+  }
+  if (r() < 0.7) {
+    const tenant = villageMakeRoofBird(r);
+    tenant.position.set(0, 2.45, 0); g.add(tenant);
+  }
+  g.add(villageBlobShadow(0.4));
+  return g;
+}
+
+// Washing strung between two posts, swaying gently in the night air.
+function villageMakeWashingLine(r, pal) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const span = 2.4 + r() * 0.8;
+  for (const sx of [-span / 2, span / 2]) {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 1.6, 6), beamMat);
+    post.position.set(sx, 0.8, 0); g.add(post);
+  }
+  const line = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, span, 4), new THREE.MeshLambertMaterial({ color: 0xa39a80 }));
+  line.rotation.z = Math.PI / 2; line.position.y = 1.5; g.add(line);
+  const clothCols = [0xd8d2c0, pal.plaster, 0x8a9ab0, 0xc0907a];
+  const n = 2 + Math.floor(r() * 3);
+  for (let i = 0; i < n; i++) {
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.36 + r() * 0.2, 0.5 + r() * 0.2),
+      new THREE.MeshLambertMaterial({ color: clothCols[Math.floor(r() * clothCols.length)], side: THREE.DoubleSide }));
+    cloth.position.set(-span / 2 + (i + 0.7) * span / (n + 0.7), 1.24, 0);
+    cloth.userData.phase = r() * 6.28;
+    villageCloths.push(cloth);
+    g.add(cloth);
+  }
+  return g;
+}
+
+// A tidy log pile with a chopping block.
+function villageMakeLogPile(r, pal) {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06) });
+  const endMat = new THREE.MeshLambertMaterial({ color: 0xc0a878 });
+  let count = 4;
+  for (let row = 0; row < 3 && count > 0; row++) {
+    for (let i = 0; i < count; i++) {
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.85, 7), woodMat);
+      log.rotation.x = Math.PI / 2;
+      log.position.set((i - (count - 1) / 2) * 0.28, 0.13 + row * 0.24, 0);
+      g.add(log);
+      const end = new THREE.Mesh(new THREE.CircleGeometry(0.12, 7), endMat);
+      end.position.set(log.position.x, log.position.y, 0.43); g.add(end);
+    }
+    count -= 1;
+  }
+  const block = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.45, 8), woodMat);
+  block.position.set(0.9, 0.22, 0.3); g.add(block);
+  g.add(villageBlobShadow(0.8));
+  return g;
+}
+
+// A plain wooden bench for watching the square go by.
+function villageMakeBench(r, pal) {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08) });
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.4), woodMat);
+  seat.position.y = 0.45; g.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 0.07), woodMat);
+  back.position.set(0, 0.75, -0.18); back.rotation.x = -0.12; g.add(back);
+  for (const sx of [-0.55, 0.55]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.45, 0.36), woodMat);
+    leg.position.set(sx, 0.22, 0); g.add(leg);
+  }
+  g.add(villageBlobShadow(0.7));
+  return g;
+}
+
+// A row of straw bee skeps on a low table — honey for the potion shop.
+function villageMakeBeehives(r, pal) {
+  const g = new THREE.Group();
+  const strawMat = new THREE.MeshLambertMaterial({ color: 0xc0a05a });
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const table = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 0.6), beamMat);
+  table.position.y = 0.35; g.add(table);
+  for (const sx of [-0.7, 0.7]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.35, 0.5), beamMat);
+    leg.position.set(sx, 0.17, 0); g.add(leg);
+  }
+  const n = 2 + Math.floor(r() * 2);
+  for (let i = 0; i < n; i++) {
+    const x = (i - (n - 1) / 2) * 0.6;
+    for (let ring = 0; ring < 3; ring++) {
+      const rad = 0.24 - ring * 0.05;
+      const coil = new THREE.Mesh(new THREE.SphereGeometry(rad, 8, 5), strawMat);
+      coil.scale.set(1, 0.55, 1);
+      coil.position.set(x, 0.46 + ring * 0.12, 0); g.add(coil);
+    }
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.035, 6), new THREE.MeshBasicMaterial({ color: 0x141210 }));
+    hole.position.set(x, 0.46, 0.235); g.add(hole);
+  }
+  g.add(villageBlobShadow(0.9));
+  return g;
+}
+
+// A vegetable patch in tilled rows — cabbages by moonlight.
+function villageMakeVegPatch(r, pal) {
+  const g = new THREE.Group();
+  const soil = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.03, -0.14, 0.05) }));
+  soil.rotation.x = -Math.PI / 2; soil.position.y = 0.012; g.add(soil);
+  // tilled furrows
+  const furrowMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.03, -0.14, -0.02) });
+  for (let row = 0; row < 3; row++) {
+    const furrow = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.18), furrowMat);
+    furrow.rotation.x = -Math.PI / 2; furrow.position.set(0, 0.014, -0.55 + row * 0.55 + 0.27);
+    g.add(furrow);
+  }
+  const veg = r() < 0.5 ? { color: 0x4a7a3a, s: 0.11 } : { color: 0xc07830, s: 0.13 }; // cabbages or pumpkins
+  const vegMat = new THREE.MeshLambertMaterial({ color: veg.color });
+  for (let row = 0; row < 3; row++) {
+    for (let i = 0; i < 5; i++) {
+      if (r() < 0.18) continue; // gap where one was picked
+      const plant = new THREE.Mesh(new THREE.SphereGeometry(veg.s * (0.8 + r() * 0.5), 6, 5), vegMat);
+      plant.scale.y = 0.75;
+      plant.position.set(-1.0 + i * 0.5, 0.07, -0.55 + row * 0.55);
+      g.add(plant);
+    }
+  }
+  // one corner marker post
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.06), new THREE.MeshLambertMaterial({ color: pal.timber }));
+  post.position.set(1.2, 0.25, -0.85); g.add(post);
+  return g;
+}
+
+// A fairy ring of toadstools — the birds refuse to land inside it.
+function villageMakeMushroomRing(r, pal) {
+  const g = new THREE.Group();
+  const stemMat = new THREE.MeshLambertMaterial({ color: 0xd8d2c0 });
+  const capMat = new THREE.MeshLambertMaterial({ color: 0xb03a34 });
+  const n = 6 + Math.floor(r() * 3);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.3;
+    const s = 0.7 + r() * 0.6;
+    const x = Math.cos(a) * 0.8, z = Math.sin(a) * 0.8;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * s, 0.05 * s, 0.16 * s, 5), stemMat);
+    stem.position.set(x, 0.08 * s, z); g.add(stem);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.1 * s, 7, 4, 0, Math.PI * 2, 0, Math.PI / 2), capMat);
+    cap.position.set(x, 0.15 * s, z); g.add(cap);
+  }
+  return g;
+}
+
+// A snowman with a coal grin — only in the frostbitten villages.
+function villageMakeSnowman(r, pal) {
+  const g = new THREE.Group();
+  const snowMat = new THREE.MeshLambertMaterial({ color: 0xeef0f4 });
+  const sizes = [0.42, 0.3, 0.2];
+  let y = 0;
+  sizes.forEach(s => { y += s * 0.85; const ball = new THREE.Mesh(new THREE.SphereGeometry(s, 9, 7), snowMat); ball.position.y = y; g.add(ball); y += s * 0.55; });
+  const carrot = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.22, 6), new THREE.MeshLambertMaterial({ color: 0xd07a3a }));
+  carrot.rotation.x = Math.PI / 2; carrot.position.set(0, 1.28, 0.26); g.add(carrot);
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  for (const sx of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.6, 4), beamMat);
+    arm.rotation.z = sx * (Math.PI / 2 - 0.4); arm.position.set(sx * 0.55, 0.95, 0); g.add(arm);
+  }
+  const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.2, 8), new THREE.MeshLambertMaterial({ color: 0x26262c }));
+  hat.position.y = 1.5; g.add(hat);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 8), hat.material);
+  brim.position.y = 1.41; g.add(brim);
+  if (r() < 0.6) { // a robin on the hat, of course
+    const robin = villageMakeRoofBird(r, 0xb04a3a);
+    robin.position.y = 1.6; g.add(robin);
+  }
+  g.add(villageBlobShadow(0.55));
+  return g;
+}
+
+// A villager in a hooded cloak. Walkers get a `route`; the rest stand and chat.
+function villageMakeVillager(r, pal) {
+  const g = new THREE.Group();
+  const cloakCols = [0x6a4a3a, 0x3a4a6a, 0x4a5a3a, 0x5a3a52, 0x6a5a34];
+  const cloakMat = new THREE.MeshLambertMaterial({ color: cloakCols[Math.floor(r() * cloakCols.length)] });
+  const cloak = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.95, 7), cloakMat);
+  cloak.position.y = 0.48; g.add(cloak);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 6), new THREE.MeshLambertMaterial({ color: 0xd8b890 }));
+  head.position.y = 1.05; g.add(head);
+  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.3, 7), cloakMat);
+  hood.position.y = 1.18; g.add(hood);
+  if (r() < 0.35) { // a lantern to light the way
+    const lant = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.12, 0.09), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+    lant.position.set(0.3, 0.55, 0.05); g.add(lant);
+    const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.5 }));
+    gl.scale.set(0.9, 0.9, 1); gl.position.copy(lant.position); g.add(gl);
+  } else if (r() < 0.3) { // or a bird riding on one shoulder
+    const chum = villageMakeRoofBird(r);
+    chum.position.set(0.18, 1.02, 0); g.add(chum);
+  }
+  g.add(villageBlobShadow(0.34));
+  return g;
+}
+
+// A gently arched footbridge for riverside villages.
+function villageMakeBridge(r, pal, width) {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.05) });
+  const span = width + 2.2;
+  const segs = 5;
+  for (let i = 0; i < segs; i++) {
+    const t = (i + 0.5) / segs - 0.5; // -0.5..0.5 across the span
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.09, span / segs + 0.08), woodMat);
+    plank.position.set(0, 0.32 + Math.cos(t * Math.PI) * 0.4, t * span);
+    plank.rotation.x = Math.sin(t * Math.PI) * 0.4;
+    g.add(plank);
+  }
+  for (const sx of [-0.75, 0.75]) {
+    for (let i = 0; i <= 2; i++) {
+      const t = i / 2 - 0.5;
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.6, 0.09), woodMat);
+      post.position.set(sx, 0.62 + Math.cos(t * Math.PI) * 0.4, t * span);
+      g.add(post);
+    }
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, span), woodMat);
+    rail.position.set(sx, 1.0, 0); g.add(rail);
+  }
+  return g;
+}
+
+// A run of post-and-rail fencing along the roads (local X axis).
+function villageMakeFenceRun(r, pal, len) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const posts = Math.max(2, Math.round(len / 1.1));
+  for (let i = 0; i <= posts; i++) {
+    if (r() < 0.08) continue; // a post the goats got to
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.7, 0.09), beamMat);
+    post.position.set(-len / 2 + (i / posts) * len, 0.35, 0);
+    post.rotation.z = (r() - 0.5) * 0.1;
+    g.add(post);
+  }
+  for (const railY of [0.52, 0.26]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.06, 0.06), beamMat);
+    rail.position.y = railY; g.add(rail);
+  }
+  return g;
 }
 
 // ---- Renderer / scene lifecycle ----------------------------------------------
@@ -14893,6 +15641,8 @@ function disposeVillageScene() {
   });
   villageScene = null;
   villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null; villageWindmills = [];
+  villageWalkers = []; villageRoofBirds = []; villageCloths = []; villageDucks = []; villageClouds = []; villageWaterMats = [];
+  villageWeatherFx = null; villageShootingStar = null;
 }
 
 function buildVillageScene(v) {
@@ -14904,35 +15654,192 @@ function buildVillageScene(v) {
   const sizeRoll = r();
   const tier = sizeRoll < 0.34 ? 0 : sizeRoll < 0.74 ? 1 : 2; // 0 hamlet · 1 village · 2 town
   const groundR = 30 + tier * 5;
+  // Every settlement is also built to one of three plans: a ring green, a
+  // crossroads settlement, or a riverside village with a footbridge.
+  const layoutRoll = r();
+  const layout = layoutRoll < 0.42 ? 'green' : layoutRoll < 0.72 ? 'crossroads' : 'riverside';
+  const startAngle = r() * Math.PI * 2;
+  const riverA = startAngle + Math.PI + (r() - 0.5) * 0.8; // riverside: which way the water lies
+  const riverDist = 10.6, riverW = 3.4;
+  const riverUx = Math.cos(riverA), riverUz = Math.sin(riverA);
+  const riverPx = riverUx * riverDist, riverPz = riverUz * riverDist;
 
   villageScene = new THREE.Scene();
   villageScene.background = new THREE.Color(pal.sky);
   villageScene.fog = new THREE.Fog(pal.sky, 30 + tier * 4, 66 + tier * 8);
 
+  // ---- placement registry: scatter without piling props into each other -----
+  const claimed = [{ x: 0, z: 0, rad: 6.4 }]; // keep the plaza itself clear
+  function spotFree(x, z, rad) {
+    for (const c of claimed) { if (Math.hypot(x - c.x, z - c.z) < rad + c.rad) return false; }
+    if (layout === 'crossroads') {
+      const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
+      const d2 = Math.abs(Math.cos(startAngle) * x + Math.sin(startAngle) * z);
+      if (Math.min(d1, d2) < 2.1 + rad * 0.4) return false;
+    } else if (layout === 'riverside') {
+      if (Math.abs((x - riverPx) * riverUx + (z - riverPz) * riverUz) < 2.9 + rad * 0.4) return false;
+    }
+    return true;
+  }
+  function claimSpot(x, z, rad) { claimed.push({ x, z, rad }); }
+  function scatterSpot(minR, maxR, rad, arcCenter, arcSpread) {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const a = arcCenter !== undefined ? arcCenter + (r() - 0.5) * (arcSpread || Math.PI * 2) : r() * Math.PI * 2;
+      const dd = minR + r() * (maxR - minR);
+      const x = Math.cos(a) * dd, z = Math.sin(a) * dd;
+      if (spotFree(x, z, rad)) { claimSpot(x, z, rad); return { x, z, a }; }
+    }
+    return null;
+  }
+  // Riverside villages keep to the dry bank; everything scatters into this arc.
+  const dryArc = layout === 'riverside' ? { c: riverA + Math.PI, s: 3.4 } : { c: undefined, s: undefined };
+
   // Ground, plaza and paths
   const ground = new THREE.Mesh(new THREE.CircleGeometry(groundR, 44), new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground, pal.speck) }));
   ground.material.map.repeat.set(9, 9);
   ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
+  // Worn patches in the turf — snowdrifts in frost, leaf-litter in autumn
+  const patchColor = pal.weather === 'snow' ? 0xdfe4ec : pal.weather === 'leaves' ? 0x6a4a20 : new THREE.Color(pal.ground).offsetHSL(0.03, -0.2, 0.13).getHex();
+  const patchMat = new THREE.MeshLambertMaterial({ color: patchColor });
+  for (let i = 0; i < 5 + Math.floor(r() * 4); i++) {
+    const a = r() * Math.PI * 2, dd = 6 + r() * (groundR * 0.55);
+    const patch = new THREE.Mesh(new THREE.CircleGeometry(0.8 + r() * 1.6, 9), patchMat);
+    patch.rotation.x = -Math.PI / 2; patch.position.set(Math.cos(a) * dd, 0.008, Math.sin(a) * dd);
+    patch.scale.set(1, 0.6 + r() * 0.6, 1);
+    villageScene.add(patch);
+  }
   const cobbles = villageCobbleTexture(r);
   const plaza = new THREE.Mesh(new THREE.CircleGeometry(4.8 + tier * 0.7 + r() * 1.4, 22), new THREE.MeshLambertMaterial({ map: cobbles }));
   plaza.material.map.repeat.set(3.4, 3.4);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
-  // Buildings on a ring with jittered spacing, radius and colours.
+  // ---- layout groundwork ------------------------------------------------------
+  if (layout === 'crossroads') {
+    // Two cobbled roads meet at the square; fences and a waymarker gate line them
+    for (const roadA of [startAngle, startAngle + Math.PI / 2]) {
+      const roadGrp = new THREE.Group();
+      const road = new THREE.Mesh(new THREE.PlaneGeometry(groundR * 1.8, 3.0), new THREE.MeshLambertMaterial({ map: cobbles.clone() }));
+      road.material.map.needsUpdate = true;
+      road.material.map.repeat.set(groundR / 2.4, 2);
+      road.rotation.x = -Math.PI / 2;
+      roadGrp.add(road);
+      roadGrp.rotation.y = -roadA;
+      roadGrp.position.y = 0.014;
+      villageScene.add(roadGrp);
+      // fence runs beside the roads
+      for (let f = 0; f < 2 + tier; f++) {
+        const along = (r() < 0.5 ? -1 : 1) * (6 + r() * (groundR * 0.4));
+        const side = (r() < 0.5 ? -1 : 1) * (2.6 + r() * 0.5);
+        const len = 3 + r() * 4;
+        const fence = villageMakeFenceRun(r, pal, len);
+        fence.rotation.y = -roadA;
+        fence.position.set(Math.cos(roadA) * along - Math.sin(roadA) * side, 0, Math.sin(roadA) * along + Math.cos(roadA) * side);
+        villageScene.add(fence);
+      }
+    }
+    // A waymarker gate where the main road leaves the village
+    const gateD = groundR * 0.52;
+    const gate = new THREE.Group();
+    const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+    for (const sx of [-1.7, 1.7]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), beamMat);
+      post.position.set(sx, 1.3, 0); gate.add(post);
+    }
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.9, 0.18, 0.24), beamMat);
+    lintel.position.y = 2.6; gate.add(lintel);
+    const gLant = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.16), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+    gLant.position.set(0, 2.35, 0); gate.add(gLant);
+    const gGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.7 }));
+    gGlow.scale.set(1.6, 1.6, 1); gGlow.position.set(0, 2.35, 0); gate.add(gGlow);
+    if (r() < 0.6) { const gb = villageMakeRoofBird(r); gb.position.set(0.8, 2.72, 0); gate.add(gb); }
+    gate.rotation.y = -startAngle + Math.PI / 2;
+    gate.position.set(Math.cos(startAngle) * gateD, 0, Math.sin(startAngle) * gateD);
+    villageScene.add(gate);
+  } else if (layout === 'riverside') {
+    // The river crosses the scene beyond the square, banks whispering with reeds
+    const riverGrp = new THREE.Group();
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(groundR * 2.2, riverW), villageWaterMaterial(r, '#1e3852'));
+    water.material.map.repeat.set(16, 1.4);
+    water.rotation.x = -Math.PI / 2;
+    riverGrp.add(water);
+    for (const side of [-1, 1]) {
+      const bank = new THREE.Mesh(new THREE.PlaneGeometry(groundR * 2.2, 0.6), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, -0.08, 0.06) }));
+      bank.rotation.x = -Math.PI / 2; bank.position.set(0, 0.002, side * (riverW / 2 + 0.28));
+      riverGrp.add(bank);
+    }
+    riverGrp.rotation.y = -(riverA + Math.PI / 2);
+    riverGrp.position.set(riverPx, 0.01, riverPz);
+    villageScene.add(riverGrp);
+    // Reeds and a moored rowboat along the banks
+    const reedMat = new THREE.MeshLambertMaterial({ color: 0x3c5a22 });
+    const tX = -riverUz, tZ = riverUx; // direction the river flows
+    for (let i = 0; i < 14; i++) {
+      const s = (r() - 0.5) * 30, side = (r() < 0.5 ? -1 : 1) * (riverW / 2 + 0.35 + r() * 0.5);
+      const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.035, 0.5 + r() * 0.45, 4), reedMat);
+      reed.position.set(riverPx + tX * s + riverUx * side, 0.28, riverPz + tZ * s + riverUz * side);
+      reed.rotation.z = (r() - 0.5) * 0.3;
+      villageScene.add(reed);
+    }
+    if (r() < 0.65) {
+      const boat = new THREE.Group();
+      const hullMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.14) });
+      const hull = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 0.62), hullMat);
+      hull.position.y = 0.18; boat.add(hull);
+      for (const be of [-0.8, 0.8]) {
+        const bow = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.5), hullMat);
+        bow.position.set(be, 0.24, 0); bow.rotation.z = be > 0 ? -0.5 : 0.5; boat.add(bow);
+      }
+      const bench = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.56), hullMat);
+      bench.position.y = 0.3; boat.add(bench);
+      const bs = 4 + r() * 6;
+      boat.position.set(riverPx + tX * bs, 0.02, riverPz + tZ * bs);
+      boat.rotation.y = -(riverA + Math.PI / 2) + (r() - 0.5) * 0.4;
+      villageScene.add(boat);
+    }
+    // The footbridge carries the lane over the water
+    const bridge = villageMakeBridge(r, pal, riverW);
+    bridge.rotation.y = Math.PI / 2 - riverA;
+    bridge.position.set(riverPx, 0, riverPz);
+    villageScene.add(bridge);
+    // Lane from the plaza to the bridge
+    const laneLen = riverDist - 3;
+    const lane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, laneLen), new THREE.MeshLambertMaterial({ map: cobbles.clone() }));
+    lane.material.map.needsUpdate = true;
+    lane.material.map.repeat.set(1, laneLen / 2.4);
+    lane.rotation.x = -Math.PI / 2;
+    lane.position.set(riverUx * (laneLen / 2 + 1), 0.015, riverUz * (laneLen / 2 + 1));
+    lane.rotation.z = Math.atan2(riverUx, riverUz);
+    villageScene.add(lane);
+  }
+
+  // Buildings with jittered spacing, radius and colours, arranged to the plan.
   // Each village only has the trades its seed grants it.
   const shopKeys = villageShopKeysFor(v.seed);
-  const startAngle = r() * Math.PI * 2;
   const roofPool = pal.roofs.slice();
   villageBuildings = [];
   shopKeys.forEach((k, i) => {
-    const angle = startAngle + (i / shopKeys.length) * Math.PI * 2 + (r() - 0.5) * 0.4;
-    const radius = 7.4 + tier * 0.8 + r() * 1.8;
-    const px = Math.cos(angle) * radius, pz = Math.sin(angle) * radius;
+    let px, pz, faceX = 0, faceZ = 0;
+    if (layout === 'crossroads') {
+      // Shops take the four corners of the crossing, then march down the arms
+      const arm = startAngle + (i % 4) * Math.PI / 2;
+      const along = 7.2 + Math.floor(i / 4) * 4.6 + r() * 1.6;
+      const side = ((i + Math.floor(i / 4)) % 2 === 0 ? 1 : -1) * (3.4 + r() * 0.7);
+      px = Math.cos(arm) * along - Math.sin(arm) * side;
+      pz = Math.sin(arm) * along + Math.cos(arm) * side;
+      faceX = Math.cos(arm) * along; faceZ = Math.sin(arm) * along; // face the road
+    } else {
+      const spread = layout === 'riverside' ? 2.6 : Math.PI * 2;
+      const base = layout === 'riverside' ? riverA + Math.PI - spread / 2 : startAngle;
+      const angle = base + (i / shopKeys.length) * spread + (r() - 0.5) * 0.4;
+      const radius = 7.4 + tier * 0.8 + r() * 1.8;
+      px = Math.cos(angle) * radius; pz = Math.sin(angle) * radius;
+    }
+    claimSpot(px, pz, 3.2);
     if (roofPool.length === 0) roofPool.push(...pal.roofs);
     const roofColor = roofPool.splice(Math.floor(r() * roofPool.length), 1)[0];
     const b = villageMakeBuilding(k, { icon: VILLAGE_SHOPS[k].icon, name: VILLAGE_SHOPS[k].name, roofColor }, r, pal);
     b.position.set(px, 0, pz);
-    b.lookAt(0, 0, 0);
+    b.lookAt(faceX, 0, faceZ);
     b.rotation.x = 0; b.rotation.z = 0;
     b.rotation.y += (r() - 0.5) * 0.22;
     villageScene.add(b);
@@ -14957,40 +15864,66 @@ function buildVillageScene(v) {
   });
 
   // Cottages fill out bigger settlements (none in a hamlet).
-  const cottageCount = tier === 0 ? 0 : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
+  const cottageCount = tier === 0 ? (r() < 0.4 ? 1 : 0) : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
   for (let i = 0; i < cottageCount; i++) {
-    const a = r() * Math.PI * 2, rad = 11.5 + r() * (3 + tier * 2);
-    const cx = Math.cos(a) * rad, cz = Math.sin(a) * rad;
+    let cx, cz, faceX = 0, faceZ = 0;
+    if (layout === 'crossroads') {
+      const arm = startAngle + Math.floor(r() * 4) * Math.PI / 2;
+      const along = 10 + r() * (5 + tier * 2);
+      const side = (r() < 0.5 ? 1 : -1) * (3.6 + r() * 1.4);
+      cx = Math.cos(arm) * along - Math.sin(arm) * side;
+      cz = Math.sin(arm) * along + Math.cos(arm) * side;
+      faceX = Math.cos(arm) * along; faceZ = Math.sin(arm) * along;
+      if (!spotFree(cx, cz, 2.4)) continue;
+      claimSpot(cx, cz, 2.4);
+    } else if (layout === 'riverside' && i >= cottageCount - 1 - tier && tier >= 1) {
+      // the last cottage or two settle across the water, lamplit on the far
+      // bank — set off to one side so they never block the bridge landing
+      const off = (r() < 0.5 ? -1 : 1) * (1.5 + r() * 4.5);
+      cx = riverPx + riverUx * (3.6 + r() * 2.5) - riverUz * off;
+      cz = riverPz + riverUz * (3.6 + r() * 2.5) + riverUx * off;
+      faceX = riverPx; faceZ = riverPz; // face back toward the bridge
+      claimSpot(cx, cz, 2.4);
+    } else {
+      const spot = scatterSpot(11.5, 14.5 + tier * 2, 2.4, dryArc.c, dryArc.s);
+      if (!spot) continue;
+      cx = spot.x; cz = spot.z;
+    }
     const cottage = villageMakeCottage(r, pal);
     cottage.position.set(cx, 0, cz);
-    cottage.lookAt(0, 0, 0); cottage.rotation.x = 0; cottage.rotation.z = 0;
+    cottage.lookAt(faceX, 0, faceZ); cottage.rotation.x = 0; cottage.rotation.z = 0;
     cottage.rotation.y += (r() - 0.5) * 0.5;
     villageScene.add(cottage);
   }
 
-  // Landmarks — church, windmill, manor or a ruined watchtower. Villages get
-  // one (usually), towns often two, so no two settlements share a skyline.
-  const landmarkMakers = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower];
-  const landmarkCount = tier === 0 ? (r() < 0.25 ? 1 : 0) : tier === 1 ? (r() < 0.72 ? 1 : 0) : (r() < 0.6 ? 2 : 1);
+  // Landmarks — churches, windmills, manors, ruins, and rarer wonders: the
+  // Great Perch, a standing-stone circle, a royal aviary, a dusk bell tower.
+  // No two settlements share a skyline.
+  const landmarkMakers = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower,
+    villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower];
+  const landmarkCount = tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
   const landmarkPool = landmarkMakers.slice();
   for (let i = 0; i < landmarkCount; i++) {
-    const a = startAngle + Math.PI + (i === 0 ? 0 : Math.PI * 0.6) + (r() - 0.5) * 1.2, rad = 12 + r() * 3;
+    const spot = scatterSpot(11.5, 16, 3.4, dryArc.c, dryArc.s);
+    if (!spot) break;
     const maker = landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0];
     const landmark = maker(r, pal);
-    landmark.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
-    landmark.rotation.y = -a + (r() - 0.5);
+    landmark.position.set(spot.x, 0, spot.z);
+    landmark.rotation.y = -spot.a + (r() - 0.5);
     villageScene.add(landmark);
   }
 
   // A dovecote suits a realm of bird trainers — most villages keep one.
   if (r() < 0.6) {
-    const a = r() * Math.PI * 2, rad = 9.5 + r() * 3;
-    const dovecote = villageMakeDovecote(r, pal);
-    dovecote.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
-    villageScene.add(dovecote);
+    const spot = scatterSpot(9.5, 12.5, 1.4, dryArc.c, dryArc.s);
+    if (spot) {
+      const dovecote = villageMakeDovecote(r, pal);
+      dovecote.position.set(spot.x, 0, spot.z);
+      villageScene.add(dovecote);
+    }
   }
 
-  // Village centrepiece: well, market cross or fountain
+  // Village centrepiece: well, market cross, fountain, birdbath or maypole
   villageScene.add(villageMakeCentrepiece(r, pal));
 
   // Market stalls around the plaza
@@ -15001,6 +15934,15 @@ function buildVillageScene(v) {
     stall.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
     stall.rotation.y = -a + Math.PI / 2 + (r() - 0.5) * 0.4;
     villageScene.add(stall);
+  }
+  // A bench or two facing the centrepiece
+  for (let i = 0; i < 1 + (tier > 0 ? 1 : 0); i++) {
+    if (r() < 0.3) continue;
+    const a = r() * Math.PI * 2, rad = 2.6 + r() * 1.2;
+    const bench = villageMakeBench(r, pal);
+    bench.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    bench.rotation.y = -a - Math.PI / 2;
+    villageScene.add(bench);
   }
 
   // Bunting strung across the square
@@ -15021,32 +15963,48 @@ function buildVillageScene(v) {
   }
 
   // Countryside set dressing — every piece rolls per village, so one place has
-  // a duck pond and geese, the next a hay field, a cart and a maypole.
-  if (r() < 0.55) {
-    const a = r() * Math.PI * 2, rad = 10 + r() * 4;
-    const pond = villageMakePond(r, pal);
-    pond.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
-    villageScene.add(pond);
+  // a duck pond and a scarecrow with its jury of sparrows, the next a fairy
+  // ring, beehives, washing on the line and a snowman.
+  const dressing = [
+    { p: 0.55, rad: 3.2, min: 10, max: 15, make: () => villageMakePond(r, pal) },
+    { p: 0.55, rad: 2.4, min: 11, max: 15, make: () => { const pen = villageMakePen(r, pal); pen.rotation.y = r() * Math.PI; return pen; } },
+    { p: 0.6, rad: 1.2, min: 5.5, max: 8.5, make: () => { const cart = villageMakeCart(r, pal); cart.rotation.y = r() * Math.PI * 2; return cart; } },
+    { p: tier >= 1 ? 0.5 : 0, rad: 1.6, min: 13, max: 17, make: () => villageMakeHay(r, pal) },
+    { p: 0.6, rad: 2.0, min: 10.5, max: 15, make: () => { const veg = villageMakeVegPatch(r, pal); veg.rotation.y = r() * Math.PI; return veg; } },
+    { p: 0.55, rad: 1.0, min: 10, max: 15, make: () => { const sc = villageMakeScarecrow(r, pal); sc.rotation.y = r() * Math.PI * 2; return sc; } },
+    { p: 1.0, rad: 0.7, min: 6.5, max: 11, make: () => villageMakeBirdhousePole(r, pal) }, // every village honours its birds
+    { p: tier >= 1 ? 0.55 : 0.25, rad: 0.7, min: 8, max: 13, make: () => villageMakeBirdhousePole(r, pal) },
+    { p: 0.6, rad: 1.6, min: 9, max: 13.5, make: () => { const wl = villageMakeWashingLine(r, pal); wl.rotation.y = r() * Math.PI; return wl; } },
+    { p: 0.65, rad: 1.0, min: 8.5, max: 13, make: () => { const lp = villageMakeLogPile(r, pal); lp.rotation.y = r() * Math.PI; return lp; } },
+    { p: 0.45, rad: 1.2, min: 9.5, max: 14, make: () => { const bh = villageMakeBeehives(r, pal); bh.rotation.y = r() * Math.PI; return bh; } },
+    { p: 0.4, rad: 1.2, min: 11, max: 16, make: () => villageMakeMushroomRing(r, pal) },
+    { p: pal.weather === 'snow' ? 0.7 : 0, rad: 0.8, min: 6, max: 11, make: () => { const sm = villageMakeSnowman(r, pal); sm.rotation.y = r() * Math.PI * 2; return sm; } }
+  ];
+  dressing.forEach(item => {
+    if (r() >= item.p) return;
+    const spot = scatterSpot(item.min, item.max, item.rad, dryArc.c, dryArc.s);
+    if (!spot) return;
+    const piece = item.make();
+    piece.position.set(spot.x, 0, spot.z);
+    villageScene.add(piece);
+  });
+
+  // Villagers out in the evening air: a few chatting near the square, and one
+  // or two on a slow circuit of the plaza with a lantern.
+  const idlers = 1 + tier + Math.floor(r() * 2);
+  for (let i = 0; i < idlers; i++) {
+    const a = r() * Math.PI * 2, rad = 2.4 + r() * 3.4;
+    const soul = villageMakeVillager(r, pal);
+    soul.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    soul.rotation.y = r() * Math.PI * 2;
+    villageScene.add(soul);
   }
-  if (r() < 0.55) {
-    const a = r() * Math.PI * 2, rad = 11 + r() * 4;
-    const pen = villageMakePen(r, pal);
-    pen.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
-    pen.rotation.y = r() * Math.PI;
-    villageScene.add(pen);
-  }
-  if (r() < 0.6) {
-    const a = r() * Math.PI * 2, rad = 5.5 + r() * 3;
-    const cart = villageMakeCart(r, pal);
-    cart.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
-    cart.rotation.y = r() * Math.PI * 2;
-    villageScene.add(cart);
-  }
-  if (tier >= 1 && r() < 0.5) {
-    const a = r() * Math.PI * 2, rad = 13 + r() * 4;
-    const hay = villageMakeHay(r, pal);
-    hay.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
-    villageScene.add(hay);
+  const walkers = tier === 0 ? 1 : 2;
+  for (let i = 0; i < walkers; i++) {
+    const soul = villageMakeVillager(r, pal);
+    soul.userData.route = { rad: 4.4 + r() * 1.8, phase: r() * Math.PI * 2, speed: (0.1 + r() * 0.08) * (r() < 0.5 ? -1 : 1) };
+    villageWalkers.push(soul);
+    villageScene.add(soul);
   }
 
   // Lantern posts along a couple of the cobbled paths
@@ -15070,16 +16028,18 @@ function buildVillageScene(v) {
   }
 
   // Trees ringing the village
-  const treeCount = 8 + tier * 3 + Math.floor(r() * 6);
+  const treeCount = 10 + tier * 4 + Math.floor(r() * 6);
   for (let i = 0; i < treeCount; i++) {
     const a = (i / treeCount) * Math.PI * 2 + r() * 0.5;
     const rad = 14.5 + r() * 7;
+    const tx = Math.cos(a) * rad, tz = Math.sin(a) * rad;
+    if (!spotFree(tx, tz, 0.9)) continue;
     const tree = villageMakeTree(r, pal);
-    tree.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    tree.position.set(tx, 0, tz);
     villageScene.add(tree);
   }
 
-  // Night sky: stars + a bright moon sprite
+  // Night sky: stars, a bright moon, slow clouds and the odd shooting star
   const starCount = 240;
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount; i++) {
@@ -15096,22 +16056,58 @@ function buildVillageScene(v) {
   moonSprite.scale.set(9, 9, 1);
   moonSprite.position.set(-22, 24, 14);
   villageScene.add(moonSprite);
-
-  // Fireflies drifting over the green
-  const flyCount = 22;
-  const flyPos = new Float32Array(flyCount * 3);
-  const flyBase = [];
-  for (let i = 0; i < flyCount; i++) {
-    const a = r() * Math.PI * 2, rad = 4 + r() * 11;
-    const bx = Math.cos(a) * rad, bz = Math.sin(a) * rad, by = 0.6 + r() * 1.8;
-    flyBase.push({ x: bx, y: by, z: bz, p: r() * 6.28, s: 0.5 + r() * 0.8 });
-    flyPos[i * 3] = bx; flyPos[i * 3 + 1] = by; flyPos[i * 3 + 2] = bz;
+  const cloudTex = villageSmokeTexture();
+  const cloudCount = pal.weather === 'rain' ? 5 : 3;
+  for (let i = 0; i < cloudCount; i++) {
+    const cloud = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, fog: false, opacity: pal.weather === 'rain' ? 0.3 : 0.16 }));
+    cloud.scale.set(11 + r() * 8, 3.5 + r() * 2, 1);
+    cloud.position.set((r() - 0.5) * 70, 17 + r() * 8, (r() - 0.5) * 60 - 10);
+    cloud.userData = { baseX: cloud.position.x, speed: 0.25 + r() * 0.35 };
+    villageClouds.push(cloud);
+    villageScene.add(cloud);
   }
-  const flyGeo = new THREE.BufferGeometry();
-  flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
-  villageFireflies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xd8ff9a, size: 0.16, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
-  villageFireflies.userData.base = flyBase;
-  villageScene.add(villageFireflies);
+  villageShootingStar = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('225,235,255'), transparent: true, depthWrite: false, fog: false, opacity: 0 }));
+  villageShootingStar.scale.set(2.4, 0.35, 1);
+  villageShootingStar.userData = {
+    period: 11 + r() * 9,
+    x0: -34 + r() * 24, y0: 24 + r() * 6, z0: -26 + r() * 30,
+    vx: 16 + r() * 8, vy: -(3 + r() * 3), vz: (r() - 0.5) * 6
+  };
+  villageScene.add(villageShootingStar);
+
+  // Weather — fireflies on mild nights, else snow, drifting leaves or rain
+  if (pal.weather === 'fireflies') {
+    const flyCount = 22;
+    const flyPos = new Float32Array(flyCount * 3);
+    const flyBase = [];
+    for (let i = 0; i < flyCount; i++) {
+      const a = r() * Math.PI * 2, rad = 4 + r() * 11;
+      const bx = Math.cos(a) * rad, bz = Math.sin(a) * rad, by = 0.6 + r() * 1.8;
+      flyBase.push({ x: bx, y: by, z: bz, p: r() * 6.28, s: 0.5 + r() * 0.8 });
+      flyPos[i * 3] = bx; flyPos[i * 3 + 1] = by; flyPos[i * 3 + 2] = bz;
+    }
+    const flyGeo = new THREE.BufferGeometry();
+    flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
+    villageFireflies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xd8ff9a, size: 0.16, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+    villageFireflies.userData.base = flyBase;
+    villageScene.add(villageFireflies);
+  } else {
+    const cfg = pal.weather === 'snow' ? { n: 110, size: 0.16, color: 0xe8ecf8, h: 14, speed: 1.1, sway: 0.7, op: 0.9 }
+      : pal.weather === 'rain' ? { n: 150, size: 0.07, color: 0x9ab0d0, h: 14, speed: 10, sway: 0.06, op: 0.5 }
+      : { n: 70, size: 0.2, color: 0xc0763a, h: 10, speed: 0.55, sway: 1.5, op: 0.9 };
+    const wPos = new Float32Array(cfg.n * 3);
+    const wBase = [];
+    for (let i = 0; i < cfg.n; i++) {
+      const bx = (r() - 0.5) * 46, bz = (r() - 0.5) * 46;
+      wBase.push({ x: bx, z: bz, p: r() * cfg.h, sp: r() * 6.28 });
+      wPos[i * 3] = bx; wPos[i * 3 + 1] = r() * cfg.h; wPos[i * 3 + 2] = bz;
+    }
+    const wGeo = new THREE.BufferGeometry();
+    wGeo.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
+    villageWeatherFx = new THREE.Points(wGeo, new THREE.PointsMaterial({ color: cfg.color, size: cfg.size, transparent: true, opacity: cfg.op, depthWrite: false }));
+    villageWeatherFx.userData = { cfg, base: wBase };
+    villageScene.add(villageWeatherFx);
+  }
 
   // Lighting: moonlight + warm hearth-glow
   villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 1.7));
@@ -15140,7 +16136,10 @@ function villageAnimate(ts) {
   if (currentScreen !== 'village') { villageRunning = false; return; }
   requestAnimationFrame(villageAnimate);
   if (!villageRenderer || !villageScene) return;
-  const t = (ts || 0) / 1000;
+  villageAnimateFrame((ts || 0) / 1000);
+}
+
+function villageAnimateFrame(t) {
   villageCam.azimuth += 0.0006; // slow idle drift
   const { azimuth, polar, dist } = villageCam;
   villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
@@ -15155,6 +16154,66 @@ function villageAnimate(ts) {
     const sc = 0.55 + cycle * 0.6;
     p.scale.set(sc, sc, 1);
   });
+  // Villagers on their evening circuit of the square
+  villageWalkers.forEach(wk => {
+    const rt = wk.userData.route;
+    if (!rt) return;
+    const ph = rt.phase + t * rt.speed;
+    const x = Math.cos(ph) * rt.rad, z = Math.sin(ph) * rt.rad;
+    wk.position.set(x, Math.abs(Math.sin(t * 6 + rt.phase)) * 0.03, z);
+    const vx = -Math.sin(ph) * Math.sign(rt.speed), vz = Math.cos(ph) * Math.sign(rt.speed);
+    wk.rotation.y = Math.atan2(-vz, vx);
+  });
+  // Perched birds bob, hop and glance about
+  villageRoofBirds.forEach((b, i) => {
+    if (b.userData.baseY0 === undefined) { b.userData.baseY0 = b.position.y; b.userData.baseRotY = b.rotation.y; }
+    const hop = Math.max(0, Math.sin(t * (1.3 + (i % 4) * 0.23) + b.userData.phase) - 0.94) * 1.4;
+    b.position.y = b.userData.baseY0 + hop;
+    b.rotation.y = b.userData.baseRotY + Math.sin(t * 0.7 + b.userData.phase) * 0.55;
+  });
+  // Washing swings on the line
+  villageCloths.forEach(c => { c.rotation.x = Math.sin(t * 1.3 + c.userData.phase) * 0.22; });
+  // Ducks paddle their circuits
+  villageDucks.forEach(dk => {
+    const u = dk.userData;
+    const ph = u.phase + t * u.speed;
+    dk.position.x = Math.cos(ph) * u.rad;
+    dk.position.z = Math.sin(ph) * u.rad * u.squash;
+    const s = Math.sign(u.speed);
+    const vx = -Math.sin(ph) * s, vz = Math.cos(ph) * u.squash * s;
+    dk.rotation.y = Math.atan2(-vz, vx);
+  });
+  // Clouds drift, moonlit water shimmers
+  villageClouds.forEach(cl => {
+    cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + 45) % 90) - 45;
+  });
+  villageWaterMats.forEach((m, i) => { if (m.map) { m.map.offset.x = t * 0.018 * (1 + (i % 3) * 0.4); } });
+  // The odd shooting star
+  if (villageShootingStar) {
+    const u = villageShootingStar.userData;
+    const cycle = t % u.period;
+    if (cycle < 1.1) {
+      const k = cycle / 1.1;
+      villageShootingStar.position.set(u.x0 + u.vx * cycle, u.y0 + u.vy * cycle, u.z0 + u.vz * cycle);
+      villageShootingStar.material.opacity = Math.sin(k * Math.PI) * 0.9;
+    } else if (villageShootingStar.material.opacity > 0) {
+      villageShootingStar.material.opacity = 0;
+    }
+  }
+  // Weather: snowfall, drifting leaves or rain
+  if (villageWeatherFx) {
+    const { cfg, base } = villageWeatherFx.userData;
+    const pos = villageWeatherFx.geometry.attributes.position;
+    for (let i = 0; i < base.length; i++) {
+      const b = base[i];
+      const y = cfg.h - ((t * cfg.speed + b.p) % cfg.h);
+      pos.setXYZ(i,
+        b.x + Math.sin(t * 0.8 + b.sp) * cfg.sway,
+        y,
+        b.z + Math.cos(t * 0.6 + b.sp) * cfg.sway * 0.6);
+    }
+    pos.needsUpdate = true;
+  }
   if (villageFireflies) {
     const pos = villageFireflies.geometry.attributes.position;
     const base = villageFireflies.userData.base;
@@ -15168,6 +16227,19 @@ function villageAnimate(ts) {
     pos.needsUpdate = true;
   }
   villageRenderer.render(villageScene, villageCamera);
+}
+
+// Local-only debug hook so the village generator can be exercised headlessly
+if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+  window.__burbzVillageDebug = {
+    build: buildVillageScene,
+    dispose: disposeVillageScene,
+    ensureRenderer: ensureVillageRenderer,
+    frame: villageAnimateFrame,
+    rng: villageRngFrom,
+    palettes: VILLAGE_PALETTES,
+    state: () => ({ scene: villageScene, camera: villageCamera, buildings: villageBuildings, walkers: villageWalkers, roofBirds: villageRoofBirds, ducks: villageDucks, cloths: villageCloths, clouds: villageClouds, waterMats: villageWaterMats, weatherFx: villageWeatherFx, shootingStar: villageShootingStar })
+  };
 }
 
 // ---- Shop overlay + purchases ----
