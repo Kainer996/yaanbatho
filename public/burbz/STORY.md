@@ -8,8 +8,8 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 ## The Liberation Map
 
-- The unexplored world is shown in **dark green**: land still hidden beneath the usurper's veil.
-- A liberated sanctuary is shown in **light green**, with its real map detail restored.
+- The unexplored world sleeps beneath the **usurper's cloud**: a drifting blanket of cloud hides the land, so the Earth itself is covered rather than painted over.
+- Around a liberated sanctuary the **clouds part**, revealing the true medieval map beneath — parchment land, ink-lettered town names and no modern roads — ringed in light green.
 - Town and village icons appear when the player zooms close enough to inspect liberated places.
 - The fantasy of travelling abroad is a major part of Burbz. Taking the app to another country literally reveals and restores a new piece of the world.
 - The long-term objective is global: the player and their flock can awaken the whole map, restoring the Kingdom of Burbz region by region.
@@ -19,7 +19,7 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 1. The player physically reaches and enters a real town or village through the map.
 2. The town's shadow-bound occupying flock challenges the player's birds in a **Liberation Battle**.
 3. A victory breaks the usurper's hold. The player then builds a sanctuary birdhouse to anchor the freedom spell.
-4. The town becomes part of the player's empire, lights up in light green, gains a liberation icon, supports the realm, and becomes a safe local hub.
+4. The town becomes part of the player's empire, the clouds part over its land in a light green ring, it gains a liberation icon, supports the realm, and becomes a safe local hub.
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
