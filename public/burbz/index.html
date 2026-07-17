@@ -368,32 +368,54 @@ svg.academy-room-bg { display:block; filter:none; }
 .village-claim-btn[disabled] { opacity:.55; }
 .village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
 #empirePanel { margin:14px; }
-.empire-map-card { position:relative; height:390px; margin:12px 14px 6px; overflow:hidden; border-radius:19px; border:1px solid rgba(214,178,110,.48); background:#18222a; box-shadow:0 14px 34px rgba(0,0,0,.42), inset 0 0 32px rgba(240,199,103,.07); }
+/* ---- Crusader-style royal map frame ---------------------------------------- */
+.empire-map-card { position:relative; height:52vh; min-height:380px; margin:12px 12px 6px; overflow:hidden; border-radius:14px; border:2px solid #7a5a28; background:#18222a; box-shadow:0 0 0 1px rgba(240,199,103,.55), 0 0 0 5px rgba(28,20,8,.95), 0 0 0 6px rgba(214,168,79,.4), 0 18px 40px rgba(0,0,0,.55), inset 0 0 32px rgba(240,199,103,.07); }
 #empireWorldMap { position:absolute; inset:0; }
-#empireWorldMap .maplibregl-canvas { filter:saturate(.9) sepia(.16) brightness(1.02) contrast(1.03); }
+#empireWorldMap .maplibregl-canvas { filter:saturate(.88) sepia(.24) brightness(1.02) contrast(1.05); }
 .empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; }
 .empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
-.empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); }
-.empire-map-vignette { position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 34px rgba(6,10,14,.44); background:linear-gradient(180deg,rgba(8,12,16,.1),transparent 34%,transparent 76%,rgba(8,12,16,.22)); }
-.empire-map-tools { position:absolute; z-index:5; top:10px; left:10px; display:flex; gap:7px; }
-.empire-map-btn { min-height:35px; padding:0 11px; border-radius:11px; border:1px solid rgba(240,199,103,.5); background:rgba(11,20,15,.9); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.4); }
+.empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); background:rgba(24,16,6,.92); border:1px solid rgba(214,168,79,.5); }
+.empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button { color:#ffe8a5; }
+.empire-map-vignette { position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 48px rgba(20,12,2,.55); background:linear-gradient(180deg,rgba(14,9,2,.28),transparent 30%,transparent 72%,rgba(14,9,2,.34)); }
+/* burnt parchment corners, like an old campaign map */
+.empire-map-corner { position:absolute; z-index:5; width:26px; height:26px; pointer-events:none; border:2px solid rgba(240,199,103,.75); }
+.empire-map-corner.tl { top:6px; left:6px; border-right:0; border-bottom:0; border-top-left-radius:9px; }
+.empire-map-corner.tr { top:6px; right:6px; border-left:0; border-bottom:0; border-top-right-radius:9px; }
+.empire-map-corner.bl { bottom:6px; left:6px; border-right:0; border-top:0; border-bottom-left-radius:9px; }
+.empire-map-corner.br { bottom:6px; right:6px; border-left:0; border-top:0; border-bottom-right-radius:9px; }
+/* royal banner floating over the top of the map */
+.empire-realm-banner { position:absolute; z-index:6; top:0; left:50%; transform:translateX(-50%); max-width:86%; padding:7px 18px 9px; border-radius:0 0 13px 13px; border:1px solid rgba(240,199,103,.65); border-top:0; background:linear-gradient(180deg,rgba(52,34,12,.96),rgba(24,15,5,.96)); box-shadow:0 8px 20px rgba(0,0,0,.5), inset 0 0 14px rgba(240,199,103,.12); text-align:center; pointer-events:none; }
+.empire-realm-banner-name { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.1em; color:#ffe9a8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.empire-realm-banner-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.16em; color:#c8b98f; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.empire-map-tools { position:absolute; z-index:5; top:58px; left:10px; display:flex; gap:7px; }
+.empire-map-btn { min-height:35px; padding:0 12px; border-radius:9px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(46,31,12,.94),rgba(18,12,5,.94)); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.18); }
 .empire-map-btn:active { transform:scale(.97); }
 .empire-map-btn:focus-visible, .empire-map-marker:focus-visible { outline:3px solid #f4fff5; outline-offset:3px; }
-.empire-map-status { position:absolute; z-index:5; left:10px; right:10px; bottom:26px; min-height:34px; display:flex; align-items:center; justify-content:center; padding:7px 10px; border-radius:11px; border:1px solid rgba(240,199,103,.3); background:rgba(8,16,11,.88); color:#f8e7b2; font-size:10px; font-weight:800; letter-spacing:.04em; text-align:center; pointer-events:none; backdrop-filter:blur(8px); }
-.empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:7px; line-height:1; color:rgba(226,244,226,.82); text-align:center; white-space:nowrap; pointer-events:auto; text-shadow:0 1px 3px rgba(0,20,12,.98); }
+.empire-map-status { position:absolute; z-index:5; left:10px; right:10px; bottom:26px; min-height:34px; display:flex; align-items:center; justify-content:center; padding:7px 10px; border-radius:10px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(38,26,10,.92),rgba(16,11,4,.92)); color:#f8e7b2; font-size:10px; font-weight:800; letter-spacing:.04em; text-align:center; pointer-events:none; backdrop-filter:blur(8px); }
+.empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:7px; line-height:1; color:rgba(240,226,190,.82); text-align:center; white-space:nowrap; pointer-events:auto; text-shadow:0 1px 3px rgba(20,12,0,.98); }
 .empire-map-attribution a { color:inherit; text-decoration:none; }
 .empire-map-empty { position:absolute; z-index:4; inset:64px 24px 58px; display:none; place-items:center; color:#eadcac; font-size:12px; line-height:1.5; text-align:center; pointer-events:none; }
 .empire-map-card.is-empty .empire-map-empty { display:none; }
+/* heraldic shield markers for liberated provinces */
 .empire-map-marker { appearance:none; border:0; padding:0; background:transparent; color:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transition:opacity .18s ease; filter:drop-shadow(0 4px 7px rgba(0,0,0,.72)); }
 .empire-map-marker.is-visible { opacity:1; pointer-events:auto; }
-.empire-map-marker-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:50% 50% 50% 8px; transform:rotate(-45deg); border:2px solid #dcffe1; background:radial-gradient(circle at 36% 32%,#b9f5bd,#3d8d58 76%); box-shadow:0 0 0 3px rgba(126,217,131,.20),0 0 18px rgba(126,217,131,.68); }
-.empire-map-marker-icon > span { transform:rotate(45deg); font-size:17px; }
+.empire-map-marker-icon { display:grid; place-items:center; width:32px; height:37px; border-radius:8px 8px 50% 50% / 8px 8px 62% 62%; border:2px solid #f0c767; background:linear-gradient(160deg,#3c7a4a 0%,#1c4527 58%,#0e2b17 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.35), inset 0 0 8px rgba(0,0,0,.4), 0 0 14px rgba(126,217,131,.4); }
+.empire-map-marker-icon > span { font-size:16px; transform:translateY(-1px); filter:drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.empire-map-marker-banner { width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:7px solid #f0c767; margin-top:-1px; }
 .empire-map-marker.is-world-pin { min-width:44px; min-height:44px; justify-content:flex-end; }
-.empire-map-marker.is-world-pin .empire-map-marker-icon { width:23px; height:23px; border-width:1.5px; box-shadow:0 0 0 2px rgba(126,217,131,.22),0 0 12px rgba(126,217,131,.72); }
-.empire-map-marker.is-world-pin .empire-map-marker-icon > span { font-size:12px; }
-.empire-map-marker-label { display:none; max-width:126px; margin-top:4px; padding:3px 7px; border-radius:9px; border:1px solid rgba(126,217,131,.58); background:rgba(6,22,14,.92); color:#dcffe1; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.empire-map-marker.is-world-pin .empire-map-marker-icon { width:21px; height:25px; border-width:1.5px; }
+.empire-map-marker.is-world-pin .empire-map-marker-icon > span { font-size:11px; }
+.empire-map-marker-label { display:none; max-width:132px; margin-top:3px; padding:3px 9px; border-radius:3px; border:1px solid rgba(240,199,103,.6); background:linear-gradient(180deg,rgba(46,31,12,.95),rgba(20,13,5,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; letter-spacing:.05em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .empire-map-marker.show-label .empire-map-marker-label { display:block; }
-.empire-village-hub { margin:14px; padding:12px; border-radius:18px; border:1px solid rgba(240,199,103,.18); background:rgba(10,15,11,.58); }
+/* travelling-to-province transition scroll */
+#empireTravelOverlay { position:fixed; inset:0; z-index:340; display:none; place-items:center; background:radial-gradient(circle at 50% 45%, rgba(36,24,8,.94), rgba(5,3,1,.985)); opacity:0; transition:opacity .3s ease; }
+#empireTravelOverlay.show { display:grid; opacity:1; }
+#empireTravelOverlay.fade { opacity:0; }
+.empire-travel-card { text-align:center; padding:26px 34px; border-radius:16px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(46,31,12,.7),rgba(16,10,4,.8)); box-shadow:0 0 0 4px rgba(28,20,8,.9), 0 0 0 5px rgba(214,168,79,.35), 0 24px 60px rgba(0,0,0,.6); }
+.empire-travel-crest { font-size:52px; filter:drop-shadow(0 6px 14px rgba(0,0,0,.7)); animation:pickupBob 1.2s ease-in-out infinite; }
+.empire-travel-name { margin-top:8px; font-family:'Russo One',sans-serif; font-size:19px; letter-spacing:.08em; color:#ffe9a8; }
+.empire-travel-sub { margin-top:4px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; letter-spacing:.18em; color:#c8b98f; text-transform:uppercase; }
+.empire-village-hub { margin:14px 12px; padding:12px; border-radius:14px; border:2px solid #7a5a28; background:rgba(12,9,4,.72); box-shadow:0 0 0 1px rgba(240,199,103,.4), inset 0 0 26px rgba(240,199,103,.05); }
 .empire-village-hub-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 
 .liberation-battle-banner { margin:0 0 12px; padding:13px 14px; border-radius:14px; border:1px solid rgba(126,217,131,.44); background:linear-gradient(135deg,rgba(25,79,45,.88),rgba(9,29,18,.92)); color:#d8f7dc; font-size:12px; line-height:1.45; }
@@ -404,15 +426,52 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 .empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
 
-.empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:14px; border:1px solid rgba(120,166,109,.5); background:rgba(38,58,36,.85); color:#dff3d4; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; }
+/* ---- Royal ledger: realm stats + provinces --------------------------------- */
+.empire-stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:0 0 10px; }
+.empire-stat-chip { padding:8px 4px; border-radius:10px; border:1px solid rgba(240,199,103,.28); background:linear-gradient(180deg,rgba(36,25,10,.7),rgba(14,10,4,.8)); text-align:center; }
+.empire-stat-value { font-family:'Russo One',sans-serif; font-size:14px; color:#ffe9a8; }
+.empire-stat-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:8.5px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
+.empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:12px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(160deg,rgba(64,84,38,.92),rgba(22,32,14,.95)); color:#e9f3c9; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; box-shadow:inset 0 1px 0 rgba(255,240,200,.16), 0 8px 20px rgba(0,0,0,.4); }
 .empire-tribute-btn[disabled] { opacity:.5; }
 .empire-village-list { display:grid; gap:8px; }
-.empire-village-row { width:100%; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:13px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.09); color:inherit; text-align:left; }
-.empire-village-row:active { transform:scale(.99); border-color:rgba(240,199,103,.38); }
-.empire-village-flag { font-size:20px; }
-.empire-village-name { flex:1; font-family:'Rajdhani',sans-serif; font-weight:800; color:var(--text); letter-spacing:.04em; }
-.empire-village-meta { font-size:11px; color:var(--text3); }
+.empire-village-row { width:100%; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:11px; background:linear-gradient(180deg,rgba(30,21,9,.6),rgba(10,7,3,.7)); border:1px solid rgba(240,199,103,.22); color:inherit; text-align:left; }
+.empire-village-row:active { transform:scale(.99); border-color:rgba(240,199,103,.5); }
+.empire-village-flag { display:grid; place-items:center; width:34px; height:38px; font-size:17px; border-radius:7px 7px 50% 50% / 7px 7px 60% 60%; border:1.5px solid rgba(240,199,103,.75); background:linear-gradient(160deg,#3c7a4a 0%,#173d22 70%); box-shadow:inset 0 1px 0 rgba(255,240,200,.3); }
+.empire-village-main { flex:1; min-width:0; }
+.empire-village-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px; color:var(--text); letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.empire-village-meta { font-size:10.5px; color:var(--text3); }
+.empire-village-income { text-align:right; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:#cfe3ac; line-height:1.35; white-space:nowrap; }
 .empire-empty { padding:14px; border-radius:13px; background:rgba(0,0,0,.3); border:1px dashed rgba(255,255,255,.14); color:var(--text3); font-size:12px; line-height:1.55; text-align:center; }
+/* ---- Province management: population, needs, construction ------------------ */
+#villageManagePanel { margin:10px 2px 4px; }
+#villageManagePanel:empty { display:none; }
+.province-panel { border-radius:12px; border:1px solid rgba(240,199,103,.3); background:linear-gradient(180deg,rgba(30,21,9,.55),rgba(10,7,3,.7)); padding:11px; }
+.province-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.province-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.08em; color:#ffe9a8; }
+.province-pop { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); }
+.province-needs { display:grid; grid-template-columns:repeat(2,1fr); gap:7px 10px; margin-bottom:10px; }
+.province-need { }
+.province-need-label { display:flex; justify-content:space-between; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; letter-spacing:.06em; color:var(--text2); margin-bottom:3px; }
+.province-need-bar { height:7px; border-radius:4px; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
+.province-need-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#7ea653,#b9d36a); transition:width .4s ease; }
+.province-need-fill.low { background:linear-gradient(90deg,#a65340,#d3846a); }
+.province-need-fill.mid { background:linear-gradient(90deg,#a68b3f,#d3b96a); }
+.province-income-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.22); background:rgba(0,0,0,.3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#e6d9ae; text-align:center; }
+.province-build-title { font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.14em; color:var(--text2); margin:2px 2px 7px; text-transform:uppercase; }
+.province-build-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.province-building { position:relative; display:flex; flex-direction:column; gap:4px; padding:9px 9px 8px; border-radius:10px; border:1px solid rgba(240,199,103,.24); background:linear-gradient(180deg,rgba(36,25,10,.62),rgba(12,8,3,.78)); }
+.province-building.is-built { border-color:rgba(126,217,131,.45); box-shadow:inset 0 0 14px rgba(126,217,131,.07); }
+.province-building-head { display:flex; align-items:center; gap:6px; }
+.province-building-icon { font-size:17px; }
+.province-building-name { flex:1; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:var(--text); letter-spacing:.03em; }
+.province-building-pips { display:flex; gap:2px; }
+.province-pip { width:7px; height:7px; border-radius:2px; transform:rotate(45deg); background:rgba(255,255,255,.12); border:1px solid rgba(240,199,103,.3); }
+.province-pip.on { background:#f0c767; box-shadow:0 0 6px rgba(240,199,103,.7); }
+.province-building-desc { font-size:9.5px; line-height:1.4; color:var(--text3); min-height:26px; }
+.province-build-btn { min-height:34px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
+.province-build-btn:active { transform:scale(.97); }
+.province-build-btn[disabled] { opacity:.45; }
+.province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
 @keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
 .burbz-pickup-burst { position:absolute; z-index:60; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none; animation:pickupBurst 1.5s ease-out forwards; }
 .burbz-pickup-burst-glyph { font-size:26px; filter:drop-shadow(0 0 12px rgba(240,199,103,.9)); }
@@ -2306,6 +2365,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div id="empireWorldMap" role="application" aria-label="Interactive map of your liberated territories"></div>
         <div class="empire-map-vignette"></div>
         <canvas class="empire-fog-overlay" id="empireFogCanvas" aria-hidden="true"></canvas>
+        <div class="empire-map-corner tl"></div><div class="empire-map-corner tr"></div><div class="empire-map-corner bl"></div><div class="empire-map-corner br"></div>
+        <div class="empire-realm-banner"><div class="empire-realm-banner-name" id="empireRealmName">THE REALM OF BURBZ</div><div class="empire-realm-banner-rank" id="empireRealmRank">Wandering Trainer</div></div>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
         <div class="empire-map-empty"></div>
         <div class="empire-map-status" id="empireMapStatus">Gathering the clouds over the world…</div>
@@ -2317,9 +2378,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="village-sub" id="villageSub"></div>
         <div id="villageClaimBar"></div>
         <div class="village-stage" id="villageStage"><div class="village-loading" id="villageLoading">Raising the timber frames…</div></div>
+        <div id="villageManagePanel"></div>
         <div class="village-legend" id="villageLegend"></div>
       </div>
     </div>
+    <div id="empireTravelOverlay" aria-hidden="true"><div class="empire-travel-card"><div class="empire-travel-crest" id="empireTravelCrest">🕊️</div><div class="empire-travel-name" id="empireTravelName"></div><div class="empire-travel-sub">Travelling to your province…</div></div></div>
 
     <div class="screen" id="screen-quests">
       <div class="screen-title">QUESTS</div>
@@ -11337,6 +11400,7 @@ function wireAcademyZones() {
 Object.assign(window, {
   claimCurrentVillage,
   collectEmpireTribute,
+  empireBuildStructure,
   academyBuildBuilding,
   academyBuildAndMoveBird,
   academySelectRoom,
@@ -13994,14 +14058,33 @@ function focusEmpireVillage(seed) {
   empireMap.flyTo({ center:[Number(village.lon), Number(village.lat)], zoom:Math.max(11.5, empireMap.getZoom()), duration:850 });
 }
 
+// Tapping a liberated province on the royal map travels to its 3D village:
+// a heraldic transition scroll covers the journey while the scene builds.
+let empireTravelTimer = null, empireTravelFadeTimer = null;
 function openEmpireVillage(seed) {
   const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
   if (!village) return;
   villageActive = { seed:village.seed >>> 0, name:village.name, lat:village.lat, lon:village.lon };
   if (gameState) { gameState.lastVillage = villageActive; saveState(); }
+  SFX.tap();
+  const overlay = $('empireTravelOverlay');
+  if (overlay) {
+    const crest = $('empireTravelCrest'), name = $('empireTravelName');
+    if (crest) crest.textContent = empireVillageCrest(village.seed);
+    if (name) name.textContent = village.name.toUpperCase();
+    clearTimeout(empireTravelTimer); clearTimeout(empireTravelFadeTimer);
+    overlay.classList.remove('fade');
+    overlay.classList.add('show');
+    // While the scroll covers the screen: build the 3D scene and glide down to it
+    empireTravelTimer = setTimeout(() => {
+      overlay.classList.add('fade');
+      empireTravelFadeTimer = setTimeout(() => overlay.classList.remove('show', 'fade'), 320);
+    }, 900);
+  }
   focusEmpireVillage(village.seed);
+  if (currentScreen !== 'village') switchScreen('village');
   renderVillage();
-  setTimeout(() => $('empireVillageHub')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260);
+  setTimeout(() => $('villageStage')?.scrollIntoView({ behavior: overlay ? 'auto' : 'smooth', block:'center' }), overlay ? 420 : 260);
 }
 
 function refreshEmpireMap(options = {}) {
@@ -14010,14 +14093,15 @@ function refreshEmpireMap(options = {}) {
   const core = window.BurbzEmpireMapCore;
   try {
     empireMap.getSource('empire-claims')?.setData(core.claimFeatureCollection(villages));
+    empireMap.getSource('empire-territory')?.setData(core.territoryFeatureCollection(villages));
   } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
   clearEmpireMapMarkers();
   villages.forEach(village => {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'empire-map-marker';
-    el.setAttribute('aria-label', 'Open liberated village ' + village.name);
-    el.innerHTML = '<span class="empire-map-marker-icon"><span>🕊️</span></span><span class="empire-map-marker-label">' + escapeHtml(village.name) + '</span>';
+    el.setAttribute('aria-label', 'Travel to your province ' + village.name);
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + empireVillageCrest(village.seed) + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(village.name) + '</span>';
     el.addEventListener('click', ev => { ev.stopPropagation(); openEmpireVillage(village.seed); });
     const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(village.lon), Number(village.lat)]).addTo(empireMap);
     empireMapMarkers.push(marker);
@@ -14028,7 +14112,7 @@ function refreshEmpireMap(options = {}) {
   card?.classList.toggle('is-empty', villages.length === 0);
   const status = $('empireMapStatus');
   if (status) status.textContent = villages.length
-    ? 'Clouds parted over ' + villages.length + ' village' + (villages.length === 1 ? '' : 's') + ' · tap a sanctuary'
+    ? 'Clouds parted over ' + villages.length + ' province' + (villages.length === 1 ? '' : 's') + ' · tap a banner to travel to its village'
     : 'The whole world sleeps under cloud — liberate your first town to part it';
   if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
 }
@@ -14063,6 +14147,18 @@ function initialiseEmpireMap() {
         const fogCanvas = $('empireFogCanvas');
         if (fogCanvas) map.getCanvasContainer().appendChild(fogCanvas);
         if (!empireFogRafId) empireFogRafId = requestAnimationFrame(empireFogDriftTick);
+        // Realm territory: each liberated province paints its lands in the
+        // realm's green with an inked border, Crusader-map style. The fill is
+        // tappable — touching your territory travels to its 3D village.
+        map.addSource('empire-territory', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+        map.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territory', paint:{ 'fill-color':'#7ed983', 'fill-opacity':.18 } });
+        map.addLayer({ id:'empire-territory-border', type:'line', source:'empire-territory', paint:{ 'line-color':'#2c693f', 'line-width':['interpolate',['linear'],['zoom'],2,1.1,11,2.8], 'line-dasharray':[2.2,1.3], 'line-opacity':.9 } });
+        map.on('click', 'empire-territory-fill', event => {
+          const feature = event.features && event.features[0];
+          if (feature && feature.properties && feature.properties.seed) openEmpireVillage(feature.properties.seed);
+        });
+        map.on('mouseenter', 'empire-territory-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'empire-territory-fill', () => { map.getCanvas().style.cursor = ''; });
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#7ed983', 'circle-opacity':.28, 'circle-blur':.45 } });
         map.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#dfffe2', 'circle-stroke-color':'#2c693f', 'circle-stroke-width':1.4 } });
@@ -14119,27 +14215,159 @@ function birdhouseCostForNextVillage() {
   const owned = empireVillages().length;
   return { coins: 60 + Math.min(owned, 12) * 15, branches: 15 + Math.min(owned, 12) * 5 };
 }
+// ============================================================================
+// PROVINCE ECONOMY — every liberated village is a small living province with a
+// population, four basic needs (food, water, shelter, joy) and a construction
+// yard. Buildings raise need capacity or income; well-kept villagers multiply
+// and pay more taxes, neglected ones drift away. All simulation is lazy and
+// deterministic: it catches up in 8-hour cycles whenever the realm is viewed.
+// ============================================================================
 const EMPIRE_TRIBUTE_INTERVAL_MS = 8 * 60 * 60 * 1000; // each village pays every 8h
-const EMPIRE_TRIBUTE_MAX_PERIODS = 3;                  // stores up to a day away
-const EMPIRE_TRIBUTE_COINS = 6;
-const EMPIRE_TRIBUTE_BRANCHES = 2;
+const EMPIRE_TRIBUTE_MAX_PERIODS = 3;                  // strongbox stores up to a day away
+const EMPIRE_SIM_MAX_CYCLES = 21;                      // a week of population catch-up
+const VILLAGE_BASE_POPULATION = 8;
+const VILLAGE_MIN_POPULATION = 4;
+const VILLAGE_MAX_POPULATION = 200;
+// What a raw liberated village supports before anything is built: the square,
+// a spring and a handful of huts keep the founding villagers barely covered.
+const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 12, joy: 7 };
+
+const EMPIRE_NEEDS = [
+  { id: 'food',    icon: '🍞', label: 'Food' },
+  { id: 'water',   icon: '💧', label: 'Water' },
+  { id: 'shelter', icon: '🏠', label: 'Shelter' },
+  { id: 'joy',     icon: '🎉', label: 'Joy' }
+];
+
+const EMPIRE_BUILDINGS = [
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10 }, need: 'food',    perLevel: 14, desc: 'Feeds 14 villagers per level.' },
+  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8 },  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18 }, need: 'shelter', perLevel: 12, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12 }, need: 'joy',     perLevel: 12, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14 }, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6 },  branchesPerLevel: 3, desc: '+3 🪵 materials per tax cycle per level.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20 }, coinsPerLevel: 4, branchesPerLevel: 1, desc: 'Stone for trade: +4 🪙 and +1 🪵 per cycle per level.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16 }, taxBoost: 0.25, desc: '+25% taxes per level — merchants pay for stalls.' }
+];
+const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
+
+// Every province flies its own bird crest, grown from its seed.
+const EMPIRE_CRESTS = ['🕊️', '🦅', '🦉', '🦢', '🐦', '🪶', '🦜', '🐓'];
+function empireVillageCrest(seed) { return EMPIRE_CRESTS[(Number(seed) >>> 0) % EMPIRE_CRESTS.length]; }
+
+function ensureVillageEconomy(rec) {
+  if (!rec) return null;
+  if (!rec.economy || typeof rec.economy !== 'object' || Array.isArray(rec.economy)) rec.economy = {};
+  const eco = rec.economy;
+  if (!eco.buildings || typeof eco.buildings !== 'object' || Array.isArray(eco.buildings)) eco.buildings = {};
+  EMPIRE_BUILDINGS.forEach(b => { eco.buildings[b.id] = Math.max(0, Math.min(b.maxLevel, Math.floor(Number(eco.buildings[b.id]) || 0))); });
+  if (!Number.isFinite(Number(eco.population)) || Number(eco.population) <= 0) eco.population = VILLAGE_BASE_POPULATION;
+  eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
+  if (!Number.isFinite(Number(eco.lastSimAt))) eco.lastSimAt = Number(rec.lastTributeAt) || Date.parse(rec.claimedAt) || Date.now();
+  return eco;
+}
+function villageBuildingLevel(rec, id) {
+  const eco = ensureVillageEconomy(rec);
+  return eco ? (eco.buildings[id] || 0) : 0;
+}
+function villageNeedCapacity(rec, needId) {
+  let cap = VILLAGE_BASE_NEED_CAPACITY[needId] || 0;
+  EMPIRE_BUILDINGS.forEach(b => { if (b.need === needId) cap += (b.perLevel || 0) * villageBuildingLevel(rec, b.id); });
+  return cap;
+}
+// One glance at a province: population, per-need satisfaction, overall
+// happiness and what it pays into the royal strongbox each cycle.
+function villageEconomySnapshot(rec) {
+  const eco = ensureVillageEconomy(rec);
+  if (!eco) return null;
+  const pop = eco.population;
+  const needs = EMPIRE_NEEDS.map(n => {
+    const cap = villageNeedCapacity(rec, n.id);
+    return { id: n.id, icon: n.icon, label: n.label, cap, sat: Math.min(1, cap / Math.max(1, pop)) };
+  });
+  const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
+  let flatCoins = 0, flatBranches = 0, taxBoost = 0;
+  EMPIRE_BUILDINGS.forEach(b => {
+    const level = villageBuildingLevel(rec, b.id);
+    if (!level) return;
+    flatCoins += (b.coinsPerLevel || 0) * level;
+    flatBranches += (b.branchesPerLevel || 0) * level;
+    taxBoost += (b.taxBoost || 0) * level;
+  });
+  // Miserable villagers still pay a trickle (0.35 floor); a content, market-run
+  // town of 40 pays several times a raw hamlet's rate.
+  const taxes = Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost)) + flatCoins);
+  const branches = 2 + flatBranches;
+  return { pop, needs, happiness, taxes, branches, housingCap: villageNeedCapacity(rec, 'shelter') };
+}
+// Population drifts once per tax cycle: thriving provinces grow toward their
+// housing cap, hungry or joyless ones empty out (never below a stubborn few).
+function simulateVillageEconomy(rec, now) {
+  const eco = ensureVillageEconomy(rec);
+  if (!eco) return;
+  const t = Number(now) || Date.now();
+  const elapsed = Math.floor((t - eco.lastSimAt) / EMPIRE_TRIBUTE_INTERVAL_MS);
+  if (elapsed <= 0) return;
+  eco.lastSimAt += elapsed * EMPIRE_TRIBUTE_INTERVAL_MS;
+  for (let i = 0; i < Math.min(EMPIRE_SIM_MAX_CYCLES, elapsed); i++) {
+    const snap = villageEconomySnapshot(rec);
+    if (snap.happiness >= 0.9 && eco.population < snap.housingCap) eco.population += 2;
+    else if (snap.happiness >= 0.65 && eco.population < snap.housingCap) eco.population += 1;
+    else if (snap.happiness < 0.45) eco.population -= 1;
+    eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, VILLAGE_MIN_POPULATION))));
+  }
+}
+function simulateAllVillageEconomies() {
+  const now = Date.now();
+  empireVillages().forEach(v => simulateVillageEconomy(v, now));
+}
+function villageBuildingCost(building, level) {
+  return { coins: building.cost.coins * (level + 1), branches: building.cost.branches * (level + 1) };
+}
+function empireBuildStructure(seed, buildingId) {
+  const empire = ensureEmpireState();
+  const rec = empire && empire.villages[String(Number(seed) >>> 0)];
+  const building = EMPIRE_BUILDING_INDEX[buildingId];
+  if (!rec || !building) return;
+  const eco = ensureVillageEconomy(rec);
+  const level = eco.buildings[building.id] || 0;
+  if (level >= building.maxLevel) { showToast(building.icon + ' ' + building.name + ' is already at its highest level.'); return; }
+  const cost = villageBuildingCost(building, level);
+  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to raise the ' + building.name + ' — collect taxes and win battles.'); return; }
+  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the ' + building.name + ' — send birds on Branch Run or Timber Haul quests.'); return; }
+  addCoins(-cost.coins);
+  addBranches(-cost.branches);
+  eco.buildings[building.id] = level + 1;
+  addPlayerXp(12);
+  saveState();
+  SFX.questComplete();
+  vibrate(35);
+  showToast(building.icon + ' ' + building.name + (level === 0 ? ' built' : ' raised to level ' + (level + 1)) + ' in ' + rec.name + '!');
+  // Rebuild the 3D scene so the new structure rises in the village itself
+  if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
+  updateHeader();
+  renderVillage();
+}
 function empireVillageTributePeriods(v, now) {
   const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
   return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((now - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
 }
 function empireTributeReady() {
+  simulateAllVillageEconomies();
   const now = Date.now();
   let coins = 0, branches = 0;
   empireVillages().forEach(v => {
     const periods = empireVillageTributePeriods(v, now);
-    coins += periods * EMPIRE_TRIBUTE_COINS;
-    branches += periods * EMPIRE_TRIBUTE_BRANCHES;
+    if (!periods) return;
+    const snap = villageEconomySnapshot(v);
+    coins += periods * snap.taxes;
+    branches += periods * snap.branches;
   });
   return { coins, branches };
 }
 function collectEmpireTribute() {
   const due = empireTributeReady();
-  if (due.coins <= 0 && due.branches <= 0) { showToast('No tribute ready yet — villages pay every 8 hours.'); return; }
+  if (due.coins <= 0 && due.branches <= 0) { showToast('No taxes ready yet — provinces pay every 8 hours.'); return; }
   const now = Date.now();
   empireVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) v.lastTributeAt = now; });
   addCoins(due.coins);
@@ -14147,8 +14375,8 @@ function collectEmpireTribute() {
   saveState();
   SFX.questComplete();
   vibrate(40);
-  showToast('👑 Tribute collected: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵');
-  updateHeader(); renderEmpirePanel(); renderVillageClaimBar();
+  showToast('👑 Taxes collected: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵');
+  updateHeader(); renderEmpirePanel(); renderVillageClaimBar(); renderVillageManagePanel();
 }
 function claimCurrentVillage() {
   const v = currentVillage();
@@ -14193,18 +14421,78 @@ function renderVillageClaimBar() {
     ? '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>'
     : '<button class="village-claim-btn" onclick="claimCurrentVillage()">🕊️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
 }
+// The governor's desk beneath the 3D village: population, the four basic
+// needs, this province's tax yield and the construction yard.
+function renderVillageManagePanel() {
+  const panel = $('villageManagePanel');
+  if (!panel) return;
+  const v = currentVillage();
+  const empire = ensureEmpireState();
+  const rec = v && empire ? empire.villages[String(v.seed >>> 0)] : null;
+  if (!rec) { panel.innerHTML = ''; return; }
+  simulateVillageEconomy(rec, Date.now());
+  const snap = villageEconomySnapshot(rec);
+  const wallet = gameState.player.coins || 0;
+  const timber = playerBranches();
+  const needsHtml = snap.needs.map(n => {
+    const pct = Math.round(n.sat * 100);
+    const tone = n.sat >= 0.95 ? '' : n.sat >= 0.6 ? ' mid' : ' low';
+    return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, n.cap) + '/' + snap.pop + '</span></div>' +
+      '<div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div></div>';
+  }).join('');
+  const buildingsHtml = EMPIRE_BUILDINGS.map(b => {
+    const level = villageBuildingLevel(rec, b.id);
+    const maxed = level >= b.maxLevel;
+    const cost = maxed ? null : villageBuildingCost(b, level);
+    const affordable = cost && wallet >= cost.coins && timber >= cost.branches;
+    const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
+    const btn = maxed
+      ? '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>'
+      : '<button class="province-build-btn" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' + (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>';
+    return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
+      '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
+      '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn + '</div>';
+  }).join('');
+  panel.innerHTML = '<div class="province-panel">' +
+    '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' GOVERN ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
+    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%</div></div>' +
+    '<div class="province-needs">' + needsHtml + '</div>' +
+    '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>' +
+    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵</div>' +
+    '<div class="province-build-grid">' + buildingsHtml + '</div>' +
+    '</div>';
+}
+function happinessFace(h) { return h >= 0.9 ? '😊' : h >= 0.65 ? '🙂' : h >= 0.45 ? '😐' : '😟'; }
 function renderEmpirePanel() {
   const panel = $('empirePanel');
   if (!panel) return;
+  simulateAllVillageEconomies();
   const villages = empireVillages().slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0));
   const due = empireTributeReady();
   const count = villages.length;
   const hasTribute = due.coins > 0 || due.branches > 0;
-  const rows = count ? villages.map(v =>
-    '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '"><span class="empire-village-flag">🕊️</span><span class="empire-village-name">' + escapeHtml(v.name) + '</span><span class="empire-village-meta">liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></button>'
-  ).join('') : '<div class="empire-empty">No villages yet · open a nearby town from Map</div>';
-  panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 YOUR EMPIRE — ' + count + ' VILLAGE' + (count === 1 ? '' : 'S') + '</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
-    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TRIBUTE: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' : '⏳ TRIBUTE GROWING — CHECK BACK LATER') + '</button>' : '') +
+  let totalPop = 0, taxesPerCycle = 0, branchesPerCycle = 0;
+  const rows = count ? villages.map(v => {
+    const snap = villageEconomySnapshot(v);
+    totalPop += snap.pop; taxesPerCycle += snap.taxes; branchesPerCycle += snap.branches;
+    return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
+      '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
+      '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + '</span><br>' +
+      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '% · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
+      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
+  }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
+  const realmName = $('empireRealmName'), realmRank = $('empireRealmRank');
+  const playerName = (gameState && gameState.player && gameState.player.name) || 'Burbz';
+  if (realmName) realmName.textContent = 'THE REALM OF ' + playerName.toUpperCase();
+  if (realmRank) realmRank.textContent = empireRankTitle(count) + (count ? ' · ' + count + ' province' + (count === 1 ? '' : 's') : '');
+  panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
+    (count ? '<div class="empire-stats-row">' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Provinces</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + totalPop + '</div><div class="empire-stat-label">Subjects</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxesPerCycle + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
+      '</div>' : '') +
+    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' : '⏳ TAXES GROWING — CHECK BACK LATER') + '</button>' : '') +
     '<div class="empire-village-list">' + rows + '</div>';
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
 }
@@ -14228,8 +14516,9 @@ function renderVillage() {
   const title = $('villageTitle');
   if (title) title.textContent = (owned ? '👑 ' : '') + v.name.toUpperCase();
   const sub = $('villageSub');
-  if (sub) sub.textContent = (owned ? 'Your village. ' : '') + 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside. Find more villages on the map.';
+  if (sub) sub.textContent = (owned ? 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' : '') + 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside.' + (owned ? '' : ' Find more villages on the map.');
   renderVillageClaimBar();
+  renderVillageManagePanel();
   renderEmpirePanel();
   renderEmpireWorldMap();
   renderVillageLegend();
@@ -16730,6 +17019,128 @@ function buildVillageScene(v) {
     villageWeatherFx = new THREE.Points(wGeo, new THREE.PointsMaterial({ color: cfg.color, size: cfg.size, transparent: true, opacity: cfg.op, depthWrite: false }));
     villageWeatherFx.userData = { cfg, base: wBase };
     villageScene.add(villageWeatherFx);
+  }
+
+  // ---- Governor's constructions ---------------------------------------------
+  // Structures raised from the province management panel appear in the village
+  // itself. A separate rng stream (er) keeps their placement stable without
+  // reshuffling the rest of the settlement every time something is built.
+  const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
+  if (econRec) {
+    const er = villageRngFrom((v.seed >>> 0) ^ 0x51ed270b);
+    const econScatter = (minR, maxR, rad) => {
+      for (let attempt = 0; attempt < 16; attempt++) {
+        const a = dryArc.c !== undefined ? dryArc.c + (er() - 0.5) * dryArc.s : er() * Math.PI * 2;
+        const dd = minR + er() * (maxR - minR);
+        const x = Math.cos(a) * dd, z = Math.sin(a) * dd;
+        if (spotFree(x, z, rad)) { claimSpot(x, z, rad); return { x, z, a }; }
+      }
+      return null;
+    };
+    const econLabel = (group, text, height) => {
+      const sign = villageMakeSign(text);
+      sign.scale.set(2.6, 0.98, 1);
+      sign.position.set(0, height, 0);
+      sign.userData.baseY = sign.position.y;
+      group.add(sign);
+      villageSigns.push(sign);
+    };
+    EMPIRE_BUILDINGS.forEach(b => {
+      const level = villageBuildingLevel(econRec, b.id);
+      if (!level) return;
+      if (b.id === 'farm') {
+        const spot = econScatter(11, 15.5, 2.8);
+        if (!spot) return;
+        const field = villageMakeGrainField(er, pal);
+        field.rotation.y = er() * Math.PI;
+        field.position.set(spot.x, 0, spot.z);
+        econLabel(field, '🌾 Grain Farm', 2.4);
+        villageScene.add(field);
+        if (level >= 2) { const hay = villageMakeHay(er, pal); hay.position.set(spot.x + 2.6, 0, spot.z + 1.2); villageScene.add(hay); }
+        if (level >= 3) { const sc = villageMakeScarecrow(er, pal); sc.rotation.y = er() * Math.PI * 2; sc.position.set(spot.x - 2.2, 0, spot.z - 1.4); villageScene.add(sc); }
+      } else if (b.id === 'well') {
+        const spot = econScatter(6.5, 9.5, 1.3);
+        if (!spot) return;
+        const well = new THREE.Group();
+        const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), stoneMat);
+        ring.position.y = 0.28; well.add(ring);
+        const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+        for (const sx of [-0.55, 0.55]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.25, 0.09), beamMat); post.position.set(sx, 0.85, 0); well.add(post); }
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.55, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+        roof.position.y = 1.68; roof.rotation.y = Math.PI / 4; well.add(roof);
+        const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.16, 7), beamMat);
+        bucket.position.y = 0.95; well.add(bucket);
+        well.add(villageBlobShadow(0.9));
+        well.position.set(spot.x, 0, spot.z);
+        econLabel(well, '⛲ Stone Well', 2.3);
+        villageScene.add(well);
+      } else if (b.id === 'cottages') {
+        for (let i = 0; i < level; i++) {
+          const spot = econScatter(11.5, 16, 2.4);
+          if (!spot) break;
+          const cottage = villageMakeCottage(er, pal);
+          cottage.position.set(spot.x, 0, spot.z);
+          cottage.lookAt(0, 0, 0); cottage.rotation.x = 0; cottage.rotation.z = 0;
+          cottage.rotation.y += (er() - 0.5) * 0.4;
+          villageScene.add(cottage);
+        }
+      } else if (b.id === 'tavern') {
+        const spot = econScatter(8.5, 11.5, 3.2);
+        if (!spot) return;
+        const tavern = villageMakeBuilding('tavern', { icon: '🍻', name: 'Alehouse', roofColor: pal.roofs[1 % pal.roofs.length] }, er, pal);
+        tavern.position.set(spot.x, 0, spot.z);
+        tavern.lookAt(0, 0, 0); tavern.rotation.x = 0; tavern.rotation.z = 0;
+        villageScene.add(tavern);
+        villageBuildings.push(tavern); // tappable — pop into the alehouse
+      } else if (b.id === 'chapel') {
+        const spot = econScatter(12, 16, 3.4);
+        if (!spot) return;
+        const chapel = villageMakeChurch(er, pal);
+        chapel.position.set(spot.x, 0, spot.z);
+        chapel.rotation.y = -spot.a + (er() - 0.5);
+        villageScene.add(chapel);
+      } else if (b.id === 'lumber') {
+        const spot = econScatter(10.5, 14.5, 2.2);
+        if (!spot) return;
+        const camp = new THREE.Group();
+        for (let i = 0; i <= level; i++) {
+          const pile = villageMakeLogPile(er, pal);
+          pile.rotation.y = er() * Math.PI;
+          pile.position.set((er() - 0.5) * 2.6, 0, (er() - 0.5) * 2.6);
+          camp.add(pile);
+        }
+        const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.4, 8), new THREE.MeshLambertMaterial({ color: pal.timber }));
+        stump.position.set(1.3, 0.2, -0.7); camp.add(stump);
+        camp.position.set(spot.x, 0, spot.z);
+        econLabel(camp, '🪓 Lumber Camp', 2.2);
+        villageScene.add(camp);
+      } else if (b.id === 'quarry') {
+        const spot = econScatter(12.5, 16.5, 2.6);
+        if (!spot) return;
+        const quarry = new THREE.Group();
+        const gravel = new THREE.Mesh(new THREE.CircleGeometry(2.1, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.05, -0.06) }));
+        gravel.rotation.x = -Math.PI / 2; gravel.position.y = 0.012; quarry.add(gravel);
+        const rockMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+        for (let i = 0; i < 3 + level * 2; i++) {
+          const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28 + er() * 0.4, 0), rockMat);
+          rock.position.set((er() - 0.5) * 3.2, 0.22 + er() * 0.15, (er() - 0.5) * 3.2);
+          rock.rotation.set(er() * 3, er() * 3, er() * 3);
+          quarry.add(rock);
+        }
+        quarry.position.set(spot.x, 0, spot.z);
+        econLabel(quarry, '⛏️ Quarry', 2.1);
+        villageScene.add(quarry);
+      } else if (b.id === 'market') {
+        for (let i = 0; i < level; i++) {
+          const a = er() * Math.PI * 2, rad = 5.4 + er() * 1.4;
+          const stall = villageMakeStall(er, pal);
+          stall.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+          stall.rotation.y = -a + Math.PI / 2 + (er() - 0.5) * 0.4;
+          villageScene.add(stall);
+        }
+      }
+    });
   }
 
   // Lighting: moonlight + warm hearth-glow
@@ -19927,7 +20338,8 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapter:'Collection', title:'Active companion', screen:'map', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed from the pantry, train it and watch its hunger, happiness and health rather than treating every bird as identical.' },
   { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map keeps the undiscovered world hidden beneath cloud. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary — the clouds part there and reveal the true map.' },
   { chapter:'Realm', title:'Liberation Battle', screen:'battle', target:'.nav-item[data-screen="battle"]', text:'A town’s Liberation Battle uses your chosen flock against its occupying birds. Victory frees the town; returning there lets you build its sanctuary birdhouse.' },
-  { chapter:'Realm', title:'Sanctuaries and tribute', screen:'village', target:'#empirePanel', text:'Nearby sanctuary areas merge into one cloud-free realm. Each village pin remains tappable, and liberated villages grow coin and branch tribute every eight hours.' },
+  { chapter:'Realm', title:'Provinces and taxes', screen:'village', target:'#empirePanel', text:'Each liberated province flies a heraldic banner — tap it (or its green territory) to travel to its 3D village. Provinces pay coin and branch taxes every eight hours; happy, well-fed villagers multiply and pay more.' },
+  { chapter:'Realm', title:'Govern your villages', screen:'village', target:'#villageManagePanel', text:'Below the 3D village, the governor’s panel tracks population and the four basic needs: food, water, shelter and joy. Raise farms, wells, cottages and markets in the Construction Yard to meet needs, grow the population and boost taxes and materials.' },
   { chapter:'Battle', title:'Perch League', screen:'battle', target:'#battleSelect', text:'Perch League is the repeatable three-bird arena. Read the matchup wheel, choose a balanced team, use learned moves and climb the ranks through turn-based battles.' },
   { chapter:'Academy', title:'Build the Academy', screen:'academy', target:'#academyTreehouse', text:'Spend coins and branches on Academy buildings. Choose Place, tap the tree, then open or move built rooms whenever your campus needs changing.' },
   { chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
