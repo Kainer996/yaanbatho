@@ -145,7 +145,7 @@ def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_abov
     assert "document.querySelector('.bottom-nav')" in layout
     assert "--quest-focus-card-height" in layout
     assert "--quest-focus-lift" in layout
-    assert "burbz-footpath-ring-v84-20260716" in SW.read_text(encoding="utf-8")
+    assert "burbz-village-life-v85-20260716" in SW.read_text(encoding="utf-8")
 
 
 def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():
