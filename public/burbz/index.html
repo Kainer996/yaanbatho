@@ -476,6 +476,19 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-build-btn:active { transform:scale(.97); }
 .province-build-btn[disabled] { opacity:.45; }
 .province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
+.province-build-btn.busy { opacity:.55; filter:grayscale(.35); }
+.province-ruin-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px; }
+.province-ruin { display:flex; flex-direction:column; gap:4px; padding:9px 9px 8px; border-radius:10px; border:1px dashed rgba(200,150,110,.4); background:linear-gradient(180deg,rgba(38,26,18,.62),rgba(14,9,5,.78)); }
+.province-ruin-head { display:flex; align-items:center; gap:6px; }
+.province-ruin-icon { font-size:17px; }
+.province-ruin-name { flex:1; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:var(--text); letter-spacing:.03em; }
+.province-ruin-desc { font-size:9.5px; line-height:1.4; color:var(--text3); }
+.province-clear-btn { min-height:32px; border-radius:8px; border:1px solid rgba(178,217,126,.5); background:linear-gradient(180deg,rgba(44,58,20,.92),rgba(16,24,8,.95)); color:#dcf0b0; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
+.province-clear-btn:active { transform:scale(.97); }
+.province-construction { margin:0 0 10px; padding:9px 10px; border-radius:10px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(48,34,12,.7),rgba(14,9,3,.82)); }
+.province-construction-head { display:flex; align-items:center; justify-content:space-between; gap:8px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:#ffe9a8; margin-bottom:5px; }
+.province-construction-eta { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; color:#f0c767; white-space:nowrap; }
+.province-construction-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#c89a3f,#f0c767); transition:width .9s linear; }
 @keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
 .burbz-pickup-burst { position:absolute; z-index:60; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none; animation:pickupBurst 1.5s ease-out forwards; }
 .burbz-pickup-burst-glyph { font-size:26px; filter:drop-shadow(0 0 12px rgba(240,199,103,.9)); }
@@ -11522,6 +11535,7 @@ Object.assign(window, {
   claimCurrentVillage,
   collectEmpireTribute,
   empireBuildStructure,
+  empireClearRuin,
   academyBuildBuilding,
   academyBuildAndMoveBird,
   academySelectRoom,
@@ -14356,16 +14370,123 @@ const EMPIRE_NEEDS = [
 ];
 
 const EMPIRE_BUILDINGS = [
-  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10 }, need: 'food',    perLevel: 14, desc: 'Feeds 14 villagers per level.' },
-  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8 },  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
-  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18 }, need: 'shelter', perLevel: 12, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12 }, need: 'joy',     perLevel: 12, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14 }, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
-  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6 },  branchesPerLevel: 3, desc: '+3 🪵 materials per tax cycle per level.' },
-  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20 }, coinsPerLevel: 4, branchesPerLevel: 1, desc: 'Stone for trade: +4 🪙 and +1 🪵 per cycle per level.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16 }, taxBoost: 0.25, desc: '+25% taxes per level — merchants pay for stalls.' }
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10 }, buildMinutes: 5,  need: 'food',    perLevel: 14, desc: 'Feeds 14 villagers per level.' },
+  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18 }, buildMinutes: 8,  need: 'shelter', perLevel: 12, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12 }, buildMinutes: 6,  need: 'joy',     perLevel: 12, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6 },  buildMinutes: 5,  branchesPerLevel: 3, desc: '+3 🪵 materials per tax cycle per level.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20 }, buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, desc: 'Stone for trade: +4 🪙 and +1 🪵 per cycle per level.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16 }, buildMinutes: 15, taxBoost: 0.25, desc: '+25% taxes per level — merchants pay for stalls.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
+
+// ---- Ruins & rubble ---------------------------------------------------------
+// The long darkness left every settlement part-wrecked: a couple of tumbled
+// buildings and drifts of rubble. Which wrecks a village carries is grown from
+// its seed, so the ruins you glimpse before liberation are the very ones your
+// villagers clear afterwards — each clearance salvages a little timber.
+const VILLAGE_RUIN_KINDS = {
+  house: { icon: '🏚️', label: 'Wrecked cottage', desc: 'A tumbled home, beams down and thatch burnt away.' },
+  barn:  { icon: '🏚️', label: 'Collapsed barn',  desc: 'The roof came down whole — good planks under there.' },
+  tower: { icon: '🗼', label: 'Crumbled tower',  desc: 'Only a stub of the old watchtower still stands.' }
+};
+function villageRuinDefsFor(seed) {
+  const rr = villageRngFrom((Number(seed) >>> 0) ^ 0x5eed9b1);
+  const kinds = Object.keys(VILLAGE_RUIN_KINDS);
+  const count = 2 + (rr() < 0.4 ? 1 : 0); // just a couple of wrecks per village
+  const defs = [];
+  for (let i = 0; i < count; i++) defs.push({ kind: kinds[Math.floor(rr() * kinds.length)], reward: 4 + Math.floor(rr() * 5), cleared: false });
+  return defs;
+}
+
+// ---- Construction timers ----------------------------------------------------
+// Raising a structure takes real time, mobile-game style: costs are paid up
+// front, a scaffolded site appears in the village, and the finished building
+// rises when the clock runs out — even if the app was closed meanwhile.
+function villageBuildTimeMs(building, level) {
+  return Math.max(1, (building.buildMinutes || 5) * (level + 1)) * 60000;
+}
+function formatBuildCountdown(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60), sec = s % 60;
+  if (m < 60) return m + 'm ' + String(sec).padStart(2, '0') + 's';
+  return Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm';
+}
+function formatBuildDuration(ms) {
+  const m = Math.max(1, Math.round(ms / 60000));
+  if (m < 60) return m + 'm';
+  return Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '');
+}
+function villageConstructionFor(rec) {
+  const eco = ensureVillageEconomy(rec);
+  return eco && eco.construction ? eco.construction : null;
+}
+function constructionProgress(con, now) {
+  const t = Number(now) || Date.now();
+  return Math.max(0, Math.min(1, (t - con.startMs) / Math.max(1, con.endMs - con.startMs)));
+}
+// Total built levels across a province — drives how ruined or lively its 3D
+// scene looks (0 = still all rubble, 5+ = flourishing again).
+function villageTotalDevelopment(rec) {
+  const eco = ensureVillageEconomy(rec);
+  let total = 0;
+  if (eco) EMPIRE_BUILDINGS.forEach(b => { total += eco.buildings[b.id] || 0; });
+  return total;
+}
+// Finish any construction whose clock has run out. Never renders — callers
+// decide what to refresh (returns true when something completed).
+function empireCompleteConstructions(now) {
+  const t = Number(now) || Date.now();
+  let completed = false;
+  empireVillages().forEach(rec => {
+    const eco = ensureVillageEconomy(rec);
+    const con = eco && eco.construction;
+    if (!con) return;
+    const building = EMPIRE_BUILDING_INDEX[con.id];
+    if (!building) { delete eco.construction; return; }
+    if (t < Number(con.endMs)) return;
+    const level = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(con.toLevel) || ((eco.buildings[building.id] || 0) + 1)));
+    eco.buildings[building.id] = level;
+    delete eco.construction;
+    completed = true;
+    addPlayerXp(12);
+    showToast('🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!');
+    if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
+  });
+  if (completed) { saveState(); SFX.questComplete(); vibrate(35); }
+  return completed;
+}
+function tickEmpireConstruction() {
+  if (!empireCompleteConstructions()) return;
+  updateHeader();
+  if (currentScreen === 'village') renderVillage();
+  else renderEmpirePanel();
+}
+// Lightweight 1s ticker that keeps the governor-panel countdown live without
+// re-rendering the whole panel; it retires itself once nothing counts down.
+let provinceCountdownTimer = null;
+function ensureProvinceCountdownTicker() {
+  if (provinceCountdownTimer) return;
+  provinceCountdownTimer = setInterval(() => {
+    const els = document.querySelectorAll('[data-build-end]');
+    if (!els.length) { clearInterval(provinceCountdownTimer); provinceCountdownTimer = null; return; }
+    const now = Date.now();
+    let finished = false;
+    els.forEach(el => {
+      const end = Number(el.dataset.buildEnd) || 0;
+      if (now >= end) { finished = true; return; }
+      if (el.dataset.buildBar !== undefined) {
+        const start = Number(el.dataset.buildStart) || 0;
+        el.style.width = Math.min(100, Math.round(((now - start) / Math.max(1, end - start)) * 100)) + '%';
+      } else {
+        el.textContent = '⏳ ' + formatBuildCountdown(end - now);
+      }
+    });
+    if (finished) tickEmpireConstruction();
+  }, 1000);
+}
 
 // Every province flies its own bird crest, grown from its seed.
 const EMPIRE_CRESTS = ['🕊️', '🦅', '🦉', '🦢', '🐦', '🪶', '🦜', '🐓'];
@@ -14377,6 +14498,19 @@ function ensureVillageEconomy(rec) {
   const eco = rec.economy;
   if (!eco.buildings || typeof eco.buildings !== 'object' || Array.isArray(eco.buildings)) eco.buildings = {};
   EMPIRE_BUILDINGS.forEach(b => { eco.buildings[b.id] = Math.max(0, Math.min(b.maxLevel, Math.floor(Number(eco.buildings[b.id]) || 0))); });
+  // Every province carries the wrecks the darkness left behind (seeded, so the
+  // ruins seen before liberation match the ones cleared after).
+  if (!Array.isArray(eco.ruins)) eco.ruins = villageRuinDefsFor(rec.seed);
+  else eco.ruins = eco.ruins.slice(0, 6).map(ru => ({
+    kind: ru && VILLAGE_RUIN_KINDS[ru.kind] ? ru.kind : 'house',
+    reward: Math.max(1, Math.min(20, Math.floor(Number(ru && ru.reward) || 4))),
+    cleared: !!(ru && ru.cleared)
+  }));
+  if (eco.construction) {
+    const con = eco.construction, b = EMPIRE_BUILDING_INDEX[con.id];
+    if (!b || !Number.isFinite(Number(con.startMs)) || !Number.isFinite(Number(con.endMs)) || Number(con.endMs) <= Number(con.startMs)) delete eco.construction;
+    else con.toLevel = Math.max(1, Math.min(b.maxLevel, Math.floor(Number(con.toLevel)) || ((eco.buildings[b.id] || 0) + 1)));
+  }
   if (!Number.isFinite(Number(eco.population)) || Number(eco.population) <= 0) eco.population = VILLAGE_BASE_POPULATION;
   eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
   if (!Number.isFinite(Number(eco.lastSimAt))) eco.lastSimAt = Number(rec.lastTributeAt) || Date.parse(rec.claimedAt) || Date.now();
@@ -14441,11 +14575,17 @@ function villageBuildingCost(building, level) {
   return { coins: building.cost.coins * (level + 1), branches: building.cost.branches * (level + 1) };
 }
 function empireBuildStructure(seed, buildingId) {
+  empireCompleteConstructions();
   const empire = ensureEmpireState();
   const rec = empire && empire.villages[String(Number(seed) >>> 0)];
   const building = EMPIRE_BUILDING_INDEX[buildingId];
   if (!rec || !building) return;
   const eco = ensureVillageEconomy(rec);
+  if (eco.construction) {
+    const busy = EMPIRE_BUILDING_INDEX[eco.construction.id];
+    showToast('🏗️ Your builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project at a time.');
+    return;
+  }
   const level = eco.buildings[building.id] || 0;
   if (level >= building.maxLevel) { showToast(building.icon + ' ' + building.name + ' is already at its highest level.'); return; }
   const cost = villageBuildingCost(building, level);
@@ -14453,16 +14593,46 @@ function empireBuildStructure(seed, buildingId) {
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the ' + building.name + ' — send birds on Branch Run or Timber Haul quests.'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
-  eco.buildings[building.id] = level + 1;
-  addPlayerXp(12);
+  // Costs are paid up front; the structure itself takes real time to rise.
+  const now = Date.now();
+  const buildMs = villageBuildTimeMs(building, level);
+  eco.construction = { id: building.id, toLevel: level + 1, startMs: now, endMs: now + buildMs };
   saveState();
   SFX.questComplete();
   vibrate(35);
-  showToast(building.icon + ' ' + building.name + (level === 0 ? ' built' : ' raised to level ' + (level + 1)) + ' in ' + rec.name + '!');
-  // Rebuild the 3D scene so the new structure rises in the village itself
+  showToast('🏗️ ' + building.icon + ' ' + building.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.');
+  // Rebuild the 3D scene so the scaffolded site appears in the village itself
   if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   updateHeader();
   renderVillage();
+}
+// Clearing a wreck is quick, honest work: the rubble goes, and the salvage
+// pays out a little timber toward the first new buildings.
+function empireClearRuin(seed, index) {
+  const empire = ensureEmpireState();
+  const rec = empire && empire.villages[String(Number(seed) >>> 0)];
+  if (!rec) return;
+  const eco = ensureVillageEconomy(rec);
+  const ruin = eco.ruins && eco.ruins[index];
+  if (!ruin || ruin.cleared) return;
+  ruin.cleared = true;
+  const reward = Math.max(1, Math.floor(Number(ruin.reward) || 4));
+  addBranches(reward);
+  addPlayerXp(6);
+  saveState();
+  SFX.questComplete();
+  vibrate(30);
+  const kind = VILLAGE_RUIN_KINDS[ruin.kind] || VILLAGE_RUIN_KINDS.house;
+  showToast('🧹 ' + kind.label + ' cleared in ' + rec.name + ' — salvaged +' + reward + ' 🪵 timber!');
+  if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
+  updateHeader();
+  renderVillage();
+}
+function villageTapRuin(index) {
+  const v = currentVillage();
+  if (!v) return;
+  if (!empireOwnsVillage(v.seed)) { showToast('🏚️ Rubble from the long darkness. Free ' + v.name + ' and your villagers will help clear it.'); return; }
+  empireClearRuin(v.seed >>> 0, index);
 }
 function empireVillageTributePeriods(v, now) {
   const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
@@ -14562,7 +14732,11 @@ function renderVillageManagePanel() {
   const empire = ensureEmpireState();
   const rec = v && empire ? empire.villages[String(v.seed >>> 0)] : null;
   if (!rec) { panel.innerHTML = ''; return; }
+  empireCompleteConstructions();
   simulateVillageEconomy(rec, Date.now());
+  const now = Date.now();
+  const eco = ensureVillageEconomy(rec);
+  const construction = eco.construction || null;
   const snap = villageEconomySnapshot(rec);
   const wallet = gameState.player.coins || 0;
   const timber = playerBranches();
@@ -14572,15 +14746,42 @@ function renderVillageManagePanel() {
     return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, n.cap) + '/' + snap.pop + '</span></div>' +
       '<div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div></div>';
   }).join('');
+  // Uncleared wrecks left by the darkness — quick to clear, each pays timber.
+  const pendingRuins = (eco.ruins || []).map((ru, i) => ({ ru, i })).filter(x => !x.ru.cleared);
+  const ruinsHtml = pendingRuins.length
+    ? '<div class="province-build-title">🧹 Storm Wreckage · clear the rubble to salvage timber</div>' +
+      '<div class="province-ruin-grid">' + pendingRuins.map(x => {
+        const kind = VILLAGE_RUIN_KINDS[x.ru.kind] || VILLAGE_RUIN_KINDS.house;
+        return '<div class="province-ruin">' +
+          '<div class="province-ruin-head"><span class="province-ruin-icon">' + kind.icon + '</span><span class="province-ruin-name">' + escapeHtml(kind.label) + '</span></div>' +
+          '<div class="province-ruin-desc">' + escapeHtml(kind.desc) + '</div>' +
+          '<button class="province-clear-btn" onclick="empireClearRuin(' + (rec.seed >>> 0) + ',' + x.i + ')">🧹 CLEAR · +' + x.ru.reward + ' 🪵</button></div>';
+      }).join('') + '</div>'
+    : '';
+  // Active building site: name, animated progress bar and a live countdown.
+  let constructionHtml = '';
+  if (construction) {
+    const cb = EMPIRE_BUILDING_INDEX[construction.id];
+    const pct = Math.round(constructionProgress(construction, now) * 100);
+    constructionHtml = '<div class="province-construction">' +
+      '<div class="province-construction-head"><span>🏗️ ' + (cb ? cb.icon + ' ' + escapeHtml(cb.name) : 'Construction') + (construction.toLevel > 1 ? ' → level ' + construction.toLevel : '') + '</span>' +
+      '<span class="province-construction-eta" data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></div>' +
+      '<div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + construction.startMs + '" data-build-end="' + construction.endMs + '" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+  }
   const buildingsHtml = EMPIRE_BUILDINGS.map(b => {
     const level = villageBuildingLevel(rec, b.id);
     const maxed = level >= b.maxLevel;
     const cost = maxed ? null : villageBuildingCost(b, level);
     const affordable = cost && wallet >= cost.coins && timber >= cost.branches;
     const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
-    const btn = maxed
-      ? '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>'
-      : '<button class="province-build-btn" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' + (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>';
+    const inProgress = construction && construction.id === b.id;
+    const busyElsewhere = construction && construction.id !== b.id;
+    let btn;
+    if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
+    else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
+    else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
+      (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
       '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
       '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn + '</div>';
@@ -14590,14 +14791,18 @@ function renderVillageManagePanel() {
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%</div></div>' +
     '<div class="province-needs">' + needsHtml + '</div>' +
     '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>' +
-    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵</div>' +
+    ruinsHtml +
+    constructionHtml +
+    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     '</div>';
+  if (construction) ensureProvinceCountdownTicker();
 }
 function happinessFace(h) { return h >= 0.9 ? '😊' : h >= 0.65 ? '🙂' : h >= 0.45 ? '😐' : '😟'; }
 function renderEmpirePanel() {
   const panel = $('empirePanel');
   if (!panel) return;
+  empireCompleteConstructions();
   simulateAllVillageEconomies();
   const villages = empireVillages().slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0));
   const due = empireTributeReady();
@@ -14610,7 +14815,7 @@ function renderEmpirePanel() {
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + '</span><br>' +
-      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '% · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
+      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
   const realmName = $('empireRealmName'), realmRank = $('empireRealmRank');
@@ -14643,12 +14848,20 @@ let villageActive = null;
 function renderVillage() {
   const stage = $('villageStage');
   if (!stage) return;
+  empireCompleteConstructions(); // finish any timed-out builds before drawing
   const v = currentVillage();
   const owned = empireOwnsVillage(v.seed);
   const title = $('villageTitle');
   if (title) title.textContent = (owned ? '👑 ' : '') + v.name.toUpperCase();
   const sub = $('villageSub');
-  if (sub) sub.textContent = (owned ? 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' : '') + 'The market square of ' + v.name + '. Drag to look around — tap a building to step inside.' + (owned ? '' : ' Find more villages on the map.');
+  if (sub) {
+    const rec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
+    const dev = rec ? villageTotalDevelopment(rec) : 0;
+    const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
+    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, then free the village to rebuild it.';
+    else if (dev <= 0) sub.textContent = 'Your province, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.';
+    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around — tap a building to step inside.';
+  }
   renderVillageClaimBar();
   renderVillageManagePanel();
   renderEmpirePanel();
@@ -15316,6 +15529,133 @@ function villageMakeRuinTower(r, pal) {
   crow.position.set(0.6, h + 0.45, 0.4); crow.rotation.y = r() * Math.PI * 2;
   g.add(crow);
   g.add(villageBlobShadow(1.8));
+  return g;
+}
+
+// ---- Wrecks, rubble and building sites --------------------------------------
+// A drift of tumbled stone and splintered planks — the darkness's calling card.
+function villageMakeRubblePile(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.03, -0.04) });
+  const plankMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, -0.05, -0.08) });
+  const dust = new THREE.Mesh(new THREE.CircleGeometry(0.9 + r() * 0.5, 10), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, -0.15, -0.06) }));
+  dust.rotation.x = -Math.PI / 2; dust.position.y = 0.01; g.add(dust);
+  for (let i = 0; i < 5 + Math.floor(r() * 3); i++) {
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14 + r() * 0.22, 0), stoneMat);
+    const a = r() * Math.PI * 2, d = r() * 0.7;
+    rock.position.set(Math.cos(a) * d, 0.1 + r() * 0.12, Math.sin(a) * d);
+    rock.rotation.set(r() * 3, r() * 3, r() * 3);
+    g.add(rock);
+  }
+  for (let i = 0; i < 2 + Math.floor(r() * 2); i++) {
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.8 + r() * 0.6, 0.06, 0.16), plankMat);
+    plank.position.set((r() - 0.5) * 0.9, 0.12 + i * 0.07, (r() - 0.5) * 0.9);
+    plank.rotation.set((r() - 0.5) * 0.5, r() * Math.PI, (r() - 0.5) * 0.4);
+    g.add(plank);
+  }
+  return g;
+}
+
+// A wrecked building — enough of a shell left to read what it once was.
+// Kinds match VILLAGE_RUIN_KINDS: house · barn · tower.
+function villageMakeWreckedBuilding(r, pal, kind) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06) });
+  const plasterMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, -0.08, -0.1) });
+  const charMat = new THREE.MeshLambertMaterial({ color: 0x241d16 });
+  const beamMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, -0.06, -0.1) });
+  if (kind === 'tower') {
+    const h = 1.5 + r() * 0.7;
+    const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, h, 9), stoneMat);
+    stub.position.y = h / 2; g.add(stub);
+    for (let i = 0; i < 6; i++) {
+      if (r() < 0.45) continue;
+      const a = (i / 6) * Math.PI * 2;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.2 + r() * 0.35, 0.26), stoneMat);
+      m.position.set(Math.cos(a) * 0.78, h + 0.12, Math.sin(a) * 0.78);
+      m.rotation.y = -a; g.add(m);
+    }
+  } else if (kind === 'barn') {
+    // the roof came down whole and lies slumped like a collapsed tent
+    for (const side of [-1, 1]) {
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.09, 1.6), beamMat);
+      slab.position.set(0, 0.5, side * 0.62);
+      slab.rotation.x = side * 0.9;
+      g.add(slab);
+    }
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.7, 0.16), beamMat);
+    post.position.set(-1.5, 0.85, 0); post.rotation.z = (r() - 0.5) * 0.2; g.add(post);
+  } else {
+    // broken cottage: two jagged plaster walls in an L, hearth still standing
+    for (const w of [{ x: 0, z: -0.95, ry: 0, len: 2.3 }, { x: -1.1, z: 0.15, ry: Math.PI / 2, len: 2.0 }]) {
+      for (let s = 0; s < 4; s++) {
+        const segH = 0.5 + r() * 0.9;
+        const seg = new THREE.Mesh(new THREE.BoxGeometry(w.len / 4, segH, 0.18), plasterMat);
+        seg.position.set(w.x + Math.cos(w.ry) * (s - 1.5) * (w.len / 4), segH / 2, w.z + Math.sin(w.ry) * (s - 1.5) * (w.len / 4));
+        seg.rotation.y = w.ry;
+        g.add(seg);
+      }
+    }
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.9, 0.4), stoneMat);
+    chimney.position.set(1.05, 0.95, -0.8); g.add(chimney);
+    for (let i = 0; i < 3; i++) {
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(1.6 + r() * 0.7, 0.09, 0.12), charMat);
+      beam.position.set((r() - 0.5) * 1.2, 0.28 + i * 0.09, (r() - 0.5) * 1.0);
+      beam.rotation.set((r() - 0.5) * 0.4, r() * Math.PI, 0.18 + (r() - 0.5) * 0.3);
+      g.add(beam);
+    }
+  }
+  // every wreck: tumbled stones and weeds pushing through the floor
+  for (let i = 0; i < 5; i++) {
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.12 + r() * 0.18, 0), stoneMat);
+    const a = r() * Math.PI * 2, d = 1.1 + r() * 1.1;
+    rock.position.set(Math.cos(a) * d, 0.1, Math.sin(a) * d);
+    rock.rotation.set(r() * 3, r() * 3, r() * 3);
+    g.add(rock);
+  }
+  const weedMat = new THREE.MeshLambertMaterial({ color: 0x3c5222 });
+  for (let i = 0; i < 3; i++) {
+    const weed = new THREE.Mesh(new THREE.SphereGeometry(0.16 + r() * 0.14, 5, 4), weedMat);
+    const a = r() * Math.PI * 2, d = 0.6 + r() * 1.2;
+    weed.position.set(Math.cos(a) * d, 0.12, Math.sin(a) * d);
+    g.add(weed);
+  }
+  g.add(villageBlobShadow(1.9));
+  return g;
+}
+
+// A construction site: scaffold, half-risen walls and a builder at work. The
+// wall shell's height tracks build progress, so returning players see it rise.
+function villageMakeConstructionSite(r, pal, progress) {
+  const g = new THREE.Group();
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const plasterMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, -0.04, 0.02) });
+  const dirt = new THREE.Mesh(new THREE.CircleGeometry(2.3, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.02, -0.2, -0.08) }));
+  dirt.rotation.x = -Math.PI / 2; dirt.position.y = 0.012; g.add(dirt);
+  const shellH = 0.35 + Math.max(0, Math.min(1, Number(progress) || 0)) * 1.3;
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.9, shellH, 1.5), plasterMat);
+  shell.position.y = shellH / 2; g.add(shell);
+  // scaffold: corner posts, ledgers and a walk-board
+  for (const sx of [-1.15, 1.15]) for (const sz of [-0.95, 0.95]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 2.3, 0.09), beamMat);
+    post.position.set(sx, 1.15, sz); g.add(post);
+  }
+  for (const y of [1.0, 2.1]) for (const sz of [-0.95, 0.95]) {
+    const ledger = new THREE.Mesh(new THREE.BoxGeometry(2.42, 0.07, 0.09), beamMat);
+    ledger.position.set(0, y, sz); g.add(ledger);
+  }
+  const board = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.05, 0.4), beamMat);
+  board.position.set(0, 1.05, 0.95); g.add(board);
+  // materials stacked on site
+  const logs = villageMakeLogPile(r, pal); logs.position.set(1.9, 0, 0.8); logs.rotation.y = r() * Math.PI; g.add(logs);
+  const crates = villageMakeCrates(r, pal); crates.position.set(-1.9, 0, 1.0); g.add(crates);
+  const sand = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 6), new THREE.MeshLambertMaterial({ color: 0xb59a67 }));
+  sand.scale.set(1, 0.45, 1); sand.position.set(1.6, 0.1, -1.1); g.add(sand);
+  const builder = villageMakeVillager(r, pal, 'commoner');
+  builder.position.set(-0.4, 0, 1.7);
+  builder.lookAt(0, 0, 0); builder.rotation.x = 0; builder.rotation.z = 0;
+  g.add(builder);
+  g.add(villageBlobShadow(2.1));
   return g;
 }
 
@@ -16573,8 +16913,9 @@ function ensureVillageRenderer(stage) {
     const hits = ray.intersectObjects(villageBuildings.concat(villageNpcs), true);
     if (hits.length > 0) {
       let obj = hits[0].object;
-      while (obj && !obj.userData.shopKey && !obj.userData.npc) obj = obj.parent;
+      while (obj && !obj.userData.shopKey && !obj.userData.npc && obj.userData.ruinIndex === undefined) obj = obj.parent;
       if (obj && obj.userData.shopKey) villageOpenShop(obj.userData.shopKey);
+      else if (obj && obj.userData.ruinIndex !== undefined) villageTapRuin(obj.userData.ruinIndex);
       else if (obj && obj.userData.npc) villageGreetNpc(obj);
     }
   });
@@ -16610,6 +16951,12 @@ function buildVillageScene(v) {
   const sizeRoll = r();
   const tier = sizeRoll < 0.34 ? 0 : sizeRoll < 0.74 ? 1 : 2; // 0 hamlet · 1 village · 2 town
   const groundR = 30 + tier * 5;
+  // How rebuilt this settlement is. The darkness left every village wrecked, so
+  // an unliberated (or freshly liberated) village shows only rubble and a
+  // couple of broken shells; it fills back in as the governor raises buildings.
+  const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
+  const devLevel = econRec ? villageTotalDevelopment(econRec) : 0;
+  const ruinStage = devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
   // Every settlement is also built to one of three plans: a ring green, a
   // crossroads settlement, or a riverside village with a footbridge.
   const layoutRoll = r();
@@ -16792,7 +17139,9 @@ function buildVillageScene(v) {
   const shopKeys = villageShopKeysFor(v.seed);
   const roofPool = pal.roofs.slice();
   villageBuildings = [];
-  shopKeys.forEach((k, i) => {
+  // In a wrecked village the trades haven't reopened — no shopfronts rise
+  // until rebuilding begins (their wares stay reachable from the chips below).
+  if (ruinStage >= 1) shopKeys.forEach((k, i) => {
     let px, pz, faceX = 0, faceZ = 0;
     if (layout === 'crossroads') {
       // Shops take the four corners of the crossing, then march down the arms
@@ -16838,8 +17187,46 @@ function buildVillageScene(v) {
     villageTorches.push(torch);
   });
 
-  // Cottages fill out bigger settlements (none in a hamlet).
-  const cottageCount = tier === 0 ? (r() < 0.4 ? 1 : 0) : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
+  // ---- Wrecks & rubble left by the darkness ---------------------------------
+  // Each village carries a couple of broken buildings (seeded, matching the
+  // governor panel's wreckage list). Cleared wrecks still burn their rng draws
+  // so the survivors don't wander when one is tidied away.
+  const ruinDefs = econRec ? (ensureVillageEconomy(econRec).ruins || []) : villageRuinDefsFor(v.seed);
+  const rr = villageRngFrom((v.seed >>> 0) ^ 0x7c3a9e5);
+  ruinDefs.forEach((ru, i) => {
+    const baseA = rr() * Math.PI * 2, baseD = 7.2 + rr() * 4.2, rot = rr() * Math.PI * 2, meshSeed = Math.floor(rr() * 0x7fffffff);
+    if (ru.cleared) return;
+    let x = 0, z = 0, placed = false;
+    for (let attempt = 0; attempt < 14 && !placed; attempt++) {
+      const a = baseA + attempt * 0.9, dd = baseD + (attempt % 3) * 1.4;
+      x = Math.cos(a) * dd; z = Math.sin(a) * dd;
+      placed = spotFree(x, z, 2.6);
+    }
+    if (!placed) return;
+    claimSpot(x, z, 2.6);
+    const wreck = villageMakeWreckedBuilding(villageRngFrom(meshSeed), pal, ru.kind);
+    wreck.position.set(x, 0, z);
+    wreck.rotation.y = rot;
+    wreck.userData.ruinIndex = i;
+    villageScene.add(wreck);
+    villageBuildings.push(wreck); // tappable — clear the rubble for timber
+  });
+  // Loose drifts of rubble make an untouched village feel storm-struck; they
+  // sweep away as soon as rebuilding starts.
+  if (ruinStage === 0) {
+    for (let i = 0; i < 3 + Math.floor(rr() * 3); i++) {
+      const spot = scatterSpot(4.5, 10.5, 1.2, dryArc.c, dryArc.s);
+      if (!spot) continue;
+      const pile = villageMakeRubblePile(rr, pal);
+      pile.position.set(spot.x, 0, spot.z);
+      pile.rotation.y = rr() * Math.PI * 2;
+      villageScene.add(pile);
+    }
+  }
+
+  // Cottages fill out bigger settlements (none in a hamlet, none amid ruins —
+  // homes return once the province flourishes again).
+  const cottageCount = ruinStage < 2 ? 0 : tier === 0 ? (r() < 0.4 ? 1 : 0) : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
   for (let i = 0; i < cottageCount; i++) {
     let cx, cz, faceX = 0, faceZ = 0;
     if (layout === 'crossroads') {
@@ -16876,7 +17263,7 @@ function buildVillageScene(v) {
   // No two settlements share a skyline.
   const landmarkMakers = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower,
     villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower];
-  const landmarkCount = tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
+  const landmarkCount = ruinStage < 2 ? 0 : tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
   const landmarkPool = landmarkMakers.slice();
   for (let i = 0; i < landmarkCount; i++) {
     const spot = scatterSpot(11.5, 16, 3.4, dryArc.c, dryArc.s);
@@ -16889,7 +17276,7 @@ function buildVillageScene(v) {
   }
 
   // A dovecote suits a realm of bird trainers — most villages keep one.
-  if (r() < 0.6) {
+  if (ruinStage >= 1 && r() < 0.6) {
     const spot = scatterSpot(9.5, 12.5, 1.4, dryArc.c, dryArc.s);
     if (spot) {
       const dovecote = villageMakeDovecote(r, pal);
@@ -16902,7 +17289,8 @@ function buildVillageScene(v) {
   villageScene.add(villageMakeCentrepiece(r, pal));
 
   // Market stalls around the plaza — most keep a vendor minding the counter
-  const stallCount = 1 + Math.floor(r() * 3);
+  // (traders only return once the settlement is flourishing again)
+  const stallCount = ruinStage === 2 ? 1 + Math.floor(r() * 3) : 0;
   for (let i = 0; i < stallCount; i++) {
     const a = r() * Math.PI * 2, rad = 3.6 + r() * 1.6;
     const stall = villageMakeStall(r, pal);
@@ -16918,7 +17306,7 @@ function buildVillageScene(v) {
     }
   }
   // A bench or two facing the centrepiece
-  for (let i = 0; i < 1 + (tier > 0 ? 1 : 0); i++) {
+  for (let i = 0; i < (ruinStage >= 1 ? 1 + (tier > 0 ? 1 : 0) : 0); i++) {
     if (r() < 0.3) continue;
     const a = r() * Math.PI * 2, rad = 2.6 + r() * 1.2;
     const bench = villageMakeBench(r, pal);
@@ -16927,16 +17315,17 @@ function buildVillageScene(v) {
     villageScene.add(bench);
   }
 
-  // Bunting strung across the square
-  if (r() < 0.75) {
+  // Bunting strung across the square — nobody hangs bunting over rubble
+  if (ruinStage === 2 && r() < 0.75) {
     const a = r() * Math.PI * 2;
     villageScene.add(villageMakeGarland(r, pal,
       new THREE.Vector3(Math.cos(a) * 5.5, 3.1, Math.sin(a) * 5.5),
       new THREE.Vector3(Math.cos(a + Math.PI) * 5.5, 3.1, Math.sin(a + Math.PI) * 5.5)));
   }
 
-  // Barrels, crates and sacks near the buildings — one barrel keeps the cat
-  const clutterCount = 5 + Math.floor(r() * 5);
+  // Barrels, crates and sacks near the buildings — one barrel keeps the cat.
+  // Amid ruins there's only a little salvage stacked by the wrecks.
+  const clutterCount = villageBuildings.length ? (ruinStage >= 1 ? 5 + Math.floor(r() * 5) : 2 + Math.floor(r() * 2)) : 0;
   let catBarrel = null;
   for (let i = 0; i < clutterCount; i++) {
     const near = villageBuildings[Math.floor(r() * villageBuildings.length)];
@@ -16963,10 +17352,10 @@ function buildVillageScene(v) {
     { p: tier >= 1 ? 0.5 : 0, rad: 1.6, min: 13, max: 17, make: () => villageMakeHay(r, pal) },
     { p: 0.6, rad: 2.0, min: 10.5, max: 15, make: () => { const veg = villageMakeVegPatch(r, pal); veg.rotation.y = r() * Math.PI; return veg; } },
     { p: 0.55, rad: 1.0, min: 10, max: 15, make: () => { const sc = villageMakeScarecrow(r, pal); sc.rotation.y = r() * Math.PI * 2; return sc; } },
-    { p: 1.0, rad: 0.7, min: 6.5, max: 11, make: () => villageMakeBirdhousePole(r, pal) }, // every village honours its birds
+    { p: 1.0, rad: 0.7, min: 6.5, max: 11, always: true, make: () => villageMakeBirdhousePole(r, pal) }, // every village honours its birds, even in ruin
     { p: tier >= 1 ? 0.55 : 0.25, rad: 0.7, min: 8, max: 13, make: () => villageMakeBirdhousePole(r, pal) },
     { p: 0.6, rad: 1.6, min: 9, max: 13.5, make: () => { const wl = villageMakeWashingLine(r, pal); wl.rotation.y = r() * Math.PI; return wl; } },
-    { p: 0.65, rad: 1.0, min: 8.5, max: 13, make: () => { const lp = villageMakeLogPile(r, pal); lp.rotation.y = r() * Math.PI; return lp; } },
+    { p: 0.65, rad: 1.0, min: 8.5, max: 13, always: true, make: () => { const lp = villageMakeLogPile(r, pal); lp.rotation.y = r() * Math.PI; return lp; } },
     { p: 0.45, rad: 1.2, min: 9.5, max: 14, make: () => { const bh = villageMakeBeehives(r, pal); bh.rotation.y = r() * Math.PI; return bh; } },
     { p: 0.4, rad: 1.2, min: 11, max: 16, make: () => villageMakeMushroomRing(r, pal) },
     { p: pal.weather === 'snow' ? 0.7 : 0, rad: 0.8, min: 6, max: 11, make: () => { const sm = villageMakeSnowman(r, pal); sm.rotation.y = r() * Math.PI * 2; return sm; } },
@@ -16976,7 +17365,8 @@ function buildVillageScene(v) {
     { p: 0.45, rad: 2.4, min: 12, max: 16.5, make: () => { const w = villageMakeStoneWall(r, pal, 3.5 + r() * 3); w.rotation.y = r() * Math.PI; return w; } }
   ];
   dressing.forEach(item => {
-    if (r() >= item.p) return;
+    if (ruinStage === 0 && !item.always) return; // ruins keep only the essentials
+    if (r() >= item.p * (ruinStage === 1 ? 0.7 : 1)) return;
     const spot = scatterSpot(item.min, item.max, item.rad, dryArc.c, dryArc.s);
     if (!spot) return;
     const piece = item.make();
@@ -16987,7 +17377,7 @@ function buildVillageScene(v) {
   // Villagers out in the evening air: elders, children and townsfolk near the
   // square, walkers on slow circuits, children darting on quicker ones, a dog
   // trotting its rounds and hens pecking at the plaza edge. Tap anyone to chat.
-  const idlers = 2 + tier * 2 + Math.floor(r() * 3);
+  const idlers = ruinStage === 0 ? 1 + Math.floor(r() * 2) : 2 + tier * 2 + Math.floor(r() * 3);
   for (let i = 0; i < idlers; i++) {
     const a = r() * Math.PI * 2, rad = 2.4 + r() * 4;
     const roll = r();
@@ -16997,7 +17387,7 @@ function buildVillageScene(v) {
     soul.rotation.y = r() * Math.PI * 2;
     villageScene.add(soul);
   }
-  const walkers = 2 + tier;
+  const walkers = ruinStage === 0 ? 0 : ruinStage === 1 ? 1 : 2 + tier;
   for (let i = 0; i < walkers; i++) {
     const young = r() < 0.35;
     const soul = villageMakeVillager(r, pal, young ? 'child' : 'commoner');
@@ -17010,7 +17400,7 @@ function buildVillageScene(v) {
     villageScene.add(soul);
   }
   // The village dog does its own patrol, tail going the whole way round
-  if (r() < 0.8) {
+  if (ruinStage >= 1 && r() < 0.8) {
     const dog = villageMakeDog(r, pal);
     dog.userData.route = { rad: 5.6 + r() * 1.6, phase: r() * Math.PI * 2, speed: (0.16 + r() * 0.08) * (r() < 0.5 ? -1 : 1) };
     villageWalkers.push(dog);
@@ -17018,7 +17408,7 @@ function buildVillageScene(v) {
   }
   // Hens peck about between the plaza and the first gardens. Like the
   // villagers they're welcome on the square itself, so no spotFree check.
-  const henCount = 2 + Math.floor(r() * 3);
+  const henCount = ruinStage === 0 ? 1 : 2 + Math.floor(r() * 3); // one stubborn hen stays through anything
   for (let i = 0; i < henCount; i++) {
     const a = r() * Math.PI * 2, rad = 4.2 + r() * 3.2;
     const hen = villageMakeChicken(r, pal);
@@ -17027,7 +17417,7 @@ function buildVillageScene(v) {
     villageScene.add(hen);
   }
   // A bard serenades the centrepiece on festival-ish nights
-  if (r() < 0.55) {
+  if (ruinStage === 2 && r() < 0.55) {
     const a = r() * Math.PI * 2, rad = 1.7 + r() * 0.8;
     const bard = villageMakeVillager(r, pal, 'bard');
     bard.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
@@ -17035,8 +17425,8 @@ function buildVillageScene(v) {
     villageScene.add(bard);
   }
 
-  // Lantern posts along a couple of the cobbled paths
-  const lampCount = 3 + tier;
+  // Lantern posts along a couple of the cobbled paths (dark while in ruins)
+  const lampCount = ruinStage === 0 ? 0 : 3 + tier;
   for (let i = 0; i < lampCount && villageBuildings.length; i++) {
     const near = villageBuildings[Math.floor(r() * villageBuildings.length)];
     const t = 0.45 + r() * 0.3;
@@ -17157,7 +17547,6 @@ function buildVillageScene(v) {
   // Structures raised from the province management panel appear in the village
   // itself. A separate rng stream (er) keeps their placement stable without
   // reshuffling the rest of the settlement every time something is built.
-  const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
   if (econRec) {
     const er = villageRngFrom((v.seed >>> 0) ^ 0x51ed270b);
     const econScatter = (minR, maxR, rad) => {
@@ -17177,9 +17566,23 @@ function buildVillageScene(v) {
       group.add(sign);
       villageSigns.push(sign);
     };
+    const pendingCon = villageConstructionFor(econRec);
     EMPIRE_BUILDINGS.forEach(b => {
       const level = villageBuildingLevel(econRec, b.id);
-      if (!level) return;
+      const rising = pendingCon && pendingCon.id === b.id;
+      if (!level && !rising) return;
+      if (rising) {
+        // The building being built: scaffold, half-raised walls, busy builder.
+        const spot = econScatter(8.5, 13.5, 2.8);
+        if (spot) {
+          const site = villageMakeConstructionSite(er, pal, constructionProgress(pendingCon));
+          site.position.set(spot.x, 0, spot.z);
+          site.rotation.y = -spot.a + (er() - 0.5) * 0.5;
+          econLabel(site, '🏗️ ' + b.icon + ' ' + (level ? b.name + ' upgrade' : b.name), 2.9);
+          villageScene.add(site);
+        }
+        if (!level) return; // nothing finished yet — only the site shows
+      }
       if (b.id === 'farm') {
         const spot = econScatter(11, 15.5, 2.8);
         if (!spot) return;
@@ -20322,7 +20725,7 @@ function tickPetCare() {
 
 function startPetCareLoop() {
   clearInterval(petCareTimer);
-  petCareTimer = setInterval(() => { tickPetCare(); tickAcademy(); }, 60000);
+  petCareTimer = setInterval(() => { tickPetCare(); tickAcademy(); tickEmpireConstruction(); }, 60000);
 }
 
 function feedPet() {
