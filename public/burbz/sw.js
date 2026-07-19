@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-empire-provinces-v86-20260717';
+const BURBZ_CACHE = 'burbz-skyclash-forge-v87-20260719';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -63,7 +63,8 @@ const BURBZ_ASSETS = [
   './assets/academy-buildings-manga/nursery.png',
   './assets/academy-buildings-manga/observatory.png',
   './assets/academy-buildings-manga/quest-roost.png',
-  './battle_core.js',
+  './battle_core.js?v=skyclash-squads-20260719',
+  './loot_crafting_core.js?v=fletchers-forge-20260719',
   './manifest.json',
   './privacy.html',
   './assets/burbz-logo-yaan-transparent-20260608.png',
@@ -96,7 +97,8 @@ const BURBZ_CORE = [
   './index.html',
   './lib/three.min.js?v=0.158.0',
   './academy_treehouse_core.js',
-  './battle_core.js',
+  './battle_core.js?v=skyclash-squads-20260719',
+  './loot_crafting_core.js?v=fletchers-forge-20260719',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
   './au_bird_expansion.js?v=au-source-backed-20260713',
