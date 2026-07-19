@@ -86,22 +86,31 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert "is-visible" in html
 
 
-def test_unexplored_world_is_hidden_beneath_drifting_cloud_with_liberated_windows():
+def test_unexplored_world_is_visible_but_dark_with_liberated_windows():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="empireFogCanvas"' in html
-    assert "function buildEmpireCloudTile(" in html
     assert "function updateEmpireFogMask(" in html
-    assert "function empireFogDriftTick(" in html
+    assert "ctx.fillStyle = EMPIRE_DARKNESS_FILL" in html
     assert "map.on('move', updateEmpireFogMask)" in html
     assert "map.on('resize', updateEmpireFogMask)" in html
+    # The veil is static, so visibility return must repaint a purged canvas.
+    assert "document.addEventListener('visibilitychange', () => { if (!document.hidden) updateEmpireFogMask(); })" in html
     assert "core.destination" in html
     assert "wrappedLongitudeNear" in html
     assert "empireMap.getCenter().lng" in html
-    # The reveal erases cloud instead of painting a wash over the map.
+    # The veil multiplies over the atlas, so seas and coastlines stay readable
+    # through the dark instead of the Earth being hidden by an opaque blanket.
+    fog_css = html.split(".empire-fog-overlay {", 1)[1].split("}", 1)[0]
+    assert "mix-blend-mode:multiply" in fog_css
+    # No drifting cloud layer: the darkness is static, so no animation loop runs.
+    assert "buildEmpireCloudTile" not in html
+    assert "empireFogDriftTick" not in html
+    assert "EMPIRE_CLOUD_TILE" not in html
+    # The reveal erases darkness instead of painting a wash over the map.
     assert "'destination-out'" in html
     assert "empire-liberated-wash" not in html
     assert "empire-unexplored-shade" not in html
-    # The cloud canvas rides inside MapLibre's canvas container so markers stay above it.
+    # The darkness canvas rides inside MapLibre's canvas container so markers stay above it.
     assert "map.getCanvasContainer().appendChild(fogCanvas)" in html
 
 
@@ -116,7 +125,7 @@ def test_world_palette_is_a_medieval_atlas_with_town_names_and_no_roads():
     assert "/transportation|highway|road|rail|bridge|tunnel|aeroway|aerodrome|ferry|oneway/" in html
     assert "/poi|housenumber/" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
-    assert "burbz-village-life-v85-20260716" in SW.read_text(encoding="utf-8")
+    assert "burbz-empire-darkness-v88-20260719" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
@@ -136,16 +145,17 @@ def test_map_keyboard_controls_and_markers_have_visible_focus():
     assert ".empire-map-marker:focus-visible" in html
 
 
-def test_liberated_cloud_windows_union_into_one_soft_edged_reveal():
+def test_liberated_darkness_windows_union_into_one_soft_edged_reveal():
     html = HTML.read_text(encoding="utf-8")
-    fog = html[html.index("function updateEmpireFogMask("):html.index("function empireFogDriftTick(")]
+    fog = html[html.index("function updateEmpireFogMask("):html.index("function frameEmpireTerritory(")]
     # Rim glow strokes first, then the destination-out punch erases rim segments that
     # fall inside neighbouring holes — overlapping territories share one unioned outline.
     assert fog.index("ctx.stroke()") < fog.index("'destination-out'")
-    assert "createRadialGradient" in fog  # soft feathered cloud edges, not hard circles
-    assert "map.addLayer({ id:'empire-territory-fill'" not in html
-    assert "map.addLayer({ id:'empire-territory-line'" not in html
-    assert "map.addSource('empire-territories'" not in html
+    assert "createRadialGradient" in fog  # soft feathered edges to the dark, not hard circles
+    # Liberated lands stay marked on the map itself with a tappable green fill.
+    assert "map.addSource('empire-territory'" in html
+    assert "map.addLayer({ id:'empire-territory-fill'" in html
+    assert "map.addLayer({ id:'empire-territory-border'" in html
 
 
 def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():

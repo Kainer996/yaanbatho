@@ -376,7 +376,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-card { position:relative; height:52vh; min-height:380px; margin:12px 12px 6px; overflow:hidden; border-radius:14px; border:2px solid #7a5a28; background:#18222a; box-shadow:0 0 0 1px rgba(240,199,103,.55), 0 0 0 5px rgba(28,20,8,.95), 0 0 0 6px rgba(214,168,79,.4), 0 18px 40px rgba(0,0,0,.55), inset 0 0 32px rgba(240,199,103,.07); }
 #empireWorldMap { position:absolute; inset:0; }
 #empireWorldMap .maplibregl-canvas { filter:saturate(.88) sepia(.24) brightness(1.02) contrast(1.05); }
-.empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; }
+.empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; mix-blend-mode:multiply; }
 .empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
 .empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); background:rgba(24,16,6,.92); border:1px solid rgba(214,168,79,.5); }
 .empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button { color:#ffe8a5; }
@@ -2458,7 +2458,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="empire-realm-banner"><div class="empire-realm-banner-name" id="empireRealmName">THE REALM OF BURBZ</div><div class="empire-realm-banner-rank" id="empireRealmRank">Wandering Trainer</div></div>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
         <div class="empire-map-empty"></div>
-        <div class="empire-map-status" id="empireMapStatus">Gathering the clouds over the world…</div>
+        <div class="empire-map-status" id="empireMapStatus">Charting the darkened world…</div>
         <div class="empire-map-attribution"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
       </div>
       <div id="empirePanel"></div>
@@ -13977,7 +13977,6 @@ let empireMap = null, empireMapReady = false, empireMapInitPromise = null, empir
 
 function resetEmpireMapAfterFailure(mapToRemove) {
   clearEmpireMapMarkers();
-  if (empireFogRafId) { cancelAnimationFrame(empireFogRafId); empireFogRafId = null; }
   // Rescue the fog canvas before map.remove() clears the map container, so a retry keeps it.
   const fogCanvas = $('empireFogCanvas');
   const card = $('empireMapCard');
@@ -14043,9 +14042,12 @@ function applyEmpireAtlasPalette(map) {
       return;
     }
     if (layer.type === 'symbol') {
+      // Halos match the terrain beneath them rather than glowing bright: on the
+      // revealed parchment the ink stays perfectly readable, while under the
+      // darkness veil the lettering sinks into the land and keeps its secrets.
       setPaint(layer, 'text-color', water ? '#2e5e7d' : '#41301a');
-      setPaint(layer, 'text-halo-color', water ? '#cfe0dd' : '#ecdcb0');
-      setPaint(layer, 'text-halo-width', 1.25);
+      setPaint(layer, 'text-halo-color', water ? '#9fc3d6' : '#e3d3a8');
+      setPaint(layer, 'text-halo-width', .8);
       setPaint(layer, 'icon-opacity', .55);
     }
   });
@@ -14075,56 +14077,14 @@ function wrappedLongitudeNear(lon, referenceLon) {
   return longitude + 360 * Math.round((reference - longitude) / 360);
 }
 
-/* Cloud cover over the undiscovered Earth. The whole world starts wrapped in a
-   drifting cloud blanket; each liberated town punches a soft-edged window through
-   it so the real medieval map shows beneath — nothing is painted over the map. */
-const EMPIRE_CLOUD_TILE = 320;
-let empireCloudTileCanvas = null, empireCloudPattern = null;
-let empireFogRafId = null, empireFogDriftMs = 0, empireFogLastFrame = 0;
-
-function buildEmpireCloudTile() {
-  const size = EMPIRE_CLOUD_TILE;
-  const tile = document.createElement('canvas');
-  tile.width = size; tile.height = size;
-  const tctx = tile.getContext('2d');
-  if (!tctx) return null;
-  const image = tctx.createImageData(size, size);
-  const lattice = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
-  const fade = t => t * t * (3 - 2 * t);
-  // Tileable value noise: lattice coordinates wrap at each octave's cell count.
-  const noise = (u, v, cells) => {
-    const gx = u * cells, gy = v * cells;
-    const x0 = Math.floor(gx), y0 = Math.floor(gy);
-    const fx = fade(gx - x0), fy = fade(gy - y0);
-    const wrap = n => ((n % cells) + cells) % cells;
-    const v00 = lattice(wrap(x0), wrap(y0)), v10 = lattice(wrap(x0 + 1), wrap(y0));
-    const v01 = lattice(wrap(x0), wrap(y0 + 1)), v11 = lattice(wrap(x0 + 1), wrap(y0 + 1));
-    const top = v00 + (v10 - v00) * fx;
-    const bottom = v01 + (v11 - v01) * fx;
-    return top + (bottom - top) * fy;
-  };
-  for (let py = 0; py < size; py++) {
-    for (let px = 0; px < size; px++) {
-      const u = px / size, v = py / size;
-      let total = 0, weight = 0, amp = 1;
-      for (const cells of [4, 8, 16, 32]) {
-        total += noise(u, v, cells) * amp;
-        weight += amp;
-        amp *= .55;
-      }
-      const cloud = Math.min(1, Math.max(0, (total / weight - .16) / .68));
-      const idx = (py * size + px) * 4;
-      image.data[idx] = Math.round(150 + (243 - 150) * cloud);
-      image.data[idx + 1] = Math.round(163 + (246 - 163) * cloud);
-      image.data[idx + 2] = Math.round(173 + (247 - 173) * cloud);
-      // Mostly opaque so the undiscovered Earth stays hidden, but the darker
-      // crevices stay faintly translucent — you can sense a world underneath.
-      image.data[idx + 3] = Math.round(255 * (.9 + .1 * cloud));
-    }
-  }
-  tctx.putImageData(image, 0, 0);
-  return tile;
-}
+/* Darkness over the undiscovered Earth. The whole world is visible from the
+   start — dark seas, darkened continents, unmistakably our planet — but its
+   details sleep in shadow. The veil multiplies over the atlas (see
+   .empire-fog-overlay), so water stays water-blue and land stays land-warm
+   instead of vanishing under a flat wash; only names and features are lost to
+   the dark. Each liberated town lifts the darkness in a soft-edged window so
+   the true medieval map shows in daylight beneath. */
+const EMPIRE_DARKNESS_FILL = '#39434f'; // multiplied over parchment and sea, this reads as a moonlit Earth
 
 function updateEmpireFogMask() {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
@@ -14142,18 +14102,8 @@ function updateEmpireFogMask() {
   if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
-  if (!empireCloudTileCanvas) empireCloudTileCanvas = buildEmpireCloudTile();
-  if (!empireCloudTileCanvas) return;
-  if (!empireCloudPattern) empireCloudPattern = ctx.createPattern(empireCloudTileCanvas, 'repeat');
-  if (empireCloudPattern) {
-    const driftX = (empireFogDriftMs * .0052) % EMPIRE_CLOUD_TILE;
-    const driftY = (empireFogDriftMs * .0021) % EMPIRE_CLOUD_TILE;
-    ctx.save();
-    ctx.translate(-driftX, -driftY);
-    ctx.fillStyle = empireCloudPattern;
-    ctx.fillRect(0, 0, width + EMPIRE_CLOUD_TILE, height + EMPIRE_CLOUD_TILE);
-    ctx.restore();
-  }
+  ctx.fillStyle = EMPIRE_DARKNESS_FILL;
+  ctx.fillRect(0, 0, width, height);
   const core = window.BurbzEmpireMapCore;
   const referenceLon = empireMap.getCenter().lng;
   const holes = [];
@@ -14193,17 +14143,11 @@ function updateEmpireFogMask() {
   });
   ctx.globalCompositeOperation = 'source-over';
 }
-
-function empireFogDriftTick(ts) {
-  empireFogRafId = requestAnimationFrame(empireFogDriftTick);
-  if (!empireMapReady || document.hidden) return;
-  const canvas = $('empireFogCanvas');
-  if (!canvas || !canvas.offsetParent) return;
-  if (ts - empireFogLastFrame < 100) return; // a slow ~10fps drift keeps the clouds alive cheaply
-  empireFogLastFrame = ts;
-  empireFogDriftMs = ts;
-  updateEmpireFogMask();
-}
+// The veil is static — no animation loop repaints it — so restore it when the
+// page returns to view, in case the browser purged the 2D canvas while the
+// PWA was backgrounded (routine on mobile under memory pressure).
+document.addEventListener('visibilitychange', () => { if (!document.hidden) updateEmpireFogMask(); });
+window.addEventListener('pageshow', () => updateEmpireFogMask());
 
 function frameEmpireTerritory() {
   if (!empireMap) return;
@@ -14285,8 +14229,8 @@ function refreshEmpireMap(options = {}) {
   card?.classList.toggle('is-empty', villages.length === 0);
   const status = $('empireMapStatus');
   if (status) status.textContent = villages.length
-    ? 'Clouds parted over ' + villages.length + ' province' + (villages.length === 1 ? '' : 's') + ' · tap a banner to travel to its village'
-    : 'The whole world sleeps under cloud — liberate your first town to part it';
+    ? 'Daylight restored over ' + villages.length + ' province' + (villages.length === 1 ? '' : 's') + ' · tap a banner to travel to its village'
+    : 'The whole world sleeps in darkness — liberate your first town to bring back its light';
   if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
 }
 
@@ -14315,11 +14259,10 @@ function initialiseEmpireMap() {
       if (settled) return;
       try {
         applyEmpireAtlasPalette(map);
-        // Slot the cloud canvas inside MapLibre's canvas container: it paints above
-        // the map tiles, while village markers (appended afterwards) stay above the clouds.
+        // Slot the darkness canvas inside MapLibre's canvas container: it paints above
+        // the map tiles, while village markers (appended afterwards) stay above the dark.
         const fogCanvas = $('empireFogCanvas');
         if (fogCanvas) map.getCanvasContainer().appendChild(fogCanvas);
-        if (!empireFogRafId) empireFogRafId = requestAnimationFrame(empireFogDriftTick);
         // Realm territory: each liberated province paints its lands in the
         // realm's green with an inked border, Crusader-map style. The fill is
         // tappable — touching your territory travels to its 3D village.
@@ -20181,7 +20124,7 @@ function endPerchBattle() {
     const next = core.LEAGUE_TIERS[league.tier];
     rows.push('<div class="rw-row"><span>PROMOTED! ' + tier.icon + '→' + next.icon + '</span><b>+' + tier.promoCoins + ' 🪙 +' + tier.promoBranches + ' 🪵</b></div>');
   }
-  if (liberatedTown) rows.push('<div class="rw-note">The shadow lifts from ' + escapeHtml(liberatedTown.name) + '. Return to build its sanctuary birdhouse and part the clouds over this land.</div>');
+  if (liberatedTown) rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedTown.name) + ' is broken. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
   if (!won) rows.push('<div class="rw-note">Tip: counter the rival\'s wing classes, and train new moves in the Academy.</div>');
@@ -20828,7 +20771,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
   { chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
   { chapter:'Collection', title:'Active companion', screen:'map', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed from the pantry, train it and watch its hunger, happiness and health rather than treating every bird as identical.' },
-  { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map keeps the undiscovered world hidden beneath cloud. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary — the clouds part there and reveal the true map.' },
+  { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the whole Earth sleeping in darkness — seas and coastlines are clear, but the land keeps its secrets. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary — the darkness lifts there and reveals the true map.' },
   { chapter:'Realm', title:'Liberation Battle', screen:'battle', target:'.nav-item[data-screen="battle"]', text:'A town’s Liberation Battle uses your chosen flock against its occupying birds. Victory frees the town; returning there lets you build its sanctuary birdhouse.' },
   { chapter:'Realm', title:'Provinces and taxes', screen:'village', target:'#empirePanel', text:'Each liberated province flies a heraldic banner — tap it (or its green territory) to travel to its 3D village. Provinces pay coin and branch taxes every eight hours; happy, well-fed villagers multiply and pay more.' },
   { chapter:'Realm', title:'Govern your villages', screen:'village', target:'#villageManagePanel', text:'Below the 3D village, the governor’s panel tracks population and the four basic needs: food, water, shelter and joy. Raise farms, wells, cottages and markets in the Construction Yard to meet needs, grow the population and boost taxes and materials.' },
