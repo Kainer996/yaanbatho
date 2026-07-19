@@ -14046,7 +14046,7 @@ function applyEmpireAtlasPalette(map) {
       // revealed parchment the ink stays perfectly readable, while under the
       // darkness veil the lettering sinks into the land and keeps its secrets.
       setPaint(layer, 'text-color', water ? '#2e5e7d' : '#41301a');
-      setPaint(layer, 'text-halo-color', water ? '#69a1c0' : '#e3d3a8');
+      setPaint(layer, 'text-halo-color', water ? '#9fc3d6' : '#e3d3a8');
       setPaint(layer, 'text-halo-width', .8);
       setPaint(layer, 'icon-opacity', .55);
     }
@@ -14143,6 +14143,11 @@ function updateEmpireFogMask() {
   });
   ctx.globalCompositeOperation = 'source-over';
 }
+// The veil is static — no animation loop repaints it — so restore it when the
+// page returns to view, in case the browser purged the 2D canvas while the
+// PWA was backgrounded (routine on mobile under memory pressure).
+document.addEventListener('visibilitychange', () => { if (!document.hidden) updateEmpireFogMask(); });
+window.addEventListener('pageshow', () => updateEmpireFogMask());
 
 function frameEmpireTerritory() {
   if (!empireMap) return;
@@ -20119,7 +20124,7 @@ function endPerchBattle() {
     const next = core.LEAGUE_TIERS[league.tier];
     rows.push('<div class="rw-row"><span>PROMOTED! ' + tier.icon + '→' + next.icon + '</span><b>+' + tier.promoCoins + ' 🪙 +' + tier.promoBranches + ' 🪵</b></div>');
   }
-  if (liberatedTown) rows.push('<div class="rw-note">The shadow lifts from ' + escapeHtml(liberatedTown.name) + '. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
+  if (liberatedTown) rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedTown.name) + ' is broken. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
   if (!won) rows.push('<div class="rw-note">Tip: counter the rival\'s wing classes, and train new moves in the Academy.</div>');

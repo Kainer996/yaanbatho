@@ -90,15 +90,18 @@ def test_unexplored_world_is_visible_but_dark_with_liberated_windows():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="empireFogCanvas"' in html
     assert "function updateEmpireFogMask(" in html
-    assert "EMPIRE_DARKNESS_FILL" in html
+    assert "ctx.fillStyle = EMPIRE_DARKNESS_FILL" in html
     assert "map.on('move', updateEmpireFogMask)" in html
     assert "map.on('resize', updateEmpireFogMask)" in html
+    # The veil is static, so visibility return must repaint a purged canvas.
+    assert "document.addEventListener('visibilitychange', () => { if (!document.hidden) updateEmpireFogMask(); })" in html
     assert "core.destination" in html
     assert "wrappedLongitudeNear" in html
     assert "empireMap.getCenter().lng" in html
     # The veil multiplies over the atlas, so seas and coastlines stay readable
     # through the dark instead of the Earth being hidden by an opaque blanket.
-    assert "mix-blend-mode:multiply" in html
+    fog_css = html.split(".empire-fog-overlay {", 1)[1].split("}", 1)[0]
+    assert "mix-blend-mode:multiply" in fog_css
     # No drifting cloud layer: the darkness is static, so no animation loop runs.
     assert "buildEmpireCloudTile" not in html
     assert "empireFogDriftTick" not in html
