@@ -3605,7 +3605,8 @@ const DEFAULT_STATE = {
   knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
-  starterTimber: { taken: {} } // Guaranteed timber bundles near new players — enough to build The Roost
+  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough to build The Roost
+  sideQuest: { active: null, history: [] } // Free-exploration side quests: the game charts wherever the player goes
 };
 
 let gameState;
@@ -11680,7 +11681,7 @@ function applyBurbzCameraPadding() {
     liveMap.setPadding({ top: Math.round(h * 0.44), bottom: 0, left: 0, right: 0 });
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
   if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
   if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
@@ -12025,36 +12026,38 @@ function closeWalkQuestSheet() { const el = $('walkQuestSheet'); if (el) el.clas
 function openQuestBoard() {
   SFX.tap();
   if (activeWalkingQuest()) { openActiveWalkQuestSheet(); return; }
+  if (sideQuestActive()) { openSideQuestLogSheet(); return; }
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
     '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="quest-board-title">Nearby Quests</div><div class="quest-board-intro" id="walkQuestSheetStatus">Scouting real trails and public footpaths around you…</div></div></div>' +
 
     '<div id="walkQuestOfferList"><div class="quest-all-done">Reading the enchanted trail map…</div></div>' +
-    '<div class="quest-section-title">🧭 Chart your own route</div><div id="walkQuestAdventureList"></div>' +
+    '<div class="quest-section-title">🎒 Side Quest</div><div id="walkQuestSideQuestSlot"></div>' +
     '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
   el.classList.add('open');
-  const adventureList = $('walkQuestAdventureList');
-  [['Short stroll', 1200, '~1.2 km loop'], ['Explorer loop', 2500, '~2.5 km loop'], ['Grand expedition', 4500, '~4.5 km loop']].forEach(opt => {
+  // Side Quest: no route, no markers — just explore and Burbz charts where you go.
+  const sideSlot = $('walkQuestSideQuestSlot');
+  if (sideSlot) {
     const b = document.createElement('button');
     b.className = 'walk-quest-offer';
-    b.innerHTML = '<div class="wqo-icon">🧭</div><div class="wqo-body"><div class="wqo-distance">STARTS HERE</div><div class="wqo-name">Chart My Own Adventure — ' + opt[0] + '</div><div class="wqo-meta"><span>' + opt[2] + '</span><span>↺ returns home</span></div></div><span aria-hidden="true">›</span>';
-    b.addEventListener('click', () => startAdventureWalkQuest(opt[1], opt[0]));
-    adventureList?.appendChild(b);
-  });
+    b.innerHTML = '<div class="wqo-icon">🎒</div><div class="wqo-body"><div class="wqo-distance">STARTS HERE</div><div class="wqo-name">Side Quest — just explore</div><div class="wqo-meta"><span>No markers, no route</span><span>🗺️ charts wherever you go</span></div></div><span aria-hidden="true">›</span>';
+    b.addEventListener('click', () => openSideQuestIntroSheet());
+    sideSlot.appendChild(b);
+  }
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
     const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'Allow location from the map to discover exactly how far away each real quest begins.';
-    const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. Your charted adventures are still ready below.</div>';
+    const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. A Side Quest is still ready below.</div>';
     return;
   }
   discoverNearbyQuestOffers().then(offers => {
     const sheet = $('walkQuestSheet'); if (!offers || !sheet || !sheet.classList.contains('open')) return;
     walkQuestOffersCache = offers;
     const st = $('walkQuestSheetStatus');
-    if (st) st.textContent = offers.length ? offers.length + ' nearby quest' + (offers.length === 1 ? '' : 's') + ', ordered by distance to the start.' : 'No mapped trail starts nearby — chart your own route below.';
+    if (st) st.textContent = offers.length ? offers.length + ' nearby quest' + (offers.length === 1 ? '' : 's') + ', ordered by distance to the start.' : 'No mapped trail starts nearby — start a Side Quest below and just explore.';
     renderQuestOfferCards($('walkQuestOfferList'), offers, focusQuestOnMap);
   }).catch(err => {
     console.warn('BURBZ walking quest discovery failed', err);
-    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'The trail archive is resting. You can still chart an adventure from your position.';
+    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'The trail archive is resting. You can still start a Side Quest from right here.';
     const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Nearby trails could not be loaded just now.</div>';
   });
 }
@@ -12089,16 +12092,6 @@ function likelyRowsToQuestBirds(rows) {
   return (rows || []).map(r => ({ species: r.species, rarity: r.rarityLabel || realWorldRarityLabel(r.species) }));
 }
 
-function startAdventureWalkQuest(lenM, label) {
-  if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location needed to chart an adventure'); return; }
-  const { lat, lon } = liveMapLastPosition;
-  const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'The cartographers are charting your adventure...';
-  window.BurbzQuestCore.fetchAdventureRoute(lat, lon, lenM).then(pts => {
-    if (activeWalkingQuest()) return; // double-tap guard
-    startWalkingQuestFromOffer({ kind: 'adventure', name: 'Charted Adventure: ' + label, points: pts.map(p => ({ lat: p.lat, lon: p.lon })), ref: null });
-  });
-}
-
 // Linear trails get a routed RETURN leg along different paths so the player
 // walks one continuous loop home instead of retracing their steps.
 function ensureOfferLoopBack(offer) {
@@ -12116,6 +12109,7 @@ async function startWalkingQuestFromOffer(offer) {
   if (!offer) return;
   let wq = ensureWalkingQuestState();
   if (wq.active) { showToast('Finish or abandon your current quest first'); return; }
+  if (sideQuestActive()) { showToast('End your Side Quest first — it is still charting your trail'); return; }
   if (offer.kind !== 'adventure' && offer._loop === undefined && window.BurbzQuestCore.offerLoopStyle(offer.points) === 'out-and-back') {
     showToast('🧭 The cartographers are charting a loop home along different paths...');
     try { await ensureOfferLoopBack(offer); } catch (e) { offer._loop = null; }
@@ -12209,7 +12203,8 @@ const QUEST_BUZZ = {
   chest:    [100, 60, 100, 60, 400],
   tavern:   [100, 60, 100, 60, 100],
   blocked:  [400, 150, 400],
-  complete: [200, 100, 200, 100, 600]
+  complete: [200, 100, 200, 100, 600],
+  discovery: [120, 70, 120, 70, 500]
 };
 
 // Keep the screen awake while a walking quest is active: once the screen turns
@@ -12233,16 +12228,25 @@ function releaseQuestWakeLock() {
 // The OS drops the lock whenever the tab is hidden — take it back the moment
 // the player returns mid-quest.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && questWakeLockWanted && activeWalkingQuest()) acquireQuestWakeLock();
+  if (document.visibilityState === 'visible' && questWakeLockWanted && (activeWalkingQuest() || sideQuestActive())) acquireQuestWakeLock();
 });
 
 function updateWalkQuestHud() {
   const hud = $('mapQuestHud'), btnLabel = $('mapQuestBtnLabel'), btn = $('mapQuestBtn');
   const quest = activeWalkingQuest();
-  if (quest) acquireQuestWakeLock(); else releaseQuestWakeLock();
-  if (btnLabel) btnLabel.textContent = quest ? 'Quest Log' : 'Explore Quests';
-  if (btn) btn.classList.toggle('on-quest', !!quest);
+  const side = quest ? null : sideQuestActive();
+  if (quest || side) acquireQuestWakeLock(); else releaseQuestWakeLock();
+  if (btnLabel) btnLabel.textContent = quest ? 'Quest Log' : side ? 'Side Quest' : 'Explore Quests';
+  if (btn) btn.classList.toggle('on-quest', !!(quest || side));
   if (!hud) return;
+  if (side) {
+    hud.classList.add('active');
+    const found = side.discoveries.length, waiting = side.discoveries.filter(d => !d.claimed).length;
+    const nm = $('mapQuestHudName'), st = $('mapQuestHudStats');
+    if (nm) nm.textContent = '🎒 Side Quest — exploring';
+    if (st) st.textContent = (side.distanceM / 1000).toFixed(2) + ' km charted · ' + found + ' ✨ found' + (waiting ? ' · ' + waiting + ' waiting on the map!' : '');
+    return;
+  }
   if (!quest) { hud.classList.remove('active'); return; }
   hud.classList.add('active');
   const total = quest.checkpoints.length;
@@ -12462,6 +12466,315 @@ function abandonWalkingQuest() {
   closeWalkQuestSheet();
   showToast('Quest abandoned. The trail will wait for you.');
   if (currentScreen === 'quests') renderQuests();
+}
+
+// ============================================================================
+// SIDE QUEST — free exploration. No route, no markers to chase: the player
+// starts a Side Quest, pockets the phone and just goes wherever they want.
+// Burbz charts wherever they walk. As they wander they stumble across
+// discoveries — a treasure chest, a weapon, a quest-giver bird — announced by
+// a pocket buzz and an audible chirp, then revealed on the map the next time
+// the phone comes out. At the end the wander can be kept as a draft to turn
+// into a real quest for other players in the future.
+// ============================================================================
+const SIDE_QUEST_MIN_STEP_M = 12;        // breadcrumb spacing
+const SIDE_QUEST_FIRST_FIND_M = 120;     // first discovery arrives quickly
+const SIDE_QUEST_FIND_GAP_M = [150, 280]; // then every 150–280 m of wandering
+const SIDE_QUEST_MAX_PATH_POINTS = 2400;
+
+function ensureSideQuestState() {
+  if (!gameState.sideQuest || typeof gameState.sideQuest !== 'object' || Array.isArray(gameState.sideQuest)) gameState.sideQuest = { active: null, history: [] };
+  if (!Array.isArray(gameState.sideQuest.history)) gameState.sideQuest.history = [];
+  if (gameState.sideQuest.active && typeof gameState.sideQuest.active !== 'object') gameState.sideQuest.active = null;
+  return gameState.sideQuest;
+}
+function sideQuestActive() { return ensureSideQuestState().active; }
+
+// --- Pocket mode -------------------------------------------------------------
+// With the screen off, browsers freeze pages — unless the page is playing
+// media. A barely-audible looped tone registers the Side Quest as an active
+// media session, so position fixes keep arriving in the pocket, and the
+// discovery chirp (a real <audio> element) still sounds with the screen dark.
+// navigator.vibrate is used too, though most phones only honour it on-screen.
+function synthWavDataUri(seconds, tones, amp) {
+  const rate = 8000, n = Math.floor(rate * seconds);
+  const data = new Uint8Array(44 + n * 2);
+  const view = new DataView(data.buffer);
+  const w = (o, str) => { for (let i = 0; i < str.length; i++) data[o + i] = str.charCodeAt(i); };
+  w(0, 'RIFF'); view.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true); w(36, 'data'); view.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) {
+    const t = i / rate;
+    const tone = tones[Math.min(tones.length - 1, Math.floor((t / seconds) * tones.length))];
+    const env = Math.min(1, 8 * Math.min(t, seconds - t) / seconds);
+    view.setInt16(44 + i * 2, Math.round(Math.sin(2 * Math.PI * tone * t) * 32767 * amp * env), true);
+  }
+  let bin = '';
+  for (let i = 0; i < data.length; i += 4096) bin += String.fromCharCode.apply(null, data.subarray(i, i + 4096));
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+let sideQuestKeepAliveEl = null, sideQuestChimeEl = null;
+function startSideQuestPocketMode() {
+  try {
+    if (!sideQuestKeepAliveEl) {
+      sideQuestKeepAliveEl = new Audio(synthWavDataUri(4, [55], 0.012));
+      sideQuestKeepAliveEl.loop = true;
+      sideQuestKeepAliveEl.volume = 0.06;
+    }
+    sideQuestKeepAliveEl.play().catch(() => {});
+    if (!sideQuestChimeEl) sideQuestChimeEl = new Audio(synthWavDataUri(0.7, [880, 1174, 1568], 0.5));
+    if ('mediaSession' in navigator && window.MediaMetadata) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: 'Side Quest — exploring', artist: 'Kingdom of Burbz' });
+      navigator.mediaSession.playbackState = 'playing';
+    }
+  } catch (e) { console.warn('BURBZ side quest pocket mode unavailable', e); }
+  acquireQuestWakeLock();
+}
+function stopSideQuestPocketMode() {
+  try { if (sideQuestKeepAliveEl) { sideQuestKeepAliveEl.pause(); sideQuestKeepAliveEl.currentTime = 0; } } catch (e) {}
+  try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none'; } catch (e) {}
+  if (!activeWalkingQuest()) releaseQuestWakeLock();
+}
+function sideQuestPocketAlert() {
+  vibrate(QUEST_BUZZ.discovery);
+  try { if (sideQuestChimeEl) { sideQuestChimeEl.currentTime = 0; sideQuestChimeEl.volume = 1; sideQuestChimeEl.play().catch(() => {}); } } catch (e) {}
+}
+
+// --- Intro sheet -------------------------------------------------------------
+function openSideQuestIntroSheet() {
+  SFX.tap();
+  const el = walkQuestSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
+    '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🎒</div><div><div class="quest-board-title">Side Quest</div><div class="quest-board-intro">Just explore — Burbz charts wherever you go.</div></div></div>' +
+    '<div class="quest-desc" style="line-height:1.55;">' +
+    '<p>🗺️ <b>No markers, no route.</b> Start the Side Quest and go wherever you want — every step you take is charted onto your own trail.</p>' +
+    '<p>📱 <b>Pocket the phone.</b> The quest keeps working with the screen off. When you stumble across something out there, the phone buzzes and chirps in your pocket.</p>' +
+    '<p>✨ <b>Take the phone out</b> and your discovery is waiting on the map — a treasure chest, a weapon, or a quest-giver bird with a companion to offer.</p>' +
+    '<p>🤝 <b>At the end</b> you will have the option to turn your wander into a real quest for other players to play in the future.</p>' +
+    '</div>' +
+    '<button class="wq-detail-start" onclick="startSideQuest()">🎒 START SIDE QUEST</button>' +
+    '<div class="wq-attribution">Real-world walking — stay aware, follow signs and respect private land.</div></div>';
+  el.classList.add('open');
+}
+
+function startSideQuest() {
+  if (activeWalkingQuest()) { showToast('Finish or abandon your current quest first'); return; }
+  if (sideQuestActive()) { openSideQuestLogSheet(); return; }
+  if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location is needed before a Side Quest can chart your trail'); return; }
+  const sq = ensureSideQuestState();
+  const { lat, lon } = liveMapLastPosition;
+  sq.active = {
+    id: 'sq_' + Date.now().toString(36),
+    startedAt: new Date().toISOString(),
+    path: [[lat, lon, Date.now()]],
+    distanceM: 0,
+    nextFindAtM: SIDE_QUEST_FIRST_FIND_M,
+    discoveries: []
+  };
+  saveState();
+  closeWalkQuestSheet();
+  setQuestOverview(false);
+  startSideQuestPocketMode();
+  drawSideQuestOnMap();
+  updateWalkQuestHud();
+  switchScreen('map');
+  SFX.levelUp();
+  vibrate(QUEST_BUZZ.start);
+  showToast('🎒 Side Quest started — pocket the phone and wander. Burbz is charting your trail!');
+}
+
+// --- Position stream ---------------------------------------------------------
+function sideQuestOnPositionFix(lat, lon, accuracy) {
+  const active = sideQuestActive();
+  if (!active || (Number.isFinite(accuracy) && accuracy > 80)) return;
+  const last = active.path[active.path.length - 1];
+  const step = mapDistanceMeters({ lat: last[0], lon: last[1] }, { lat, lon });
+  if (step < SIDE_QUEST_MIN_STEP_M) return;
+  if (step < 400) active.distanceM = Math.round(active.distanceM + step); // GPS jumps don't count as wandering
+  active.path.push([lat, lon, Date.now()]);
+  if (active.path.length > SIDE_QUEST_MAX_PATH_POINTS) active.path.splice(1, 1); // keep the start point
+  if (active.distanceM >= active.nextFindAtM) spawnSideQuestDiscovery(active, lat, lon);
+  drawSideQuestTrail();
+  updateWalkQuestHud();
+  if (active.path.length % 8 === 0) saveState();
+}
+
+function spawnSideQuestDiscovery(active, lat, lon) {
+  const roll = Math.random();
+  const kind = roll < 0.45 ? 'chest' : roll < 0.72 ? 'weapon' : 'questgiver';
+  const d = { id: 'sqd_' + active.discoveries.length + '_' + Date.now().toString(36), kind, lat, lon, foundAt: new Date().toISOString(), claimed: false };
+  if (kind === 'chest') d.coins = 20 + Math.floor(Math.random() * 26);
+  if (kind === 'questgiver') {
+    const rows = likelyBirdRows(liveMapSpawns || []);
+    const offer = rows.map(r => r.species).find(sp => !companionForSpecies(sp) && !(gameState.tavernPatrons || []).some(p => p.key === speciesKey(canonicalSpeciesName(sp))))
+      || rows[0]?.species || 'European Robin';
+    d.species = canonicalSpeciesName(offer);
+    const rarity = String((typeof realWorldRarityLabel === 'function' && realWorldRarityLabel(d.species)) || 'common').toLowerCase();
+    d.rarity = ['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(rarity) ? rarity : 'common';
+  }
+  active.discoveries.push(d);
+  active.nextFindAtM = active.distanceM + SIDE_QUEST_FIND_GAP_M[0] + Math.floor(Math.random() * (SIDE_QUEST_FIND_GAP_M[1] - SIDE_QUEST_FIND_GAP_M[0]));
+  saveState();
+  sideQuestPocketAlert();
+  const label = kind === 'chest' ? 'a treasure chest' : kind === 'weapon' ? 'a weapon' : 'a quest giver';
+  showToast('✨ You stumbled across ' + label + '! It is marked on your map.');
+  drawSideQuestOnMap();
+}
+
+// --- Map drawing -------------------------------------------------------------
+let sideQuestMapMarkers = [];
+function sideQuestTrailGeoJSON(active) {
+  if (!active || active.path.length < 2) return { type: 'FeatureCollection', features: [] };
+  return { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: active.path.map(p => [p[1], p[0]]) } }] };
+}
+function drawSideQuestTrail() {
+  if (!liveMap) return;
+  try {
+    if (!liveMap.getSource('burbz-side-quest-trail')) {
+      liveMap.addSource('burbz-side-quest-trail', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-glow', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#69ebc2', 'line-width': 8, 'line-opacity': .16, 'line-blur': 3 } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-line', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#69ebc2', 'line-width': 3, 'line-opacity': .9 } });
+    }
+    liveMap.getSource('burbz-side-quest-trail').setData(sideQuestTrailGeoJSON(sideQuestActive()));
+  } catch (e) {}
+}
+function drawSideQuestOnMap() {
+  sideQuestMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+  sideQuestMapMarkers = [];
+  drawSideQuestTrail();
+  const active = sideQuestActive();
+  if (!active || !liveMap || !window.maplibregl) return;
+  active.discoveries.forEach(d => {
+    if (d.claimed) return;
+    const el = document.createElement('div');
+    el.className = 'quest-marker-pin';
+    const face = document.createElement('div');
+    face.className = 'quest-marker ' + (d.kind === 'questgiver' ? 'qm-npc' : 'qm-chest');
+    if (d.kind === 'chest') face.innerHTML = CHEST_SVG;
+    else if (d.kind === 'weapon') face.textContent = '🗡️';
+    else face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
+    el.appendChild(face);
+    el.addEventListener('click', ev => { ev.stopPropagation(); sideQuestClaimDiscovery(d.id); });
+    sideQuestMapMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([d.lon, d.lat]).addTo(liveMap));
+  });
+}
+function clearSideQuestFromMap() {
+  sideQuestMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+  sideQuestMapMarkers = [];
+  drawSideQuestTrail();
+  updateWalkQuestHud();
+}
+
+// Discoveries were physically reached the moment they spawned under the
+// player's feet, so they can be opened from any distance once spotted.
+function sideQuestClaimDiscovery(id, opts) {
+  const quiet = !!(opts && opts.quiet);
+  const active = sideQuestActive();
+  const d = active && active.discoveries.find(x => x.id === id);
+  if (!d || d.claimed) return;
+  d.claimed = true;
+  if (d.kind === 'chest') {
+    addCoins(d.coins || 25);
+    addPlayerXp(12);
+    SFX.capture();
+    playQuestClaimCelebration({ coins: d.coins || 25, xp: 12, items: {} });
+    showToast('🎁 Side-quest chest opened — +' + (d.coins || 25) + ' coins!');
+  } else if (d.kind === 'weapon') {
+    let lines = [];
+    try { lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true })); } catch (e) {}
+    addPlayerXp(15);
+    SFX.capture();
+    showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
+  } else {
+    const added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
+    addPlayerXp(15);
+    SFX.levelUp();
+    if (quiet) showToast('🐦 The wandering quest giver sends the ' + d.species + (added ? ' to the Academy Barracks!' : ' with regards. (+15 XP)'));
+    else showQuestNpcDialog('Wandering quest giver', added
+      ? 'You found me off the beaten path, explorer! Meet my friend the ' + d.species + ' — now waiting at the Academy Barracks to join your flock.'
+      : 'You found me off the beaten path, explorer! My friend the ' + d.species + ' already flies with you — take this instead. (+15 XP)');
+  }
+  vibrate(QUEST_BUZZ.chest);
+  saveState();
+  updateHeader();
+  drawSideQuestOnMap();
+  updateWalkQuestHud();
+}
+
+// --- Log + finish ------------------------------------------------------------
+function openSideQuestLogSheet() {
+  const active = sideQuestActive();
+  if (!active) { openQuestBoard(); return; }
+  const found = active.discoveries.length, unclaimed = active.discoveries.filter(d => !d.claimed).length;
+  const el = walkQuestSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
+    '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🎒</div><div><div class="quest-board-title">Side Quest — exploring</div><div class="quest-board-intro">' +
+    (active.distanceM / 1000).toFixed(2) + ' km wandered · ' + found + ' discover' + (found === 1 ? 'y' : 'ies') + (unclaimed ? ' · ' + unclaimed + ' waiting on the map!' : '') + '</div></div></div>' +
+    '<div class="quest-desc" style="line-height:1.5;">Keep the phone in your pocket and keep exploring — it will buzz and chirp when you stumble across something. Ending the quest keeps everything you found, and you can turn the wander into a real quest for others.</div>' +
+    '<button class="wq-detail-start" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">🗺️ VIEW MY TRAIL</button>' +
+    '<button class="wq-detail-start" style="background:linear-gradient(135deg,#a78335,#74541d);" onclick="endSideQuest()">🏁 END SIDE QUEST</button></div>';
+  el.classList.add('open');
+}
+
+function endSideQuest() {
+  const sq = ensureSideQuestState();
+  const active = sq.active;
+  if (!active) return;
+  const unclaimed = active.discoveries.filter(d => !d.claimed);
+  unclaimed.forEach(d => sideQuestClaimDiscovery(d.id, { quiet: true })); // nothing found is ever lost
+  const xp = Math.min(200, 25 + Math.round(active.distanceM / 40));
+  addPlayerXp(xp);
+  const summary = {
+    id: active.id, kind: 'side-quest', name: 'Side Quest', startedAt: active.startedAt, endedAt: new Date().toISOString(),
+    distanceM: active.distanceM, discoveries: active.discoveries.length, xp,
+    path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
+    sharedDraft: false
+  };
+  sq.history.unshift(summary);
+  if (sq.history.length > 40) sq.history.length = 40;
+  sq.active = null;
+  saveState();
+  stopSideQuestPocketMode();
+  clearSideQuestFromMap();
+  SFX.victory();
+  vibrate(QUEST_BUZZ.complete);
+  const el = walkQuestSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
+    '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🏁</div><div><div class="quest-board-title">Side Quest complete!</div><div class="quest-board-intro">' +
+    (summary.distanceM / 1000).toFixed(2) + ' km wandered · ' + summary.discoveries + ' discover' + (summary.discoveries === 1 ? 'y' : 'ies') + ' · +' + xp + ' XP</div></div></div>' +
+    '<div class="quest-desc" style="line-height:1.5;">Your whole wander is charted and saved. Turn it into a real quest so other players can walk your trail in the future?</div>' +
+    '<button class="wq-detail-start" onclick="shareSideQuestDraft(\'' + summary.id + '\')">🤝 TURN INTO A QUEST FOR OTHERS</button>' +
+    '<button class="wq-detail-start" style="background:rgba(255,255,255,.08);" onclick="closeWalkQuestSheet()">DONE</button></div>';
+  el.classList.add('open');
+  if (currentScreen === 'quests') renderQuests();
+}
+
+function shareSideQuestDraft(id) {
+  const sq = ensureSideQuestState();
+  const entry = sq.history.find(h => h.id === id);
+  if (entry) { entry.sharedDraft = true; saveState(); }
+  SFX.questComplete();
+  closeWalkQuestSheet();
+  showToast('🤝 Saved as a quest draft! Community quests are coming soon — your trail is kept safe until then.');
+}
+
+// A Side Quest survives app restarts: redraw and keep charting on relaunch.
+let sideQuestResumeArmed = false;
+function resumeSideQuestIfAny() {
+  if (!sideQuestActive()) return;
+  if (sideQuestResumeArmed) { drawSideQuestOnMap(); updateWalkQuestHud(); return; }
+  sideQuestResumeArmed = true;
+  drawSideQuestOnMap();
+  updateWalkQuestHud();
+  acquireQuestWakeLock();
+  // Media autoplay needs a user gesture after a fresh launch — rearm pocket
+  // mode on the first tap anywhere.
+  document.addEventListener('click', function rearmPocket() {
+    if (sideQuestActive()) startSideQuestPocketMode();
+    document.removeEventListener('click', rearmPocket);
+  }, { once: true });
 }
 
 function openActiveWalkQuestSheet() {
@@ -13004,6 +13317,7 @@ function openQuestOfferDetail(offer) {
 Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
+  openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   __burbzQuestDebug: {
     getState: () => gameState,
     getActive: () => activeWalkingQuest(),
@@ -13057,6 +13371,7 @@ function handleLivePosition(pos, fly) {
   liveMapLastPosition = { lat, lon, accuracy, source:'Your live position' };
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy });
   try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
+  try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
@@ -21660,6 +21975,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'story', chapter:'The Tale of Burbz', title:'The darkness falls', screen:'map', target:null, text:'A dark force has taken our kingdom. The evil Burbz — shadow-woven birds with burning red eyes — swept over every town, and the usurper’s darkness now covers our whole world.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Merlin’s spell-tablet', screen:'map', target:null, text:'With my last great spell I hurled my magic tablet across the multiverse into your universe. You are holding it right now — this very device is the tablet, and this app is its magic.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'You are the chosen one', screen:'map', target:null, text:'Only you can unlock the darkness that has swallowed Burbz. Real birdwatching restores Burbz: every real bird you find feeds the tablet’s magic and frees our kingdom, town by town.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'11,000 birds, one legend', screen:'map', target:null, text:'Your Earth holds roughly 11,000 known bird species — and even my tablet does not know them all. Discover a real bird missing from Burbz and you shall claim an ABSOLUTELY EPIC prize. A wizard keeps his word.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This map mirrors your real world and follows your real position. Walk it, explore it, and open nearby towns to challenge the evil Burbz who hold them. I will teach each art the first time you need it.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'First task: find a bird', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Every quest begins with one real bird. Open Scan when you are ready and I will show you how the tablet captures a bird’s spirit. Go well, friend — Burbz is counting on you.' },
 
@@ -21693,6 +22009,7 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Quests: taught the first time the Quests screen opens.
   { chapterId:'quests', chapter:'Quests', title:'Expeditions', screen:'quests', target:'#expeditionQuestList', text:'Companion expeditions run for real time; the Quest Roost unlocks longer journeys. Requirements, duration and rewards appear before departure, and finished flights can return resources and Merlin clues.' },
   { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
+  { chapterId:'quests', chapter:'Quests', title:'Side Quests', screen:'map', target:'#mapQuestBtn', text:'A Side Quest has no route: pocket the phone and just explore. Burbz charts wherever you go and buzzes when you stumble on chests, weapons or quest-giver birds — later you can turn your wander into a quest for others.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
   { chapterId:'forge', chapter:'Forge', title:'The Fletcher’s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils, then equip your birds. Gear feeds straight into their fighting stats — the sharper the squad, the faster the shadow breaks.' },
@@ -22096,6 +22413,7 @@ function init() {
   checkBadges();
   renderPetCompanion();
   maybeShowIntroCutscene();
+  resumeSideQuestIfAny();
   startPetWander();
   startPetCareLoop();
   startPetChatterLoop();
