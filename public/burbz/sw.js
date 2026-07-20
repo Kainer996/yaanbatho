@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-evil-burbz-new-dawn-v91-20260720';
+const BURBZ_CACHE = 'burbz-starter-timber-v92-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;

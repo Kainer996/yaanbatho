@@ -357,6 +357,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-pickup-marker.locked .burbz-pickup-orb { filter:grayscale(.7) brightness(.7); opacity:.72; box-shadow:0 3px 8px rgba(0,0,0,.5), 0 0 0 2px rgba(150,150,160,.4); animation:none; }
 /* Gear caches shimmer blue; relic chests blaze with rare-loot light. */
 .burbz-pickup-marker.gear .burbz-pickup-orb { box-shadow:0 4px 10px rgba(0,0,0,.45), 0 0 0 2px rgba(143,208,255,.6), 0 0 18px rgba(143,208,255,.5); }
+/* Starter timber: the new-player wood stash glows green so it can't be missed */
+.burbz-pickup-marker.starter .burbz-pickup-orb { width:36px; height:36px; font-size:20px; box-shadow:0 4px 12px rgba(0,0,0,.5), 0 0 0 2px rgba(126,217,131,.8), 0 0 22px rgba(126,217,131,.6); }
 .burbz-pickup-marker.relic .burbz-pickup-orb { width:38px; height:38px; font-size:22px; box-shadow:0 4px 12px rgba(0,0,0,.5), 0 0 0 2px rgba(240,180,41,.75), 0 0 26px rgba(240,180,41,.65); animation:pickupBob 2.2s ease-in-out infinite, relicGlow 1.6s ease-in-out infinite alternate; }
 @keyframes relicGlow { from { filter:brightness(1); } to { filter:brightness(1.45) drop-shadow(0 0 6px rgba(240,180,41,.8)); } }
 .burbz-village-marker.locked .burbz-village-icon { filter:grayscale(.55) brightness(.72); box-shadow:0 5px 12px rgba(0,0,0,.5), 0 0 0 2px rgba(150,150,160,.4); animation:none; }
@@ -3598,7 +3600,8 @@ const DEFAULT_STATE = {
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
   knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
-  tavernPatrons: [] // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
+  tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
+  starterTimber: { taken: {} } // Guaranteed timber bundles near new players — enough to build The Roost
 };
 
 let gameState;
@@ -13355,6 +13358,66 @@ const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
 const MAP_PICKUP_RANGE_M = 220;
 let liveMapPickupMarkers = [];
 
+// ---------------------------------------------------------------------------
+// STARTER TIMBER — every new player finds enough wood to raise The Roost.
+// Guaranteed 🪵 bundles appear right around the player on the questing map
+// (well inside gathering range) until The Roost is built or all bundles are
+// taken. 4 bundles × 3 branches = 12 timber ≥ The Roost's 10-branch cost.
+// ---------------------------------------------------------------------------
+const STARTER_TIMBER_BUNDLES = 4;
+const STARTER_TIMBER_PER_BUNDLE = 3;
+const STARTER_TIMBER_TYPE = {
+  id: 'starter_timber', glyph: '🪵', label: 'Starter timber', cls: 'starter',
+  grant() { return '+' + STARTER_TIMBER_PER_BUNDLE + ' branches'; }
+};
+
+function ensureStarterTimberState() {
+  if (!gameState.starterTimber || typeof gameState.starterTimber !== 'object' || Array.isArray(gameState.starterTimber)) gameState.starterTimber = { taken: {} };
+  if (!gameState.starterTimber.taken || typeof gameState.starterTimber.taken !== 'object' || Array.isArray(gameState.starterTimber.taken)) gameState.starterTimber.taken = {};
+  return gameState.starterTimber;
+}
+
+function starterTimberDone() {
+  const state = ensureStarterTimberState();
+  if (isAcademyBuildingBuilt('dorm')) return true; // The Roost stands — mission accomplished
+  return Object.keys(state.taken).length >= STARTER_TIMBER_BUNDLES;
+}
+
+// Anchored to wherever the player currently is, so the timber is always in
+// the vicinity: a ring of bundles 60–165 m out, each well inside reach.
+function starterTimberPickupsNear(lat, lon) {
+  if (!gameState || starterTimberDone()) return [];
+  const state = ensureStarterTimberState();
+  const out = [];
+  for (let i = 0; i < STARTER_TIMBER_BUNDLES; i++) {
+    if (state.taken[i]) continue;
+    const angle = (i / STARTER_TIMBER_BUNDLES) * Math.PI * 2 + Math.PI / 5;
+    const meters = 60 + i * 35;
+    const dLat = (meters * Math.cos(angle)) / 111320;
+    const dLon = (meters * Math.sin(angle)) / (111320 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
+    out.push({
+      key: 'starter_timber:' + i,
+      starterIndex: i,
+      seed: burbzHash32('burbz-starter-timber:' + i),
+      type: STARTER_TIMBER_TYPE,
+      lat: lat + dLat,
+      lon: lon + dLon
+    });
+  }
+  return out;
+}
+
+function collectStarterTimber(pickup) {
+  const state = ensureStarterTimberState();
+  if (state.taken[pickup.starterIndex]) return null;
+  state.taken[pickup.starterIndex] = true;
+  addBranches(STARTER_TIMBER_PER_BUNDLE);
+  if (starterTimberDone()) {
+    setTimeout(() => showToast('🏠 Enough timber for The Roost! Raise it at the Academy.'), 1300);
+  }
+  return '+' + STARTER_TIMBER_PER_BUNDLE + ' branches';
+}
+
 function pickupDayKey() { return new Date().toISOString().split('T')[0]; }
 function ensureMapPickupState() {
   if (!gameState) return { day: pickupDayKey(), collected: {} };
@@ -13401,11 +13464,15 @@ function drawMapPickups(lat, lon) {
   // greyed-out and locked until you walk over to them.
   const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM;
   const zoomedOut = zoom < BURBZ_START_ZOOM - 0.5;
-  mapPickupsNear(lat, lon)
-    .filter(p => !state.collected[p.key])
+  // Starter timber first: guaranteed, always in the vicinity, never crowded
+  // out by the daily loot cap below.
+  starterTimberPickupsNear(lat, lon)
     .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
-    .sort((a, b) => a.dist - b.dist)
-    .slice(0, zoomedOut ? 26 : 14)
+    .concat(mapPickupsNear(lat, lon)
+      .filter(p => !state.collected[p.key])
+      .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, zoomedOut ? 26 : 14))
     .forEach(({ p, dist }) => {
       const inReach = dist <= MAP_PICKUP_RANGE_M;
       const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + p.type.glyph + '</div>');
@@ -13422,11 +13489,17 @@ function collectMapPickup(pickup, el) {
     showToast(pickup.type.glyph + ' ' + pickup.type.label + ' — walk closer to gather it!');
     return;
   }
-  const state = ensureMapPickupState();
-  if (state.collected[pickup.key]) return;
-  state.collected[pickup.key] = true;
-  const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
-  const rewardText = pickup.type.grant(r);
+  let rewardText;
+  if (pickup.starterIndex != null) {
+    rewardText = collectStarterTimber(pickup);
+    if (!rewardText) return;
+  } else {
+    const state = ensureMapPickupState();
+    if (state.collected[pickup.key]) return;
+    state.collected[pickup.key] = true;
+    const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
+    rewardText = pickup.type.grant(r);
+  }
   saveState(); updateHeader();
   SFX.questComplete(); vibrate(25);
   // Pop a little reward flourish where the item stood, then fade the marker.

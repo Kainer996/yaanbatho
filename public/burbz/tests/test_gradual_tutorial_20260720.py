@@ -131,5 +131,5 @@ def test_fresh_start_epoch_resets_the_whole_game_once():
 
 def test_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-evil-burbz-new-dawn-v91-20260720" in sw
+    assert "burbz-starter-timber-v92-20260720" in sw
     assert "./assets/evil-burbz/evil-burb-1.png" in sw
