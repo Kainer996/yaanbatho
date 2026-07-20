@@ -2236,6 +2236,31 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-bird-preview-name { margin-top:8px; font-size:20px; font-weight:900; color:#f0c767; }
 .map-bird-preview-sub { margin-top:4px; font-size:12px; color:var(--text3); }
 .map-bird-preview-close { margin-top:12px; padding:9px 22px; border-radius:13px; border:1px solid rgba(214,168,79,.5); background:rgba(214,168,79,.16); color:#f0c767; font-weight:800; font-family:inherit; }
+
+/* ========== SECRET: THE NIGHTWING (hidden bat Easter egg) ========== */
+.bat-secret-overlay { position:fixed; inset:0; z-index:1500; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:calc(16px + var(--safe-top)) 18px calc(16px + var(--safe-bottom)); background:radial-gradient(circle at 50% 14%, rgba(64,48,118,.55), rgba(3,2,10,.97) 66%); backdrop-filter:blur(10px); }
+.bat-secret-overlay.show { display:flex; }
+.bat-secret-kicker { font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.34em; text-transform:uppercase; color:#cdbcff; text-shadow:0 0 22px rgba(147,112,255,.85); animation:batKickerGlow 2.4s ease-in-out infinite; }
+@keyframes batKickerGlow { 0%,100% { opacity:.75; } 50% { opacity:1; text-shadow:0 0 32px rgba(176,144,255,1); } }
+.bat-card { position:relative; width:min(100%,330px); max-height:min(72vh,540px); overflow:auto; padding:22px 18px 18px; border-radius:22px; text-align:center; background:linear-gradient(180deg,#191233 0%,#0b0820 55%,#050311 100%); border:1px solid rgba(147,112,255,.55); box-shadow:0 0 44px rgba(122,84,255,.38), inset 0 1px 0 rgba(255,255,255,.10); animation:batCardArrive .7s cubic-bezier(.2,1.5,.4,1); }
+@keyframes batCardArrive { 0% { transform:scale(.6) rotate(-4deg); opacity:0; } 100% { transform:scale(1) rotate(0deg); opacity:1; } }
+.bat-card-moon { position:absolute; top:14px; right:16px; width:52px; height:52px; border-radius:50%; background:radial-gradient(circle at 38% 34%, #f5f0dc, #b9aed6 70%); box-shadow:0 0 30px rgba(240,235,210,.5); opacity:.9; pointer-events:none; }
+.bat-card-art { font-size:96px; line-height:1.15; filter:drop-shadow(0 10px 24px rgba(122,84,255,.55)); animation:batFloat 3.4s ease-in-out infinite; }
+@keyframes batFloat { 0%,100% { transform:translateY(0) rotate(-2deg); } 50% { transform:translateY(-9px) rotate(2deg); } }
+.bat-card-rarity { margin-top:6px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.26em; color:#b48ad6; text-transform:uppercase; }
+.bat-card-name { margin-top:2px; font-family:'Russo One',sans-serif; font-size:30px; letter-spacing:.06em; color:#e7ddff; text-shadow:0 0 26px rgba(147,112,255,.8); }
+.bat-card-species { margin-top:3px; font-size:12px; color:#8f86b8; font-style:italic; }
+.bat-card-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0 12px; }
+.bat-card-stat { padding:8px 4px; border-radius:12px; background:rgba(147,112,255,.10); border:1px solid rgba(147,112,255,.28); }
+.bat-card-stat span { display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:#8f86b8; }
+.bat-card-stat b { display:block; margin-top:2px; font-family:'Russo One',sans-serif; font-size:18px; color:#cdbcff; }
+.bat-card-quote { font-size:12px; line-height:1.5; color:#b3a8dd; }
+.bat-card-reward { margin-top:12px; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.13); border:1px solid rgba(214,168,79,.32); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; color:var(--legendary); }
+.bat-card-reward:empty { display:none; }
+.bat-secret-close { min-height:46px; padding:0 30px; border-radius:14px; border:1px solid rgba(147,112,255,.5); background:rgba(147,112,255,.16); color:#e7ddff; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; letter-spacing:.1em; text-transform:uppercase; }
+.bat-secret-close:active { background:rgba(147,112,255,.3); }
+.profile-badge.secret.locked .profile-badge-icon { filter:grayscale(1); }
+.profile-badge.earned[data-badge="nightwing_secret"] { cursor:pointer; border-color:#9370ff; box-shadow:0 0 12px rgba(147,112,255,.4); }
 </style>
 </head>
 <body>
@@ -2670,6 +2695,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="recruit-list" id="recruitList"></div>
       <button class="recruit-close" id="recruitClose">Keep exploring</button>
     </div>
+  </div>
+
+  <!-- SECRET: The Nightwing — hidden Easter egg card for players who catch a real bat on camera or sound. Sssh. -->
+  <div class="bat-secret-overlay" id="batSecretOverlay" role="dialog" aria-modal="true" aria-label="Secret discovery">
+    <div class="bat-secret-kicker">Secret Discovery</div>
+    <div class="bat-card">
+      <div class="bat-card-moon" aria-hidden="true"></div>
+      <div class="bat-card-art" aria-hidden="true">🦇</div>
+      <div class="bat-card-rarity">Mythic · Secret Card</div>
+      <div class="bat-card-name">NIGHTWING</div>
+      <div class="bat-card-species">Order Chiroptera · not a bird at all</div>
+      <div class="bat-card-stats">
+        <div class="bat-card-stat"><span>Echolocation</span><b>99</b></div>
+        <div class="bat-card-stat"><span>Silent flight</span><b>97</b></div>
+        <div class="bat-card-stat"><span>Mystery</span><b>&#8734;</b></div>
+      </div>
+      <div class="bat-card-quote">&ldquo;That&hellip; is no bird, friend. Of every flier in your world, you found the one with fur. Even my tablet fell silent. It will remember this night &mdash; and so shall I.&rdquo; &mdash; Merlin</div>
+      <div class="bat-card-reward" id="batSecretReward"></div>
+    </div>
+    <button class="bat-secret-close" id="batSecretClose">Keep the secret</button>
   </div>
 
   <!-- Barracks: compact discovered-bird roster and full recruitment card -->
@@ -19998,7 +20043,13 @@ async function analyseContinuousSoundWindow(windowData) {
     // may animate the wand, but it never logs or names a bird by itself.
     const result = await uploadRecording(blob, { signal:controller.signal });
     if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
-    if (result && result.species) {
+    const batLabel = batLabelInIdentifyResult(result);
+    if (batLabel) triggerBatEasterEgg('sound', batLabel);
+    const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
+    if (mainMatchIsBat) {
+      // A bat is never a Birdex entry — the secret card is its whole reward.
+      setMerlinListenerState('listening', 'Something furry flew past… still listening');
+    } else if (result && result.species) {
       handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
       const confidence = Math.round((Number(result.confidence) || 0) * 100);
       setMerlinListenerState('match', 'BirdNET match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
@@ -20565,9 +20616,12 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
       message: 'Photo ID upload failed — try a clearer bird photo.'
     }));
 
-    if (result && result.found && result.species) {
+    const batLabel = batLabelInIdentifyResult(result);
+    if (batLabel) triggerBatEasterEgg('photo', batLabel);
+    const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
+    if (result && result.found && result.species && !mainMatchIsBat) {
       handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
-    } else {
+    } else if (!batLabel) {
       showToast(result && result.message ? result.message : 'No bird found in that photo');
     }
   } catch(e) {
@@ -21860,6 +21914,68 @@ function renderQuests() {
 }
 
 // ============================================================================
+// SECRET: THE NIGHTWING — a hidden Easter egg, never hinted at anywhere in the
+// UI. If a real bat ever comes back from photo or sound identification, the
+// player unlocks a mythic secret card and a one-time trove of XP and coins.
+// ============================================================================
+const BAT_SECRET_XP = 400;
+const BAT_SECRET_COINS = 300;
+// Word 'bat' alone would false-positive on real birds (Bat Falcon, Bat Hawk),
+// so require either a non-raptor 'bat' mention or a known chiropteran name.
+const BAT_NAME_HINTS = /(pipistrelle|pipistrellus|noctule|nyctalus|serotine|eptesicus|barbastelle|barbastella|myotis|plecotus|rhinolophus|vespertilio|tadarida|lasiurus|molossidae|chiroptera|pteropus|flying fox)/i;
+function looksLikeBatLabel(label) {
+  if (!label) return false;
+  const text = String(label);
+  if (BAT_NAME_HINTS.test(text)) return true;
+  return /\bbats?\b/i.test(text) && !/\bbat\s+(falcon|hawk)\b/i.test(text);
+}
+// Sweep every field an identify endpoint might name a species in — the main
+// match, the message copy, and the full detection list — so the egg hatches no
+// matter how the server phrases its surprise.
+function batLabelInIdentifyResult(result) {
+  if (!result) return null;
+  const labels = [result.species, result.scientificName, result.commonName, result.message];
+  (Array.isArray(result.allDetections) ? result.allDetections : []).forEach(d => {
+    if (d) labels.push(d.species, d.name, d.commonName, d.scientificName, d.label);
+  });
+  return labels.find(looksLikeBatLabel) || null;
+}
+
+function batSecretFound() { return !!(gameState.batEasterEgg && gameState.batEasterEgg.found); }
+
+function triggerBatEasterEgg(source, label) {
+  if (batSecretFound()) {
+    showToast('🦇 The Nightwing stirs again — its secret is already yours.');
+    return;
+  }
+  gameState.batEasterEgg = { found: true, at: Date.now(), source: source || 'unknown', label: String(label || 'bat') };
+  addCoins(BAT_SECRET_COINS);
+  addPlayerXp(BAT_SECRET_XP); // also refreshes the header and saves
+  checkBadges();
+  SFX.questComplete();
+  vibrate(60);
+  openBatSecretCard(true);
+}
+
+function openBatSecretCard(justEarned) {
+  const overlay = $('batSecretOverlay');
+  if (!overlay) return;
+  const reward = $('batSecretReward');
+  if (reward) reward.textContent = justEarned ? '+' + BAT_SECRET_XP + ' Trainer XP · +' + BAT_SECRET_COINS + ' 🪙 · Secret achievement unlocked' : '';
+  overlay.classList.add('show');
+}
+
+$('batSecretClose')?.addEventListener('click', () => { SFX.tap(); $('batSecretOverlay')?.classList.remove('show'); });
+
+// Deliberately undocumented debug hook, matching the other __burbz*Debug hooks.
+window.__burbzBatDebug = {
+  trigger: (source, label) => triggerBatEasterEgg(source || 'debug', label || 'Common Pipistrelle'),
+  found: () => batSecretFound(),
+  card: () => openBatSecretCard(false),
+  matches: looksLikeBatLabel
+};
+
+// ============================================================================
 // PROFILE
 // ============================================================================
 const BADGES = [
@@ -21875,7 +21991,9 @@ const BADGES = [
   { id: 'level_5', name: 'Rank 5', icon: '\u{2B50}', condition: () => gameState.player.level >= 5 },
   { id: 'level_10', name: 'Rank 10', icon: '\u{1F31F}', condition: () => gameState.player.level >= 10 },
   { id: 'ten_wins', name: 'Champion', icon: '\u{1F396}\u{FE0F}', condition: () => gameState.player.wins >= 10 },
-  { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 }
+  { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 },
+  // Shown as ??? until earned — the game never explains how to get this one.
+  { id: 'nightwing_secret', name: 'Not A Bird', icon: '\u{1F987}', secret: true, condition: () => batSecretFound() }
 ];
 
 function checkBadges() {
@@ -21952,14 +22070,23 @@ function renderProfile() {
   badgesGrid.innerHTML = '';
   BADGES.forEach(b => {
     const earned = gameState.badges && gameState.badges[b.id];
+    const masked = b.secret && !earned;
     badgesGrid.innerHTML += `
-      <div class="profile-badge ${earned ? 'earned' : 'locked'}">
-        <div class="profile-badge-icon">${b.icon}</div>
-        <div class="profile-badge-name">${b.name}</div>
+      <div class="profile-badge ${earned ? 'earned' : 'locked'}${b.secret ? ' secret' : ''}" data-badge="${b.id}">
+        <div class="profile-badge-icon">${masked ? '❓' : b.icon}</div>
+        <div class="profile-badge-name">${masked ? '???' : b.name}</div>
       </div>
     `;
   });
 }
+
+// The earned Nightwing badge is the one place the secret card can be revisited.
+$('profileBadges')?.addEventListener('click', event => {
+  const badge = event.target.closest('.profile-badge.earned[data-badge="nightwing_secret"]');
+  if (!badge) return;
+  SFX.tap();
+  openBatSecretCard(false);
+});
 
 // ============================================================================
 // INTRO CUTSCENE
