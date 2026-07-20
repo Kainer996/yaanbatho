@@ -25,6 +25,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Rebuild generated statuses from optimised files already present in the workspace.",
     )
+    parser.add_argument(
+        "--defer-manifest",
+        action="store_true",
+        help="Write and validate the WebP without updating the shared manifest.",
+    )
     return parser.parse_args()
 
 
@@ -90,6 +95,12 @@ def main() -> None:
     metadata = output_metadata(output_path)
     metadata["generatedSource"] = str(input_path).replace("\\", "/")
     metadata["generatedAt"] = datetime.now(timezone.utc).isoformat()
+    if args.defer_manifest:
+        print(
+            f"Ingested {args.species} with deferred manifest update: "
+            f"{output_path.relative_to(ROOT)} ({metadata['outputBytes']} bytes)"
+        )
+        return
     bird.update(metadata)
     temporary = MANIFEST_PATH.with_suffix(".json.next")
     temporary.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
