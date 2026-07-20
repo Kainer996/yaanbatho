@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-ruins-build-timers-v89-20260719';
+const BURBZ_CACHE = 'burbz-village-graphics-v90-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -84,6 +84,27 @@ const BURBZ_ASSETS = [
   // Melbourne common birds — melbourne_common_20260630
   // Regional plus-20 birds — regional_plus20_20260701
   './data/bird-education.json',
+  // Village 3D CC0 photo textures (ambientCG) — village-graphics-20260720
+  './assets/textures3d/grass_color.jpg?v=cc0-20260720',
+  './assets/textures3d/grass_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/cobble_color.jpg?v=cc0-20260720',
+  './assets/textures3d/cobble_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/plaster_color.jpg?v=cc0-20260720',
+  './assets/textures3d/plaster_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/roof_color.jpg?v=cc0-20260720',
+  './assets/textures3d/roof_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/wood_color.jpg?v=cc0-20260720',
+  './assets/textures3d/wood_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/stone_color.jpg?v=cc0-20260720',
+  './assets/textures3d/stone_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/snow_color.jpg?v=cc0-20260720',
+  './assets/textures3d/snow_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/bark_color.jpg?v=cc0-20260720',
+  './assets/textures3d/bark_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/dirt_color.jpg?v=cc0-20260720',
+  './assets/textures3d/dirt_bump.jpg?v=cc0-20260720',
+  './assets/textures3d/fabric_color.jpg?v=cc0-20260720',
+  './assets/textures3d/fabric_bump.jpg?v=cc0-20260720',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/maskable-192.png',

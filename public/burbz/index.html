@@ -2027,6 +2027,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .village-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 10px; line-height: 1.5; }
 .village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: none; }
 .village-stage canvas { display: block; width: 100%; height: 100%; }
+/* Cinematic vignette + faint moonlit haze over the 3D stage */
+.village-stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(130% 95% at 50% 40%, rgba(0,0,0,0) 52%, rgba(4,3,12,0.42) 100%), linear-gradient(180deg, rgba(140,160,255,0.05), rgba(0,0,0,0) 30%); }
 .village-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text3); font-size: 12.5px; letter-spacing: 0.06em; }
 .village-fallback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; height: 100%; overflow-y: auto; }
 .village-fallback-building { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--bg4); border-radius: 12px; padding: 12px 8px; color: var(--text); }
@@ -14832,7 +14834,7 @@ function renderEmpirePanel() {
 // ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
-let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
+let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [], villageStarMats = [];
 let villageNpcs = [], villageChickens = [];
 let villageWeatherFx = null, villageShootingStar = null;
 let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
@@ -14962,6 +14964,116 @@ function villageWaterMaterial(r, baseCss) {
   villageWaterMats.push(mat);
   return mat;
 }
+// ---- Real CC0 photo textures (ambientCG) -----------------------------------
+// Downscaled photo scans live in assets/textures3d/ (public domain — see the
+// ATTRIBUTION.md there). They load once in the background; until they arrive
+// (or if they can't, e.g. first offline run) every builder falls back to the
+// old flat-colour look, then the scene rebuilds itself with the real surfaces.
+const VILLAGE_TEX_NAMES = ['grass', 'cobble', 'plaster', 'roof', 'wood', 'stone', 'snow', 'bark', 'dirt', 'fabric'];
+const VILLAGE_TEX_VERSION = 'cc0-20260720';
+let villageTexImages = null;      // name -> { color, bump } images once ALL have arrived
+let villageTexLoadKicked = false;
+let villageTintedTexCache = {};   // 'name|tint' -> master texture (shared, never disposed)
+let villageBumpTexCache = {};
+
+function villageLoadRealTextures() {
+  if (villageTexLoadKicked) return;
+  villageTexLoadKicked = true;
+  const staged = {};
+  let left = VILLAGE_TEX_NAMES.length * 2, dead = false;
+  VILLAGE_TEX_NAMES.forEach(name => {
+    staged[name] = {};
+    ['color', 'bump'].forEach(kind => {
+      const img = new Image();
+      img.onload = () => {
+        staged[name][kind] = img;
+        if (--left === 0 && !dead) {
+          villageTexImages = staged;
+          villageBuiltSeed = null; // rebuild the current view with the real surfaces
+          if (currentScreen === 'village') renderVillage();
+        }
+      };
+      img.onerror = () => { dead = true; }; // stay on the procedural look
+      img.src = 'assets/textures3d/' + name + '_' + kind + '.jpg?v=' + VILLAGE_TEX_VERSION;
+    });
+  });
+}
+
+function villageLiftColor(hex, lift) {
+  return new THREE.Color(hex).lerp(new THREE.Color(0xffffff), lift);
+}
+
+// Master tinted texture: the photo multiplied by a lightened palette colour,
+// so each village keeps its per-seed hues while gaining photographic detail.
+function villageTintedTex(name, tint, lift) {
+  const col = villageLiftColor(tint === undefined ? 0xffffff : tint, lift === undefined ? 0.52 : lift);
+  const key = name + '|' + col.getHexString();
+  let tex = villageTintedTexCache[key];
+  if (tex) return tex;
+  const img = villageTexImages[name].color;
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d');
+  x.drawImage(img, 0, 0);
+  x.globalCompositeOperation = 'multiply';
+  x.fillStyle = '#' + col.getHexString();
+  x.fillRect(0, 0, c.width, c.height);
+  tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.userData.shared = true;
+  villageTintedTexCache[key] = tex;
+  return tex;
+}
+function villageBumpTexOf(name) {
+  let tex = villageBumpTexCache[name];
+  if (tex) return tex;
+  tex = new THREE.Texture(villageTexImages[name].bump);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.needsUpdate = true;
+  tex.userData.shared = true;
+  villageBumpTexCache[name] = tex;
+  return tex;
+}
+// A clone of a shared texture with its own repeat (bitmap stays shared).
+function villageSharedTex(name, tint, rx, ry, lift) {
+  if (!villageTexImages) return null;
+  const t = villageTintedTex(name, tint, lift).clone(); // clone: per-material repeat
+  t.needsUpdate = true;
+  if (rx) t.repeat.set(rx, ry || rx);
+  return t;
+}
+const VILLAGE_TEX_STYLE = {
+  grass:   { bumpScale: 0.8,  roughness: 1.0,  lift: 0.75 },
+  cobble:  { bumpScale: 0.9,  roughness: 0.95, lift: 0.72 },
+  plaster: { bumpScale: 0.35, roughness: 0.95, lift: 0.78 },
+  roof:    { bumpScale: 0.6,  roughness: 0.9,  lift: 0.34 },
+  wood:    { bumpScale: 0.4,  roughness: 0.85, lift: 0.45 },
+  stone:   { bumpScale: 0.7,  roughness: 0.95, lift: 0.55 },
+  snow:    { bumpScale: 0.5,  roughness: 0.98, lift: 0.8 },
+  bark:    { bumpScale: 0.5,  roughness: 0.95, lift: 0.5 },
+  dirt:    { bumpScale: 0.6,  roughness: 1.0,  lift: 0.65 },
+  fabric:  { bumpScale: 0.3,  roughness: 0.9,  lift: 0.6 }
+};
+// Photo-textured, bump-mapped standard material tinted to the palette colour.
+// Falls back to the old flat Lambert until the texture files are in.
+function villageTexMat(name, tint, opts) {
+  opts = opts || {};
+  if (!villageTexImages) {
+    return new THREE.MeshLambertMaterial(Object.assign({ color: tint === undefined ? 0xffffff : tint }, opts.extra || {}));
+  }
+  const style = VILLAGE_TEX_STYLE[name] || {};
+  const bump = villageBumpTexOf(name).clone();
+  bump.needsUpdate = true;
+  if (opts.rx) bump.repeat.set(opts.rx, opts.ry || opts.rx);
+  return new THREE.MeshStandardMaterial(Object.assign({
+    map: villageSharedTex(name, tint, opts.rx, opts.ry, opts.lift !== undefined ? opts.lift : style.lift),
+    bumpMap: bump,
+    bumpScale: opts.bumpScale !== undefined ? opts.bumpScale : (style.bumpScale || 0.5),
+    roughness: opts.roughness !== undefined ? opts.roughness : (style.roughness || 0.95),
+    metalness: 0
+  }, opts.extra || {}));
+}
+
 // A tiny perched songbird — roofs, signs, scarecrows and wells all get them.
 // Registered in villageRoofBirds so it bobs and flicks its tail in animate().
 function villageMakeRoofBird(r, color) {
@@ -15000,7 +15112,7 @@ function villageMakeSign(text) {
 function villageBlobShadow(radius) {
   const m = new THREE.Mesh(
     new THREE.CircleGeometry(radius, 18),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.16, depthWrite: false })
   );
   m.rotation.x = -Math.PI / 2; m.position.y = 0.011;
   return m;
@@ -15017,10 +15129,10 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   const uw = w + jetty, ud = d + jetty;
 
   const plaster = new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.08);
-  const bodyMat = new THREE.MeshLambertMaterial({ color: plaster });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const roofMat = new THREE.MeshLambertMaterial({ color: cfg.roofColor });
-  const baseMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.06) });
+  const bodyMat = villageTexMat('plaster', plaster);
+  const beamMat = villageTexMat('wood', pal.timber);
+  const roofMat = villageTexMat('roof', cfg.roofColor);
+  const baseMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.06));
 
   // Stone lower storey + jettied plaster upper storey
   const base = new THREE.Mesh(new THREE.BoxGeometry(w, baseH, d), baseMat);
@@ -15136,7 +15248,7 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
     ridge.position.set(0, baseH + upH + roofH, 0); g.add(ridge);
     // shingle courses so the roof reads as tiles rather than a flat slab
     const slope = Math.atan2(roofH, W);
-    const shingleMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(cfg.roofColor).offsetHSL(0, 0, -0.06) });
+    const shingleMat = villageTexMat('roof', new THREE.Color(cfg.roofColor).offsetHSL(0, 0, -0.06));
     for (const s of [-1, 1]) {
       for (const f of [0.3, 0.62]) {
         const line = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, ud + 0.95), shingleMat);
@@ -15212,8 +15324,8 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
 
 // Trade-specific clutter placed by each shop's door (local +z = shopfront)
 function villageShopDressing(shopKey, g, w, d, r, pal) {
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.07) });
+  const beamMat = villageTexMat('wood', pal.timber);
+  const woodMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.07));
   const sideX = (r() < 0.5 ? -1 : 1) * (w / 2 + 0.55);
   if (shopKey === 'general') {
     // Stacked crates and a pair of plump grain sacks
@@ -15307,9 +15419,9 @@ function villageShopDressing(shopKey, g, w, d, r, pal) {
 function villageMakeCottage(r, pal) {
   const g = new THREE.Group();
   const w = 2.2 + r() * 1.1, d = 2.0 + r() * 0.9, h = 1.2 + r() * 0.5;
-  const bodyMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.12) });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const bodyMat = villageTexMat('plaster', new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.12));
+  const beamMat = villageTexMat('wood', pal.timber);
+  const roofMat = villageTexMat('roof', pal.roofs[Math.floor(r() * pal.roofs.length)]);
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
   body.position.y = h / 2; g.add(body);
   const belt = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.12, d + 0.06), beamMat);
@@ -15325,7 +15437,7 @@ function villageMakeCottage(r, pal) {
     win.position.set(-(r() - 0.5) * w * 0.55, h * 0.6, d / 2 + 0.04); g.add(win);
   }
   if (r() < 0.55) {
-    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), new THREE.MeshLambertMaterial({ color: pal.stone }));
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), villageTexMat('stone', pal.stone));
     chimney.position.set((r() - 0.5) * w * 0.4, h + roofH * 0.55, (r() - 0.5) * d * 0.3); g.add(chimney);
     const smokeTex = villageSmokeTexture();
     for (let i = 0; i < 2; i++) {
@@ -15342,8 +15454,8 @@ function villageMakeCottage(r, pal) {
 // A stone church with a spire — a village landmark.
 function villageMakeChurch(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
-  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[0] });
+  const stoneMat = villageTexMat('stone', pal.stone);
+  const roofMat = villageTexMat('roof', pal.roofs[0]);
   const nave = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.2, 4.4), stoneMat);
   nave.position.y = 1.1; g.add(nave);
   const roofH = 1.2, W = 1.5;
@@ -15369,7 +15481,7 @@ function villageMakeChurch(r, pal) {
     }
   }
   // A hushed churchyard: leaning gravestones behind a low stone wall
-  const graveMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.08) });
+  const graveMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, -0.08));
   for (let i = 0; i < 4 + Math.floor(r() * 3); i++) {
     const gx = -2.6 + (r() - 0.5) * 1.6, gz = -1.5 + r() * 3.4;
     const slab = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5 + r() * 0.3, 0.1), graveMat);
@@ -15381,7 +15493,7 @@ function villageMakeChurch(r, pal) {
     top.position.set(gx, 0.26 + (slab.geometry.parameters.height / 2), gz);
     g.add(top);
   }
-  const wallMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const wallMat = villageTexMat('stone', pal.stone);
   for (let i = 0; i < 5; i++) {
     const seg = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.4, 0.24), wallMat);
     seg.position.set(-3.6, 0.2, -2.2 + i * 1.15);
@@ -15401,13 +15513,13 @@ function villageMakeChurch(r, pal) {
 // A windmill with turning sails — an alternative landmark.
 function villageMakeWindmill(r, pal) {
   const g = new THREE.Group();
-  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.4, 4.0, 12), new THREE.MeshLambertMaterial({ color: pal.stone }));
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.4, 4.0, 12), villageTexMat('stone', pal.stone));
   tower.position.y = 2.0; g.add(tower);
-  const cap = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.1, 12), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.1, 12), villageTexMat('roof', pal.roofs[0]));
   cap.position.y = 4.55; g.add(cap);
   const sails = new THREE.Group();
-  const sailMat = new THREE.MeshLambertMaterial({ color: pal.timber, side: THREE.DoubleSide });
-  const clothMat = new THREE.MeshLambertMaterial({ color: pal.plaster, side: THREE.DoubleSide });
+  const sailMat = villageTexMat('wood', pal.timber, { extra: { side: THREE.DoubleSide } });
+  const clothMat = villageTexMat('plaster', pal.plaster, { extra: { side: THREE.DoubleSide } });
   for (let i = 0; i < 4; i++) {
     const arm = new THREE.Group();
     const spar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.6, 0.12), sailMat); spar.position.y = 1.3; arm.add(spar);
@@ -15418,14 +15530,14 @@ function villageMakeWindmill(r, pal) {
   g.add(sails);
   villageWindmills.push(sails);
   // The miller's yard: a spare millstone against the wall and flour sacks
-  const millstone = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.16, 12), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, 0.05) }));
+  const millstone = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.16, 12), villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, 0.05)));
   millstone.rotation.x = Math.PI / 2 - 0.3; millstone.position.set(1.5, 0.5, 0.4); g.add(millstone);
   for (let i = 0; i < 3; i++) {
     const sack = new THREE.Mesh(new THREE.SphereGeometry(0.2, 6, 5), new THREE.MeshLambertMaterial({ color: 0xcbb98a }));
     sack.scale.set(1, 1.25, 1); sack.position.set(-1.3 - r() * 0.5, 0.24, 0.5 + (r() - 0.5) * 1.2);
     g.add(sack);
   }
-  const millDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.1), new THREE.MeshLambertMaterial({ color: pal.timber }));
+  const millDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.1, 0.1), villageTexMat('wood', pal.timber));
   millDoor.position.set(0, 0.55, 1.32); g.add(millDoor);
   const millWin = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.4, 0.1), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
   millWin.position.set(0, 2.4, 1.16); g.add(millWin);
@@ -15436,10 +15548,10 @@ function villageMakeWindmill(r, pal) {
 // A fortified manor house — the reeve's hall, with a little banner tower.
 function villageMakeManor(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
-  const plasterMat = new THREE.MeshLambertMaterial({ color: pal.plaster });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const stoneMat = villageTexMat('stone', pal.stone);
+  const plasterMat = villageTexMat('plaster', pal.plaster);
+  const beamMat = villageTexMat('wood', pal.timber);
+  const roofMat = villageTexMat('roof', pal.roofs[Math.floor(r() * pal.roofs.length)]);
   const hall = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.6, 3.0), stoneMat);
   hall.position.y = 0.8; g.add(hall);
   const upper = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.4, 3.2), plasterMat);
@@ -15482,7 +15594,7 @@ function villageMakeManor(r, pal) {
 // A crumbling watchtower — older than the village, half swallowed by ivy.
 function villageMakeRuinTower(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.05) });
+  const stoneMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, -0.05));
   const h = 3.2 + r() * 1.2;
   const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.3, h, 10), stoneMat);
   tower.position.y = h / 2; g.add(tower);
@@ -15522,8 +15634,8 @@ function villageMakeRuinTower(r, pal) {
 // A drift of tumbled stone and splintered planks — the darkness's calling card.
 function villageMakeRubblePile(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.03, -0.04) });
-  const plankMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, -0.05, -0.08) });
+  const stoneMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, -0.03, -0.04));
+  const plankMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, -0.05, -0.08));
   const dust = new THREE.Mesh(new THREE.CircleGeometry(0.9 + r() * 0.5, 10), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, -0.15, -0.06) }));
   dust.rotation.x = -Math.PI / 2; dust.position.y = 0.01; g.add(dust);
   for (let i = 0; i < 5 + Math.floor(r() * 3); i++) {
@@ -15546,10 +15658,10 @@ function villageMakeRubblePile(r, pal) {
 // Kinds match VILLAGE_RUIN_KINDS: house · barn · tower.
 function villageMakeWreckedBuilding(r, pal, kind) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06) });
-  const plasterMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, -0.08, -0.1) });
+  const stoneMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06));
+  const plasterMat = villageTexMat('plaster', new THREE.Color(pal.plaster).offsetHSL(0, -0.08, -0.1));
   const charMat = new THREE.MeshLambertMaterial({ color: 0x241d16 });
-  const beamMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, -0.06, -0.1) });
+  const beamMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, -0.06, -0.1));
   if (kind === 'tower') {
     const h = 1.5 + r() * 0.7;
     const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, h, 9), stoneMat);
@@ -15614,8 +15726,8 @@ function villageMakeWreckedBuilding(r, pal, kind) {
 // wall shell's height tracks build progress, so returning players see it rise.
 function villageMakeConstructionSite(r, pal, progress) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const plasterMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, -0.04, 0.02) });
+  const beamMat = villageTexMat('wood', pal.timber);
+  const plasterMat = villageTexMat('plaster', new THREE.Color(pal.plaster).offsetHSL(0, -0.04, 0.02));
   const dirt = new THREE.Mesh(new THREE.CircleGeometry(2.3, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.02, -0.2, -0.08) }));
   dirt.rotation.x = -Math.PI / 2; dirt.position.y = 0.012; g.add(dirt);
   const shellH = 0.35 + Math.max(0, Math.min(1, Number(progress) || 0)) * 1.3;
@@ -15649,9 +15761,9 @@ function villageMakeConstructionSite(r, pal, progress) {
 function villageMakeDovecote(r, pal) {
   const g = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 2.4, 10),
-    new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, -0.04) }));
+    villageTexMat('plaster', new THREE.Color(pal.plaster).offsetHSL(0, 0, -0.04)));
   body.position.y = 1.2; g.add(body);
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.95, 10), new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.0, 0.95, 10), villageTexMat('roof', pal.roofs[Math.floor(r() * pal.roofs.length)]));
   roof.position.y = 2.85; g.add(roof);
   const holeMat = new THREE.MeshBasicMaterial({ color: 0x141210 });
   for (let row = 0; row < 2; row++) {
@@ -15727,7 +15839,7 @@ function villageMakePond(r, pal) {
 // A wattle-fenced pen with a few sheep or geese.
 function villageMakePen(r, pal) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const w = 2.6 + r() * 1.2, d = 2.2 + r() * 1.0;
   for (const [sx, sz, len, rot] of [[0, -d/2, w, 0], [0, d/2, w, 0], [-w/2, 0, d, Math.PI/2], [w/2, 0, d, Math.PI/2]]) {
     const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, 0.07), beamMat);
@@ -15758,7 +15870,7 @@ function villageMakePen(r, pal) {
 // A hand cart resting by the square.
 function villageMakeCart(r, pal) {
   const g = new THREE.Group();
-  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06) });
+  const woodMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06));
   const bed = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.32, 0.9), woodMat);
   bed.position.y = 0.55; bed.rotation.z = -0.16; g.add(bed);
   for (const sz of [-0.5, 0.5]) {
@@ -15799,7 +15911,7 @@ function villageMakeHay(r, pal) {
 // A lantern post lighting the way (sprite glow only — cheap on phones).
 function villageMakeLampPost(r, pal) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 2.1, 6), beamMat);
   pole.position.y = 1.05; g.add(pole);
   const arm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.06), beamMat);
@@ -15832,7 +15944,7 @@ function villageMakeFlowers(r, pal) {
 // A maypole wound with ribbons — festival centrepiece.
 function villageMakeMaypole(r, pal) {
   const grp = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 4.2, 8), beamMat);
   pole.position.y = 2.1; grp.add(pole);
   const crown = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 6, 12), new THREE.MeshLambertMaterial({ color: 0x3c5a22 }));
@@ -15847,7 +15959,7 @@ function villageMakeMaypole(r, pal) {
     ribbon.rotation.x = 0.18;
     grp.add(ribbon);
   }
-  const steps = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 0.25, 10), new THREE.MeshLambertMaterial({ color: pal.stone }));
+  const steps = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 0.25, 10), villageTexMat('stone', pal.stone));
   steps.position.y = 0.12; grp.add(steps);
   grp.add(villageBlobShadow(1.2));
   return grp;
@@ -15857,7 +15969,7 @@ function villageMakeTree(r, pal) {
   const tree = new THREE.Group();
   const birch = r() < 0.18;
   const dead = !birch && r() < 0.08;
-  const trunkMat = new THREE.MeshLambertMaterial({ color: birch ? 0xd8d4c8 : pal.timber });
+  const trunkMat = birch ? new THREE.MeshLambertMaterial({ color: 0xd8d4c8 }) : villageTexMat('bark', pal.timber, { lift: 0.7 });
   const leafHue = new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL((r() - 0.5) * 0.06, 0, (r() - 0.5) * 0.08);
   const leafMat = new THREE.MeshLambertMaterial({ color: leafHue });
   const s = 0.8 + r() * 0.8;
@@ -15903,7 +16015,7 @@ function villageMakeTree(r, pal) {
 
 function villageMakeStall(r, pal) {
   const stall = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const cA = '#' + new THREE.Color(pal.roofs[Math.floor(r() * pal.roofs.length)]).getHexString();
   const canopyMat = new THREE.MeshLambertMaterial({ map: villageStripeTexture(r, cA, '#e8dcc0'), side: THREE.DoubleSide });
   const counter = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.75, 1.0), beamMat);
@@ -15917,7 +16029,7 @@ function villageMakeStall(r, pal) {
   canopy.position.set(0, 1.95, 0); stall.add(canopy);
   for (let i = 0; i < 3; i++) {
     const box = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.24, 0.34),
-      new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+      villageTexMat('wood', pal.roofs[Math.floor(r() * pal.roofs.length)]));
     box.position.set(-0.6 + i * 0.6, 0.87, (r() - 0.5) * 0.4);
     box.rotation.y = r() * 0.8; stall.add(box);
   }
@@ -15928,7 +16040,7 @@ function villageMakeStall(r, pal) {
 function villageMakeBarrel(r, pal) {
   const barrel = new THREE.Mesh(
     new THREE.CylinderGeometry(0.3, 0.34, 0.62, 9),
-    new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08) })
+    villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08))
   );
   barrel.position.y = 0.31;
   const grp = new THREE.Group(); grp.add(barrel); grp.add(villageBlobShadow(0.42));
@@ -15937,8 +16049,8 @@ function villageMakeBarrel(r, pal) {
 
 function villageMakeCentrepiece(r, pal) {
   const grp = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const stoneMat = villageTexMat('stone', pal.stone);
+  const beamMat = villageTexMat('wood', pal.timber);
   const pick = r();
   if (pick >= 0.86) return villageMakeMaypole(r, pal);
   if (pick < 0.28) {
@@ -15957,7 +16069,7 @@ function villageMakeCentrepiece(r, pal) {
     rope.position.y = 1.5; grp.add(rope);
     const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.1, 0.2, 8), beamMat);
     bucket.position.y = 1.05; grp.add(bucket);
-    const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.0, 6), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+    const wellRoof = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.0, 6), villageTexMat('roof', pal.roofs[0]));
     wellRoof.position.y = 2.35; grp.add(wellRoof);
     if (r() < 0.5) {
       const sparrow = villageMakeRoofBird(r, 0x8a7a5a);
@@ -16035,7 +16147,7 @@ function villageMakeGarland(r, pal, from, to) {
 // with votive lanterns. The proudest thing a settlement can raise.
 function villageMakeGreatPerch(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, 0.04) });
+  const stoneMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, 0.04));
   for (let i = 0; i < 3; i++) {
     const step = new THREE.Mesh(new THREE.CylinderGeometry(1.9 - i * 0.45, 1.9 - i * 0.45, 0.26, 10), stoneMat);
     step.position.y = 0.13 + i * 0.26; g.add(step);
@@ -16076,7 +16188,7 @@ function villageMakeGreatPerch(r, pal) {
 // A ring of mossy standing stones, older than any road that reaches them.
 function villageMakeStoneCircle(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06) });
+  const stoneMat = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06));
   const mossMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.leaf || 0x2c4a1e).offsetHSL(0, 0.08, 0.02) });
   const n = 6 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
@@ -16108,7 +16220,7 @@ function villageMakeStoneCircle(r, pal) {
 // The royal aviary — a gilded cage-dome where honoured birds convalesce.
 function villageMakeAviary(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const stoneMat = villageTexMat('stone', pal.stone);
   const gildMat = new THREE.MeshBasicMaterial({ color: 0xc8a84a, wireframe: true });
   const wall = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.8, 0.7, 12), stoneMat);
   wall.position.y = 0.35; g.add(wall);
@@ -16117,7 +16229,7 @@ function villageMakeAviary(r, pal) {
   const finial = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 6), new THREE.MeshBasicMaterial({ color: 0xf0d98a }));
   finial.position.y = 2.55; g.add(finial);
   // A cross-perch inside with resting birds
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.5, 6), beamMat);
   post.position.y = 1.05; g.add(post);
   const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 5), beamMat);
@@ -16137,8 +16249,8 @@ function villageMakeAviary(r, pal) {
 // A freestanding bell tower that rings the flocks home at dusk.
 function villageMakeBellTower(r, pal) {
   const g = new THREE.Group();
-  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
-  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const stoneMat = villageTexMat('stone', pal.stone);
+  const roofMat = villageTexMat('roof', pal.roofs[Math.floor(r() * pal.roofs.length)]);
   const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.5, 4.2, 1.5), stoneMat);
   shaft.position.y = 2.1; g.add(shaft);
   // Open belfry: four corner posts under a pyramid cap
@@ -16152,7 +16264,7 @@ function villageMakeBellTower(r, pal) {
   bell.position.y = 4.7; g.add(bell);
   const clapper = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 5), new THREE.MeshLambertMaterial({ color: 0x8a6a2a }));
   clapper.position.y = 4.42; g.add(clapper);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.1), new THREE.MeshLambertMaterial({ color: pal.timber }));
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.1), villageTexMat('wood', pal.timber));
   door.position.set(0, 0.5, 0.78); g.add(door);
   const slit = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.6, 0.08), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
   slit.position.set(0, 2.6, 0.78); g.add(slit);
@@ -16168,13 +16280,13 @@ function villageMakeBellTower(r, pal) {
 // A scarecrow the local birds treat as a public perch — the farmer despairs.
 function villageMakeScarecrow(r, pal) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const strawMat = new THREE.MeshLambertMaterial({ color: 0xb8933e });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 1.9, 6), beamMat);
   pole.position.y = 0.95; g.add(pole);
   const arms = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.5, 5), beamMat);
   arms.rotation.z = Math.PI / 2; arms.position.y = 1.35; g.add(arms);
-  const coat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.8, 7), new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+  const coat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.8, 7), villageTexMat('fabric', pal.roofs[Math.floor(r() * pal.roofs.length)]));
   coat.position.y = 1.0; g.add(coat);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 7, 6), strawMat);
   head.position.y = 1.68; g.add(head);
@@ -16195,9 +16307,9 @@ function villageMakeScarecrow(r, pal) {
 // A birdhouse pole — the roadside shrines of the Kingdom of Burbz.
 function villageMakeBirdhousePole(r, pal) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const houseMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, -0.06) });
-  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const beamMat = villageTexMat('wood', pal.timber);
+  const houseMat = villageTexMat('plaster', new THREE.Color(pal.plaster).offsetHSL(0, 0, -0.06));
+  const roofMat = villageTexMat('roof', pal.roofs[Math.floor(r() * pal.roofs.length)]);
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 2.2, 6), beamMat);
   pole.position.y = 1.1; g.add(pole);
   const n = 1 + Math.floor(r() * 2);
@@ -16222,7 +16334,7 @@ function villageMakeBirdhousePole(r, pal) {
 // Washing strung between two posts, swaying gently in the night air.
 function villageMakeWashingLine(r, pal) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const span = 2.4 + r() * 0.8;
   for (const sx of [-span / 2, span / 2]) {
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 1.6, 6), beamMat);
@@ -16246,7 +16358,7 @@ function villageMakeWashingLine(r, pal) {
 // A tidy log pile with a chopping block.
 function villageMakeLogPile(r, pal) {
   const g = new THREE.Group();
-  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06) });
+  const woodMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06));
   const endMat = new THREE.MeshLambertMaterial({ color: 0xc0a878 });
   let count = 4;
   for (let row = 0; row < 3 && count > 0; row++) {
@@ -16269,7 +16381,7 @@ function villageMakeLogPile(r, pal) {
 // A plain wooden bench for watching the square go by.
 function villageMakeBench(r, pal) {
   const g = new THREE.Group();
-  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08) });
+  const woodMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08));
   const seat = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.4), woodMat);
   seat.position.y = 0.45; g.add(seat);
   const back = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 0.07), woodMat);
@@ -16286,7 +16398,7 @@ function villageMakeBench(r, pal) {
 function villageMakeBeehives(r, pal) {
   const g = new THREE.Group();
   const strawMat = new THREE.MeshLambertMaterial({ color: 0xc0a05a });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const table = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 0.6), beamMat);
   table.position.y = 0.35; g.add(table);
   for (const sx of [-0.7, 0.7]) {
@@ -16333,7 +16445,7 @@ function villageMakeVegPatch(r, pal) {
     }
   }
   // one corner marker post
-  const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.06), new THREE.MeshLambertMaterial({ color: pal.timber }));
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.06), villageTexMat('wood', pal.timber));
   post.position.set(1.2, 0.25, -0.85); g.add(post);
   return g;
 }
@@ -16365,7 +16477,7 @@ function villageMakeSnowman(r, pal) {
   sizes.forEach(s => { y += s * 0.85; const ball = new THREE.Mesh(new THREE.SphereGeometry(s, 9, 7), snowMat); ball.position.y = y; g.add(ball); y += s * 0.55; });
   const carrot = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.22, 6), new THREE.MeshLambertMaterial({ color: 0xd07a3a }));
   carrot.rotation.x = Math.PI / 2; carrot.position.set(0, 1.28, 0.26); g.add(carrot);
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   for (const sx of [-1, 1]) {
     const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.6, 4), beamMat);
     arm.rotation.z = sx * (Math.PI / 2 - 0.4); arm.position.set(sx * 0.55, 0.95, 0); g.add(arm);
@@ -16471,7 +16583,7 @@ function villageMakeVillager(r, pal, role) {
         ? [0x3a4252, 0x42384a, 0x384a44]
         : [0x6a4a3a, 0x3a4a6a, 0x4a5a3a, 0x5a3a52, 0x6a5a34];
   const cloakMat = new THREE.MeshLambertMaterial({ color: cloakCols[Math.floor(r() * cloakCols.length)] });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const cloak = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.95, 7), cloakMat);
   cloak.position.y = 0.48; g.add(cloak);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 6), new THREE.MeshLambertMaterial({ color: 0xd8b890 }));
@@ -16627,7 +16739,7 @@ function villageMakeChicken(r, pal) {
 // A gently arched footbridge for riverside villages.
 function villageMakeBridge(r, pal, width) {
   const g = new THREE.Group();
-  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.05) });
+  const woodMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.05));
   const span = width + 2.2;
   const segs = 5;
   for (let i = 0; i < segs; i++) {
@@ -16653,7 +16765,7 @@ function villageMakeBridge(r, pal, width) {
 // A run of post-and-rail fencing along the roads (local X axis).
 function villageMakeFenceRun(r, pal, len) {
   const g = new THREE.Group();
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const beamMat = villageTexMat('wood', pal.timber);
   const posts = Math.max(2, Math.round(len / 1.1));
   for (let i = 0; i <= posts; i++) {
     if (r() < 0.08) continue; // a post the goats got to
@@ -16672,8 +16784,8 @@ function villageMakeFenceRun(r, pal, len) {
 // A tumbledown drystone wall — stacked stones of uneven height (local X axis).
 function villageMakeStoneWall(r, pal, len) {
   const g = new THREE.Group();
-  const stoneA = new THREE.MeshLambertMaterial({ color: pal.stone });
-  const stoneB = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06) });
+  const stoneA = villageTexMat('stone', pal.stone);
+  const stoneB = villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06));
   const segs = Math.max(3, Math.round(len / 0.66));
   for (let i = 0; i < segs; i++) {
     if (r() < 0.07) continue; // a gap where the wall has slumped
@@ -16696,7 +16808,7 @@ function villageMakeStoneWall(r, pal, len) {
 // A small orchard plot: fruit trees in rows with lantern-bright fruit.
 function villageMakeOrchard(r, pal) {
   const g = new THREE.Group();
-  const trunkMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const trunkMat = villageTexMat('wood', pal.timber);
   const leafMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL(0.02, 0.05, 0.05) });
   const fruitMat = new THREE.MeshLambertMaterial({ color: r() < 0.5 ? 0xc84a3a : 0xd8a83a });
   const cols = 2, rows = 2 + (r() < 0.5 ? 1 : 0);
@@ -16755,7 +16867,7 @@ function villageMakeGrainField(r, pal) {
 // Stacked crates and grain sacks — dockside clutter for the shop fronts.
 function villageMakeCrates(r, pal) {
   const g = new THREE.Group();
-  const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.12) });
+  const woodMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.12));
   const sackMat = new THREE.MeshLambertMaterial({ color: 0xb8a67e });
   const n = 2 + Math.floor(r() * 2);
   for (let i = 0; i < n; i++) {
@@ -16874,9 +16986,15 @@ function ensureVillageRenderer(stage) {
     if (!villageRenderer.domElement.isConnected) stage.appendChild(villageRenderer.domElement);
     return;
   }
-  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
+  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
   villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   villageRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  // Cinematic pass: filmic tone mapping + soft real-time moon shadows
+  villageRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  villageRenderer.toneMappingExposure = 1.25;
+  villageRenderer.shadowMap.enabled = true;
+  villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  villageLoadRealTextures();
   stage.appendChild(villageRenderer.domElement);
 
   const el = villageRenderer.domElement;
@@ -16919,11 +17037,15 @@ function disposeVillageScene() {
     if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
     if (o.geometry) o.geometry.dispose();
     const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
-    mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+    mats.forEach(m => {
+      if (m.map && !(m.map.userData && m.map.userData.shared)) m.map.dispose();
+      if (m.bumpMap && !(m.bumpMap.userData && m.bumpMap.userData.shared)) m.bumpMap.dispose();
+      m.dispose();
+    });
   });
   villageScene = null;
   villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null; villageWindmills = [];
-  villageWalkers = []; villageRoofBirds = []; villageCloths = []; villageDucks = []; villageClouds = []; villageWaterMats = [];
+  villageWalkers = []; villageRoofBirds = []; villageCloths = []; villageDucks = []; villageClouds = []; villageWaterMats = []; villageStarMats = [];
   villageNpcs = []; villageChickens = [];
   villageWeatherFx = null; villageShootingStar = null;
 }
@@ -16942,7 +17064,9 @@ function buildVillageScene(v) {
   // couple of broken shells; it fills back in as the governor raises buildings.
   const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
   const devLevel = econRec ? villageTotalDevelopment(econRec) : 0;
-  const ruinStage = devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
+  const ruinStage = (typeof window !== 'undefined' && window.__burbzForceRuinStage !== undefined)
+    ? window.__burbzForceRuinStage // headless/debug override (see __burbzVillageDebug)
+    : devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
   // Every settlement is also built to one of three plans: a ring green, a
   // crossroads settlement, or a riverside village with a footbridge.
   const layoutRoll = r();
@@ -16983,8 +17107,13 @@ function buildVillageScene(v) {
   // Riverside villages keep to the dry bank; everything scatters into this arc.
   const dryArc = layout === 'riverside' ? { c: riverA + Math.PI, s: 3.4 } : { c: undefined, s: undefined };
 
-  // Ground, plaza and paths
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(groundR, 44), new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground, pal.speck) }));
+  // Ground, plaza and paths — real photo turf when the CC0 textures are in,
+  // snow or leaf-litter ground in the frost/autumn palettes
+  const groundTexName = pal.weather === 'snow' ? 'snow' : pal.weather === 'leaves' ? 'dirt' : 'grass';
+  const groundMat = villageTexImages
+    ? villageTexMat(groundTexName, pal.ground, { rx: 9, ry: 9, lift: 0.75 })
+    : new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground, pal.speck) });
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(groundR, 44), groundMat);
   ground.material.map.repeat.set(9, 9);
   ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
   // Worn patches in the turf — snowdrifts in frost, leaf-litter in autumn
@@ -16997,8 +17126,11 @@ function buildVillageScene(v) {
     patch.scale.set(1, 0.6 + r() * 0.6, 1);
     villageScene.add(patch);
   }
-  const cobbles = villageCobbleTexture(r);
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(4.8 + tier * 0.7 + r() * 1.4, 22), new THREE.MeshLambertMaterial({ map: cobbles }));
+  const cobbles = villageSharedTex('cobble', pal.stone, 1, 1, 0.72) || villageCobbleTexture(r);
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(4.8 + tier * 0.7 + r() * 1.4, 22),
+    villageTexImages
+      ? villageTexMat('cobble', pal.stone, { rx: 3.4, ry: 3.4, lift: 0.72 })
+      : new THREE.MeshLambertMaterial({ map: cobbles }));
   plaza.material.map.repeat.set(3.4, 3.4);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
@@ -17029,7 +17161,7 @@ function buildVillageScene(v) {
     // A waymarker gate where the main road leaves the village
     const gateD = groundR * 0.52;
     const gate = new THREE.Group();
-    const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+    const beamMat = villageTexMat('wood', pal.timber);
     for (const sx of [-1.7, 1.7]) {
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), beamMat);
       post.position.set(sx, 1.3, 0); gate.add(post);
@@ -17079,7 +17211,7 @@ function buildVillageScene(v) {
     }
     if (r() < 0.65) {
       const boat = new THREE.Group();
-      const hullMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.14) });
+      const hullMat = villageTexMat('wood', new THREE.Color(pal.timber).offsetHSL(0, 0, 0.14));
       const hull = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 0.62), hullMat);
       hull.position.y = 0.18; boat.add(hull);
       for (const be of [-0.8, 0.8]) {
@@ -17166,9 +17298,9 @@ function buildVillageScene(v) {
     villageScene.add(path);
 
     // A warm torch by each doorway
-    const torch = new THREE.PointLight(0xffb45e, 1.7, 11, 2);
+    const torch = new THREE.PointLight(0xffb45e, 7.5, 12, 2);
     torch.position.set(px * 0.82, 1.7, pz * 0.82);
-    torch.userData.base = 1.5 + r() * 0.4;
+    torch.userData.base = 7 + r() * 2;
     villageScene.add(torch);
     villageTorches.push(torch);
   });
@@ -17459,23 +17591,65 @@ function buildVillageScene(v) {
   // and mossy boulders. Costs only a handful of draw calls.
   villageScene.add(villageMakeForestBelt(r, pal, groundR, spotFree, tier));
 
-  // Night sky: stars, a bright moon, slow clouds and the odd shooting star
-  const starCount = 240;
-  const starPos = new Float32Array(starCount * 3);
-  for (let i = 0; i < starCount; i++) {
-    const a = r() * Math.PI * 2, p = r() * Math.PI * 0.42;
-    const rad = 46;
-    starPos[i * 3] = Math.cos(a) * Math.sin(p + 0.12) * rad;
-    starPos[i * 3 + 1] = Math.cos(p) * rad * 0.6 + 6;
-    starPos[i * 3 + 2] = Math.sin(a) * Math.sin(p + 0.12) * rad;
+  // Night sky: a graded sky dome, layered stars, a crisp cratered moon,
+  // slow clouds and the odd shooting star
+  const zenith = new THREE.Color(pal.sky).lerp(new THREE.Color(0x000006), 0.45);
+  const horizon = new THREE.Color(pal.sky).lerp(new THREE.Color(pal.hemiSky), 0.42).lerp(new THREE.Color(0xffffff), 0.10);
+  const domeTex = (() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 256;
+    const x = c.getContext('2d');
+    const gr = x.createLinearGradient(0, 0, 0, 256);
+    gr.addColorStop(0, '#' + zenith.getHexString());
+    gr.addColorStop(0.62, '#' + new THREE.Color(pal.sky).getHexString());
+    gr.addColorStop(1, '#' + horizon.getHexString());
+    x.fillStyle = gr; x.fillRect(0, 0, 4, 256);
+    const t = new THREE.CanvasTexture(c);
+    if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(95, 24, 14),
+    new THREE.MeshBasicMaterial({ map: domeTex, side: THREE.BackSide, fog: false, depthWrite: false }));
+  dome.renderOrder = -10;
+  villageScene.add(dome);
+  // Fog fades the distance into the horizon band of the dome
+  villageScene.fog.color.copy(horizon);
+  // Two star layers: a dusting of faint stars plus a handful of bright ones
+  for (const layer of [{ n: 340, size: 0.22, op: 0.85 }, { n: 60, size: 0.5, op: 1.0 }]) {
+    const starPos = new Float32Array(layer.n * 3);
+    for (let i = 0; i < layer.n; i++) {
+      const a = r() * Math.PI * 2, p = r() * Math.PI * 0.46;
+      const rad = 60;
+      starPos[i * 3] = Math.cos(a) * Math.sin(p + 0.1) * rad;
+      starPos[i * 3 + 1] = Math.cos(p) * rad * 0.62 + 6;
+      starPos[i * 3 + 2] = Math.sin(a) * Math.sin(p + 0.1) * rad;
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xcdd8ff, size: layer.size, sizeAttenuation: true, transparent: true, opacity: layer.op, fog: false, depthWrite: false });
+    starMat.userData.twinkleBase = layer.op;
+    villageStarMats.push(starMat);
+    villageScene.add(new THREE.Points(starGeo, starMat));
   }
-  const starGeo = new THREE.BufferGeometry();
-  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  villageScene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcdd8ff, size: 0.22, sizeAttenuation: true, transparent: true, opacity: 0.9, fog: false })));
-  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('220,230,255'), transparent: true, depthWrite: false, fog: false }));
-  moonSprite.scale.set(9, 9, 1);
-  moonSprite.position.set(-22, 24, 14);
-  villageScene.add(moonSprite);
+  // The moon: soft halo behind a crisp, lightly cratered disc
+  const moonGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('220,230,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.8 }));
+  moonGlow.scale.set(16, 16, 1);
+  const moonDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(56, 52, 8, 64, 64, 52);
+    g.addColorStop(0, '#f6f8ff'); g.addColorStop(0.75, '#dfe6fa'); g.addColorStop(0.97, '#b8c4e8'); g.addColorStop(1, 'rgba(184,196,232,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(64, 64, 52, 0, Math.PI * 2); x.fill();
+    x.fillStyle = 'rgba(148,160,200,0.35)';
+    for (const [cx, cy, cr] of [[46, 50, 9], [78, 42, 6], [70, 84, 11], [42, 82, 5], [88, 66, 4]]) {
+      x.beginPath(); x.arc(cx, cy, cr, 0, Math.PI * 2); x.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  })(), transparent: true, depthWrite: false, fog: false }));
+  moonDisc.scale.set(7, 7, 1);
+  const moonGroup = new THREE.Group();
+  moonGroup.add(moonGlow); moonGroup.add(moonDisc);
+  moonGroup.position.set(-38, 58, 28); // sits along the moonlight direction
+  villageScene.add(moonGroup);
   const cloudTex = villageSmokeTexture();
   const cloudCount = pal.weather === 'rain' ? 5 : 3;
   for (let i = 0; i < cloudCount; i++) {
@@ -17583,12 +17757,12 @@ function buildVillageScene(v) {
         const spot = econScatter(6.5, 9.5, 1.3);
         if (!spot) return;
         const well = new THREE.Group();
-        const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+        const stoneMat = villageTexMat('stone', pal.stone);
         const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), stoneMat);
         ring.position.y = 0.28; well.add(ring);
-        const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+        const beamMat = villageTexMat('wood', pal.timber);
         for (const sx of [-0.55, 0.55]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.25, 0.09), beamMat); post.position.set(sx, 0.85, 0); well.add(post); }
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.55, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.55, 4), villageTexMat('roof', pal.roofs[0]));
         roof.position.y = 1.68; roof.rotation.y = Math.PI / 4; well.add(roof);
         const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.16, 7), beamMat);
         bucket.position.y = 0.95; well.add(bucket);
@@ -17631,7 +17805,7 @@ function buildVillageScene(v) {
           pile.position.set((er() - 0.5) * 2.6, 0, (er() - 0.5) * 2.6);
           camp.add(pile);
         }
-        const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.4, 8), new THREE.MeshLambertMaterial({ color: pal.timber }));
+        const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.4, 8), villageTexMat('wood', pal.timber));
         stump.position.set(1.3, 0.2, -0.7); camp.add(stump);
         camp.position.set(spot.x, 0, spot.z);
         econLabel(camp, '🪓 Lumber Camp', 2.2);
@@ -17640,9 +17814,9 @@ function buildVillageScene(v) {
         const spot = econScatter(12.5, 16.5, 2.6);
         if (!spot) return;
         const quarry = new THREE.Group();
-        const gravel = new THREE.Mesh(new THREE.CircleGeometry(2.1, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.05, -0.06) }));
+        const gravel = new THREE.Mesh(new THREE.CircleGeometry(2.1, 14), villageTexMat('stone', new THREE.Color(pal.stone).offsetHSL(0, -0.05, -0.06)));
         gravel.rotation.x = -Math.PI / 2; gravel.position.y = 0.012; quarry.add(gravel);
-        const rockMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+        const rockMat = villageTexMat('stone', pal.stone);
         for (let i = 0; i < 3 + level * 2; i++) {
           const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28 + er() * 0.4, 0), rockMat);
           rock.position.set((er() - 0.5) * 3.2, 0.22 + er() * 0.15, (er() - 0.5) * 3.2);
@@ -17664,10 +17838,29 @@ function buildVillageScene(v) {
     });
   }
 
-  // Lighting: moonlight + warm hearth-glow
-  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 1.7));
-  const moon = new THREE.DirectionalLight(0xaabcff, 1.0);
-  moon.position.set(-8, 14, 6); villageScene.add(moon);
+  // Lighting: moonlight (with soft real shadows) + a cool counter-fill so the
+  // shaded faces still read, + the warm hearth-glow of the door torches
+  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 2.1));
+  const moon = new THREE.DirectionalLight(0xbfd0ff, 2.2);
+  moon.position.set(-19, 29, 14);
+  moon.castShadow = true;
+  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.camera.left = -26; moon.shadow.camera.right = 26;
+  moon.shadow.camera.top = 26; moon.shadow.camera.bottom = -26;
+  moon.shadow.camera.near = 4; moon.shadow.camera.far = 90;
+  moon.shadow.bias = -0.0006;
+  moon.shadow.normalBias = 0.03;
+  villageScene.add(moon);
+  const fill = new THREE.DirectionalLight(pal.hemiSky, 0.55);
+  fill.position.set(16, 9, -12); villageScene.add(fill);
+  // Everything solid casts and catches the moonlight; ground decals (flat
+  // circles/planes hovering just above the turf) only receive.
+  villageScene.traverse(o => {
+    if (!o.isMesh) return;
+    o.receiveShadow = true;
+    const gt = o.geometry && o.geometry.type;
+    if (gt !== 'CircleGeometry' && gt !== 'PlaneGeometry') o.castShadow = true;
+  });
 
   villageBuiltSeed = v.seed;
   // Open on the gap between the first two buildings so nothing blocks the view
@@ -17700,7 +17893,7 @@ function villageAnimateFrame(t) {
   villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
   villageCamera.lookAt(0, 1.4, 0);
   villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
-  villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
+  villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 7) + Math.sin(t * 7 + i * 1.7) * 0.8; });
   villageWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });
   villageSmokes.forEach(p => {
     const cycle = ((t * p.userData.speed + p.userData.phase) % 1.6);
@@ -17751,6 +17944,7 @@ function villageAnimateFrame(t) {
     cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + 45) % 90) - 45;
   });
   villageWaterMats.forEach((m, i) => { if (m.map) { m.map.offset.x = t * 0.018 * (1 + (i % 3) * 0.4); } });
+  villageStarMats.forEach((m, i) => { m.opacity = m.userData.twinkleBase * (0.82 + 0.18 * Math.sin(t * (0.8 + i * 0.5) + i * 2.1)); });
   // The odd shooting star
   if (villageShootingStar) {
     const u = villageShootingStar.userData;
