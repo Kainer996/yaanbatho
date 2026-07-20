@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-ruins-build-timers-v89-20260719';
+const BURBZ_CACHE = 'burbz-village-graphics-v90-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -96,6 +96,11 @@ BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, 
 const BURBZ_CORE = [
   './index.html',
   './lib/three.min.js?v=0.158.0',
+  // 3D village ground detail (small, and the village looks flat without them)
+  './assets/tex/grass_c.jpg',
+  './assets/tex/grass_n.jpg',
+  './assets/tex/cobble_c.jpg',
+  './assets/tex/cobble_n.jpg',
   './academy_treehouse_core.js',
   './battle_core.js?v=skyclash-squads-20260719',
   './loot_crafting_core.js?v=fletchers-forge-20260719',

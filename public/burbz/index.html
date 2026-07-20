@@ -2027,6 +2027,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .village-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 10px; line-height: 1.5; }
 .village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: none; }
 .village-stage canvas { display: block; width: 100%; height: 100%; }
+.village-stage:has(canvas)::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(5,3,12,0.38) 100%); }
 .village-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text3); font-size: 12.5px; letter-spacing: 0.06em; }
 .village-fallback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; height: 100%; overflow-y: auto; }
 .village-fallback-building { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--bg4); border-radius: 12px; padding: 12px 8px; color: var(--text); }
@@ -14834,8 +14835,9 @@ let villageScene = null, villageRenderer = null, villageCamera = null, villageRu
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
 let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
 let villageNpcs = [], villageChickens = [];
-let villageWeatherFx = null, villageShootingStar = null;
+let villageWeatherFx = null, villageShootingStar = null, villageTwinkleStars = null;
 let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
+let villageShadowTick = 0;
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
 let villageActive = null;
@@ -14895,39 +14897,17 @@ function villageCanvasTex(size, draw) {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return t;
 }
-function villageGrassTexture(r, baseHex, speck) {
-  const sp = speck || [120, 150, 60];
-  return villageCanvasTex(256, (x, s) => {
-    x.fillStyle = '#' + baseHex.toString(16).padStart(6, '0'); x.fillRect(0, 0, s, s);
-    for (let i = 0; i < 900; i++) {
-      const j = 0.7 + r() * 0.55; // brightness jitter per speck
-      x.fillStyle = 'rgba(' + Math.floor(sp[0] * j) + ',' + Math.floor(sp[1] * j) + ',' + Math.floor(sp[2] * j) + ',' + (0.22 + r() * 0.4) + ')';
-      x.fillRect(r() * s, r() * s, 1.6 + r() * 2.4, 1.6 + r() * 2.4);
-    }
-  });
-}
-function villageCobbleTexture(r) {
-  return villageCanvasTex(256, (x, s) => {
-    x.fillStyle = '#3c3833'; x.fillRect(0, 0, s, s);
-    const cell = 26;
-    for (let gy = 0; gy < s / cell; gy++) {
-      for (let gx = 0; gx < s / cell + 1; gx++) {
-        const off = (gy % 2) * cell / 2;
-        const tone = 100 + Math.floor(r() * 44);
-        x.fillStyle = 'rgb(' + tone + ',' + (tone - 6) + ',' + (tone - 14) + ')';
-        x.beginPath();
-        x.ellipse(gx * cell + off, gy * cell + cell / 2, cell / 2 - 2.2, cell / 2 - 3.4, 0, 0, Math.PI * 2);
-        x.fill();
-      }
-    }
-  });
-}
 function villageStripeTexture(r, cA, cB) {
   return villageCanvasTex(128, (x, s) => {
     for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? cA : cB; x.fillRect(i * s / 8, 0, s / 8, s); }
   });
 }
+// Glow and smoke sprites recur dozens of times per scene — cache one texture
+// per look for the whole session (marked shared so disposal leaves them alone).
+const villageGlowTexCache = {};
 function villageGlowTexture(rgb) {
+  let tx = villageGlowTexCache[rgb];
+  if (tx) return tx;
   const c = document.createElement('canvas'); c.width = c.height = 64;
   const x = c.getContext('2d');
   const g = x.createRadialGradient(32, 32, 2, 32, 32, 30);
@@ -14935,32 +14915,233 @@ function villageGlowTexture(rgb) {
   g.addColorStop(0.5, 'rgba(' + rgb + ',0.28)');
   g.addColorStop(1, 'rgba(' + rgb + ',0)');
   x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-  return new THREE.CanvasTexture(c);
+  tx = new THREE.CanvasTexture(c);
+  tx.userData.shared = true;
+  villageGlowTexCache[rgb] = tx;
+  return tx;
 }
+let villageSmokeTexShared = null;
 function villageSmokeTexture() {
+  if (villageSmokeTexShared) return villageSmokeTexShared;
   const c = document.createElement('canvas'); c.width = c.height = 64;
   const x = c.getContext('2d');
   const g = x.createRadialGradient(32, 32, 4, 32, 32, 30);
   g.addColorStop(0, 'rgba(200,200,210,0.55)');
   g.addColorStop(1, 'rgba(200,200,210,0)');
   x.fillStyle = g; x.fillRect(0, 0, 64, 64);
-  return new THREE.CanvasTexture(c);
+  villageSmokeTexShared = new THREE.CanvasTexture(c);
+  villageSmokeTexShared.userData.shared = true;
+  return villageSmokeTexShared;
+}
+// ---- Shared detail maps (CC0 photos from ambientCG.com + procedural) --------
+// Photographs are flattened to luminance so material.color can tint them to
+// each palette — villages keep their seeded art direction and gain real
+// micro-detail plus normal-mapped relief. The canvases persist across scene
+// rebuilds; the THREE textures wrapping them are per-scene and disposable.
+const villageTexCache = {};
+function villageSharedTexture(key, url, prime, draw, opts) {
+  const o = opts || {};
+  let entry = villageTexCache[key];
+  if (!entry) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = o.size || 512;
+    prime(canvas.getContext('2d'), canvas.width);
+    entry = villageTexCache[key] = {
+      canvas, textures: {}, loaded: !url, failed: false,
+      load() {
+        this.failed = false;
+        const img = new Image();
+        img.onload = () => {
+          draw(canvas.getContext('2d'), canvas.width, img);
+          this.loaded = true;
+          Object.values(this.textures).forEach(tx => { tx.needsUpdate = true; });
+        };
+        img.onerror = () => { this.failed = true; }; // primed fill stands in; retried next build
+        img.src = url;
+      }
+    };
+    if (url) entry.load();
+  } else if (entry.failed) {
+    entry.load(); // connectivity may be back — try again on each scene build
+  }
+  const tkey = (o.repeatX || 1) + 'x' + (o.repeatY || 1);
+  let tx = entry.textures[tkey];
+  if (!tx) {
+    tx = new THREE.CanvasTexture(entry.canvas);
+    tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+    tx.anisotropy = 4; // keeps ground detail crisp at glancing angles
+    if (o.srgb && THREE.SRGBColorSpace) tx.colorSpace = THREE.SRGBColorSpace;
+    tx.repeat.set(o.repeatX || 1, o.repeatY || 1);
+    tx.userData.shared = true; // one GPU upload per session — disposeVillageScene skips these
+    entry.textures[tkey] = tx;
+  }
+  return tx;
+}
+// Photo colour flattened to luminance with a whisper of its natural hue kept,
+// plus a low-frequency mottle so the detail still reads from village distance
+// (fine grain alone mips away to a flat wash)
+function villageDetailMap(key, url) {
+  return villageSharedTexture(key, url,
+    (x, s) => { x.fillStyle = '#96968e'; x.fillRect(0, 0, s, s); },
+    (x, s, img) => {
+      x.drawImage(img, 0, 0, s, s);
+      x.globalCompositeOperation = 'saturation';
+      x.fillStyle = '#808080'; x.fillRect(0, 0, s, s);
+      x.globalCompositeOperation = 'overlay'; // push micro-contrast back up
+      x.globalAlpha = 0.4; x.drawImage(img, 0, 0, s, s);
+      x.globalCompositeOperation = 'source-over';
+      x.globalAlpha = 0.22; x.drawImage(img, 0, 0, s, s);
+      x.globalAlpha = 1;
+      const mrand = villageRngFrom(1234567);
+      for (let i = 0; i < 15; i++) { // broad light/dark drift patches
+        const px = mrand() * s, py = mrand() * s, rad = s * (0.1 + mrand() * 0.16);
+        const dark = i % 2 === 0;
+        for (const ox of [0, -s]) for (const oy of [0, -s]) { // wrapped so the tile stays seamless
+          const gr = x.createRadialGradient(px + ox, py + oy, rad * 0.15, px + ox, py + oy, rad);
+          gr.addColorStop(0, dark ? 'rgba(30,30,26,0.16)' : 'rgba(235,235,225,0.13)');
+          gr.addColorStop(1, 'rgba(128,128,128,0)');
+          x.fillStyle = gr;
+          x.fillRect(px + ox - rad, py + oy - rad, rad * 2, rad * 2);
+        }
+      }
+    }, { srgb: true });
+}
+function villageNormalTexture(key, url) {
+  return villageSharedTexture(key, url,
+    (x, s) => { x.fillStyle = '#8080ff'; x.fillRect(0, 0, s, s); },
+    (x, s, img) => { x.drawImage(img, 0, 0, s, s); });
+}
+function villageGrassMaps() {
+  return { map: villageDetailMap('grassC', 'assets/tex/grass_c.jpg'), normalMap: villageNormalTexture('grassN', 'assets/tex/grass_n.jpg') };
+}
+// One cobble material serves the plaza, roads and every path — tile density is
+// baked into each mesh's UVs (villageScaleUV) so the maps can be shared.
+function villageCobbleMaterial(pal) {
+  const map = villageDetailMap('cobbleC', 'assets/tex/cobble_c.jpg');
+  const normalMap = villageNormalTexture('cobbleN', 'assets/tex/cobble_n.jpg');
+  return new THREE.MeshStandardMaterial({
+    map, normalMap, normalScale: new THREE.Vector2(0.9, 0.9),
+    color: new THREE.Color(pal.stone).offsetHSL(0, -0.04, 0.12),
+    roughness: 0.95, metalness: 0
+  });
+}
+function villageScaleUV(geo, sx, sy) {
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * sx, uv.getY(i) * sy);
+  uv.needsUpdate = true;
+  return geo;
+}
+// Tiling wave-normal map, computed once from layered sines (integer
+// frequencies so it wraps seamlessly)
+function villageWaterNormalTexture(repX, repY) {
+  return villageSharedTexture('waterN', null, (x, s) => {
+    const H = (u, v) =>
+      Math.sin((u * 3 + v * 5) * Math.PI * 2 + 1.7) * 0.5 +
+      Math.sin((u * 7 - v * 2) * Math.PI * 2 + 0.4) * 0.28 +
+      Math.sin((u * 11 + v * 13) * Math.PI * 2 + 3.1) * 0.16;
+    const img = x.createImageData(s, s);
+    const e = 1 / s, k = 5.5;
+    for (let j = 0; j < s; j++) {
+      for (let i = 0; i < s; i++) {
+        const u = i / s, v = j / s;
+        const dx = (H(u + e, v) - H(u - e, v)) * k, dy = (H(u, v + e) - H(u, v - e)) * k;
+        const inv = 1 / Math.hypot(dx, dy, 1);
+        const o = (j * s + i) * 4;
+        img.data[o] = 128 - dx * inv * 127;
+        img.data[o + 1] = 128 - dy * inv * 127;
+        img.data[o + 2] = 128 + inv * 127;
+        img.data[o + 3] = 255;
+      }
+    }
+    x.putImageData(img, 0, 0);
+  }, null, { size: 256, repeatX: repX || 3, repeatY: repY || 3 });
 }
 // Moonlit water with drifting highlight streaks (offset animated per frame)
 function villageWaterTexture(r, baseCss) {
   return villageCanvasTex(128, (x, s) => {
     x.fillStyle = baseCss || '#22405e'; x.fillRect(0, 0, s, s);
-    for (let i = 0; i < 26; i++) {
-      x.fillStyle = 'rgba(190,215,255,' + (0.06 + r() * 0.12) + ')';
+    for (let i = 0; i < 16; i++) {
+      x.fillStyle = 'rgba(190,215,255,' + (0.035 + r() * 0.065) + ')';
       x.fillRect(r() * s, r() * s, 10 + r() * 34, 1 + r() * 1.6);
     }
   });
 }
-// Animated water material — registered so villageAnimate can drift the streaks
-function villageWaterMaterial(r, baseCss) {
-  const mat = new THREE.MeshBasicMaterial({ map: villageWaterTexture(r, baseCss) });
+// Animated water material — shaded, with rippling wave normals that catch the
+// moon. Registered so villageAnimate can drift both the streaks and the waves.
+function villageWaterMaterial(r, baseCss, repX, repY) {
+  const nm = villageWaterNormalTexture(repX, repY);
+  const base = new THREE.Color(baseCss || '#22405e');
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    map: villageWaterTexture(r, baseCss),
+    normalMap: nm, normalScale: new THREE.Vector2(0.75, 0.75),
+    shininess: 90, specular: new THREE.Color(0x7d95c0),
+    emissive: base.clone().multiplyScalar(0.42),
+    transparent: true, opacity: 0.96
+  });
   villageWaterMats.push(mat);
   return mat;
+}
+// The three bands of the night sky per palette; fog shares the horizon colour
+// so distant hills melt seamlessly into the dome.
+function villageSkyColors(pal) {
+  const mid = new THREE.Color(pal.sky);
+  return {
+    mid,
+    top: mid.clone().multiplyScalar(0.42),
+    hor: mid.clone().lerp(new THREE.Color(pal.hemiSky), 0.18).offsetHSL(0, 0.02, 0.02)
+  };
+}
+// Gradient night-sky dome: deep zenith falling to a hazed horizon, dithered so
+// the blend never bands. Drawn behind everything, untouched by fog.
+function villageSkyDome(cols) {
+  const { top, mid, hor } = cols;
+  const mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: { top: { value: top }, mid: { value: mid }, hor: { value: hor } },
+    vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: [
+      'uniform vec3 top; uniform vec3 mid; uniform vec3 hor; varying vec3 vDir;',
+      'float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
+      'void main(){',
+      '  float h = vDir.y;',
+      '  vec3 c = h > 0.11 ? mix(mid, top, smoothstep(0.11, 0.8, h)) : mix(hor, mid, smoothstep(-0.04, 0.11, h));',
+      '  c += (hash(gl_FragCoord.xy) - 0.5) * 0.014;',
+      '  gl_FragColor = vec4(c, 1.0);',
+      '  #include <colorspace_fragment>',
+      '}'
+    ].join('\n')
+  });
+  // Upper hemisphere + a skirt below the horizon — the camera never sees the rest
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(96, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2 + 0.35), mat);
+  dome.userData.sky = true;
+  return dome;
+}
+// A real full moon — pale disc, maria blotches, bright limb — painted once
+function villageMoonTexture() {
+  return villageSharedTexture('moon', null, (x, s) => {
+    x.clearRect(0, 0, s, s);
+    const c = s / 2, R = s * 0.46;
+    const g = x.createRadialGradient(c - R * 0.25, c - R * 0.3, R * 0.15, c, c, R);
+    g.addColorStop(0, '#fbf8ea');
+    g.addColorStop(0.65, '#e8e8e2');
+    g.addColorStop(0.92, '#c9cdd8');
+    g.addColorStop(1, '#aeb4c6');
+    x.fillStyle = g;
+    x.beginPath(); x.arc(c, c, R, 0, Math.PI * 2); x.fill();
+    const maria = [
+      [-0.28, -0.22, 0.30, 0.24, 0.16], [0.16, -0.34, 0.22, 0.17, 0.13],
+      [0.30, 0.10, 0.26, 0.21, 0.15], [-0.10, 0.30, 0.20, 0.15, 0.12],
+      [-0.42, 0.12, 0.13, 0.11, 0.10], [0.04, 0.02, 0.34, 0.28, 0.07]
+    ];
+    x.save();
+    x.beginPath(); x.arc(c, c, R * 0.985, 0, Math.PI * 2); x.clip();
+    maria.forEach(([mx, my, rw, rh, al]) => {
+      x.fillStyle = 'rgba(128,138,164,' + al + ')';
+      x.beginPath(); x.ellipse(c + mx * R, c + my * R, rw * R, rh * R, mx * 2, 0, Math.PI * 2); x.fill();
+    });
+    x.restore();
+  }, null, { srgb: true });
 }
 // A tiny perched songbird — roofs, signs, scarecrows and wells all get them.
 // Registered in villageRoofBirds so it bobs and flicks its tail in animate().
@@ -14996,12 +15177,14 @@ function villageMakeSign(text) {
   return sprite;
 }
 
-// Soft dark disc that fakes a contact shadow (cheaper than real shadows on phones)
+// Soft dark disc under each prop. Real moonlight shadows do the heavy lifting
+// now, so this is just a faint ambient-occlusion hint that grounds the base.
 function villageBlobShadow(radius) {
   const m = new THREE.Mesh(
     new THREE.CircleGeometry(radius, 18),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.13, depthWrite: false })
   );
+  m.material.userData.blob = true; // skipped by the shadow-flag traversal
   m.rotation.x = -Math.PI / 2; m.position.y = 0.011;
   return m;
 }
@@ -15524,7 +15707,7 @@ function villageMakeRubblePile(r, pal) {
   const g = new THREE.Group();
   const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.03, -0.04) });
   const plankMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, -0.05, -0.08) });
-  const dust = new THREE.Mesh(new THREE.CircleGeometry(0.9 + r() * 0.5, 10), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, -0.15, -0.06) }));
+  const dust = new THREE.Mesh(new THREE.CircleGeometry(0.9 + r() * 0.5, 10), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0, -0.12, 0.09) }));
   dust.rotation.x = -Math.PI / 2; dust.position.y = 0.01; g.add(dust);
   for (let i = 0; i < 5 + Math.floor(r() * 3); i++) {
     const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14 + r() * 0.22, 0), stoneMat);
@@ -15616,7 +15799,7 @@ function villageMakeConstructionSite(r, pal, progress) {
   const g = new THREE.Group();
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
   const plasterMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, -0.04, 0.02) });
-  const dirt = new THREE.Mesh(new THREE.CircleGeometry(2.3, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.02, -0.2, -0.08) }));
+  const dirt = new THREE.Mesh(new THREE.CircleGeometry(2.3, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.02, -0.18, 0.08) }));
   dirt.rotation.x = -Math.PI / 2; dirt.position.y = 0.012; g.add(dirt);
   const shellH = 0.35 + Math.max(0, Math.min(1, Number(progress) || 0)) * 1.3;
   const shell = new THREE.Mesh(new THREE.BoxGeometry(1.9, shellH, 1.5), plasterMat);
@@ -16786,7 +16969,7 @@ function villageMakeCrates(r, pal) {
 // broadleaves mix per-instance with individual size, lean and leaf tone;
 // glades are carved out so lanes of sky reach the forest floor, and the roads
 // and river keep their corridors clear via the shared spotFree check.
-function villageMakeForestBelt(r, pal, groundR, spotFree, tier) {
+function villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt) {
   const g = new THREE.Group();
   const inner = 15.5, outer = groundR - 0.6;
   const glades = [];
@@ -16833,7 +17016,7 @@ function villageMakeForestBelt(r, pal, groundR, spotFree, tier) {
     const mesh = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: 0xffffff }), items.length);
     items.forEach((it, i) => {
       tmpE.set(0, it.rotY, 0); tmpQ.setFromEuler(tmpE);
-      tmpP.set(it.x, 0, it.z);
+      tmpP.set(it.x, heightAt(it.x, it.z) - 0.06, it.z); // ride the hills, toes just under the turf
       tmpS.set(it.s, it.s * (ySquashOf ? ySquashOf(it) : 1), it.s);
       tmpM.compose(tmpP, tmpQ, tmpS);
       mesh.setMatrixAt(i, tmpM);
@@ -16841,6 +17024,7 @@ function villageMakeForestBelt(r, pal, groundR, spotFree, tier) {
     });
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.castShadow = true; mesh.receiveShadow = true; // whole belt in one shadow draw per mesh
     mesh.frustumCulled = false; // instance bounds aren't tracked; the belt is always in view anyway
     g.add(mesh);
     return mesh;
@@ -16874,9 +17058,14 @@ function ensureVillageRenderer(stage) {
     if (!villageRenderer.domElement.isConnected) stage.appendChild(villageRenderer.domElement);
     return;
   }
-  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
+  villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 140); // far covers the 96-radius sky dome from max orbit
   villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   villageRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  villageRenderer.shadowMap.enabled = true; // real moonlight shadows
+  villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  villageRenderer.shadowMap.autoUpdate = false; // static moon: the pass re-renders every 3rd frame (see villageAnimateFrame)
+  villageRenderer.toneMapping = THREE.ACESFilmicToneMapping; // filmic depth + rich darks
+  villageRenderer.toneMappingExposure = 1.25;
   stage.appendChild(villageRenderer.domElement);
 
   const el = villageRenderer.domElement;
@@ -16887,7 +17076,7 @@ function ensureVillageRenderer(stage) {
     const dx = e.clientX - down.x, dy = e.clientY - down.y;
     if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
     villageCam.azimuth = down.az - dx * 0.006;
-    villageCam.polar = Math.min(1.42, Math.max(0.55, down.po - dy * 0.004));
+    villageCam.polar = Math.min(1.36, Math.max(0.55, down.po - dy * 0.004)); // 1.36: the raised rim forest stays below the lens
   });
   el.addEventListener('pointerup', e => {
     const wasDrag = dragged; down = null;
@@ -16907,7 +17096,7 @@ function ensureVillageRenderer(stage) {
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
-    villageCam.dist = Math.min(30, Math.max(12, villageCam.dist + e.deltaY * 0.02));
+    villageCam.dist = Math.min(28, Math.max(12, villageCam.dist + e.deltaY * 0.02));
   }, { passive: false });
 
   window.addEventListener('resize', onVillageResize);
@@ -16917,15 +17106,25 @@ function disposeVillageScene() {
   if (!villageScene) return;
   villageScene.traverse(o => {
     if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
+    if (o.isLight) { // free the shadow render target, or every rebuild leaks 16MB of GPU memory
+      if (o.shadow && o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
+      if (typeof o.dispose === 'function') o.dispose();
+    }
     if (o.geometry) o.geometry.dispose();
     const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
-    mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+    mats.forEach(m => {
+      ['map', 'normalMap', 'emissiveMap'].forEach(slot => {
+        const tx = m[slot];
+        if (tx && tx.dispose && !(tx.userData && tx.userData.shared)) tx.dispose();
+      });
+      m.dispose();
+    });
   });
   villageScene = null;
   villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null; villageWindmills = [];
   villageWalkers = []; villageRoofBirds = []; villageCloths = []; villageDucks = []; villageClouds = []; villageWaterMats = [];
   villageNpcs = []; villageChickens = [];
-  villageWeatherFx = null; villageShootingStar = null;
+  villageWeatherFx = null; villageShootingStar = null; villageTwinkleStars = null;
 }
 
 function buildVillageScene(v) {
@@ -16955,7 +17154,9 @@ function buildVillageScene(v) {
 
   villageScene = new THREE.Scene();
   villageScene.background = new THREE.Color(pal.sky);
-  villageScene.fog = new THREE.Fog(pal.sky, 30 + tier * 4, 66 + tier * 8);
+  const skyCols = villageSkyColors(pal);
+  villageScene.fog = new THREE.Fog(skyCols.hor.clone(), 34 + tier * 4, 78 + tier * 8);
+  villageScene.add(villageSkyDome(skyCols));
 
   // ---- placement registry: scatter without piling props into each other -----
   const claimed = [{ x: 0, z: 0, rad: 6.4 }]; // keep the plaza itself clear
@@ -16983,23 +17184,79 @@ function buildVillageScene(v) {
   // Riverside villages keep to the dry bank; everything scatters into this arc.
   const dryArc = layout === 'riverside' ? { c: riverA + Math.PI, s: 3.4 } : { c: undefined, s: undefined };
 
+  // ---- Terrain: a flat meadow that swells into rolling moonlit hills at the
+  // treeline. The village floor stays perfectly level so every building and
+  // prop still sits at y=0; only the outer belt (and the forest on it) climbs.
+  const hillPh1 = r() * Math.PI * 2, hillPh2 = r() * Math.PI * 2, hillAmp = 1.6 + r() * 1.2;
+  const flatR = 19.5;
+  const heightAt = (x, z) => {
+    const d = Math.hypot(x, z);
+    if (d <= flatR) return 0;
+    let k = Math.min(1, (d - flatR) / (groundR - flatR));
+    k = k * k * (3 - 2 * k);
+    const a = Math.atan2(z, x);
+    let h = hillAmp * k * (0.75 + 0.3 * Math.sin(a * 3 + hillPh1) + 0.18 * Math.sin(a * 7 + hillPh2));
+    if (layout === 'riverside') { // the river keeps its low valley through the hills
+      const dr = Math.abs((x - riverPx) * riverUx + (z - riverPz) * riverUz);
+      h *= Math.min(1, Math.max(0, (dr - 2.8) / 4.5));
+    } else if (layout === 'crossroads') { // the roads leave through passes, not into hillsides
+      const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
+      const d2 = Math.abs(Math.cos(startAngle) * x + Math.sin(startAngle) * z);
+      h *= Math.min(1, Math.max(0, (Math.min(d1, d2) - 2.2) / 4.5));
+    }
+    return h;
+  };
+
   // Ground, plaza and paths
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(groundR, 44), new THREE.MeshLambertMaterial({ map: villageGrassTexture(r, pal.ground, pal.speck) }));
-  ground.material.map.repeat.set(9, 9);
-  ground.rotation.x = -Math.PI / 2; villageScene.add(ground);
+  const grassTile = 4.6; // world units per texture tile
+  const groundGeo = (() => {
+    const rings = 30, segs = 72;
+    const pos = [0, 0, 0], uv = [0, 0], idx = [];
+    for (let ri = 1; ri <= rings; ri++) {
+      const rr = groundR * Math.pow(ri / rings, 0.85); // rings crowd toward the hilly rim
+      for (let si = 0; si < segs; si++) {
+        const a = (si / segs) * Math.PI * 2;
+        const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+        pos.push(x, heightAt(x, z), z);
+        uv.push(x / grassTile, z / grassTile);
+      }
+    }
+    const at = (ri, si) => ri === 0 ? 0 : 1 + (ri - 1) * segs + (si % segs);
+    for (let si = 0; si < segs; si++) idx.push(0, at(1, si + 1), at(1, si));
+    for (let ri = 1; ri < rings; ri++) {
+      for (let si = 0; si < segs; si++) {
+        const a0 = at(ri, si), a1 = at(ri, si + 1), b0 = at(ri + 1, si), b1 = at(ri + 1, si + 1);
+        idx.push(a0, a1, b0, a1, b1, b0);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    return geo;
+  })();
+  const grassMaps = villageGrassMaps();
+  const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({
+    map: grassMaps.map, normalMap: grassMaps.normalMap, normalScale: new THREE.Vector2(1.0, 1.0),
+    color: new THREE.Color(pal.ground).multiplyScalar(1.85), roughness: 1, metalness: 0
+  }));
+  ground.receiveShadow = true;
+  villageScene.add(ground);
   // Worn patches in the turf — snowdrifts in frost, leaf-litter in autumn
   const patchColor = pal.weather === 'snow' ? 0xdfe4ec : pal.weather === 'leaves' ? 0x6a4a20 : new THREE.Color(pal.ground).offsetHSL(0.03, -0.2, 0.13).getHex();
-  const patchMat = new THREE.MeshLambertMaterial({ color: patchColor });
+  const patchMat = new THREE.MeshLambertMaterial({ color: patchColor, transparent: true, opacity: 0.85 });
   for (let i = 0; i < 5 + Math.floor(r() * 4); i++) {
-    const a = r() * Math.PI * 2, dd = 6 + r() * (groundR * 0.55);
+    const a = r() * Math.PI * 2, dd = Math.min(flatR - 1.5, 6 + r() * (groundR * 0.55)); // stay on the level meadow
     const patch = new THREE.Mesh(new THREE.CircleGeometry(0.8 + r() * 1.6, 9), patchMat);
     patch.rotation.x = -Math.PI / 2; patch.position.set(Math.cos(a) * dd, 0.008, Math.sin(a) * dd);
     patch.scale.set(1, 0.6 + r() * 0.6, 1);
     villageScene.add(patch);
   }
-  const cobbles = villageCobbleTexture(r);
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(4.8 + tier * 0.7 + r() * 1.4, 22), new THREE.MeshLambertMaterial({ map: cobbles }));
-  plaza.material.map.repeat.set(3.4, 3.4);
+  const cobbleMat = villageCobbleMaterial(pal);
+  const cobbleTile = 2.6; // world units per cobble tile
+  const plazaR = 4.8 + tier * 0.7 + r() * 1.4;
+  const plaza = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(plazaR, 28), (plazaR * 2) / cobbleTile, (plazaR * 2) / cobbleTile), cobbleMat);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
   // ---- layout groundwork ------------------------------------------------------
@@ -17007,9 +17264,8 @@ function buildVillageScene(v) {
     // Two cobbled roads meet at the square; fences and a waymarker gate line them
     for (const roadA of [startAngle, startAngle + Math.PI / 2]) {
       const roadGrp = new THREE.Group();
-      const road = new THREE.Mesh(new THREE.PlaneGeometry(groundR * 1.8, 3.0), new THREE.MeshLambertMaterial({ map: cobbles.clone() }));
-      road.material.map.needsUpdate = true;
-      road.material.map.repeat.set(groundR / 2.4, 2);
+      const road = new THREE.Mesh(villageScaleUV(new THREE.PlaneGeometry(groundR * 1.8, 3.0), (groundR * 1.8) / cobbleTile, 3.0 / cobbleTile), cobbleMat);
+      road.receiveShadow = true;
       road.rotation.x = -Math.PI / 2;
       roadGrp.add(road);
       roadGrp.rotation.y = -roadA;
@@ -17055,8 +17311,8 @@ function buildVillageScene(v) {
   } else if (layout === 'riverside') {
     // The river crosses the scene beyond the square, banks whispering with reeds
     const riverGrp = new THREE.Group();
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(groundR * 2.2, riverW), villageWaterMaterial(r, '#1e3852'));
-    water.material.map.repeat.set(16, 1.4);
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(groundR * 2.2, riverW), villageWaterMaterial(r, '#1e3852', 18, 1.1));
+    water.material.map.repeat.set(7, 1);
     water.rotation.x = -Math.PI / 2;
     riverGrp.add(water);
     for (const side of [-1, 1]) {
@@ -17100,9 +17356,8 @@ function buildVillageScene(v) {
     villageScene.add(bridge);
     // Lane from the plaza to the bridge
     const laneLen = riverDist - 3;
-    const lane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, laneLen), new THREE.MeshLambertMaterial({ map: cobbles.clone() }));
-    lane.material.map.needsUpdate = true;
-    lane.material.map.repeat.set(1, laneLen / 2.4);
+    const lane = new THREE.Mesh(villageScaleUV(new THREE.PlaneGeometry(1.5, laneLen), 1.5 / cobbleTile, laneLen / cobbleTile), cobbleMat);
+    lane.receiveShadow = true;
     lane.rotation.x = -Math.PI / 2;
     lane.position.set(riverUx * (laneLen / 2 + 1), 0.015, riverUz * (laneLen / 2 + 1));
     lane.rotation.z = Math.atan2(riverUx, riverUz);
@@ -17123,6 +17378,8 @@ function buildVillageScene(v) {
   // Buildings with jittered spacing, radius and colours, arranged to the plan.
   // Each village only has the trades its seed grants it.
   const shopKeys = villageShopKeysFor(v.seed);
+  // Opening camera bearing (also used to hang the moon where it will be seen)
+  const camAz = Math.PI / 2 - (startAngle + Math.PI / shopKeys.length);
   const roofPool = pal.roofs.slice();
   villageBuildings = [];
   // In a wrecked village the trades haven't reopened — no shopfronts rise
@@ -17157,18 +17414,17 @@ function buildVillageScene(v) {
 
     // Cobbled path from the plaza to each door
     const len = Math.hypot(px, pz);
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(1.4, len), new THREE.MeshLambertMaterial({ map: cobbles.clone() }));
-    path.material.map.needsUpdate = true;
-    path.material.map.repeat.set(0.9, len / 2.4);
+    const path = new THREE.Mesh(villageScaleUV(new THREE.PlaneGeometry(1.4, len), 1.4 / cobbleTile, len / cobbleTile), cobbleMat);
+    path.receiveShadow = true;
     path.rotation.x = -Math.PI / 2;
     path.position.set(px / 2, 0.015, pz / 2);
     path.rotation.z = Math.atan2(px, pz);
     villageScene.add(path);
 
     // A warm torch by each doorway
-    const torch = new THREE.PointLight(0xffb45e, 1.7, 11, 2);
+    const torch = new THREE.PointLight(0xffb45e, 2.5, 12, 2);
     torch.position.set(px * 0.82, 1.7, pz * 0.82);
-    torch.userData.base = 1.5 + r() * 0.4;
+    torch.userData.base = 2.2 + r() * 0.5;
     villageScene.add(torch);
     villageTorches.push(torch);
   });
@@ -17440,7 +17696,7 @@ function buildVillageScene(v) {
     const tx = Math.cos(a) * rad, tz = Math.sin(a) * rad;
     if (!spotFree(tx, tz, 0.9)) continue;
     const tree = villageMakeTree(r, pal);
-    tree.position.set(tx, 0, tz);
+    tree.position.set(tx, heightAt(tx, tz) - 0.02, tz); // outer trees ride the hill skirt
     villageScene.add(tree);
     if (r() < 0.3) { // a companion or two huddled alongside — a copse
       for (let c = 0; c < 1 + Math.floor(r() * 2); c++) {
@@ -17448,7 +17704,7 @@ function buildVillageScene(v) {
         const cx = Math.cos(ca) * cd, cz = Math.sin(ca) * cd;
         if (!spotFree(cx, cz, 0.8)) continue;
         const chum = villageMakeTree(r, pal);
-        chum.position.set(cx, 0, cz);
+        chum.position.set(cx, heightAt(cx, cz) - 0.02, cz);
         villageScene.add(chum);
       }
     }
@@ -17457,25 +17713,49 @@ function buildVillageScene(v) {
   // …and beyond them, the deep wood: hundreds of instanced pines and
   // broadleaves closing in around the settlement, with glades, undergrowth
   // and mossy boulders. Costs only a handful of draw calls.
-  villageScene.add(villageMakeForestBelt(r, pal, groundR, spotFree, tier));
+  villageScene.add(villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt));
 
-  // Night sky: stars, a bright moon, slow clouds and the odd shooting star
-  const starCount = 240;
-  const starPos = new Float32Array(starCount * 3);
-  for (let i = 0; i < starCount; i++) {
-    const a = r() * Math.PI * 2, p = r() * Math.PI * 0.42;
-    const rad = 46;
-    starPos[i * 3] = Math.cos(a) * Math.sin(p + 0.12) * rad;
-    starPos[i * 3 + 1] = Math.cos(p) * rad * 0.6 + 6;
-    starPos[i * 3 + 2] = Math.sin(a) * Math.sin(p + 0.12) * rad;
+  // Night sky: layered stars (the small field twinkles), a real cratered moon
+  // with its halo, slow clouds and the odd shooting star
+  for (const tierCfg of [{ n: 260, size: 0.26, op: 0.55 }, { n: 130, size: 0.5, op: 0.95, twinkle: true }]) {
+    const starPos = new Float32Array(tierCfg.n * 3);
+    for (let i = 0; i < tierCfg.n; i++) {
+      const a = r() * Math.PI * 2, p = r() * Math.PI * 0.42;
+      const rad = 76; // beyond the moon sprite (62-64) so stars never twinkle across its face
+      starPos[i * 3] = Math.cos(a) * Math.sin(p + 0.12) * rad;
+      starPos[i * 3 + 1] = Math.cos(p) * rad * 0.6 + 6;
+      starPos[i * 3 + 2] = Math.sin(a) * Math.sin(p + 0.12) * rad;
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xd6dfff, size: tierCfg.size, sizeAttenuation: true, transparent: true, opacity: tierCfg.op, fog: false }));
+    if (tierCfg.twinkle) { stars.userData.twinkle = tierCfg.op; villageTwinkleStars = stars; }
+    villageScene.add(stars);
   }
-  const starGeo = new THREE.BufferGeometry();
-  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  villageScene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcdd8ff, size: 0.22, sizeAttenuation: true, transparent: true, opacity: 0.9, fog: false })));
-  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('220,230,255'), transparent: true, depthWrite: false, fog: false }));
-  moonSprite.scale.set(9, 9, 1);
-  moonSprite.position.set(-22, 24, 14);
+  // The moon hangs low over the treeline dead ahead of the opening camera, so
+  // every village greets its governor with a harvest moon over the woods.
+  const skyAim = -(camAz + Math.PI / 2); // bearing dead ahead of the opening camera (camera maps azimuth via sin/cos, hence the flip)
+  const skyDirAt = (ang, y) => new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).setY(y).normalize();
+  const moonDir = skyDirAt(skyAim, 0.17);
+  const moonLightDir = skyDirAt(skyAim + 0.55, 0.6); // its light falls steeper and off-axis
+  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('205,220,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.62 }));
+  moonHalo.scale.set(32, 32, 1);
+  moonHalo.position.copy(moonDir).multiplyScalar(64);
+  villageScene.add(moonHalo);
+  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
+  moonSprite.scale.set(9.5, 9.5, 1);
+  moonSprite.position.copy(moonDir).multiplyScalar(62);
   villageScene.add(moonSprite);
+  // Ground mist: broad soft sheets drifting low through the meadow
+  const mistTex = villageSmokeTexture();
+  for (let i = 0; i < (pal.weather === 'rain' ? 6 : 4); i++) {
+    const mist = new THREE.Sprite(new THREE.SpriteMaterial({ map: mistTex, transparent: true, depthWrite: false, opacity: 0.05 + r() * 0.05 }));
+    mist.scale.set(13 + r() * 9, 2.4 + r() * 1.6, 1);
+    mist.position.set((r() - 0.5) * 34, 0.7 + r() * 0.8, (r() - 0.5) * 34);
+    mist.userData = { baseX: mist.position.x, speed: 0.12 + r() * 0.22, range: 19 }; // wraps inside the meadow, never floats past the rim
+    villageClouds.push(mist);
+    villageScene.add(mist);
+  }
   const cloudTex = villageSmokeTexture();
   const cloudCount = pal.weather === 'rain' ? 5 : 3;
   for (let i = 0; i < cloudCount; i++) {
@@ -17497,7 +17777,7 @@ function buildVillageScene(v) {
 
   // Weather — fireflies on mild nights, else snow, drifting leaves or rain
   if (pal.weather === 'fireflies') {
-    const flyCount = 22;
+    const flyCount = 32;
     const flyPos = new Float32Array(flyCount * 3);
     const flyBase = [];
     for (let i = 0; i < flyCount; i++) {
@@ -17508,12 +17788,12 @@ function buildVillageScene(v) {
     }
     const flyGeo = new THREE.BufferGeometry();
     flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
-    villageFireflies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xd8ff9a, size: 0.16, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+    villageFireflies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xd8ff9a, map: villageGlowTexture('216,255,154'), size: 0.42, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
     villageFireflies.userData.base = flyBase;
     villageScene.add(villageFireflies);
   } else {
     const cfg = pal.weather === 'snow' ? { n: 110, size: 0.16, color: 0xe8ecf8, h: 14, speed: 1.1, sway: 0.7, op: 0.9 }
-      : pal.weather === 'rain' ? { n: 150, size: 0.07, color: 0x9ab0d0, h: 14, speed: 10, sway: 0.06, op: 0.5 }
+      : pal.weather === 'rain' ? { n: 150, size: 0.14, color: 0x9ab0d0, h: 14, speed: 10, sway: 0.06, op: 0.75 } // sized up for the soft glow sprite
       : { n: 70, size: 0.2, color: 0xc0763a, h: 10, speed: 0.55, sway: 1.5, op: 0.9 };
     const wPos = new Float32Array(cfg.n * 3);
     const wBase = [];
@@ -17524,7 +17804,7 @@ function buildVillageScene(v) {
     }
     const wGeo = new THREE.BufferGeometry();
     wGeo.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
-    villageWeatherFx = new THREE.Points(wGeo, new THREE.PointsMaterial({ color: cfg.color, size: cfg.size, transparent: true, opacity: cfg.op, depthWrite: false }));
+    villageWeatherFx = new THREE.Points(wGeo, new THREE.PointsMaterial({ color: cfg.color, map: villageGlowTexture('255,255,255'), size: cfg.size, transparent: true, opacity: cfg.op, depthWrite: false }));
     villageWeatherFx.userData = { cfg, base: wBase };
     villageScene.add(villageWeatherFx);
   }
@@ -17664,16 +17944,44 @@ function buildVillageScene(v) {
     });
   }
 
-  // Lighting: moonlight + warm hearth-glow
-  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 1.7));
-  const moon = new THREE.DirectionalLight(0xaabcff, 1.0);
-  moon.position.set(-8, 14, 6); villageScene.add(moon);
+  // Lighting: soft sky bounce, shadow-casting moonlight aligned with the moon
+  // in the sky, and a faint cool fill so shaded faces never fall to black
+  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 2.0));
+  const moon = new THREE.DirectionalLight(0xbfd2ff, 1.95);
+  moon.position.copy(moonLightDir).multiplyScalar(42);
+  moon.castShadow = true;
+  moon.shadow.mapSize.set(2048, 2048);
+  const shadowSpan = groundR + 4;
+  moon.shadow.camera.left = -shadowSpan; moon.shadow.camera.right = shadowSpan;
+  moon.shadow.camera.top = shadowSpan; moon.shadow.camera.bottom = -shadowSpan;
+  moon.shadow.camera.near = 1; moon.shadow.camera.far = 110; // wide enough that moonward rim pines aren't near-plane-clipped
+  moon.shadow.bias = -0.0005; moon.shadow.normalBias = 0.18;
+  villageScene.add(moon);
+  const fill = new THREE.DirectionalLight(0x39456e, 0.8);
+  fill.position.copy(skyDirAt(skyAim + Math.PI - 0.4, 0.45)).multiplyScalar(30); // lifts the faces the moon leaves dark
+  villageScene.add(fill);
+
+  // Real moonlight shadows: every solid mesh casts, flat ground decals only
+  // receive, self-lit glows and the contact-shadow discs stay out of the pass
+  villageScene.traverse(o => {
+    if (!o.isMesh || o.userData.sky) return;
+    const m = Array.isArray(o.material) ? o.material[0] : o.material;
+    if (!m || m.wireframe || (m.userData && m.userData.blob)) return;
+    if (m.isMeshBasicMaterial) return;
+    // Exactly-flat planes/discs/rings are ground decals (paths, patches, soil,
+    // pond rims): receive only. The tight window keeps tilted surfaces like
+    // the stall canopy (-PI/2 + 0.28) casting properly.
+    const flatDecal = (o.geometry.type === 'PlaneGeometry' || o.geometry.type === 'CircleGeometry' || o.geometry.type === 'RingGeometry') && Math.abs(o.rotation.x + Math.PI / 2) < 0.05;
+    if (flatDecal) { o.receiveShadow = true; return; }
+    o.castShadow = true;
+    o.receiveShadow = true;
+  });
 
   villageBuiltSeed = v.seed;
   // Open on the gap between the first two buildings so nothing blocks the view
   // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
-  villageCam.azimuth = Math.PI / 2 - (startAngle + Math.PI / shopKeys.length);
-  villageCam.polar = 1.02;
+  villageCam.azimuth = camAz;
+  villageCam.polar = 1.08; // a touch lower than before — more sky, moonrise over the woods
   villageCam.dist = 22 + r() * 2.5;
 }
 
@@ -17748,9 +18056,14 @@ function villageAnimateFrame(t) {
   });
   // Clouds drift, moonlit water shimmers
   villageClouds.forEach(cl => {
-    cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + 45) % 90) - 45;
+    const range = cl.userData.range || 45;
+    cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + range) % (range * 2)) - range;
   });
-  villageWaterMats.forEach((m, i) => { if (m.map) { m.map.offset.x = t * 0.018 * (1 + (i % 3) * 0.4); } });
+  villageWaterMats.forEach((m, i) => {
+    if (m.map) m.map.offset.x = t * 0.018 * (1 + (i % 3) * 0.4);
+    if (m.normalMap) m.normalMap.offset.set(t * 0.021 + i * 0.17, t * 0.014 * (i % 2 ? -1 : 1));
+  });
+  if (villageTwinkleStars) villageTwinkleStars.material.opacity = villageTwinkleStars.userData.twinkle * (0.78 + Math.sin(t * 1.9) * 0.14 + Math.sin(t * 4.7) * 0.08);
   // The odd shooting star
   if (villageShootingStar) {
     const u = villageShootingStar.userData;
@@ -17789,6 +18102,9 @@ function villageAnimateFrame(t) {
     }
     pos.needsUpdate = true;
   }
+  // The moon never moves — refreshing the shadow map at a third of the frame
+  // rate keeps walkers' and sails' shadows live at a fraction of the GPU cost
+  if (villageShadowTick++ % 3 === 0) villageRenderer.shadowMap.needsUpdate = true;
   villageRenderer.render(villageScene, villageCamera);
 }
 
@@ -17801,6 +18117,12 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
     frame: villageAnimateFrame,
     rng: villageRngFrom,
     palettes: VILLAGE_PALETTES,
+    seedEmpire: (seed, rec) => {
+      const e = ensureEmpireState();
+      if (!e) { console.warn('BURBZ debug: seedEmpire called before game state initialised'); return; }
+      e.villages[String(seed >>> 0)] = rec;
+      villageBuiltSeed = null; // force the next renderVillage to rebuild with the new record
+    },
     state: () => ({ scene: villageScene, camera: villageCamera, renderer: villageRenderer, cam: villageCam, buildings: villageBuildings, walkers: villageWalkers, roofBirds: villageRoofBirds, ducks: villageDucks, cloths: villageCloths, clouds: villageClouds, waterMats: villageWaterMats, weatherFx: villageWeatherFx, shootingStar: villageShootingStar, npcs: villageNpcs, chickens: villageChickens })
   };
 }
