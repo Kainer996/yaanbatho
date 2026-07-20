@@ -2705,6 +2705,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-label">Send Feedback / Report a Bird</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
+      <div class="settings-row" id="startNewGameBtn" role="button" tabindex="0">
+        <div class="settings-label">&#128260; Start New Game</div>
+        <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
+      </div>
       <div class="settings-danger" id="resetDataBtn">RESET ALL DATA</div>
     </div>
   </div>
@@ -21982,6 +21986,22 @@ $('toggleVibration').addEventListener('click', () => {
   el.classList.toggle('on');
   gameState.settings.vibration = el.classList.contains('on');
   saveState();
+});
+
+// Start New Game: the full restart used for testing playthroughs. Rides the
+// same ?reset flow as the reset link, so local progress, Burbz caches and the
+// old service worker are all cleared before the fresh game boots — the intro
+// video, Merlin's story and the starter timber all play again from the top.
+function startNewGame() {
+  if (!confirm('Are you sure? This starts a brand-new game: all progress, birds, coins and buildings will be wiped, and the intro and tutorial will play again.')) return;
+  window.location.href = window.location.pathname + '?reset=1';
+}
+$('startNewGameBtn')?.addEventListener('click', () => { SFX.tap(); startNewGame(); });
+$('startNewGameBtn')?.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  SFX.tap();
+  startNewGame();
 });
 
 $('resetDataBtn').addEventListener('click', () => {
