@@ -615,7 +615,11 @@
     defender.fainted = true;
     defender.cr = 0;
     addFocus(battle, side, 2);
-    events.push({ type:'faint', side: defSide, name: defender.name, text: defender.name + ' is out of the match!' });
+    // Beaten evil Burbz are never killed: the usurper's magic simply unravels.
+    events.push({ type:'faint', side: defSide, name: defender.name,
+      text: defSide === 'opponent'
+        ? defender.name + '\'s dark magic unravels — the shadow scatters!'
+        : defender.name + ' is out of the match!' });
   }
 
   // Resolve the acting fighter's chosen action.
@@ -706,10 +710,10 @@
     // Winner check.
     if (!teamAlive(battle, 'opponent')) {
       battle.phase = 'over'; battle.winner = 'player';
-      events.push({ type:'end', winner:'player', text:'Victory! The rival flock concedes the perch.' });
+      events.push({ type:'end', winner:'player', text:'Victory! The evil Burbz squad breaks and the darkness retreats a little further.' });
     } else if (!teamAlive(battle, 'player')) {
       battle.phase = 'over'; battle.winner = 'opponent';
-      events.push({ type:'end', winner:'opponent', text:'Defeat... your flock needs rest and more training.' });
+      events.push({ type:'end', winner:'opponent', text:'Defeat... the evil Burbz hold the perch. Your flock needs rest and more training.' });
     }
     return events;
   }
@@ -752,16 +756,18 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Perch League — ladder + reward economy, tunable in one place
+  // Perch League — the war's front line against the evil Burbz.
+  // Each habitat tier is patrolled by stronger shadow squads; ladder + reward
+  // economy stays tunable in one place.
   // ---------------------------------------------------------------------------
   const LEAGUE_TIERS = [
-    { id:'garden',   label:'Garden Perch',     icon:'🌼', rarities:['common'],            favoredTypes:['songbird','groundbird'], levelBoost:0, winCoins:12, winBranches:2,  promoteWins:3, promoCoins:40,  promoBranches:12, copy:'Local garden flocks. Everyone starts on the fence post.' },
-    { id:'hedgerow', label:'Hedgerow Cup',     icon:'🌿', rarities:['common','uncommon'], favoredTypes:['songbird','trickster'],  levelBoost:1, winCoins:18, winBranches:3,  promoteWins:3, promoCoins:60,  promoBranches:16, copy:'Farm hedges and lanes — the corvids are watching.' },
-    { id:'woodland', label:'Woodland Crown',   icon:'🌳', rarities:['uncommon'],          favoredTypes:['trickster','songbird'],  levelBoost:2, winCoins:24, winBranches:4,  promoteWins:3, promoCoins:80,  promoBranches:20, copy:'Deep woods. Jays, owls and woodpeckers rule here.' },
-    { id:'river',    label:'River Trophy',     icon:'🏞️', rarities:['uncommon','rare'],   favoredTypes:['waterbird'],             levelBoost:3, winCoins:30, winBranches:5,  promoteWins:3, promoCoins:100, promoBranches:26, copy:'Riverbank champions — herons, kingfishers and swans.' },
-    { id:'coast',    label:'Coastal Gauntlet', icon:'⚓', rarities:['rare'],              favoredTypes:['waterbird','skydancer'], levelBoost:4, winCoins:38, winBranches:6,  promoteWins:3, promoCoins:130, promoBranches:32, copy:'Cliff colonies and sea winds. Gulls fight dirty.' },
-    { id:'highland', label:'Highland Talons',  icon:'🏔️', rarities:['rare','epic'],       favoredTypes:['raptor'],                levelBoost:5, winCoins:46, winBranches:8,  promoteWins:3, promoCoins:170, promoBranches:40, copy:'Raptor country. Bring counters or bring bandages.' },
-    { id:'sky',      label:'Sky Court',        icon:'👑', rarities:['epic','legendary'],  favoredTypes:null,                      levelBoost:6, winCoins:56, winBranches:10, promoteWins:0, promoCoins:0,   promoBranches:0,  copy:'The endless summit league of legendary birds.' }
+    { id:'garden',   label:'Garden Perch',     icon:'🌼', rarities:['common'],            favoredTypes:['songbird','groundbird'], levelBoost:0, winCoins:12, winBranches:2,  promoteWins:3, promoCoins:40,  promoBranches:12, copy:'Shadow scouts probe the garden hedges — the weakest of the evil Burbz.' },
+    { id:'hedgerow', label:'Hedgerow Cup',     icon:'🌿', rarities:['common','uncommon'], favoredTypes:['songbird','trickster'],  levelBoost:1, winCoins:18, winBranches:3,  promoteWins:3, promoCoins:60,  promoBranches:16, copy:'Evil Burbz raiders haunt the farm hedges and lanes.' },
+    { id:'woodland', label:'Woodland Crown',   icon:'🌳', rarities:['uncommon'],          favoredTypes:['trickster','songbird'],  levelBoost:2, winCoins:24, winBranches:4,  promoteWins:3, promoCoins:80,  promoBranches:20, copy:'Deep woods crawl with the shadow\'s corrupted tricksters.' },
+    { id:'river',    label:'River Trophy',     icon:'🏞️', rarities:['uncommon','rare'],   favoredTypes:['waterbird'],             levelBoost:3, winCoins:30, winBranches:5,  promoteWins:3, promoCoins:100, promoBranches:26, copy:'Waterlogged evil Burbz bruisers patrol the riverbanks.' },
+    { id:'coast',    label:'Coastal Gauntlet', icon:'⚓', rarities:['rare'],              favoredTypes:['waterbird','skydancer'], levelBoost:4, winCoins:38, winBranches:6,  promoteWins:3, promoCoins:130, promoBranches:32, copy:'Cliff colonies swarm with sea-hardened shadow squads.' },
+    { id:'highland', label:'Highland Talons',  icon:'🏔️', rarities:['rare','epic'],       favoredTypes:['raptor'],                levelBoost:5, winCoins:46, winBranches:8,  promoteWins:3, promoCoins:170, promoBranches:40, copy:'The usurper\'s raptor elite rule the high crags. Bring counters or bandages.' },
+    { id:'sky',      label:'Sky Court',        icon:'👑', rarities:['epic','legendary'],  favoredTypes:null,                      levelBoost:6, winCoins:56, winBranches:10, promoteWins:0, promoCoins:0,   promoBranches:0,  copy:'The endless summit — the dark lord\'s own legendary guard.' }
   ];
 
   // Diminishing returns after this many wins per day keeps battle grinding from

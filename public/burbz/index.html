@@ -1126,7 +1126,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .pitch-half-label.top { top: 7px; } .pitch-half-label.bottom { bottom: 7px; }
 .squad-slot { position: absolute; width: 58px; min-height: 76px; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 3; }
 .squad-slot.player .squad-orb { border-color: var(--accent); box-shadow: 0 0 18px rgba(214,168,79,0.38); }
-.squad-slot.opponent .squad-orb { border-color: var(--epic); box-shadow: 0 0 18px rgba(151,117,250,0.30); }
+.squad-slot.opponent .squad-orb { border-color: #c92b2b; box-shadow: 0 0 18px rgba(224,57,43,0.35); }
 .squad-orb { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.50); border: 2px solid rgba(255,255,255,0.2); }
 .squad-orb img { width:100%; height:100%; object-fit:contain; display:block; }
 .squad-emoji { font-size: 27px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
@@ -1145,7 +1145,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-log { margin-top: 12px; padding: 12px; background: var(--bg2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); max-height: 150px; overflow-y: auto; }
 .battle-log-entry { font-size: 12px; color: var(--text2); margin-bottom: 4px; padding: 5px 8px; border-radius: 6px; animation: slideUp 0.2s ease; }
 .battle-log-entry.player-action { background: rgba(214,168,79,0.08); border-left: 2px solid var(--accent2); }
-.battle-log-entry.enemy-action { background: rgba(151,117,250,0.08); border-left: 2px solid var(--epic); }
+.battle-log-entry.enemy-action { background: rgba(224,57,43,0.08); border-left: 2px solid #e0392b; }
 .battle-log-entry.system-msg { background: rgba(255,212,59,0.06); border-left: 2px solid var(--legendary); color: var(--legendary); }
 /* ========== PERCH LEAGUE (turn-based battles) ========== */
 .league-header { display:flex; align-items:center; gap:12px; padding:12px; background:linear-gradient(135deg, var(--bg3), var(--bg2)); border:1px solid rgba(214,168,79,0.25); border-radius:14px; margin-bottom:12px; }
@@ -1164,6 +1164,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .rival-card .rc-emoji { font-size:34px; line-height:52px; }
 .rival-card .rc-name { font-size:10px; color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .rival-card .rc-lv { font-size:9px; color:var(--text3); }
+.rival-card.evil { border-color:rgba(224,57,43,0.4); background:linear-gradient(180deg,rgba(26,8,10,0.9),rgba(10,4,6,0.95)); box-shadow:inset 0 0 14px rgba(224,57,43,0.12); }
+.rival-card.evil .rc-art { border:1px solid rgba(224,57,43,0.45); box-shadow:0 0 10px rgba(224,57,43,0.3); }
+.rival-card.evil .rc-name { color:#ffb3a8; }
 .type-chip { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; border:1px solid; margin-top:3px; text-transform:uppercase; letter-spacing:0.5px; }
 .battle-team-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:10px 0; }
 .pick-card { position:relative; text-align:center; padding:10px 6px 8px; background:var(--bg2); border:1.5px solid rgba(255,255,255,0.07); border-radius:12px; transition:border-color .15s, transform .1s; }
@@ -1184,7 +1187,7 @@ svg.academy-room-bg { display:block; filter:none; }
 /* Arena */
 .arena-fighter { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); margin-bottom:10px; position:relative; overflow:visible; }
 .arena-fighter.player { border-color:rgba(214,168,79,0.35); }
-.arena-fighter.opponent { border-color:rgba(160,106,232,0.35); }
+.arena-fighter.opponent { border-color:rgba(224,57,43,0.4); }
 .arena-fighter .af-art { width:74px; height:74px; border-radius:12px; object-fit:cover; background:var(--bg4); flex-shrink:0; }
 .arena-fighter .af-emoji { font-size:48px; line-height:74px; width:74px; text-align:center; flex-shrink:0; }
 .arena-fighter.shake { animation:arenaShake .4s ease; }
@@ -1221,14 +1224,14 @@ svg.academy-room-bg { display:block; filter:none; }
 .tl-chip img { width:100%; height:100%; object-fit:cover; }
 .tl-chip em { font-style:normal; font-size:16px; }
 .tl-chip.player { border-color:rgba(214,168,79,0.7); }
-.tl-chip.opponent { border-color:rgba(160,106,232,0.7); }
+.tl-chip.opponent { border-color:rgba(224,57,43,0.75); }
 .tl-chip.now { box-shadow:0 0 10px rgba(255,255,255,0.35); transform:scale(1.12); }
 .arena-squad { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:8px; }
 .arena-unit { position:relative; text-align:center; padding:6px 4px 7px; background:var(--bg2); border-radius:12px; border:1.5px solid rgba(255,255,255,0.08); overflow:visible; transition:transform .15s, border-color .2s, box-shadow .2s; }
 .arena-squad.player .arena-unit { border-color:rgba(214,168,79,0.3); }
-.arena-squad.opponent .arena-unit { border-color:rgba(160,106,232,0.3); }
+.arena-squad.opponent .arena-unit { border-color:rgba(224,57,43,0.38); background:linear-gradient(180deg,rgba(26,8,10,0.85),rgba(10,4,6,0.92)); }
 .arena-unit.acting { border-color:var(--accent); box-shadow:0 0 14px rgba(214,168,79,0.4); transform:translateY(-3px); }
-.arena-squad.opponent .arena-unit.acting { border-color:var(--epic); box-shadow:0 0 14px rgba(160,106,232,0.45); }
+.arena-squad.opponent .arena-unit.acting { border-color:#e0392b; box-shadow:0 0 14px rgba(224,57,43,0.55); }
 .arena-unit.fainted { opacity:0.32; filter:grayscale(.9); }
 .arena-unit.targetable { border-color:var(--hp-red); box-shadow:0 0 12px rgba(224,89,74,0.5); animation:targetPulse 0.9s ease-in-out infinite; cursor:crosshair; }
 @keyframes targetPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
@@ -1252,7 +1255,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .focus-pips { display:flex; gap:2px; }
 .focus-pips i { width:7px; height:11px; border-radius:2px; background:var(--bg4); }
 .focus-pips i.lit { background:linear-gradient(180deg,#f0b429,#e0594a); box-shadow:0 0 5px rgba(240,180,41,0.6); }
-.focus-side.rival .focus-pips i.lit { background:linear-gradient(180deg,#a06ae8,#4a6de0); box-shadow:0 0 5px rgba(160,106,232,0.6); }
+.focus-side.rival .focus-pips i.lit { background:linear-gradient(180deg,#e0392b,#6b1210); box-shadow:0 0 5px rgba(224,57,43,0.65); }
 .arena-waiting { grid-column:1/-1; text-align:center; padding:14px 0; color:var(--text3); font-size:12px; }
 .arena-turn-banner { grid-column:1/-1; text-align:center; font-size:11px; font-weight:800; letter-spacing:0.5px; color:var(--accent2); padding:2px 0; }
 .move-btn.pending { border-color:var(--hp-red); box-shadow:0 0 10px rgba(224,89,74,0.4); }
@@ -2784,7 +2787,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
-<script src="battle_core.js?v=skyclash-squads-20260719"></script>
+<script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
 <script src="loot_crafting_core.js?v=fletchers-forge-20260719"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=footpath-ring-quests-v1-20260716"></script>
@@ -3604,13 +3607,35 @@ let leaderboardState = { board: 'collection', data: { collection: [], mechanics:
 
 function clearBurbzLocalProgress() {
   try {
-    Object.keys(localStorage).filter(key => key === 'burbz_state' || key === 'burbz_cloud_token' || key.startsWith('burbz_')).forEach(key => localStorage.removeItem(key));
-    Object.keys(sessionStorage || {}).filter(key => key.startsWith('burbz_')).forEach(key => sessionStorage.removeItem(key));
+    // Everything Burbz-owned goes: the save, cloud token, intro/tutorial flags
+    // ('burbzIntroSeen:…', 'burbzTutorialChapters:…') and any 'burbz_' scoped key.
+    Object.keys(localStorage).filter(key => /^burbz/i.test(key)).forEach(key => localStorage.removeItem(key));
+    Object.keys(sessionStorage || {}).filter(key => /^burbz/i.test(key)).forEach(key => sessionStorage.removeItem(key));
   } catch(e) {
     console.warn('BURBZ: local progress clear hit a storage issue', e);
   }
   cloudAuth.token = '';
   cloudAuth.user = null;
+}
+
+// ---------------------------------------------------------------------------
+// FRESH START EPOCH — the full-playthrough reset.
+// Bumping this stamp wipes every device's local progress ONCE on next load, so
+// the whole game returns to the very beginning: no birds, no coins, intro
+// video and Merlin's tutorial play again from the top.
+// ---------------------------------------------------------------------------
+const BURBZ_FRESH_START_EPOCH = 'new-dawn-evil-burbz-20260720';
+const BURBZ_EPOCH_KEY = 'burbz_epoch';
+function applyFreshStartEpochIfNeeded() {
+  try {
+    if (localStorage.getItem(BURBZ_EPOCH_KEY) === BURBZ_FRESH_START_EPOCH) return false;
+    clearBurbzLocalProgress();
+    localStorage.setItem(BURBZ_EPOCH_KEY, BURBZ_FRESH_START_EPOCH);
+    return true;
+  } catch(e) {
+    console.warn('BURBZ: fresh-start epoch could not reset progress', e);
+    return false;
+  }
 }
 
 function applyResetUrlIfRequested() {
@@ -3630,6 +3655,7 @@ function applyResetUrlIfRequested() {
 }
 
 function loadState() {
+  applyFreshStartEpochIfNeeded();
   applyResetUrlIfRequested();
   try {
     const saved = localStorage.getItem('burbz_state');
@@ -13500,6 +13526,9 @@ function switchScreen(name) {
   if (name === 'quests') renderQuests();
   if (name === 'leaderboards') renderLeaderboards();
   if (name === 'profile') renderProfile();
+
+  // Gradual tutorial: Merlin teaches each system the first time its screen opens.
+  if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
 }
 
 // ============================================================================
@@ -20351,13 +20380,62 @@ $('captureOverlay').addEventListener('click', (e) => {
 });
 
 // ============================================================================
-// BATTLE SYSTEM — PERCH LEAGUE
-// Pokémon-style turn battles on real birds: wing classes from real biology,
-// moves learned through Academy training, a habitat ladder for the economy.
+// BATTLE SYSTEM — WAR ON THE EVIL BURBZ
+// Every battle is fought against squads of evil Burbz: the shadow-woven,
+// red-eyed birds of the dark force that has taken the Kingdom of Burbz.
+// Each evil Burb keeps the wing class of the bird it was twisted from, so
+// real-bird matchup knowledge still decides fights. Wing classes come from
+// real biology, moves from Academy training, and the habitat ladder is the
+// war's front line — never a friendly match against free birds.
 // ============================================================================
 let battleState = null;        // { battle, busy }
 let battleSelectedIds = [];    // picked team, in order
-let leagueRivalCache = null;   // deterministic rival preview per league moment
+let leagueRivalCache = null;   // deterministic evil Burbz squad per league moment
+
+// The usurper's army. `base` is the real bird the evil Burb was twisted from:
+// it drives stats, wing class and signature move, while the shadow name and
+// corrupted portrait are what the player sees across the battle UI.
+const EVIL_BURB_PORTRAITS = [
+  'assets/evil-burbz/evil-burb-1.png',
+  'assets/evil-burbz/evil-burb-2.png',
+  'assets/evil-burbz/evil-burb-3.png',
+  'assets/evil-burbz/evil-burb-4.png',
+];
+const EVIL_BURBZ_ROSTER = [
+  // Shadow scouts — the weakest constructs, probing gardens and hedgerows.
+  { name:'Gloomfinch',        base:'Goldfinch',                rarity:'common',    portrait:0 },
+  { name:'Shadow Sparrow',    base:'House Sparrow',            rarity:'common',    portrait:1 },
+  { name:'Ashwing Starling',  base:'Starling',                 rarity:'common',    portrait:2 },
+  { name:'Sooty Wren',        base:'Wren',                     rarity:'common',    portrait:3 },
+  { name:'Grudge Pigeon',     base:'Wood Pigeon',              rarity:'common',    portrait:0 },
+  { name:'Cinder Swift',      base:'Common Swift',             rarity:'common',    portrait:1 },
+  { name:'Mire Duck',         base:'Mallard',                  rarity:'common',    portrait:2 },
+  { name:'Duskpecker',        base:'Great Spotted Woodpecker', rarity:'common',    portrait:3 },
+  // Raiders — the shadow's cunning mid-rank.
+  { name:'Dread Magpie',      base:'Magpie',                   rarity:'uncommon',  portrait:0 },
+  { name:'Nightshade Jay',    base:'Jay',                      rarity:'uncommon',  portrait:1 },
+  { name:'Carrion Shade',     base:'Carrion Crow',             rarity:'uncommon',  portrait:2 },
+  { name:'Bog Heron',         base:'Grey Heron',               rarity:'uncommon',  portrait:3 },
+  { name:'Smog Gull',         base:'Herring Gull',             rarity:'uncommon',  portrait:0 },
+  { name:'Thorn Pheasant',    base:'Common Pheasant',          rarity:'uncommon',  portrait:1 },
+  // Enforcers — shadow constructs strong enough to hold a river or a coast.
+  { name:'Wraith Raven',      base:'Raven',                    rarity:'rare',      portrait:2 },
+  { name:'Storm-Torn Kestrel',base:'Kestrel',                  rarity:'rare',      portrait:3 },
+  { name:'Blight Swan',       base:'Mute Swan',                rarity:'rare',      portrait:0 },
+  { name:'Void Kingfisher',   base:'Kingfisher',               rarity:'rare',      portrait:1 },
+  { name:'Hollow Owl',        base:'Barn Owl',                 rarity:'rare',      portrait:2 },
+  { name:'Hedge Reaper',      base:'Sparrowhawk',              rarity:'rare',      portrait:3 },
+  // Dread captains — the usurper's high command over the crags.
+  { name:'Doom Talon',        base:'Golden Eagle',             rarity:'epic',      portrait:0 },
+  { name:'Dread Stoop',       base:'Peregrine Falcon',         rarity:'epic',      portrait:1 },
+  { name:'Mock King',         base:'Superb Lyrebird',          rarity:'epic',      portrait:2 },
+  { name:'Deep Maw',          base:'Shoebill',                 rarity:'epic',      portrait:3 },
+  // The legendary guard — the dark lord's own.
+  { name:"The Usurper's Shadow", base:'Harpy Eagle',           rarity:'legendary', portrait:0 },
+  { name:'Void Emperor',      base:'Steller Sea Eagle',        rarity:'legendary', portrait:1 },
+  { name:'Doomclaw',          base:'Southern Cassowary',       rarity:'legendary', portrait:2 },
+  { name:'Shriek Eternal',    base:'Australian Magpie',        rarity:'legendary', portrait:3 },
+];
 
 function battleCore() { if (!window.BurbzBattleCore) throw new Error('BurbzBattleCore not loaded'); return window.BurbzBattleCore; }
 
@@ -20387,42 +20465,51 @@ function fighterArtHTML(f, base) {
   return '<div class="' + base + '-art ' + base + '-emoji">' + escapeHtml(f.emoji || '🐦') + '</div>';
 }
 
-// Deterministic rival for this exact league moment (re-rolls after every match).
+// Deterministic evil Burbz squad for this exact league moment (re-rolls after
+// every match). Squads are drawn from the usurper's roster: tier rarity picks
+// the rank of construct, and favoured wing classes come from the base bird.
 function leagueRivalOpponents() {
   const core = battleCore();
   const league = ensureLeagueState();
   const tier = core.LEAGUE_TIERS[league.tier];
   const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses);
   if (leagueRivalCache && leagueRivalCache.key === key) return leagueRivalCache;
-  const rng = core.seededRandom('rival_' + key);
-  const pool = BURBZ_SPECIES_PROFILES.filter(p => tier.rarities.includes(p.rarity));
-  const favored = tier.favoredTypes ? pool.filter(p => tier.favoredTypes.includes(core.classifySpecies(p.name))) : [];
+  const rng = core.seededRandom('evil_burbz_' + key);
+  let pool = EVIL_BURBZ_ROSTER.filter(e => tier.rarities.includes(e.rarity));
+  if (!pool.length) pool = EVIL_BURBZ_ROSTER.slice();
+  const favored = tier.favoredTypes ? pool.filter(e => tier.favoredTypes.includes(core.classifySpecies(e.base))) : [];
   const picks = [];
   const used = new Set();
   let attempts = 0;
   while (picks.length < 4 && attempts++ < 100) {
     const useFavored = favored.length > 0 && (picks.length < 2 ? rng() < 0.7 : rng() < 0.35);
     const src = (useFavored ? favored : pool);
-    const p = src[Math.floor(rng() * src.length)];
-    if (!p || used.has(p.id)) continue;
-    used.add(p.id);
-    picks.push(p);
+    const e = src[Math.floor(rng() * src.length)];
+    if (!e || used.has(e.name)) continue;
+    used.add(e.name);
+    picks.push(e);
   }
+  // Fewer roster entries than 4 in a band can never stall the squad: repeat picks.
+  while (picks.length < 4 && pool.length) picks.push(pool[Math.floor(rng() * pool.length)]);
   const flock = getBattleFlock();
   const top = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 4);
   const avgLevel = top.length ? top.reduce((s, b) => s + (b.level || 1), 0) / top.length : 1;
-  const opponents = picks.map((p, i) => {
+  const opponents = picks.map((e, i) => {
     const level = Math.max(1, Math.round(avgLevel) + tier.levelBoost + (i === 3 ? 1 : 0) - (i === 0 ? 1 : 0));
-    const stats = generateBirdStats(p.name, null, p.rarity);
+    const stats = generateBirdStats(e.base, null, e.rarity);
     const lv = 1 + level * 0.04;
     const bird = {
-      id: 'rival_' + p.id + '_' + i, species: p.name, commonName: p.name, rarity: p.rarity, level,
+      id: 'evil_burb_' + speciesKey(e.name) + '_' + i,
+      species: e.base,                 // the twisted bird beneath: wing class, stats, signature
+      commonName: e.name,              // the shadow name the player sees
+      rarity: e.rarity, level,
+      isEvilBurb: true,
       maxHp: clamp(Math.floor(stats.maxHp * lv), 50, 999),
       atk: clamp(Math.floor(stats.atk * lv), 10, 999), def: clamp(Math.floor(stats.def * lv), 10, 999),
       spd: clamp(Math.floor(stats.spd * lv), 10, 999), int: clamp(Math.floor(stats.int * lv), 10, 999),
       cha: clamp(Math.floor((stats.cha || 50) * lv), 10, 999), stamina: clamp(Math.floor(stats.stamina * lv), 10, 999),
       mag: clamp(Math.floor((stats.mag || 45) * lv), 10, 999),
-      emoji: stats.emoji, artUrl: resolveBuiltInBirdArt(p.name) || null
+      emoji: '\u{1F426}\u200D\u2B1B', artUrl: EVIL_BURB_PORTRAITS[e.portrait % EVIL_BURB_PORTRAITS.length]
     };
     bird.hp = bird.maxHp;
     return bird;
@@ -20445,13 +20532,13 @@ function renderBattleSelect() {
   const liberation = pendingEmpireLiberation();
   const liberationBanner = $('liberationBattleBanner');
   if (liberationBanner) liberationBanner.innerHTML = liberation
-    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A shadow-bound occupying flock guards this town. Outmatch them to break the usurper\'s hold and free the flock, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">PAUSE LIBERATION · PLAY PERCH LEAGUE</button></div>'
+    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A garrison of evil Burbz — the dark force\'s shadow-bound occupying flock — holds this town. Scatter them to break the usurper\'s hold, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">PAUSE LIBERATION · PLAY PERCH LEAGUE</button></div>'
     : '';
   $('liberationCancelBtn')?.addEventListener('click', cancelEmpireLiberation, { once:true });
   const selectCopy = $('battleSelectCopy');
   if (selectCopy) selectCopy.textContent = liberation
-    ? 'Choose the four birds who will free this town. The whole squad fights at once — counter the occupying flock\'s wing classes and gear up at the Forge before you begin.'
-    : 'Tap birds to add them. The whole squad fights at once, ordered by the Speed meter. Counter the rival\'s wing classes — the wheel below shows who beats whom.';
+    ? 'Choose the four birds who will free this town. The whole squad fights at once — counter the evil Burbz garrison\'s wing classes and gear up at the Forge before you begin.'
+    : 'Tap birds to add them. The whole squad fights at once, ordered by the Speed meter. Counter the evil Burbz squad\'s wing classes — the wheel below shows who beats whom.';
 
   // Header: current tier, record, promotion pips.
   const pips = tier.promoteWins > 0
@@ -20464,12 +20551,12 @@ function renderBattleSelect() {
     '<div class="league-progress">' + league.wins + 'W · ' + league.losses + 'L' +
     (tier.promoteWins > 0 ? '<br>' + league.winsInTier + '/' + tier.promoteWins + ' to promote' : '<br>Summit league') + pips + '</div>';
 
-  // Rival preview — this is where counter-picking happens.
+  // Evil Burbz squad preview — this is where counter-picking happens.
   const rival = leagueRivalOpponents();
   $('leagueRival').innerHTML =
-    '<div class="league-rival-title">' + (liberation ? 'The occupying flock — counter their classes!' : 'Today\'s rival flock — counter their classes!') + '</div>' +
+    '<div class="league-rival-title">' + (liberation ? '😈 The occupying evil Burbz — counter their classes!' : '😈 An evil Burbz squad prowls this perch — counter their classes!') + '</div>' +
     '<div class="league-rival-row">' + rival.opponents.map(b =>
-      '<div class="rival-card">' + fighterArtHTML(b, 'rc') +
+      '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
       '<div class="rc-lv">Lv ' + b.level + '</div>' +
       typeChipHTML(core.classifySpecies(b.species)) + '</div>').join('') + '</div>';
@@ -20545,7 +20632,7 @@ function startPerchBattle() {
   $('battleArena').style.display = 'block';
   $('battleLog').innerHTML = '';
   const tier = core.LEAGUE_TIERS[league.tier];
-  addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — outmatch the shadow-bound flock and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a rival flock lands on the perch!');
+  addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
   SFX.tap();
   battleAdvance();
@@ -20618,7 +20705,7 @@ function renderArena() {
   const pips = n => Array.from({ length: core.FOCUS_MAX }, (_, i) => '<i class="' + (i < n ? 'lit' : '') + '"></i>').join('');
   $('arenaFocus').innerHTML =
     '<div class="focus-side"><span>YOUR FOCUS</span><div class="focus-pips">' + pips(b.focus.player) + '</div></div>' +
-    '<div class="focus-side rival"><span>RIVAL</span><div class="focus-pips">' + pips(b.focus.opponent) + '</div></div>';
+    '<div class="focus-side rival"><span>EVIL BURBZ</span><div class="focus-pips">' + pips(b.focus.opponent) + '</div></div>';
 
   const actions = $('arenaActions');
   if (b.phase === 'over') { actions.innerHTML = ''; return; }
@@ -20631,7 +20718,7 @@ function renderArena() {
   const acts = core.availableActions(b);
   const canSurge = b.focus.player >= core.SURGE_COST;
   actions.innerHTML =
-    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' + (choosingTarget ? ' — tap a rival to strike' : '') + '</div>' +
+    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' + (choosingTarget ? ' — tap an evil Burb to strike' : '') + '</div>' +
     acts.map((a, i) => {
       const m = a.skill;
       const metaLine = m.kind === 'attack'
@@ -20838,7 +20925,7 @@ function endPerchBattle() {
   if (liberatedTown) rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedTown.name) + ' is broken. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
-  if (!won) rows.push('<div class="rw-note">Tip: counter the rival\'s wing classes, and train new moves in the Academy.</div>');
+  if (!won) rows.push('<div class="rw-note">Tip: counter the evil Burbz\' wing classes, and train new moves in the Academy.</div>');
   rows.push('<div class="rw-note">Your birds are tired and a little hungry — the Kitchen, Hospital and Roost will fix them up.</div>');
   $('battleResultRewards').innerHTML = rows.join('');
   $('battleAgainBtn').textContent = liberatedTown ? 'RETURN TO ' + liberatedTown.name.toUpperCase() : liberation ? 'TRY LIBERATION AGAIN' : 'BACK TO THE LEAGUE';
@@ -20855,7 +20942,7 @@ function liberationFriendlyBattleText(text) {
     .replace(/takes (\d+) damage/gi, 'loses $1 resolve')
     .replace(/critical hit/gi, 'brilliant move')
     .replace(/\bdamage\b/gi, 'impact')
-    .replace(/ is out of the match!/gi, ' is freed from the shadow spell!')
+    .replace(/ is out of the match!/gi, ' must rest — the squad fights on!')
     .replace(/fainted/gi, 'resting');
 }
 
@@ -21462,46 +21549,117 @@ function maybeShowIntroCutscene() {
 }
 
 // ============================================================================
-// MERLIN'S TUTORIAL — first-flight guided tour of every mechanic
+// MERLIN'S TUTORIAL — the gradual apprenticeship
+// A brand-new tutorial that introduces the game mechanics gradually. It opens
+// with Merlin telling the story of the Kingdom of Burbz (the Earth of another
+// universe where birds rule, now taken by the dark force of the evil Burbz),
+// then teaches each system in a short chapter the FIRST time the player opens
+// that part of the game, instead of one giant up-front tour.
 // ============================================================================
-const BURBZ_TUTORIAL_VERSION = 'merlin-complete-tour-v2-20260715';
-const BURBZ_TUTORIAL_SEEN_KEY = 'burbzTutorialSeen:' + BURBZ_TUTORIAL_VERSION;
+const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v3-20260720';
+const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
-const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:merlin-grand-tour-20260707';
-const MERLIN_TUTORIAL_ESSENTIAL_INDICES = [0, 1, 4, 7, 20];
+const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:' + BURBZ_TUTORIAL_VERSION;
+
+// Chapters fire once each: 'launch' right after the intro video, the rest the
+// first time their screen is opened. Replaying from Settings runs everything.
+const MERLIN_TUTORIAL_CHAPTERS = [
+  { id:'story',        trigger:'launch' },
+  { id:'scan',         trigger:'scan' },
+  { id:'birdex',       trigger:'birdex' },
+  { id:'battle',       trigger:'battle' },
+  { id:'village',      trigger:'village' },
+  { id:'academy',      trigger:'academy' },
+  { id:'quests',       trigger:'quests' },
+  { id:'forge',        trigger:'forge' },
+  { id:'inventory',    trigger:'inventory' },
+  { id:'leaderboards', trigger:'leaderboards' },
+  { id:'profile',      trigger:'profile' },
+];
 
 const MERLIN_TUTORIAL_STEPS = [
-  { chapter:'Welcome', title:'The living field guide', screen:'map', target:'.header', text:'I am Merlin. Real birdwatching restores Burbz. Start with these essentials; the complete systems tour is always available in Settings. Back, Next and Skip are always here.' },
-  { chapter:'Explore', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The live map follows your real position and shows mapped habitat clues. Use the locate control to return to yourself; bird and village markers can be opened directly.' },
-  { chapter:'Explore', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'Likely Birds estimates what may be nearby from habitat, season, range and local map features. It is a field clue, never a guaranteed identification.' },
-  { chapter:'Explore', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
-  { chapter:'Discover', title:'Scan two ways', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera for a photo or Sound for Merlin’s listener. Only recognition-backed matches enter your Birdex, protecting discoveries, rewards and rankings from self-reported species.' },
-  { chapter:'Discover', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Camera opens your phone’s native camera. Frame the bird closely, confirm the crop and review the suggested match before adding it to your discoveries.' },
-  { chapter:'Discover', title:'Sound and BirdNET', screen:'scan', target:'#scanSoundBtn', text:'Sound keeps listening across screens until Stop; the green light means your microphone is live. Short windows are uploaded for BirdNET analysis, not stored in your game. Location help is optional and off by default.' },
+  // — The Tale of Burbz: the story chapter, told before anything is taught.
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'A voice across the multiverse', screen:'map', target:null, text:'I am Merlin, wizard falcon of the Kingdom of Burbz. My home is the Earth of another universe — the same lands and seas as yours — but in our world, birds are the dominant species.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'The darkness falls', screen:'map', target:null, text:'A dark force has taken our kingdom. The evil Burbz — shadow-woven birds with burning red eyes — swept over every town, and the usurper’s darkness now covers our whole world.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Merlin’s spell-tablet', screen:'map', target:null, text:'With my last great spell I hurled my magic tablet across the multiverse into your universe. You are holding it right now — this very device is the tablet, and this app is its magic.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'You are the chosen one', screen:'map', target:null, text:'Only you can unlock the darkness that has swallowed Burbz. Real birdwatching restores Burbz: every real bird you find feeds the tablet’s magic and frees our kingdom, town by town.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This map mirrors your real world and follows your real position. Walk it, explore it, and open nearby towns to challenge the evil Burbz who hold them. I will teach each art the first time you need it.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'First task: find a bird', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Every quest begins with one real bird. Open Scan when you are ready and I will show you how the tablet captures a bird’s spirit. Go well, friend — Burbz is counting on you.' },
 
-  { chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
-  { chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
-  { chapter:'Collection', title:'Active companion', screen:'map', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed from the pantry, train it and watch its hunger, happiness and health rather than treating every bird as identical.' },
-  { chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the whole Earth sleeping in darkness — seas and coastlines are clear, but the land keeps its secrets. Open a real nearby town from Map, win its Liberation Battle and build a sanctuary — the darkness lifts there and reveals the true map.' },
-  { chapter:'Realm', title:'Liberation Battle', screen:'battle', target:'.nav-item[data-screen="battle"]', text:'A town’s Liberation Battle uses your chosen flock against its occupying birds. Victory frees the town; returning there lets you build its sanctuary birdhouse.' },
-  { chapter:'Realm', title:'Provinces and taxes', screen:'village', target:'#empirePanel', text:'Each liberated province flies a heraldic banner — tap it (or its green territory) to travel to its 3D village. Provinces pay coin and branch taxes every eight hours; happy, well-fed villagers multiply and pay more.' },
-  { chapter:'Realm', title:'Govern your villages', screen:'village', target:'#villageManagePanel', text:'Below the 3D village, the governor’s panel tracks population and the four basic needs: food, water, shelter and joy. Raise farms, wells, cottages and markets in the Construction Yard to meet needs, grow the population and boost taxes and materials.' },
-  { chapter:'Battle', title:'Perch League', screen:'battle', target:'#battleSelect', text:'Perch League is the repeatable three-bird arena. Read the matchup wheel, choose a balanced team, use learned moves and climb the ranks through turn-based battles.' },
-  { chapter:'Academy', title:'Build the Academy', screen:'academy', target:'#academyTreehouse', text:'Spend coins and branches on Academy buildings. Choose Place, tap the tree, then open or move built rooms whenever your campus needs changing.' },
-  { chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
-  { chapter:'Academy', title:'Training and pantry', screen:'academy', target:'#academyTreehouse', text:'Training rooms unlock and improve battle disciplines. Food comes from your pantry: species-appropriate feeding supports care and progression, while cooldowns prevent instant repetition.' },
-  { chapter:'Quests', title:'Expeditions', screen:'quests', target:'#expeditionQuestList', text:'Companion expeditions run for real time; the Quest Roost unlocks longer journeys. Requirements, duration and rewards appear before departure, and finished flights can return resources and Merlin clues.' },
-  { chapter:'Resources', title:'Your Bag', screen:'inventory', target:'#inventoryGrid', text:'The Bag holds quest items, gifts and gear. Food for companion care is managed through the Academy pantry. Quantities and usable actions stay visible whenever a decision needs them.' },
-  { chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Ranks compares collection progress and Perch League performance. Collection rewards broad discovery; League rewards wins, training and squad strength.' },
-  { chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your profile holds level, achievements and optional cloud save. Settings controls sound, vibration, privacy links, feedback, the intro and this complete tutorial. You can replay it at any time.' },
+  // — Discovery: taught the first time the Scan screen opens.
+  { chapterId:'scan', chapter:'Discovery', title:'Scan two ways', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera for a photo or Sound for my listener. Only recognition-backed matches enter your Birdex — the tablet’s magic needs a real bird, never a self-reported guess.' },
+  { chapterId:'scan', chapter:'Discovery', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Camera opens your phone’s native camera. Frame the bird closely, confirm the crop and review the suggested match before adding it to your discoveries.' },
+  { chapterId:'scan', chapter:'Discovery', title:'Sound and BirdNET', screen:'scan', target:'#scanSoundBtn', text:'Sound keeps listening across screens until Stop; the green light means your microphone is live. Short windows are uploaded for BirdNET analysis, not stored in your game. Location help is optional and off by default.' },
+  { chapterId:'scan', chapter:'Discovery', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'Back on the Map, Likely Birds estimates what may be nearby from habitat, season and range. It is a field clue to guide your search, never a guaranteed identification.' },
+
+  // — Collection: taught the first time the Birdex opens.
+  { chapterId:'birdex', chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'The Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
+  { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
+  { chapterId:'birdex', chapter:'Collection', title:'Active companion', screen:'birdex', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed it from the pantry, train it, and watch its hunger, happiness and health — every bird is an individual.' },
+
+  // — War on the evil Burbz: taught the first time the Battle screen opens.
+  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'These are your true foes: squads of evil Burbz, the usurper’s shadow soldiers. You never fight free birds — every battle you win unravels a little more of the dark magic.' },
+  { chapterId:'battle', chapter:'The War', title:'Pick your squad', screen:'battle', target:'#battleTeamGrid', text:'Choose four birds; the whole squad fights at once. Each evil Burb keeps the wing class of the bird it was twisted from, so counter their classes — the wheel below shows who beats whom.' },
+  { chapterId:'battle', chapter:'The War', title:'Skyclash basics', screen:'battle', target:'#battleStartBtn', text:'The Speed meter decides who acts. Basic moves build your squad’s shared Focus; spend it to Surge a skill for extra power. Signatures are each bird’s ultimate.' },
+  { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a real town from the Map and its evil Burbz garrison will meet you here in a Liberation Battle. Victory frees the town — return there to build its sanctuary birdhouse.' },
+
+  // — Realm: taught the first time the Empire screen opens.
+  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the whole Earth sleeping under the usurper’s darkness — seas and coastlines are clear, but the land keeps its secrets. Each liberation lifts the dark and reveals the true map beneath.' },
+  { chapterId:'village', chapter:'Realm', title:'Provinces and taxes', screen:'village', target:'#empirePanel', text:'Each liberated province flies a heraldic banner — tap it (or its green territory) to travel to its 3D village. Provinces pay coin and branch taxes every eight hours; happy villagers multiply and pay more.' },
+  { chapterId:'village', chapter:'Realm', title:'Govern your villages', screen:'village', target:'#villageManagePanel', text:'Below the 3D village, the governor’s panel tracks population and the four basic needs: food, water, shelter and joy. Raise farms, wells, cottages and markets to meet needs and boost taxes and materials.' },
+
+  // — Academy: taught the first time the Academy opens.
+  { chapterId:'academy', chapter:'Academy', title:'Build the Academy', screen:'academy', target:'#academyTreehouse', text:'Spend coins and branches on Academy buildings. Choose Place, tap the tree, then open or move built rooms whenever your campus needs changing.' },
+  { chapterId:'academy', chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
+  { chapterId:'academy', chapter:'Academy', title:'Training and pantry', screen:'academy', target:'#academyTreehouse', text:'Training rooms unlock and improve battle disciplines — your edge against the evil Burbz. Food comes from your pantry: species-appropriate feeding supports care and progression.' },
+
+  // — Quests: taught the first time the Quests screen opens.
+  { chapterId:'quests', chapter:'Quests', title:'Expeditions', screen:'quests', target:'#expeditionQuestList', text:'Companion expeditions run for real time; the Quest Roost unlocks longer journeys. Requirements, duration and rewards appear before departure, and finished flights can return resources and Merlin clues.' },
+  { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
+
+  // — Forge: taught the first time the Fletcher's Forge opens.
+  { chapterId:'forge', chapter:'Forge', title:'The Fletcher’s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils, then equip your birds. Gear feeds straight into their fighting stats — the sharper the squad, the faster the shadow breaks.' },
+
+  // — Resources: taught the first time the Bag opens.
+  { chapterId:'inventory', chapter:'Resources', title:'Your Bag', screen:'inventory', target:'#inventoryGrid', text:'The Bag holds quest items, gifts and gear. Food for companion care is managed through the Academy pantry. Quantities and usable actions stay visible whenever a decision needs them.' },
+
+  // — Community: taught the first time Ranks opens.
+  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Ranks compares collection progress and Perch League performance. Collection rewards broad discovery; the League rewards wins, training and squad strength against the evil Burbz.' },
+
+  // — Finish: taught the first time the Profile opens.
+  { chapterId:'profile', chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your profile holds level, achievements and optional cloud save. Settings controls sound, vibration, privacy links, feedback, the intro video and a full replay of this tutorial at any time.' },
 ];
+
+function merlinChapterStepIndices(chapterId) {
+  return MERLIN_TUTORIAL_STEPS.map((step, index) => step.chapterId === chapterId ? index : -1).filter(index => index >= 0);
+}
 
 let merlinTutStep = -1;
 let merlinTutActive = false;
 let merlinTutOriginScreen = 'map';
 let merlinTutPreviousFocus = null;
-let merlinTutSequence = MERLIN_TUTORIAL_ESSENTIAL_INDICES.slice();
-let merlinTutMode = 'essentials';
+let merlinTutSequence = merlinChapterStepIndices('story');
+let merlinTutMode = 'story';
+
+function merlinChaptersSeen() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(BURBZ_TUTORIAL_CHAPTERS_KEY) || '[]');
+    return Array.isArray(raw) ? raw.filter(id => typeof id === 'string') : [];
+  } catch (e) { return []; }
+}
+
+function markMerlinChaptersSeen(chapterIds) {
+  try {
+    const seen = new Set(merlinChaptersSeen());
+    chapterIds.forEach(id => seen.add(id));
+    localStorage.setItem(BURBZ_TUTORIAL_CHAPTERS_KEY, JSON.stringify([...seen]));
+  } catch (e) {}
+}
+
+function allMerlinChaptersSeen() {
+  const seen = new Set(merlinChaptersSeen());
+  return MERLIN_TUTORIAL_CHAPTERS.every(chapter => seen.has(chapter.id));
+}
 
 function readMerlinTutorialState() {
   try { return JSON.parse(localStorage.getItem(BURBZ_TUTORIAL_STATE_KEY) || 'null'); } catch (e) { return null; }
@@ -21530,8 +21688,9 @@ function setMerlinTutorialBackgroundInert(inert) {
 function startMerlinTutorial(options = {}) {
   const overlay = $('merlinTutorialOverlay');
   if (!overlay || merlinTutActive) return;
-  merlinTutMode = options.full ? 'full' : 'essentials';
-  merlinTutSequence = options.full ? MERLIN_TUTORIAL_STEPS.map((_, index) => index) : MERLIN_TUTORIAL_ESSENTIAL_INDICES.slice();
+  merlinTutMode = options.full ? 'full' : (options.chapterId || 'story');
+  merlinTutSequence = options.full ? MERLIN_TUTORIAL_STEPS.map((_, index) => index) : merlinChapterStepIndices(merlinTutMode);
+  if (!merlinTutSequence.length) return;
   const saved = options.resume === false ? null : readMerlinTutorialState();
   const resumeStep = saved && saved.status === 'in_progress' && saved.mode === merlinTutMode
     ? Math.max(0, Math.min(merlinTutSequence.length - 1, Number(saved.currentStep) || 0))
@@ -21619,28 +21778,42 @@ function endMerlinTutorial(completed) {
   setMerlinTutorialBackgroundInert(false);
   merlinTutSpotlightTarget(null);
   positionMerlinTutorialStage(null);
-  try { localStorage.setItem(BURBZ_TUTORIAL_SEEN_KEY, '1'); } catch(e) {}
+  // A finished OR skipped chapter counts as seen — Merlin never nags twice.
+  markMerlinChaptersSeen(merlinTutMode === 'full' ? MERLIN_TUTORIAL_CHAPTERS.map(c => c.id) : [merlinTutMode]);
   saveMerlinTutorialState(completed ? 'completed' : 'skipped');
-  if (currentScreen !== merlinTutOriginScreen) switchScreen(merlinTutOriginScreen);
+  if (currentScreen !== merlinTutOriginScreen && (merlinTutMode === 'full' || merlinTutMode === 'story')) switchScreen(merlinTutOriginScreen);
   let gifted = false;
   try { gifted = localStorage.getItem(BURBZ_TUTORIAL_GIFT_KEY) === '1'; } catch(e) {}
-  if (completed && !gifted) {
+  if (completed && allMerlinChaptersSeen() && !gifted) {
     try { localStorage.setItem(BURBZ_TUTORIAL_GIFT_KEY, '1'); } catch(e) {}
     addCoins(50);
     addBranches(25);
     saveState();
     updateHeader();
-    showToast("\u{1F381} Merlin's gift: +50 \u{1FA99} coins and +25 \u{1FAB5} branches!");
-  } else if (completed) {
-    showToast('Merlin nods. "You know the way, friend."');
+    showToast("\u{1F381} Merlin's gift for finishing the apprenticeship: +50 \u{1FA99} coins and +25 \u{1FAB5} branches!");
+  } else if (completed && merlinTutMode === 'story') {
+    showToast('Merlin bows. "The Kingdom of Burbz flies with you now."');
   }
   if (merlinTutPreviousFocus && typeof merlinTutPreviousFocus.focus === 'function') merlinTutPreviousFocus.focus({ preventScroll:true });
   merlinTutPreviousFocus = null;
 }
 
+// First launch: after the intro video, Merlin tells the Tale of Burbz.
 function maybeStartMerlinTutorial(delay = 600) {
-  try { if (localStorage.getItem(BURBZ_TUTORIAL_SEEN_KEY) === '1') return; } catch(e) { return; }
-  setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ full:false, resume:true }); }, delay);
+  if (merlinChaptersSeen().includes('story')) return;
+  setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
+}
+
+// Gradual teaching: each remaining chapter fires the first time its screen opens.
+function maybeStartMerlinChapterForScreen(screenName) {
+  if (merlinTutActive) return;
+  const chapter = MERLIN_TUTORIAL_CHAPTERS.find(c => c.trigger === screenName);
+  if (!chapter || merlinChaptersSeen().includes(chapter.id)) return;
+  // The story always comes first; hold screen chapters until Merlin has spoken.
+  if (chapter.id !== 'story' && !merlinChaptersSeen().includes('story')) return;
+  setTimeout(() => {
+    if (!merlinTutActive && currentScreen === screenName) startMerlinTutorial({ chapterId: chapter.id, resume:true });
+  }, 480);
 }
 
 $('merlinTutorialBack')?.addEventListener('click', merlinTutBack);
