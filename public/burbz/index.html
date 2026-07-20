@@ -2028,9 +2028,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: none; }
 .village-stage canvas { display: block; width: 100%; height: 100%; }
 .village-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text3); font-size: 12.5px; letter-spacing: 0.06em; }
-.village-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 12px 90px; }
-.village-chip { background: var(--bg3); border: 1px solid var(--bg4); color: var(--text2); font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 9px; letter-spacing: 0.03em; }
-.village-chip:active { border-color: var(--accent); color: var(--accent); }
 .village-fallback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; height: 100%; overflow-y: auto; }
 .village-fallback-building { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--bg4); border-radius: 12px; padding: 12px 8px; color: var(--text); }
 .village-fallback-building:active { border-color: var(--accent); }
@@ -2481,7 +2478,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div id="villageClaimBar"></div>
         <div class="village-stage" id="villageStage"><div class="village-loading" id="villageLoading">Raising the timber frames…</div></div>
         <div id="villageManagePanel"></div>
-        <div class="village-legend" id="villageLegend"></div>
       </div>
     </div>
     <div id="empireTravelOverlay" aria-hidden="true"><div class="empire-travel-card"><div class="empire-travel-crest" id="empireTravelCrest">🕊️</div><div class="empire-travel-name" id="empireTravelName"></div><div class="empire-travel-sub">Travelling to your province…</div></div></div>
@@ -14278,11 +14274,10 @@ function initialiseEmpireMap() {
         const fogCanvas = $('empireFogCanvas');
         if (fogCanvas) map.getCanvasContainer().appendChild(fogCanvas);
         // Realm territory: each liberated province paints its lands in the
-        // realm's green with an inked border, Crusader-map style. The fill is
-        // tappable — touching your territory travels to its 3D village.
+        // realm's green, Crusader-map style. The fill is tappable — touching
+        // your territory travels to its 3D village.
         map.addSource('empire-territory', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territory', paint:{ 'fill-color':'#7ed983', 'fill-opacity':.18 } });
-        map.addLayer({ id:'empire-territory-border', type:'line', source:'empire-territory', paint:{ 'line-color':'#2c693f', 'line-width':['interpolate',['linear'],['zoom'],2,1.1,11,2.8], 'line-dasharray':[2.2,1.3], 'line-opacity':.9 } });
         map.on('click', 'empire-territory-fill', event => {
           const feature = event.features && event.features[0];
           if (feature && feature.properties && feature.properties.seed) openEmpireVillage(feature.properties.seed);
@@ -14866,7 +14861,6 @@ function renderVillage() {
   renderVillageManagePanel();
   renderEmpirePanel();
   renderEmpireWorldMap();
-  renderVillageLegend();
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {
     ensureVillageRenderer(stage);
@@ -14880,14 +14874,6 @@ function renderVillage() {
     villageFallbackMode = true;
     renderVillageFallback();
   }
-}
-
-function renderVillageLegend() {
-  const legend = $('villageLegend');
-  if (!legend) return;
-  legend.innerHTML = villageShopKeysFor(currentVillage().seed).map(k =>
-    '<button class="village-chip" onclick="villageOpenShop(\'' + k + '\')">' + VILLAGE_SHOPS[k].icon + ' ' + escapeHtml(VILLAGE_SHOPS[k].name) + '</button>'
-  ).join('') + '<button class="village-chip" onclick="openVillageKnowledgeQuiz()">🧠 Birder Question · earn coins</button>';
 }
 
 function renderVillageFallback() {
