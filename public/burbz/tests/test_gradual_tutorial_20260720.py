@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-VERSION = "merlin-gradual-chapters-v3-20260720"
+VERSION = "merlin-gradual-chapters-v4-20260720"
 
 
 def _extract_array(html: str, marker: str):
@@ -133,5 +133,5 @@ def test_fresh_start_epoch_resets_the_whole_game_once():
 
 def test_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-side-quests-v94-20260720" in sw
+    assert "burbz-roost-barracks-v95-20260720" in sw
     assert "./assets/evil-burbz/evil-burb-1.png" in sw

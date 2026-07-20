@@ -1,8 +1,8 @@
 """New players find guaranteed starter timber on the questing map.
 
 Timber bundles spawn in a ring right around the player (well inside gathering
-range) until The Roost is built or every bundle is taken, and they add up to
-more than The Roost's branch cost.
+range) until The Roost and Barracks are built or every bundle is taken, and
+they add up to both opening buildings' branch cost.
 """
 import json
 import re
@@ -13,17 +13,25 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 
 
-def test_starter_timber_covers_the_roost_cost():
+def _required_int(pattern: str, text: str) -> int:
+    match = re.search(pattern, text)
+    assert match, pattern
+    return int(match.group(1))
+
+
+def test_starter_timber_covers_the_roost_and_barracks_cost():
     html = HTML.read_text(encoding="utf-8")
-    bundles = int(re.search(r"const STARTER_TIMBER_BUNDLES = (\d+);", html).group(1))
-    per = int(re.search(r"const STARTER_TIMBER_PER_BUNDLE = (\d+);", html).group(1))
+    bundles = _required_int(r"const STARTER_TIMBER_BUNDLES = (\d+);", html)
+    per = _required_int(r"const STARTER_TIMBER_PER_BUNDLE = (\d+);", html)
     core = (ROOT / "academy_treehouse_core.js").read_text(encoding="utf-8")
-    roost = re.search(r"id:'dorm'.*?branches:(\d+)", core).group(1)
-    assert bundles * per >= int(roost), (bundles, per, roost)
-    # The Roost's coin cost is affordable from the default starting purse.
-    roost_coins = int(re.search(r"id:'dorm'.*?cost:(\d+)", core).group(1))
-    start_coins = int(re.search(r"player: \{ name: 'Bird Trainer'.*?coins: (\d+)", html).group(1))
-    assert start_coins >= roost_coins, (start_coins, roost_coins)
+    roost = _required_int(r"id:'dorm'.*?branches:(\d+)", core)
+    barracks = _required_int(r"id:'tavern'.*?branches:(\d+)", core)
+    assert bundles * per >= roost + barracks, (bundles, per, roost, barracks)
+    # Both opening buildings are affordable from the default starting purse.
+    roost_coins = _required_int(r"id:'dorm'.*?cost:(\d+)", core)
+    barracks_coins = _required_int(r"id:'tavern'.*?cost:(\d+)", core)
+    start_coins = _required_int(r"player: \{ name: 'Bird Trainer'.*?coins: (\d+)", html)
+    assert start_coins >= roost_coins + barracks_coins, (start_coins, roost_coins, barracks_coins)
 
 
 def test_bundles_spawn_in_a_ring_within_gathering_range_of_the_player():
@@ -33,8 +41,10 @@ def test_bundles_spawn_in_a_ring_within_gathering_range_of_the_player():
     # Anchored to the player's current position, not to fixed world cells.
     assert "lat: lat + dLat" in body and "lon: lon + dLon" in body
     # Max ring distance stays well inside MAP_PICKUP_RANGE_M (220 m).
-    base, step = map(int, re.search(r"const meters = (\d+) \+ i \* (\d+);", body).groups())
-    bundles = int(re.search(r"const STARTER_TIMBER_BUNDLES = (\d+);", html).group(1))
+    distance_match = re.search(r"const meters = (\d+) \+ i \* (\d+);", body)
+    assert distance_match
+    base, step = map(int, distance_match.groups())
+    bundles = _required_int(r"const STARTER_TIMBER_BUNDLES = (\d+);", html)
     assert base + (bundles - 1) * step < 220
     # Simulate a full gather in node: spawn near a player, take every bundle.
     script = _runtime_harness(html) + """
@@ -49,13 +59,13 @@ console.log(JSON.stringify({ count: near.length, maxDist: Math.max(...dists), ga
     result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
-    assert payload["count"] == 4
+    assert payload["count"] == 6
     assert payload["maxDist"] < 220
-    assert payload["gained"] >= 10          # enough branches for The Roost
+    assert payload["gained"] >= 18          # enough branches for Roost + Barracks
     assert payload["respawn"] == 0          # taken bundles never respawn
 
 
-def test_starter_timber_is_wired_into_the_live_map_and_stops_after_the_roost():
+def test_starter_timber_is_wired_into_the_live_map_and_stops_after_both_openers():
     html = HTML.read_text(encoding="utf-8")
     draw_start = html.index("function drawMapPickups(")
     draw = html[draw_start:html.index("\nfunction collectMapPickup", draw_start)]
@@ -63,7 +73,7 @@ def test_starter_timber_is_wired_into_the_live_map_and_stops_after_the_roost():
     collect_start = html.index("function collectMapPickup(")
     collect = html[collect_start:html.index("\nlet liveMapAreaRows", collect_start)]
     assert "collectStarterTimber(pickup)" in collect
-    assert "isAcademyBuildingBuilt('dorm')" in html   # Roost built => no more spawns
+    assert "isAcademyBuildingBuilt('dorm') && isAcademyBuildingBuilt('tavern')" in html
     assert "starterTimber: { taken: {} }" in html      # default state entry
     assert ".burbz-pickup-marker.starter" in html      # visible green glow styling
 
@@ -82,8 +92,11 @@ def _runtime_harness(html: str) -> str:
                     break
         return html[start:i + 1]
 
-    bundles = re.search(r"const STARTER_TIMBER_BUNDLES = \d+;", html).group(0)
-    per = re.search(r"const STARTER_TIMBER_PER_BUNDLE = \d+;", html).group(0)
+    bundles_match = re.search(r"const STARTER_TIMBER_BUNDLES = \d+;", html)
+    per_match = re.search(r"const STARTER_TIMBER_PER_BUNDLE = \d+;", html)
+    assert bundles_match and per_match
+    bundles = bundles_match.group(0)
+    per = per_match.group(0)
     return "\n".join([
         "const gameState = { player: { branches: 0 }, academyBuildings: {} };",
         "function isAcademyBuildingBuilt() { return false; }",

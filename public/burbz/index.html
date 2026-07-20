@@ -2813,7 +2813,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=perch-league-20260710"></script>
+<script src="academy_treehouse_core.js?v=roost-barracks-onboarding-20260720"></script>
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
 <script src="loot_crafting_core.js?v=fletchers-forge-20260719"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
@@ -3601,7 +3601,7 @@ function vibrate(ms) {
 // GAME STATE
 // ============================================================================
 const DEFAULT_STATE = {
-  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 90, branches: 0 },
+  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
   flock: [],
   discoveredSpecies: {},
   inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1 }, equipment: {}, giftsGiven: {} },
@@ -3617,7 +3617,7 @@ const DEFAULT_STATE = {
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // Campus building ownership
-  academyBuilderVersion: 4,
+  academyBuilderVersion: 5,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
   league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // Perch League ladder
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
@@ -3626,7 +3626,7 @@ const DEFAULT_STATE = {
   knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
-  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough to build The Roost
+  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for The Roost and Barracks
   sideQuest: { active: null, history: [] } // Free-exploration side quests: the game charts wherever the player goes
 };
 
@@ -3699,10 +3699,12 @@ function loadState() {
   if (!gameState || typeof gameState !== 'object' || Array.isArray(gameState)) {
     gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
-  const needsAcademyBuilderGrant = !gameState.academyBuildings || !gameState.academyBuilderVersion;
+  const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
+  const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 5;
   for (const k of Object.keys(DEFAULT_STATE)) {
     if (gameState[k] === undefined) gameState[k] = JSON.parse(JSON.stringify(DEFAULT_STATE[k]));
   }
+  if (needsAcademyBuilderGrant) gameState.academyBuilderVersion = academyBuilderVersionBeforeDefaults;
   gameState.player = { ...DEFAULT_STATE.player, ...(gameState.player && typeof gameState.player === 'object' ? gameState.player : {}) };
   if (typeof gameState.player.coins !== 'number') gameState.player.coins = DEFAULT_STATE.player.coins;
   ensureAcademyBuildings(needsAcademyBuilderGrant);
@@ -9669,6 +9671,24 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     }
     delete gameState.academyBuildings.market;
   }
+  // v5: The Roost and Barracks now unlock together. Existing early-game saves
+  // receive only the missing construction budget plus a realistic first-bird
+  // recruitment reserve; established campuses are left untouched.
+  if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 5) {
+    const openingBuildingIds = ['dorm', 'tavern'];
+    const missingOpeningIds = openingBuildingIds.filter(id => !isAcademyBuildingBuilt(id));
+    const constructionCoins = missingOpeningIds.reduce((sum, id) => sum + (ACADEMY_BUILDINGS[id]?.cost || 0), 0);
+    const constructionBranches = missingOpeningIds.reduce((sum, id) => sum + (ACADEMY_BUILDINGS[id]?.branches || 0), 0);
+    const recruitmentReserve = isAcademyBuildingBuilt('tavern') ? 0 : 100;
+    const previousCoins = Number(gameState.player.coins) || 0;
+    const previousBranches = Number(gameState.player.branches) || 0;
+    gameState.player.coins = Math.max(previousCoins, constructionCoins + recruitmentReserve);
+    gameState.player.branches = Math.max(previousBranches, constructionBranches);
+    gameState.academyBuilderVersion = 5;
+    if (gameState.player.coins > previousCoins || gameState.player.branches > previousBranches) {
+      setTimeout(() => showToast('🪶 Merlin topped up your opening Academy building and recruitment fund.'), 900);
+    }
+  }
   Object.keys(ACADEMY_ROOMS).forEach(room => {
     if (room !== 'outdoors' && !isAcademyRoomBuilt(room)) {
       (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === room) b.academy.room = 'outdoors'; });
@@ -13701,10 +13721,11 @@ let liveMapPickupMarkers = [];
 // ---------------------------------------------------------------------------
 // STARTER TIMBER — every new player finds enough wood to raise The Roost.
 // Guaranteed 🪵 bundles appear right around the player on the questing map
-// (well inside gathering range) until The Roost is built or all bundles are
-// taken. 4 bundles × 3 branches = 12 timber ≥ The Roost's 10-branch cost.
+// (well inside gathering range) until The Roost and Barracks are built or all
+// bundles are taken. 6 bundles × 3 branches = 18 timber: exactly enough for
+// both opening Academy buildings.
 // ---------------------------------------------------------------------------
-const STARTER_TIMBER_BUNDLES = 4;
+const STARTER_TIMBER_BUNDLES = 6;
 const STARTER_TIMBER_PER_BUNDLE = 3;
 const STARTER_TIMBER_TYPE = {
   id: 'starter_timber', glyph: '🪵', label: 'Starter timber', cls: 'starter',
@@ -13719,12 +13740,12 @@ function ensureStarterTimberState() {
 
 function starterTimberDone() {
   const state = ensureStarterTimberState();
-  if (isAcademyBuildingBuilt('dorm')) return true; // The Roost stands — mission accomplished
+  if (isAcademyBuildingBuilt('dorm') && isAcademyBuildingBuilt('tavern')) return true;
   return Object.keys(state.taken).length >= STARTER_TIMBER_BUNDLES;
 }
 
 // Anchored to wherever the player currently is, so the timber is always in
-// the vicinity: a ring of bundles 60–165 m out, each well inside reach.
+// the vicinity: a ring of bundles 60–185 m out, each well inside reach.
 function starterTimberPickupsNear(lat, lon) {
   if (!gameState || starterTimberDone()) return [];
   const state = ensureStarterTimberState();
@@ -13732,7 +13753,7 @@ function starterTimberPickupsNear(lat, lon) {
   for (let i = 0; i < STARTER_TIMBER_BUNDLES; i++) {
     if (state.taken[i]) continue;
     const angle = (i / STARTER_TIMBER_BUNDLES) * Math.PI * 2 + Math.PI / 5;
-    const meters = 60 + i * 35;
+    const meters = 60 + i * 25;
     const dLat = (meters * Math.cos(angle)) / 111320;
     const dLon = (meters * Math.sin(angle)) / (111320 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
     out.push({
@@ -13753,7 +13774,7 @@ function collectStarterTimber(pickup) {
   state.taken[pickup.starterIndex] = true;
   addBranches(STARTER_TIMBER_PER_BUNDLE);
   if (starterTimberDone()) {
-    setTimeout(() => showToast('🏠 Enough timber for The Roost! Raise it at the Academy.'), 1300);
+    setTimeout(() => showToast('🏠 Enough timber for The Roost and Barracks! Raise them at the Academy.'), 1300);
   }
   return '+' + STARTER_TIMBER_PER_BUNDLE + ' branches';
 }
@@ -21996,7 +22017,8 @@ function maybeShowIntroCutscene() {
 // then teaches each system in a short chapter the FIRST time the player opens
 // that part of the game, instead of one giant up-front tour.
 // ============================================================================
-const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v3-20260720';
+const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v4-20260720';
+const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v3-20260720';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:' + BURBZ_TUTORIAL_VERSION;
@@ -22050,12 +22072,14 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'village', chapter:'Realm', title:'Govern your villages', screen:'village', target:'#villageManagePanel', text:'Below the 3D village, the governor’s panel tracks population and the four basic needs: food, water, shelter and joy. Raise farms, wells, cottages and markets to meet needs and boost taxes and materials.' },
 
   // — Academy: taught the first time the Academy opens.
-  { chapterId:'academy', chapter:'Academy', title:'Build the Academy', screen:'academy', target:'#academyTreehouse', text:'Spend coins and branches on Academy buildings. Choose Place, tap the tree, then open or move built rooms whenever your campus needs changing.' },
+  { chapterId:'academy', chapter:'Academy', title:'Your first two buildings', screen:'academy', target:'#academyBuildPanel', text:'The Roost and Barracks unlock together at trainer level 1. Nearby starter timber and your opening coins cover both buildings plus one common bird recruitment.' },
+  { chapterId:'academy', chapter:'Academy', title:'Recruit your first companion', screen:'academy', target:'#academyBuildPanel', text:'Build The Roost for care, then build the Barracks to review your real Birdex discoveries and recruit one bird into your flock. That companion can take your first quest.' },
   { chapterId:'academy', chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
   { chapterId:'academy', chapter:'Academy', title:'Training and pantry', screen:'academy', target:'#academyTreehouse', text:'Training rooms unlock and improve battle disciplines — your edge against the evil Burbz. Food comes from your pantry: species-appropriate feeding supports care and progression.' },
 
   // — Quests: taught the first time the Quests screen opens.
-  { chapterId:'quests', chapter:'Quests', title:'Expeditions', screen:'quests', target:'#expeditionQuestList', text:'Companion expeditions run for real time; the Quest Roost unlocks longer journeys. Requirements, duration and rewards appear before departure, and finished flights can return resources and Merlin clues.' },
+  { chapterId:'quests', chapter:'Quests', title:'Send your first bird', screen:'quests', target:'#expeditionQuestList', text:'First assignment: send one bird on one starter quest. Pick Find Seed, Find Coins, Branch Run or Scavenge, choose your recruited companion, then confirm the departure.' },
+  { chapterId:'quests', chapter:'Quests', title:'Longer expeditions', screen:'quests', target:'#expeditionQuestList', text:'Starter errands are available immediately. Build the Quest Roost later for longer journeys; every quest shows its duration and rewards before your bird leaves.' },
   { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
   { chapterId:'quests', chapter:'Quests', title:'Side Quests', screen:'map', target:'#mapQuestBtn', text:'A Side Quest has no route: pocket the phone and just explore. Burbz charts wherever you go and buzzes when you stumble on chests, weapons or quest-giver birds — later you can turn your wander into a quest for others.' },
 
@@ -22083,7 +22107,28 @@ let merlinTutPreviousFocus = null;
 let merlinTutSequence = merlinChapterStepIndices('story');
 let merlinTutMode = 'story';
 
+function migratePreviousMerlinTutorialProgress() {
+  try {
+    const previousChaptersKey = 'burbzTutorialChapters:' + BURBZ_PREVIOUS_TUTORIAL_VERSION;
+    if (localStorage.getItem(BURBZ_TUTORIAL_CHAPTERS_KEY) == null) {
+      const previousRaw = localStorage.getItem(previousChaptersKey);
+      if (previousRaw != null) {
+        const previous = JSON.parse(previousRaw);
+        const retained = Array.isArray(previous)
+          ? previous.filter(id => typeof id === 'string' && id !== 'academy' && id !== 'quests')
+          : [];
+        localStorage.setItem(BURBZ_TUTORIAL_CHAPTERS_KEY, JSON.stringify(retained));
+      }
+    }
+    const previousGiftKey = 'burbzTutorialGift:' + BURBZ_PREVIOUS_TUTORIAL_VERSION;
+    if (localStorage.getItem(previousGiftKey) === '1' && localStorage.getItem(BURBZ_TUTORIAL_GIFT_KEY) == null) {
+      localStorage.setItem(BURBZ_TUTORIAL_GIFT_KEY, '1');
+    }
+  } catch (e) {}
+}
+
 function merlinChaptersSeen() {
+  migratePreviousMerlinTutorialProgress();
   try {
     const raw = JSON.parse(localStorage.getItem(BURBZ_TUTORIAL_CHAPTERS_KEY) || '[]');
     return Array.isArray(raw) ? raw.filter(id => typeof id === 'string') : [];

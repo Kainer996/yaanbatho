@@ -125,7 +125,7 @@ def test_world_palette_is_a_medieval_atlas_with_town_names_and_no_roads():
     assert "/transportation|highway|road|rail|bridge|tunnel|aeroway|aerodrome|ferry|oneway/" in html
     assert "/poi|housenumber/" in html
     assert ".empire-map-card.is-empty .empire-map-empty { display:none; }" in html
-    assert "burbz-empire-darkness-v88-20260719" in SW.read_text(encoding="utf-8")
+    assert "const BURBZ_CACHE = 'burbz-" in SW.read_text(encoding="utf-8")
 
 
 def test_liberated_icons_remain_visible_at_world_zoom():
@@ -155,7 +155,7 @@ def test_liberated_darkness_windows_union_into_one_soft_edged_reveal():
     # Liberated lands stay marked on the map itself with a tappable green fill.
     assert "map.addSource('empire-territory'" in html
     assert "map.addLayer({ id:'empire-territory-fill'" in html
-    assert "map.addLayer({ id:'empire-territory-border'" in html
+    assert "map.addLayer({ id:'empire-territory-border'" not in html
 
 
 def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():
