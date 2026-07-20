@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const manifestPath = path.join(root, 'tmp', 'imagegen', 'burbz-placeholder-manifest.json');
+const manifestPath = path.join(root, 'data', 'burbz-art-recovery-manifest-20260720.json');
 const outputPath = path.join(root, 'public', 'burbz', 'generated_bird_art_20260720.js');
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
