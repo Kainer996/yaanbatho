@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-ruins-build-timers-v89-20260719';
+const BURBZ_CACHE = 'burbz-village-graphics-v90-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -49,6 +49,10 @@ const BURBZ_ASSETS = [
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
   './data/national-bird-completion/manifest.json?v=national-completion-20260715',
   './assets/merlin-tutorial.png',
+  './assets/tex/grass_c.jpg',
+  './assets/tex/grass_n.jpg',
+  './assets/tex/cobble_c.jpg',
+  './assets/tex/cobble_n.jpg',
   './assets/ui/quest-compass-emblem.webp',
   './assets/ui/merlin-wand-listener.webp',
   './assets/academy-tree-manga-20260629.png',
