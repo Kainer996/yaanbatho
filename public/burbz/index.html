@@ -3600,6 +3600,9 @@ function vibrate(ms) {
 // ============================================================================
 // GAME STATE
 // ============================================================================
+// Merlin guarantees that the first real Birdex discovery recruited into an
+// empty flock never costs more than the coins left after both opening builds.
+const FIRST_RECRUIT_MAX_COST = 110;
 const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
   flock: [],
@@ -3617,7 +3620,7 @@ const DEFAULT_STATE = {
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // Campus building ownership
-  academyBuilderVersion: 5,
+  academyBuilderVersion: 6,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
   league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // Perch League ladder
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
@@ -3700,7 +3703,7 @@ function loadState() {
     gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
-  const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 5;
+  const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 6;
   for (const k of Object.keys(DEFAULT_STATE)) {
     if (gameState[k] === undefined) gameState[k] = JSON.parse(JSON.stringify(DEFAULT_STATE[k]));
   }
@@ -9671,20 +9674,26 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     }
     delete gameState.academyBuildings.market;
   }
-  // v5: The Roost and Barracks now unlock together. Existing early-game saves
-  // receive only the missing construction budget plus a realistic first-bird
-  // recruitment reserve; established campuses are left untouched.
-  if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 5) {
+  // v6: The Roost and Barracks unlock together. Existing early-game saves
+  // receive only the missing construction budget plus the guaranteed first-
+  // companion reserve. Migrated timber is marked collected so it cannot be
+  // claimed a second time from the six map bundles.
+  if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 6) {
     const openingBuildingIds = ['dorm', 'tavern'];
     const missingOpeningIds = openingBuildingIds.filter(id => !isAcademyBuildingBuilt(id));
     const constructionCoins = missingOpeningIds.reduce((sum, id) => sum + (ACADEMY_BUILDINGS[id]?.cost || 0), 0);
     const constructionBranches = missingOpeningIds.reduce((sum, id) => sum + (ACADEMY_BUILDINGS[id]?.branches || 0), 0);
-    const recruitmentReserve = isAcademyBuildingBuilt('tavern') ? 0 : 100;
+    const recruitmentReserve = (gameState.flock || []).length ? 0 : FIRST_RECRUIT_MAX_COST;
     const previousCoins = Number(gameState.player.coins) || 0;
     const previousBranches = Number(gameState.player.branches) || 0;
     gameState.player.coins = Math.max(previousCoins, constructionCoins + recruitmentReserve);
     gameState.player.branches = Math.max(previousBranches, constructionBranches);
-    gameState.academyBuilderVersion = 5;
+    if (constructionBranches > 0) {
+      if (!gameState.starterTimber || typeof gameState.starterTimber !== 'object') gameState.starterTimber = { taken: {} };
+      if (!gameState.starterTimber.taken || typeof gameState.starterTimber.taken !== 'object') gameState.starterTimber.taken = {};
+      for (let i = 0; i < 6; i++) gameState.starterTimber.taken[i] = true;
+    }
+    gameState.academyBuilderVersion = 6;
     if (gameState.player.coins > previousCoins || gameState.player.branches > previousBranches) {
       setTimeout(() => showToast('🪶 Merlin topped up your opening Academy building and recruitment fund.'), 900);
     }
@@ -14020,8 +14029,11 @@ function renameCompanionBird(birdId) {
 }
 function discoveredSpeciesRecords() { return Object.values(gameState.discoveredSpecies || {}).filter(Boolean); }
 function recruitCostForBird(bird) {
-  if (window.BurbzScanEconomy && typeof BurbzScanEconomy.recruitCostForBird === 'function') return BurbzScanEconomy.recruitCostForBird(bird);
-  return RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common;
+  const fullCost = window.BurbzScanEconomy && typeof BurbzScanEconomy.recruitCostForBird === 'function'
+    ? BurbzScanEconomy.recruitCostForBird(bird)
+    : (RARITY_RECRUIT_COST[(bird && bird.rarity) || 'common'] || RARITY_RECRUIT_COST.common);
+  const firstCompanion = gameState && Array.isArray(gameState.flock) && gameState.flock.length === 0;
+  return firstCompanion ? Math.min(fullCost, FIRST_RECRUIT_MAX_COST) : fullCost;
 }
 function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && bird.rarity) || 'common'] || RARITY_DISCOVERY_REWARD.common; }
 function addCoins(amount) { gameState.player.coins = Math.max(0, Math.floor((Number(gameState.player.coins) || 0) + amount)); return gameState.player.coins; }

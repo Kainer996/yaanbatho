@@ -22,7 +22,7 @@ const self={
   clients:{claim:async()=>{}}, skipWaiting:async()=>{}, location:{origin:'https://yaanbatho.com'}
 };
 const caches={
-  keys:async()=>['burbz-old-v78','burbz-national-completion-v79-20260715','burbz-buzzard-history-v80-20260716','burbz-village-variety-v81-20260716','burbz-cloud-atlas-v82-20260716','burbz-discovery-flip-cards-v83-20260716','burbz-footpath-ring-v84-20260716','burbz-village-life-v85-20260716','burbz-roost-barracks-v95-20260720','good-news-v4','quarry-pro-v2'],
+  keys:async()=>['burbz-old-v78','burbz-national-completion-v79-20260715','burbz-buzzard-history-v80-20260716','burbz-village-variety-v81-20260716','burbz-cloud-atlas-v82-20260716','burbz-discovery-flip-cards-v83-20260716','burbz-footpath-ring-v84-20260716','burbz-village-life-v85-20260716','burbz-roost-barracks-v96-20260720','good-news-v4','quarry-pro-v2'],
   delete:async key=>{deleted.push(key);return true},
   open:async()=>({add:async()=>{},put:async()=>{}}), match:async()=>null
 };
