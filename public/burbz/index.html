@@ -2799,6 +2799,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="uk_bird_expansion_3.js?v=uk-regular-completion-20260715"></script>
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
+<script src="generated_bird_art_20260720.js?v=recovered-720-20260720"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script>
 /* ============================================================================
@@ -9149,15 +9150,18 @@ Object.assign(BUILT_IN_BIRD_ART, {
   "Whooper Swan": "/burbz/bird-art-cache/whooper_swan_burbz_manga_rpg_20260711.png",
   "Wood Duck": "/burbz/bird-art-cache/wood_duck_burbz_manga_rpg_20260711.png"
 });
+Object.assign(BUILT_IN_BIRD_ART, globalThis.BURBZ_GENERATED_BIRD_ART_20260720 || {});
 
 // Bird art is stored through a mixture of Git LFS and regular Git blobs. The
 // github.com raw endpoint resolves both kinds to real image bytes, unlike the
 // VPS source-archive deploy (LFS pointer text) or the media-only endpoint
 // (404 for regular blobs). Route every mapped raster through this one endpoint.
 const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
+const BIRD_ART_USE_LOCAL_ASSETS = location.protocol === 'file:' ||
+  ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
 for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
   // Honest 20260715 placeholders are served locally; only real paintings are routed through GitHub/LFS.
-  if (/^\/burbz\/bird-art-cache\/[^?#]+\.(?:png|jpe?g|webp)$/i.test(artUrl) && !/placeholder_20260715/i.test(artUrl)) {
+  if (!BIRD_ART_USE_LOCAL_ASSETS && /^\/burbz\/bird-art-cache\/[^?#]+\.(?:png|jpe?g|webp)$/i.test(artUrl) && !/placeholder_20260715/i.test(artUrl)) {
     BUILT_IN_BIRD_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
   }
 }

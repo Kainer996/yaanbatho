@@ -4,14 +4,16 @@ importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
+importScripts('./generated_bird_art_20260720.js?v=recovered-720-20260720');
 
-const BURBZ_CACHE = 'burbz-ruins-build-timers-v89-20260719';
+const BURBZ_CACHE = 'burbz-recovered-bird-art-v90-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
 const UK_FINAL_SW = self.BURBZ_UK_BIRD_EXPANSION_FINAL;
 const AU50_SW = self.BURBZ_AU_BIRD_EXPANSION_50;
 const NATIONAL_SW = self.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;
+const GENERATED_ART_SW = self.BURBZ_GENERATED_BIRD_ART_20260720 || {};
 const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
 const ALL_EXPANSION_ART = { ...UK50_SW.art, ...UK26_SW.art, ...AU_SW.art };
 const NEW_LOCAL_PLACEHOLDER_ART = { ...UK_FINAL_SW.art, ...AU50_SW.art };
@@ -23,6 +25,7 @@ const UK50_REMOTE_CUTOUTS = Object.values(ALL_EXPANSION_ART).map(path => {
   return BIRD_ART_GITHUB_RAW_BASE + '/public/burbz/bird-art-cache/cutouts/' + filename;
 });
 const NEW_LOCAL_ART = Object.values(NEW_LOCAL_PLACEHOLDER_ART);
+const RECOVERED_LOCAL_ART = Object.values(GENERATED_ART_SW);
 const NEW_LOCAL_CUTOUTS = NEW_LOCAL_ART.map(path => {
   const filename = path.split('/').pop().replace(/\.png$/i, '_cutout.png');
   return '/burbz/bird-art-cache/cutouts/' + filename;
@@ -44,6 +47,7 @@ const BURBZ_ASSETS = [
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './national_bird_completion_20260715.js?v=national-completion-20260715',
+  './generated_bird_art_20260720.js?v=recovered-720-20260720',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
@@ -89,7 +93,7 @@ const BURBZ_ASSETS = [
   './icons/maskable-192.png',
   './icons/maskable-512.png'
 ];
-BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, ...NEW_LOCAL_CUTOUTS);
+BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, ...NEW_LOCAL_CUTOUTS, ...RECOVERED_LOCAL_ART);
 
 // The app shell must cache or the install fails; artwork/video are best-effort
 // so one missing file can never knock out offline support for the whole game.
@@ -105,6 +109,7 @@ const BURBZ_CORE = [
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './national_bird_completion_20260715.js?v=national-completion-20260715',
+  './generated_bird_art_20260720.js?v=recovered-720-20260720',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
