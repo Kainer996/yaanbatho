@@ -19,27 +19,39 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 ## How a town is liberated
 
 1. The player physically reaches and enters a real town or village through the map.
-2. A squad of **evil Burbz** — the dark force's occupying garrison — challenges the player's birds in a **Liberation Battle**.
+2. A squad of **evil Burbz** — the usurper's supernatural shadow-bird garrison — challenges the player's real birds in a **Liberation Battle**.
 3. A victory breaks the usurper's hold. The player then builds a sanctuary birdhouse to anchor the freedom spell.
 4. The town becomes part of the player's empire, the darkness lifts over its land in a light green ring, it gains a liberation icon, supports the realm, and becomes a safe local hub.
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
-## The evil Burbz
+## The evil Burbz — the enemies the birds fight
 
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.
-- Evil Burbz are shadow constructs animated by the usurper's magic around a corrupted bird's silhouette. They keep the wing class of the bird they were twisted from, so real matchup knowledge still wins fights.
-- When an evil Burb is beaten its dark magic unravels and the shadow scatters; nothing is killed. The bird trapped inside is freed.
+- Evil Burbz are made from the **usurper's shadow magic**. They are not real bird species, undiscovered wildlife or ordinary birds waiting to be recruited: they are huge supernatural avian shapes formed from smoke, torn black feather-like shadow and ember-red corruption. Their glowing red eyes and faint red seams make the usurper's influence unmistakable.
+- Their silhouettes echo raptors, corvids, owls and other powerful bird forms — each evil Burb keeps the wing class of the form it was cast around, so real matchup knowledge still wins fights — but they must never be presented as biological versions of those species. They do not belong in Birdex and cannot become companions.
+- Their purpose is to occupy, intimidate and hold places under the shadow spell until the player's living flock breaks it.
+- When an evil Burb is beaten it is **dispelled**: its dark magic unravels and the black form scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death.
 - The Perch League is the war effort's proving ground: each habitat tier is patrolled by stronger evil Burbz, up to the usurper's legendary guard.
+
+### Canonical visual direction
+
+- Monumental, ragged bird silhouettes with broad wings, hooked beaks and strong talons.
+- Bodies read as layered black feathers dissolving into smoke, ash-like wisps and torn shadow ribbons.
+- Charcoal, black, storm-grey and cold silver dominate; ember red is reserved for eyes, tiny cracks and corruption sparks.
+- Storm clouds, drifting smoke and distant ruined-spire silhouettes establish the occupied realm.
+- Keep the image dramatic and ominous but non-gory. The contrast after victory is hopeful: red corruption extinguishes, darkness disperses and the sanctuary returns in green, gold and daylight.
+
+Canonical concept reference: `burbz-shadow-enemies-reference-20260720.png` in the shared Burbz/Obsidian reference archive; in-game portraits live in `assets/evil-burbz/`.
 
 ## Tone and moral frame
 
-**No town is destroyed.** Liberation Battles are non-gory contests against the usurper's shadow squads. Defeated evil Burbz dissolve back into shadow and the birds bound inside them are released from the spell rather than killed or conquered. The player restores communities, knowledge, wildlife and safe paths. The empire is an expanding network of free sanctuaries, and its visual language should feel hopeful, alive and green.
+**No town is destroyed.** Liberation Battles are non-gory magical contests between the player's living flock and the usurper's shadow squads. Defeated evil Burbz are dispelled rather than killed or conquered. Real birds remain the heroes, discoveries and companions; the player restores communities, knowledge, wildlife and safe paths. The empire is an expanding network of free sanctuaries, and its visual language should feel hopeful, alive and green.
 
 ## Canon terminology
 
 - Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species.
-- Use **evil Burbz** for the dark force's soldiers; the player's own birds are simply **birds** or **companions**.
+- Use **evil Burbz** for the dark force's shadow soldiers; the player's own birds are simply **birds** or **companions**.
 - Use **liberate**, **liberated**, **sanctuary**, **restore**, **awaken** and **free** for world progress.
 - The real world and the Kingdom of Burbz are magically linked through Merlin's spell-tablet.
 - Avoid domination language for the player's actions; the player is freeing the world from the usurper's hold.
