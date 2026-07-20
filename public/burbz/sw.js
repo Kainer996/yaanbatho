@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-village-graphics-v90-20260720';
+const BURBZ_CACHE = 'burbz-evil-burbz-new-dawn-v91-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -63,10 +63,14 @@ const BURBZ_ASSETS = [
   './assets/academy-buildings-manga/nursery.png',
   './assets/academy-buildings-manga/observatory.png',
   './assets/academy-buildings-manga/quest-roost.png',
-  './battle_core.js?v=skyclash-squads-20260719',
+  './battle_core.js?v=evil-burbz-squads-20260720',
   './loot_crafting_core.js?v=fletchers-forge-20260719',
   './manifest.json',
   './privacy.html',
+  './assets/evil-burbz/evil-burb-1.png',
+  './assets/evil-burbz/evil-burb-2.png',
+  './assets/evil-burbz/evil-burb-3.png',
+  './assets/evil-burbz/evil-burb-4.png',
   './assets/burbz-logo-yaan-transparent-20260608.png',
   './assets/cutscenes/burbz-intro-30s-seedance-20260629-discord.mp4',
   './assets/cutscenes/burbz-intro-part1-seedance-20260629-discord.mp4',
@@ -102,7 +106,7 @@ const BURBZ_CORE = [
   './assets/tex/cobble_c.jpg',
   './assets/tex/cobble_n.jpg',
   './academy_treehouse_core.js',
-  './battle_core.js?v=skyclash-squads-20260719',
+  './battle_core.js?v=evil-burbz-squads-20260720',
   './loot_crafting_core.js?v=fletchers-forge-20260719',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
