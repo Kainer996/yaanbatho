@@ -19,6 +19,7 @@ MANIFEST_PATH = ROOT / "tmp" / "imagegen" / "burbz-placeholder-manifest.json"
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--species")
+    parser.add_argument("--target-relative-path")
     parser.add_argument("--input", type=Path)
     parser.add_argument(
         "--repair",
@@ -68,11 +69,26 @@ def main() -> None:
         print(f"Repaired {repaired} generated manifest entries")
         return
 
-    if not args.species or not args.input:
-        raise SystemExit("--species and --input are required unless --repair is used")
-    bird = next((item for item in manifest["birds"] if item["species"] == args.species), None)
+    if (not args.species and not args.target_relative_path) or not args.input:
+        raise SystemExit(
+            "--input and either --species or --target-relative-path are required unless --repair is used"
+        )
+    bird = next(
+        (
+            item
+            for item in manifest["birds"]
+            if (
+                args.target_relative_path
+                and item["targetRelativePath"] == args.target_relative_path
+            )
+            or (not args.target_relative_path and item["species"] == args.species)
+        ),
+        None,
+    )
     if bird is None:
-        raise SystemExit(f"Species is not in the manifest: {args.species}")
+        identity = args.target_relative_path or args.species
+        raise SystemExit(f"Bird is not in the manifest: {identity}")
+    species = bird["species"]
 
     input_path = args.input.resolve()
     if not input_path.is_file():
@@ -97,7 +113,7 @@ def main() -> None:
     metadata["generatedAt"] = datetime.now(timezone.utc).isoformat()
     if args.defer_manifest:
         print(
-            f"Ingested {args.species} with deferred manifest update: "
+            f"Ingested {species} with deferred manifest update: "
             f"{output_path.relative_to(ROOT)} ({metadata['outputBytes']} bytes)"
         )
         return
@@ -105,7 +121,7 @@ def main() -> None:
     temporary = MANIFEST_PATH.with_suffix(".json.next")
     temporary.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(MANIFEST_PATH)
-    print(f"Ingested {args.species}: {output_path.relative_to(ROOT)} ({metadata['outputBytes']} bytes)")
+    print(f"Ingested {species}: {output_path.relative_to(ROOT)} ({metadata['outputBytes']} bytes)")
 
 
 if __name__ == "__main__":
