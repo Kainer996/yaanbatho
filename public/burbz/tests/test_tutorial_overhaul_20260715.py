@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-roost-barracks-v95-20260720" in sw
+    assert "burbz-skyrim-settlements-v96-20260720" in sw

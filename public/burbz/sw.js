@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-roost-barracks-v95-20260720';
+const BURBZ_CACHE = 'burbz-skyrim-settlements-v96-20260720';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -35,6 +35,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
   './quest_core.js?v=footpath-ring-quests-v1-20260716',
+  './irl_world_core.js?v=skyrim-settlements-v1-20260720',
   './academy_treehouse_core.js?v=roost-barracks-onboarding-20260720',
   './scan_economy_core.js',
   './sound_listener_core.js?v=merlin-discovery-history-v3-20260716',
@@ -105,6 +106,7 @@ const BURBZ_CORE = [
   './assets/tex/grass_n.jpg',
   './assets/tex/cobble_c.jpg',
   './assets/tex/cobble_n.jpg',
+  './irl_world_core.js?v=skyrim-settlements-v1-20260720',
   './academy_treehouse_core.js?v=roost-barracks-onboarding-20260720',
   './battle_core.js?v=evil-burbz-squads-20260720',
   './loot_crafting_core.js?v=fletchers-forge-20260719',

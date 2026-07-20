@@ -2187,6 +2187,17 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 /* The Wandering Perch — pop-up trail tavern */
 .quest-marker.qm-tavern { width:54px; height:54px; border-radius:14px; border:2.5px solid #f0c767; background:linear-gradient(180deg,#3a2c12,#1c150a); font-size:30px; box-shadow:0 0 18px rgba(240,199,103,.65); animation:questBounce 1.8s ease-in-out infinite; }
 .quest-marker.qm-tavern.visited { animation:none; opacity:.9; }
+/* Skyrim-style settlement questgivers + their daily quest targets */
+.quest-marker.qm-villager { width:48px; height:48px; border-radius:50%; overflow:visible; border:2.5px solid #f0c767; background:radial-gradient(circle at 40% 30%, #3a2f16, #141007); font-size:24px; box-shadow:0 0 14px rgba(240,199,103,.5); }
+.quest-marker.qm-villager.irl-done { opacity:.62; }
+.quest-marker.qm-villager .qm-npc-quest { position:absolute; top:-17px; right:-5px; font-size:16px; font-weight:900; font-family:'Rajdhani',sans-serif; color:#ffd75e; text-shadow:0 0 6px rgba(0,0,0,.85); animation:questBounce 1.4s ease-in-out infinite; }
+.qm-npc-nameplate { position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:4px; padding:1px 7px; border-radius:7px; background:rgba(12,16,10,.85); border:1px solid rgba(240,199,103,.55); color:#f2dfae; font:700 9.5px/1.5 'Rajdhani',sans-serif; letter-spacing:.04em; white-space:nowrap; }
+.quest-marker.qm-irl-target { width:40px; height:40px; border-radius:11px; border:2px solid #f0c767; background:linear-gradient(180deg,#3a2c12,#191207); font-size:20px; box-shadow:0 0 12px rgba(240,199,103,.55); animation:questBounce 1.6s ease-in-out infinite; }
+.quest-marker.qm-irl-target.done { animation:none; opacity:.55; }
+.irl-town-banner { padding:3px 10px; border-radius:999px; background:linear-gradient(180deg,rgba(38,30,14,.92),rgba(16,13,7,.92)); border:1px solid rgba(240,199,103,.6); color:#f0c767; font:800 11px/1.6 'Rajdhani',sans-serif; letter-spacing:.06em; white-space:nowrap; filter:drop-shadow(0 3px 5px rgba(0,0,0,.55)); }
+.irl-npc-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.irl-npc-actions .wq-npc-ok.irl-ghost { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.18); color:var(--text3); }
+.irl-reward-line { margin-top:6px; color:#f0c767; font-weight:800; }
 /* Tavern sheet */
 .tavern-lines { margin:8px 0 4px; }
 .tavern-line { margin:4px 0; }
@@ -2818,6 +2829,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="loot_crafting_core.js?v=fletchers-forge-20260719"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=footpath-ring-quests-v1-20260716"></script>
+<script src="irl_world_core.js?v=skyrim-settlements-v1-20260720"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -11722,7 +11734,7 @@ function applyBurbzCameraPadding() {
     liveMap.setPadding({ top: Math.round(h * 0.44), bottom: 0, left: 0, right: 0 });
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); initIrlWorld(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
   if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
   if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
@@ -11733,9 +11745,10 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
     if (/path|track/i.test(id)) { try { liveMap.setPaintProperty(id, 'line-dasharray', [1.6, 1.4]); } catch (e2) {} }
   }
   if (/building/i.test(id)) {
-    // Keep flat building footprints for a richer, more detailed map (they read
-    // as clustered timber/stone dwellings), but drop the modern 3D extrusions.
-    if (layer.type === 'fill-extrusion') { liveMap.setLayoutProperty(id, 'visibility', 'none'); }
+    // Flat footprints stay for the zoomed-out parchment look; the 3D extrusions
+    // are restyled by BurbzIrlWorld into weathered timber-and-stone Skyrim
+    // holds and only fade in when zoomed close to street level.
+    if (layer.type === 'fill-extrusion') { if (window.BurbzIrlWorld) window.BurbzIrlWorld.styleExtrusionLayer(liveMap, id); else liveMap.setLayoutProperty(id, 'visibility', 'none'); }
     else if (layer.type === 'fill') {
       liveMap.setLayoutProperty(id, 'visibility', 'visible');
       try { liveMap.setPaintProperty(id, 'fill-color', ['interpolate', ['linear'], ['zoom'], 14, '#3a3428', 17, '#463d2c']); } catch (e0) {}
@@ -11762,6 +11775,24 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
 // the single biggest cause of the slow, jumpy map on phones. The painted
 // medieval styling carries the look without them.
 function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { liveMap.setTerrain(null); } catch (e) {} liveMapTerrainEnabled = true; }
+// Skyrim-style settlements: hand the IRL world module everything it needs from
+// the game (map handle, XP/coin rewards, toasts, SFX) so it stays decoupled.
+function initIrlWorld() {
+  if (!window.BurbzIrlWorld || !liveMap) return;
+  try {
+    window.BurbzIrlWorld.init({
+      getMap: () => liveMap,
+      addPlayerXp,
+      addCoins: n => { gameState.player.coins += n; updateHeader(); saveState(); },
+      showToast,
+      escapeHtml,
+      reachRadius: () => (window.BurbzQuestCore ? window.BurbzQuestCore.REACH_RADIUS_M : 45),
+      playSfx: name => { try { SFX[name] && SFX[name](); } catch (e) {} }
+    });
+    window.BurbzIrlWorld.onMapReady();
+    if (liveMapHasPrecisePosition && liveMapLastPosition) window.BurbzIrlWorld.onPositionFix(liveMapLastPosition.lat, liveMapLastPosition.lon);
+  } catch (err) { console.warn('BURBZ IRL world init failed', err); }
+}
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
@@ -13413,6 +13444,7 @@ function handleLivePosition(pos, fly) {
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy });
   try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
   try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
+  try { if (window.BurbzIrlWorld) window.BurbzIrlWorld.onPositionFix(lat, lon); } catch (err) { console.warn('BURBZ settlement fix failed', err); }
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
