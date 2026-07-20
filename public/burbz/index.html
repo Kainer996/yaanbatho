@@ -56,8 +56,8 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   display: flex; align-items: center; gap: 12px; flex-shrink: 0;
 }
 .header-logo {
-  width: min(34vw, 132px);
-  height: 44px;
+  width: min(26vw, 106px);
+  height: 46px;
   display: flex;
   align-items: center;
   flex: 0 0 auto;
@@ -70,10 +70,21 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   object-position: left center;
   display: block;
 }
-.header-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.header-level { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px; color: var(--accent2); }
-.header-xp-bar { width: 100%; height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
-.header-xp-fill { height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s ease; }
+.header-hud { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.hud-top { display: flex; align-items: center; gap: 7px; }
+.hud-level-badge { flex: none; display: flex; align-items: baseline; gap: 3px; padding: 2px 8px 3px; border-radius: 9px; border: 1px solid rgba(214,168,79,.45); background: linear-gradient(135deg, rgba(214,168,79,.22), rgba(0,0,0,.35)); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.hud-lv-label { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 9px; letter-spacing: .08em; color: var(--text2); }
+.hud-lv-num { font-family: 'Russo One', sans-serif; font-size: 14px; line-height: 1; color: var(--legendary); }
+.hud-xp { position: relative; flex: 1; min-width: 0; height: 15px; border-radius: 8px; background: var(--bg4); border: 1px solid rgba(255,255,255,.08); overflow: hidden; }
+.hud-xp-fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--legendary)); transition: width .5s ease; }
+.hud-xp-text { position: relative; z-index: 1; display: block; text-align: center; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 9px; line-height: 14px; letter-spacing: .05em; color: #fff8e6; text-shadow: 0 1px 2px rgba(0,0,0,.75); white-space: nowrap; overflow: hidden; }
+.hud-resources { display: flex; gap: 6px; }
+.hud-chip { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 3px 8px 4px; border-radius: 9px; border: 1px solid rgba(214,168,79,.28); background: linear-gradient(135deg, rgba(214,168,79,.12), rgba(255,255,255,.03)); }
+.hud-chip:active { background: rgba(214,168,79,.24); }
+.hud-chip-icon { font-size: 12px; line-height: 1; }
+.hud-chip-value { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 13px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-chip.bump .hud-chip-value { animation: hudBump .45s ease; }
+@keyframes hudBump { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--legendary); } 100% { transform: scale(1); } }
 .header-settings {
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   border-radius: 8px; background: var(--bg3); font-size: 18px; color: var(--text2);
@@ -1423,7 +1434,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .profile-stat-num { font-family: 'Russo One', sans-serif; font-size: 24px; color: var(--accent2); }
 .profile-stat-label { font-family: 'Rajdhani', sans-serif; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
 .burbz-economy-card {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 0 14px;
+  display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:8px; margin:0 0 14px;
   padding:10px; border-radius:14px; background:linear-gradient(135deg,rgba(214,168,79,.14),rgba(0,0,0,.28));
   border:1px solid rgba(214,168,79,.22);
 }
@@ -2237,9 +2248,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <!-- Header -->
   <header class="header">
     <div class="header-logo"><img src="assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></div>
-    <div class="header-info">
-      <div class="header-level" id="headerLevel">TRAINER LV. 1</div>
-      <div class="header-xp-bar"><div class="header-xp-fill" id="headerXpFill" style="width: 0%"></div></div>
+    <div class="header-hud">
+      <div class="hud-top">
+        <span class="hud-level-badge" title="Trainer level"><span class="hud-lv-label">LV</span><span class="hud-lv-num" id="hudLevelNum">1</span></span>
+        <div class="hud-xp" id="hudXpBar" role="progressbar" aria-label="Trainer XP towards next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="hud-xp-fill" id="headerXpFill" style="width: 0%"></div>
+          <span class="hud-xp-text" id="hudXpText">0 / 130 XP</span>
+        </div>
+      </div>
+      <div class="hud-resources">
+        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><span class="hud-chip-icon">🪙</span><span class="hud-chip-value" id="hudCoins">0</span></button>
+        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><span class="hud-chip-icon">🪵</span><span class="hud-chip-value" id="hudTimber">0</span></button>
+      </div>
     </div>
     <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile">&#128100;</button>
     <button class="header-settings" id="settingsBtn">&#9881;</button>
@@ -2556,6 +2576,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="screen-title">INVENTORY</div>
       <div class="burbz-economy-card">
         <div class="burbz-economy-stat"><div class="burbz-economy-num" id="inventoryCoins">0</div><div class="burbz-economy-label">Coins</div></div>
+        <div class="burbz-economy-stat"><div class="burbz-economy-num" id="inventoryTimber">0</div><div class="burbz-economy-label">Timber</div></div>
         <div class="burbz-economy-stat"><div class="burbz-economy-num" id="inventoryItems">0</div><div class="burbz-economy-label">Items</div></div>
         <div class="burbz-economy-stat"><div class="burbz-economy-num" id="inventoryGifts">0</div><div class="burbz-economy-label">Gifts</div></div>
       </div>
@@ -18718,7 +18739,7 @@ function renderRpgHud() {
   const discovered = discoveredSpeciesSet().size;
   const companions = (gameState.flock || []).length;
   const items = inventoryItemCount();
-  [['burbzCoins', gameState.player.coins || 0], ['burbzCompanions', companions], ['burbzInventory', items], ['profileCoins', gameState.player.coins || 0], ['profileInventory', items], ['profileGifts', giftItemCount()], ['inventoryCoins', gameState.player.coins || 0], ['inventoryItems', items], ['inventoryGifts', giftItemCount()]].forEach(([id, val]) => { const el = $(id); if (el) el.textContent = val; });
+  [['burbzCoins', gameState.player.coins || 0], ['burbzCompanions', companions], ['burbzInventory', items], ['profileCoins', gameState.player.coins || 0], ['profileInventory', items], ['profileGifts', giftItemCount()], ['inventoryCoins', gameState.player.coins || 0], ['inventoryTimber', playerBranches()], ['inventoryItems', items], ['inventoryGifts', giftItemCount()]].forEach(([id, val]) => { const el = $(id); if (el) el.textContent = val; });
 }
 
 function showRecruitChoiceOverlay(birds, message) {
@@ -19215,16 +19236,43 @@ function renderForgeMaterials(body) {
 // ============================================================================
 // HEADER
 // ============================================================================
+function formatHudAmount(n) {
+  n = Math.max(0, Math.floor(Number(n) || 0));
+  if (n >= 1000000) return (n / 1000000).toFixed(n >= 10000000 ? 0 : 1).replace(/\.0(?=M?$)/, '') + 'M';
+  if (n >= 10000) return (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0(?=k?$)/, '') + 'k';
+  return String(n);
+}
+
+function setHudChipValue(chipId, valueId, amount) {
+  const chip = $(chipId), el = $(valueId);
+  if (!el) return;
+  const next = formatHudAmount(amount);
+  if (el.textContent !== next && chip && el.dataset.seeded) {
+    chip.classList.remove('bump');
+    void chip.offsetWidth; // restart the bump animation on rapid back-to-back gains
+    chip.classList.add('bump');
+  }
+  el.textContent = next;
+  el.dataset.seeded = '1';
+}
+
 function updateHeader() {
   const lv = gameState.player.level;
+  const xp = Math.max(0, Math.floor(gameState.player.xp || 0));
   const xpNeeded = XP_PER_LEVEL(lv);
-  const pct = Math.min(100, (gameState.player.xp / xpNeeded) * 100);
-  $('headerLevel').textContent = 'TRAINER LV. ' + lv + ' · ' + (gameState.player.coins || 0) + ' 🪙 · ' + playerBranches() + ' 🪵';
+  const pct = Math.min(100, (xp / xpNeeded) * 100);
+  const lvEl = $('hudLevelNum'); if (lvEl) lvEl.textContent = lv;
   $('headerXpFill').style.width = pct + '%';
+  const xpText = $('hudXpText'); if (xpText) xpText.textContent = formatHudAmount(xp) + ' / ' + formatHudAmount(xpNeeded) + ' XP';
+  const xpBar = $('hudXpBar'); if (xpBar) xpBar.setAttribute('aria-valuenow', Math.round(pct));
+  setHudChipValue('hudCoinsChip', 'hudCoins', gameState.player.coins || 0);
+  setHudChipValue('hudTimberChip', 'hudTimber', playerBranches());
   const cameraHudLevel = $('cameraHudLevel');
   if (cameraHudLevel) cameraHudLevel.textContent = 'LV. ' + lv;
   renderRpgHud();
 }
+
+window.__burbzHudDebug = { refresh: updateHeader, getPlayer: () => gameState && gameState.player };
 
 // ============================================================================
 // BIRDEX
@@ -22243,6 +22291,8 @@ window.visualViewport?.addEventListener('scroll', refreshMerlinTutorialPosition)
 // SETTINGS
 // ============================================================================
 $('headerProfileBtn')?.addEventListener('click', () => switchScreen('profile'));
+$('hudCoinsChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
+$('hudTimberChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
 $('introPlayAgainBtn')?.addEventListener('click', () => showIntroCutscene({ replay:true }));
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
