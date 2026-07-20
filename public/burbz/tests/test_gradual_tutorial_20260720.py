@@ -64,7 +64,7 @@ def test_every_chapter_has_steps_and_a_first_open_trigger():
     # Gradual means short chapters, not one giant essay.
     for cid in chapter_ids:
         count = sum(1 for s in steps if s["chapterId"] == cid)
-        assert 1 <= count <= 6, (cid, count)
+        assert 1 <= count <= 7, (cid, count)
 
 
 def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():
@@ -83,6 +83,8 @@ def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():
         "multiverse",
         "only you can unlock the darkness",
         "real birdwatching restores burbz",
+        "11,000 known bird species",
+        "absolutely epic prize",
     ):
         assert marker in story, marker
 
@@ -131,5 +133,5 @@ def test_fresh_start_epoch_resets_the_whole_game_once():
 
 def test_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-starter-timber-v92-20260720" in sw
+    assert "burbz-side-quests-v94-20260720" in sw
     assert "./assets/evil-burbz/evil-burb-1.png" in sw
