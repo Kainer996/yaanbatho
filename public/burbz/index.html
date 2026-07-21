@@ -14961,12 +14961,16 @@ function birdhouseCostForNextVillage() {
 const EMPIRE_TRIBUTE_INTERVAL_MS = 8 * 60 * 60 * 1000; // each village pays every 8h
 const EMPIRE_TRIBUTE_MAX_PERIODS = 3;                  // strongbox stores up to a day away
 const EMPIRE_SIM_MAX_CYCLES = 21;                      // a week of population catch-up
-const VILLAGE_BASE_POPULATION = 8;
-const VILLAGE_MIN_POPULATION = 4;
+// A freshly liberated town stands empty — the darkness scattered everyone, so
+// settlers only return once the governor raises homes for them to live in.
+const VILLAGE_BASE_POPULATION = 0;
+const VILLAGE_MIN_POPULATION = 4; // once settled, a town never empties below a stubborn few
 const VILLAGE_MAX_POPULATION = 200;
 // What a raw liberated village supports before anything is built: the square,
-// a spring and a handful of huts keep the founding villagers barely covered.
-const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 12, joy: 7 };
+// a spring and the old cellar stores keep food, water and a little cheer
+// ticking over — but every home lies in ruins, so shelter (and with it any
+// residents at all) comes only from cottages the player builds.
+const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 0, joy: 7 };
 
 const EMPIRE_NEEDS = [
   { id: 'food',    icon: '🍞', label: 'Food' },
@@ -15058,7 +15062,16 @@ function empireCompleteConstructions(now) {
     delete eco.construction;
     completed = true;
     addPlayerXp(12);
-    showToast('🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!');
+    // New homes draw new residents: finishing a shelter building brings the
+    // first families straight in (half its fresh capacity), and the rest of
+    // the rooms fill up over the 8-hour tax cycles as the town thrives.
+    let movedIn = 0;
+    if (building.need === 'shelter') {
+      const housingCap = villageNeedCapacity(rec, 'shelter');
+      movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
+      eco.population += movedIn;
+    }
+    showToast('🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!' + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : ''));
     if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   });
   if (completed) { saveState(); SFX.questComplete(); vibrate(35); }
@@ -15117,8 +15130,8 @@ function ensureVillageEconomy(rec) {
     if (!b || !Number.isFinite(Number(con.startMs)) || !Number.isFinite(Number(con.endMs)) || Number(con.endMs) <= Number(con.startMs)) delete eco.construction;
     else con.toLevel = Math.max(1, Math.min(b.maxLevel, Math.floor(Number(con.toLevel)) || ((eco.buildings[b.id] || 0) + 1)));
   }
-  if (!Number.isFinite(Number(eco.population)) || Number(eco.population) <= 0) eco.population = VILLAGE_BASE_POPULATION;
-  eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
+  if (!Number.isFinite(Number(eco.population)) || Number(eco.population) < 0) eco.population = VILLAGE_BASE_POPULATION;
+  eco.population = Math.max(0, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
   if (!Number.isFinite(Number(eco.lastSimAt))) eco.lastSimAt = Number(rec.lastTributeAt) || Date.parse(rec.claimedAt) || Date.now();
   return eco;
 }
@@ -15150,14 +15163,16 @@ function villageEconomySnapshot(rec) {
     flatBranches += (b.branchesPerLevel || 0) * level;
     taxBoost += (b.taxBoost || 0) * level;
   });
-  // Miserable villagers still pay a trickle (0.35 floor); a content, market-run
-  // town of 40 pays several times a raw hamlet's rate.
-  const taxes = Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost)) + flatCoins);
-  const branches = 2 + flatBranches;
+  // An empty province pays nothing — taxes and timber need residents to raise
+  // them. Miserable villagers still pay a trickle (0.35 floor); a content,
+  // market-run town of 40 pays several times a raw hamlet's rate.
+  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost)) + flatCoins);
+  const branches = pop <= 0 ? 0 : 2 + flatBranches;
   return { pop, needs, happiness, taxes, branches, housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
-// housing cap, hungry or joyless ones empty out (never below a stubborn few).
+// housing cap, hungry or joyless ones empty out (never below a stubborn few —
+// though the floor never conjures settlers into a town with no homes built).
 function simulateVillageEconomy(rec, now) {
   const eco = ensureVillageEconomy(rec);
   if (!eco) return;
@@ -15167,10 +15182,11 @@ function simulateVillageEconomy(rec, now) {
   eco.lastSimAt += elapsed * EMPIRE_TRIBUTE_INTERVAL_MS;
   for (let i = 0; i < Math.min(EMPIRE_SIM_MAX_CYCLES, elapsed); i++) {
     const snap = villageEconomySnapshot(rec);
+    const floor = Math.min(eco.population, VILLAGE_MIN_POPULATION);
     if (snap.happiness >= 0.9 && eco.population < snap.housingCap) eco.population += 2;
     else if (snap.happiness >= 0.65 && eco.population < snap.housingCap) eco.population += 1;
     else if (snap.happiness < 0.45) eco.population -= 1;
-    eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, VILLAGE_MIN_POPULATION))));
+    eco.population = Math.max(floor, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, floor))));
   }
 }
 function simulateAllVillageEconomies() {
@@ -15305,7 +15321,7 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The town armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count) + claimLootText);
+  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! The town stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count) + claimLootText);
   setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
@@ -15394,9 +15410,11 @@ function renderVillageManagePanel() {
   }).join('');
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' GOVERN ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
-    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%</div></div>' +
+    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
     '<div class="province-needs">' + needsHtml + '</div>' +
-    '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>' +
+    (snap.pop > 0
+      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>'
+      : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy' : '') + '</div>' +
@@ -15421,7 +15439,7 @@ function renderEmpirePanel() {
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + '</span><br>' +
-      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
+      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
   const realmName = $('empireRealmName'), realmRank = $('empireRealmRank');
