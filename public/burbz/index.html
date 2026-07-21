@@ -13410,6 +13410,16 @@ function validLivePosition(pos) {
   const lat = Number(coords.latitude), lon = Number(coords.longitude), accuracy = Number(coords.accuracy);
   return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180 && Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 500;
 }
+// Remember roughly where the player lives so other screens (the Empire atlas
+// opens over their own country) know home before a fresh GPS fix arrives —
+// including in the next play session, since it rides in the saved game.
+function rememberHomeFix(lat, lon) {
+  if (!gameState) return;
+  const prev = gameState.lastKnownHome;
+  const movedFar = !prev || !Number.isFinite(Number(prev.lat)) || !Number.isFinite(Number(prev.lon)) || mapDistanceMeters({ lat:Number(prev.lat), lon:Number(prev.lon) }, { lat, lon }) > 1000;
+  gameState.lastKnownHome = { lat, lon, at: Date.now() };
+  if (movedFar) saveState(); // GPS ticks are frequent — only persist real moves
+}
 function handleLivePosition(pos, fly) {
   if (!validLivePosition(pos)) {
     const accuracy = Number(pos && pos.coords && pos.coords.accuracy);
@@ -13419,6 +13429,7 @@ function handleLivePosition(pos, fly) {
   const lat = Number(pos.coords.latitude), lon = Number(pos.coords.longitude), accuracy = Number(pos.coords.accuracy);
   liveMapHasPrecisePosition = true;
   liveMapLastPosition = { lat, lon, accuracy, source:'Your live position' };
+  rememberHomeFix(lat, lon);
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy });
   try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
   try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
@@ -14473,6 +14484,7 @@ function resetEmpireMapAfterFailure(mapToRemove) {
   empireMapReady = false;
   empireMapInitPromise = null;
   empireMapHasFramed = false;
+  empireMapUserAdjusted = false;
 }
 
 function empireMappableVillages() {
@@ -14635,13 +14647,50 @@ function updateEmpireFogMask() {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) updateEmpireFogMask(); });
 window.addEventListener('pageshow', () => updateEmpireFogMask());
 
+// Default framing: the royal atlas opens over the player's own country —
+// close enough to read it, far enough out to see its outskirts — instead of
+// the whole dark world. Home comes from the live map's GPS fix, the last
+// remembered fix, or the towns the player has been visiting.
+const EMPIRE_HOME_ZOOM = 4.6;
+let empireMapUserAdjusted = false, empireHomeFixRequested = false;
+function empireHomeCenter() {
+  const candidates = [
+    liveMapHasPrecisePosition ? liveMapLastPosition : null,
+    gameState && gameState.lastKnownHome,
+    pendingEmpireLiberation(),
+    gameState && gameState.lastVillage
+  ];
+  const villages = empireMappableVillages();
+  if (villages.length) candidates.push(villages[villages.length - 1]);
+  for (const c of candidates) {
+    if (!c) continue;
+    const lat = Number(c.lat), lon = Number(c.lon);
+    if (Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) return { lat, lon };
+  }
+  return null;
+}
+// Without a stored location the atlas still finds the player: ask once for a
+// rough fix and glide the country view over to them when it arrives.
+function requestEmpireHomeFix() {
+  if (empireHomeFixRequested || !navigator.geolocation) return;
+  if (liveMapHasPrecisePosition || (gameState && gameState.lastKnownHome)) return;
+  empireHomeFixRequested = true;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = Number(pos && pos.coords && pos.coords.latitude), lon = Number(pos && pos.coords && pos.coords.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    rememberHomeFix(lat, lon);
+    if (empireMap && !empireMapUserAdjusted && !empireMappableVillages().length) empireMap.easeTo({ center:[lon, lat], zoom:EMPIRE_HOME_ZOOM, duration:900 });
+  }, () => {}, { enableHighAccuracy:false, timeout:9000, maximumAge:600000 });
+}
 function frameEmpireTerritory() {
   if (!empireMap) return;
   const core = window.BurbzEmpireMapCore;
   const villages = empireMappableVillages();
   const bounds = core && core.claimBounds ? core.claimBounds(villages) : null;
   if (!bounds) {
-    empireMap.easeTo({ center:[0, 22], zoom:1.45, duration:900 });
+    const home = empireHomeCenter();
+    if (home) empireMap.easeTo({ center:[home.lon, home.lat], zoom:EMPIRE_HOME_ZOOM, duration:900 });
+    else empireMap.easeTo({ center:[0, 22], zoom:1.45, duration:900 });
   } else if (villages.length === 1 || (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])) {
     empireMap.easeTo({ center:[Number(villages[0].lon), Number(villages[0].lat)], zoom:11.1, duration:900 });
   } else {
@@ -14652,6 +14701,7 @@ function frameEmpireTerritory() {
 
 function showEmpireWorld() {
   if (!empireMap) return;
+  empireMapUserAdjusted = true; // an explicit world view must not be recentred by a late location fix
   empireMap.easeTo({ center:[0, 22], zoom:1.45, duration:1000 });
 }
 
@@ -14725,12 +14775,15 @@ function initialiseEmpireMap() {
   if (empireMapInitPromise) return empireMapInitPromise;
   empireMapInitPromise = loadMapLibreIfNeeded().then(() => new Promise((resolve, reject) => {
     if (!window.maplibregl || !$('empireWorldMap')) throw new Error('MapLibre unavailable for Empire map');
+    const home = empireHomeCenter();
     const map = new maplibregl.Map({
-      container:'empireWorldMap', style:burbzMapStyle(), center:[0,22], zoom:1.45,
+      container:'empireWorldMap', style:burbzMapStyle(), center: home ? [home.lon, home.lat] : [0,22], zoom: home ? EMPIRE_HOME_ZOOM : 1.45,
       minZoom:1, maxZoom:17, dragPan:true, scrollZoom:true, touchZoomRotate:true,
       pitchWithRotate:false, attributionControl:false
     });
     empireMap = map;
+    map.on('dragstart', () => { empireMapUserAdjusted = true; });
+    map.on('zoomstart', event => { if (event && event.originalEvent) empireMapUserAdjusted = true; });
     let settled = false;
     let loadTimeout = null;
     const fail = error => {
@@ -14796,6 +14849,7 @@ function renderEmpireWorldMap() {
   const worldBtn = $('empireMapWorldBtn');
   if (realmBtn) realmBtn.onclick = frameEmpireTerritory;
   if (worldBtn) worldBtn.onclick = showEmpireWorld;
+  requestEmpireHomeFix();
   initialiseEmpireMap().then(map => {
     if (!map) return;
     setTimeout(() => { try { map.resize(); refreshEmpireMap(); } catch (e) {} }, 80);
@@ -20938,6 +20992,28 @@ function fighterArtHTML(f, base) {
   return '<div class="' + base + '-art ' + base + '-emoji">' + escapeHtml(f.emoji || '🐦') + '</div>';
 }
 
+// The story's very first Liberation Battle must be won: no province claimed
+// and no liberation victory recorded yet means this is the opening beat.
+function isFirstLiberationBattle() {
+  const empire = ensureEmpireState();
+  if (!empire) return false;
+  return Object.keys(empire.liberationVictories || {}).length === 0 && empireVillages().length === 0;
+}
+// The garrison holding the player's first town is a weary token force — two
+// feeble guards at a fraction of their strength — so the opening Liberation
+// Battle is effectively guaranteed to be won even by a single fresh bird.
+function weakenFirstGarrison(opponents) {
+  return opponents.slice(0, 2).map(b => {
+    const wearyHp = Math.max(24, Math.round(b.maxHp * 0.25));
+    return {
+      ...b, level: 1, maxHp: wearyHp, hp: wearyHp,
+      atk: Math.max(5, Math.round(b.atk * 0.12)), def: Math.max(5, Math.round(b.def * 0.12)),
+      spd: Math.max(5, Math.round(b.spd * 0.15)), int: Math.max(5, Math.round(b.int * 0.2)),
+      cha: Math.max(5, Math.round(b.cha * 0.3)), mag: Math.max(5, Math.round(b.mag * 0.12)),
+      stamina: Math.max(5, Math.round(b.stamina * 0.3))
+    };
+  });
+}
 // Deterministic evil Burbz squad for this exact league moment (re-rolls after
 // every match). Squads are drawn from the usurper's roster: tier rarity picks
 // the rank of construct, and favoured wing classes come from the base bird.
@@ -20945,7 +21021,8 @@ function leagueRivalOpponents() {
   const core = battleCore();
   const league = ensureLeagueState();
   const tier = core.LEAGUE_TIERS[league.tier];
-  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses);
+  const firstLiberation = !!pendingEmpireLiberation() && isFirstLiberationBattle();
+  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '');
   if (leagueRivalCache && leagueRivalCache.key === key) return leagueRivalCache;
   const rng = core.seededRandom('evil_burbz_' + key);
   let pool = EVIL_BURBZ_ROSTER.filter(e => tier.rarities.includes(e.rarity));
@@ -20987,7 +21064,7 @@ function leagueRivalOpponents() {
     bird.hp = bird.maxHp;
     return bird;
   });
-  leagueRivalCache = { key, opponents };
+  leagueRivalCache = { key, opponents: firstLiberation ? weakenFirstGarrison(opponents) : opponents };
   return leagueRivalCache;
 }
 
@@ -21027,7 +21104,7 @@ function renderBattleSelect() {
   // Evil Burbz squad preview — this is where counter-picking happens.
   const rival = leagueRivalOpponents();
   $('leagueRival').innerHTML =
-    '<div class="league-rival-title">' + (liberation ? '😈 The occupying evil Burbz — counter their classes!' : '😈 An evil Burbz squad prowls this perch — counter their classes!') + '</div>' +
+    '<div class="league-rival-title">' + (liberation ? (isFirstLiberationBattle() ? '🌅 Only a weary token garrison holds your first town — victory is all but assured!' : '😈 The occupying evil Burbz — counter their classes!') : '😈 An evil Burbz squad prowls this perch — counter their classes!') + '</div>' +
     '<div class="league-rival-row">' + rival.opponents.map(b =>
       '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
@@ -21097,6 +21174,9 @@ function startPerchBattle() {
   const rival = leagueRivalOpponents();
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter.
   const playerFighters = team.map(b => core.buildFighter(b, { gear: birdGearBonuses(b) }));
+  // Merlin's blessing on the story's first liberation: the flock enters at full
+  // strength, so the opening battle can't be lost to a tired or hurt bird.
+  if (liberation && isFirstLiberationBattle()) playerFighters.forEach(f => { f.hp = f.maxHp; f.fainted = false; });
   const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
   battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
@@ -21106,6 +21186,7 @@ function startPerchBattle() {
   $('battleLog').innerHTML = '';
   const tier = core.LEAGUE_TIERS[league.tier];
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
+  if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
   SFX.tap();
   battleAdvance();
