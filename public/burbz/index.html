@@ -2023,9 +2023,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-locked-room { padding:16px 14px; border:1px dashed rgba(214,168,79,.30); border-radius:14px; background:rgba(214,168,79,.06); color:var(--text2); font-size:12px; line-height:1.45; }
 .academy-move-btn.locked { opacity:.82; border-color:rgba(214,168,79,.34); color:var(--accent2); }
 @media (min-width: 720px) { .academy-build-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-.nav-item.needs-care { position: relative; }
-.nav-item.needs-care::after { content: ''; position: absolute; top: 6px; right: calc(50% - 18px); width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 6px rgba(255,107,107,0.7); animation: navPulse 1.4s ease-in-out infinite; }
-@keyframes navPulse { 0%,100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+.nav-action-badge { position:absolute; top:4px; left:calc(50% + 8px); min-width:16px; height:16px; padding:0 4px; display:grid; place-items:center; border-radius:999px; border:2px solid #090806; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 8px rgba(255,74,92,.45); font:800 9px/1 'Rajdhani',sans-serif; z-index:3; pointer-events:none; animation:navActionPulse 1.8s ease-in-out infinite; }
+.sr-only { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
+@keyframes navActionPulse { 0%,100% { transform:scale(1); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 5px rgba(255,74,92,.35); } 50% { transform:scale(1.08); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 10px rgba(255,74,92,.58); } }
+@media (prefers-reduced-motion: reduce) { .nav-action-badge { animation:none; } }
 
 .academy-grad-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.78); z-index: 9999; backdrop-filter: blur(6px); animation: gradFade 0.4s ease-out; }
 @keyframes gradFade { from { opacity: 0; } to { opacity: 1; } }
@@ -2784,6 +2785,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <a class="settings-label" href="privacy.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Privacy Policy</a>
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
+      <div class="settings-row">
+        <a class="settings-label" href="audio-credits.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Sound Credits &amp; Licences</a>
+        <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
+      </div>
       <div class="settings-row" id="replayIntroBtn" role="button" tabindex="0">
         <div class="settings-label">Replay Intro Cutscene</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
@@ -2908,6 +2913,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
+<script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
+<script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -3584,7 +3591,8 @@ function $$(sel, parent) { return (parent || document).querySelectorAll(sel); }
 function escapeHtml(value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
 // ============================================================================
-// SOUND EFFECTS (Web Audio API — no external files)
+// SOUND EFFECTS — licensed file-backed audio, with oscillator fallback only
+// when the standalone audio module did not load.
 // ============================================================================
 let audioCtx = null;
 let sfxEnabled = true;
@@ -3636,7 +3644,7 @@ function playTone(freq, duration, type, vol, ramp) {
   } catch(e) {}
 }
 
-const SFX = {
+const oscillatorSfxFallback = {
   capture() {
     playTone(880, 0.1, 'sine', 0.2);
     setTimeout(() => playTone(1100, 0.1, 'sine', 0.2), 100);
@@ -3671,8 +3679,41 @@ const SFX = {
     playTone(700, 0.1, 'sine', 0.12);
     setTimeout(() => playTone(900, 0.15, 'sine', 0.15), 120);
     setTimeout(() => playTone(1200, 0.25, 'sine', 0.12), 250);
-  }
+  },
+  page() { this.tap(); },
+  unlock() { this.capture(); },
+  coins() { this.tap(); },
+  build() { playTone(180, 0.12, 'triangle', 0.08, 110); },
+  bird() { this.capture(); },
+  owl() { playTone(300, 0.3, 'sine', 0.08, 180); },
+  error() { this.hit(); },
+  prime() { try { getAudioCtx().resume(); return Promise.resolve(true); } catch (e) { return Promise.resolve(false); } },
+  setEnabled(value) { sfxEnabled = !!value; return sfxEnabled; }
 };
+
+const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioManager === 'function'
+  ? window.BurbzAudioCore.createAudioManager({ getEnabled: () => sfxEnabled })
+  : oscillatorSfxFallback;
+
+// Mobile browsers unlock media only inside a real user gesture. Prime one
+// disposable muted clip; this never starts ambience or any repeating sound.
+function primeBurbzAudio() {
+  const manager = SFX;
+  if (manager && typeof manager.prime === 'function') manager.prime('tap').catch(() => {});
+}
+window.addEventListener('pointerdown', primeBurbzAudio, { once:true, passive:true });
+window.addEventListener('click', primeBurbzAudio, { once:true, passive:true });
+
+// Conservative default for controls without their own semantic sound. A recent
+// explicit sound in the same click is detected so controls never double-chime.
+document.addEventListener('click', event => {
+  const control = event.target && event.target.closest ? event.target.closest('button,a,input,select,[role="button"]') : null;
+  if (!control || control.closest('.bottom-nav') || control.dataset.audio === 'none') return;
+  if (SFX && typeof SFX.playedRecently === 'function' && SFX.playedRecently(80)) return;
+  const sound = window.BurbzAudioCore && window.BurbzAudioCore.classifyInteraction
+    ? window.BurbzAudioCore.classifyInteraction(control) : 'tap';
+  if (sound && typeof SFX[sound] === 'function') SFX[sound]();
+});
 
 function vibrate(ms) {
   if (gameState.settings.vibration && navigator.vibrate) navigator.vibrate(ms);
@@ -3863,6 +3904,7 @@ function loadState() {
 
   ensureActivePetStillExists();
   sfxEnabled = gameState.settings.sfx;
+  if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   saveState();
 }
 
@@ -3871,6 +3913,7 @@ function saveState() {
     localStorage.setItem('burbz_state', JSON.stringify(gameState));
   } catch(e) {}
   queueCloudSave();
+  queueActionBadgeUpdate();
 }
 
 function apiHeaders(extra) {
@@ -9816,7 +9859,8 @@ function academyBuildBuilding(id, opts = {}) {
   updateQuestProgress('build_academy', 1);
   saveState();
   updateHeader();
-  SFX.levelUp();
+  if (SFX && typeof SFX.build === 'function') SFX.build();
+  else if (SFX && typeof SFX.levelUp === 'function') SFX.levelUp();
   showToast('Built ' + cfg.icon + ' ' + cfg.label + '!');
   renderAcademy();
   return true;
@@ -10148,7 +10192,9 @@ function startBirdExpedition(birdId, templateId, loadout) {
   quest.equipment = equipment;
   gameState.birdExpeditions.unshift(quest);
   saveState();
-  SFX.tap();
+  if (templateId === 'moon_scout' && SFX && typeof SFX.owl === 'function') SFX.owl();
+  else if (SFX && typeof SFX.page === 'function') SFX.page();
+  else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast('🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderBirdExpeditions();
 }
@@ -10555,16 +10601,6 @@ function renderAcademy() {
       });
     });
     markers.innerHTML = html;
-  }
-
-  // Tab-level needs indicator
-  const navBadge = document.querySelector('.nav-item[data-screen="academy"]');
-  if (navBadge) {
-    const anyNeeds = gameState.flock.some(b => {
-      ensureBirdAcademy(b);
-      return (b.care.hunger || 0) >= 70 || (b.care.happiness || 100) <= 30 || (b.hp || 1) < (b.maxHp || 1) * 0.4;
-    });
-    navBadge.classList.toggle('needs-care', anyNeeds);
   }
 
   renderAcademyRoomPanel(byRoom[academySelectedRoom]);
@@ -14087,13 +14123,79 @@ function buildFallbackHabitatMarkers(lat, lon, source, presetSpawns) { const fal
 
 
 // ============================================================================
+// ACTIONABLE NAV BADGES
+// ============================================================================
+function normalizeActionBadgeState(now = Date.now()) {
+  const academyCore = window.BurbzAcademyCore;
+  const expeditionRows = Array.isArray(gameState && gameState.birdExpeditions) ? gameState.birdExpeditions : [];
+  const trainingRows = Array.isArray(gameState && gameState.birdTrainingSessions) ? gameState.birdTrainingSessions : [];
+  const birdExpeditions = expeditionRows.map(expedition => {
+    const advanced = academyCore && typeof academyCore.advanceBirdExpedition === 'function'
+      ? academyCore.advanceBirdExpedition(expedition, now)
+      : { ...expedition, status: Number(expedition.endMs) <= now ? 'complete' : (expedition.status || 'active') };
+    return { ...advanced, claimed: expedition.claimed === true || expedition.status === 'claimed' };
+  });
+  const birdTrainingSessions = trainingRows.map(session => {
+    const advanced = academyCore && typeof academyCore.advanceTrainingSession === 'function'
+      ? academyCore.advanceTrainingSession(session, now)
+      : { ...session, status: Number(session.endMs) <= now ? 'complete' : (session.status || 'active') };
+    return { ...advanced, claimed: session.claimed === true || session.status === 'claimed' };
+  });
+  const activeSideQuest = gameState && gameState.sideQuest && gameState.sideQuest.active;
+  const sideQuestDiscoveries = activeSideQuest && Array.isArray(activeSideQuest.discoveries)
+    ? activeSideQuest.discoveries.map(discovery => ({ active:true, claimed:discovery.claimed === true })) : [];
+  const careNeedsCount = (gameState && Array.isArray(gameState.flock) ? gameState.flock : []).filter(bird => {
+    const care = bird && bird.care && typeof bird.care === 'object' ? bird.care : {};
+    const hunger = Number(care.hunger ?? 0);
+    const happiness = Number(care.happiness ?? 100);
+    const hp = Number(bird && bird.hp != null ? bird.hp : 1);
+    const maxHp = Math.max(1, Number(bird && bird.maxHp != null ? bird.maxHp : 1));
+    return hunger >= 70 || happiness <= 30 || hp < maxHp * 0.4;
+  }).length;
+  let recruitableCount = 0;
+  try {
+    const barracksOpen = typeof isAcademyRoomBuilt === 'function' && isAcademyRoomBuilt('tavern');
+    const coins = Number(gameState && gameState.player && gameState.player.coins) || 0;
+    recruitableCount = barracksOpen && typeof barracksRecruitCandidates === 'function'
+      ? barracksRecruitCandidates().filter(candidate => recruitCostForBird(candidate.bird) <= coins).length
+      : 0;
+  } catch (e) {}
+  return {
+    questDefinitions: [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
+    quests: gameState && gameState.quests,
+    birdExpeditions,
+    birdTrainingSessions,
+    sideQuestDiscoveries,
+    recruitableCount,
+    careNeedsCount
+  };
+}
+
+function updateActionBadges() {
+  const core = window.BurbzActionBadges;
+  if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
+  if (!document || !document.querySelectorAll) return;
+  const counts = core.computeActionBadgeCounts(normalizeActionBadgeState(Date.now()));
+  core.applyActionBadges(document, counts);
+}
+
+let actionBadgeUpdateQueued = false;
+function queueActionBadgeUpdate() {
+  if (actionBadgeUpdateQueued) return;
+  actionBadgeUpdateQueued = true;
+  const run = () => { actionBadgeUpdateQueued = false; updateActionBadges(); };
+  if (typeof queueMicrotask === 'function') queueMicrotask(run);
+  else Promise.resolve().then(run);
+}
+
+// ============================================================================
 // NAVIGATION
 // ============================================================================
 let currentScreen = 'map';
 
 function switchScreen(name) {
   if (name === currentScreen) return;
-  SFX.tap();
+  SFX.page();
 
   $$('.screen').forEach(s => s.classList.remove('active'));
   $$('.nav-item').forEach(n => n.classList.remove('active'));
@@ -14119,6 +14221,7 @@ function switchScreen(name) {
   if (name === 'quests') renderQuests();
   if (name === 'leaderboards') renderLeaderboards();
   if (name === 'profile') renderProfile();
+  queueActionBadgeUpdate();
 
   // Gradual tutorial: Merlin teaches each system the first time its screen opens.
   if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
@@ -22957,6 +23060,7 @@ $('toggleSfx').addEventListener('click', () => {
   el.classList.toggle('on');
   gameState.settings.sfx = el.classList.contains('on');
   sfxEnabled = gameState.settings.sfx;
+  if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   saveState();
 });
 
@@ -23081,6 +23185,8 @@ function init() {
   renderInventory();
   renderBirdExpeditions();
   checkBadges();
+  queueActionBadgeUpdate();
+  setInterval(queueActionBadgeUpdate, 30000);
   renderPetCompanion();
   maybeShowIntroCutscene();
   resumeSideQuestIfAny();
@@ -23113,11 +23219,8 @@ function init() {
   if (!gameState.settings.particles) $('toggleParticles').classList.remove('on');
   if (!gameState.settings.vibration) $('toggleVibration').classList.remove('on');
 
-  // Initialize audio context on first interaction
-  document.addEventListener('click', function initAudio() {
-    getAudioCtx();
-    document.removeEventListener('click', initAudio);
-  }, { once: true });
+  // File-backed audio was gesture-primed above; the AudioContext is created
+  // only if the safe oscillator fallback is actually needed.
 }
 
 // Register Play/PWA service worker when served over HTTPS or localhost.
