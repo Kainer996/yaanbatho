@@ -13215,26 +13215,34 @@ function updateShowQuestsButton() {
   showBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
   showBtn.setAttribute('aria-label', active && questOverview.offers.length ? 'Show and reframe ' + questOverview.offers.length + ' local quests on the map' : 'Show all local quests on the map');
 }
+// Showing quests keeps the camera local: frame only the player and the quest
+// trails within easy walking distance, instead of zooming out to fit every
+// offer on the board (some sit kilometres away).
+const QUEST_SHOW_WALK_RADIUS_M = 1200;
+const QUEST_WALKING_ZOOM = 14.6;
 function fitAllLocalQuestRoutes(offers = questOverview.offers) {
   if (!liveMap || !window.maplibregl || !offers || !offers.length) return;
+  const me = (liveMapHasPrecisePosition && liveMapLastPosition) ? liveMapLastPosition : null;
   try {
     const bounds = new maplibregl.LngLatBounds();
     let pointCount = 0;
     offers.forEach(offer => questOfferDisplayPoints(offer).forEach(point => {
       const lat = Number(point && point.lat), lon = Number(point && point.lon);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+      if (me && mapDistanceMeters(me, { lat, lon }) > QUEST_SHOW_WALK_RADIUS_M) return; // beyond walking range — leave it off-frame
       bounds.extend([lon, lat]);
       pointCount++;
     }));
-    if (liveMapHasPrecisePosition && liveMapLastPosition) {
-      bounds.extend([liveMapLastPosition.lon, liveMapLastPosition.lat]);
+    if (me) {
+      bounds.extend([me.lon, me.lat]);
       pointCount++;
     }
     if (!pointCount) return;
-    liveMap.fitBounds(bounds, { padding:{ top:190, right:40, bottom:105, left:40 }, maxZoom:13.4, pitch:0, retainPadding:false, duration:950 });
+    liveMap.fitBounds(bounds, { padding:{ top:190, right:40, bottom:105, left:40 }, maxZoom:15.2, pitch:0, retainPadding:false, duration:950 });
   } catch (e) {
     const first = offers.find(offer => offer && offer.points && offer.points[0]);
-    if (first) liveMap.easeTo({ center:[first.points[0].lon, first.points[0].lat], zoom:QUEST_OVERVIEW_ZOOM, pitch:0, duration:850 });
+    const center = me ? [me.lon, me.lat] : (first ? [first.points[0].lon, first.points[0].lat] : null);
+    if (center) liveMap.easeTo({ center, zoom:QUEST_WALKING_ZOOM, pitch:0, duration:850 });
   }
 }
 function setQuestOverview(on, opts = {}) {
