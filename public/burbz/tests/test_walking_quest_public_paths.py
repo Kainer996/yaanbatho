@@ -146,6 +146,18 @@ def test_visible_map_footpaths_are_merged_into_quest_discovery():
     assert "mergeQuestOffers(offers, visibleMapWalkingQuestOffers(lat, lon))" in html
 
 
+def test_mapped_footpath_quests_are_filtered_out_of_the_quest_board():
+    # The generic auto-numbered "Mapped Footpath N" walks are still produced by
+    # the core geometry logic (so the ring/nearby-walk network keeps working),
+    # but discoverNearbyQuestOffers drops them before they reach the Quests tab
+    # or the map overview.
+    html = HTML.read_text(encoding="utf-8")
+    discover = html[html.index("function discoverNearbyQuestOffers("):html.index("function questOverviewGeoJSON(")]
+    assert "/^Mapped Footpath\\b/.test" in discover
+    assert "const surfaced = mergeQuestOffers(offers, visibleMapWalkingQuestOffers(lat, lon))" in discover
+    assert "questOverview.offers = prepareQuestOffers(surfaced)" in discover
+
+
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")

@@ -13073,7 +13073,13 @@ function discoverNearbyQuestOffers(force = false) {
     if (liveMapLastPosition && window.BurbzQuestCore.questHaversine(lat, lon, liveMapLastPosition.lat, liveMapLastPosition.lon) > 120) {
       return discoverNearbyQuestOffers(true);
     }
-    questOverview.offers = prepareQuestOffers(mergeQuestOffers(offers, visibleMapWalkingQuestOffers(lat, lon)));
+    // The generic auto-numbered "Mapped Footpath N" walks (unnamed basemap paths)
+    // cluttered the quest board, so they are no longer surfaced as quests on the
+    // Quests tab or the map overview. Named public footpaths, legendary named
+    // trails and the guaranteed nearby footpath quest still stand.
+    const surfaced = mergeQuestOffers(offers, visibleMapWalkingQuestOffers(lat, lon))
+      .filter(o => !/^Mapped Footpath\b/.test(String((o && o.name) || '')));
+    questOverview.offers = prepareQuestOffers(surfaced);
     questOverview.fetchedAt = Date.now();
     questOverview.at = { lat, lon };
     walkQuestOffersCache = questOverview.offers;
