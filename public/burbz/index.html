@@ -1307,6 +1307,36 @@ svg.academy-room-bg { display:block; filter:none; }
 .forge-picker-row .fp-name { font-size:11px; font-weight:800; }
 .forge-picker-row .fp-meta { font-size:9px; color:var(--text3); }
 .forge-picker-row .fp-count { margin-left:auto; font-size:10px; color:var(--text3); }
+/* ---- Bird equipment screen — tap a bird for the classic RPG loadout ---- */
+.bird-equip-overlay { position:fixed; inset:0; z-index:1370; display:none; flex-direction:column; background:radial-gradient(120% 90% at 50% 0%, #171208 0%, #0a0805 45%, #000 100%); }
+.bird-equip-overlay.show { display:flex; }
+.bird-equip-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px calc(24px + env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
+.bird-equip-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.bird-equip-title { font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+.bird-equip-close { padding:8px 14px; border-radius:999px; background:var(--bg3); border:1.5px solid rgba(214,168,79,.35); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.08em; }
+.bird-equip-hero { position:relative; display:flex; gap:12px; align-items:center; padding:12px; border-radius:16px; border:1.5px solid rgba(214,168,79,.3); background:linear-gradient(135deg, rgba(214,168,79,.10), rgba(0,0,0,.4)); margin-bottom:10px; }
+.bird-equip-art { width:96px; height:96px; border-radius:14px; object-fit:cover; background:var(--bg4); border:1.5px solid rgba(255,255,255,.12); flex-shrink:0; }
+.bird-equip-art-emoji { width:96px; height:96px; border-radius:14px; background:var(--bg4); font-size:56px; line-height:96px; text-align:center; flex-shrink:0; }
+.bird-equip-name { font-family:'Russo One',sans-serif; font-size:17px; color:var(--text); }
+.bird-equip-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+.bird-equip-power { font-size:12px; font-weight:800; margin-top:5px; }
+.bird-equip-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-bottom:12px; }
+.bird-equip-stat { background:var(--bg2); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:7px 4px 6px; text-align:center; }
+.bird-equip-stat .bes-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:800; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
+.bird-equip-stat .bes-value { font-family:'Russo One',sans-serif; font-size:15px; color:var(--text); margin-top:1px; }
+.bird-equip-stat .bes-boost { font-size:9px; color:#7fdcc6; font-weight:800; }
+.bird-equip-section-label { font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); margin:2px 0 7px; }
+.bird-equip-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+.bird-equip-slot { position:relative; text-align:left; display:flex; gap:9px; align-items:center; padding:10px; border-radius:13px; background:var(--bg2); border:1.5px dashed rgba(255,255,255,.16); min-height:58px; transition:transform .1s, border-color .15s; }
+.bird-equip-slot:active { transform:scale(.97); }
+.bird-equip-slot.filled { border-style:solid; }
+.bird-equip-slot.open { border-color:var(--accent); box-shadow:0 0 10px rgba(214,168,79,.3); }
+.bird-equip-slot .beq-icon { font-size:24px; width:30px; text-align:center; flex-shrink:0; }
+.bird-equip-slot .beq-slot-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--text3); }
+.bird-equip-slot .beq-item { font-size:11px; font-weight:800; color:var(--text); margin-top:1px; }
+.bird-equip-slot .beq-meta { font-size:9px; color:var(--text3); margin-top:1px; }
+.bird-equip-picker { background:var(--bg3); border:1px solid rgba(143,208,255,.3); border-radius:13px; padding:10px; margin-bottom:12px; }
+.pk-equip { position:absolute; top:5px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); border:1px solid rgba(214,168,79,.5); font-size:12px; line-height:20px; text-align:center; z-index:2; }
 .forge-recipe-group { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent2); font-family:'Russo One', sans-serif; margin:14px 0 8px; }
 .forge-recipe { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:10px; margin-bottom:8px; }
 .forge-recipe .fr-icon { font-size:26px; }
@@ -2744,6 +2774,17 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
 
+  <!-- Bird Equipment Screen — tap a companion bird to open its RPG loadout -->
+  <div class="bird-equip-overlay" id="birdEquipOverlay" role="dialog" aria-modal="true" aria-label="Bird equipment">
+    <div class="bird-equip-scroll">
+      <div class="bird-equip-topbar">
+        <div class="bird-equip-title">⚔️ Equipment</div>
+        <button class="bird-equip-close" onclick="closeBirdEquip()">✕ CLOSE</button>
+      </div>
+      <div id="birdEquipBody"></div>
+    </div>
+  </div>
+
   <!-- Intro Cutscene Overlay -->
   <div class="intro-cutscene-overlay" id="introCutsceneOverlay" aria-modal="true" role="dialog" aria-label="Burbz intro cutscene">
     <div class="intro-cutscene-shell">
@@ -2815,7 +2856,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=roost-barracks-onboarding-20260720"></script>
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
-<script src="loot_crafting_core.js?v=fletchers-forge-20260719"></script>
+<script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=footpath-ring-quests-v1-20260716"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -3607,7 +3648,7 @@ const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
   flock: [],
   discoveredSpecies: {},
-  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1 }, equipment: {}, giftsGiven: {} },
+  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {} },
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   quests: {},
   questsLastReset: null,
@@ -8546,7 +8587,8 @@ function openBirdInfo(birdId) {
         <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
         <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
         <div class="bird-info-rarity" style="color:${rarityColor}">${escapeHTML(bird.rarity || 'common')} · Power ${bird.power || 0}</div>
-        ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>`}
+        ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>
+        <button class="card-pet-btn" style="margin-top:8px" onclick="closeBirdInfo(); openBirdEquip('${escapeHTML(bird.id)}')">⚔️ Equipment</button>`}
       </div>
     </div>
     <div class="bird-info-summary">${escapeHTML(summary)}</div>
@@ -13684,6 +13726,45 @@ function birdLoadout(birdId) {
 function birdGearBonuses(bird) {
   try { return lootCore().equipmentBonuses(birdLoadout(bird && bird.id)); }
   catch (e) { return {}; }
+}
+
+// An equipped spell scroll grants the fighter an extra skill, slotted in just
+// before the signature ultimate.
+function applyEquippedSpell(fighter, bird) {
+  let skill = null;
+  try { skill = lootCore().spellSkillFor(birdLoadout(bird.id).spell); } catch (e) {}
+  if (!skill || !Array.isArray(fighter.skills)) return;
+  fighter.skills.splice(Math.max(1, fighter.skills.length - 1), 0, { ...skill, cdLeft: 0 });
+}
+
+// An equipped potion is drunk automatically as the battle opens: heal, barrier,
+// stat brews and turn-meter head starts all land before the first move.
+function applyEquippedPotion(fighter, bird) {
+  let item = null, effect = null;
+  try {
+    const L = lootCore();
+    item = L.gearById(birdLoadout(bird.id).potion);
+    effect = L.potionEffectFor(item);
+  } catch (e) {}
+  if (!item || !effect) return null;
+  if (effect.healPct) fighter.hp = Math.min(fighter.maxHp, fighter.hp + Math.round(fighter.maxHp * effect.healPct));
+  if (effect.barrierPct) fighter.barrier = Math.max(fighter.barrier || 0, Math.round(fighter.maxHp * effect.barrierPct));
+  (effect.mods || []).forEach(m => fighter.mods.push({ ...m }));
+  if (effect.crStart) fighter.cr = clamp((fighter.cr || 0) + effect.crStart * 100, 0, 100);
+  fighter.fainted = fighter.hp <= 0;
+  return item;
+}
+
+// The drunk potion leaves the slot; if the bag holds another of the same brew
+// it is restocked automatically so the loadout survives repeat battles.
+function consumeEquippedPotion(bird) {
+  const loadout = birdLoadout(bird.id);
+  const id = loadout.potion;
+  if (!id) return false;
+  delete loadout.potion;
+  const bag = gameState.inventory.gear;
+  if ((bag[id] || 0) > 0) { bag[id] -= 1; loadout.potion = id; }
+  return true;
 }
 
 // Apply a rolled loot bundle to the save and return display strings.
@@ -19112,9 +19193,11 @@ function renderInventory() {
 let forgeState = { tab: 'equip', birdId: null, slotPicker: null };
 
 const FORGE_SLOT_META = {
-  weapon:  { label: 'Weapon',  empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
-  armour:  { label: 'Armour',  empty: '🛡️', hint: 'DEF, HP and magic resist' },
-  trinket: { label: 'Trinket', empty: '💍', hint: 'Speed and critical strikes' }
+  weapon:  { label: 'Weapon',      empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
+  armour:  { label: 'Armour',      empty: '🛡️', hint: 'DEF, HP and magic resist' },
+  trinket: { label: 'Enhancement', empty: '💍', hint: 'Speed and critical strikes' },
+  spell:   { label: 'Spell',       empty: '📜', hint: 'Grants an extra battle skill' },
+  potion:  { label: 'Potion',      empty: '🧪', hint: 'Drunk automatically as battle begins' }
 };
 
 function forgeSetTab(tab) {
@@ -19138,6 +19221,20 @@ function forgeGearStatLine(item) {
   if (s.spd) parts.push('+' + s.spd + ' SPD');
   if (s.maxHp) parts.push('+' + s.maxHp + ' HP');
   if (s.critBonus) parts.push('+' + Math.round(s.critBonus * 100) + '% CRIT');
+  if (item.spell) {
+    const sp = item.spell;
+    if (sp.kind === 'attack') parts.push('✨ PWR ' + sp.power + (sp.aoe ? ' · hits all' : '') + (sp.rider ? ' · -' + sp.rider.stat.toUpperCase() : ''));
+    else if (sp.kind === 'heal') parts.push('✨ Heal ' + Math.round(sp.healPct * 100) + '%' + (sp.teamWide ? ' · squad' : '') + (sp.cleanse ? ' · cleanse' : ''));
+    else if (sp.kind === 'barrier') parts.push('✨ Barrier ' + Math.round(sp.barrierPct * 100) + '%');
+    parts.push('CD ' + sp.cd);
+  }
+  if (item.battle) {
+    const b = item.battle;
+    if (b.healPct) parts.push('🧪 +' + Math.round(b.healPct * 100) + '% HP at start');
+    if (b.barrierPct) parts.push('🧪 ' + Math.round(b.barrierPct * 100) + '% barrier');
+    (b.mods || []).forEach(m => parts.push('🧪 +' + Math.round(m.pct * 100) + '% ' + m.stat.toUpperCase()));
+    if (b.crStart) parts.push('🧪 head start on the turn meter');
+  }
   return parts.join(' · ');
 }
 
@@ -19205,31 +19302,43 @@ function renderForgeEquip(body) {
 function forgeSelectBird(birdId) { forgeState.birdId = birdId; forgeState.slotPicker = null; SFX.tap(); renderForge(); }
 function forgeOpenSlot(slot) { forgeState.slotPicker = forgeState.slotPicker === slot ? null : slot; SFX.tap(); renderForge(); }
 
-function forgeEquip(slot, gearId) {
+// Shared equip plumbing — used by both the Forge and the tap-on-bird
+// equipment screen. Swapped-out pieces go back into the bag.
+function equipItemOnBird(birdId, slot, gearId) {
   const L = lootCore();
   const item = L.gearById(gearId);
-  if (!item || item.slot !== slot) return;
+  if (!item || item.slot !== slot) return false;
   const gearBag = gameState.inventory.gear;
-  if ((gearBag[gearId] || 0) <= 0) { showToast('None left in the bag.'); return; }
-  const loadout = birdLoadout(forgeState.birdId);
+  if ((gearBag[gearId] || 0) <= 0) { showToast('None left in the bag.'); return false; }
+  const loadout = birdLoadout(birdId);
   if (loadout[slot]) gearBag[loadout[slot]] = (gearBag[loadout[slot]] || 0) + 1; // return old piece
   gearBag[gearId] -= 1;
   loadout[slot] = gearId;
-  forgeState.slotPicker = null;
   saveState();
   SFX.questComplete();
   showToast(item.icon + ' ' + item.label + ' equipped!');
+  return true;
+}
+
+function unequipItemFromBird(birdId, slot) {
+  const loadout = birdLoadout(birdId);
+  if (!loadout[slot]) return false;
+  gameState.inventory.gear[loadout[slot]] = (gameState.inventory.gear[loadout[slot]] || 0) + 1;
+  delete loadout[slot];
+  saveState();
+  SFX.tap();
+  return true;
+}
+
+function forgeEquip(slot, gearId) {
+  if (!equipItemOnBird(forgeState.birdId, slot, gearId)) return;
+  forgeState.slotPicker = null;
   renderForge();
 }
 
 function forgeUnequip(slot) {
-  const loadout = birdLoadout(forgeState.birdId);
-  if (!loadout[slot]) return;
-  gameState.inventory.gear[loadout[slot]] = (gameState.inventory.gear[loadout[slot]] || 0) + 1;
-  delete loadout[slot];
+  if (!unequipItemFromBird(forgeState.birdId, slot)) return;
   forgeState.slotPicker = null;
-  saveState();
-  SFX.tap();
   renderForge();
 }
 
@@ -19237,7 +19346,7 @@ function renderForgeCraft(body) {
   const L = lootCore();
   const stock = gameState.inventory.items || {};
   const coins = gameState.player.coins || 0;
-  const groups = { weapon: '🗡️ Weapons — talons & wands', armour: '🛡️ Armour', trinket: '💍 Trinkets' };
+  const groups = { weapon: '🗡️ Weapons — talons & wands', armour: '🛡️ Armour', trinket: '💍 Enhancements', spell: '📜 Spells — scrolls & sigils', potion: '🧪 Potions — battle brews' };
   let html = '';
   Object.keys(groups).forEach(slot => {
     html += '<div class="forge-recipe-group">' + groups[slot] + '</div>';
@@ -19318,6 +19427,117 @@ function renderForgeMaterials(body) {
       '<div class="fm-count">' + (Number(stock[m.id]) || 0) + '</div></div>';
   }).join('') + '</div>' +
   '<div class="forge-intro" style="margin-top:10px;">Materials turn up on the map while you walk, drop from battles, and arrive as tribute from your liberated provinces.</div>';
+}
+
+// ============================================================================
+// BIRD EQUIPMENT SCREEN — tap a companion bird for its classic RPG loadout:
+// weapon, armour, enhancement, spell and potion, with a live stat preview.
+// ============================================================================
+let birdEquipState = { birdId: null, slotPicker: null };
+
+const EQUIP_SLOT_ORDER = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
+
+function openBirdEquip(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!bird) return;
+  birdEquipState = { birdId: birdId, slotPicker: null };
+  renderBirdEquip();
+  $('birdEquipOverlay').classList.add('show');
+  SFX.tap();
+  vibrate(10);
+}
+
+function closeBirdEquip() {
+  $('birdEquipOverlay').classList.remove('show');
+  birdEquipState.slotPicker = null;
+}
+
+function birdEquipOpenSlot(slot) {
+  birdEquipState.slotPicker = birdEquipState.slotPicker === slot ? null : slot;
+  SFX.tap();
+  renderBirdEquip();
+}
+
+function birdEquipSet(slot, gearId) {
+  if (!equipItemOnBird(birdEquipState.birdId, slot, gearId)) return;
+  birdEquipState.slotPicker = null;
+  renderBirdEquip();
+}
+
+function birdEquipClear(slot) {
+  if (!unequipItemFromBird(birdEquipState.birdId, slot)) return;
+  birdEquipState.slotPicker = null;
+  renderBirdEquip();
+}
+
+function renderBirdEquip() {
+  const body = $('birdEquipBody');
+  if (!body) return;
+  const bird = (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
+  if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; return; }
+  const L = lootCore();
+  const loadout = birdLoadout(bird.id);
+  const bonus = birdGearBonuses(bird);
+  const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
+  const artUrl = getBirdArtUrl(bird);
+  const art = artUrl
+    ? '<img class="bird-equip-art" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
+    : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
+
+  const hero = '<div class="bird-equip-hero" style="border-color:' + rarityColor + '55;">' + art +
+    '<div><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
+    '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
+    '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div></div></div>';
+
+  const stat = (label, base, key) => '<div class="bird-equip-stat"><div class="bes-label">' + label + '</div>' +
+    '<div class="bes-value">' + base + (bonus[key] ? ' <span class="bes-boost">+' + bonus[key] + '</span>' : '') + '</div></div>';
+  const stats = '<div class="bird-equip-stats">' +
+    stat('❤️ HP', bird.maxHp || 0, 'maxHp') +
+    stat('⚔️ ATK', bird.atk || 0, 'atk') +
+    stat('✨ MAG', bird.mag || 0, 'mag') +
+    stat('🛡️ DEF', bird.def || 0, 'def') +
+    stat('🪽 SPD', bird.spd || 0, 'spd') +
+    '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
+    '</div>';
+
+  const slots = '<div class="bird-equip-section-label">Loadout</div><div class="bird-equip-slots">' + EQUIP_SLOT_ORDER.map(slot => {
+    const meta = FORGE_SLOT_META[slot];
+    const item = L.gearById(loadout[slot]);
+    const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
+    const open = birdEquipState.slotPicker === slot;
+    return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
+      '<div class="beq-icon">' + (item ? item.icon : meta.empty) + '</div>' +
+      '<div><div class="beq-slot-label">' + meta.label + '</div>' +
+      (item ? '<div class="beq-item" style="color:' + color + ';">' + escapeHtml(item.label) + '</div><div class="beq-meta">' + forgeGearStatLine(item) + '</div>' : '<div class="beq-meta">' + meta.hint + '</div>') +
+      '</div></button>';
+  }).join('') + '</div>';
+
+  let picker = '';
+  if (birdEquipState.slotPicker) {
+    const slot = birdEquipState.slotPicker;
+    const owned = Object.entries(gameState.inventory.gear || {}).filter(([, n]) => (Number(n) || 0) > 0)
+      .map(([id, n]) => ({ item: L.gearById(id), count: n })).filter(x => x.item && x.item.slot === slot)
+      .sort((a, b) => L.rarityIndex(b.item.rarity) - L.rarityIndex(a.item.rarity));
+    picker = '<div class="bird-equip-picker"><div class="forge-picker-title">' + FORGE_SLOT_META[slot].label + ' for ' + escapeHtml(birdDisplayName(bird)) + '</div>' +
+      (loadout[slot] ? '<button class="forge-picker-row" onclick="birdEquipClear(\'' + slot + '\')"><span class="fp-icon">✖️</span><span class="fp-name">Unequip</span></button>' : '') +
+      (owned.length ? owned.map(x => {
+        const color = L.RARITY_META[x.item.rarity].color;
+        return '<button class="forge-picker-row" style="border-color:' + color + '66;" onclick="birdEquipSet(\'' + slot + '\',\'' + x.item.id + '\')">' +
+          '<span class="fp-icon">' + x.item.icon + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
+      }).join('') : '<div class="inventory-empty">No spare ' + FORGE_SLOT_META[slot].label.toLowerCase() + 's in the bag — loot the map, win battles, or craft one at the Fletcher\'s Forge.</div>') +
+      '</div>';
+  }
+
+  const spellItem = L.gearById(loadout.spell);
+  const potionItem = L.gearById(loadout.potion);
+  const notes = '<div class="bird-equip-section-label">In battle</div><div class="forge-stat-card">' +
+    '<span>📜 ' + (spellItem ? '<b>' + escapeHtml(spellItem.label) + '</b> joins ' + escapeHtml(birdDisplayName(bird)) + '\'s skill bar.' : 'Equip a spell scroll to add an extra skill.') + '</span>' +
+    '<span>🧪 ' + (potionItem ? '<b>' + escapeHtml(potionItem.label) + '</b> is drunk automatically as battle begins, then restocked from your bag if you have another.' : 'Equip a potion to drink it automatically as battle begins.') + '</span>' +
+    '</div>';
+
+  const forgeLink = '<button class="battle-forge-btn" onclick="closeBirdEquip(); switchScreen(\'forge\');">⚒️ CRAFT MORE AT THE FLETCHER\'S FORGE</button>';
+
+  body.innerHTML = hero + stats + slots + picker + notes + forgeLink;
 }
 
 // ============================================================================
@@ -19513,6 +19733,12 @@ function renderBirdex() {
         openBirdInfo(infoTarget.dataset.birdId || card.dataset.birdId);
         return;
       }
+      const equipTarget = e.target.closest('[data-action="open-equip"]');
+      if (equipTarget) {
+        e.stopPropagation();
+        openBirdEquip(equipTarget.dataset.birdId || card.dataset.birdId);
+        return;
+      }
       card.classList.toggle('flipped');
     });
   });
@@ -19543,7 +19769,7 @@ function createBirdCardHTML(bird, idx) {
     <div class="bird-card ${isActivePet ? 'active-pet-card' : ''}" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
       <div class="bird-card-inner">
         <div class="card-front">
-          <div class="card-art">
+          <div class="card-art" data-action="open-equip" data-bird-id="${bird.id}" title="Tap your bird to open its equipment">
             <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}15, ${rarityColor}05);"></div>
             ${artBg}
             ${birdIcon}
@@ -19583,6 +19809,7 @@ function createBirdCardHTML(bird, idx) {
             <button class="card-pet-btn ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Pet' : 'Make Pet'}</button>
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
+            <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
           </div>
           <div class="card-back-hint">Tap empty space to flip back</div>
         </div>
@@ -21126,6 +21353,7 @@ function renderBattleSelect() {
       const moves = core.trainedMoves(b.academy && b.academy.disciplines).length;
       return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
+        '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
         fighterArtHTML(b, 'pk') +
         '<div class="pk-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
         '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + '</div>' +
@@ -21173,10 +21401,21 @@ function startPerchBattle() {
   const liberation = pendingEmpireLiberation();
   const rival = leagueRivalOpponents();
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter.
-  const playerFighters = team.map(b => core.buildFighter(b, { gear: birdGearBonuses(b) }));
+  const playerFighters = team.map(b => {
+    const f = core.buildFighter(b, { gear: birdGearBonuses(b) });
+    applyEquippedSpell(f, b);
+    return f;
+  });
   // Merlin's blessing on the story's first liberation: the flock enters at full
   // strength, so the opening battle can't be lost to a tired or hurt bird.
   if (liberation && isFirstLiberationBattle()) playerFighters.forEach(f => { f.hp = f.maxHp; f.fainted = false; });
+  // Equipped potions are drunk as the squad takes wing, then restocked from the bag.
+  const potionSips = [];
+  team.forEach((b, i) => {
+    const item = applyEquippedPotion(playerFighters[i], b);
+    if (item && consumeEquippedPotion(b)) potionSips.push(playerFighters[i].name + ' drinks ' + item.icon + ' ' + item.label + '!');
+  });
+  if (potionSips.length) saveState();
   const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
   battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
@@ -21188,6 +21427,7 @@ function startPerchBattle() {
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
+  potionSips.forEach(t => addBattleLog('system-msg', '🧪 ' + t));
   SFX.tap();
   battleAdvance();
 }
@@ -21517,7 +21757,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, switchScreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
