@@ -22,7 +22,7 @@ const self={
   clients:{claim:async()=>{}}, skipWaiting:async()=>{}, location:{origin:'https://yaanbatho.com'}
 };
 const caches={
-  keys:async()=>['burbz-old-v78','burbz-national-completion-v79-20260715','burbz-buzzard-history-v80-20260716','burbz-village-variety-v81-20260716','burbz-cloud-atlas-v82-20260716','burbz-discovery-flip-cards-v83-20260716','burbz-footpath-ring-v84-20260716','burbz-village-life-v85-20260716','burbz-roost-barracks-v96-20260720','burbz-home-atlas-first-light-v97-20260721','burbz-bird-equip-screen-v98-20260721','good-news-v4','quarry-pro-v2'],
+  keys:async()=>['burbz-old-v78','burbz-national-completion-v79-20260715','burbz-buzzard-history-v80-20260716','burbz-village-variety-v81-20260716','burbz-cloud-atlas-v82-20260716','burbz-discovery-flip-cards-v83-20260716','burbz-footpath-ring-v84-20260716','burbz-village-life-v85-20260716','burbz-roost-barracks-v96-20260720','burbz-home-atlas-first-light-v97-20260721','burbz-bird-equip-screen-v98-20260721','burbz-empty-liberated-towns-v99-20260721','good-news-v4','quarry-pro-v2'],
   delete:async key=>{deleted.push(key);return true},
   open:async()=>({add:async()=>{},put:async()=>{}}), match:async()=>null
 };
@@ -33,7 +33,7 @@ Promise.resolve(work).then(()=>console.log(JSON.stringify(deleted))).catch(e=>{c
 '''
     result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=30)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == ["burbz-old-v78", "burbz-national-completion-v79-20260715", "burbz-buzzard-history-v80-20260716", "burbz-village-variety-v81-20260716", "burbz-cloud-atlas-v82-20260716", "burbz-discovery-flip-cards-v83-20260716", "burbz-footpath-ring-v84-20260716", "burbz-village-life-v85-20260716", "burbz-roost-barracks-v96-20260720", "burbz-home-atlas-first-light-v97-20260721"]
+    assert json.loads(result.stdout) == ["burbz-old-v78", "burbz-national-completion-v79-20260715", "burbz-buzzard-history-v80-20260716", "burbz-village-variety-v81-20260716", "burbz-cloud-atlas-v82-20260716", "burbz-discovery-flip-cards-v83-20260716", "burbz-footpath-ring-v84-20260716", "burbz-village-life-v85-20260716", "burbz-roost-barracks-v96-20260720", "burbz-home-atlas-first-light-v97-20260721", "burbz-bird-equip-screen-v98-20260721", "burbz-empty-liberated-towns-v99-20260721"]
 
 
 def test_spain_boundary_is_part_of_the_offline_app_shell():
