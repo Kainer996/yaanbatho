@@ -15464,7 +15464,10 @@ let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes
 let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
 let villageNpcs = [], villageChickens = [];
 let villageWeatherFx = null, villageShootingStar = null, villageTwinkleStars = null;
-let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
+// Free-roam camera: azimuth/polar/dist orbit around a ground-plane target
+// (tx,tz) the player can pan anywhere in the village; lastInputAt pauses the
+// idle drift while (and just after) the player is steering for themselves.
+let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20, tx: 0, tz: 0, lastInputAt: 0 };
 let villageShadowTick = 0;
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
@@ -15483,9 +15486,9 @@ function renderVillage() {
     const rec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
-    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, then free the village to rebuild it.';
+    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
     else if (dev <= 0) sub.textContent = 'Your province, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.';
-    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around — tap a building to step inside.';
+    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.';
   }
   renderVillageClaimBar();
   renderVillageManagePanel();
@@ -17697,17 +17700,75 @@ function ensureVillageRenderer(stage) {
   stage.appendChild(villageRenderer.domElement);
 
   const el = villageRenderer.domElement;
-  let down = null, dragged = false;
-  el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar }; dragged = false; });
-  el.addEventListener('pointermove', e => {
-    if (!down) return;
-    const dx = e.clientX - down.x, dy = e.clientY - down.y;
-    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
-    villageCam.azimuth = down.az - dx * 0.006;
-    villageCam.polar = Math.min(1.36, Math.max(0.55, down.po - dy * 0.004)); // 1.36: the raised rim forest stays below the lens
+  // Free-roam controls: one finger (or mouse) drags to orbit, two fingers
+  // pinch to zoom and drag together to stroll around the village. Desktop
+  // gets the same freedom via the wheel and shift- or right-button dragging.
+  // A quick double-tap walks the camera back to the village centre.
+  const VILLAGE_CAM_MIN_DIST = 6, VILLAGE_CAM_MAX_DIST = 30, VILLAGE_CAM_PAN_REACH = 16;
+  const camPointers = new Map();
+  let orbitStart = null, pinchLast = null, dragged = false;
+  function villageCamZoom(dist) { villageCam.dist = Math.min(VILLAGE_CAM_MAX_DIST, Math.max(VILLAGE_CAM_MIN_DIST, dist)); }
+  function villageCamPan(dx, dy) {
+    // Screen drag → ground-plane slide relative to the current view bearing,
+    // so the village follows the finger; clamped to the meadow's edge.
+    const s = Math.sin(villageCam.azimuth), c = Math.cos(villageCam.azimuth);
+    const k = villageCam.dist * 0.0016;
+    villageCam.tx += (-c * dx - s * dy) * k;
+    villageCam.tz += (s * dx - c * dy) * k;
+    const reach = Math.hypot(villageCam.tx, villageCam.tz);
+    if (reach > VILLAGE_CAM_PAN_REACH) { villageCam.tx *= VILLAGE_CAM_PAN_REACH / reach; villageCam.tz *= VILLAGE_CAM_PAN_REACH / reach; }
+  }
+  function pinchState() {
+    const pts = [...camPointers.values()];
+    return { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx: (pts[0].x + pts[1].x) / 2, my: (pts[0].y + pts[1].y) / 2 };
+  }
+  el.addEventListener('pointerdown', e => {
+    camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { el.setPointerCapture(e.pointerId); } catch (err) {} // release always reaches us, even off-canvas
+    villageCam.lastInputAt = Date.now();
+    if (camPointers.size === 1) {
+      orbitStart = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar, pan: e.shiftKey || e.button === 2 };
+      dragged = false;
+    } else if (camPointers.size === 2) {
+      orbitStart = null;
+      pinchLast = pinchState();
+      dragged = true; // a pinch is never a tap
+    }
   });
+  el.addEventListener('pointermove', e => {
+    const p = camPointers.get(e.pointerId);
+    if (!p) return;
+    const prevX = p.x, prevY = p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    villageCam.lastInputAt = Date.now();
+    if (camPointers.size === 2 && pinchLast) {
+      const now = pinchState();
+      villageCamZoom(villageCam.dist * (pinchLast.d / Math.max(1, now.d))); // fingers apart = closer in
+      villageCamPan(now.mx - pinchLast.mx, now.my - pinchLast.my);          // two-finger drag strolls around
+      pinchLast = now;
+      return;
+    }
+    if (!orbitStart) return;
+    const dx = e.clientX - orbitStart.x, dy = e.clientY - orbitStart.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    if (orbitStart.pan) { villageCamPan(p.x - prevX, p.y - prevY); return; }
+    villageCam.azimuth = orbitStart.az - dx * 0.006;
+    villageCam.polar = Math.min(1.36, Math.max(0.55, orbitStart.po - dy * 0.004)); // 1.36: the raised rim forest stays below the lens
+  });
+  function releasePointer(e) {
+    camPointers.delete(e.pointerId);
+    if (camPointers.size < 2) pinchLast = null;
+    if (camPointers.size === 1) {
+      // Lifting one finger of a pinch: the survivor orbits from where it is
+      const pt = [...camPointers.values()][0];
+      orbitStart = { x: pt.x, y: pt.y, az: villageCam.azimuth, po: villageCam.polar, pan: false };
+    } else if (camPointers.size === 0) orbitStart = null;
+  }
+  el.addEventListener('pointercancel', releasePointer);
   el.addEventListener('pointerup', e => {
-    const wasDrag = dragged; down = null;
+    releasePointer(e);
+    const wasDrag = dragged;
+    if (camPointers.size > 0) return;
     if (wasDrag) return;
     const rect = el.getBoundingClientRect();
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
@@ -17724,8 +17785,11 @@ function ensureVillageRenderer(stage) {
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
-    villageCam.dist = Math.min(28, Math.max(12, villageCam.dist + e.deltaY * 0.02));
+    villageCam.lastInputAt = Date.now();
+    villageCamZoom(villageCam.dist + e.deltaY * 0.02);
   }, { passive: false });
+  el.addEventListener('dblclick', () => { villageCam.tx = 0; villageCam.tz = 0; villageCamZoom(22); }); // walk back to the square
+  el.addEventListener('contextmenu', e => e.preventDefault()); // right-drag pans instead
 
   window.addEventListener('resize', onVillageResize);
 }
@@ -17770,10 +17834,13 @@ function buildVillageScene(v) {
   const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
   const devLevel = econRec ? villageTotalDevelopment(econRec) : 0;
   const ruinStage = devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
-  // Every settlement is also built to one of three plans: a ring green, a
-  // crossroads settlement, or a riverside village with a footbridge.
+  // Every settlement is also built to one of five plans — and the plans are no
+  // longer all rings around a point: a loose village green, a crossroads
+  // settlement, a riverside village with a footbridge, a single high street
+  // ('lane') with shopfronts staggered down both sides, or a scattered hamlet
+  // whose trades cluster wherever the ground allows, with no formal square.
   const layoutRoll = r();
-  const layout = layoutRoll < 0.42 ? 'green' : layoutRoll < 0.72 ? 'crossroads' : 'riverside';
+  const layout = layoutRoll < 0.22 ? 'green' : layoutRoll < 0.42 ? 'crossroads' : layoutRoll < 0.62 ? 'riverside' : layoutRoll < 0.82 ? 'lane' : 'hamlet';
   const startAngle = r() * Math.PI * 2;
   const riverA = startAngle + Math.PI + (r() - 0.5) * 0.8; // riverside: which way the water lies
   const riverDist = 10.6, riverW = 3.4;
@@ -17787,13 +17854,18 @@ function buildVillageScene(v) {
   villageScene.add(villageSkyDome(skyCols));
 
   // ---- placement registry: scatter without piling props into each other -----
-  const claimed = [{ x: 0, z: 0, rad: 6.4 }]; // keep the plaza itself clear
+  // A hamlet keeps only a small clearing by its well; formal plans keep the
+  // whole square clear.
+  const claimed = [{ x: 0, z: 0, rad: layout === 'hamlet' ? 4.2 : 6.4 }];
   function spotFree(x, z, rad) {
     for (const c of claimed) { if (Math.hypot(x - c.x, z - c.z) < rad + c.rad) return false; }
     if (layout === 'crossroads') {
       const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
       const d2 = Math.abs(Math.cos(startAngle) * x + Math.sin(startAngle) * z);
       if (Math.min(d1, d2) < 2.1 + rad * 0.4) return false;
+    } else if (layout === 'lane') {
+      // the high street runs straight through — nothing builds on the road
+      if (Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z) < 2.1 + rad * 0.4) return false;
     } else if (layout === 'riverside') {
       if (Math.abs((x - riverPx) * riverUx + (z - riverPz) * riverUz) < 2.9 + rad * 0.4) return false;
     }
@@ -17831,6 +17903,9 @@ function buildVillageScene(v) {
       const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
       const d2 = Math.abs(Math.cos(startAngle) * x + Math.sin(startAngle) * z);
       h *= Math.min(1, Math.max(0, (Math.min(d1, d2) - 2.2) / 4.5));
+    } else if (layout === 'lane') { // the high street leaves through a single pass
+      const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
+      h *= Math.min(1, Math.max(0, (d1 - 2.2) / 4.5));
     }
     return h;
   };
@@ -17883,14 +17958,18 @@ function buildVillageScene(v) {
   }
   const cobbleMat = villageCobbleMaterial(pal);
   const cobbleTile = 2.6; // world units per cobble tile
-  const plazaR = 4.8 + tier * 0.7 + r() * 1.4;
+  // The cobbled centre matches the plan: a full market square for formal
+  // plans, a modest widening of the high street for a lane, and only a small
+  // worn clearing around the hamlet's well.
+  const plazaR = layout === 'hamlet' ? 2.4 + r() * 0.9 : layout === 'lane' ? 3.5 + tier * 0.5 + r() * 1.0 : 4.8 + tier * 0.7 + r() * 1.4;
   const plaza = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(plazaR, 28), (plazaR * 2) / cobbleTile, (plazaR * 2) / cobbleTile), cobbleMat);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
   // ---- layout groundwork ------------------------------------------------------
-  if (layout === 'crossroads') {
-    // Two cobbled roads meet at the square; fences and a waymarker gate line them
-    for (const roadA of [startAngle, startAngle + Math.PI / 2]) {
+  if (layout === 'crossroads' || layout === 'lane') {
+    // Cobbled roads — two meeting at the square, or one high street running
+    // straight through; fences and a waymarker gate line them
+    for (const roadA of (layout === 'crossroads' ? [startAngle, startAngle + Math.PI / 2] : [startAngle])) {
       const roadGrp = new THREE.Group();
       const road = new THREE.Mesh(villageScaleUV(new THREE.PlaneGeometry(groundR * 1.8, 3.0), (groundR * 1.8) / cobbleTile, 3.0 / cobbleTile), cobbleMat);
       road.receiveShadow = true;
@@ -18022,11 +18101,34 @@ function buildVillageScene(v) {
       px = Math.cos(arm) * along - Math.sin(arm) * side;
       pz = Math.sin(arm) * along + Math.cos(arm) * side;
       faceX = Math.cos(arm) * along; faceZ = Math.sin(arm) * along; // face the road
+    } else if (layout === 'lane') {
+      // Shopfronts stagger down both sides of the high street, facing across
+      // it — a row of gables rather than a ring
+      const dir = i % 2 === 0 ? 1 : -1;
+      const along = dir * (4.6 + Math.floor(i / 2) * 4.4 + r() * 1.8);
+      const side = ((i + Math.floor(i / 2)) % 2 === 0 ? 1 : -1) * (3.3 + r() * 0.8);
+      px = Math.cos(startAngle) * along - Math.sin(startAngle) * side;
+      pz = Math.sin(startAngle) * along + Math.cos(startAngle) * side;
+      faceX = Math.cos(startAngle) * along; faceZ = Math.sin(startAngle) * along; // face the street
+    } else if (layout === 'hamlet') {
+      // No square at all: each trade settles wherever the ground allows, at
+      // its own distance and bearing, facing whichever way it pleases
+      px = 0; pz = 0;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const a = r() * Math.PI * 2, dd = 5.2 + r() * 7.6;
+        const hx = Math.cos(a) * dd, hz = Math.sin(a) * dd;
+        if (!spotFree(hx, hz, 3.2) && attempt < 9) continue;
+        px = hx; pz = hz;
+        break;
+      }
+      faceX = (r() - 0.5) * 7; faceZ = (r() - 0.5) * 7;
     } else {
+      // Village green or riverside arc — jitter each plot's bearing and depth
+      // hard enough that even the green reads as a loose cluster, not a circle
       const spread = layout === 'riverside' ? 2.6 : Math.PI * 2;
       const base = layout === 'riverside' ? riverA + Math.PI - spread / 2 : startAngle;
-      const angle = base + (i / shopKeys.length) * spread + (r() - 0.5) * 0.4;
-      const radius = 7.4 + tier * 0.8 + r() * 1.8;
+      const angle = base + (i / shopKeys.length) * spread + (r() - 0.5) * (layout === 'riverside' ? 0.4 : 0.85);
+      const radius = 6.6 + tier * 0.8 + r() * (layout === 'riverside' ? 1.8 : 3.4);
       px = Math.cos(angle) * radius; pz = Math.sin(angle) * radius;
     }
     claimSpot(px, pz, 3.2);
@@ -18099,8 +18201,12 @@ function buildVillageScene(v) {
   const cottageCount = ruinStage < 2 ? 0 : tier === 0 ? (r() < 0.4 ? 1 : 0) : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
   for (let i = 0; i < cottageCount; i++) {
     let cx, cz, faceX = 0, faceZ = 0;
-    if (layout === 'crossroads') {
-      const arm = startAngle + Math.floor(r() * 4) * Math.PI / 2;
+    if (layout === 'crossroads' || layout === 'lane') {
+      // Homes keep to the roadsides — down the arms of the crossing, or
+      // strung further out along both ends of the high street
+      const arm = layout === 'lane'
+        ? startAngle + (r() < 0.5 ? 0 : Math.PI)
+        : startAngle + Math.floor(r() * 4) * Math.PI / 2;
       const along = 10 + r() * (5 + tier * 2);
       const side = (r() < 0.5 ? 1 : -1) * (3.6 + r() * 1.4);
       cx = Math.cos(arm) * along - Math.sin(arm) * side;
@@ -18117,7 +18223,8 @@ function buildVillageScene(v) {
       faceX = riverPx; faceZ = riverPz; // face back toward the bridge
       claimSpot(cx, cz, 2.4);
     } else {
-      const spot = scatterSpot(11.5, 14.5 + tier * 2, 2.4, dryArc.c, dryArc.s);
+      // Hamlet homes mix in among the trades; ring plans keep them further out
+      const spot = scatterSpot(layout === 'hamlet' ? 6.5 : 11.5, 14.5 + tier * 2, 2.4, dryArc.c, dryArc.s);
       if (!spot) continue;
       cx = spot.x; cz = spot.z;
     }
@@ -18611,6 +18718,7 @@ function buildVillageScene(v) {
   villageCam.azimuth = camAz;
   villageCam.polar = 1.08; // a touch lower than before — more sky, moonrise over the woods
   villageCam.dist = 22 + r() * 2.5;
+  villageCam.tx = 0; villageCam.tz = 0; // every village opens centred on its square
 }
 
 function onVillageResize() {
@@ -18631,10 +18739,12 @@ function villageAnimate(ts) {
 }
 
 function villageAnimateFrame(t) {
-  villageCam.azimuth += 0.0006; // slow idle drift
-  const { azimuth, polar, dist } = villageCam;
-  villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
-  villageCamera.lookAt(0, 1.4, 0);
+  // Slow idle drift, but only once the player has left the camera alone for a
+  // while — never wrestle the view away from someone exploring the village.
+  if (Date.now() - (villageCam.lastInputAt || 0) > 8000) villageCam.azimuth += 0.0006;
+  const { azimuth, polar, dist, tx, tz } = villageCam;
+  villageCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
+  villageCamera.lookAt(tx, 1.4, tz);
   villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
   villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
   villageWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });

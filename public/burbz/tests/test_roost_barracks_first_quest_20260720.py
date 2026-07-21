@@ -234,4 +234,4 @@ def test_onboarding_release_is_query_busted_and_offline():
     version = "roost-barracks-onboarding-20260720"
     assert f'academy_treehouse_core.js?v={version}' in html
     assert f"./academy_treehouse_core.js?v={version}" in sw
-    assert "burbz-empty-liberated-towns-v99-20260721" in sw
+    assert "burbz-village-explore-v100-20260721" in sw
