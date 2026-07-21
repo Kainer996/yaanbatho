@@ -1,6 +1,7 @@
 // Burbz Loot & Crafting Core — "The Fletcher's Forge"
-// Item catalogue (weapons / armour / trinkets), crafting materials, loot
-// tables with pity protection, gear stat bonuses and forge recipes.
+// Item catalogue (weapons / armour / trinkets-as-enhancements / spells /
+// potions), crafting materials, loot tables with pity protection, gear stat
+// bonuses and forge recipes.
 // Weapons split into talon-craft (ATK) and spell-craft (MAG) so both big
 // bruisers and small spellcasters have a gearing path. Pure logic module:
 // no DOM, deterministic when given a seeded RNG, UMD export.
@@ -62,15 +63,27 @@
     feather_mail:   { id:'feather_mail',   slot:'armour', kind:'armour', rarity:'rare',      label:'Feather Mail',     icon:'⛓️', stats:{ def:15, maxHp:28, res:6 }, copy:'Thousands of tempered pinions, ringed like mail.' },
     warden_plumage: { id:'warden_plumage', slot:'armour', kind:'armour', rarity:'epic',      label:'Warden\'s Plumage',icon:'🥋', stats:{ def:22, maxHp:42, res:10 }, copy:'Worn by the sanctuary wardens of the free towns.' },
     aegis_of_dawn:  { id:'aegis_of_dawn',  slot:'armour', kind:'armour', rarity:'legendary', label:'Aegis of Dawn',    icon:'🌤️', stats:{ def:30, maxHp:60, res:15 }, copy:'The usurper\'s shadow slides straight off it.' },
-    // --- Trinkets ---
+    // --- Trinkets — presented in the equip screen as Enhancements ---
     swift_band:     { id:'swift_band',     slot:'trinket', kind:'trinket', rarity:'common',    label:'Swift Band',      icon:'💍', stats:{ spd:5 }, copy:'A leg-band blessed by a passing swift.' },
     keen_eye_bead:  { id:'keen_eye_bead',  slot:'trinket', kind:'trinket', rarity:'uncommon',  label:'Keen-Eye Bead',   icon:'👁️', stats:{ critBonus:0.06, spd:2 }, copy:'See the gap before it opens.' },
     stormglass_anklet:{ id:'stormglass_anklet', slot:'trinket', kind:'trinket', rarity:'rare', label:'Stormglass Anklet', icon:'⚡', stats:{ spd:8, critBonus:0.04 }, copy:'Crackles when the wearer banks hard.' },
     gale_pendant:   { id:'gale_pendant',   slot:'trinket', kind:'trinket', rarity:'epic',      label:'Gale Pendant',    icon:'🌀', stats:{ spd:12, critBonus:0.06, mag:6 }, copy:'A bottled tailwind on a golden thread.' },
-    heart_of_sky:   { id:'heart_of_sky',   slot:'trinket', kind:'trinket', rarity:'legendary', label:'Heart of the Sky',icon:'💎', stats:{ spd:16, critBonus:0.09, atk:8, mag:8 }, copy:'The open sky itself, cut and set.' }
+    heart_of_sky:   { id:'heart_of_sky',   slot:'trinket', kind:'trinket', rarity:'legendary', label:'Heart of the Sky',icon:'💎', stats:{ spd:16, critBonus:0.09, atk:8, mag:8 }, copy:'The open sky itself, cut and set.' },
+    // --- Spells — an equipped scroll grants the bird an extra battle skill ---
+    ember_wisp:     { id:'ember_wisp',     slot:'spell', kind:'spell', rarity:'common',    label:'Ember Wisp',       icon:'🔥', stats:{}, spell:{ power:56, cd:2, kind:'attack' }, copy:'A darting mote of flame, eager to bite.' },
+    mending_light:  { id:'mending_light',  slot:'spell', kind:'spell', rarity:'uncommon',  label:'Mending Light',    icon:'💫', stats:{}, spell:{ power:0, cd:3, kind:'heal', healPct:0.28 }, copy:'Warm dawnlight knits feather and bone.' },
+    frost_sigil:    { id:'frost_sigil',    slot:'spell', kind:'spell', rarity:'rare',      label:'Frost Sigil',      icon:'❄️', stats:{}, spell:{ power:68, cd:2, kind:'attack', rider:{ kind:'debuff', stat:'spd', pct:0.2, turns:2 } }, copy:'Rime creeps along the foe\'s wings.' },
+    tempest_scroll: { id:'tempest_scroll', slot:'spell', kind:'spell', rarity:'epic',      label:'Tempest Scroll',   icon:'⛈️', stats:{}, spell:{ power:62, cd:3, kind:'attack', aoe:true }, copy:'Unrolls into a storm that strikes every foe.' },
+    phoenix_chorus: { id:'phoenix_chorus', slot:'spell', kind:'spell', rarity:'legendary', label:'Phoenix Chorus',   icon:'🎶', stats:{}, spell:{ power:0, cd:4, kind:'heal', healPct:0.32, cleanse:true, teamWide:true }, copy:'The firebird\'s song mends the whole squad.' },
+    // --- Potions — equipped brews that fire automatically as battle begins ---
+    tonic_of_vigour:{ id:'tonic_of_vigour',slot:'potion', kind:'potion', rarity:'common',    label:'Tonic of Vigour',  icon:'🧪', stats:{}, battle:{ healPct:0.3 }, copy:'A bracing berry tonic — restores HP as the fight opens.' },
+    nettle_brew:    { id:'nettle_brew',    slot:'potion', kind:'potion', rarity:'uncommon',  label:'Nettle War-Brew',  icon:'🍵', stats:{}, battle:{ mods:[{ stat:'atk', pct:0.15, turns:3 }, { stat:'mag', pct:0.15, turns:3 }] }, copy:'Stings going down, then the fury takes hold.' },
+    barrier_draught:{ id:'barrier_draught',slot:'potion', kind:'potion', rarity:'rare',      label:'Barrier Draught',  icon:'🫧', stats:{}, battle:{ barrierPct:0.22 }, copy:'Bottled shieldwater wraps the drinker in a shimmering shell.' },
+    stormwing_philtre:{ id:'stormwing_philtre', slot:'potion', kind:'potion', rarity:'epic', label:'Stormwing Philtre',icon:'🌪️', stats:{}, battle:{ mods:[{ stat:'spd', pct:0.2, turns:3 }], crStart:0.35 }, copy:'Drink the gale — start the battle already moving.' },
+    phoenix_elixir: { id:'phoenix_elixir', slot:'potion', kind:'potion', rarity:'legendary', label:'Phoenix Elixir',   icon:'🔆', stats:{}, battle:{ healPct:0.5, barrierPct:0.2, mods:[{ stat:'atk', pct:0.15, turns:3 }, { stat:'mag', pct:0.15, turns:3 }] }, copy:'A drop of ember-light: mends, shields and emboldens.' }
   };
 
-  const GEAR_SLOTS = ['weapon', 'armour', 'trinket'];
+  const GEAR_SLOTS = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
 
   function gearById(id) { return GEAR[id] || null; }
   function materialById(id) { return MATERIALS[id] || null; }
@@ -84,14 +97,53 @@
     GEAR_SLOTS.forEach(slot => {
       const item = gearById(loadout[slot]);
       if (!item) return;
-      Object.keys(item.stats).forEach(k => { total[k] = (total[k] || 0) + item.stats[k]; });
+      Object.keys(item.stats || {}).forEach(k => { total[k] = (total[k] || 0) + item.stats[k]; });
     });
     return total;
   }
 
+  // An equipped spell scroll becomes a real battle skill in the shape
+  // battle_core's action resolver already understands (attack/heal/barrier/buff).
+  function spellSkillFor(gearIdOrItem) {
+    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    if (!item || item.slot !== 'spell' || !item.spell) return null;
+    return {
+      id: 'spell_' + item.id,
+      label: item.label,
+      icon: item.icon,
+      school: 'spell',
+      stat: 'mag',
+      kind: item.spell.kind || 'attack',
+      power: item.spell.power || 0,
+      cd: item.spell.cd || 2,
+      healPct: item.spell.healPct || 0,
+      aoe: !!item.spell.aoe,
+      cleanse: !!item.spell.cleanse,
+      teamWide: !!item.spell.teamWide,
+      rider: item.spell.rider || null,
+      fromSpellScroll: true
+    };
+  }
+
+  // The start-of-battle effect of an equipped potion:
+  // { healPct, barrierPct, mods:[{stat,pct,turns}], crStart }
+  function potionEffectFor(gearIdOrItem) {
+    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    if (!item || item.slot !== 'potion' || !item.battle) return null;
+    return {
+      healPct: item.battle.healPct || 0,
+      barrierPct: item.battle.barrierPct || 0,
+      mods: (item.battle.mods || []).map(m => ({ ...m })),
+      crStart: item.battle.crStart || 0
+    };
+  }
+
   function gearPowerScore(item) {
     const s = item.stats || {};
-    return Math.round((s.atk || 0) * 1.5 + (s.mag || 0) * 1.5 + (s.def || 0) * 1.2 + (s.res || 0) + (s.spd || 0) * 1.3 + (s.maxHp || 0) * 0.25 + (s.critBonus || 0) * 200);
+    let score = Math.round((s.atk || 0) * 1.5 + (s.mag || 0) * 1.5 + (s.def || 0) * 1.2 + (s.res || 0) + (s.spd || 0) * 1.3 + (s.maxHp || 0) * 0.25 + (s.critBonus || 0) * 200);
+    if (item.spell) score += Math.round((item.spell.power || 0) * 0.5 + (item.spell.healPct || 0) * 100 + (item.spell.aoe ? 15 : 0) + (item.spell.teamWide ? 15 : 0));
+    if (item.battle) score += Math.round((item.battle.healPct || 0) * 80 + (item.battle.barrierPct || 0) * 80 + (item.battle.mods || []).reduce((n, m) => n + m.pct * 100, 0) + (item.battle.crStart || 0) * 40);
+    return score;
   }
 
   // ---------------------------------------------------------------------------
@@ -209,7 +261,9 @@
     talon:   ['iron_grit', 'oak_twig', 'storm_glass', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
     wand:    ['river_reed', 'moon_dust', 'storm_glass', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     armour:  ['down_tuft', 'oak_twig', 'iron_grit', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
-    trinket: ['river_reed', 'storm_glass', 'moon_dust', 'sun_amber', 'ancient_rune', 'phoenix_ember']
+    trinket: ['river_reed', 'storm_glass', 'moon_dust', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
+    spell:   ['river_reed', 'moon_dust', 'sun_amber', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
+    potion:  ['river_reed', 'down_tuft', 'moon_dust', 'sun_amber', 'ancient_rune', 'phoenix_ember']
   };
 
   function recipeFor(gearId) {
@@ -260,7 +314,7 @@
   return {
     RARITY_ORDER, RARITY_META, rarityIndex,
     MATERIALS, GEAR, GEAR_SLOTS, gearById, materialById, gearBySlot,
-    equipmentBonuses, gearPowerScore,
+    equipmentBonuses, gearPowerScore, spellSkillFor, potionEffectFor,
     RARITY_WEIGHTS, PITY_RARE_CAP, pickRarity, rollGear, rollMaterials, rollLoot,
     CRAFT_COST_BY_RARITY, KIND_MATERIALS, recipeFor, allRecipes,
     TRANSMUTE_RATIO, transmuteTargets, canCraft
