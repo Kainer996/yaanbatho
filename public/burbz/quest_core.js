@@ -810,7 +810,10 @@
     { coins: 25, label: 'a pouch of 25 coins' },
     { coins: 40, label: 'a chest of 40 coins' },
     { coins: 30, xp: 15, label: '30 coins and a glowing feather (+15 XP)' },
-    { coins: 20, xp: 25, label: '20 coins and an old map scrap (+25 XP)' }
+    { coins: 20, xp: 25, label: '20 coins and an old map scrap (+25 XP)' },
+    // Bird-study scrolls go to the bag; use them from there on a bird you choose.
+    { coins: 15, item: 'xp_scroll_minor', label: '15 coins and a Feather Scroll' },
+    { coins: 10, item: 'xp_scroll_greater', label: '10 coins and a Wisdom Tome' }
   ];
 
   // Players should end where they started whenever possible. Routes whose ends

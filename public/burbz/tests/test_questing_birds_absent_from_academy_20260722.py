@@ -80,4 +80,4 @@ def test_academy_move_bird_refuses_birds_that_are_away_or_training():
 
 def test_fix_ships_with_a_fresh_offline_cache_version():
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert "burbz-quests-tab-footpaths-v102-20260722" in sw
+    assert "burbz-bird-levelling-v103-20260722" in sw
