@@ -234,4 +234,4 @@ def test_onboarding_release_is_query_busted_and_offline():
     version = "bird-levelling-20260722"
     assert f'academy_treehouse_core.js?v={version}' in html
     assert f"./academy_treehouse_core.js?v={version}" in sw
-    assert "burbz-bird-levelling-v103-20260722" in sw
+    assert "burbz-bird-levelling-v104-20260722" in sw
