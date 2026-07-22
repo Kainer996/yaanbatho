@@ -1308,6 +1308,36 @@ svg.academy-room-bg { display:block; filter:none; }
 .forge-picker-row .fp-name { font-size:11px; font-weight:800; }
 .forge-picker-row .fp-meta { font-size:9px; color:var(--text3); }
 .forge-picker-row .fp-count { margin-left:auto; font-size:10px; color:var(--text3); }
+/* ---- Bird equipment screen — tap a bird for the classic RPG loadout ---- */
+.bird-equip-overlay { position:fixed; inset:0; z-index:1370; display:none; flex-direction:column; background:radial-gradient(120% 90% at 50% 0%, #171208 0%, #0a0805 45%, #000 100%); }
+.bird-equip-overlay.show { display:flex; }
+.bird-equip-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 14px calc(24px + env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
+.bird-equip-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.bird-equip-title { font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+.bird-equip-close { padding:8px 14px; border-radius:999px; background:var(--bg3); border:1.5px solid rgba(214,168,79,.35); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.08em; }
+.bird-equip-hero { position:relative; display:flex; gap:12px; align-items:center; padding:12px; border-radius:16px; border:1.5px solid rgba(214,168,79,.3); background:linear-gradient(135deg, rgba(214,168,79,.10), rgba(0,0,0,.4)); margin-bottom:10px; }
+.bird-equip-art { width:96px; height:96px; border-radius:14px; object-fit:cover; background:var(--bg4); border:1.5px solid rgba(255,255,255,.12); flex-shrink:0; }
+.bird-equip-art-emoji { width:96px; height:96px; border-radius:14px; background:var(--bg4); font-size:56px; line-height:96px; text-align:center; flex-shrink:0; }
+.bird-equip-name { font-family:'Russo One',sans-serif; font-size:17px; color:var(--text); }
+.bird-equip-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+.bird-equip-power { font-size:12px; font-weight:800; margin-top:5px; }
+.bird-equip-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-bottom:12px; }
+.bird-equip-stat { background:var(--bg2); border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:7px 4px 6px; text-align:center; }
+.bird-equip-stat .bes-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:800; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
+.bird-equip-stat .bes-value { font-family:'Russo One',sans-serif; font-size:15px; color:var(--text); margin-top:1px; }
+.bird-equip-stat .bes-boost { font-size:9px; color:#7fdcc6; font-weight:800; }
+.bird-equip-section-label { font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; color:var(--accent2); margin:2px 0 7px; }
+.bird-equip-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+.bird-equip-slot { position:relative; text-align:left; display:flex; gap:9px; align-items:center; padding:10px; border-radius:13px; background:var(--bg2); border:1.5px dashed rgba(255,255,255,.16); min-height:58px; transition:transform .1s, border-color .15s; }
+.bird-equip-slot:active { transform:scale(.97); }
+.bird-equip-slot.filled { border-style:solid; }
+.bird-equip-slot.open { border-color:var(--accent); box-shadow:0 0 10px rgba(214,168,79,.3); }
+.bird-equip-slot .beq-icon { font-size:24px; width:30px; text-align:center; flex-shrink:0; }
+.bird-equip-slot .beq-slot-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--text3); }
+.bird-equip-slot .beq-item { font-size:11px; font-weight:800; color:var(--text); margin-top:1px; }
+.bird-equip-slot .beq-meta { font-size:9px; color:var(--text3); margin-top:1px; }
+.bird-equip-picker { background:var(--bg3); border:1px solid rgba(143,208,255,.3); border-radius:13px; padding:10px; margin-bottom:12px; }
+.pk-equip { position:absolute; top:5px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); border:1px solid rgba(214,168,79,.5); font-size:12px; line-height:20px; text-align:center; z-index:2; }
 .forge-recipe-group { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent2); font-family:'Russo One', sans-serif; margin:14px 0 8px; }
 .forge-recipe { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:10px; margin-bottom:8px; }
 .forge-recipe .fr-icon { font-size:26px; }
@@ -1994,9 +2024,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-locked-room { padding:16px 14px; border:1px dashed rgba(214,168,79,.30); border-radius:14px; background:rgba(214,168,79,.06); color:var(--text2); font-size:12px; line-height:1.45; }
 .academy-move-btn.locked { opacity:.82; border-color:rgba(214,168,79,.34); color:var(--accent2); }
 @media (min-width: 720px) { .academy-build-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-.nav-item.needs-care { position: relative; }
-.nav-item.needs-care::after { content: ''; position: absolute; top: 6px; right: calc(50% - 18px); width: 8px; height: 8px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 6px rgba(255,107,107,0.7); animation: navPulse 1.4s ease-in-out infinite; }
-@keyframes navPulse { 0%,100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+.nav-action-badge { position:absolute; top:4px; left:calc(50% + 8px); min-width:16px; height:16px; padding:0 4px; display:grid; place-items:center; border-radius:999px; border:2px solid #090806; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 8px rgba(255,74,92,.45); font:800 9px/1 'Rajdhani',sans-serif; z-index:3; pointer-events:none; animation:navActionPulse 1.8s ease-in-out infinite; }
+.sr-only { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
+@keyframes navActionPulse { 0%,100% { transform:scale(1); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 5px rgba(255,74,92,.35); } 50% { transform:scale(1.08); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 10px rgba(255,74,92,.58); } }
+@media (prefers-reduced-motion: reduce) { .nav-action-badge { animation:none; } }
 
 .academy-grad-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.78); z-index: 9999; backdrop-filter: blur(6px); animation: gradFade 0.4s ease-out; }
 @keyframes gradFade { from { opacity: 0; } to { opacity: 1; } }
@@ -2053,15 +2084,21 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .vfb-name { font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; }
 .vfb-desc { font-size: 9.5px; color: var(--text3); text-align: center; line-height: 1.4; }
 
-.village-shop-overlay { position: fixed; inset: 0; z-index: 1200; display: none; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+.village-shop-overlay { position: fixed; inset: 0; z-index: 1200; display: none; background: rgba(6,8,9,0.78); backdrop-filter: blur(7px); }
 .village-shop-overlay.show { display: flex; align-items: flex-end; justify-content: center; }
-.shop-panel { width: 100%; max-width: 460px; max-height: 72vh; overflow-y: auto; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--accent3); border-bottom: none; border-radius: 18px 18px 0 0; padding: 14px 14px calc(16px + var(--safe-bottom)); animation: shopRise 0.28s cubic-bezier(0.3, 1.2, 0.5, 1); }
+.shop-panel { width: 100%; max-width: 500px; max-height: min(92dvh, 820px); overflow: hidden; display: flex; flex-direction: column; background: linear-gradient(180deg, #201d18, var(--bg2)); border: 1px solid rgba(240,199,103,0.5); border-bottom: none; border-radius: 20px 20px 0 0; box-shadow: 0 -18px 60px rgba(0,0,0,0.46); animation: shopRise 0.32s cubic-bezier(0.3, 1.2, 0.5, 1); }
 @keyframes shopRise { from { transform: translateY(40%); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
-.shop-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.shop-icon { font-size: 30px; }
-.shop-name { font-family: Georgia, serif; font-size: 17px; font-weight: 800; color: var(--accent); letter-spacing: 0.03em; }
-.shop-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
-.shop-close { margin-left: auto; font-size: 26px; color: var(--text3); padding: 2px 8px; }
+.village-shop-interior { position: relative; flex: 0 0 auto; width: 100%; aspect-ratio: 4 / 3; max-height: 45dvh; min-height: 230px; overflow: hidden; isolation: isolate; background: #2c2418; }
+.village-shop-interior-bg { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(1.06) contrast(1.03) brightness(0.89); transform: scale(1.012); }
+.village-shop-interior::after { content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: linear-gradient(180deg, rgba(8,8,10,0.56) 0%, transparent 31%, transparent 65%, rgba(8,7,5,0.42) 100%), radial-gradient(ellipse at center, transparent 48%, rgba(7,6,5,0.32) 100%); }
+.village-shop-scene-head { position: absolute; z-index: 7; top: 10px; left: 10px; right: 10px; display: flex; align-items: flex-start; gap: 9px; color: #fff8e7; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); }
+.shop-icon { flex: 0 0 auto; display: grid; place-items: center; width: 39px; height: 39px; font-size: 23px; border: 1px solid rgba(255,224,150,0.55); border-radius: 12px; background: rgba(18,15,11,0.72); backdrop-filter: blur(4px); }
+.shop-head-copy { min-width: 0; padding-top: 1px; }
+.shop-name { margin: 0; font-family: Georgia, serif; font-size: 18px; line-height: 1.05; font-weight: 800; color: #ffe39a; letter-spacing: 0.025em; }
+.shop-desc { max-width: 330px; margin-top: 4px; font-size: 10.5px; color: #fff7df; line-height: 1.3; text-shadow: 0 1px 3px #000; }
+.shop-close { margin-left: auto; flex: 0 0 auto; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(255,224,150,0.45); border-radius: 50%; font-size: 27px; line-height: 1; color: #fff7df; background: rgba(18,15,11,0.78); backdrop-filter: blur(4px); }
+.shop-close:active { transform: scale(0.92); }
+.shop-scroll-body { min-height: 0; overflow-y: auto; padding: 12px 14px calc(16px + var(--safe-bottom)); background: linear-gradient(180deg, rgba(44,36,26,0.98), var(--bg2) 30%); }
 .shop-coins { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
 .shop-coins b { color: var(--legendary); }
 .shop-stock { display: flex; flex-direction: column; gap: 8px; }
@@ -2072,6 +2109,40 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .shop-pantry-note { color: var(--accent); font-weight: 700; }
 .shop-buy-btn { flex-shrink: 0; background: var(--accent); color: #11100d; font-size: 12px; font-weight: 800; padding: 9px 13px; border-radius: 9px; letter-spacing: 0.03em; }
 .shop-buy-btn:active { transform: scale(0.95); }
+
+/* Populated village interiors: transparent Burbz cutouts move independently
+   over the painted rooms, keeping the art crisp and the shops feeling alive. */
+.village-shop-patrons { position: absolute; z-index: 3; left: 3%; right: 3%; bottom: 1%; height: 39%; pointer-events: none; }
+.village-shop-patron { --walk: 7px; position: absolute; left: var(--x); bottom: var(--y); width: clamp(52px, 18%, 88px); aspect-ratio: 1; transform-origin: 50% 100%; animation: villagePatronHop var(--speed) ease-in-out var(--delay) infinite; }
+.village-shop-patron img { display: block; width: 100%; height: 100%; object-fit: contain; transform: scale(var(--scale)) scaleX(var(--facing)); transform-origin: 50% 100%; filter: drop-shadow(0 5px 3px rgba(0,0,0,0.48)); animation: villagePatronLook 4.4s ease-in-out var(--delay) infinite; }
+.village-shop-patron:nth-child(2) { --walk: -6px; }
+.village-shop-patron:nth-child(3) { --walk: 5px; }
+.village-shop-patron:nth-child(4) { --walk: -4px; }
+@keyframes villagePatronHop { 0%,100% { translate: 0 0; } 18% { translate: 0 -2px; } 42% { translate: var(--walk) 0; } 66% { translate: var(--walk) -3px; } }
+@keyframes villagePatronLook { 0%,42%,100% { rotate: -1deg; } 50%,84% { rotate: 2deg; } }
+
+.village-shop-ambient { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.village-shop-mote { position: absolute; left: var(--mx); bottom: -8px; width: var(--ms); height: var(--ms); border-radius: 50%; background: rgba(255,220,127,0.88); box-shadow: 0 0 9px rgba(255,190,75,0.9); opacity: 0; animation: villageMoteRise var(--md) linear var(--ml) infinite; }
+@keyframes villageMoteRise { 0% { translate: 0 0; opacity: 0; } 16% { opacity: .78; } 74% { opacity: .3; } 100% { translate: var(--drift) -190px; opacity: 0; } }
+.village-shop-steam { position: absolute; left: var(--sx); bottom: var(--sy); width: 13px; height: 24px; border: 3px solid rgba(245,255,238,0.66); border-left-color: transparent; border-bottom-color: transparent; border-radius: 50%; opacity: 0; filter: blur(.4px); animation: villageSteam 3.2s ease-out var(--sd) infinite; }
+@keyframes villageSteam { 0% { translate: 0 5px; scale: .65; opacity: 0; } 25% { opacity: .65; } 100% { translate: 8px -67px; scale: 1.45; rotate: 18deg; opacity: 0; } }
+.village-shop-fire-glow { position: absolute; left: var(--gx); bottom: var(--gy); width: 21%; aspect-ratio: 1.35; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,204,71,.72), rgba(255,90,26,.23) 48%, transparent 72%); mix-blend-mode: screen; filter: blur(5px); animation: villageFirePulse .75s ease-in-out infinite alternate; }
+@keyframes villageFirePulse { from { scale: .9 1; opacity: .62; } to { scale: 1.12 .92; opacity: 1; } }
+.shop-scene-tavern .village-shop-fire-glow { --gx: 8%; --gy: 21%; }
+.shop-scene-smith .village-shop-fire-glow { --gx: 60%; --gy: 26%; }
+.shop-scene-potion .village-shop-mote { background: rgba(120,255,222,.9); box-shadow: 0 0 10px rgba(83,255,222,.95); }
+.shop-scene-potion .village-shop-fire-glow { --gx: 35%; --gy: 16%; background: radial-gradient(ellipse, rgba(93,255,229,.76), rgba(147,72,255,.34) 48%, transparent 73%); }
+.shop-scene-guild .village-shop-mote { background: rgba(255,230,154,.72); }
+.shop-scene-general .village-shop-mote { background: rgba(255,240,171,.72); }
+
+@media (max-height: 680px) {
+  .village-shop-interior { min-height: 210px; max-height: 42dvh; }
+  .shop-desc { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shop-panel, .village-shop-patron, .village-shop-patron img, .village-shop-mote, .village-shop-steam, .village-shop-fire-glow { animation: none !important; }
+  .village-shop-mote, .village-shop-steam { display: none; }
+}
 
 .map-village-orb { pointer-events: auto; width: 52px; height: 52px; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: linear-gradient(180deg, #3a2812, #241a0d); color: #f4ead4; box-shadow: 0 8px 20px rgba(0,0,0,0.38), 0 0 0 3px rgba(240,199,103,0.25); margin-left: 8px; }
 .map-village-orb:active { transform: scale(0.94); }
@@ -2715,6 +2786,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <a class="settings-label" href="privacy.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Privacy Policy</a>
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
+      <div class="settings-row">
+        <a class="settings-label" href="audio-credits.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Sound Credits &amp; Licences</a>
+        <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
+      </div>
       <div class="settings-row" id="replayIntroBtn" role="button" tabindex="0">
         <div class="settings-label">Replay Intro Cutscene</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
@@ -2744,6 +2819,17 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
   </div>
 
+
+  <!-- Bird Equipment Screen — tap a companion bird to open its RPG loadout -->
+  <div class="bird-equip-overlay" id="birdEquipOverlay" role="dialog" aria-modal="true" aria-label="Bird equipment">
+    <div class="bird-equip-scroll">
+      <div class="bird-equip-topbar">
+        <div class="bird-equip-title">⚔️ Equipment</div>
+        <button class="bird-equip-close" onclick="closeBirdEquip()">✕ CLOSE</button>
+      </div>
+      <div id="birdEquipBody"></div>
+    </div>
+  </div>
 
   <!-- Intro Cutscene Overlay -->
   <div class="intro-cutscene-overlay" id="introCutsceneOverlay" aria-modal="true" role="dialog" aria-label="Burbz intro cutscene">
@@ -2816,7 +2902,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=roost-barracks-onboarding-20260720"></script>
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
-<script src="loot_crafting_core.js?v=fletchers-forge-20260719"></script>
+<script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=footpath-ring-quests-v1-20260716"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -2828,6 +2914,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
+<script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
+<script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -3504,7 +3592,8 @@ function $$(sel, parent) { return (parent || document).querySelectorAll(sel); }
 function escapeHtml(value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
 // ============================================================================
-// SOUND EFFECTS (Web Audio API — no external files)
+// SOUND EFFECTS — licensed file-backed audio, with oscillator fallback only
+// when the standalone audio module did not load.
 // ============================================================================
 let audioCtx = null;
 let sfxEnabled = true;
@@ -3556,7 +3645,7 @@ function playTone(freq, duration, type, vol, ramp) {
   } catch(e) {}
 }
 
-const SFX = {
+const oscillatorSfxFallback = {
   capture() {
     playTone(880, 0.1, 'sine', 0.2);
     setTimeout(() => playTone(1100, 0.1, 'sine', 0.2), 100);
@@ -3591,8 +3680,41 @@ const SFX = {
     playTone(700, 0.1, 'sine', 0.12);
     setTimeout(() => playTone(900, 0.15, 'sine', 0.15), 120);
     setTimeout(() => playTone(1200, 0.25, 'sine', 0.12), 250);
-  }
+  },
+  page() { this.tap(); },
+  unlock() { this.capture(); },
+  coins() { this.tap(); },
+  build() { playTone(180, 0.12, 'triangle', 0.08, 110); },
+  bird() { this.capture(); },
+  owl() { playTone(300, 0.3, 'sine', 0.08, 180); },
+  error() { this.hit(); },
+  prime() { try { getAudioCtx().resume(); return Promise.resolve(true); } catch (e) { return Promise.resolve(false); } },
+  setEnabled(value) { sfxEnabled = !!value; return sfxEnabled; }
 };
+
+const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioManager === 'function'
+  ? window.BurbzAudioCore.createAudioManager({ getEnabled: () => sfxEnabled })
+  : oscillatorSfxFallback;
+
+// Mobile browsers unlock media only inside a real user gesture. Prime one
+// disposable muted clip; this never starts ambience or any repeating sound.
+function primeBurbzAudio() {
+  const manager = SFX;
+  if (manager && typeof manager.prime === 'function') manager.prime('tap').catch(() => {});
+}
+window.addEventListener('pointerdown', primeBurbzAudio, { once:true, passive:true });
+window.addEventListener('click', primeBurbzAudio, { once:true, passive:true });
+
+// Conservative default for controls without their own semantic sound. A recent
+// explicit sound in the same click is detected so controls never double-chime.
+document.addEventListener('click', event => {
+  const control = event.target && event.target.closest ? event.target.closest('button,a,input,select,[role="button"]') : null;
+  if (!control || control.closest('.bottom-nav') || control.dataset.audio === 'none') return;
+  if (SFX && typeof SFX.playedRecently === 'function' && SFX.playedRecently(80)) return;
+  const sound = window.BurbzAudioCore && window.BurbzAudioCore.classifyInteraction
+    ? window.BurbzAudioCore.classifyInteraction(control) : 'tap';
+  if (sound && typeof SFX[sound] === 'function') SFX[sound]();
+});
 
 function vibrate(ms) {
   if (gameState.settings.vibration && navigator.vibrate) navigator.vibrate(ms);
@@ -3608,7 +3730,7 @@ const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
   flock: [],
   discoveredSpecies: {},
-  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1 }, equipment: {}, giftsGiven: {} },
+  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {} },
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   quests: {},
   questsLastReset: null,
@@ -3783,6 +3905,7 @@ function loadState() {
 
   ensureActivePetStillExists();
   sfxEnabled = gameState.settings.sfx;
+  if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   saveState();
 }
 
@@ -3791,6 +3914,7 @@ function saveState() {
     localStorage.setItem('burbz_state', JSON.stringify(gameState));
   } catch(e) {}
   queueCloudSave();
+  queueActionBadgeUpdate();
 }
 
 function apiHeaders(extra) {
@@ -8547,7 +8671,8 @@ function openBirdInfo(birdId) {
         <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
         <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
         <div class="bird-info-rarity" style="color:${rarityColor}">${escapeHTML(bird.rarity || 'common')} · Power ${bird.power || 0}</div>
-        ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>`}
+        ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>
+        <button class="card-pet-btn" style="margin-top:8px" onclick="closeBirdInfo(); openBirdEquip('${escapeHTML(bird.id)}')">⚔️ Equipment</button>`}
       </div>
     </div>
     <div class="bird-info-summary">${escapeHTML(summary)}</div>
@@ -9735,7 +9860,8 @@ function academyBuildBuilding(id, opts = {}) {
   updateQuestProgress('build_academy', 1);
   saveState();
   updateHeader();
-  SFX.levelUp();
+  if (SFX && typeof SFX.build === 'function') SFX.build();
+  else if (SFX && typeof SFX.levelUp === 'function') SFX.levelUp();
   showToast('Built ' + cfg.icon + ' ' + cfg.label + '!');
   renderAcademy();
   return true;
@@ -10067,7 +10193,9 @@ function startBirdExpedition(birdId, templateId, loadout) {
   quest.equipment = equipment;
   gameState.birdExpeditions.unshift(quest);
   saveState();
-  SFX.tap();
+  if (templateId === 'moon_scout' && SFX && typeof SFX.owl === 'function') SFX.owl();
+  else if (SFX && typeof SFX.page === 'function') SFX.page();
+  else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast('🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderBirdExpeditions();
 }
@@ -10476,16 +10604,6 @@ function renderAcademy() {
       });
     });
     markers.innerHTML = html;
-  }
-
-  // Tab-level needs indicator
-  const navBadge = document.querySelector('.nav-item[data-screen="academy"]');
-  if (navBadge) {
-    const anyNeeds = gameState.flock.some(b => {
-      ensureBirdAcademy(b);
-      return (b.care.hunger || 0) >= 70 || (b.care.happiness || 100) <= 30 || (b.hp || 1) < (b.maxHp || 1) * 0.4;
-    });
-    navBadge.classList.toggle('needs-care', anyNeeds);
   }
 
   renderAcademyRoomPanel(byRoom[academySelectedRoom]);
@@ -11134,11 +11252,10 @@ function academyGraduationOverlay(bird) {
 
 let academyInteriorRoom = 'outdoors';
 
-// ===== Academy room interiors — hand-drawn inline SVG scenes ================
-// Painted PNG/SVG interior assets were never shipped, so rooms opened onto a
-// black hero. Every room now draws its own manga-styled scene inline; nothing
-// external can 404 and blank the screen again.
-const ACADEMY_ROOM_SCENES = (() => {
+// ===== Academy room interiors ================================================
+// Keep the original inline scenes available as a dormant fallback/reference.
+// Production rooms use the generated manga-style environment paintings below.
+const ACADEMY_ROOM_SVG_FALLBACKS = (() => {
   const INK = '#140d06', TRIM = '#6b4a26', GOLD = '#d6a84f', GOLDHI = '#f0c767', CREAM = '#f4ead4', TEAL = '#2e7d86';
   let uid = 0;
 
@@ -11431,6 +11548,25 @@ const ACADEMY_ROOM_SCENES = (() => {
     return `<svg class="academy-room-bg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${label} interior">${DEFS}${body}<rect width="800" height="600" fill="url(#ri-vig)"/></svg>`;
   };
 })();
+
+const ACADEMY_ROOM_INTERIOR_ASSETS = {
+  outdoors: 'assets/academy-interiors-manga/aviary-gardens.png',
+  dorm: 'assets/academy-interiors-manga/roost.png',
+  tavern: 'assets/academy-interiors-manga/barracks.png',
+  training: 'assets/academy-interiors-manga/training-hall.png',
+  hospital: 'assets/academy-interiors-manga/hospital.png',
+  crowbar: 'assets/academy-interiors-manga/crowbar.png',
+  kitchen: 'assets/academy-interiors-manga/kitchen.png',
+  workshop: 'assets/academy-interiors-manga/workshop.png',
+  nursery: 'assets/academy-interiors-manga/nursery.png',
+  observatory: 'assets/academy-interiors-manga/observatory.png',
+  quest_roost: 'assets/academy-interiors-manga/quest-roost.png'
+};
+
+function ACADEMY_ROOM_SCENES(room, label) {
+  const src = ACADEMY_ROOM_INTERIOR_ASSETS[room] || ACADEMY_ROOM_INTERIOR_ASSETS.outdoors;
+  return `<img class="academy-room-bg" src="${src}" alt="${label} interior" draggable="false" decoding="async">`;
+}
 
 function openAcademyRoom(room) {
   if (!ACADEMY_ROOMS[room]) return;
@@ -13699,6 +13835,45 @@ function birdGearBonuses(bird) {
   catch (e) { return {}; }
 }
 
+// An equipped spell scroll grants the fighter an extra skill, slotted in just
+// before the signature ultimate.
+function applyEquippedSpell(fighter, bird) {
+  let skill = null;
+  try { skill = lootCore().spellSkillFor(birdLoadout(bird.id).spell); } catch (e) {}
+  if (!skill || !Array.isArray(fighter.skills)) return;
+  fighter.skills.splice(Math.max(1, fighter.skills.length - 1), 0, { ...skill, cdLeft: 0 });
+}
+
+// An equipped potion is drunk automatically as the battle opens: heal, barrier,
+// stat brews and turn-meter head starts all land before the first move.
+function applyEquippedPotion(fighter, bird) {
+  let item = null, effect = null;
+  try {
+    const L = lootCore();
+    item = L.gearById(birdLoadout(bird.id).potion);
+    effect = L.potionEffectFor(item);
+  } catch (e) {}
+  if (!item || !effect) return null;
+  if (effect.healPct) fighter.hp = Math.min(fighter.maxHp, fighter.hp + Math.round(fighter.maxHp * effect.healPct));
+  if (effect.barrierPct) fighter.barrier = Math.max(fighter.barrier || 0, Math.round(fighter.maxHp * effect.barrierPct));
+  (effect.mods || []).forEach(m => fighter.mods.push({ ...m }));
+  if (effect.crStart) fighter.cr = clamp((fighter.cr || 0) + effect.crStart * 100, 0, 100);
+  fighter.fainted = fighter.hp <= 0;
+  return item;
+}
+
+// The drunk potion leaves the slot; if the bag holds another of the same brew
+// it is restocked automatically so the loadout survives repeat battles.
+function consumeEquippedPotion(bird) {
+  const loadout = birdLoadout(bird.id);
+  const id = loadout.potion;
+  if (!id) return false;
+  delete loadout.potion;
+  const bag = gameState.inventory.gear;
+  if ((bag[id] || 0) > 0) { bag[id] -= 1; loadout.potion = id; }
+  return true;
+}
+
 // Apply a rolled loot bundle to the save and return display strings.
 function grantLootDrops(drops) {
   const L = lootCore();
@@ -13961,13 +14136,79 @@ function buildFallbackHabitatMarkers(lat, lon, source, presetSpawns) { const fal
 
 
 // ============================================================================
+// ACTIONABLE NAV BADGES
+// ============================================================================
+function normalizeActionBadgeState(now = Date.now()) {
+  const academyCore = window.BurbzAcademyCore;
+  const expeditionRows = Array.isArray(gameState && gameState.birdExpeditions) ? gameState.birdExpeditions : [];
+  const trainingRows = Array.isArray(gameState && gameState.birdTrainingSessions) ? gameState.birdTrainingSessions : [];
+  const birdExpeditions = expeditionRows.map(expedition => {
+    const advanced = academyCore && typeof academyCore.advanceBirdExpedition === 'function'
+      ? academyCore.advanceBirdExpedition(expedition, now)
+      : { ...expedition, status: Number(expedition.endMs) <= now ? 'complete' : (expedition.status || 'active') };
+    return { ...advanced, claimed: expedition.claimed === true || expedition.status === 'claimed' };
+  });
+  const birdTrainingSessions = trainingRows.map(session => {
+    const advanced = academyCore && typeof academyCore.advanceTrainingSession === 'function'
+      ? academyCore.advanceTrainingSession(session, now)
+      : { ...session, status: Number(session.endMs) <= now ? 'complete' : (session.status || 'active') };
+    return { ...advanced, claimed: session.claimed === true || session.status === 'claimed' };
+  });
+  const activeSideQuest = gameState && gameState.sideQuest && gameState.sideQuest.active;
+  const sideQuestDiscoveries = activeSideQuest && Array.isArray(activeSideQuest.discoveries)
+    ? activeSideQuest.discoveries.map(discovery => ({ active:true, claimed:discovery.claimed === true })) : [];
+  const careNeedsCount = (gameState && Array.isArray(gameState.flock) ? gameState.flock : []).filter(bird => {
+    const care = bird && bird.care && typeof bird.care === 'object' ? bird.care : {};
+    const hunger = Number(care.hunger ?? 0);
+    const happiness = Number(care.happiness ?? 100);
+    const hp = Number(bird && bird.hp != null ? bird.hp : 1);
+    const maxHp = Math.max(1, Number(bird && bird.maxHp != null ? bird.maxHp : 1));
+    return hunger >= 70 || happiness <= 30 || hp < maxHp * 0.4;
+  }).length;
+  let recruitableCount = 0;
+  try {
+    const barracksOpen = typeof isAcademyRoomBuilt === 'function' && isAcademyRoomBuilt('tavern');
+    const coins = Number(gameState && gameState.player && gameState.player.coins) || 0;
+    recruitableCount = barracksOpen && typeof barracksRecruitCandidates === 'function'
+      ? barracksRecruitCandidates().filter(candidate => recruitCostForBird(candidate.bird) <= coins).length
+      : 0;
+  } catch (e) {}
+  return {
+    questDefinitions: [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
+    quests: gameState && gameState.quests,
+    birdExpeditions,
+    birdTrainingSessions,
+    sideQuestDiscoveries,
+    recruitableCount,
+    careNeedsCount
+  };
+}
+
+function updateActionBadges() {
+  const core = window.BurbzActionBadges;
+  if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
+  if (!document || !document.querySelectorAll) return;
+  const counts = core.computeActionBadgeCounts(normalizeActionBadgeState(Date.now()));
+  core.applyActionBadges(document, counts);
+}
+
+let actionBadgeUpdateQueued = false;
+function queueActionBadgeUpdate() {
+  if (actionBadgeUpdateQueued) return;
+  actionBadgeUpdateQueued = true;
+  const run = () => { actionBadgeUpdateQueued = false; updateActionBadges(); };
+  if (typeof queueMicrotask === 'function') queueMicrotask(run);
+  else Promise.resolve().then(run);
+}
+
+// ============================================================================
 // NAVIGATION
 // ============================================================================
 let currentScreen = 'map';
 
 function switchScreen(name) {
   if (name === currentScreen) return;
-  SFX.tap();
+  SFX.page();
 
   $$('.screen').forEach(s => s.classList.remove('active'));
   $$('.nav-item').forEach(n => n.classList.remove('active'));
@@ -13993,6 +14234,7 @@ function switchScreen(name) {
   if (name === 'quests') renderQuests();
   if (name === 'leaderboards') renderLeaderboards();
   if (name === 'profile') renderProfile();
+  queueActionBadgeUpdate();
 
   // Gradual tutorial: Merlin teaches each system the first time its screen opens.
   if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
@@ -14221,6 +14463,23 @@ const VILLAGE_SHOPS = {
     ]
   }
 };
+
+const VILLAGE_SHOP_INTERIORS = {
+  general: 'assets/village-interiors-manga/seed-and-sundry.png',
+  potion: 'assets/village-interiors-manga/gilded-beak.png',
+  smith: 'assets/village-interiors-manga/talon-and-anvil.png',
+  tavern: 'assets/village-interiors-manga/puffins-rest.png',
+  guild: 'assets/village-interiors-manga/birders-guild.png'
+};
+
+const VILLAGE_SHOP_PATRONS = [
+  'bird-art-cache/cutouts/puffin_burbz_manga_20260624_cutout.png',
+  'bird-art-cache/cutouts/blue_tit_burbz_manga_20260624_v2_cutout.png',
+  'bird-art-cache/cutouts/blackcap_burbz_manga_20260630_clean_cutout.png',
+  'bird-art-cache/cutouts/hawfinch_burbz_manga_20260709_cutout.png',
+  'bird-art-cache/cutouts/marsh_tit_burbz_manga_20260709_cutout.png',
+  'bird-art-cache/cutouts/yellow_wagtail_burbz_manga_20260709_cutout.png'
+];
 
 // ---- Seeded randomness -----------------------------------------------------
 function burbzHash32(str) {
@@ -14893,12 +15152,16 @@ function birdhouseCostForNextVillage() {
 const EMPIRE_TRIBUTE_INTERVAL_MS = 8 * 60 * 60 * 1000; // each village pays every 8h
 const EMPIRE_TRIBUTE_MAX_PERIODS = 3;                  // strongbox stores up to a day away
 const EMPIRE_SIM_MAX_CYCLES = 21;                      // a week of population catch-up
-const VILLAGE_BASE_POPULATION = 8;
-const VILLAGE_MIN_POPULATION = 4;
+// A freshly liberated town stands empty — the darkness scattered everyone, so
+// settlers only return once the governor raises homes for them to live in.
+const VILLAGE_BASE_POPULATION = 0;
+const VILLAGE_MIN_POPULATION = 4; // once settled, a town never empties below a stubborn few
 const VILLAGE_MAX_POPULATION = 200;
 // What a raw liberated village supports before anything is built: the square,
-// a spring and a handful of huts keep the founding villagers barely covered.
-const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 12, joy: 7 };
+// a spring and the old cellar stores keep food, water and a little cheer
+// ticking over — but every home lies in ruins, so shelter (and with it any
+// residents at all) comes only from cottages the player builds.
+const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 0, joy: 7 };
 
 const EMPIRE_NEEDS = [
   { id: 'food',    icon: '🍞', label: 'Food' },
@@ -14990,7 +15253,16 @@ function empireCompleteConstructions(now) {
     delete eco.construction;
     completed = true;
     addPlayerXp(12);
-    showToast('🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!');
+    // New homes draw new residents: finishing a shelter building brings the
+    // first families straight in (half its fresh capacity), and the rest of
+    // the rooms fill up over the 8-hour tax cycles as the town thrives.
+    let movedIn = 0;
+    if (building.need === 'shelter') {
+      const housingCap = villageNeedCapacity(rec, 'shelter');
+      movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
+      eco.population += movedIn;
+    }
+    showToast('🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!' + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : ''));
     if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   });
   if (completed) { saveState(); SFX.questComplete(); vibrate(35); }
@@ -15049,8 +15321,8 @@ function ensureVillageEconomy(rec) {
     if (!b || !Number.isFinite(Number(con.startMs)) || !Number.isFinite(Number(con.endMs)) || Number(con.endMs) <= Number(con.startMs)) delete eco.construction;
     else con.toLevel = Math.max(1, Math.min(b.maxLevel, Math.floor(Number(con.toLevel)) || ((eco.buildings[b.id] || 0) + 1)));
   }
-  if (!Number.isFinite(Number(eco.population)) || Number(eco.population) <= 0) eco.population = VILLAGE_BASE_POPULATION;
-  eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
+  if (!Number.isFinite(Number(eco.population)) || Number(eco.population) < 0) eco.population = VILLAGE_BASE_POPULATION;
+  eco.population = Math.max(0, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
   if (!Number.isFinite(Number(eco.lastSimAt))) eco.lastSimAt = Number(rec.lastTributeAt) || Date.parse(rec.claimedAt) || Date.now();
   return eco;
 }
@@ -15082,14 +15354,16 @@ function villageEconomySnapshot(rec) {
     flatBranches += (b.branchesPerLevel || 0) * level;
     taxBoost += (b.taxBoost || 0) * level;
   });
-  // Miserable villagers still pay a trickle (0.35 floor); a content, market-run
-  // town of 40 pays several times a raw hamlet's rate.
-  const taxes = Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost)) + flatCoins);
-  const branches = 2 + flatBranches;
+  // An empty province pays nothing — taxes and timber need residents to raise
+  // them. Miserable villagers still pay a trickle (0.35 floor); a content,
+  // market-run town of 40 pays several times a raw hamlet's rate.
+  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost)) + flatCoins);
+  const branches = pop <= 0 ? 0 : 2 + flatBranches;
   return { pop, needs, happiness, taxes, branches, housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
-// housing cap, hungry or joyless ones empty out (never below a stubborn few).
+// housing cap, hungry or joyless ones empty out (never below a stubborn few —
+// though the floor never conjures settlers into a town with no homes built).
 function simulateVillageEconomy(rec, now) {
   const eco = ensureVillageEconomy(rec);
   if (!eco) return;
@@ -15099,10 +15373,11 @@ function simulateVillageEconomy(rec, now) {
   eco.lastSimAt += elapsed * EMPIRE_TRIBUTE_INTERVAL_MS;
   for (let i = 0; i < Math.min(EMPIRE_SIM_MAX_CYCLES, elapsed); i++) {
     const snap = villageEconomySnapshot(rec);
+    const floor = Math.min(eco.population, VILLAGE_MIN_POPULATION);
     if (snap.happiness >= 0.9 && eco.population < snap.housingCap) eco.population += 2;
     else if (snap.happiness >= 0.65 && eco.population < snap.housingCap) eco.population += 1;
     else if (snap.happiness < 0.45) eco.population -= 1;
-    eco.population = Math.max(VILLAGE_MIN_POPULATION, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, VILLAGE_MIN_POPULATION))));
+    eco.population = Math.max(floor, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, floor))));
   }
 }
 function simulateAllVillageEconomies() {
@@ -15237,7 +15512,7 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The town armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count) + claimLootText);
+  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! The town stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count) + claimLootText);
   setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
@@ -15326,9 +15601,11 @@ function renderVillageManagePanel() {
   }).join('');
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' GOVERN ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
-    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%</div></div>' +
+    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
     '<div class="province-needs">' + needsHtml + '</div>' +
-    '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>' +
+    (snap.pop > 0
+      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>'
+      : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy' : '') + '</div>' +
@@ -15353,7 +15630,7 @@ function renderEmpirePanel() {
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + '</span><br>' +
-      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
+      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
   const realmName = $('empireRealmName'), realmRank = $('empireRealmRank');
@@ -15378,7 +15655,10 @@ let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes
 let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
 let villageNpcs = [], villageChickens = [];
 let villageWeatherFx = null, villageShootingStar = null, villageTwinkleStars = null;
-let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20 };
+// Free-roam camera: azimuth/polar/dist orbit around a ground-plane target
+// (tx,tz) the player can pan anywhere in the village; lastInputAt pauses the
+// idle drift while (and just after) the player is steering for themselves.
+let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20, tx: 0, tz: 0, lastInputAt: 0 };
 let villageShadowTick = 0;
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
@@ -15397,9 +15677,9 @@ function renderVillage() {
     const rec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
-    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, then free the village to rebuild it.';
+    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
     else if (dev <= 0) sub.textContent = 'Your province, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.';
-    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around — tap a building to step inside.';
+    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.';
   }
   renderVillageClaimBar();
   renderVillageManagePanel();
@@ -17611,17 +17891,75 @@ function ensureVillageRenderer(stage) {
   stage.appendChild(villageRenderer.domElement);
 
   const el = villageRenderer.domElement;
-  let down = null, dragged = false;
-  el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar }; dragged = false; });
-  el.addEventListener('pointermove', e => {
-    if (!down) return;
-    const dx = e.clientX - down.x, dy = e.clientY - down.y;
-    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
-    villageCam.azimuth = down.az - dx * 0.006;
-    villageCam.polar = Math.min(1.36, Math.max(0.55, down.po - dy * 0.004)); // 1.36: the raised rim forest stays below the lens
+  // Free-roam controls: one finger (or mouse) drags to orbit, two fingers
+  // pinch to zoom and drag together to stroll around the village. Desktop
+  // gets the same freedom via the wheel and shift- or right-button dragging.
+  // A quick double-tap walks the camera back to the village centre.
+  const VILLAGE_CAM_MIN_DIST = 6, VILLAGE_CAM_MAX_DIST = 30, VILLAGE_CAM_PAN_REACH = 16;
+  const camPointers = new Map();
+  let orbitStart = null, pinchLast = null, dragged = false;
+  function villageCamZoom(dist) { villageCam.dist = Math.min(VILLAGE_CAM_MAX_DIST, Math.max(VILLAGE_CAM_MIN_DIST, dist)); }
+  function villageCamPan(dx, dy) {
+    // Screen drag → ground-plane slide relative to the current view bearing,
+    // so the village follows the finger; clamped to the meadow's edge.
+    const s = Math.sin(villageCam.azimuth), c = Math.cos(villageCam.azimuth);
+    const k = villageCam.dist * 0.0016;
+    villageCam.tx += (-c * dx - s * dy) * k;
+    villageCam.tz += (s * dx - c * dy) * k;
+    const reach = Math.hypot(villageCam.tx, villageCam.tz);
+    if (reach > VILLAGE_CAM_PAN_REACH) { villageCam.tx *= VILLAGE_CAM_PAN_REACH / reach; villageCam.tz *= VILLAGE_CAM_PAN_REACH / reach; }
+  }
+  function pinchState() {
+    const pts = [...camPointers.values()];
+    return { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx: (pts[0].x + pts[1].x) / 2, my: (pts[0].y + pts[1].y) / 2 };
+  }
+  el.addEventListener('pointerdown', e => {
+    camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { el.setPointerCapture(e.pointerId); } catch (err) {} // release always reaches us, even off-canvas
+    villageCam.lastInputAt = Date.now();
+    if (camPointers.size === 1) {
+      orbitStart = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar, pan: e.shiftKey || e.button === 2 };
+      dragged = false;
+    } else if (camPointers.size === 2) {
+      orbitStart = null;
+      pinchLast = pinchState();
+      dragged = true; // a pinch is never a tap
+    }
   });
+  el.addEventListener('pointermove', e => {
+    const p = camPointers.get(e.pointerId);
+    if (!p) return;
+    const prevX = p.x, prevY = p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    villageCam.lastInputAt = Date.now();
+    if (camPointers.size === 2 && pinchLast) {
+      const now = pinchState();
+      villageCamZoom(villageCam.dist * (pinchLast.d / Math.max(1, now.d))); // fingers apart = closer in
+      villageCamPan(now.mx - pinchLast.mx, now.my - pinchLast.my);          // two-finger drag strolls around
+      pinchLast = now;
+      return;
+    }
+    if (!orbitStart) return;
+    const dx = e.clientX - orbitStart.x, dy = e.clientY - orbitStart.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    if (orbitStart.pan) { villageCamPan(p.x - prevX, p.y - prevY); return; }
+    villageCam.azimuth = orbitStart.az - dx * 0.006;
+    villageCam.polar = Math.min(1.36, Math.max(0.55, orbitStart.po - dy * 0.004)); // 1.36: the raised rim forest stays below the lens
+  });
+  function releasePointer(e) {
+    camPointers.delete(e.pointerId);
+    if (camPointers.size < 2) pinchLast = null;
+    if (camPointers.size === 1) {
+      // Lifting one finger of a pinch: the survivor orbits from where it is
+      const pt = [...camPointers.values()][0];
+      orbitStart = { x: pt.x, y: pt.y, az: villageCam.azimuth, po: villageCam.polar, pan: false };
+    } else if (camPointers.size === 0) orbitStart = null;
+  }
+  el.addEventListener('pointercancel', releasePointer);
   el.addEventListener('pointerup', e => {
-    const wasDrag = dragged; down = null;
+    releasePointer(e);
+    const wasDrag = dragged;
+    if (camPointers.size > 0) return;
     if (wasDrag) return;
     const rect = el.getBoundingClientRect();
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
@@ -17638,8 +17976,11 @@ function ensureVillageRenderer(stage) {
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
-    villageCam.dist = Math.min(28, Math.max(12, villageCam.dist + e.deltaY * 0.02));
+    villageCam.lastInputAt = Date.now();
+    villageCamZoom(villageCam.dist + e.deltaY * 0.02);
   }, { passive: false });
+  el.addEventListener('dblclick', () => { villageCam.tx = 0; villageCam.tz = 0; villageCamZoom(22); }); // walk back to the square
+  el.addEventListener('contextmenu', e => e.preventDefault()); // right-drag pans instead
 
   window.addEventListener('resize', onVillageResize);
 }
@@ -17684,10 +18025,13 @@ function buildVillageScene(v) {
   const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
   const devLevel = econRec ? villageTotalDevelopment(econRec) : 0;
   const ruinStage = devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
-  // Every settlement is also built to one of three plans: a ring green, a
-  // crossroads settlement, or a riverside village with a footbridge.
+  // Every settlement is also built to one of five plans — and the plans are no
+  // longer all rings around a point: a loose village green, a crossroads
+  // settlement, a riverside village with a footbridge, a single high street
+  // ('lane') with shopfronts staggered down both sides, or a scattered hamlet
+  // whose trades cluster wherever the ground allows, with no formal square.
   const layoutRoll = r();
-  const layout = layoutRoll < 0.42 ? 'green' : layoutRoll < 0.72 ? 'crossroads' : 'riverside';
+  const layout = layoutRoll < 0.22 ? 'green' : layoutRoll < 0.42 ? 'crossroads' : layoutRoll < 0.62 ? 'riverside' : layoutRoll < 0.82 ? 'lane' : 'hamlet';
   const startAngle = r() * Math.PI * 2;
   const riverA = startAngle + Math.PI + (r() - 0.5) * 0.8; // riverside: which way the water lies
   const riverDist = 10.6, riverW = 3.4;
@@ -17701,13 +18045,18 @@ function buildVillageScene(v) {
   villageScene.add(villageSkyDome(skyCols));
 
   // ---- placement registry: scatter without piling props into each other -----
-  const claimed = [{ x: 0, z: 0, rad: 6.4 }]; // keep the plaza itself clear
+  // A hamlet keeps only a small clearing by its well; formal plans keep the
+  // whole square clear.
+  const claimed = [{ x: 0, z: 0, rad: layout === 'hamlet' ? 4.2 : 6.4 }];
   function spotFree(x, z, rad) {
     for (const c of claimed) { if (Math.hypot(x - c.x, z - c.z) < rad + c.rad) return false; }
     if (layout === 'crossroads') {
       const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
       const d2 = Math.abs(Math.cos(startAngle) * x + Math.sin(startAngle) * z);
       if (Math.min(d1, d2) < 2.1 + rad * 0.4) return false;
+    } else if (layout === 'lane') {
+      // the high street runs straight through — nothing builds on the road
+      if (Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z) < 2.1 + rad * 0.4) return false;
     } else if (layout === 'riverside') {
       if (Math.abs((x - riverPx) * riverUx + (z - riverPz) * riverUz) < 2.9 + rad * 0.4) return false;
     }
@@ -17745,6 +18094,9 @@ function buildVillageScene(v) {
       const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
       const d2 = Math.abs(Math.cos(startAngle) * x + Math.sin(startAngle) * z);
       h *= Math.min(1, Math.max(0, (Math.min(d1, d2) - 2.2) / 4.5));
+    } else if (layout === 'lane') { // the high street leaves through a single pass
+      const d1 = Math.abs(-Math.sin(startAngle) * x + Math.cos(startAngle) * z);
+      h *= Math.min(1, Math.max(0, (d1 - 2.2) / 4.5));
     }
     return h;
   };
@@ -17797,14 +18149,18 @@ function buildVillageScene(v) {
   }
   const cobbleMat = villageCobbleMaterial(pal);
   const cobbleTile = 2.6; // world units per cobble tile
-  const plazaR = 4.8 + tier * 0.7 + r() * 1.4;
+  // The cobbled centre matches the plan: a full market square for formal
+  // plans, a modest widening of the high street for a lane, and only a small
+  // worn clearing around the hamlet's well.
+  const plazaR = layout === 'hamlet' ? 2.4 + r() * 0.9 : layout === 'lane' ? 3.5 + tier * 0.5 + r() * 1.0 : 4.8 + tier * 0.7 + r() * 1.4;
   const plaza = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(plazaR, 28), (plazaR * 2) / cobbleTile, (plazaR * 2) / cobbleTile), cobbleMat);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
   // ---- layout groundwork ------------------------------------------------------
-  if (layout === 'crossroads') {
-    // Two cobbled roads meet at the square; fences and a waymarker gate line them
-    for (const roadA of [startAngle, startAngle + Math.PI / 2]) {
+  if (layout === 'crossroads' || layout === 'lane') {
+    // Cobbled roads — two meeting at the square, or one high street running
+    // straight through; fences and a waymarker gate line them
+    for (const roadA of (layout === 'crossroads' ? [startAngle, startAngle + Math.PI / 2] : [startAngle])) {
       const roadGrp = new THREE.Group();
       const road = new THREE.Mesh(villageScaleUV(new THREE.PlaneGeometry(groundR * 1.8, 3.0), (groundR * 1.8) / cobbleTile, 3.0 / cobbleTile), cobbleMat);
       road.receiveShadow = true;
@@ -17936,11 +18292,34 @@ function buildVillageScene(v) {
       px = Math.cos(arm) * along - Math.sin(arm) * side;
       pz = Math.sin(arm) * along + Math.cos(arm) * side;
       faceX = Math.cos(arm) * along; faceZ = Math.sin(arm) * along; // face the road
+    } else if (layout === 'lane') {
+      // Shopfronts stagger down both sides of the high street, facing across
+      // it — a row of gables rather than a ring
+      const dir = i % 2 === 0 ? 1 : -1;
+      const along = dir * (4.6 + Math.floor(i / 2) * 4.4 + r() * 1.8);
+      const side = ((i + Math.floor(i / 2)) % 2 === 0 ? 1 : -1) * (3.3 + r() * 0.8);
+      px = Math.cos(startAngle) * along - Math.sin(startAngle) * side;
+      pz = Math.sin(startAngle) * along + Math.cos(startAngle) * side;
+      faceX = Math.cos(startAngle) * along; faceZ = Math.sin(startAngle) * along; // face the street
+    } else if (layout === 'hamlet') {
+      // No square at all: each trade settles wherever the ground allows, at
+      // its own distance and bearing, facing whichever way it pleases
+      px = 0; pz = 0;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const a = r() * Math.PI * 2, dd = 5.2 + r() * 7.6;
+        const hx = Math.cos(a) * dd, hz = Math.sin(a) * dd;
+        if (!spotFree(hx, hz, 3.2) && attempt < 9) continue;
+        px = hx; pz = hz;
+        break;
+      }
+      faceX = (r() - 0.5) * 7; faceZ = (r() - 0.5) * 7;
     } else {
+      // Village green or riverside arc — jitter each plot's bearing and depth
+      // hard enough that even the green reads as a loose cluster, not a circle
       const spread = layout === 'riverside' ? 2.6 : Math.PI * 2;
       const base = layout === 'riverside' ? riverA + Math.PI - spread / 2 : startAngle;
-      const angle = base + (i / shopKeys.length) * spread + (r() - 0.5) * 0.4;
-      const radius = 7.4 + tier * 0.8 + r() * 1.8;
+      const angle = base + (i / shopKeys.length) * spread + (r() - 0.5) * (layout === 'riverside' ? 0.4 : 0.85);
+      const radius = 6.6 + tier * 0.8 + r() * (layout === 'riverside' ? 1.8 : 3.4);
       px = Math.cos(angle) * radius; pz = Math.sin(angle) * radius;
     }
     claimSpot(px, pz, 3.2);
@@ -18013,8 +18392,12 @@ function buildVillageScene(v) {
   const cottageCount = ruinStage < 2 ? 0 : tier === 0 ? (r() < 0.4 ? 1 : 0) : tier === 1 ? 3 + Math.floor(r() * 3) : 6 + Math.floor(r() * 4);
   for (let i = 0; i < cottageCount; i++) {
     let cx, cz, faceX = 0, faceZ = 0;
-    if (layout === 'crossroads') {
-      const arm = startAngle + Math.floor(r() * 4) * Math.PI / 2;
+    if (layout === 'crossroads' || layout === 'lane') {
+      // Homes keep to the roadsides — down the arms of the crossing, or
+      // strung further out along both ends of the high street
+      const arm = layout === 'lane'
+        ? startAngle + (r() < 0.5 ? 0 : Math.PI)
+        : startAngle + Math.floor(r() * 4) * Math.PI / 2;
       const along = 10 + r() * (5 + tier * 2);
       const side = (r() < 0.5 ? 1 : -1) * (3.6 + r() * 1.4);
       cx = Math.cos(arm) * along - Math.sin(arm) * side;
@@ -18031,7 +18414,8 @@ function buildVillageScene(v) {
       faceX = riverPx; faceZ = riverPz; // face back toward the bridge
       claimSpot(cx, cz, 2.4);
     } else {
-      const spot = scatterSpot(11.5, 14.5 + tier * 2, 2.4, dryArc.c, dryArc.s);
+      // Hamlet homes mix in among the trades; ring plans keep them further out
+      const spot = scatterSpot(layout === 'hamlet' ? 6.5 : 11.5, 14.5 + tier * 2, 2.4, dryArc.c, dryArc.s);
       if (!spot) continue;
       cx = spot.x; cz = spot.z;
     }
@@ -18525,6 +18909,7 @@ function buildVillageScene(v) {
   villageCam.azimuth = camAz;
   villageCam.polar = 1.08; // a touch lower than before — more sky, moonrise over the woods
   villageCam.dist = 22 + r() * 2.5;
+  villageCam.tx = 0; villageCam.tz = 0; // every village opens centred on its square
 }
 
 function onVillageResize() {
@@ -18545,10 +18930,12 @@ function villageAnimate(ts) {
 }
 
 function villageAnimateFrame(t) {
-  villageCam.azimuth += 0.0006; // slow idle drift
-  const { azimuth, polar, dist } = villageCam;
-  villageCamera.position.set(Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, Math.cos(azimuth) * Math.sin(polar) * dist);
-  villageCamera.lookAt(0, 1.4, 0);
+  // Slow idle drift, but only once the player has left the camera alone for a
+  // while — never wrestle the view away from someone exploring the village.
+  if (Date.now() - (villageCam.lastInputAt || 0) > 8000) villageCam.azimuth += 0.0006;
+  const { azimuth, polar, dist, tx, tz } = villageCam;
+  villageCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
+  villageCamera.lookAt(tx, 1.4, tz);
   villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
   villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
   villageWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });
@@ -18670,6 +19057,37 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
 }
 
 // ---- Shop overlay + purchases ----
+function villageShopPatronsHTML(shopKey) {
+  const r = villageRngFrom(burbzHash32('interior-patrons-' + shopKey));
+  const slots = [5, 29, 55, 78];
+  return slots.map((x, i) => {
+    const art = VILLAGE_SHOP_PATRONS[Math.floor(r() * VILLAGE_SHOP_PATRONS.length)];
+    const y = Math.round(r() * 7);
+    const scale = (0.8 + r() * 0.25).toFixed(2);
+    const facing = r() > 0.5 ? 1 : -1;
+    const delay = (-r() * 4).toFixed(2) + 's';
+    const speed = (3.2 + r() * 1.8).toFixed(2) + 's';
+    return '<span class="village-shop-patron" style="--x:' + x + '%;--y:' + y + '%;--scale:' + scale + ';--facing:' + facing + ';--delay:' + delay + ';--speed:' + speed + '">' +
+      '<img src="' + art + '" alt="" draggable="false" decoding="async"></span>';
+  }).join('');
+}
+
+function villageShopAmbientHTML(shopKey) {
+  const motes = [
+    ['12%', '3px', '5.2s', '-1.4s', '14px'], ['30%', '4px', '6.1s', '-3.8s', '-9px'],
+    ['52%', '3px', '4.8s', '-2.2s', '11px'], ['72%', '5px', '6.7s', '-4.9s', '-13px'],
+    ['89%', '3px', '5.7s', '-.6s', '8px']
+  ].map(m => '<span class="village-shop-mote" style="--mx:' + m[0] + ';--ms:' + m[1] + ';--md:' + m[2] + ';--ml:' + m[3] + ';--drift:' + m[4] + '"></span>').join('');
+  const steamByShop = {
+    tavern: [['22%', '24%', '-1.2s'], ['73%', '20%', '-2.6s']],
+    potion: [['25%', '25%', '-.4s'], ['47%', '23%', '-2.1s'], ['70%', '26%', '-1.4s']],
+    smith: [['67%', '31%', '-.9s']]
+  };
+  const steam = (steamByShop[shopKey] || []).map(s => '<span class="village-shop-steam" style="--sx:' + s[0] + ';--sy:' + s[1] + ';--sd:' + s[2] + '"></span>').join('');
+  const glow = ['tavern', 'smith', 'potion'].includes(shopKey) ? '<span class="village-shop-fire-glow"></span>' : '';
+  return motes + steam + glow;
+}
+
 function villageOpenShop(shopKey) {
   const shop = VILLAGE_SHOPS[shopKey];
   const overlay = $('villageShopOverlay');
@@ -18685,14 +19103,22 @@ function villageOpenShop(shopKey) {
       '<button class="shop-buy-btn" onclick="villageBuy(\'' + shopKey + '\',\'' + item.id + '\')">' + buyLabel + '</button>' +
       '</div>';
   }).join('');
-  overlay.innerHTML = '<div class="shop-panel">' +
-    '<div class="shop-head"><span class="shop-icon">' + shop.icon + '</span>' +
-    '<div><div class="shop-name">' + escapeHtml(shop.name) + '</div><div class="shop-desc">' + escapeHtml(shop.desc) + '</div></div>' +
-    '<button class="shop-close" onclick="villageCloseShop()">&times;</button></div>' +
+  const interior = VILLAGE_SHOP_INTERIORS[shopKey] || VILLAGE_SHOP_INTERIORS.general;
+  overlay.innerHTML = '<section class="shop-panel" role="dialog" aria-modal="true" aria-labelledby="villageShopTitle">' +
+    '<div class="village-shop-interior shop-scene-' + shopKey + '">' +
+    '<img class="village-shop-interior-bg" src="' + interior + '" alt="' + escapeHtml(shop.name) + ' interior" draggable="false" decoding="async">' +
+    '<div class="village-shop-ambient" aria-hidden="true">' + villageShopAmbientHTML(shopKey) + '</div>' +
+    '<div class="village-shop-patrons" aria-hidden="true">' + villageShopPatronsHTML(shopKey) + '</div>' +
+    '<div class="village-shop-scene-head"><span class="shop-icon">' + shop.icon + '</span>' +
+    '<div class="shop-head-copy"><h2 class="shop-name" id="villageShopTitle">' + escapeHtml(shop.name) + '</h2><div class="shop-desc">' + escapeHtml(shop.desc) + '</div></div>' +
+    '<button class="shop-close" type="button" aria-label="Close ' + escapeHtml(shop.name) + '" onclick="villageCloseShop()">&times;</button></div>' +
+    '</div><div class="shop-scroll-body">' +
     '<div class="shop-coins">Your purse: <b>' + coins + ' 🪙</b></div>' +
-    '<div class="shop-stock">' + rows + '</div>' +
-    '</div>';
+    '<div class="shop-stock">' + rows + '</div></div>' +
+    '</section>';
   overlay.classList.add('show');
+  const closeButton = overlay.querySelector('.shop-close');
+  if (closeButton) closeButton.focus({ preventScroll: true });
 }
 
 function villageCloseShop() {
@@ -19125,9 +19551,11 @@ function renderInventory() {
 let forgeState = { tab: 'equip', birdId: null, slotPicker: null };
 
 const FORGE_SLOT_META = {
-  weapon:  { label: 'Weapon',  empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
-  armour:  { label: 'Armour',  empty: '🛡️', hint: 'DEF, HP and magic resist' },
-  trinket: { label: 'Trinket', empty: '💍', hint: 'Speed and critical strikes' }
+  weapon:  { label: 'Weapon',      empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
+  armour:  { label: 'Armour',      empty: '🛡️', hint: 'DEF, HP and magic resist' },
+  trinket: { label: 'Enhancement', empty: '💍', hint: 'Speed and critical strikes' },
+  spell:   { label: 'Spell',       empty: '📜', hint: 'Grants an extra battle skill' },
+  potion:  { label: 'Potion',      empty: '🧪', hint: 'Drunk automatically as battle begins' }
 };
 
 function forgeSetTab(tab) {
@@ -19151,6 +19579,20 @@ function forgeGearStatLine(item) {
   if (s.spd) parts.push('+' + s.spd + ' SPD');
   if (s.maxHp) parts.push('+' + s.maxHp + ' HP');
   if (s.critBonus) parts.push('+' + Math.round(s.critBonus * 100) + '% CRIT');
+  if (item.spell) {
+    const sp = item.spell;
+    if (sp.kind === 'attack') parts.push('✨ PWR ' + sp.power + (sp.aoe ? ' · hits all' : '') + (sp.rider ? ' · -' + sp.rider.stat.toUpperCase() : ''));
+    else if (sp.kind === 'heal') parts.push('✨ Heal ' + Math.round(sp.healPct * 100) + '%' + (sp.teamWide ? ' · squad' : '') + (sp.cleanse ? ' · cleanse' : ''));
+    else if (sp.kind === 'barrier') parts.push('✨ Barrier ' + Math.round(sp.barrierPct * 100) + '%');
+    parts.push('CD ' + sp.cd);
+  }
+  if (item.battle) {
+    const b = item.battle;
+    if (b.healPct) parts.push('🧪 +' + Math.round(b.healPct * 100) + '% HP at start');
+    if (b.barrierPct) parts.push('🧪 ' + Math.round(b.barrierPct * 100) + '% barrier');
+    (b.mods || []).forEach(m => parts.push('🧪 +' + Math.round(m.pct * 100) + '% ' + m.stat.toUpperCase()));
+    if (b.crStart) parts.push('🧪 head start on the turn meter');
+  }
   return parts.join(' · ');
 }
 
@@ -19218,31 +19660,43 @@ function renderForgeEquip(body) {
 function forgeSelectBird(birdId) { forgeState.birdId = birdId; forgeState.slotPicker = null; SFX.tap(); renderForge(); }
 function forgeOpenSlot(slot) { forgeState.slotPicker = forgeState.slotPicker === slot ? null : slot; SFX.tap(); renderForge(); }
 
-function forgeEquip(slot, gearId) {
+// Shared equip plumbing — used by both the Forge and the tap-on-bird
+// equipment screen. Swapped-out pieces go back into the bag.
+function equipItemOnBird(birdId, slot, gearId) {
   const L = lootCore();
   const item = L.gearById(gearId);
-  if (!item || item.slot !== slot) return;
+  if (!item || item.slot !== slot) return false;
   const gearBag = gameState.inventory.gear;
-  if ((gearBag[gearId] || 0) <= 0) { showToast('None left in the bag.'); return; }
-  const loadout = birdLoadout(forgeState.birdId);
+  if ((gearBag[gearId] || 0) <= 0) { showToast('None left in the bag.'); return false; }
+  const loadout = birdLoadout(birdId);
   if (loadout[slot]) gearBag[loadout[slot]] = (gearBag[loadout[slot]] || 0) + 1; // return old piece
   gearBag[gearId] -= 1;
   loadout[slot] = gearId;
-  forgeState.slotPicker = null;
   saveState();
   SFX.questComplete();
   showToast(item.icon + ' ' + item.label + ' equipped!');
+  return true;
+}
+
+function unequipItemFromBird(birdId, slot) {
+  const loadout = birdLoadout(birdId);
+  if (!loadout[slot]) return false;
+  gameState.inventory.gear[loadout[slot]] = (gameState.inventory.gear[loadout[slot]] || 0) + 1;
+  delete loadout[slot];
+  saveState();
+  SFX.tap();
+  return true;
+}
+
+function forgeEquip(slot, gearId) {
+  if (!equipItemOnBird(forgeState.birdId, slot, gearId)) return;
+  forgeState.slotPicker = null;
   renderForge();
 }
 
 function forgeUnequip(slot) {
-  const loadout = birdLoadout(forgeState.birdId);
-  if (!loadout[slot]) return;
-  gameState.inventory.gear[loadout[slot]] = (gameState.inventory.gear[loadout[slot]] || 0) + 1;
-  delete loadout[slot];
+  if (!unequipItemFromBird(forgeState.birdId, slot)) return;
   forgeState.slotPicker = null;
-  saveState();
-  SFX.tap();
   renderForge();
 }
 
@@ -19250,7 +19704,7 @@ function renderForgeCraft(body) {
   const L = lootCore();
   const stock = gameState.inventory.items || {};
   const coins = gameState.player.coins || 0;
-  const groups = { weapon: '🗡️ Weapons — talons & wands', armour: '🛡️ Armour', trinket: '💍 Trinkets' };
+  const groups = { weapon: '🗡️ Weapons — talons & wands', armour: '🛡️ Armour', trinket: '💍 Enhancements', spell: '📜 Spells — scrolls & sigils', potion: '🧪 Potions — battle brews' };
   let html = '';
   Object.keys(groups).forEach(slot => {
     html += '<div class="forge-recipe-group">' + groups[slot] + '</div>';
@@ -19331,6 +19785,117 @@ function renderForgeMaterials(body) {
       '<div class="fm-count">' + (Number(stock[m.id]) || 0) + '</div></div>';
   }).join('') + '</div>' +
   '<div class="forge-intro" style="margin-top:10px;">Materials turn up on the map while you walk, drop from battles, and arrive as tribute from your liberated provinces.</div>';
+}
+
+// ============================================================================
+// BIRD EQUIPMENT SCREEN — tap a companion bird for its classic RPG loadout:
+// weapon, armour, enhancement, spell and potion, with a live stat preview.
+// ============================================================================
+let birdEquipState = { birdId: null, slotPicker: null };
+
+const EQUIP_SLOT_ORDER = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
+
+function openBirdEquip(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!bird) return;
+  birdEquipState = { birdId: birdId, slotPicker: null };
+  renderBirdEquip();
+  $('birdEquipOverlay').classList.add('show');
+  SFX.tap();
+  vibrate(10);
+}
+
+function closeBirdEquip() {
+  $('birdEquipOverlay').classList.remove('show');
+  birdEquipState.slotPicker = null;
+}
+
+function birdEquipOpenSlot(slot) {
+  birdEquipState.slotPicker = birdEquipState.slotPicker === slot ? null : slot;
+  SFX.tap();
+  renderBirdEquip();
+}
+
+function birdEquipSet(slot, gearId) {
+  if (!equipItemOnBird(birdEquipState.birdId, slot, gearId)) return;
+  birdEquipState.slotPicker = null;
+  renderBirdEquip();
+}
+
+function birdEquipClear(slot) {
+  if (!unequipItemFromBird(birdEquipState.birdId, slot)) return;
+  birdEquipState.slotPicker = null;
+  renderBirdEquip();
+}
+
+function renderBirdEquip() {
+  const body = $('birdEquipBody');
+  if (!body) return;
+  const bird = (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
+  if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; return; }
+  const L = lootCore();
+  const loadout = birdLoadout(bird.id);
+  const bonus = birdGearBonuses(bird);
+  const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
+  const artUrl = getBirdArtUrl(bird);
+  const art = artUrl
+    ? '<img class="bird-equip-art" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
+    : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
+
+  const hero = '<div class="bird-equip-hero" style="border-color:' + rarityColor + '55;">' + art +
+    '<div><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
+    '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
+    '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div></div></div>';
+
+  const stat = (label, base, key) => '<div class="bird-equip-stat"><div class="bes-label">' + label + '</div>' +
+    '<div class="bes-value">' + base + (bonus[key] ? ' <span class="bes-boost">+' + bonus[key] + '</span>' : '') + '</div></div>';
+  const stats = '<div class="bird-equip-stats">' +
+    stat('❤️ HP', bird.maxHp || 0, 'maxHp') +
+    stat('⚔️ ATK', bird.atk || 0, 'atk') +
+    stat('✨ MAG', bird.mag || 0, 'mag') +
+    stat('🛡️ DEF', bird.def || 0, 'def') +
+    stat('🪽 SPD', bird.spd || 0, 'spd') +
+    '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
+    '</div>';
+
+  const slots = '<div class="bird-equip-section-label">Loadout</div><div class="bird-equip-slots">' + EQUIP_SLOT_ORDER.map(slot => {
+    const meta = FORGE_SLOT_META[slot];
+    const item = L.gearById(loadout[slot]);
+    const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
+    const open = birdEquipState.slotPicker === slot;
+    return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
+      '<div class="beq-icon">' + (item ? item.icon : meta.empty) + '</div>' +
+      '<div><div class="beq-slot-label">' + meta.label + '</div>' +
+      (item ? '<div class="beq-item" style="color:' + color + ';">' + escapeHtml(item.label) + '</div><div class="beq-meta">' + forgeGearStatLine(item) + '</div>' : '<div class="beq-meta">' + meta.hint + '</div>') +
+      '</div></button>';
+  }).join('') + '</div>';
+
+  let picker = '';
+  if (birdEquipState.slotPicker) {
+    const slot = birdEquipState.slotPicker;
+    const owned = Object.entries(gameState.inventory.gear || {}).filter(([, n]) => (Number(n) || 0) > 0)
+      .map(([id, n]) => ({ item: L.gearById(id), count: n })).filter(x => x.item && x.item.slot === slot)
+      .sort((a, b) => L.rarityIndex(b.item.rarity) - L.rarityIndex(a.item.rarity));
+    picker = '<div class="bird-equip-picker"><div class="forge-picker-title">' + FORGE_SLOT_META[slot].label + ' for ' + escapeHtml(birdDisplayName(bird)) + '</div>' +
+      (loadout[slot] ? '<button class="forge-picker-row" onclick="birdEquipClear(\'' + slot + '\')"><span class="fp-icon">✖️</span><span class="fp-name">Unequip</span></button>' : '') +
+      (owned.length ? owned.map(x => {
+        const color = L.RARITY_META[x.item.rarity].color;
+        return '<button class="forge-picker-row" style="border-color:' + color + '66;" onclick="birdEquipSet(\'' + slot + '\',\'' + x.item.id + '\')">' +
+          '<span class="fp-icon">' + x.item.icon + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
+      }).join('') : '<div class="inventory-empty">No spare ' + FORGE_SLOT_META[slot].label.toLowerCase() + 's in the bag — loot the map, win battles, or craft one at the Fletcher\'s Forge.</div>') +
+      '</div>';
+  }
+
+  const spellItem = L.gearById(loadout.spell);
+  const potionItem = L.gearById(loadout.potion);
+  const notes = '<div class="bird-equip-section-label">In battle</div><div class="forge-stat-card">' +
+    '<span>📜 ' + (spellItem ? '<b>' + escapeHtml(spellItem.label) + '</b> joins ' + escapeHtml(birdDisplayName(bird)) + '\'s skill bar.' : 'Equip a spell scroll to add an extra skill.') + '</span>' +
+    '<span>🧪 ' + (potionItem ? '<b>' + escapeHtml(potionItem.label) + '</b> is drunk automatically as battle begins, then restocked from your bag if you have another.' : 'Equip a potion to drink it automatically as battle begins.') + '</span>' +
+    '</div>';
+
+  const forgeLink = '<button class="battle-forge-btn" onclick="closeBirdEquip(); switchScreen(\'forge\');">⚒️ CRAFT MORE AT THE FLETCHER\'S FORGE</button>';
+
+  body.innerHTML = hero + stats + slots + picker + notes + forgeLink;
 }
 
 // ============================================================================
@@ -19526,6 +20091,12 @@ function renderBirdex() {
         openBirdInfo(infoTarget.dataset.birdId || card.dataset.birdId);
         return;
       }
+      const equipTarget = e.target.closest('[data-action="open-equip"]');
+      if (equipTarget) {
+        e.stopPropagation();
+        openBirdEquip(equipTarget.dataset.birdId || card.dataset.birdId);
+        return;
+      }
       card.classList.toggle('flipped');
     });
   });
@@ -19556,7 +20127,7 @@ function createBirdCardHTML(bird, idx) {
     <div class="bird-card ${isActivePet ? 'active-pet-card' : ''}" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
       <div class="bird-card-inner">
         <div class="card-front">
-          <div class="card-art">
+          <div class="card-art" data-action="open-equip" data-bird-id="${bird.id}" title="Tap your bird to open its equipment">
             <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}15, ${rarityColor}05);"></div>
             ${artBg}
             ${birdIcon}
@@ -19596,6 +20167,7 @@ function createBirdCardHTML(bird, idx) {
             <button class="card-pet-btn ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Pet' : 'Make Pet'}</button>
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
+            <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
           </div>
           <div class="card-back-hint">Tap empty space to flip back</div>
         </div>
@@ -21139,6 +21711,7 @@ function renderBattleSelect() {
       const moves = core.trainedMoves(b.academy && b.academy.disciplines).length;
       return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
+        '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
         fighterArtHTML(b, 'pk') +
         '<div class="pk-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
         '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + '</div>' +
@@ -21186,10 +21759,21 @@ function startPerchBattle() {
   const liberation = pendingEmpireLiberation();
   const rival = leagueRivalOpponents();
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter.
-  const playerFighters = team.map(b => core.buildFighter(b, { gear: birdGearBonuses(b) }));
+  const playerFighters = team.map(b => {
+    const f = core.buildFighter(b, { gear: birdGearBonuses(b) });
+    applyEquippedSpell(f, b);
+    return f;
+  });
   // Merlin's blessing on the story's first liberation: the flock enters at full
   // strength, so the opening battle can't be lost to a tired or hurt bird.
   if (liberation && isFirstLiberationBattle()) playerFighters.forEach(f => { f.hp = f.maxHp; f.fainted = false; });
+  // Equipped potions are drunk as the squad takes wing, then restocked from the bag.
+  const potionSips = [];
+  team.forEach((b, i) => {
+    const item = applyEquippedPotion(playerFighters[i], b);
+    if (item && consumeEquippedPotion(b)) potionSips.push(playerFighters[i].name + ' drinks ' + item.icon + ' ' + item.label + '!');
+  });
+  if (potionSips.length) saveState();
   const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
   battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
@@ -21201,6 +21785,7 @@ function startPerchBattle() {
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
+  potionSips.forEach(t => addBattleLog('system-msg', '🧪 ' + t));
   SFX.tap();
   battleAdvance();
 }
@@ -21530,7 +22115,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, switchScreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -22488,6 +23073,7 @@ $('toggleSfx').addEventListener('click', () => {
   el.classList.toggle('on');
   gameState.settings.sfx = el.classList.contains('on');
   sfxEnabled = gameState.settings.sfx;
+  if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   saveState();
 });
 
@@ -22612,6 +23198,8 @@ function init() {
   renderInventory();
   renderBirdExpeditions();
   checkBadges();
+  queueActionBadgeUpdate();
+  setInterval(queueActionBadgeUpdate, 30000);
   renderPetCompanion();
   maybeShowIntroCutscene();
   resumeSideQuestIfAny();
@@ -22644,11 +23232,8 @@ function init() {
   if (!gameState.settings.particles) $('toggleParticles').classList.remove('on');
   if (!gameState.settings.vibration) $('toggleVibration').classList.remove('on');
 
-  // Initialize audio context on first interaction
-  document.addEventListener('click', function initAudio() {
-    getAudioCtx();
-    document.removeEventListener('click', initAudio);
-  }, { once: true });
+  // File-backed audio was gesture-primed above; the AudioContext is created
+  // only if the safe oscillator fallback is actually needed.
 }
 
 // Register Play/PWA service worker when served over HTTPS or localhost.
