@@ -3499,7 +3499,7 @@ Object.assign(REAL_WORLD_COMMONNESS, NATIONAL.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, UK4.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
-const BURBZ_MAP_VERSION = '3d-terrain-forests-v1-20260722';
+const BURBZ_MAP_VERSION = '3d-terrain-forests-v2-20260722';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
@@ -12373,8 +12373,12 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
 // inside the vector tiles the map downloads anyway: zero extra network.
 // The whole package sits behind the "3D Terrain" toggle in Settings.
 const BURBZ_DEM_SOURCE = 'burbz-dem';
-const BURBZ_DEM_MAXZOOM = 10;
-const BURBZ_TERRAIN_EXAGGERATION = 1.45;
+// z12 DEM ≈ 25m/px: local hills and valleys still read at street zoom, while
+// a whole town remains just a handful of small tiles (the old laggy terrain
+// pulled full-res z14-15 DEM). Exaggeration is deliberately theatrical so
+// gentle countryside still visibly rolls.
+const BURBZ_DEM_MAXZOOM = 12;
+const BURBZ_TERRAIN_EXAGGERATION = 1.6;
 function burbzTerrain3dOn() { return !(gameState && gameState.settings && gameState.settings.terrain3d === false); }
 function burbzFirstSymbolLayerId() { try { const layers = (liveMap.getStyle().layers || []); const sym = layers.find(l => l.type === 'symbol'); return sym ? sym.id : undefined; } catch (e) { return undefined; } }
 function ensureBurbzForestCanopy() {
