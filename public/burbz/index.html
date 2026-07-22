@@ -13049,7 +13049,6 @@ function renderWalkingQuestSection() {
       '<div class="quest-progress-text">' + hit + '/' + q.checkpoints.length + ' markers</div></div>' +
       '<button class="quest-claim-btn" onclick="switchScreen(\'map\')">MAP</button></div>';
   }
-  html += '<div class="quest-section-title">🧭 Nearby Quests</div><div class="quest-board-distance-note">Ordered by distance from you to each trailhead.</div><div id="walkingQuestNearbyList"><div class="quest-all-done">Reading nearby trail starts…</div></div>';
   html += '<div class="quest-section-title">🏆 Completed Adventures</div>';
   if (!wq.history.length) {
     html += '<div class="quest-all-done">No adventures completed yet — open Explore Quests and take a real walk!</div>';
@@ -13071,22 +13070,6 @@ function renderWalkingQuestSection() {
   });
   const activeCard = container.querySelector('[data-walk-active]');
   if (activeCard) activeCard.addEventListener('click', ev => { if (!ev.target.classList.contains('quest-claim-btn')) openActiveWalkQuestSheet(); });
-  renderQuestScreenNearbyOffers();
-}
-
-function renderQuestScreenNearbyOffers() {
-  const box = $('walkingQuestNearbyList');
-  if (!box) return;
-  if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
-    box.innerHTML = '<div class="quest-all-done">Open the map and allow location to rank quests by distance to their start.</div>';
-    return;
-  }
-  discoverNearbyQuestOffers().then(offers => {
-    if (!offers || !$('walkingQuestNearbyList')) return;
-    renderQuestOfferCards($('walkingQuestNearbyList'), offers, focusQuestOnMap);
-  }).catch(() => {
-    if ($('walkingQuestNearbyList')) $('walkingQuestNearbyList').innerHTML = '<div class="quest-all-done">Nearby quests could not be loaded just now.</div>';
-  });
 }
 
 function resumeWalkingQuestIfAny() {

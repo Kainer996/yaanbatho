@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-village-explore-v100-20260721" in sw
+    assert "burbz-village-explore-v101-20260722" in sw
