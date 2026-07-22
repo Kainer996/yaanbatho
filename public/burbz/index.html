@@ -156,6 +156,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .room-bird-option-name { font-weight:800; font-size:13px; }
 .room-bird-option-meta { color:var(--text3); font-size:10px; margin-top:2px; }
 .room-bird-add-btn { min-height:34px; border-radius:9px; padding:0 10px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.05em; }
+.room-bird-add-btn:disabled { opacity:.45; filter:grayscale(.7); }
 
 /* ========== SCREEN CONTAINER ========== */
 .screens { flex: 1; position: relative; overflow: hidden; }
@@ -10570,7 +10571,9 @@ function renderAcademy() {
 
   // Zone counts + active highlight
   const byRoom = Object.fromEntries(Object.keys(ACADEMY_ROOMS).map(r => [r, []]));
-  gameState.flock.forEach(b => { const r = (b.academy && byRoom[b.academy.room]) ? b.academy.room : 'outdoors'; byRoom[r].push(b); });
+  // Birds away on an expedition are physically absent from the Academy — they
+  // must not perch on campus, count toward a room, or be offered for a move.
+  gameState.flock.forEach(b => { if (birdHasActiveExpedition(b.id)) return; const r = (b.academy && byRoom[b.academy.room]) ? b.academy.room : 'outdoors'; byRoom[r].push(b); });
   renderAcademyTreehouse(byRoom);
   renderBirdExpeditions();
   const countIds = { dorm: 'academyCountDorm', training: 'academyCountTraining', outdoors: 'academyCountOutdoors' };
@@ -10934,6 +10937,8 @@ function academyMoveBird(birdId, room) {
   const bird = academyBirdById(birdId);
   if (!bird || !ACADEMY_ROOMS[room]) return;
   if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
+  if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
+  if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
   if (!isAcademyRoomBuilt(room)) {
     const building = ACADEMY_BUILDINGS[ACADEMY_ROOMS[room].buildingId || room];
@@ -11707,8 +11712,8 @@ function renderAcademyRoomInterior() {
   const room = academyInteriorRoom || academySelectedRoom || 'outdoors';
   const cfg = ACADEMY_ROOMS[room] || ACADEMY_ROOMS.outdoors;
   try {
-    const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room; });
-    const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room; });
+    const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room && !birdHasActiveExpedition(b.id); });
+    const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room || birdHasActiveExpedition(b.id); });
     const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
     if (room === 'tavern') {
       const waiting = barracksRecruitCandidates().length;
@@ -11720,7 +11725,15 @@ function renderAcademyRoomInterior() {
     }
     const addRows = others.length ? others.map(b => {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
-      return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy') + '</div></div><button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button></div>';
+      const away = birdHasActiveExpedition(b.id);
+      const training = birdHasActiveTraining(b.id);
+      const meta = away ? '🧭 Away on a quest — rejoins the Academy when it finishes'
+        : training ? '🏋️ Mid-training in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'the Training Hall')
+        : 'Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy');
+      const action = (away || training)
+        ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : 'Training') + '</button>'
+        : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
+      return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
