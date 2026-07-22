@@ -19464,6 +19464,16 @@ window.__burbzSoundDiscoveryDebug = {
   showInBirdex: species => showSpeciesInBirdex(species)
 };
 
+// True when the recognised bird has a profile in the client catalogue, matched
+// by common name, canonical name, alias, or scientific name (findSpeciesProfile
+// handles all of those, including BirdNET name-form differences via aliases).
+function speciesInClientCatalogue(bird) {
+  if (!bird) return false;
+  return !!(findSpeciesProfile(bird.species)
+    || findSpeciesProfile(bird.commonName)
+    || findSpeciesProfile(bird.scientificName));
+}
+
 function handleBirdCandidates(primary, detections = [], opts = {}) {
   const candidates = [];
   if (primary && primary.species) candidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
@@ -19472,7 +19482,13 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
   });
   const top = candidates[0];
-  const catalogMatched = opts.catalogMatched !== false;
+  // The backend sends catalogMatched from its own species index, which can drift
+  // out of sync with the client catalogue (BURBZ_SPECIES_PROFILES). The client
+  // catalogue is the source of truth for what is playable — profiles, art, stats
+  // and rarity all live here — so any recognised bird we hold a profile for must
+  // unlock, even if the backend flagged it unmatched. Only a bird with no client
+  // profile at all is treated as genuinely not yet in the catalogue.
+  const catalogMatched = speciesInClientCatalogue(top) || opts.catalogMatched !== false;
   if (top && !catalogMatched) {
     showCatalogUnmatchedRecognition(top);
     return;
