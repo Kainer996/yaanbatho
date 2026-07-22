@@ -96,7 +96,7 @@ def test_chapters_cover_every_major_system():
         "live map", "likely birds", "walking quest", "sound", "birdnet", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
         "sanctuary", "evil burbz", "academy", "hospital", "training",
-        "pantry", "expedition", "bag", "rank", "settings", "forge",
+        "pantry", "expedition", "stores", "rank", "settings", "forge",
     ]
     assert all(term in copy for term in required), [t for t in required if t not in copy]
     assert "uploaded" in copy and "location" in copy and "optional" in copy
@@ -133,5 +133,5 @@ def test_fresh_start_epoch_resets_the_whole_game_once():
 
 def test_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-bird-levelling-v104-20260722" in sw
+    assert "burbz-kitchen-pantry-v105-20260722" in sw
     assert "./assets/evil-burbz/evil-burb-1.png" in sw
