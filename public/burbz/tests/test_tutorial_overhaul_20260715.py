@@ -30,7 +30,7 @@ def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
         "live map", "likely birds", "walking quest", "sound", "birdnet", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
         "sanctuary", "perch league", "academy", "hospital", "training",
-        "pantry", "expedition", "bag", "rank", "settings",
+        "pantry", "expedition", "stores", "rank", "settings",
     ]
     assert all(term in copy for term in required), [term for term in required if term not in copy]
     assert "uploaded" in copy and "location" in copy and "optional" in copy
@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-bird-levelling-v104-20260722" in sw
+    assert "burbz-kitchen-pantry-v105-20260722" in sw
