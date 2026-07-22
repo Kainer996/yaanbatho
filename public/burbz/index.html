@@ -2932,6 +2932,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="uk_bird_expansion_3.js?v=uk-regular-completion-20260715"></script>
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
+<script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
@@ -2953,6 +2954,14 @@ const UK26 = window.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_EXP = window.BURBZ_AU_BIRD_EXPANSION;
 // Complete the practical RSPB/BTO UK field-guide scope and add 50 more source-backed Australian birds.
 const UK_FINAL = window.BURBZ_UK_BIRD_EXPANSION_FINAL;
+// Wave-4 British-List completion: species recent taxonomic splits left out of
+// the earlier UK waves (Cabot's Tern, Fea's Petrel, Stejneger's Stonechat,
+// Arctic Redpoll). Layered on the same coarse UK season/range rules.
+const UK4 = window.BURBZ_UK_BIRD_EXPANSION_4 || {
+  names: [], profiles: [], art: {}, commonness: {},
+  addToHabitatPools() {},
+  isEligible() { return true; }
+};
 const AU50 = window.BURBZ_AU_BIRD_EXPANSION_50;
 const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
   names: [], profiles: [], commonness: {}, regions: {},
@@ -3326,6 +3335,7 @@ WILD_BIRDS.push(...UK50.names);
 WILD_BIRDS.push(...UK26.names);
 WILD_BIRDS.push(...AU_EXP.names);
 WILD_BIRDS.push(...UK_FINAL.names, ...AU50.names);
+WILD_BIRDS.push(...UK4.names);
 function addUniqueWildBird(name) {
   if (!name) return;
   if (!WILD_BIRDS.some(existing => normaliseSpeciesKey(existing) === normaliseSpeciesKey(name))) WILD_BIRDS.push(name);
@@ -3347,6 +3357,7 @@ const HABITAT_BIRD_POOLS = {
 UK50.addToHabitatPools(HABITAT_BIRD_POOLS);
 UK26.addToHabitatPools(HABITAT_BIRD_POOLS);
 UK_FINAL.addToHabitatPools(HABITAT_BIRD_POOLS);
+UK4.addToHabitatPools(HABITAT_BIRD_POOLS);
 function makeNationalRegionalHabitatPools() {
   return { water:[], wetland:[], woodland:[], heath:[], park:[], farmland:[], grassland:[], urban:[], coast:[], hills:[], default:[] };
 }
@@ -3395,6 +3406,7 @@ REGION_AREA_SPECIES.uk.push(...UK26.names);
 REGION_AREA_SPECIES.au.push(...AU_EXP.names);
 AU_EXP.addToRegionalPools(REGIONAL_HABITAT_BIRD_POOLS.au);
 REGION_AREA_SPECIES.uk.push(...UK_FINAL.names, ...UK_FINAL.regionalAliases);
+REGION_AREA_SPECIES.uk.push(...UK4.names);
 REGION_AREA_SPECIES.au.push(...AU50.names);
 AU50.addToRegionalPools(REGIONAL_HABITAT_BIRD_POOLS.au);
 REGION_AREA_SPECIES.es = [];
@@ -3434,6 +3446,7 @@ Object.assign(REAL_WORLD_COMMONNESS, UK26.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, AU_EXP.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, UK_FINAL.commonness, AU50.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, NATIONAL.commonness);
+Object.assign(REAL_WORLD_COMMONNESS, UK4.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
 const BURBZ_MAP_VERSION = 'detailed-map-vicinity-visits-nolag-v2-20260706';
@@ -8435,6 +8448,7 @@ BURBZ_SPECIES_PROFILES.push(...UK50.profiles);
 BURBZ_SPECIES_PROFILES.push(...UK26.profiles);
 BURBZ_SPECIES_PROFILES.push(...AU_EXP.profiles);
 BURBZ_SPECIES_PROFILES.push(...UK_FINAL.profiles, ...AU50.profiles);
+BURBZ_SPECIES_PROFILES.push(...UK4.profiles);
 function addNationalSpeciesProfiles(targetProfiles, nationalProfiles) {
   const seenNames = new Set(targetProfiles.map(p => normaliseSpeciesKey(p && p.name)));
   const seenScientific = new Set(targetProfiles.map(p => normaliseSpeciesKey((p && (p.scientificName || p.scientific)) || '')).filter(Boolean));
@@ -9155,6 +9169,7 @@ Object.assign(BUILT_IN_BIRD_ART, UK50.art);
 Object.assign(BUILT_IN_BIRD_ART, UK26.art);
 Object.assign(BUILT_IN_BIRD_ART, AU_EXP.art);
 Object.assign(BUILT_IN_BIRD_ART, UK_FINAL.art, AU50.art);
+Object.assign(BUILT_IN_BIRD_ART, UK4.art);
 
 // Complete manga RPG artwork for species that previously used simple placeholders.
 Object.assign(BUILT_IN_BIRD_ART, {
@@ -13711,7 +13726,7 @@ function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, m
   const eligible = species => {
     if (NATIONAL.isEligible(region, species, lat, lon, month, habitat)) return true;
     if (NATIONAL.names.some(name => normaliseSpeciesKey(name) === normaliseSpeciesKey(species))) return false;
-    if (region === 'uk') return UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat);
+    if (region === 'uk') return UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat) && UK4.isEligible(species, lat, lon, month, habitat);
     if (region === 'au') return AU50.isEligible(species, lat, lon, month, habitat);
     return false;
   };

@@ -4,14 +4,18 @@ importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
 importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
+importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-bird-levelling-v103-20260722';
+const BURBZ_CACHE = 'burbz-bird-levelling-v104-20260722';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
 const UK_FINAL_SW = self.BURBZ_UK_BIRD_EXPANSION_FINAL;
 const AU50_SW = self.BURBZ_AU_BIRD_EXPANSION_50;
 const NATIONAL_SW = self.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;
+const UK4_SW = self.BURBZ_UK_BIRD_EXPANSION_4;
+// Wave-4 placeholder art is lightweight local SVG (no PNG cutout counterpart).
+const UK4_ART = UK4_SW ? Object.values(UK4_SW.art) : [];
 const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
 const ALL_EXPANSION_ART = { ...UK50_SW.art, ...UK26_SW.art, ...AU_SW.art };
 const NEW_LOCAL_PLACEHOLDER_ART = { ...UK_FINAL_SW.art, ...AU50_SW.art };
@@ -44,6 +48,7 @@ const BURBZ_ASSETS = [
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './national_bird_completion_20260715.js?v=national-completion-20260715',
+  './uk_bird_expansion_4.js?v=uk-british-list-completion-20260722',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
@@ -123,6 +128,7 @@ const BURBZ_ASSETS = [
   './icons/maskable-512.png'
 ];
 BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, ...NEW_LOCAL_CUTOUTS);
+BURBZ_ASSETS.push(...UK4_ART);
 
 // The app shell must cache or the install fails; artwork/video are best-effort
 // so one missing file can never knock out offline support for the whole game.
@@ -156,6 +162,7 @@ const BURBZ_CORE = [
   './uk_bird_expansion_3.js?v=uk-regular-completion-20260715',
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './national_bird_completion_20260715.js?v=national-completion-20260715',
+  './uk_bird_expansion_4.js?v=uk-british-list-completion-20260722',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
