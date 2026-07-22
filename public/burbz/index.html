@@ -102,7 +102,24 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .inventory-card-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; letter-spacing:.07em; color:var(--accent2); }
 .inventory-card-count { font-family:'Russo One',sans-serif; font-size:32px; color:var(--legendary); margin:7px 0 2px; }
 .inventory-card-copy { color:var(--text3); font-size:11px; line-height:1.35; }
+.inventory-card-usable { text-align:left; cursor:pointer; border-color:rgba(240,199,103,.45); background:linear-gradient(135deg,rgba(240,199,103,.16),rgba(0,0,0,.24)); }
+.inventory-card-usable:active { transform:scale(.97); }
+.inventory-card-usable .inventory-card-count { font-size:16px; color:var(--accent2); }
+.inventory-card-detail { color:var(--text3); font-size:11px; line-height:1.35; margin-top:4px; }
 .inventory-empty { grid-column:1/-1; padding:22px 16px; border:1px dashed rgba(255,255,255,.14); border-radius:16px; color:var(--text3); text-align:center; }
+/* Bird picker for XP scrolls */
+.xp-picker-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.xp-picker-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 10px; border-radius:14px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.28)); color:var(--text); cursor:pointer; }
+.xp-picker-row:active { transform:scale(.98); }
+.xpp-art { width:44px; height:44px; border-radius:10px; object-fit:cover; flex:none; }
+.xpp-emoji { display:grid; place-items:center; font-size:26px; background:rgba(0,0,0,.3); }
+.xp-picker-info { flex:1; min-width:0; }
+.xp-picker-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px; letter-spacing:.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.xp-picker-wing { font-size:11px; font-weight:700; margin-left:4px; }
+.xp-picker-level { font-size:11px; color:var(--text3); margin-top:1px; }
+.xp-picker-bar { width:100%; height:4px; background:var(--bg4); border-radius:2px; overflow:hidden; margin-top:4px; }
+.xp-picker-fill { height:100%; background:linear-gradient(90deg,#d6a84f,#f0c767); border-radius:2px; }
+.xp-picker-gain { font-family:'Russo One',sans-serif; font-size:15px; color:var(--legendary); flex:none; }
 .academy-room-hero { position:relative; margin:0 0 14px; min-height:360px; border-radius:18px; overflow:hidden; border:1px solid rgba(214,168,79,.24); background:#090807; box-shadow:inset 0 0 50px rgba(0,0,0,.45); }
 .academy-room-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.96) brightness(.82); }
 svg.academy-room-bg { display:block; filter:none; }
@@ -712,6 +729,8 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .card-hp-bar { width: 100%; height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin-top: 2px; }
 .card-hp-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.card-xp-bar { width: 100%; height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+.card-xp-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #d6a84f, #f0c767); transition: width 0.3s ease; }
 .card-stats-row {
   display: flex; gap: 4px; margin-top: 4px;
 }
@@ -2900,11 +2919,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=roost-barracks-onboarding-20260720"></script>
+<script src="academy_treehouse_core.js?v=bird-levelling-20260722"></script>
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=footpath-ring-quests-v1-20260716"></script>
+<script src="quest_core.js?v=bird-levelling-20260722"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -9637,10 +9656,13 @@ function createBirdEntry(speciesName, scientificName, confidence) {
 }
 
 function levelUpBird(bird, xpGain) {
-  bird.xp += xpGain;
-  const needed = XP_PER_LEVEL(bird.level);
-  while (bird.xp >= needed && bird.level < 50) {
-    bird.xp -= needed;
+  if (!bird || !Number.isFinite(Number(xpGain))) return 0;
+  bird.level = Math.max(1, Number(bird.level) || 1);
+  bird.xp = Math.max(0, Number(bird.xp) || 0) + Number(xpGain);
+  const startLevel = bird.level;
+  // Recompute the threshold each level so a big XP dump climbs the curve properly.
+  while (bird.xp >= XP_PER_LEVEL(bird.level) && bird.level < 50) {
+    bird.xp -= XP_PER_LEVEL(bird.level);
     bird.level++;
 
     // Recalculate base stats for the new level
@@ -9668,6 +9690,14 @@ function levelUpBird(bird, xpGain) {
 
     bird.hp = bird.maxHp;
   }
+  const levelsGained = bird.level - startLevel;
+  if (levelsGained > 0) {
+    try {
+      showToast('🎉 ' + birdDisplayName(bird) + ' reached LV.' + bird.level + '!');
+      SFX.levelUp();
+    } catch (e) {}
+  }
+  return levelsGained;
 }
 
 function applyBirdTraining(bird, type) {
@@ -12592,9 +12622,15 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       const loot = ev.checkpoint.loot || { coins: 25, label: 'a pouch of 25 coins' };
       if (loot.coins) addCoins(loot.coins);
       if (loot.xp) addPlayerXp(loot.xp);
+      const chestItems = {};
+      if (loot.item && birdXpItem(loot.item)) { addBirdXpItemToBag(loot.item, 1); chestItems[loot.item] = 1; }
+      // The walking pet studies chest finds too — glowing feathers and map
+      // scraps teach the bird as much as the trainer.
+      const chestPet = getActivePet();
+      if (loot.xp && chestPet) levelUpBird(chestPet, loot.xp);
       SFX.capture();
       vibrate(QUEST_BUZZ.chest);
-      playQuestClaimCelebration({ coins: loot.coins || 0, xp: loot.xp || 0, items: {} });
+      playQuestClaimCelebration({ coins: loot.coins || 0, xp: loot.xp || 0, items: chestItems });
       showToast('🎁 Treasure chest opened — ' + loot.label + '!');
     } else if (ev.type === 'flag') {
       SFX.tap();
@@ -12643,6 +12679,14 @@ function completeWalkingQuest() {
   if (!quest) return;
   const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
   addPlayerXp(summary.xp);
+  // The bird that walked the quest levels up too: the active walking pet earns
+  // half the headline XP (it did half the work, after all).
+  const walkingPet = getActivePet();
+  if (walkingPet) {
+    summary.petXp = Math.max(20, Math.round(summary.xp * 0.5));
+    summary.petName = birdDisplayName(walkingPet);
+    levelUpBird(walkingPet, summary.petXp);
+  }
   const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
   if (bonusCoins) addCoins(bonusCoins);
   wq.history.unshift(summary);
@@ -13029,6 +13073,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
     '<div class="wq-summary-stat"><div class="num">' + summary.chestsOpened + '</div><div class="lbl">chests</div></div>' +
     '<div class="wq-summary-stat"><div class="num">' + (summary.birds || []).length + '</div><div class="lbl">birds captured</div></div>' +
     '<div class="wq-summary-stat"><div class="num">+' + summary.xp + '</div><div class="lbl">XP earned</div></div>' +
+    (summary.petXp ? '<div class="wq-summary-stat"><div class="num">+' + summary.petXp + '</div><div class="lbl">' + escapeHtml(summary.petName || 'pet') + ' XP</div></div>' : '') +
     '</div>' +
     (summary.trailBirds && summary.trailBirds.total ?
       '<div class="quest-desc" style="margin:6px 0">🐦 Trail birds spotted: <b>' + summary.trailBirds.matched + '/' + summary.trailBirds.total + '</b>' +
@@ -13896,6 +13941,7 @@ const MAP_PICKUP_TYPES = [
   { id:'mushroom', glyph:'🍄', label:'Forest mushroom', weight:10, grant() { gameState.inventory.items.forest_mushroom = (gameState.inventory.items.forest_mushroom || 0) + 1; return '+1 Forest Mushroom'; } },
   { id:'chest',    glyph:CHEST_SVG, label:'Treasure chest', weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
   { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
+  { id:'birdscroll', glyph:'🪶', label:'Study scroll', weight:5,  grant(r) { const key = randomXpScrollKey(r); addBirdXpItemToBag(key, 1); const it = birdXpItem(key); return '+1 ' + it.label + ' (' + birdXpItemDetail(key) + ') — use it from your Bag'; } },
   // --- Fletcher's Forge materials, lying where the kingdom left them ---
   { id:'twig',     glyph:'🪵', label:'Oak twig',      weight:12, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'oak_twig', qty:1 }])); } },
   { id:'reed',     glyph:'🌿', label:'River reed',    weight:11, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'river_reed', qty:1 }])); } },
@@ -14425,7 +14471,9 @@ const VILLAGE_SHOPS = {
       { id: 'heal_potion', label: 'Heal draught',   detail: 'Fully restores your pet\'s HP',      price: 25, effect: 'heal' },
       { id: 'happy_tonic', label: 'Cheer tonic',    detail: '+30 happiness for your pet',         price: 18, effect: 'happy' },
       { id: 'xp_scroll',   label: 'Wisdom scroll',  detail: '+40 XP for your pet',                price: 30, effect: 'xp' },
-      { id: 'feast_elixir',label: 'Feast elixir',   detail: 'Empties your pet\'s hunger bar',     price: 15, effect: 'feast' }
+      { id: 'feast_elixir',label: 'Feast elixir',   detail: 'Empties your pet\'s hunger bar',     price: 15, effect: 'feast' },
+      { id: 'bag_feather_scroll', label: 'Feather scroll', detail: 'Bag item: +40 XP to any bird you choose', price: 35, grantItem: 'xp_scroll_minor' },
+      { id: 'bag_wisdom_tome',    label: 'Wisdom tome',    detail: 'Bag item: +120 XP to any bird you choose', price: 95, grantItem: 'xp_scroll_greater' }
     ]
   },
   smith: {
@@ -19134,6 +19182,16 @@ function villageBuy(shopKey, itemId) {
     return;
   }
 
+  // Bag scrolls: bought into the inventory, used later on a bird of your choice
+  if (item.grantItem) {
+    addCoins(-item.price);
+    addBirdXpItemToBag(item.grantItem, 1);
+    saveState(); updateHeader();
+    showToast(inventoryIcon(item.grantItem) + ' ' + item.label + ' tucked into your Bag — use it on any bird you choose!');
+    villageOpenShop(shopKey);
+    return;
+  }
+
   // Effects that need an active pet
   const needsPet = ['heal', 'happy', 'xp', 'feast', 'drill', 'rest'].includes(item.effect);
   const pet = needsPet ? getActivePet() : null;
@@ -19497,10 +19555,133 @@ async function sendBurbzFeedback(message, contact) {
 // ============================================================================
 // INVENTORY
 // ============================================================================
+
+// ---- Bird XP scrolls -------------------------------------------------------
+// Bag consumables that grant XP to a bird the player chooses. Any-bird scrolls
+// work on the whole flock; wing-class scrolls (raptor, songbird, …) only fit
+// birds of that class — classified by the battle system's real species rules —
+// and pay more XP for the restriction.
+const BIRD_XP_ITEMS = {
+  xp_scroll_minor:      { label: 'Feather Scroll',      icon: '📜', xp: 40 },
+  xp_scroll_greater:    { label: 'Wisdom Tome',         icon: '📖', xp: 120 },
+  xp_scroll_raptor:     { label: "Hunter's War Scroll", icon: '🦅', xp: 150, type: 'raptor' },
+  xp_scroll_trickster:  { label: "Trickster's Riddle",  icon: '🃏', xp: 150, type: 'trickster' },
+  xp_scroll_songbird:   { label: 'Dawn Chorus Scroll',  icon: '🎵', xp: 150, type: 'songbird' },
+  xp_scroll_skydancer:  { label: 'Gale Script',         icon: '🪽', xp: 150, type: 'skydancer' },
+  xp_scroll_waterbird:  { label: 'Tidewatcher Scroll',  icon: '🌊', xp: 150, type: 'waterbird' },
+  xp_scroll_groundbird: { label: 'Turfward Scroll',     icon: '🥾', xp: 150, type: 'groundbird' }
+};
+
+function birdXpItem(key) { return BIRD_XP_ITEMS[key] || null; }
+
+function birdWingClass(bird) {
+  try { return window.BurbzBattleCore.classifySpecies(bird.species || bird.commonName); } catch (e) { return 'songbird'; }
+}
+
+function birdWingClassMeta(typeId) {
+  const types = window.BurbzBattleCore && window.BurbzBattleCore.BIRD_TYPES;
+  return (types && types[typeId]) || { id: typeId, label: typeId || 'Bird', icon: '🐦', color: 'var(--accent)' };
+}
+
+function birdXpItemDetail(itemKey) {
+  const item = birdXpItem(itemKey);
+  if (!item) return '';
+  if (!item.type) return '+' + item.xp + ' XP · any bird';
+  const meta = birdWingClassMeta(item.type);
+  return '+' + item.xp + ' XP · ' + meta.icon + ' ' + meta.label + 's only';
+}
+
+function addBirdXpItemToBag(key, qty) {
+  if (!birdXpItem(key)) return;
+  gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + Math.max(1, Number(qty) || 1);
+}
+
+// Loot roll for world drops: mostly Feather Scrolls, sometimes a wing-class
+// scroll, rarely a Wisdom Tome.
+function randomXpScrollKey(r) {
+  r = r || Math.random;
+  const roll = r();
+  if (roll < 0.55) return 'xp_scroll_minor';
+  if (roll < 0.65) return 'xp_scroll_greater';
+  const types = ['raptor', 'trickster', 'songbird', 'skydancer', 'waterbird', 'groundbird'];
+  return 'xp_scroll_' + types[Math.floor(r() * types.length)];
+}
+
+function xpScrollSheetEl() {
+  let el = $('xpScrollSheet');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'xpScrollSheet';
+    el.className = 'quest-overlay';
+    el.addEventListener('click', ev => { if (ev.target === el) closeXpScrollSheet(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function closeXpScrollSheet() { const el = $('xpScrollSheet'); if (el) el.classList.remove('open'); }
+
+// Bird picker for an XP scroll: shows every bird the scroll can be used on,
+// with its level and progress to the next one.
+function openXpScrollPicker(itemKey) {
+  const item = birdXpItem(itemKey);
+  const count = (gameState.inventory.items && gameState.inventory.items[itemKey]) || 0;
+  if (!item || count <= 0) return;
+  const flock = gameState.flock || [];
+  const eligible = flock.filter(b => !item.type || birdWingClass(b) === item.type);
+  let body;
+  if (!flock.length) {
+    body = '<div class="inventory-empty">Recruit a bird first — then bring it a scroll to study.</div>';
+  } else if (!eligible.length) {
+    const meta = birdWingClassMeta(item.type);
+    body = '<div class="inventory-empty">None of your birds are ' + meta.icon + ' ' + escapeHtml(meta.label) + 's. ' + escapeHtml(meta.blurb || '') + '</div>';
+  } else {
+    body = '<div class="xp-picker-list">' + eligible.map(b => {
+      const lv = Math.max(1, Number(b.level) || 1);
+      const need = XP_PER_LEVEL(lv);
+      const pct = lv >= 50 ? 100 : Math.min(100, Math.round(((Number(b.xp) || 0) / need) * 100));
+      const wing = birdWingClassMeta(birdWingClass(b));
+      return '<button class="xp-picker-row" onclick="useXpScroll(\'' + itemKey + '\',\'' + b.id + '\')">' +
+        fighterArtHTML(b, 'xpp') +
+        '<div class="xp-picker-info"><div class="xp-picker-name">' + escapeHtml(birdDisplayName(b)) + ' <span class="xp-picker-wing" style="color:' + wing.color + '">' + wing.icon + ' ' + escapeHtml(wing.label) + '</span></div>' +
+        '<div class="xp-picker-level">LV.' + lv + (lv >= 50 ? ' · MAX' : ' · ' + (Number(b.xp) || 0) + '/' + need + ' XP') + '</div>' +
+        '<div class="xp-picker-bar"><div class="xp-picker-fill" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="xp-picker-gain">+' + item.xp + '</div></button>';
+    }).join('') + '</div>';
+  }
+  const el = xpScrollSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeXpScrollSheet()">✕</button>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + item.icon + '</div><div>' +
+    '<div class="quest-name">' + escapeHtml(item.label) + ' ×' + count + '</div>' +
+    '<div class="quest-desc">' + escapeHtml(birdXpItemDetail(itemKey)) + ' · choose who studies it</div></div></div>' +
+    body + '</div>';
+  el.classList.add('open');
+}
+
+function useXpScroll(itemKey, birdId) {
+  const item = birdXpItem(itemKey);
+  const bag = (gameState.inventory && gameState.inventory.items) || {};
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!item || !bird || (bag[itemKey] || 0) <= 0) { closeXpScrollSheet(); return; }
+  if (item.type && birdWingClass(bird) !== item.type) return;
+  if ((Number(bird.level) || 1) >= 50) { showToast(birdDisplayName(bird) + ' has already mastered every lesson (LV.50).'); return; }
+  bag[itemKey] -= 1;
+  const before = bird.level;
+  levelUpBird(bird, item.xp);
+  saveState();
+  if (bird.level <= before) { SFX.capture(); showToast(item.icon + ' ' + birdDisplayName(bird) + ' studies the ' + item.label + ' — +' + item.xp + ' XP!'); }
+  renderInventory();
+  if ((bag[itemKey] || 0) > 0) openXpScrollPicker(itemKey); else closeXpScrollSheet();
+  if (typeof currentScreen !== 'undefined' && currentScreen === 'burbz') { try { renderBirdex(); } catch (e) {} }
+}
+
 function inventoryLabel(key) {
+  const xpi = birdXpItem(key);
+  if (xpi) return xpi.label;
   return String(key || '').replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase());
 }
 function inventoryIcon(key) {
+  const xpi = birdXpItem(key);
+  if (xpi) return xpi.icon;
   try { const m = lootCore().materialById(key); if (m) return m.icon; } catch (e) {}
   if (/berry|fruit/i.test(key)) return '🫐';
   if (/pebble|stone/i.test(key)) return '🪨';
@@ -19513,7 +19694,16 @@ function renderInventory() {
   renderRpgHud();
   const grid = $('inventoryGrid');
   if (!grid) return;
-  const items = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
+  const allItems = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
+  const xpItems = allItems.filter(([key]) => birdXpItem(key));
+  const items = allItems.filter(([key]) => !birdXpItem(key));
+  const xpCards = xpItems.map(([key, count]) => {
+    const it = birdXpItem(key);
+    return '<button class="inventory-card inventory-card-usable" onclick="openXpScrollPicker(\'' + key + '\')">' +
+      '<div class="inventory-card-title">' + it.icon + ' ' + escapeHtml(it.label) + '</div>' +
+      '<div class="inventory-card-detail">' + escapeHtml(birdXpItemDetail(key)) + '</div>' +
+      '<div class="inventory-card-count">×' + count + ' · tap to use</div></button>';
+  }).join('');
   let gearCards = '';
   try {
     const L = lootCore();
@@ -19523,11 +19713,11 @@ function renderInventory() {
       return '<div class="inventory-card" style="border-color:' + color + '55;"><div class="inventory-card-title" style="color:' + color + ';">' + ((g && g.icon) || '🗡️') + ' ' + escapeHtml((g && g.label) || inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>';
     }).join('');
   } catch (e) {}
-  if (!items.length && !gearCards) {
+  if (!items.length && !gearCards && !xpCards) {
     grid.innerHTML = '<div class="inventory-empty">Bag empty · loot appears on the map as you walk, and battles drop spoils.</div>';
     return;
   }
-  grid.innerHTML = gearCards + items.map(([key, count]) => '<div class="inventory-card"><div class="inventory-card-title">' + inventoryIcon(key) + ' ' + escapeHtml(inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>').join('');
+  grid.innerHTML = xpCards + gearCards + items.map(([key, count]) => '<div class="inventory-card"><div class="inventory-card-title">' + inventoryIcon(key) + ' ' + escapeHtml(inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>').join('');
 }
 
 // ============================================================================
@@ -19830,7 +20020,8 @@ function renderBirdEquip() {
   const hero = '<div class="bird-equip-hero" style="border-color:' + rarityColor + '55;">' + art +
     '<div><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
-    '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div></div></div>';
+    '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div>' +
+    '<div class="bird-equip-sub">' + ((Number(bird.level) || 1) >= 50 ? 'Max level' : (Number(bird.xp) || 0) + '/' + XP_PER_LEVEL(Math.max(1, Number(bird.level) || 1)) + ' XP to Lv ' + ((Number(bird.level) || 1) + 1)) + '</div></div></div>';
 
   const stat = (label, base, key) => '<div class="bird-equip-stat"><div class="bes-label">' + label + '</div>' +
     '<div class="bes-value">' + base + (bonus[key] ? ' <span class="bes-boost">+' + bonus[key] + '</span>' : '') + '</div></div>';
@@ -20097,6 +20288,11 @@ function renderBirdex() {
 function createBirdCardHTML(bird, idx) {
   const hpPct = bird.maxHp ? Math.floor((bird.hp / bird.maxHp) * 100) : 100;
   const hpColor = hpPct > 50 ? 'var(--hp-green)' : hpPct > 25 ? 'var(--hp-yellow)' : 'var(--hp-red)';
+  const cardLv = Math.max(1, Number(bird.level) || 1);
+  const cardXpNeed = XP_PER_LEVEL(cardLv);
+  const cardXp = Math.max(0, Number(bird.xp) || 0);
+  const cardXpPct = cardLv >= 50 ? 100 : Math.min(100, Math.floor((cardXp / cardXpNeed) * 100));
+  const cardXpTitle = cardLv >= 50 ? 'Max level' : cardXp + '/' + cardXpNeed + ' XP to LV.' + (cardLv + 1);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
   const isActivePet = gameState.activePetId === bird.id;
 
@@ -20117,13 +20313,14 @@ function createBirdCardHTML(bird, idx) {
             ${artBg}
             ${birdIcon}
           </div>
-          <div class="card-level">LV.${bird.level || 1}</div>
+          <div class="card-level" title="${cardXpTitle}">LV.${cardLv}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
           <button class="card-pet-front ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Walking Pet' : 'Choose as Pet'}</button>
           <div class="card-info">
             <div class="card-name">${escapeHtml(birdDisplayName(bird))}</div>
             <div class="card-species">${escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species))}</div>
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
+            <div class="card-xp-bar" title="${cardXpTitle}"><div class="card-xp-fill" style="width:${cardXpPct}%"></div></div>
             <div class="card-stats-row">
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
@@ -20135,7 +20332,7 @@ function createBirdCardHTML(bird, idx) {
         <div class="card-back">
           <div class="card-back-head">
             <div class="card-back-title" style="color:${rarityColor}">${escapeHtml(birdDisplayName(bird))}</div>
-            <div class="card-back-meta">${bird.rarity ? bird.rarity.toUpperCase() : 'COMMON'}<br>${bird.captureDate ? new Date(bird.captureDate).toLocaleDateString() : 'Unknown'}</div>
+            <div class="card-back-meta">${bird.rarity ? bird.rarity.toUpperCase() : 'COMMON'}<br>${bird.captureDate ? new Date(bird.captureDate).toLocaleDateString() : 'Unknown'}<br>${cardLv >= 50 ? 'LV.50 · MAX' : 'LV.' + cardLv + ' · ' + cardXp + '/' + cardXpNeed + ' XP'}</div>
           </div>
           <div class="card-back-stats">
             <div class="card-back-stat"><span class="card-back-stat-label">HP</span><strong class="card-back-stat-value">${bird.maxHp || 100}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.maxHp||100)/2.5)}%;background:var(--hp-green)"></div></div></div>

@@ -40,4 +40,4 @@ def test_footpath_offers_still_ship_on_the_map_explore_board():
 
 
 def test_change_ships_with_a_fresh_offline_cache_version():
-    assert "burbz-quests-tab-footpaths-v102-20260722" in SW
+    assert "burbz-bird-levelling-v103-20260722" in SW
