@@ -8491,11 +8491,23 @@ BURBZ_SPECIES_PROFILES.forEach(profile => {
   });
 });
 
+function lookupSpeciesProfileExact(cleaned, key) {
+  return BIRD_INFO[cleaned] || BIRD_INFO[key] || BURBZ_SPECIES_PROFILES.find(p => p.name === cleaned || normaliseSpeciesKey(p.name) === key || (p.aliases || []).includes(cleaned) || (p.aliases || []).some(alias => normaliseSpeciesKey(alias) === key)) || null;
+}
+
 function findSpeciesProfile(speciesName) {
   if (!speciesName) return null;
   const cleaned = String(speciesName).split('(')[0].trim();
   const key = normaliseSpeciesKey(cleaned);
-  return BIRD_INFO[cleaned] || BIRD_INFO[key] || BURBZ_SPECIES_PROFILES.find(p => p.name === cleaned || normaliseSpeciesKey(p.name) === key || (p.aliases || []).includes(cleaned) || (p.aliases || []).some(alias => normaliseSpeciesKey(alias) === key)) || null;
+  const exact = lookupSpeciesProfileExact(cleaned, key);
+  if (exact) return exact;
+  // Recognition services label many British species with a qualifier the game
+  // catalogue omits ("Eurasian Blue Tit" → "Blue Tit", "Common Kingfisher" →
+  // "Kingfisher"). Only when the full name is unknown, retry once with the
+  // leading qualifier stripped; an exact catalogue name always wins first.
+  const stripped = key.replace(/^(eurasian|european|common|northern|great) /, '');
+  if (stripped !== key) return lookupSpeciesProfileExact('', stripped);
+  return null;
 }
 
 function getBirdInfo(bird) {
@@ -19472,8 +19484,14 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
   });
   const top = candidates[0];
-  const catalogMatched = opts.catalogMatched !== false;
-  if (top && !catalogMatched) {
+  // The shipped game catalogue is the authority on what can unlock. The
+  // server's catalogMatched flag only says whether the server's own species
+  // list matched, and that list can lag behind the game catalogue (Buzzard,
+  // then Mallard, were wrongly rejected this way). A recognised bird is only
+  // "not in the catalogue" when the game catalogue itself has no profile for
+  // it under any name, alias or scientific name.
+  const inGameCatalogue = !!(top && (findSpeciesProfile(top.species) || findSpeciesProfile(top.commonName) || findSpeciesProfile(top.scientificName)));
+  if (top && opts.catalogMatched === false && !inGameCatalogue) {
     showCatalogUnmatchedRecognition(top);
     return;
   }
