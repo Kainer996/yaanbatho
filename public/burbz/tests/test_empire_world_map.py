@@ -90,7 +90,8 @@ def test_unexplored_world_is_visible_but_dark_with_liberated_windows():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="empireFogCanvas"' in html
     assert "function updateEmpireFogMask(" in html
-    assert "ctx.fillStyle = EMPIRE_DARKNESS_FILL" in html
+    assert "ctx.fillStyle = empireVeilFill()" in html  # daylight-aware veil; EMPIRE_DARKNESS_FILL is its night colour
+    assert "EMPIRE_DARKNESS_FILL = '#39434f'" in html
     assert "map.on('move', updateEmpireFogMask)" in html
     assert "map.on('resize', updateEmpireFogMask)" in html
     # The veil is static, so visibility return must repaint a purged canvas.

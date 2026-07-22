@@ -5,7 +5,7 @@ importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
 importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 
-const BURBZ_CACHE = 'burbz-bird-levelling-v103-20260722';
+const BURBZ_CACHE = 'burbz-day-night-kitchen-v104-20260722';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -35,7 +35,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
   './quest_core.js?v=bird-levelling-20260722',
-  './academy_treehouse_core.js?v=bird-levelling-20260722',
+  './academy_treehouse_core.js?v=day-night-kitchen-20260722',
   './scan_economy_core.js',
   './sound_listener_core.js?v=merlin-discovery-history-v3-20260716',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
@@ -134,7 +134,7 @@ const BURBZ_CORE = [
   './assets/tex/grass_n.jpg',
   './assets/tex/cobble_c.jpg',
   './assets/tex/cobble_n.jpg',
-  './academy_treehouse_core.js?v=bird-levelling-20260722',
+  './academy_treehouse_core.js?v=day-night-kitchen-20260722',
   './battle_core.js?v=evil-burbz-squads-20260720',
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
   './audio_core.js?v=medieval-bird-audio-v2-20260721',

@@ -120,6 +120,25 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .xp-picker-bar { width:100%; height:4px; background:var(--bg4); border-radius:2px; overflow:hidden; margin-top:4px; }
 .xp-picker-fill { height:100%; background:linear-gradient(90deg,#d6a84f,#f0c767); border-radius:2px; }
 .xp-picker-gain { font-family:'Russo One',sans-serif; font-size:15px; color:var(--legendary); flex:none; }
+/* Kitchen & Pantry meal prep */
+.kitchen-bird-state { font-size:12.5px; color:var(--text2); margin:6px 0 2px; }
+.kitchen-diet-hint { font-size:12px; line-height:1.5; color:var(--text3); background:rgba(214,168,79,.08); border:1px solid rgba(214,168,79,.2); border-radius:12px; padding:8px 10px; margin:6px 0; }
+.kitchen-plate { display:flex; flex-wrap:wrap; gap:6px; min-height:38px; align-items:center; padding:7px 9px; border-radius:13px; border:1.5px dashed rgba(214,168,79,.35); background:rgba(0,0,0,.25); }
+.kitchen-plate-chip { padding:6px 10px; border-radius:999px; border:1px solid rgba(240,199,103,.5); background:rgba(240,199,103,.14); color:var(--text); font-size:12.5px; font-weight:700; cursor:pointer; }
+.kitchen-plate-empty { font-size:11.5px; color:var(--text3); }
+.kitchen-shelves { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:4px; }
+.kitchen-shelf-card { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 4px 6px; border-radius:12px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.28)); color:var(--text); cursor:pointer; }
+.kitchen-shelf-card:active { transform:scale(.95); }
+.kitchen-shelf-card.disabled { opacity:.4; }
+.kitchen-shelf-emoji { font-size:20px; }
+.kitchen-shelf-label { font-family:'Rajdhani',sans-serif; font-size:9.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--text2); text-align:center; }
+.kitchen-shelf-count { font-size:10.5px; color:var(--accent2); font-weight:800; }
+.kitchen-result { border-radius:14px; padding:10px 12px; margin:4px 0 8px; border:1px solid rgba(214,168,79,.3); background:rgba(214,168,79,.08); }
+.kitchen-result.perfect { border-color:rgba(142,227,154,.55); background:rgba(142,227,154,.1); }
+.kitchen-result.refused { border-color:rgba(224,89,74,.5); background:rgba(224,89,74,.08); }
+.kitchen-result-verdict { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; letter-spacing:.03em; margin-bottom:4px; }
+.kitchen-result-lines { font-size:12px; line-height:1.55; color:var(--text2); }
+.kitchen-room-copy { font-size:12px; line-height:1.5; color:var(--text3); margin:4px 0 10px; }
 .academy-room-hero { position:relative; margin:0 0 14px; min-height:360px; border-radius:18px; overflow:hidden; border:1px solid rgba(214,168,79,.24); background:#090807; box-shadow:inset 0 0 50px rgba(0,0,0,.45); }
 .academy-room-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.96) brightness(.82); }
 svg.academy-room-bg { display:block; filter:none; }
@@ -2919,7 +2938,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=bird-levelling-20260722"></script>
+<script src="academy_treehouse_core.js?v=day-night-kitchen-20260722"></script>
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
@@ -3582,6 +3601,49 @@ function inferBirdDiet(speciesName) {
 // Player's pantry — refilled gradually so feeding has rhythm
 const DEFAULT_PANTRY = { seeds: 6, suet: 4, insects: 5, worms: 4, berries: 4, fruit: 4, fish: 3, flying: 3, meat: 2, carrion: 2, acorns: 4, aquatic: 4 };
 const PANTRY_CAP = { seeds: 12, suet: 10, insects: 12, worms: 10, berries: 10, fruit: 10, fish: 8, flying: 8, meat: 6, carrion: 6, acorns: 10, aquatic: 10 };
+
+// Gathered food parcels. Quests, expeditions and world pickups drop these;
+// each parcel unpacks into real pantry portions, so "go berry picking" or
+// "fly a hunting trip" genuinely stocks the shelves the Kitchen cooks from.
+const FOOD_TOKENS = {
+  berry_bundle: { label: 'Berry Bundle', icon: '🫐', foods: { berries: 2 } },
+  seed_satchel: { label: 'Seed Satchel', icon: '🌾', foods: { seeds: 3 } },
+  worm_tin:     { label: 'Worm Tin',     icon: '🪱', foods: { worms: 3 } },
+  fruit_basket: { label: 'Fruit Basket', icon: '🍎', foods: { fruit: 2 } },
+  bug_box:      { label: 'Bug Box',      icon: '🐛', foods: { insects: 2, flying: 1 } },
+  pond_haul:    { label: 'Pond Haul',    icon: '🎣', foods: { fish: 2, aquatic: 1 } },
+  prey_cache:   { label: 'Prey Cache',   icon: '🐭', foods: { meat: 2 } },
+  carrion_find: { label: 'Carrion Find', icon: '🦴', foods: { carrion: 2 } },
+  suet_pat:     { label: 'Suet Pat',     icon: '🥩', foods: { suet: 2 } },
+  acorn_pouch:  { label: 'Acorn Pouch',  icon: '🌰', foods: { acorns: 3 } }
+};
+
+function foodToken(key) { return FOOD_TOKENS[key] || null; }
+
+// Unpack qty parcels into the pantry (respecting shelf caps). Returns the
+// portions actually shelved as [{food, qty}], or an empty list if all full.
+function unpackFoodToken(key, qty) {
+  const tok = foodToken(key);
+  if (!tok) return [];
+  const gained = [];
+  for (let n = 0; n < Math.max(1, Number(qty) || 1); n++) {
+    Object.entries(tok.foods).forEach(([food, q]) => {
+      const cap = PANTRY_CAP[food] || 10;
+      const cur = gameState.pantry[food] || 0;
+      const add = Math.max(0, Math.min(cap - cur, q));
+      if (add > 0) {
+        gameState.pantry[food] = cur + add;
+        const g = gained.find(x => x.food === food);
+        if (g) g.qty += add; else gained.push({ food, qty: add });
+      }
+    });
+  }
+  return gained;
+}
+
+function foodGainsLabel(gained) {
+  return gained.map(g => '+' + g.qty + ' ' + (FOODS[g.food] ? FOODS[g.food].emoji + ' ' + FOODS[g.food].label : g.food)).join(' · ');
+}
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -10208,6 +10270,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
+  if (bird.care && (bird.care.hunger || 0) >= 90) { showToast('🍽️ ' + birdDisplayName(bird) + ' is far too hungry to set off — prepare a meal in the Kitchen & Pantry first!'); return; }
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now());
   // Fallout Shelter-style loadout: a pantry provision and a charm item ride
   // along and pay out as bonuses when the quest is claimed.
@@ -10250,12 +10313,30 @@ function claimBirdExpedition(expeditionId) {
     const pool = (template && template.items) || Object.keys(items);
     if (pool.length) { const bonus = pool[q.seed % pool.length]; items[bonus] = (items[bonus] || 0) + 1; }
   }
+  // Food parcels shelve straight into the pantry; everything else goes to the bag.
+  const pantryGains = [];
   Object.entries(items).forEach(([key, count]) => {
-    if (count > 0) gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + count;
+    if (count <= 0) return;
+    if (foodToken(key)) {
+      const gained = unpackFoodToken(key, count);
+      gained.forEach(g => {
+        const prev = pantryGains.find(x => x.food === g.food);
+        if (prev) prev.qty += g.qty; else pantryGains.push(g);
+      });
+    } else {
+      gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + count;
+    }
   });
   const foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
   const bird = academyBirdById(q.birdId);
-  if (bird) levelUpBird(bird, questXp || 10);
+  if (bird) {
+    levelUpBird(bird, questXp || 10);
+    // Questing is hungry work — longer flights burn more. Cook something!
+    const tmpl = getExpeditionTemplate(q.templateId);
+    bird.care = bird.care || { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null };
+    bird.care.hunger = clamp((bird.care.hunger || 0) + Math.min(24, 8 + Math.round(((tmpl && tmpl.minutes) || 30) / 30)), 0, 100);
+  }
+  if (pantryGains.length) setTimeout(() => showToast('🥣 Pantry stocked: ' + foodGainsLabel(pantryGains)), 1200);
   // A claimed quest leaves the board for good.
   gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
   saveState();
@@ -10318,7 +10399,11 @@ const QUEST_TEMPLATE_INFO = {
   short_forage: 'An hour among the hedgerows for berries and shiny finds.',
   supply_run:   'A two-hour supply route past the squirrel market. Fills the pantry.',
   timber_haul:  'A heavy trip to the storm-fall clearing. The biggest branch payout for serious builders.',
-  moon_scout:   'A three-hour night flight tracing Merlin runes. The best coin — and secrets.'
+  moon_scout:   'A three-hour night flight tracing Merlin runes. The best coin — and secrets.',
+  berry_harvest:'Strip the hawthorn and rowan hedges. Berries and fruit go straight to the pantry.',
+  bug_hunt:     'Beetles, caterpillars and grubs from the meadow. Insect-eaters\' pantry shelves, filled.',
+  pond_dip:     'Fish the reedbeds like a heron. Stocks fish and pondweed for the water-birds.',
+  hunt_prey:    'A true hunting flight over the far fields. Brings back prey for raptors and owls.'
 };
 
 function questDurationLabel(minutes) {
@@ -10695,6 +10780,9 @@ function renderAcademyRoomPanel(birds) {
       actions = '<button class="academy-btn primary" onclick="startBirdExpedition(\'' + b.id + '\',\'short_forage\')">🧭 1h Forage</button>' +
         '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'supply_run\')">🥣 2h Supplies</button>' +
         '<button class="academy-btn" onclick="startBirdExpedition(\'' + b.id + '\',\'moon_scout\')">🌙 3h Scout</button>';
+    } else if (academySelectedRoom === 'kitchen') {
+      actions = '<button class="academy-btn primary" onclick="openKitchenSheet(\'' + b.id + '\')">🍲 Prepare a Meal</button>' +
+        academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
     } else {
       actions = academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
     }
@@ -11094,6 +11182,199 @@ function academyFeedFood(birdId, foodKey) {
   }
   renderAcademy();
   renderPetCompanion();
+}
+
+// ---------------------------------------------------------------------------
+// THE KITCHEN & PANTRY — where meals are prepared. The player plates up to
+// three pantry portions for a chosen bird; serving teaches the bird's real
+// diet (loved / tolerated / refused, with the field factoid), fills its
+// hunger, and marks the diet as discovered. Hunger is the natural meter:
+// birds come back peckish from quests, battles and training, and only a
+// hungry bird will sit down to a meal.
+// ---------------------------------------------------------------------------
+const KITCHEN_PLATE_MAX = 3;
+let kitchenMeal = { birdId: null, plate: [] };
+
+function kitchenSheetEl() {
+  let el = $('kitchenSheet');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'kitchenSheet';
+    el.className = 'quest-overlay';
+    el.addEventListener('click', ev => { if (ev.target === el) closeKitchenSheet(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function closeKitchenSheet() { const el = $('kitchenSheet'); if (el) el.classList.remove('open'); }
+
+function kitchenBirdAvailable(b) {
+  try { return !birdHasActiveExpedition(b.id) && !birdHasActiveTraining(b.id); } catch (e) { return true; }
+}
+
+function openKitchenSheet(birdId) {
+  refillPantry();
+  const flock = gameState.flock || [];
+  if (!flock.length) { showToast('Recruit a bird first — then cook for it!'); return; }
+  let bird = birdId ? flock.find(b => b.id === birdId) : null;
+  if (!bird || !kitchenBirdAvailable(bird)) bird = flock.find(kitchenBirdAvailable) || flock[0];
+  kitchenMeal = { birdId: bird.id, plate: [] };
+  renderKitchenSheet('');
+}
+
+function kitchenPickBird(birdId) {
+  kitchenMeal.birdId = birdId;
+  kitchenMeal.plate = [];
+  SFX.tap();
+  renderKitchenSheet('');
+}
+
+function kitchenAddFood(foodKey) {
+  if (kitchenMeal.plate.length >= KITCHEN_PLATE_MAX) return;
+  const inPlate = kitchenMeal.plate.filter(f => f === foodKey).length;
+  if ((gameState.pantry[foodKey] || 0) - inPlate <= 0) return;
+  kitchenMeal.plate.push(foodKey);
+  SFX.tap();
+  renderKitchenSheet('');
+}
+
+function kitchenRemoveFood(idx) {
+  kitchenMeal.plate.splice(idx, 1);
+  SFX.tap();
+  renderKitchenSheet('');
+}
+
+// The diet summary a cook needs: known diets show what the bird loves and
+// tolerates; unknown diets stay a mystery to solve by serving wild-true food.
+function kitchenDietHint(bird) {
+  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const known = bird.academy && bird.academy.dietKnown;
+  if (!known) {
+    return '<div class="kitchen-diet-hint">🔍 Diet: <b>???</b> — what would a wild ' + escapeHtml(bird.commonName || bird.species) + ' eat? Serve it to find out.</div>';
+  }
+  const pref = (diet ? diet.pref : ['seeds', 'insects']).map(k => FOODS[k] ? FOODS[k].emoji + ' ' + FOODS[k].label : k).join(' · ');
+  const ok = (diet ? diet.ok : ['berries', 'fruit', 'worms', 'suet']).map(k => FOODS[k] ? FOODS[k].emoji + ' ' + FOODS[k].label : k).join(' · ');
+  return '<div class="kitchen-diet-hint">💚 Loves: ' + pref + (ok ? '<br>🆗 Tolerates: ' + ok : '') + '</div>';
+}
+
+function renderKitchenSheet(resultHtml) {
+  const flock = gameState.flock || [];
+  const bird = flock.find(b => b.id === kitchenMeal.birdId) || flock[0];
+  if (!bird) return;
+  const hunger = clamp(Math.round((bird.care && bird.care.hunger) || 0), 0, 100);
+
+  const birdChips = flock.map(b => {
+    const busy = !kitchenBirdAvailable(b);
+    const sel = b.id === kitchenMeal.birdId ? ' selected' : '';
+    return '<button class="quest-bird-chip' + sel + (busy ? ' disabled' : '') + '" ' + (busy ? 'disabled' : 'onclick="kitchenPickBird(\'' + b.id + '\')"') + '>' +
+      birdOnlyImgHTML(b, 'quest-bird-chip-art') +
+      '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
+      '<span class="quest-bird-chip-note">' + (busy ? 'Away' : 'Hunger ' + Math.round((b.care && b.care.hunger) || 0)) + '</span></button>';
+  }).join('');
+
+  const plateChips = kitchenMeal.plate.length ? kitchenMeal.plate.map((f, i) =>
+    '<button class="kitchen-plate-chip" onclick="kitchenRemoveFood(' + i + ')">' + (FOODS[f] ? FOODS[f].emoji + ' ' + escapeHtml(FOODS[f].label) : f) + ' ✕</button>'
+  ).join('') : '<span class="kitchen-plate-empty">An empty plate — add up to ' + KITCHEN_PLATE_MAX + ' pantry portions.</span>';
+
+  const shelfCards = Object.keys(FOODS).map(k => {
+    const stock = gameState.pantry[k] || 0;
+    const inPlate = kitchenMeal.plate.filter(f => f === k).length;
+    const left = stock - inPlate;
+    const disabled = left <= 0 || kitchenMeal.plate.length >= KITCHEN_PLATE_MAX;
+    return '<button class="kitchen-shelf-card' + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="kitchenAddFood(\'' + k + '\')"') + ' title="' + escapeHtml(FOODS[k].desc) + '">' +
+      '<span class="kitchen-shelf-emoji">' + FOODS[k].emoji + '</span>' +
+      '<span class="kitchen-shelf-label">' + escapeHtml(FOODS[k].label) + '</span>' +
+      '<span class="kitchen-shelf-count">×' + left + '</span></button>';
+  }).join('');
+
+  const el = kitchenSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeKitchenSheet()">✕</button>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">🥣</div><div>' +
+    '<div class="quest-name">Kitchen &amp; Pantry</div>' +
+    '<div class="quest-desc">Cook a meal from the pantry — matching a bird\'s real wild diet feeds it best.</div></div></div>' +
+    (resultHtml || '') +
+    '<div class="quest-overlay-label">Who\'s at the table?</div>' +
+    '<div class="quest-bird-row">' + birdChips + '</div>' +
+    '<div class="kitchen-bird-state">' + escapeHtml(birdDisplayName(bird)) + ' · Hunger <b>' + hunger + '</b>/100' + (hunger < 15 ? ' — not hungry right now' : hunger >= 70 ? ' — famished!' : '') + '</div>' +
+    kitchenDietHint(bird) +
+    '<div class="quest-overlay-label">The plate</div>' +
+    '<div class="kitchen-plate">' + plateChips + '</div>' +
+    '<div class="quest-overlay-label">Pantry shelves <span class="quest-overlay-hint">long-press a shelf to read what real birds it suits</span></div>' +
+    '<div class="kitchen-shelves">' + shelfCards + '</div>' +
+    '<button class="quest-send-btn" ' + (kitchenMeal.plate.length ? '' : 'disabled') + ' onclick="kitchenServeMeal()">' +
+    (kitchenMeal.plate.length ? '🍲 SERVE THE MEAL' : 'ADD SOMETHING TO THE PLATE') + '</button></div>';
+  el.classList.add('open');
+}
+
+function kitchenServeMeal() {
+  const flock = gameState.flock || [];
+  const bird = flock.find(b => b.id === kitchenMeal.birdId);
+  if (!bird || !kitchenMeal.plate.length) return;
+  if (!kitchenBirdAvailable(bird)) { showToast(birdDisplayName(bird) + ' is away right now.'); return; }
+  ensureBirdAcademy(bird);
+  bird.care = bird.care || { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null };
+  if ((bird.care.hunger || 0) < 15) { showToast(birdDisplayName(bird) + ' isn\'t hungry — save the pantry for after its next quest!'); return; }
+  refillPantry();
+  // Validate stock, then take the portions off the shelves.
+  for (const f of kitchenMeal.plate) {
+    if ((gameState.pantry[f] || 0) < kitchenMeal.plate.filter(x => x === f).length) { renderKitchenSheet(''); return; }
+  }
+  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const pref = diet ? diet.pref : ['seeds', 'insects'];
+  const ok = diet ? diet.ok : ['berries', 'fruit', 'worms', 'suet'];
+  const avoid = (diet && diet.avoid) || [];
+  const loved = [], okay = [], refused = [];
+  kitchenMeal.plate.forEach(f => {
+    gameState.pantry[f] = clamp((gameState.pantry[f] || 0) - 1, 0, 99);
+    if (pref.includes(f)) {
+      loved.push(f);
+      bird.care.hunger = clamp((bird.care.hunger || 0) - 30, 0, 100);
+      bird.care.happiness = clamp((bird.care.happiness || 80) + 8, 0, 100);
+    } else if (ok.includes(f)) {
+      okay.push(f);
+      bird.care.hunger = clamp((bird.care.hunger || 0) - 12, 0, 100);
+      bird.care.happiness = clamp((bird.care.happiness || 80) + 3, 0, 100);
+    } else {
+      refused.push(f);
+      bird.care.happiness = clamp((bird.care.happiness || 80) - 4, 0, 100);
+    }
+  });
+  const name = bird.commonName || bird.species;
+  let firstDiscovery = false;
+  if (loved.length) {
+    bird.care.lastFed = new Date().toISOString();
+    bird.training = bird.training || { feedCount: 0, trainCount: 0 };
+    bird.training.feedCount = (bird.training.feedCount || 0) + 1;
+    bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 2, 0, 50);
+    bird.maxHp = clamp(bird.maxHp + 2, 50, 999);
+    bird.hp = bird.maxHp;
+    recalcBirdPower(bird);
+    firstDiscovery = !bird.academy.dietKnown;
+    bird.academy.dietKnown = true;
+    updateQuestProgress('feed_correct', loved.length);
+    levelUpBird(bird, Math.min(12, 4 * loved.length));
+  }
+  const foodNames = list => list.map(f => FOODS[f] ? FOODS[f].emoji + ' ' + FOODS[f].label.toLowerCase() : f).join(', ');
+  const perfect = loved.length === kitchenMeal.plate.length && kitchenMeal.plate.length >= 2;
+  let verdict = perfect ? '🌟 A perfect ' + name + ' meal — exactly what it hunts and forages in the wild!'
+    : loved.length ? '✅ A hearty meal.' : okay.length ? '🆗 It picks politely at the plate.' : '❌ The plate is refused!';
+  const lines = [];
+  if (loved.length) lines.push('Devoured: ' + foodNames(loved) + '.');
+  if (okay.length) lines.push('Nibbled: ' + foodNames(okay) + ' — filler, not its true diet.');
+  if (refused.length) {
+    const harmful = refused.filter(f => avoid.includes(f));
+    lines.push('Refused: ' + foodNames(refused) + '.' + (harmful.length ? ' In the wild, ' + name + ' never touches ' + foodNames(harmful) + ' — the wrong diet can do real harm.' : ''));
+  }
+  if (diet && diet.fact && (loved.length || refused.length)) lines.push('📖 ' + diet.fact);
+  if (firstDiscovery) lines.push('🎓 Diet discovered — it\'s now in ' + name + '\'s field guide!');
+  const resultHtml = '<div class="kitchen-result' + (perfect ? ' perfect' : refused.length && !loved.length ? ' refused' : '') + '">' +
+    '<div class="kitchen-result-verdict">' + verdict + '</div>' +
+    '<div class="kitchen-result-lines">' + lines.map(l => escapeHtml(l)).join('<br>') + '</div></div>';
+  kitchenMeal.plate = [];
+  saveState();
+  if (perfect) SFX.levelUp(); else SFX.tap();
+  renderKitchenSheet(resultHtml);
+  try { renderAcademy(); renderPetCompanion(); } catch (e) {}
 }
 
 function academyDietLine(bird) {
@@ -11637,6 +11918,7 @@ function startBirdTrainingSession(birdId, templateId) {
   if (tplRoom !== 'training' && !isAcademyBuildingBuilt(tplRoom)) { showToast('Build the ' + ((tpl && tpl.roomLabel) || tplRoom) + ' to unlock ' + ((tpl && tpl.label) || 'this drill') + '.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is already in training.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away questing right now.'); return; }
+  if (bird.care && (bird.care.hunger || 0) >= 90 && tpl && tpl.id !== 'pantry_gauntlet') { showToast('🍽️ ' + birdDisplayName(bird) + ' is far too hungry to train — prepare a meal in the Kitchen & Pantry first!'); return; }
   if (!window.BurbzAcademyCore || typeof window.BurbzAcademyCore.createTrainingSession !== 'function') { showToast('Training scrolls are still loading — try again in a moment.'); return; }
   ensureBirdAcademy(bird);
   bird.academy.room = tplRoom;
@@ -11765,7 +12047,11 @@ function renderAcademyRoomInterior() {
         : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
       return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
-    const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
+    const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others)
+      : room === 'kitchen' ? ('<div class="room-add-panel"><div class="room-add-title">The cook\'s bench</div>' +
+          '<div class="kitchen-room-copy">Every bird eats a real diet — raptors need prey, finches need seed, kingfishers need fish. Stock the pantry with gathering quests and foraged scraps, then plate up.</div>' +
+          '<button class="quest-send-btn" onclick="openKitchenSheet()">🍲 PREPARE A MEAL</button></div>')
+      : '';
     root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + trainingPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
@@ -12686,6 +12972,9 @@ function completeWalkingQuest() {
     summary.petXp = Math.max(20, Math.round(summary.xp * 0.5));
     summary.petName = birdDisplayName(walkingPet);
     levelUpBird(walkingPet, summary.petXp);
+    // A long walk works up an appetite — the further the quest, the hungrier.
+    walkingPet.care = walkingPet.care || { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null };
+    walkingPet.care.hunger = clamp((walkingPet.care.hunger || 0) + Math.min(22, 8 + Math.round(summary.distanceKm * 3)), 0, 100);
   }
   const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
   if (bonusCoins) addCoins(bonusCoins);
@@ -13938,6 +14227,11 @@ const MAP_PICKUP_TYPES = [
   { id:'feather',  glyph:'🪶', label:'Lucky feather', weight:14, grant() { gameState.inventory.items.lucky_feather = (gameState.inventory.items.lucky_feather || 0) + 1; return '+1 Lucky Feather'; } },
   { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
   { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
+  // Food scraps for the Kitchen: every walk stocks a shelf or two
+  { id:'suetscrap', glyph:'🥩', label:'Suet scrap',    weight:9,  grant() { gameState.pantry.suet = clamp((gameState.pantry.suet || 0) + 2, 0, PANTRY_CAP.suet || 10); return '+2 Suet (pantry)'; } },
+  { id:'windfall', glyph:'🍎', label:'Windfall fruit', weight:10, grant() { gameState.pantry.fruit = clamp((gameState.pantry.fruit || 0) + 2, 0, PANTRY_CAP.fruit || 10); return '+2 Fruit (pantry)'; } },
+  { id:'acorncache', glyph:'🌰', label:'Acorn cache',  weight:9,  grant() { gameState.pantry.acorns = clamp((gameState.pantry.acorns || 0) + 2, 0, PANTRY_CAP.acorns || 10); return '+2 Acorns (pantry)'; } },
+  { id:'beetlelog', glyph:'🐛', label:'Beetle log',    weight:9,  grant() { gameState.pantry.insects = clamp((gameState.pantry.insects || 0) + 2, 0, PANTRY_CAP.insects || 12); return '+2 Insects (pantry)'; } },
   { id:'mushroom', glyph:'🍄', label:'Forest mushroom', weight:10, grant() { gameState.inventory.items.forest_mushroom = (gameState.inventory.items.forest_mushroom || 0) + 1; return '+1 Forest Mushroom'; } },
   { id:'chest',    glyph:CHEST_SVG, label:'Treasure chest', weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
   { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
@@ -14462,7 +14756,11 @@ const VILLAGE_SHOPS = {
       { id: 'pack_berries', label: 'Berry basket',   detail: '+4 Berries',      price: 12, food: 'berries', qty: 4 },
       { id: 'pack_fish',    label: 'Fresh minnows',  detail: '+3 Fish',         price: 18, food: 'fish',    qty: 3 },
       { id: 'pack_meat',    label: 'Butcher scraps', detail: '+2 Small prey',   price: 20, food: 'meat',    qty: 2 },
-      { id: 'pack_acorns',  label: 'Acorn pouch',    detail: '+4 Acorns',       price: 10, food: 'acorns',  qty: 4 }
+      { id: 'pack_acorns',  label: 'Acorn pouch',    detail: '+4 Acorns',       price: 10, food: 'acorns',  qty: 4 },
+      { id: 'pack_fruit',   label: 'Windfall crate', detail: '+4 Fruit',        price: 12, food: 'fruit',   qty: 4 },
+      { id: 'pack_flying',  label: 'Midge jar',      detail: '+3 Aerial bugs',  price: 16, food: 'flying',  qty: 3 },
+      { id: 'pack_carrion', label: 'Keeper\'s leavings', detail: '+2 Carrion',  price: 14, food: 'carrion', qty: 2 },
+      { id: 'pack_aquatic', label: 'Pondweed bale',  detail: '+4 Pondweed',     price: 10, food: 'aquatic', qty: 4 }
     ]
   },
   potion: {
@@ -14889,6 +15187,18 @@ function wrappedLongitudeNear(lon, referenceLon) {
    the true medieval map shows in daylight beneath. */
 const EMPIRE_DARKNESS_FILL = '#39434f'; // multiplied over parchment and sea, this reads as a moonlit Earth
 
+// The veil now follows the real sky outside: multiplied colour runs from the
+// moonlit slate of night up to a barely-there parchment sunshine by day, with
+// an amber wash at dawn and dusk. (Multiply blend: white = no darkening.)
+function empireVeilFill() {
+  const dl = burbzDaylight();
+  const lerpCh = (a, b, t) => Math.round(a + (b - a) * t);
+  const night = [0x39, 0x43, 0x4f], day = [0xf4, 0xee, 0xdc], gold = [0xc5, 0x8a, 0x5e];
+  let rgb = night.map((c, i) => lerpCh(c, day[i], dl.light));
+  if (dl.warm) rgb = rgb.map((c, i) => lerpCh(c, gold[i], dl.warm * 0.55));
+  return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
+}
+
 function updateEmpireFogMask() {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const canvas = $('empireFogCanvas');
@@ -14905,7 +15215,7 @@ function updateEmpireFogMask() {
   if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = EMPIRE_DARKNESS_FILL;
+  ctx.fillStyle = empireVeilFill();
   ctx.fillRect(0, 0, width, height);
   const core = window.BurbzEmpireMapCore;
   const referenceLon = empireMap.getCenter().lng;
@@ -15695,6 +16005,8 @@ let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20, tx: 0, tz: 0, lastInputA
 let villageShadowTick = 0;
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
+let villageBuiltDayKey = null; // daylight bucket the scene was built for
+let villageDayCheckAt = 0;
 let villageActive = null;
 
 function renderVillage() {
@@ -15721,7 +16033,7 @@ function renderVillage() {
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {
     ensureVillageRenderer(stage);
-    if (villageBuiltSeed !== v.seed) buildVillageScene(v);
+    if (villageBuiltSeed !== v.seed || villageBuiltDayKey !== burbzDaylightKey()) buildVillageScene(v);
     const loading = $('villageLoading');
     if (loading) loading.remove();
     if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
@@ -15931,21 +16243,81 @@ function villageWaterMaterial(r, baseCss, repX, repY) {
     map: villageWaterTexture(r, baseCss),
     normalMap: nm, normalScale: new THREE.Vector2(0.75, 0.75),
     shininess: 90, specular: new THREE.Color(0x7d95c0),
-    emissive: base.clone().multiplyScalar(0.42),
+    emissive: base.clone().multiplyScalar(0.42 * (1 - villageDaylight.light * 0.6)),
     transparent: true, opacity: 0.96
   });
   villageWaterMats.push(mat);
   return mat;
 }
-// The three bands of the night sky per palette; fog shares the horizon colour
-// so distant hills melt seamlessly into the dome.
-function villageSkyColors(pal) {
-  const mid = new THREE.Color(pal.sky);
-  return {
-    mid,
-    top: mid.clone().multiplyScalar(0.42),
-    hor: mid.clone().lerp(new THREE.Color(pal.hemiSky), 0.18).offsetHSL(0, 0.02, 0.02)
-  };
+// ---------------------------------------------------------------------------
+// Real-world day/night. The village and Empire follow the player's actual
+// clock — and their latitude's seasonal sunrise/sunset when the map has a
+// fix — so the game sky matches the sky outside the window.
+// ---------------------------------------------------------------------------
+function burbzSunTimes(date, lat) {
+  // Solar-declination approximation: good to a few minutes, plenty for a sky.
+  const start = new Date(date.getFullYear(), 0, 0);
+  const doy = Math.floor((date - start) / 86400000);
+  const decl = -23.44 * Math.cos((2 * Math.PI / 365) * (doy + 10));
+  const latR = lat * Math.PI / 180, declR = decl * Math.PI / 180;
+  // -0.83° accounts for refraction + the sun's radius; clamp handles the
+  // midnight sun (always day) and polar night (always night) gracefully.
+  let cosH = (Math.sin(-0.83 * Math.PI / 180) - Math.sin(latR) * Math.sin(declR)) / (Math.cos(latR) * Math.cos(declR));
+  cosH = Math.max(-1, Math.min(1, cosH));
+  const halfDay = Math.acos(cosH) * 12 / Math.PI; // hours either side of solar noon
+  return { sunrise: 12 - halfDay, sunset: 12 + halfDay };
+}
+
+// { phase: 'night'|'dawn'|'day'|'dusk', light: 0..1 (0 full night, 1 full
+//   day), warm: 0..1 golden-hour glow, sunrise, sunset }
+function burbzDaylight(date) {
+  date = date || new Date();
+  let lat = 51.5; // kingdom default until the map knows better
+  try {
+    if (typeof liveMapLastPosition === 'object' && liveMapLastPosition && isFinite(liveMapLastPosition.lat)) lat = liveMapLastPosition.lat;
+  } catch (e) {}
+  const t = date.getHours() + date.getMinutes() / 60;
+  const sun = burbzSunTimes(date, Math.max(-66, Math.min(66, lat)));
+  const twilight = 0.8; // hours of dawn/dusk blend either side of the sun
+  let light, phase;
+  if (t <= sun.sunrise - twilight || t >= sun.sunset + twilight) { light = 0; phase = 'night'; }
+  else if (t < sun.sunrise + twilight) { light = (t - (sun.sunrise - twilight)) / (2 * twilight); phase = 'dawn'; }
+  else if (t <= sun.sunset - twilight) { light = 1; phase = 'day'; }
+  else { light = (sun.sunset + twilight - t) / (2 * twilight); phase = 'dusk'; }
+  const warm = (phase === 'dawn' || phase === 'dusk') ? 1 - Math.abs(light * 2 - 1) : 0;
+  return { phase, light, warm, sunrise: sun.sunrise, sunset: sun.sunset };
+}
+
+// Coarse bucket so scenes rebuild only when the sky meaningfully changes.
+function burbzDaylightKey() {
+  const d = burbzDaylight();
+  return d.phase + ':' + Math.round(d.light * 4);
+}
+
+// Lerp two hex colours as THREE.Color (villages) — returns a THREE.Color.
+function villageLerpColor(nightHex, dayHex, t) {
+  return new THREE.Color(nightHex).lerp(new THREE.Color(dayHex), Math.max(0, Math.min(1, t)));
+}
+
+// The daylight snapshot the current village scene was built with. Set at the
+// top of buildVillageScene; read wherever materials/lights need to know.
+let villageDaylight = { phase: 'night', light: 0, warm: 0 };
+
+// The three bands of the sky per palette, blended from the palette's night
+// colours toward a shared daytime blue (with a golden-hour wash at dawn and
+// dusk); fog shares the horizon colour so distant hills melt into the dome.
+function villageSkyColors(pal, daylight) {
+  const dl = daylight || villageDaylight;
+  const nightMid = new THREE.Color(pal.sky);
+  const mid = nightMid.clone().lerp(new THREE.Color(0x79aede), dl.light);
+  const top = nightMid.clone().multiplyScalar(0.42).lerp(new THREE.Color(0x3d78c8), dl.light);
+  const hor = nightMid.clone().lerp(new THREE.Color(pal.hemiSky), 0.18).offsetHSL(0, 0.02, 0.02)
+    .lerp(new THREE.Color(0xcfe2ee), dl.light);
+  if (dl.warm) {
+    hor.lerp(new THREE.Color(0xe8925a), dl.warm * 0.6);
+    mid.lerp(new THREE.Color(0xc98a64), dl.warm * 0.3);
+  }
+  return { mid, top, hor };
 }
 // Gradient night-sky dome: deep zenith falling to a hazed horizon, dithered so
 // the blend never bands. Drawn behind everything, untouched by fog.
@@ -16089,16 +16461,20 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   }
 
   // Glowing (or dark) windows on the upper storey. Each trade keeps its own
-  // hour-glow: violet at the potion shop, forge-orange at the smith.
+  // hour-glow: violet at the potion shop, forge-orange at the smith. In
+  // daylight the candles are out — same rolls (so the layout never shifts),
+  // dark glass instead of glow.
   const winTint = shopKey === 'potion' ? { hex: 0xc9a0ff, rgb: '190,150,255' }
     : shopKey === 'smith' ? { hex: 0xffab52, rgb: '255,150,70' }
     : { hex: 0xffd98a, rgb: '255,205,120' };
+  const candlesOut = villageDaylight.light >= 0.5;
   const litMat = new THREE.MeshBasicMaterial({ color: winTint.hex });
-  const darkMat = new THREE.MeshLambertMaterial({ color: 0x1c1812 });
+  const darkMat = new THREE.MeshLambertMaterial({ color: candlesOut ? 0x3a4450 : 0x1c1812 });
   const winCount = Math.max(2, Math.round(uw / 1.7));
   for (let i = 0; i < winCount; i++) {
     const wx = -uw / 2 + (i + 0.5) * uw / winCount;
-    const lit = r() < 0.72;
+    const litRoll = r() < 0.72; // rolled day and night alike so the layout never shifts
+    const lit = litRoll && !candlesOut;
     const win = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.62, 0.08), lit ? litMat : darkMat);
     win.position.set(wx, baseH + upH / 2 + 0.05, ud / 2 + 0.06);
     g.add(win);
@@ -16115,8 +16491,8 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
         g.add(sh);
       }
     }
-    // window box spilling blooms under a lit window
-    if (lit && r() < 0.6) {
+    // window box spilling blooms under a lit window (flowers stay out by day)
+    if (litRoll && r() < 0.6) {
       const box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.12, 0.14), beamMat);
       box.position.set(wx, baseH + upH / 2 - 0.32, ud / 2 + 0.1); g.add(box);
       const bloomCols = [0xd05a72, 0xe8c84a, 0xc8cdec, 0xd07a3a];
@@ -16133,7 +16509,7 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   for (let i = 0; i < loWins; i++) {
     const wx = -w / 2 + (i + 0.5) * w / loWins + (r() - 0.5) * 0.3;
     if (Math.abs(wx) < 0.9) continue; // keep clear of the door
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.5, 0.08), r() < 0.6 ? litMat : darkMat);
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.5, 0.08), (r() < 0.6 && !candlesOut) ? litMat : darkMat);
     win.position.set(wx, baseH * 0.55, d / 2 + 0.05);
     g.add(win);
   }
@@ -16144,11 +16520,13 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
   const arch = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 12, 1, false, 0, Math.PI), beamMat);
   arch.rotation.x = Math.PI / 2; arch.rotation.z = Math.PI / 2;
   arch.position.set(0, 1.25, d / 2 + 0.03); g.add(arch);
-  const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+  const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: candlesOut ? 0x8a6f52 : 0xffc46a }));
   lantern.position.set(w / 2 - 0.4, 1.5, d / 2 + 0.12); g.add(lantern);
-  const lGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.75 }));
-  lGlow.scale.set(1.9, 1.9, 1); lGlow.position.copy(lantern.position).z += 0.15;
-  g.add(lGlow);
+  if (!candlesOut) {
+    const lGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,180,94'), transparent: true, depthWrite: false, opacity: 0.75 }));
+    lGlow.scale.set(1.9, 1.9, 1); lGlow.position.copy(lantern.position).z += 0.15;
+    g.add(lGlow);
+  }
   // Worn doorstep, and sometimes a little shingled porch over the door
   const step = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.5), baseMat);
   step.position.set(0, 0.05, d / 2 + 0.28); g.add(step);
@@ -18045,6 +18423,9 @@ function disposeVillageScene() {
 
 function buildVillageScene(v) {
   disposeVillageScene();
+  villageDaylight = burbzDaylight();
+  villageBuiltDayKey = burbzDaylightKey();
+  const dl = villageDaylight;
   const r = villageRngFrom(v.seed);
   const pal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
   // Settlement size drives how many cottages/landmarks appear, so villages range
@@ -18072,8 +18453,8 @@ function buildVillageScene(v) {
   const riverPx = riverUx * riverDist, riverPz = riverUz * riverDist;
 
   villageScene = new THREE.Scene();
-  villageScene.background = new THREE.Color(pal.sky);
-  const skyCols = villageSkyColors(pal);
+  const skyCols = villageSkyColors(pal, dl);
+  villageScene.background = skyCols.mid.clone();
   villageScene.fog = new THREE.Fog(skyCols.hor.clone(), 34 + tier * 4, 78 + tier * 8);
   villageScene.add(villageSkyDome(skyCols));
 
@@ -18375,10 +18756,11 @@ function buildVillageScene(v) {
     path.rotation.z = Math.atan2(px, pz);
     villageScene.add(path);
 
-    // A warm torch by each doorway
-    const torch = new THREE.PointLight(0xffb45e, 2.5, 12, 2);
+    // A warm torch by each doorway — banked right down in daylight
+    const torchDim = 1 - dl.light * 0.85;
+    const torch = new THREE.PointLight(0xffb45e, 2.5 * torchDim, 12, 2);
     torch.position.set(px * 0.82, 1.7, pz * 0.82);
-    torch.userData.base = 2.2 + r() * 0.5;
+    torch.userData.base = (2.2 + r() * 0.5) * torchDim;
     villageScene.add(torch);
     villageTorches.push(torch);
   });
@@ -18675,8 +19057,10 @@ function buildVillageScene(v) {
   villageScene.add(villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt));
 
   // Night sky: layered stars (the small field twinkles), a real cratered moon
-  // with its halo, slow clouds and the odd shooting star
-  for (const tierCfg of [{ n: 260, size: 0.26, op: 0.55 }, { n: 130, size: 0.5, op: 0.95, twinkle: true }]) {
+  // with its halo, slow clouds and the odd shooting star. In daylight the
+  // stars and moon stand down and the sun takes the same spot in the sky.
+  const nightSky = dl.light < 0.45;
+  if (nightSky) for (const tierCfg of [{ n: 260, size: 0.26, op: 0.55 * (1 - dl.light * 2) }, { n: 130, size: 0.5, op: 0.95 * (1 - dl.light * 2), twinkle: true }]) {
     const starPos = new Float32Array(tierCfg.n * 3);
     for (let i = 0; i < tierCfg.n; i++) {
       const a = r() * Math.PI * 2, p = r() * Math.PI * 0.42;
@@ -18695,16 +19079,28 @@ function buildVillageScene(v) {
   // every village greets its governor with a harvest moon over the woods.
   const skyAim = -(camAz + Math.PI / 2); // bearing dead ahead of the opening camera (camera maps azimuth via sin/cos, hence the flip)
   const skyDirAt = (ang, y) => new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).setY(y).normalize();
-  const moonDir = skyDirAt(skyAim, 0.17);
-  const moonLightDir = skyDirAt(skyAim + 0.55, 0.6); // its light falls steeper and off-axis
-  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('205,220,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.62 }));
-  moonHalo.scale.set(32, 32, 1);
-  moonHalo.position.copy(moonDir).multiplyScalar(64);
-  villageScene.add(moonHalo);
-  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
-  moonSprite.scale.set(9.5, 9.5, 1);
-  moonSprite.position.copy(moonDir).multiplyScalar(62);
-  villageScene.add(moonSprite);
+  const moonDir = skyDirAt(skyAim, nightSky ? 0.17 : 0.42); // the sun rides higher than the harvest moon
+  const moonLightDir = skyDirAt(skyAim + 0.55, nightSky ? 0.6 : 0.85); // its light falls steeper and off-axis
+  if (nightSky) {
+    const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('205,220,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.62 }));
+    moonHalo.scale.set(32, 32, 1);
+    moonHalo.position.copy(moonDir).multiplyScalar(64);
+    villageScene.add(moonHalo);
+    const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
+    moonSprite.scale.set(9.5, 9.5, 1);
+    moonSprite.position.copy(moonDir).multiplyScalar(62);
+    villageScene.add(moonSprite);
+  } else {
+    // Daytime sun: a warm glow where the moon would hang, gilded at golden hour
+    const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(dl.warm > 0.3 ? '255,180,110' : '255,242,214'), transparent: true, depthWrite: false, fog: false, opacity: 0.85 }));
+    sunHalo.scale.set(38, 38, 1);
+    sunHalo.position.copy(moonDir).multiplyScalar(64);
+    villageScene.add(sunHalo);
+    const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,250,235'), transparent: true, depthWrite: false, fog: false, opacity: 1 }));
+    sunDisc.scale.set(10, 10, 1);
+    sunDisc.position.copy(moonDir).multiplyScalar(62);
+    villageScene.add(sunDisc);
+  }
   // Ground mist: broad soft sheets drifting low through the meadow
   const mistTex = villageSmokeTexture();
   for (let i = 0; i < (pal.weather === 'rain' ? 6 : 4); i++) {
@@ -18725,17 +19121,20 @@ function buildVillageScene(v) {
     villageClouds.push(cloud);
     villageScene.add(cloud);
   }
-  villageShootingStar = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('225,235,255'), transparent: true, depthWrite: false, fog: false, opacity: 0 }));
-  villageShootingStar.scale.set(2.4, 0.35, 1);
-  villageShootingStar.userData = {
-    period: 11 + r() * 9,
-    x0: -34 + r() * 24, y0: 24 + r() * 6, z0: -26 + r() * 30,
-    vx: 16 + r() * 8, vy: -(3 + r() * 3), vz: (r() - 0.5) * 6
-  };
-  villageScene.add(villageShootingStar);
+  if (nightSky) {
+    villageShootingStar = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('225,235,255'), transparent: true, depthWrite: false, fog: false, opacity: 0 }));
+    villageShootingStar.scale.set(2.4, 0.35, 1);
+    villageShootingStar.userData = {
+      period: 11 + r() * 9,
+      x0: -34 + r() * 24, y0: 24 + r() * 6, z0: -26 + r() * 30,
+      vx: 16 + r() * 8, vy: -(3 + r() * 3), vz: (r() - 0.5) * 6
+    };
+    villageScene.add(villageShootingStar);
+  }
 
-  // Weather — fireflies on mild nights, else snow, drifting leaves or rain
-  if (pal.weather === 'fireflies') {
+  // Weather — fireflies on mild nights (drifting leaves by day), else snow,
+  // drifting leaves or rain
+  if (pal.weather === 'fireflies' && nightSky) {
     const flyCount = 32;
     const flyPos = new Float32Array(flyCount * 3);
     const flyBase = [];
@@ -18903,10 +19302,16 @@ function buildVillageScene(v) {
     });
   }
 
-  // Lighting: soft sky bounce, shadow-casting moonlight aligned with the moon
-  // in the sky, and a faint cool fill so shaded faces never fall to black
-  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 2.0));
-  const moon = new THREE.DirectionalLight(0xbfd2ff, 1.95);
+  // Lighting: soft sky bounce, a shadow-casting key light aligned with the
+  // moon (or sun) in the sky, and a faint fill so shaded faces never fall to
+  // black. Colours and intensities blend from moonlit night to full daylight
+  // with a golden wash at dawn and dusk.
+  const hemiSkyCol = villageLerpColor(pal.hemiSky, 0xcfe4ff, dl.light);
+  const hemiGroundCol = villageLerpColor(pal.hemiGround, 0x9c8f6a, dl.light);
+  villageScene.add(new THREE.HemisphereLight(hemiSkyCol, hemiGroundCol, 2.0 + dl.light * 0.9));
+  const keyCol = villageLerpColor(0xbfd2ff, 0xfff3d0, dl.light);
+  if (dl.warm) keyCol.lerp(new THREE.Color(0xffb36e), dl.warm * 0.6);
+  const moon = new THREE.DirectionalLight(keyCol, 1.95 + dl.light * 1.15);
   moon.position.copy(moonLightDir).multiplyScalar(42);
   moon.castShadow = true;
   moon.shadow.mapSize.set(2048, 2048);
@@ -18916,9 +19321,10 @@ function buildVillageScene(v) {
   moon.shadow.camera.near = 1; moon.shadow.camera.far = 110; // wide enough that moonward rim pines aren't near-plane-clipped
   moon.shadow.bias = -0.0005; moon.shadow.normalBias = 0.18;
   villageScene.add(moon);
-  const fill = new THREE.DirectionalLight(0x39456e, 0.8);
+  const fill = new THREE.DirectionalLight(villageLerpColor(0x39456e, 0xa9c3e0, dl.light), 0.8 - dl.light * 0.25);
   fill.position.copy(skyDirAt(skyAim + Math.PI - 0.4, 0.45)).multiplyScalar(30); // lifts the faces the moon leaves dark
   villageScene.add(fill);
+  if (villageRenderer) villageRenderer.toneMappingExposure = 1.25 + dl.light * 0.3;
 
   // Real moonlight shadows: every solid mesh casts, flat ground decals only
   // receive, self-lit glows and the contact-shadow discs stay out of the pass
@@ -18963,6 +19369,18 @@ function villageAnimate(ts) {
 }
 
 function villageAnimateFrame(t) {
+  // Dawn and dusk arrive while the player watches: every 30s check whether the
+  // real-world sky has moved to a new daylight bucket and rebuild to match.
+  const nowMs = Date.now();
+  if (nowMs - villageDayCheckAt > 30000) {
+    villageDayCheckAt = nowMs;
+    if (villageBuiltDayKey !== burbzDaylightKey()) {
+      try {
+        buildVillageScene(currentVillage());
+        updateEmpireFogMask();
+      } catch (e) {}
+    }
+  }
   // Slow idle drift, but only once the player has left the camera alone for a
   // while — never wrestle the view away from someone exploring the village.
   if (Date.now() - (villageCam.lastInputAt || 0) > 8000) villageCam.azimuth += 0.0006;
@@ -19674,14 +20092,32 @@ function useXpScroll(itemKey, birdId) {
   if (typeof currentScreen !== 'undefined' && currentScreen === 'burbz') { try { renderBirdex(); } catch (e) {} }
 }
 
+// Unpack one food parcel from the bag onto the pantry shelves.
+function useFoodTokenFromBag(key) {
+  const tok = foodToken(key);
+  const bag = (gameState.inventory && gameState.inventory.items) || {};
+  if (!tok || (bag[key] || 0) <= 0) return;
+  const gained = unpackFoodToken(key, 1);
+  if (!gained.length) { showToast('The pantry shelves for this are already full!'); return; }
+  bag[key] -= 1;
+  saveState();
+  SFX.tap();
+  showToast(tok.icon + ' Unpacked into the pantry: ' + foodGainsLabel(gained));
+  renderInventory();
+}
+
 function inventoryLabel(key) {
   const xpi = birdXpItem(key);
   if (xpi) return xpi.label;
+  const tok = foodToken(key);
+  if (tok) return tok.label;
   return String(key || '').replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase());
 }
 function inventoryIcon(key) {
   const xpi = birdXpItem(key);
   if (xpi) return xpi.icon;
+  const tok = foodToken(key);
+  if (tok) return tok.icon;
   try { const m = lootCore().materialById(key); if (m) return m.icon; } catch (e) {}
   if (/berry|fruit/i.test(key)) return '🫐';
   if (/pebble|stone/i.test(key)) return '🪨';
@@ -19696,7 +20132,16 @@ function renderInventory() {
   if (!grid) return;
   const allItems = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
   const xpItems = allItems.filter(([key]) => birdXpItem(key));
-  const items = allItems.filter(([key]) => !birdXpItem(key));
+  const tokenItems = allItems.filter(([key]) => foodToken(key));
+  const items = allItems.filter(([key]) => !birdXpItem(key) && !foodToken(key));
+  const tokenCards = tokenItems.map(([key, count]) => {
+    const tok = foodToken(key);
+    const contents = Object.entries(tok.foods).map(([f, q]) => '+' + q + ' ' + (FOODS[f] ? FOODS[f].label : f)).join(' · ');
+    return '<button class="inventory-card inventory-card-usable" onclick="useFoodTokenFromBag(\'' + key + '\')">' +
+      '<div class="inventory-card-title">' + tok.icon + ' ' + escapeHtml(tok.label) + '</div>' +
+      '<div class="inventory-card-detail">' + escapeHtml(contents) + ' → pantry</div>' +
+      '<div class="inventory-card-count">×' + count + ' · tap to unpack</div></button>';
+  }).join('');
   const xpCards = xpItems.map(([key, count]) => {
     const it = birdXpItem(key);
     return '<button class="inventory-card inventory-card-usable" onclick="openXpScrollPicker(\'' + key + '\')">' +
@@ -19713,11 +20158,11 @@ function renderInventory() {
       return '<div class="inventory-card" style="border-color:' + color + '55;"><div class="inventory-card-title" style="color:' + color + ';">' + ((g && g.icon) || '🗡️') + ' ' + escapeHtml((g && g.label) || inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>';
     }).join('');
   } catch (e) {}
-  if (!items.length && !gearCards && !xpCards) {
+  if (!items.length && !gearCards && !xpCards && !tokenCards) {
     grid.innerHTML = '<div class="inventory-empty">Bag empty · loot appears on the map as you walk, and battles drop spoils.</div>';
     return;
   }
-  grid.innerHTML = xpCards + gearCards + items.map(([key, count]) => '<div class="inventory-card"><div class="inventory-card-title">' + inventoryIcon(key) + ' ' + escapeHtml(inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>').join('');
+  grid.innerHTML = xpCards + tokenCards + gearCards + items.map(([key, count]) => '<div class="inventory-card"><div class="inventory-card-title">' + inventoryIcon(key) + ' ' + escapeHtml(inventoryLabel(key)) + '</div><div class="inventory-card-count">×' + count + '</div></div>').join('');
 }
 
 // ============================================================================

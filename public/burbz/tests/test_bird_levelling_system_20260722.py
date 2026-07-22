@@ -181,8 +181,7 @@ def test_bag_renders_usable_scroll_cards_and_companion_cards_show_xp():
 def test_release_ships_with_a_fresh_offline_cache_version():
     sw = SW_PATH.read_text(encoding="utf-8")
     html = HTML_PATH.read_text(encoding="utf-8")
-    assert "burbz-bird-levelling-v103-20260722" in sw
-    version = "bird-levelling-20260722"
-    for marker in (f"quest_core.js?v={version}", f"academy_treehouse_core.js?v={version}"):
+    assert "burbz-day-night-kitchen-v104-20260722" in sw
+    for marker in ("quest_core.js?v=bird-levelling-20260722", "academy_treehouse_core.js?v=day-night-kitchen-20260722"):
         assert marker in html
         assert f"./{marker}" in sw
