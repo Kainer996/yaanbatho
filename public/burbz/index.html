@@ -2847,10 +2847,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-toggle on" id="toggleVibration"></div>
       </div>
       <div class="settings-row">
-        <div class="settings-label">3D Terrain (Hills &amp; Forests)</div>
-        <div class="settings-toggle on" id="toggleTerrain3d"></div>
-      </div>
-      <div class="settings-row">
         <a class="settings-label" href="privacy.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Privacy Policy</a>
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
@@ -3499,7 +3495,7 @@ Object.assign(REAL_WORLD_COMMONNESS, NATIONAL.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, UK4.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
-const BURBZ_MAP_VERSION = '3d-terrain-tree-cylinders-v3-20260722';
+const BURBZ_MAP_VERSION = 'flat-fast-map-terrain-reverted-v4-20260722';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
@@ -3840,7 +3836,7 @@ const DEFAULT_STATE = {
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   quests: {},
   questsLastReset: null,
-  settings: { sfx: true, particles: true, vibration: true, terrain3d: true },
+  settings: { sfx: true, particles: true, vibration: true },
   badges: {},
   activePetId: null,
   // Legacy whole-app pet care kept for old saves/tests; active birds now use per-bird care.
@@ -12310,7 +12306,7 @@ function showToast(msg) {
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapPropMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, setTerrain3d(on) { if (gameState && gameState.settings) gameState.settings.terrain3d = on !== false; applyBurbzTerrainDetail(); }, refreshTrees() { burbzTreeLastKey = ''; return refreshBurbzForestTrees(); }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -12327,7 +12323,7 @@ function applyBurbzCameraPadding() {
     liveMap.setPadding({ top: Math.round(h * 0.44), bottom: 0, left: 0, right: 0 });
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); applyBurbzTerrainDetail(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
   if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
   if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
@@ -12363,142 +12359,10 @@ function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.get
   }
   if (/park|landcover|landuse|wood|forest|grass/i.test(id) && (layer.type === 'fill' || layer.type === 'background')) { if (liveMap.getPaintProperty(id, 'fill-color') !== undefined) liveMap.setPaintProperty(id, 'fill-color', '#274b2e'); if (liveMap.getPaintProperty(id, 'fill-opacity') !== undefined) liveMap.setPaintProperty(id, 'fill-opacity', .54); }
 } catch(e) {} }); }
-// 3D terrain, brought back the cheap way. The old version was removed because
-// full-resolution DEM tiles + a dense terrain mesh made phones jumpy. This one
-// caps the DEM source at zoom 12, so the whole visible area is covered by a
-// handful of small, aggressively-cached tiles and the terrain mesh stays
-// coarse — real hills and mountains still read clearly at Burbz's tilted
-// camera, but the GPU/network cost is a fraction of full-res terrain.
-// Forests are individual scattered tree "cylinders" (small hexagonal prisms)
-// placed deterministically inside the OSM woodland polygons already in the
-// vector tiles. The first attempt extruded the whole woodland polygon into a
-// solid canopy block — standing INSIDE a forest that meant giant walls filling
-// the screen, and the full-screen overdraw lagged even flagship phones.
-// The whole package sits behind the "3D Terrain" toggle in Settings.
-const BURBZ_DEM_SOURCE = 'burbz-dem';
-const BURBZ_DEM_MAXZOOM = 12;
-const BURBZ_TERRAIN_EXAGGERATION = 1.9;
-const BURBZ_TREE_SOURCE = 'burbz-forest-trees';
-const BURBZ_TREE_LAYER = 'burbz-forest-trees-3d';
-const BURBZ_TREE_CAP = 220;          // hard ceiling on prisms on screen
-const BURBZ_TREE_MIN_ZOOM = 12.4;
-function burbzTerrain3dOn() { return !(gameState && gameState.settings && gameState.settings.terrain3d === false); }
-function burbzFirstSymbolLayerId() { try { const layers = (liveMap.getStyle().layers || []); const sym = layers.find(l => l.type === 'symbol'); return sym ? sym.id : undefined; } catch (e) { return undefined; } }
-// Deterministic per-grid-cell hash so a given patch of real forest always
-// grows the same trees in the same spots (no Math.random: trees must not
-// jump around between refreshes).
-function burbzTreeHash(x, y, salt) { let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(salt | 0, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
-function burbzPointInRing(lon, lat, ring) { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]; if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside; } return inside; }
-function burbzPointInPolygon(lon, lat, rings) { if (!rings.length || !burbzPointInRing(lon, lat, rings[0])) return false; for (let r = 1; r < rings.length; r++) { if (burbzPointInRing(lon, lat, rings[r])) return false; } return true; }
-function burbzHexagon(lon, lat, radiusM, cosLat) { const dLat = radiusM / 111320, dLon = radiusM / (111320 * cosLat); const pts = []; for (let a = 0; a < 6; a++) { const t = a * Math.PI / 3; pts.push([lon + Math.cos(t) * dLon, lat + Math.sin(t) * dLat]); } pts.push(pts[0]); return [pts]; }
-const BURBZ_TREE_SHADES = ['#2a5c36', '#245231', '#1e4a2b'];
-function burbzWoodLayerIds() { return (liveMap.getStyle().layers || []).filter(l => l.type === 'fill' && (l['source-layer'] || '') === 'landcover' && /wood|forest/i.test(l.id || '')).map(l => l.id); }
-function ensureBurbzTreeLayer() {
-  if (!liveMap.getSource(BURBZ_TREE_SOURCE)) liveMap.addSource(BURBZ_TREE_SOURCE, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  if (!liveMap.getLayer(BURBZ_TREE_LAYER)) {
-    liveMap.addLayer({ id: BURBZ_TREE_LAYER, type: 'fill-extrusion', source: BURBZ_TREE_SOURCE, minzoom: BURBZ_TREE_MIN_ZOOM, paint: { 'fill-extrusion-color': ['get', 'c'], 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': .9 } }, burbzFirstSymbolLayerId());
-  }
-  liveMap.setLayoutProperty(BURBZ_TREE_LAYER, 'visibility', 'visible');
-}
-let burbzTreeRefreshTimer = null, burbzTreeLastKey = '';
-function scheduleBurbzTreeRefresh() { clearTimeout(burbzTreeRefreshTimer); burbzTreeRefreshTimer = setTimeout(refreshBurbzForestTrees, 420); }
-function refreshBurbzForestTrees() {
-  if (!liveMap || !liveMapTerrainEnabled) return;
-  try {
-    const src = liveMap.getSource(BURBZ_TREE_SOURCE); if (!src) return;
-    const zoom = liveMap.getZoom(), c = liveMap.getCenter();
-    if (zoom < BURBZ_TREE_MIN_ZOOM) { if (burbzTreeLastKey !== 'empty') { burbzTreeLastKey = 'empty'; src.setData({ type: 'FeatureCollection', features: [] }); } return; }
-    // Skip regeneration when the camera hasn't meaningfully moved.
-    const key = c.lng.toFixed(4) + ',' + c.lat.toFixed(4) + ',' + zoom.toFixed(1);
-    if (key === burbzTreeLastKey) return;
-    // querySourceFeatures, not queryRenderedFeatures: the rendered query
-    // returns nothing while 3D terrain is active (known MapLibre limitation),
-    // but the raw vector-tile data is always queryable.
-    const woodLayer = (liveMap.getStyle().layers || []).find(l => (l['source-layer'] || '') === 'landcover' && l.source);
-    if (!woodLayer) return;
-    const feats = liveMap.querySourceFeatures(woodLayer.source, { sourceLayer: 'landcover', filter: ['in', ['get', 'class'], ['literal', ['wood', 'forest']]] });
-    if (!feats.length) {
-      // Either no woodland nearby, or the tiles haven't loaded yet — do not
-      // record the camera key, so the next idle/moveend retries for real.
-      burbzTreeLastKey = '';
-      src.setData({ type: 'FeatureCollection', features: [] });
-      if (!liveMap.areTilesLoaded()) liveMap.once('idle', scheduleBurbzTreeRefresh);
-      return;
-    }
-    // Spacing widens as you zoom out so the tree count stays roughly constant.
-    const cellM = zoom >= 15.5 ? 44 : zoom >= 14.5 ? 66 : zoom >= 13.5 ? 100 : 150;
-    const dLatCell = cellM / 111320, cosLat = Math.cos(c.lat * Math.PI / 180) || 1, dLonCell = cellM / (111320 * cosLat);
-    // Source features can span tiles well past the screen — only grow trees in
-    // (roughly) the visible area, so the cap is spent where the player looks.
-    const vb = liveMap.getBounds();
-    const vMinLon = vb.getWest() - dLonCell, vMaxLon = vb.getEast() + dLonCell, vMinLat = vb.getSouth() - dLatCell, vMaxLat = vb.getNorth() + dLatCell;
-    const seen = new Set(), trees = [];
-    let tested = 0;
-    outer: for (const f of feats) {
-      const g = f.geometry; if (!g) continue;
-      const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
-      for (const rings of polys) {
-        const ringOuter = rings[0]; if (!ringOuter || ringOuter.length < 4) continue;
-        let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
-        for (const p of ringOuter) { if (p[0] < minLon) minLon = p[0]; if (p[0] > maxLon) maxLon = p[0]; if (p[1] < minLat) minLat = p[1]; if (p[1] > maxLat) maxLat = p[1]; }
-        if (minLon > vMaxLon || maxLon < vMinLon || minLat > vMaxLat || maxLat < vMinLat) continue;
-        minLon = Math.max(minLon, vMinLon); maxLon = Math.min(maxLon, vMaxLon); minLat = Math.max(minLat, vMinLat); maxLat = Math.min(maxLat, vMaxLat);
-        const ix0 = Math.floor(minLon / dLonCell), ix1 = Math.floor(maxLon / dLonCell), iy0 = Math.floor(minLat / dLatCell), iy1 = Math.floor(maxLat / dLatCell);
-        for (let iy = iy0; iy <= iy1; iy++) {
-          for (let ix = ix0; ix <= ix1; ix++) {
-            if (++tested > 9000 || trees.length >= BURBZ_TREE_CAP) break outer;
-            const cellKey = ix + ':' + iy; if (seen.has(cellKey)) continue;
-            const h1 = burbzTreeHash(ix, iy, 1);
-            if (h1 < .3) { seen.add(cellKey); continue; } // thin the grid so woods look natural, not planted
-            const lon = (ix + .18 + .64 * burbzTreeHash(ix, iy, 2)) * dLonCell;
-            const lat = (iy + .18 + .64 * burbzTreeHash(ix, iy, 3)) * dLatCell;
-            if (!burbzPointInPolygon(lon, lat, rings)) continue;
-            seen.add(cellKey);
-            const r = 3.6 + burbzTreeHash(ix, iy, 4) * 3.4;
-            trees.push({ type: 'Feature', properties: { h: Math.round(9 + burbzTreeHash(ix, iy, 5) * 9), c: BURBZ_TREE_SHADES[Math.floor(h1 * 10) % BURBZ_TREE_SHADES.length] }, geometry: { type: 'Polygon', coordinates: burbzHexagon(lon, lat, r, cosLat) } });
-          }
-        }
-      }
-    }
-    burbzTreeLastKey = key;
-    src.setData({ type: 'FeatureCollection', features: trees });
-  } catch (e) { console.warn('BURBZ tree scatter failed', e); }
-}
-function enableBurbzTerrain() { applyBurbzTerrainDetail(); }
-function applyBurbzTerrainDetail() {
-  if (!liveMap) return;
-  try {
-    if (burbzTerrain3dOn()) {
-      if (liveMapTerrainEnabled) { ensureBurbzTreeLayer(); scheduleBurbzTreeRefresh(); return; }
-      if (!liveMap.getSource(BURBZ_DEM_SOURCE)) {
-        liveMap.addSource(BURBZ_DEM_SOURCE, { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256, maxzoom: BURBZ_DEM_MAXZOOM, attribution: 'Terrain: Mapzen/AWS Open Data' });
-      }
-      // Hillshade paints valley/ridge shading straight onto the ground so
-      // relief reads even before the 3D mesh kicks in — one cheap raster pass.
-      if (!liveMap.getLayer('burbz-hillshade')) {
-        liveMap.addLayer({ id: 'burbz-hillshade', type: 'hillshade', source: BURBZ_DEM_SOURCE, paint: { 'hillshade-exaggeration': .48, 'hillshade-shadow-color': '#0b1e12', 'hillshade-highlight-color': '#5b7a52', 'hillshade-accent-color': '#12281a' } }, burbzFirstSymbolLayerId());
-      }
-      ensureBurbzTreeLayer();
-      liveMap.setTerrain({ source: BURBZ_DEM_SOURCE, exaggeration: BURBZ_TERRAIN_EXAGGERATION });
-      liveMapTerrainEnabled = true;
-      // Trees can only be sampled from tiles that have finished rendering.
-      liveMap.once('idle', refreshBurbzForestTrees);
-      scheduleBurbzTreeRefresh();
-    } else {
-      if (!liveMapTerrainEnabled && !liveMap.getLayer('burbz-hillshade')) return;
-      try { liveMap.setTerrain(null); } catch (e) {}
-      if (liveMap.getLayer('burbz-hillshade')) liveMap.removeLayer('burbz-hillshade');
-      if (liveMap.getLayer(BURBZ_TREE_LAYER)) liveMap.setLayoutProperty(BURBZ_TREE_LAYER, 'visibility', 'none');
-      burbzTreeLastKey = '';
-      liveMapTerrainEnabled = false;
-    }
-  } catch (err) {
-    // Style still parsing on a cold start — retry shortly, same pattern as
-    // ensureBurbzMapSources.
-    if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(applyBurbzTerrainDetail, 180); return; }
-    console.warn('BURBZ terrain detail failed', err);
-  }
-}
+// 3D terrain + hillshade removed: the DEM tile downloads and terrain mesh were
+// the single biggest cause of the slow, jumpy map on phones. The painted
+// medieval styling carries the look without them.
+function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { liveMap.setTerrain(null); } catch (e) {} liveMapTerrainEnabled = true; }
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
@@ -12535,7 +12399,7 @@ function wireMapRotateOnly() {
   liveMap.on('rotate', () => applyPlayerHeading(liveMap.getBearing()));
 }
 
-function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); scheduleZoomCollectibleRefresh(); scheduleBurbzTreeRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
+function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); scheduleZoomCollectibleRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
 // Zooming in/out changes how much loot is revealed, so redraw the pickups when
 // the zoom band flips (debounced so a continuous pinch doesn't thrash the DOM).
 let liveMapZoomPickupBand = null, liveMapZoomPickupTimer = null;
@@ -23877,14 +23741,6 @@ $('toggleVibration').addEventListener('click', () => {
   saveState();
 });
 
-$('toggleTerrain3d').addEventListener('click', () => {
-  const el = $('toggleTerrain3d');
-  el.classList.toggle('on');
-  gameState.settings.terrain3d = el.classList.contains('on');
-  applyBurbzTerrainDetail();
-  saveState();
-});
-
 // Start New Game: the full restart used for testing playthroughs. Rides the
 // same ?reset flow as the reset link, so local progress, Burbz caches and the
 // old service worker are all cleared before the fresh game boots — the intro
@@ -24024,7 +23880,6 @@ function init() {
   if (!gameState.settings.sfx) $('toggleSfx').classList.remove('on');
   if (!gameState.settings.particles) $('toggleParticles').classList.remove('on');
   if (!gameState.settings.vibration) $('toggleVibration').classList.remove('on');
-  if (gameState.settings.terrain3d === false) $('toggleTerrain3d').classList.remove('on');
 
   // File-backed audio was gesture-primed above; the AudioContext is created
   // only if the safe oscillator fallback is actually needed.
