@@ -14,7 +14,7 @@ def _runtime_stats(profile, rarity, base_power):
     script = f"""
 const profile = {json.dumps(profile)};
 function findSpeciesProfile() {{ return profile; }}
-function speciesPersonalityBase() {{ return 5; }}
+function speciesCharmBase() {{ return 5; }}
 function clamp(value, min, max) {{ return Math.max(min, Math.min(max, value)); }}
 function hashStr() {{ return 0; }}
 function seededRandom() {{ return () => 0.5; }}
@@ -81,7 +81,7 @@ def test_legacy_flock_migration_recalibrates_stats_but_preserves_level_training_
     script = f"""
 const profile = {json.dumps(profile)};
 function findSpeciesProfile(name) {{ return name === profile.name ? profile : null; }}
-function speciesPersonalityBase() {{ return 5; }}
+function speciesCharmBase() {{ return 5; }}
 function clamp(value, min, max) {{ return Math.max(min, Math.min(max, value)); }}
 function hashStr() {{ return 0; }}
 function seededRandom() {{ return () => 0.5; }}
