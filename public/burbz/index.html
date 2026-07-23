@@ -2974,9 +2974,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=kitchen-pantry-20260722"></script>
+<script src="academy_treehouse_core.js?v=charm-diplomacy-20260723"></script>
 <script src="kitchen_pantry_core.js?v=kitchen-pantry-20260722"></script>
-<script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
+<script src="battle_core.js?v=charm-diplomacy-20260723"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=quest-path-alignment-r3-20260723"></script>
@@ -4204,7 +4204,7 @@ const BURBZ_STAT_RUBRIC = {
     def: "Survivability, adaptability, awareness, and environmental resilience.",
     spd: "Real-world flight speed, agility, or pursuit speed.",
     int: "Problem solving, learning, memory, social complexity, adaptability.",
-    cha: "Personality & charisma: how confiding, bold and sociable the species is around people. Robins hop up to gardeners; dunnocks skulk in the hedge bottom."
+    cha: "Charm: the heart of Kingdom diplomacy — how winning, confiding and sociable the species is. Charm sways battle Parleys and pays on diplomacy quests. Robins hop up to gardeners and wrens charm the whole hedgerow; dunnocks skulk in the hedge bottom. Intelligence is coveted, but charm is what carries the Crowbar."
   },
   bands: {
     1: "Very low", 2: "Low", 3: "Below average", 4: "Slightly below average",
@@ -8822,7 +8822,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-stat"><span class="bird-info-stat-label">SPD</span><span class="bird-info-stat-value">${bird.spd || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">INT</span><span class="bird-info-stat-value">${bird.int || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">STAM</span><span class="bird-info-stat-value">${bird.stamina || 0}</span></div>
-      <div class="bird-info-stat"><span class="bird-info-stat-label">PER</span><span class="bird-info-stat-value">${bird.cha || 0}</span></div>
+      <div class="bird-info-stat"><span class="bird-info-stat-label">CHA</span><span class="bird-info-stat-value">${bird.cha || 0}</span></div>
     </div>
     <div class="bird-info-section">
       <div class="bird-info-section-title">Natural range</div>
@@ -8853,13 +8853,16 @@ function closeBirdInfo() {
 }
 
 // ============================================================================
-// PERSONALITY (PER / cha): how confiding, bold and people-friendly each species
-// really is. 10 = famously tame (robins perch on spade handles, feral pigeons
-// eat from hands); 1-2 = shy skulkers and wary raptors that keep well away.
-// Species without an entry fall back to a trait-based estimate.
+// CHARM (CHA / cha): the diplomacy stat — how winning, confiding and sociable
+// each species really is. 10 = famously charming (robins perch on spade
+// handles and melt every gardener's heart); 9 = the hedgerow charmers like
+// the wren; 1-2 = shy skulkers and wary raptors that keep well away. The
+// warriors — buzzards, eagles — carry the branches; the charmers carry the
+// conversation. Species without an entry fall back to a trait-based estimate.
 // ============================================================================
-const BURBZ_PERSONALITY = {
+const BURBZ_CHARM = {
   robin: 10, feral_pigeon: 10, rock_pigeon: 10,
+  wren: 9,
   australian_magpie: 9, willie_wagtail: 9, common_myna: 9, silver_gull: 9,
   laughing_kookaburra: 9, rainbow_lorikeet: 9, australian_white_ibis: 9,
   herring_gull: 9, sulphur_crested_cockatoo: 9,
@@ -8884,7 +8887,7 @@ const BURBZ_PERSONALITY = {
   eurasian_coot: 5, dusky_moorhen: 5, little_raven: 5, australian_raven: 5,
   eastern_rosella: 5, red_rumped_parrot: 5, red_browed_finch: 5,
   yellow_tailed_black_cockatoo: 5, golden_whistler: 5,
-  wren: 4, goldcrest: 4, chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
+  goldcrest: 4, chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
   grey_wagtail: 4, kestrel: 4, little_owl: 4, lapwing: 4, swift: 4,
   great_spotted_woodpecker: 4, cormorant: 4, gannet: 4, razorbill: 4,
   dipper: 4, sand_martin: 4, pied_flycatcher: 4, yellowhammer: 4,
@@ -8911,8 +8914,8 @@ const BURBZ_PERSONALITY = {
   wedge_tailed_eagle: 2, square_tailed_kite: 2, blue_billed_duck: 2
 };
 
-function speciesPersonalityBase(profile) {
-  if (profile && BURBZ_PERSONALITY[profile.id] != null) return BURBZ_PERSONALITY[profile.id];
+function speciesCharmBase(profile) {
+  if (profile && BURBZ_CHARM[profile.id] != null) return BURBZ_CHARM[profile.id];
   const traits = ((profile && profile.traits) || []).join(' ').toLowerCase();
   let score = 5;
   if (/bold|tame|confiding|social|curious|urban|gregarious|noisy|cheeky|garden/.test(traits)) score += 2;
@@ -8933,7 +8936,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
     const def = Math.round(baseStats.def * 10);
     const spd = Math.round(baseStats.spd * 10);
     const int = Math.round(baseStats.int * 10);
-    const cha = Math.round(speciesPersonalityBase(profile) * 10);
+    const cha = Math.round(speciesCharmBase(profile) * 10);
     // MAG — the Kingdom's magic flows strongest through its smallest birds.
     // Inverse of physical bulk (strength + hp) so a goldcrest out-spells an eagle.
     const mag = clamp(Math.round((11.5 - (baseStats.strength * 0.6 + baseStats.hp * 0.5)) * 10), 20, 100);
@@ -9893,7 +9896,7 @@ const ACADEMY_ROOMS = {
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
-  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar. Regulars swap rumours, make friends and come out of their shells — Personality grows here, and charming birds earn bonus coins on social quests.', perk:'Passive: +1 PER every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
+  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds sway battle Parleys, win over foes and earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'Hearty species-friendly cooking. Birds stationed here build Stamina one good meal at a time.', perk:'Passive: +1 STAM every 30 min', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
@@ -10487,7 +10490,7 @@ function renderBirdExpeditions() {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
-    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + (t.chaWeight ? ' · 🗣️ PER pays' : '');
+    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
@@ -10556,7 +10559,7 @@ function renderQuestSendSheet() {
     const training = birdHasActiveTraining(b.id);
     const tooLow = (b.level || 1) < (t.minLevel || 1);
     const disabled = away || training || tooLow;
-    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · PER ' + (b.cha || 0) : '');
+    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const sel = questSendState.birdId === b.id ? ' selected' : '';
     return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
@@ -10575,19 +10578,19 @@ function renderQuestSendSheet() {
   const charmChips = charms.length ? charms.map(([k, n]) => {
     const sel = questSendState.charm === k ? ' selected' : '';
     return '<button class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'charm\',\'' + k + '\')">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' <span class="quest-equip-count">×' + n + '</span></button>';
-  }).join('') : '<div class="quest-equip-none">No charms in the Stores yet — quests award them.</div>';
+  }).join('') : '<div class="quest-equip-none">No lucky charms in the Stores yet — quests award them.</div>';
 
   el.innerHTML = '<div class="quest-overlay-panel">' +
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
       '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + ((t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '') + ' · +' + (t.xp || 0) + ' XP</div></div></div>' +
-    '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🗣️ A social quest — birds with high Personality (PER) charm bonus coins and extra finds.</span>' : '') + '</div>' +
+    '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') + '</div>' +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
     '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins &amp; branches</span></div>' +
     '<div class="quest-equip-row">' + provisionChips + '</div>' +
-    '<div class="quest-overlay-label">Charm <span class="quest-overlay-hint">+1 bonus find</span></div>' +
+    '<div class="quest-overlay-label">Lucky charm <span class="quest-overlay-hint">+1 bonus find</span></div>' +
     '<div class="quest-equip-row">' + charmChips + '</div>' +
     '<button class="quest-send-btn" id="questSendBtn" ' + (questSendState.birdId ? '' : 'disabled') + ' onclick="confirmQuestSend()">' +
       (questSendState.birdId ? '🧭 SEND ON QUEST' : 'PICK A BIRD FIRST') + '</button>' +
@@ -11627,10 +11630,11 @@ function academyForage(birdId) {
 
 // Passive per-room effects, runs on the same 60s cadence as pet care
 // Fallout Shelter-style room jobs: a bird stationed in a stat room slowly and
-// permanently grows that stat. The Crowbar is the Personality (PER) room.
+// permanently grows that stat. The Crowbar is the Charm (CHA) room — the
+// place a bird learns diplomacy over a thimble of elderberry cordial.
 const ACADEMY_ROOM_STAT_EFFECTS = {
   training:    { stat:'atk',     label:'ATK' },
-  crowbar:     { stat:'cha',     label:'PER' },
+  crowbar:     { stat:'cha',     label:'CHA' },
   kitchen:     { stat:'stamina', label:'STAM' },
   workshop:    { stat:'def',     label:'DEF' },
   observatory: { stat:'int',     label:'INT' }
@@ -11672,7 +11676,7 @@ function tickAcademy() {
       b.care.hunger = clamp((b.care.hunger || 0) + 4, 0, 100);
       b.care.happiness = clamp((b.care.happiness || 80) - 1, 0, 100);
     } else if (room === 'crowbar') {
-      // The bar is fun: morale climbs alongside Personality.
+      // The bar is fun: morale climbs alongside Charm.
       b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
       b.care.hunger = clamp((b.care.hunger || 0) + 2, 0, 100);
     } else {
@@ -20950,7 +20954,9 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-back-stat"><span class="card-back-stat-label">DEF</span><strong class="card-back-stat-value">${bird.def || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.def||50)/1.2)}%;background:var(--accent2)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">SPD</span><strong class="card-back-stat-value">${bird.spd || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.spd||50)/1.2)}%;background:var(--uncommon)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">MAG</span><strong class="card-back-stat-value">${bird.mag || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.mag||40)/1.2)}%;background:var(--epic)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">CHA</span><strong class="card-back-stat-value">${bird.cha || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.cha||40)/1.2)}%;background:var(--legendary)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">INT</span><strong class="card-back-stat-value">${bird.int || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.int||50)/1.2)}%;background:var(--rare)"></div></div></div>
+            <div class="card-back-stat"><span class="card-back-stat-label">STAM</span><strong class="card-back-stat-value">${bird.stamina || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.stamina||50)/1.2)}%;background:var(--accent3)"></div></div></div>
           </div>
           <div class="card-back-special">&#10024; ${bird.specialMove || 'Unknown'}</div>
           <div class="card-back-section-label">Academy placement</div>
@@ -22580,6 +22586,7 @@ function startPerchBattle() {
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
+  addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
   potionSips.forEach(t => addBattleLog('system-msg', '🧪 ' + t));
   SFX.tap();
   battleAdvance();
@@ -22670,6 +22677,7 @@ function renderArena() {
       const m = a.skill;
       const metaLine = m.kind === 'attack'
         ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'steal' ? ' · steals Focus' : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
+        : m.kind === 'parley' ? 'CHA ' + me.cha + ' · 🕊️ diplomacy · saps a foe\'s will · can win over a foe below ' + Math.round(core.PARLEY_WINOVER_HP_PCT * 100) + '% HP'
         : m.kind === 'barrier' ? 'Barrier ' + Math.round(m.barrierPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '')
         : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '') + (m.cleanse ? ' · cleanse' : '')
         : 'Squad rally' + (m.healPct ? ' + heal' : '');
@@ -22774,6 +22782,11 @@ function playBattleEvents(events) {
         SFX.tap();
       }
       if (ev.type === 'heal' && ev.healed) spawnDamageFloat(ev.side, fighterIndexByName(b, ev.side, ev.name), '+' + ev.healed, 'heal');
+      if (ev.type === 'sway') {
+        const swayIdx = ev.targetIndex != null && ev.targetIndex >= 0 ? ev.targetIndex : fighterIndexByName(b, ev.side, ev.name);
+        spawnDamageFloat(ev.side, swayIdx, '🕊️ won over!', 'heal');
+        SFX.tap();
+      }
       if (ev.type === 'surge') SFX.questComplete && SFX.tap();
       if (ev.type === 'faint' && !battleState.liberation) SFX.defeat && SFX.tap();
       renderArena();
@@ -22797,7 +22810,8 @@ function endPerchBattle() {
   const won = b.winner === 'player';
   const liberation = battleState.liberation || pendingEmpireLiberation();
   const liberatedTown = won && liberation ? completeEmpireLiberationVictory() : null;
-  const rewards = core.battleRewards(tierIndex, b.winner, { winsToday: league.daily.wins, firstWinOfDay: won && league.daily.wins === 0 });
+  const swayedCount = b.teams.opponent.filter(f => f.swayed).length;
+  const rewards = core.battleRewards(tierIndex, b.winner, { winsToday: league.daily.wins, firstWinOfDay: won && league.daily.wins === 0, swayed: swayedCount });
 
   let promoted = false;
   if (won) {
@@ -22821,7 +22835,7 @@ function endPerchBattle() {
     gameState.player.losses++;
     SFX.defeat();
   }
-  addCoins(rewards.coins);
+  addCoins(rewards.coins + (rewards.charmCoins || 0));
   addBranches(rewards.branches);
   addPlayerXp(rewards.playerXp);
 
@@ -22858,6 +22872,7 @@ function endPerchBattle() {
   const rows = [];
   rows.push('<div class="rw-row"><span>Coins' + (rewards.firstWinBonus ? ' (first win ×2!)' : '') + '</span><b>+' + rewards.coins + ' 🪙</b></div>');
   if (rewards.branches) rows.push('<div class="rw-row"><span>Branches</span><b>+' + rewards.branches + ' 🪵</b></div>');
+  if (rewards.charmCoins) rows.push('<div class="rw-row"><span>🕊️ Won over by Charm ×' + rewards.swayed + '</span><b>+' + rewards.charmCoins + ' 🪙</b></div>');
   rows.push('<div class="rw-row"><span>Each bird</span><b>+' + rewards.birdXp + ' XP</b></div>');
   rows.push('<div class="rw-row"><span>Trainer</span><b>+' + rewards.playerXp + ' XP</b></div>');
   lootLines.forEach(l => {
@@ -23471,6 +23486,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'These are your true foes: squads of evil Burbz, the usurper’s shadow soldiers. You never fight free birds — every battle you win unravels a little more of the dark magic.' },
   { chapterId:'battle', chapter:'The War', title:'Pick your squad', screen:'battle', target:'#battleTeamGrid', text:'Choose four birds; the whole squad fights at once. Each evil Burb keeps the wing class of the bird it was twisted from, so counter their classes — the wheel below shows who beats whom.' },
   { chapterId:'battle', chapter:'The War', title:'Skyclash basics', screen:'battle', target:'#battleStartBtn', text:'The Speed meter decides who acts. Basic moves build your squad’s shared Focus; spend it to Surge a skill for extra power. Signatures are each bird’s ultimate.' },
+  { chapterId:'battle', chapter:'The War', title:'Diplomacy and Charm', screen:'battle', target:'#battleStartBtn', text:'Not every fight is won with talons. Any bird can Parley: Charm (CHA) saps a foe’s will to fight, and a weakened foe can be won over without a blow. Eagles are your warriors; robins and wrens are your diplomats.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a real town from the Map and its evil Burbz garrison will meet you here in a Liberation Battle. Victory frees the town — return there to build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.
@@ -23483,6 +23499,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'academy', chapter:'Academy', title:'Recruit your first companion', screen:'academy', target:'#academyBuildPanel', text:'Build The Roost for care, then build the Barracks to review your real Birdex discoveries and recruit one bird into your flock. That companion can take your first quest.' },
   { chapterId:'academy', chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
   { chapterId:'academy', chapter:'Academy', title:'Training and pantry', screen:'academy', target:'#academyTreehouse', text:'Training rooms unlock and improve battle disciplines — your edge against the evil Burbz. Food comes from your pantry: species-appropriate feeding supports care and progression.' },
+  { chapterId:'academy', chapter:'Academy', title:'The Crowbar', screen:'academy', target:'#academyTreehouse', text:'The Crowbar is the bird bar — the home of Kingdom diplomacy. Birds perched there grow Charm (CHA), which sways battle Parleys and pays on diplomacy quests. Send your robins and wrens: charm is their crown.' },
 
   // — Quests: taught the first time the Quests screen opens.
   { chapterId:'quests', chapter:'Quests', title:'Send your first bird', screen:'quests', target:'#expeditionQuestList', text:'First assignment: send one bird on one starter quest. Pick Find Seed, Find Coins, Branch Run or Scavenge, choose your recruited companion, then confirm the departure.' },

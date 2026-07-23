@@ -44,6 +44,15 @@ Battle is therefore a story mechanic, not a disconnected league minigame: traini
 
 Canonical concept reference: `burbz-shadow-enemies-reference-20260720.png` in the shared Burbz/Obsidian reference archive; in-game portraits live in `assets/evil-burbz/`.
 
+## Charm and diplomacy — the small birds' war
+
+Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental stat of diplomacy — and diplomacy is how the small birds fight the war. Buzzards and eagles are the warriors: they carry the branches, the food and the front line of every Liberation Battle. But a robin or a wren carries something the raptors never will — charm — and the Kingdom needs both.
+
+- **Charm is a core bird stat.** Famously confiding, winning species (the robin above all, the wren close behind) rate highest; shy skulkers and wary raptors rate lowest. Charm shows on bird cards beside HP, ATK and MAG.
+- **Parley** is the diplomacy action in battle: any bird can appeal to an evil Burb, and charm saps its will to fight. A weakened evil Burb can be **won over** entirely — the usurper's shadow lifts and the bird bows out in peace, leaving goodwill gifts. This is the gentlest form of dispelling and fits the kingdom's moral frame exactly: no foe is ever harmed by kindness.
+- **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there sway parleys and diplomacy quests.
+- **Diplomacy quests** (marked 🕊️, like the Diplomacy Envoy) pay out on charm: charming birds talk squirrel markets, border flocks and passers-by into better deals, bonus coins and gifts.
+
 ## Tone and moral frame
 
 **No town is destroyed.** Liberation Battles are non-gory magical contests between the player's living flock and the usurper's shadow squads. Defeated evil Burbz are dispelled rather than killed or conquered. Real birds remain the heroes, discoveries and companions; the player restores communities, knowledge, wildlife and safe paths. The empire is an expanding network of free sanctuaries, and its visual language should feel hopeful, alive and green.

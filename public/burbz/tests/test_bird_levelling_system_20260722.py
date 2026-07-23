@@ -185,7 +185,7 @@ def test_release_ships_with_a_fresh_offline_cache_version():
     assert "const BURBZ_CACHE = 'burbz-" in sw
     for marker in (
         "quest_core.js?v=quest-path-alignment-r3-20260723",
-        "academy_treehouse_core.js?v=kitchen-pantry-20260722",
+        "academy_treehouse_core.js?v=charm-diplomacy-20260723",
     ):
         assert marker in html
         assert f"./{marker}" in sw

@@ -20,7 +20,7 @@ def test_card_back_has_a_crisp_header_and_compact_stat_grid():
     card = _card_template()
     assert 'class="card-back-head"' in card
     assert 'class="card-back-meta"' in card
-    assert card.count('class="card-back-stat"') == 6
+    assert card.count('class="card-back-stat"') == 8
     assert ".card-back-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr));" in HTML
     assert ".card-back-stat { display:grid; grid-template-columns:1fr auto;" in HTML
 

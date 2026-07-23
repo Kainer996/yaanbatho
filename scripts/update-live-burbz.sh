@@ -36,6 +36,7 @@ FILES=(
   "loot_crafting_core.js"
   "audio_core.js"
   "action_badge_core.js"
+  "merlin_companion_core.js"
   "uk_bird_expansion_50.js"
   "uk_bird_expansion_2.js"
   "uk_bird_expansion_3.js"
