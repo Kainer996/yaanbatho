@@ -815,7 +815,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .bird-card.known-species .card-name::after { content: ' · WILD'; color: var(--text3); font-size: 10px; }
 
 
-/* ========== PET COMPANION ========== */
+/* ========== MERLIN COMPANION ========== */
 .card-pet-btn {
   margin-top: 8px; padding: 8px 10px; border-radius: 8px;
   background: linear-gradient(135deg, rgba(214,168,79,0.18), rgba(201,201,201,0.10));
@@ -824,15 +824,7 @@ svg.academy-room-bg { display:block; filter:none; }
   letter-spacing: 0.8px; text-transform: uppercase; min-height: 38px;
 }
 .card-pet-btn.active { border-color: var(--legendary); color: var(--legendary); box-shadow: 0 0 14px rgba(255,212,59,0.22); }
-.card-pet-front {
-  position: relative; left: auto; right: auto; bottom: auto; z-index: 3; order: 3;
-  width: auto; margin: 7px 8px 10px;
-  min-height: 34px; padding: 6px 8px; border-radius: 8px;
-  background: rgba(0,0,0,0.86); border: 1px solid rgba(214,168,79,0.36);
-  color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.8px; backdrop-filter: blur(5px);
-}
-.card-pet-front.active { border-color: var(--legendary); color: var(--legendary); }
+
 .pet-companion {
   position: fixed;
   top: calc(var(--safe-top) + 76px);
@@ -894,6 +886,25 @@ svg.academy-room-bg { display:block; filter:none; }
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .pet-speech.show { opacity: 1; transform: translateY(2px); }
+.merlin-care-menu { position:fixed; top:calc(var(--safe-top) + 148px); right:12px; z-index:275; width:min(316px,calc(100vw - 24px)); padding:15px; border-radius:20px; border:1px solid rgba(240,199,103,.48); color:var(--text); background:linear-gradient(155deg,rgba(25,22,15,.98),rgba(7,12,11,.98)); box-shadow:0 20px 54px rgba(0,0,0,.66),inset 0 1px rgba(255,255,255,.08); }
+.merlin-care-menu[hidden] { display:none; }
+.merlin-care-head { display:flex; align-items:center; gap:11px; padding-right:36px; }
+.merlin-care-portrait { width:58px; height:58px; object-fit:contain; filter:drop-shadow(0 7px 8px rgba(0,0,0,.55)); }
+.merlin-care-kicker { color:#79e0bd; font:900 9px/1 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+.merlin-care-title { margin:4px 0 0; color:#fff1c5; font:400 20px/1.08 'Russo One',sans-serif; }
+.merlin-care-mood { margin-top:4px; color:var(--text2); font-size:11px; }
+.merlin-care-close { position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,.14); color:var(--text2); background:rgba(255,255,255,.05); font-size:22px; }
+.merlin-care-status { display:grid; gap:9px; margin-top:14px; }
+.merlin-care-row { display:grid; grid-template-columns:72px 1fr 36px; align-items:center; gap:8px; }
+.merlin-care-label { color:var(--text2); font:900 10px/1 'Rajdhani',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.merlin-care-track { height:8px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.08); }
+.merlin-care-fill { height:100%; border-radius:inherit; transition:width .25s ease; }
+.merlin-care-value { color:var(--text); text-align:right; font:900 10px/1 'Rajdhani',sans-serif; }
+.merlin-care-meta { display:flex; justify-content:space-between; gap:8px; margin-top:12px; padding:9px 10px; border-radius:12px; background:rgba(255,255,255,.045); color:var(--text2); font-size:11px; }
+.merlin-care-meta b { color:var(--accent2); }
+.merlin-care-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }
+.merlin-care-action { min-height:46px; padding:7px 5px; border-radius:12px; border:1px solid rgba(214,168,79,.34); background:rgba(214,168,79,.10); color:var(--text); font:900 11px/1.15 'Rajdhani',sans-serif; }
+.merlin-care-note { min-height:28px; margin-top:10px; color:#9be8cd; font-size:10px; line-height:1.35; }
 .pet-sparkle {
   position: fixed; z-index: 259; pointer-events: none; color: var(--legendary); font-size: 16px;
   animation: pet-sparkle 1.2s ease-out forwards;
@@ -1651,7 +1662,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .capture-card-wrapper .bird-card { min-height:360px; filter:drop-shadow(0 0 30px rgba(214,168,79,.40)); animation: unlockCardShake 1.45s .95s cubic-bezier(.2,.9,.25,1.2) both; }
 .capture-card-wrapper .bird-card-inner { min-height:360px; }
 .capture-card-wrapper .card-art { height:190px; }
-.capture-card-wrapper .card-pet-front { display:none; }
 @keyframes captureCardEntry { from{opacity:0;transform:translateY(-240px) rotateY(180deg) rotateZ(-12deg) scale(0.35)} 55%{opacity:1;transform:translateY(18px) rotateY(0) rotateZ(4deg) scale(1.18)} to{opacity:1;transform:translateY(0) rotateY(0) rotateZ(0) scale(1)} }
 @keyframes unlockCardShake { 0%,100%{transform:translateX(0) rotate(0) scale(1)} 12%{transform:translateX(-8px) rotate(-3deg) scale(1.03)} 24%{transform:translateX(8px) rotate(3deg) scale(1.04)} 36%{transform:translateX(-5px) rotate(-2deg) scale(1.03)} 48%{transform:translateX(5px) rotate(2deg) scale(1.02)} 70%{transform:translateX(0) rotate(0) scale(1.08)} }
 .capture-card-wrapper.fly-to-companions { animation: cardFlyToCompanions .62s ease-in forwards; }
@@ -2930,24 +2940,24 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
   </div>
 
-  <!-- Pet Companion (the perch is a separate element so it never flies with the bird) -->
-  <div class="pet-perch" id="petPerch"></div>
-  <div class="pet-companion" id="petCompanion" aria-live="polite">
-    <div class="pet-speech" id="petSpeech">Chirp!</div>
-    <div class="pet-sprite" id="petSprite"><div class="pet-emoji" id="petEmoji">&#128038;</div></div>
-    <div class="pet-nameplate">
-      <div class="pet-name" id="petName">No pet</div>
-      <div class="pet-mood" id="petMood">Choose a bird</div>
-      <div class="pet-bars">
-        <div class="pet-bar"><div class="pet-bar-fill" id="petHungerFill" style="width:80%;background:var(--uncommon)"></div></div>
-        <div class="pet-bar"><div class="pet-bar-fill" id="petHappyFill" style="width:80%;background:var(--accent2)"></div></div>
-      </div>
-      <div class="pet-actions">
-        <button class="pet-action-btn" id="petFeedBtn">Feed</button>
-        <button class="pet-action-btn" id="petPlayBtn">Train</button>
-      </div>
-    </div>
+  <!-- Merlin is Burbz's permanent guide and top-right Tamagotchi companion. -->
+  <div class="pet-perch show" id="petPerch"></div>
+  <div class="pet-companion show" id="petCompanion" aria-live="polite">
+    <div class="pet-speech" id="petSpeech">Ready when you are!</div>
+    <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><img src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt="Merlin the wizard falcon"></button>
   </div>
+  <section class="merlin-care-menu" id="merlinCareMenu" role="dialog" aria-labelledby="merlinCareTitle" hidden>
+    <button class="merlin-care-close" id="merlinCareClose" type="button" aria-label="Close Merlin's care menu">&times;</button>
+    <div class="merlin-care-head"><img class="merlin-care-portrait" src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt=""><div><div class="merlin-care-kicker">Your permanent guide</div><h2 class="merlin-care-title" id="merlinCareTitle">Merlin</h2><div class="merlin-care-mood" id="merlinCareMood">Bright-eyed and magical</div></div></div>
+    <div class="merlin-care-status">
+      <div class="merlin-care-row"><span class="merlin-care-label">Food</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinFoodFill" style="width:80%;background:#78a66d"></div></div><span class="merlin-care-value" id="merlinFoodValue">80%</span></div>
+      <div class="merlin-care-row"><span class="merlin-care-label">Happiness</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinHappyFill" style="width:85%;background:#f0c767"></div></div><span class="merlin-care-value" id="merlinHappyValue">85%</span></div>
+      <div class="merlin-care-row"><span class="merlin-care-label">Energy</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinEnergyFill" style="width:90%;background:#69dbc0"></div></div><span class="merlin-care-value" id="merlinEnergyValue">90%</span></div>
+    </div>
+    <div class="merlin-care-meta"><span>Bond <b id="merlinBondLevel">LV.1</b></span><span>Mealworms <b id="merlinMealworms">0</b></span></div>
+    <div class="merlin-care-actions"><button class="merlin-care-action" id="merlinFeedBtn" type="button">🪱 Feed</button><button class="merlin-care-action" id="merlinPlayBtn" type="button">✨ Play</button><button class="merlin-care-action" id="merlinRestBtn" type="button">🌙 Rest</button></div>
+    <div class="merlin-care-note" id="merlinCareNote" aria-live="polite">Feed Merlin insects from your pantry — a real Merlin falcon's natural food.</div>
+  </section>
 
   <!-- Village shop overlay (must sit beside the nav so it stacks above it) -->
   <div class="village-shop-overlay" id="villageShopOverlay"></div>
@@ -2982,6 +2992,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
+<script src="merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -3018,6 +3029,8 @@ const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
 const SPAIN_BOUNDARY = window.BURBZ_SPAIN_BOUNDARY_20260715 || {
   contains() { return false; }
 };
+const MERLIN_CORE = window.BurbzMerlinCompanionCore;
+if (!MERLIN_CORE) throw new Error('Merlin companion core failed to load');
 
 // ============================================================================
 // CONSTANTS
@@ -3838,9 +3851,7 @@ const DEFAULT_STATE = {
   questsLastReset: null,
   settings: { sfx: true, particles: true, vibration: true },
   badges: {},
-  activePetId: null,
-  // Legacy whole-app pet care kept for old saves/tests; active birds now use per-bird care.
-  pet: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null },
+  merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE },
   birdCare: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null }, // Default per-bird care state
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
@@ -3957,6 +3968,15 @@ function loadState() {
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
+  // Merlin permanently replaces the old selectable walking-pet slot. Preserve
+  // old care values as his starting mood, then discard the obsolete selection.
+  const merlinNow = Date.now();
+  const legacyMerlinCare = (gameState.merlinCare && typeof gameState.merlinCare === 'object') ? gameState.merlinCare : ((gameState.pet && typeof gameState.pet === 'object') ? gameState.pet : {});
+  const legacyCareTime = Number(legacyMerlinCare.lastCareAt) || Date.parse(legacyMerlinCare.lastCare || '') || merlinNow;
+  gameState.merlinCare = MERLIN_CORE.sanitizeMerlinCare({ ...legacyMerlinCare, lastCareAt:legacyCareTime }, merlinNow);
+  gameState.merlinCare = MERLIN_CORE.tickMerlinCare(gameState.merlinCare, Math.floor(Math.max(0, merlinNow - legacyCareTime) / 60000), merlinNow);
+  delete gameState.activePetId;
+  delete gameState.pet;
   gameState.battlePreset = (gameState.battlePreset && typeof gameState.battlePreset === 'object' && !Array.isArray(gameState.battlePreset)) ? { ...DEFAULT_STATE.battlePreset, ...gameState.battlePreset } : JSON.parse(JSON.stringify(DEFAULT_STATE.battlePreset));
   gameState.birdExpeditions = Array.isArray(gameState.birdExpeditions) ? gameState.birdExpeditions.filter(q => q && typeof q === 'object') : [];
   gameState.walkingQuests = (gameState.walkingQuests && typeof gameState.walkingQuests === 'object' && !Array.isArray(gameState.walkingQuests)) ? gameState.walkingQuests : { active: null, history: [] };
@@ -3978,7 +3998,6 @@ function loadState() {
     });
     saveState();
   }, 0);
-  if (gameState.activePetId === undefined) gameState.activePetId = null;
 
   // Migrate old flock format and old birds to have individual care/training objects.
   gameState.flock = gameState.flock.map(b => {
@@ -4011,7 +4030,6 @@ function loadState() {
     return b;
   });
 
-  ensureActivePetStillExists();
   sfxEnabled = gameState.settings.sfx;
   if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   saveState();
@@ -13167,10 +13185,8 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       if (loot.xp) addPlayerXp(loot.xp);
       const chestItems = {};
       if (loot.item && birdXpItem(loot.item)) { addBirdXpItemToBag(loot.item, 1); chestItems[loot.item] = 1; }
-      // The walking pet studies chest finds too — glowing feathers and map
-      // scraps teach the bird as much as the trainer.
-      const chestPet = getActivePet();
-      if (loot.xp && chestPet) levelUpBird(chestPet, loot.xp);
+      // Merlin is always beside the player and gains a little bond XP from finds.
+      if (loot.xp) gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), Math.max(2, Math.round(loot.xp * 0.2)), Date.now());
       SFX.capture();
       vibrate(QUEST_BUZZ.chest);
       playQuestClaimCelebration({ coins: loot.coins || 0, xp: loot.xp || 0, items: chestItems });
@@ -13222,14 +13238,9 @@ function completeWalkingQuest() {
   if (!quest) return;
   const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
   addPlayerXp(summary.xp);
-  // The bird that walked the quest levels up too: the active walking pet earns
-  // half the headline XP (it did half the work, after all).
-  const walkingPet = getActivePet();
-  if (walkingPet) {
-    summary.petXp = Math.max(20, Math.round(summary.xp * 0.5));
-    summary.petName = birdDisplayName(walkingPet);
-    levelUpBird(walkingPet, summary.petXp);
-  }
+  // Merlin is the permanent walking companion; adventures deepen his bond.
+  summary.merlinBondXp = Math.max(10, Math.round(summary.xp * 0.25));
+  gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), summary.merlinBondXp, Date.now());
   const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
   if (bonusCoins) addCoins(bonusCoins);
   wq.history.unshift(summary);
@@ -13616,7 +13627,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
     '<div class="wq-summary-stat"><div class="num">' + summary.chestsOpened + '</div><div class="lbl">chests</div></div>' +
     '<div class="wq-summary-stat"><div class="num">' + (summary.birds || []).length + '</div><div class="lbl">birds captured</div></div>' +
     '<div class="wq-summary-stat"><div class="num">+' + summary.xp + '</div><div class="lbl">XP earned</div></div>' +
-    (summary.petXp ? '<div class="wq-summary-stat"><div class="num">+' + summary.petXp + '</div><div class="lbl">' + escapeHtml(summary.petName || 'pet') + ' XP</div></div>' : '') +
+    (summary.merlinBondXp ? '<div class="wq-summary-stat"><div class="num">+' + summary.merlinBondXp + '</div><div class="lbl">Merlin bond XP</div></div>' : '') +
     '</div>' +
     (summary.trailBirds && summary.trailBirds.total ?
       '<div class="quest-desc" style="margin:6px 0">🐦 Trail birds spotted: <b>' + summary.trailBirds.matched + '/' + summary.trailBirds.total + '</b>' +
@@ -15040,12 +15051,12 @@ const VILLAGE_SHOPS = {
     ]
   },
   potion: {
-    name: 'The Gilded Beak', icon: '🧪', desc: 'Potion shop. Brews act on your active pet companion.',
+    name: 'The Gilded Beak', icon: '🧪', desc: 'Potion shop. Brews care for Merlin; scrolls go to any recruited bird you choose.',
     stock: [
-      { id: 'heal_potion', label: 'Heal draught',   detail: 'Fully restores your pet\'s HP',      price: 25, effect: 'heal' },
-      { id: 'happy_tonic', label: 'Cheer tonic',    detail: '+30 happiness for your pet',         price: 18, effect: 'happy' },
-      { id: 'xp_scroll',   label: 'Wisdom scroll',  detail: '+40 XP for your pet',                price: 30, effect: 'xp' },
-      { id: 'feast_elixir',label: 'Feast elixir',   detail: 'Empties your pet\'s hunger bar',     price: 15, effect: 'feast' },
+      { id: 'heal_potion', label: 'Wizard tonic',   detail: '+30 Merlin energy',                   price: 25, effect: 'merlin_energy' },
+      { id: 'happy_tonic', label: 'Cheer tonic',    detail: '+30 Merlin happiness',                price: 18, effect: 'merlin_happy' },
+      { id: 'xp_scroll',   label: 'Wisdom scroll',  detail: 'Stores item: +40 XP to any bird you choose', price: 30, grantItem: 'xp_scroll_minor' },
+      { id: 'feast_elixir',label: 'Feast elixir',   detail: 'Fills Merlin\'s food bar',             price: 15, effect: 'merlin_feast' },
       { id: 'bag_feather_scroll', label: 'Feather scroll', detail: 'Stores item: +40 XP to any bird you choose', price: 35, grantItem: 'xp_scroll_minor' },
       { id: 'bag_wisdom_tome',    label: 'Wisdom tome',    detail: 'Stores item: +120 XP to any bird you choose', price: 95, grantItem: 'xp_scroll_greater' }
     ]
@@ -15053,8 +15064,8 @@ const VILLAGE_SHOPS = {
   smith: {
     name: 'Talon & Anvil', icon: '⚒️', desc: 'Blacksmith. Gear for hard-training birds.',
     stock: [
-      { id: 'drill_token', label: 'Drill whistle', detail: 'Your pet may drill again right now (clears training cooldown)', price: 30, effect: 'drill' },
-      { id: 'rest_token',  label: 'Feather pillow', detail: 'Your pet may Deep Rest again right now', price: 22, effect: 'rest' }
+      { id: 'drill_token', label: 'Wizard whistle', detail: '+25 Merlin happiness and +8 bond XP', price: 30, effect: 'merlin_play' },
+      { id: 'rest_token',  label: 'Feather pillow', detail: '+35 Merlin energy', price: 22, effect: 'merlin_rest' }
     ]
   },
   tavern: {
@@ -19778,19 +19789,19 @@ function villageBuy(shopKey, itemId) {
     return;
   }
 
-  // Effects that need an active pet
-  const needsPet = ['heal', 'happy', 'xp', 'feast', 'drill', 'rest'].includes(item.effect);
-  const pet = needsPet ? getActivePet() : null;
-  if (needsPet && !pet) { showToast('Choose an active pet in the Burbz tab first!'); return; }
-
   addCoins(-item.price);
   let msg = '';
-  if (item.effect === 'heal')  { pet.hp = pet.maxHp; msg = '🧪 ' + birdDisplayName(pet) + ' is fully healed!'; }
-  if (item.effect === 'happy') { pet.care = pet.care || {}; pet.care.happiness = clamp((pet.care.happiness || 80) + 30, 0, 100); msg = '🧪 ' + birdDisplayName(pet) + ' is delighted! +30 happiness'; }
-  if (item.effect === 'xp')    { levelUpBird(pet, 40); msg = '📜 ' + birdDisplayName(pet) + ' studies the scroll — +40 XP!'; }
-  if (item.effect === 'feast') { pet.care = pet.care || {}; pet.care.hunger = 0; msg = '🧪 ' + birdDisplayName(pet) + ' is completely full!'; }
-  if (item.effect === 'drill') { pet.care = pet.care || {}; pet.care.lastTrained = null; msg = '⚒️ The whistle sounds — ' + birdDisplayName(pet) + ' can drill again!'; }
-  if (item.effect === 'rest')  { pet.academy = pet.academy || {}; pet.academy.lastRest = null; msg = '⚒️ ' + birdDisplayName(pet) + ' can Deep Rest again!'; }
+  if (['merlin_energy','merlin_happy','merlin_feast','merlin_play','merlin_rest'].includes(item.effect)) {
+    let care = getMerlinCare();
+    if (item.effect === 'merlin_energy') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, energy:care.energy + 30 }, 4, Date.now()); msg = '🧪 Merlin’s energy crackles back! +30 energy'; }
+    if (item.effect === 'merlin_happy') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, happiness:care.happiness + 30 }, 5, Date.now()); msg = '🧪 Merlin is delighted! +30 happiness'; }
+    if (item.effect === 'merlin_feast') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, hunger:0 }, 5, Date.now()); msg = '🧪 Merlin’s food bar is completely full!'; }
+    if (item.effect === 'merlin_play') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, happiness:care.happiness + 25, energy:care.energy - 8 }, 8, Date.now()); msg = '⚒️ Merlin chases the whistle-light! +25 happiness'; }
+    if (item.effect === 'merlin_rest') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, energy:care.energy + 35 }, 3, Date.now()); msg = '⚒️ Merlin curls up on the feather pillow. +35 energy'; }
+    gameState.merlinCare = MERLIN_CORE.sanitizeMerlinCare(care, Date.now());
+    renderPetCompanion();
+    petSay(msg);
+  }
   if (item.effect === 'rumor') {
     const rule = BIRD_DIET_RULES[Math.floor(Math.random() * BIRD_DIET_RULES.length)];
     addPlayerXp(3);
@@ -19886,7 +19897,7 @@ function recruitDiscoveredBird(key) {
   saveState();
   SFX.capture();
   showCaptureOverlay(bird);
-  if (!gameState.activePetId) selectPet(bird.id); else renderPetCompanion();
+  renderPetCompanion();
   renderBirdex(); updateHeader(); renderProfile();
   showToast(bird.commonName + ' joined your flock! -' + cost + ' coins');
   return true;
@@ -20836,7 +20847,7 @@ function renderBirdex() {
     }
   }
 
-  // Attach card and pet-selection events. Locked codex cards do not reveal species.
+  // Attach card actions. Locked codex cards do not reveal species.
   grid.querySelectorAll('.bird-card:not(.undiscovered):not(.locked-card)').forEach(card => {
     card.addEventListener('click', (e) => {
       const recruitBtn = e.target.closest('[data-action="goto-tavern"]');
@@ -20845,12 +20856,7 @@ function renderBirdex() {
         gotoTavernRecruit();
         return;
       }
-      const petBtn = e.target.closest('[data-action="make-pet"]');
-      if (petBtn) {
-        e.stopPropagation();
-        selectPet(petBtn.dataset.birdId);
-        return;
-      }
+
       const renameBtn = e.target.closest('[data-action="rename-bird"]');
       if (renameBtn) {
         e.stopPropagation();
@@ -20896,7 +20902,6 @@ function createBirdCardHTML(bird, idx) {
   const cardXpPct = cardLv >= 50 ? 100 : Math.min(100, Math.floor((cardXp / cardXpNeed) * 100));
   const cardXpTitle = cardLv >= 50 ? 'Max level' : cardXp + '/' + cardXpNeed + ' XP to LV.' + (cardLv + 1);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  const isActivePet = gameState.activePetId === bird.id;
 
   const cardArt = birdCardImgAttrs(bird);
   const artBg = cardArt
@@ -20909,7 +20914,7 @@ function createBirdCardHTML(bird, idx) {
   const cardDietBadge = (gameState.dietBadges || {})[speciesKey(canonicalSpeciesName(bird.species || bird.commonName))]
     ? '<div class="birdex-diet-badge" title="Diet mastered at the Kitchen & Pantry">🍽️ DIET</div>' : '';
   return `
-    <div class="bird-card ${isActivePet ? 'active-pet-card' : ''}" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
+    <div class="bird-card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
       <div class="bird-card-inner">
         <div class="card-front">
           ${cardDietBadge}
@@ -20920,7 +20925,7 @@ function createBirdCardHTML(bird, idx) {
           </div>
           <div class="card-level" title="${cardXpTitle}">LV.${cardLv}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
-          <button class="card-pet-front ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Walking Pet' : 'Choose as Pet'}</button>
+
           <div class="card-info">
             <div class="card-name">${escapeHtml(birdDisplayName(bird))}</div>
             <div class="card-species">${escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species))}</div>
@@ -20951,7 +20956,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-section-label">Academy placement</div>
           <div class="card-back-rooms">${academyRoomButtonsHTML(bird)}</div>
           <div class="card-back-utilities">
-            <button class="card-pet-btn ${isActivePet ? 'active' : ''}" data-action="make-pet" data-bird-id="${bird.id}">${isActivePet ? 'Your Pet' : 'Make Pet'}</button>
+
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
             <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
@@ -22922,142 +22927,131 @@ Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMo
   };
 });
 // ============================================================================
-// PET COMPANION
+// PET COMPANION — PERMANENT MERLIN
+// Merlin is the permanent main character at the top right. Recruited birds
+// remain individual Academy/battle companions, but can no longer replace him.
 // ============================================================================
 let petWanderTimer = null;
 let petFlightTimer = null;
 let petCareTimer = null;
 let petSpeechTimer = null;
+let petChatterTimer = null;
+let merlinCareReturnFocus = null;
 
-function getActivePet() {
-  if (!gameState || !Array.isArray(gameState.flock) || !gameState.activePetId) return null;
-  return gameState.flock.find(b => b.id === gameState.activePetId) || null;
+const MERLIN_GUIDE = Object.freeze({
+  id: 'merlin-guide', species: 'Merlin', commonName: 'Merlin', scientificName: 'Falco columbarius',
+  artUrl: '/burbz/bird-art-cache/merlin_burbz_manga_20260624_v2.png',
+  cutoutUrl: '/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png'
+});
+
+function getMerlinCare() {
+  gameState.merlinCare = MERLIN_CORE.sanitizeMerlinCare(gameState.merlinCare || {}, Date.now());
+  return gameState.merlinCare;
 }
 
-function ensureActivePetStillExists() {
-  if (!gameState || !gameState.activePetId || !Array.isArray(gameState.flock)) return;
-  if (!gameState.flock.some(b => b.id === gameState.activePetId)) {
-    gameState.activePetId = null;
-  }
-}
-
-function selectPet(birdId) {
-  const bird = (gameState.flock || []).find(b => b.id === birdId);
-  if (!bird) return;
-  gameState.activePetId = bird.id;
-  // Do not reset hunger/happiness on selection, use existing per-bird care if present
-  bird.care = bird.care || JSON.parse(JSON.stringify(DEFAULT_STATE.birdCare));
-  // Slightly boost happiness on selection
-  bird.care.happiness = clamp((bird.care.happiness || 0) + 5, 0, 100);
-  bird.care.lastCare = new Date().toISOString();
-  saveState();
-  renderPetCompanion();
-  renderBirdex();
-  petSay(`${birdDisplayName(bird)} is your buddy!`);
-  SFX.questComplete();
-  vibrate(25);
-}
-
-function getPetMood(bird) {
-  const pet = bird.care || DEFAULT_STATE.birdCare; // Use the bird's individual care
-  if (pet.hunger > 70) return 'Hungry';
-  if (pet.happiness < 35) return 'Needs play';
-  if (pet.happiness > 85 && pet.hunger < 35) return 'Sparkly';
-  return 'Chirpy';
+function getPetMood() {
+  const pet = getMerlinCare();
+  if (pet.hunger > 70) return 'Hungry for mealworms';
+  if (pet.energy < 30) return 'Ready for a wizard nap';
+  if (pet.happiness < 35) return 'Needs a little play';
+  if (pet.happiness > 85 && pet.hunger < 35) return 'Sparkly and magnificent';
+  if (pet.happiness > 65) return 'Bright-eyed and magical';
+  return 'Quietly plotting an adventure';
 }
 
 function setPetOnPerch() {
   const companion = $('petCompanion');
-  const sprite = $('petSprite');
   if (!companion) return;
-  clearTimeout(petFlightTimer);
+  companion.style.left = ''; companion.style.bottom = ''; companion.style.right = '14px';
+  companion.style.top = 'calc(var(--safe-top) + 76px)';
   companion.classList.remove('flying', 'facing-left');
-  companion.style.left = 'auto';
-  companion.style.right = '14px';
-  companion.style.bottom = 'auto';
-  companion.style.top = `calc(var(--safe-top) + 76px)`;
+  const sprite = $('petSprite');
   if (sprite) sprite.classList.remove('pet-walk');
+}
+
+function renderMerlinCareMenu() {
+  const menu = $('merlinCareMenu');
+  if (!menu) return;
+  const pet = getMerlinCare();
+  const values = [
+    ['merlinFoodFill', 'merlinFoodValue', Math.max(0, 100 - pet.hunger)],
+    ['merlinHappyFill', 'merlinHappyValue', pet.happiness],
+    ['merlinEnergyFill', 'merlinEnergyValue', pet.energy]
+  ];
+  values.forEach(([fillId, valueId, value]) => {
+    const safe = clamp(Math.round(Number(value) || 0), 0, 100);
+    if ($(fillId)) $(fillId).style.width = safe + '%';
+    if ($(valueId)) $(valueId).textContent = safe + '%';
+  });
+  if ($('merlinCareMood')) $('merlinCareMood').textContent = getPetMood();
+  if ($('merlinBondLevel')) $('merlinBondLevel').textContent = 'LV.' + pet.bondLevel;
+  if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(gameState.pantry && gameState.pantry.insects) || 0));
 }
 
 function renderPetCompanion() {
   const companion = $('petCompanion');
-  if (!companion) return;
-  ensureActivePetStillExists();
-  const bird = getActivePet();
   const perch = $('petPerch');
-  if (!bird) {
-    companion.classList.remove('show');
-    if (perch) perch.classList.remove('show');
-    return;
-  }
-  if (perch) perch.classList.add('show');
-
-  const pet = bird.care || DEFAULT_STATE.birdCare; // Use the bird's individual care
   const sprite = $('petSprite');
-  // The pet flies around the screen — bird-only art (cutout or emoji), never
-  // a square painted scene.
-  sprite.innerHTML = birdOnlyImgHTML(bird, 'pet-art');
-
-  $('petName').textContent = birdDisplayName(bird);
-  $('petMood').textContent = `${getPetMood(bird)} · Lv.${bird.level || 1} · Tr.${(bird.training?.trainCount || 0)}`;
-  $('petHungerFill').style.width = `${Math.max(0, 100 - (pet.hunger || 0))}%`;
-  $('petHappyFill').style.width = `${pet.happiness || 0}%`;
+  if (!companion || !sprite) return;
+  if (!sprite.querySelector('img')) sprite.innerHTML = '<img src="' + MERLIN_GUIDE.cutoutUrl + '" alt="Merlin the wizard falcon">';
   companion.classList.add('show');
+  if (perch) perch.classList.add('show');
+  renderMerlinCareMenu();
   if (!companion.classList.contains('flying')) setPetOnPerch();
+}
+
+function openMerlinCareMenu() {
+  const menu = $('merlinCareMenu');
+  const sprite = $('petSprite');
+  if (!menu) return;
+  merlinCareReturnFocus = document.activeElement;
+  renderMerlinCareMenu();
+  menu.hidden = false;
+  if (sprite) sprite.setAttribute('aria-expanded', 'true');
+  if ($('merlinCareClose')) $('merlinCareClose').focus({ preventScroll:true });
+  makePetSparkles(4); SFX.tap();
+}
+
+function closeMerlinCareMenu() {
+  const menu = $('merlinCareMenu');
+  const sprite = $('petSprite');
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  if (sprite) sprite.setAttribute('aria-expanded', 'false');
+  if (merlinCareReturnFocus && typeof merlinCareReturnFocus.focus === 'function') merlinCareReturnFocus.focus({ preventScroll:true });
+  merlinCareReturnFocus = null;
 }
 
 function petFlyOutAndReturn() {
   const companion = $('petCompanion');
   const sprite = $('petSprite');
-  const bird = getActivePet();
-  if (!companion || !sprite || !bird || !companion.classList.contains('show')) return;
-
+  if (!companion || !sprite || !companion.classList.contains('show')) return;
   clearTimeout(petFlightTimer);
   const rect = companion.getBoundingClientRect();
-  const startLeft = rect.left;
-  const maxLeft = Math.max(18, window.innerWidth - 84);
-  const minTop = Math.max(72, parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-top')) + 82 || 82);
-  const maxTop = Math.max(minTop + 60, Math.min(window.innerHeight * 0.54, window.innerHeight - 210));
-  const nextLeft = 18 + Math.random() * (maxLeft - 18);
-  const nextTop = minTop + Math.random() * (maxTop - minTop);
-
-  companion.classList.add('flying');
-  companion.classList.toggle('facing-left', nextLeft < startLeft);
-  sprite.classList.add('pet-walk');
-  companion.style.right = 'auto';
-  companion.style.bottom = 'auto';
-  companion.style.left = `${startLeft}px`;
-  companion.style.top = `${rect.top}px`;
-
-  requestAnimationFrame(() => {
-    companion.style.left = `${nextLeft}px`;
-    companion.style.top = `${nextTop}px`;
-  });
-
+  companion.style.right = 'auto'; companion.style.left = rect.left + 'px'; companion.style.top = rect.top + 'px';
+  companion.classList.add('flying'); sprite.classList.add('pet-walk');
+  const targetLeft = Math.max(10, Math.min(window.innerWidth - 72, window.innerWidth * (0.12 + Math.random() * 0.60)));
+  const targetTop = Math.max(84, Math.min(window.innerHeight - 160, window.innerHeight * (0.12 + Math.random() * 0.48)));
+  companion.classList.toggle('facing-left', targetLeft < rect.left);
+  requestAnimationFrame(() => { companion.style.left = targetLeft + 'px'; companion.style.top = targetTop + 'px'; });
   makePetSparkles(5);
-  petSay(randomPetLine());
   petFlightTimer = setTimeout(() => {
-    setPetOnPerch();
-    makePetSparkles(3);
+    const from = companion.getBoundingClientRect();
+    companion.classList.toggle('facing-left', window.innerWidth - 76 < from.left);
+    companion.style.left = Math.max(10, window.innerWidth - 76) + 'px';
+    companion.style.top = 'calc(var(--safe-top) + 76px)';
+    petFlightTimer = setTimeout(() => { setPetOnPerch(); makePetSparkles(3); }, 1850);
   }, 2200);
 }
 
-function startPetWander() {
-  clearTimeout(petWanderTimer);
-  setPetOnPerch();
-}
+function startPetWander() { clearTimeout(petWanderTimer); setPetOnPerch(); }
 
 function tickPetCare() {
-  const bird = getActivePet();
-  if (!bird) return; // Only tick care for the active pet
-
-  const pet = bird.care || DEFAULT_STATE.birdCare;
-  pet.hunger = clamp((pet.hunger || 0) + 4, 0, 100);
-  pet.happiness = clamp((pet.happiness || 80) - (pet.hunger > 65 ? 6 : 2), 0, 100);
-  pet.lastCare = new Date().toISOString();
-  // No need to set bird.care = pet here, as pet is a direct reference
-  saveState();
-  renderPetCompanion();
+  const now = Date.now();
+  const pet = getMerlinCare();
+  const elapsed = Math.max(1, Math.floor((now - (Number(pet.lastCareAt) || now)) / 60000));
+  gameState.merlinCare = MERLIN_CORE.tickMerlinCare(pet, elapsed, now);
+  saveState(); renderPetCompanion();
 }
 
 function startPetCareLoop() {
@@ -23065,126 +23059,54 @@ function startPetCareLoop() {
   petCareTimer = setInterval(() => { tickPetCare(); tickAcademy(); tickEmpireConstruction(); }, 60000);
 }
 
-function feedPet() {
-  const bird = getActivePet();
-  if (!bird) return;
-  // Feeding now teaches real diets — route to the Academy roost food tray.
-  ensureBirdAcademy(bird);
-  bird.academy.room = 'dorm';
-  academySelectedRoom = 'dorm';
-  academyFeedTrayBirdId = bird.id;
-  saveState();
-  petSay('Take me to the Roost — and pick the food I really eat!');
-  switchScreen('academy');
-}
-
-function playWithPet() {
-  const bird = getActivePet();
-  if (!bird) return;
-  const gainMessage = applyBirdTraining(bird, 'train');
-  if (gainMessage) {
-    bird.care.happiness = clamp((bird.care.happiness || 80) + 22, 0, 100);
-    bird.care.hunger = clamp((bird.care.hunger || 0) + 8, 0, 100);
-    // levelUpBird(bird, 3); // Handled by applyBirdTraining
-    saveState();
-    renderPetCompanion();
-    petSay(`Training! ${gainMessage}`);
-    makePetSparkles(8);
-    SFX.capture();
-    if (currentScreen === 'birdex') renderBirdex();
-  }
+function careForMerlin(action) {
+  const result = MERLIN_CORE.applyMerlinCareAction(getMerlinCare(), gameState.pantry || {}, action, Date.now());
+  gameState.merlinCare = result.state; gameState.pantry = result.pantry;
+  saveState(); renderPetCompanion();
+  if ($('merlinCareNote')) $('merlinCareNote').textContent = result.message;
+  petSay(result.message);
+  if (result.ok) { makePetSparkles(action === 'play' ? 8 : 5); SFX.capture(); vibrate(20); }
+  else SFX.tap();
+  return result.ok;
 }
 
 function petSay(msg) {
   const bubble = $('petSpeech');
   if (!bubble) return;
-  bubble.textContent = msg;
-  bubble.classList.add('show');
-  clearTimeout(petSpeechTimer);
-  // Longer lines stay up longer so facts are actually readable.
-  const holdMs = Math.min(6500, 2000 + msg.length * 45);
+  bubble.textContent = msg; bubble.classList.add('show'); clearTimeout(petSpeechTimer);
+  const holdMs = Math.min(8500, 2200 + msg.length * 47);
   petSpeechTimer = setTimeout(() => bubble.classList.remove('show'), holdMs);
 }
 
-// 20 funny lines + 10 bird facts. Picked at random, never repeating any of the
-// last 8, so each session feels different.
-const PET_CHATTER_LINES = [
-  'I saw a worm this morning. I let him live. He knows why.',
-  'Early bird gets the worm? I prefer brunch.',
-  'I don’t sing for free after 9am.',
-  'Statues are just humans who lost a staring contest with a pigeon.',
-  'My nest isn’t messy, it’s rustic.',
-  'The cat asked permission to enter this garden. As it should.',
-  'Migration is just a group chat that got wildly out of hand.',
-  'I could fly south for winter… or you could turn the heating up.',
-  'That scarecrow? We use it as a coat rack.',
-  'Tweet tweet. That’s copyrighted, by the way.',
-  'Bathed in a puddle today. It’s called self-care.',
-  'Seagulls don’t share chips. Don’t be a seagull.',
-  'I’m on a seafood diet. I see food and scream like a gull.',
-  'Your alarm goes off at 6am? Cute. I AM the alarm.',
-  'Feathers: 10/10, would preen again.',
-  'If I stare at the window long enough, snacks appear. Science.',
-  'The pecking order? I invented it. Look it up.',
-  'I’m not chubby, I’m fluffed for winter.',
-  'Told an owl a joke once. He didn’t give a hoot.',
-  'Free bird? Mate, this bird costs three sunflower seeds minimum.',
-  'Fact: hummingbirds are the only birds that can fly backwards.',
-  'Fact: an ostrich’s eye is bigger than its brain.',
-  'Fact: wrens can sing around 10 notes a second. Show-offs.',
-  'Fact: crows recognise human faces — and hold grudges.',
-  'Fact: swifts can stay airborne for 10 months without landing.',
-  'Fact: owls can’t move their eyes — that’s why they swivel their heads.',
-  'Fact: a robin’s red breast is for territory battles, not romance.',
-  'Fact: peregrine falcons dive at over 240 mph — fastest animal on Earth.',
-  'Fact: some ducks sleep with one eye open, half the brain on watch.',
-  'Fact: puffins can carry a dozen fish in their beak at once.'
-];
-let petRecentLines = [];
+// The count is saved. Ambient utterances 5, 10, 15… are always gameplay tips.
 function randomPetLine() {
-  const fresh = PET_CHATTER_LINES.filter(l => !petRecentLines.includes(l));
-  const pool = fresh.length ? fresh : PET_CHATTER_LINES;
-  const line = pool[Math.floor(Math.random() * pool.length)];
-  petRecentLines.push(line);
-  if (petRecentLines.length > 8) petRecentLines.shift();
-  return line;
+  const next = MERLIN_CORE.nextMerlinUtterance(getMerlinCare());
+  gameState.merlinCare = next.state; saveState();
+  return next.line;
 }
 
-// Ambient chatter: roughly every 30s (jittered 24-42s so it never feels
-// scripted), the pet pipes up with a random line while it's on screen.
-let petChatterTimer = null;
 function startPetChatterLoop() {
   clearTimeout(petChatterTimer);
   const delay = 24000 + Math.random() * 18000;
   petChatterTimer = setTimeout(() => {
     const companion = $('petCompanion');
-    if (companion && companion.classList.contains('show') && !document.hidden) {
-      petSay(randomPetLine());
-    }
+    if (companion && companion.classList.contains('show') && !document.hidden) petSay(randomPetLine());
     startPetChatterLoop();
   }, delay);
 }
 
 function makePetSparkles(count) {
   const companion = $('petCompanion');
-  if (!companion) return;
+  if (!companion || !gameState.settings.particles) return;
   const rect = companion.getBoundingClientRect();
   for (let i = 0; i < count; i++) {
-    const sp = document.createElement('div');
-    sp.className = 'pet-sparkle';
-    sp.textContent = '✦';
-    sp.style.left = (rect.left + 20 + Math.random() * 50) + 'px';
-    sp.style.top = (rect.top + 10 + Math.random() * 45) + 'px';
-    document.body.appendChild(sp);
-    setTimeout(() => sp.remove(), 1300);
+    const el = document.createElement('div');
+    el.className = 'pet-sparkle'; el.textContent = ['✦','·','✧'][Math.floor(Math.random() * 3)];
+    el.style.left = (rect.left + rect.width / 2 + (Math.random() - 0.5) * 50) + 'px';
+    el.style.top = (rect.top + rect.height / 2 + (Math.random() - 0.5) * 35) + 'px';
+    document.body.appendChild(el); setTimeout(() => el.remove(), 1300);
   }
 }
-
-$('petFeedBtn').addEventListener('click', (e) => { e.stopPropagation(); feedPet(); });
-$('petPlayBtn').addEventListener('click', (e) => { e.stopPropagation(); playWithPet(); });
-$('petCompanion').addEventListener('click', () => {
-  petFlyOutAndReturn();
-});
 
 // ============================================================================
 // QUESTS SYSTEM
@@ -23543,7 +23465,7 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Collection: taught the first time the Birdex opens.
   { chapterId:'birdex', chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'The Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
   { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
-  { chapterId:'birdex', chapter:'Collection', title:'Active companion', screen:'birdex', target:'#petCompanion', text:'Choose one recruited bird as your active companion. Feed it from the pantry, train it, and watch its hunger, happiness and health — every bird is an individual.' },
+  { chapterId:'birdex', chapter:'Collection', title:'Merlin, your guide', screen:'birdex', target:'#petCompanion', text:'Merlin is the main character and your permanent top-right companion. Tap him to check his food, happiness, energy and bond, then feed, play or let him rest.' },
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
   { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'These are your true foes: squads of evil Burbz, the usurper’s shadow soldiers. You never fight free birds — every battle you win unravels a little more of the dark magic.' },
@@ -23915,6 +23837,22 @@ $('resetDataBtn').addEventListener('click', () => {
   }
 });
 $('cloudSignOutBtn')?.addEventListener('click', signOutCloud);
+
+// Merlin Tamagotchi controls. Tapping the permanent top-right character opens
+// care instead of selecting or replacing him with a recruited bird.
+$('petSprite')?.addEventListener('click', openMerlinCareMenu);
+$('merlinCareClose')?.addEventListener('click', closeMerlinCareMenu);
+$('merlinFeedBtn')?.addEventListener('click', () => careForMerlin('feed'));
+$('merlinPlayBtn')?.addEventListener('click', () => careForMerlin('play'));
+$('merlinRestBtn')?.addEventListener('click', () => careForMerlin('rest'));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && $('merlinCareMenu') && !$('merlinCareMenu').hidden) closeMerlinCareMenu();
+});
+document.addEventListener('pointerdown', event => {
+  const menu = $('merlinCareMenu');
+  const sprite = $('petSprite');
+  if (menu && !menu.hidden && !menu.contains(event.target) && !(sprite && sprite.contains(event.target))) closeMerlinCareMenu();
+});
 
 // ============================================================================
 // NAVIGATION EVENT LISTENERS

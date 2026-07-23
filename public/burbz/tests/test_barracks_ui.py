@@ -124,14 +124,11 @@ def test_every_mapped_bird_has_a_real_transparent_cutout():
     expected.update(Path(value).stem + "_cutout.png" for value in json.loads(expansions.stdout))
     cutout_dir = ROOT / "bird-art-cache" / "cutouts"
     actual = {path.name for path in cutout_dir.glob("*_cutout.png")}
-    # Keep all mapped sprites complete while allowing the two retained legacy
-    # UK variants that are still used by older save data.
+    # The legacy Lapwing and Magpie variants were retired; every remaining
+    # cutout must now correspond to an actively mapped bird-art entry.
     assert expected <= actual
-    assert actual - expected == {
-        "lapwing_burbz_manga_20260624_v2_cutout.png",
-        "magpie_burbz_manga_20260624_cutout.png",
-    }
-    assert len(actual) == 561
+    assert not (actual - expected)
+    assert len(actual) == 559
     for path in cutout_dir.glob("*_cutout.png"):
         with Image.open(path) as image:
             assert image.mode == "RGBA", path.name

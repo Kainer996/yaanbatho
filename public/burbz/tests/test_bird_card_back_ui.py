@@ -42,9 +42,11 @@ def test_academy_room_chips_use_compact_text_with_full_accessible_labels():
     assert "aria-label=\"' + escapeHtml(label) + '\"" in fn
 
 
-def test_card_back_keeps_pet_rename_and_field_guide_actions():
+def test_card_back_keeps_rename_and_field_guide_but_removes_pet_choice():
     card = _card_template()
-    assert "Your Pet" in card
+    assert "Your Pet" not in card
+    assert "Choose as Pet" not in card
+    assert "Make Pet" not in card
     assert "Rename" in card
     assert "Field Guide" in card
 

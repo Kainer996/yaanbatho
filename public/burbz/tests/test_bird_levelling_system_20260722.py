@@ -133,25 +133,26 @@ def test_every_wing_class_has_a_scroll_and_random_drops_stay_in_catalogue():
     assert out["variety"] >= 3  # minor scrolls, tomes and wing-class scrolls all roll
 
 
-def test_walking_quest_completion_pays_the_walking_pet():
+def test_walking_quest_completion_deepens_permanent_merlin_bond():
     html = HTML_PATH.read_text(encoding="utf-8")
     src = function_source(html, "completeWalkingQuest")
-    assert "getActivePet()" in src
-    assert "summary.petXp" in src
-    assert "levelUpBird(walkingPet, summary.petXp)" in src
-    # The summary sheet shows the pet's cut next to the trainer's XP.
+    assert "getActivePet()" not in src
+    assert "summary.merlinBondXp" in src
+    assert "MERLIN_CORE.grantMerlinBondXp" in src
+    # The summary sheet shows Merlin's bond gain next to the trainer's XP.
     sheet = function_source(html, "showWalkQuestSummarySheet")
-    assert "summary.petXp" in sheet
+    assert "summary.merlinBondXp" in sheet
+    assert "Merlin bond XP" in sheet
 
 
-def test_quest_chests_can_hold_scrolls_and_teach_the_walking_pet():
+def test_quest_chests_can_hold_scrolls_and_deepen_merlin_bond():
     quest_core = QUEST_CORE_PATH.read_text(encoding="utf-8")
     assert "item: 'xp_scroll_minor'" in quest_core
     assert "item: 'xp_scroll_greater'" in quest_core
     html = HTML_PATH.read_text(encoding="utf-8")
     fix = function_source(html, "questOnPositionFix")
     assert "addBirdXpItemToBag(loot.item, 1)" in fix
-    assert "levelUpBird(chestPet, loot.xp)" in fix
+    assert "MERLIN_CORE.grantMerlinBondXp" in fix
 
 
 def test_scrolls_drop_from_expeditions_map_pickups_and_the_potion_shop():
@@ -182,6 +183,9 @@ def test_release_ships_with_a_fresh_offline_cache_version():
     sw = SW_PATH.read_text(encoding="utf-8")
     html = HTML_PATH.read_text(encoding="utf-8")
     assert "const BURBZ_CACHE = 'burbz-" in sw
-    for marker in ("quest_core.js?v=quest-path-alignment-r3-20260723", "academy_treehouse_core.js?v=kitchen-pantry-20260722"):
+    for marker in (
+        "quest_core.js?v=quest-path-alignment-r3-20260723",
+        "academy_treehouse_core.js?v=kitchen-pantry-20260722",
+    ):
         assert marker in html
         assert f"./{marker}" in sw
