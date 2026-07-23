@@ -2,10 +2,13 @@
 # ===============================================================
 # yaanbatho.com — pull the latest Burbz build onto the live server
 # ---------------------------------------------------------------
-# Downloads ONLY the Burbz files that changed (medieval 3D village
-# with RPG shops, shop-button fix, self-hosted Three.js, hardened
-# offline service worker) from GitHub main into the web root.
-# Backs up the current files first. Touches nothing else.
+# Downloads the COMPLETE Burbz app shell (page, service worker and
+# every companion .js/data file the page loads) from GitHub main
+# into the web root. A hardcoded 3-file list here once shipped
+# index.html without its companion core files, 404-ing new features
+# on live — this list must contain every file index.html references.
+# Backs up the current index.html/sw.js first. Add/update only —
+# never deletes, so live-only assets (bird art, cutscenes) survive.
 #
 # Run on the server:
 #
@@ -22,7 +25,31 @@ BASE="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/public/burbz"
 FILES=(
   "index.html"
   "sw.js"
+  "manifest.json"
+  "quest_core.js"
+  "empire_map_core.js"
+  "academy_treehouse_core.js"
+  "kitchen_pantry_core.js"
+  "scan_economy_core.js"
+  "sound_listener_core.js"
+  "battle_core.js"
+  "loot_crafting_core.js"
+  "audio_core.js"
+  "action_badge_core.js"
+  "uk_bird_expansion_50.js"
+  "uk_bird_expansion_2.js"
+  "uk_bird_expansion_3.js"
+  "uk_bird_expansion_4.js"
+  "au_bird_expansion.js"
+  "au_bird_expansion_2.js"
+  "national_bird_completion_20260715.js"
+  "spain_boundary_20260715.js"
   "lib/three.min.js"
+  "lib/maplibre-gl.js"
+  "lib/maplibre-gl.css"
+  "data/uk-bird-education-50.json"
+  "data/regional-bird-education-20260715.json"
+  "data/national-bird-completion/manifest.json"
 )
 
 log()  { printf "\033[1;36m==>\033[0m %s\n" "$*"; }
@@ -105,10 +132,12 @@ log "Installed new Burbz files (owner $OWNER)"
 # ----------------------------------------------------------------
 # 4. Verify
 # ----------------------------------------------------------------
-if grep -q 'screen-village' "$ROOT/index.html" && [[ -f "$ROOT/lib/three.min.js" ]]; then
-  printf "\n\033[1;32m  ✔ Done! yaanbatho.com/burbz now has the medieval village + shops.\033[0m\n"
-  printf "    On your phone: close the app fully and reopen (or hard-refresh)\n"
-  printf "    so the new service worker takes over. Look for the VILLAGE tab.\n"
+if grep -q 'screen-village' "$ROOT/index.html" && [[ -f "$ROOT/lib/three.min.js" && -f "$ROOT/quest_core.js" ]]; then
+  NEW_CACHE="$(grep -o "BURBZ_CACHE = '[^']*'" "$ROOT/sw.js" | head -1 || true)"
+  printf "\n\033[1;32m  ✔ Done! yaanbatho.com/burbz now serves the latest GitHub main build.\033[0m\n"
+  printf "    Live build: %s\n" "${NEW_CACHE:-unknown}"
+  printf "    On your phone: close the app fully and reopen TWICE (or hard-refresh)\n"
+  printf "    so the new service worker takes over.\n"
   printf "    To roll back: cp %s/index.html.bak-%s %s/index.html\n\n" "$ROOT" "$STAMP" "$ROOT"
 else
   die "Verification failed. Old files are untouched in *.bak-$STAMP"
