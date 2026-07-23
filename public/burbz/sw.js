@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-merlin-tamagotchi-v113-20260723';
+const BURBZ_CACHE = 'burbz-adventurers-diary-v114-20260723';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -90,6 +90,7 @@ const BURBZ_ASSETS = [
   './audio_core.js?v=medieval-bird-audio-v2-20260721',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
   './merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723',
+  './diary_core.js?v=adventurers-diary-20260723',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/ui-book.mp3',
   './assets/audio/ui-lock.mp3',
@@ -150,6 +151,7 @@ const BURBZ_CORE = [
   './audio_core.js?v=medieval-bird-audio-v2-20260721',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
   './merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723',
+  './diary_core.js?v=adventurers-diary-20260723',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/ui-book.mp3',
   './assets/audio/ui-lock.mp3',

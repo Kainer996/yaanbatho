@@ -54,7 +54,7 @@ def test_merlin_tamagotchi_menu_is_accessible_and_actionable():
         assert marker in html
     assert "merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723" in html
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-merlin-tamagotchi-v113-20260723" in sw
+    assert "burbz-adventurers-diary-v114-20260723" in sw  # cache bumped by later features; merlin assets below must stay cached
     assert "./merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723" in sw
     assert "./bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" in sw
 

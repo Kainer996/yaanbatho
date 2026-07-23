@@ -23,7 +23,7 @@
 <meta name="twitter:description" content="Turn birds you hear or photograph into collectible manga fighter companions. A playful field-guide game in progress.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Russo+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="lib/maplibre-gl.css?v=5.24.0" onerror="this.onerror=null;this.href='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css';">
 <style>
 /* ========== RESET & BASE ========== */
@@ -243,6 +243,43 @@ svg.academy-room-bg { display:block; filter:none; }
   content: ''; flex: 1; height: 2px; border-radius: 1px;
   background: linear-gradient(90deg, var(--accent), rgba(214,168,79,.25) 55%, transparent);
 }
+
+/* ========== ADVENTURER'S DIARY ==========
+   An RPG storybook: dark leather binding around aged-parchment pages, quill
+   serif type, day chapters with small-cap headings and an illuminated
+   drop-cap on the front page — the diary Merlin keeps of the whole adventure. */
+.diary-book {
+  margin: 4px 2px 18px; padding: 7px; border-radius: 14px;
+  background: linear-gradient(160deg, #4a2f1b, #2c1a0e 70%);
+  border: 1px solid rgba(240,199,103,0.35);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.55);
+}
+.diary-page {
+  border-radius: 9px; padding: 18px 16px 24px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255,246,214,0.5), rgba(255,246,214,0) 60%),
+    linear-gradient(175deg, #f3e6c2, #e7d3a4 55%, #d9bf8a);
+  color: #3b2a17; font-family: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  box-shadow: inset 0 0 34px rgba(122,84,40,0.38), inset 0 0 4px rgba(122,84,40,0.4);
+}
+.diary-crest { text-align: center; font-size: 30px; filter: drop-shadow(0 2px 3px rgba(90,60,20,0.35)); }
+.diary-main-title { text-align: center; font-size: 24px; letter-spacing: 0.04em; color: #5b3714; text-shadow: 0 1px 0 rgba(255,250,230,0.6); }
+.diary-sub { text-align: center; font-style: italic; font-size: 13px; color: #7a5a33; margin-top: 2px; }
+.diary-rule { text-align: center; color: #8a6435; margin: 10px 0 8px; font-size: 16px; }
+.diary-rule::before, .diary-rule::after { content: '——'; letter-spacing: -1px; margin: 0 8px; opacity: 0.55; }
+.diary-intro { font-size: 14.5px; line-height: 1.6; text-align: justify; margin: 4px 2px 10px; }
+.diary-intro::first-letter { font-size: 300%; float: left; line-height: 0.85; padding: 2px 6px 0 0; color: #7c1f1a; }
+.diary-stats { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 2px 0 6px; }
+.diary-stat { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(122,84,40,0.4); background: rgba(255,248,225,0.5); color: #5b3d1c; }
+.diary-chapter { margin-top: 16px; padding-top: 10px; border-top: 1px dashed rgba(122,84,40,0.45); }
+.diary-day-head { text-align: center; font-size: 15px; letter-spacing: 0.06em; color: #6d2019; font-variant: small-caps; }
+.diary-day-summary { font-style: italic; font-size: 13.5px; line-height: 1.55; color: #6a4a24; margin: 7px 2px 9px; text-align: center; }
+.diary-entry { display: flex; gap: 9px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid rgba(122,84,40,0.16); }
+.diary-entry:last-child { border-bottom: none; }
+.diary-entry-icon { flex: none; font-size: 15px; margin-top: 1px; filter: sepia(0.3); }
+.diary-entry-text { font-size: 13.8px; line-height: 1.5; color: #43301a; }
+.diary-entry-time { display: inline-block; margin-left: 7px; font-size: 11px; font-style: italic; color: #8a6a3f; white-space: nowrap; }
+.diary-blank { text-align: center; font-style: italic; color: #7a5a33; padding: 18px 8px 8px; line-height: 1.6; }
 
 /* ========== BOTTOM NAV ==========
    Monoline SVG icons instead of mixed emoji, one quiet accent colour, and the
@@ -2661,6 +2698,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div id="questsList"></div>
     </div>
 
+    <!-- ADVENTURER'S DIARY SCREEN -->
+    <div class="screen" id="screen-diary">
+      <div class="screen-title">ADVENTURER'S DIARY</div>
+      <div class="diary-book" id="diaryBook"></div>
+    </div>
+
     <!-- PROFILE SCREEN -->
     <div class="screen" id="screen-profile">
       <div class="screen-title">PROFILE</div>
@@ -2789,6 +2832,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <button class="nav-item" data-screen="quests" aria-label="Quests">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7"/><path d="M7 4a2 2 0 0 0-2 2v1.5h4V6a2 2 0 0 0-2-2ZM7 20a2 2 0 0 1-2-2v-1h4v1a2 2 0 0 1-2 2ZM10.5 9.5H16M10.5 13h5.5"/></svg></div>
       <div class="nav-label">Quests</div>
+    </button>
+    <button class="nav-item" data-screen="diary" aria-label="Diary">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.8 4.2c-4.6.5-8.2 2.5-10.4 6.1-1 1.7-1.6 3.6-1.8 5.7 2.1-.2 4-.8 5.7-1.8 3.6-2.2 5.6-5.8 6.1-10.4Z"/><path d="M4 20c2.8-2.8 5.6-5.6 9-9"/></svg></div>
+      <div class="nav-label">Diary</div>
     </button>
     <button class="nav-item" data-screen="leaderboards" aria-label="Ranks">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4Z"/><path d="M8 5.5H5a3 3 0 0 0 3 3.8M16 5.5h3a3 3 0 0 1-3 3.8M12 13.5v2.5M9.5 19c0-1.7 1.1-3 2.5-3s2.5 1.3 2.5 3M7.5 20h9"/></svg></div>
@@ -2993,6 +3040,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723"></script>
+<script src="diary_core.js?v=adventurers-diary-20260723"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -3866,7 +3914,8 @@ const DEFAULT_STATE = {
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
   starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for The Roost and Barracks
-  sideQuest: { active: null, history: [] } // Free-exploration side quests: the game charts wherever the player goes
+  sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
+  diary: { entries: [] } // Adventurer's Diary — Merlin's chronicle of everything the player has done
 };
 
 let gameState;
@@ -3986,6 +4035,7 @@ function loadState() {
   gameState.tavernPatrons = Array.isArray(gameState.tavernPatrons) ? gameState.tavernPatrons.filter(p => p && typeof p === 'object' && p.species) : [];
   gameState.mapExploredCells = Array.isArray(gameState.mapExploredCells) ? [...new Set(gameState.mapExploredCells.filter(Boolean))].slice(-180) : [];
   gameState.league = (gameState.league && typeof gameState.league === 'object' && !Array.isArray(gameState.league)) ? gameState.league : {}; // Perch League ladder (fully healed in ensureLeagueState)
+  gameState.diary = window.BurbzDiaryCore ? window.BurbzDiaryCore.sanitizeDiaryState(gameState.diary) : ((gameState.diary && typeof gameState.diary === 'object') ? gameState.diary : { entries: [] });
 
   // Diet-discovery achievement: any save with already-known diets should reflect
   // the current count at boot so the badge unlocks aren't gated behind a future feed.
@@ -4041,6 +4091,16 @@ function saveState() {
   } catch(e) {}
   queueCloudSave();
   queueActionBadgeUpdate();
+}
+
+// Adventurer's Diary: every notable deed is appended here as a typed event.
+// Callers all save right after, so this only records — it never re-renders.
+function logDiary(type, data) {
+  try {
+    if (!window.BurbzDiaryCore || !gameState) return;
+    gameState.diary = window.BurbzDiaryCore.sanitizeDiaryState(gameState.diary);
+    window.BurbzDiaryCore.appendDiaryEvent(gameState.diary, { type, ...(data || {}) }, Date.now());
+  } catch (e) {}
 }
 
 function apiHeaders(extra) {
@@ -9817,6 +9877,7 @@ function levelUpBird(bird, xpGain) {
       showToast('🎉 ' + birdDisplayName(bird) + ' reached LV.' + bird.level + '!');
       SFX.levelUp();
     } catch (e) {}
+    if (typeof logDiary === 'function') logDiary('bird_level', { species: bird.commonName || bird.species, level: bird.level });
   }
   return levelsGained;
 }
@@ -10379,6 +10440,9 @@ function claimBirdExpedition(expeditionId) {
   });
   const foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
   const bird = academyBirdById(q.birdId);
+  const expeditionTemplate = getExpeditionTemplate(q.templateId);
+  if (typeof logDiary === 'function') logDiary('expedition', { quest: (expeditionTemplate && expeditionTemplate.label) || 'an expedition', bird: (bird && (bird.commonName || bird.species)) || 'A companion', coins, xp: questXp });
+  if (foundNewClue && typeof logDiary === 'function') logDiary('clue', { title: advanced.story.title });
   if (bird) levelUpBird(bird, questXp || 10);
   // A claimed quest leaves the board for good.
   gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
@@ -11464,6 +11528,7 @@ function kitchenServeMeal() {
     const before = gameState.dietBadges[chosen.key] || 0;
     gameState.dietBadges[chosen.key] = before + 1;
     badgeEarned = before === 0;
+    if (badgeEarned && typeof logDiary === 'function') logDiary('meal', { species: chosen.name });
   }
 
   if (companion) {
@@ -12270,6 +12335,7 @@ function addPlayerXp(amount) {
   if (leveledUp) {
     SFX.levelUp();
     showToast('LEVEL UP! Now Level ' + gameState.player.level);
+    if (typeof logDiary === 'function') logDiary('level_up', { level: gameState.player.level, title: getPlayerTitle() });
   }
   updateHeader();
   saveState();
@@ -13243,6 +13309,7 @@ function completeWalkingQuest() {
   gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), summary.merlinBondXp, Date.now());
   const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
   if (bonusCoins) addCoins(bonusCoins);
+  if (typeof logDiary === 'function') logDiary('walk_quest', { name: summary.name, km: summary.distanceKm, markers: summary.checkpointsHit, markersTotal: summary.checkpointsTotal, xp: summary.xp });
   wq.history.unshift(summary);
   if (wq.history.length > 60) wq.history.length = 60;
   wq.active = null;
@@ -13529,6 +13596,7 @@ function endSideQuest() {
     path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
     sharedDraft: false
   };
+  if (typeof logDiary === 'function') logDiary('side_quest', { km: +(summary.distanceM / 1000).toFixed(2), discoveries: summary.discoveries, xp });
   sq.history.unshift(summary);
   if (sq.history.length > 40) sq.history.length = 40;
   sq.active = null;
@@ -14837,6 +14905,7 @@ function switchScreen(name) {
   if (name === 'inventory') renderInventory();
   if (name === 'forge') renderForge();
   if (name === 'quests') renderQuests();
+  if (name === 'diary') renderDiary();
   if (name === 'leaderboards') renderLeaderboards();
   if (name === 'profile') renderProfile();
   queueActionBadgeUpdate();
@@ -16118,6 +16187,7 @@ function claimCurrentVillage() {
   addBranches(-cost.branches);
   const liberatedAt = new Date().toISOString();
   empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: liberatedAt, liberatedAt, lastTributeAt: Date.now() };
+  if (typeof logDiary === 'function') logDiary('village', { name: v.name, count: empireVillages().length });
   addPlayerXp(40);
   saveState();
   SFX.victory();
@@ -19855,7 +19925,10 @@ function rememberDiscoveredBird(bird, opts = {}) {
   };
   gameState.discoveredSpecies[key] = record;
   discoveryKeysForSpecies(canonical).forEach(aliasKey => { if (aliasKey && aliasKey !== key) gameState.discoveredSpecies[aliasKey] = record; });
-  if (!existing && !opts.silent) addCoins(discoveryRewardForBird(bird));
+  if (!existing && !opts.silent) {
+    addCoins(discoveryRewardForBird(bird));
+    if (typeof logDiary === 'function') logDiary('discover', { species: canonical, rarity: record.rarity });
+  }
   return !existing;
 }
 
@@ -19886,6 +19959,7 @@ function recruitDiscoveredBird(key) {
   bird.recruitedAt = new Date().toISOString();
   ensureBirdAcademy(bird);
   gameState.flock.push(bird);
+  if (typeof logDiary === 'function') logDiary('recruit', { species: bird.commonName || bird.species, rarity: bird.rarity, cost });
   gameState.player.totalCaptures = gameState.flock.length;
   addPlayerXp(20 + (bird.rarity === 'legendary' ? 100 : bird.rarity === 'epic' ? 50 : bird.rarity === 'rare' ? 30 : bird.rarity === 'uncommon' ? 15 : 10));
   updateQuestProgress('capture', 1);
@@ -20539,6 +20613,7 @@ function craftGear(gearId) {
   addCoins(-recipe.coins);
   Object.keys(recipe.materials).forEach(matId => { stock[matId] -= recipe.materials[matId]; if (stock[matId] <= 0) delete stock[matId]; });
   gameState.inventory.gear[gearId] = (gameState.inventory.gear[gearId] || 0) + 1;
+  if (typeof logDiary === 'function') logDiary('craft', { item: item.label });
   updateQuestProgress('gear_crafted', 1);
   saveState();
   updateHeader();
@@ -22846,6 +22921,7 @@ function endPerchBattle() {
     bird.care.happiness = clamp((bird.care.happiness || 80) + (won ? 4 : -3), 0, 100);
     levelUpBird(bird, rewards.birdXp);
   });
+  if (typeof logDiary === 'function') logDiary('battle', { won, tier: tier.label, liberated: liberatedTown ? (liberatedTown.name || null) : null, promoted });
   leagueRivalCache = null; // next rival rolls fresh
   checkBadges();
   saveState();
@@ -23272,6 +23348,7 @@ function renderQuests() {
       const q = allQ.find(x => x.id === qId);
       if (q && gameState.quests[qId] && !gameState.quests[qId].claimed) {
         gameState.quests[qId].claimed = true;
+        if (typeof logDiary === 'function') logDiary('quest_claim', { name: q.name, kind: DAILY_QUESTS.includes(q) ? 'daily' : WEEKLY_QUESTS.includes(q) ? 'weekly' : 'achievement' });
         addPlayerXp(q.reward);
         saveState();
         playQuestClaimCelebration({ coins: 0, xp: q.reward, items: {} });
@@ -23306,11 +23383,64 @@ const BADGES = [
   { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 }
 ];
 
+// ============================================================================
+// ADVENTURER'S DIARY — Merlin's storybook chronicle of the whole adventure
+// ============================================================================
+function renderDiary() {
+  const book = $('diaryBook');
+  if (!book) return;
+  const core = window.BurbzDiaryCore;
+  if (!core) { book.innerHTML = ''; return; }
+  gameState.diary = core.sanitizeDiaryState(gameState.diary);
+  const entries = gameState.diary.entries;
+  const totals = {
+    name: gameState.player.name || 'the chosen one',
+    level: gameState.player.level || 1,
+    title: getPlayerTitle(),
+    discovered: discoveredSpeciesSet().size,
+    companions: (gameState.flock || []).length,
+    towns: empireVillages().length,
+    wins: gameState.player.wins || 0
+  };
+  const now = Date.now();
+  const stats = [
+    ['🐦', totals.discovered + ' species'],
+    ['🪶', totals.companions + ' companion' + (totals.companions === 1 ? '' : 's')],
+    ['🏰', totals.towns + ' town' + (totals.towns === 1 ? '' : 's') + ' freed'],
+    ['🏆', totals.wins + ' ' + (totals.wins === 1 ? 'victory' : 'victories')]
+  ].map(([icon, label]) => '<span class="diary-stat">' + icon + ' ' + escapeHtml(label) + '</span>').join('');
+
+  const chapters = core.groupEntriesByDay(entries).map(day => {
+    const lines = day.entries.map(e => {
+      const line = core.formatDiaryLine(e);
+      const when = new Date(e.t);
+      const time = when.getHours() + ':' + String(when.getMinutes()).padStart(2, '0');
+      return '<div class="diary-entry"><span class="diary-entry-icon">' + line.icon + '</span>' +
+        '<div class="diary-entry-text">' + escapeHtml(line.text) + '<span class="diary-entry-time">' + time + '</span></div></div>';
+    }).join('');
+    return '<div class="diary-chapter">' +
+      '<div class="diary-day-head">' + escapeHtml(core.diaryDayHeading(day.key, now)) + '</div>' +
+      '<p class="diary-day-summary">' + escapeHtml(core.composeDayChronicle(day.entries)) + '</p>' +
+      lines + '</div>';
+  }).join('');
+
+  book.innerHTML = '<div class="diary-page">' +
+    '<div class="diary-crest">🪶</div>' +
+    '<div class="diary-main-title">The Chronicle of Burbz</div>' +
+    '<div class="diary-sub">as recorded by Merlin, wizard falcon of the kingdom</div>' +
+    '<div class="diary-rule">❦</div>' +
+    '<p class="diary-intro">' + escapeHtml(core.diaryStorySoFar(entries, totals)) + '</p>' +
+    '<div class="diary-stats">' + stats + '</div>' +
+    (chapters || '<div class="diary-blank">The pages beyond lie blank. Go out into the world, chosen one — every bird you discover, every trail you walk and every town you free will be written here.</div>') +
+    '</div>';
+}
+
 function checkBadges() {
   if (!gameState.badges) gameState.badges = {};
   BADGES.forEach(b => {
     if (!gameState.badges[b.id] && b.condition()) {
       gameState.badges[b.id] = true;
+      if (typeof logDiary === 'function') logDiary('badge', { name: b.name });
       showToast('Badge earned: ' + b.name + '!');
     }
   });
@@ -23440,6 +23570,7 @@ const MERLIN_TUTORIAL_CHAPTERS = [
   { id:'village',      trigger:'village' },
   { id:'academy',      trigger:'academy' },
   { id:'quests',       trigger:'quests' },
+  { id:'diary',        trigger:'diary' },
   { id:'forge',        trigger:'forge' },
   { id:'inventory',    trigger:'inventory' },
   { id:'leaderboards', trigger:'leaderboards' },
@@ -23489,6 +23620,9 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'quests', chapter:'Quests', title:'Longer expeditions', screen:'quests', target:'#expeditionQuestList', text:'Starter errands are available immediately. Build the Quest Roost later for longer journeys; every quest shows its duration and rewards before your bird leaves.' },
   { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
   { chapterId:'quests', chapter:'Quests', title:'Side Quests', screen:'map', target:'#mapQuestBtn', text:'A Side Quest has no route: pocket the phone and just explore. Burbz charts wherever you go and buzzes when you stumble on chests, weapons or quest-giver birds — later you can turn your wander into a quest for others.' },
+
+  // — Diary: taught the first time the Adventurer's Diary opens.
+  { chapterId:'diary', chapter:'The Chronicle', title:'Your adventuring diary', screen:'diary', target:'#diaryBook', text:'Every deed you do — each bird discovered, town freed, trail walked and battle won — I record here with my own quill. Lose your place in the quest? Open the Diary and read the whole tale back, day by day.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
   { chapterId:'forge', chapter:'Forge', title:'The Fletcher’s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils, then equip your birds. Gear feeds straight into their fighting stats — the sharper the squad, the faster the shadow breaks.' },
