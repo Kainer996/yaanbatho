@@ -40,4 +40,4 @@ def test_footpath_offers_still_ship_on_the_map_explore_board():
 
 
 def test_change_ships_with_a_fresh_offline_cache_version():
-    assert "burbz-kitchen-core-delivery-v109-20260723" in SW
+    assert "burbz-kitchen-core-delivery-v110-20260723" in SW

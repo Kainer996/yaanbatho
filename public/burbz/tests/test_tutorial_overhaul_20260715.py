@@ -93,4 +93,4 @@ def test_persistent_screens_do_not_repeat_tutorial_essays():
 
 def test_tutorial_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-kitchen-core-delivery-v109-20260723" in sw
+    assert "burbz-kitchen-core-delivery-v110-20260723" in sw

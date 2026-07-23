@@ -14,7 +14,7 @@ try { importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715')
 try { importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715'); } catch (e) { swImportFallback('national_bird_completion_20260715.js'); }
 try { importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722'); } catch (e) { swImportFallback('uk_bird_expansion_4.js'); }
 
-const BURBZ_CACHE = 'burbz-kitchen-core-delivery-v109-20260723';
+const BURBZ_CACHE = 'burbz-kitchen-core-delivery-v110-20260723';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50 || { art: {} };
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26 || { art: {} };
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION || { art: {} };

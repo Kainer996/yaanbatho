@@ -133,5 +133,5 @@ def test_fresh_start_epoch_resets_the_whole_game_once():
 
 def test_release_is_offline_and_cache_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-kitchen-core-delivery-v109-20260723" in sw
+    assert "burbz-kitchen-core-delivery-v110-20260723" in sw
     assert "./assets/evil-burbz/evil-burb-1.png" in sw
