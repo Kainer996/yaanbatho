@@ -266,6 +266,46 @@
     return { points: cleaned, snappedFraction: snapped / dense.length };
   }
 
+  // Re-chart a route ONTO a different path network — the ways the basemap
+  // actually renders. Point-snapping can only fix small offsets; when the
+  // quest's source data disagrees with the basemap by more than the snap
+  // radius (stale mirror, missing paths) the whole walk must be rebuilt on
+  // the network the player can see. Rings are rebuilt as rings from the same
+  // start; linear routes become the network path toward the route's far end.
+  // Returns null when the network can't host the walk — callers keep the
+  // existing route rather than draw something half-invented.
+  function rechartRouteOnWays(routePts, ways, opts) {
+    opts = opts || {};
+    if (!routePts || routePts.length < 2) return null;
+    var usable = (ways || []).filter(function (w) { return w && w.length >= 2; });
+    if (!usable.length) return null;
+    var net = buildPathNetwork(usable, opts.joinM);
+    if (!net.edges.length) return null;
+    var sLat = isFinite(opts.startLat) ? opts.startLat : routePts[0].lat;
+    var sLon = isFinite(opts.startLon) ? opts.startLon : routePts[0].lon;
+    var start = insertNetworkStart(net, sLat, sLon, opts.maxSnapM || 160);
+    if (!start) return null;
+    var lenM = routeLengthM(routePts);
+    var e0 = routePts[0], e1 = routePts[routePts.length - 1];
+    var isRing = questHaversine(e0.lat, e0.lon, e1.lat, e1.lon) <= LOOP_ENDS_MEET_M;
+    if (isRing) {
+      var loop = findFootpathLoopFrom(net, start.nodeId, {
+        minLenM: Math.max(350, lenM * 0.45),
+        maxLenM: Math.max(900, lenM * 2),
+        targetLenM: Math.max(RING_MIN_LEN_M, lenM)
+      });
+      if (!loop || !loop.points || loop.points.length < 3) return null;
+      return { points: loop.points, lengthM: routeLengthM(loop.points), ring: true };
+    }
+    var endHit = insertNetworkStart(net, e1.lat, e1.lon, opts.maxSnapM || 160);
+    if (!endHit || endHit.nodeId === start.nodeId) return null;
+    var path = networkShortestPath(net, start.nodeId, endHit.nodeId);
+    if (!path || !path.edgeIds.length) return null;
+    var pts = pathPointsAlongEdges(net, start.nodeId, path.edgeIds);
+    if (pts.length < 2 || routeLengthM(pts) < 250) return null;
+    return { points: pts, lengthM: routeLengthM(pts), ring: false };
+  }
+
   // Single-point variant, for checkpoints/markers. Null when no way is close.
   function snapPointToWays(p, ways, maxSnapM) {
     maxSnapM = maxSnapM || 30;
@@ -1377,6 +1417,7 @@
     densifyRoute: densifyRoute,
     snapRouteToWays: snapRouteToWays,
     snapPointToWays: snapPointToWays,
+    rechartRouteOnWays: rechartRouteOnWays,
     buildOverpassQuery: buildOverpassQuery,
     parseOverpassTrails: parseOverpassTrails,
     parseMapWalkableFeatures: parseMapWalkableFeatures,

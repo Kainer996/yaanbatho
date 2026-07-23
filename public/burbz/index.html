@@ -2969,7 +2969,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=quest-path-alignment-20260723"></script>
+<script src="quest_core.js?v=quest-path-alignment-r2-20260723"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -12814,6 +12814,9 @@ function clearWalkingQuestFromMap() {
 // fresh tiles stream in while the player walks.
 function visibleWalkablePathWays() {
   if (!liveMap) return [];
+  // Below ~z13 the tiles carry no (or heavily simplified) path geometry —
+  // aligning to that would be worse than doing nothing.
+  try { if ((liveMap.getZoom ? liveMap.getZoom() : 0) < 13.2) return []; } catch (e) { return []; }
   const ways = [], seen = new Set();
   try {
     const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {});
@@ -12854,25 +12857,63 @@ function alignActiveQuestRouteToMapPaths(force = false) {
   if (!Array.isArray(quest.routeRaw) || quest.routeRaw.length < 2) quest.routeRaw = quest.route.map(p => p.slice());
   const raw = quest.routeRaw.map(p => ({ lat:p[0], lon:p[1] }));
   const snap = core.snapRouteToWays(raw, ways, { maxSnapM:32, stepM:12 });
-  if (!snap || !snap.points || snap.points.length < 2 || !(snap.snappedFraction > 0)) return false;
-  const route = core.simplifyRoute(snap.points, 320).map(p => [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]);
+  let newPts = null, recharted = false;
+  if (snap && snap.points && snap.points.length >= 2 && snap.snappedFraction >= 0.7) {
+    // The route already corresponds to the rendered paths — small nudge only.
+    newPts = snap.points;
+  } else if (core.rechartRouteOnWays) {
+    // The route barely touches any rendered path: its source data disagrees
+    // with the basemap. NEVER half-snap (that draws a zigzag of both worlds)
+    // — rebuild the whole walk on the path network the player can see.
+    const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+    const redo = core.rechartRouteOnWays(raw, ways, me ? { startLat: me.lat, startLon: me.lon } : {});
+    if (redo && redo.points && redo.points.length >= 2) { newPts = redo.points; recharted = true; }
+  }
+  if (!newPts) return false;
+  const route = core.simplifyRoute(newPts, 320).map(p => [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]);
   const routeChanged = JSON.stringify(route) !== JSON.stringify(quest.route);
   if (routeChanged) quest.route = route;
-  // Unreached markers ride along onto the same visible paths (≤32 m nudge, so
-  // everything stays reachable and idempotent — once on a way they stop moving).
   let markersMoved = false, extrasMoved = false;
-  quest.checkpoints.forEach(cp => {
-    if (cp.reached) return;
-    const hit = core.snapPointToWays({ lat:cp.lat, lon:cp.lon }, ways, 32);
-    if (hit && hit.distM > 0.5) { cp.lat = +hit.lat.toFixed(6); cp.lon = +hit.lon.toFixed(6); markersMoved = true; }
-  });
+  if (recharted) {
+    // The walk itself changed shape: re-base future passes on the new route
+    // and carry every unreached marker to its same relative spot along it.
+    quest.routeRaw = route.map(p => p.slice());
+    const oldRouteObj = { route: raw.map(p => [p.lat, p.lon]) };
+    const isLoop = quest.loopStyle === 'loop';
+    quest.lengthM = Math.round(isLoop ? core.routeLengthM(newPts) : core.routeLengthM(newPts) * 2);
+    quest.checkpoints.forEach(cp => {
+      if (cp.reached) return;
+      let target = null;
+      if (cp.kind === 'npc') target = newPts[0];
+      else if (cp.kind === 'finish') target = isLoop ? newPts[newPts.length - 1] : core.destPoint(newPts[0].lat, newPts[0].lon, 90, 15);
+      else target = core.pointAtFraction(newPts, core.questNearestRouteFraction(oldRouteObj, cp.lat, cp.lon));
+      if (target) { cp.lat = +target.lat.toFixed(6); cp.lon = +target.lon.toFixed(6); markersMoved = true; }
+    });
+    showToast('🗺️ The cartographers redrew your trail along the mapped footpaths');
+  } else {
+    // Unreached markers ride along onto the same visible paths (≤32 m nudge, so
+    // everything stays reachable and idempotent — once on a way they stop moving).
+    quest.checkpoints.forEach(cp => {
+      if (cp.reached) return;
+      const hit = core.snapPointToWays({ lat:cp.lat, lon:cp.lon }, ways, 32);
+      if (hit && hit.distM > 0.5) { cp.lat = +hit.lat.toFixed(6); cp.lon = +hit.lon.toFixed(6); markersMoved = true; }
+    });
+  }
+  const oldRouteForExtras = { route: raw.map(p => [p.lat, p.lon]) };
+  const placeExtra = spot => {
+    if (recharted) {
+      const p = core.pointAtFraction(newPts, core.questNearestRouteFraction(oldRouteForExtras, spot.lat, spot.lon));
+      return p ? { lat: p.lat, lon: p.lon, distM: 999 } : null;
+    }
+    return core.snapPointToWays({ lat: spot.lat, lon: spot.lon }, ways, 32);
+  };
   (Array.isArray(quest.trailNpcs) ? quest.trailNpcs : []).forEach(npc => {
     if (!npc || npc.met) return;
-    const hit = core.snapPointToWays({ lat:npc.lat, lon:npc.lon }, ways, 32);
+    const hit = placeExtra(npc);
     if (hit && hit.distM > 0.5) { npc.lat = +hit.lat.toFixed(6); npc.lon = +hit.lon.toFixed(6); extrasMoved = true; }
   });
   if (quest.trailTavern && !quest.trailTavern.visited) {
-    const hit = core.snapPointToWays({ lat:quest.trailTavern.lat, lon:quest.trailTavern.lon }, ways, 32);
+    const hit = placeExtra(quest.trailTavern);
     if (hit && hit.distM > 0.5) { quest.trailTavern.lat = +hit.lat.toFixed(6); quest.trailTavern.lon = +hit.lon.toFixed(6); extrasMoved = true; }
   }
   if (!routeChanged && !markersMoved && !extrasMoved) return false;
@@ -13719,6 +13760,9 @@ function renderQuestOfferCards(container, offers, onChoose) {
 }
 function visibleMapWalkingQuestOffers(lat, lon) {
   if (!liveMap || !window.BurbzQuestCore.parseMapWalkableFeatures) return [];
+  // Path geometry below ~z13 is absent or generalised — offers built from it
+  // would cut across the real footpaths.
+  try { if ((liveMap.getZoom ? liveMap.getZoom() : 0) < 13.2) return []; } catch (e) { return []; }
   const features = [], seen = new Set();
   try {
     const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {});
@@ -13735,7 +13779,16 @@ function visibleMapWalkingQuestOffers(lat, lon) {
 }
 function mergeQuestOffers(primary, visible) {
   const merged = (primary || []).slice();
+  // The ring charted from the basemap's own path geometry matches the lines
+  // the player actually sees drawn — prefer it over a mirror-sourced ring.
+  const visibleRing = (visible || []).find(o => o && o.ring && o.points && o.points.length >= 3);
+  if (visibleRing) {
+    const mirrorRingIdx = merged.findIndex(o => o && o.ring);
+    if (mirrorRingIdx >= 0) merged.splice(mirrorRingIdx, 1, visibleRing);
+    else merged.unshift(visibleRing);
+  }
   (visible || []).forEach(candidate => {
+    if (candidate === visibleRing) return;
     const cp = candidate.points || [], cs = cp[0], ce = cp[cp.length - 1];
     if (!cs || !ce) return;
     const duplicate = merged.some(existing => {
