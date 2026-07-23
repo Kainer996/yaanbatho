@@ -100,6 +100,51 @@ def test_snap_point_to_ways_nudges_markers_onto_the_path():
     assert far is None  # ~200 m away: never yanked across the map
 
 
+def square_network():
+    # Four ways forming a ~1.6 km square — stands in for the rendered basemap.
+    return [
+        [{"lat": 53.0000, "lon": -2.0000}, {"lat": 53.0000, "lon": -1.9940}],
+        [{"lat": 53.0000, "lon": -1.9940}, {"lat": 53.0036, "lon": -1.9940}],
+        [{"lat": 53.0036, "lon": -1.9940}, {"lat": 53.0036, "lon": -2.0000}],
+        [{"lat": 53.0036, "lon": -2.0000}, {"lat": 53.0000, "lon": -2.0000}],
+    ]
+
+
+def test_rechart_rebuilds_a_stale_ring_on_the_rendered_network():
+    # A stale ring whose geometry mostly misses the rendered square (offset
+    # ~150 m south) — snapping can't fix it, recharting must.
+    stale = [
+        {"lat": 52.99865, "lon": -1.9995},
+        {"lat": 52.9975, "lon": -1.997},
+        {"lat": 52.99865, "lon": -1.9945},
+        {"lat": 52.9998, "lon": -1.997},
+        {"lat": 52.99865, "lon": -1.9995},
+    ]
+    result = run_core(
+        "(() => { const ways=" + json.dumps(square_network()) + ";"
+        "const stale=" + json.dumps(stale) + ";"
+        "const redo=q.rechartRouteOnWays(stale, ways, {startLat:52.99995, startLon:-1.997});"
+        "if (!redo) return {redo:null};"
+        "const worst=Math.max.apply(null, redo.points.map(p=>"
+        "  Math.min.apply(null, ways.map(w=>q.nearestPointOnRoute(w,p.lat,p.lon,false).distanceM))));"
+        "const closes=q.questHaversine(redo.points[0].lat,redo.points[0].lon,"
+        "  redo.points[redo.points.length-1].lat,redo.points[redo.points.length-1].lon);"
+        "return {ring:redo.ring, lengthM:redo.lengthM, worst:worst, closes:closes}; })()"
+    )
+    assert result.get("ring") is True
+    assert 1400 < result["lengthM"] < 1900
+    assert result["worst"] < 25  # the new walk lies ON the rendered ways
+    assert result["closes"] < 25  # and still ends where it began
+
+
+def test_rechart_refuses_when_no_rendered_path_is_near_the_start():
+    stale = [{"lat": 52.99, "lon": -1.997}, {"lat": 52.985, "lon": -1.997}, {"lat": 52.99, "lon": -1.997}]
+    result = run_core(
+        "q.rechartRouteOnWays(" + json.dumps(stale) + ", " + json.dumps(square_network()) + ", {})"
+    )
+    assert result is None  # >160 m from any way: keep the old route, invent nothing
+
+
 def test_index_wires_alignment_into_start_resume_and_walking():
     html = HTML.read_text(encoding="utf-8")
     assert "function visibleWalkablePathWays" in html
@@ -107,12 +152,17 @@ def test_index_wires_alignment_into_start_resume_and_walking():
     assert html.count("alignActiveQuestRouteToMapPaths(true)") >= 3  # start, resume, loop upgrade
     assert "scheduleWalkQuestRealign" in html
     assert "snapRouteToWays" in html
+    # Badly-off routes are re-charted over the rendered network, never half-snapped.
+    assert "rechartRouteOnWays" in html
+    assert "snappedFraction >= 0.7" in html
+    # And a basemap-charted ring outranks a mirror-sourced one at discovery.
+    assert "visibleRing" in html
 
 
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-path-alignment-20260723"
+    marker = "quest_core.js?v=quest-path-alignment-r2-20260723"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
