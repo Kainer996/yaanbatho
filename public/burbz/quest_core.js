@@ -112,12 +112,171 @@
   }
 
   // Keep payload small: decimate a polyline to at most maxPts evenly spaced points.
+  // Sampling only (corridor checks, overlap fractions) — for anything that gets
+  // DRAWN use simplifyRoute, which never cuts corners.
   function decimateRoute(pts, maxPts) {
     maxPts = maxPts || 160;
     if (pts.length <= maxPts) return pts.slice();
     var out = [];
     for (var i = 0; i < maxPts; i++) out.push(pointAtFraction(pts, i / (maxPts - 1)));
     return out;
+  }
+
+  // Perpendicular distance (m) from p to segment a-b, equirectangular approx.
+  function pointSegDistM(p, a, b) {
+    var cosLat = Math.max(0.2, Math.cos(toRad(a.lat)));
+    var bx = (b.lon - a.lon) * cosLat, by = b.lat - a.lat;
+    var px = (p.lon - a.lon) * cosLat, py = p.lat - a.lat;
+    var denom = bx * bx + by * by;
+    var t = denom > 0 ? Math.max(0, Math.min(1, (px * bx + py * by) / denom)) : 0;
+    var dx = px - bx * t, dy = py - by * t;
+    return Math.sqrt(dx * dx + dy * dy) * 111320;
+  }
+
+  // Douglas-Peucker: indices of the vertices needed to stay within epsM of the
+  // original line. Kept points are always REAL vertices of the input.
+  function douglasPeuckerKeep(pts, epsM) {
+    var keep = new Array(pts.length);
+    keep[0] = keep[pts.length - 1] = true;
+    var stack = [[0, pts.length - 1]];
+    while (stack.length) {
+      var span = stack.pop(), s = span[0], e = span[1];
+      if (e - s < 2) continue;
+      var worst = -1, worstD = epsM;
+      for (var i = s + 1; i < e; i++) {
+        var d = pointSegDistM(pts[i], pts[s], pts[e]);
+        if (d > worstD) { worstD = d; worst = i; }
+      }
+      if (worst > 0) { keep[worst] = true; stack.push([s, worst], [worst, e]); }
+    }
+    var out = [];
+    for (var j = 0; j < pts.length; j++) if (keep[j]) out.push(j);
+    return out;
+  }
+
+  // Shape-preserving cap: drop redundant vertices but keep every corner, so the
+  // drawn line still lies ON the footpath. (Even resampling — the old approach
+  // for stored routes — chorded bends into straight cuts across the map.)
+  function simplifyRoute(pts, maxPts, startEpsM) {
+    maxPts = maxPts || 320;
+    if (!pts || pts.length <= 2) return (pts || []).slice();
+    var kept = null;
+    for (var eps = startEpsM || 1.2; eps <= 500; eps *= 1.7) {
+      kept = douglasPeuckerKeep(pts, eps);
+      if (kept.length <= maxPts) break;
+    }
+    if (!kept || kept.length > maxPts) {
+      kept = [];
+      for (var i = 0; i < maxPts; i++) kept.push(Math.round(i * (pts.length - 1) / (maxPts - 1)));
+    }
+    return kept.map(function (k) { return pts[k]; });
+  }
+
+  // Insert interpolated points so consecutive spacing is at most stepM.
+  function densifyRoute(pts, stepM, maxPts) {
+    stepM = stepM || 12;
+    maxPts = maxPts || 1400;
+    if (!pts || pts.length < 2) return (pts || []).slice();
+    var out = [pts[0]];
+    for (var i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i];
+      var n = Math.min(60, Math.floor(questHaversine(a.lat, a.lon, b.lat, b.lon) / stepM));
+      for (var k = 1; k <= n; k++) {
+        if (out.length >= maxPts - (pts.length - i)) break;
+        var f = k / (n + 1);
+        out.push({ lat: a.lat + (b.lat - a.lat) * f, lon: a.lon + (b.lon - a.lon) * f });
+      }
+      out.push(b);
+    }
+    return out;
+  }
+
+  function projectOntoSegment(p, a, b) {
+    var cosLat = Math.max(0.2, Math.cos(toRad(a.lat)));
+    var bx = (b.lon - a.lon) * cosLat, by = b.lat - a.lat;
+    var px = (p.lon - a.lon) * cosLat, py = p.lat - a.lat;
+    var denom = bx * bx + by * by;
+    var t = denom > 0 ? Math.max(0, Math.min(1, (px * bx + py * by) / denom)) : 0;
+    var pt = { lat: a.lat + (b.lat - a.lat) * t, lon: a.lon + (b.lon - a.lon) * t };
+    return { pt: pt, distM: questHaversine(p.lat, p.lon, pt.lat, pt.lon) };
+  }
+
+  // Snap a route onto real path geometry. Quest routes can come from sources
+  // that disagree slightly with the basemap the player is looking at (mirror
+  // lag, tile generalisation) — snapping onto the walkable ways rendered on
+  // screen makes the golden line hug the same footpaths the player is
+  // physically standing on. Points with no way within maxSnapM keep their
+  // original position, so partial tile coverage still improves the route.
+  function snapRouteToWays(pts, ways, opts) {
+    opts = opts || {};
+    var maxSnapM = opts.maxSnapM || 30;
+    var stepM = opts.stepM || 12;
+    if (!pts || pts.length < 2) return { points: (pts || []).slice(), snappedFraction: 0 };
+    var segs = [];
+    (ways || []).forEach(function (w, wi) {
+      if (!w || w.length < 2) return;
+      for (var i = 1; i < w.length; i++) {
+        var a = w[i - 1], b = w[i];
+        if (a && b && isFinite(a.lat) && isFinite(a.lon) && isFinite(b.lat) && isFinite(b.lon)) segs.push({ a: a, b: b, way: wi });
+      }
+    });
+    if (!segs.length) return { points: pts.slice(), snappedFraction: 0 };
+    // Grid cells at least 2x the snap radius wide: a point only ever needs to
+    // look in its own cell because segments register with one cell of padding.
+    var cellDeg = Math.max(60, maxSnapM * 2) / 111320;
+    var cosRef = Math.max(0.2, Math.cos(toRad(pts[0].lat)));
+    var grid = {};
+    function cx(lon) { return Math.floor(lon * cosRef / cellDeg); }
+    function cy(lat) { return Math.floor(lat / cellDeg); }
+    segs.forEach(function (s, si) {
+      var x0 = cx(Math.min(s.a.lon, s.b.lon)) - 1, x1 = cx(Math.max(s.a.lon, s.b.lon)) + 1;
+      var y0 = cy(Math.min(s.a.lat, s.b.lat)) - 1, y1 = cy(Math.max(s.a.lat, s.b.lat)) + 1;
+      if ((x1 - x0 + 1) * (y1 - y0 + 1) > 4000) return; // degenerate mega-segment
+      for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) {
+        var k = x + '_' + y;
+        (grid[k] = grid[k] || []).push(si);
+      }
+    });
+    var dense = densifyRoute(pts, stepM, opts.maxDensePts || 1400);
+    var snapped = 0, lastWay = -1;
+    var out = dense.map(function (p) {
+      var cands = grid[cx(p.lon) + '_' + cy(p.lat)] || [];
+      var best = null, bestSame = null;
+      for (var i = 0; i < cands.length; i++) {
+        var s = segs[cands[i]];
+        var hit = projectOntoSegment(p, s.a, s.b);
+        if (hit.distM > maxSnapM) continue;
+        if (!best || hit.distM < best.distM) best = { distM: hit.distM, pt: hit.pt, way: s.way };
+        if (s.way === lastWay && (!bestSame || hit.distM < bestSame.distM)) bestSame = { distM: hit.distM, pt: hit.pt, way: s.way };
+      }
+      // Continuity: keep following the way we're on unless another is clearly
+      // closer — stops the line zigzagging between two parallel paths.
+      var pick = best;
+      if (bestSame && best && bestSame.way !== best.way && bestSame.distM <= best.distM + 8) pick = bestSame;
+      if (!pick) { lastWay = -1; return p; }
+      lastWay = pick.way;
+      snapped++;
+      return { lat: pick.pt.lat, lon: pick.pt.lon };
+    });
+    var cleaned = [out[0]];
+    for (var j = 1; j < out.length; j++) {
+      var prev = cleaned[cleaned.length - 1];
+      if (j === out.length - 1 || questHaversine(prev.lat, prev.lon, out[j].lat, out[j].lon) >= 1.5) cleaned.push(out[j]);
+    }
+    return { points: cleaned, snappedFraction: snapped / dense.length };
+  }
+
+  // Single-point variant, for checkpoints/markers. Null when no way is close.
+  function snapPointToWays(p, ways, maxSnapM) {
+    maxSnapM = maxSnapM || 30;
+    if (!p || !isFinite(p.lat) || !isFinite(p.lon)) return null;
+    var best = null;
+    (ways || []).forEach(function (w) {
+      if (!w || w.length < 2) return;
+      var n = nearestPointOnRoute(w, p.lat, p.lon, false);
+      if (n && n.distanceM <= maxSnapM && (!best || n.distanceM < best.distanceM)) best = n;
+    });
+    return best ? { lat: best.point.lat, lon: best.point.lon, distM: best.distanceM } : null;
   }
 
   // ---------------- Overpass (OpenStreetMap) trail discovery ----------------
@@ -855,7 +1014,9 @@
     var rawPts = offer.points;
     var loopStyle = offer.kind === 'adventure' ? 'loop' : offerLoopStyle(rawPts);
     if (loopStyle === 'out-and-back') rawPts = trimRouteToLength(rawPts, OUT_AND_BACK_ONE_WAY_CAP_M);
-    var pts = decimateRoute(rawPts, 160);
+    // Shape-preserving: the stored route must trace the real footpath, corners
+    // included, or the drawn line sends the player the wrong way.
+    var pts = simplifyRoute(rawPts, 320);
     var oneWayM = routeLengthM(pts);
     var lenM = loopStyle === 'out-and-back' ? oneWayM * 2 : oneWayM; // walking distance incl. return leg
     // Flags roughly every 350m of the polyline they sit on (the one-way leg for
@@ -915,7 +1076,7 @@
     if (!quest || quest.completedAt) return false;
     if (quest.loopStyle !== 'out-and-back' || quest.loopedBack) return false;
     if (!loop || !loop.loopedBack || !loop.points || loop.points.length < 2) return false;
-    var pts = decimateRoute(loop.points, 160);
+    var pts = simplifyRoute(loop.points, 320);
     quest.route = pts.map(function (p) { return [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]; });
     quest.loopStyle = 'loop';
     quest.loopedBack = true;
@@ -1212,6 +1373,10 @@
     questChainTargetIndices: questChainTargetIndices,
     pointAtFraction: pointAtFraction,
     decimateRoute: decimateRoute,
+    simplifyRoute: simplifyRoute,
+    densifyRoute: densifyRoute,
+    snapRouteToWays: snapRouteToWays,
+    snapPointToWays: snapPointToWays,
     buildOverpassQuery: buildOverpassQuery,
     parseOverpassTrails: parseOverpassTrails,
     parseMapWalkableFeatures: parseMapWalkableFeatures,
