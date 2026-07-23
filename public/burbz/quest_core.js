@@ -518,11 +518,22 @@
 
   // ---------------- Footpath ring quests (graph loops, no routing server) ----------------
 
+  // Two separate tolerances, because conflating them is what put a straight
+  // diagonal across the footpath. joinM (generous) decides where to SPLIT a way
+  // for a T-junction — harmless if a touch loose. mergeM (tight) decides which
+  // endpoints FUSE into one shared node — and fusing two genuinely-different
+  // path ends that sit, say, 15 m apart is what makes the drawn ring slash
+  // straight across the gap between them. Real OSM/tile junctions share the
+  // exact same node (gap ~0), so a tight mergeM keeps every true junction while
+  // refusing to invent a connection where the map shows none.
+  var PATH_MERGE_M = 8;
+
   // Build a node/edge graph from walkable way geometries. Ways are split where
-  // another way's endpoint touches them (junctions), then endpoints within
-  // joinM merge into shared nodes. Edges keep their full geometry.
-  function buildPathNetwork(ways, joinM) {
+  // another way's endpoint touches them (within joinM), then endpoints within
+  // mergeM merge into shared nodes. Edges keep their full real geometry.
+  function buildPathNetwork(ways, joinM, mergeM) {
     joinM = joinM || 20;
+    mergeM = mergeM || Math.min(joinM, PATH_MERGE_M);
     var segs = (ways || []).filter(function (w) { return w && w.length >= 2; });
     var cellDeg = Math.max(joinM, 1) / 111320;
     function gridCell(lat, lon) {
@@ -566,7 +577,7 @@
     function nodeIdFor(p) {
       var cands = gridNear(nodeGrid, p.lat, p.lon);
       for (var i = 0; i < cands.length; i++) {
-        if (questHaversine(nodes[cands[i]].lat, nodes[cands[i]].lon, p.lat, p.lon) <= joinM) return cands[i];
+        if (questHaversine(nodes[cands[i]].lat, nodes[cands[i]].lon, p.lat, p.lon) <= mergeM) return cands[i];
       }
       var id = nodes.length;
       nodes.push({ lat: p.lat, lon: p.lon, edges: [] });
@@ -664,7 +675,15 @@
     var cur = fromNode;
     edgeIds.forEach(function (eid) {
       var seg = edgePointsFrom(net, eid, cur);
-      pts = pts.concat(seg.slice(1));
+      // Two edges meet at a shared graph node, but each edge keeps its own real
+      // endpoint — at a true junction those endpoints coincide, so we drop the
+      // duplicate. When they differ (a small tolerated fusion), KEEP the next
+      // edge's real start: the line then walks edge A to its real end and
+      // bridges to edge B's real start, instead of skipping B's endpoint and
+      // cutting a diagonal across the gap.
+      var last = pts[pts.length - 1];
+      var coincident = last && seg[0] && questHaversine(last.lat, last.lon, seg[0].lat, seg[0].lon) <= 1;
+      pts = pts.concat(seg.slice(coincident ? 1 : 0));
       var e = net.edges[eid];
       cur = e.a === cur ? e.b : e.a;
     });

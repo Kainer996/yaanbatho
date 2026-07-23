@@ -145,6 +145,55 @@ def test_rechart_refuses_when_no_rendered_path_is_near_the_start():
     assert result is None  # >160 m from any way: keep the old route, invent nothing
 
 
+def test_graph_does_not_fuse_distinct_path_ends_into_a_straight_chord():
+    # Two footpaths whose nearest ends sit ~14.5 m apart — DISTINCT paths that do
+    # NOT share an OSM node. The old graph fused any endpoints within 20 m into
+    # one node, then pathPointsAlongEdges drew a straight diagonal across the gap
+    # (the "line cuts across the footpath" bug). A tight merge tolerance must
+    # keep them as separate nodes.
+    way_a = [{"lat": 53.0000, "lon": -2.0000}, {"lat": 53.0000, "lon": -1.9970}]
+    way_b = [{"lat": 53.00013, "lon": -1.9970}, {"lat": 53.00013, "lon": -2.0000}]
+    result = run_core(
+        "(() => { const a=" + json.dumps(way_a) + ", b=" + json.dumps(way_b) + ";"
+        "const wide=q.buildPathNetwork([a.map(p=>({...p})),b.map(p=>({...p}))], 20, 20).nodes.length;"
+        "const tight=q.buildPathNetwork([a.map(p=>({...p})),b.map(p=>({...p}))], 20).nodes.length;"
+        "return {wide, tight}; })()"
+    )
+    assert result["wide"] == 2   # old behaviour fuses the 14.5 m gap -> chord
+    assert result["tight"] == 4  # default now keeps the four ends distinct
+
+
+def test_true_junction_still_fuses_so_rings_still_form():
+    # Endpoints that genuinely coincide (a real OSM junction) must still merge,
+    # or footpath rings would stop forming. The square's corners are coincident.
+    square = [
+        [{"lat": 53.0000, "lon": -2.0000}, {"lat": 53.0000, "lon": -1.9940}],
+        [{"lat": 53.0000, "lon": -1.9940}, {"lat": 53.0036, "lon": -1.9940}],
+        [{"lat": 53.0036, "lon": -1.9940}, {"lat": 53.0036, "lon": -2.0000}],
+        [{"lat": 53.0036, "lon": -2.0000}, {"lat": 53.0000, "lon": -2.0000}],
+    ]
+    osm = {"elements": [
+        {"type": "way", "id": i + 1, "tags": {"highway": "footway", "designation": "public_footpath"}, "geometry": g}
+        for i, g in enumerate(square)
+    ]}
+    offers = run_core(f"q.parseOverpassTrails({json.dumps(osm)},52.99995,-1.9970)")
+    rings = [o for o in offers if o.get("ring")]
+    assert len(rings) == 1
+    ring = rings[0]
+    # Every drawn segment must be a real edge of the square (~600 m sides
+    # decimated), never a diagonal chord across a corner. The square is 600 m
+    # per side; a corner-cutting chord would be much shorter but OFF the path —
+    # assert instead that the ring closes and stays the right length.
+    assert 1400 < ring["lengthM"] < 1800
+    # No single segment should jump more than one side length (no cross-square cut)
+    seg_check = run_core(
+        "(() => { const pts=" + json.dumps(ring["points"]) + "; let mx=0;"
+        "for(let i=1;i<pts.length;i++) mx=Math.max(mx,q.questHaversine(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon));"
+        "return Math.round(mx); })()"
+    )
+    assert seg_check <= 620  # longest hop is one side, not a diagonal across
+
+
 def test_index_wires_alignment_into_start_resume_and_walking():
     html = HTML.read_text(encoding="utf-8")
     assert "function visibleWalkablePathWays" in html
@@ -162,7 +211,7 @@ def test_index_wires_alignment_into_start_resume_and_walking():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-path-alignment-r2-20260723"
+    marker = "quest_core.js?v=quest-path-alignment-r3-20260723"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
