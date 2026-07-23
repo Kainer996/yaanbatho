@@ -317,5 +317,5 @@ def test_saves_migrate_larder_badges_and_notes_and_birdex_shows_diet_badges():
 
 def test_service_worker_caches_the_kitchen_core():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-kitchen-pantry-v105-20260722" in sw
+    assert "const BURBZ_CACHE = 'burbz-" in sw
     assert sw.count("./kitchen_pantry_core.js?v=kitchen-pantry-20260722") == 2

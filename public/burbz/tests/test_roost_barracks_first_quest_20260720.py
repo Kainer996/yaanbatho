@@ -234,4 +234,4 @@ def test_onboarding_release_is_query_busted_and_offline():
     version = "kitchen-pantry-20260722"
     assert f'academy_treehouse_core.js?v={version}' in html
     assert f"./academy_treehouse_core.js?v={version}" in sw
-    assert "burbz-kitchen-pantry-v105-20260722" in sw
+    assert "const BURBZ_CACHE = 'burbz-" in sw

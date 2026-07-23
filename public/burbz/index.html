@@ -2969,7 +2969,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=evil-burbz-squads-20260720"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=bird-levelling-20260722"></script>
+<script src="quest_core.js?v=quest-path-alignment-20260723"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -12399,7 +12399,7 @@ function wireMapRotateOnly() {
   liveMap.on('rotate', () => applyPlayerHeading(liveMap.getBearing()));
 }
 
-function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); scheduleZoomCollectibleRefresh(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
+function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); scheduleZoomCollectibleRefresh(); scheduleWalkQuestRealign(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
 // Zooming in/out changes how much loot is revealed, so redraw the pickups when
 // the zoom band flips (debounced so a continuous pinch doesn't thrash the DOM).
 let liveMapZoomPickupBand = null, liveMapZoomPickupTimer = null;
@@ -12766,6 +12766,7 @@ async function startWalkingQuestFromOffer(offer) {
   wq.active = quest;
   walkQuestLastSave = Date.now();
   saveState();
+  alignActiveQuestRouteToMapPaths(true);
   if (!quest.likelyBirds.length) {
     // Started without opening the info sheet (e.g. charted adventure) — scout
     // the route's birds in the background so the bonus still applies.
@@ -12803,6 +12804,91 @@ function clearWalkingQuestFromMap() {
   clearTrailExtraMarkers();
   drawWalkingQuestRoute();
   updateWalkQuestHud();
+}
+
+// ---- Quest route ↔ footpath alignment ----
+// The golden dashed line must sit ON the footpaths the player sees drawn on
+// the map. Trail sources (Overpass mirrors, routers) can lag behind or
+// generalise geometry, so the active route is re-snapped onto the walkable
+// ways in the loaded map tiles — at quest start, on resume, and again as
+// fresh tiles stream in while the player walks.
+function visibleWalkablePathWays() {
+  if (!liveMap) return [];
+  const ways = [], seen = new Set();
+  try {
+    const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {});
+    sources.forEach(sourceId => {
+      let rows = [];
+      try { rows = liveMap.querySourceFeatures(sourceId, { sourceLayer:'transportation' }) || []; } catch (e) {}
+      rows.forEach(feature => {
+        const props = feature && feature.properties || {};
+        const cls = String(props.subclass || props.class || props.type || '').toLowerCase();
+        if (!/path|footway|bridleway|track|pedestrian|cycleway|steps/.test(cls)) return;
+        const geom = feature.geometry || {};
+        const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.type === 'MultiLineString' ? geom.coordinates : [];
+        lines.forEach(coords => {
+          if (!coords || coords.length < 2) return;
+          const key = coords.length + '|' + coords[0] + '|' + coords[coords.length - 1];
+          if (seen.has(key)) return;
+          seen.add(key);
+          const pts = coords.filter(c => c && isFinite(c[0]) && isFinite(c[1])).map(c => ({ lat:Number(c[1]), lon:Number(c[0]) }));
+          if (pts.length >= 2) ways.push(pts);
+        });
+      });
+    });
+  } catch (e) {}
+  return ways;
+}
+let walkQuestAlignState = { questId:null, lastAt:0 };
+let walkQuestRealignTimer = null;
+function alignActiveQuestRouteToMapPaths(force = false) {
+  const quest = activeWalkingQuest();
+  const core = window.BurbzQuestCore;
+  if (!quest || !liveMap || !core || !core.snapRouteToWays) return false;
+  const now = Date.now();
+  if (!force && walkQuestAlignState.questId === quest.id && now - walkQuestAlignState.lastAt < 6000) return false;
+  const ways = visibleWalkablePathWays();
+  if (!ways.length) return false;
+  walkQuestAlignState = { questId: quest.id, lastAt: now };
+  // Always re-snap from the ORIGINAL route so repeated passes never drift.
+  if (!Array.isArray(quest.routeRaw) || quest.routeRaw.length < 2) quest.routeRaw = quest.route.map(p => p.slice());
+  const raw = quest.routeRaw.map(p => ({ lat:p[0], lon:p[1] }));
+  const snap = core.snapRouteToWays(raw, ways, { maxSnapM:32, stepM:12 });
+  if (!snap || !snap.points || snap.points.length < 2 || !(snap.snappedFraction > 0)) return false;
+  const route = core.simplifyRoute(snap.points, 320).map(p => [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]);
+  const routeChanged = JSON.stringify(route) !== JSON.stringify(quest.route);
+  if (routeChanged) quest.route = route;
+  // Unreached markers ride along onto the same visible paths (≤32 m nudge, so
+  // everything stays reachable and idempotent — once on a way they stop moving).
+  let markersMoved = false, extrasMoved = false;
+  quest.checkpoints.forEach(cp => {
+    if (cp.reached) return;
+    const hit = core.snapPointToWays({ lat:cp.lat, lon:cp.lon }, ways, 32);
+    if (hit && hit.distM > 0.5) { cp.lat = +hit.lat.toFixed(6); cp.lon = +hit.lon.toFixed(6); markersMoved = true; }
+  });
+  (Array.isArray(quest.trailNpcs) ? quest.trailNpcs : []).forEach(npc => {
+    if (!npc || npc.met) return;
+    const hit = core.snapPointToWays({ lat:npc.lat, lon:npc.lon }, ways, 32);
+    if (hit && hit.distM > 0.5) { npc.lat = +hit.lat.toFixed(6); npc.lon = +hit.lon.toFixed(6); extrasMoved = true; }
+  });
+  if (quest.trailTavern && !quest.trailTavern.visited) {
+    const hit = core.snapPointToWays({ lat:quest.trailTavern.lat, lon:quest.trailTavern.lon }, ways, 32);
+    if (hit && hit.distM > 0.5) { quest.trailTavern.lat = +hit.lat.toFixed(6); quest.trailTavern.lon = +hit.lon.toFixed(6); extrasMoved = true; }
+  }
+  if (!routeChanged && !markersMoved && !extrasMoved) return false;
+  saveState();
+  drawWalkingQuestRoute();
+  if (markersMoved) questMapMarkers.forEach((mk, idx) => {
+    const cp = quest.checkpoints[idx];
+    if (mk && cp) { try { mk.setLngLat([cp.lon, cp.lat]); } catch (e) {} }
+  });
+  if (extrasMoved) { try { drawTrailExtrasOnMap(quest); } catch (e) {} }
+  return true;
+}
+function scheduleWalkQuestRealign() {
+  if (!activeWalkingQuest()) return;
+  clearTimeout(walkQuestRealignTimer);
+  walkQuestRealignTimer = setTimeout(() => alignActiveQuestRouteToMapPaths(), 900);
 }
 function drawWalkingQuestOnMap() {
   const quest = activeWalkingQuest();
@@ -13011,7 +13097,9 @@ function maybeChartLoopHome(quest, opts) {
     const act = activeWalkingQuest();
     if (!act || act.id !== quest.id) return;
     if (core.upgradeQuestWithLoop(act, loop)) {
+      act.routeRaw = null; // route replaced — re-base the footpath alignment on it
       saveState();
+      alignActiveQuestRouteToMapPaths(true);
       drawWalkingQuestOnMap();
       SFX.tap();
       showToast('🧭 The cartographers charted you a loop home — new footpaths, no backtracking!');
@@ -13023,6 +13111,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const quest = activeWalkingQuest();
   if (!quest) return [];
   maybeChartLoopHome(quest);
+  scheduleWalkQuestRealign(); // fresh tiles along the walk keep the line on-path
   const finishWasReady = window.BurbzQuestCore.questFinishIsReady(quest);
   const events = window.BurbzQuestCore.questProcessFix(quest, lat, lon, accuracy, tOverride);
   events.forEach(ev => {
@@ -13550,6 +13639,9 @@ function resumeWalkingQuestIfAny() {
   if (!quest) { updateWalkQuestHud(); return; }
   quest.lastFix = null; // never count the jump between play sessions as walked distance
   drawWalkingQuestOnMap();
+  // Tiles are still loading at map 'load' — align the saved route to the
+  // rendered footpaths once they're in.
+  try { liveMap.once('idle', () => alignActiveQuestRouteToMapPaths(true)); } catch (e) {}
 }
 
 // ---- Quest overview: distinct, calm route colours from above ----
@@ -13678,7 +13770,7 @@ function questOverviewGeoJSON() {
   return { type: 'FeatureCollection', features: questOverview.offers.map((o, i) => ({
     type: 'Feature',
     properties: { offerIdx: i, name: o.name, color: questOverviewColor(i), selected: questOverview.selectedIndex === i },
-    geometry: { type: 'LineString', coordinates: window.BurbzQuestCore.decimateRoute(questOfferDisplayPoints(o), 80).map(p => [p.lon, p.lat]) }
+    geometry: { type: 'LineString', coordinates: window.BurbzQuestCore.simplifyRoute(questOfferDisplayPoints(o), 120).map(p => [p.lon, p.lat]) }
   })) };
 }
 function drawQuestOverviewLines() {

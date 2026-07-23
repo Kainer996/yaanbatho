@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-terrain-reverted-v109-20260722';
+const BURBZ_CACHE = 'burbz-quest-path-alignment-v110-20260723';
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -38,7 +38,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
-  './quest_core.js?v=bird-levelling-20260722',
+  './quest_core.js?v=quest-path-alignment-20260723',
   './academy_treehouse_core.js?v=kitchen-pantry-20260722',
   './kitchen_pantry_core.js?v=kitchen-pantry-20260722',
   './scan_economy_core.js',
