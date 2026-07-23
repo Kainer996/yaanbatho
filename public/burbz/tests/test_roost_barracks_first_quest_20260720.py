@@ -95,11 +95,11 @@ def test_existing_tutorial_progress_replays_only_academy_and_quests():
 
 def test_existing_v4_saves_receive_the_missing_opening_budget_once():
     html = HTML_PATH.read_text(encoding="utf-8")
-    assert "academyBuilderVersion: 6" in html
+    assert "academyBuilderVersion: 7" in html
 
     load = html[html.index("function loadState()") : html.index("function saveState()")]
     assert "const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0" in load
-    assert "academyBuilderVersionBeforeDefaults < 6" in load
+    assert "academyBuilderVersionBeforeDefaults < 7" in load
     assert "gameState.academyBuilderVersion = academyBuilderVersionBeforeDefaults" in load
 
     migration = html[
@@ -111,6 +111,7 @@ def test_existing_v4_saves_receive_the_missing_opening_budget_once():
     assert "constructionCoins + recruitmentReserve" in migration
     assert "gameState.starterTimber.taken[i] = true" in migration
     assert "gameState.academyBuilderVersion = 6" in migration
+    assert "gameState.academyBuilderVersion = 7" in migration
 
 
 def test_real_build_discovery_recruit_and_starter_dispatch_path_runs_end_to_end():
@@ -175,6 +176,7 @@ function renderBirdExpeditions(){}
 function academyBirdById(id){return gameState.flock.find(b=>b.id===id)||null;}
 function isStarterExpeditionTemplate(id){return ['find_seed','find_coins','branch_run','scavenge'].includes(id);}
 function birdHasActiveExpedition(){return false;}
+function warnOrBlockBirdWork(){return true;}
 """ + actual_functions + """
 const roostBuilt=academyBuildBuilding('dorm');
 const barracksBuilt=academyBuildBuilding('tavern');
@@ -225,13 +227,13 @@ console.log(JSON.stringify({missingBoth,barracksOnly,established}));
     assert result["barracksOnly"]["player"] == {"coins": 160, "branches": 10}
     assert len(result["barracksOnly"]["starterTimber"]["taken"]) == 6
     assert result["established"]["player"] == {"coins": 3, "branches": 2}
-    assert result["established"]["academyBuilderVersion"] == 6
+    assert result["established"]["academyBuilderVersion"] == 7
 
 
 def test_onboarding_release_is_query_busted_and_offline():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    version = "charm-diplomacy-20260723"
+    version = "diet-hunger-release-20260723"
     assert f'academy_treehouse_core.js?v={version}' in html
     assert f"./academy_treehouse_core.js?v={version}" in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

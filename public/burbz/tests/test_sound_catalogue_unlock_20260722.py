@@ -85,7 +85,14 @@ function detect(name, scientificName, catalogMatched) {
 """
     functions = "\n".join(
         function_source(html, name)
-        for name in ("speciesKey", "canonicalSpeciesName", "createBirdEntry", "handleBirdCandidates")
+        for name in (
+            "dietHungerCore",
+            "defaultBirdCare",
+            "speciesKey",
+            "canonicalSpeciesName",
+            "createBirdEntry",
+            "handleBirdCandidates",
+        )
     )
     driver = """
 const nameFails = [];

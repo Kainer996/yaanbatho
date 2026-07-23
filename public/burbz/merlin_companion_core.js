@@ -42,7 +42,7 @@
   // below this is exactly one hundred additional things for Merlin to say.
   const NEW_CHATTER_LINES = [
     'A wizard is never late. He is merely circling on a thermal.',
-    'My wand says adventure. My stomach says mealworms.',
+    'My wand says adventure. My stomach says falcon food.',
     'I polished my beak. The kingdom may now proceed.',
     'I have consulted the clouds. They remain extremely vague.',
     'One does not simply walk into a nest. Wipe your feet first.',
@@ -159,16 +159,85 @@
     lastCareAt: null,
     lastFedAt: null,
     lastPlayedAt: null,
-    lastRestedAt: null
+    lastRestedAt: null,
+    lastHungerAt: null,
+    hungerTransactions: [],
+    hungerTransactionLog: []
   });
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, Number(value) || 0));
   }
 
+  function normalizeHungerTransactions(source) {
+    const seen = new Set();
+    const out = [];
+    []
+      .concat(Array.isArray(source && source.hungerTransactions) ? source.hungerTransactions : [])
+      .concat(Array.isArray(source && source.hungerTransactionLog) ? source.hungerTransactionLog : [])
+      .concat(Array.isArray(source && source.hungerHistory) ? source.hungerHistory : [])
+      .forEach(row => {
+      const id = typeof row === 'string' ? row : row && row.id;
+      const clean = String(id || '').trim();
+      if (clean && !seen.has(clean)) { seen.add(clean); out.push(clean); }
+    });
+    return out;
+  }
+
+  function normalizeHungerLog(source, ids, now) {
+    const seen = new Set();
+    const out = [];
+    const push = row => {
+      const id = String(row && row.id || '').trim();
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      out.push({
+        id,
+        type: String(row.type || 'merlin-care'),
+        activityId: row.activityId == null ? null : String(row.activityId),
+        delta: Number.isFinite(Number(row.delta)) ? Number(row.delta) : 0,
+        before: Number.isFinite(Number(row.before)) ? Number(row.before) : null,
+        after: Number.isFinite(Number(row.after)) ? Number(row.after) : null,
+        at: Number(row.at) || Number(source && source.lastHungerAt) || Number(now) || Date.now()
+      });
+    };
+    (Array.isArray(source && source.hungerTransactionLog) ? source.hungerTransactionLog : []).forEach(push);
+    (Array.isArray(source && source.hungerHistory) ? source.hungerHistory : []).forEach(push);
+    (Array.isArray(source && source.hungerTransactions) ? source.hungerTransactions : []).forEach(row => {
+      if (typeof row === 'object') push(row);
+    });
+    (ids || []).forEach(id => { if (!seen.has(id)) push({ id, type:'legacy', at:Number(source && source.lastHungerAt) || Number(now) || Date.now() }); });
+    return out.slice(-80);
+  }
+
+  function applyHungerDelta(state, delta, type, now) {
+    const time = Number(now) || Date.now();
+    const base = sanitizeMerlinCare(state, time);
+    const id = String(type || 'merlin-care') + ':' + time;
+    if (base.hungerTransactions.includes(id)) return base;
+    const before = base.hunger;
+    const after = clamp(before + (Number(delta) || 0), 0, 100);
+    return sanitizeMerlinCare({
+      ...base,
+      hunger: after,
+      lastHungerAt: time,
+      hungerTransactions: base.hungerTransactions.concat(id),
+      hungerTransactionLog: base.hungerTransactionLog.concat({
+        id,
+        type: String(type || 'merlin-care'),
+        activityId: type || null,
+        delta: Number(delta) || 0,
+        before,
+        after,
+        at: time
+      }).slice(-80)
+    }, time);
+  }
+
   function sanitizeMerlinCare(raw, now) {
     const source = raw && typeof raw === 'object' ? raw : {};
     const time = Number(now) || Date.now();
+    const hungerTransactions = normalizeHungerTransactions(source);
     return {
       hunger: clamp(source.hunger === undefined ? DEFAULT_MERLIN_CARE.hunger : source.hunger, 0, 100),
       happiness: clamp(source.happiness === undefined ? DEFAULT_MERLIN_CARE.happiness : source.happiness, 0, 100),
@@ -181,7 +250,10 @@
       lastCareAt: Number(source.lastCareAt) || time,
       lastFedAt: Number(source.lastFedAt) || null,
       lastPlayedAt: Number(source.lastPlayedAt) || null,
-      lastRestedAt: Number(source.lastRestedAt) || null
+      lastRestedAt: Number(source.lastRestedAt) || null,
+      lastHungerAt: Number(source.lastHungerAt) || time,
+      hungerTransactions,
+      hungerTransactionLog: normalizeHungerLog(source, hungerTransactions, time)
     };
   }
 
@@ -217,13 +289,18 @@
     const state = sanitizeMerlinCare(rawCare, time);
     const pantry = { ...(rawPantry && typeof rawPantry === 'object' ? rawPantry : {}) };
     if (action === 'feed') {
+      if (state.hunger <= 0) return { ok:false, state, pantry, consumed:{}, message:'Merlin is already fully fed; no falcon food was spent.' };
+      const falconFood = Math.max(0, Math.floor(Number(pantry.small_bird_prey_ration) || 0));
+      if (falconFood >= 1) {
+        pantry.small_bird_prey_ration = falconFood - 1;
+        return { ok:true, pantry, consumed:{ small_bird_prey_ration:1 }, state:addBond(sanitizeMerlinCare({ ...applyHungerDelta(state, -32, 'merlin-feed:small_bird_prey_ration', time), happiness:state.happiness + 7, energy:state.energy + 4, lastCareAt:time, lastFedAt:time }, time), 5), message:'Falcon food served: a small-bird prey ration suits Falco columbarius.' };
+      }
       const insects = Math.max(0, Math.floor(Number(pantry.insects) || 0));
-      if (insects < 1) return { ok:false, state, pantry, message:'No mealworms left — find or buy insects for Merlin first.' };
-      pantry.insects = insects - 1;
-      return { ok:true, pantry, state:addBond(sanitizeMerlinCare({ ...state, hunger:state.hunger - 30, happiness:state.happiness + 6, energy:state.energy + 4, lastCareAt:time, lastFedAt:time }, time), 5), message:'Mealworm magic! Merlin is much less hungry.' };
+      if (insects > 0) return { ok:false, state, pantry, consumed:{}, message:'Merlin refuses mealworms as a main meal: Falco columbarius is a small-bird specialist, so prepare a small-bird prey ration.' };
+      return { ok:false, state, pantry, consumed:{}, message:'No falcon food ready - prepare a small-bird prey ration for Merlin first.' };
     }
     if (action === 'play') {
-      return { ok:true, pantry, state:addBond(sanitizeMerlinCare({ ...state, hunger:state.hunger + 6, happiness:state.happiness + 22, energy:state.energy - 12, lastCareAt:time, lastPlayedAt:time }, time), 8), message:'Merlin swoops after the wand-light — happiness up!' };
+      return { ok:true, pantry, state:addBond(sanitizeMerlinCare({ ...applyHungerDelta(state, 6, 'merlin-play', time), happiness:state.happiness + 22, energy:state.energy - 12, lastCareAt:time, lastPlayedAt:time }, time), 8), message:'Merlin swoops after the wand-light — happiness up!' };
     }
     if (action === 'rest') {
       return { ok:true, pantry, state:addBond(sanitizeMerlinCare({ ...state, happiness:state.happiness + 3, energy:state.energy + 28, lastCareAt:time, lastRestedAt:time }, time), 3), message:'Merlin tucks one foot up and restores his magic.' };

@@ -179,6 +179,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-guest-status { font-size:11px; color:var(--text3); margin-top:2px; }
 .kitchen-guest-clue { font-size:12px; color:var(--text2); margin-top:6px; line-height:1.45; }
 .kitchen-guest-notes { font-size:11px; color:var(--accent2); margin-top:6px; }
+.kitchen-diet-guidance { margin-top:8px; padding:8px 9px; border-radius:9px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.08); font-size:11px; line-height:1.45; color:var(--text2); }
+.kitchen-diet-source { color:var(--text3); font-size:10px; margin-top:2px; }
 .kitchen-plate { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
 .kitchen-slot { min-height:78px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 6px; border-radius:14px; border:1px solid rgba(214,168,79,.35); background:rgba(0,0,0,.25); color:var(--text); font:inherit; }
 .kitchen-slot.empty { border-style:dashed; color:var(--text3); }
@@ -191,6 +193,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-larder-item { display:flex; align-items:center; gap:6px; padding:7px 9px; border-radius:11px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04); font-size:12px; }
 .kitchen-larder-label { flex:1; }
 .kitchen-larder-count { color:var(--accent2); font-weight:800; }
+.kitchen-bridge-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:6px; margin-top:6px; }
+.kitchen-bridge-item { min-width:0; display:flex; align-items:center; gap:5px; padding:6px 8px; border-radius:9px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.035); font-size:11px; }
+.kitchen-bridge-arrow { flex:0 0 auto; color:var(--text3); font-size:10px; }
 .kitchen-pick-row { padding:10px 0; border-top:1px solid rgba(255,255,255,.08); }
 .kitchen-pick-head { display:flex; gap:9px; align-items:flex-start; margin-bottom:7px; }
 .kitchen-pick-icon { font-size:22px; }
@@ -663,9 +668,9 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .bird-grid.companions-grid.companions-count-0 { grid-template-columns:1fr; }
 .bird-grid.companions-grid.companions-count-1 { grid-template-columns:1fr; }
-.bird-grid.companions-grid.companions-count-1 .bird-card { min-height:min(54vh,520px); }
-.bird-grid.companions-grid.companions-count-1 .bird-card-inner { min-height:min(54vh,520px); }
-.bird-grid.companions-grid.companions-count-1 .card-art { height:clamp(240px,54vw,340px); }
+.bird-grid.companions-grid.companions-count-1 .bird-card { min-height:520px; }
+.bird-grid.companions-grid.companions-count-1 .bird-card-inner { min-height:520px; }
+.bird-grid.companions-grid.companions-count-1 .card-art { height:clamp(188px,48vw,260px); }
 .bird-grid.companions-grid.companions-count-2 { grid-template-columns:repeat(2,1fr); }
 .bird-grid.companions-grid.companions-count-2 .bird-card { min-height:430px; }
 .bird-grid.companions-grid.companions-count-2 .bird-card-inner { min-height:430px; }
@@ -2132,6 +2137,20 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-tray-hint { grid-column: 1 / -1; font-size: 9.5px; color: var(--text3); line-height: 1.45; margin-top: 2px; }
 
 /* Field-guide diet panel */
+.diet-disclosure { margin-top:8px; padding:8px 9px; border-radius:8px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.07); color:var(--text2); font-size:11px; line-height:1.38; }
+.diet-disclosure-title { color:var(--accent); font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.diet-disclosure-row { display:block; margin-top:2px; }
+.diet-disclosure-row b { color:var(--text); font-weight:900; }
+.diet-disclosure-compatible { color:var(--text3); }
+.diet-disclosure-source { color:var(--text3); font-size:10px; margin-top:4px; }
+.diet-disclosure-note { color:#9be8cd; margin-top:5px; font-size:10.5px; line-height:1.35; }
+.diet-disclosure.compact { padding:6px 7px; font-size:9.5px; line-height:1.28; }
+.diet-disclosure.compact .diet-disclosure-title { font-size:8.5px; }
+.diet-disclosure.compact .diet-disclosure-note { display:none; }
+.card-diet-disclosure { margin-top:2px; max-height:58px; overflow:hidden; }
+.academy-diet-disclosure { margin-top:6px; }
+.merlin-diet-guidance { margin-top:10px; }
+.merlin-care-hunger-copy { margin:-2px 0 0 80px; color:var(--text3); font-size:10px; line-height:1.25; }
 .bird-info-foodgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
 .bird-info-foodrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; align-items: center; }
 .bird-info-foodrow-label { font-size: 9.5px; letter-spacing: 0.08em; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 2px; }
@@ -2481,7 +2500,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
 
     <!-- SCAN SCREEN -->
-    <div class="screen camera-mode" id="screen-scan">
+    <div class="screen camera-mode" id="screen-scan" data-scan-path="camera-only">
       <div class="screen-title">SCAN</div>
       <div class="scan-mode-toggle">
         <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image">&#128247; Camera</button>
@@ -2946,17 +2965,19 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="pet-speech" id="petSpeech">Ready when you are!</div>
     <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><img src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt="Merlin the wizard falcon"></button>
   </div>
-  <section class="merlin-care-menu" id="merlinCareMenu" role="dialog" aria-labelledby="merlinCareTitle" hidden>
+  <section class="merlin-care-menu" id="merlinCareMenu" role="dialog" aria-labelledby="merlinCareTitle" data-hunger-surface="merlin-care" hidden>
     <button class="merlin-care-close" id="merlinCareClose" type="button" aria-label="Close Merlin's care menu">&times;</button>
     <div class="merlin-care-head"><img class="merlin-care-portrait" src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt=""><div><div class="merlin-care-kicker">Your permanent guide</div><h2 class="merlin-care-title" id="merlinCareTitle">Merlin</h2><div class="merlin-care-mood" id="merlinCareMood">Bright-eyed and magical</div></div></div>
     <div class="merlin-care-status">
       <div class="merlin-care-row"><span class="merlin-care-label">Food</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinFoodFill" style="width:80%;background:#78a66d"></div></div><span class="merlin-care-value" id="merlinFoodValue">80%</span></div>
+      <div class="merlin-care-hunger-copy" id="merlinHungerStatus">Fed · 20/100 hunger</div>
       <div class="merlin-care-row"><span class="merlin-care-label">Happiness</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinHappyFill" style="width:85%;background:#f0c767"></div></div><span class="merlin-care-value" id="merlinHappyValue">85%</span></div>
       <div class="merlin-care-row"><span class="merlin-care-label">Energy</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinEnergyFill" style="width:90%;background:#69dbc0"></div></div><span class="merlin-care-value" id="merlinEnergyValue">90%</span></div>
     </div>
-    <div class="merlin-care-meta"><span>Bond <b id="merlinBondLevel">LV.1</b></span><span>Mealworms <b id="merlinMealworms">0</b></span></div>
-    <div class="merlin-care-actions"><button class="merlin-care-action" id="merlinFeedBtn" type="button">🪱 Feed</button><button class="merlin-care-action" id="merlinPlayBtn" type="button">✨ Play</button><button class="merlin-care-action" id="merlinRestBtn" type="button">🌙 Rest</button></div>
-    <div class="merlin-care-note" id="merlinCareNote" aria-live="polite">Feed Merlin insects from your pantry — a real Merlin falcon's natural food.</div>
+    <div class="merlin-care-meta"><span>Bond <b id="merlinBondLevel">LV.1</b></span><span>Falcon food <b id="merlinMealworms">0</b></span></div>
+    <div id="merlinDietGuidance" class="merlin-diet-guidance" data-diet-surface="merlin-care" data-diet-provenance="BirdFuncDat Merlin override · certainty A">Primary: small-bird prey rations; Secondary: insects.</div>
+    <div class="merlin-care-actions"><button class="merlin-care-action" id="merlinFeedBtn" type="button">🪶 Feed</button><button class="merlin-care-action" id="merlinPlayBtn" type="button">✨ Play</button><button class="merlin-care-action" id="merlinRestBtn" type="button">🌙 Rest</button></div>
+    <div class="merlin-care-note" id="merlinCareNote" aria-live="polite">Merlin is Falco columbarius: serve small-bird prey rations inspired by Meadow Pipits, Skylarks and other small passerines; insects are secondary.</div>
   </section>
 
   <!-- Village shop overlay (must sit beside the nav so it stacks above it) -->
@@ -2974,8 +2995,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=charm-diplomacy-20260723"></script>
-<script src="kitchen_pantry_core.js?v=kitchen-pantry-20260722"></script>
+<script src="academy_treehouse_core.js?v=diet-hunger-release-20260723"></script>
+<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
+<script src="data/bird-diet-records.js?v=diet-hunger-release-20260723"></script>
+<script src="bird_diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
+<script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="battle_core.js?v=charm-diplomacy-20260723"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
@@ -2992,7 +3016,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
-<script src="merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723"></script>
+<script src="merlin_companion_core.js?v=diet-hunger-release-20260723"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -3535,6 +3559,34 @@ const FOODS = {
   acorns:   { label: 'Acorns / nuts', emoji: '🌰', desc: 'Acorns, beech mast, hazelnuts. Jays, nuthatches, woodpeckers cache them.' },
   aquatic:  { label: 'Pondweed',      emoji: '🌿', desc: 'Aquatic plants, snails, dabbled grains. Ducks, swans, geese.' }
 };
+const FOOD_DIET_FAMILY = {
+  insects:'invertebrates',
+  flying:'flying_insects',
+  berries:'fruit_berries',
+  fruit:'fruit_berries',
+  aquatic:'aquatic_plants',
+  meat:'small_mammals',
+  acorns:'seeds',
+  suet:'invertebrates'
+};
+function dietFamilyMatches(list, foodKey) {
+  const families = list || [];
+  return families.includes(foodKey) || families.includes(FOOD_DIET_FAMILY[foodKey]);
+}
+function foodFamilyLabel(family) {
+  if (FOODS[family]) return FOODS[family].emoji + ' ' + FOODS[family].label;
+  const sourceFamilies = window.BurbzDietHungerCore && BurbzDietHungerCore.FOOD_FAMILIES;
+  if (sourceFamilies && sourceFamilies[family]) return sourceFamilies[family].label;
+  return String(family || '').replace(/_/g, ' ');
+}
+function foodFamilyInfo(family) {
+  if (FOODS[family]) return FOODS[family];
+  const sourceFamilies = window.BurbzDietHungerCore && BurbzDietHungerCore.FOOD_FAMILIES;
+  if (sourceFamilies && sourceFamilies[family]) {
+    return { emoji:'🍽️', label:sourceFamilies[family].label, desc:'Source-backed BirdFuncDat diet family.' };
+  }
+  return { emoji:'🍽️', label:String(family || '').replace(/_/g, ' '), desc:'Source-backed diet family.' };
+}
 
 // Diet rules. Each entry has match patterns + preferred foods (correct = full benefit)
 // + accepted foods (partial benefit) + a one-line factoid shown when fed correctly.
@@ -3666,11 +3718,60 @@ const BIRD_DIET_RULES = [
 
 function inferBirdDiet(speciesName) {
   if (!speciesName) return null;
-  const name = String(speciesName);
+  try {
+    if (window.BurbzDietHungerCore && typeof BurbzDietHungerCore.createKitchenDietRule === 'function') {
+      const sourceRule = BurbzDietHungerCore.createKitchenDietRule(speciesName);
+      if (sourceRule) return sourceRule;
+    }
+  } catch (e) {}
+  const name = typeof speciesName === 'object'
+    ? String(speciesName.commonName || speciesName.name || speciesName.species || speciesName.scientificName || '')
+    : String(speciesName);
   for (const rule of BIRD_DIET_RULES) {
     if (rule.match.test(name)) return rule;
   }
   return null;
+}
+
+function dietDisclosureFor(subject) {
+  const core = dietHungerCore();
+  if (core && typeof core.dietDisclosureForSpecies === 'function') return core.dietDisclosureForSpecies(subject);
+  const rule = inferBirdDiet(subject) || {};
+  const primaryFamilies = rule.pref || [];
+  const secondaryFamilies = rule.ok || [];
+  const labels = list => (list || []).map(foodFamilyLabel);
+  return {
+    matchMethod:'legacy-rule',
+    fallbackType:'legacy-rule',
+    certainty:'U',
+    provenance:'Fallback field-guide rule · certainty U',
+    primaryFamilies,
+    secondaryFamilies,
+    compatibleFamilies: primaryFamilies.concat((secondaryFamilies || []).filter(f => !primaryFamilies.includes(f))),
+    primaryLabels: labels(primaryFamilies),
+    secondaryLabels: labels(secondaryFamilies),
+    compatibleLabels: labels(primaryFamilies.concat(secondaryFamilies || [])),
+    education: rule.fact || 'Fallback field-guide rule; use this as general guidance until the source-backed diet records load.',
+    noSpeciesClaim:false
+  };
+}
+
+function renderDietDisclosureHTML(subject, surface, options = {}) {
+  const d = dietDisclosureFor(subject);
+  const primary = d.primaryLabels && d.primaryLabels.length ? d.primaryLabels.join(' · ') : 'No primary source found';
+  const secondary = d.secondaryLabels && d.secondaryLabels.length ? d.secondaryLabels.join(' · ') : 'None recorded';
+  const compatible = d.compatibleLabels && d.compatibleLabels.length ? d.compatibleLabels.join(' · ') : secondary;
+  const cls = 'diet-disclosure' + (options.compact ? ' compact' : '') + (options.className ? ' ' + options.className : '');
+  const title = options.title || 'Diet guidance';
+  const note = options.note || d.education || '';
+  return '<div class="' + cls + '" data-diet-surface="' + escapeHtml(surface || 'diet-guidance') + '" data-diet-guidance="' + escapeHtml(options.guidanceKey || surface || 'diet-guidance') + '" data-diet-primary="' + escapeHtml(primary) + '" data-diet-secondary="' + escapeHtml(secondary) + '" data-compatible-foods="' + escapeHtml((d.compatibleFamilies || []).join(',')) + '" data-diet-provenance="' + escapeHtml(d.provenance || '') + '" data-diet-fallback="' + escapeHtml(d.fallbackType || d.matchMethod || '') + '">' +
+    '<div class="diet-disclosure-title">' + escapeHtml(title) + '</div>' +
+    '<span class="diet-disclosure-row"><b>Primary:</b> ' + escapeHtml(primary) + '</span>' +
+    '<span class="diet-disclosure-row"><b>Secondary:</b> ' + escapeHtml(secondary) + '</span>' +
+    (options.compatible === false ? '' : '<span class="diet-disclosure-row diet-disclosure-compatible"><b>Compatible:</b> ' + escapeHtml(compatible) + '</span>') +
+    '<div class="diet-disclosure-source">Source: ' + escapeHtml(d.provenance || 'Fallback field-guide rule') + '</div>' +
+    (note ? '<div class="diet-disclosure-note">' + escapeHtml(note) + '</div>' : '') +
+  '</div>';
 }
 
 // Player's pantry — refilled gradually so feeding has rhythm
@@ -3839,24 +3940,102 @@ function vibrate(ms) {
 // Merlin guarantees that the first real Birdex discovery recruited into an
 // empty flock never costs more than the coins left after both opening builds.
 const FIRST_RECRUIT_MAX_COST = 110;
+function dietHungerCore() { return window.BurbzDietHungerCore || null; }
+function defaultBirdCare(now = Date.now()) {
+  const care = { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null, lastHungerAt: now, hungerTransactions: [], hungerTransactionLog: [] };
+  const core = dietHungerCore();
+  return core && typeof core.sanitizeCare === 'function' ? core.sanitizeCare(care, now) : care;
+}
+function normalizeBirdCare(bird, now = Date.now()) {
+  if (!bird) return null;
+  const core = dietHungerCore();
+  bird.care = core && typeof core.sanitizeCare === 'function'
+    ? core.sanitizeCare(bird.care || defaultBirdCare(now), now)
+    : { ...defaultBirdCare(now), ...(bird.care && typeof bird.care === 'object' ? bird.care : {}) };
+  return bird.care;
+}
+function migrateAllHungerState(now = Date.now()) {
+  const core = dietHungerCore();
+  if (core && typeof core.migrateHungerState === 'function') gameState = core.migrateHungerState(gameState, now);
+  if (gameState && Array.isArray(gameState.flock)) gameState.flock.forEach(bird => normalizeBirdCare(bird, now));
+}
+function hungerStatusForBird(bird, now = Date.now()) {
+  const core = dietHungerCore();
+  const care = normalizeBirdCare(bird, now) || defaultBirdCare(now);
+  if (core && typeof core.hungerStatusForCare === 'function') return core.hungerStatusForCare(care, now);
+  const hunger = clamp(Number(care.hunger) || 0, 0, 100);
+  const level = hunger >= 85 ? 'urgent' : hunger >= 70 ? 'hungry' : hunger >= 45 ? 'peckish' : 'fed';
+  return { hunger, level, label: level === 'urgent' ? 'Urgent care' : level[0].toUpperCase() + level.slice(1), warnsWork:hunger >= 70, blocksWork:hunger >= 85, message:'' };
+}
+function birdWorkReadiness(bird, activityType, now = Date.now()) {
+  const core = dietHungerCore();
+  if (core && typeof core.activityReadiness === 'function') return core.activityReadiness(bird, activityType, now);
+  const status = hungerStatusForBird(bird, now);
+  return { ok:!status.blocksWork, warning:status.warnsWork, status, message:status.message };
+}
+function warnOrBlockBirdWork(bird, activityType) {
+  const readiness = birdWorkReadiness(bird, activityType, Date.now());
+  const name = birdDisplayName ? birdDisplayName(bird) : ((bird && (bird.commonName || bird.species)) || 'This bird');
+  if (!readiness.ok) {
+    showToast('🍽️ ' + name + ' needs food before ' + String(activityType || 'work').replace(/_/g, ' ') + '.');
+    return false;
+  }
+  if (readiness.warning) showToast('🍽️ ' + name + ' is hungry — they can help, but feed them soon.');
+  return true;
+}
+function applyBirdHungerTransaction(birdId, activityType, activityId, delta, now = Date.now()) {
+  const bird = (gameState.flock || []).find(b => b && b.id === birdId);
+  if (!bird) return { ok:false, duplicate:false, transactionId:[activityType || 'activity', activityId || 'unknown'].join(':') };
+  const core = dietHungerCore();
+  if (core && typeof core.applyHungerDeltaToCare === 'function') {
+    const result = core.applyHungerDeltaToCare(bird.care, { activityType, activityId, delta, now });
+    bird.care = result.care;
+    return result;
+  }
+  normalizeBirdCare(bird, now);
+  const txId = [activityType || 'activity', activityId || 'unknown'].join(':');
+  if (bird.care.hungerTransactions.includes(txId)) return { ok:true, duplicate:true, transactionId:txId };
+  bird.care.hunger = clamp((bird.care.hunger || 0) + Number(delta || 0), 0, 100);
+  bird.care.lastHungerAt = now;
+  bird.care.hungerTransactions.push(txId);
+  return { ok:true, duplicate:false, transactionId:txId };
+}
+function recordBirdFeedingRecovery(bird, amount, source, now = Date.now()) {
+  if (!bird) return null;
+  return applyBirdHungerTransaction(bird.id, 'feeding', String(source || 'meal') + ':' + bird.id + ':' + now, -Math.max(0, Number(amount) || 0), now);
+}
+function adjustBirdHungerUntracked(bird, delta, now = Date.now()) {
+  if (!bird) return null;
+  const core = dietHungerCore();
+  if (core && typeof core.applyHungerDeltaToCare === 'function') {
+    const result = core.applyHungerDeltaToCare(bird.care, { delta, now });
+    bird.care = result.care;
+    return result;
+  }
+  normalizeBirdCare(bird, now);
+  bird.care.hunger = clamp((bird.care.hunger || 0) + Number(delta || 0), 0, 100);
+  bird.care.lastHungerAt = now;
+  return { ok:true, care:bird.care };
+}
 const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
   flock: [],
   discoveredSpecies: {},
-  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { mealworm_scoop: 2, sunflower_seeds: 2, hedgerow_berries: 1, gizzard_grit: 1 } },
+  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1 } },
   dietBadges: {}, // speciesKey → count of Field-Perfect meals served (Kitchen & Pantry)
   kitchenNotes: {}, // speciesKey → { perfect:[families], refused:[families] } — the player's own field notes
+  kitchenStarterLarderVersion: 1, // One-time documented starter stock for the reachable Kitchen/Pantry proof.
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   quests: {},
   questsLastReset: null,
   settings: { sfx: true, particles: true, vibration: true },
   badges: {},
   merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE },
-  birdCare: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null }, // Default per-bird care state
+  birdCare: defaultBirdCare(), // Default per-bird care state
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
-  academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // Campus building ownership
-  academyBuilderVersion: 6,
+  academyBuildings: { outdoors: { built: true, builtAt: 'starter' }, kitchen: { built: true, builtAt: 'starter-kitchen', x: 50, y: 52 } }, // Campus building ownership
+  academyBuilderVersion: 7,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
   league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // Perch League ladder
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
@@ -3911,6 +4090,7 @@ function applyResetUrlIfRequested() {
     const params = new URLSearchParams(window.location.search || '');
     if (!params.has('reset') && !params.has('freshStart')) return false;
     clearBurbzLocalProgress();
+    localStorage.setItem(BURBZ_EPOCH_KEY, BURBZ_FRESH_START_EPOCH);
     if (window.caches && caches.keys) caches.keys().then(keys => keys.filter(key => key.startsWith('burbz-')).forEach(key => caches.delete(key))).catch(() => {});
     if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(reg => reg.unregister())).catch(() => {});
     const cleanUrl = window.location.pathname + (window.location.hash || '');
@@ -3939,7 +4119,8 @@ function loadState() {
     gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
-  const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 6;
+  const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
+  const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
   for (const k of Object.keys(DEFAULT_STATE)) {
     if (gameState[k] === undefined) gameState[k] = JSON.parse(JSON.stringify(DEFAULT_STATE[k]));
   }
@@ -3962,6 +4143,13 @@ function loadState() {
   // badge / field-note books, and older saves start with the same taster
   // ingredients a fresh game gets so the Kitchen is playable immediately.
   gameState.inventory.larder = (gameState.inventory.larder && typeof gameState.inventory.larder === 'object' && !Array.isArray(gameState.inventory.larder)) ? gameState.inventory.larder : JSON.parse(JSON.stringify(DEFAULT_STATE.inventory.larder));
+  if (needsKitchenStarterLarderGrant) {
+    const starterLarder = DEFAULT_STATE.inventory.larder || {};
+    Object.entries(starterLarder).forEach(([id, count]) => {
+      gameState.inventory.larder[id] = Math.max(Number(gameState.inventory.larder[id]) || 0, Number(count) || 0);
+    });
+    gameState.kitchenStarterLarderVersion = 1;
+  }
   gameState.dietBadges = (gameState.dietBadges && typeof gameState.dietBadges === 'object' && !Array.isArray(gameState.dietBadges)) ? gameState.dietBadges : {};
   gameState.kitchenNotes = (gameState.kitchenNotes && typeof gameState.kitchenNotes === 'object' && !Array.isArray(gameState.kitchenNotes)) ? gameState.kitchenNotes : {};
   gameState.flock = Array.isArray(gameState.flock) ? gameState.flock.filter(b => b && typeof b === 'object') : [];
@@ -4010,7 +4198,8 @@ function loadState() {
     if (!b.commonName) b.commonName = b.species;
     if (!b.rarity) b.rarity = 'common';
     if (b.artUrl != null && typeof b.artUrl !== 'string') b.artUrl = null; // heal poisoned art refs for good
-    if (!b.care || typeof b.care !== 'object') b.care = JSON.parse(JSON.stringify(DEFAULT_STATE.birdCare));
+    if (!b.care || typeof b.care !== 'object') b.care = defaultBirdCare();
+    normalizeBirdCare(b);
     if (!b.training || typeof b.training !== 'object') b.training = { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
     if (b.training.chaBonus == null) b.training.chaBonus = 0;
     if (b.training.magBonus == null) b.training.magBonus = 0;
@@ -4029,6 +4218,7 @@ function loadState() {
     syncBirdArtUrl(b);
     return b;
   });
+  migrateAllHungerState(Date.now());
 
   sfxEnabled = gameState.settings.sfx;
   if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
@@ -4133,7 +4323,8 @@ function mergeCloudState(cloudState) {
   const merged = { ...current, ...(cloudState && typeof cloudState === 'object' ? cloudState : {}) };
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
-  return merged;
+  const core = dietHungerCore();
+  return core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
 }
 
 async function loadCloudProgress() {
@@ -8717,37 +8908,16 @@ function renderEducationSections(bird, education) {
 
 function renderBirdDietPanel(bird) {
   if (!bird) return '';
-  const diet = inferBirdDiet(bird.commonName || bird.species);
   const known = bird && bird.academy && bird.academy.dietKnown;
   const isPreview = bird.previewOnly;
   const title = '<div class="bird-info-section-title">Feeding the real bird</div>';
-  if (isPreview) {
-    return '<div class="bird-info-section">' + title +
-      '<div class="bird-info-section-body">Capture this species in the wild to unlock the feeding panel — then head to the Academy roost to learn its diet.</div></div>';
-  }
-  if (!known) {
-    const hintFoods = (diet ? diet.pref.concat(diet.ok).slice(0,4) : ['seeds','insects','berries','suet'])
-      .map(k => FOODS[k]).filter(Boolean);
-    return '<div class="bird-info-section">' + title +
-      '<div class="bird-info-section-body">Diet not yet discovered. Visit the <b>Academy roost</b> and try a food on the tray — get it right and the full diet unlocks here.</div>' +
-      '<div class="bird-info-foodgrid">' + hintFoods.map(f =>
-        '<div class="bird-info-food unknown"><span class="bird-info-food-emoji">❔</span><span class="bird-info-food-label">???</span></div>'
-      ).join('') + '</div></div>';
-  }
-  const factHtml = diet && diet.fact ? '<div class="bird-info-fact">💡 ' + escapeHTML(diet.fact) + '</div>' : '';
-  const preferred = (diet ? diet.pref : ['seeds','insects']).map(k => FOODS[k]).filter(Boolean);
-  const accepted  = (diet ? diet.ok  : []).map(k => FOODS[k]).filter(Boolean);
-  const avoid     = (diet ? diet.avoid : []).map(k => FOODS[k]).filter(Boolean);
-  const block = (cls, label, list) => list.length
-    ? '<div class="bird-info-foodrow"><span class="bird-info-foodrow-label ' + cls + '">' + label + '</span>' + list.map(f =>
-        '<span class="bird-info-food ' + cls + '" title="' + escapeHTML(f.desc) + '"><span class="bird-info-food-emoji">' + f.emoji + '</span><span class="bird-info-food-label">' + escapeHTML(f.label) + '</span></span>'
-      ).join('') + '</div>'
-    : '';
+  const note = known
+    ? 'Your Academy notes have confirmed this diet for this companion.'
+    : isPreview
+      ? 'Field-guide source guidance is visible now; recruit or feed this bird to add personal Academy notes.'
+      : 'Field-guide source guidance is visible now; a primary meal in the Academy marks it discovered.';
   return '<div class="bird-info-section">' + title +
-    block('preferred','Preferred', preferred) +
-    block('ok','Will accept', accepted) +
-    block('avoid','Avoid', avoid) +
-    factHtml +
+    renderDietDisclosureHTML(bird, 'field-guide-profile', { title:'Source-backed feeding', note }) +
     '</div>';
 }
 
@@ -9771,7 +9941,7 @@ function createBirdEntry(speciesName, scientificName, confidence) {
     captureDate: new Date().toISOString(),
     confidence: confidence || 0,
     artUrl: resolveBuiltInBirdArt(canonicalName) || null,
-    care: { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null }, // Per-bird care state
+    care: defaultBirdCare(), // Per-bird care state
     training: { feedCount: 0, trainCount: 0 }, // Per-bird training state
     academy: { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null }, // Starts unlocked for Academy play
     biologyStatsVersion: BIRD_BIOLOGY_STATS_VERSION,
@@ -9978,6 +10148,20 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
       setTimeout(() => showToast('🪶 Merlin topped up your opening Academy building and recruitment fund.'), 900);
     }
   }
+  // v7: Kitchen & Pantry is part of the core care loop, so it starts built.
+  // The building catalogue still owns its room metadata; this grant only makes
+  // the normal Academy UI open the Kitchen without level-gated detours.
+  if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 7) {
+    const kitchenCfg = ACADEMY_BUILDINGS.kitchen || {};
+    gameState.academyBuildings.kitchen = {
+      ...(gameState.academyBuildings.kitchen || {}),
+      built: true,
+      builtAt: (gameState.academyBuildings.kitchen && gameState.academyBuildings.kitchen.builtAt) || 'starter-kitchen',
+      x: Number(gameState.academyBuildings.kitchen && gameState.academyBuildings.kitchen.x) || kitchenCfg.x || 50,
+      y: Number(gameState.academyBuildings.kitchen && gameState.academyBuildings.kitchen.y) || kitchenCfg.y || 52
+    };
+    gameState.academyBuilderVersion = 7;
+  }
   Object.keys(ACADEMY_ROOMS).forEach(room => {
     if (room !== 'outdoors' && !isAcademyRoomBuilt(room)) {
       (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === room) b.academy.room = 'outdoors'; });
@@ -10091,7 +10275,8 @@ function renderAcademyBuildPanel() {
 
 function ensureBirdAcademy(bird) {
   if (!bird) return bird;
-  if (!bird.care || typeof bird.care !== 'object') bird.care = { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null };
+  if (!bird.care || typeof bird.care !== 'object') bird.care = defaultBirdCare();
+  normalizeBirdCare(bird);
   if (!bird.training || typeof bird.training !== 'object') bird.training = { feedCount: 0, trainCount: 0 };
   if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null };
   if (!bird.academy.disciplines || typeof bird.academy.disciplines !== 'object') {
@@ -10295,7 +10480,7 @@ function ensureBirdTrainingSessions() {
 }
 
 function birdHasActiveTraining(birdId) {
-  return ensureBirdTrainingSessions().some(t => t.birdId === birdId && t.status !== 'claimed' && (window.BurbzAcademyCore ? window.BurbzAcademyCore.advanceTrainingSession(t, Date.now()).status !== 'complete' : true));
+  return ensureBirdTrainingSessions().some(t => t.birdId === birdId && !['claimed','cancelled','failed'].includes(String(t.status || '').toLowerCase()));
 }
 
 function trainingTemplateById(templateId) {
@@ -10322,7 +10507,7 @@ function isStarterExpeditionTemplate(templateId) {
 }
 
 function birdHasActiveExpedition(birdId) {
-  return ensureBirdExpeditions().some(q => q.birdId === birdId && q.status !== 'claimed' && (window.BurbzAcademyCore ? window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now()).status !== 'complete' : true));
+  return ensureBirdExpeditions().some(q => q.birdId === birdId && !['claimed','cancelled','failed'].includes(String(q.status || '').toLowerCase()));
 }
 
 function startBirdExpedition(birdId, templateId, loadout) {
@@ -10332,6 +10517,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
+  if (!warnOrBlockBirdWork(bird, 'expedition')) return;
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now());
   // Fallout Shelter-style loadout: a pantry provision and a charm item ride
   // along and pay out as bonuses when the quest is claimed.
@@ -10376,13 +10562,19 @@ function claimBirdExpedition(expeditionId) {
   }
   Object.entries(items).forEach(([key, count]) => {
     if (count <= 0) return;
-    // Kitchen ingredients land in the Stores larder, ready for the Prep Counter.
-    if (kitchenIngredientById(key)) addLarderIngredient(key, count);
+    // Kitchen ingredients and legacy pantry-supply rewards land in the Stores
+    // larder, ready for the Prep Counter instead of becoming inert bag items.
+    const larderKey = legacyKitchenSupplyIngredient(key) || key;
+    if (kitchenIngredientById(larderKey)) addLarderIngredient(larderKey, count);
     else gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + count;
   });
   const foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
   const bird = academyBirdById(q.birdId);
-  if (bird) levelUpBird(bird, questXp || 10);
+  if (bird) {
+    levelUpBird(bird, questXp || 10);
+    const delta = (dietHungerCore() && dietHungerCore().ACTIVITY_HUNGER_DELTAS && dietHungerCore().ACTIVITY_HUNGER_DELTAS.expedition) || 12;
+    applyBirdHungerTransaction(q.birdId, 'expedition', q.id, delta, Date.now());
+  }
   // A claimed quest leaves the board for good.
   gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
   saveState();
@@ -10558,10 +10750,13 @@ function renderQuestSendSheet() {
     const away = birdHasActiveExpedition(b.id);
     const training = birdHasActiveTraining(b.id);
     const tooLow = (b.level || 1) < (t.minLevel || 1);
-    const disabled = away || training || tooLow;
-    const note = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
+    const readiness = birdWorkReadiness(b, 'expedition');
+    const disabled = away || training || tooLow || !readiness.ok;
+    const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
+    const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
+    const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
-    return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
+    return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
       '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
@@ -10580,7 +10775,7 @@ function renderQuestSendSheet() {
     return '<button class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'charm\',\'' + k + '\')">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' <span class="quest-equip-count">×' + n + '</span></button>';
   }).join('') : '<div class="quest-equip-none">No lucky charms in the Stores yet — quests award them.</div>';
 
-  el.innerHTML = '<div class="quest-overlay-panel">' +
+  el.innerHTML = '<div class="quest-overlay-panel" data-hunger-surface="expedition-dispatch">' +
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
@@ -10842,8 +11037,9 @@ function renderAcademyRoomPanel(birds) {
         '<div class="academy-bird-meta">Lv ' + b.level + ' · ' + (b.rarity || 'common').toUpperCase() + ' · PWR ' + (b.power || '?') + (b.training.trainCount ? ' · ' + b.training.trainCount + ' drills done' : '') + (b.academy.honor === 'star_pupil' ? ' · Star Pupil' : '') + '</div>' +
         academyMeter('HP', hpPct, 'hp') +
         academyMeter('HUNGER', hungerPct, 'hunger') +
+        academyHungerStatusHTML(b) +
         academyMeter('HAPPY', happyPct, 'happy') +
-        (academySelectedRoom === 'dorm' ? academyDietLine(b) : '') +
+        academyDietLine(b) +
       '</div>' +
       '<div class="academy-actions">' + actions + '</div>' +
       tray +
@@ -11066,8 +11262,14 @@ function academyTavernRecruit(patronKey) {
 }
 
 function academyMeter(label, pct, cls) {
-  return '<div class="academy-meter"><span class="academy-meter-label">' + label + '</span>' +
+  const hungerSurface = label === 'HUNGER' ? ' data-hunger-surface="academy-room"' : '';
+  return '<div class="academy-meter"' + hungerSurface + '><span class="academy-meter-label">' + label + '</span>' +
     '<div class="academy-meter-bar"><div class="academy-meter-fill ' + cls + '" style="width:' + pct + '%"></div></div></div>';
+}
+
+function academyHungerStatusHTML(bird) {
+  const status = hungerStatusForBird(bird);
+  return '<div class="academy-diet hunger-status" data-hunger-state="' + status.level + '">🍽️ ' + escapeHtml(status.label) + ' · ' + Math.round(status.hunger) + '/100' + (status.blocksWork ? ' · feed before work' : status.warnsWork ? ' · feed soon' : '') + '</div>';
 }
 
 function academyActionBtn(fn, id, label, cdMs, primary) {
@@ -11167,7 +11369,7 @@ function academyFeed(birdId) {
 }
 
 function academyFeedFood(birdId, foodKey) {
-  const bird = academyBirdById(birdId);
+  let bird = academyBirdById(birdId);
   const food = FOODS[foodKey];
   if (!bird || !food) return;
   ensureBirdAcademy(bird);
@@ -11175,27 +11377,65 @@ function academyFeedFood(birdId, foodKey) {
 
   if ((gameState.pantry[foodKey] || 0) <= 0) { showToast('No ' + food.label.toLowerCase() + ' left in the pantry — it restocks over time.'); return; }
 
-  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const core = dietHungerCore();
+  const target = { target:'bird', birdId:bird.id, scientificName:bird.scientificName || bird.scientific || null, commonName:bird.commonName || bird.species, name:bird.commonName || bird.species };
+  const feedSpec = { pantryKey:foodKey, source:'pantry' };
+  const normalizedSpec = core && typeof core.normalizeFeedingSpec === 'function' ? core.normalizeFeedingSpec(feedSpec) : { ingredientId:foodKey, prep:'fresh' };
+  const compatibility = core && typeof core.scoreFoodCompatibility === 'function' ? core.scoreFoodCompatibility(target, normalizedSpec) : null;
   const name = bird.commonName || bird.species;
-  // Unknown species fall back to "generalist": seeds/insects accepted.
-  const pref = diet ? diet.pref : ['seeds', 'insects'];
-  const ok = diet ? diet.ok : ['berries', 'fruit', 'worms', 'suet'];
+  const diet = inferBirdDiet(target);
 
-  gameState.pantry[foodKey] = clamp((gameState.pantry[foodKey] || 0) - 1, 0, 99);
+  if (compatibility && compatibility.verdict === 'primary' && academyCdLeft(bird.care.lastFed, 60 * 60 * 1000) > 0) {
+    showToast(name + ' is still full!');
+    return;
+  }
 
-  if (pref.includes(foodKey)) {
-    // Correct! Full benefit + the real-world factoid.
-    if (academyCdLeft(bird.care.lastFed, 60 * 60 * 1000) > 0) {
-      gameState.pantry[foodKey] += 1; // not hungry — refund the portion
-      showToast(name + ' is still full!');
-      return;
+  if (core && typeof core.applyFeedingTransaction === 'function') {
+    const now = Date.now();
+    const txId = 'academy-feed:' + bird.id + ':' + foodKey + ':' + now;
+    const tx = core.applyFeedingTransaction(gameState, target, feedSpec, { transactionId:txId, now });
+    gameState = tx.state;
+    bird = academyBirdById(birdId) || bird;
+    ensureBirdAcademy(bird);
+    if (tx.ok && !tx.duplicate) {
+      // Correct! Full benefit + the real-world factoid.
+      bird.care.lastFed = new Date(now).toISOString();
+      bird.training.feedCount = (bird.training.feedCount || 0) + 1;
+      bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 2, 0, 50);
+      bird.maxHp = clamp(bird.maxHp + 2, 50, 999);
+      bird.hp = bird.maxHp;
+      bird.care.happiness = clamp((bird.care.happiness || 80) + 4, 0, 100);
+      recalcBirdPower(bird);
+      levelUpBird(bird, 4);
+      const firstTime = !bird.academy.dietKnown;
+      bird.academy.dietKnown = true;
+      academyFeedTrayBirdId = null;
+      updateQuestProgress('feed_correct', 1);
+      saveState();
+      showToast('✅ ' + food.emoji + ' Primary meal! ' + (diet ? diet.fact : tx.message) + ' +2 HP, +4 XP' + (firstTime ? ' · Diet discovered!' : ''));
+      SFX.tap();
+    } else {
+      saveState();
+      const primary = (diet ? diet.pref : []).map(k => foodFamilyLabel(k).toLowerCase()).join(' and ') || 'its primary source-backed diet';
+      showToast('❌ ' + name + ' refuses this as a main meal — no pantry spent. Try ' + primary + '.');
+      SFX.tap();
     }
+    renderAcademy();
+    renderPetCompanion();
+    return;
+  }
+
+  // Fallback for very old cached builds without the source-backed transaction core.
+  const pref = diet ? diet.pref : ['seeds', 'insects'];
+  if (dietFamilyMatches(pref, foodKey)) {
+    if (academyCdLeft(bird.care.lastFed, 60 * 60 * 1000) > 0) { showToast(name + ' is still full!'); return; }
+    gameState.pantry[foodKey] = clamp((gameState.pantry[foodKey] || 0) - 1, 0, 99);
     bird.care.lastFed = new Date().toISOString();
     bird.training.feedCount = (bird.training.feedCount || 0) + 1;
     bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 2, 0, 50);
     bird.maxHp = clamp(bird.maxHp + 2, 50, 999);
     bird.hp = bird.maxHp;
-    bird.care.hunger = clamp((bird.care.hunger || 0) - 30, 0, 100);
+    recordBirdFeedingRecovery(bird, 30, 'academy-feed:' + foodKey);
     bird.care.happiness = clamp((bird.care.happiness || 80) + 10, 0, 100);
     recalcBirdPower(bird);
     levelUpBird(bird, 4);
@@ -11206,18 +11446,9 @@ function academyFeedFood(birdId, foodKey) {
     saveState();
     showToast('✅ ' + food.emoji + ' Perfect! ' + (diet ? diet.fact : name + ' happily eats ' + food.label.toLowerCase() + '.') + ' +2 HP, +4 XP' + (firstTime ? ' · Diet discovered!' : ''));
     SFX.tap();
-  } else if (ok.includes(foodKey)) {
-    // Acceptable but not ideal — partial benefit, nudge toward the real diet.
-    bird.care.hunger = clamp((bird.care.hunger || 0) - 12, 0, 100);
-    bird.care.happiness = clamp((bird.care.happiness || 80) + 3, 0, 100);
-    saveState();
-    showToast('🆗 ' + name + ' nibbles the ' + food.label.toLowerCase() + '... but in the wild it mainly eats ' + (diet ? diet.pref.map(k => FOODS[k].label.toLowerCase()).join(' and ') : 'seeds and insects') + '.');
-    SFX.tap();
   } else {
-    // Wrong food — refused, portion wasted, and the game teaches why.
-    bird.care.happiness = clamp((bird.care.happiness || 80) - 4, 0, 100);
     saveState();
-    showToast('❌ ' + name + ' turns its beak up! ' + (diet ? diet.fact : 'Try seeds or insects for garden birds.'));
+    showToast('❌ ' + name + ' turns its beak up — no pantry spent. ' + (diet ? diet.fact : 'Try seeds or insects for garden birds.'));
     SFX.tap();
   }
   renderAcademy();
@@ -11225,26 +11456,23 @@ function academyFeedFood(birdId, foodKey) {
 }
 
 function academyDietLine(bird) {
-  const diet = inferBirdDiet(bird.commonName || bird.species);
-  if (!bird.academy.dietKnown) {
-    return '<div class="academy-diet unknown">🍽️ Diet: ??? — feed the right food to discover it</div>';
-  }
-  const prefs = (diet ? diet.pref : ['seeds', 'insects']).map(k => FOODS[k].emoji + ' ' + FOODS[k].label).join(' · ');
-  return '<div class="academy-diet">🍽️ Diet: ' + prefs + '</div>';
+  const known = bird && bird.academy && bird.academy.dietKnown;
+  const note = known ? 'Academy note confirmed.' : 'Feed a primary meal to mark this diet discovered.';
+  return renderDietDisclosureHTML(bird, 'care-panel', { compact:true, compatible:false, className:'academy-diet-disclosure', note });
 }
 
 function academyFeedTrayHTML(bird) {
   refillPantry();
-  const diet = inferBirdDiet(bird.commonName || bird.species);
+  const diet = inferBirdDiet(bird);
   const known = bird.academy.dietKnown;
   return '<div class="academy-tray">' +
     '<div class="academy-tray-title">What does a ' + escapeHtml(bird.commonName || bird.species) + ' eat in the wild?</div>' +
     Object.keys(FOODS).map(k => {
       const f = FOODS[k];
       const count = gameState.pantry[k] || 0;
-      const knownPref = known && diet && diet.pref.includes(k);
+      const knownPref = known && diet && dietFamilyMatches(diet.pref, k);
       return '<button class="academy-food' + (knownPref ? ' known-pref' : '') + (count <= 0 ? ' empty' : '') + '" ' +
-        'onclick="academyFeedFood(\'' + bird.id + '\',\'' + k + '\')" title="' + escapeHtml(f.desc) + '">' +
+        'data-pantry-count="' + escapeHtml(k) + '" data-count="' + count + '" onclick="academyFeedFood(\'' + bird.id + '\',\'' + k + '\')" title="' + escapeHtml(f.desc) + '">' +
         '<span class="academy-food-emoji">' + f.emoji + '</span>' +
         '<span class="academy-food-label">' + f.label + '</span>' +
         '<span class="academy-food-count">×' + count + '</span>' +
@@ -11264,10 +11492,31 @@ function academyFeedTrayHTML(bird) {
 // ============================================================================
 function kitchenCore() { return window.BurbzKitchenCore; }
 function kitchenIngredientById(id) { try { return kitchenCore().ingredientById(id); } catch (e) { return null; } }
+function kitchenDietCore() { return window.BurbzDietHungerCore || null; }
+function legacyKitchenSupplyIngredient(id) {
+  return ({
+    seed_satchel: 'sunflower_seeds',
+    worm_tin: 'garden_worms',
+    berry_bundle: 'hedgerow_berries'
+  })[id] || null;
+}
 
 function ensureLarder() {
+  if (!gameState.inventory || typeof gameState.inventory !== 'object' || Array.isArray(gameState.inventory)) gameState.inventory = {};
   if (!gameState.inventory.larder || typeof gameState.inventory.larder !== 'object' || Array.isArray(gameState.inventory.larder)) gameState.inventory.larder = {};
-  return gameState.inventory.larder;
+  const larder = gameState.inventory.larder;
+  if ((Number(gameState.kitchenLegacySupplyMigrationVersion) || 0) < 1) {
+    const items = gameState.inventory.items && typeof gameState.inventory.items === 'object' && !Array.isArray(gameState.inventory.items) ? gameState.inventory.items : {};
+    ['seed_satchel', 'worm_tin', 'berry_bundle'].forEach(legacyId => {
+      const ingredientId = legacyKitchenSupplyIngredient(legacyId);
+      const qty = Math.max(0, Math.floor(Number(items[legacyId]) || 0));
+      if (qty > 0) larder[ingredientId] = (Math.max(0, Number(larder[ingredientId]) || 0)) + qty;
+      delete items[legacyId];
+    });
+    gameState.inventory.items = items;
+    gameState.kitchenLegacySupplyMigrationVersion = 1;
+  }
+  return larder;
 }
 
 function addLarderIngredient(id, qty) {
@@ -11279,22 +11528,23 @@ function addLarderIngredient(id, qty) {
 
 let kitchenState = { speciesKey: null, slots: [null, null, null] };
 
-// Everyone the player can cook for: recruited companions first (they get fed),
-// then every wild species discovered in the Birdex (they get feeder trays).
+// Everyone the player can cook for: Merlin first as the permanent starter
+// companion, then recruited companions and wild Birdex species.
 function kitchenSpeciesChoices() {
   const seen = new Set();
-  const rows = [];
+  const rows = [{ key:'merlin', name:'Merlin', commonName:'Merlin', scientificName:'Falco columbarius', merlin:true }];
+  seen.add('merlin');
   (gameState.flock || []).forEach(bird => {
     const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
     if (!key || seen.has(key)) return;
     seen.add(key);
-    rows.push({ key, name: canonicalSpeciesName(bird.species || bird.commonName), companion: bird });
+    rows.push({ key, name: canonicalSpeciesName(bird.species || bird.commonName), commonName:bird.commonName || bird.species, scientificName:bird.scientificName || bird.scientific || null, companion: bird });
   });
   discoveredSpeciesRecords().forEach(record => {
     const key = speciesKey(canonicalSpeciesName(record.species || record.commonName));
     if (!key || seen.has(key)) return;
     seen.add(key);
-    rows.push({ key, name: canonicalSpeciesName(record.species || record.commonName), record });
+    rows.push({ key, name: canonicalSpeciesName(record.species || record.commonName), commonName:record.commonName || record.species, scientificName:record.scientificName || record.scientific || null, record });
   });
   return rows;
 }
@@ -11307,7 +11557,7 @@ function kitchenSelectedChoice() {
 function kitchenNotesLine(key) {
   const notes = (gameState.kitchenNotes || {})[key];
   if (!notes || (!(notes.perfect || []).length && !(notes.refused || []).length)) return 'No field notes yet — serve a tray and learn.';
-  const label = family => (FOODS[family] ? FOODS[family].emoji + ' ' + FOODS[family].label : family);
+  const label = foodFamilyLabel;
   const bits = [];
   if ((notes.perfect || []).length) bits.push('loves ' + notes.perfect.map(label).join(', '));
   if ((notes.refused || []).length) bits.push('refuses ' + notes.refused.map(label).join(', '));
@@ -11332,11 +11582,12 @@ function renderKitchenPanelHTML() {
   const chosen = kitchenSelectedChoice();
   if (chosen && kitchenState.speciesKey !== chosen.key) kitchenState.speciesKey = chosen.key;
   const larder = ensureLarder();
+  const rule = kitchenDietRuleForChoice(chosen);
 
   const chips = choices.slice(0, 60).map(row => {
     const active = chosen && row.key === chosen.key;
     const badge = (gameState.dietBadges || {})[row.key] ? ' 🏅' : '';
-    return '<button class="kitchen-chip' + (active ? ' active' : '') + '" onclick="kitchenSelectSpecies(\'' + row.key + '\')">' + (row.companion ? '🐦 ' : '🌲 ') + escapeHtml(row.name) + badge + '</button>';
+    return '<button class="kitchen-chip' + (active ? ' active' : '') + '" data-kitchen-species-choice="' + escapeHtml(row.key) + '" onclick="kitchenSelectSpecies(\'' + row.key + '\')">' + (row.merlin ? '🧙 ' : row.companion ? '🐦 ' : '🌲 ') + escapeHtml(row.name) + badge + '</button>';
   }).join('');
 
   let speciesCard = '<div class="inventory-empty">Discover a bird first — every scan and listen adds a species you can cook for.</div>';
@@ -11344,11 +11595,12 @@ function renderKitchenPanelHTML() {
     const profile = findSpeciesProfile(chosen.name);
     const clue = profile ? [profile.habitat, profile.diet ? 'Diet clue: ' + profile.diet : null].filter(Boolean).join(' · ') : 'Watch where you met it for clues.';
     const badgeCount = (gameState.dietBadges || {})[chosen.key] || 0;
-    const status = chosen.companion ? 'Companion — a good meal feeds it properly.' : 'Wild Birdex species — a perfect tray builds feeder trust (cheaper to recruit).';
+    const status = chosen.merlin ? 'Permanent companion — a source-backed falcon meal feeds him properly.' : chosen.companion ? 'Companion — a good meal feeds it properly.' : 'Wild Birdex species — a perfect tray builds feeder trust (cheaper to recruit).';
     speciesCard = '<div class="kitchen-guest">' +
       '<div class="kitchen-guest-name">' + escapeHtml(chosen.name) + (badgeCount ? ' <span class="kitchen-guest-badge">🏅 Diet Badge' + (badgeCount > 1 ? ' ×' + badgeCount : '') + '</span>' : '') + '</div>' +
       '<div class="kitchen-guest-status">' + status + '</div>' +
       '<div class="kitchen-guest-clue">' + escapeHtml(clue) + '</div>' +
+      kitchenDietGuidanceHTML(chosen, rule) +
       '<div class="kitchen-guest-notes">' + escapeHtml(kitchenNotesLine(chosen.key)) + '</div></div>';
   }
 
@@ -11356,17 +11608,18 @@ function renderKitchenPanelHTML() {
   const larderHtml = larderRows.length ? larderRows.map(([id, count]) => {
     const ing = kitchenIngredientById(id);
     if (!ing) return '';
-    return '<div class="kitchen-larder-item" title="' + escapeHtml(ing.desc) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
+    return '<div class="kitchen-larder-item" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(count) || 0) + '" title="' + escapeHtml(ing.desc) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
   }).join('') : '<div class="inventory-empty">Larder empty — go fishing from the Quest Roost, walk the map, or shop at the Seed &amp; Sundry.</div>';
 
-  return '<div class="room-add-panel kitchen-panel"><div class="room-add-title">🍳 The Prep Counter</div>' +
-    '<div class="kitchen-help">Pick a guest, build a plate from the Stores larder, and serve it the way the species really eats. Perfect trays earn Diet Badges for the Birdex.</div>' +
+  return '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
+    '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow; shops, map forage and quests add more larder stock.</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '<div class="inventory-empty">No birds discovered yet.</div>') + '</div>' +
     speciesCard +
     '<div class="kitchen-plate">' + kitchenState.slots.map((slot, i) => kitchenSlotHTML(slot, i)).join('') + '</div>' +
-    '<button class="kitchen-serve-btn" onclick="kitchenServeMeal()">🔔 Serve the tray</button>' +
+    '<button class="kitchen-serve-btn" data-feed-transaction-id="" onclick="kitchenServeMeal()">🔔 Serve the tray</button>' +
     '<div class="room-add-title kitchen-larder-title">🧺 Stores larder</div>' +
-    '<div class="kitchen-larder-grid">' + larderHtml + '</div></div>';
+    '<div class="kitchen-larder-grid">' + larderHtml + '</div>' +
+    kitchenPantryBridgeHTML() + '</div>';
 }
 
 function kitchenSelectSpecies(key) {
@@ -11396,9 +11649,9 @@ function kitchenOpenSlot(index) {
     const ing = kitchenIngredientById(id);
     const preps = ing.preps.map(pid => {
       const p = kitchenCore().prepById(pid);
-      return '<button class="kitchen-prep-chip" onclick="kitchenAssignSlot(' + index + ',\'' + id + '\',\'' + pid + '\')" title="' + escapeHtml(p.desc) + '">' + p.icon + ' ' + escapeHtml(p.label) + '</button>';
+      return '<button class="kitchen-prep-chip" data-ingredient-id="' + escapeHtml(id) + '" data-prep-id="' + escapeHtml(pid) + '" onclick="kitchenAssignSlot(' + index + ',\'' + id + '\',\'' + pid + '\')" title="' + escapeHtml(p.desc) + '">' + p.icon + ' ' + escapeHtml(p.label) + '</button>';
     }).join('');
-    return '<div class="kitchen-pick-row"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(ing.desc) + '</div></div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
+    return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(ing.desc) + '</div></div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
   }).join('') : '<div class="inventory-empty">Nothing in the larder. Send a bird on a Fishing Trip, forage the map, or buy supplies at the Seed &amp; Sundry.</div>';
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍳</div><div><div class="quest-name">Plate slot ' + (index + 1) + '</div><div class="quest-desc">Choose an ingredient, then how to serve it — the preparation matters as much as the food.</div></div></div>' +
@@ -11435,6 +11688,41 @@ function kitchenRecordFieldNotes(key, result) {
   gameState.kitchenNotes[key] = notes;
 }
 
+function kitchenDietSubject(chosen) {
+  if (!chosen) return null;
+  if (chosen.merlin) return { commonName:'Merlin', name:'Merlin', scientificName:'Falco columbarius', target:'merlin' };
+  return {
+    commonName: chosen.commonName || chosen.name,
+    name: chosen.name,
+    species: chosen.name,
+    scientificName: chosen.scientificName || chosen.scientific || (chosen.companion && (chosen.companion.scientificName || chosen.companion.scientific)) || null
+  };
+}
+
+function kitchenDietRuleForChoice(chosen) {
+  return inferBirdDiet(kitchenDietSubject(chosen) || (chosen && chosen.name));
+}
+
+function kitchenDietGuidanceHTML(chosen, rule) {
+  if (!chosen) return '';
+  return renderDietDisclosureHTML(kitchenDietSubject(chosen) || chosen.name, 'pantry-card', { title:'Pantry diet card', className:'kitchen-diet-guidance', guidanceKey:chosen.key });
+}
+
+function kitchenPantryBridgeHTML() {
+  const core = kitchenDietCore();
+  const bridge = core && core.PANTRY_BRIDGE ? core.PANTRY_BRIDGE : {};
+  const pantry = gameState.pantry || {};
+  const rows = Object.keys(FOODS).map(key => {
+    const info = FOODS[key];
+    const target = bridge[key] && kitchenIngredientById(bridge[key].ingredientId);
+    const count = Math.max(0, Number(pantry[key]) || 0);
+    return '<div class="kitchen-bridge-item" data-pantry-count="' + escapeHtml(key) + '" data-count="' + count + '">' +
+      '<span>' + info.emoji + '</span><span class="kitchen-larder-label">' + escapeHtml(info.label) + '</span><span class="kitchen-larder-count">×' + count + '</span>' +
+      (target ? '<span class="kitchen-bridge-arrow">→ ' + target.icon + '</span>' : '') + '</div>';
+  }).join('');
+  return '<div class="room-add-title kitchen-larder-title">🥣 Academy pantry bridge</div><div class="kitchen-bridge-grid">' + rows + '</div>';
+}
+
 function kitchenServeMeal() {
   if (!kitchenCore()) return;
   const chosen = kitchenSelectedChoice();
@@ -11444,9 +11732,18 @@ function kitchenServeMeal() {
 
   // Companions eat the meal for real, so respect fullness before spending food.
   const companion = chosen.companion || companionForSpecies(chosen.name);
+  if (chosen.merlin) {
+    const now = Date.now();
+    gameState.merlinCare = MERLIN_CORE.sanitizeMerlinCare(gameState.merlinCare, now);
+    const fedAt = Math.max(0, Number(gameState.merlinCare.lastFedAt) || 0);
+    if (gameState.merlinCare.hunger <= 0 || (fedAt > 0 && now - fedAt < 60 * 60 * 1000)) {
+      showToast('Merlin is still full — no food was spent.');
+      return;
+    }
+  }
   if (companion) {
     ensureBirdAcademy(companion);
-    if (academyCdLeft(companion.care.lastFed, 60 * 60 * 1000) > 0) { showToast(escapeHtml(chosen.name) + ' is still full — serve a wild Birdex species instead.'); return; }
+    if (Number(companion.care.hunger) <= 0 || academyCdLeft(companion.care.lastFed, 60 * 60 * 1000) > 0) { showToast(escapeHtml(chosen.name) + ' is still full — serve a wild Birdex species instead.'); return; }
   }
 
   const larder = ensureLarder();
@@ -11454,31 +11751,49 @@ function kitchenServeMeal() {
   slots.forEach(s => { need[s.ingredientId] = (need[s.ingredientId] || 0) + 1; });
   const short = Object.entries(need).find(([id, n]) => (larder[id] || 0) < n);
   if (short) { showToast('Not enough ' + (kitchenIngredientById(short[0])?.label || short[0]) + ' in the larder.'); return; }
-  Object.entries(need).forEach(([id, n]) => { larder[id] -= n; });
 
-  const rule = inferBirdDiet(chosen.name);
+  const rule = kitchenDietRuleForChoice(chosen);
   const result = kitchenCore().scoreMeal(rule, slots);
+  const acceptedMeal = result.refusedCount === 0 && result.perfectCount > 0;
+  const txId = 'kitchen-feed:' + chosen.key + ':' + hashStr(JSON.stringify(slots)) + ':' + Date.now();
+  result.transactionId = txId;
   kitchenRecordFieldNotes(chosen.key, result);
 
   const rewards = [];
   let badgeEarned = false;
-  if (result.tier === 'field_perfect') {
+  if (!acceptedMeal) {
+    rewards.push('No stock spent — this was not a primary compatible meal.');
+  } else {
+    Object.entries(need).forEach(([id, n]) => { larder[id] -= n; });
+  }
+
+  if (acceptedMeal && result.tier === 'field_perfect' && !chosen.merlin) {
     if (!gameState.dietBadges || typeof gameState.dietBadges !== 'object') gameState.dietBadges = {};
     const before = gameState.dietBadges[chosen.key] || 0;
     gameState.dietBadges[chosen.key] = before + 1;
     badgeEarned = before === 0;
   }
 
-  if (companion) {
+  if (chosen.merlin) {
+    if (acceptedMeal) {
+      const core = kitchenDietCore();
+      const now = Date.now();
+      const applied = core && typeof core.applyHungerDeltaToCare === 'function'
+        ? core.applyHungerDeltaToCare(gameState.merlinCare, { transactionId:txId, activityType:'feeding', activityId:'small_bird_prey_ration', delta:-42, now })
+        : { care:MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, hunger:(gameState.merlinCare.hunger || 20) - 42 }, now), transactionId:txId };
+      gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...applied.care, happiness:(applied.care.happiness || 80) + 7, energy:(applied.care.energy || 80) + 4, lastCareAt:now, lastFedAt:now }, now), 5, now);
+      rewards.push('Merlin fed · source-backed falcon ration');
+    }
+  } else if (companion) {
     const care = companion.care = companion.care || {};
-    if (result.tier === 'refused') {
-      care.happiness = clamp((care.happiness || 80) - 4, 0, 100);
+    if (!acceptedMeal) {
       rewards.push('The tray came back untouched.');
     } else {
       const hungerCut = result.tier === 'field_perfect' ? 35 : result.tier === 'hearty' ? 25 : 10;
-      care.hunger = clamp((care.hunger || 0) - hungerCut, 0, 100);
-      care.happiness = clamp((care.happiness || 80) + (result.tier === 'field_perfect' ? 12 : result.tier === 'hearty' ? 8 : 2), 0, 100);
-      care.lastFed = new Date().toISOString();
+      applyBirdHungerTransaction(companion.id, 'feeding', txId, -hungerCut, Date.now());
+      const fedCare = companion.care = companion.care || care;
+      fedCare.happiness = clamp((fedCare.happiness || 80) + (result.tier === 'field_perfect' ? 12 : result.tier === 'hearty' ? 8 : 2), 0, 100);
+      fedCare.lastFed = new Date().toISOString();
       companion.training = companion.training || {};
       companion.training.feedCount = (companion.training.feedCount || 0) + 1;
       if (result.tier === 'field_perfect') {
@@ -11496,18 +11811,20 @@ function kitchenServeMeal() {
   } else {
     // A feeder tray for a wild Birdex species: coins for good field craft, and
     // a perfect tray builds enough trust to make recruiting cheaper.
-    let coins = result.coins;
-    if (badgeEarned) coins += kitchenCore().FIRST_BADGE_BONUS_COINS;
-    if (coins > 0) { addCoins(coins); rewards.push('+' + coins + ' coins'); }
-    addPlayerXp(Math.ceil(result.xp / 2));
-    rewards.push('+' + Math.ceil(result.xp / 2) + ' Trainer XP');
-    if (result.tier === 'field_perfect' && chosen.record) {
-      const badges = (gameState.dietBadges || {})[chosen.key] || 1;
-      const base = RARITY_RECRUIT_COST[chosen.record.rarity] || chosen.record.recruitCost || 150;
-      const discounted = kitchenCore().discountedRecruitCost(base, badges);
-      if (discounted < (chosen.record.recruitCost || base)) {
-        chosen.record.recruitCost = discounted;
-        rewards.push('feeder trust — recruit cost now ' + discounted + ' 🪙');
+    if (acceptedMeal) {
+      let coins = result.coins;
+      if (badgeEarned) coins += kitchenCore().FIRST_BADGE_BONUS_COINS;
+      if (coins > 0) { addCoins(coins); rewards.push('+' + coins + ' coins'); }
+      addPlayerXp(Math.ceil(result.xp / 2));
+      rewards.push('+' + Math.ceil(result.xp / 2) + ' Trainer XP');
+      if (result.tier === 'field_perfect' && chosen.record) {
+        const badges = (gameState.dietBadges || {})[chosen.key] || 1;
+        const base = RARITY_RECRUIT_COST[chosen.record.rarity] || chosen.record.recruitCost || 150;
+        const discounted = kitchenCore().discountedRecruitCost(base, badges);
+        if (discounted < (chosen.record.recruitCost || base)) {
+          chosen.record.recruitCost = discounted;
+          rewards.push('feeder trust — recruit cost now ' + discounted + ' 🪙');
+        }
       }
     }
   }
@@ -11533,7 +11850,7 @@ function kitchenShowResult(chosen, rule, result, rewards) {
       '<div class="kitchen-result-note">' + escapeHtml(row.note) + '</div></div>';
   }).join('');
   const fact = rule && rule.fact ? '<div class="kitchen-result-fact">📖 ' + escapeHtml(rule.fact) + '</div>' : '';
-  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
+  el.innerHTML = '<div class="quest-overlay-panel" data-feed-result-sheet="kitchen" data-feed-transaction-id="' + escapeHtml(result.transactionId || '') + '"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + result.tierIcon + '</div><div><div class="quest-name">' + escapeHtml(result.tierLabel) + '</div><div class="quest-desc">' + escapeHtml(chosen.name) + ' · ' + result.points + ' point' + (result.points === 1 ? '' : 's') + '</div></div></div>' +
     slotRows + fact +
     (rewards.length ? '<div class="kitchen-result-rewards">' + rewards.map(r => '<span>' + escapeHtml(r) + '</span>').join('') + '</div>' : '') +
@@ -11552,6 +11869,12 @@ window.__burbzKitchenDebug = {
   assign: kitchenAssignSlot,
   serve: kitchenServeMeal,
   state: () => kitchenState
+};
+window.__burbzDietHungerDebug = {
+  core: () => window.BurbzDietHungerCore,
+  record: species => window.BurbzDietHungerCore && BurbzDietHungerCore.getDietRecord(species),
+  score: (species, ingredient) => window.BurbzDietHungerCore && BurbzDietHungerCore.scoreFoodCompatibility(species, ingredient),
+  merlin: () => window.BurbzDietHungerCore && BurbzDietHungerCore.getDietRecord({ scientificName:'Falco columbarius', commonName:'Merlin' })
 };
 
 function academyGroom(birdId) {
@@ -11587,6 +11910,7 @@ function academyDrill(birdId, stat) {
   if (!bird || !['atk','def','spd','int'].includes(stat)) return;
   ensureBirdAcademy(bird);
   if (academyCdLeft(bird.care.lastTrained, 90*60*1000) > 0) { showToast('Needs a breather between drills!'); return; }
+  if (!warnOrBlockBirdWork(bird, 'academy drill')) return;
 
   const bonusKey = stat + 'Bonus';
   if ((bird.training[bonusKey] || 0) >= 30) { showToast('That stat is maxed from training!'); return; }
@@ -11594,7 +11918,7 @@ function academyDrill(birdId, stat) {
   bird.training[bonusKey] = clamp((bird.training[bonusKey] || 0) + 1, 0, 30);
   bird[stat] = clamp((bird[stat] || 10) + 1, 10, 999);
   bird.care.lastTrained = new Date().toISOString();
-  bird.care.hunger = clamp((bird.care.hunger || 0) + 10, 0, 100);
+  applyBirdHungerTransaction(bird.id, 'academy_drill', stat + ':' + Date.now(), 10, Date.now());
   recalcBirdPower(bird);
   levelUpBird(bird, 8);
 
@@ -11618,7 +11942,7 @@ function academyForage(birdId) {
   ensureBirdAcademy(bird);
   if (academyCdLeft(bird.academy.lastForage, 60*60*1000) > 0) { showToast('Still digesting the last forage!'); return; }
   bird.academy.lastForage = new Date().toISOString();
-  bird.care.hunger = clamp((bird.care.hunger || 0) - 22, 0, 100);
+  recordBirdFeedingRecovery(bird, 22, 'academy-forage');
   const lucky = Math.random() < 0.3;
   if (lucky) bird.care.happiness = clamp((bird.care.happiness || 80) + 10, 0, 100);
   levelUpBird(bird, 6);
@@ -11667,21 +11991,21 @@ function tickAcademy() {
     }
     if (room === 'dorm') {
       b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04)), 1, b.maxHp || 100);
-      b.care.hunger = clamp((b.care.hunger || 0) + 1, 0, 100);
+      adjustBirdHungerUntracked(b, 1, now);
     } else if (room === 'hospital') {
       b.hp = clamp((b.hp || b.maxHp) + Math.max(2, Math.round((b.maxHp || 100) * 0.10)), 1, b.maxHp || 100);
-      b.care.hunger = clamp((b.care.hunger || 0) + 1, 0, 100);
+      adjustBirdHungerUntracked(b, 1, now);
     } else if (room === 'training') {
       b.xp = (b.xp || 0) + 1;
-      b.care.hunger = clamp((b.care.hunger || 0) + 4, 0, 100);
+      adjustBirdHungerUntracked(b, 4, now);
       b.care.happiness = clamp((b.care.happiness || 80) - 1, 0, 100);
     } else if (room === 'crowbar') {
       // The bar is fun: morale climbs alongside Charm.
       b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
-      b.care.hunger = clamp((b.care.hunger || 0) + 2, 0, 100);
+      adjustBirdHungerUntracked(b, 2, now);
     } else {
       b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
-      b.care.hunger = clamp((b.care.hunger || 0) + 2, 0, 100);
+      adjustBirdHungerUntracked(b, 2, now);
     }
   });
   saveState();
@@ -12066,6 +12390,7 @@ function startBirdTrainingSession(birdId, templateId) {
   if (tplRoom !== 'training' && !isAcademyBuildingBuilt(tplRoom)) { showToast('Build the ' + ((tpl && tpl.roomLabel) || tplRoom) + ' to unlock ' + ((tpl && tpl.label) || 'this drill') + '.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is already in training.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away questing right now.'); return; }
+  if (!warnOrBlockBirdWork(bird, 'training')) return;
   if (!window.BurbzAcademyCore || typeof window.BurbzAcademyCore.createTrainingSession !== 'function') { showToast('Training scrolls are still loading — try again in a moment.'); return; }
   ensureBirdAcademy(bird);
   bird.academy.room = tplRoom;
@@ -12112,7 +12437,9 @@ function claimBirdTrainingSession(sessionId) {
     }
   }
   bird.care.lastTrained = new Date().toISOString();
-  bird.care.hunger = clamp((bird.care.hunger || 0) + (rewards.hunger || 10), 0, 100);
+  const trainingHungerDelta = Number.isFinite(Number(rewards.hunger))
+    ? Number(rewards.hunger)
+    : ((dietHungerCore() && dietHungerCore().ACTIVITY_HUNGER_DELTAS && dietHungerCore().ACTIVITY_HUNGER_DELTAS.training) || 10);
   bird.care.happiness = clamp((bird.care.happiness || 80) + (rewards.happiness || -2), 0, 100);
   recalcBirdPower(bird);
   levelUpBird(bird, rewards.xp || 30);
@@ -12123,6 +12450,7 @@ function claimBirdTrainingSession(sessionId) {
     addPlayerXp(120);
   }
   session.status = 'claimed';
+  applyBirdHungerTransaction(session.birdId, 'training', session.id, trainingHungerDelta, Date.now());
   saveState();
   SFX.questComplete();
   showToast('🎓 Training complete! +' + bonus + ' ' + (rewards.statLabel || stat.toUpperCase()) + ', +' + (rewards.xp || 30) + ' XP');
@@ -12159,10 +12487,15 @@ function renderTrainingHallPanel(birds, others) {
     const moveLine = t.moveLine ? '<div class="training-session-meta">Move line: ' + escapeHtml(t.moveLine) + '</div>' : '';
     const buttons = !roomBuilt
       ? '<div class="academy-empty">🔒 Build the ' + escapeHtml(t.roomLabel || t.room) + ' to unlock this discipline.</div>'
-      : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => '<button class="training-bird-btn" onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')">Send ' + escapeHtml(birdDisplayName(b)) + '</button>').join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
+      : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => {
+        const readiness = birdWorkReadiness(b, 'training');
+        const hungerLabel = readiness.status && readiness.status.label ? readiness.status.label.toLowerCase() : 'fed';
+        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + hungerLabel;
+        return '<button class="training-bird-btn" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
+      }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
     return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Six disciplines, one per Academy room: each timed session raises a stat AND teaches Perch League battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Six disciplines, one per Academy room: each timed session raises a stat AND teaches Perch League battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function renderAcademyRoomInterior() {
@@ -15049,6 +15382,7 @@ const VILLAGE_SHOPS = {
       { id: 'pack_meat',    label: 'Butcher scraps', detail: '+2 Small prey',   price: 20, food: 'meat',    qty: 2 },
       { id: 'pack_acorns',  label: 'Acorn pouch',    detail: '+4 Acorns',       price: 10, food: 'acorns',  qty: 4 },
       { id: 'larder_minnow',   label: 'Live minnow pail',  detail: 'Stores larder: +2 Live Minnow — fish-hunters strike live prey', price: 22, larder: 'live_minnow',     qty: 2 },
+      { id: 'larder_falcon',   label: 'Falcon ration',     detail: 'Stores larder: +2 Small-Bird Prey Ration — primary food for Merlin the small falcon', price: 24, larder: 'small_bird_prey_ration', qty: 2 },
       { id: 'larder_mealworm', label: 'Mealworm crate',    detail: 'Stores larder: +3 Mealworm Scoop for the Prep Counter',        price: 15, larder: 'mealworm_scoop',  qty: 3 },
       { id: 'larder_seeds',    label: 'Sunflower sack',    detail: 'Stores larder: +3 Sunflower Seeds — husk them for finches',    price: 12, larder: 'sunflower_seeds', qty: 3 },
       { id: 'larder_suet',     label: 'Suet cake wrap',    detail: 'Stores larder: +2 Suet Cake — press it into a bark log',       price: 14, larder: 'suet_cake',       qty: 2 }
@@ -19799,7 +20133,19 @@ function villageBuy(shopKey, itemId) {
     let care = getMerlinCare();
     if (item.effect === 'merlin_energy') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, energy:care.energy + 30 }, 4, Date.now()); msg = '🧪 Merlin’s energy crackles back! +30 energy'; }
     if (item.effect === 'merlin_happy') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, happiness:care.happiness + 30 }, 5, Date.now()); msg = '🧪 Merlin is delighted! +30 happiness'; }
-    if (item.effect === 'merlin_feast') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, hunger:0 }, 5, Date.now()); msg = '🧪 Merlin’s food bar is completely full!'; }
+    if (item.effect === 'merlin_feast') {
+      const now = Date.now();
+      const txId = 'merlin-feast-elixir:' + now;
+      const before = clamp(Number(care.hunger) || 0, 0, 100);
+      care = MERLIN_CORE.grantMerlinBondXp({
+        ...care,
+        hunger:0,
+        lastHungerAt:now,
+        hungerTransactions:[...((care && care.hungerTransactions) || []), txId],
+        hungerTransactionLog:[...((care && care.hungerTransactionLog) || []), { id:txId, type:'merlin-feeding', activityId:'feast_elixir', delta:-before, before, after:0, at:now }].slice(-80)
+      }, 5, now);
+      msg = '🧪 Merlin’s food bar is completely full!';
+    }
     if (item.effect === 'merlin_play') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, happiness:care.happiness + 25, energy:care.energy - 8 }, 8, Date.now()); msg = '⚒️ Merlin chases the whistle-light! +25 happiness'; }
     if (item.effect === 'merlin_rest') { care = MERLIN_CORE.grantMerlinBondXp({ ...care, energy:care.energy + 35 }, 3, Date.now()); msg = '⚒️ Merlin curls up on the feather pillow. +35 energy'; }
     gameState.merlinCare = MERLIN_CORE.sanitizeMerlinCare(care, Date.now());
@@ -20898,6 +21244,7 @@ function renderBirdex() {
 
 
 function createBirdCardHTML(bird, idx) {
+  ensureBirdAcademy(bird);
   const hpPct = bird.maxHp ? Math.floor((bird.hp / bird.maxHp) * 100) : 100;
   const hpColor = hpPct > 50 ? 'var(--hp-green)' : hpPct > 25 ? 'var(--hp-yellow)' : 'var(--hp-red)';
   const cardLv = Math.max(1, Number(bird.level) || 1);
@@ -20917,8 +21264,10 @@ function createBirdCardHTML(bird, idx) {
 
   const cardDietBadge = (gameState.dietBadges || {})[speciesKey(canonicalSpeciesName(bird.species || bird.commonName))]
     ? '<div class="birdex-diet-badge" title="Diet mastered at the Kitchen & Pantry">🍽️ DIET</div>' : '';
+  const hungerStatus = hungerStatusForBird(bird);
+  const cardDietDisclosure = renderDietDisclosureHTML(bird, 'companion-card', { compact:true, compatible:false, className:'card-diet-disclosure' });
   return `
-    <div class="bird-card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
+    <div class="bird-card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}">
       <div class="bird-card-inner">
         <div class="card-front">
           ${cardDietBadge}
@@ -20933,6 +21282,8 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-info">
             <div class="card-name">${escapeHtml(birdDisplayName(bird))}</div>
             <div class="card-species">${escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species))}</div>
+            <div class="card-info-hint">Hunger: ${escapeHtml(hungerStatus.label)} · ${Math.round(hungerStatus.hunger)}/100</div>
+            ${cardDietDisclosure}
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
             <div class="card-xp-bar" title="${cardXpTitle}"><div class="card-xp-fill" style="width:${cardXpPct}%"></div></div>
             <div class="card-stats-row">
@@ -22510,20 +22861,24 @@ function renderBattleSelect() {
       const order = battleSelectedIds.indexOf(b.id);
       const hpPct = Math.round(clamp((b.hp || b.maxHp) / (b.maxHp || 1), 0, 1) * 100);
       const moves = core.trainedMoves(b.academy && b.academy.disciplines).length;
-      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
+      const readiness = birdWorkReadiness(b, 'battle');
+      const hungerMeta = ' · ' + readiness.status.label;
+      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (!readiness.ok ? ' hungry-blocked' : readiness.warning ? ' hungry-warn' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
         '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
         fighterArtHTML(b, 'pk') +
         '<div class="pk-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
-        '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + '</div>' +
+        '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + escapeHtml(hungerMeta) + '</div>' +
         typeChipHTML(core.classifySpecies(b.species)) +
         '<div class="pk-hp"><div style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div>' +
         '</button>';
     }).join('');
   }
   const need = Math.min(4, flock.length);
-  $('battleStartBtn').disabled = !flock.length || battleSelectedIds.length < need;
-  $('battleStartBtn').textContent = flock.length ? (battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '') : liberation ? 'LIBERATE ' + liberation.name.toUpperCase() : 'START BATTLE') : 'SCAN A BIRD FIRST';
+  const selectedBattleBirds = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
+  const hungerBlocked = selectedBattleBirds.some(b => !birdWorkReadiness(b, 'battle').ok);
+  $('battleStartBtn').disabled = !flock.length || battleSelectedIds.length < need || hungerBlocked;
+  $('battleStartBtn').textContent = flock.length ? (battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '') : hungerBlocked ? 'FEED URGENT BIRD' : liberation ? 'LIBERATE ' + liberation.name.toUpperCase() : 'START BATTLE') : 'SCAN A BIRD FIRST';
 
   // The teaching wheel — real facts, always visible.
   $('typeWheel').innerHTML = '<div class="type-wheel-title">Wing-class matchups</div>' +
@@ -22557,6 +22912,9 @@ function startPerchBattle() {
   const flock = getBattleFlock();
   const team = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
   if (!team.length) return;
+  const blocked = team.find(b => !birdWorkReadiness(b, 'battle').ok);
+  if (blocked) { showToast('🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'); renderBattleSelect(); return; }
+  if (team.some(b => birdWorkReadiness(b, 'battle').warning)) showToast('🍽️ One or more selected birds are hungry — feed them after this battle.');
   const liberation = pendingEmpireLiberation();
   const rival = leagueRivalOpponents();
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter.
@@ -22577,6 +22935,7 @@ function startPerchBattle() {
   if (potionSips.length) saveState();
   const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
+  battle.activityId = 'battle_' + battle.seed;
   battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
   $('battleSelect').style.display = 'none';
   $('battleResult').style.display = 'none';
@@ -22802,6 +23161,8 @@ function playBattleEvents(events) {
 }
 
 function endPerchBattle() {
+  if (!battleState || battleState.completed) return;
+  battleState.completed = true;
   const core = battleCore();
   const b = battleState.battle;
   const league = ensureLeagueState();
@@ -22851,12 +23212,14 @@ function endPerchBattle() {
 
   // Battle fatigue closes the care loop: damage persists, birds get hungry,
   // and the Hospital / Kitchen / Roost become the places to recover.
+  const battleActivityId = b.activityId || b.seed || ('battle_' + tierIndex + '_' + b.turn);
   b.teams.player.forEach(f => {
     const bird = gameState.flock.find(x => x.id === f.birdId);
     if (!bird) return;
     bird.hp = clamp(Math.max(1, Math.round(f.hp)), 1, bird.maxHp);
-    bird.care = bird.care || { hunger: 20, happiness: 80 };
-    bird.care.hunger = clamp((bird.care.hunger || 0) + 12, 0, 100);
+    normalizeBirdCare(bird);
+    const delta = (dietHungerCore() && dietHungerCore().ACTIVITY_HUNGER_DELTAS && dietHungerCore().ACTIVITY_HUNGER_DELTAS.battle) || 12;
+    applyBirdHungerTransaction(bird.id, 'battle', battleActivityId, delta, Date.now());
     bird.care.happiness = clamp((bird.care.happiness || 80) + (won ? 4 : -3), 0, 100);
     levelUpBird(bird, rewards.birdXp);
   });
@@ -22966,7 +23329,7 @@ function getMerlinCare() {
 
 function getPetMood() {
   const pet = getMerlinCare();
-  if (pet.hunger > 70) return 'Hungry for mealworms';
+  if (pet.hunger > 70) return 'Hungry for falcon food';
   if (pet.energy < 30) return 'Ready for a wizard nap';
   if (pet.happiness < 35) return 'Needs a little play';
   if (pet.happiness > 85 && pet.hunger < 35) return 'Sparkly and magnificent';
@@ -22999,8 +23362,15 @@ function renderMerlinCareMenu() {
     if ($(valueId)) $(valueId).textContent = safe + '%';
   });
   if ($('merlinCareMood')) $('merlinCareMood').textContent = getPetMood();
+  const core = dietHungerCore();
+  const status = core && typeof core.hungerStatusForCare === 'function'
+    ? core.hungerStatusForCare(pet, Date.now())
+    : { label: pet.hunger >= 85 ? 'Urgent care' : pet.hunger >= 70 ? 'Hungry' : pet.hunger >= 45 ? 'Peckish' : 'Fed', hunger:clamp(Number(pet.hunger) || 0, 0, 100) };
+  if ($('merlinHungerStatus')) $('merlinHungerStatus').textContent = status.label + ' · ' + Math.round(status.hunger) + '/100 hunger';
   if ($('merlinBondLevel')) $('merlinBondLevel').textContent = 'LV.' + pet.bondLevel;
-  if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(gameState.pantry && gameState.pantry.insects) || 0));
+  const larder = gameState.inventory && gameState.inventory.larder;
+  if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(larder && larder.small_bird_prey_ration) || 0));
+  if ($('merlinDietGuidance')) $('merlinDietGuidance').outerHTML = renderDietDisclosureHTML(MERLIN_GUIDE, 'merlin-care', { title:'Falco columbarius diet', className:'merlin-diet-guidance' });
 }
 
 function renderPetCompanion() {
@@ -23075,8 +23445,40 @@ function startPetCareLoop() {
 }
 
 function careForMerlin(action) {
-  const result = MERLIN_CORE.applyMerlinCareAction(getMerlinCare(), gameState.pantry || {}, action, Date.now());
-  gameState.merlinCare = result.state; gameState.pantry = result.pantry;
+  if (action === 'feed') {
+    const core = dietHungerCore();
+    if (core && typeof core.applyFeedingTransaction === 'function') {
+      const now = Date.now();
+      const tx = core.applyFeedingTransaction(
+        gameState,
+        { target:'merlin', scientificName:'Falco columbarius', commonName:'Merlin' },
+        { ingredientId:'small_bird_prey_ration', prep:'whole' },
+        { transactionId:'merlin-feed:small_bird_prey_ration:' + now, now }
+      );
+      gameState = tx.state;
+      if (tx.ok && !tx.duplicate) {
+        gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, energy:(gameState.merlinCare.energy || 80) + 4, lastCareAt:now }, now), 5, now);
+      }
+      saveState(); renderPetCompanion();
+      const message = tx.ok
+        ? 'Falcon food served: a source-backed small-bird prey ration suits Falco columbarius.'
+        : (Math.max(0, Number(ensureLarder().mealworm_scoop) || 0) > 0
+          ? 'Merlin refuses mealworms as a main meal: prepare a small-bird prey ration.'
+          : tx.message);
+      if ($('merlinCareNote')) $('merlinCareNote').textContent = message;
+      petSay(message);
+      if (tx.ok) { makePetSparkles(5); SFX.capture(); vibrate(20); }
+      else SFX.tap();
+      return tx.ok;
+    }
+  }
+  const larder = ensureLarder();
+  const feedStock = { ...(gameState.pantry || {}), small_bird_prey_ration:Math.max(0, Number(larder.small_bird_prey_ration) || 0) };
+  const result = MERLIN_CORE.applyMerlinCareAction(getMerlinCare(), feedStock, action, Date.now());
+  gameState.merlinCare = result.state;
+  gameState.pantry = { ...(result.pantry || {}) };
+  larder.small_bird_prey_ration = Math.max(0, Number(result.pantry && result.pantry.small_bird_prey_ration) || 0);
+  delete gameState.pantry.small_bird_prey_ration;
   saveState(); renderPetCompanion();
   if ($('merlinCareNote')) $('merlinCareNote').textContent = result.message;
   petSay(result.message);

@@ -6,7 +6,8 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-charm-diplomacy-v114-20260723';
+const BURBZ_CACHE = 'burbz-diet-hunger-release-v115-20260723';
+// diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
 const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
@@ -39,8 +40,11 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
   './quest_core.js?v=quest-path-alignment-r3-20260723',
-  './academy_treehouse_core.js?v=charm-diplomacy-20260723',
-  './kitchen_pantry_core.js?v=kitchen-pantry-20260722',
+  './academy_treehouse_core.js?v=diet-hunger-release-20260723',
+  './kitchen_pantry_core.js?v=diet-hunger-release-20260723',
+  './data/bird-diet-records.js?v=diet-hunger-release-20260723',
+  './bird_diet_hunger_core.js?v=diet-hunger-release-20260723',
+  './diet_hunger_core.js?v=diet-hunger-release-20260723',
   './scan_economy_core.js',
   './sound_listener_core.js?v=merlin-discovery-history-v3-20260716',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
@@ -89,7 +93,7 @@ const BURBZ_ASSETS = [
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
   './audio_core.js?v=medieval-bird-audio-v2-20260721',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
-  './merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723',
+  './merlin_companion_core.js?v=diet-hunger-release-20260723',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/ui-book.mp3',
   './assets/audio/ui-lock.mp3',
@@ -143,13 +147,16 @@ const BURBZ_CORE = [
   './assets/tex/grass_n.jpg',
   './assets/tex/cobble_c.jpg',
   './assets/tex/cobble_n.jpg',
-  './academy_treehouse_core.js?v=charm-diplomacy-20260723',
-  './kitchen_pantry_core.js?v=kitchen-pantry-20260722',
+  './academy_treehouse_core.js?v=diet-hunger-release-20260723',
+  './kitchen_pantry_core.js?v=diet-hunger-release-20260723',
+  './data/bird-diet-records.js?v=diet-hunger-release-20260723',
+  './bird_diet_hunger_core.js?v=diet-hunger-release-20260723',
+  './diet_hunger_core.js?v=diet-hunger-release-20260723',
   './battle_core.js?v=charm-diplomacy-20260723',
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
   './audio_core.js?v=medieval-bird-audio-v2-20260721',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
-  './merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723',
+  './merlin_companion_core.js?v=diet-hunger-release-20260723',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/ui-book.mp3',
   './assets/audio/ui-lock.mp3',

@@ -52,10 +52,10 @@ def test_merlin_tamagotchi_menu_is_accessible_and_actionable():
         "function closeMerlinCareMenu(",
     ]:
         assert marker in html
-    assert "merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723" in html
+    assert "merlin_companion_core.js?v=diet-hunger-release-20260723" in html
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-charm-diplomacy-v114-20260723" in sw
-    assert "./merlin_companion_core.js?v=merlin-tamagotchi-v1-20260723" in sw
+    assert "burbz-diet-hunger-release-v115-20260723" in sw
+    assert "./merlin_companion_core.js?v=diet-hunger-release-20260723" in sw
     assert "./bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" in sw
 
 
@@ -94,22 +94,32 @@ def test_merlin_care_actions_and_elapsed_decay_are_bounded_and_persistable():
         """
 const c=require('./merlin_companion_core.js');
 let care=c.sanitizeMerlinCare({hunger:70,happiness:50,energy:40,bondXp:95,bondLevel:1,lastCareAt:1000000},1000000);
-let pantry={insects:2};
+let pantry={small_bird_prey_ration:1,insects:2};
 const fed=c.applyMerlinCareAction(care,pantry,'feed',1060000); care=fed.state; pantry=fed.pantry;
+const refused=c.applyMerlinCareAction(care,{insects:2},'feed',1090000);
 const played=c.applyMerlinCareAction(care,pantry,'play',1120000); care=played.state;
 const rested=c.applyMerlinCareAction(care,pantry,'rest',1180000); care=rested.state;
 const ticked=c.tickMerlinCare(care,60,4780000);
 const empty=c.applyMerlinCareAction(care,{insects:0},'feed',1240000);
-console.log(JSON.stringify({fed,played,rested,ticked,empty}));
+const full=c.applyMerlinCareAction({hunger:0,happiness:80,energy:80,lastFedAt:null},{small_bird_prey_ration:1},'feed',1300000);
+console.log(JSON.stringify({fed,refused,played,rested,ticked,empty,full}));
 """
     )
     assert out["fed"]["ok"] is True
-    assert out["fed"]["pantry"]["insects"] == 1
+    assert out["fed"]["pantry"]["small_bird_prey_ration"] == 0
+    assert out["fed"]["pantry"]["insects"] == 2
     assert out["fed"]["state"]["hunger"] < 70
+    assert out["refused"]["ok"] is False
+    assert out["refused"]["pantry"]["insects"] == 2
+    assert out["refused"]["state"]["hunger"] == out["fed"]["state"]["hunger"]
     assert out["played"]["state"]["happiness"] > out["fed"]["state"]["happiness"]
     assert out["rested"]["state"]["energy"] > out["played"]["state"]["energy"]
     assert 0 <= out["ticked"]["hunger"] <= 100
     assert 0 <= out["ticked"]["happiness"] <= 100
     assert 0 <= out["ticked"]["energy"] <= 100
     assert out["empty"]["ok"] is False
+    assert out["full"]["ok"] is False
+    assert out["full"]["pantry"]["small_bird_prey_ration"] == 1
+    assert out["full"]["state"]["hunger"] == 0
+    assert out["full"]["state"]["lastFedAt"] is None
     assert out["empty"]["pantry"]["insects"] == 0

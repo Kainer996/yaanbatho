@@ -205,13 +205,15 @@ const canonicalSpeciesName = n => String(n||'').split('(')[0].trim();
 const companionForSpecies = () => null;
 const discoveredSpeciesRecords = () => Object.values(gameState.discoveredSpecies || {}).filter(Boolean);
 const kitchenShowResult = (chosen, rule, result) => { global.__lastResult = result; };
+const hashStr = str => Array.from(String(str)).reduce((h, ch) => Math.abs(((h << 5) - h + ch.charCodeAt(0)) | 0), 0);
 const $ = () => null;
 """
     functions = "\n".join(function_source(html, name) for name in (
-        "kitchenCore", "kitchenIngredientById", "ensureLarder", "addLarderIngredient",
-        "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNotes", "kitchenServeMeal",
+        "kitchenCore", "kitchenIngredientById", "legacyKitchenSupplyIngredient", "ensureLarder", "addLarderIngredient",
+        "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNotes",
+        "kitchenDietSubject", "kitchenDietRuleForChoice", "kitchenServeMeal",
     ))
-    rules = diet_rules_source() + "\nfunction inferBirdDiet(n){ for (const r of BIRD_DIET_RULES) if (r.match.test(n)) return r; return null; }\n"
+    rules = diet_rules_source() + "\nfunction inferBirdDiet(n){ const name = typeof n === 'object' ? String(n.commonName || n.name || n.species || n.scientificName || '') : String(n || ''); for (const r of BIRD_DIET_RULES) if (r.match.test(name)) return r; return null; }\n"
     driver = """
 // kitchenState is declared inside the extracted game code.
 kitchenState = { speciesKey: 'osprey', slots: [ {ingredientId:'live_minnow', prep:'live'}, {ingredientId:'live_minnow', prep:'live'}, null ] };
@@ -259,8 +261,9 @@ def test_fishing_trip_expedition_exists_and_yields_only_larder_ingredients():
 def test_claimed_expedition_ingredients_route_to_larder_not_misc_items():
     html = HTML.read_text(encoding="utf-8")
     claim = function_source(html, "claimBirdExpedition")
-    assert "kitchenIngredientById(key)" in claim
-    assert "addLarderIngredient(key, count)" in claim
+    assert "legacyKitchenSupplyIngredient(key) || key" in claim
+    assert "kitchenIngredientById(larderKey)" in claim
+    assert "addLarderIngredient(larderKey, count)" in claim
     assert "fishing_trip:" in html  # quest board blurb
 
 
@@ -285,7 +288,7 @@ def test_map_forage_and_shop_stock_feed_the_larder():
 def test_kitchen_prep_counter_is_wired_into_the_kitchen_room():
     html = HTML.read_text(encoding="utf-8")
     for marker in (
-        '<script src="kitchen_pantry_core.js?v=kitchen-pantry-20260722"></script>',
+        '<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>',
         "room === 'kitchen' ? renderKitchenPanelHTML()",
         "function renderKitchenPanelHTML(",
         "function kitchenServeMeal(",
@@ -318,4 +321,4 @@ def test_saves_migrate_larder_badges_and_notes_and_birdex_shows_diet_badges():
 def test_service_worker_caches_the_kitchen_core():
     sw = SW.read_text(encoding="utf-8")
     assert "const BURBZ_CACHE = 'burbz-" in sw
-    assert sw.count("./kitchen_pantry_core.js?v=kitchen-pantry-20260722") == 2
+    assert sw.count("./kitchen_pantry_core.js?v=diet-hunger-release-20260723") == 2
