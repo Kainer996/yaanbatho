@@ -1,18 +1,26 @@
-importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');
-importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713');
-importScripts('./au_bird_expansion.js?v=au-source-backed-20260713');
-importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715');
-importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
-importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
-importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
+// A stale live server can be missing one roster file (a 404 makes
+// importScripts throw, which would kill the whole service worker and take
+// offline support down with it). Each import falls back to the jsDelivr
+// mirror of GitHub main, and a file that is missing everywhere is skipped.
+function swImportFallback(file) {
+  try { importScripts('https://cdn.jsdelivr.net/gh/Kainer996/yaanbatho@main/public/burbz/' + file); }
+  catch (e) { console.warn('BURBZ SW: roster file unavailable', file); }
+}
+try { importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713'); } catch (e) { swImportFallback('uk_bird_expansion_50.js'); }
+try { importScripts('./uk_bird_expansion_2.js?v=uk26-source-backed-20260713'); } catch (e) { swImportFallback('uk_bird_expansion_2.js'); }
+try { importScripts('./au_bird_expansion.js?v=au-source-backed-20260713'); } catch (e) { swImportFallback('au_bird_expansion.js'); }
+try { importScripts('./uk_bird_expansion_3.js?v=uk-regular-completion-20260715'); } catch (e) { swImportFallback('uk_bird_expansion_3.js'); }
+try { importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715'); } catch (e) { swImportFallback('au_bird_expansion_2.js'); }
+try { importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715'); } catch (e) { swImportFallback('national_bird_completion_20260715.js'); }
+try { importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722'); } catch (e) { swImportFallback('uk_bird_expansion_4.js'); }
 
-const BURBZ_CACHE = 'burbz-3d-tree-cylinders-v108-20260722';
-const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
-const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
-const AU_SW = self.BURBZ_AU_BIRD_EXPANSION;
-const UK_FINAL_SW = self.BURBZ_UK_BIRD_EXPANSION_FINAL;
-const AU50_SW = self.BURBZ_AU_BIRD_EXPANSION_50;
-const NATIONAL_SW = self.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;
+const BURBZ_CACHE = 'burbz-kitchen-core-delivery-v109-20260723';
+const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50 || { art: {} };
+const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26 || { art: {} };
+const AU_SW = self.BURBZ_AU_BIRD_EXPANSION || { art: {} };
+const UK_FINAL_SW = self.BURBZ_UK_BIRD_EXPANSION_FINAL || { art: {} };
+const AU50_SW = self.BURBZ_AU_BIRD_EXPANSION_50 || { art: {} };
+const NATIONAL_SW = self.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || { art: {} };
 const UK4_SW = self.BURBZ_UK_BIRD_EXPANSION_4;
 // Wave-4 placeholder art is lightweight local SVG (no PNG cutout counterpart).
 const UK4_ART = UK4_SW ? Object.values(UK4_SW.art) : [];

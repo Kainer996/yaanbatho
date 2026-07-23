@@ -2987,6 +2987,38 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script>
+// The live server has shipped this index.html without one of its companion
+// core files before (a stale sync left kitchen_pantry_core.js as a 404, so
+// the Prep Counter stayed "warming up" forever). Any core that failed to
+// load is re-fetched from the jsDelivr mirror of the GitHub main branch —
+// same pattern as the three.js CDN fallback above.
+(function () {
+  var mirror = 'https://cdn.jsdelivr.net/gh/Kainer996/yaanbatho@main/public/burbz/';
+  [
+    ['BurbzAcademyCore', 'academy_treehouse_core.js'],
+    ['BurbzKitchenCore', 'kitchen_pantry_core.js'],
+    ['BurbzBattleCore', 'battle_core.js'],
+    ['BurbzLootCore', 'loot_crafting_core.js'],
+    ['BurbzEmpireMapCore', 'empire_map_core.js'],
+    ['BurbzQuestCore', 'quest_core.js'],
+    ['BurbzScanEconomy', 'scan_economy_core.js'],
+    ['BurbzSoundListenerCore', 'sound_listener_core.js'],
+    ['BURBZ_UK_BIRD_EXPANSION_50', 'uk_bird_expansion_50.js'],
+    ['BURBZ_UK_BIRD_EXPANSION_26', 'uk_bird_expansion_2.js'],
+    ['BURBZ_AU_BIRD_EXPANSION', 'au_bird_expansion.js'],
+    ['BURBZ_UK_BIRD_EXPANSION_FINAL', 'uk_bird_expansion_3.js'],
+    ['BURBZ_AU_BIRD_EXPANSION_50', 'au_bird_expansion_2.js'],
+    ['BURBZ_NATIONAL_BIRD_COMPLETION_20260715', 'national_bird_completion_20260715.js'],
+    ['BURBZ_UK_BIRD_EXPANSION_4', 'uk_bird_expansion_4.js'],
+    ['BURBZ_SPAIN_BOUNDARY_20260715', 'spain_boundary_20260715.js'],
+    ['BurbzAudioCore', 'audio_core.js'],
+    ['BurbzActionBadges', 'action_badge_core.js']
+  ].forEach(function (pair) {
+    if (!window[pair[0]]) document.write('<script src="' + mirror + pair[1] + '"><\/script>');
+  });
+})();
+</script>
+<script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
    Complete Single-Page Application

@@ -172,4 +172,4 @@ def test_loot_core_version_is_bumped_and_consistent():
     assert "'./loot_crafting_core.js?v=bird-equip-screen-20260721'" in SW
     assert "fletchers-forge-20260719" not in HTML
     assert "fletchers-forge-20260719" not in SW
-    assert "const BURBZ_CACHE = 'burbz-kitchen-pantry-v105-20260722';" in SW
+    assert "const BURBZ_CACHE = 'burbz-kitchen-core-delivery-v109-20260723';" in SW
