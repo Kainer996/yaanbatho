@@ -186,6 +186,41 @@ console.log(JSON.stringify(out));
 """
 
 
+def test_worms_midges_and_molluscs_count_as_invertebrates_for_generalists():
+    """Earthworms, midges and snails ARE invertebrates. A bird whose source
+    diet lists the general "invertebrates" family must accept the specific
+    sub-family foods (Garden Worms, Cloud of Midges, Shore Snail Mix) — a
+    Carrion Crow does eat earthworms. The expansion runs one way only: a
+    fish-only Osprey still refuses worms, and a swift's aerial-insect PRIMARY
+    diet does not promote a tray mealworm to a primary meal."""
+    out = run_node(
+        "global.window = global;"
+        "require('./data/bird-diet-records.js');"
+        "require('./bird_diet_hunger_core.js');"
+        "const D = global.BurbzDietHungerCore;"
+        "const v = (s, i, p) => D.scoreFoodCompatibility({ commonName:s, name:s }, { ingredientId:i, prep:p }).verdict;"
+        "console.log(JSON.stringify({"
+        "  crowWorms: v('Carrion Crow','garden_worms','fresh'),"
+        "  crowMidges: v('Carrion Crow','aerial_midges','tossed'),"
+        "  crowSnails: v('Carrion Crow','shore_snail_mix','cracked'),"
+        "  tuftWorms: v('Blue Tit','garden_worms','fresh'),"
+        "  sparrowWorms: v('House Sparrow','garden_worms','fresh'),"
+        "  ospreyWorms: v('Osprey','garden_worms','fresh'),"
+        "  swiftMealworm: v('Common Swift','mealworm_scoop','fresh')"
+        "}));"
+    )
+    # Generalist invertebrate-eaters now take the specific invertebrate foods.
+    assert out["crowWorms"] == "primary"
+    assert out["crowMidges"] == "primary"
+    assert out["crowSnails"] == "primary"
+    assert out["tuftWorms"] == "primary"
+    # A bird with invertebrates only in its secondary tier accepts them there.
+    assert out["sparrowWorms"] == "secondary"
+    # One-way expansion: no false positives, no over-promotion.
+    assert out["ospreyWorms"] == "refused"
+    assert out["swiftMealworm"] == "secondary"
+
+
 def test_roster_feeds_right_food_refuses_wrong_food_and_flags_empty_kitchen():
     out = run_node(NODE_HARNESS)
     assert out["rosterKeys"] == ["merlin", "b1"]

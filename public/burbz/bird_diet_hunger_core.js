@@ -298,6 +298,28 @@
     return FOOD_FAMILIES[family] ? family : (LEGACY_FAMILY[family] || family);
   }
 
+  // Earthworms, midges, snails, crabs and mealworms are ALL invertebrates. The
+  // source taxonomy splits them into flavourful sub-families (worms,
+  // flying_insects, molluscs_crustaceans) alongside the general "invertebrates"
+  // category. A bird that eats the GENERAL category eats every specific kind at
+  // that same tier: without this, ~900 species that list only "invertebrates"
+  // wrongly refused Garden Worms — a Carrion Crow does eat earthworms.
+  //
+  // The expansion runs one way only (general → specifics). It deliberately does
+  // NOT promote a specific back up to the general, nor link one specialty to
+  // another: a swift's aerial flying_insects (primary) must not make a tray
+  // mealworm a PRIMARY meal, and must not make earthworms its main food. Where
+  // the source genuinely lists a specialist's secondary "invertebrates", that
+  // entry expands on its own to cover the specifics at the secondary tier.
+  const INVERTEBRATE_GENERAL = 'invertebrates';
+  const INVERTEBRATE_SPECIFICS = ['worms', 'flying_insects', 'molluscs_crustaceans'];
+
+  function expandInvertebrateFamilies(families) {
+    const set = new Set((families || []).map(canonicalFamily));
+    if (set.has(INVERTEBRATE_GENERAL)) INVERTEBRATE_SPECIFICS.forEach(family => set.add(family));
+    return set;
+  }
+
   function ingredientById(id) {
     return INGREDIENTS[id] || null;
   }
@@ -359,8 +381,8 @@
     }
 
     const family = canonicalFamily(ingredient.family);
-    const primary = familySet(record, 'primaryCompatibleFamilies');
-    const secondary = familySet(record, 'secondaryCompatibleFamilies');
+    const primary = expandInvertebrateFamilies([...familySet(record, 'primaryCompatibleFamilies')]);
+    const secondary = expandInvertebrateFamilies([...familySet(record, 'secondaryCompatibleFamilies')]);
     const wantedPrep = expectedPrep(record, family);
     const compatible = primary.has(family) || secondary.has(family);
     if (!compatible) {
@@ -416,8 +438,11 @@
   function createKitchenDietRule(species) {
     const record = getDietRecord(species);
     if (!record) return null;
-    const pref = unique(record.primaryCompatibleFamilies || []);
-    const ok = unique(record.secondaryCompatibleFamilies || []);
+    // Expand invertebrate sub-families so the Prep Counter mini-game agrees
+    // with the roster: worms/flying insects/molluscs count as invertebrates.
+    const pref = unique([...expandInvertebrateFamilies(record.primaryCompatibleFamilies || [])]);
+    const okAll = unique([...expandInvertebrateFamilies(record.secondaryCompatibleFamilies || [])]);
+    const ok = okAll.filter(family => !pref.includes(family));
     const avoid = Object.keys(FOOD_FAMILIES).filter(family => !pref.includes(family) && !ok.includes(family));
     const fact = record.education || ('Source-backed BirdFuncDat diet: primary ' + (pref.join(', ') || 'none') + '; secondary ' + (ok.join(', ') || 'none') + '.');
     return { pref, ok, avoid, prep:{ ...((record && record.prepByFamily) || {}) }, fact, record };
@@ -830,6 +855,7 @@
     metadata,
     loadPayload,
     getDietRecord,
+    expandInvertebrateFamilies,
     ingredientById,
     pantryBridgeForKey,
     pantryKeyForIngredientId,
