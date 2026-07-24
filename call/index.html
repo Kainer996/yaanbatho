@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Call — Yaan Batho</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+  :root {
+    --bg: #000;
+    --panel: #0A0A0A;
+    --line: #222;
+    --fg: #EDEDED;
+    --dim: #888;
+    --accent: #FFF;
+    --danger: #FF3B30;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  /* ---------- Lobby ---------- */
+  #lobby {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px; padding: 24px; text-align: center;
+    background:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 30;
+  }
+  #lobby h1 { font-size: 22px; letter-spacing: 4px; font-weight: 600; }
+  #lobby p { color: var(--dim); font-size: 13px; max-width: 340px; line-height: 1.6; }
+  #code {
+    width: min(320px, 80vw);
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--fg);
+    font: inherit; font-size: 18px; letter-spacing: 2px;
+    text-align: center; border-radius: 8px; outline: none;
+  }
+  #code:focus { border-color: var(--dim); }
+  #connectBtn {
+    width: min(320px, 80vw);
+    padding: 14px 16px;
+    background: var(--accent); color: #000;
+    border: none; border-radius: 8px;
+    font: inherit; font-size: 16px; font-weight: 700; letter-spacing: 2px;
+    cursor: pointer;
+  }
+  #connectBtn:disabled { opacity: .4; }
+  #lobbyStatus { color: var(--dim); font-size: 13px; min-height: 18px; }
+  #lobbyStatus.err { color: var(--danger); }
+
+  /* ---------- Call stage ---------- */
+  #stage { position: fixed; inset: 0; display: none; background: #000; }
+  #stage.active { display: block; }
+  video {
+    object-fit: cover;
+    background: #050505;
+    transform: translateZ(0);
+  }
+  #mainVideo { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #pipVideo {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    right: 12px;
+    width: 28vw; max-width: 160px;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    z-index: 5;
+    cursor: pointer;
+  }
+  video.mirror { transform: scaleX(-1) translateZ(0); }
+
+  #callStatus {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    left: 14px;
+    z-index: 6;
+    font-size: 12px; color: var(--dim);
+    background: rgba(0,0,0,.55);
+    padding: 6px 10px; border-radius: 6px;
+    max-width: 55vw;
+  }
+
+  /* ---------- Controls ---------- */
+  #controls {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    z-index: 10;
+  }
+  #zoomRow {
+    display: none;
+    align-items: center; gap: 10px;
+    background: rgba(10,10,10,.75);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 16px;
+    width: min(420px, 88vw);
+  }
+  #zoomRow.on { display: flex; }
+  #zoomRow span { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  #zoomSlider { flex: 1; accent-color: #fff; height: 24px; }
+  #zoomVal { min-width: 44px; text-align: right; color: var(--fg); }
+
+  #btnRow { display: flex; gap: 10px; }
+  .ctl {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(10,10,10,.75);
+    color: var(--fg);
+    font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    user-select: none; -webkit-user-select: none;
+  }
+  .ctl.on { background: var(--accent); }
+  .ctl.hidden { display: none; }
+  .ctl:active { transform: scale(.94); }
+  #endBtn { background: var(--danger); border-color: var(--danger); }
+
+  /* ---------- End overlay ---------- */
+  #endedOverlay {
+    position: fixed; inset: 0;
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px;
+    background: rgba(0,0,0,.9);
+    z-index: 40; text-align: center; padding: 24px;
+  }
+  #endedOverlay.on { display: flex; }
+  #endedOverlay h2 { font-size: 18px; letter-spacing: 3px; }
+  #endedOverlay button {
+    padding: 12px 28px;
+    background: var(--accent); color: #000;
+    border: none; border-radius: 8px;
+    font: inherit; font-weight: 700; letter-spacing: 1px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="lobby">
+  <h1>PRIVATE CALL</h1>
+  <p>Enter the secret code you two agreed on. When you both enter the same code and tap connect, the call links up directly between your phones.</p>
+  <input id="code" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="secret code">
+  <button id="connectBtn">CONNECT</button>
+  <div id="lobbyStatus"></div>
+</div>
+
+<div id="stage">
+  <video id="mainVideo" autoplay playsinline></video>
+  <video id="pipVideo" autoplay playsinline muted></video>
+  <div id="callStatus">starting…</div>
+  <div id="controls">
+    <div id="zoomRow">
+      <span>ZOOM</span>
+      <input id="zoomSlider" type="range">
+      <span id="zoomVal">1.0×</span>
+    </div>
+    <div id="btnRow">
+      <button class="ctl" id="flipBtn" title="Switch camera">🔄</button>
+      <button class="ctl hidden" id="torchBtn" title="Torch">🔦</button>
+      <button class="ctl" id="micBtn" title="Mute">🎤</button>
+      <button class="ctl" id="camBtn" title="Camera on/off">📷</button>
+      <button class="ctl" id="endBtn" title="End call">✕</button>
+    </div>
+  </div>
+</div>
+
+<div id="endedOverlay">
+  <h2 id="endedMsg">CALL ENDED</h2>
+  <button id="rejoinBtn">RECONNECT</button>
+</div>
+
+<script src="./peerjs.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const lobby = $("lobby"), stage = $("stage"), endedOverlay = $("endedOverlay");
+  const codeInput = $("code"), connectBtn = $("connectBtn"), lobbyStatus = $("lobbyStatus");
+  const mainVideo = $("mainVideo"), pipVideo = $("pipVideo"), callStatus = $("callStatus");
+  const zoomRow = $("zoomRow"), zoomSlider = $("zoomSlider"), zoomVal = $("zoomVal");
+  const flipBtn = $("flipBtn"), torchBtn = $("torchBtn"), micBtn = $("micBtn"),
+        camBtn = $("camBtn"), endBtn = $("endBtn"), rejoinBtn = $("rejoinBtn");
+
+  // Free STUN + TURN so it connects even across mobile carrier NATs
+  // (one of you walking on 4G/5G, the other in Australia).
+  const RTC_CONFIG = {
+    iceServers: [
+      { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+      {
+        urls: [
+          "turn:openrelay.metered.ca:80",
+          "turn:openrelay.metered.ca:443",
+          "turn:openrelay.metered.ca:443?transport=tcp"
+        ],
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      }
+    ]
+  };
+
+  let localStream = null;
+  let remoteMedia = null;
+  let peer = null;
+  let activeCall = null;
+  let facing = "user";          // "user" = front camera, "environment" = rear
+  let torchOn = false;
+  let joinRetryTimer = null;
+  let statsTimer = null;
+  let pipShowsLocal = true;
+  let wakeLock = null;
+  let leaving = false;
+
+  const setLobbyStatus = (msg, err) => {
+    lobbyStatus.textContent = msg;
+    lobbyStatus.classList.toggle("err", !!err);
+  };
+  const setCallStatus = (msg) => { callStatus.textContent = msg; };
+
+  // ---------- Room id: both phones derive the same peer id from the code ----------
+  async function roomIdFromCode(code) {
+    const data = new TextEncoder().encode("yaanbatho-private-call:" + code);
+    const hash = await crypto.subtle.digest("SHA-256", data);
+    const hex = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("");
+    return "yb-call-" + hex.slice(0, 24);
+  }
+
+  // ---------- Camera ----------
+  async function getCamera(facingMode) {
+    return navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: facingMode },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+  }
+
+  const videoTrack = () => localStream && localStream.getVideoTracks()[0];
+
+  // Read what this camera can do and show/hide zoom + torch controls
+  function refreshCameraControls() {
+    const track = videoTrack();
+    zoomRow.classList.remove("on");
+    torchBtn.classList.add("hidden");
+    torchOn = false;
+    torchBtn.classList.remove("on");
+    if (!track || !track.getCapabilities) return;
+
+    const caps = track.getCapabilities();
+    const settings = track.getSettings ? track.getSettings() : {};
+
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      zoomSlider.min = caps.zoom.min;
+      zoomSlider.max = caps.zoom.max;
+      zoomSlider.step = caps.zoom.step || 0.1;
+      zoomSlider.value = settings.zoom || caps.zoom.min;
+      zoomVal.textContent = Number(zoomSlider.value).toFixed(1) + "×";
+      zoomRow.classList.add("on");
+    }
+    if (caps.torch) {
+      torchBtn.classList.remove("hidden");
+    }
+    // Mirror only the front camera preview, and only where WE see ourselves
+    updateMirror();
+  }
+
+  function updateMirror() {
+    const mirrored = facing === "user";
+    pipVideo.classList.toggle("mirror", mirrored && pipShowsLocal);
+    mainVideo.classList.toggle("mirror", mirrored && !pipShowsLocal);
+  }
+
+  async function applyZoom(value) {
+    const track = videoTrack();
+    if (!track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ zoom: Number(value) }] });
+      zoomVal.textContent = Number(value).toFixed(1) + "×";
+    } catch (e) { /* some devices reject mid-stream constraint changes */ }
+  }
+
+  zoomSlider.addEventListener("input", () => applyZoom(zoomSlider.value));
+
+  // Pinch to zoom on the main video
+  let pinchStartDist = 0, pinchStartZoom = 1;
+  stage.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 2 && zoomRow.classList.contains("on")) {
+      pinchStartDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      pinchStartZoom = Number(zoomSlider.value);
+    }
+  }, { passive: true });
+  stage.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 2 && pinchStartDist && zoomRow.classList.contains("on")) {
+      const d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const min = Number(zoomSlider.min), max = Number(zoomSlider.max);
+      const z = Math.min(max, Math.max(min, pinchStartZoom * (d / pinchStartDist)));
+      zoomSlider.value = z;
+      applyZoom(z);
+    }
+  }, { passive: true });
+  stage.addEventListener("touchend", () => { pinchStartDist = 0; }, { passive: true });
+
+  torchBtn.addEventListener("click", async () => {
+    const track = videoTrack();
+    if (!track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: !torchOn }] });
+      torchOn = !torchOn;
+      torchBtn.classList.toggle("on", torchOn);
+    } catch (e) {
+      setCallStatus("torch not available on this camera");
+      setTimeout(() => setCallStatus("in call"), 2500);
+    }
+  });
+
+  flipBtn.addEventListener("click", async () => {
+    facing = facing === "user" ? "environment" : "user";
+    let newStream;
+    try {
+      newStream = await getCamera(facing);
+    } catch (e) {
+      facing = facing === "user" ? "environment" : "user"; // revert
+      return;
+    }
+    const newTrack = newStream.getVideoTracks()[0];
+    const oldTrack = videoTrack();
+
+    // Swap the track inside the live call so the other side sees the new camera
+    if (activeCall && activeCall.peerConnection) {
+      const sender = activeCall.peerConnection.getSenders().find(s => s.track && s.track.kind === "video");
+      if (sender) await sender.replaceTrack(newTrack);
+    }
+    if (oldTrack) { localStream.removeTrack(oldTrack); oldTrack.stop(); }
+    // Drop the throwaway audio track from the new capture; keep our original mic
+    newStream.getAudioTracks().forEach(t => t.stop());
+    localStream.addTrack(newTrack);
+    attachStreams();
+    refreshCameraControls();
+  });
+
+  micBtn.addEventListener("click", () => {
+    const t = localStream && localStream.getAudioTracks()[0];
+    if (!t) return;
+    t.enabled = !t.enabled;
+    micBtn.textContent = t.enabled ? "🎤" : "🔇";
+    micBtn.classList.toggle("on", !t.enabled);
+  });
+
+  camBtn.addEventListener("click", () => {
+    const t = videoTrack();
+    if (!t) return;
+    t.enabled = !t.enabled;
+    camBtn.classList.toggle("on", !t.enabled);
+  });
+
+  endBtn.addEventListener("click", () => endCall("CALL ENDED"));
+  rejoinBtn.addEventListener("click", () => location.reload());
+
+  // Tap the small picture to swap which video is fullscreen
+  pipVideo.addEventListener("click", () => {
+    pipShowsLocal = !pipShowsLocal;
+    attachStreams();
+  });
+
+  function attachStreams() {
+    const remote = remoteMedia;
+    const localS = localStream;
+    const mainS = pipShowsLocal ? (remote || localS) : localS;
+    const pipS = pipShowsLocal ? localS : (remote || localS);
+    if (mainVideo.srcObject !== mainS) mainVideo.srcObject = mainS;
+    if (pipVideo.srcObject !== pipS) pipVideo.srcObject = pipS;
+    // Never play our own mic back to ourselves
+    mainVideo.muted = mainS === localS;
+    pipVideo.muted = true;
+    updateMirror();
+    mainVideo.play().catch(() => {});
+    pipVideo.play().catch(() => {});
+  }
+
+  // ---------- Keep the screen awake while walking ----------
+  async function keepAwake() {
+    try {
+      if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+    } catch (e) { /* not critical */ }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && stage.classList.contains("active")) keepAwake();
+  });
+
+  // ---------- Call wiring ----------
+  function wireCall(call) {
+    if (activeCall && activeCall !== call) { call.close(); return; } // only the two of us
+    activeCall = call;
+
+    call.on("stream", (stream) => {
+      remoteMedia = stream;
+      clearInterval(joinRetryTimer);
+      setCallStatus("in call");
+      attachStreams();
+    });
+    call.on("close", () => { if (!leaving) endCall("SHE HUNG UP — OR THE LINE DROPPED"); });
+    call.on("error", () => { if (!leaving) endCall("CONNECTION ERROR"); });
+
+    // Watch the underlying connection so a dead 4G tunnel shows up as ended
+    statsTimer = setInterval(() => {
+      const pc = call.peerConnection;
+      if (!pc) return;
+      if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+        endCall("CONNECTION LOST");
+      }
+    }, 3000);
+  }
+
+  function endCall(message) {
+    leaving = true;
+    clearInterval(joinRetryTimer);
+    clearInterval(statsTimer);
+    if (activeCall) { try { activeCall.close(); } catch (e) {} activeCall = null; }
+    remoteMedia = null;
+    if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+    $("endedMsg").textContent = message;
+    endedOverlay.classList.add("on");
+  }
+
+  window.addEventListener("beforeunload", () => {
+    if (peer) try { peer.destroy(); } catch (e) {}
+  });
+
+  // ---------- Connect flow ----------
+  connectBtn.addEventListener("click", async () => {
+    const code = codeInput.value.trim().toLowerCase();
+    if (code.length < 4) {
+      setLobbyStatus("code needs at least 4 characters", true);
+      return;
+    }
+    connectBtn.disabled = true;
+    localStorage.setItem("yb-call-code", code);
+
+    setLobbyStatus("asking for camera + microphone…");
+    try {
+      localStream = await getCamera(facing);
+    } catch (e) {
+      setLobbyStatus("camera/mic blocked — allow access in your browser and try again", true);
+      connectBtn.disabled = false;
+      return;
+    }
+
+    const roomId = await roomIdFromCode(code);
+    setLobbyStatus("connecting…");
+
+    // Whoever arrives first claims the room id and waits.
+    // The second one finds the id taken and calls it.
+    startAsHost(roomId);
+  });
+
+  function enterStage() {
+    lobby.style.display = "none";
+    stage.classList.add("active");
+    attachStreams();
+    refreshCameraControls();
+    keepAwake();
+  }
+
+  function startAsHost(roomId) {
+    peer = new Peer(roomId, { config: RTC_CONFIG });
+
+    peer.on("open", () => {
+      enterStage();
+      setCallStatus("waiting for her to join — same code, same page");
+      peer.on("call", (call) => {
+        call.answer(localStream);
+        wireCall(call);
+        setCallStatus("connecting…");
+      });
+    });
+
+    peer.on("error", (err) => {
+      if (err.type === "unavailable-id") {
+        // She's already waiting — become the caller.
+        try { peer.destroy(); } catch (e) {}
+        startAsJoiner(roomId);
+      } else if (!leaving) {
+        setLobbyStatus("network error (" + err.type + ") — try again", true);
+        connectBtn.disabled = false;
+      }
+    });
+    peer.on("disconnected", () => { if (peer && !leaving) peer.reconnect(); });
+  }
+
+  function startAsJoiner(roomId) {
+    peer = new Peer({ config: RTC_CONFIG });
+
+    peer.on("open", () => {
+      enterStage();
+      setCallStatus("calling her…");
+      const dial = () => {
+        if (activeCall || leaving) return;
+        const call = peer.call(roomId, localStream);
+        if (call) wireCall(call);
+      };
+      dial();
+      // If the first dial races her setup, keep retrying until she answers
+      joinRetryTimer = setInterval(() => {
+        if (!remoteMedia) {
+          if (activeCall) { try { activeCall.close(); } catch (e) {} activeCall = null; }
+          dial();
+        }
+      }, 5000);
+    });
+
+    peer.on("error", (err) => {
+      if (err.type === "peer-unavailable") {
+        setCallStatus("she's not there yet — retrying…");
+        if (activeCall) { try { activeCall.close(); } catch (e) {} activeCall = null; }
+      } else if (!leaving) {
+        setCallStatus("network error (" + err.type + ")");
+      }
+    });
+    peer.on("disconnected", () => { if (peer && !leaving) peer.reconnect(); });
+  }
+
+  // Remember the code between calls
+  const saved = localStorage.getItem("yb-call-code");
+  if (saved) codeInput.value = saved;
+
+  if (!navigator.mediaDevices || !window.isSecureContext) {
+    setLobbyStatus("this page needs HTTPS and a modern browser", true);
+    connectBtn.disabled = true;
+  }
+})();
+</script>
+</body>
+</html>
