@@ -216,6 +216,26 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-result-fact { margin-top:10px; padding:9px 11px; border-radius:11px; border:1px solid rgba(214,168,79,.30); background:rgba(214,168,79,.10); font-size:12px; color:var(--accent2); line-height:1.45; }
 .kitchen-result-rewards { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 .kitchen-result-rewards span { padding:4px 9px; border-radius:9px; background:rgba(255,255,255,.07); font-size:11px; font-weight:700; }
+/* Kitchen — companion feeding roster (scrollable list; no birds wander the room) */
+.kitchen-roster-list { max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:8px; padding-right:2px; }
+.kitchen-roster-row { padding:10px 12px; border-radius:13px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.22); }
+.kitchen-roster-head { display:flex; align-items:center; gap:10px; }
+.kitchen-roster-art { width:46px; height:46px; flex:0 0 auto; object-fit:contain; font-size:34px; line-height:46px; text-align:center; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45)); }
+.kitchen-roster-main { flex:1; min-width:0; }
+.kitchen-roster-name { font-family:'Russo One',sans-serif; font-size:14px; color:var(--accent2); }
+.kitchen-roster-species { font-size:11px; color:var(--text3); }
+.kitchen-roster-feed-btn { flex:0 0 auto; min-height:38px; padding:0 12px; border-radius:12px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Russo One',sans-serif; font-size:12px; }
+.kitchen-roster-feed-btn:disabled { opacity:.5; }
+.kitchen-roster-eats { font-size:11px; color:var(--text2); margin-top:6px; line-height:1.45; }
+.kitchen-roster-supply { font-size:11px; margin-top:4px; line-height:1.45; font-weight:700; }
+.kitchen-roster-supply.has-food { color:var(--hp-green); }
+.kitchen-roster-supply.no-food { color:var(--hp-red); }
+.kitchen-roster-activity { font-size:11px; margin-top:4px; line-height:1.45; font-weight:800; }
+.kitchen-roster-activity.blocked { color:var(--hp-red); }
+.kitchen-roster-activity.warn { color:var(--accent2); }
+.kitchen-roster-away { font-size:11px; color:var(--text3); margin-top:4px; }
+.kitchen-roster-tray { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
+.kitchen-roster-tray-hint { width:100%; font-size:11px; color:var(--text3); line-height:1.4; }
 .birdex-diet-badge { position:absolute; top:6px; left:6px; z-index:2; font-size:11px; padding:3px 7px; border-radius:9px; background:rgba(214,168,79,.85); color:#241809; font-family:'Rajdhani',sans-serif; font-weight:900; }
 .room-bird-list { display:flex; flex-direction:column; gap:8px; }
 .room-bird-option { display:grid; grid-template-columns:48px 1fr auto; align-items:center; gap:9px; padding:8px; border-radius:12px; border:1px solid rgba(255,255,255,.09); background:rgba(0,0,0,.24); }
@@ -4153,6 +4173,15 @@ function loadState() {
   gameState.dietBadges = (gameState.dietBadges && typeof gameState.dietBadges === 'object' && !Array.isArray(gameState.dietBadges)) ? gameState.dietBadges : {};
   gameState.kitchenNotes = (gameState.kitchenNotes && typeof gameState.kitchenNotes === 'object' && !Array.isArray(gameState.kitchenNotes)) ? gameState.kitchenNotes : {};
   gameState.flock = Array.isArray(gameState.flock) ? gameState.flock.filter(b => b && typeof b === 'object') : [];
+  // Feeding-table migration: the Kitchen is where companions are FED, not a
+  // room they lodge or wander in. Move any kitchen-stationed birds back to
+  // the Gardens once; from here on no bird can be stationed in the Kitchen.
+  if ((Number(gameState.kitchenFeedingTableVersion) || 0) < 1) {
+    gameState.flock.forEach(bird => {
+      if (bird && bird.academy && bird.academy.room === 'kitchen') bird.academy.room = 'outdoors';
+    });
+    gameState.kitchenFeedingTableVersion = 1;
+  }
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
@@ -10067,7 +10096,7 @@ const ACADEMY_ROOMS = {
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
   crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds sway battle Parleys, win over foes and earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
-  kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'Hearty species-friendly cooking. Birds stationed here build Stamina one good meal at a time.', perk:'Passive: +1 STAM every 30 min', perches:[[50,52],[46,56],[54,56]] },
+  kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
@@ -11297,6 +11326,7 @@ function academyMoveBird(birdId, room) {
   const bird = academyBirdById(birdId);
   if (!bird || !ACADEMY_ROOMS[room]) return;
   if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
+  if (room === 'kitchen') { showToast('The Kitchen is a feeding table — birds visit for meals, they do not lodge there. Open the Kitchen to feed your companions.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
@@ -11332,7 +11362,7 @@ function cardSendBirdToRoom(birdId, room) {
 
 function academyRoomButtonsHTML(bird) {
   ensureBirdAcademy(bird);
-  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern').map(room => {
+  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen').map(room => {
     const cfg = ACADEMY_ROOMS[room];
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
@@ -11528,6 +11558,224 @@ function addLarderIngredient(id, qty) {
 
 let kitchenState = { speciesKey: null, slots: [null, null, null] };
 
+// ---- Companion feeding roster ---------------------------------------------
+// The heart of the Kitchen: a scrollable roster of Merlin plus every recruited
+// companion. The player assigns the right food to the right bird — wrong picks
+// are refused without wasting stock, which is how the diets are learned. A
+// bird with no suitable food in the kitchen goes hungry, and a hungry bird
+// turns less active: quests and training lock at urgent hunger. Food comes
+// from liberated village markets, quests and map forage.
+let kitchenRosterTrayKey = null;
+
+function kitchenRosterEntries() {
+  const rows = [{
+    key: 'merlin',
+    merlin: true,
+    name: 'Merlin',
+    speciesLine: 'Falco columbarius · permanent companion',
+    target: { target:'merlin', scientificName:'Falco columbarius', commonName:'Merlin', name:'Merlin' },
+    artBird: { commonName:'Merlin', species:'Merlin', scientificName:'Falco columbarius' }
+  }];
+  (gameState.flock || []).forEach(bird => {
+    if (!bird || !bird.id) return;
+    rows.push({
+      key: String(bird.id),
+      bird,
+      name: birdDisplayName(bird),
+      speciesLine: canonicalSpeciesName(bird.species || bird.commonName) || (bird.commonName || ''),
+      target: { target:'bird', birdId:bird.id, scientificName:bird.scientificName || bird.scientific || null, commonName:bird.commonName || bird.species, name:bird.commonName || bird.species },
+      artBird: bird
+    });
+  });
+  return rows;
+}
+
+function kitchenRosterEntryByKey(key) {
+  return kitchenRosterEntries().find(row => row.key === String(key)) || null;
+}
+
+// The serving style is auto-matched to how the species really takes that food
+// family in the wild — the roster teaches WHAT each bird eats; the Prep
+// Counter below stays the deeper how-is-it-served puzzle.
+function kitchenRosterWantedPrep(target, ingredient) {
+  const core = kitchenDietCore();
+  const fallback = (ingredient && Array.isArray(ingredient.preps) && ingredient.preps[0]) || 'fresh';
+  if (!core || !ingredient) return fallback;
+  const family = ingredient.family;
+  const record = typeof core.getDietRecord === 'function' ? core.getDietRecord(target) : null;
+  const fromRecord = record && record.prepByFamily && record.prepByFamily[family];
+  const familyDefault = core.FOOD_FAMILIES && core.FOOD_FAMILIES[family] && core.FOOD_FAMILIES[family].defaultPrep;
+  return fromRecord || familyDefault || fallback;
+}
+
+// Every in-stock food the kitchen holds (Academy pantry families + Stores
+// larder ingredients), each scored against this bird's source-backed diet.
+function kitchenRosterFoodOptions(entry) {
+  const core = kitchenDietCore();
+  if (!entry || !core || typeof core.scoreFoodCompatibility !== 'function') return [];
+  refillPantry();
+  const options = [];
+  Object.keys(FOODS).forEach(key => {
+    const count = Math.max(0, Math.floor(Number((gameState.pantry || {})[key]) || 0));
+    if (count <= 0) return;
+    const spec = typeof core.normalizeFeedingSpec === 'function' ? core.normalizeFeedingSpec({ pantryKey:key, source:'pantry' }) : { ingredientId:key, prep:'fresh' };
+    const compat = core.scoreFoodCompatibility(entry.target, spec);
+    options.push({ kind:'pantry', id:key, label:FOODS[key].label, emoji:FOODS[key].emoji, desc:FOODS[key].desc, count, accepted: compat.verdict === 'primary' || compat.verdict === 'insufficient' });
+  });
+  const larder = ensureLarder();
+  Object.keys(larder).forEach(id => {
+    const ing = typeof core.ingredientById === 'function' ? core.ingredientById(id) : null;
+    const count = Math.max(0, Math.floor(Number(larder[id]) || 0));
+    if (!ing || count <= 0) return;
+    if (ing.family === 'grit') return; // grit is a Prep Counter garnish, never a meal
+    const prep = kitchenRosterWantedPrep(entry.target, ing);
+    const compat = core.scoreFoodCompatibility(entry.target, { ingredientId:id, prep });
+    const uiIng = kitchenIngredientById(id);
+    options.push({ kind:'larder', id, label:ing.label, emoji:(uiIng && uiIng.icon) || '🍽️', desc:ing.desc || '', count, prep, accepted: compat.verdict === 'primary' || compat.verdict === 'insufficient' });
+  });
+  return options;
+}
+
+function kitchenRosterEatsLabels(entry) {
+  const core = kitchenDietCore();
+  if (!core || typeof core.dietDisclosureForSpecies !== 'function') return [];
+  const disc = core.dietDisclosureForSpecies(entry.target);
+  return (disc.primaryLabels && disc.primaryLabels.length ? disc.primaryLabels : disc.compatibleLabels) || [];
+}
+
+function kitchenRosterHungerStatus(entry) {
+  if (!entry.merlin) return hungerStatusForBird(entry.bird);
+  const core = kitchenDietCore();
+  if (core && typeof core.hungerStatusForCare === 'function') return core.hungerStatusForCare(getMerlinCare(), Date.now());
+  return { hunger:0, level:'fed', label:'Fed', warnsWork:false, blocksWork:false };
+}
+
+function kitchenRosterTrayHTML(entry, options) {
+  if (!options.length) {
+    return '<div class="kitchen-roster-tray"><div class="kitchen-roster-tray-hint">The kitchen is completely bare — buy food at a liberated village market, or bring some back from quests and map forage.</div></div>';
+  }
+  // Diet already discovered? Then highlight known-good picks, like the
+  // Academy tray does. Otherwise nothing is revealed: picking teaches.
+  const reveal = entry.merlin || (entry.bird && entry.bird.academy && entry.bird.academy.dietKnown);
+  const chips = options.map(option => {
+    const pref = reveal && option.accepted;
+    return '<button class="academy-food' + (pref ? ' known-pref' : '') + '" data-kitchen-roster-food="' + escapeHtml(option.kind + ':' + option.id) + '" data-count="' + option.count + '" title="' + escapeHtml(option.desc) + '" onclick="kitchenRosterFeed(\'' + escapeHtml(entry.key) + '\',\'' + option.kind + '\',\'' + escapeHtml(option.id) + '\')">' +
+      '<span class="academy-food-emoji">' + option.emoji + '</span>' +
+      '<span class="academy-food-label">' + escapeHtml(option.label) + '</span>' +
+      '<span class="academy-food-count">×' + option.count + '</span></button>';
+  }).join('');
+  return '<div class="kitchen-roster-tray">' + chips +
+    '<div class="kitchen-roster-tray-hint">Serve what this bird really eats in the wild. A wrong pick is refused and nothing is wasted — that refusal is the lesson.</div></div>';
+}
+
+function kitchenRosterRowHTML(entry) {
+  const status = kitchenRosterHungerStatus(entry);
+  const options = kitchenRosterFoodOptions(entry);
+  const suitable = options.filter(option => option.accepted);
+  const away = entry.bird ? birdHasActiveExpedition(entry.bird.id) : false;
+  const training = entry.bird ? birdHasActiveTraining(entry.bird.id) : false;
+  const eats = kitchenRosterEatsLabels(entry);
+  const eatsLine = '<div class="kitchen-roster-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — try a meal and learn') + '</div>';
+  const supplyCount = suitable.reduce((sum, option) => sum + option.count, 0);
+  const supplyLine = suitable.length
+    ? '<div class="kitchen-roster-supply has-food" data-kitchen-supply="stocked">🧺 ' + supplyCount + ' suitable meal' + (supplyCount === 1 ? '' : 's') + ' in the kitchen</div>'
+    : '<div class="kitchen-roster-supply no-food" data-kitchen-supply="empty">🚫 No food in the kitchen for this bird — buy ' + escapeHtml(eats.length ? eats.join(' or ').toLowerCase() : 'its food') + ' at a liberated village market, or find it on quests and map forage.</div>';
+  let activityLine = '';
+  if (!entry.merlin) {
+    if (status.blocksWork) activityLine = '<div class="kitchen-roster-activity blocked" data-kitchen-activity="blocked">⛔ Too hungry to be active — quests and training are locked until this bird is fed.</div>';
+    else if (status.warnsWork) activityLine = '<div class="kitchen-roster-activity warn" data-kitchen-activity="warn">😴 Getting less active — feed this bird soon or quests and training will lock.</div>';
+  }
+  const awayLine = away ? '<div class="kitchen-roster-away">🧭 Away on a quest — back at the table when it returns.</div>'
+    : training ? '<div class="kitchen-roster-away">🏋️ Mid-training — a meal now still counts.</div>' : '';
+  const hungerLine = '<div class="academy-diet hunger-status" data-hunger-state="' + status.level + '">🍽️ ' + escapeHtml(status.label) + ' · ' + Math.round(status.hunger) + '/100' + (status.blocksWork ? ' · feed before work' : status.warnsWork ? ' · feed soon' : '') + '</div>';
+  const open = kitchenRosterTrayKey === entry.key;
+  const feedBtn = away
+    ? '<button class="kitchen-roster-feed-btn" disabled>Away</button>'
+    : '<button class="kitchen-roster-feed-btn" data-action="kitchen-roster-tray" onclick="kitchenRosterToggleTray(\'' + escapeHtml(entry.key) + '\')">' + (open ? 'Close tray' : '🍽️ Feed') + '</button>';
+  return '<div class="kitchen-roster-row" data-kitchen-roster-bird="' + escapeHtml(entry.key) + '">' +
+    '<div class="kitchen-roster-head">' + birdOnlyImgHTML(entry.artBird, 'kitchen-roster-art') +
+    '<div class="kitchen-roster-main"><div class="kitchen-roster-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
+    '<div class="kitchen-roster-species">' + escapeHtml(entry.speciesLine) + '</div>' + hungerLine + '</div>' + feedBtn + '</div>' +
+    eatsLine + supplyLine + activityLine + awayLine +
+    (open ? kitchenRosterTrayHTML(entry, options) : '') + '</div>';
+}
+
+function renderKitchenRosterHTML() {
+  const entries = kitchenRosterEntries();
+  if (kitchenRosterTrayKey && !entries.some(row => row.key === kitchenRosterTrayKey)) kitchenRosterTrayKey = null;
+  return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
+    '<div class="room-add-title">🍽️ Companion feeding table</div>' +
+    '<div class="kitchen-help">Every bird eats something different. Scroll your companions, open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Stock the kitchen from liberated village markets, quests and map forage.</div>' +
+    '<div class="kitchen-roster-list">' + entries.map(kitchenRosterRowHTML).join('') + '</div></div>';
+}
+
+function kitchenRosterToggleTray(key) {
+  kitchenRosterTrayKey = kitchenRosterTrayKey === String(key) ? null : String(key);
+  SFX.tap();
+  renderAcademyRoomInterior();
+}
+
+function kitchenRosterRefusalToast(entry, option, tx) {
+  const compat = tx && tx.compatibility;
+  const eats = kitchenRosterEatsLabels(entry).join(', ').toLowerCase();
+  if (compat && compat.compatible === false) {
+    return '❌ ' + entry.name + ' turns its beak up at ' + option.label.toLowerCase() + ' — not part of its natural diet, nothing wasted. It eats ' + (eats || 'something else') + '.';
+  }
+  if (compat && compat.verdict === 'secondary') {
+    return '🥄 ' + option.label + ' is only a side-snack for ' + entry.name + ' — serve a main meal: ' + (eats || 'its primary diet') + '.';
+  }
+  return '❌ ' + ((tx && tx.message) || 'That meal was refused.');
+}
+
+function kitchenRosterFeed(targetKey, kind, foodId) {
+  const core = kitchenDietCore();
+  if (!core || typeof core.applyFeedingTransaction !== 'function') { showToast('The kitchen scales are still loading — try again in a moment.'); return; }
+  const entry = kitchenRosterEntryByKey(targetKey);
+  if (!entry) return;
+  refillPantry();
+  const option = kitchenRosterFoodOptions(entry).find(row => row.kind === kind && row.id === foodId);
+  if (!option) { showToast('That food is no longer in the kitchen.'); renderAcademyRoomInterior(); return; }
+  const spec = kind === 'pantry'
+    ? { pantryKey:foodId, source:'pantry' }
+    : { ingredientId:foodId, prep:option.prep };
+  const now = Date.now();
+  const txId = 'kitchen-roster:' + entry.key + ':' + kind + ':' + foodId + ':' + now;
+  const tx = core.applyFeedingTransaction(gameState, entry.target, spec, { transactionId:txId, now });
+  gameState = tx.state;
+  if (tx.ok && !tx.duplicate) {
+    const verdict = tx.compatibility && tx.compatibility.verdict;
+    if (entry.merlin) {
+      if (window.BurbzMerlinCompanionCore) {
+        gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, lastCareAt: now }, now), 5, now);
+      }
+    } else {
+      const bird = academyBirdById(entry.key);
+      if (bird) {
+        ensureBirdAcademy(bird);
+        if (verdict === 'primary') {
+          const firstTime = !bird.academy.dietKnown;
+          bird.academy.dietKnown = true;
+          if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 900);
+        }
+        updateQuestProgress('feed_correct', 1);
+      }
+    }
+    saveState();
+    const rule = inferBirdDiet(entry.target);
+    const fact = verdict === 'primary' && rule && rule.fact ? ' ' + rule.fact : (verdict === 'insufficient' ? ' (A conservative care ration — this species’ exact wild diet is not claimed.)' : '');
+    showToast('✅ ' + entry.name + ' tucks into ' + option.label.toLowerCase() + ' — hunger ' + Math.round(tx.before) + ' → ' + Math.round(tx.after) + '/100.' + fact);
+    SFX.capture();
+    vibrate(20);
+  } else if (!tx.ok) {
+    saveState();
+    showToast(kitchenRosterRefusalToast(entry, option, tx));
+    SFX.tap();
+  }
+  renderAcademyRoomInterior();
+  renderPetCompanion();
+  renderAcademy();
+}
+
 // Everyone the player can cook for: Merlin first as the permanent starter
 // companion, then recruited companions and wild Birdex species.
 function kitchenSpeciesChoices() {
@@ -11611,7 +11859,8 @@ function renderKitchenPanelHTML() {
     return '<div class="kitchen-larder-item" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(count) || 0) + '" title="' + escapeHtml(ing.desc) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
   }).join('') : '<div class="inventory-empty">Larder empty — go fishing from the Quest Roost, walk the map, or shop at the Seed &amp; Sundry.</div>';
 
-  return '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
+  return renderKitchenRosterHTML() +
+    '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
     '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow; shops, map forage and quests add more larder stock.</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '<div class="inventory-empty">No birds discovered yet.</div>') + '</div>' +
     speciesCard +
@@ -11868,7 +12117,10 @@ window.__burbzKitchenDebug = {
   select: kitchenSelectSpecies,
   assign: kitchenAssignSlot,
   serve: kitchenServeMeal,
-  state: () => kitchenState
+  state: () => kitchenState,
+  roster: kitchenRosterEntries,
+  rosterOptions: key => kitchenRosterFoodOptions(kitchenRosterEntryByKey(key)),
+  rosterFeed: kitchenRosterFeed
 };
 window.__burbzDietHungerDebug = {
   core: () => window.BurbzDietHungerCore,
@@ -11959,7 +12211,8 @@ function academyForage(birdId) {
 const ACADEMY_ROOM_STAT_EFFECTS = {
   training:    { stat:'atk',     label:'ATK' },
   crowbar:     { stat:'cha',     label:'CHA' },
-  kitchen:     { stat:'stamina', label:'STAM' },
+  // No kitchen entry: the Kitchen is a feeding table, not a posting — birds
+  // are never stationed there. Its STAM growth lives in the Pantry Gauntlet drill.
   workshop:    { stat:'def',     label:'DEF' },
   observatory: { stat:'int',     label:'INT' }
 };
@@ -12393,7 +12646,9 @@ function startBirdTrainingSession(birdId, templateId) {
   if (!warnOrBlockBirdWork(bird, 'training')) return;
   if (!window.BurbzAcademyCore || typeof window.BurbzAcademyCore.createTrainingSession !== 'function') { showToast('Training scrolls are still loading — try again in a moment.'); return; }
   ensureBirdAcademy(bird);
-  bird.academy.room = tplRoom;
+  // Kitchen drills (Pantry Gauntlet) train FROM the Gardens: no bird is ever
+  // stationed in the Kitchen — it is a feeding table, not a roost.
+  bird.academy.room = tplRoom === 'kitchen' ? 'outdoors' : tplRoom;
   bird.academy.lastMovedAt = new Date().toISOString();
   const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now());
   ensureBirdTrainingSessions().unshift(session);
@@ -12529,7 +12784,15 @@ function renderAcademyRoomInterior() {
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk) + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + trainingPanel + kitchenPanel + '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+    // The Kitchen is a feeding table: birds never lodge or wander there (the
+    // migration + move guards keep its stationed list empty), and there is no
+    // "add a bird to this room" panel — the feeding roster replaces it.
+    const flockCount = (gameState.flock || []).length;
+    const roomSub = room === 'kitchen'
+      ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
+      : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
+    const roomAddPanel = room === 'kitchen' ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + trainingPanel + kitchenPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -12573,6 +12836,8 @@ Object.assign(window, {
   kitchenAssignSlot,
   kitchenClearSlot,
   kitchenServeMeal,
+  kitchenRosterToggleTray,
+  kitchenRosterFeed,
   startBirdTrainingSession,
   claimBirdTrainingSession,
   academyForage,
