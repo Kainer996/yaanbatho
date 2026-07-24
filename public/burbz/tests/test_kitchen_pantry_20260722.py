@@ -294,7 +294,7 @@ def test_kitchen_prep_counter_is_wired_into_the_kitchen_room():
         "function kitchenServeMeal(",
         "function kitchenOpenSlot(",
         "🍳 The Prep Counter",
-        "🧺 Stores larder",
+        "🧺 Larder",
         "kitchenSelectSpecies,",
         "kitchenServeMeal,",
         ".kitchen-plate {",

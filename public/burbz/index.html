@@ -179,6 +179,18 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-guest-status { font-size:11px; color:var(--text3); margin-top:2px; }
 .kitchen-guest-clue { font-size:12px; color:var(--text2); margin-top:6px; line-height:1.45; }
 .kitchen-guest-notes { font-size:11px; color:var(--accent2); margin-top:6px; }
+/* Glance-readable "Eats" chips — the only diet info shown by default */
+.kitchen-eats { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:8px; }
+.kitchen-eats-word { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
+.kitchen-eats-chip { padding:5px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; font-weight:700; color:var(--text); }
+.kitchen-eats-chip.fav { border-color:rgba(214,168,79,.5); background:rgba(214,168,79,.14); color:var(--accent2); }
+/* Wordier detail folds behind a tap */
+.kitchen-more { margin-top:9px; border:1px dashed rgba(255,255,255,.14); border-radius:10px; padding:0 10px; }
+.kitchen-more[open] { padding-bottom:9px; }
+.kitchen-more > summary { list-style:none; cursor:pointer; padding:9px 0; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--text3); }
+.kitchen-more > summary::-webkit-details-marker { display:none; }
+.kitchen-more[open] > summary { color:var(--accent2); }
+.kitchen-more-panel { margin-top:12px; }
 .kitchen-diet-guidance { margin-top:8px; padding:8px 9px; border-radius:9px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.08); font-size:11px; line-height:1.45; color:var(--text2); }
 .kitchen-diet-source { color:var(--text3); font-size:10px; margin-top:2px; }
 .kitchen-plate { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
@@ -11731,7 +11743,7 @@ function renderKitchenRosterHTML() {
   if (kitchenRosterTrayKey && !entries.some(row => row.key === kitchenRosterTrayKey)) kitchenRosterTrayKey = null;
   return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
     '<div class="room-add-title">🍽️ Companion feeding table</div>' +
-    '<div class="kitchen-help">Every bird eats something different. Scroll your companions, open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Stock the kitchen from liberated village markets, quests and map forage.</div>' +
+    '<div class="kitchen-help">Give each companion food it really eats — a hungry bird stops questing.</div>' +
     '<div class="kitchen-roster-list">' + entries.map(kitchenRosterRowHTML).join('') + '</div></div>';
 }
 
@@ -11830,12 +11842,41 @@ function kitchenSelectedChoice() {
 
 function kitchenNotesLine(key) {
   const notes = (gameState.kitchenNotes || {})[key];
-  if (!notes || (!(notes.perfect || []).length && !(notes.refused || []).length)) return 'No field notes yet — serve a tray and learn.';
+  if (!notes || (!(notes.perfect || []).length && !(notes.refused || []).length)) return '';
   const label = foodFamilyLabel;
   const bits = [];
   if ((notes.perfect || []).length) bits.push('loves ' + notes.perfect.map(label).join(', '));
   if ((notes.refused || []).length) bits.push('refuses ' + notes.refused.map(label).join(', '));
-  return 'Field notes: ' + bits.join(' · ');
+  return '\u{1F4DD} ' + bits.join(' · ');
+}
+
+// One glance-readable "what does it eat" line: emoji chips, favourites first.
+const KITCHEN_EATS_META = {
+  small_birds:{ emoji:'\u{1FAB6}', label:'Small birds' },
+  small_mammals:{ emoji:'\u{1F42D}', label:'Small prey' },
+  fish:{ emoji:'\u{1F41F}', label:'Fish' },
+  flying_insects:{ emoji:'\u{1F99F}', label:'Flying bugs' },
+  invertebrates:{ emoji:'\u{1F41B}', label:'Bugs' },
+  worms:{ emoji:'\u{1FAB1}', label:'Worms' },
+  molluscs_crustaceans:{ emoji:'\u{1F41A}', label:'Snails' },
+  seeds:{ emoji:'\u{1F33B}', label:'Seeds' },
+  fruit_berries:{ emoji:'\u{1FAD0}', label:'Berries' },
+  nectar:{ emoji:'\u{1F33A}', label:'Nectar' },
+  aquatic_plants:{ emoji:'\u{1F33F}', label:'Water plants' },
+  carrion:{ emoji:'\u{1F9B4}', label:'Carrion' }
+};
+
+function kitchenEatsChipsHTML(chosen) {
+  const d = dietDisclosureFor(kitchenDietSubject(chosen) || chosen.name);
+  const primary = d.primaryFamilies || [];
+  const families = primary.concat((d.compatibleFamilies || []).filter(f => !primary.includes(f))).slice(0, 4);
+  if (!families.length) return '';
+  const chips = families.map((family, i) => {
+    const meta = KITCHEN_EATS_META[family] || { emoji:'\u{1F37D}\u{FE0F}', label:foodFamilyLabel(family) };
+    const fav = i < primary.length && primary.length < families.length;
+    return '<span class="kitchen-eats-chip' + (fav ? ' fav' : '') + '">' + meta.emoji + ' ' + escapeHtml(meta.label) + (fav ? ' ⭐' : '') + '</span>';
+  }).join('');
+  return '<div class="kitchen-eats"><span class="kitchen-eats-word">Eats</span>' + chips + '</div>';
 }
 
 function kitchenSlotHTML(slot, index) {
@@ -11864,18 +11905,24 @@ function renderKitchenPanelHTML() {
     return '<button class="kitchen-chip' + (active ? ' active' : '') + '" data-kitchen-species-choice="' + escapeHtml(row.key) + '" onclick="kitchenSelectSpecies(\'' + row.key + '\')">' + (row.merlin ? '🧙 ' : row.companion ? '🐦 ' : '🌲 ') + escapeHtml(row.name) + badge + '</button>';
   }).join('');
 
-  let speciesCard = '<div class="inventory-empty">Discover a bird first — every scan and listen adds a species you can cook for.</div>';
+  let speciesCard = '<div class="inventory-empty">Scan a bird first — then cook for it.</div>';
   if (chosen) {
     const profile = findSpeciesProfile(chosen.name);
     const clue = profile ? [profile.habitat, profile.diet ? 'Diet clue: ' + profile.diet : null].filter(Boolean).join(' · ') : 'Watch where you met it for clues.';
     const badgeCount = (gameState.dietBadges || {})[chosen.key] || 0;
     const status = chosen.merlin ? 'Permanent companion — a source-backed falcon meal feeds him properly.' : chosen.companion ? 'Companion — a good meal feeds it properly.' : 'Wild Birdex species — a perfect tray builds feeder trust (cheaper to recruit).';
+    const notes = kitchenNotesLine(chosen.key);
+    // Baby-simple by default: name, what it eats, and the plate. Everything
+    // wordier (status, habitat clue, sourced diet card) folds behind Bird facts.
     speciesCard = '<div class="kitchen-guest">' +
       '<div class="kitchen-guest-name">' + escapeHtml(chosen.name) + (badgeCount ? ' <span class="kitchen-guest-badge">🏅 Diet Badge' + (badgeCount > 1 ? ' ×' + badgeCount : '') + '</span>' : '') + '</div>' +
-      '<div class="kitchen-guest-status">' + status + '</div>' +
-      '<div class="kitchen-guest-clue">' + escapeHtml(clue) + '</div>' +
-      kitchenDietGuidanceHTML(chosen, rule) +
-      '<div class="kitchen-guest-notes">' + escapeHtml(kitchenNotesLine(chosen.key)) + '</div></div>';
+      kitchenEatsChipsHTML(chosen) +
+      (notes ? '<div class="kitchen-guest-notes">' + escapeHtml(notes) + '</div>' : '') +
+      '<details class="kitchen-more"><summary>ℹ️ Bird facts</summary>' +
+        '<div class="kitchen-guest-status">' + status + '</div>' +
+        '<div class="kitchen-guest-clue">' + escapeHtml(clue) + '</div>' +
+        kitchenDietGuidanceHTML(chosen, rule) +
+      '</details></div>';
   }
 
   const larderRows = Object.entries(larder).filter(([, n]) => (Number(n) || 0) > 0);
@@ -11887,14 +11934,17 @@ function renderKitchenPanelHTML() {
 
   return renderKitchenRosterHTML() +
     '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
-    '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow; shops, map forage and quests add more larder stock.</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '<div class="inventory-empty">No birds discovered yet.</div>') + '</div>' +
     speciesCard +
     '<div class="kitchen-plate">' + kitchenState.slots.map((slot, i) => kitchenSlotHTML(slot, i)).join('') + '</div>' +
     '<button class="kitchen-serve-btn" data-feed-transaction-id="" onclick="kitchenServeMeal()">🔔 Serve the tray</button>' +
-    '<div class="room-add-title kitchen-larder-title">🧺 Stores larder</div>' +
+    '<div class="room-add-title kitchen-larder-title">🧺 Larder</div>' +
     '<div class="kitchen-larder-grid">' + larderHtml + '</div>' +
-    kitchenPantryBridgeHTML() + '</div>';
+    '<details class="kitchen-more kitchen-more-panel"><summary>ℹ️ How the Kitchen works</summary>' +
+      '<div class="kitchen-help">Pick a bird, add up to three foods, serve the tray. The right food served the right way scores best — and teaches you the real diet.</div>' +
+      '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow; shops, map forage and quests add more larder stock.</div>' +
+      kitchenPantryBridgeHTML() +
+    '</details></div>';
 }
 
 function kitchenSelectSpecies(key) {
@@ -11929,7 +11979,7 @@ function kitchenOpenSlot(index) {
     return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(ing.desc) + '</div></div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
   }).join('') : '<div class="inventory-empty">Nothing in the larder. Send a bird on a Fishing Trip, forage the map, or buy supplies at the Seed &amp; Sundry.</div>';
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍳</div><div><div class="quest-name">Plate slot ' + (index + 1) + '</div><div class="quest-desc">Choose an ingredient, then how to serve it — the preparation matters as much as the food.</div></div></div>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍳</div><div><div class="quest-name">Plate slot ' + (index + 1) + '</div><div class="quest-desc">Pick a food, then how to serve it.</div></div></div>' +
     (kitchenState.slots[index] ? '<button class="kitchen-clear-btn" onclick="kitchenClearSlot(' + index + ')">Remove current ingredient</button>' : '') +
     body + '</div>';
   el.classList.add('open');
