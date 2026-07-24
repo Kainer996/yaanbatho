@@ -850,6 +850,12 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .card-pet-btn.active { border-color: var(--legendary); color: var(--legendary); box-shadow: 0 0 14px rgba(255,212,59,0.22); }
 
+/* Merlin roosts on a real bough that reaches in from a tree just past the
+   right edge of the screen. The bough and the bird stay separate fixed layers
+   (Merlin still has to be able to fly off), but they run the SAME sway
+   keyframe about the SAME pivot — the base of the bough, 26px beyond the
+   screen edge — so the tip of the branch travels while the base barely
+   stirs, and Merlin's talons never leave the bark. */
 .pet-companion {
   position: fixed;
   top: calc(var(--safe-top) + 76px);
@@ -860,46 +866,49 @@ svg.academy-room-bg { display:block; filter:none; }
   width: 62px;
   height: 72px;
   pointer-events: auto;
-  transform: translate3d(0,0,0);
+  /* 100% is this box's right edge (14px in from the screen); the bough's base
+     sits a further 40px right, which is .pet-perch's own 100% pivot. */
+  transform-origin: calc(100% + 40px) 48px;
+  animation: merlin-bough-sway 7.4s ease-in-out infinite;
   transition: left 1.8s cubic-bezier(.2,.8,.2,1), top 1.8s cubic-bezier(.2,.8,.2,1), right 0.2s ease, bottom 0.2s ease;
   filter: drop-shadow(0 8px 14px rgba(0,0,0,0.42));
   display: none;
 }
 .pet-companion.show { display: block; }
-/* The perch is its own fixed element so it stays put while the bird flies. */
+/* The bough is its own fixed element so it stays put while the bird flies.
+   It overshoots the screen by 26px so the thick base is cropped away and
+   reads as carrying on into a tree we cannot see. */
 .pet-perch {
   position: fixed;
   top: calc(var(--safe-top) + 76px);
-  right: 14px;
-  width: 62px;
-  height: 72px;
+  right: -26px;
+  width: 180px;
+  height: 104px;
   z-index: 179;
   pointer-events: none;
   display: none;
-  filter: drop-shadow(0 8px 14px rgba(0,0,0,0.42));
+  transform-origin: 100% 48px;
+  animation: merlin-bough-sway 7.4s ease-in-out infinite;
+  filter: drop-shadow(0 9px 12px rgba(0,0,0,0.5));
 }
 .pet-perch.show { display: block; }
-.pet-perch::before {
-  content:''; position:absolute; left:13px; right:13px; bottom:11px; height:18px; z-index:1;
-  background:linear-gradient(90deg, transparent 0 8%, rgba(96,57,26,.95) 9% 17%, transparent 18% 82%, rgba(96,57,26,.95) 83% 91%, transparent 92%), linear-gradient(180deg, rgba(139,92,45,.98), rgba(67,39,18,.98));
-  clip-path:polygon(0 36%,100% 36%,94% 62%,62% 68%,58% 100%,42% 100%,38% 68%,6% 62%);
-  filter:drop-shadow(0 7px 8px rgba(0,0,0,.52));
-}
-.pet-perch::after {
-  content: '';
-  position: absolute;
-  left: 3px; right: 3px; bottom: 23px; height: 7px; border-radius: 999px; z-index:2;
-  background: linear-gradient(90deg, rgba(91,51,22,0.98), rgba(232,178,91,0.98), rgba(91,51,22,0.98));
-  box-shadow: 0 3px 8px rgba(0,0,0,0.48), 0 0 10px rgba(214,168,79,0.14);
-}
+.pet-branch { display: block; width: 180px; height: 104px; overflow: visible; }
+/* Side twigs flex about the point where they join the bough, not about the
+   bough's own pivot, so the leafy sprays quiver instead of sliding. */
+.pet-branch-spray { transform-box: view-box; transform-origin: 94px 41px; animation: merlin-twig-flutter 4.3s ease-in-out infinite; }
+.pet-branch-drop { transform-box: view-box; transform-origin: 152px 50px; animation: merlin-twig-flutter 5.6s ease-in-out infinite reverse; }
 .pet-companion.facing-left .pet-sprite { transform: scaleX(-1); }
 .pet-companion.flying { z-index: 260; }
 .pet-sprite {
   width: 54px; height: 54px; margin: 0 auto; overflow: visible;
   display: flex; align-items: center; justify-content: center; position: relative; z-index: 3;
-  background: transparent; border: 0; animation: pet-idle 1.15s ease-in-out infinite;
+  background: transparent; border: 0;
+  /* Pivot on the talons (44% across, 72% down the art) so the idle breath
+     rocks him on the branch instead of lifting him off it. */
+  transform-origin: 44% 72%;
+  animation: pet-idle 3.9s ease-in-out infinite;
 }
-.pet-sprite.pet-walk { animation: pet-flutter 0.38s ease-in-out infinite; }
+.pet-sprite.pet-walk { transform-origin: 50% 50%; animation: pet-flutter 0.38s ease-in-out infinite; }
 .pet-sprite img { width: 100%; height: 100%; object-fit: contain; filter:drop-shadow(0 8px 8px rgba(0,0,0,.50)); }
 .pet-sprite .pet-emoji { font-size: 32px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
 .pet-nameplate { display: none; }
@@ -934,9 +943,18 @@ svg.academy-room-bg { display:block; filter:none; }
   position: fixed; z-index: 259; pointer-events: none; color: var(--legendary); font-size: 16px;
   animation: pet-sparkle 1.2s ease-out forwards;
 }
-@keyframes pet-idle { 0%,100%{ transform: translateY(0) scale(1); } 50%{ transform: translateY(-4px) scale(1.02); } }
+@keyframes pet-idle { 0%,100%{ transform: rotate(-0.7deg) scale(1); } 50%{ transform: rotate(0.6deg) scale(1.014); } }
 @keyframes pet-flutter { 0%,100%{ transform: translateY(0) rotate(-8deg); } 50%{ transform: translateY(-5px) rotate(8deg); } }
 @keyframes pet-sparkle { from{ opacity:1; transform:translateY(0) scale(1); } to{ opacity:0; transform:translateY(-36px) scale(0.5); } }
+/* One shared sway for bough and bird: a slow turn about the base out past the
+   screen edge, so the far tip rises and dips several pixels while the base
+   moves barely at all — the way a real branch carries weight. */
+@keyframes merlin-bough-sway { 0%,100%{ transform: rotate(-1.9deg); } 38%{ transform: rotate(0.6deg); } 62%{ transform: rotate(1.5deg); } }
+@keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-1.4deg); } 50%{ transform: rotate(1.7deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .pet-perch, .pet-companion, .pet-branch-spray, .pet-branch-drop, .pet-sprite { animation: none; }
+  .pet-perch, .pet-companion { transform: rotate(-0.2deg); }
+}
 
 /* ========== SCAN SCREEN ========== */
 .scan-mode-toggle {
@@ -2989,7 +3007,108 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
   <!-- Merlin is Burbz's permanent guide and top-right Tamagotchi companion. -->
-  <div class="pet-perch show" id="petPerch"></div>
+  <!-- The bough Merlin stands on. Drawn base-right/tip-left: the top surface
+       passes under his talons at y≈39.4 in these user units, which is exactly
+       where the art's toe pads land, so he grips the bark rather than hovering
+       near it. Base runs off the right of the viewBox into an unseen tree. -->
+  <div class="pet-perch show" id="petPerch" aria-hidden="true">
+    <svg class="pet-branch" viewBox="0 0 180 104" width="180" height="104" fill="none" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="merlinBarkFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7a5730"/>
+          <stop offset=".26" stop-color="#54381d"/>
+          <stop offset=".62" stop-color="#2e1e10"/>
+          <stop offset=".9" stop-color="#1b1108"/>
+          <stop offset="1" stop-color="#38260f"/>
+        </linearGradient>
+        <linearGradient id="merlinTwigFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#664524"/>
+          <stop offset="1" stop-color="#241608"/>
+        </linearGradient>
+        <!-- The drooping twig starts in the bough's shadow, so it darkens
+             towards its root instead of popping off the silhouette. -->
+        <linearGradient id="merlinDropTwigFill" x1="1" y1="0" x2="0" y2=".7">
+          <stop offset="0" stop-color="#1d1207"/>
+          <stop offset=".45" stop-color="#3f2a13"/>
+          <stop offset="1" stop-color="#5d3f21"/>
+        </linearGradient>
+        <linearGradient id="merlinLeafFill" x1=".1" y1="0" x2=".8" y2="1">
+          <stop offset="0" stop-color="#4c7346"/>
+          <stop offset=".5" stop-color="#2f5236"/>
+          <stop offset="1" stop-color="#172d21"/>
+        </linearGradient>
+        <linearGradient id="merlinLeafFillAlt" x1=".1" y1="0" x2=".8" y2="1">
+          <stop offset="0" stop-color="#5c7842"/>
+          <stop offset=".5" stop-color="#3a4f2b"/>
+          <stop offset="1" stop-color="#1d2a19"/>
+        </linearGradient>
+        <radialGradient id="merlinGripShade" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="#000" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0"/>
+        </radialGradient>
+        <!-- One leaf: petiole, asymmetric blade, midrib. Placed by <use> so the
+             origin is the point where it joins its twig. -->
+        <g id="merlinLeaf">
+          <path d="M0 0 3.1.2" stroke="#4a3218" stroke-width=".9" stroke-linecap="round"/>
+          <path d="M3 .2C6.4-4.4 13-5.2 16.6-.8 12.8 4.2 6.6 4.4 3 .2Z"/>
+          <path d="M4.2.1C8 .3 12.4-.1 15.8-.7" stroke="#a6cd97" stroke-opacity=".22" stroke-width=".6" fill="none"/>
+        </g>
+        <clipPath id="merlinBarkClip">
+          <path d="M8 27.6C30 27.8 52 30.2 74 34.2 86 36.4 94 37.8 106 39.4 124 41 150 42.4 180 43.8L180 62C163 59.6 147 57 129 53.4 117 51 104 48.4 86 42.6 62 34.8 32 29.8 8 28.8Z"/>
+        </clipPath>
+      </defs>
+
+      <!-- Leafy side spray, tucked behind the bough so the twigs grow out of it -->
+      <g class="pet-branch-spray">
+        <g stroke="url(#merlinTwigFill)" stroke-linecap="round">
+          <path d="M94 40.6C88 32 80 24 70 18" stroke-width="3.2"/>
+          <path d="M71 18.6C62 13.4 52 10 41 8.6" stroke-width="1.9"/>
+          <path d="M82 25C78 19.4 73 14.6 66 11" stroke-width="1.3"/>
+        </g>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(41.6 8.7) rotate(-172)"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(54 10.6) rotate(-131) scale(.84)" opacity=".95"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(64.4 13.8) rotate(151) scale(.71)" opacity=".92"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(74.6 19.6) rotate(-108) scale(.62)" opacity=".9"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(66.2 11.2) rotate(-152) scale(.52)" opacity=".85"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(87 30.6) rotate(139) scale(.48)" opacity=".82"/>
+      </g>
+
+      <!-- Main bough -->
+      <path d="M8 27.6C30 27.8 52 30.2 74 34.2 86 36.4 94 37.8 106 39.4 124 41 150 42.4 180 43.8L180 62C163 59.6 147 57 129 53.4 117 51 104 48.4 86 42.6 62 34.8 32 29.8 8 28.8Z" fill="url(#merlinBarkFill)"/>
+      <g clip-path="url(#merlinBarkClip)">
+        <g stroke="#150b04" stroke-opacity=".55" stroke-width="1" fill="none" stroke-linecap="round">
+          <path d="M14 29.4C48 32.6 84 39 129 47.6 148 51.2 164 54 180 55.4"/>
+          <path d="M40 32.4C74 37.4 106 43.6 140 51.6 156 55.4 170 58 180 59"/>
+          <path d="M96 40.4C118 43.2 140 46.6 158 50.4"/>
+          <path d="M118 42.2C132 45.6 146 49.4 160 54"/>
+          <path d="M62 34.6C78 36.4 96 39.4 118 43.2" stroke-opacity=".3"/>
+        </g>
+        <!-- Sapwood catch-light: keeps the bough reading as a cylinder -->
+        <g stroke="#b9884f" stroke-opacity=".2" stroke-width=".9" fill="none" stroke-linecap="round">
+          <path d="M26 29.4C58 31.2 96 36 138 43.4 156 46.6 170 48.6 180 49.6"/>
+          <path d="M52 31.6C84 34.4 118 39.6 152 46.4"/>
+        </g>
+        <ellipse cx="86" cy="37.4" rx="4.4" ry="2.4" fill="#1b1006" opacity=".46"/>
+        <ellipse cx="85.2" cy="36.8" rx="2.4" ry="1.2" fill="#a1723c" opacity=".34"/>
+        <!-- Contact shadow where the talons press into the bark -->
+        <ellipse cx="106" cy="40.6" rx="13" ry="3.6" fill="url(#merlinGripShade)"/>
+      </g>
+      <!-- Rim light along the lit top edge, the same gold the rest of the UI uses -->
+      <path d="M8 27.6C30 27.8 52 30.2 74 34.2 86 36.4 94 37.8 106 39.4 124 41 150 42.4 180 43.8" stroke="#e6c284" stroke-opacity=".24" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+
+      <!-- A short twig drooping off the base, for depth in front of the bough.
+           Kept high and tight to the screen edge so it stays over map, not UI. -->
+      <g class="pet-branch-drop">
+        <path d="M152 50.4C150 56.4 145 61 138 63.2" stroke="url(#merlinDropTwigFill)" stroke-width="2.2" stroke-linecap="round"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(138 63.2) rotate(163) scale(.74)" opacity=".88"/>
+        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(145 57.6) rotate(114) scale(.52)" opacity=".8"/>
+      </g>
+
+      <!-- Two leaves out at the whippy tip so the far end reads as alive -->
+      <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(23.4 28.2) rotate(157) scale(.72)" opacity=".9"/>
+      <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(11.6 27.4) rotate(-146) scale(.56)" opacity=".86"/>
+    </svg>
+  </div>
   <div class="pet-companion show" id="petCompanion" aria-live="polite">
     <div class="pet-speech" id="petSpeech">Ready when you are!</div>
     <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><img src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt="Merlin the wizard falcon"></button>
