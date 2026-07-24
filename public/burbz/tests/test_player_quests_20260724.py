@@ -104,4 +104,4 @@ def test_tutorial_introduces_player_quests():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-player-quests-release-v117-20260724" in sw
+    assert "burbz-merlin-branch-perch-v118-20260724" in sw
