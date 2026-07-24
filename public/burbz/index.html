@@ -1512,6 +1512,14 @@ svg.academy-room-bg { display:block; filter:none; }
   animation: claimPulse 1.5s ease infinite;
 }
 @keyframes claimPulse { 0%,100%{box-shadow:0 0 8px rgba(255,212,59,0.3)} 50%{box-shadow:0 0 16px rgba(255,212,59,0.6)} }
+/* Player Quests — the guided chain pinned to the top of the Quests tab */
+.player-quest-card { border-color: rgba(214,168,79,.45); background: linear-gradient(180deg, rgba(214,168,79,.10), rgba(0,0,0,.18)); }
+.player-quest-count { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(214,168,79,.16); border: 1px solid rgba(214,168,79,.3); font-size: 11px; color: var(--accent); }
+.quest-go-btn {
+  flex-shrink: 0; padding: 8px 14px; background: linear-gradient(135deg, #4dabf7, #1971c2);
+  border-radius: 6px; font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 12px; color: #fff; text-transform: uppercase;
+}
 .merlin-clue-notebook { margin-top: 12px; padding: 12px; background: rgba(151,117,250,0.08); border: 1px solid rgba(151,117,250,0.22); border-radius: 12px; }
 .merlin-clue-title { font-family: 'Russo One', sans-serif; font-size: 13px; color: var(--legendary); letter-spacing: 0.8px; margin-bottom: 8px; }
 .merlin-clue-grid { display: grid; gap: 8px; }
@@ -2695,6 +2703,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
     <div class="screen" id="screen-quests">
       <div class="screen-title">QUESTS</div>
+      <div id="playerQuestsList"></div>
       <div id="walkingQuestsList"></div>
       <div id="expeditionQuestList"></div>
       <div id="questsList"></div>
@@ -10225,6 +10234,7 @@ function academyBuildBuilding(id, opts = {}) {
   gameState.academyBuildings[id] = { built: true, builtAt: new Date().toISOString(), x: opts.position ? opts.position.x : cfg.x, y: opts.position ? opts.position.y : cfg.y };
   if (cfg.room) academySelectedRoom = cfg.room;
   updateQuestProgress('build_academy', 1);
+  updateQuestProgress('build_' + id, 1);
   saveState();
   updateHeader();
   if (SFX && typeof SFX.build === 'function') SFX.build();
@@ -10561,6 +10571,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   }
   quest.equipment = equipment;
   gameState.birdExpeditions.unshift(quest);
+  updateQuestProgress('expedition_sent', 1);
   saveState();
   if (templateId === 'moon_scout' && SFX && typeof SFX.owl === 'function') SFX.owl();
   else if (SFX && typeof SFX.page === 'function') SFX.page();
@@ -12080,6 +12091,8 @@ function kitchenServeMeal() {
   if (badgeEarned) rewards.push('🏅 Diet Badge earned — see it in the Birdex!');
 
   kitchenState.slots = [null, null, null];
+  gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
+  updateQuestProgress('meal_served', 1);
   saveState(); updateHeader();
   kitchenShowResult(chosen, rule, result, rewards);
   renderAcademyRoomInterior();
@@ -15381,7 +15394,7 @@ function normalizeActionBadgeState(now = Date.now()) {
       : 0;
   } catch (e) {}
   return {
-    questDefinitions: [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
+    questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
     quests: gameState && gameState.quests,
     birdExpeditions,
     birdTrainingSessions,
@@ -20471,6 +20484,7 @@ function rememberDiscoveredBird(bird, opts = {}) {
   gameState.discoveredSpecies[key] = record;
   discoveryKeysForSpecies(canonical).forEach(aliasKey => { if (aliasKey && aliasKey !== key) gameState.discoveredSpecies[aliasKey] = record; });
   if (!existing && !opts.silent) addCoins(discoveryRewardForBird(bird));
+  if (!existing) updateQuestProgress('discover', 1);
   return !existing;
 }
 
@@ -20505,6 +20519,7 @@ function recruitDiscoveredBird(key) {
   addPlayerXp(20 + (bird.rarity === 'legendary' ? 100 : bird.rarity === 'epic' ? 50 : bird.rarity === 'rare' ? 30 : bird.rarity === 'uncommon' ? 15 : 10));
   updateQuestProgress('capture', 1);
   updateQuestProgress('capture_' + bird.rarity, 1);
+  updateQuestProgress('recruit', 1);
   const walkQ = activeWalkingQuest();
   if (walkQ) { walkQ.birdsCaptured.push({ name: bird.commonName || bird.species, species: bird.species, rarity: bird.rarity, at: Date.now() }); updateWalkQuestHud(); showToast('🐦 ' + (bird.commonName || bird.species) + ' logged on your quest (+20 XP at the banner)'); try { questRegisterBirdEncounter(bird); } catch (err) {} }
   removeTavernPatronForSpecies(bird.species || bird.commonName); // no longer waits in the Barracks queue
@@ -23455,6 +23470,7 @@ function endPerchBattle() {
       }
     }
     updateQuestProgress('win', 1);
+    if (liberatedTown) updateQuestProgress('town_liberated', 1);
     SFX.victory();
   } else {
     league.losses += 1;
@@ -23818,6 +23834,108 @@ const ACHIEVEMENT_QUESTS = [
   { id: 'ach_diet_15', name: 'Field Naturalist', desc: 'Discover the true diets of 15 species', type: 'diets_known', target: 15, reward: 200, icon: '\u{1F4D6}' }
 ];
 
+// ============================================================================
+// PLAYER QUESTS — the guided chain that starts where the tutorial ends.
+// Classic mobile progression: one clear goal at a time, always pinned to the
+// top of the Quests tab, so the player never wonders what to do next. These
+// are quests the PLAYER completes, different from bird expeditions. Each
+// link has an event type for live progress plus a measure() read from real
+// game state, so a goal the player already met completes the moment its
+// turn comes.
+// ============================================================================
+const PLAYER_QUESTS = [
+  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to capture any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_build_roost',    name:'Build The Roost', desc:'Raise The Roost at the Academy', type:'build_dorm', target:1, reward:40, coins:20, icon:'\u{1F3E0}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('dorm') ? 1 : 0 },
+  { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
+  { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
+    measure:() => (gameState.flock || []).length },
+  { id:'pq_expedition',     name:'Send a bird questing', desc:'Send a companion on a Kingdom Errand', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
+    measure:() => (gameState.birdExpeditions || []).length },
+  { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
+    measure:() => Number(gameState.player.mealsServed) || 0 },
+  { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
+    measure:() => Number(gameState.player.wins) || 0 },
+  { id:'pq_liberate',       name:'Liberate a town', desc:'Free a real town from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
+    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+];
+
+function activePlayerQuest() {
+  return PLAYER_QUESTS.find(q => !(gameState.quests && gameState.quests[q.id] && gameState.quests[q.id].claimed)) || null;
+}
+
+// Only the active link in the chain accepts progress, so a later goal can
+// never complete (or badge the nav) before its turn.
+function syncActivePlayerQuest() {
+  const q = activePlayerQuest();
+  if (!q) return;
+  if (!gameState.quests) gameState.quests = {};
+  if (!gameState.quests[q.id]) gameState.quests[q.id] = { progress: 0, claimed: false };
+  const state = gameState.quests[q.id];
+  if (typeof q.measure === 'function') {
+    try { state.progress = Math.min(q.target, Math.max(state.progress || 0, q.measure())); } catch (e) {}
+  }
+}
+
+function playerQuestGo(q) {
+  if (q.go && q.go !== currentScreen) switchScreen(q.go);
+  else if (q.go === 'quests') $('expeditionQuestList')?.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function claimPlayerQuest(id) {
+  const q = PLAYER_QUESTS.find(x => x.id === id);
+  const state = q && gameState.quests && gameState.quests[q.id];
+  if (!q || !state || state.claimed || (state.progress || 0) < q.target) return;
+  state.claimed = true;
+  addPlayerXp(q.reward);
+  if (q.coins) addCoins(q.coins);
+  if (q.branches) addBranches(q.branches);
+  syncActivePlayerQuest(); // arm the next link immediately
+  saveState();
+  updateHeader();
+  playQuestClaimCelebration({ coins: q.coins || 0, xp: q.reward, items: {} });
+  const next = activePlayerQuest();
+  if (next) showToast('\u{1F9ED} Next player quest: ' + next.name);
+  renderQuests();
+}
+
+function renderPlayerQuests() {
+  const host = $('playerQuestsList');
+  if (!host) return;
+  syncActivePlayerQuest();
+  const total = PLAYER_QUESTS.length;
+  const claimed = PLAYER_QUESTS.filter(q => gameState.quests[q.id] && gameState.quests[q.id].claimed).length;
+  const active = activePlayerQuest();
+  if (!active) {
+    host.innerHTML = '<div class="quest-section-title">Player Quests</div>' +
+      '<div class="quest-all-done">\u{1F451} All ' + total + ' player quests complete — the Kingdom of Burbz flies with you!</div>';
+    return;
+  }
+  const state = gameState.quests[active.id] || { progress: 0 };
+  const complete = (state.progress || 0) >= active.target;
+  const pct = Math.min(100, ((state.progress || 0) / active.target) * 100);
+  const rewardBits = ['+' + active.reward + ' XP'];
+  if (active.coins) rewardBits.push('+' + active.coins + ' \u{1FA99}');
+  if (active.branches) rewardBits.push('+' + active.branches + ' \u{1FAB5}');
+  host.innerHTML = '<div class="quest-section-title">Player Quests <span class="player-quest-count">' + claimed + '/' + total + '</span></div>' +
+    '<div class="quest-card player-quest-card" data-quest-card="' + active.id + '">' +
+      '<div class="quest-icon">' + active.icon + '</div>' +
+      '<div class="quest-info">' +
+        '<div class="quest-name">' + escapeHtml(active.name) + '</div>' +
+        '<div class="quest-desc">' + escapeHtml(active.desc) + '</div>' +
+        '<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="quest-progress-text">' + (state.progress || 0) + '/' + active.target + ' · ' + rewardBits.join(' · ') + '</div>' +
+      '</div>' +
+      (complete
+        ? '<button class="quest-claim-btn pulse" data-player-quest-claim="' + active.id + '">CLAIM</button>'
+        : '<button class="quest-go-btn" data-player-quest-go="' + active.id + '">GO ›</button>') +
+    '</div>';
+  host.querySelector('[data-player-quest-go]')?.addEventListener('click', () => { SFX.tap(); playerQuestGo(active); });
+  host.querySelector('[data-player-quest-claim]')?.addEventListener('click', () => claimPlayerQuest(active.id));
+}
+
 function initQuests() {
   const now = new Date();
   const todayKey = now.toISOString().split('T')[0];
@@ -23860,6 +23978,12 @@ function initQuests() {
   const achLeg = gameState.quests['ach_legendary'];
   if (achLeg && hasLegendary) achLeg.progress = 1;
 
+  // Player quests: every link has state; only the active one syncs progress.
+  PLAYER_QUESTS.forEach(q => {
+    if (!gameState.quests[q.id]) gameState.quests[q.id] = { progress: 0, claimed: false };
+  });
+  syncActivePlayerQuest();
+
   saveState();
 }
 
@@ -23888,6 +24012,20 @@ function updateQuestProgress(type, amount) {
       }
     });
   }
+  // Player quests: only the active link in the chain moves.
+  const activePq = activePlayerQuest();
+  if (activePq) {
+    if (!gameState.quests[activePq.id]) gameState.quests[activePq.id] = { progress: 0, claimed: false };
+    const pqState = gameState.quests[activePq.id];
+    const before = pqState.progress || 0;
+    if (activePq.type === type) pqState.progress = Math.min(activePq.target, before + amount);
+    syncActivePlayerQuest();
+    if (before < activePq.target && (pqState.progress || 0) >= activePq.target) {
+      showToast('\u{1F3C5} Player quest complete: ' + activePq.name + ' — claim it in Quests!');
+      if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} }
+    }
+  }
+  if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
   saveState();
 }
 
@@ -23907,6 +24045,7 @@ function renderQuests() {
   initQuests();
   const container = $('questsList');
   container.innerHTML = '';
+  renderPlayerQuests();
   renderWalkingQuestSection();
   renderBirdExpeditions();
 
@@ -24171,6 +24310,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'academy', chapter:'Academy', title:'The Crowbar', screen:'academy', target:'#academyTreehouse', text:'The bird bar! Birds perched here grow Charm — the stat that wins Parleys and diplomacy quests. Send your robins and wrens.' },
 
   // — Quests: taught the first time the Quests screen opens.
+  { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'Your next goal always sits here at the top. Follow the Player Quests and you will never wonder what to do next.' },
   { chapterId:'quests', chapter:'Quests', title:'Send a bird questing', screen:'quests', target:'#expeditionQuestList', text:'Pick a starter quest, choose a recruited bird and confirm. Rewards and duration always show up front.' },
   { chapterId:'quests', chapter:'Quests', title:'Longer expeditions', screen:'quests', target:'#expeditionQuestList', text:'Build the Quest Roost later to unlock longer expeditions with bigger rewards.' },
   { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests offers real walking quests on public paths — or start a Side Quest and simply wander.' },

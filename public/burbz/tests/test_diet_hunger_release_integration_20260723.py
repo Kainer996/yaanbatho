@@ -10,7 +10,7 @@ SW = ROOT / "sw.js"
 DEPLOY_SCRIPT = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 RELEASE_PIN = "diet-hunger-release-20260723"
-CACHE_NAME = "burbz-merlin-tutorial-v5-release-v116-20260724"
+CACHE_NAME = "burbz-player-quests-release-v117-20260724"
 PINNED_RUNTIME_ASSETS = [
     "academy_treehouse_core.js",
     "kitchen_pantry_core.js",
