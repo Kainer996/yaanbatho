@@ -24105,9 +24105,12 @@ function maybeShowIntroCutscene() {
 // universe where birds rule, now taken by the dark force of the evil Burbz),
 // then teaches each system in a short chapter the FIRST time the player opens
 // that part of the game, instead of one giant up-front tour.
+// v5 rules: capturing birds is taught first, every line stays short enough to
+// read at a glance, and the spotlight only ever lights a target it can
+// actually see on the active screen.
 // ============================================================================
-const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v4-20260720';
-const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v3-20260720';
+const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v5-20260724';
+const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v4-20260720';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:' + BURBZ_TUTORIAL_VERSION;
@@ -24129,62 +24132,61 @@ const MERLIN_TUTORIAL_CHAPTERS = [
 ];
 
 const MERLIN_TUTORIAL_STEPS = [
-  // — The Tale of Burbz: the story chapter, told before anything is taught.
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'A voice across the multiverse', screen:'map', target:null, text:'I am Merlin, wizard falcon of the Kingdom of Burbz. My home is the Earth of another universe — the same lands and seas as yours — but in our world, birds are the dominant species.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'The darkness falls', screen:'map', target:null, text:'A dark force has taken our kingdom. The evil Burbz — shadow-woven birds with burning red eyes — swept over every town, and the usurper’s darkness now covers our whole world.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Merlin’s spell-tablet', screen:'map', target:null, text:'With my last great spell I hurled my magic tablet across the multiverse into your universe. You are holding it right now — this very device is the tablet, and this app is its magic.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'You are the chosen one', screen:'map', target:null, text:'Only you can unlock the darkness that has swallowed Burbz. Real birdwatching restores Burbz: every real bird you find feeds the tablet’s magic and frees our kingdom, town by town.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'11,000 birds, one legend', screen:'map', target:null, text:'Your Earth holds roughly 11,000 known bird species — and even my tablet does not know them all. Discover a real bird missing from Burbz and you shall claim an ABSOLUTELY EPIC prize. A wizard keeps his word.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This map mirrors your real world and follows your real position. Walk it, explore it, and open nearby towns to challenge the evil Burbz who hold them. I will teach each art the first time you need it.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'First task: find a bird', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Every quest begins with one real bird. Open Scan when you are ready and I will show you how the tablet captures a bird’s spirit. Go well, friend — Burbz is counting on you.' },
+  // — The Tale of Burbz: a short story, then straight to capturing birds.
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'A voice across the multiverse', screen:'map', target:null, text:'I am Merlin, wizard falcon of the Kingdom of Burbz — the Earth of another universe, where birds are the dominant species.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'The darkness falls', screen:'map', target:null, text:'A dark force has taken our kingdom. The evil Burbz — shadow birds with burning red eyes — now hold every town.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Merlin’s spell-tablet', screen:'map', target:null, text:'With my last spell I hurled my magic tablet into your universe. You are holding it right now — this app is that tablet.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'You are the chosen one', screen:'map', target:null, text:'Only you can unlock the darkness. Real birdwatching restores Burbz: every real bird you find frees our kingdom, town by town.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'11,000 birds, one legend', screen:'map', target:null, text:'Your Earth holds about 11,000 known bird species. Find one my tablet does not know and you claim an ABSOLUTELY EPIC prize.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Nearby towns are held by the evil Burbz — one day you will free them.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'First: capture a bird', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Everything starts with capturing birds. Tap Scan and I will show you how. The rest I will teach bit by bit, when you need it.' },
 
-  // — Discovery: taught the first time the Scan screen opens.
-  { chapterId:'scan', chapter:'Discovery', title:'Scan two ways', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera for a photo or Sound for my listener. Only recognition-backed matches enter your Birdex — the tablet’s magic needs a real bird, never a self-reported guess.' },
-  { chapterId:'scan', chapter:'Discovery', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Camera opens your phone’s native camera. Frame the bird closely, confirm the crop and review the suggested match before adding it to your discoveries.' },
-  { chapterId:'scan', chapter:'Discovery', title:'Sound and BirdNET', screen:'scan', target:'#scanSoundBtn', text:'Sound keeps listening across screens until Stop; the green light means your microphone is live. Short windows are uploaded for BirdNET analysis, not stored in your game. Location help is optional and off by default.' },
-  { chapterId:'scan', chapter:'Discovery', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'Back on the Map, Likely Birds estimates what may be nearby from habitat, season and range. It is a field clue to guide your search, never a guaranteed identification.' },
+  // — Capture: taught the first time the Scan screen opens. Always first.
+  { chapterId:'scan', chapter:'Capture', title:'Two ways to capture', screen:'scan', target:'.scan-mode-toggle', text:'Capture birds with Camera or Sound. Only a real, recognised bird counts — that is what powers the tablet’s magic.' },
+  { chapterId:'scan', chapter:'Capture', title:'Camera', screen:'scan', target:'#scanImageBtn', text:'Snap a photo of the bird, then confirm the match. Every capture is added to your Birdex.' },
+  { chapterId:'scan', chapter:'Capture', title:'Sound', screen:'scan', target:'#scanSoundBtn', text:'Sound listens for bird song with your microphone. Short clips are uploaded for BirdNET analysis only. Location help is optional.' },
+  { chapterId:'scan', chapter:'Capture', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'On the Map, Likely Birds hints at what may be nearby. A clue for your hunt — never a promise.' },
 
   // — Collection: taught the first time the Birdex opens.
-  { chapterId:'birdex', chapter:'Collection', title:'Birdex and field guide', screen:'birdex', target:'#burbzModeTabs', text:'The Birdex records discovered and undiscovered species, identification notes, diets and real-world facts. Companions is the roster of birds already recruited to your flock.' },
-  { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Discovery does not recruit a bird automatically. Visit the Academy Barracks, compare its full card and spend the shown coins to invite it into your flock.' },
-  { chapterId:'birdex', chapter:'Collection', title:'Merlin, your guide', screen:'birdex', target:'#petCompanion', text:'Merlin is the main character and your permanent top-right companion. Tap him to check his food, happiness, energy and bond, then feed, play or let him rest.' },
+  { chapterId:'birdex', chapter:'Collection', title:'Your Birdex', screen:'birdex', target:'#burbzModeTabs', text:'Every capture is recorded here with real facts about the species. Companions shows the birds already in your flock.' },
+  { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'A captured bird is not yours yet. Recruit it at the Academy Barracks with coins to bring it into your flock.' },
+  { chapterId:'birdex', chapter:'Collection', title:'Merlin, your companion', screen:'birdex', target:'#petCompanion', text:'That is me, top right! Tap me any time to feed me, play with me, or let me rest.' },
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
-  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'These are your true foes: squads of evil Burbz, the usurper’s shadow soldiers. You never fight free birds — every battle you win unravels a little more of the dark magic.' },
-  { chapterId:'battle', chapter:'The War', title:'Pick your squad', screen:'battle', target:'#battleTeamGrid', text:'Choose four birds; the whole squad fights at once. Each evil Burb keeps the wing class of the bird it was twisted from, so counter their classes — the wheel below shows who beats whom.' },
-  { chapterId:'battle', chapter:'The War', title:'Skyclash basics', screen:'battle', target:'#battleStartBtn', text:'The Speed meter decides who acts. Basic moves build your squad’s shared Focus; spend it to Surge a skill for extra power. Signatures are each bird’s ultimate.' },
-  { chapterId:'battle', chapter:'The War', title:'Diplomacy and Charm', screen:'battle', target:'#battleStartBtn', text:'Not every fight is won with talons. Any bird can Parley: Charm (CHA) saps a foe’s will to fight, and a weakened foe can be won over without a blow. Eagles are your warriors; robins and wrens are your diplomats.' },
-  { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a real town from the Map and its evil Burbz garrison will meet you here in a Liberation Battle. Victory frees the town — return there to build its sanctuary birdhouse.' },
+  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz — never free birds. Every win breaks a little more of the dark magic.' },
+  { chapterId:'battle', chapter:'The War', title:'Pick your squad', screen:'battle', target:'#battleTeamGrid', text:'Choose four birds. Wing classes counter each other — the wheel below shows who beats whom.' },
+  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Or Parley: a bird with high Charm can win a foe over without a blow.' },
+  { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a town on the Map to face its garrison in a Liberation Battle. Win to free the town and build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.
-  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the whole Earth sleeping under the usurper’s darkness — seas and coastlines are clear, but the land keeps its secrets. Each liberation lifts the dark and reveals the true map beneath.' },
-  { chapterId:'village', chapter:'Realm', title:'Provinces and taxes', screen:'village', target:'#empirePanel', text:'Each liberated province flies a heraldic banner — tap it (or its green territory) to travel to its 3D village. Provinces pay coin and branch taxes every eight hours; happy villagers multiply and pay more.' },
-  { chapterId:'village', chapter:'Realm', title:'Govern your villages', screen:'village', target:'#villageManagePanel', text:'Below the 3D village, the governor’s panel tracks population and the four basic needs: food, water, shelter and joy. Raise farms, wells, cottages and markets to meet needs and boost taxes and materials.' },
+  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world under darkness. Every town you free lifts the shadow from its province.' },
+  { chapterId:'village', chapter:'Realm', title:'Provinces pay taxes', screen:'village', target:'#empirePanel', text:'Tap a freed province to visit its village. Provinces pay coins and branches every eight hours — happy villagers pay more.' },
 
   // — Academy: taught the first time the Academy opens.
-  { chapterId:'academy', chapter:'Academy', title:'Your first two buildings', screen:'academy', target:'#academyBuildPanel', text:'The Roost and Barracks unlock together at trainer level 1. Nearby starter timber and your opening coins cover both buildings plus one common bird recruitment.' },
-  { chapterId:'academy', chapter:'Academy', title:'Recruit your first companion', screen:'academy', target:'#academyBuildPanel', text:'Build The Roost for care, then build the Barracks to review your real Birdex discoveries and recruit one bird into your flock. That companion can take your first quest.' },
-  { chapterId:'academy', chapter:'Academy', title:'Hospital and care', screen:'academy', target:'#academyBuildPanel', text:'The Bird Hospital restores health and shows exact current and maximum HP. Other rooms support rest, grooming, recruitment and specialist care for individual companions.' },
-  { chapterId:'academy', chapter:'Academy', title:'Training and pantry', screen:'academy', target:'#academyTreehouse', text:'Training rooms unlock and improve battle disciplines — your edge against the evil Burbz. Food comes from your pantry: species-appropriate feeding supports care and progression.' },
-  { chapterId:'academy', chapter:'Academy', title:'The Crowbar', screen:'academy', target:'#academyTreehouse', text:'The Crowbar is the bird bar — the home of Kingdom diplomacy. Birds perched there grow Charm (CHA), which sways battle Parleys and pays on diplomacy quests. Send your robins and wrens: charm is their crown.' },
+  { chapterId:'academy', chapter:'Academy', title:'Build your Academy', screen:'academy', target:'#academyBuildPanel', text:'Start with The Roost and the Barracks. Your starter coins and timber cover both buildings.' },
+  { chapterId:'academy', chapter:'Academy', title:'Recruit at the Barracks', screen:'academy', target:'#academyBuildPanel', text:'The Barracks is where captured birds join your flock. Recruit one — it becomes your first questing companion.' },
+  { chapterId:'academy', chapter:'Academy', title:'Kitchen & Pantry', screen:'academy', target:'#academyTreehouse', text:'Birds get hungry. Cook meals in the Kitchen from your larder — serve each species its real diet and it thrives.' },
+  { chapterId:'academy', chapter:'Academy', title:'Care and healing', screen:'academy', target:'#academyTreehouse', text:'The Bird Hospital restores HP. Other rooms cover rest, grooming and everyday care.' },
+  { chapterId:'academy', chapter:'Academy', title:'Training and levels', screen:'academy', target:'#academyTreehouse', text:'Training rooms sharpen battle skills, and birds level up as they fight and quest. Stronger birds free towns faster.' },
+  { chapterId:'academy', chapter:'Academy', title:'The Crowbar', screen:'academy', target:'#academyTreehouse', text:'The bird bar! Birds perched here grow Charm — the stat that wins Parleys and diplomacy quests. Send your robins and wrens.' },
 
   // — Quests: taught the first time the Quests screen opens.
-  { chapterId:'quests', chapter:'Quests', title:'Send your first bird', screen:'quests', target:'#expeditionQuestList', text:'First assignment: send one bird on one starter quest. Pick Find Seed, Find Coins, Branch Run or Scavenge, choose your recruited companion, then confirm the departure.' },
-  { chapterId:'quests', chapter:'Quests', title:'Longer expeditions', screen:'quests', target:'#expeditionQuestList', text:'Starter errands are available immediately. Build the Quest Roost later for longer journeys; every quest shows its duration and rewards before your bird leaves.' },
-  { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests finds public-path walking quests. Choose a trail, reach checkpoints in order and use Show Quests to compare nearby routes before setting out.' },
-  { chapterId:'quests', chapter:'Quests', title:'Side Quests', screen:'map', target:'#mapQuestBtn', text:'A Side Quest has no route: pocket the phone and just explore. Burbz charts wherever you go and buzzes when you stumble on chests, weapons or quest-giver birds — later you can turn your wander into a quest for others.' },
+  { chapterId:'quests', chapter:'Quests', title:'Send a bird questing', screen:'quests', target:'#expeditionQuestList', text:'Pick a starter quest, choose a recruited bird and confirm. Rewards and duration always show up front.' },
+  { chapterId:'quests', chapter:'Quests', title:'Longer expeditions', screen:'quests', target:'#expeditionQuestList', text:'Build the Quest Roost later to unlock longer expeditions with bigger rewards.' },
+  { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests offers real walking quests on public paths — or start a Side Quest and simply wander.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
-  { chapterId:'forge', chapter:'Forge', title:'The Fletcher’s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils, then equip your birds. Gear feeds straight into their fighting stats — the sharper the squad, the faster the shadow breaks.' },
+  { chapterId:'forge', chapter:'Forge', title:'The Fletcher’s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils at the Forge.' },
+  { chapterId:'forge', chapter:'Forge', title:'Equip your birds', screen:'forge', target:'#screen-forge', text:'Open a bird’s equipment screen to gear it up. Gear raises its battle stats directly.' },
 
   // — Resources: taught the first time the Stores open.
-  { chapterId:'inventory', chapter:'Resources', title:'Your Stores', screen:'inventory', target:'#inventoryGrid', text:'The Stores hold quest items, gifts, gear and the Kitchen larder. Raw bird food waits here until you cook it at the Academy Kitchen & Pantry. Quantities and usable actions stay visible whenever a decision needs them.' },
+  { chapterId:'inventory', chapter:'Resources', title:'Your Stores', screen:'inventory', target:'#inventoryGrid', text:'Quest items, gifts, gear and the Kitchen larder all live here. Raw food waits in the larder until you cook it.' },
 
   // — Community: taught the first time Ranks opens.
-  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Ranks compares collection progress and Perch League performance. Collection rewards broad discovery; the League rewards wins, training and squad strength against the evil Burbz.' },
+  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Compare your collection with the world, and climb the Perch League by winning battles.' },
 
   // — Finish: taught the first time the Profile opens.
-  { chapterId:'profile', chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your profile holds level, achievements and optional cloud save. Settings controls sound, vibration, privacy links, feedback, the intro video and a full replay of this tutorial at any time.' },
+  { chapterId:'profile', chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your level, achievements and cloud save live here. Replay this tutorial any time from Settings.' },
 ];
 
 function merlinChapterStepIndices(chapterId) {
@@ -24205,8 +24207,11 @@ function migratePreviousMerlinTutorialProgress() {
       const previousRaw = localStorage.getItem(previousChaptersKey);
       if (previousRaw != null) {
         const previous = JSON.parse(previousRaw);
+        // Chapters whose systems gained new mechanics since v4 (Kitchen
+        // feeding & hunger, larder, equipment) are re-taught; the rest carry.
+        const reteach = ['academy', 'inventory', 'forge'];
         const retained = Array.isArray(previous)
-          ? previous.filter(id => typeof id === 'string' && id !== 'academy' && id !== 'quests')
+          ? previous.filter(id => typeof id === 'string' && !reteach.includes(id))
           : [];
         localStorage.setItem(BURBZ_TUTORIAL_CHAPTERS_KEY, JSON.stringify(retained));
       }
@@ -24283,23 +24288,52 @@ function startMerlinTutorial(options = {}) {
   merlinTutShowStep(resumeStep);
 }
 
+// Resolve a step target to an element the player can actually SEE. The old
+// tutorial measured whatever the selector matched — including elements on
+// hidden screens, mid-render layouts and targets scrolled out of view — and
+// then clamped the highlight into the viewport, lighting up the wrong part of
+// the display while Merlin spoke. No visible target now means full dim.
+function merlinTutVisibleTarget(selector) {
+  if (!selector) return null;
+  const el = document.querySelector(selector);
+  if (!el) return null;
+  const screen = el.closest('.screen');
+  if (screen && !screen.classList.contains('active')) return null;
+  if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') return null;
+  const rect = el.getBoundingClientRect();
+  if (rect.width < 2 || rect.height < 2) return null;
+  const visibleW = Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0);
+  const visibleH = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+  if (visibleW <= 0 || visibleH <= 0) return null;
+  if ((visibleW * visibleH) / (rect.width * rect.height) < 0.4) return null;
+  return el;
+}
+
+let merlinTutLastSpotRect = null;
 function merlinTutSpotlightTarget(selector) {
   const spot = $('merlinTutorialSpotlight');
   if (!spot) return;
-  const el = selector ? document.querySelector(selector) : null;
+  const el = merlinTutVisibleTarget(selector);
   const rect = el ? el.getBoundingClientRect() : null;
-  if (!rect || rect.width < 2 || rect.height < 2) {
+  if (!rect) {
+    merlinTutLastSpotRect = null;
     spot.classList.add('none');
     spot.style.top = '50%'; spot.style.left = '50%';
     spot.style.width = '0px'; spot.style.height = '0px';
     return;
   }
   const pad = 8;
-  spot.classList.remove('none');
   const left = Math.max(6, rect.left - pad);
   const top = Math.max(6, rect.top - pad);
   const right = Math.min(window.innerWidth - 6, rect.right + pad);
   const bottom = Math.min(window.innerHeight - 6, rect.bottom + pad);
+  // Glide between steps, but snap on small per-frame drift (scroll, late
+  // layout) so the highlight never chases its target across the screen.
+  const last = merlinTutLastSpotRect;
+  const jump = !last || Math.abs(last.left - left) > 48 || Math.abs(last.top - top) > 48;
+  spot.style.transitionDuration = jump && !spot.classList.contains('none') ? '' : '0s';
+  merlinTutLastSpotRect = { left, top };
+  spot.classList.remove('none');
   spot.style.top = top + 'px';
   spot.style.left = left + 'px';
   spot.style.width = Math.max(0, right - left) + 'px';
@@ -24309,9 +24343,27 @@ function merlinTutSpotlightTarget(selector) {
 function positionMerlinTutorialStage(selector) {
   const stage = $('merlinTutorialStage');
   if (!stage) return;
-  const target = selector ? document.querySelector(selector) : null;
-  const rect = target ? target.getBoundingClientRect() : null;
+  const rect = merlinTutVisibleTarget(selector)?.getBoundingClientRect() || null;
   stage.classList.toggle('is-top', !!(rect && rect.top > window.innerHeight * .48));
+}
+
+// Keep the spotlight glued to its target for the whole step: screens render
+// asynchronously, images load late and the player can scroll, so a one-shot
+// measurement is never enough.
+let merlinTutTrackHandle = 0;
+function merlinTutStopTracking() {
+  if (merlinTutTrackHandle) { cancelAnimationFrame(merlinTutTrackHandle); merlinTutTrackHandle = 0; }
+}
+function merlinTutTrackTarget(selector) {
+  merlinTutStopTracking();
+  const stepAtStart = merlinTutStep;
+  const tick = () => {
+    if (!merlinTutActive || merlinTutStep !== stepAtStart) { merlinTutTrackHandle = 0; return; }
+    merlinTutSpotlightTarget(selector);
+    positionMerlinTutorialStage(selector);
+    merlinTutTrackHandle = requestAnimationFrame(tick);
+  };
+  tick();
 }
 
 function merlinTutShowStep(i) {
@@ -24327,10 +24379,18 @@ function merlinTutShowStep(i) {
   $('merlinTutorialCounter').textContent = (i + 1) + ' / ' + merlinTutSequence.length;
   $('merlinTutorialBack').disabled = i === 0;
   $('merlinTutorialNext').textContent = i === merlinTutSequence.length - 1 ? 'Finish' : 'Next';
+  merlinTutStopTracking();
+  merlinTutSpotlightTarget(null);
   setTimeout(() => {
     if (!merlinTutActive || merlinTutStep !== i) return;
-    merlinTutSpotlightTarget(step.target);
-    positionMerlinTutorialStage(step.target);
+    // Bring an off-screen target into view before spotlighting it, but only
+    // when it lives on the screen the player is looking at.
+    const el = step.target ? document.querySelector(step.target) : null;
+    const screen = el && el.closest('.screen');
+    if (el && (!screen || screen.classList.contains('active'))) {
+      try { el.scrollIntoView({ block:'nearest', inline:'nearest' }); } catch (e) {}
+    }
+    merlinTutTrackTarget(step.target);
     $('merlinTutorialNext')?.focus({ preventScroll:true });
   }, step.screen ? 360 : 70);
 }
@@ -24351,6 +24411,7 @@ function merlinTutBack() {
 function endMerlinTutorial(completed) {
   const overlay = $('merlinTutorialOverlay');
   merlinTutActive = false;
+  merlinTutStopTracking();
   if (overlay) overlay.classList.remove('show');
   if (overlay) overlay.setAttribute('aria-hidden', 'true');
   setMerlinTutorialBackgroundInert(false);
