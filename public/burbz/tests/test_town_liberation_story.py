@@ -54,7 +54,7 @@ def test_liberation_battle_copy_uses_non_destructive_resolve_language():
     html = HTML.read_text(encoding="utf-8")
     battle = battle_logic(html)
     tutorial = html[html.index("const MERLIN_TUTORIAL_STEPS = ["):html.index("\n];", html.index("const MERLIN_TUTORIAL_STEPS = ["))]
-    assert "Victory frees the town" in tutorial
+    assert "free the town" in tutorial
     assert "Liberation Battle" in tutorial
     assert "liberationFriendlyBattleText" in battle
     assert "loses $1 resolve" in battle

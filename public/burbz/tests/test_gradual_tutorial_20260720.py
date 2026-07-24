@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-VERSION = "merlin-gradual-chapters-v4-20260720"
+VERSION = "merlin-gradual-chapters-v5-20260724"
 
 
 def _extract_array(html: str, marker: str):

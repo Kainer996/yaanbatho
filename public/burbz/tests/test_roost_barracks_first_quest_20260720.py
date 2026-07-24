@@ -72,24 +72,24 @@ def test_tutorial_states_the_recruit_then_send_one_bird_sequence():
     end = html.index("\n];", start)
     tutorial = html[start:end].lower()
     required = (
-        "the roost and barracks unlock together",
+        "the roost and the barracks",
         "recruit one",
-        "send one bird on one starter quest",
+        "choose a recruited bird",
         "quest roost",
-        "longer journeys",
+        "longer expeditions",
     )
     assert all(marker in tutorial for marker in required), [m for m in required if m not in tutorial]
 
 
 def test_existing_tutorial_progress_replays_only_academy_and_quests():
     html = HTML_PATH.read_text(encoding="utf-8")
-    assert "const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v4-20260720'" in html
-    assert "const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v3-20260720'" in html
+    assert "const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v5-20260724'" in html
+    assert "const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v4-20260720'" in html
     migration = html[
         html.index("function migratePreviousMerlinTutorialProgress()") :
         html.index("function merlinChaptersSeen()")
     ]
-    assert "id !== 'academy' && id !== 'quests'" in migration
+    assert "const reteach = ['academy', 'inventory', 'forge']" in migration
     assert "previousGiftKey" in migration and "BURBZ_TUTORIAL_GIFT_KEY" in migration
 
 

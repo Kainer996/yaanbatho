@@ -161,4 +161,5 @@ def test_index_wires_charm_throughout():
     assert "PARLEY_WINOVER_HP_PCT" in html
     assert "Won over by Charm" in html
     # Merlin's tutorial covers diplomacy
-    assert "Diplomacy and Charm" in html
+    assert "a bird with high Charm can win a foe over" in html
+    assert "the stat that wins Parleys and diplomacy quests" in html
