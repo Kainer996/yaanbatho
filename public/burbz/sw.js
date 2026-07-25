@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-birbs-quest-music-v134-20260725';
+const BURBZ_CACHE = 'burbz-merlin-larger-reconciled-v136-20260725';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -39,7 +39,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
-  './quest_core.js?v=quest-path-alignment-r3-20260723',
+  './quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724',
   './academy_treehouse_core.js?v=diet-hunger-release-20260723',
   './kitchen_pantry_core.js?v=diet-hunger-release-20260723',
   './data/bird-diet-records.js?v=diet-hunger-release-20260723',
@@ -98,7 +98,7 @@ const BURBZ_ASSETS = [
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
   './audio_core.js?v=birbs-quest-music-v3-20260725',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
-  './merlin_companion_core.js?v=diet-hunger-release-20260723',
+  './merlin_companion_core.js?v=merlin-compact-speech-v2-20260724',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/bgm-birbs-quest.mp3',
   './assets/audio/ui-book.mp3',
@@ -162,7 +162,7 @@ const BURBZ_CORE = [
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
   './audio_core.js?v=birbs-quest-music-v3-20260725',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
-  './merlin_companion_core.js?v=diet-hunger-release-20260723',
+  './merlin_companion_core.js?v=merlin-compact-speech-v2-20260724',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/bgm-birbs-quest.mp3',
   './assets/audio/ui-book.mp3',

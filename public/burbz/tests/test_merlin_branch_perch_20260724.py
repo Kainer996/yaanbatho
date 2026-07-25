@@ -1,16 +1,17 @@
 """Merlin stands on a branch, not on a plank.
 
 The old top-right perch was a chunky gradient slab with a bracket tab, and the
-Merlin cutout floated near it rather than gripping it. This release replaces it
-with a drawn bough that reaches in from a tree past the right edge of the
-screen, and locks the bird to the bark: the bough and the bird are separate
-fixed layers (the flight code still needs to move the bird alone) that share
-one sway keyframe about one pivot — the base of the bough at the screen edge.
+Merlin cutout floated near it rather than gripping it. It is a drawn bough now,
+reaching in from a tree past the right edge of the screen, with the bird locked
+to the bark.
 
-The arithmetic in these tests is the contract. Move the bird's `right` without
-moving its `transform-origin` and the two layers pivot about different points,
-which slides Merlin off the branch mid-sway; that is what the pivot test
-catches.
+How they stay locked changed when the live compact header was reconciled into
+main. There used to be two independent fixed layers sharing one sway keyframe
+about one carefully-matched off-screen pivot. Now a single fixed
+`.merlin-perch-assembly` holds both and sways as one body, so contact is
+structural rather than arithmetic: nothing can drift, because there is only one
+thing moving. The bough still overhangs the screen edge, and the bird still
+leaves the assembly to fly.
 """
 
 import re
@@ -20,10 +21,10 @@ ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-# The cutout's toe pads sit 72.4% down the square art and its talon cluster is
-# centred 44% across, which is why the sprite pivots there and why the bough's
-# top surface is drawn at y≈39.4 in the SVG's user units.
-TALON_PIVOT = "transform-origin: 44% 72%;"
+# The bough's top surface is drawn at y≈39.4 in the SVG's user units, which is
+# where the sprite's toe pads land. The puppet's torso pivots on that same point
+# (see test_merlin_animated_rig_20260725), so breathing never lifts him off it.
+TALON_CONTACT = "106 39.4"
 
 
 def css_rule(html: str, selector: str) -> str:
@@ -64,35 +65,28 @@ def test_the_perch_is_a_drawn_bough_with_leafy_twigs():
     assert "106 39.4" in html
 
 
-def test_bough_and_bird_share_one_sway_about_one_pivot():
+def test_one_assembly_sways_and_carries_both_bough_and_bird():
     html = INDEX.read_text(encoding="utf-8")
+    assembly = css_rule(html, ".merlin-perch-assembly")
     perch = css_rule(html, ".pet-perch")
     bird = css_rule(html, ".pet-companion")
 
-    # Same keyframe, same duration: the two layers must move as one body.
-    assert declaration(perch, "animation") == declaration(bird, "animation")
-    assert "merlin-bough-sway" in declaration(perch, "animation")
-    # Same vertical band, so a shared pivot row means a shared pivot point.
-    assert declaration(perch, "top") == declaration(bird, "top")
+    # One fixed parent does the swaying...
+    assert declaration(assembly, "position") == "fixed"
+    assert "merlinBranchSway" in declaration(assembly, "animation")
+    # ...and both children ride it, so neither can drift against the other.
+    for rule in (perch, bird):
+        assert declaration(rule, "position") == "absolute"
+        assert "animation" not in rule
 
+    assert '<div class="merlin-perch-assembly" id="merlinPerchAssembly">' in html
+    # The bird sits inside the assembly; the bough is wider than it and hangs
+    # off the screen edge so its thick base is cropped by the viewport.
     perch_right = float(re.match(r"(-?[\d.]+)px", declaration(perch, "right")).group(1))
-    bird_right = float(re.match(r"(-?[\d.]+)px", declaration(bird, "right")).group(1))
-
-    # The bough pivots on its own right edge; the bird pivots on a point that
-    # many pixels further right. Both land on the same screen column only while
-    # this equality holds.
-    perch_origin = declaration(perch, "transform-origin")
-    bird_origin = declaration(bird, "transform-origin")
-    assert perch_origin.startswith("100% ")
-    offset = float(re.search(r"calc\(100% \+ ([\d.]+)px\)", bird_origin).group(1))
-    assert offset == bird_right - perch_right
-
-    # ...and on the same row.
-    assert perch_origin.split()[-1] == bird_origin.split()[-1]
-
-    # The pivot sits off the right of the screen, so the tip of the bough
-    # travels far more than the base does.
     assert perch_right < 0
+    # Flight lifts the bird out of the assembly, and the sway stands down.
+    assert ".merlin-perch-assembly:has(.pet-companion.flying) { animation:none; }" in html
+    assert "position:fixed" in css_rule(html, ".pet-companion.flying")
 
 
 def test_the_bough_reaches_in_from_off_screen():
@@ -111,27 +105,31 @@ def test_idle_breath_keeps_the_talons_on_the_bark():
     html = INDEX.read_text(encoding="utf-8")
     idle = re.search(r"@keyframes pet-idle \{([^}]*)\}", html)
     assert idle, "pet-idle keyframes missing"
-    # A vertical bob lifted him clear of the perch; a rock about the talons does not.
+    # A vertical bob lifted him clear of the perch; a rock about the feet does not.
     assert "translateY" not in idle.group(1)
     assert "rotate(" in idle.group(1)
-    assert TALON_PIVOT in html
-    # Flight still spins about the body, not the feet.
-    assert ".pet-sprite.pet-walk { transform-origin: 50% 50%;" in html
+    # The sprite rocks about its base, and the bark line it rocks on is drawn
+    # at the point the toe pads reach.
+    assert "transform-origin:50%92%" in css_rule(html, ".pet-sprite").replace(" ", "")
+    assert TALON_CONTACT in html
 
 
 def test_reduced_motion_still_leaves_him_standing_on_the_branch():
     html = INDEX.read_text(encoding="utf-8")
     block = re.search(
-        r"@media \(prefers-reduced-motion: reduce\) \{\s*\.pet-perch[^}]*\}[^}]*\}",
+        r"@media \(prefers-reduced-motion: reduce\) \{\s*\.merlin-perch-assembly[^}]*\}.*?\n\}",
         html,
+        re.S,
     )
     assert block, "no reduced-motion guard for the perch"
     body = block.group(0)
-    assert "animation: none;" in body
-    # Both layers must be parked at the same angle or he floats off the bark.
-    assert ".pet-perch, .pet-companion { transform: rotate(-0.2deg); }" in body
+    assert "animation:none !important;" in body
+    # One parent parks, so bird and bough stop together and stay in contact —
+    # there is no second layer left free to drift.
+    assert ".merlin-perch-assembly" in body
+    assert ".pet-sprite" in body and ".merlin-part" in body
 
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-merlin-animated-rig-v119-20260725" in sw
+    assert "burbz-merlin-larger-reconciled-v136-20260725" in sw

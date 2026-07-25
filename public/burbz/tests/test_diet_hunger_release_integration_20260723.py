@@ -10,15 +10,19 @@ SW = ROOT / "sw.js"
 DEPLOY_SCRIPT = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 RELEASE_PIN = "diet-hunger-release-20260723"
-CACHE_NAME = "burbz-merlin-animated-rig-v119-20260725"
-PINNED_RUNTIME_ASSETS = [
-    "academy_treehouse_core.js",
-    "kitchen_pantry_core.js",
-    "data/bird-diet-records.js",
-    "bird_diet_hunger_core.js",
-    "diet_hunger_core.js",
-    "merlin_companion_core.js",
-]
+CACHE_NAME = "burbz-merlin-larger-reconciled-v136-20260725"
+# The point of this list is that index.html and sw.js never drift apart on a
+# runtime asset — not that every asset stays frozen on the diet-hunger pin.
+# merlin_companion_core.js has moved on since (shorter Merlin speech), so it
+# carries its own pin and is checked the same way.
+PINNED_RUNTIME_ASSETS = {
+    "academy_treehouse_core.js": RELEASE_PIN,
+    "kitchen_pantry_core.js": RELEASE_PIN,
+    "data/bird-diet-records.js": RELEASE_PIN,
+    "bird_diet_hunger_core.js": RELEASE_PIN,
+    "diet_hunger_core.js": RELEASE_PIN,
+    "merlin_companion_core.js": "merlin-compact-speech-v2-20260724",
+}
 BUILD_ONLY_ASSETS = ["data/bird-diet-records.json"]
 MAX_RUNTIME_DIET_JS_BYTES = 1_000_000
 
@@ -30,8 +34,8 @@ def test_index_and_service_worker_share_final_diet_hunger_release_pins():
     assert CACHE_NAME in sw
     assert "burbz-pantry-transaction-v114-20260723" not in sw
 
-    for asset in PINNED_RUNTIME_ASSETS:
-        pinned = f"{asset}?v={RELEASE_PIN}"
+    for asset, pin in PINNED_RUNTIME_ASSETS.items():
+        pinned = f"{asset}?v={pin}"
         assert pinned in html, f"{pinned} is not loaded by index.html"
         assert f"./{pinned}" in sw, f"{pinned} is not referenced by sw.js"
 
@@ -152,8 +156,8 @@ Promise.resolve(installWork)
     assert result.returncode == 0, result.stderr
     out = json.loads(result.stdout)
     assert out["opened"] == [CACHE_NAME]
-    for asset in PINNED_RUNTIME_ASSETS:
-        assert f"./{asset}?v={RELEASE_PIN}" in out["added"]
+    for asset, pin in PINNED_RUNTIME_ASSETS.items():
+        assert f"./{asset}?v={pin}" in out["added"]
 
 
 def test_protected_regression_references_remain_in_the_app_shell():

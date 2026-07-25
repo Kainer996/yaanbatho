@@ -104,4 +104,4 @@ def test_tutorial_introduces_player_quests():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-merlin-animated-rig-v119-20260725" in sw
+    assert "burbz-merlin-larger-reconciled-v136-20260725" in sw

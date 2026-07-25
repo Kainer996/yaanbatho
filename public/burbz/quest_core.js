@@ -294,8 +294,16 @@
         maxLenM: Math.max(900, lenM * 2),
         targetLenM: Math.max(RING_MIN_LEN_M, lenM)
       });
-      if (!loop || !loop.points || loop.points.length < 3) return null;
-      return { points: loop.points, lengthM: routeLengthM(loop.points), ring: true };
+      if (loop && loop.points && loop.points.length >= 3) {
+        return { points: loop.points, lengthM: routeLengthM(loop.points), ring: true };
+      }
+      // Acyclic visible component: never retain the stale ring and never close
+      // it with a chord. Convert it to a deterministic real out-and-back leg.
+      var outward = networkFurthestPath(net, start.nodeId);
+      if (!outward) return null;
+      var outwardPts = pathPointsAlongEdges(net, start.nodeId, outward.path.edgeIds);
+      if (outwardPts.length < 2) return null;
+      return { points: outwardPts, lengthM: routeLengthM(outwardPts) * 2, ring: false, outAndBack: true };
     }
     var endHit = insertNetworkStart(net, e1.lat, e1.lon, opts.maxSnapM || 160);
     if (!endHit || endHit.nodeId === start.nodeId) return null;
@@ -317,6 +325,204 @@
       if (n && n.distanceM <= maxSnapM && (!best || n.distanceM < best.distanceM)) best = n;
     });
     return best ? { lat: best.point.lat, lon: best.point.lon, distM: best.distanceM } : null;
+  }
+
+  var ROUTE_ALIGNMENT_VERSION = 2;
+  var ROUTE_CERTIFICATION_TOLERANCE_M = 2;
+  var ROUTE_CERTIFICATION_SAMPLE_M = 2;
+
+  function mapTransportationClass(feature) {
+    var p = feature && feature.properties || {};
+    return String(p.subclass || p.class || p.type || '').trim().toLowerCase();
+  }
+
+  // Pure, deterministic policy shared by visible offer discovery and active
+  // route certification. It is deliberately an allow-list, not substring
+  // matching, and explicit private/no-foot tags always win.
+  function isEligibleMapTransportationFeature(feature) {
+    var p = feature && feature.properties || {};
+    if (/^(no|private)$/i.test(String(p.access || '').trim())) return false;
+    if (/^(no|private)$/i.test(String(p.foot || '').trim())) return false;
+    var cls = mapTransportationClass(feature);
+    return /^(path|footway|pedestrian|steps|bridleway|track|cycleway)$/.test(cls);
+  }
+
+  function eligibleMapTransportationWays(features) {
+    var ways = [], seen = {};
+    (features || []).forEach(function (feature) {
+      if (!isEligibleMapTransportationFeature(feature)) return;
+      var geom = feature && feature.geometry || {};
+      var lines = geom.type === 'LineString' ? [geom.coordinates] :
+        geom.type === 'MultiLineString' ? geom.coordinates : [];
+      lines.forEach(function (coords) {
+        var pts = (coords || []).filter(function (c) {
+          return c && isFinite(c[0]) && isFinite(c[1]);
+        }).map(function (c) { return { lat: Number(c[1]), lon: Number(c[0]) }; });
+        if (pts.length < 2) return;
+        var key = pts.map(function (p) { return p.lat.toFixed(7) + ',' + p.lon.toFixed(7); }).join(';');
+        if (!seen[key]) { seen[key] = true; ways.push(pts); }
+      });
+    });
+    return ways;
+  }
+
+  function routeObjects(route) {
+    return (route || []).map(function (p) {
+      return Array.isArray(p) ? { lat: Number(p[0]), lon: Number(p[1]) } :
+        { lat: Number(p.lat), lon: Number(p.lon) };
+    }).filter(function (p) { return isFinite(p.lat) && isFinite(p.lon); });
+  }
+
+  function wayComponents(ways) {
+    var parent = ways.map(function (_, i) { return i; });
+    function root(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
+    function unite(a, b) { a = root(a); b = root(b); if (a !== b) parent[Math.max(a, b)] = Math.min(a, b); }
+    function endpointTouchesWay(p, w) {
+      var n = nearestPointOnRoute(w, p.lat, p.lon, false);
+      return n && n.distanceM <= PATH_MERGE_M;
+    }
+    for (var i = 0; i < ways.length; i++) for (var j = i + 1; j < ways.length; j++) {
+      var a = ways[i], b = ways[j];
+      if (endpointTouchesWay(a[0], b) || endpointTouchesWay(a[a.length - 1], b) ||
+          endpointTouchesWay(b[0], a) || endpointTouchesWay(b[b.length - 1], a)) unite(i, j);
+    }
+    return parent.map(function (_, i) { return root(i); });
+  }
+
+  function nearestWayHit(p, ways) {
+    var best = null;
+    ways.forEach(function (w, wi) {
+      var n = nearestPointOnRoute(w, p.lat, p.lon, false);
+      if (n && (!best || n.distanceM < best.distanceM - 1e-9 ||
+          (Math.abs(n.distanceM - best.distanceM) <= 1e-9 && wi < best.wayIndex))) {
+        best = { distanceM: n.distanceM, wayIndex: wi, point: n.point };
+      }
+    });
+    return best;
+  }
+
+  // Certify the WHOLE polyline, not just its vertices. Samples are never more
+  // than 2 m apart; checkpoints use the same strict 2 m corridor. A transition
+  // between disconnected visible-way components is rejected even when a short
+  // gap's midpoint happens to be within 2 m of both ends.
+  function certifyRouteAgainstWays(route, checkpoints, ways, opts) {
+    opts = opts || {};
+    var toleranceM = Math.min(ROUTE_CERTIFICATION_TOLERANCE_M, opts.toleranceM || ROUTE_CERTIFICATION_TOLERANCE_M);
+    var spacingM = Math.min(ROUTE_CERTIFICATION_SAMPLE_M, opts.sampleSpacingM || ROUTE_CERTIFICATION_SAMPLE_M);
+    var pts = routeObjects(route), usable = (ways || []).filter(function (w) { return w && w.length >= 2; });
+    if (pts.length < 2) return { certified: false, reason: 'invalid-route', sampleSpacingM: spacingM, sampleCount: 0 };
+    if (!usable.length) return { certified: false, reason: 'no-eligible-ways', sampleSpacingM: spacingM, sampleCount: 0 };
+    var dense = [pts[0]];
+    for (var i = 1; i < pts.length; i++) {
+      var a = pts[i - 1], b = pts[i];
+      var len = questHaversine(a.lat, a.lon, b.lat, b.lon);
+      var parts = Math.max(1, Math.ceil(len / spacingM));
+      for (var k = 1; k <= parts; k++) {
+        dense.push({ lat: a.lat + (b.lat - a.lat) * k / parts, lon: a.lon + (b.lon - a.lon) * k / parts });
+      }
+    }
+    var comps = wayComponents(usable), maxDistanceM = 0, disconnected = false, previousComp = null;
+    dense.forEach(function (p) {
+      var hit = nearestWayHit(p, usable);
+      if (!hit) { maxDistanceM = Infinity; return; }
+      maxDistanceM = Math.max(maxDistanceM, hit.distanceM);
+      var comp = comps[hit.wayIndex];
+      if (previousComp !== null && comp !== previousComp) disconnected = true;
+      previousComp = comp;
+    });
+    var maxCheckpointDistanceM = 0;
+    (checkpoints || []).forEach(function (cp) {
+      if (!cp || !isFinite(cp.lat) || !isFinite(cp.lon)) { maxCheckpointDistanceM = Infinity; return; }
+      var hit = nearestWayHit({ lat: Number(cp.lat), lon: Number(cp.lon) }, usable);
+      maxCheckpointDistanceM = Math.max(maxCheckpointDistanceM, hit ? hit.distanceM : Infinity);
+    });
+    var reason = disconnected ? 'disconnected-route' :
+      maxDistanceM > toleranceM ? 'route-off-way' :
+      maxCheckpointDistanceM > toleranceM ? 'checkpoint-off-way' : null;
+    return {
+      certified: !reason, reason: reason, sampleSpacingM: spacingM,
+      sampleCount: dense.length, maxDistanceM: maxDistanceM,
+      maxCheckpointDistanceM: maxCheckpointDistanceM
+    };
+  }
+
+  function roundedRoute(pts) {
+    return pts.map(function (p) { return [+p.lat.toFixed(6), +p.lon.toFixed(6)]; });
+  }
+
+  // Atomic/idempotent migration for persisted and newly-created quests. Only
+  // route geography/alignment metadata are changed; gameplay/progress fields
+  // and checkpoint objects retain all identity, claim, reward and reached data.
+  function repairQuestRouteAgainstWays(quest, ways, opts) {
+    opts = opts || {};
+    if (!quest || !Array.isArray(quest.route) || quest.route.length < 2) return { status: 'impossible', reason: 'invalid-quest' };
+    var usable = (ways || []).filter(function (w) { return w && w.length >= 2; });
+    if (!usable.length) return { status: 'pending', reason: 'tiles-not-ready' };
+    var existing = certifyRouteAgainstWays(quest.route, quest.checkpoints || [], usable);
+    if (quest.routeAlignmentVersion === ROUTE_ALIGNMENT_VERSION && quest.routeCertification &&
+        quest.routeCertification.status === 'certified' && existing.certified) {
+      return { status: 'certified', changed: false, certification: existing };
+    }
+    // querySourceFeatures exposes only currently loaded viewport tiles. Once a
+    // route has a durable certificate, contrary non-authoritative tile evidence
+    // can only mean "not enough tiles yet"; it must never replace that certificate.
+    if (quest.routeCertification && quest.routeCertification.status === 'certified' && !existing.certified &&
+        !opts.authoritativeFullCoverage) {
+      return { status: 'pending', reason: 'partial-tiles', changed: false };
+    }
+
+    var oldRoute = routeObjects(quest.route);
+    var routeOnly = certifyRouteAgainstWays(oldRoute, [], usable);
+    var candidate = routeOnly.certified ? { points: oldRoute, ring: quest.loopStyle === 'loop' } :
+      rechartRouteOnWays(oldRoute, usable, opts);
+    if (!candidate || !candidate.points || candidate.points.length < 2) {
+      return opts.authoritativeFullCoverage ? { status: 'impossible', reason: 'no-connected-route' } :
+        { status: 'pending', reason: 'partial-tiles', changed: false };
+    }
+
+    var points = candidate.points;
+    // A middle-only tile fragment can look like a valid tiny replacement route.
+    // Never truncate a saved quest from viewport evidence.
+    if (!opts.authoritativeFullCoverage && routeLengthM(points) < routeLengthM(oldRoute) * 0.8) {
+      return { status: 'pending', reason: 'partial-tiles', changed: false };
+    }
+    // Keep shape-preserving simplification only when its entire segments still
+    // certify; otherwise persist the real source-edge geometry unchanged.
+    var simpler = simplifyRoute(points, 320);
+    if (certifyRouteAgainstWays(simpler, [], usable).certified) points = simpler;
+    var newRoute = roundedRoute(points);
+    var routeForFractions = { route: oldRoute.map(function (p) { return [p.lat, p.lon]; }) };
+    var isLoop = candidate.ring === true;
+    var remappedCheckpoints = (quest.checkpoints || []).map(function (cp) {
+      var next = {};
+      Object.keys(cp || {}).forEach(function (key) { next[key] = cp[key]; });
+      var target;
+      if (cp.kind === 'npc') target = points[0];
+      else if (cp.kind === 'finish') target = isLoop ? points[points.length - 1] : points[0];
+      else target = pointAtFraction(points, questNearestRouteFraction(routeForFractions, cp.lat, cp.lon));
+      if (target) { next.lat = +target.lat.toFixed(6); next.lon = +target.lon.toFixed(6); }
+      return next;
+    });
+    var finalCert = certifyRouteAgainstWays(newRoute, remappedCheckpoints, usable);
+    if (!finalCert.certified) {
+      return opts.authoritativeFullCoverage ? { status: 'impossible', reason: finalCert.reason, certification: finalCert } :
+        { status: 'pending', reason: 'partial-tiles', changed: false, certification: finalCert };
+    }
+
+    if (!Array.isArray(quest.routeOriginal)) quest.routeOriginal = quest.route.map(function (p) { return p.slice(); });
+    quest.route = newRoute;
+    quest.checkpoints = remappedCheckpoints;
+    quest.routeRaw = newRoute.map(function (p) { return p.slice(); });
+    quest.loopStyle = isLoop ? 'loop' : 'out-and-back';
+    quest.loopedBack = isLoop ? !!quest.loopedBack : false;
+    quest.lengthM = Math.round(routeLengthM(points) * (isLoop ? 1 : 2));
+    quest.routeAlignmentVersion = ROUTE_ALIGNMENT_VERSION;
+    quest.routeCertification = {
+      status: 'certified', schemaVersion: ROUTE_ALIGNMENT_VERSION,
+      sampleSpacingM: ROUTE_CERTIFICATION_SAMPLE_M,
+      toleranceM: ROUTE_CERTIFICATION_TOLERANCE_M
+    };
+    return { status: 'certified', changed: true, certification: finalCert };
   }
 
   // ---------------- Overpass (OpenStreetMap) trail discovery ----------------
@@ -526,7 +732,7 @@
   // straight across the gap between them. Real OSM/tile junctions share the
   // exact same node (gap ~0), so a tight mergeM keeps every true junction while
   // refusing to invent a connection where the map shows none.
-  var PATH_MERGE_M = 8;
+  var PATH_MERGE_M = 1;
 
   // Build a node/edge graph from walkable way geometries. Ways are split where
   // another way's endpoint touches them (within joinM), then endpoints within
@@ -668,6 +874,23 @@
       cur = e.a === cur ? e.b : e.a;
     }
     return { lenM: dist[toNode], edgeIds: seq };
+  }
+
+  // Deterministic longest shortest-path in the connected component. This is
+  // the safe fallback for legacy rings when the visible network has no cycle:
+  // walk out along real edges and return over the same certified geometry.
+  function networkFurthestPath(net, fromNode) {
+    var best = null;
+    for (var node = 0; node < net.nodes.length; node++) {
+      if (node === fromNode) continue;
+      var path = networkShortestPath(net, fromNode, node);
+      if (!path || !path.edgeIds.length) continue;
+      if (!best || path.lenM > best.path.lenM + 0.001 ||
+          (Math.abs(path.lenM - best.path.lenM) <= 0.001 && node < best.node)) {
+        best = { node: node, path: path };
+      }
+    }
+    return best;
   }
 
   function pathPointsAlongEdges(net, fromNode, edgeIds, startPts) {
@@ -850,21 +1073,21 @@
 
   // Turn the walkable path geometry already visible in MapLibre into offers.
   function parseMapWalkableFeatures(features, playerLat, playerLon) {
-    var elements = [];
+    var elements = [], seen = {};
     (features || []).forEach(function (feature, fi) {
-      var props = feature && feature.properties || {};
-      var cls = String(props.subclass || props.class || props.type || '').toLowerCase();
-      if (!/path|footway|bridleway|track/.test(cls)) return;
-      if (/^(private|no)$/i.test(props.access || '') || /^(private|no)$/i.test(props.foot || '')) return;
-      var geom = feature.geometry || {};
-      var lines = geom.type === 'LineString' ? [geom.coordinates] : geom.type === 'MultiLineString' ? geom.coordinates : [];
+      if (!isEligibleMapTransportationFeature(feature)) return;
+      var props = feature.properties || {}, geom = feature.geometry || {};
+      var lines = geom.type === 'LineString' ? [geom.coordinates] :
+        geom.type === 'MultiLineString' ? geom.coordinates : [];
       lines.forEach(function (coords, li) {
         var geometry = (coords || []).filter(function (c) { return c && isFinite(c[0]) && isFinite(c[1]); })
           .map(function (c) { return { lat: Number(c[1]), lon: Number(c[0]) }; });
         if (geometry.length < 2) return;
+        var key = geometry.map(function (p) { return p.lat.toFixed(7) + ',' + p.lon.toFixed(7); }).join(';');
+        if (seen[key]) return;
+        seen[key] = true;
         elements.push({ type: 'way', id: 'map_' + fi + '_' + li,
-          tags: { highway: /bridleway/.test(cls) ? 'bridleway' : /track/.test(cls) ? 'track' : 'footway', foot: 'yes', name: props.name || props.ref || '' },
-          geometry: geometry });
+          tags: { highway: 'footway', foot: 'yes', name: props.name || props.ref || '' }, geometry: geometry });
       });
     });
     return parseOverpassTrails({ elements: elements }, playerLat, playerLon).map(function (offer, i) {
@@ -1025,14 +1248,105 @@
 
   var QUEST_GIVER_NAMES = ['Elder Bramblewing', 'Sage Oakfeather', 'Warden Thistledown', 'Keeper Mossbeak'];
   var CHEST_LOOT = [
-    { coins: 25, label: 'a pouch of 25 coins' },
-    { coins: 40, label: 'a chest of 40 coins' },
-    { coins: 30, xp: 15, label: '30 coins and a glowing feather (+15 XP)' },
-    { coins: 20, xp: 25, label: '20 coins and an old map scrap (+25 XP)' },
+    { coins: 25, xp: 10, larder: { field_vole: 2, mealworm_scoop: 1 } },
+    { coins: 40, xp: 12, larder: { small_bird_prey_ration: 1, garden_worms: 2 } },
+    { coins: 30, xp: 15, larder: { field_vole: 1, live_minnow: 2 } },
+    { coins: 20, xp: 25, larder: { small_bird_prey_ration: 2, sunflower_seeds: 1 } },
     // Bird-study scrolls go to the bag; use them from there on a bird you choose.
-    { coins: 15, item: 'xp_scroll_minor', label: '15 coins and a Feather Scroll' },
-    { coins: 10, item: 'xp_scroll_greater', label: '10 coins and a Wisdom Tome' }
+    { coins: 15, item: 'xp_scroll_minor', larder: { field_vole: 2, hedgerow_berries: 1 } },
+    { coins: 10, item: 'xp_scroll_greater', larder: { small_bird_prey_ration: 1, pondweed_tangle: 2 } }
   ];
+
+  function chestLootHash(value) {
+    var text = String(value || 'legacy-chest'), hash = 2166136261;
+    for (var i = 0; i < text.length; i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+    return hash >>> 0;
+  }
+
+  // Clone persisted loot and repair old active quests deterministically. Legacy
+  // chests pre-date food/progression rewards, so the stable claim key chooses a
+  // useful bundle once instead of rerolling whenever the save is loaded.
+  function normaliseChestLoot(raw, stableKey) {
+    var source = raw && typeof raw === 'object' ? raw : {};
+    var out = {};
+    Object.keys(source).forEach(function (key) {
+      if (key !== 'larder') out[key] = source[key];
+    });
+    out.coins = Math.max(1, Math.floor(Number(out.coins) || 25));
+    if (!(Number(out.xp) > 0) && !out.item) out.xp = 10;
+    var larder = {};
+    if (source.larder && typeof source.larder === 'object' && !Array.isArray(source.larder)) {
+      Object.keys(source.larder).forEach(function (id) {
+        var qty = Math.max(0, Math.floor(Number(source.larder[id]) || 0));
+        if (qty) larder[id] = qty;
+      });
+    }
+    var units = Object.keys(larder).reduce(function (sum, id) { return sum + larder[id]; }, 0);
+    var primary = (larder.field_vole || 0) + (larder.small_bird_prey_ration || 0);
+    if (primary < 1 || units < 3 || Object.keys(larder).length < 2) {
+      var fallback = [
+        { primary: 'field_vole', secondary: 'mealworm_scoop' },
+        { primary: 'small_bird_prey_ration', secondary: 'garden_worms' },
+        { primary: 'field_vole', secondary: 'hedgerow_berries' },
+        { primary: 'small_bird_prey_ration', secondary: 'sunflower_seeds' }
+      ][chestLootHash(stableKey) % 4];
+      larder[fallback.primary] = Math.max(2, larder[fallback.primary] || 0);
+      larder[fallback.secondary] = Math.max(1, larder[fallback.secondary] || 0);
+    }
+    out.larder = larder;
+    return out;
+  }
+
+  // Validate and clone the complete deterministic bundle before any gameplay
+  // mutation. Resolvers are injected by the browser's live catalogues.
+  function validateChestRewardBundle(raw, ingredientExists, itemExists) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Invalid chest reward bundle');
+    var coins = Number(raw.coins), xp = Number(raw.xp || 0);
+    if (!isFinite(coins) || coins < 0 || Math.floor(coins) !== coins) throw new Error('Invalid chest coins');
+    if (!isFinite(xp) || xp < 0 || Math.floor(xp) !== xp) throw new Error('Invalid chest XP');
+    var larder = raw.larder;
+    if (!larder || typeof larder !== 'object' || Array.isArray(larder)) throw new Error('Invalid chest larder');
+    var cleanLarder = {}, units = 0, ids = Object.keys(larder);
+    ids.forEach(function (id) {
+      var qty = Number(larder[id]);
+      if (!id || !isFinite(qty) || qty <= 0 || Math.floor(qty) !== qty) throw new Error('Invalid chest ingredient quantity: ' + id);
+      if (typeof ingredientExists !== 'function' || !ingredientExists(id)) throw new Error('Unknown chest ingredient: ' + id);
+      cleanLarder[id] = qty; units += qty;
+    });
+    if (units < 3 || ids.length < 2 || !((cleanLarder.field_vole || 0) + (cleanLarder.small_bird_prey_ration || 0))) {
+      throw new Error('Incomplete chest food bundle');
+    }
+    var out = { coins: coins, xp: xp, larder: cleanLarder };
+    if (raw.item) {
+      if (typeof itemExists !== 'function' || !itemExists(raw.item)) throw new Error('Unknown chest item: ' + raw.item);
+      out.item = String(raw.item);
+    }
+    return out;
+  }
+
+  // Exact-once local transaction. The caller owns state shape and success UI.
+  function runDurableChestClaim(opts) {
+    opts = opts || {};
+    var claimKey = String(opts.claimKey || '');
+    if (!claimKey) return { status: 'failed', error: new Error('Missing chest claim key') };
+    var prior = typeof opts.getReceipt === 'function' ? opts.getReceipt(claimKey) : null;
+    if (prior) return { status: 'duplicate', receipt: prior };
+    var snapshot = typeof opts.snapshot === 'function' ? opts.snapshot() : null;
+    try {
+      var bundle = opts.validate(opts.bundle);
+      opts.apply(bundle);
+      var receipt = { bundle: JSON.parse(JSON.stringify(bundle)), committedAt: Number(opts.now || Date.now()) };
+      opts.setReceipt(claimKey, receipt);
+      var persisted = opts.persist();
+      if (persisted === false || (persisted && persisted.ok === false)) {
+        throw (persisted && persisted.error) || new Error('Chest claim persistence failed');
+      }
+      return { status: 'committed', bundle: bundle, receipt: receipt };
+    } catch (error) {
+      if (typeof opts.restore === 'function') opts.restore(snapshot);
+      return { status: 'failed', error: error };
+    }
+  }
 
   // Players should end where they started whenever possible. Routes whose ends
   // already meet are natural loops; linear paths become out-and-back walks with
@@ -1094,15 +1408,15 @@
     var nChests = Math.min(chestSlots.length, lenM > 2500 ? 3 : 2);
     for (var c = 0; c < nChests; c++) {
       var slotI = chestSlots.splice(Math.floor(rand() * chestSlots.length), 1)[0];
-      var loot = CHEST_LOOT[Math.floor(rand() * CHEST_LOOT.length)];
+      var loot = normaliseChestLoot(CHEST_LOOT[Math.floor(rand() * CHEST_LOOT.length)], 'new:' + c + ':' + slotI);
       checkpoints[slotI] = {
         kind: 'chest', lat: checkpoints[slotI].lat, lon: checkpoints[slotI].lon,
         label: 'Treasure Chest', reached: false, loot: loot
       };
     }
-    // Loops and out-and-back walks both finish back at the start; nudge the
-    // banner ~15m aside so it doesn't sit exactly on top of the quest giver.
-    var end = loopStyle === 'out-and-back' ? destPoint(pts[0].lat, pts[0].lon, 90, 15) : pts[pts.length - 1];
+    // Both loop and out-and-back finishes are geographically on-route. Marker
+    // overlap is a presentation concern handled with a screen-space offset.
+    var end = loopStyle === 'out-and-back' ? pts[0] : pts[pts.length - 1];
     checkpoints.push({ kind: 'finish', lat: end.lat, lon: end.lon, label: 'Quest Banner', reached: false });
 
     return {
@@ -1114,6 +1428,8 @@
       loopStyle: loopStyle,           // loop | out-and-back
       loopedBack: !!offer.loopedBack, // loop returns home along DIFFERENT paths
       route: pts.map(function (p) { return [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]; }),
+      routeAlignmentVersion: 0,
+      routeCertification: { status: 'uncertified' },
       lengthM: Math.round(lenM),
       checkpoints: checkpoints,
       startedAt: opts.now || Date.now(),
@@ -1216,7 +1532,9 @@
 
   // ---------------- Progress tracking ----------------
 
-  var REACH_RADIUS_M = 45;
+  // GPS/path alignment is approximate on phones: a generous 90 m reach keeps
+  // quest chests and waymarkers collectible without requiring exact path pixels.
+  var REACH_RADIUS_M = 90;
   var MAX_FIX_JUMP_M = 150;   // GPS glitch guard per fix
   var MAX_DISTANCE_ACCURACY_M = 60;
   var MAX_CHECKPOINT_ACCURACY_M = 120;
@@ -1241,9 +1559,14 @@
       if (cp.reached) return;
       if (cp.kind === 'finish') return; // finish checked after the loop, needs the rest done
       if (questHaversine(lat, lon, cp.lat, cp.lon) <= REACH_RADIUS_M) {
+        if (cp.kind === 'chest') {
+          // Chest reach is only an intent. The UI transaction validates rewards,
+          // writes the receipt and reached/count state durably, then shows success.
+          events.push({ type: cp.kind, checkpoint: cp, index: idx, reachedAt: now });
+          return;
+        }
         cp.reached = true;
         cp.reachedAt = now;
-        if (cp.kind === 'chest') quest.chestsOpened++;
         events.push({ type: cp.kind, checkpoint: cp, index: idx });
         quest._finishNudged = false; // fresh progress re-arms the missed-waymarker nudge
       }
@@ -1436,6 +1759,11 @@
     densifyRoute: densifyRoute,
     snapRouteToWays: snapRouteToWays,
     snapPointToWays: snapPointToWays,
+    certifyRouteAgainstWays: certifyRouteAgainstWays,
+    repairQuestRouteAgainstWays: repairQuestRouteAgainstWays,
+    isEligibleMapTransportationFeature: isEligibleMapTransportationFeature,
+    eligibleMapTransportationWays: eligibleMapTransportationWays,
+    ROUTE_ALIGNMENT_VERSION: ROUTE_ALIGNMENT_VERSION,
     rechartRouteOnWays: rechartRouteOnWays,
     buildOverpassQuery: buildOverpassQuery,
     parseOverpassTrails: parseOverpassTrails,
@@ -1460,6 +1788,10 @@
     questMetTrailNpcs: questMetTrailNpcs,
     questMaybeSpawnTavern: questMaybeSpawnTavern,
     TRAIL_TAVERN_NPCS_NEEDED: TRAIL_TAVERN_NPCS_NEEDED,
+    CHEST_LOOT: CHEST_LOOT.map(function (loot) { return normaliseChestLoot(loot, 'export'); }),
+    normaliseChestLoot: normaliseChestLoot,
+    validateChestRewardBundle: validateChestRewardBundle,
+    runDurableChestClaim: runDurableChestClaim,
     buildQuestFromOffer: buildQuestFromOffer,
     upgradeQuestWithLoop: upgradeQuestWithLoop,
     offerLoopStyle: offerLoopStyle,

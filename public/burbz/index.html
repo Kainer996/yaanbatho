@@ -94,6 +94,24 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   border-radius:10px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
   font-size:17px; color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
+.merlin-listening-dock {
+  position:relative; display:none; flex:0 0 36px; width:36px; height:36px; padding:3px;
+  align-items:center; justify-content:center; border-radius:10px;
+  border:1px solid rgba(105,224,184,.54); background:linear-gradient(145deg,rgba(15,26,20,.98),rgba(8,11,9,.98));
+  box-shadow:0 0 16px rgba(76,206,160,.16); overflow:visible;
+}
+.merlin-listening-dock.show { display:flex; }
+.merlin-listening-dock img { width:28px; height:28px; object-fit:cover; border-radius:7px; }
+.merlin-listening-pulse { position:absolute; top:-2px; right:-2px; width:9px; height:9px; border-radius:50%; background:#69e0b8; border:2px solid #050403; box-shadow:0 0 0 0 rgba(105,224,184,.62); animation:merlinListeningPulse 1.8s ease-out infinite; }
+@keyframes merlinListeningPulse { 0%{box-shadow:0 0 0 0 rgba(105,224,184,.62)} 75%,100%{box-shadow:0 0 0 7px rgba(105,224,184,0)} }
+.header.merlin-active { padding-inline:8px; gap:6px; }
+.header.merlin-active .header-logo { width:min(23vw,84px); }
+@media (max-width:380px) {
+  .header.merlin-active { padding-inline:6px; gap:5px; }
+  .header.merlin-active .header-logo { width:min(21vw,76px); }
+  .header.merlin-active .hud-chip { padding-inline:4px; }
+}
+@media (prefers-reduced-motion:reduce) { .merlin-listening-pulse { animation:none; } }
 .academy-send-btn { border-radius:8px; padding:6px 7px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.28); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
 .academy-send-btn.ready { background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; }
 .academy-send-btn.current { background:rgba(81,207,102,.16); border-color:rgba(81,207,102,.40); color:#b7f5c3; }
@@ -106,6 +124,8 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .inventory-card-usable:active { transform:scale(.97); }
 .inventory-card-usable .inventory-card-count { font-size:16px; color:var(--accent2); }
 .inventory-card-detail { color:var(--text3); font-size:11px; line-height:1.35; margin-top:4px; }
+.inventory-card-larder-count { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 7px; margin-top:9px; color:var(--accent2); font-family:'Russo One',sans-serif; font-size:16px; line-height:1.15; }
+.inventory-card-larder-route { flex:1 1 82px; color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:800; line-height:1.25; letter-spacing:.02em; text-transform:uppercase; overflow-wrap:anywhere; }
 .inventory-empty { grid-column:1/-1; padding:22px 16px; border:1px dashed rgba(255,255,255,.14); border-radius:16px; color:var(--text3); text-align:center; }
 /* Bird picker for XP scrolls */
 .xp-picker-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
@@ -488,11 +508,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-corner.tr { top:6px; right:6px; border-left:0; border-bottom:0; border-top-right-radius:9px; }
 .empire-map-corner.bl { bottom:6px; left:6px; border-right:0; border-top:0; border-bottom-left-radius:9px; }
 .empire-map-corner.br { bottom:6px; right:6px; border-left:0; border-top:0; border-bottom-right-radius:9px; }
-/* royal banner floating over the top of the map */
-.empire-realm-banner { position:absolute; z-index:6; top:0; left:50%; transform:translateX(-50%); max-width:86%; padding:7px 18px 9px; border-radius:0 0 13px 13px; border:1px solid rgba(240,199,103,.65); border-top:0; background:linear-gradient(180deg,rgba(52,34,12,.96),rgba(24,15,5,.96)); box-shadow:0 8px 20px rgba(0,0,0,.5), inset 0 0 14px rgba(240,199,103,.12); text-align:center; pointer-events:none; }
-.empire-realm-banner-name { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.1em; color:#ffe9a8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.empire-realm-banner-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.16em; color:#c8b98f; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.empire-map-tools { position:absolute; z-index:5; top:58px; left:10px; display:flex; gap:7px; }
+.empire-map-tools { position:absolute; z-index:5; top:12px; left:10px; display:flex; gap:7px; }
 .empire-map-btn { min-height:35px; padding:0 12px; border-radius:9px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(46,31,12,.94),rgba(18,12,5,.94)); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.18); }
 .empire-map-btn:active { transform:scale(.97); }
 .empire-map-btn:focus-visible, .empire-map-marker:focus-visible { outline:3px solid #f4fff5; outline-offset:3px; }
@@ -838,6 +854,16 @@ svg.academy-room-bg { display:block; filter:none; }
 .bird-card.known-species .bird-card-inner { min-height: 365px; }
 .bird-card.known-species .card-art { opacity: 0.88; filter: saturate(0.85); }
 .bird-card.known-species .card-name::after { content: ' · WILD'; color: var(--text3); font-size: 10px; }
+.birdex-learning-back { padding:10px; gap:7px; background:linear-gradient(155deg,rgba(214,168,79,.14),rgba(12,12,10,.98) 38%); }
+.birdex-learning-kicker { color:var(--accent); font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+.birdex-learning-title { color:var(--accent2); font-family:'Russo One',sans-serif; font-size:15px; line-height:1.1; }
+.birdex-learning-scientific { color:var(--text3); font-size:10px; font-style:italic; line-height:1.2; }
+.birdex-learning-facts { display:grid; gap:5px; min-height:0; }
+.birdex-learning-fact { padding:5px 6px; border-radius:7px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.07); }
+.birdex-learning-label { display:block; margin-bottom:1px; color:var(--accent); font-family:'Rajdhani',sans-serif; font-size:8px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+.birdex-learning-value { display:-webkit-box; overflow:hidden; color:var(--text2); font-size:9px; line-height:1.25; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.birdex-more-info { margin-top:auto; width:100%; min-height:44px; padding:9px 12px; border:1px solid rgba(214,168,79,.62); border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#17130b; font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+.birdex-learning-back .card-back-hint { margin-top:0; }
 
 
 /* ========== MERLIN COMPANION ========== */
@@ -850,66 +876,66 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .card-pet-btn.active { border-color: var(--legendary); color: var(--legendary); box-shadow: 0 0 14px rgba(255,212,59,0.22); }
 
-/* Merlin roosts on a real bough that reaches in from a tree just past the
-   right edge of the screen. The bough and the bird stay separate fixed layers
-   (Merlin still has to be able to fly off), but they run the SAME sway
-   keyframe about the SAME pivot — the base of the bough, 26px beyond the
-   screen edge — so the tip of the branch travels while the base barely
-   stirs, and Merlin's talons never leave the bark. */
-.pet-companion {
+.merlin-perch-assembly {
   position: fixed;
-  top: calc(var(--safe-top) + 76px);
-  right: 14px;
+  top: calc(var(--safe-top) + 68px);
+  right: 0;
+  width: 108px;
+  height: 108px;
+  z-index: 179;
+  pointer-events: none;
+  transform-origin: right center;
+  animation: merlinBranchSway 18s ease-in-out infinite;
+}
+.merlin-perch-assembly:has(.pet-companion.flying) { animation:none; }
+.pet-companion {
+  position: absolute;
+  /* Merlin grew, and he grew upwards out of the box: his toes stay on the bark
+     while his head gains the height. */
+  top: -9px;
+  right: 0;
   left: auto;
   bottom: auto;
   z-index: 180;
-  width: 62px;
-  height: 72px;
+  width: 96px;
+  height: 104px;
   pointer-events: auto;
-  /* 100% is this box's right edge (14px in from the screen); the bough's base
-     sits a further 40px right, which is .pet-perch's own 100% pivot. */
-  transform-origin: calc(100% + 40px) 48px;
-  animation: merlin-bough-sway 7.4s ease-in-out infinite;
+  transform-origin: 50% 92%;
   transition: left 1.8s cubic-bezier(.2,.8,.2,1), top 1.8s cubic-bezier(.2,.8,.2,1), right 0.2s ease, bottom 0.2s ease;
   filter: drop-shadow(0 8px 14px rgba(0,0,0,0.42));
   display: none;
 }
 .pet-companion.show { display: block; }
-/* The bough is its own fixed element so it stays put while the bird flies.
-   It overshoots the screen by 26px so the thick base is cropped away and
-   reads as carrying on into a tree we cannot see. */
 .pet-perch {
-  position: fixed;
-  top: calc(var(--safe-top) + 76px);
-  right: -26px;
-  width: 180px;
-  height: 104px;
+  position: absolute;
+  top: 21.5px;
+  right: -8px;
+  /* The SVG keeps its 0 0 180 104 viewBox and is drawn at 150px, so every path,
+     twig pivot and the bark line all scale together by 0.8333. */
+  width: 150px;
+  height: 86.7px;
   z-index: 179;
   pointer-events: none;
   display: none;
-  transform-origin: 100% 48px;
-  animation: merlin-bough-sway 7.4s ease-in-out infinite;
+  transform-origin: right center;
   filter: drop-shadow(0 9px 12px rgba(0,0,0,0.5));
 }
 .pet-perch.show { display: block; }
-.pet-branch { display: block; width: 180px; height: 104px; overflow: visible; }
+.pet-branch { display: block; width: 150px; height: 86.7px; overflow: visible; }
 /* Side twigs flex about the point where they join the bough, not about the
    bough's own pivot, so the leafy sprays quiver instead of sliding. */
 .pet-branch-spray { transform-box: view-box; transform-origin: 98px 41px; animation: merlin-twig-flutter 4.3s ease-in-out infinite; }
 .pet-branch-tip { transform-box: view-box; transform-origin: 56px 43.8px; animation: merlin-twig-flutter 3.7s ease-in-out infinite; }
 .pet-branch-drop { transform-box: view-box; transform-origin: 160px 53.4px; animation: merlin-twig-flutter 5.6s ease-in-out infinite reverse; }
+@keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-1.4deg); } 50%{ transform: rotate(1.7deg); } }
 .pet-companion.facing-left .pet-sprite { transform: scaleX(-1); }
-.pet-companion.flying { z-index: 260; }
+.pet-companion.flying { position:fixed; z-index:260; }
 .pet-sprite {
-  width: 54px; height: 54px; margin: 0 auto; overflow: visible;
+  width: 88px; height: 88px; margin: 0 auto; overflow: visible;
   display: flex; align-items: center; justify-content: center; position: relative; z-index: 3;
-  background: transparent; border: 0;
-  /* Pivot on the talons (44% across, 72% down the art) so the idle breath
-     rocks him on the branch instead of lifting him off it. */
-  transform-origin: 44% 72%;
-  animation: pet-idle 3.9s ease-in-out infinite;
+  background:transparent; border:0; transform-origin:50% 92%; animation:pet-idle 3.6s ease-in-out infinite;
 }
-.pet-sprite.pet-walk { transform-origin: 50% 50%; animation: pet-flutter 0.38s ease-in-out infinite; }
+.pet-sprite.pet-walk { animation: pet-flutter 0.38s ease-in-out infinite; }
 .pet-sprite > img { width: 100%; height: 100%; object-fit: contain; filter:drop-shadow(0 8px 8px rgba(0,0,0,.50)); }
 
 /* Merlin is a four-piece puppet cut from the one painting — cape and tail,
@@ -941,12 +967,16 @@ svg.academy-room-bg { display:block; filter:none; }
 .pet-nameplate { display: none; }
 .pet-name, .pet-mood, .pet-bars, .pet-actions { display: none; }
 .pet-speech {
-  position: absolute; right: 6px; top: 54px; transform: translateY(-4px); z-index: 6;
-  min-width: 76px; max-width: 156px; padding: 6px 7px; border-radius: 10px; background: rgba(255,255,255,0.94);
-  color: #17130b; font-size: 10px; font-weight: 800; text-align: center; opacity: 0; pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  position: absolute; right: calc(100% + 8px); top: 6px; transform: translateX(4px); z-index: 6;
+  width:min(170px,calc(100vw - 104px)); min-width:0; max-width:190px; padding:7px 9px; border-radius:10px; background:rgba(255,255,255,0.94);
+  color:#17130b; font-size:10px; line-height:1.3; font-weight:800; text-align:left; overflow-wrap:anywhere; opacity:0; pointer-events:none;
+  transition:opacity 0.2s ease,transform 0.2s ease;
 }
-.pet-speech.show { opacity: 1; transform: translateY(2px); }
+.pet-speech::after {
+  content:''; position:absolute; right:-6px; top:15px; width:0; height:0;
+  border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:7px solid rgba(255,255,255,0.94);
+}
+.pet-speech.show { opacity: 1; transform: translateX(0); }
 .merlin-care-menu { position:fixed; top:calc(var(--safe-top) + 148px); right:12px; z-index:275; width:min(316px,calc(100vw - 24px)); padding:15px; border-radius:20px; border:1px solid rgba(240,199,103,.48); color:var(--text); background:linear-gradient(155deg,rgba(25,22,15,.98),rgba(7,12,11,.98)); box-shadow:0 20px 54px rgba(0,0,0,.66),inset 0 1px rgba(255,255,255,.08); }
 .merlin-care-menu[hidden] { display:none; }
 .merlin-care-head { display:flex; align-items:center; gap:11px; padding-right:36px; }
@@ -970,14 +1000,10 @@ svg.academy-room-bg { display:block; filter:none; }
   position: fixed; z-index: 259; pointer-events: none; color: var(--legendary); font-size: 16px;
   animation: pet-sparkle 1.2s ease-out forwards;
 }
-@keyframes pet-idle { 0%,100%{ transform: rotate(-0.7deg) scale(1); } 50%{ transform: rotate(0.6deg) scale(1.014); } }
+@keyframes merlinBranchSway { 0%,100%{ transform:rotate(-0.7deg); } 50%{ transform:rotate(0.8deg); } }
+@keyframes pet-idle { 0%,100%{ transform:rotate(-0.5deg) scale(1); } 50%{ transform:rotate(0.5deg) scale(1.015); } }
 @keyframes pet-flutter { 0%,100%{ transform: translateY(0) rotate(-8deg); } 50%{ transform: translateY(-5px) rotate(8deg); } }
 @keyframes pet-sparkle { from{ opacity:1; transform:translateY(0) scale(1); } to{ opacity:0; transform:translateY(-36px) scale(0.5); } }
-/* One shared sway for bough and bird: a slow turn about the base out past the
-   screen edge, so the far tip rises and dips several pixels while the base
-   moves barely at all — the way a real branch carries weight. */
-@keyframes merlin-bough-sway { 0%,100%{ transform: rotate(-1.9deg); } 38%{ transform: rotate(0.6deg); } 62%{ transform: rotate(1.5deg); } }
-@keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-1.4deg); } 50%{ transform: rotate(1.7deg); } }
 /* Chest fills and empties about the talons — the one motion that never stops. */
 @keyframes merlin-breathe {
   0%,100% { transform: scaleY(1) scaleX(1); }
@@ -1023,9 +1049,10 @@ svg.academy-room-bg { display:block; filter:none; }
   50% { transform: rotate(-2.6deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pet-perch, .pet-companion, .pet-branch-spray, .pet-branch-tip, .pet-branch-drop,
-  .pet-sprite, .merlin-part, .merlin-glint { animation: none; }
-  .pet-perch, .pet-companion { transform: rotate(-0.2deg); }
+  .merlin-perch-assembly,.pet-sprite,.pet-sprite.pet-walk,.pet-sparkle,
+  .pet-branch-spray,.pet-branch-tip,.pet-branch-drop,
+  .merlin-part,.merlin-glint { animation:none !important; }
+  .pet-companion { transition:none !important; }
   .merlin-part { transform: none; }
   .merlin-glint { opacity: 0; }
 }
@@ -1096,14 +1123,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-data-note { margin:-4px 0 12px; padding:9px 11px; border:1px solid rgba(105,224,184,.24); border-radius:13px; background:rgba(10,21,17,.76); color:#bdb7a7; font-size:10px; line-height:1.35; }
 .merlin-location-opt { display:flex; align-items:center; gap:8px; min-height:44px; margin-top:5px; color:#e8ddbc; font:800 10px/1.2 'Rajdhani',sans-serif; }
 .merlin-location-opt input { width:18px; height:18px; accent-color:#62dab3; flex:0 0 auto; }
-.merlin-listening-dock { position:fixed; left:10px; right:10px; bottom:calc(var(--nav-height) + var(--safe-bottom) + 10px); z-index:1070; display:none; grid-template-columns:48px minmax(0,1fr) auto; gap:9px; align-items:center; max-width:430px; margin:auto; padding:7px 8px; border-radius:17px; background:linear-gradient(145deg,rgba(15,26,20,.97),rgba(8,11,9,.98)); border:1px solid rgba(105,224,184,.48); box-shadow:0 14px 34px rgba(0,0,0,.58),0 0 20px rgba(76,206,160,.11); }
-.merlin-listening-dock.show { display:grid; }
-.merlin-listening-dock img { width:48px; height:48px; object-fit:cover; border-radius:13px; background:#08100d; border:1px solid rgba(240,199,103,.45); }
-.merlin-dock-kicker { color:#79e0bc; font:900 8px/1 'Rajdhani',sans-serif; letter-spacing:.12em; text-transform:uppercase; }
-.merlin-dock-status { margin-top:4px; color:#fff1c8; font:900 11px/1.1 'Russo One',sans-serif; }
-.merlin-dock-actions { display:flex; gap:5px; }
-.merlin-dock-actions button { min-width:44px; min-height:44px; padding:5px 8px; border-radius:12px; border:1px solid rgba(240,199,103,.34); background:rgba(240,199,103,.1); color:#f8e5ad; font:900 9px/1 'Rajdhani',sans-serif; text-transform:uppercase; }
-.merlin-dock-actions .stop { color:#ffd0c8; border-color:rgba(255,132,110,.38); background:rgba(158,44,31,.16); }
+
 
 .scan-waveform {
   width: 100%; height: 60px; margin-bottom: 16px; position: relative;
@@ -1143,7 +1163,7 @@ svg.academy-room-bg { display:block; filter:none; }
   animation: birdPickupPulse 1s ease-in-out infinite;
 }
 @keyframes birdPickupPulse { 0%,100%{box-shadow:0 4px 18px rgba(214,168,79,0.35)} 50%{box-shadow:0 4px 28px rgba(214,168,79,0.70)} }
-@media (max-width:380px) { .merlin-listener-stage{min-height:305px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} .merlin-listening-dock{grid-template-columns:42px minmax(0,1fr) auto}.merlin-listening-dock img{width:42px;height:42px} }
+@media (max-width:380px) { .merlin-listener-stage{min-height:305px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} }
 @media (prefers-reduced-motion:reduce) { .merlin-listener-stage.listening .merlin-wand-tip,.merlin-listener-stage.listening .merlin-wand-tip::before,.merlin-listener-stage.listening .merlin-wand-tip::after { animation:none !important; } }
 
 .scan-result { margin-top:16px; display:none; }
@@ -1814,6 +1834,11 @@ svg.academy-room-bg { display:block; filter:none; }
 .recruit-title { font-family:'Russo One',sans-serif; font-size:18px; color:var(--legendary); text-transform:uppercase; letter-spacing:.08em; }
 .recruit-copy { margin:8px 0 12px; color:var(--text3); font-size:12px; line-height:1.4; }
 .recruit-wallet { margin:0 0 12px; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.12); border:1px solid rgba(214,168,79,.20); font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); }
+.feedback-file { width:100%; box-sizing:border-box; padding:10px; border-radius:12px; border:1px dashed rgba(79,209,197,.5); background:rgba(79,209,197,.08); color:inherit; font:inherit; }
+.feedback-shot-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:8px; }
+.feedback-shot { position:relative; min-width:0; }
+.feedback-shot img { display:block; width:100%; aspect-ratio:1; object-fit:cover; border-radius:9px; border:1px solid rgba(255,255,255,.18); }
+.feedback-shot button { width:100%; min-height:34px; margin-top:4px; border-radius:8px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08); color:inherit; font:700 11px 'Rajdhani',sans-serif; }
 .recruit-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .recruit-list .bird-card { min-height:338px; }
 .recruit-close { width:100%; min-height:44px; margin-top:12px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
@@ -1927,6 +1952,14 @@ svg.academy-room-bg { display:block; filter:none; }
   padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .settings-label { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 14px; }
+.settings-feedback {
+  margin: 4px 0 10px; padding: 14px; border: 1px solid rgba(79,209,197,.34);
+  border-radius: 12px; background: linear-gradient(135deg, rgba(79,209,197,.13), rgba(214,168,79,.09));
+  cursor: pointer; width: 100%; color: inherit; text-align: left; font: inherit;
+}
+.settings-feedback:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+.settings-feedback .settings-label { color: var(--accent2); font-size: 15px; }
+.settings-feedback-copy { color: var(--text3); font-size: 12px; margin-top: 2px; }
 .settings-toggle {
   width: 44px; height: 24px; border-radius: 12px; background: var(--bg4);
   position: relative; cursor: pointer; transition: background 0.2s ease;
@@ -2546,8 +2579,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><span class="hud-chip-icon">🪵</span><span class="hud-chip-value" id="hudTimber">0</span></button>
       </div>
     </div>
+    <button class="merlin-listening-dock" id="merlinDockReturn" type="button" aria-label="Merlin is listening — open listener">
+      <img src="assets/ui/merlin-wand-listener.webp" alt="">
+      <span class="merlin-listening-pulse" aria-hidden="true"></span>
+      <span class="sr-only" id="merlinDockStatus" aria-live="polite">Listening across Burbz</span>
+    </button>
     <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile">&#128100;</button>
-    <button class="header-settings" id="settingsBtn">&#9881;</button>
+    <button class="header-settings" id="settingsBtn" aria-label="Settings">&#9881;</button>
   </header>
 
   <!-- Screens -->
@@ -2776,7 +2814,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="empire-map-vignette"></div>
         <canvas class="empire-fog-overlay" id="empireFogCanvas" aria-hidden="true"></canvas>
         <div class="empire-map-corner tl"></div><div class="empire-map-corner tr"></div><div class="empire-map-corner bl"></div><div class="empire-map-corner br"></div>
-        <div class="empire-realm-banner"><div class="empire-realm-banner-name" id="empireRealmName">THE REALM OF BURBZ</div><div class="empire-realm-banner-rank" id="empireRealmRank">Wandering Trainer</div></div>
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button></div>
         <div class="empire-map-empty"></div>
         <div class="empire-map-status" id="empireMapStatus">Charting the darkened world…</div>
@@ -2984,6 +3021,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-title">Settings</div>
+      <button type="button" class="settings-row settings-feedback" id="sendFeedbackBtn" aria-label="Send feedback, report a bug, or suggest an idea">
+        <div>
+          <div class="settings-label">💌 Send Feedback</div>
+          <div class="settings-feedback-copy">Report a bug, bird issue, or share an idea</div>
+        </div>
+        <span style="color: var(--accent2); font-size: 22px;">&#8250;</span>
+      </button>
       <div class="settings-row">
         <div class="settings-label">Sound Effects</div>
         <div class="settings-toggle on" id="toggleSfx"></div>
@@ -3014,10 +3058,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
       <div class="settings-row" id="replayTutorialBtn" role="button" tabindex="0">
         <div class="settings-label">Replay Complete Tutorial</div>
-        <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
-      </div>
-      <div class="settings-row" id="sendFeedbackBtn" role="button" tabindex="0">
-        <div class="settings-label">Send Feedback / Report a Bird</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
       <div class="settings-row" id="startNewGameBtn" role="button" tabindex="0">
@@ -3084,143 +3124,145 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
   </div>
 
-  <!-- Merlin is Burbz's permanent guide and top-right Tamagotchi companion. -->
-  <!-- The bough Merlin stands on. Drawn base-right/tip-left: the top surface
-       passes under his talons at y≈39.4 in these user units, which is exactly
-       where the art's toe pads land, so he grips the bark rather than hovering
-       near it. Base runs off the right of the viewBox into an unseen tree. -->
-  <div class="pet-perch show" id="petPerch" aria-hidden="true">
-    <svg class="pet-branch" viewBox="0 0 180 104" width="180" height="104" fill="none" aria-hidden="true" focusable="false">
-      <defs>
-        <!-- The map is lit from the upper left and so is the bird, so the bough
-             has to agree: bright crown, warm flank, near-black belly with a
-             thread of bounce light under it. Flat fills read as a plank. -->
-        <linearGradient id="merlinBarkFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#a4763f"/>
-          <stop offset=".13" stop-color="#7c5227"/>
-          <stop offset=".36" stop-color="#4e3117"/>
-          <stop offset=".64" stop-color="#291809"/>
-          <stop offset=".87" stop-color="#130a03"/>
-          <stop offset="1" stop-color="#2b1b0d"/>
-        </linearGradient>
-        <linearGradient id="merlinTwigFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#8a6134"/>
-          <stop offset=".55" stop-color="#4a2f16"/>
-          <stop offset="1" stop-color="#1d1207"/>
-        </linearGradient>
-        <!-- The drooping twig starts in the bough's shadow, so it darkens
-             towards its root instead of popping off the silhouette. -->
-        <linearGradient id="merlinDropTwigFill" x1="1" y1="0" x2="0" y2=".7">
-          <stop offset="0" stop-color="#1a1006"/>
-          <stop offset=".45" stop-color="#3f2a13"/>
-          <stop offset="1" stop-color="#6a4926"/>
-        </linearGradient>
-        <linearGradient id="merlinLeafFill" x1=".1" y1="0" x2=".8" y2="1">
-          <stop offset="0" stop-color="#436b41"/>
-          <stop offset=".45" stop-color="#28472f"/>
-          <stop offset="1" stop-color="#101f17"/>
-        </linearGradient>
-        <linearGradient id="merlinLeafFillAlt" x1=".1" y1="0" x2=".8" y2="1">
-          <stop offset="0" stop-color="#556f3c"/>
-          <stop offset=".45" stop-color="#314426"/>
-          <stop offset="1" stop-color="#161f13"/>
-        </linearGradient>
-        <radialGradient id="merlinGripShade" cx=".5" cy=".5" r=".5">
-          <stop offset="0" stop-color="#000" stop-opacity=".62"/>
-          <stop offset="1" stop-color="#000" stop-opacity="0"/>
-        </radialGradient>
-        <!-- One leaf: petiole, asymmetric blade, midrib. Placed by <use> so the
-             origin is the point where it joins its twig. -->
-        <g id="merlinLeaf">
-          <path d="M0 0 3.1.2" stroke="#3d2915" stroke-width=".8" stroke-linecap="round"/>
-          <path d="M3 .2C6.6-4.8 13.4-5.4 17.4-1 13 4.6 6.6 4.6 3 .2Z"/>
-          <path d="M4.2.1C8.4.3 13-.2 16.6-.9" stroke="#a8c496" stroke-opacity=".16" stroke-width=".55" fill="none"/>
-        </g>
-        <clipPath id="merlinBarkClip">
-          <path d="M54 42.6C72 40.9 92 39.8 106 39.4 132 38.2 158 35.4 180 32.6L180 55.4C156 53 130 49.9 106 48.4 90 47.4 70 46.4 54 45.6Z"/>
-        </clipPath>
-      </defs>
+  <!-- Merlin is Burbz's permanent guide and top-right care companion. -->
+  <div class="merlin-perch-assembly" id="merlinPerchAssembly">
+    <!-- The bough Merlin stands on. Drawn base-right/tip-left: the top surface
+         passes under his talons at y=39.4 in these user units, which is exactly
+         where the art's toe pads land, so he grips the bark rather than hovering
+         near it. Base runs off the right of the viewBox into an unseen tree. -->
+    <div class="pet-perch show" id="petPerch" aria-hidden="true">
+      <svg class="pet-branch" viewBox="0 0 180 104" width="150" height="86.7" fill="none" aria-hidden="true" focusable="false">
+        <defs>
+          <!-- The map is lit from the upper left and so is the bird, so the bough
+               has to agree: bright crown, warm flank, near-black belly with a
+               thread of bounce light under it. Flat fills read as a plank. -->
+          <linearGradient id="merlinBarkFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#a4763f"/>
+            <stop offset=".13" stop-color="#7c5227"/>
+            <stop offset=".36" stop-color="#4e3117"/>
+            <stop offset=".64" stop-color="#291809"/>
+            <stop offset=".87" stop-color="#130a03"/>
+            <stop offset="1" stop-color="#2b1b0d"/>
+          </linearGradient>
+          <linearGradient id="merlinTwigFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#8a6134"/>
+            <stop offset=".55" stop-color="#4a2f16"/>
+            <stop offset="1" stop-color="#1d1207"/>
+          </linearGradient>
+          <!-- The drooping twig starts in the bough's shadow, so it darkens
+               towards its root instead of popping off the silhouette. -->
+          <linearGradient id="merlinDropTwigFill" x1="1" y1="0" x2="0" y2=".7">
+            <stop offset="0" stop-color="#1a1006"/>
+            <stop offset=".45" stop-color="#3f2a13"/>
+            <stop offset="1" stop-color="#6a4926"/>
+          </linearGradient>
+          <linearGradient id="merlinLeafFill" x1=".1" y1="0" x2=".8" y2="1">
+            <stop offset="0" stop-color="#436b41"/>
+            <stop offset=".45" stop-color="#28472f"/>
+            <stop offset="1" stop-color="#101f17"/>
+          </linearGradient>
+          <linearGradient id="merlinLeafFillAlt" x1=".1" y1="0" x2=".8" y2="1">
+            <stop offset="0" stop-color="#556f3c"/>
+            <stop offset=".45" stop-color="#314426"/>
+            <stop offset="1" stop-color="#161f13"/>
+          </linearGradient>
+          <radialGradient id="merlinGripShade" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#000" stop-opacity=".62"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+          <!-- One leaf: petiole, asymmetric blade, midrib. Placed by <use> so the
+               origin is the point where it joins its twig. -->
+          <g id="merlinLeaf">
+            <path d="M0 0 3.1.2" stroke="#3d2915" stroke-width=".8" stroke-linecap="round"/>
+            <path d="M3 .2C6.6-4.8 13.4-5.4 17.4-1 13 4.6 6.6 4.6 3 .2Z"/>
+            <path d="M4.2.1C8.4.3 13-.2 16.6-.9" stroke="#a8c496" stroke-opacity=".16" stroke-width=".55" fill="none"/>
+          </g>
+          <clipPath id="merlinBarkClip">
+            <path d="M54 42.6C72 40.9 92 39.8 106 39.4 132 38.2 158 35.4 180 32.6L180 55.4C156 53 130 49.9 106 48.4 90 47.4 70 46.4 54 45.6Z"/>
+          </clipPath>
+        </defs>
 
-      <!-- Canopy behind the bird: one limb climbing away from the bough, its
-           leaves in overlapping bunches rather than a row of flat ovals. -->
-      <g class="pet-branch-spray">
-        <g stroke="url(#merlinTwigFill)" stroke-linecap="round" fill="none">
-          <path d="M98 41C93 30.6 86.6 21.6 75 13.8" stroke-width="2.8"/>
-          <path d="M79 16.4C71.4 10.4 62.6 6.4 52.6 4.4" stroke-width="1.7"/>
-          <path d="M87 25.6C82.4 19.6 77 14.8 70.4 11.4" stroke-width="1.1"/>
-          <path d="M92.6 33.4C90.2 27.8 87 23 82.6 19" stroke-width=".8"/>
+        <!-- Canopy behind the bird: one limb climbing away from the bough, its
+             leaves in overlapping bunches rather than a row of flat ovals. -->
+        <g class="pet-branch-spray">
+          <g stroke="url(#merlinTwigFill)" stroke-linecap="round" fill="none">
+            <path d="M98 41C93 30.6 86.6 21.6 75 13.8" stroke-width="2.8"/>
+            <path d="M79 16.4C71.4 10.4 62.6 6.4 52.6 4.4" stroke-width="1.7"/>
+            <path d="M87 25.6C82.4 19.6 77 14.8 70.4 11.4" stroke-width="1.1"/>
+            <path d="M92.6 33.4C90.2 27.8 87 23 82.6 19" stroke-width=".8"/>
+          </g>
+          <!-- Outer bunch, at the tip of the climbing limb -->
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(52.6 4.4) rotate(-169) scale(.6)"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(55 6) rotate(-129) scale(.52)" opacity=".95"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(57.6 4.2) rotate(161) scale(.46)" opacity=".9"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(51.4 7) rotate(-101) scale(.38)" opacity=".86"/>
+          <!-- Middle bunch, straddling the fork -->
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(70.4 11.4) rotate(-156) scale(.52)" opacity=".94"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(72.4 13.4) rotate(-114) scale(.42)" opacity=".88"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(75.4 12.6) rotate(146) scale(.36)" opacity=".84"/>
+          <!-- Inner bunch, deep in shade against the bough -->
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(82.6 19) rotate(-144) scale(.4)" opacity=".78"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(89 28.8) rotate(134) scale(.34)" opacity=".7"/>
         </g>
-        <!-- Outer bunch, at the tip of the climbing limb -->
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(52.6 4.4) rotate(-169) scale(.6)"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(55 6) rotate(-129) scale(.52)" opacity=".95"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(57.6 4.2) rotate(161) scale(.46)" opacity=".9"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(51.4 7) rotate(-101) scale(.38)" opacity=".86"/>
-        <!-- Middle bunch, straddling the fork -->
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(70.4 11.4) rotate(-156) scale(.52)" opacity=".94"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(72.4 13.4) rotate(-114) scale(.42)" opacity=".88"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(75.4 12.6) rotate(146) scale(.36)" opacity=".84"/>
-        <!-- Inner bunch, deep in shade against the bough -->
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(82.6 19) rotate(-144) scale(.4)" opacity=".78"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(89 28.8) rotate(134) scale(.34)" opacity=".7"/>
-      </g>
 
-      <!-- Main bough: base off the right edge into an unseen tree, drooping to a
-           whippy tip that the tip spray hides. Merlin's toes land at 106 39.4. -->
-      <path d="M54 42.6C72 40.9 92 39.8 106 39.4 132 38.2 158 35.4 180 32.6L180 55.4C156 53 130 49.9 106 48.4 90 47.4 70 46.4 54 45.6Z" fill="url(#merlinBarkFill)"/>
-      <g clip-path="url(#merlinBarkClip)">
-        <!-- Bark runs the length of the limb and crowds towards the dark belly -->
-        <g stroke="#100903" stroke-opacity=".46" stroke-width=".8" fill="none" stroke-linecap="round">
-          <path d="M56 44.4C82 43.2 112 41.4 142 39.2 160 37.9 172 36.8 180 36"/>
-          <path d="M58 45.2C86 44.4 116 43 146 41 164 39.8 174 39 180 38.5"/>
-          <path d="M84 45C110 44 136 42.6 158 41.2 170 40.4 176 39.9 180 39.6" stroke-opacity=".32"/>
-          <path d="M104 46.4C126 45.6 148 44.2 166 43 173 42.5 178 42.2 180 42"/>
-          <path d="M124 47C142 46.4 158 45.6 172 44.8 176 44.5 179 44.4 180 44.3" stroke-opacity=".34"/>
+        <!-- Main bough: base off the right edge into an unseen tree, drooping to a
+             whippy tip that the tip spray hides. Merlin's toes land at 106 39.4. -->
+        <path d="M54 42.6C72 40.9 92 39.8 106 39.4 132 38.2 158 35.4 180 32.6L180 55.4C156 53 130 49.9 106 48.4 90 47.4 70 46.4 54 45.6Z" fill="url(#merlinBarkFill)"/>
+        <g clip-path="url(#merlinBarkClip)">
+          <!-- Bark runs the length of the limb and crowds towards the dark belly -->
+          <g stroke="#100903" stroke-opacity=".46" stroke-width=".8" fill="none" stroke-linecap="round">
+            <path d="M56 44.4C82 43.2 112 41.4 142 39.2 160 37.9 172 36.8 180 36"/>
+            <path d="M58 45.2C86 44.4 116 43 146 41 164 39.8 174 39 180 38.5"/>
+            <path d="M84 45C110 44 136 42.6 158 41.2 170 40.4 176 39.9 180 39.6" stroke-opacity=".32"/>
+            <path d="M104 46.4C126 45.6 148 44.2 166 43 173 42.5 178 42.2 180 42"/>
+            <path d="M124 47C142 46.4 158 45.6 172 44.8 176 44.5 179 44.4 180 44.3" stroke-opacity=".34"/>
+          </g>
+          <!-- Sapwood catch-light: the narrow band that makes it a cylinder -->
+          <path d="M62 42.4C88 41 116 39.2 144 37 162 35.6 173 34.4 180 33.6" stroke="#d6a76b" stroke-opacity=".2" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M76 43C102 41.8 128 40.2 152 38.4 166 37.3 175 36.5 180 36" stroke="#a37941" stroke-opacity=".13" stroke-width=".8" fill="none" stroke-linecap="round"/>
+          <!-- An old knot: a pit with a lit upper lip -->
+          <ellipse cx="140" cy="43" rx="4" ry="2.1" fill="#120a03" opacity=".5"/>
+          <ellipse cx="139.6" cy="42.2" rx="2.5" ry="1" fill="#8f6635" opacity=".24"/>
+          <!-- Moss on the lit crown, tying the bough to the green of the map -->
+          <g fill="#5c7c48" opacity=".2">
+            <ellipse cx="158" cy="35.6" rx="8" ry="1.4"/>
+            <ellipse cx="122" cy="39.4" rx="5.4" ry="1"/>
+            <ellipse cx="78" cy="42.6" rx="4" ry=".8"/>
+          </g>
+          <!-- Contact shadow where the talons press into the bark -->
+          <ellipse cx="106" cy="40.6" rx="11" ry="3" fill="url(#merlinGripShade)"/>
         </g>
-        <!-- Sapwood catch-light: the narrow band that makes it a cylinder -->
-        <path d="M62 42.4C88 41 116 39.2 144 37 162 35.6 173 34.4 180 33.6" stroke="#d6a76b" stroke-opacity=".2" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        <path d="M76 43C102 41.8 128 40.2 152 38.4 166 37.3 175 36.5 180 36" stroke="#a37941" stroke-opacity=".13" stroke-width=".8" fill="none" stroke-linecap="round"/>
-        <!-- An old knot: a pit with a lit upper lip -->
-        <ellipse cx="140" cy="43" rx="4" ry="2.1" fill="#120a03" opacity=".5"/>
-        <ellipse cx="139.6" cy="42.2" rx="2.5" ry="1" fill="#8f6635" opacity=".24"/>
-        <!-- Moss on the lit crown, tying the bough to the green of the map -->
-        <g fill="#5c7c48" opacity=".2">
-          <ellipse cx="158" cy="35.6" rx="8" ry="1.4"/>
-          <ellipse cx="122" cy="39.4" rx="5.4" ry="1"/>
-          <ellipse cx="78" cy="42.6" rx="4" ry=".8"/>
-        </g>
-        <!-- Contact shadow where the talons press into the bark -->
-        <ellipse cx="106" cy="40.6" rx="11" ry="3" fill="url(#merlinGripShade)"/>
-      </g>
-      <!-- Rim light along the lit top edge, the same gold the rest of the UI uses -->
-      <path d="M54 42.6C72 40.9 92 39.8 106 39.4 132 38.2 158 35.4 180 32.6" stroke="#f0cd8e" stroke-opacity=".26" stroke-width=".9" stroke-linecap="round" fill="none"/>
+        <!-- Rim light along the lit top edge, the same gold the rest of the UI uses -->
+        <path d="M54 42.6C72 40.9 92 39.8 106 39.4 132 38.2 158 35.4 180 32.6" stroke="#f0cd8e" stroke-opacity=".26" stroke-width=".9" stroke-linecap="round" fill="none"/>
 
-      <!-- The tip spray: fine twigs and a bunch of leaves closing off the far end
-           so the bough stops in foliage instead of tapering to a bare point. -->
-      <g class="pet-branch-tip">
-        <g stroke="url(#merlinTwigFill)" stroke-linecap="round" fill="none">
-          <path d="M56 43.8C50 41.6 44 40.6 38 40.8" stroke-width="1.5"/>
-          <path d="M55 44C50.6 46.6 45.6 48.4 40.6 49" stroke-width="1.1"/>
+        <!-- The tip spray: fine twigs and a bunch of leaves closing off the far end
+             so the bough stops in foliage instead of tapering to a bare point. -->
+        <g class="pet-branch-tip">
+          <g stroke="url(#merlinTwigFill)" stroke-linecap="round" fill="none">
+            <path d="M56 43.8C50 41.6 44 40.6 38 40.8" stroke-width="1.5"/>
+            <path d="M55 44C50.6 46.6 45.6 48.4 40.6 49" stroke-width="1.1"/>
+          </g>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(38 40.8) rotate(-172) scale(.56)" opacity=".94"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(42 39.6) rotate(-138) scale(.44)" opacity=".88"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(40.6 49) rotate(166) scale(.5)" opacity=".9"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(45.6 47.8) rotate(126) scale(.38)" opacity=".84"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(48.6 44.6) rotate(-160) scale(.34)" opacity=".8"/>
         </g>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(38 40.8) rotate(-172) scale(.56)" opacity=".94"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(42 39.6) rotate(-138) scale(.44)" opacity=".88"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(40.6 49) rotate(166) scale(.5)" opacity=".9"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(45.6 47.8) rotate(126) scale(.38)" opacity=".84"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(48.6 44.6) rotate(-160) scale(.34)" opacity=".8"/>
-      </g>
 
-      <!-- A short twig drooping off the base, for depth in front of the bough.
-           Kept high and tight to the screen edge so it stays over map, not UI. -->
-      <g class="pet-branch-drop">
-        <path d="M160 53.4C158.6 59.8 154 65 146 68" stroke="url(#merlinDropTwigFill)" stroke-width="1.9" stroke-linecap="round"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(146 68) rotate(156) scale(.56)" opacity=".88"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(153.4 62) rotate(110) scale(.42)" opacity=".8"/>
-        <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(148.6 66.2) rotate(-164) scale(.36)" opacity=".74"/>
-      </g>
-    </svg>
-  </div>
-  <div class="pet-companion show" id="petCompanion" aria-live="polite">
-    <div class="pet-speech" id="petSpeech">Ready when you are!</div>
-    <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><span class="merlin-rig"><img class="merlin-part merlin-back" src="/burbz/assets/merlin/merlin-back.webp" alt="" aria-hidden="true"><img class="merlin-part merlin-body" src="/burbz/assets/merlin/merlin-body.webp" alt="Merlin the wizard falcon"><img class="merlin-part merlin-wing" src="/burbz/assets/merlin/merlin-wing.webp" alt="" aria-hidden="true"><span class="merlin-part merlin-head"><img src="/burbz/assets/merlin/merlin-head.webp" alt="" aria-hidden="true"><span class="merlin-glint" aria-hidden="true"></span></span></span></button>
+        <!-- A short twig drooping off the base, for depth in front of the bough.
+             Kept high and tight to the screen edge so it stays over map, not UI. -->
+        <g class="pet-branch-drop">
+          <path d="M160 53.4C158.6 59.8 154 65 146 68" stroke="url(#merlinDropTwigFill)" stroke-width="1.9" stroke-linecap="round"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(146 68) rotate(156) scale(.56)" opacity=".88"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFillAlt)" transform="translate(153.4 62) rotate(110) scale(.42)" opacity=".8"/>
+          <use href="#merlinLeaf" fill="url(#merlinLeafFill)" transform="translate(148.6 66.2) rotate(-164) scale(.36)" opacity=".74"/>
+        </g>
+      </svg>
+    </div>
+    <div class="pet-companion show" id="petCompanion" aria-live="polite">
+      <div class="pet-speech" id="petSpeech">Ready when you are!</div>
+      <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><span class="merlin-rig"><img class="merlin-part merlin-back" src="/burbz/assets/merlin/merlin-back.webp" alt="" aria-hidden="true"><img class="merlin-part merlin-body" src="/burbz/assets/merlin/merlin-body.webp" alt="Merlin the wizard falcon"><img class="merlin-part merlin-wing" src="/burbz/assets/merlin/merlin-wing.webp" alt="" aria-hidden="true"><span class="merlin-part merlin-head"><img src="/burbz/assets/merlin/merlin-head.webp" alt="" aria-hidden="true"><span class="merlin-glint" aria-hidden="true"></span></span></span></button>
+    </div>
   </div>
   <section class="merlin-care-menu" id="merlinCareMenu" role="dialog" aria-labelledby="merlinCareTitle" data-hunger-surface="merlin-care" hidden>
     <button class="merlin-care-close" id="merlinCareClose" type="button" aria-label="Close Merlin's care menu">&times;</button>
@@ -3242,11 +3284,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
   <!-- Toast container -->
   <div class="scan-encounter-stack" id="scanEncounterStack" aria-live="polite" aria-label="Birds heard while listening"></div>
-  <aside class="merlin-listening-dock" id="merlinListeningDock" aria-label="Merlin sound listener" aria-live="polite">
-    <img src="assets/ui/merlin-wand-listener.webp" alt="">
-    <div><div class="merlin-dock-kicker">Merlin’s wand · microphone live</div><div class="merlin-dock-status" id="merlinDockStatus">Listening across Burbz</div></div>
-    <div class="merlin-dock-actions"><button id="merlinDockReturn" type="button">View</button><button class="stop" id="merlinDockStop" type="button">Stop</button></div>
-  </aside>
+
   <div class="toast-container" id="toastContainer"></div>
 </div>
 
@@ -3260,7 +3298,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=charm-diplomacy-20260723"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=quest-path-alignment-r3-20260723"></script>
+<script src="quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -3273,7 +3311,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=birbs-quest-music-v3-20260725"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
-<script src="merlin_companion_core.js?v=diet-hunger-release-20260723"></script>
+<script src="merlin_companion_core.js?v=merlin-compact-speech-v2-20260724"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -4516,13 +4554,46 @@ function loadState() {
   saveState();
 }
 
-function saveState() {
+function durableSaveState(opts = {}) {
+  let serialised;
   try {
-    localStorage.setItem('burbz_state', JSON.stringify(gameState));
-  } catch(e) {}
-  queueCloudSave();
-  queueActionBadgeUpdate();
+    serialised = JSON.stringify(gameState);
+    localStorage.setItem('burbz_state', serialised);
+  } catch (error) {
+    if (opts.throwOnFailure) throw error;
+    return { ok:false, error };
+  }
+  // Post-commit notification failures must not make a caller roll memory back
+  // after localStorage has already accepted the transaction.
+  try { if (opts.queueCloud !== false) queueCloudSave(); } catch (e) { console.warn('Cloud save scheduling failed', e); }
+  try { queueActionBadgeUpdate(); } catch (e) { console.warn('Action badge update failed', e); }
+  return { ok:true };
 }
+function saveState() { return durableSaveState(); }
+function snapshotGameState() { return JSON.parse(JSON.stringify(gameState)); }
+function restoreStateTree(target, source) {
+  if (!target || !source || typeof target !== 'object' || typeof source !== 'object' || Array.isArray(target) !== Array.isArray(source)) return source;
+  if (Array.isArray(target)) {
+    target.length = source.length;
+    for (let i = 0; i < source.length; i++) target[i] = restoreStateTree(target[i], source[i]);
+    return target;
+  }
+  Object.keys(target).forEach(key => { if (!Object.prototype.hasOwnProperty.call(source, key)) delete target[key]; });
+  Object.keys(source).forEach(key => { target[key] = restoreStateTree(target[key], source[key]); });
+  return target;
+}
+// Restore in place so active quest/discovery/checkpoint references held by the
+// current browser event are rolled back with the gameState root.
+function restoreGameStateSnapshot(snapshot) { gameState = restoreStateTree(gameState, snapshot); return gameState; }
+function questClaimReceipt(key) {
+  const receipts = gameState.questClaimReceipts;
+  return receipts && receipts[key] || null;
+}
+function setQuestClaimReceipt(key, receipt) {
+  if (!gameState.questClaimReceipts || typeof gameState.questClaimReceipts !== 'object' || Array.isArray(gameState.questClaimReceipts)) gameState.questClaimReceipts = {};
+  gameState.questClaimReceipts[key] = receipt;
+}
+function queueQuestClaimCloudSync() { queueCloudSave(); queueActionBadgeUpdate(); }
 
 function apiHeaders(extra) {
   const headers = { 'Content-Type': 'application/json', ...(extra || {}) };
@@ -10240,7 +10311,7 @@ function createBirdEntry(speciesName, scientificName, confidence) {
   };
 }
 
-function levelUpBird(bird, xpGain) {
+function levelUpBird(bird, xpGain, options = {}) {
   if (!bird || !Number.isFinite(Number(xpGain))) return 0;
   bird.level = Math.max(1, Number(bird.level) || 1);
   bird.xp = Math.max(0, Number(bird.xp) || 0) + Number(xpGain);
@@ -10276,7 +10347,7 @@ function levelUpBird(bird, xpGain) {
     bird.hp = bird.maxHp;
   }
   const levelsGained = bird.level - startLevel;
-  if (levelsGained > 0) {
+  if (levelsGained > 0 && !options.silent) {
     try {
       showToast('🎉 ' + birdDisplayName(bird) + ' reached LV.' + bird.level + '!');
       SFX.levelUp();
@@ -10802,14 +10873,25 @@ function birdHasActiveExpedition(birdId) {
   return ensureBirdExpeditions().some(q => q.birdId === birdId && !['claimed','cancelled','failed'].includes(String(q.status || '').toLowerCase()));
 }
 
+function expeditionDispatchBirds(flock) {
+  const birds = Array.isArray(flock) ? flock.filter(b => b && b.id !== MERLIN_GUIDE.id) : [];
+  return [MERLIN_GUIDE].concat(birds);
+}
+
+function expeditionBirdById(id) {
+  if (id === MERLIN_GUIDE.id) return { ...MERLIN_GUIDE, care:getMerlinCare() };
+  return academyBirdById(id);
+}
+
 function startBirdExpedition(birdId, templateId, loadout) {
-  const bird = academyBirdById(birdId);
+  const bird = expeditionBirdById(birdId);
   if (!bird) return;
   const starterQuest = isStarterExpeditionTemplate(templateId);
+  if (birdId === 'merlin-guide' && !starterQuest) { showToast('Merlin can lead starter errands; recruit companions for longer expeditions.'); return; }
   if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
-  if (!warnOrBlockBirdWork(bird, 'expedition')) return;
+  if (!warnOrBlockBirdWork(birdId === 'merlin-guide' ? { ...bird, care:getMerlinCare() } : bird, 'expedition')) return;
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now());
   // Fallout Shelter-style loadout: a pantry provision and a charm item ride
   // along and pay out as bonuses when the quest is claimed.
@@ -10830,51 +10912,76 @@ function startBirdExpedition(birdId, templateId, loadout) {
   else if (SFX && typeof SFX.page === 'function') SFX.page();
   else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast('🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
+  renderPetCompanion();
   renderBirdExpeditions();
 }
 
 function claimBirdExpedition(expeditionId) {
+  const receiptKey = 'expedition:' + expeditionId;
+  if (questClaimReceipt(receiptKey)) return;
   const q = ensureBirdExpeditions().find(x => x.id === expeditionId);
   if (!q || q.status === 'claimed') return;
   const advanced = window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now());
   if (advanced.status !== 'complete') { showToast('Still questing — check back soon.'); return; }
-  q.status = 'claimed';
-  const equipment = q.equipment || {};
-  let coins = advanced.rewards.coins || 0;
-  let branches = Math.max(0, Math.floor(Number(advanced.rewards.branches) || 0));
-  if (equipment.provision) { coins = Math.round(coins * 1.25); branches = Math.round(branches * 1.25); } // well-fed birds haul more
-  addCoins(coins);
-  addBranches(branches);
-  const questXp = Math.max(0, Math.floor(Number(advanced.rewards.xp) || 0));
-  if (questXp > 0) addPlayerXp(questXp);
-  const items = { ...(advanced.rewards.items || {}) };
-  if (equipment.charm) {
-    const template = getExpeditionTemplate(q.templateId);
-    const pool = (template && template.items) || Object.keys(items);
-    if (pool.length) { const bonus = pool[q.seed % pool.length]; items[bonus] = (items[bonus] || 0) + 1; }
+  const snapshot = snapshotGameState();
+  const previousPlayerLevel = Number(gameState.player.level) || 1;
+  let coins = 0;
+  let branches = 0;
+  let questXp = 0;
+  let items = {};
+  let foundNewClue = false;
+  let birdLevelsGained = 0;
+  try {
+    q.status = 'claimed';
+    const equipment = q.equipment || {};
+    coins = advanced.rewards.coins || 0;
+    branches = Math.max(0, Math.floor(Number(advanced.rewards.branches) || 0));
+    if (equipment.provision) { coins = Math.round(coins * 1.25); branches = Math.round(branches * 1.25); }
+    addCoins(coins);
+    addBranches(branches);
+    questXp = Math.max(0, Math.floor(Number(advanced.rewards.xp) || 0));
+    if (questXp > 0) applyPlayerXpState(questXp); // durable mutation; addPlayerXp(questXp) would save and celebrate too early
+    items = { ...(advanced.rewards.items || {}) };
+    if (equipment.charm) {
+      const template = getExpeditionTemplate(q.templateId);
+      const pool = (template && template.items) || Object.keys(items);
+      if (pool.length) { const bonus = pool[q.seed % pool.length]; items[bonus] = (items[bonus] || 0) + 1; }
+    }
+    Object.entries(items).forEach(([key, count]) => {
+      if (count <= 0) return;
+      const larderKey = legacyKitchenSupplyIngredient(key) || key;
+      if (kitchenIngredientById(larderKey)) {
+        if (!addLarderIngredient(larderKey, count)) throw new Error('Unknown expedition ingredient: ' + larderKey);
+      } else gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + count;
+    });
+    foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
+    if (q.birdId === MERLIN_GUIDE.id) {
+      gameState.merlinCare = MERLIN_CORE.applyMerlinExpeditionCompletion(gameState.merlinCare, q.id, Date.now());
+    } else {
+      const bird = academyBirdById(q.birdId);
+      if (bird) {
+        birdLevelsGained = levelUpBird(bird, questXp || 10, { silent:true });
+        const delta = (dietHungerCore() && dietHungerCore().ACTIVITY_HUNGER_DELTAS && dietHungerCore().ACTIVITY_HUNGER_DELTAS.expedition) || 12;
+        applyBirdHungerTransaction(q.birdId, 'expedition', q.id, delta, Date.now());
+      }
+    }
+    gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
+    setQuestClaimReceipt(receiptKey, { id:receiptKey, committedAt:Date.now(), coins, branches, xp:questXp, items });
+    // saveState() is intentionally replaced by one observable durable commit.
+    durableSaveState({ throwOnFailure:true, queueCloud:false });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    console.warn('Expedition claim rolled back', error);
+    showToast('Expedition rewards could not be saved. Please try claiming again.');
+    return;
   }
-  Object.entries(items).forEach(([key, count]) => {
-    if (count <= 0) return;
-    // Kitchen ingredients and legacy pantry-supply rewards land in the Stores
-    // larder, ready for the Prep Counter instead of becoming inert bag items.
-    const larderKey = legacyKitchenSupplyIngredient(key) || key;
-    if (kitchenIngredientById(larderKey)) addLarderIngredient(larderKey, count);
-    else gameState.inventory.items[key] = (gameState.inventory.items[key] || 0) + count;
-  });
-  const foundNewClue = advanced.story && advanced.story.clueId ? rememberMerlinClue(advanced.story.clueId) : false;
-  const bird = academyBirdById(q.birdId);
-  if (bird) {
-    levelUpBird(bird, questXp || 10);
-    const delta = (dietHungerCore() && dietHungerCore().ACTIVITY_HUNGER_DELTAS && dietHungerCore().ACTIVITY_HUNGER_DELTAS.expedition) || 12;
-    applyBirdHungerTransaction(q.birdId, 'expedition', q.id, delta, Date.now());
-  }
-  // A claimed quest leaves the board for good.
-  gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
-  saveState();
+  queueQuestClaimCloudSync();
+  if ((Number(gameState.player.level) || 1) > previousPlayerLevel) { SFX.levelUp(); showToast('LEVEL UP! Now Level ' + gameState.player.level); }
+  if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
-  playQuestClaimCelebration({ coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  playQuestClaimCelebration({ badge: 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   maybeOpenQuestKnowledgeQuiz(advanced, coins);
-  renderBirdExpeditions(); renderInventory(); updateHeader();
+  renderPetCompanion(); renderBirdExpeditions(); renderInventory(); updateHeader();
 }
 
 // ---- Claim celebration: a quick dopamine burst of coins and sparkles -------
@@ -10883,6 +10990,8 @@ function playQuestClaimCelebration(rewards) {
   const el = document.createElement('div');
   el.id = 'questClaimCelebration';
   el.className = 'quest-claim-celebration';
+  el.setAttribute('role', 'status');
+  el.setAttribute('aria-live', 'polite');
   const bits = [];
   const glyphs = ['🪙', '✨', '🪙', '🪶', '✨', '🪙'];
   for (let i = 0; i < 16; i++) {
@@ -10891,11 +11000,13 @@ function playQuestClaimCelebration(rewards) {
     bits.push('<span class="qcc-bit" style="--tx:' + Math.round(Math.cos(a) * d) + 'px;--ty:' + Math.round(Math.sin(a) * d - 40) + 'px;animation-delay:' + (Math.random() * 0.15).toFixed(2) + 's">' + glyphs[i % glyphs.length] + '</span>');
   }
   const itemBits = Object.entries(rewards.items || {}).filter(([, n]) => n > 0)
-    .map(([k, n]) => '<span class="qcc-item">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + (n > 1 ? ' ×' + n : '') + '</span>').join('');
+    .map(([k, n]) => '<span class="qcc-item">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' ×' + n + '</span>').join('');
+  const larderBits = Object.entries(rewards.larder || {}).filter(([, n]) => n > 0)
+    .map(([k, n]) => { const ing = kitchenIngredientById(k); return '<span class="qcc-item">' + (ing ? ing.icon : '🍽️') + ' ' + escapeHtml(ing ? ing.label : k) + ' ×' + n + '</span>'; }).join('');
   el.innerHTML = '<div class="qcc-center">' + bits.join('') +
-    '<div class="qcc-badge">QUEST COMPLETE!</div>' +
+    '<div class="qcc-badge">' + escapeHtml(rewards.badge || 'REWARD FOUND!') + '</div>' +
     '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.branches > 0 ? '+' + rewards.branches + ' 🪵' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
-    (itemBits ? '<div class="qcc-items">' + itemBits + '</div>' : '') +
+    (itemBits || larderBits ? '<div class="qcc-items">' + itemBits + larderBits + '</div>' : '') +
     (rewards.clue ? '<div class="qcc-clue">📜 Merlin Clue: ' + escapeHtml(rewards.clue) + '</div>' : '') +
     '</div>';
   document.body.appendChild(el);
@@ -10957,7 +11068,7 @@ function renderBirdExpeditions() {
   // Birds currently away (tap for the adventure log)
   const activeHtml = rows.length ? '<div class="quest-section-title">Birds on Quests</div>' + rows.map(q => {
     const done = q.status === 'complete';
-    const bird = academyBirdById(q.birdId);
+    const bird = expeditionBirdById(q.birdId);
     const art = bird ? birdOnlyImgHTML(bird, 'quest-away-art') : '<div class="quest-away-art">' + q.icon + '</div>';
     return '<div class="quest-away-card' + (done ? ' ready' : '') + '" onclick="openQuestLog(\'' + q.id + '\')">' +
       art +
@@ -11036,14 +11147,16 @@ function renderQuestSendSheet() {
   const t = getExpeditionTemplate(questSendState.templateId);
   if (!t) return;
   const el = questOverlayEl();
-  const birds = (gameState.flock || []).filter(b => b && b.id);
+  const birds = isStarterExpeditionTemplate(t.id)
+    ? expeditionDispatchBirds(gameState.flock || [])
+    : (gameState.flock || []).filter(b => b && b.id);
   const info = QUEST_TEMPLATE_INFO[t.id] || '';
 
   const birdChips = birds.length ? birds.map(b => {
     const away = birdHasActiveExpedition(b.id);
     const training = birdHasActiveTraining(b.id);
     const tooLow = (b.level || 1) < (t.minLevel || 1);
-    const readiness = birdWorkReadiness(b, 'expedition');
+    const readiness = birdWorkReadiness(b.id === MERLIN_GUIDE.id ? { ...b, care:getMerlinCare() } : b, 'expedition');
     const disabled = away || training || tooLow || !readiness.ok;
     const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
@@ -11054,7 +11167,7 @@ function renderQuestSendSheet() {
       '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
     '</button>';
-  }).join('') : '<div class="academy-empty">No companions yet — scan and recruit a bird first.</div>';
+  }).join('') : '<div class="academy-empty">No flock companions are ready for this expedition yet.</div>';
 
   const provisions = Object.keys(FOODS).filter(k => (gameState.pantry && gameState.pantry[k] || 0) > 0);
   const provisionChips = provisions.length ? provisions.map(k => {
@@ -11183,7 +11296,7 @@ function openQuestLog(expeditionId, silentRefresh) {
   if (!silentRefresh) SFX.tap();
   const q = window.BurbzAcademyCore.advanceBirdExpedition(raw, Date.now());
   const el = questOverlayEl();
-  const bird = academyBirdById(q.birdId);
+  const bird = expeditionBirdById(q.birdId);
   const art = bird ? birdOnlyImgHTML(bird, 'quest-log-art') : '<div class="quest-log-art">' + q.icon + '</div>';
   const timeline = buildQuestTimeline(q);
   const visible = timeline.filter(e => e.pct <= q.progressPct);
@@ -13127,7 +13240,7 @@ window.__burbzAcademyDebug = {
 // ============================================================================
 // PLAYER LEVEL
 // ============================================================================
-function addPlayerXp(amount) {
+function applyPlayerXpState(amount) {
   gameState.player.xp += amount;
   let leveledUp = false;
   while (gameState.player.xp >= XP_PER_LEVEL(gameState.player.level)) {
@@ -13135,6 +13248,11 @@ function addPlayerXp(amount) {
     gameState.player.level++;
     leveledUp = true;
   }
+  return leveledUp;
+}
+
+function addPlayerXp(amount) {
+  const leveledUp = applyPlayerXpState(amount);
   if (leveledUp) {
     SFX.levelUp();
     showToast('LEVEL UP! Now Level ' + gameState.player.level);
@@ -13633,6 +13751,7 @@ function ensureOfferLoopBack(offer) {
   return offer._loopPromise;
 }
 
+let walkQuestPendingActivation = null;
 async function startWalkingQuestFromOffer(offer) {
   if (!offer) return;
   let wq = ensureWalkingQuestState();
@@ -13649,10 +13768,23 @@ async function startWalkingQuestFromOffer(offer) {
     : offer;
   const quest = window.BurbzQuestCore.buildQuestFromOffer(questOffer);
   quest.likelyBirds = Array.isArray(offer.likelyBirds) ? offer.likelyBirds.slice(0, 8) : [];
+  // Activation is authoritative only after the complete route and every marker
+  // certify against eligible transportation geometry in currently loaded tiles.
+  const initialWays = visibleWalkablePathWays();
+  const initialRepair = window.BurbzQuestCore.repairQuestRouteAgainstWays(quest, initialWays,
+    liveMapLastPosition ? { startLat:liveMapLastPosition.lat, startLon:liveMapLastPosition.lon } : {});
+  if (initialRepair.status !== 'certified') {
+    walkQuestPendingActivation = offer;
+    installWalkQuestAlignmentReadinessRetry();
+    showToast(initialRepair.status === 'pending'
+      ? 'Mapped footpaths are still loading — this quest will retry automatically.'
+      : 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.');
+    return;
+  }
+  walkQuestPendingActivation = null;
   wq.active = quest;
   walkQuestLastSave = Date.now();
   saveState();
-  alignActiveQuestRouteToMapPaths(true);
   if (!quest.likelyBirds.length) {
     // Started without opening the info sheet (e.g. charted adventure) — scout
     // the route's birds in the background so the bonus still applies.
@@ -13677,7 +13809,7 @@ async function startWalkingQuestFromOffer(offer) {
 }
 
 function walkQuestRouteGeoJSON(quest) {
-  if (!quest) return { type: 'FeatureCollection', features: [] };
+  if (!quest || !quest.routeCertification || quest.routeCertification.status !== 'certified') return { type: 'FeatureCollection', features: [] };
   return { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: quest.route.map(p => [p[1], p[0]]) } }] };
 }
 function drawWalkingQuestRoute() {
@@ -13699,123 +13831,117 @@ function clearWalkingQuestFromMap() {
 // ways in the loaded map tiles — at quest start, on resume, and again as
 // fresh tiles stream in while the player walks.
 function visibleWalkablePathWays() {
-  if (!liveMap) return [];
-  // Below ~z13 the tiles carry no (or heavily simplified) path geometry —
-  // aligning to that would be worse than doing nothing.
+  if (!liveMap || !window.BurbzQuestCore) return [];
   try { if ((liveMap.getZoom ? liveMap.getZoom() : 0) < 13.2) return []; } catch (e) { return []; }
-  const ways = [], seen = new Set();
+  const features = [];
   try {
-    const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {});
+    const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {}).sort();
     sources.forEach(sourceId => {
       let rows = [];
       try { rows = liveMap.querySourceFeatures(sourceId, { sourceLayer:'transportation' }) || []; } catch (e) {}
-      rows.forEach(feature => {
-        const props = feature && feature.properties || {};
-        const cls = String(props.subclass || props.class || props.type || '').toLowerCase();
-        if (!/path|footway|bridleway|track|pedestrian|cycleway|steps/.test(cls)) return;
-        const geom = feature.geometry || {};
-        const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.type === 'MultiLineString' ? geom.coordinates : [];
-        lines.forEach(coords => {
-          if (!coords || coords.length < 2) return;
-          const key = coords.length + '|' + coords[0] + '|' + coords[coords.length - 1];
-          if (seen.has(key)) return;
-          seen.add(key);
-          const pts = coords.filter(c => c && isFinite(c[0]) && isFinite(c[1])).map(c => ({ lat:Number(c[1]), lon:Number(c[0]) }));
-          if (pts.length >= 2) ways.push(pts);
-        });
-      });
+      rows.forEach(feature => features.push(feature));
     });
   } catch (e) {}
-  return ways;
+  return window.BurbzQuestCore.eligibleMapTransportationWays(features);
 }
 let walkQuestAlignState = { questId:null, lastAt:0 };
 let walkQuestRealignTimer = null;
+let walkQuestAlignmentRetryInstalled = false;
+function setWalkQuestAlignmentStatus(message) {
+  const hud = $('mapQuestHudStats');
+  if (hud) hud.textContent = message;
+  const sheet = $('walkQuestSheetStatus');
+  if (sheet) sheet.textContent = message;
+}
 function alignActiveQuestRouteToMapPaths(force = false) {
   const quest = activeWalkingQuest();
   const core = window.BurbzQuestCore;
-  if (!quest || !liveMap || !core || !core.snapRouteToWays) return false;
+  if (!quest || !liveMap || !core || !core.repairQuestRouteAgainstWays) return false;
   const now = Date.now();
   if (!force && walkQuestAlignState.questId === quest.id && now - walkQuestAlignState.lastAt < 6000) return false;
   const ways = visibleWalkablePathWays();
-  if (!ways.length) return false;
-  walkQuestAlignState = { questId: quest.id, lastAt: now };
-  // Always re-snap from the ORIGINAL route so repeated passes never drift.
-  if (!Array.isArray(quest.routeRaw) || quest.routeRaw.length < 2) quest.routeRaw = quest.route.map(p => p.slice());
-  const raw = quest.routeRaw.map(p => ({ lat:p[0], lon:p[1] }));
-  const snap = core.snapRouteToWays(raw, ways, { maxSnapM:32, stepM:12 });
-  let newPts = null, recharted = false;
-  if (snap && snap.points && snap.points.length >= 2 && snap.snappedFraction >= 0.7) {
-    // The route already corresponds to the rendered paths — small nudge only.
-    newPts = snap.points;
-  } else if (core.rechartRouteOnWays) {
-    // The route barely touches any rendered path: its source data disagrees
-    // with the basemap. NEVER half-snap (that draws a zigzag of both worlds)
-    // — rebuild the whole walk on the path network the player can see.
-    const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
-    const redo = core.rechartRouteOnWays(raw, ways, me ? { startLat: me.lat, startLon: me.lon } : {});
-    if (redo && redo.points && redo.points.length >= 2) { newPts = redo.points; recharted = true; }
-  }
-  if (!newPts) return false;
-  const route = core.simplifyRoute(newPts, 320).map(p => [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]);
-  const routeChanged = JSON.stringify(route) !== JSON.stringify(quest.route);
-  if (routeChanged) quest.route = route;
-  let markersMoved = false, extrasMoved = false;
-  if (recharted) {
-    // The walk itself changed shape: re-base future passes on the new route
-    // and carry every unreached marker to its same relative spot along it.
-    quest.routeRaw = route.map(p => p.slice());
-    const oldRouteObj = { route: raw.map(p => [p.lat, p.lon]) };
-    const isLoop = quest.loopStyle === 'loop';
-    quest.lengthM = Math.round(isLoop ? core.routeLengthM(newPts) : core.routeLengthM(newPts) * 2);
-    quest.checkpoints.forEach(cp => {
-      if (cp.reached) return;
-      let target = null;
-      if (cp.kind === 'npc') target = newPts[0];
-      else if (cp.kind === 'finish') target = isLoop ? newPts[newPts.length - 1] : core.destPoint(newPts[0].lat, newPts[0].lon, 90, 15);
-      else target = core.pointAtFraction(newPts, core.questNearestRouteFraction(oldRouteObj, cp.lat, cp.lon));
-      if (target) { cp.lat = +target.lat.toFixed(6); cp.lon = +target.lon.toFixed(6); markersMoved = true; }
-    });
-    showToast('🗺️ The cartographers redrew your trail along the mapped footpaths');
-  } else {
-    // Unreached markers ride along onto the same visible paths (≤32 m nudge, so
-    // everything stays reachable and idempotent — once on a way they stop moving).
-    quest.checkpoints.forEach(cp => {
-      if (cp.reached) return;
-      const hit = core.snapPointToWays({ lat:cp.lat, lon:cp.lon }, ways, 32);
-      if (hit && hit.distM > 0.5) { cp.lat = +hit.lat.toFixed(6); cp.lon = +hit.lon.toFixed(6); markersMoved = true; }
-    });
-  }
-  const oldRouteForExtras = { route: raw.map(p => [p.lat, p.lon]) };
-  const placeExtra = spot => {
-    if (recharted) {
-      const p = core.pointAtFraction(newPts, core.questNearestRouteFraction(oldRouteForExtras, spot.lat, spot.lon));
-      return p ? { lat: p.lat, lon: p.lon, distM: 999 } : null;
+  if (!ways.length) {
+    const hasCertificate = quest.routeCertification && quest.routeCertification.status === 'certified';
+    const alreadyPending = quest.routeCertification && quest.routeCertification.status === 'pending' && quest.routeCertification.reason === 'tiles-not-ready';
+    if (!hasCertificate && !alreadyPending) {
+      quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:'tiles-not-ready' };
+      saveState();
     }
-    return core.snapPointToWays({ lat: spot.lat, lon: spot.lon }, ways, 32);
-  };
-  (Array.isArray(quest.trailNpcs) ? quest.trailNpcs : []).forEach(npc => {
-    if (!npc || npc.met) return;
-    const hit = placeExtra(npc);
-    if (hit && hit.distM > 0.5) { npc.lat = +hit.lat.toFixed(6); npc.lon = +hit.lon.toFixed(6); extrasMoved = true; }
-  });
-  if (quest.trailTavern && !quest.trailTavern.visited) {
-    const hit = placeExtra(quest.trailTavern);
-    if (hit && hit.distM > 0.5) { quest.trailTavern.lat = +hit.lat.toFixed(6); quest.trailTavern.lon = +hit.lon.toFixed(6); extrasMoved = true; }
+    setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
+    installWalkQuestAlignmentReadinessRetry();
+    drawWalkingQuestOnMap();
+    return false;
   }
-  if (!routeChanged && !markersMoved && !extrasMoved) return false;
-  saveState();
-  drawWalkingQuestRoute();
-  if (markersMoved) questMapMarkers.forEach((mk, idx) => {
-    const cp = quest.checkpoints[idx];
-    if (mk && cp) { try { mk.setLngLat([cp.lon, cp.lat]); } catch (e) {} }
-  });
-  if (extrasMoved) { try { drawTrailExtrasOnMap(quest); } catch (e) {} }
-  return true;
+  walkQuestAlignState = { questId: quest.id, lastAt: now };
+  const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+  const result = core.repairQuestRouteAgainstWays(quest, ways, me ? { startLat:me.lat, startLon:me.lon } : {});
+  if (result.status === 'pending') {
+    // partial-tiles is non-authoritative viewport evidence. Preserve an existing
+    // certified route/certificate atomically; uncertified legacy routes stay hidden.
+    const hasCertificate = quest.routeCertification && quest.routeCertification.status === 'certified';
+    const alreadyPending = quest.routeCertification && quest.routeCertification.status === 'pending' && quest.routeCertification.reason === result.reason;
+    if (!hasCertificate && !alreadyPending) {
+      quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
+      saveState();
+    }
+    setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
+    installWalkQuestAlignmentReadinessRetry();
+    drawWalkingQuestOnMap();
+    return false;
+  }
+  const finalCertification = result.status === 'certified'
+    ? core.certifyRouteAgainstWays(quest.route, quest.checkpoints, ways) : null;
+  if (result.status !== 'certified' || !finalCertification || !finalCertification.certified) {
+    // Visible source features are viewport/tile fragments, not authoritative
+    // evidence that a route is impossible. Certified routes stay drawable;
+    // uncertified routes stay pending/hidden until complete tiles arrive.
+    const hasCertificate = quest.routeCertification && quest.routeCertification.status === 'certified';
+    if (!hasCertificate) {
+      quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
+      saveState();
+    }
+    setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
+    installWalkQuestAlignmentReadinessRetry();
+    drawWalkingQuestOnMap();
+    return false;
+  }
+  if (result.changed) {
+    const routePts = quest.route.map(p => ({ lat:p[0], lon:p[1] }));
+    const moveExtra = spot => {
+      if (!spot) return;
+      const hit = core.nearestPointOnRoute(routePts, spot.lat, spot.lon, false);
+      if (hit) { spot.lat = +hit.point.lat.toFixed(6); spot.lon = +hit.point.lon.toFixed(6); }
+    };
+    (Array.isArray(quest.trailNpcs) ? quest.trailNpcs : []).forEach(npc => { if (npc && !npc.met) moveExtra(npc); });
+    if (quest.trailTavern && !quest.trailTavern.visited) moveExtra(quest.trailTavern);
+    showToast('🗺️ Your saved quest was safely recharted on mapped footpaths');
+    saveState();
+  }
+  drawWalkingQuestOnMap();
+  return !!result.changed;
 }
 function scheduleWalkQuestRealign() {
   if (!activeWalkingQuest()) return;
   clearTimeout(walkQuestRealignTimer);
   walkQuestRealignTimer = setTimeout(() => alignActiveQuestRouteToMapPaths(), 900);
+}
+function installWalkQuestAlignmentReadinessRetry() {
+  if (!liveMap || walkQuestAlignmentRetryInstalled) return;
+  walkQuestAlignmentRetryInstalled = true;
+  const retry = () => {
+    clearTimeout(walkQuestRealignTimer);
+    walkQuestRealignTimer = setTimeout(() => {
+      if (walkQuestPendingActivation && !activeWalkingQuest()) {
+        const offer = walkQuestPendingActivation;
+        startWalkingQuestFromOffer(offer);
+      } else {
+        alignActiveQuestRouteToMapPaths(true);
+      }
+    }, 250);
+  };
+  ['sourcedata', 'idle', 'styledata'].forEach(eventName => {
+    try { liveMap.on(eventName, retry); } catch (e) {}
+  });
 }
 function drawWalkingQuestOnMap() {
   const quest = activeWalkingQuest();
@@ -13823,8 +13949,15 @@ function drawWalkingQuestOnMap() {
   questMapMarkers = [];
   drawWalkingQuestRoute();
   if (!quest || !liveMap || !window.maplibregl) return;
+  if (!quest.routeCertification || quest.routeCertification.status !== 'certified') {
+    setWalkQuestAlignmentStatus(quest.routeCertification && quest.routeCertification.status === 'blocked'
+      ? 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.'
+      : 'Mapped footpaths are still loading — recharting this quest automatically…');
+    return;
+  }
   quest.checkpoints.forEach((cp, idx) => {
     if (cp.kind === 'finish' && !window.BurbzQuestCore.questFinishIsReady(quest)) return;
+    if (cp.kind === 'chest' && cp.reached) return;
     // Outer pin belongs to MapLibre (inline transform positioning); all visuals,
     // transitions and bounce animations live on the inner .quest-marker child.
     const el = document.createElement('div');
@@ -13833,16 +13966,18 @@ function drawWalkingQuestOnMap() {
     const face = document.createElement('div');
     face.className = 'quest-marker qm-' + cp.kind + (cp.reached ? ' reached' : '');
     if (cp.kind === 'npc') face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
-    else if (cp.kind === 'chest') face.innerHTML = cp.reached ? CHEST_OPEN_SVG : CHEST_SVG;
+    else if (cp.kind === 'chest') face.innerHTML = CHEST_SVG;
     else face.textContent = cp.kind === 'finish' ? '🏁' : (cp.reached ? '✅' : '🚩');
     el.appendChild(face);
     el.addEventListener('click', ev => {
       ev.stopPropagation(); // keep the tap off the map's quest-offers hit layer underneath
       const meta = cp.kind === 'npc' ? (cp.label + ' the quest giver') : cp.kind === 'chest' ? 'A treasure chest' : cp.kind === 'finish' ? 'The quest banner' : cp.label;
       const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, cp)) : null;
-      showToast(meta + (cp.reached ? ' — claimed!' : me !== null ? ' — ' + me + ' m away. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m!' : ''));
+      showToast(meta + (me !== null ? ' — ' + me + ' m away. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m to open it!' : ' — walk close to open it.'));
     });
-    const mk = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
+    const markerOptions = { element: el, anchor: 'center' };
+    if (cp.kind === 'finish') markerOptions.offset = [14, -14]; // visual only; geographic point remains on-route
+    const mk = new maplibregl.Marker(markerOptions).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
     questMapMarkers[idx] = mk;
   });
   drawTrailExtrasOnMap(quest);
@@ -14041,6 +14176,8 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   scheduleWalkQuestRealign(); // fresh tiles along the walk keep the line on-path
   const finishWasReady = window.BurbzQuestCore.questFinishIsReady(quest);
   const events = window.BurbzQuestCore.questProcessFix(quest, lat, lon, accuracy, tOverride);
+  let chestClaimFailed = false;
+  let chestClaimHandled = false;
   events.forEach(ev => {
     if (ev.type === 'npc') {
       addPlayerXp(10);
@@ -14048,17 +14185,57 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       vibrate(QUEST_BUZZ.npc);
       showQuestNpcDialog(quest.npcName, 'Well met, adventurer! The path of "' + quest.name + '" lies before you. May your wings stay swift and your scanner sharp. (+10 XP)');
     } else if (ev.type === 'chest') {
-      const loot = ev.checkpoint.loot || { coins: 25, label: 'a pouch of 25 coins' };
-      if (loot.coins) addCoins(loot.coins);
-      if (loot.xp) addPlayerXp(loot.xp);
-      const chestItems = {};
-      if (loot.item && birdXpItem(loot.item)) { addBirdXpItemToBag(loot.item, 1); chestItems[loot.item] = 1; }
-      // Merlin is always beside the player and gains a little bond XP from finds.
-      if (loot.xp) gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), Math.max(2, Math.round(loot.xp * 0.2)), Date.now());
+      chestClaimHandled = true;
+      const claimKey = 'walking:' + quest.id + ':checkpoint:' + ev.index;
+      const rawLoot = window.BurbzQuestCore.normaliseChestLoot(ev.checkpoint.loot, claimKey);
+      const tx = window.BurbzQuestCore.runDurableChestClaim({
+        claimKey,
+        bundle: rawLoot,
+        now: ev.reachedAt || Date.now(),
+        snapshot: snapshotGameState,
+        restore: restoreGameStateSnapshot,
+        getReceipt: questClaimReceipt,
+        setReceipt: setQuestClaimReceipt,
+        validate: bundle => window.BurbzQuestCore.validateChestRewardBundle(bundle, id => !!kitchenIngredientById(id), id => !!birdXpItem(id)),
+        apply: loot => {
+          ev.checkpoint.loot = loot;
+          ev.checkpoint.reached = true;
+          ev.checkpoint.reachedAt = ev.reachedAt || Date.now();
+          quest.chestsOpened = Math.max(0, Number(quest.chestsOpened) || 0) + 1;
+          quest._finishNudged = false;
+          if (loot.coins) addCoins(loot.coins);
+          if (loot.xp) applyPlayerXpState(loot.xp);
+          if (loot.item) addBirdXpItemToBag(loot.item, 1);
+          Object.entries(loot.larder).forEach(([id, qty]) => {
+            if (!addLarderIngredient(id, qty)) throw new Error('Unknown chest ingredient: ' + id);
+          });
+          if (loot.xp) gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), Math.max(2, Math.round(loot.xp * 0.2)), Date.now());
+        },
+        persist: () => durableSaveState({ throwOnFailure:true, queueCloud:false })
+      });
+      if (tx.status !== 'committed') {
+        if (tx.status === 'failed') {
+          chestClaimFailed = true;
+          showToast('Treasure could not be saved. Please try again — the chest is still here.');
+        }
+        return;
+      }
+      queueQuestClaimCloudSync();
+      const loot = tx.bundle;
+      const chestItems = loot.item ? { [loot.item]: 1 } : {};
+      updateHeader();
+      renderInventory();
+      updateWalkQuestHud();
       SFX.capture();
       vibrate(QUEST_BUZZ.chest);
-      playQuestClaimCelebration({ coins: loot.coins || 0, xp: loot.xp || 0, items: chestItems });
-      showToast('🎁 Treasure chest opened — ' + loot.label + '!');
+      playQuestClaimCelebration({ badge: 'TREASURE FOUND!', coins: loot.coins, xp: loot.xp, items: chestItems, larder: loot.larder });
+      const rewardLines = ['+' + loot.coins + ' coins']
+        .concat(loot.xp ? ['+' + loot.xp + ' XP'] : [])
+        .concat(Object.entries(chestItems).map(([id, qty]) => '+' + qty + ' ' + inventoryLabel(id)))
+        .concat(Object.entries(loot.larder).map(([id, qty]) => { const ing = kitchenIngredientById(id); return '+' + qty + ' ' + ing.label; }));
+      showToast('🎁 TREASURE FOUND! ' + rewardLines.join(' · '));
+      const mk = questMapMarkers[ev.index];
+      if (mk) { try { mk.remove(); } catch (e) {} questMapMarkers[ev.index] = null; }
     } else if (ev.type === 'flag') {
       SFX.tap();
       vibrate(QUEST_BUZZ.flag);
@@ -14087,7 +14264,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       vibrate(QUEST_BUZZ.blocked);
       showToast('🏁 The quest banner waits — ' + ev.pending + ' waymarker' + (ev.pending === 1 ? '' : 's') + ' still to visit!');
     }
-    if (ev.checkpoint) {
+    if (ev.checkpoint && ev.checkpoint.kind !== 'chest') {
       const mk = questMapMarkers[ev.index];
       const face = mk && mk.getElement ? mk.getElement().querySelector('.quest-marker') : null;
       if (face) { face.classList.add('reached'); if (ev.checkpoint.kind === 'chest') face.innerHTML = CHEST_OPEN_SVG; else if (ev.checkpoint.kind === 'flag') face.textContent = '✅'; }
@@ -14096,7 +14273,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   if (!finishWasReady && activeWalkingQuest() === quest && window.BurbzQuestCore.questFinishIsReady(quest)) drawWalkingQuestOnMap();
   updateWalkQuestHud();
   const now = Date.now();
-  if (events.length || now - walkQuestLastSave > 20000) { walkQuestLastSave = now; saveState(); }
+  if (!chestClaimFailed && !chestClaimHandled && (events.length || now - walkQuestLastSave > 20000)) { walkQuestLastSave = now; saveState(); }
   return events;
 }
 
@@ -14117,7 +14294,7 @@ function completeWalkingQuest() {
   saveState();
   clearWalkingQuestFromMap();
   vibrate(QUEST_BUZZ.complete);
-  playQuestClaimCelebration({ coins: bonusCoins, xp: summary.xp, items: {} });
+  playQuestClaimCelebration({ badge: 'QUEST COMPLETE!', coins: bonusCoins, xp: summary.xp, items: {} });
   setTimeout(() => showWalkQuestSummarySheet(summary, true), 1400);
 }
 
@@ -14266,11 +14443,27 @@ function sideQuestOnPositionFix(lat, lon, accuracy) {
   if (active.path.length % 8 === 0) saveState();
 }
 
+function sideQuestChestLoot(stableKey, coins) {
+  const bundles = [
+    { field_vole: 2, mealworm_scoop: 1 },
+    { small_bird_prey_ration: 2, garden_worms: 1 },
+    { field_vole: 1, hedgerow_berries: 2 },
+    { small_bird_prey_ration: 1, sunflower_seeds: 2 }
+  ];
+  const text = String(stableKey || 'legacy-side-chest');
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return { coins: Math.max(1, Math.floor(Number(coins) || 25)), xp: 12, larder: { ...bundles[(hash >>> 0) % bundles.length] } };
+}
+
 function spawnSideQuestDiscovery(active, lat, lon) {
   const roll = Math.random();
   const kind = roll < 0.45 ? 'chest' : roll < 0.72 ? 'weapon' : 'questgiver';
   const d = { id: 'sqd_' + active.discoveries.length + '_' + Date.now().toString(36), kind, lat, lon, foundAt: new Date().toISOString(), claimed: false };
-  if (kind === 'chest') d.coins = 20 + Math.floor(Math.random() * 26);
+  if (kind === 'chest') {
+    d.coins = 20 + Math.floor(Math.random() * 26);
+    d.loot = sideQuestChestLoot(d.id, d.coins); // persisted now; claim never rerolls
+  }
   if (kind === 'questgiver') {
     const rows = likelyBirdRows(liveMapSpawns || []);
     const offer = rows.map(r => r.species).find(sp => !companionForSpecies(sp) && !(gameState.tavernPatrons || []).some(p => p.key === speciesKey(canonicalSpeciesName(sp))))
@@ -14334,25 +14527,63 @@ function clearSideQuestFromMap() {
 
 // Discoveries were physically reached the moment they spawned under the
 // player's feet, so they can be opened from any distance once spotted.
-function sideQuestClaimDiscovery(id, opts) {
+async function sideQuestClaimDiscovery(id, opts) {
   const quiet = !!(opts && opts.quiet);
   const active = sideQuestActive();
   const d = active && active.discoveries.find(x => x.id === id);
-  if (!d || d.claimed) return;
-  d.claimed = true;
+  if (!d || d.claimed) return false;
   if (d.kind === 'chest') {
-    addCoins(d.coins || 25);
-    addPlayerXp(12);
+    const claimKey = 'side:' + active.id + ':discovery:' + d.id;
+    const rawLoot = d.loot || sideQuestChestLoot(d.id, d.coins); // deterministic old-save fallback
+    const tx = window.BurbzQuestCore.runDurableChestClaim({
+      claimKey,
+      bundle: rawLoot,
+      now: Date.now(),
+      snapshot: snapshotGameState,
+      restore: restoreGameStateSnapshot,
+      getReceipt: questClaimReceipt,
+      setReceipt: setQuestClaimReceipt,
+      validate: bundle => window.BurbzQuestCore.validateChestRewardBundle(bundle, ingredientId => !!kitchenIngredientById(ingredientId), () => false),
+      apply: loot => {
+        d.loot = loot;
+        d.claimed = true;
+        addCoins(loot.coins);
+        applyPlayerXpState(loot.xp);
+        Object.entries(loot.larder).forEach(([ingredientId, qty]) => {
+          if (!addLarderIngredient(ingredientId, qty)) throw new Error('Unknown side-quest ingredient: ' + ingredientId);
+        });
+      },
+      persist: () => durableSaveState({ throwOnFailure:true, queueCloud:false })
+    });
+    if (tx.status !== 'committed') {
+      if (tx.status === 'failed') showToast('Treasure could not be saved. Please try again — the chest is still here.');
+      return false;
+    }
+    queueQuestClaimCloudSync();
+    const loot = tx.bundle;
+    updateHeader();
+    renderInventory();
+    drawSideQuestOnMap();
+    updateWalkQuestHud();
     SFX.capture();
-    playQuestClaimCelebration({ coins: d.coins || 25, xp: 12, items: {} });
-    showToast('🎁 Side-quest chest opened — +' + (d.coins || 25) + ' coins!');
-  } else if (d.kind === 'weapon') {
+    vibrate(QUEST_BUZZ.chest);
+    playQuestClaimCelebration({ badge: 'TREASURE FOUND!', coins: loot.coins, xp: loot.xp, items: {}, larder: loot.larder });
+    const foodText = Object.entries(loot.larder).map(([ingredientId, qty]) => {
+      const ing = kitchenIngredientById(ingredientId);
+      return '+' + qty + ' ' + ing.label;
+    }).join(' · ');
+    showToast('🎁 TREASURE FOUND! +' + loot.coins + ' coins · +' + loot.xp + ' XP · ' + foodText);
+    return true;
+  }
+  if (d.kind === 'weapon') {
+    d.claimed = true;
     let lines = [];
     try { lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true })); } catch (e) {}
     addPlayerXp(15);
     SFX.capture();
     showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
   } else {
+    d.claimed = true;
     const added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
     addPlayerXp(15);
     SFX.levelUp();
@@ -14364,8 +14595,10 @@ function sideQuestClaimDiscovery(id, opts) {
   vibrate(QUEST_BUZZ.chest);
   saveState();
   updateHeader();
+  renderInventory();
   drawSideQuestOnMap();
   updateWalkQuestHud();
+  return true;
 }
 
 // --- Log + finish ------------------------------------------------------------
@@ -14383,12 +14616,18 @@ function openSideQuestLogSheet() {
   el.classList.add('open');
 }
 
-function endSideQuest() {
+async function endSideQuest() {
   const sq = ensureSideQuestState();
   const active = sq.active;
   if (!active) return;
   const unclaimed = active.discoveries.filter(d => !d.claimed);
-  unclaimed.forEach(d => sideQuestClaimDiscovery(d.id, { quiet: true })); // nothing found is ever lost
+  for (const d of unclaimed) {
+    const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
+    if (!claimed) {
+      showToast('One discovery could not be saved. Side Quest remains active so you can retry.');
+      return;
+    }
+  } // nothing found is ever lost
   const xp = Math.min(200, 25 + Math.round(active.distanceM / 40));
   addPlayerXp(xp);
   const summary = {
@@ -14558,10 +14797,16 @@ function resumeWalkingQuestIfAny() {
   const quest = activeWalkingQuest();
   if (!quest) { updateWalkQuestHud(); return; }
   quest.lastFix = null; // never count the jump between play sessions as walked distance
+  // Legacy/current uncertified saves are hidden before the first draw; readiness
+  // events repair them without requiring GPS movement.
+  if (quest.routeAlignmentVersion !== window.BurbzQuestCore.ROUTE_ALIGNMENT_VERSION ||
+      !quest.routeCertification || quest.routeCertification.status !== 'certified') {
+    quest.routeCertification = { status:'pending', schemaVersion:window.BurbzQuestCore.ROUTE_ALIGNMENT_VERSION, reason:'resume-repair' };
+    saveState();
+  }
   drawWalkingQuestOnMap();
-  // Tiles are still loading at map 'load' — align the saved route to the
-  // rendered footpaths once they're in.
-  try { liveMap.once('idle', () => alignActiveQuestRouteToMapPaths(true)); } catch (e) {}
+  installWalkQuestAlignmentReadinessRetry();
+  alignActiveQuestRouteToMapPaths(true);
 }
 
 // ---- Quest overview: distinct, calm route colours from above ----
@@ -15375,13 +15620,14 @@ const MAP_PICKUP_TYPES = [
   { id:'feather',  glyph:'🪶', label:'Lucky feather', weight:14, grant() { gameState.inventory.items.lucky_feather = (gameState.inventory.items.lucky_feather || 0) + 1; return '+1 Lucky Feather'; } },
   { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
   { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
-  { id:'mushroom', glyph:'🍄', label:'Forest mushroom', weight:10, grant() { gameState.inventory.items.forest_mushroom = (gameState.inventory.items.forest_mushroom || 0) + 1; return '+1 Forest Mushroom'; } },
+  { id:'fieldvole', glyph:'🐭', label:'Field vole', weight:6, grant() { addLarderIngredient('field_vole', 1); return '+1 Field Vole (Stores larder)'; } },
+  { id:'mealworms', glyph:'🐛', label:'Mealworm scoop', weight:4, grant() { addLarderIngredient('mealworm_scoop', 1); return '+1 Mealworm Scoop (Stores larder)'; } },
   // --- Kitchen larder finds: real bird food headed for the Prep Counter ---
   { id:'wormcast', glyph:'🪱', label:'Worm cast',     weight:10, grant() { addLarderIngredient('garden_worms', 1); return '+1 Garden Worms (Stores larder)'; } },
   { id:'acorns',   glyph:'🌰', label:'Acorn drop',    weight:9,  grant() { addLarderIngredient('acorn_handful', 1); return '+1 Acorn Handful (Stores larder)'; } },
   { id:'gritbank', glyph:'⚪', label:'Gravel bank',   weight:7,  grant() { addLarderIngredient('gizzard_grit', 1); return '+1 Gizzard Grit (Stores larder)'; } },
   { id:'midges',   glyph:'🦟', label:'Midge cloud',   weight:6,  grant() { addLarderIngredient('aerial_midges', 1); return '+1 Cloud of Midges (Stores larder)'; } },
-  { id:'chest',    glyph:CHEST_SVG, label:'Treasure chest', weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
+  { id:'chest',    glyph:CHEST_SVG, toastGlyph:'🧰', label:'Treasure chest', weight:5,  grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
   { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
   { id:'birdscroll', glyph:'🪶', label:'Study scroll', weight:5,  grant(r) { const key = randomXpScrollKey(r); addBirdXpItemToBag(key, 1); const it = birdXpItem(key); return '+1 ' + it.label + ' (' + birdXpItemDetail(key) + ') — use it from your Stores'; } },
   // --- Fletcher's Forge materials, lying where the kingdom left them ---
@@ -15396,7 +15642,7 @@ const MAP_PICKUP_TYPES = [
   { id:'relic',    glyph:'✨', label:'Relic chest',   weight:2,  cls:'relic', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_relic', { rng:r, pity:gameState.lootPity }))); } }
 ];
 const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
-const MAP_PICKUP_RANGE_M = 220;
+const MAP_PICKUP_RANGE_M = 440; // doubled for normal GPS/path alignment error
 let liveMapPickupMarkers = [];
 
 // ---------------------------------------------------------------------------
@@ -15526,9 +15772,10 @@ function drawMapPickups(lat, lon) {
 }
 function collectMapPickup(pickup, el) {
   const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+  const toastGlyph = pickup.type.toastGlyph || pickup.type.glyph;
   if (me && mapDistanceMeters(me, pickup) > MAP_PICKUP_RANGE_M) {
     SFX.tap();
-    showToast(pickup.type.glyph + ' ' + pickup.type.label + ' — walk closer to gather it!');
+    showToast(toastGlyph + ' ' + pickup.type.label + ' — walk closer to gather it!');
     return;
   }
   let rewardText;
@@ -15557,7 +15804,7 @@ function collectMapPickup(pickup, el) {
     setTimeout(() => burst.remove(), 1500);
   }
   if (el) { el.classList.add('collected'); setTimeout(() => { const m = liveMapPickupMarkers.find(mk => mk.getElement() === el); if (m) m.remove(); }, 420); }
-  showToast(pickup.type.glyph + ' ' + rewardText);
+  showToast(toastGlyph + ' ' + rewardText);
 }
 let liveMapAreaRows = [];
 const BURBZ_AREA_BIRDS_OPEN_KEY = 'burbz_area_birds_open';
@@ -17120,10 +17367,6 @@ function renderEmpirePanel() {
       '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
-  const realmName = $('empireRealmName'), realmRank = $('empireRealmRank');
-  const playerName = (gameState && gameState.player && gameState.player.name) || 'Burbz';
-  if (realmName) realmName.textContent = 'THE REALM OF ' + playerName.toUpperCase();
-  if (realmRank) realmRank.textContent = empireRankTitle(count) + (count ? ' · ' + count + ' province' + (count === 1 ? '' : 's') : '');
   panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
     (count ? '<div class="empire-stats-row">' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Provinces</div></div>' +
@@ -20998,7 +21241,12 @@ function showCatalogUnmatchedRecognition(bird) {
 }
 
 // ---- Player feedback (also lands in the private Burbz inbox) ----------------
+const MAX_FEEDBACK_SCREENSHOTS = 3;
+const MAX_FEEDBACK_SCREENSHOT_BYTES = 6 * 1024 * 1024;
+const FEEDBACK_SCREENSHOT_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
 function openFeedbackPrompt() {
+  const opener = document.activeElement;
   const prev = document.getElementById('feedbackOverlay');
   if (prev) prev.remove();
   const overlay = document.createElement('div');
@@ -21006,37 +21254,165 @@ function openFeedbackPrompt() {
   overlay.id = 'feedbackOverlay';
   overlay.style.zIndex = '3600';
   overlay.innerHTML =
-    '<div class="recruit-sheet">' +
+    '<div class="recruit-sheet" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" aria-describedby="feedbackIntro">' +
       '<div class="modal-handle"></div>' +
-      '<div class="recruit-title">Send feedback to the Burbz team</div>' +
-      '<div class="recruit-copy">Found a bug, love something, or spotted a bird that isn\'t in the game? Tell us — it goes straight to the developers.</div>' +
-      '<textarea id="feedbackText" rows="5" placeholder="Your message…" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;resize:vertical"></textarea>' +
-      '<input id="feedbackContact" type="text" placeholder="Email or name (optional)" autocomplete="off" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;margin-top:10px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit">' +
+      '<div class="recruit-title" id="feedbackTitle">Send feedback to Yaan &amp; Ava</div>' +
+      '<div class="recruit-copy" id="feedbackIntro">Found a bug? Have an idea? Spotted something wrong about a bird? Tell us here. It lands privately in our Burbz inbox.</div>' +
+      '<label for="feedbackCategory" style="display:block;margin:12px 0 5px;font-weight:700">What is this about?</label>' +
+      '<select id="feedbackCategory" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;font:inherit;border:1px solid rgba(255,255,255,.18);background:var(--bg3);color:inherit">' +
+        '<option value="bug">Bug / something went wrong</option>' +
+        '<option value="suggestion">Suggestion / idea</option>' +
+        '<option value="bird">Bird information or identification</option>' +
+        '<option value="praise">Something I loved</option>' +
+        '<option value="other">Something else</option>' +
+      '</select>' +
+      '<label for="feedbackText" style="display:block;margin:12px 0 5px;font-weight:700">Your feedback</label>' +
+      '<textarea id="feedbackText" rows="5" maxlength="4000" placeholder="Tell us what happened or what you would like to see…" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit;resize:vertical"></textarea>' +
+      '<label for="feedbackContact" style="display:block;margin:10px 0 5px;font-weight:700">Name or email <span style="font-weight:400;color:var(--text3)">(optional)</span></label>' +
+      '<input id="feedbackContact" type="text" maxlength="200" placeholder="Only if you would like a reply" autocomplete="email" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit">' +
+      '<label for="feedbackScreenshots" style="display:block;margin:10px 0 5px;font-weight:700">Screenshots <span style="font-weight:400;color:var(--text3)">(optional, up to 3)</span></label>' +
+      '<input class="feedback-file" id="feedbackScreenshots" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" multiple aria-describedby="feedbackScreenshotHelp">' +
+      '<div id="feedbackScreenshotHelp" class="recruit-copy" style="margin:5px 0 0">PNG, JPEG or WebP · 6 MB maximum each. You can preview and remove them before sending.</div>' +
+      '<div class="feedback-shot-list" id="feedbackScreenshotList"></div>' +
+      '<label aria-hidden="true" style="position:absolute;left:-9999px">Website<input id="feedbackWebsite" type="text" tabindex="-1" autocomplete="off"></label>' +
+      '<div id="feedbackStatus" aria-live="polite" style="min-height:20px;margin-top:8px;color:var(--accent2);font-size:13px"></div>' +
       '<button class="recruit-close" id="feedbackSend" style="margin-top:12px">Send feedback</button>' +
       '<button class="recruit-close" id="feedbackCancel" style="margin-top:8px;opacity:.7">Cancel</button>' +
     '</div>';
   document.body.appendChild(overlay);
-  const close = () => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 250); };
+  const screenshotInput = document.getElementById('feedbackScreenshots');
+  const screenshotList = document.getElementById('feedbackScreenshotList');
+  const feedbackStatus = document.getElementById('feedbackStatus');
+  let feedbackScreenshots = [];
+  let screenshotPreviewUrls = [];
+  const clearScreenshotPreviews = () => {
+    screenshotPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    screenshotPreviewUrls = [];
+  };
+  const renderFeedbackScreenshots = () => {
+    clearScreenshotPreviews();
+    screenshotList.replaceChildren();
+    feedbackScreenshots.forEach((file, index) => {
+      const item = document.createElement('div');
+      item.className = 'feedback-shot';
+      const preview = document.createElement('img');
+      const previewUrl = URL.createObjectURL(file);
+      screenshotPreviewUrls.push(previewUrl);
+      preview.src = previewUrl;
+      preview.alt = 'Screenshot ' + (index + 1) + ' preview';
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.setAttribute('aria-label', 'Remove screenshot ' + (index + 1));
+      remove.addEventListener('click', () => {
+        feedbackScreenshots.splice(index, 1);
+        renderFeedbackScreenshots();
+        feedbackStatus.textContent = feedbackScreenshots.length ? feedbackScreenshots.length + ' screenshot(s) ready.' : '';
+      });
+      item.append(preview, remove);
+      screenshotList.appendChild(item);
+    });
+  };
+  screenshotInput.addEventListener('change', () => {
+    const selected = Array.from(screenshotInput.files || []);
+    let selectionError = '';
+    for (const file of selected) {
+      if (!FEEDBACK_SCREENSHOT_TYPES.has(file.type)) {
+        selectionError = 'Screenshots must be PNG, JPEG or WebP images.';
+        continue;
+      }
+      if (file.size > MAX_FEEDBACK_SCREENSHOT_BYTES) {
+        selectionError = 'Each screenshot must be 6 MB or smaller.';
+        continue;
+      }
+      if (feedbackScreenshots.length >= MAX_FEEDBACK_SCREENSHOTS) {
+        selectionError = 'You can attach up to 3 screenshots.';
+        break;
+      }
+      feedbackScreenshots.push(file);
+    }
+    screenshotInput.value = '';
+    renderFeedbackScreenshots();
+    feedbackStatus.textContent = selectionError || (feedbackScreenshots.length ? feedbackScreenshots.length + ' screenshot(s) ready.' : '');
+  });
+  let closing = false;
+  const close = () => {
+    if (closing) return;
+    closing = true;
+    clearScreenshotPreviews();
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.remove();
+      try { if (opener && typeof opener.focus === 'function') opener.focus(); } catch (e) {}
+    }, 250);
+  };
   overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.id === 'feedbackCancel') close(); });
-  document.getElementById('feedbackSend').addEventListener('click', async () => {
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from(overlay.querySelectorAll('select,textarea,input:not([tabindex="-1"]),button'))
+      .filter(el => !el.disabled && el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  const feedbackSend = document.getElementById('feedbackSend');
+  feedbackSend.addEventListener('click', async () => {
     const msg = (document.getElementById('feedbackText').value || '').trim();
     if (!msg) { showToast('Type a message first'); return; }
     const contact = (document.getElementById('feedbackContact').value || '').trim();
-    close();
-    await sendBurbzFeedback(msg, contact);
+    const category = document.getElementById('feedbackCategory').value;
+    const website = document.getElementById('feedbackWebsite').value;
+    const status = document.getElementById('feedbackStatus');
+    feedbackSend.disabled = true;
+    feedbackSend.textContent = 'Sending…';
+    status.textContent = 'Sending your feedback securely…';
+    const res = await sendBurbzFeedback(msg, contact, category, website, feedbackScreenshots);
+    if (res && res.ok) {
+      status.textContent = '✓ Thank you — it is in our private inbox.';
+      showToast('💌 Thanks! Your feedback was sent to Yaan & Ava.');
+      setTimeout(close, 500);
+    } else {
+      status.textContent = (res && res.error) || 'Could not send. Your message is still here — please try again.';
+      feedbackSend.disabled = false;
+      feedbackSend.textContent = 'Try again';
+      showToast('Could not send feedback — your message has not been lost.');
+    }
   });
   requestAnimationFrame(() => overlay.classList.add('show'));
-  setTimeout(() => { try { document.getElementById('feedbackText').focus(); } catch (e) {} }, 120);
+  setTimeout(() => { try { document.getElementById('feedbackCategory').focus(); } catch (e) {} }, 120);
 }
 
-async function sendBurbzFeedback(message, contact) {
+async function sendBurbzFeedback(message, contact, category, website, screenshots = []) {
   try {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (typeof cloudAuth !== 'undefined' && cloudAuth.token) headers.Authorization = 'Bearer ' + cloudAuth.token;
-    const res = await fetch('api/feedback', { method: 'POST', headers, body: JSON.stringify({ message, contact }) });
-    showToast(res && res.ok ? '💌 Thanks! Your feedback was sent to the team.' : 'Could not send feedback — try again later.');
+    const context = {
+      screen: typeof currentScreen === 'string' ? currentScreen : '',
+      release: 'feedback-screenshots-v130-20260724',
+      path: location.pathname,
+      viewport: window.innerWidth + 'x' + window.innerHeight
+    };
+    const form = new FormData();
+    form.append('message', message);
+    form.append('contact', contact);
+    form.append('category', category);
+    form.append('website', website);
+    form.append('context', JSON.stringify(context));
+    screenshots.forEach(file => form.append('screenshots', file));
+    const res = await fetch('api/feedback', {
+      method: 'POST', headers,
+      body: form
+    });
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (res.ok && data.ok) return { ok: true, id: data.id || '' };
+    if (res.status === 429) return { ok: false, error: 'A few messages were sent recently. Please wait ten minutes and try again.' };
+    if (data && data.error) return { ok: false, error: data.error };
+    return { ok: false, error: 'Could not send right now. Please try again.' };
   } catch (e) {
-    showToast('Could not send feedback — check your connection.');
+    return { ok: false, error: 'No connection. Your message and screenshots are still here — try again when you are online.' };
   }
 }
 
@@ -21206,7 +21582,7 @@ function renderInventory() {
   try {
     larderCards = Object.entries((gameState.inventory && gameState.inventory.larder) || {}).filter(([id, n]) => kitchenIngredientById(id) && (Number(n) || 0) > 0).map(([id, count]) => {
       const ing = kitchenIngredientById(id);
-      return '<div class="inventory-card"><div class="inventory-card-title">' + ing.icon + ' ' + escapeHtml(ing.label) + '</div><div class="inventory-card-detail">' + escapeHtml(ing.desc) + '</div><div class="inventory-card-count">×' + count + ' · cook at the Kitchen &amp; Pantry</div></div>';
+      return '<div class="inventory-card"><div class="inventory-card-title">' + ing.icon + ' ' + escapeHtml(ing.label) + '</div><div class="inventory-card-detail">' + escapeHtml(ing.desc) + '</div><div class="inventory-card-larder-count"><span>×' + count + '</span><span class="inventory-card-larder-route">Cook at Kitchen &amp; Pantry</span></div></div>';
     }).join('');
   } catch (e) {}
   if (!items.length && !gearCards && !xpCards && !larderCards) {
@@ -21764,7 +22140,10 @@ function renderBirdex() {
         openBirdEquip(equipTarget.dataset.birdId || card.dataset.birdId);
         return;
       }
-      card.classList.toggle('flipped');
+      const isFlipped = card.classList.toggle('flipped');
+      if (isFlipped) requestAnimationFrame(() => {
+        card.scrollIntoView({ behavior:'smooth', block:'center' });
+      });
     });
   });
   const loadMore = $('birdexLoadMore');
@@ -21861,6 +22240,7 @@ function createBirdCardHTML(bird, idx) {
 
 function createKnownSpeciesCardHTML(bird, idx) {
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
+  const info = getBirdInfo(bird);
   const cardArt = birdCardImgAttrs(bird);
   const cardEmoji = bird.emoji || getBirdMarkerEmoji(bird.commonName || bird.species || '') || '&#128038;';
   const artBg = cardArt
@@ -21895,8 +22275,21 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
             </div>
             <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🪶 Inspect at the Barracks' : '🪶 Unlock the Barracks to recruit'}</button>
-            <div class="card-info-hint" data-action="open-info" data-bird-id="preview:${bird.commonName || bird.species}">Discovery counts on leaderboard · recruit at the Academy Barracks for ${cost} coins</div>
+            <div class="card-info-hint">Tap card to learn about the real bird</div>
           </div>
+        </div>
+        <div class="card-back birdex-learning-back">
+          <div class="birdex-learning-kicker">Real bird</div>
+          <div class="birdex-learning-title">${escapeHtml(bird.commonName || bird.species)}</div>
+          <div class="birdex-learning-scientific"><span class="birdex-learning-label">Scientific name</span>${escapeHtml(bird.scientificName || info.scientificName || 'Not recorded')}</div>
+          <div class="birdex-learning-facts">
+            <div class="birdex-learning-fact"><span class="birdex-learning-label">Habitat</span><span class="birdex-learning-value">${escapeHtml(info.habitat || 'Field-guide details are being checked.')}</span></div>
+            <div class="birdex-learning-fact"><span class="birdex-learning-label">Eats</span><span class="birdex-learning-value">${escapeHtml(info.diet || 'Field-guide details are being checked.')}</span></div>
+            <div class="birdex-learning-fact"><span class="birdex-learning-label">Range</span><span class="birdex-learning-value">${escapeHtml(info.range || info.origin || 'Field-guide details are being checked.')}</span></div>
+            <div class="birdex-learning-fact"><span class="birdex-learning-label">Conservation</span><span class="birdex-learning-value">${escapeHtml(info.conservation || 'Status not recorded')}</span></div>
+          </div>
+          <button type="button" class="birdex-more-info" data-action="open-info" data-bird-id="preview:${bird.commonName || bird.species}">More info</button>
+          <div class="card-back-hint">Tap empty space to flip back</div>
         </div>
       </div>
     </div>
@@ -22042,7 +22435,6 @@ $('scanBtn').addEventListener('click', () => {
   if (continuousSoundScanWanted) stopContinuousSoundListening({ userStop:true });
   else startContinuousSoundListening();
 });
-$('merlinDockStop').addEventListener('click', () => { SFX.tap(); stopContinuousSoundListening({ userStop:true }); });
 $('merlinDockReturn').addEventListener('click', () => { SFX.tap(); switchScreen('scan'); showSoundScanMode(); });
 
 // CONTINUOUS_MERLIN_VISIBILITY: browser tabs may throttle timers, but the
@@ -22069,7 +22461,7 @@ function updateMerlinListeningUI() {
   const button = $('scanBtn');
   const status = $('merlinListenStatus');
   const activity = $('merlinListenActivity');
-  const dock = $('merlinListeningDock');
+  const dock = $('merlinDockReturn');
   const dockStatus = $('merlinDockStatus');
   stage?.classList.toggle('listening', active);
   if (status) {
@@ -22084,8 +22476,12 @@ function updateMerlinListeningUI() {
     button.classList.toggle('recording', active);
   }
   const awayFromSound = currentScreen !== 'scan' || scanMode !== 'sound';
-  dock?.classList.toggle('show', active && awayFromSound);
-  if (dockStatus) dockStatus.textContent = soundListenerState === 'match' ? soundListenerDetail : 'Listening across Burbz';
+  const showHeaderIndicator = active && awayFromSound;
+  dock?.classList.toggle('show', showHeaderIndicator);
+  document.querySelector('.header')?.classList.toggle('merlin-active', showHeaderIndicator);
+  const dockCopy = soundListenerState === 'match' ? soundListenerDetail : 'Listening across Burbz';
+  if (dockStatus) dockStatus.textContent = dockCopy;
+  if (dock) dock.setAttribute('aria-label', soundListenerState === 'match' ? dockCopy + ' — open listener' : 'Merlin is listening — open listener');
 }
 
 function soundListenerDependencies() {
@@ -23857,6 +24253,7 @@ let merlinCareReturnFocus = null;
 
 const MERLIN_GUIDE = Object.freeze({
   id: 'merlin-guide', species: 'Merlin', commonName: 'Merlin', scientificName: 'Falco columbarius',
+  level: 1, power: 80, int: 55, spd: 85, stamina: 48, cha: 72,
   artUrl: '/burbz/bird-art-cache/merlin_burbz_manga_20260624_v2.png',
   cutoutUrl: '/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   // The perched companion is not the flat cutout — it is that same painting cut
@@ -23898,8 +24295,8 @@ function getPetMood() {
 function setPetOnPerch() {
   const companion = $('petCompanion');
   if (!companion) return;
-  companion.style.left = ''; companion.style.bottom = ''; companion.style.right = '14px';
-  companion.style.top = 'calc(var(--safe-top) + 76px)';
+  companion.style.left = ''; companion.style.bottom = '';
+  companion.style.right = ''; companion.style.top = '';
   companion.classList.remove('flying', 'facing-left');
   const sprite = $('petSprite');
   if (sprite) sprite.classList.remove('pet-walk');
@@ -23934,13 +24331,17 @@ function renderMerlinCareMenu() {
 function renderPetCompanion() {
   const companion = $('petCompanion');
   const perch = $('petPerch');
+  const assembly = $('merlinPerchAssembly');
   const sprite = $('petSprite');
   if (!companion || !sprite) return;
   if (!sprite.querySelector('.merlin-rig')) sprite.innerHTML = merlinRigHTML();
-  companion.classList.add('show');
+  const away = birdHasActiveExpedition(MERLIN_GUIDE.id);
+  companion.classList.toggle('show', !away);
   if (perch) perch.classList.add('show');
+  if (assembly) { assembly.classList.toggle('merlin-away', away); assembly.dataset.merlinStatus = away ? 'away' : 'perched'; }
+  if (away) closeMerlinCareMenu();
   renderMerlinCareMenu();
-  if (!companion.classList.contains('flying')) setPetOnPerch();
+  if (!away && !companion.classList.contains('flying')) setPetOnPerch();
 }
 
 function openMerlinCareMenu() {
@@ -23968,20 +24369,21 @@ function closeMerlinCareMenu() {
 function petFlyOutAndReturn() {
   const companion = $('petCompanion');
   const sprite = $('petSprite');
-  if (!companion || !sprite || !companion.classList.contains('show')) return;
+  if (!companion || !sprite || !companion.classList.contains('show') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   clearTimeout(petFlightTimer);
   const rect = companion.getBoundingClientRect();
   companion.style.right = 'auto'; companion.style.left = rect.left + 'px'; companion.style.top = rect.top + 'px';
   companion.classList.add('flying'); sprite.classList.add('pet-walk');
-  const targetLeft = Math.max(10, Math.min(window.innerWidth - 72, window.innerWidth * (0.12 + Math.random() * 0.60)));
+  const targetLeft = Math.max(10, Math.min(window.innerWidth - 104, window.innerWidth * (0.12 + Math.random() * 0.60)));
   const targetTop = Math.max(84, Math.min(window.innerHeight - 160, window.innerHeight * (0.12 + Math.random() * 0.48)));
   companion.classList.toggle('facing-left', targetLeft < rect.left);
   requestAnimationFrame(() => { companion.style.left = targetLeft + 'px'; companion.style.top = targetTop + 'px'; });
   makePetSparkles(5);
   petFlightTimer = setTimeout(() => {
     const from = companion.getBoundingClientRect();
-    companion.classList.toggle('facing-left', window.innerWidth - 76 < from.left);
-    companion.style.left = Math.max(10, window.innerWidth - 76) + 'px';
+    const perchLeft = Math.max(10, window.innerWidth - 96);
+    companion.classList.toggle('facing-left', perchLeft < from.left);
+    companion.style.left = perchLeft + 'px';
     companion.style.top = 'calc(var(--safe-top) + 76px)';
     petFlightTimer = setTimeout(() => { setPetOnPerch(); makePetSparkles(3); }, 1850);
   }, 2200);
@@ -24045,11 +24447,19 @@ function careForMerlin(action) {
   return result.ok;
 }
 
+function compactMerlinSpeech(msg) {
+  const text = String(msg || '').replace(/\bBirdNET\b/gi, 'sound scan').replace(/\s+/g, ' ').trim();
+  if (text.length <= 80) return text;
+  const shortened = text.slice(0, 77).replace(/\s+\S*$/, '').trimEnd();
+  return (shortened || text.slice(0, 77)) + '…';
+}
+
 function petSay(msg) {
   const bubble = $('petSpeech');
   if (!bubble) return;
-  bubble.textContent = msg; bubble.classList.add('show'); clearTimeout(petSpeechTimer);
-  const holdMs = Math.min(8500, 2200 + msg.length * 47);
+  const speech = compactMerlinSpeech(msg);
+  bubble.textContent = speech; bubble.classList.add('show'); clearTimeout(petSpeechTimer);
+  const holdMs = Math.min(6500, 1800 + speech.length * 42);
   petSpeechTimer = setTimeout(() => bubble.classList.remove('show'), holdMs);
 }
 
@@ -24372,7 +24782,7 @@ function renderQuests() {
         gameState.quests[qId].claimed = true;
         addPlayerXp(q.reward);
         saveState();
-        playQuestClaimCelebration({ coins: 0, xp: q.reward, items: {} });
+        playQuestClaimCelebration({ badge: 'QUEST REWARD!', coins: 0, xp: q.reward, items: {} });
         const card = container.querySelector(`[data-quest-card="${qId}"]`);
         if (card) {
           card.classList.add('claiming');
@@ -25011,7 +25421,7 @@ $('resetDataBtn').addEventListener('click', () => {
 });
 $('cloudSignOutBtn')?.addEventListener('click', signOutCloud);
 
-// Merlin Tamagotchi controls. Tapping the permanent top-right character opens
+// Merlin care controls. Tapping the permanent top-right character opens
 // care instead of selecting or replacing him with a recruited bird.
 $('petSprite')?.addEventListener('click', openMerlinCareMenu);
 $('merlinCareClose')?.addEventListener('click', closeMerlinCareMenu);

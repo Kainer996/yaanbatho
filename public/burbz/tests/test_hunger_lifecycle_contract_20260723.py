@@ -204,7 +204,9 @@ def test_browser_activity_paths_use_transactions_readiness_and_completed_reserva
 
     assert "applyBirdHungerTransaction(q.birdId, 'expedition', q.id" in claim_exp
     assert "applyBirdHungerTransaction(session.birdId, 'training', session.id" in claim_training
-    assert "warnOrBlockBirdWork(bird, 'expedition')" in start_exp
+    # Merlin can lead starter errands now, and he keeps his care state outside
+    # the flock, so the guard is handed his care record rather than a flock bird.
+    assert "warnOrBlockBirdWork(birdId === 'merlin-guide' ? { ...bird, care:getMerlinCare() } : bird, 'expedition')" in start_exp
     assert "warnOrBlockBirdWork(bird, 'training')" in start_training
     assert "advanceBirdExpedition" not in has_exp
     assert "advanceTrainingSession" not in has_training
