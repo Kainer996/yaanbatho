@@ -2037,11 +2037,14 @@ svg.academy-room-bg { display:block; filter:none; }
 .card-info-hint { margin-top: 4px; color: var(--accent2); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* ========== TOAST NOTIFICATIONS ========== */
-.toast-container { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; gap: 8px; }
+.toast-container { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(92vw, 460px); pointer-events: none; }
 .toast {
   padding: 10px 20px; border-radius: 8px; background: var(--bg3);
   border: 1px solid rgba(255,255,255,0.1); font-family: 'Rajdhani', sans-serif;
-  font-weight: 600; font-size: 13px; white-space: nowrap;
+  font-weight: 600; font-size: 13px;
+  /* Long messages wrap inside the container instead of running off both
+     edges of a phone screen and covering the header/map. */
+  max-width: 100%; white-space: normal; text-align: center; overflow-wrap: anywhere;
   box-shadow: 0 4px 16px rgba(0,0,0,0.4); animation: toastIn 0.3s ease, toastOut 0.3s 2.7s ease forwards;
 }
 @keyframes toastIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
@@ -13295,13 +13298,36 @@ function initParticles() {
 // ============================================================================
 // TOAST NOTIFICATIONS
 // ============================================================================
+const TOAST_VISIBLE_MS = 3000;
+const TOAST_MAX_VISIBLE = 3;
+function dismissToast(el) {
+  if (!el) return;
+  clearTimeout(el._toastTimer);
+  if (el.parentNode) el.parentNode.removeChild(el);
+}
 function showToast(msg) {
   const container = $('toastContainer');
+  if (!container) return;
+  const text = String(msg);
+  // Retry loops (quest route alignment, tile-readiness polls) can raise the same
+  // message many times a second. Refresh the toast that is already on screen
+  // instead of stacking identical copies over the header and map.
+  const existing = Array.from(container.children).find(el => el.dataset.toastMsg === text);
+  if (existing) {
+    clearTimeout(existing._toastTimer);
+    existing.style.animation = 'none';
+    void existing.offsetWidth; // reflow so the entrance/exit animation replays
+    existing.style.animation = '';
+    existing._toastTimer = setTimeout(() => dismissToast(existing), TOAST_VISIBLE_MS);
+    return;
+  }
   const t = document.createElement('div');
   t.className = 'toast';
-  t.textContent = msg;
+  t.textContent = text;
+  t.dataset.toastMsg = text;
   container.appendChild(t);
-  setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, 3000);
+  while (container.children.length > TOAST_MAX_VISIBLE) dismissToast(container.firstChild);
+  t._toastTimer = setTimeout(() => dismissToast(t), TOAST_VISIBLE_MS);
 }
 
 
@@ -13752,13 +13778,26 @@ function ensureOfferLoopBack(offer) {
 }
 
 let walkQuestPendingActivation = null;
-async function startWalkingQuestFromOffer(offer) {
+let walkQuestActivationInFlight = false;
+// `retry` marks an automatic re-attempt driven by map tile-readiness events.
+// Those fire continuously while tiles stream in, so they must not re-announce
+// the same status — the HUD/sheet status line already reports it.
+async function startWalkingQuestFromOffer(offer, { retry = false } = {}) {
   if (!offer) return;
+  if (walkQuestActivationInFlight) return; // a tile event fired mid-activation
+  walkQuestActivationInFlight = true;
+  try {
+    await activateWalkingQuestFromOffer(offer, retry);
+  } finally {
+    walkQuestActivationInFlight = false;
+  }
+}
+async function activateWalkingQuestFromOffer(offer, retry) {
   let wq = ensureWalkingQuestState();
   if (wq.active) { showToast('Finish or abandon your current quest first'); return; }
   if (sideQuestActive()) { showToast('End your Side Quest first — it is still charting your trail'); return; }
   if (offer.kind !== 'adventure' && offer._loop === undefined && window.BurbzQuestCore.offerLoopStyle(offer.points) === 'out-and-back') {
-    showToast('🧭 The cartographers are charting a loop home along different paths...');
+    if (!retry) showToast('🧭 The cartographers are charting a loop home along different paths...');
     try { await ensureOfferLoopBack(offer); } catch (e) { offer._loop = null; }
     wq = ensureWalkingQuestState();
     if (wq.active) return; // another quest started while the loop was charting
@@ -13776,12 +13815,17 @@ async function startWalkingQuestFromOffer(offer) {
   if (initialRepair.status !== 'certified') {
     walkQuestPendingActivation = offer;
     installWalkQuestAlignmentReadinessRetry();
-    showToast(initialRepair.status === 'pending'
+    const pending = initialRepair.status === 'pending';
+    setWalkQuestAlignmentStatus(pending
+      ? 'Mapped footpaths are still loading — this quest will retry automatically.'
+      : 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.');
+    if (!retry) showToast(pending
       ? 'Mapped footpaths are still loading — this quest will retry automatically.'
       : 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.');
     return;
   }
   walkQuestPendingActivation = null;
+  uninstallWalkQuestAlignmentReadinessRetry();
   wq.active = quest;
   walkQuestLastSave = Date.now();
   saveState();
@@ -13846,7 +13890,7 @@ function visibleWalkablePathWays() {
 }
 let walkQuestAlignState = { questId:null, lastAt:0 };
 let walkQuestRealignTimer = null;
-let walkQuestAlignmentRetryInstalled = false;
+let walkQuestAlignmentRetry = { map: null, handler: null };
 function setWalkQuestAlignmentStatus(message) {
   const hud = $('mapQuestHudStats');
   if (hud) hud.textContent = message;
@@ -13917,6 +13961,9 @@ function alignActiveQuestRouteToMapPaths(force = false) {
     showToast('🗺️ Your saved quest was safely recharted on mapped footpaths');
     saveState();
   }
+  // Certified: stop the tile-readiness retry. Ongoing realignment as the player
+  // walks is driven by scheduleWalkQuestRealign() instead.
+  uninstallWalkQuestAlignmentReadinessRetry();
   drawWalkingQuestOnMap();
   return !!result.changed;
 }
@@ -13925,22 +13972,38 @@ function scheduleWalkQuestRealign() {
   clearTimeout(walkQuestRealignTimer);
   walkQuestRealignTimer = setTimeout(() => alignActiveQuestRouteToMapPaths(), 900);
 }
+const WALK_QUEST_RETRY_EVENTS = ['sourcedata', 'idle', 'styledata'];
 function installWalkQuestAlignmentReadinessRetry() {
-  if (!liveMap || walkQuestAlignmentRetryInstalled) return;
-  walkQuestAlignmentRetryInstalled = true;
+  if (!liveMap) return;
+  if (walkQuestAlignmentRetry.handler) {
+    if (walkQuestAlignmentRetry.map === liveMap) return;
+    uninstallWalkQuestAlignmentReadinessRetry(); // map was rebuilt — rebind
+  }
   const retry = () => {
     clearTimeout(walkQuestRealignTimer);
     walkQuestRealignTimer = setTimeout(() => {
       if (walkQuestPendingActivation && !activeWalkingQuest()) {
-        const offer = walkQuestPendingActivation;
-        startWalkingQuestFromOffer(offer);
-      } else {
+        startWalkingQuestFromOffer(walkQuestPendingActivation, { retry: true });
+      } else if (activeWalkingQuest()) {
         alignActiveQuestRouteToMapPaths(true);
+      } else {
+        // Nothing left to align — stop listening to every tile event.
+        uninstallWalkQuestAlignmentReadinessRetry();
       }
     }, 250);
   };
-  ['sourcedata', 'idle', 'styledata'].forEach(eventName => {
+  walkQuestAlignmentRetry = { map: liveMap, handler: retry };
+  WALK_QUEST_RETRY_EVENTS.forEach(eventName => {
     try { liveMap.on(eventName, retry); } catch (e) {}
+  });
+}
+function uninstallWalkQuestAlignmentReadinessRetry() {
+  const { map, handler } = walkQuestAlignmentRetry;
+  walkQuestAlignmentRetry = { map: null, handler: null };
+  if (!map || !handler) return;
+  clearTimeout(walkQuestRealignTimer);
+  WALK_QUEST_RETRY_EVENTS.forEach(eventName => {
+    try { map.off(eventName, handler); } catch (e) {}
   });
 }
 function drawWalkingQuestOnMap() {
