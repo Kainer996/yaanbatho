@@ -177,7 +177,7 @@ def test_the_rig_is_precached_so_merlin_animates_offline():
     sw = SW.read_text(encoding="utf-8")
     for part in PARTS:
         assert f"'./assets/merlin/merlin-{part}.webp'" in sw, part
-    assert "burbz-reconciled-live-and-main-v135-20260725" in sw
+    assert "burbz-merlin-larger-reconciled-v136-20260725" in sw
 
 
 def test_the_perch_position_lives_in_css_not_in_inline_pixels():
@@ -198,7 +198,11 @@ def test_bird_and_bough_are_sized_so_the_talons_meet_the_bark():
     html = INDEX.read_text(encoding="utf-8")
 
     def px(rule, prop):
-        return float(re.match(r"(-?[\d.]+)px", declaration(css_rule(html, rule), prop)).group(1))
+        # A bare 0 is valid CSS and carries no unit.
+        raw = declaration(css_rule(html, rule), prop)
+        match = re.match(r"(-?[\d.]+)(px)?$", raw.strip())
+        assert match, f"{rule} {prop} is {raw!r}, not a pixel length"
+        return float(match.group(1))
 
     sprite = px(".pet-sprite", "width")
     bird_w, bird_r, bird_t = (px(".pet-companion", p) for p in ("width", "right", "top"))

@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-reconciled-live-and-main-v135-20260725';
+const BURBZ_CACHE = 'burbz-merlin-larger-reconciled-v136-20260725';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -96,10 +96,11 @@ const BURBZ_ASSETS = [
   './assets/village-interiors-manga/birders-guild.png',
   './battle_core.js?v=charm-diplomacy-20260723',
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
-  './audio_core.js?v=medieval-bird-audio-v2-20260721',
+  './audio_core.js?v=birbs-quest-music-v3-20260725',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
   './merlin_companion_core.js?v=merlin-compact-speech-v2-20260724',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
+  './assets/audio/bgm-birbs-quest.mp3',
   './assets/audio/ui-book.mp3',
   './assets/audio/ui-lock.mp3',
   './assets/audio/ui-coins.mp3',
@@ -159,10 +160,11 @@ const BURBZ_CORE = [
   './diet_hunger_core.js?v=diet-hunger-release-20260723',
   './battle_core.js?v=charm-diplomacy-20260723',
   './loot_crafting_core.js?v=bird-equip-screen-20260721',
-  './audio_core.js?v=medieval-bird-audio-v2-20260721',
+  './audio_core.js?v=birbs-quest-music-v3-20260725',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
   './merlin_companion_core.js?v=merlin-compact-speech-v2-20260724',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
+  './assets/audio/bgm-birbs-quest.mp3',
   './assets/audio/ui-book.mp3',
   './assets/audio/ui-lock.mp3',
   './assets/audio/ui-coins.mp3',

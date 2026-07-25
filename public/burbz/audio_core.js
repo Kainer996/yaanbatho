@@ -281,9 +281,127 @@
     return manager;
   }
 
+  // Background music is deliberately separate from the one-shot SFX manager:
+  // it owns one persistent HTMLAudioElement, never consumes the SFX polyphony
+  // budget, and keeps its playback position while gameplay is temporarily
+  // suppressed (intro video, microphone listening, or a hidden page).
+  function createMusicManager(options) {
+    options = options || {};
+    var hasOwn = Object.prototype.hasOwnProperty;
+    var AudioFactory = hasOwn.call(options, 'Audio')
+      ? options.Audio
+      : (options.audioFactory || (root && root.Audio));
+    var src = options.src || 'assets/audio/bgm-birbs-quest.mp3';
+    var volume = hasOwn.call(options, 'volume') ? Number(options.volume) : 0.2;
+    var localEnabled = options.enabled !== false;
+    var wanted = false;
+    var audio = null;
+    var suppressed = Object.create(null);
+
+    function isEnabled() {
+      if (!localEnabled) return false;
+      if (typeof options.getEnabled === 'function') {
+        try { return !!options.getEnabled(); } catch (_) { return false; }
+      }
+      return true;
+    }
+
+    function isSuppressed() {
+      return Object.keys(suppressed).length > 0;
+    }
+
+    function makeAudio() {
+      if (audio) return audio;
+      if (typeof AudioFactory !== 'function') return null;
+      try {
+        audio = new AudioFactory(src);
+      } catch (_) {
+        try { audio = AudioFactory(src); } catch (_) { audio = null; }
+      }
+      if (!audio) return null;
+      try { audio.loop = true; } catch (_) {}
+      try { audio.preload = 'auto'; } catch (_) {}
+      try { audio.volume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 0.2)); } catch (_) {}
+      return audio;
+    }
+
+    function safePause() {
+      if (!audio || typeof audio.pause !== 'function') return;
+      try { audio.pause(); } catch (_) {}
+    }
+
+    function sync() {
+      if (!wanted || !isEnabled() || isSuppressed()) {
+        safePause();
+        return Promise.resolve(false);
+      }
+      var track = makeAudio();
+      if (!track || typeof track.play !== 'function') return Promise.resolve(false);
+      var result;
+      try { result = track.play(); }
+      catch (_) { return Promise.resolve(false); }
+      return Promise.resolve(result).then(function() { return true; }, function() { return false; });
+    }
+
+    function start() {
+      wanted = true;
+      return sync();
+    }
+
+    function pause() {
+      wanted = false;
+      safePause();
+      return false;
+    }
+
+    function setEnabled(value) {
+      localEnabled = !!value;
+      return sync();
+    }
+
+    function setSuppressed(reason, value) {
+      reason = String(reason || 'unspecified');
+      if (value) suppressed[reason] = true;
+      else delete suppressed[reason];
+      return sync();
+    }
+
+    function setVolume(value) {
+      var next = Number(value);
+      if (Number.isFinite(next)) volume = Math.max(0, Math.min(1, next));
+      if (audio) {
+        try { audio.volume = volume; } catch (_) {}
+      }
+      return volume;
+    }
+
+    function destroy() {
+      wanted = false;
+      safePause();
+      audio = null;
+      suppressed = Object.create(null);
+    }
+
+    return {
+      src: src,
+      start: start,
+      pause: pause,
+      sync: sync,
+      setEnabled: setEnabled,
+      setSuppressed: setSuppressed,
+      setVolume: setVolume,
+      destroy: destroy,
+      isEnabled: isEnabled,
+      isSuppressed: isSuppressed,
+      getAudio: function() { return audio; },
+      get wanted() { return wanted; }
+    };
+  }
+
   return {
     DEFAULT_SOUND_MANIFEST: DEFAULT_SOUND_MANIFEST,
     createAudioManager: createAudioManager,
+    createMusicManager: createMusicManager,
     classifyInteraction: classifyInteraction
   };
 });

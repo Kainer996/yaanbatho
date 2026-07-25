@@ -54,7 +54,7 @@ def test_merlin_tamagotchi_menu_is_accessible_and_actionable():
         assert marker in html
     assert "merlin_companion_core.js?v=merlin-compact-speech-v2-20260724" in html
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-reconciled-live-and-main-v135-20260725" in sw
+    assert "burbz-merlin-larger-reconciled-v136-20260725" in sw
     assert "./merlin_companion_core.js?v=merlin-compact-speech-v2-20260724" in sw
     assert "./bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" in sw
 
