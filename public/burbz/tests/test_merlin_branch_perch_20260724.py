@@ -134,4 +134,4 @@ def test_reduced_motion_still_leaves_him_standing_on_the_branch():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-merlin-branch-perch-v118-20260724" in sw
+    assert "burbz-merlin-animated-rig-v119-20260725" in sw
