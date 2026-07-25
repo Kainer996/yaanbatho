@@ -51,6 +51,12 @@ FILES=(
   "lib/three.min.js"
   "lib/maplibre-gl.js"
   "lib/maplibre-gl.css"
+  # Merlin's perched companion is a four-piece puppet; ship every piece or the
+  # top-right corner renders four broken images.
+  "assets/merlin/merlin-back.webp"
+  "assets/merlin/merlin-body.webp"
+  "assets/merlin/merlin-wing.webp"
+  "assets/merlin/merlin-head.webp"
   "data/uk-bird-education-50.json"
   "data/regional-bird-education-20260715.json"
   "data/national-bird-completion/manifest.json"
@@ -123,6 +129,10 @@ log "Downloaded ${#FILES[@]} files from GitHub"
 grep -q 'screen-village' "$TMP/index.html"  || die "index.html doesn't contain the village — aborting, live site untouched"
 grep -q 'BURBZ_CORE'     "$TMP/sw.js"       || die "sw.js doesn't look right — aborting, live site untouched"
 [[ "$(wc -c < "$TMP/lib/three.min.js")" -gt 500000 ]] || die "three.min.js looks truncated — aborting, live site untouched"
+for piece in back body wing head; do
+  [[ "$(head -c 4 "$TMP/assets/merlin/merlin-$piece.webp")" == "RIFF" ]] \
+    || die "Merlin's $piece layer is not a WebP — aborting, live site untouched"
+done
 
 OWNER="$(stat -c '%U:%G' "$ROOT/index.html")"
 

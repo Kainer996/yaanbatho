@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-merlin-branch-perch-v118-20260724';
+const BURBZ_CACHE = 'burbz-merlin-animated-rig-v119-20260725';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -61,6 +61,11 @@ const BURBZ_ASSETS = [
   './assets/merlin-tutorial.png',
   './assets/ui/quest-compass-emblem.webp',
   './assets/ui/merlin-wand-listener.webp',
+  // Merlin's perched companion is a four-piece puppet, not one flat cutout.
+  './assets/merlin/merlin-back.webp',
+  './assets/merlin/merlin-body.webp',
+  './assets/merlin/merlin-wing.webp',
+  './assets/merlin/merlin-head.webp',
   './assets/academy-tree-manga-20260629.png',
   './assets/academy-buildings-manga/aviary-gardens.png',
   './assets/academy-buildings-manga/roost.png',
