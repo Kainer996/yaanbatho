@@ -178,3 +178,51 @@ def test_the_rig_is_precached_so_merlin_animates_offline():
     for part in PARTS:
         assert f"'./assets/merlin/merlin-{part}.webp'" in sw, part
     assert "burbz-reconciled-live-and-main-v135-20260725" in sw
+
+
+def test_the_perch_position_lives_in_css_not_in_inline_pixels():
+    html = INDEX.read_text(encoding="utf-8")
+    # setPetOnPerch used to re-assert `right: 20px; top: 0` as inline styles,
+    # which outrank the stylesheet — resizing Merlin in CSS then moved the bough
+    # but left the bird pinned to the old spot, hovering off the bark. It has to
+    # clear those properties and let CSS place him.
+    perch_fn = html.split("function setPetOnPerch()", 1)[1].split("\n}", 1)[0]
+    assert "companion.style.right = ''" in perch_fn
+    assert "companion.style.top = ''" in perch_fn
+    for pinned in ("'20px'", "'0'"):
+        assert f"companion.style.right = {pinned}" not in perch_fn
+        assert f"companion.style.top = {pinned}" not in perch_fn
+
+
+def test_bird_and_bough_are_sized_so_the_talons_meet_the_bark():
+    html = INDEX.read_text(encoding="utf-8")
+
+    def px(rule, prop):
+        return float(re.match(r"(-?[\d.]+)px", declaration(css_rule(html, rule), prop)).group(1))
+
+    sprite = px(".pet-sprite", "width")
+    bird_w, bird_r, bird_t = (px(".pet-companion", p) for p in ("width", "right", "top"))
+    bough_w, bough_r, bough_t = (px(".pet-perch", p) for p in ("width", "right", "top"))
+
+    # The bough SVG keeps a 0 0 180 104 viewBox whatever size it is drawn at, so
+    # everything in it — including the 106 39.4 bark line — scales by this.
+    k = bough_w / 180.0
+    assert 0.6 < k <= 1.0, "the bough should never be drawn larger than its viewBox"
+
+    # Both measured leftwards from the screen edge, inside the same assembly.
+    talon_x = -(bird_r + bird_w) + (bird_w - sprite) / 2 + 0.44 * sprite
+    talon_y = bird_t + 0.72 * sprite
+    bark_x = -(bough_r + bough_w) + 106.0 * k
+    bark_y = bough_t + 39.4 * k
+    assert abs(talon_x - bark_x) < 2.0, f"talons are {talon_x - bark_x:.1f}px off the bark horizontally"
+    assert abs(talon_y - bark_y) < 2.0, f"talons are {talon_y - bark_y:.1f}px off the bark vertically"
+
+    # Big enough to read as a falcon at arm's length, and the bough stays the
+    # smaller partner so the bird is what the eye lands on.
+    assert sprite >= 68, "Merlin is too small to make out on a phone"
+    assert bough_w < 180, "the bough should be the shorter one now"
+
+    # The art's right edge must stay on screen: the cutout paints out to 93.5%
+    # of its square, and the sprite is centred in the companion box.
+    art_right = -(bird_r + bird_w) + (bird_w - sprite) / 2 + 0.935 * sprite
+    assert art_right < -6, "Merlin's tail would clip the screen edge"

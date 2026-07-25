@@ -880,8 +880,8 @@ svg.academy-room-bg { display:block; filter:none; }
   position: fixed;
   top: calc(var(--safe-top) + 76px);
   right: 0;
-  width: 92px;
-  height: 82px;
+  width: 100px;
+  height: 96px;
   z-index: 179;
   pointer-events: none;
   transform-origin: right center;
@@ -890,13 +890,15 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-perch-assembly:has(.pet-companion.flying) { animation:none; }
 .pet-companion {
   position: absolute;
-  top: 0;
-  right: 20px;
+  /* Merlin grew, and he grew upwards out of the box: his toes stay on the bark
+     while his head gains the height. */
+  top: -11px;
+  right: 11px;
   left: auto;
   bottom: auto;
   z-index: 180;
-  width: 62px;
-  height: 72px;
+  width: 78px;
+  height: 88px;
   pointer-events: auto;
   transform-origin: 50% 92%;
   transition: left 1.8s cubic-bezier(.2,.8,.2,1), top 1.8s cubic-bezier(.2,.8,.2,1), right 0.2s ease, bottom 0.2s ease;
@@ -906,10 +908,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .pet-companion.show { display: block; }
 .pet-perch {
   position: absolute;
-  top: 0;
-  right: -20px;
-  width: 180px;
-  height: 104px;
+  top: 6px;
+  right: -8px;
+  /* The SVG keeps its 0 0 180 104 viewBox and is drawn at 150px, so every path,
+     twig pivot and the bark line all scale together by 0.8333. */
+  width: 150px;
+  height: 86.7px;
   z-index: 179;
   pointer-events: none;
   display: none;
@@ -917,7 +921,7 @@ svg.academy-room-bg { display:block; filter:none; }
   filter: drop-shadow(0 9px 12px rgba(0,0,0,0.5));
 }
 .pet-perch.show { display: block; }
-.pet-branch { display: block; width: 180px; height: 104px; overflow: visible; }
+.pet-branch { display: block; width: 150px; height: 86.7px; overflow: visible; }
 /* Side twigs flex about the point where they join the bough, not about the
    bough's own pivot, so the leafy sprays quiver instead of sliding. */
 .pet-branch-spray { transform-box: view-box; transform-origin: 98px 41px; animation: merlin-twig-flutter 4.3s ease-in-out infinite; }
@@ -927,7 +931,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .pet-companion.facing-left .pet-sprite { transform: scaleX(-1); }
 .pet-companion.flying { position:fixed; z-index:260; }
 .pet-sprite {
-  width: 54px; height: 54px; margin: 0 auto; overflow: visible;
+  width: 70px; height: 70px; margin: 0 auto; overflow: visible;
   display: flex; align-items: center; justify-content: center; position: relative; z-index: 3;
   background:transparent; border:0; transform-origin:50% 92%; animation:pet-idle 3.6s ease-in-out infinite;
 }
@@ -3123,7 +3127,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
          where the art's toe pads land, so he grips the bark rather than hovering
          near it. Base runs off the right of the viewBox into an unseen tree. -->
     <div class="pet-perch show" id="petPerch" aria-hidden="true">
-      <svg class="pet-branch" viewBox="0 0 180 104" width="180" height="104" fill="none" aria-hidden="true" focusable="false">
+      <svg class="pet-branch" viewBox="0 0 180 104" width="150" height="86.7" fill="none" aria-hidden="true" focusable="false">
         <defs>
           <!-- The map is lit from the upper left and so is the bird, so the bough
                has to agree: bright crown, warm flank, near-black belly with a
@@ -24257,8 +24261,8 @@ function getPetMood() {
 function setPetOnPerch() {
   const companion = $('petCompanion');
   if (!companion) return;
-  companion.style.left = ''; companion.style.bottom = ''; companion.style.right = '20px';
-  companion.style.top = '0';
+  companion.style.left = ''; companion.style.bottom = '';
+  companion.style.right = ''; companion.style.top = '';
   companion.classList.remove('flying', 'facing-left');
   const sprite = $('petSprite');
   if (sprite) sprite.classList.remove('pet-walk');
@@ -24336,15 +24340,16 @@ function petFlyOutAndReturn() {
   const rect = companion.getBoundingClientRect();
   companion.style.right = 'auto'; companion.style.left = rect.left + 'px'; companion.style.top = rect.top + 'px';
   companion.classList.add('flying'); sprite.classList.add('pet-walk');
-  const targetLeft = Math.max(10, Math.min(window.innerWidth - 72, window.innerWidth * (0.12 + Math.random() * 0.60)));
+  const targetLeft = Math.max(10, Math.min(window.innerWidth - 88, window.innerWidth * (0.12 + Math.random() * 0.60)));
   const targetTop = Math.max(84, Math.min(window.innerHeight - 160, window.innerHeight * (0.12 + Math.random() * 0.48)));
   companion.classList.toggle('facing-left', targetLeft < rect.left);
   requestAnimationFrame(() => { companion.style.left = targetLeft + 'px'; companion.style.top = targetTop + 'px'; });
   makePetSparkles(5);
   petFlightTimer = setTimeout(() => {
     const from = companion.getBoundingClientRect();
-    companion.classList.toggle('facing-left', window.innerWidth - 76 < from.left);
-    companion.style.left = Math.max(10, window.innerWidth - 76) + 'px';
+    const perchLeft = Math.max(10, window.innerWidth - 89);
+    companion.classList.toggle('facing-left', perchLeft < from.left);
+    companion.style.left = perchLeft + 'px';
     companion.style.top = 'calc(var(--safe-top) + 76px)';
     petFlightTimer = setTimeout(() => { setPetOnPerch(); makePetSparkles(3); }, 1850);
   }, 2200);
