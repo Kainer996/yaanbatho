@@ -177,4 +177,4 @@ def test_the_rig_is_precached_so_merlin_animates_offline():
     sw = SW.read_text(encoding="utf-8")
     for part in PARTS:
         assert f"'./assets/merlin/merlin-{part}.webp'" in sw, part
-    assert "burbz-merlin-animated-rig-v119-20260725" in sw
+    assert "burbz-reconciled-live-and-main-v135-20260725" in sw

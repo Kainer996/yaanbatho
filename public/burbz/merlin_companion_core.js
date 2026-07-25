@@ -124,26 +124,26 @@
   ];
 
   const GAMEPLAY_TIPS = [
-    'Tip: Open Scan and choose Sound to let my wand keep listening with BirdNET while you visit other Burbz screens.',
-    'Tip: Camera and BirdNET discoveries fill the Birdex; typing a bird name never counts as a discovery.',
-    'Tip: Tap a discovered Birdex card to flip it and read the real habitat, diet and field-guide notes.',
-    'Tip: Build the Barracks at the Academy before you try to recruit birds you have discovered.',
-    'Tip: Feed birds their real diet in the Kitchen & Pantry to earn trust and improve your field notes.',
-    'Tip: The Map’s Likely Birds panel changes with your real location, season and nearby habitat.',
-    'Tip: Walking quests begin at their marked trailhead, so check the distance before choosing one.',
-    'Tip: Tap Show Quests on the Map to frame every nearby route and compare its trailhead distance.',
-    'Tip: Training, gear and Academy rooms strengthen recruited birds without changing their real biological base stats.',
-    'Tip: A bird’s rarity affects encounters and rewards, not whether a robin can overpower an eagle.',
-    'Tip: Use the Hospital and Roost after battles to restore tired or injured flock members.',
-    'Tip: The Stores can hold XP scrolls for later, so you can choose exactly which recruited bird receives them.',
-    'Tip: Locked Birdex cards hide species names; discover birds outdoors to reveal their artwork and information.',
-    'Tip: In Birdex, use Load More to browse another batch without forcing every species card to load at once.',
-    'Tip: Liberation Battles free real-world towns and awaken their linked sanctuary in the Kingdom of Burbz.',
-    'Tip: Counter enemy wing classes in battle instead of relying only on the bird with the biggest power number.',
-    'Tip: Settings contains Replay Complete Tutorial whenever you want Merlin’s full tour again.',
-    'Tip: Continuous listening stops when you press Stop, close Burbz or your phone suspends the browser.',
-    'Tip: Visit the Bag to equip earned gear; different items can improve attack, defence, speed or magic.',
-    'Tip: Tap me at the top right whenever you want to check my food, happiness, energy and bond level.'
+    'Tip: Sound Scan can keep listening while you explore other screens.',
+    'Tip: Camera and Sound discoveries fill the Birdex automatically.',
+    'Tip: Flip a discovered Birdex card for habitat, diet and field notes.',
+    'Tip: Build the Academy Barracks before recruiting discovered birds.',
+    'Tip: Feed each bird its real diet in the Kitchen to earn trust.',
+    'Tip: Likely Birds changes with your location, season and habitat.',
+    'Tip: Walking quests start at the marked trailhead. Check the distance.',
+    'Tip: Show Quests frames nearby routes and their trailhead distances.',
+    'Tip: Training, gear and Academy rooms strengthen recruited birds.',
+    'Tip: Rarity affects encounters and rewards, not biological strength.',
+    'Tip: The Hospital and Roost restore tired flock members after battles.',
+    'Tip: Save XP scrolls in Stores, then choose which bird receives them.',
+    'Tip: Locked Birdex cards reveal their species only after discovery.',
+    'Tip: Use Load More in Birdex to browse the next batch of birds.',
+    'Tip: Liberation Battles free towns and awaken their sanctuaries.',
+    'Tip: Counter enemy wing classes instead of relying on power alone.',
+    'Tip: Replay Merlin’s full tour from Settings whenever you need it.',
+    'Tip: Listening stops when you tap Stop, close Burbz or suspend it.',
+    'Tip: Equip gear from the Bag to improve a bird’s battle stats.',
+    'Tip: Tap me to check my food, happiness, energy and bond.'
   ];
 
   const ALL_MERLIN_LINES = BASE_CHATTER_LINES.concat(NEW_CHATTER_LINES, GAMEPLAY_TIPS);
@@ -284,6 +284,32 @@
     return addBond(sanitizeMerlinCare(raw, now), Math.max(0, Number(amount) || 0));
   }
 
+  function applyMerlinExpeditionCompletion(raw, expeditionId, now) {
+    const time = Number(now) || Date.now();
+    const state = sanitizeMerlinCare(raw, time);
+    const transactionId = 'expedition:' + String(expeditionId || '').trim();
+    if (!expeditionId || state.hungerTransactions.includes(transactionId)) return state;
+    const before = state.hunger;
+    const after = clamp(before + 12, 0, 100);
+    return sanitizeMerlinCare(addBond({
+      ...state,
+      hunger: after,
+      energy: state.energy - 10,
+      lastCareAt: time,
+      lastHungerAt: time,
+      hungerTransactions: state.hungerTransactions.concat(transactionId),
+      hungerTransactionLog: state.hungerTransactionLog.concat({
+        id: transactionId,
+        type: 'expedition',
+        activityId: String(expeditionId),
+        delta: 12,
+        before,
+        after,
+        at: time
+      }).slice(-80)
+    }, 8), time);
+  }
+
   function applyMerlinCareAction(rawCare, rawPantry, action, now) {
     const time = Number(now) || Date.now();
     const state = sanitizeMerlinCare(rawCare, time);
@@ -330,6 +356,7 @@
     sanitizeMerlinCare,
     tickMerlinCare,
     grantMerlinBondXp,
+    applyMerlinExpeditionCompletion,
     applyMerlinCareAction,
     nextMerlinUtterance
   };

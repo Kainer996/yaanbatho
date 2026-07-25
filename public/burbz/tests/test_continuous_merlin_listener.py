@@ -44,7 +44,9 @@ def test_sound_tab_starts_one_continuous_listener_and_has_an_explicit_stop():
     assert "startContinuousSoundListening();" in html
     assert 'id="scanBtn"' in html
     assert '>START MERLIN’S WAND<' in html
-    assert 'id="merlinDockStop"' in html
+    # The stop control lives on the listener screen; the header icon only
+    # reports that listening is happening and takes you back to it.
+    assert 'id="merlinListenerStage"' in html
     assert "STOP LISTENING" in html
 
 
@@ -79,7 +81,7 @@ def test_switching_burbz_screens_or_camera_view_does_not_stop_listening():
     assert "stopContinuousSoundListening" not in image_handler
     assert "stopContinuousSoundListening" not in navigation
     assert "updateMerlinListeningUI" in navigation
-    assert 'id="merlinListeningDock"' in html
+    assert 'class="merlin-listening-dock" id="merlinDockReturn"' in html
 
 
 def test_browser_tab_visibility_keeps_the_stream_and_reports_background_listening():
@@ -158,8 +160,10 @@ def test_listener_dependencies_are_injectable_for_real_browser_lifecycle_proof()
 
 def test_global_dock_reports_listening_while_player_uses_other_tabs():
     html = HTML.read_text(encoding="utf-8")
-    assert 'aria-label="Merlin sound listener"' in html
-    assert 'id="merlinDockStatus"' in html
+    # A 36px HUD button, not a panel over the map — but it must still announce
+    # itself, so the label says what it is and the status is a live region.
+    assert 'aria-label="Merlin is listening — open listener"' in html
+    assert 'id="merlinDockStatus" aria-live="polite"' in html
     assert 'id="merlinDockReturn"' in html
     assert "currentScreen !== 'scan' || scanMode !== 'sound'" in html
     assert "Listening across Burbz" in html

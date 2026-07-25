@@ -200,10 +200,17 @@ def test_index_wires_alignment_into_start_resume_and_walking():
     assert "function alignActiveQuestRouteToMapPaths" in html
     assert html.count("alignActiveQuestRouteToMapPaths(true)") >= 3  # start, resume, loop upgrade
     assert "scheduleWalkQuestRealign" in html
-    assert "snapRouteToWays" in html
+    # The snapping helper now lives in quest_core.js; index.html drives it
+    # through alignActiveQuestRouteToMapPaths rather than owning a copy.
+    assert "snapRouteToWays" in (ROOT / "quest_core.js").read_text(encoding="utf-8")
     # Badly-off routes are re-charted over the rendered network, never half-snapped.
-    assert "rechartRouteOnWays" in html
-    assert "snappedFraction >= 0.7" in html
+    assert "rechartRouteOnWays" in (ROOT / "quest_core.js").read_text(encoding="utf-8")
+    # "70% of samples landed on a way" was a heuristic; a route now carries a
+    # certificate, and index.html reads that verdict instead of the raw fraction.
+    core = (ROOT / "quest_core.js").read_text(encoding="utf-8")
+    assert "function certifyRouteAgainstWays" in core
+    assert "repairQuestRouteAgainstWays" in html and "repairQuestRouteAgainstWays" in core
+    assert "routeCertification" in html
     # And a basemap-charted ring outranks a mirror-sourced one at discovery.
     assert "visibleRing" in html
 
@@ -211,7 +218,7 @@ def test_index_wires_alignment_into_start_resume_and_walking():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-path-alignment-r3-20260723"
+    marker = "quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

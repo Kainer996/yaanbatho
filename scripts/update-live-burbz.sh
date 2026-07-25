@@ -133,6 +133,11 @@ for piece in back body wing head; do
   [[ "$(head -c 4 "$TMP/assets/merlin/merlin-$piece.webp")" == "RIFF" ]] \
     || die "Merlin's $piece layer is not a WebP — aborting, live site untouched"
 done
+# The feedback screen with screenshot attachments once lived only on the server,
+# outside git, and a deploy from main would have deleted it. It is in main now;
+# this check makes sure it never silently leaves again.
+grep -q 'id="feedbackScreenshots"' "$TMP/index.html" \
+  || die "index.html has no feedback screenshots — that build would delete a live feature. Aborting, live site untouched"
 
 OWNER="$(stat -c '%U:%G' "$ROOT/index.html")"
 

@@ -124,6 +124,11 @@ def test_real_build_discovery_recruit_and_starter_dispatch_path_runs_end_to_end(
             "rememberDiscoveredBird",
             "createBirdFromDiscovery",
             "recruitDiscoveredBird",
+            # Starter errands let Merlin lead a short quest, so dispatch now goes
+            # through these helpers rather than reading gameState.flock directly.
+            "expeditionBirdById",
+            "isStarterExpeditionTemplate",
+            "birdHasActiveExpedition",
             "startBirdExpedition",
         )
     )
@@ -142,6 +147,13 @@ const ACADEMY_BUILDINGS = {
 let academySelectedRoom = 'outdoors';
 let gameState = {player:{level:1,coins:220,branches:18,totalCaptures:0},academyBuildings:{outdoors:{built:true}},discoveredSpecies:{},flock:[],birdExpeditions:[],pantry:{},inventory:{items:{}},activePetId:null};
 const SFX={levelUp(){},capture(){},tap(){}};
+const MERLIN_GUIDE = { id:'merlin-guide', commonName:'Merlin', species:'Merlin' };
+function getExpeditionTemplate(id){ return { id, label:'Find Seed', starter:id === 'find_seed' }; }
+function ensureBirdExpeditions(){ gameState.birdExpeditions = gameState.birdExpeditions || []; return gameState.birdExpeditions; }
+function getMerlinCare(){return {hunger:0,energy:100,happiness:100};}
+function warnOrBlockBirdWork(){return true;}
+function renderPetCompanion(){}
+function renderBirdExpeditions(){}
 function ensureAcademyBuildings(){}
 function isAcademyBuildingBuilt(id){return !!gameState.academyBuildings[id]?.built;}
 function isAcademyRoomBuilt(room){return room==='tavern' && isAcademyBuildingBuilt('tavern');}
