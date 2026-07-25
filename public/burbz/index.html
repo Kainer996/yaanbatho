@@ -2989,6 +2989,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-toggle on" id="toggleSfx"></div>
       </div>
       <div class="settings-row">
+        <div class="settings-label">Music</div>
+        <div class="settings-toggle on" id="toggleMusic"></div>
+      </div>
+      <div class="settings-row">
         <div class="settings-label">Particles</div>
         <div class="settings-toggle on" id="toggleParticles"></div>
       </div>
@@ -3267,7 +3271,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=medieval-bird-audio-v2-20260721"></script>
+<script src="audio_core.js?v=birbs-quest-music-v3-20260725"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=diet-hunger-release-20260723"></script>
 <script>
@@ -4064,6 +4068,7 @@ function escapeHtml(value) { return String(value == null ? '' : value).replace(/
 // ============================================================================
 let audioCtx = null;
 let sfxEnabled = true;
+let musicEnabled = true;
 
 // Silent-failure reporter: quest taps (and anything else) that die in an
 // exception get logged server-side so device-only bugs are visible in
@@ -4163,14 +4168,36 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   ? window.BurbzAudioCore.createAudioManager({ getEnabled: () => sfxEnabled })
   : oscillatorSfxFallback;
 
+const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
+  ? window.BurbzAudioCore.createMusicManager({
+      src: 'assets/audio/bgm-birbs-quest.mp3',
+      volume: 0.2,
+      getEnabled: () => musicEnabled
+    })
+  : null;
+
+function setBurbzMusicSuppressed(reason, value) {
+  if (MUSIC && typeof MUSIC.setSuppressed === 'function') MUSIC.setSuppressed(reason, value);
+}
+
 // Mobile browsers unlock media only inside a real user gesture. Prime one
-// disposable muted clip; this never starts ambience or any repeating sound.
+// disposable muted SFX clip and start music from the same gesture. The music
+// controller stays paused when normal gameplay audio is suppressed.
+let burbzMusicGestureSeen = false;
 function primeBurbzAudio() {
   const manager = SFX;
   if (manager && typeof manager.prime === 'function') manager.prime('tap').catch(() => {});
+  if (!burbzMusicGestureSeen) {
+    burbzMusicGestureSeen = true;
+    if (MUSIC && typeof MUSIC.start === 'function') MUSIC.start();
+  }
 }
 window.addEventListener('pointerdown', primeBurbzAudio, { once:true, passive:true });
 window.addEventListener('click', primeBurbzAudio, { once:true, passive:true });
+if (document.hidden) setBurbzMusicSuppressed('hidden', true);
+document.addEventListener('visibilitychange', () => {
+  setBurbzMusicSuppressed('hidden', document.hidden);
+});
 
 // Conservative default for controls without their own semantic sound. A recent
 // explicit sound in the same click is detected so controls never double-chime.
@@ -4281,7 +4308,7 @@ const DEFAULT_STATE = {
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   quests: {},
   questsLastReset: null,
-  settings: { sfx: true, particles: true, vibration: true },
+  settings: { sfx: true, music: true, particles: true, vibration: true },
   badges: {},
   merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE },
   birdCare: defaultBirdCare(), // Default per-bird care state
@@ -4483,7 +4510,9 @@ function loadState() {
   migrateAllHungerState(Date.now());
 
   sfxEnabled = gameState.settings.sfx;
+  musicEnabled = gameState.settings.music;
   if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
+  if (MUSIC && typeof MUSIC.setEnabled === 'function') MUSIC.setEnabled(musicEnabled);
   saveState();
 }
 
@@ -22069,10 +22098,12 @@ function soundListenerDependencies() {
 }
 
 async function startContinuousSoundListening() {
+  setBurbzMusicSuppressed('sound-scan', true);
   const deps = soundListenerDependencies();
   if (continuousSoundScanWanted && mediaStream && listenerTrack?.readyState !== 'ended') { updateMerlinListeningUI(); return true; }
   if ((!navigator.mediaDevices?.getUserMedia && !window.__burbzSoundTestDeps?.getUserMedia) || !deps.MediaRecorder) {
     continuousSoundScanWanted = false;
+    setBurbzMusicSuppressed('sound-scan', false);
     setMerlinListenerState('error', 'Microphone unavailable in this browser.');
     showToast('Microphone unavailable');
     return false;
@@ -22108,6 +22139,7 @@ async function startContinuousSoundListening() {
     if (generation !== soundListenerGeneration) return false;
     continuousSoundScanWanted = false;
     cleanupFailedSoundStart();
+    setBurbzMusicSuppressed('sound-scan', false);
     const denied = error && (error.name === 'NotAllowedError' || error.name === 'SecurityError');
     setMerlinListenerState('error', denied ? 'Microphone permission needed. Tap Merlin’s wand and allow access.' : 'Microphone unavailable. Check this device and try again.');
     showToast(denied ? 'Microphone permission needed' : 'Microphone unavailable');
@@ -22146,6 +22178,7 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
   soundAnalysisQueue.clear();
   resetBirdPickup();
+  setBurbzMusicSuppressed('sound-scan', false);
   setMerlinListenerState('error', 'Listening paused by this device. Tap Merlin’s wand to resume.');
 }
 
@@ -22220,6 +22253,7 @@ function stopContinuousSoundListening(opts = {}) {
   if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
   soundAnalysisQueue.clear();
   resetBirdPickup();
+  setBurbzMusicSuppressed('sound-scan', false);
   setMerlinListenerState('stopped', opts.userStop ? 'Merlin’s wand is resting. Tap to listen again.' : 'Listening stopped.');
 }
 
@@ -24461,6 +24495,7 @@ function showIntroCutscene(opts = {}) {
   const overlay = $('introCutsceneOverlay');
   const video = $('introCutsceneVideo');
   if (!overlay || !video) return;
+  setBurbzMusicSuppressed('intro', true);
   overlay.classList.add('show');
   if (opts.replay) video.currentTime = 0;
   if (opts.autoplay !== false) video.play().catch(() => {});
@@ -24470,6 +24505,7 @@ function closeIntroCutscene() {
   const video = $('introCutsceneVideo');
   if (video) video.pause();
   if (overlay) overlay.classList.remove('show');
+  setBurbzMusicSuppressed('intro', false);
   try { localStorage.setItem(BURBZ_INTRO_SEEN_KEY, '1'); } catch(e) {}
   maybeStartMerlinTutorial(450);
 }
@@ -24921,6 +24957,15 @@ $('toggleSfx').addEventListener('click', () => {
   saveState();
 });
 
+$('toggleMusic').addEventListener('click', () => {
+  const el = $('toggleMusic');
+  el.classList.toggle('on');
+  gameState.settings.music = el.classList.contains('on');
+  musicEnabled = gameState.settings.music;
+  if (MUSIC && typeof MUSIC.setEnabled === 'function') MUSIC.setEnabled(musicEnabled);
+  saveState();
+});
+
 $('toggleParticles').addEventListener('click', () => {
   const el = $('toggleParticles');
   el.classList.toggle('on');
@@ -25089,6 +25134,7 @@ function init() {
 
   // Sync settings toggles with state
   if (!gameState.settings.sfx) $('toggleSfx').classList.remove('on');
+  if (!gameState.settings.music) $('toggleMusic').classList.remove('on');
   if (!gameState.settings.particles) $('toggleParticles').classList.remove('on');
   if (!gameState.settings.vibration) $('toggleVibration').classList.remove('on');
 

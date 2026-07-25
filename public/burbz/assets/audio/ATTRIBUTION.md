@@ -1,10 +1,11 @@
 # Burbz audio pack — attribution and licences
 
-This directory contains a compact game-ready sound pack. Each sound has an Ogg
-Vorbis preservation copy and an MP3 runtime copy for broad iPhone/browser support;
-both are mono at 44.1 kHz. The files were renamed, level-normalized, downmixed where
-needed, and re-encoded for web delivery. The two field recordings were also
-excerpted, high-pass filtered, and given short boundary fades.
+This directory contains a compact game-ready sound pack plus the Burbz Quest
+background track. Each short sound has an Ogg Vorbis preservation copy and an MP3
+runtime copy for broad iPhone/browser support; both are mono at 44.1 kHz. The short
+sounds were renamed, level-normalized, downmixed where needed, and re-encoded for
+web delivery. The two field recordings were also excerpted, high-pass filtered,
+and given short boundary fades.
 
 The audio licences below apply to the corresponding audio files. This document is
 not legal advice. No original creator or licensor endorses Burbz.
@@ -22,10 +23,21 @@ not legal advice. No original creator or licensor endorses Burbz.
 | `reward-level-up.ogg` | reward / level-up sting | 1.555737 s | 10,630 | `c8e5aacb3a9a23bdef701f235d76331f9ebf67573c67af0109508fe3759e7205` |
 | `bird-blackbird.ogg` | real common blackbird song | 2.200000 s | 21,153 | `fead210199b57e3dc9bceb12fe5b0a9e8ba99b5f4a52e3248322068bba6c4ac0` |
 | `bird-tawny-owl.ogg` | real tawny owl call | 2.200000 s | 20,857 | `ae1a55eadbd20ba9e64a620c3a1138e6857b3afd76e546876b0c66ca50cd9336` |
+| `bgm-birbs-quest.mp3` | looping instrumental background music | 60.029375 s | 1,457,390 | `3a194db0479c278513ecb1c95d0705fe8c6b0ea614821baf0185c5cb9611206e` |
 
-Ogg preservation payload: **99,440 bytes**. MP3 runtime payload: **118,264 bytes**
-(documentation excluded). Each `.mp3` file is a 96 kbps runtime conversion of the
-same-basename `.ogg` adaptation and carries the same licence and attribution.
+Short-SFX Ogg preservation payload: **99,440 bytes**. Short-SFX MP3 runtime
+payload: **118,264 bytes** (documentation excluded). Each short-SFX `.mp3` file
+is a 96 kbps runtime conversion of the same-basename `.ogg` adaptation and
+carries the same licence and attribution.
+
+## Burbz Quest background music
+
+`bgm-birbs-quest.mp3`, titled **Burbz Quest**, is an original instrumental
+generated with ElevenLabs and supplied by the Burbz project owner on 25 July
+2026 for use as the game's looping background music. The approved source file
+was `Birbs_Quest_2026-07-25T151737.mp3`; it was renamed for the runtime without
+altering its bytes. Its use remains subject to the project owner's ElevenLabs
+account and applicable service terms.
 
 ## 80 CC0 RPG SFX
 
