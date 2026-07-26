@@ -8,7 +8,10 @@
 
   const FOOD_FAMILIES = {
     small_birds: { id:'small_birds', label:'Small-bird prey rations', defaultPrep:'whole' },
-    small_mammals: { id:'small_mammals', label:'Small mammals', defaultPrep:'live' },
+    // BirdFuncDat folds mammals, reptiles and amphibians into the same
+    // "other vertebrate prey" columns (Diet-Vend / Diet-Vect / Diet-Vunk), so
+    // voles, frogs and lizards all score against this one family.
+    small_mammals: { id:'small_mammals', label:'Small mammals and other small prey', defaultPrep:'live' },
     fish: { id:'fish', label:'Fish', defaultPrep:'live' },
     flying_insects: { id:'flying_insects', label:'Flying insects', defaultPrep:'tossed' },
     invertebrates: { id:'invertebrates', label:'General invertebrates', defaultPrep:'fresh' },
@@ -53,27 +56,92 @@
     small_bird_prey_ration: {
       id:'small_bird_prey_ration', label:'Small-Bird Prey Ration', family:'small_birds',
       preps:['whole','fresh'], nourishment:42,
+      takenBy:'Merlin, Sparrowhawk, Hobby, Peregrine',
       desc:'Tasteful prepared falcon ration representing small-bird prey.'
+    },
+    starling_prey_ration: {
+      id:'starling_prey_ration', label:'Starling Prey Ration', family:'small_birds',
+      preps:['whole','fresh'], nourishment:40,
+      takenBy:'Peregrine, Sparrowhawk, Goshawk, Barn Owl (rarely)',
+      desc:'A thrush-to-starling sized bird ration — the size class a Peregrine takes over open ground.'
+    },
+    pigeon_prey_ration: {
+      id:'pigeon_prey_ration', label:'Pigeon Prey Ration', family:'small_birds',
+      preps:['whole','fresh'], nourishment:46,
+      takenBy:'Goshawk, Peregrine, Eagle Owl',
+      desc:'The heavyweight bird-prey ration. Pigeons are the mainstay of urban Peregrines and of Goshawks.'
     },
     field_vole: {
       id:'field_vole', label:'Field Vole', family:'small_mammals',
       preps:['live','fresh'], nourishment:36,
-      desc:'Small mammal prey for owls and mammal-hunting raptors.'
+      takenBy:'Barn Owl, Kestrel, Short-eared Owl, Hen Harrier',
+      desc:'The single most important prey animal for British raptors — Barn Owls live on little else.'
+    },
+    wood_mouse: {
+      id:'wood_mouse', label:'Wood Mouse', family:'small_mammals',
+      preps:['live','fresh'], nourishment:34,
+      takenBy:'Tawny Owl, Little Owl, Long-eared Owl, Kestrel',
+      desc:'The commonest woodland mouse, and the staple night-time catch of the Tawny Owl.'
+    },
+    common_shrew: {
+      id:'common_shrew', label:'Common Shrew', family:'small_mammals',
+      preps:['live','fresh'], nourishment:26,
+      takenBy:'Barn Owl, Kestrel, Short-eared Owl',
+      desc:'A small, musky mammal most predators refuse — owls swallow them whole without complaint.'
+    },
+    young_rabbit: {
+      id:'young_rabbit', label:'Young Rabbit', family:'small_mammals',
+      preps:['live','fresh'], nourishment:48,
+      takenBy:'Buzzard, Golden Eagle, Goshawk, Eagle Owl',
+      desc:'The big prey item. Rabbits carry Buzzards and Golden Eagles through the lean months.'
+    },
+    common_frog: {
+      id:'common_frog', label:'Common Frog', family:'small_mammals',
+      preps:['live','fresh'], nourishment:30,
+      takenBy:'Grey Heron, Little Owl, Marsh Harrier, Buzzard',
+      desc:'Amphibian prey from ditches and wet meadows — a spring staple for herons and marsh hunters.'
+    },
+    common_lizard: {
+      id:'common_lizard', label:'Common Lizard', family:'small_mammals',
+      preps:['live','fresh'], nourishment:28,
+      takenBy:'Kestrel, Little Owl, Secretarybird, Pacific Baza',
+      desc:'Reptile prey basking on heath and dune. Secretarybirds hunt reptiles on foot.'
     },
     live_minnow: {
       id:'live_minnow', label:'Live Minnow', family:'fish',
       preps:['live','fresh'], nourishment:34,
+      takenBy:'Kingfisher, Little Egret, Osprey (young fish)',
       desc:'Live fish for plunge-divers and fish hunters.'
     },
     river_trout: {
       id:'river_trout', label:'River Trout', family:'fish',
       preps:['live','fresh'], nourishment:38,
+      takenBy:'Osprey, Grey Heron, Goosander, White-tailed Eagle',
       desc:'A larger fish ration for specialist fish-eating birds.'
+    },
+    sand_eel: {
+      id:'sand_eel', label:'Sand Eel', family:'fish',
+      preps:['live','fresh'], nourishment:30,
+      takenBy:'Puffin, Arctic Tern, Kittiwake, Guillemot',
+      desc:'The slim silver fish whole seabird colonies depend on — carried home crosswise in the bill.'
     },
     aerial_midges: {
       id:'aerial_midges', label:'Cloud of Midges', family:'flying_insects',
       preps:['tossed'], nourishment:30,
+      takenBy:'Swift, Swallow, House Martin, Spotted Flycatcher',
       desc:'Flying insects for birds that feed on the wing.'
+    },
+    dragonfly_swarm: {
+      id:'dragonfly_swarm', label:'Dragonfly Swarm', family:'flying_insects',
+      preps:['tossed'], nourishment:28,
+      takenBy:'Hobby, Bee-eater, Red-footed Falcon',
+      desc:'Big insect prey for aerial hunters. The Hobby catches dragonflies on the wing and eats them in flight.'
+    },
+    wasp_grub_comb: {
+      id:'wasp_grub_comb', label:'Wasp Grub Comb', family:'invertebrates',
+      preps:['fresh','smeared'], nourishment:26,
+      takenBy:'Honey Buzzard',
+      desc:'A slab of wasp comb full of grubs. The Honey Buzzard digs out wasp nests and eats almost nothing else all summer.'
     },
     mealworm_scoop: {
       id:'mealworm_scoop', label:'Mealworm Scoop', family:'invertebrates',
@@ -128,7 +196,20 @@
     carrion_scraps: {
       id:'carrion_scraps', label:'Carrion Scraps', family:'carrion',
       preps:['fresh'], nourishment:32,
+      takenBy:'Carrion Crow, Raven, Red Kite, Buzzard, Magpie',
       desc:'Scavenged food for carrion specialists.'
+    },
+    deer_carrion: {
+      id:'deer_carrion', label:'Deer Carrion', family:'carrion',
+      preps:['fresh'], nourishment:40,
+      takenBy:'Red Kite, Raven, White-tailed Eagle, Griffon Vulture',
+      desc:'A whole winter-killed carcass. Kites, ravens and eagles queue at one for days.'
+    },
+    marrow_bone: {
+      id:'marrow_bone', label:'Marrow Bone', family:'carrion',
+      preps:['fresh'], nourishment:30,
+      takenBy:'Bearded Vulture (Lammergeier)',
+      desc:'The Bearded Vulture is the only bird alive on a diet of bone: it drops them onto rock to split out the marrow.'
     },
     gizzard_grit: {
       id:'gizzard_grit', label:'Gizzard Grit', family:'grit',
@@ -136,6 +217,15 @@
       desc:'Grinding grit for seed meals; not a nourishing food by itself.'
     }
   };
+
+  // The carnivore families. Anything in one of these is prey a bird of prey
+  // can actually be fed, and quest/forage/shop tables draw on this list so
+  // meat is findable from the first minute of a new game.
+  const PREY_FAMILIES = ['small_birds', 'small_mammals', 'fish', 'carrion'];
+
+  function preyIngredientIds() {
+    return Object.keys(INGREDIENTS).filter(id => PREY_FAMILIES.indexOf(INGREDIENTS[id].family) >= 0);
+  }
 
   const LEGACY_FAMILY = {
     insects:'invertebrates',
@@ -827,6 +917,8 @@
     PREPS,
     INGREDIENTS,
     PANTRY_BRIDGE,
+    PREY_FAMILIES,
+    preyIngredientIds,
     metadata,
     loadPayload,
     getDietRecord,
