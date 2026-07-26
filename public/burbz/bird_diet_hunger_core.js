@@ -41,6 +41,10 @@
 
   const HUNGER_HISTORY_LIMIT = 80;
 
+  // What a side-snack is worth against a main meal, in hunger and in rewards.
+  // One number, so the UI can promise the player exactly what the core pays.
+  const SECONDARY_MEAL_FRACTION = 0.5;
+
   const PREPS = {
     whole: { id:'whole', label:'Whole prey ration' },
     live: { id:'live', label:'Live' },
@@ -222,6 +226,9 @@
   // can actually be fed, and quest/forage/shop tables draw on this list so
   // meat is findable from the first minute of a new game.
   const PREY_FAMILIES = ['small_birds', 'small_mammals', 'fish', 'carrion'];
+
+  // Every verdict a bird will actually swallow.
+  const ACCEPTED_FEED_VERDICTS = ['primary', 'secondary', 'insufficient'];
 
   function preyIngredientIds() {
     return Object.keys(INGREDIENTS).filter(id => PREY_FAMILIES.indexOf(INGREDIENTS[id].family) >= 0);
@@ -491,9 +498,12 @@
         record
       };
     }
+    // A secondary food is genuinely eaten in the wild, just not the mainstay, so
+    // it is served rather than refused — and it fills exactly half of what the
+    // same portion of a primary food would.
     return {
       verdict: record.matchMethod === 'unmatched' ? 'insufficient' : 'secondary',
-      nourishment:Math.max(8, Math.round((ingredient.nourishment || 20) * 0.55)),
+      nourishment:Math.max(1, Math.round((ingredient.nourishment || 20) * SECONDARY_MEAL_FRACTION)),
       compatible:true,
       ingredientId: ingredient.id,
       family,
@@ -845,7 +855,9 @@
     if (subject.care.hunger <= 0) {
       return { ok:false, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:0, after:0, message:((target && (target.commonName || target.name)) || subject.commonName || subject.species || 'That bird') + ' is already fully fed; no food was spent.' };
     }
-    const acceptedVerdict = compatibility.verdict === 'primary' || compatibility.verdict === 'insufficient';
+    // Primary, secondary and the conservative fallback ration are all served.
+    // Only food this species does not eat at all is turned down.
+    const acceptedVerdict = ACCEPTED_FEED_VERDICTS.indexOf(compatibility.verdict) >= 0;
     if (!acceptedVerdict) {
       return {
         ok:false,
@@ -856,9 +868,7 @@
         inventoryPath:normalizedSpec.inventoryPath,
         before:subject.care.hunger,
         after:subject.care.hunger,
-        message: compatibility.verdict === 'secondary'
-          ? ((normalizedSpec.label || ingredientId) + ' is only a secondary food; choose a primary meal for ' + ((target && (target.commonName || target.name)) || subject.commonName || subject.species || 'that bird') + '.')
-          : compatibility.reason
+        message: compatibility.reason
       };
     }
     if (inventoryCountForFeedingSpec(state, normalizedSpec) < 1) {
@@ -879,7 +889,9 @@
     if (isMerlin) state.merlinCare = subject.care;
     const feedMessage = compatibility.verdict === 'insufficient'
       ? 'Fed a conservative care ration; the exact wild diet is not claimed for this fallback record.'
-      : 'Fed a source-backed primary meal.';
+      : compatibility.verdict === 'secondary'
+        ? 'Fed a source-backed side food: eaten in the wild, but not the mainstay, so it fills half as much.'
+        : 'Fed a source-backed primary meal.';
     return { ok:true, duplicate:false, state, consumed, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:applied.before, after:applied.after, message:feedMessage };
   }
 
@@ -914,6 +926,8 @@
     FOOD_FAMILIES,
     HUNGER_THRESHOLDS,
     ACTIVITY_HUNGER_DELTAS,
+    SECONDARY_MEAL_FRACTION,
+    ACCEPTED_FEED_VERDICTS,
     PREPS,
     INGREDIENTS,
     PANTRY_BRIDGE,

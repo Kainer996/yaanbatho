@@ -153,6 +153,7 @@ global.renderBirdex = () => {};
 global.updateHeader = () => {};
 global.playFeedDopamineBurst = () => {};
 global.recordFeedReceipt = () => {};
+global.showFeedNotePopup = () => {};
 global.refreshFeedSurfaces = () => {};
 global.feedSheetKey = null;
 global.hungerStatusForBird = b => global.BurbzDietHungerCore.hungerStatusForCare(b.care, Date.now());
@@ -175,10 +176,10 @@ global.gameState = {
 let code = 'let kitchenRosterTrayKey = null;\n';
 code += html.slice(html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({'),
                    html.indexOf('});', html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({')) + 3) + '\n';
-for (const n of ['legacyKitchenSupplyIngredient','refillPantry','ensureLarder','kitchenRosterEntries',
+for (const n of ['legacyKitchenSupplyIngredient','refillPantry','ensureLarder','feedOptionVerdict','feedRewardsForVerdict','kitchenRosterEntries',
                  'kitchenRosterEntryByKey','kitchenRosterWantedPrep','kitchenRosterFoodOptions',
                  'kitchenRosterEatsLabels','kitchenRosterHungerStatus','kitchenRosterTrayHTML',
-                 'kitchenRosterRowHTML','renderKitchenRosterHTML','kitchenRosterToggleTray',
+                 'kitchenRosterRowHTML','birdIsFull','kitchenRosterHungryEntries','renderKitchenRosterHTML','kitchenRosterToggleTray',
                  'kitchenRosterRefusalToast','feedEntryForKey','feedWildEntryForSpeciesKey',
                  'feedFoodOptions','feedArtHTML','kitchenRecordFieldNote','burbzFeedFood','feedWildSpecies',
                  'kitchenRosterFeed']) code += fnSrc(n) + '\n';

@@ -320,9 +320,15 @@ console.log(JSON.stringify({ merlinGood, merlinDuplicate, merlinMealworm, finchF
     assert out["merlinGood"]["state"]["merlinCare"]["hunger"] < 70
     assert out["merlinDuplicate"]["consumed"] == {}
     assert out["merlinDuplicate"]["state"]["inventory"]["larder"]["small_bird_prey_ration"] == 1
-    assert out["merlinMealworm"]["ok"] is False
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
-    assert out["merlinMealworm"]["state"]["merlinCare"]["hunger"] == out["merlinDuplicate"]["state"]["merlinCare"]["hunger"]
+    # A secondary food is eaten, not refused — mealworms are a real part of a
+    # Merlin's diet, just not the mainstay, so the meal lands at half value.
+    assert out["merlinMealworm"]["ok"] is True
+    assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
+    fed = (out["merlinDuplicate"]["state"]["merlinCare"]["hunger"]
+           - out["merlinMealworm"]["state"]["merlinCare"]["hunger"])
+    assert fed == round(18 * 0.5), "a side food fills exactly half a mealworm scoop's 18"
+    # Food outside the diet entirely is still refused, and still costs nothing.
     assert out["finchFish"]["ok"] is False
     assert out["finchFish"]["state"]["inventory"]["larder"]["live_minnow"] == 1
     assert out["finchSeed"]["ok"] is True
@@ -357,7 +363,7 @@ def test_val_regression_001_cache_pins_new_diet_hunger_assets_and_keeps_protecte
     for asset in runtime_assets:
         assert asset in html, f"{asset} is not loaded by index.html"
         assert "./" + asset in sw, f"{asset} is not cached by sw.js"
-    assert "burbz-one-tap-feeding-merlin-perch-v141-20260726" in sw
+    assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
     for protected in (
         "const MERLIN_GUIDE",
         "BirdNET",

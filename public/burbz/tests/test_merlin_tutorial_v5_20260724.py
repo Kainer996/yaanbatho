@@ -101,4 +101,4 @@ def test_spotlight_only_lights_visible_targets_and_tracks_them():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-one-tap-feeding-merlin-perch-v141-20260726" in sw
+    assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
