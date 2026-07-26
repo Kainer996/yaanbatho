@@ -132,4 +132,4 @@ def test_reduced_motion_still_leaves_him_standing_on_the_branch():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-toast-dedupe-quest-retry-v137-20260725" in sw
+    assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw

@@ -11,7 +11,9 @@
   // Preparation styles — each one mirrors a real feeding behaviour.
   const PREPS = {
     whole:    { id:'whole',    label:'Whole prey ration',       icon:'🪶', desc:'Prepared whole as a tasteful prey ration for falcons and other specialists.' },
-    live:     { id:'live',     label:'Live (water tank)',        icon:'🫧', desc:'Kept alive and moving. Specialist hunters only strike living prey.' },
+    // "Live" covers a minnow in the tank and a vole in the grass alike — the
+    // old water-tank wording only ever made sense for fish.
+    live:     { id:'live',     label:'Live prey',                icon:'🫧', desc:'Kept alive and moving. Specialist hunters only strike living prey.' },
     fresh:    { id:'fresh',    label:'Fresh & whole',            icon:'🍃', desc:'Served just as nature drops it.' },
     cracked:  { id:'cracked',  label:'Cracked on the anvil stone', icon:'🪨', desc:'Smashed open the way a Song Thrush breaks snails on a stone.' },
     husked:   { id:'husked',   label:'Husked & dried',           icon:'🌾', desc:'Dry seed with the husk split — finch-bill ready.' },
@@ -23,11 +25,16 @@
   // Larder ingredients. family preserves the existing FOODS/pantry ids for UI
   // compatibility; dietFamily is the source-backed canonical compatibility id.
   const INGREDIENTS = {
-    small_bird_prey_ration: { id:'small_bird_prey_ration', label:'Small-Bird Prey Ration', icon:'🪶', family:'meat',    dietFamily:'small_birds',             preps:['whole','fresh'],              source:'Falconry kitchen prep.', desc:'Tasteful prepared falcon ration representing small-bird prey without graphic detail.' },
-    live_minnow:      { id:'live_minnow',      label:'Live Minnow',      icon:'🐟', family:'fish',    dietFamily:'fish',                    preps:['live','fresh'],               source:'Fishing trips and riverside forage.', desc:'A darting silver minnow. Keep it swimming for the plunge-divers.' },
-    river_trout:      { id:'river_trout',      label:'River Trout',      icon:'🎣', family:'fish',    dietFamily:'fish',                    preps:['live','fresh'],               source:'The rarer fishing-trip catch.', desc:'A plump trout — a proper prize for a big fish-hunter.' },
+    small_bird_prey_ration: { id:'small_bird_prey_ration', label:'Small-Bird Prey Ration', icon:'🪶', family:'meat',    dietFamily:'small_birds',             preps:['whole','fresh'],              source:'Falconry Ration Run quest, butcher counter.', takenBy:'Merlin, Sparrowhawk, Hobby, Peregrine', desc:'Tasteful prepared falcon ration representing small-bird prey without graphic detail.' },
+    starling_prey_ration: { id:'starling_prey_ration', label:'Starling Prey Ration', icon:'🐦', family:'meat',  dietFamily:'small_birds',             preps:['whole','fresh'],              source:'Falconry Ration Run quest, butcher counter.', takenBy:'Peregrine, Sparrowhawk, Goshawk', desc:'A thrush-to-starling sized ration — the size class a Peregrine stoops on over open ground.' },
+    pigeon_prey_ration:   { id:'pigeon_prey_ration',   label:'Pigeon Prey Ration',   icon:'🕊️', family:'meat',  dietFamily:'small_birds',             preps:['whole','fresh'],              source:'Falconry Ration Run quest, butcher counter.', takenBy:'Goshawk, Peregrine, Eagle Owl', desc:'The heavyweight bird-prey ration. Pigeons are the mainstay of city Peregrines and of Goshawks.' },
+    live_minnow:      { id:'live_minnow',      label:'Live Minnow',      icon:'🐟', family:'fish',    dietFamily:'fish',                    preps:['live','fresh'],               source:'Fishing trips and riverside forage.', takenBy:'Kingfisher, Little Egret, young Osprey', desc:'A darting silver minnow. Keep it swimming for the plunge-divers.' },
+    river_trout:      { id:'river_trout',      label:'River Trout',      icon:'🎣', family:'fish',    dietFamily:'fish',                    preps:['live','fresh'],               source:'The rarer fishing-trip catch.', takenBy:'Osprey, Grey Heron, Goosander, White-tailed Eagle', desc:'A plump trout — a proper prize for a big fish-hunter.' },
+    sand_eel:         { id:'sand_eel',         label:'Sand Eel',         icon:'🐠', family:'fish',    dietFamily:'fish',                    preps:['live','fresh'],               source:'Fishing trips and the shoreline hunt.', takenBy:'Puffin, Arctic Tern, Kittiwake, Guillemot', desc:'The slim silver fish whole seabird colonies live on — carried home crosswise in the bill.' },
     mealworm_scoop:   { id:'mealworm_scoop',   label:'Mealworm Scoop',   icon:'🐛', family:'insects', dietFamily:'invertebrates',           preps:['fresh','smeared'],            source:'Shops and hedgerow quests.', desc:'Wriggling mealworms — useful for true insect-eaters, not a universal meal.' },
+    wasp_grub_comb:   { id:'wasp_grub_comb',   label:'Wasp Grub Comb',   icon:'🐝', family:'insects', dietFamily:'invertebrates',           preps:['fresh','smeared'],            source:'Marsh & Ditch Hunt quest, map forage.', takenBy:'Honey Buzzard', desc:'A slab of wasp comb thick with grubs. The Honey Buzzard digs out wasp nests and eats little else all summer.' },
     aerial_midges:    { id:'aerial_midges',    label:'Cloud of Midges',  icon:'🦟', family:'flying',  dietFamily:'flying_insects',          preps:['tossed'],                     source:'Netted over the pond at dusk.', desc:'Tiny flying insects. Only useful to birds that feed on the wing.' },
+    dragonfly_swarm:  { id:'dragonfly_swarm',  label:'Dragonfly Swarm',  icon:'🪰', family:'flying',  dietFamily:'flying_insects',          preps:['tossed'],                     source:'Marsh & Ditch Hunt quest, map forage.', takenBy:'Hobby, Bee-eater, Red-footed Falcon', desc:'Big insect prey for aerial hunters. A Hobby catches dragonflies on the wing and eats them in flight.' },
     garden_worms:     { id:'garden_worms',     label:'Garden Worms',     icon:'🪱', family:'worms',   dietFamily:'worms',                   preps:['fresh'],                      source:'Turned up by quests and forage.', desc:'Fat earthworms, the lawn-forager staple.' },
     shore_snail_mix:  { id:'shore_snail_mix',  label:'Shore Snail Mix',  icon:'🐚', family:'worms',   dietFamily:'molluscs_crustaceans',    preps:['cracked','fresh'],            source:'Estuary forage.', desc:'Small molluscs and crustaceans for waders and shorebirds.' },
     hedgerow_berries: { id:'hedgerow_berries', label:'Hedgerow Berries', icon:'🫐', family:'berries', dietFamily:'fruit_berries',           preps:['fresh'],                      source:'Autumn hedgerows and quests.', desc:'Rowan, hawthorn and bramble berries.' },
@@ -37,8 +44,15 @@
     acorn_handful:    { id:'acorn_handful',    label:'Acorn Handful',    icon:'🌰', family:'acorns',  dietFamily:'seeds',                   preps:['fresh','cracked'],            source:'Oak woodland forage.', desc:'Whole acorns — jays cache them whole; others need them cracked.' },
     suet_cake:        { id:'suet_cake',        label:'Suet Cake',        icon:'🧈', family:'suet',    dietFamily:'invertebrates',           preps:['smeared','fresh'],            source:'Shops.', desc:'High-energy fat cake, best worked into a bark log.' },
     pondweed_tangle:  { id:'pondweed_tangle',  label:'Pondweed Tangle',  icon:'🌿', family:'aquatic', dietFamily:'aquatic_plants',          preps:['floating','fresh'],           source:'Pond-edge forage.', desc:'Water plants and dabbled greens — proper duck food, never bread.' },
-    field_vole:       { id:'field_vole',       label:'Field Vole',       icon:'🐭', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Meadow quests.', desc:'Small mammal prey. Owls and raptors strike it live.' },
-    carrion_scraps:   { id:'carrion_scraps',   label:'Carrion Scraps',   icon:'🦴', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Scavenging quests.', desc:'Scavenged remains — a corvid banquet.' },
+    field_vole:       { id:'field_vole',       label:'Field Vole',       icon:'🐭', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Vole Meadow Hunt quest, map forage.', takenBy:'Barn Owl, Kestrel, Short-eared Owl, Hen Harrier', desc:'The single most important prey animal for British raptors — Barn Owls live on almost nothing else.' },
+    wood_mouse:       { id:'wood_mouse',       label:'Wood Mouse',       icon:'🐁', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Vole Meadow Hunt quest, map forage.', takenBy:'Tawny Owl, Little Owl, Long-eared Owl, Kestrel', desc:'The commonest woodland mouse, and the staple night-time catch of the Tawny Owl.' },
+    common_shrew:     { id:'common_shrew',     label:'Common Shrew',     icon:'🐀', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Vole Meadow Hunt quest.', takenBy:'Barn Owl, Kestrel, Short-eared Owl', desc:'Musky and small — most predators spit shrews out, but owls swallow them whole without complaint.' },
+    young_rabbit:     { id:'young_rabbit',     label:'Young Rabbit',     icon:'🐇', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Warren Watch quest, map forage.', takenBy:'Buzzard, Golden Eagle, Goshawk, Eagle Owl', desc:'The big prey item. Rabbits carry Buzzards and Golden Eagles through the lean months.' },
+    common_frog:      { id:'common_frog',      label:'Common Frog',      icon:'🐸', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Marsh & Ditch Hunt quest.', takenBy:'Grey Heron, Little Owl, Marsh Harrier, Buzzard', desc:'Amphibian prey out of ditches and wet meadows — a spring staple for herons and marsh hunters.' },
+    common_lizard:    { id:'common_lizard',    label:'Common Lizard',    icon:'🦎', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Marsh & Ditch Hunt quest.', takenBy:'Kestrel, Little Owl, Secretarybird, Pacific Baza', desc:'Reptile prey basking on heath and dune. Secretarybirds hunt reptiles on foot, striding through the grass.' },
+    carrion_scraps:   { id:'carrion_scraps',   label:'Carrion Scraps',   icon:'🦴', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Carrion Round quest, map forage.', takenBy:'Carrion Crow, Raven, Red Kite, Buzzard, Magpie', desc:'Scavenged remains — a corvid banquet.' },
+    deer_carrion:     { id:'deer_carrion',     label:'Deer Carrion',     icon:'🦌', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Carrion Round quest.', takenBy:'Red Kite, Raven, White-tailed Eagle, Griffon Vulture', desc:'A whole winter-killed carcass. Kites, ravens and eagles queue at one for days.' },
+    marrow_bone:      { id:'marrow_bone',      label:'Marrow Bone',      icon:'🍖', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Carrion Round quest.', takenBy:'Bearded Vulture (Lammergeier)', desc:'The Bearded Vulture is the only bird alive on a diet of bone: it drops them onto rock to split out the marrow.' },
     gizzard_grit:     { id:'gizzard_grit',     label:'Gizzard Grit',     icon:'⚪', family:'grit',    dietFamily:'grit',                    preps:['fresh'],                      source:'Riverbank gravel.', desc:'Birds have no teeth: seed-eaters swallow grit and the gizzard grinds the meal.' }
   };
 
@@ -46,7 +60,7 @@
   const GRIT_FAMILIES = ['seeds', 'acorns', 'aquatic', 'aquatic_plants'];
   const DIET_FAMILIES = {
     small_birds:'Small-bird prey rations',
-    small_mammals:'Small mammals',
+    small_mammals:'Small mammals and other small prey',
     fish:'Fish',
     flying_insects:'Flying insects',
     invertebrates:'General invertebrates',
@@ -89,6 +103,15 @@
   const FIRST_BADGE_BONUS_COINS = 20;
   const RECRUIT_DISCOUNT = 0.15;
   const RECRUIT_FLOOR = 0.4;
+
+  // The carnivore families. Birds of prey can only ever be fed from these, so
+  // quest, forage and shop tables use this list to guarantee meat is around.
+  const PREY_DIET_FAMILIES = ['small_birds', 'small_mammals', 'fish', 'carrion'];
+  function listPreyIngredients() {
+    return Object.values(INGREDIENTS)
+      .filter(i => PREY_DIET_FAMILIES.indexOf(i.dietFamily) >= 0)
+      .map(i => ({ ...i, preps:[...i.preps] }));
+  }
 
   function ingredientById(id) { return INGREDIENTS[id] || null; }
   function prepById(id) { return PREPS[id] || null; }
@@ -203,6 +226,7 @@
   return {
     PREPS, INGREDIENTS, DIET_FAMILIES, GRIT_FAMILIES, PREP_NOTES, TIER_META,
     FIRST_BADGE_BONUS_COINS, RECRUIT_DISCOUNT, RECRUIT_FLOOR,
+    PREY_DIET_FAMILIES, listPreyIngredients,
     ingredientById, prepById, listIngredients, listPreps, tierMeta,
     scoreMeal, discountedRecruitCost
   };

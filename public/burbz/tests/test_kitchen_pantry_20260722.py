@@ -179,6 +179,7 @@ def test_serving_a_wild_osprey_live_fish_earns_badge_coins_and_recruit_trust():
     stubs = """
 global.window = global;
 require('./kitchen_pantry_core.js');
+require('./bird_diet_hunger_core.js');
 const gameState = {
   inventory: { larder: { live_minnow: 3, sunflower_seeds: 2 } },
   dietBadges: {}, kitchenNotes: {}, flock: [],
@@ -207,35 +208,51 @@ const discoveredSpeciesRecords = () => Object.values(gameState.discoveredSpecies
 const kitchenShowResult = (chosen, rule, result) => { global.__lastResult = result; };
 const hashStr = str => Array.from(String(str)).reduce((h, ch) => Math.abs(((h << 5) - h + ch.charCodeAt(0)) | 0), 0);
 const $ = () => null;
+const applyPlayerXpState = () => {};
+const refillPantry = () => {};
+const kitchenDietCore = () => global.BurbzDietHungerCore;
+const dietHungerCore = () => global.BurbzDietHungerCore;
+const kitchenRosterEntryByKey = () => null;
+const kitchenRosterEatsLabels = () => ['Fish'];
+const createBirdFromDiscovery = () => null;
+const birdOnlyImgHTML = () => '<span class="art">B</span>';
+const playFeedDopamineBurst = () => {};
+const recordFeedReceipt = () => {};
+const showFeedNotePopup = () => {};
+const refreshFeedSurfaces = () => {};
+const vibrate = () => {};
 """
     functions = "\n".join(function_source(html, name) for name in (
         "kitchenCore", "kitchenIngredientById", "legacyKitchenSupplyIngredient", "ensureLarder", "addLarderIngredient",
-        "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNotes",
-        "kitchenDietSubject", "kitchenDietRuleForChoice", "kitchenServeMeal",
+        "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNote",
+        "kitchenDietSubject", "kitchenDietRuleForChoice", "kitchenRosterWantedPrep",
+        "feedOptionVerdict", "feedRewardsForVerdict", "feedSideSnackExplainer",
+        "kitchenRosterFoodOptions", "kitchenRosterRefusalToast", "feedEntryForKey",
+        "feedWildEntryForSpeciesKey", "feedFoodOptions", "feedWildSpecies", "burbzFeedFood",
     ))
     rules = diet_rules_source() + "\nfunction inferBirdDiet(n){ const name = typeof n === 'object' ? String(n.commonName || n.name || n.species || n.scientificName || '') : String(n || ''); for (const r of BIRD_DIET_RULES) if (r.match.test(name)) return r; return null; }\n"
     driver = """
-// kitchenState is declared inside the extracted game code.
-kitchenState = { speciesKey: 'osprey', slots: [ {ingredientId:'live_minnow', prep:'live'}, {ingredientId:'live_minnow', prep:'live'}, null ] };
-kitchenServeMeal();
-const first = { tier: global.__lastResult.tier, badges: {...gameState.dietBadges}, coins: gameState.player.coins,
+// One food, one tap, one meal — no tray to assemble first.
+burbzFeedFood('species:osprey', 'larder', 'live_minnow');
+const first = { badges: {...gameState.dietBadges}, coins: gameState.player.coins,
   recruitCost: gameState.discoveredSpecies.osprey.recruitCost, larder: {...gameState.inventory.larder},
   notes: JSON.parse(JSON.stringify(gameState.kitchenNotes)) };
-kitchenState.slots = [ {ingredientId:'sunflower_seeds', prep:'husked'}, null, null ];
-kitchenServeMeal();
-const second = { tier: global.__lastResult.tier, coins: gameState.player.coins,
+burbzFeedFood('species:osprey', 'larder', 'sunflower_seeds');
+const second = { coins: gameState.player.coins, larder: {...gameState.inventory.larder},
+  toast: toasts[toasts.length - 1] || '',
   notes: JSON.parse(JSON.stringify(gameState.kitchenNotes)) };
 console.log(JSON.stringify({first, second}));
 """
     out = run_node(stubs + rules + functions + driver)
-    assert out["first"]["tier"] == "field_perfect"
     assert out["first"]["badges"] == {"osprey": 1}
-    assert out["first"]["coins"] == 50  # 30 tier coins + 20 first-badge bonus
+    assert out["first"]["coins"] == 32  # 12 meal coins + 20 first-badge bonus
     assert out["first"]["recruitCost"] == 850  # 15% feeder-trust discount
-    assert out["first"]["larder"]["live_minnow"] == 1
+    assert out["first"]["larder"]["live_minnow"] == 2  # exactly one fish spent
     assert "fish" in out["first"]["notes"]["osprey"]["perfect"]
-    assert out["second"]["tier"] == "refused"
-    assert out["second"]["coins"] == 50  # refused trays pay nothing
+    # A wrong food is refused: no coins, and — the whole point — no stock spent.
+    assert out["second"]["coins"] == 32
+    assert out["second"]["larder"]["sunflower_seeds"] == 2
+    assert "turns its beak up" in out["second"]["toast"]
     assert "seeds" in out["second"]["notes"]["osprey"]["refused"]
 
 
@@ -291,16 +308,32 @@ def test_kitchen_prep_counter_is_wired_into_the_kitchen_room():
         '<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>',
         "room === 'kitchen' ? renderKitchenPanelHTML()",
         "function renderKitchenPanelHTML(",
-        "function kitchenServeMeal(",
-        "function kitchenOpenSlot(",
+        "function kitchenCounterFoodListHTML(",
+        "function burbzFeedTap(",
         "🍳 The Prep Counter",
         "🧺 Stores larder",
         "kitchenSelectSpecies,",
-        "kitchenServeMeal,",
-        ".kitchen-plate {",
-        ".kitchen-serve-btn {",
+        "burbzFeedFood,",
+        ".feed-food-list {",
+        ".feed-food {",
     ):
         assert marker in html, marker
+
+
+def test_the_add_ingredient_tray_mechanic_is_gone():
+    """Feeding is one food, one tap. No plate, no slots, no "Serve the tray"."""
+    html = HTML.read_text(encoding="utf-8")
+    for gone in (
+        "function kitchenServeMeal(",
+        "function kitchenOpenSlot(",
+        "function kitchenAssignSlot(",
+        "function kitchenClearSlot(",
+        "Add ingredient",
+        "Serve the tray",
+        "kitchen-plate",
+        "kitchen-slot",
+    ):
+        assert gone not in html, gone
 
 
 def test_saves_migrate_larder_badges_and_notes_and_birdex_shows_diet_badges():

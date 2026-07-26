@@ -1609,13 +1609,36 @@
   // ---------------- Quest assembly ----------------
 
   var QUEST_GIVER_NAMES = ['Elder Bramblewing', 'Sage Oakfeather', 'Warden Thistledown', 'Keeper Mossbeak'];
+  // Every real-world walking chest carries prey. Birds of prey cannot eat
+  // seed, so a chest that only held plant food would be worthless to half the
+  // Academy — each bundle is guaranteed at least one meat/prey ingredient, and
+  // the prey rotates through the whole carnivore range (small mammals,
+  // amphibians and reptiles, bird-prey rations, fish, carrion).
+  var CHEST_PREY_IDS = [
+    'field_vole', 'wood_mouse', 'common_shrew', 'young_rabbit', 'common_frog', 'common_lizard',
+    'small_bird_prey_ration', 'starling_prey_ration', 'pigeon_prey_ration',
+    'live_minnow', 'river_trout', 'sand_eel',
+    'carrion_scraps', 'deer_carrion', 'marrow_bone'
+  ];
+
+  function chestPreyUnits(larder) {
+    return CHEST_PREY_IDS.reduce(function (sum, id) { return sum + (Number(larder && larder[id]) || 0); }, 0);
+  }
+
   var CHEST_LOOT = [
     { coins: 25, xp: 10, larder: { field_vole: 2, mealworm_scoop: 1 } },
     { coins: 40, xp: 12, larder: { small_bird_prey_ration: 1, garden_worms: 2 } },
-    { coins: 30, xp: 15, larder: { field_vole: 1, live_minnow: 2 } },
-    { coins: 20, xp: 25, larder: { small_bird_prey_ration: 2, sunflower_seeds: 1 } },
+    { coins: 30, xp: 15, larder: { wood_mouse: 1, live_minnow: 2 } },
+    { coins: 20, xp: 25, larder: { starling_prey_ration: 2, sunflower_seeds: 1 } },
+    { coins: 28, xp: 14, larder: { carrion_scraps: 2, deer_carrion: 1 } },
+    { coins: 35, xp: 16, larder: { young_rabbit: 1, wood_mouse: 2 } },
+    { coins: 22, xp: 18, larder: { common_frog: 2, common_lizard: 1 } },
+    { coins: 32, xp: 12, larder: { pigeon_prey_ration: 1, field_vole: 2 } },
+    { coins: 26, xp: 15, larder: { sand_eel: 2, river_trout: 1 } },
+    { coins: 24, xp: 20, larder: { marrow_bone: 2, carrion_scraps: 1 } },
     // Bird-study scrolls go to the bag; use them from there on a bird you choose.
     { coins: 15, item: 'xp_scroll_minor', larder: { field_vole: 2, hedgerow_berries: 1 } },
+    { coins: 18, item: 'xp_scroll_minor', larder: { common_shrew: 2, wood_mouse: 1 } },
     { coins: 10, item: 'xp_scroll_greater', larder: { small_bird_prey_ration: 1, pondweed_tangle: 2 } }
   ];
 
@@ -1644,14 +1667,18 @@
       });
     }
     var units = Object.keys(larder).reduce(function (sum, id) { return sum + larder[id]; }, 0);
-    var primary = (larder.field_vole || 0) + (larder.small_bird_prey_ration || 0);
+    var primary = chestPreyUnits(larder);
     if (primary < 1 || units < 3 || Object.keys(larder).length < 2) {
       var fallback = [
         { primary: 'field_vole', secondary: 'mealworm_scoop' },
         { primary: 'small_bird_prey_ration', secondary: 'garden_worms' },
-        { primary: 'field_vole', secondary: 'hedgerow_berries' },
-        { primary: 'small_bird_prey_ration', secondary: 'sunflower_seeds' }
-      ][chestLootHash(stableKey) % 4];
+        { primary: 'wood_mouse', secondary: 'hedgerow_berries' },
+        { primary: 'starling_prey_ration', secondary: 'sunflower_seeds' },
+        { primary: 'carrion_scraps', secondary: 'garden_worms' },
+        { primary: 'common_frog', secondary: 'live_minnow' },
+        { primary: 'young_rabbit', secondary: 'field_vole' },
+        { primary: 'deer_carrion', secondary: 'carrion_scraps' }
+      ][chestLootHash(stableKey) % 8];
       larder[fallback.primary] = Math.max(2, larder[fallback.primary] || 0);
       larder[fallback.secondary] = Math.max(1, larder[fallback.secondary] || 0);
     }
@@ -1675,7 +1702,7 @@
       if (typeof ingredientExists !== 'function' || !ingredientExists(id)) throw new Error('Unknown chest ingredient: ' + id);
       cleanLarder[id] = qty; units += qty;
     });
-    if (units < 3 || ids.length < 2 || !((cleanLarder.field_vole || 0) + (cleanLarder.small_bird_prey_ration || 0))) {
+    if (units < 3 || ids.length < 2 || !chestPreyUnits(cleanLarder)) {
       throw new Error('Incomplete chest food bundle');
     }
     var out = { coins: coins, xp: xp, larder: cleanLarder };
@@ -2156,6 +2183,7 @@
     questMaybeSpawnTavern: questMaybeSpawnTavern,
     TRAIL_TAVERN_NPCS_NEEDED: TRAIL_TAVERN_NPCS_NEEDED,
     CHEST_LOOT: CHEST_LOOT.map(function (loot) { return normaliseChestLoot(loot, 'export'); }),
+    CHEST_PREY_IDS: CHEST_PREY_IDS.slice(),
     normaliseChestLoot: normaliseChestLoot,
     validateChestRewardBundle: validateChestRewardBundle,
     runDurableChestClaim: runDurableChestClaim,

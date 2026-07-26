@@ -68,6 +68,8 @@ def test_feeding_roster_is_wired_into_the_kitchen_panel():
         "function kitchenRosterEntries(",
         "function kitchenRosterFoodOptions(",
         "function kitchenRosterFeed(",
+        "function burbzFeedFood(",
+        "function burbzFeedTap(",
         "function renderKitchenRosterHTML(",
         'data-kitchen-roster-root="academy-kitchen"',
         'data-kitchen-supply="stocked"',
@@ -128,12 +130,32 @@ global.canonicalSpeciesName = n => String(n || '');
 global.birdHasActiveExpedition = () => false;
 global.birdHasActiveTraining = () => false;
 global.academyBirdById = id => gameState.flock.find(b => b.id === id) || null;
-global.ensureBirdAcademy = b => { b.academy = b.academy || { room:'outdoors' }; };
+global.ensureBirdAcademy = b => {
+  b.academy = b.academy || { room:'outdoors' };
+  b.training = b.training || { feedCount:0, trainCount:0 };
+  b.care = b.care || { hunger:20, happiness:80 };
+};
 global.getMerlinCare = () => gameState.merlinCare;
 global.MERLIN_CORE = { grantMerlinBondXp: c => c, sanitizeMerlinCare: c => c };
 global.inferBirdDiet = () => ({ pref:['fish'], ok:[], avoid:[], fact:'Ospreys eat almost nothing but live fish.' });
 global.clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 global.dietHungerCore = () => global.BurbzDietHungerCore;
+global.kitchenCore = () => global.BurbzKitchenCore;
+global.levelUpBird = () => 0;
+global.recalcBirdPower = () => {};
+global.applyPlayerXpState = () => {};
+global.addCoins = () => {};
+global.speciesKey = n => String(n || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+global.discoveredSpeciesRecords = () => [];
+global.createBirdFromDiscovery = () => null;
+global.RARITY_RECRUIT_COST = { common:150 };
+global.renderBirdex = () => {};
+global.updateHeader = () => {};
+global.playFeedDopamineBurst = () => {};
+global.recordFeedReceipt = () => {};
+global.showFeedNotePopup = () => {};
+global.refreshFeedSurfaces = () => {};
+global.feedSheetKey = null;
 global.hungerStatusForBird = b => global.BurbzDietHungerCore.hungerStatusForCare(b.care, Date.now());
 global.FOODS = { seeds:{label:'Seeds',emoji:'🌾',desc:''}, fish:{label:'Fish',emoji:'🐟',desc:''} };
 global.DEFAULT_PANTRY = { seeds:6, fish:3 };
@@ -145,17 +167,22 @@ global.gameState = {
             academy:{ room:'outdoors' },
             care:{ hunger:80, happiness:60, hungerTransactions:[], hungerTransactionLog:[] } }],
   merlinCare: { hunger:50, happiness:80, hungerTransactions:[], hungerTransactionLog:[] },
+  player: { mealsServed:0, coins:0 },
   pantry: { seeds:4, fish:2 },
   pantryLastRefill: new Date().toISOString(),
   kitchenLegacySupplyMigrationVersion: 1,
   inventory: { larder: { live_minnow:1, sunflower_seeds:2, gizzard_grit:3 } }
 };
 let code = 'let kitchenRosterTrayKey = null;\n';
-for (const n of ['legacyKitchenSupplyIngredient','refillPantry','ensureLarder','kitchenRosterEntries',
+code += html.slice(html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({'),
+                   html.indexOf('});', html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({')) + 3) + '\n';
+for (const n of ['legacyKitchenSupplyIngredient','refillPantry','ensureLarder','feedOptionVerdict','feedRewardsForVerdict','kitchenRosterEntries',
                  'kitchenRosterEntryByKey','kitchenRosterWantedPrep','kitchenRosterFoodOptions',
                  'kitchenRosterEatsLabels','kitchenRosterHungerStatus','kitchenRosterTrayHTML',
-                 'kitchenRosterRowHTML','renderKitchenRosterHTML','kitchenRosterToggleTray',
-                 'kitchenRosterRefusalToast','kitchenRosterFeed']) code += fnSrc(n) + '\n';
+                 'kitchenRosterRowHTML','birdIsFull','kitchenRosterHungryEntries','renderKitchenRosterHTML','kitchenRosterToggleTray',
+                 'kitchenRosterRefusalToast','feedEntryForKey','feedWildEntryForSpeciesKey',
+                 'feedFoodOptions','feedArtHTML','kitchenRecordFieldNote','burbzFeedFood','feedWildSpecies',
+                 'kitchenRosterFeed']) code += fnSrc(n) + '\n';
 code += 'module.exports = { kitchenRosterEntries, kitchenRosterFoodOptions, kitchenRosterEntryByKey, kitchenRosterFeed, renderKitchenRosterHTML };';
 const mod = { exports: {} };
 new Function('module', 'exports', 'require', code)(mod, mod.exports, require);

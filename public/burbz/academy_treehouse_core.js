@@ -26,13 +26,42 @@
   // coins there — charmers talk squirrels, traders and passers-by into better
   // deals. Warriors haul the branches; robins and wrens win the negotiations.
   const QUEST_TEMPLATES = {
-    find_seed: { id:'find_seed', label:'Find Seed', minutes:3, icon:'🌾', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:6, items:['seed_satchel'], beats:['hops straight from the garden path','checks the soft grass for fallen seed','tucks a tiny seed satchel under one wing','returns ready for another quick errand'] },
+    find_seed: { id:'find_seed', label:'Find Seed', minutes:3, icon:'🌾', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:6, items:['seed_satchel','sunflower_seeds'], beats:['hops straight from the garden path','checks the soft grass for fallen seed','tucks a tiny seed satchel under one wing','returns ready for another quick errand'] },
     find_coins: { id:'find_coins', label:'Find Coins', minutes:4, icon:'🪙', minLevel:1, chaWeight:1, starter:true, coins:[6,16], branches:[0,1], xp:8, items:['shiny_pebble'], beats:['flutters toward a sunny lane','spots a glint beside an old root','trades a bright pebble for pocket coins','returns jingling with tiny treasure'] },
     branch_run: { id:'branch_run', label:'Branch Run', minutes:5, icon:'🪵', minLevel:1, starter:true, coins:[0,5], branches:[4,7], xp:8, items:['soft_moss'], beats:['glides down to the windfall thicket','tugs loose the driest fallen twigs','stacks a neat bundle of branches','hauls the timber home for the builders'] },
     scavenge: { id:'scavenge', label:'Scavenge', minutes:5, icon:'🧺', minLevel:1, starter:true, coins:[2,10], branches:[2,4], xp:10, items:['soft_moss','berry_bundle'], beats:['sets off on a quick cosy scavenge','checks mossy twigs and berry leaves','bundles useful bits for the Academy','returns with simple supplies'] },
+    // --- Hunting errands: where MEAT comes from. Every bird of prey in the
+    // Academy needs prey, so these are starter quests (no Quest Roost, no
+    // level gate) and each one brings back the animals that raptor group
+    // really hunts: voles and mice for owls and kestrels, rabbits for
+    // buzzards and eagles, bird rations for the bird-hunting falcons and
+    // hawks, carrion for kites, ravens and vultures, frogs and lizards for
+    // herons, little owls and the reptile hunters.
+    meadow_hunt: { id:'meadow_hunt', label:'Vole Meadow Hunt', minutes:4, icon:'🐭', minLevel:1, starter:true, coins:[0,6], branches:[0,1], xp:8, items:['field_vole','field_vole','wood_mouse','common_shrew'], beats:['quarters the rough grass on stiff wings','hangs still in the wind above a vole run','drops into the tussocks — and holds something','carries the catch home for the cold larder'] },
+    warren_watch: { id:'warren_watch', label:'Warren Watch', minutes:6, icon:'🐇', minLevel:1, starter:true, coins:[2,9], branches:[0,2], xp:12, items:['young_rabbit','wood_mouse','field_vole'], beats:['takes a fence post above the warren','waits out the long grey afternoon','stoops the moment a young rabbit strays','hauls the heaviest prey of the day home'] },
+    ration_run: { id:'ration_run', label:'Falconry Ration Run', minutes:5, icon:'🪶', minLevel:1, starter:true, coins:[0,7], branches:[0,1], xp:10, items:['small_bird_prey_ration','small_bird_prey_ration','starling_prey_ration','pigeon_prey_ration'], beats:['flies down to the old falconry mews','waits while the keeper packs the day\'s rations','tucks the prepared prey parcels under one wing','returns with proper food for the bird-hunters'] },
+    carrion_round: { id:'carrion_round', label:'Carrion Round', minutes:5, icon:'🦴', minLevel:1, starter:true, coins:[3,12], branches:[0,1], xp:10, items:['carrion_scraps','carrion_scraps','deer_carrion','marrow_bone'], beats:['rides the morning thermals over the hill road','circles once where the crows are already gathered','waits its turn, then takes the best of what is left','brings the scavengers\' share back to the stores'] },
+    marsh_hunt: { id:'marsh_hunt', label:'Marsh & Ditch Hunt', minutes:5, icon:'🐸', minLevel:1, starter:true, coins:[1,8], branches:[0,2], xp:10, items:['common_frog','common_lizard','dragonfly_swarm','wasp_grub_comb'], beats:['picks a slow way along the flooded ditch','freezes over a shivering patch of water','takes a frog, then a basking lizard on the bank','comes home damp, muddy and well fed'] },
+    // --- Plant, insect and shore errands: where every NON-prey food comes
+    // from. Between these and the hunting quests above, every single
+    // ingredient in the game has at least one quest that brings it home, so
+    // no companion can ever be stranded with nothing it will eat. All are
+    // starter quests for the same reason the hunts are: food is not a luxury.
+    berry_run: { id:'berry_run', label:'Berry Picking', minutes:4, icon:'🫐', minLevel:1, starter:true, coins:[0,6], branches:[0,1], xp:8, items:['hedgerow_berries','hedgerow_berries','windfall_apple'], beats:['drops into the loaded hedge','works along the rowan and the bramble','fills its crop with ripe berries','carries a beakful home for the larder'] },
+    orchard_round: { id:'orchard_round', label:'Orchard Windfall', minutes:6, icon:'🍎', minLevel:1, starter:true, coins:[1,8], branches:[0,2], xp:10, items:['windfall_apple','windfall_apple','hedgerow_berries'], beats:['glides down the old orchard rows','turns the frost-softened windfalls over','sees off a bad-tempered blackbird','brings back sweet fruit for the thrushes'] },
+    worm_dig: { id:'worm_dig', label:'Wormcast Dig', minutes:4, icon:'🪱', minLevel:1, starter:true, coins:[0,5], branches:[0,1], xp:8, items:['garden_worms','garden_worms','mealworm_scoop'], beats:['runs and stops across the wet lawn','cocks its head to listen underground','pulls a long worm out of the cast','stocks the larder for the ground-feeders'] },
+    mast_gather: { id:'mast_gather', label:'Acorn & Mast Gather', minutes:6, icon:'🌰', minLevel:1, starter:true, coins:[1,9], branches:[1,3], xp:11, items:['acorn_handful','acorn_handful','sunflower_seeds','gizzard_grit'], beats:['works the oak canopy for good mast','tests each acorn for weight','picks up gizzard grit from the track','flies home heavy with autumn stores'] },
+    midge_chase: { id:'midge_chase', label:'Midge Swarm Chase', minutes:3, icon:'🦟', minLevel:1, starter:true, coins:[0,5], branches:[0,1], xp:8, items:['aerial_midges','aerial_midges','dragonfly_swarm'], beats:['climbs into the warm evening air','finds a column of midges over the pond','feeds on the wing without landing once','brings a netted cloud back for the aerial feeders'] },
+    bark_grub_round: { id:'bark_grub_round', label:'Bark & Grub Round', minutes:5, icon:'🐛', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:10, items:['mealworm_scoop','suet_cake','wasp_grub_comb'], beats:['works up the trunk in short hops','chisels a grub out of soft bark','raids a fat cake left on a garden log','returns with insect food for the small birds'] },
+    shore_scavenge: { id:'shore_scavenge', label:'Shoreline Scavenge', minutes:6, icon:'🐚', minLevel:1, starter:true, coins:[2,10], branches:[0,1], xp:11, items:['shore_snail_mix','shore_snail_mix','sand_eel'], beats:['walks the tideline as the water drops','probes the wet sand for shellfish','cracks a snail open on a flat stone','carries shore food back for the waders'] },
+    sandeel_run: { id:'sandeel_run', label:'Sand Eel Run', minutes:7, icon:'🐠', minLevel:1, starter:true, coins:[3,12], branches:[0,1], xp:13, items:['sand_eel','sand_eel','live_minnow'], beats:['heads out over the open water','hangs above a boiling shoal','dives, and comes up with a silver eel','flies home with the catch held crosswise'] },
+    nectar_round: { id:'nectar_round', label:'Blossom Nectar Round', minutes:4, icon:'🌺', minLevel:1, starter:true, coins:[1,7], branches:[0,1], xp:9, items:['nectar_cup','nectar_cup','aerial_midges'], beats:['follows the blossom line down the valley','works each flower with a brush tongue','picks off small insects between sips','returns with nectar for the blossom feeders'] },
+    pond_graze: { id:'pond_graze', label:'Dabbling Pond Graze', minutes:5, icon:'🦆', minLevel:1, starter:true, coins:[1,8], branches:[0,2], xp:10, items:['pondweed_tangle','pondweed_tangle','shore_snail_mix'], beats:['paddles out to the quiet weedy end','up-ends to reach the pondweed below','sieves the surface for small shells','brings green food back for the dabblers'] },
     short_forage: { id:'short_forage', label:'Hedgerow Forage', minutes:60, icon:'🌿', minLevel:1, chaWeight:0.5, coins:[22,44], branches:[5,10], xp:25, items:['berry_bundle','shiny_pebble','soft_moss'], beats:['sets off beneath the safe branches','finds a singing hedgerow path','checks a glittering hollow','returns with a beakful of useful things'] },
     supply_run: { id:'supply_run', label:'Pantry Supply Run', minutes:120, icon:'🥣', minLevel:2, chaWeight:1.5, coins:[50,95], branches:[8,14], xp:55, items:['seed_satchel','worm_tin','berry_bundle','xp_scroll_minor'], beats:['sets off with a tiny satchel','trades gossip at a squirrel market','spots a cache of field snacks','returns to the tree with supplies'] },
-    fishing_trip: { id:'fishing_trip', label:'Fishing Trip', minutes:45, icon:'🎣', minLevel:2, coins:[10,26], branches:[0,2], xp:30, items:['live_minnow','live_minnow','river_trout','pondweed_tangle'], beats:['follows the stream down to the shallows','stands statue-still over a glittering pool','strikes — and comes up with a wriggling catch','carries the catch home fresh for the Kitchen larder'] },
+    // Fish is prey too: ospreys, herons and kingfishers starve without it, so
+    // the fishing trip is unlocked from the start alongside the other hunts.
+    fishing_trip: { id:'fishing_trip', label:'Fishing Trip', minutes:45, icon:'🎣', minLevel:1, starter:true, coins:[10,26], branches:[0,2], xp:30, items:['live_minnow','live_minnow','river_trout','pondweed_tangle'], beats:['follows the stream down to the shallows','stands statue-still over a glittering pool','strikes — and comes up with a wriggling catch','carries the catch home fresh for the Kitchen larder'] },
     timber_haul: { id:'timber_haul', label:'Timber Haul', minutes:150, icon:'🌳', minLevel:3, coins:[20,45], branches:[22,38], xp:75, items:['soft_moss','old_map','xp_scroll_minor'], beats:['flies out to the storm-fall clearing','marks the straightest fallen boughs','ropes a heavy bundle with vine loops','hauls the timber back for the high floors'] },
     moon_scout: { id:'moon_scout', label:'Moonlit Scout', minutes:180, icon:'🌙', minLevel:4, chaWeight:0.75, coins:[95,170], branches:[10,18], xp:90, items:['moon_feather','old_map','shiny_pebble','xp_scroll_greater'], clueId:'moon_branch_map', beats:['sets off as the leaves glow silver','follows Merlin runes through the canopy','marks a safe route past the shadow woods','returns with a new clue for the Kingdom of Burbz'] },
     envoy_parley: { id:'envoy_parley', label:'Diplomacy Envoy', minutes:90, icon:'🕊️', minLevel:2, chaWeight:2.5, coins:[28,62], branches:[2,5], xp:45, items:['shiny_pebble','berry_bundle','xp_scroll_minor'], beats:['flies out under a truce-feather banner','charms a wary border flock at the parley stone','talks a bitter squabble down to shared seed','returns with goodwill gifts for the Academy'] }
@@ -111,11 +140,15 @@
     return { ...session, status, progressPct, events, templateCopy: template.copy };
   }
 
-  function createBirdExpedition(bird, templateId='short_forage', nowMs=Date.now()) {
+  // options.slowFactor stretches the timer without touching the payout. It is
+  // how a hungry Merlin still flies: the Kingdom cannot deadlock on an empty
+  // larder, so he works on regardless — it just takes him twice as long.
+  function createBirdExpedition(bird, templateId='short_forage', nowMs=Date.now(), options={}) {
     const template = QUEST_TEMPLATES[templateId] || QUEST_TEMPLATES.short_forage;
     const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
     const seed = hashString(`${bird.id || birdName}|${template.id}|${nowMs}`);
-    const durationMs = template.minutes * 60 * 1000;
+    const slowFactor = Math.max(1, Number(options && options.slowFactor) || 1);
+    const durationMs = Math.round(template.minutes * 60 * 1000 * slowFactor);
     const endMs = nowMs + durationMs;
     const baseCoins = rand(seed, template.coins[0], template.coins[1]);
     const powerBonus = Math.floor(((bird.power || 80) + (bird.int || 40) + (bird.spd || 40) + (bird.stamina || 40)) / 90);
@@ -142,6 +175,8 @@
       startMs: nowMs,
       endMs,
       status: 'active',
+      slowFactor,
+      hungryFlight: slowFactor > 1,
       rewards: { coins: baseCoins + powerBonus + charmBonus, charmBonus, branches: baseBranches + branchBonus, xp: template.xp || (10 + Math.floor(template.minutes / 10)), items: rewardItems },
       story: clue ? { clueId: clue.id, title: clue.title, copy: clue.copy, unlocksTrial: clue.unlocksTrial } : null,
       seed

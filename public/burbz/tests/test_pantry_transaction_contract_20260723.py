@@ -85,9 +85,13 @@ console.log(JSON.stringify({ before, merlinGood, duplicateCrossStore, merlinMeal
     assert out["duplicateCrossStore"]["duplicate"] is True
     assert out["duplicateCrossStore"]["consumed"] == {}
     assert out["duplicateCrossStore"]["state"]["pantry"]["meat"] == 1
-    assert out["merlinMealworm"]["ok"] is False
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
-    assert out["merlinMealworm"]["state"]["merlinCare"]["hunger"] == out["duplicateCrossStore"]["state"]["merlinCare"]["hunger"]
+    # Mealworms are a secondary food for a Merlin: eaten, but not the mainstay,
+    # so the meal is served from the right store at half value rather than
+    # refused. Food outside the diet altogether (finch + fish) still is.
+    assert out["merlinMealworm"]["ok"] is True
+    assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
+    assert out["merlinMealworm"]["consumed"] == {"inventory.larder.mealworm_scoop": 1}
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
     assert out["titMealworm"]["ok"] is True
     assert out["titMealworm"]["consumed"] == {"pantry.insects": 1}
     assert out["titMealworm"]["state"]["pantry"]["insects"] == 1
@@ -163,7 +167,8 @@ def test_academy_and_merlin_ui_paths_use_shared_bridge_transactions():
     html = INDEX.read_text(encoding="utf-8")
     academy_feed = function_source(html, "academyFeedFood")
     merlin_care = function_source(html, "careForMerlin")
-    kitchen_serve = function_source(html, "kitchenServeMeal")
+    one_tap_feed = function_source(html, "burbzFeedFood")
+    wild_feed = function_source(html, "feedWildSpecies")
     claim_expedition = function_source(html, "claimBirdExpedition")
     ensure_larder = function_source(html, "ensureLarder")
     for marker in (
@@ -179,16 +184,26 @@ def test_academy_and_merlin_ui_paths_use_shared_bridge_transactions():
         "Merlin refuses mealworms as a main meal",
     ):
         assert marker in merlin_care, marker
+    # One food, one tap, one meal: the same shared transaction commits it, and
+    # fullness is the hunger bar inside the core — never a wall-clock cooldown.
     for marker in (
-        "const acceptedMeal = result.refusedCount === 0 && result.perfectCount > 0",
-        "No stock spent",
-        "Object.entries(need).forEach(([id, n]) => { larder[id] -= n; });",
-        "result.transactionId = txId",
-        "Merlin is still full — no food was spent.",
-        "gameState.merlinCare.hunger <= 0",
-        "Number(companion.care.hunger) <= 0",
+        "core.applyFeedingTransaction(gameState, entry.target, spec",
+        "{ transactionId:txId, now }",
+        "kitchenRosterRefusalToast(entry, option, tx)",
     ):
-        assert marker in kitchen_serve, marker
+        assert marker in one_tap_feed, marker
+    assert "academyCdLeft" not in one_tap_feed
+    # A still-wild species is fed at the feeder: nothing is spent on a refusal.
+    for marker in (
+        "core.scoreFoodCompatibility(entry.target",
+        "core.ACCEPTED_FEED_VERDICTS",
+        "FIRST_BADGE_BONUS_COINS",
+        "discountedRecruitCost(base, badges)",
+    ):
+        assert marker in wild_feed, marker
+    # A side food is served at half, and the halving is explained, not silent.
+    assert "feedRewardsForVerdict(verdict)" in wild_feed
+    assert "showFeedNotePopup(" in wild_feed
     for marker in (
         "legacyKitchenSupplyIngredient(key)",
         "addLarderIngredient(larderKey, count)",

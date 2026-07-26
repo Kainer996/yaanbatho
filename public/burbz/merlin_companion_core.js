@@ -316,10 +316,14 @@
     const pantry = { ...(rawPantry && typeof rawPantry === 'object' ? rawPantry : {}) };
     if (action === 'feed') {
       if (state.hunger <= 0) return { ok:false, state, pantry, consumed:{}, message:'Merlin is already fully fed; no falcon food was spent.' };
-      const falconFood = Math.max(0, Math.floor(Number(pantry.small_bird_prey_ration) || 0));
-      if (falconFood >= 1) {
-        pantry.small_bird_prey_ration = falconFood - 1;
-        return { ok:true, pantry, consumed:{ small_bird_prey_ration:1 }, state:addBond(sanitizeMerlinCare({ ...applyHungerDelta(state, -32, 'merlin-feed:small_bird_prey_ration', time), happiness:state.happiness + 7, energy:state.energy + 4, lastCareAt:time, lastFedAt:time }, time), 5), message:'Falcon food served: a small-bird prey ration suits Falco columbarius.' };
+      // A Merlin hunts small birds — pipits, larks, finches — so any
+      // small-bird ration up to starling size feeds him. A pigeon ration is
+      // far too big for the smallest falcon in the kingdom and is not offered.
+      const MERLIN_PREY_RATIONS = ['small_bird_prey_ration', 'starling_prey_ration'];
+      const falconRationId = MERLIN_PREY_RATIONS.find(id => Math.max(0, Math.floor(Number(pantry[id]) || 0)) >= 1);
+      if (falconRationId) {
+        pantry[falconRationId] = Math.max(0, Math.floor(Number(pantry[falconRationId]) || 0)) - 1;
+        return { ok:true, pantry, consumed:{ [falconRationId]:1 }, state:addBond(sanitizeMerlinCare({ ...applyHungerDelta(state, -32, 'merlin-feed:' + falconRationId, time), happiness:state.happiness + 7, energy:state.energy + 4, lastCareAt:time, lastFedAt:time }, time), 5), message:'Falcon food served: a small-bird prey ration suits Falco columbarius.' };
       }
       const insects = Math.max(0, Math.floor(Number(pantry.insects) || 0));
       if (insects > 0) return { ok:false, state, pantry, consumed:{}, message:'Merlin refuses mealworms as a main meal: Falco columbarius is a small-bird specialist, so prepare a small-bird prey ration.' };
