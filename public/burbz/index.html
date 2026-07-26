@@ -910,9 +910,14 @@ svg.academy-room-bg { display:block; filter:none; }
   z-index: 179;
   pointer-events: none;
   transform-origin: right center;
-  animation: merlinBranchSway 18s ease-in-out infinite;
+  animation: merlinBranchSway 7.6s ease-in-out infinite;
 }
 .merlin-perch-assembly:has(.pet-companion.flying) { animation:none; }
+/* Away on a quest, the bough is empty and must LOOK empty: nothing on the
+   branch, whatever else has touched the companion's classes. It also rides a
+   little higher and rocks faster with no falcon's weight on the end of it. */
+.merlin-perch-assembly.merlin-away .pet-companion { display: none !important; }
+.merlin-perch-assembly.merlin-away { animation: merlinBranchLighten 5.4s ease-in-out infinite; }
 .pet-companion {
   position: absolute;
   /* Merlin grew, and he grew upwards out of the box: his toes stay on the bark
@@ -949,16 +954,16 @@ svg.academy-room-bg { display:block; filter:none; }
 .pet-branch { display: block; width: 150px; height: 86.7px; overflow: visible; }
 /* Side twigs flex about the point where they join the bough, not about the
    bough's own pivot, so the leafy sprays quiver instead of sliding. */
-.pet-branch-spray { transform-box: view-box; transform-origin: 98px 41px; animation: merlin-twig-flutter 4.3s ease-in-out infinite; }
-.pet-branch-tip { transform-box: view-box; transform-origin: 56px 43.8px; animation: merlin-twig-flutter 3.7s ease-in-out infinite; }
-.pet-branch-drop { transform-box: view-box; transform-origin: 160px 53.4px; animation: merlin-twig-flutter 5.6s ease-in-out infinite reverse; }
-@keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-1.4deg); } 50%{ transform: rotate(1.7deg); } }
+.pet-branch-spray { transform-box: view-box; transform-origin: 98px 41px; animation: merlin-twig-flutter 3.4s ease-in-out infinite; }
+.pet-branch-tip { transform-box: view-box; transform-origin: 56px 43.8px; animation: merlin-twig-flutter 2.9s ease-in-out infinite; }
+.pet-branch-drop { transform-box: view-box; transform-origin: 160px 53.4px; animation: merlin-twig-flutter 4.4s ease-in-out infinite reverse; }
+@keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-2.8deg); } 50%{ transform: rotate(3.4deg); } }
 .pet-companion.facing-left .pet-sprite { transform: scaleX(-1); }
 .pet-companion.flying { position:fixed; z-index:260; }
 .pet-sprite {
   width: 88px; height: 88px; margin: 0 auto; overflow: visible;
   display: flex; align-items: center; justify-content: center; position: relative; z-index: 3;
-  background:transparent; border:0; transform-origin:50% 92%; animation:pet-idle 3.6s ease-in-out infinite;
+  background:transparent; border:0; transform-origin:50% 92%; animation:pet-idle 3.1s ease-in-out infinite;
 }
 .pet-sprite.pet-walk { animation: pet-flutter 0.38s ease-in-out infinite; }
 .pet-sprite > img { width: 100%; height: 100%; object-fit: contain; filter:drop-shadow(0 8px 8px rgba(0,0,0,.50)); }
@@ -971,16 +976,16 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-rig { position: absolute; inset: 0; display: block; filter: drop-shadow(0 8px 8px rgba(0,0,0,.50)); }
 .merlin-part { position: absolute; inset: 0; width: 100%; height: 100%; display: block; will-change: transform; }
 .merlin-part > img { width: 100%; height: 100%; display: block; }
-.merlin-back { z-index: 1; transform-origin: 56.0% 29.9%; animation: merlin-cape-sway 7.6s ease-in-out infinite; }   /* cloak + tail, pivots at the shoulder */
-.merlin-body { z-index: 2; transform-origin: 45.6% 78.1%; animation: merlin-breathe 3.9s ease-in-out infinite; }     /* pivots on the talons, so breathing never lifts him */
-.merlin-wing { z-index: 3; transform-origin: 48.4% 32.6%; animation: merlin-wing-shuffle 6.7s ease-in-out infinite; }
-.merlin-head { z-index: 4; transform-origin: 43.0% 25.5%; animation: merlin-head-look 5.3s ease-in-out infinite; }   /* pivots at the base of the skull */
+.merlin-back { z-index: 1; transform-origin: 56.0% 29.9%; animation: merlin-cape-sway 6.4s ease-in-out infinite; }   /* cloak + tail, pivots at the shoulder */
+.merlin-body { z-index: 2; transform-origin: 45.6% 78.1%; animation: merlin-breathe 3.2s ease-in-out infinite; }     /* pivots on the talons, so breathing never lifts him */
+.merlin-wing { z-index: 3; transform-origin: 48.4% 32.6%; animation: merlin-wing-shuffle 5.6s ease-in-out infinite; }
+.merlin-head { z-index: 4; transform-origin: 43.0% 25.5%; animation: merlin-head-look 5.0s ease-in-out infinite; }   /* pivots at the base of the skull */
 /* A wizard's eye catches the light every so often. It sits inside .merlin-head,
    so it turns with the skull and never slides off the eye mid-glance. */
 .merlin-glint {
   position: absolute; left: 36.9%; top: 15.1%; width: 5%; height: 5%; z-index: 5; border-radius: 50%;
   background: radial-gradient(circle, rgba(255,246,214,0.95) 0%, rgba(255,212,59,0.5) 45%, rgba(255,212,59,0) 72%);
-  opacity: 0; animation: merlin-eye-glint 9.4s ease-in-out infinite;
+  opacity: 0; animation: merlin-eye-glint 7.8s ease-in-out infinite;
 }
 /* In flight the idle cycles give way to a real wingbeat. */
 .pet-sprite.pet-walk .merlin-wing { animation: merlin-wing-beat 0.26s ease-in-out infinite; }
@@ -1025,45 +1030,65 @@ svg.academy-room-bg { display:block; filter:none; }
   position: fixed; z-index: 259; pointer-events: none; color: var(--legendary); font-size: 16px;
   animation: pet-sparkle 1.2s ease-out forwards;
 }
-@keyframes merlinBranchSway { 0%,100%{ transform:rotate(-0.7deg); } 50%{ transform:rotate(0.8deg); } }
-@keyframes pet-idle { 0%,100%{ transform:rotate(-0.5deg) scale(1); } 50%{ transform:rotate(0.5deg) scale(1.015); } }
+/* A bough is not a shelf. It carries the bird's weight down and springs back
+   up, and it rocks about the trunk end while it does — the whole assembly
+   moves, so the talons never come off the bark. */
+@keyframes merlinBranchSway {
+  0%,100% { transform: translateY(-2.6px) rotate(-1.5deg); }
+  26% { transform: translateY(1.4px) rotate(0.6deg); }
+  52% { transform: translateY(3.2px) rotate(1.7deg); }
+  76% { transform: translateY(0.5px) rotate(0.1deg); }
+}
+/* With no falcon on the end of it, the same bough rides higher and lighter. */
+@keyframes merlinBranchLighten {
+  0%,100% { transform: translateY(-4.6px) rotate(-2.3deg); }
+  50% { transform: translateY(-1.1px) rotate(-0.3deg); }
+}
+@keyframes pet-idle { 0%,100%{ transform:rotate(-1.1deg) scale(1); } 50%{ transform:rotate(1.1deg) scale(1.03); } }
 @keyframes pet-flutter { 0%,100%{ transform: translateY(0) rotate(-8deg); } 50%{ transform: translateY(-5px) rotate(8deg); } }
 @keyframes pet-sparkle { from{ opacity:1; transform:translateY(0) scale(1); } to{ opacity:0; transform:translateY(-36px) scale(0.5); } }
 /* Chest fills and empties about the talons — the one motion that never stops. */
 @keyframes merlin-breathe {
   0%,100% { transform: scaleY(1) scaleX(1); }
-  46% { transform: scaleY(1.018) scaleX(0.994); }
+  46% { transform: scaleY(1.036) scaleX(0.986); }
 }
 /* Long still spells broken by a glance up and a peer down at the map, the way
    a perched falcon actually watches the ground. */
 @keyframes merlin-head-look {
-  0%,24% { transform: rotate(0deg) translate(0,0); }
-  31% { transform: rotate(-4.6deg) translate(-1.1%,-0.5%); }
-  42% { transform: rotate(-5.2deg) translate(-1.3%,-0.5%); }
-  49% { transform: rotate(-1.2deg) translate(-0.2%,-0.1%); }
-  58% { transform: rotate(2.8deg) translate(0.7%,0.4%); }
-  71% { transform: rotate(2.4deg) translate(0.6%,0.4%); }
-  80%,100% { transform: rotate(0deg) translate(0,0); }
+  0%,13% { transform: rotate(0deg) translate(0,0); }
+  20% { transform: rotate(-9deg) translate(-2.2%,-1%); }
+  32% { transform: rotate(-10.4deg) translate(-2.6%,-1.1%); }
+  39% { transform: rotate(-2.4deg) translate(-0.4%,-0.2%); }
+  49% { transform: rotate(5.8deg) translate(1.5%,0.9%); }
+  61% { transform: rotate(5deg) translate(1.3%,0.8%); }
+  69% { transform: rotate(-1.6deg) translate(-0.3%,-0.1%); }
+  78% { transform: rotate(-7.6deg) translate(-1.9%,-0.8%); }
+  87%,100% { transform: rotate(0deg) translate(0,0); }
 }
 /* Two quick beats, then the feathers settle back down — a shuffle, not a flap. */
 @keyframes merlin-wing-shuffle {
-  0%,53% { transform: rotate(0deg) translate(0,0); }
-  58% { transform: rotate(-5.6deg) translate(0.5%,-1.5%); }
-  62% { transform: rotate(-2deg) translate(0.2%,-0.6%); }
-  67% { transform: rotate(-6.6deg) translate(0.6%,-1.8%); }
-  73% { transform: rotate(-1.2deg) translate(0.1%,-0.4%); }
-  79%,100% { transform: rotate(0deg) translate(0,0); }
+  0%,25% { transform: rotate(0deg) translate(0,0); }
+  30% { transform: rotate(-8.4deg) translate(0.8%,-2.4%); }
+  36% { transform: rotate(-2.6deg) translate(0.2%,-0.7%); }
+  46% { transform: rotate(0deg) translate(0,0); }
+  57% { transform: rotate(-11deg) translate(1%,-3.1%); }
+  62% { transform: rotate(-3.4deg) translate(0.3%,-0.9%); }
+  67% { transform: rotate(-12.8deg) translate(1.2%,-3.6%); }
+  74% { transform: rotate(-2.2deg) translate(0.2%,-0.6%); }
+  81%,100% { transform: rotate(0deg) translate(0,0); }
 }
 /* The cloak trails the body it hangs from, so it runs slower and later. */
 @keyframes merlin-cape-sway {
-  0%,100% { transform: rotate(-0.9deg); }
-  44% { transform: rotate(1.2deg); }
-  72% { transform: rotate(0.2deg); }
+  0%,100% { transform: rotate(-2.4deg); }
+  44% { transform: rotate(3deg); }
+  72% { transform: rotate(0.6deg); }
 }
 @keyframes merlin-eye-glint {
-  0%,86%,100% { opacity: 0; transform: scale(0.55); }
-  90% { opacity: 0.9; transform: scale(1.2); }
-  95% { opacity: 0; transform: scale(0.7); }
+  0%,52%,100% { opacity: 0; transform: scale(0.55); }
+  56% { opacity: 0.75; transform: scale(1.05); }
+  60%,85% { opacity: 0; transform: scale(0.6); }
+  89% { opacity: 0.95; transform: scale(1.25); }
+  94% { opacity: 0; transform: scale(0.7); }
 }
 @keyframes merlin-wing-beat {
   0%,100% { transform: rotate(-27deg) translate(1.6%,-5%); }
@@ -11169,6 +11194,8 @@ function questTimeLeftLabel(q) {
 }
 
 function renderBirdExpeditions() {
+  // Whenever the quest board redraws, the branch is told who is on it.
+  try { syncMerlinPerchPresence(); } catch (e) {}
   const questScreen = $('expeditionQuestList');
   if (!questScreen) return;
   const rows = ensureBirdExpeditions().filter(q => q.status !== 'claimed').slice(0, 10)
@@ -24765,18 +24792,41 @@ function renderMerlinCareMenu() {
   if ($('merlinDietGuidance')) $('merlinDietGuidance').outerHTML = renderDietDisclosureHTML(MERLIN_GUIDE, 'merlin-care', { title:'Falco columbarius diet', className:'merlin-diet-guidance' });
 }
 
-function renderPetCompanion() {
+// Merlin is out the moment an expedition of his is unclaimed, and stays out
+// until it is. Everything that draws or moves him asks this one question.
+function merlinIsAway() {
+  return birdHasActiveExpedition(MERLIN_GUIDE.id);
+}
+
+// Put the branch in the right state for where Merlin actually is. Cheap enough
+// to call from any tick, so an empty bough can never be left carrying a bird
+// that flew off ten minutes ago.
+function syncMerlinPerchPresence() {
   const companion = $('petCompanion');
   const perch = $('petPerch');
   const assembly = $('merlinPerchAssembly');
-  const sprite = $('petSprite');
-  if (!companion || !sprite) return;
-  if (!sprite.querySelector('.merlin-rig')) sprite.innerHTML = merlinRigHTML();
-  const away = birdHasActiveExpedition(MERLIN_GUIDE.id);
+  if (!companion) return false;
+  const away = merlinIsAway();
   companion.classList.toggle('show', !away);
   if (perch) perch.classList.add('show');
   if (assembly) { assembly.classList.toggle('merlin-away', away); assembly.dataset.merlinStatus = away ? 'away' : 'perched'; }
-  if (away) closeMerlinCareMenu();
+  if (away) {
+    // He took his flight and his speech bubble with him.
+    clearTimeout(petFlightTimer);
+    companion.classList.remove('flying', 'facing-left');
+    const bubble = $('petSpeech');
+    if (bubble) bubble.classList.remove('show');
+    closeMerlinCareMenu();
+  }
+  return away;
+}
+
+function renderPetCompanion() {
+  const companion = $('petCompanion');
+  const sprite = $('petSprite');
+  if (!companion || !sprite) return;
+  if (!sprite.querySelector('.merlin-rig')) sprite.innerHTML = merlinRigHTML();
+  const away = syncMerlinPerchPresence();
   renderMerlinCareMenu();
   if (!away && !companion.classList.contains('flying')) setPetOnPerch();
 }
@@ -24806,7 +24856,7 @@ function closeMerlinCareMenu() {
 function petFlyOutAndReturn() {
   const companion = $('petCompanion');
   const sprite = $('petSprite');
-  if (!companion || !sprite || !companion.classList.contains('show') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!companion || !sprite || !companion.classList.contains('show') || merlinIsAway() || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   clearTimeout(petFlightTimer);
   const rect = companion.getBoundingClientRect();
   companion.style.right = 'auto'; companion.style.left = rect.left + 'px'; companion.style.top = rect.top + 'px';
