@@ -85,9 +85,13 @@ console.log(JSON.stringify({ before, merlinGood, duplicateCrossStore, merlinMeal
     assert out["duplicateCrossStore"]["duplicate"] is True
     assert out["duplicateCrossStore"]["consumed"] == {}
     assert out["duplicateCrossStore"]["state"]["pantry"]["meat"] == 1
-    assert out["merlinMealworm"]["ok"] is False
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
-    assert out["merlinMealworm"]["state"]["merlinCare"]["hunger"] == out["duplicateCrossStore"]["state"]["merlinCare"]["hunger"]
+    # Mealworms are a secondary food for a Merlin: eaten, but not the mainstay,
+    # so the meal is served from the right store at half value rather than
+    # refused. Food outside the diet altogether (finch + fish) still is.
+    assert out["merlinMealworm"]["ok"] is True
+    assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
+    assert out["merlinMealworm"]["consumed"] == {"inventory.larder.mealworm_scoop": 1}
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
     assert out["titMealworm"]["ok"] is True
     assert out["titMealworm"]["consumed"] == {"pantry.insects": 1}
     assert out["titMealworm"]["state"]["pantry"]["insects"] == 1
@@ -192,11 +196,14 @@ def test_academy_and_merlin_ui_paths_use_shared_bridge_transactions():
     # A still-wild species is fed at the feeder: nothing is spent on a refusal.
     for marker in (
         "core.scoreFoodCompatibility(entry.target",
-        "if (verdict !== 'primary' && verdict !== 'insufficient')",
+        "core.ACCEPTED_FEED_VERDICTS",
         "FIRST_BADGE_BONUS_COINS",
         "discountedRecruitCost(base, badges)",
     ):
         assert marker in wild_feed, marker
+    # A side food is served at half, and the halving is explained, not silent.
+    assert "feedRewardsForVerdict(verdict)" in wild_feed
+    assert "showFeedNotePopup(" in wild_feed
     for marker in (
         "legacyKitchenSupplyIngredient(key)",
         "addLarderIngredient(larderKey, count)",

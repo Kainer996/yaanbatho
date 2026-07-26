@@ -270,9 +270,14 @@ def test_the_food_list_shows_every_food_with_the_prey_blurb_that_names_its_hunte
     # Each food is its own one-tap meal button, and every button carries the
     # description — including the "Taken by:" line prey items add for the
     # birds that really hunt them.
-    picker = function_source(html, "kitchenCounterFoodListHTML")
-    assert "feed-food-desc" in picker
-    assert "burbzFeedTap(" in picker
+    # Both food lists render through one row builder, so the counter and the
+    # feed sheet can never drift apart.
+    assert "feedFoodRowHTML(entry, option, reveal)" in function_source(html, "kitchenCounterFoodListHTML")
+    row = function_source(html, "feedFoodRowHTML")
+    assert "feed-food-desc" in row
+    assert "burbzFeedTap(" in row
+    # A half-value side food says so on its face, before it is tapped.
+    assert "Side snack" in row
     options = function_source(html, "kitchenRosterFoodOptions")
     assert "Taken by: " in options
     # The bird's diet still sits above the list, on the guest card.

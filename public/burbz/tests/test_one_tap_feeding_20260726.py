@@ -58,6 +58,7 @@ require('./kitchen_pantry_core.js');
 require('./bird_diet_hunger_core.js');
 const toasts = [];
 const bursts = [];
+const notes = [];
 global.showToast = m => toasts.push(m);
 global.SFX = { tap(){}, capture(){}, victory(){} };
 global.vibrate = () => {};
@@ -94,6 +95,7 @@ global.createBirdFromDiscovery = () => null;
 global.RARITY_RECRUIT_COST = { common:150, uncommon:400, rare:1000, epic:2500, legendary:6000 };
 global.playFeedDopamineBurst = d => bursts.push(d);
 global.refreshFeedSurfaces = () => {};
+global.showFeedNotePopup = (t, b) => notes.push({ title:t, body:b });
 global.feedSheetKey = null;
 global.FOODS = { berries:{label:'Berries',emoji:'🫐',desc:''}, seeds:{label:'Seeds',emoji:'🌾',desc:''} };
 global.gameState = {
@@ -117,7 +119,8 @@ global.gameState = {
 let code = 'let kitchenRosterTrayKey = null;\n';
 const rewardsAt = html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({');
 code += html.slice(rewardsAt, html.indexOf('});', rewardsAt) + 3) + '\n';
-for (const n of ['legacyKitchenSupplyIngredient','ensureLarder','addLarderIngredient','kitchenRosterEntries',
+for (const n of ['legacyKitchenSupplyIngredient','ensureLarder','addLarderIngredient','feedOptionVerdict',
+                 'feedRewardsForVerdict','feedSideSnackExplainer','kitchenRosterEntries',
                  'kitchenRosterEntryByKey','kitchenRosterWantedPrep','kitchenRosterFoodOptions',
                  'kitchenRosterEatsLabels','kitchenRosterHungerStatus','kitchenRosterRefusalToast',
                  'feedEntryForKey','feedWildEntryForSpeciesKey','feedFoodOptions','kitchenRecordFieldNote',
@@ -219,7 +222,8 @@ def test_birdex_and_companion_cards_can_feed_the_bird():
 def test_the_feed_sheet_serves_one_food_per_tap_and_flies_the_bird_to_it():
     html = HTML.read_text(encoding="utf-8")
     sheet = function_source(html, "renderFeedSheet")
-    assert "burbzFeedTap(" in sheet
+    assert "feedFoodRowHTML(entry, option, reveal)" in sheet
+    assert "burbzFeedTap(" in function_source(html, "feedFoodRowHTML")
     assert "One food, one meal" in sheet
     fly = function_source(html, "feedFlyBirdToFood")
     assert "getBoundingClientRect" in fly
@@ -289,3 +293,95 @@ def test_only_merlin_is_allowed_to_fly_hungry():
     start = function_source(html, "startBirdExpedition")
     assert "merlinExpeditionSlowFactor()" in start
     assert "twice as long" in start
+
+
+# ---------------------------------------------------------------------------
+# 4. Side foods are served at half, fed birds leave the counter, and the
+#    counter shows the hunger it is there to fill
+# ---------------------------------------------------------------------------
+
+SIDE_SNACK_HARNESS = FEED_HARNESS.replace(
+    "out.fullBirdIsFull = F.birdIsFull(thrush()) === true;",
+    """out.fullBirdIsFull = F.birdIsFull(thrush()) === true;
+// A Woodpigeon eats leafy plants; seeds are a real but secondary food for it.
+gameState.flock.push({ id:'pigeon', species:'Woodpigeon', commonName:'Woodpigeon', scientificName:'Columba palumbus',
+  level:1, xp:0, maxHp:100, hp:100, academy:{ room:'outdoors', dietKnown:true }, training:{ feedCount:0, hpBonus:0 },
+  care:{ hunger:80, happiness:50, hungerTransactions:[], hungerTransactionLog:[] } });
+gameState.inventory.larder.sunflower_seeds = 4;
+const pigeon = () => gameState.flock.find(b => b.id === 'pigeon');
+const seedOption = F.feedFoodOptions(F.feedEntryForKey('pigeon')).find(o => o.id === 'sunflower_seeds');
+out.seedsAccepted = !!(seedOption && seedOption.accepted);
+out.seedsAreSideSnack = !!(seedOption && seedOption.sideSnack);
+out.seedsAreNotMain = !(seedOption && seedOption.main);
+const pigeonBefore = pigeon().care.hunger;
+F.burbzFeedFood('pigeon', 'larder', 'sunflower_seeds');
+out.pigeonFed = pigeonBefore - pigeon().care.hunger;
+out.pigeonXp = pigeon().xp;
+out.seedsSpent = 4 - gameState.inventory.larder.sunflower_seeds;
+out.sideSnackNote = notes[notes.length - 1] || null;
+out.sideSnackBurst = bursts[bursts.length - 1] || null;
+"""
+)
+
+
+def test_a_secondary_food_is_served_at_half_instead_of_refused():
+    out = run_node(SIDE_SNACK_HARNESS)
+    assert out["seedsAccepted"] is True, "seeds must be servable to a Woodpigeon"
+    assert out["seedsAreSideSnack"] is True
+    assert out["seedsAreNotMain"] is True
+    assert out["seedsSpent"] == 1
+    # Sunflower seeds are worth 28 to a bird that lives on them; half here.
+    assert out["pigeonFed"] == round(28 * 0.5)
+    # And half the bird XP a main meal pays.
+    assert out["pigeonXp"] == round(6 / 2)
+
+
+def test_the_player_is_told_why_a_side_food_only_counted_half():
+    out = run_node(SIDE_SNACK_HARNESS)
+    note = out["sideSnackNote"]
+    assert note, "a side food must explain itself"
+    assert "side" in note["title"].lower()
+    body = note["body"].lower()
+    assert "half the hunger" in body and "half the xp" in body
+    assert "woodpigeon" in body
+    # The burst says it too, at a glance.
+    assert "SIDE SNACK" in out["sideSnackBurst"]["badge"]
+
+
+def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
+    html = HTML.read_text(encoding="utf-8")
+    rewards = function_source(html, "feedRewardsForVerdict")
+    assert "Math.round(Number(value) / 2)" in rewards
+    assert "FEED_MEAL_REWARDS.primary" in rewards
+    # The hunger half lives in the diet core, as one number.
+    core = (ROOT / "bird_diet_hunger_core.js").read_text(encoding="utf-8")
+    assert "const SECONDARY_MEAL_FRACTION = 0.5;" in core
+    assert "SECONDARY_MEAL_FRACTION" in core.split("verdict: record.matchMethod")[1][:400]
+
+
+def test_a_full_bird_leaves_the_feeding_screen():
+    html = HTML.read_text(encoding="utf-8")
+    hungry = function_source(html, "kitchenChoiceIsHungry")
+    assert "birdIsFull(row.companion)" in hungry
+    # Wild Birdex visitors have no hunger bar, so they always stay.
+    assert "return true;" in hungry
+    # Both lists on that screen filter, and the selection moves on by itself.
+    assert "function kitchenHungryChoices(" in html
+    assert "const choices = kitchenHungryChoices();" in html
+    assert "kitchenRosterHungryEntries()" in function_source(html, "renderKitchenRosterHTML")
+    selected = function_source(html, "kitchenSelectedChoice")
+    assert "kitchenHungryChoices()" in selected
+    # And the screen says so rather than going blank when everyone is fed.
+    assert 'data-kitchen-all-fed="1"' in html
+
+
+def test_the_prep_counter_shows_the_hunger_it_is_there_to_fill():
+    html = HTML.read_text(encoding="utf-8")
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "kitchenGuestHungerHTML(chosen)" in panel
+    metre = function_source(html, "kitchenGuestHungerHTML")
+    assert 'data-hunger-surface="prep-counter"' in metre
+    assert "academy-meter-fill hunger" in metre
+    assert "/100 hunger" in metre
+    # A wild visitor has no hunger bar to show, and is told so instead.
+    assert "entry.wild" in metre

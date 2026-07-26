@@ -218,6 +218,7 @@ const createBirdFromDiscovery = () => null;
 const birdOnlyImgHTML = () => '<span class="art">B</span>';
 const playFeedDopamineBurst = () => {};
 const recordFeedReceipt = () => {};
+const showFeedNotePopup = () => {};
 const refreshFeedSurfaces = () => {};
 const vibrate = () => {};
 """
@@ -225,6 +226,7 @@ const vibrate = () => {};
         "kitchenCore", "kitchenIngredientById", "legacyKitchenSupplyIngredient", "ensureLarder", "addLarderIngredient",
         "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNote",
         "kitchenDietSubject", "kitchenDietRuleForChoice", "kitchenRosterWantedPrep",
+        "feedOptionVerdict", "feedRewardsForVerdict", "feedSideSnackExplainer",
         "kitchenRosterFoodOptions", "kitchenRosterRefusalToast", "feedEntryForKey",
         "feedWildEntryForSpeciesKey", "feedFoodOptions", "feedWildSpecies", "burbzFeedFood",
     ))

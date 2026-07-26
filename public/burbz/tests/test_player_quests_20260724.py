@@ -104,4 +104,4 @@ def test_tutorial_introduces_player_quests():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-one-tap-feeding-merlin-perch-v141-20260726" in sw
+    assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
