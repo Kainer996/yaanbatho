@@ -4073,8 +4073,11 @@ function renderDietDisclosureHTML(subject, surface, options = {}) {
 }
 
 // Player's pantry — refilled gradually so feeding has rhythm
-const DEFAULT_PANTRY = { seeds: 6, suet: 4, insects: 5, worms: 4, berries: 4, fruit: 4, fish: 3, flying: 3, meat: 2, carrion: 2, acorns: 4, aquatic: 4 };
-const PANTRY_CAP = { seeds: 12, suet: 10, insects: 12, worms: 10, berries: 10, fruit: 10, fish: 8, flying: 8, meat: 6, carrion: 6, acorns: 10, aquatic: 10 };
+// Meat, fish and carrion used to restock at half the rate of seed and sit at
+// a cap of six, which starved the birds of prey — a hawk eats every day, so
+// the carnivore shelves now hold and refill like the rest of the pantry.
+const DEFAULT_PANTRY = { seeds: 6, suet: 4, insects: 5, worms: 4, berries: 4, fruit: 4, fish: 4, flying: 3, meat: 5, carrion: 4, acorns: 4, aquatic: 4 };
+const PANTRY_CAP = { seeds: 12, suet: 10, insects: 12, worms: 10, berries: 10, fruit: 10, fish: 10, flying: 8, meat: 12, carrion: 10, acorns: 10, aquatic: 10 };
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -4338,14 +4341,21 @@ function adjustBirdHungerUntracked(bird, delta, now = Date.now()) {
   bird.care.lastHungerAt = now;
   return { ok:true, care:bird.care };
 }
+// Day-one meat. A brand-new game can hand you an owl, a kestrel or a corvid
+// long before the first shop is liberated, and none of them can eat seed — so
+// every save starts with real prey across the carnivore families, and the
+// hunting quests, map forage and butcher counter keep it topped up.
+const STARTER_PREY_LARDER = { field_vole: 3, wood_mouse: 2, carrion_scraps: 2, common_frog: 1 };
+
 const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
   flock: [],
   discoveredSpecies: {},
-  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1 } },
+  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
   dietBadges: {}, // speciesKey → count of Field-Perfect meals served (Kitchen & Pantry)
   kitchenNotes: {}, // speciesKey → { perfect:[families], refused:[families] } — the player's own field notes
   kitchenStarterLarderVersion: 1, // One-time documented starter stock for the reachable Kitchen/Pantry proof.
+  kitchenPreyLarderVersion: 1, // One-time prey top-up so existing saves get meat for their birds of prey too.
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   quests: {},
   questsLastReset: null,
@@ -4442,6 +4452,7 @@ function loadState() {
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
   const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
   const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
+  const needsKitchenPreyLarderGrant = (Number(gameState.kitchenPreyLarderVersion) || 0) < 1;
   for (const k of Object.keys(DEFAULT_STATE)) {
     if (gameState[k] === undefined) gameState[k] = JSON.parse(JSON.stringify(DEFAULT_STATE[k]));
   }
@@ -4470,6 +4481,15 @@ function loadState() {
       gameState.inventory.larder[id] = Math.max(Number(gameState.inventory.larder[id]) || 0, Number(count) || 0);
     });
     gameState.kitchenStarterLarderVersion = 1;
+  }
+  // Prey top-up: saves made before the hunting quests existed have no meat in
+  // the larder at all, which left birds of prey unfeedable. Grant the same
+  // day-one prey a fresh game gets, once.
+  if (needsKitchenPreyLarderGrant) {
+    Object.entries(STARTER_PREY_LARDER).forEach(([id, count]) => {
+      gameState.inventory.larder[id] = Math.max(Number(gameState.inventory.larder[id]) || 0, Number(count) || 0);
+    });
+    gameState.kitchenPreyLarderVersion = 1;
   }
   gameState.dietBadges = (gameState.dietBadges && typeof gameState.dietBadges === 'object' && !Array.isArray(gameState.dietBadges)) ? gameState.dietBadges : {};
   gameState.kitchenNotes = (gameState.kitchenNotes && typeof gameState.kitchenNotes === 'object' && !Array.isArray(gameState.kitchenNotes)) ? gameState.kitchenNotes : {};
@@ -11041,6 +11061,11 @@ const QUEST_TEMPLATE_INFO = {
   find_coins:   'Someone always drops a coin near the market lane. Send a sharp-eyed bird.',
   branch_run:   'Fallen twigs litter the windfall thicket. Haul branches home — buildings need timber.',
   scavenge:     'Moss, twigs and berries for the Academy stores. Easy pickings.',
+  meadow_hunt:  'Quarter the rough grass for voles, mice and shrews — the staple prey of owls, kestrels and harriers.',
+  warren_watch: 'A patient watch over the warren. Young rabbits: the heavy prey buzzards, goshawks and eagles need.',
+  ration_run:   'A trip to the old falconry mews for prepared bird-prey rations — food for merlins, sparrowhawks, peregrines and goshawks.',
+  carrion_round:'Ride the thermals over the hill road with the crows. Carrion for kites, ravens, crows and vultures.',
+  marsh_hunt:   'Work the flooded ditches for frogs, lizards, dragonflies and wasp grubs — herons, little owls, hobbies and honey buzzards.',
   short_forage: 'An hour among the hedgerows for berries and shiny finds.',
   supply_run:   'A two-hour supply route past the squirrel market. Fills the pantry.',
   fishing_trip: 'A patient stint at the river shallows. Live fish and pondweed for the Kitchen larder — fish-hunters must be fed live prey.',
@@ -11089,7 +11114,11 @@ function renderBirdExpeditions() {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
-    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
+    // Show the food an errand actually brings home. The hunting quests exist
+    // so the birds of prey can eat, and that has to be readable at a glance.
+    const foodIcons = [...new Set((t.items || []).map(id => kitchenIngredientById(id)).filter(Boolean).map(ing => ing.icon))];
+    const foodHint = foodIcons.length ? ' · ' + foodIcons.slice(0, 4).join('') + ' food' : '';
+    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
@@ -11929,6 +11958,15 @@ function ensureLarder() {
   return larder;
 }
 
+// Prey items carry a takenBy line naming the birds that really hunt them, so
+// the player can tell a Barn Owl's vole from a Goshawk's pigeon ration without
+// guessing. Everything else just shows its own description.
+function kitchenIngredientBlurb(ing) {
+  if (!ing) return '';
+  const desc = String(ing.desc || '');
+  return ing.takenBy ? (desc + ' Taken by: ' + ing.takenBy + '.').trim() : desc;
+}
+
 function addLarderIngredient(id, qty) {
   if (!kitchenIngredientById(id)) return false;
   const larder = ensureLarder();
@@ -12011,7 +12049,7 @@ function kitchenRosterFoodOptions(entry) {
     const prep = kitchenRosterWantedPrep(entry.target, ing);
     const compat = core.scoreFoodCompatibility(entry.target, { ingredientId:id, prep });
     const uiIng = kitchenIngredientById(id);
-    options.push({ kind:'larder', id, label:ing.label, emoji:(uiIng && uiIng.icon) || '🍽️', desc:ing.desc || '', count, prep, accepted: compat.verdict === 'primary' || compat.verdict === 'insufficient' });
+    options.push({ kind:'larder', id, label:ing.label, emoji:(uiIng && uiIng.icon) || '🍽️', desc:(ing.desc || '') + ((uiIng && uiIng.takenBy) ? ' Taken by: ' + uiIng.takenBy + '.' : ''), count, prep, accepted: compat.verdict === 'primary' || compat.verdict === 'insufficient' });
   });
   return options;
 }
@@ -12032,7 +12070,7 @@ function kitchenRosterHungerStatus(entry) {
 
 function kitchenRosterTrayHTML(entry, options) {
   if (!options.length) {
-    return '<div class="kitchen-roster-tray"><div class="kitchen-roster-tray-hint">The kitchen is completely bare — buy food at a liberated village market, or bring some back from quests and map forage.</div></div>';
+    return '<div class="kitchen-roster-tray"><div class="kitchen-roster-tray-hint">The kitchen is completely bare — send a bird on a hunting quest (Vole Meadow Hunt, Falconry Ration Run, Carrion Round, Marsh &amp; Ditch Hunt or Fishing Trip), pick prey up on a walk, or buy food at a village market.</div></div>';
   }
   // Diet already discovered? Then highlight known-good picks, like the
   // Academy tray does. Otherwise nothing is revealed: picking teaches.
@@ -12055,11 +12093,36 @@ function kitchenRosterRowHTML(entry) {
   const away = entry.bird ? birdHasActiveExpedition(entry.bird.id) : false;
   const training = entry.bird ? birdHasActiveTraining(entry.bird.id) : false;
   const eats = kitchenRosterEatsLabels(entry);
+  // Where this bird's food actually comes from, named errand by errand, so a
+  // player staring at a starving owl is told "Vole Meadow Hunt" instead of the
+  // useless "find it somewhere". Every quest named here is a starter quest.
+  const questHint = (() => {
+    const questHints = {
+      small_mammals: 'Vole Meadow Hunt, Warren Watch or Marsh & Ditch Hunt',
+      small_birds: 'Falconry Ration Run',
+      carrion: 'Carrion Round',
+      fish: 'Fishing Trip',
+      flying_insects: 'Marsh & Ditch Hunt',
+      invertebrates: 'Marsh & Ditch Hunt or Hedgerow Forage',
+      worms: 'Hedgerow Forage',
+      molluscs_crustaceans: 'Fishing Trip',
+      seeds: 'Find Seed or Pantry Supply Run',
+      fruit_berries: 'Hedgerow Forage',
+      nectar: 'Hedgerow Forage',
+      aquatic_plants: 'Fishing Trip'
+    };
+    const core = kitchenDietCore();
+    const disc = core && typeof core.dietDisclosureForSpecies === 'function' ? core.dietDisclosureForSpecies(entry.target) : null;
+    const families = (disc && ((disc.primaryFamilies && disc.primaryFamilies.length) ? disc.primaryFamilies : disc.compatibleFamilies)) || [];
+    const hints = [];
+    families.forEach(family => { const hint = questHints[family]; if (hint && !hints.includes(hint)) hints.push(hint); });
+    return hints.slice(0, 2).join(', or the ');
+  })();
   const eatsLine = '<div class="kitchen-roster-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — try a meal and learn') + '</div>';
   const supplyCount = suitable.reduce((sum, option) => sum + option.count, 0);
   const supplyLine = suitable.length
     ? '<div class="kitchen-roster-supply has-food" data-kitchen-supply="stocked">🧺 ' + supplyCount + ' suitable meal' + (supplyCount === 1 ? '' : 's') + ' in the kitchen</div>'
-    : '<div class="kitchen-roster-supply no-food" data-kitchen-supply="empty">🚫 No food in the kitchen for this bird — buy ' + escapeHtml(eats.length ? eats.join(' or ').toLowerCase() : 'its food') + ' at a liberated village market, or find it on quests and map forage.</div>';
+    : '<div class="kitchen-roster-supply no-food" data-kitchen-supply="empty">🚫 No food in the kitchen for this bird — it needs ' + escapeHtml(eats.length ? eats.join(' or ').toLowerCase() : 'its own food') + '. ' + escapeHtml(questHint ? 'Send a bird on the ' + questHint + ' from the Quests board, pick it up on a walk, or buy it at a village market.' : 'Look for it on quests, map forage or at a village market.') + '</div>';
   let activityLine = '';
   if (!entry.merlin) {
     if (status.blocksWork) activityLine = '<div class="kitchen-roster-activity blocked" data-kitchen-activity="blocked">⛔ Too hungry to be active — quests and training are locked until this bird is fed.</div>';
@@ -12085,7 +12148,7 @@ function renderKitchenRosterHTML() {
   if (kitchenRosterTrayKey && !entries.some(row => row.key === kitchenRosterTrayKey)) kitchenRosterTrayKey = null;
   return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
     '<div class="room-add-title">🍽️ Companion feeding table</div>' +
-    '<div class="kitchen-help">Every bird eats something different. Scroll your companions, open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Stock the kitchen from liberated village markets, quests and map forage.</div>' +
+    '<div class="kitchen-help">Every bird eats something different. Scroll your companions, open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Birds of prey cannot eat seed: voles, mice, rabbits, frogs, lizards, bird-prey rations, fish and carrion all come from the hunting quests on the Quests board, from prey you find while walking, and from the village butcher counter.</div>' +
     '<div class="kitchen-roster-list">' + entries.map(kitchenRosterRowHTML).join('') + '</div></div>';
 }
 
@@ -12236,12 +12299,12 @@ function renderKitchenPanelHTML() {
   const larderHtml = larderRows.length ? larderRows.map(([id, count]) => {
     const ing = kitchenIngredientById(id);
     if (!ing) return '';
-    return '<div class="kitchen-larder-item" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(count) || 0) + '" title="' + escapeHtml(ing.desc) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
+    return '<div class="kitchen-larder-item" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(count) || 0) + '" title="' + escapeHtml(kitchenIngredientBlurb(ing)) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
   }).join('') : '<div class="inventory-empty">Larder empty — go fishing from the Quest Roost, walk the map, or shop at the Seed &amp; Sundry.</div>';
 
   return renderKitchenRosterHTML() +
     '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
-    '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow; shops, map forage and quests add more larder stock.</div>' +
+    '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow, plus real prey for the birds of prey: field voles, a wood mouse, carrion scraps and a frog. The hunting quests (Vole Meadow Hunt, Warren Watch, Falconry Ration Run, Carrion Round, Marsh &amp; Ditch Hunt, Fishing Trip), map forage and village butchers restock the larder.</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '<div class="inventory-empty">No birds discovered yet.</div>') + '</div>' +
     speciesCard +
     '<div class="kitchen-plate">' + kitchenState.slots.map((slot, i) => kitchenSlotHTML(slot, i)).join('') + '</div>' +
@@ -12280,7 +12343,7 @@ function kitchenOpenSlot(index) {
       const p = kitchenCore().prepById(pid);
       return '<button class="kitchen-prep-chip" data-ingredient-id="' + escapeHtml(id) + '" data-prep-id="' + escapeHtml(pid) + '" onclick="kitchenAssignSlot(' + index + ',\'' + id + '\',\'' + pid + '\')" title="' + escapeHtml(p.desc) + '">' + p.icon + ' ' + escapeHtml(p.label) + '</button>';
     }).join('');
-    return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(ing.desc) + '</div></div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
+    return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(kitchenIngredientBlurb(ing)) + '</div></div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
   }).join('') : '<div class="inventory-empty">Nothing in the larder. Send a bird on a Fishing Trip, forage the map, or buy supplies at the Seed &amp; Sundry.</div>';
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍳</div><div><div class="quest-name">Plate slot ' + (index + 1) + '</div><div class="quest-desc">Choose an ingredient, then how to serve it — the preparation matters as much as the food.</div></div></div>' +
@@ -14507,11 +14570,22 @@ function sideQuestOnPositionFix(lat, lon, accuracy) {
 }
 
 function sideQuestChestLoot(stableKey, coins) {
+  // Every wander chest carries prey as well as plant food, so a walk always
+  // restocks the birds of prey — and the prey rotates through the whole
+  // carnivore range instead of only voles and falcon rations.
   const bundles = [
     { field_vole: 2, mealworm_scoop: 1 },
     { small_bird_prey_ration: 2, garden_worms: 1 },
-    { field_vole: 1, hedgerow_berries: 2 },
-    { small_bird_prey_ration: 1, sunflower_seeds: 2 }
+    { wood_mouse: 1, hedgerow_berries: 2 },
+    { starling_prey_ration: 1, sunflower_seeds: 2 },
+    { carrion_scraps: 2, deer_carrion: 1 },
+    { young_rabbit: 1, wood_mouse: 1 },
+    { common_frog: 2, common_lizard: 1 },
+    { pigeon_prey_ration: 1, field_vole: 1 },
+    { sand_eel: 2, live_minnow: 1 },
+    { marrow_bone: 1, carrion_scraps: 2 },
+    { common_shrew: 2, dragonfly_swarm: 1 },
+    { river_trout: 1, sand_eel: 2 }
   ];
   const text = String(stableKey || 'legacy-side-chest');
   let hash = 2166136261;
@@ -15683,7 +15757,22 @@ const MAP_PICKUP_TYPES = [
   { id:'feather',  glyph:'🪶', label:'Lucky feather', weight:14, grant() { gameState.inventory.items.lucky_feather = (gameState.inventory.items.lucky_feather || 0) + 1; return '+1 Lucky Feather'; } },
   { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
   { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
-  { id:'fieldvole', glyph:'🐭', label:'Field vole', weight:6, grant() { addLarderIngredient('field_vole', 1); return '+1 Field Vole (Stores larder)'; } },
+  // --- Prey on the ground: the meat birds of prey actually need. Owls,
+  // kestrels, buzzards, kites and the bird-hunting hawks all starve without
+  // these, so real prey turns up on any walk, not just on hunting quests.
+  { id:'fieldvole', glyph:'🐭', label:'Field vole', weight:8, grant() { addLarderIngredient('field_vole', 1); return '+1 Field Vole (Stores larder)'; } },
+  { id:'woodmouse', glyph:'🐁', label:'Wood mouse', weight:7, grant() { addLarderIngredient('wood_mouse', 1); return '+1 Wood Mouse (Stores larder)'; } },
+  { id:'shrew',    glyph:'🐀', label:'Common shrew', weight:4, grant() { addLarderIngredient('common_shrew', 1); return '+1 Common Shrew (Stores larder)'; } },
+  { id:'rabbit',   glyph:'🐇', label:'Young rabbit', weight:4, grant() { addLarderIngredient('young_rabbit', 1); return '+1 Young Rabbit (Stores larder)'; } },
+  { id:'frog',     glyph:'🐸', label:'Ditch frog',  weight:5, grant() { addLarderIngredient('common_frog', 1); return '+1 Common Frog (Stores larder)'; } },
+  { id:'lizard',   glyph:'🦎', label:'Basking lizard', weight:3, grant() { addLarderIngredient('common_lizard', 1); return '+1 Common Lizard (Stores larder)'; } },
+  { id:'preyration', glyph:'🪶', label:'Falconry ration', weight:5, grant() { addLarderIngredient('small_bird_prey_ration', 1); return '+1 Small-Bird Prey Ration (Stores larder)'; } },
+  { id:'starlingration', glyph:'🐦', label:'Starling ration', weight:3, grant() { addLarderIngredient('starling_prey_ration', 1); return '+1 Starling Prey Ration (Stores larder)'; } },
+  { id:'carrion',  glyph:'🦴', label:'Carrion scraps', weight:6, grant() { addLarderIngredient('carrion_scraps', 1); return '+1 Carrion Scraps (Stores larder)'; } },
+  { id:'deercarrion', glyph:'🦌', label:'Deer carcass', weight:2, grant() { addLarderIngredient('deer_carrion', 1); return '+1 Deer Carrion (Stores larder)'; } },
+  { id:'sandeel',  glyph:'🐠', label:'Sand eels',    weight:4, grant() { addLarderIngredient('sand_eel', 1); return '+1 Sand Eel (Stores larder)'; } },
+  { id:'dragonflies', glyph:'🪰', label:'Dragonfly swarm', weight:4, grant() { addLarderIngredient('dragonfly_swarm', 1); return '+1 Dragonfly Swarm (Stores larder)'; } },
+  { id:'waspcomb', glyph:'🐝', label:'Wasp comb',    weight:3, grant() { addLarderIngredient('wasp_grub_comb', 1); return '+1 Wasp Grub Comb (Stores larder)'; } },
   { id:'mealworms', glyph:'🐛', label:'Mealworm scoop', weight:4, grant() { addLarderIngredient('mealworm_scoop', 1); return '+1 Mealworm Scoop (Stores larder)'; } },
   // --- Kitchen larder finds: real bird food headed for the Prep Counter ---
   { id:'wormcast', glyph:'🪱', label:'Worm cast',     weight:10, grant() { addLarderIngredient('garden_worms', 1); return '+1 Garden Worms (Stores larder)'; } },
@@ -16226,7 +16315,17 @@ const VILLAGE_SHOPS = {
       { id: 'larder_falcon',   label: 'Falcon ration',     detail: 'Stores larder: +2 Small-Bird Prey Ration — primary food for Merlin the small falcon', price: 24, larder: 'small_bird_prey_ration', qty: 2 },
       { id: 'larder_mealworm', label: 'Mealworm crate',    detail: 'Stores larder: +3 Mealworm Scoop for the Prep Counter',        price: 15, larder: 'mealworm_scoop',  qty: 3 },
       { id: 'larder_seeds',    label: 'Sunflower sack',    detail: 'Stores larder: +3 Sunflower Seeds — husk them for finches',    price: 12, larder: 'sunflower_seeds', qty: 3 },
-      { id: 'larder_suet',     label: 'Suet cake wrap',    detail: 'Stores larder: +2 Suet Cake — press it into a bark log',       price: 14, larder: 'suet_cake',       qty: 2 }
+      { id: 'larder_suet',     label: 'Suet cake wrap',    detail: 'Stores larder: +2 Suet Cake — press it into a bark log',       price: 14, larder: 'suet_cake',       qty: 2 },
+      // --- The butcher counter: real prey for the birds of prey ---
+      { id: 'larder_vole',     label: 'Vole basket',       detail: 'Stores larder: +3 Field Vole — the staple of Barn Owls, Kestrels and Hen Harriers', price: 21, larder: 'field_vole',   qty: 3 },
+      { id: 'larder_mouse',    label: 'Mouse box',         detail: 'Stores larder: +3 Wood Mouse — what Tawny and Little Owls hunt at night', price: 21, larder: 'wood_mouse',   qty: 3 },
+      { id: 'larder_rabbit',   label: 'Young rabbit',      detail: 'Stores larder: +1 Young Rabbit — heavy prey for Buzzards, Goshawks and eagles', price: 26, larder: 'young_rabbit', qty: 1 },
+      { id: 'larder_starling', label: 'Starling ration',   detail: 'Stores larder: +2 Starling Prey Ration — bird prey for Peregrines and Sparrowhawks', price: 26, larder: 'starling_prey_ration', qty: 2 },
+      { id: 'larder_pigeon',   label: 'Pigeon ration',     detail: 'Stores larder: +1 Pigeon Prey Ration — the Goshawk and city Peregrine mainstay', price: 24, larder: 'pigeon_prey_ration', qty: 1 },
+      { id: 'larder_carrion',  label: 'Carrion pail',      detail: 'Stores larder: +3 Carrion Scraps — for crows, ravens, Red Kites and Buzzards', price: 18, larder: 'carrion_scraps', qty: 3 },
+      { id: 'larder_marrow',   label: 'Marrow bone',       detail: 'Stores larder: +2 Marrow Bone — the Bearded Vulture lives on bone alone',    price: 20, larder: 'marrow_bone',   qty: 2 },
+      { id: 'larder_frog',     label: 'Ditch frogs',       detail: 'Stores larder: +2 Common Frog — for Grey Herons, Little Owls and Marsh Harriers', price: 17, larder: 'common_frog',  qty: 2 },
+      { id: 'larder_sandeel',  label: 'Sand eel bucket',   detail: 'Stores larder: +3 Sand Eel — what Puffins, terns and kittiwakes live on', price: 19, larder: 'sand_eel',     qty: 3 }
     ]
   },
   potion: {
@@ -21645,7 +21744,7 @@ function renderInventory() {
   try {
     larderCards = Object.entries((gameState.inventory && gameState.inventory.larder) || {}).filter(([id, n]) => kitchenIngredientById(id) && (Number(n) || 0) > 0).map(([id, count]) => {
       const ing = kitchenIngredientById(id);
-      return '<div class="inventory-card"><div class="inventory-card-title">' + ing.icon + ' ' + escapeHtml(ing.label) + '</div><div class="inventory-card-detail">' + escapeHtml(ing.desc) + '</div><div class="inventory-card-larder-count"><span>×' + count + '</span><span class="inventory-card-larder-route">Cook at Kitchen &amp; Pantry</span></div></div>';
+      return '<div class="inventory-card"><div class="inventory-card-title">' + ing.icon + ' ' + escapeHtml(ing.label) + '</div><div class="inventory-card-detail">' + escapeHtml(kitchenIngredientBlurb(ing)) + '</div><div class="inventory-card-larder-count"><span>×' + count + '</span><span class="inventory-card-larder-route">Cook at Kitchen &amp; Pantry</span></div></div>';
     }).join('');
   } catch (e) {}
   if (!items.length && !gearCards && !xpCards && !larderCards) {
