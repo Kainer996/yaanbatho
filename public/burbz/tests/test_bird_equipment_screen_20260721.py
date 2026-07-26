@@ -168,8 +168,8 @@ def test_drunk_potions_restock_from_the_bag():
 # ---------------------------------------------------------------------------
 
 def test_loot_core_version_is_bumped_and_consistent():
-    assert 'loot_crafting_core.js?v=bird-equip-screen-20260721' in HTML
-    assert "'./loot_crafting_core.js?v=bird-equip-screen-20260721'" in SW
+    assert 'loot_crafting_core.js?v=timed-crafting-20260726' in HTML
+    assert "'./loot_crafting_core.js?v=timed-crafting-20260726'" in SW
     assert "fletchers-forge-20260719" not in HTML
     assert "fletchers-forge-20260719" not in SW
     assert "const BURBZ_CACHE = 'burbz-" in SW
