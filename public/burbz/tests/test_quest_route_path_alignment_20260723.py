@@ -211,14 +211,14 @@ def test_index_wires_alignment_into_start_resume_and_walking():
     assert "function certifyRouteAgainstWays" in core
     assert "repairQuestRouteAgainstWays" in html and "repairQuestRouteAgainstWays" in core
     assert "routeCertification" in html
-    # And a basemap-charted ring outranks a mirror-sourced one at discovery.
-    assert "visibleRing" in html
+    # Overpass and basemap offers now meet the same whole-route integrity guard.
+    assert "dedupeQuestOffers(merged)" in html
 
 
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724"
+    marker = "quest_core.js?v=quest-route-integrity-loops-v123-20260726"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

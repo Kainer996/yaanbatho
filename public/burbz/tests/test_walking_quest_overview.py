@@ -46,17 +46,22 @@ def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
 
 def test_quest_route_clarity_release_is_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "./quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724" in sw
+    assert "./quest_core.js?v=quest-route-integrity-loops-v123-20260726" in sw
 
 
-def test_nearby_quests_are_sorted_by_distance_to_their_start():
+def test_nearby_quests_prioritise_public_paths_and_known_hiking_routes():
     offers = [
-        {"name": "Far trail", "kind": "trail", "startDistM": 900},
+        {"name": "Far trail", "kind": "trail", "startDistM": 900, "tags": {"route": "hiking"}},
         {"name": "Nearest path", "kind": "path", "startDistM": 80},
-        {"name": "Middle footpath", "kind": "footpath", "startDistM": 320},
+        {
+            "name": "Middle footpath",
+            "kind": "footpath",
+            "startDistM": 320,
+            "tags": {"designation": "public_footpath"},
+        },
     ]
     result = run_core("q.sortOffersByStartDistance(" + json.dumps(offers) + ").map(o => o.name)")
-    assert result == ["Nearest path", "Middle footpath", "Far trail"]
+    assert result == ["Middle footpath", "Far trail", "Nearest path"]
 
 
 def test_missing_start_distance_never_outranks_a_real_nearby_trail():
@@ -190,7 +195,7 @@ def test_distance_markers_use_inner_visual_offsets_without_moving_maplibre_ancho
 def test_show_quests_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724"
+    marker = "quest_core.js?v=quest-route-integrity-loops-v123-20260726"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

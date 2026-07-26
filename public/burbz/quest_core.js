@@ -8,6 +8,10 @@
   'use strict';
 
   var EARTH_R = 6371000;
+  // A route is geometrically closed only when its recorded ends genuinely meet.
+  // Larger gaps may be candidates for a routed return, but must never be bridged
+  // by drawing a straight segment between unrelated path ends.
+  var REAL_LOOP_CLOSE_M = 3;
 
   function toRad(d) { return d * Math.PI / 180; }
 
@@ -35,18 +39,22 @@
     return t;
   }
 
-  // Nearby quest choice is first and foremost about how far the player must
-  // travel before the walk begins. Preserve kind only as a stable tie-breaker.
+  // Only offers with a real, known trailhead compete for nearby ranking.
+  // Within that set, prefer public rights of way, named hiking routes and
+  // genuine loops before using trailhead distance as the tie-breaker.
   function sortOffersByStartDistance(offers) {
-    var rank = { trail: 0, footpath: 1, path: 2, adventure: 3 };
     return (offers || []).slice().sort(function (a, b) {
       var ra = a && a.startDistM, rb = b && b.startDistM;
       var da = (ra == null || ra === '') ? Infinity : Number(ra);
       var db = (rb == null || rb === '') ? Infinity : Number(rb);
       if (!isFinite(da)) da = Infinity;
       if (!isFinite(db)) db = Infinity;
+      if (isFinite(da) !== isFinite(db)) return isFinite(da) ? -1 : 1;
+      var qa = offerQualityScore(a), qb = offerQualityScore(b);
+      if (qa !== qb) return qb - qa;
       if (da !== db) return da - db;
-      return (rank[a && a.kind] == null ? 9 : rank[a.kind]) - (rank[b && b.kind] == null ? 9 : rank[b.kind]);
+      var ak = stableOfferKey(a), bk = stableOfferKey(b);
+      return ak < bk ? -1 : (ak > bk ? 1 : 0);
     });
   }
 
@@ -327,7 +335,7 @@
     return best ? { lat: best.point.lat, lon: best.point.lon, distM: best.distanceM } : null;
   }
 
-  var ROUTE_ALIGNMENT_VERSION = 2;
+  var ROUTE_ALIGNMENT_VERSION = 3;
   var ROUTE_CERTIFICATION_TOLERANCE_M = 2;
   var ROUTE_CERTIFICATION_SAMPLE_M = 2;
 
@@ -345,6 +353,56 @@
     if (/^(no|private)$/i.test(String(p.foot || '').trim())) return false;
     var cls = mapTransportationClass(feature);
     return /^(path|footway|pedestrian|steps|bridleway|track|cycleway)$/.test(cls);
+  }
+
+  function questWayClassification(tags) {
+    tags = tags || {};
+    var highway = String(tags.highway || '').trim().toLowerCase();
+    var forbidden = /^(no|private)$/i.test(String(tags.access || '').trim()) ||
+      /^(no|private)$/i.test(String(tags.foot || '').trim());
+    var designationPublic = /public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic/i
+      .test(String(tags.designation || ''));
+    var foot = String(tags.foot || '').trim().toLowerCase();
+    var access = String(tags.access || '').trim().toLowerCase();
+    var positiveFoot = /^(designated|yes|permissive)$/.test(foot);
+    var positiveAccess = /^(public|yes|permissive)$/.test(access);
+    var named = !!String(tags.name || tags.ref || '').trim();
+    var discoveryClass = /^(path|footway|bridleway|track)$/.test(highway);
+    var eligible = !forbidden && discoveryClass && (
+      highway === 'footway' || highway === 'bridleway' ||
+      designationPublic || positiveFoot || positiveAccess ||
+      (highway === 'path' && named)
+    );
+    // `highway=track` without affirmative walking/public evidence is commonly a
+    // farm or service track. It may remain alignment geometry, but is no quest.
+    if (highway === 'track' && !(designationPublic || positiveFoot || positiveAccess)) eligible = false;
+    var publicFootpath = designationPublic || highway === 'footway' || highway === 'bridleway' ||
+      foot === 'designated' || access === 'public';
+    return {
+      highway: highway,
+      forbidden: forbidden,
+      eligible: eligible,
+      publicFootpath: !forbidden && publicFootpath,
+      explicitPublic: !forbidden && (designationPublic || foot === 'designated' || access === 'public'),
+      named: named
+    };
+  }
+
+  // Quest discovery is intentionally stricter than alignment. Urban pedestrian
+  // plazas, steps, cycleways, and access-unknown tracks can help certify a short
+  // connector, but must never be advertised as a public-footpath adventure.
+  function isEligibleQuestDiscoveryFeature(feature) {
+    if (!isEligibleMapTransportationFeature(feature)) return false;
+    var p = feature && feature.properties || {};
+    var cls = mapTransportationClass(feature);
+    if (/^(pedestrian|cycleway|steps)$/.test(cls)) return false;
+    var tags = {};
+    Object.keys(p).forEach(function (key) {
+      if (p[key] == null || typeof p[key] === 'object') return;
+      tags[key] = p[key];
+    });
+    tags.highway = cls;
+    return questWayClassification(tags).eligible;
   }
 
   function eligibleMapTransportationWays(features) {
@@ -373,29 +431,241 @@
     }).filter(function (p) { return isFinite(p.lat) && isFinite(p.lon); });
   }
 
-  function wayComponents(ways) {
-    var parent = ways.map(function (_, i) { return i; });
-    function root(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
-    function unite(a, b) { a = root(a); b = root(b); if (a !== b) parent[Math.max(a, b)] = Math.min(a, b); }
-    function endpointTouchesWay(p, w) {
-      var n = nearestPointOnRoute(w, p.lat, p.lon, false);
-      return n && n.distanceM <= PATH_MERGE_M;
-    }
-    for (var i = 0; i < ways.length; i++) for (var j = i + 1; j < ways.length; j++) {
-      var a = ways[i], b = ways[j];
-      if (endpointTouchesWay(a[0], b) || endpointTouchesWay(a[a.length - 1], b) ||
-          endpointTouchesWay(b[0], a) || endpointTouchesWay(b[b.length - 1], a)) unite(i, j);
-    }
-    return parent.map(function (_, i) { return root(i); });
+  function routePointsFrom(value) {
+    var route = value && Array.isArray(value.points) ? value.points :
+      (Array.isArray(value) ? value : []);
+    return routeObjects(route);
   }
 
-  function nearestWayHit(p, ways) {
+  function routeIsStrictLoop(value) {
+    var pts = routePointsFrom(value);
+    if (pts.length < 3) return false;
+    var a = pts[0], b = pts[pts.length - 1];
+    if (questHaversine(a.lat, a.lon, b.lat, b.lon) > REAL_LOOP_CLOSE_M) return false;
+    var lenM = routeLengthM(pts);
+    // A route that simply retraces one line can have identical endpoints while
+    // enclosing no walkable circuit. Require a small but real enclosed width.
+    return lenM > 0 && ringAreaM2(pts) >= lenM * 2;
+  }
+
+  // Length-weighted corridor coverage. Uniform distance samples make the result
+  // insensitive to vertex density, direction, and where a closed route happens
+  // to start. Each sample is compared with the WHOLE other polyline.
+  function routeCoverageFraction(subject, corridor, thresholdM, opts) {
+    opts = opts || {};
+    thresholdM = isFinite(thresholdM) ? Math.max(0.5, Number(thresholdM)) :
+      (isFinite(opts.thresholdM) ? Math.max(0.5, Number(opts.thresholdM)) : 18);
+    var a = routePointsFrom(subject), b = routePointsFrom(corridor);
+    if (a.length < 2 || b.length < 2) return 0;
+    var lenM = routeLengthM(a);
+    if (!(lenM > 0)) return 0;
+    var spacingM = Math.max(8, Number(opts.sampleSpacingM) || 24);
+    var maxSamples = Math.max(12, Number(opts.maxSamples) || 220);
+    var count = Math.max(2, Math.min(maxSamples, Math.ceil(lenM / spacingM)));
+    var hits = 0;
+    for (var i = 0; i <= count; i++) {
+      var p = pointAtFraction(a, i / count);
+      var n = nearestPointOnRoute(b, p.lat, p.lon, false);
+      if (n && n.distanceM <= thresholdM) hits++;
+    }
+    return hits / (count + 1);
+  }
+
+  // Whole-geometry, bidirectional equivalence. Requiring both coverages and a
+  // similar total length keeps two routes that merely share a trunk distinct.
+  function routesEquivalent(a, b, opts) {
+    opts = opts || {};
+    var ap = routePointsFrom(a), bp = routePointsFrom(b);
+    if (ap.length < 2 || bp.length < 2) return false;
+    var al = routeLengthM(ap), bl = routeLengthM(bp);
+    if (!(al > 0) || !(bl > 0)) return false;
+    var lengthRatio = Math.min(al, bl) / Math.max(al, bl);
+    var minLengthRatio = isFinite(opts.minLengthRatio) ? Number(opts.minLengthRatio) : 0.78;
+    if (lengthRatio < minLengthRatio) return false;
+    var thresholdM = isFinite(opts.thresholdM) ? Number(opts.thresholdM) : 18;
+    var minCoverage = isFinite(opts.minCoverage) ? Number(opts.minCoverage) : 0.88;
+    var sampleOpts = {
+      sampleSpacingM: opts.sampleSpacingM,
+      maxSamples: opts.maxSamples,
+      thresholdM: thresholdM
+    };
+    return routeCoverageFraction(ap, bp, thresholdM, sampleOpts) >= minCoverage &&
+      routeCoverageFraction(bp, ap, thresholdM, sampleOpts) >= minCoverage;
+  }
+
+  function hasExplicitPublicEvidence(offer) {
+    var tags = offer && offer.tags || {};
+    return !!(offer && offer.publicRightOfWay) ||
+      /public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic/i.test(String(tags.designation || '')) ||
+      /^(public)$/i.test(String(tags.access || '')) ||
+      /^(designated)$/i.test(String(tags.foot || ''));
+  }
+
+  function hasUsefulOfferName(offer) {
+    var name = String(offer && offer.name || '').trim();
+    return !!name && !/^(Ancient Trail|Footpath Ring|Nearby Footpath Walk|Mapped Footpath(?:\s+[IVX]+|\s+\d+)?)$/i.test(name);
+  }
+
+  // Used only to decide which representative survives an equivalence group.
+  // Large, separated bands make the preference deterministic and legible:
+  // explicit public evidence, named hiking routes/footpaths, then real loops.
+  function offerQualityScore(offer) {
+    if (!offer) return -Infinity;
+    var tags = offer.tags || {}, score = 0;
+    var named = hasUsefulOfferName(offer);
+    if (hasExplicitPublicEvidence(offer)) score += 1200;
+    if (offer.kind === 'trail' && /^(hiking|foot|walking)$/i.test(String(tags.route || ''))) score += named ? 900 : 650;
+    if (offer.kind === 'footpath') score += 460;
+    else if (offer.kind === 'path') score += 160;
+    if (named) score += offer.kind === 'trail' || offer.kind === 'footpath' ? 240 : 90;
+    if (routeIsStrictLoop(offer)) score += 320;
+    if (offer.ring) score += 40;
+    if (offer.source === 'visible-map') score += 15;
+    return score;
+  }
+
+  function stableOfferKey(offer) {
+    var pts = routePointsFrom(offer);
+    var first = pts[0] || { lat: 0, lon: 0 };
+    return String(offer && offer.ref || '') + '|' + String(offer && offer.name || '') + '|' +
+      first.lat.toFixed(7) + ',' + first.lon.toFixed(7);
+  }
+
+  function preferredEquivalentOffer(a, b) {
+    var aq = offerQualityScore(a), bq = offerQualityScore(b);
+    if (aq !== bq) return aq > bq ? a : b;
+    var al = routePointsFrom(a).length, bl = routePointsFrom(b).length;
+    if (al !== bl) return al > bl ? a : b; // preserve the richer real geometry
+    return stableOfferKey(a) <= stableOfferKey(b) ? a : b;
+  }
+
+  function mergeEquivalentOffer(preferred, other) {
+    var out = {};
+    Object.keys(preferred || {}).forEach(function (key) { out[key] = preferred[key]; });
+    out.publicRightOfWay = hasExplicitPublicEvidence(preferred) || hasExplicitPublicEvidence(other);
+    var refs = [];
+    [preferred && preferred.ref, other && other.ref].concat(
+      preferred && preferred.sourceRefs || [], other && other.sourceRefs || []
+    ).forEach(function (ref) { if (ref && refs.indexOf(ref) < 0) refs.push(ref); });
+    if (refs.length) out.sourceRefs = refs.sort();
+    return out;
+  }
+
+  function dedupeQuestOffers(offers, opts) {
+    opts = opts || {};
+    var out = [];
+    (offers || []).forEach(function (candidate) {
+      if (!candidate || routePointsFrom(candidate).length < 2) return;
+      var duplicateAt = -1;
+      for (var i = 0; i < out.length; i++) {
+        if (routesEquivalent(candidate, out[i], opts)) { duplicateAt = i; break; }
+      }
+      if (duplicateAt < 0) { out.push(candidate); return; }
+      var preferred = preferredEquivalentOffer(out[duplicateAt], candidate);
+      var other = preferred === candidate ? out[duplicateAt] : candidate;
+      out[duplicateAt] = mergeEquivalentOffer(preferred, other);
+    });
+    return out;
+  }
+
+  var compiledWalkableWaysCache = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+
+  function canonicalWayKey(pts) {
+    var forward = pts.map(function (p) { return p.lat.toFixed(7) + ',' + p.lon.toFixed(7); }).join(';');
+    var reverse = pts.slice().reverse().map(function (p) { return p.lat.toFixed(7) + ',' + p.lon.toFixed(7); }).join(';');
+    return forward <= reverse ? forward : reverse;
+  }
+
+  // Compile once, then reuse for every route/checkpoint query. Besides exact
+  // reverse-insensitive way deduplication, this replaces the former O(W^2)
+  // component pass and all-way nearest scans with a local segment grid.
+  function compileWalkableWays(ways, opts) {
+    opts = opts || {};
+    if (ways && ways.__burbzCompiledWalkableWays) return ways;
+    var raw = Array.isArray(ways) ? ways : [];
+    if (compiledWalkableWaysCache && compiledWalkableWaysCache.has(raw)) return compiledWalkableWaysCache.get(raw);
+    var usable = [], seen = {};
+    raw.forEach(function (way) {
+      var pts = routeObjects(way);
+      if (pts.length < 2) return;
+      var key = canonicalWayKey(pts);
+      if (!seen[key]) { seen[key] = true; usable.push(pts); }
+    });
+    var first = usable[0] && usable[0][0] || { lat: 0, lon: 0 };
+    var lat0 = first.lat, lon0 = first.lon;
+    var cosRef = Math.max(0.2, Math.cos(toRad(lat0)));
+    var cellM = Math.max(12, Number(opts.cellM) || 24);
+    function mx(lon) { return (lon - lon0) * 111320 * cosRef; }
+    function my(lat) { return (lat - lat0) * 111320; }
+    function cellX(lon) { return Math.floor(mx(lon) / cellM); }
+    function cellY(lat) { return Math.floor(my(lat) / cellM); }
+    var grid = {}, longSegments = [], segments = [];
+    usable.forEach(function (way, wi) {
+      for (var i = 1; i < way.length; i++) {
+        var a = way[i - 1], b = way[i];
+        var seg = { a: a, b: b, wayIndex: wi, id: segments.length };
+        segments.push(seg);
+        var x0 = cellX(Math.min(a.lon, b.lon)) - 1, x1 = cellX(Math.max(a.lon, b.lon)) + 1;
+        var y0 = cellY(Math.min(a.lat, b.lat)) - 1, y1 = cellY(Math.max(a.lat, b.lat)) + 1;
+        if ((x1 - x0 + 1) * (y1 - y0 + 1) > 4096) { longSegments.push(seg.id); continue; }
+        for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) {
+          var k = x + '_' + y;
+          (grid[k] = grid[k] || []).push(seg.id);
+        }
+      }
+    });
+    function segmentIdsNear(p, radiusM) {
+      // Segment bboxes were registered with a full-cell pad, so sub-cell
+      // certification radii need only inspect the point's own cell.
+      var reach = Math.max(0, Math.ceil((Number(radiusM) || 2) / cellM) - 1);
+      var cx = cellX(p.lon), cy = cellY(p.lat), ids = [], hit = {};
+      for (var dx = -reach; dx <= reach; dx++) for (var dy = -reach; dy <= reach; dy++) {
+        var arr = grid[(cx + dx) + '_' + (cy + dy)] || [];
+        for (var i = 0; i < arr.length; i++) if (!hit[arr[i]]) { hit[arr[i]] = true; ids.push(arr[i]); }
+      }
+      longSegments.forEach(function (id) { if (!hit[id]) { hit[id] = true; ids.push(id); } });
+      return ids;
+    }
+    var parent = usable.map(function (_, i) { return i; });
+    function root(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
+    function unite(a, b) { a = root(a); b = root(b); if (a !== b) parent[Math.max(a, b)] = Math.min(a, b); }
+    usable.forEach(function (way, wi) {
+      [way[0], way[way.length - 1]].forEach(function (p) {
+        segmentIdsNear(p, PATH_MERGE_M + 0.5).forEach(function (sid) {
+          var seg = segments[sid];
+          if (seg.wayIndex === wi) return;
+          if (projectOntoSegment(p, seg.a, seg.b).distM <= PATH_MERGE_M) unite(wi, seg.wayIndex);
+        });
+      });
+    });
+    var compiled = {
+      __burbzCompiledWalkableWays: true,
+      ways: usable,
+      segments: segments,
+      components: parent.map(function (_, i) { return root(i); }),
+      segmentIdsNear: segmentIdsNear,
+      cellM: cellM
+    };
+    if (compiledWalkableWaysCache) compiledWalkableWaysCache.set(raw, compiled);
+    return compiled;
+  }
+
+  function wayComponents(ways) {
+    return compileWalkableWays(ways).components.slice();
+  }
+
+  function nearestWayHit(p, ways, maxDistanceM) {
+    var compiled = compileWalkableWays(ways);
+    var limit = isFinite(maxDistanceM) ? Math.max(0, Number(maxDistanceM)) : Infinity;
+    var ids = compiled.segmentIdsNear(p, isFinite(limit) ? limit : compiled.cellM);
     var best = null;
-    ways.forEach(function (w, wi) {
-      var n = nearestPointOnRoute(w, p.lat, p.lon, false);
-      if (n && (!best || n.distanceM < best.distanceM - 1e-9 ||
-          (Math.abs(n.distanceM - best.distanceM) <= 1e-9 && wi < best.wayIndex))) {
-        best = { distanceM: n.distanceM, wayIndex: wi, point: n.point };
+    ids.forEach(function (sid) {
+      var seg = compiled.segments[sid];
+      var hit = projectOntoSegment(p, seg.a, seg.b);
+      if (hit.distM > limit) return;
+      if (!best || hit.distM < best.distanceM - 1e-9 ||
+          (Math.abs(hit.distM - best.distanceM) <= 1e-9 && seg.wayIndex < best.wayIndex)) {
+        best = { distanceM: hit.distM, wayIndex: seg.wayIndex, point: hit.pt };
       }
     });
     return best;
@@ -409,7 +679,7 @@
     opts = opts || {};
     var toleranceM = Math.min(ROUTE_CERTIFICATION_TOLERANCE_M, opts.toleranceM || ROUTE_CERTIFICATION_TOLERANCE_M);
     var spacingM = Math.min(ROUTE_CERTIFICATION_SAMPLE_M, opts.sampleSpacingM || ROUTE_CERTIFICATION_SAMPLE_M);
-    var pts = routeObjects(route), usable = (ways || []).filter(function (w) { return w && w.length >= 2; });
+    var pts = routeObjects(route), compiled = compileWalkableWays(ways), usable = compiled.ways;
     if (pts.length < 2) return { certified: false, reason: 'invalid-route', sampleSpacingM: spacingM, sampleCount: 0 };
     if (!usable.length) return { certified: false, reason: 'no-eligible-ways', sampleSpacingM: spacingM, sampleCount: 0 };
     var dense = [pts[0]];
@@ -421,9 +691,9 @@
         dense.push({ lat: a.lat + (b.lat - a.lat) * k / parts, lon: a.lon + (b.lon - a.lon) * k / parts });
       }
     }
-    var comps = wayComponents(usable), maxDistanceM = 0, disconnected = false, previousComp = null;
+    var comps = compiled.components, maxDistanceM = 0, disconnected = false, previousComp = null;
     dense.forEach(function (p) {
-      var hit = nearestWayHit(p, usable);
+      var hit = nearestWayHit(p, compiled, toleranceM);
       if (!hit) { maxDistanceM = Infinity; return; }
       maxDistanceM = Math.max(maxDistanceM, hit.distanceM);
       var comp = comps[hit.wayIndex];
@@ -433,7 +703,7 @@
     var maxCheckpointDistanceM = 0;
     (checkpoints || []).forEach(function (cp) {
       if (!cp || !isFinite(cp.lat) || !isFinite(cp.lon)) { maxCheckpointDistanceM = Infinity; return; }
-      var hit = nearestWayHit({ lat: Number(cp.lat), lon: Number(cp.lon) }, usable);
+      var hit = nearestWayHit({ lat: Number(cp.lat), lon: Number(cp.lon) }, compiled, toleranceM);
       maxCheckpointDistanceM = Math.max(maxCheckpointDistanceM, hit ? hit.distanceM : Infinity);
     });
     var reason = disconnected ? 'disconnected-route' :
@@ -450,15 +720,35 @@
     return pts.map(function (p) { return [+p.lat.toFixed(6), +p.lon.toFixed(6)]; });
   }
 
+  function rechartCandidateMatchesOriginal(oldRoute, candidatePoints, opts) {
+    opts = opts || {};
+    if (!oldRoute.length || !candidatePoints || candidatePoints.length < 2) return false;
+    var intendedStart = oldRoute[0];
+    var startHit = nearestPointOnRoute(candidatePoints, intendedStart.lat, intendedStart.lon, false);
+    var maxStartM = isFinite(opts.maxRechartStartM) ? Number(opts.maxRechartStartM) : 170;
+    if (!startHit || startHit.distanceM > maxStartM) return false;
+    return routesEquivalent(oldRoute, candidatePoints, {
+      // Recharting reconciles source/basemap generalisation, so its corridor is
+      // deliberately wider than duplicate detection. Bidirectional coverage
+      // still prevents an equal-length but unrelated nearby circuit replacing it.
+      thresholdM: isFinite(opts.rechartCorridorM) ? Number(opts.rechartCorridorM) : 190,
+      minCoverage: isFinite(opts.minRechartCoverage) ? Number(opts.minRechartCoverage) : 0.58,
+      minLengthRatio: isFinite(opts.minRechartLengthRatio) ? Number(opts.minRechartLengthRatio) : 0.58,
+      sampleSpacingM: 35,
+      maxSamples: 180
+    });
+  }
+
   // Atomic/idempotent migration for persisted and newly-created quests. Only
   // route geography/alignment metadata are changed; gameplay/progress fields
   // and checkpoint objects retain all identity, claim, reward and reached data.
   function repairQuestRouteAgainstWays(quest, ways, opts) {
     opts = opts || {};
     if (!quest || !Array.isArray(quest.route) || quest.route.length < 2) return { status: 'impossible', reason: 'invalid-quest' };
-    var usable = (ways || []).filter(function (w) { return w && w.length >= 2; });
+    var compiled = compileWalkableWays(ways);
+    var usable = compiled.ways;
     if (!usable.length) return { status: 'pending', reason: 'tiles-not-ready' };
-    var existing = certifyRouteAgainstWays(quest.route, quest.checkpoints || [], usable);
+    var existing = certifyRouteAgainstWays(quest.route, quest.checkpoints || [], compiled);
     if (quest.routeAlignmentVersion === ROUTE_ALIGNMENT_VERSION && quest.routeCertification &&
         quest.routeCertification.status === 'certified' && existing.certified) {
       return { status: 'certified', changed: false, certification: existing };
@@ -472,9 +762,49 @@
     }
 
     var oldRoute = routeObjects(quest.route);
-    var routeOnly = certifyRouteAgainstWays(oldRoute, [], usable);
-    var candidate = routeOnly.certified ? { points: oldRoute, ring: quest.loopStyle === 'loop' } :
-      rechartRouteOnWays(oldRoute, usable, opts);
+    var routeOnly = existing.reason === 'checkpoint-off-way' ? {
+      certified: true, reason: null, sampleSpacingM: existing.sampleSpacingM,
+      sampleCount: existing.sampleCount, maxDistanceM: existing.maxDistanceM
+    } : certifyRouteAgainstWays(oldRoute, [], compiled);
+    var candidate = routeOnly.certified ? { points: oldRoute, ring: routeIsStrictLoop(oldRoute), source: 'existing' } : null;
+
+    // First reconcile the small source/tile offsets this helper was designed
+    // for. A strict certificate and high snapped fraction make this controlled,
+    // unlike rebuilding an entirely different loop merely because it is nearby.
+    if (!candidate) {
+      var smallSnapM = isFinite(opts.smallSnapM) ? Number(opts.smallSnapM) : 32;
+      var snapped = snapRouteToWays(oldRoute, usable, {
+        maxSnapM: smallSnapM,
+        stepM: opts.snapStepM || 12,
+        maxDensePts: opts.maxDensePts || 1800
+      });
+      var snappedCert = snapped.snappedFraction >= 0.94 ?
+        certifyRouteAgainstWays(snapped.points, [], compiled) : { certified: false };
+      if (snappedCert.certified && routesEquivalent(oldRoute, snapped.points, {
+        thresholdM: smallSnapM + 3,
+        minCoverage: 0.9,
+        minLengthRatio: 0.8,
+        sampleSpacingM: 24,
+        maxSamples: 200
+      })) {
+        candidate = { points: snapped.points, ring: routeIsStrictLoop(snapped.points), source: 'snap' };
+      }
+    }
+
+    if (!candidate) {
+      // Always anchor topology repair to the persisted trailhead. The caller's
+      // live GPS may be kilometres away and must never select a different loop.
+      var anchoredOpts = {};
+      Object.keys(opts).forEach(function (key) { anchoredOpts[key] = opts[key]; });
+      anchoredOpts.startLat = oldRoute[0].lat;
+      anchoredOpts.startLon = oldRoute[0].lon;
+      candidate = rechartRouteOnWays(oldRoute, usable, anchoredOpts);
+      if (candidate && !rechartCandidateMatchesOriginal(oldRoute, candidate.points, opts)) {
+        return opts.authoritativeFullCoverage ? { status: 'impossible', reason: 'unrelated-route' } :
+          { status: 'pending', reason: 'partial-tiles', changed: false };
+      }
+      if (candidate) candidate.source = 'rechart';
+    }
     if (!candidate || !candidate.points || candidate.points.length < 2) {
       return opts.authoritativeFullCoverage ? { status: 'impossible', reason: 'no-connected-route' } :
         { status: 'pending', reason: 'partial-tiles', changed: false };
@@ -488,11 +818,13 @@
     }
     // Keep shape-preserving simplification only when its entire segments still
     // certify; otherwise persist the real source-edge geometry unchanged.
-    var simpler = simplifyRoute(points, 320);
-    if (certifyRouteAgainstWays(simpler, [], usable).certified) points = simpler;
+    if (points.length > 320) {
+      var simpler = simplifyRoute(points, 320);
+      if (certifyRouteAgainstWays(simpler, [], compiled).certified) points = simpler;
+    }
     var newRoute = roundedRoute(points);
     var routeForFractions = { route: oldRoute.map(function (p) { return [p.lat, p.lon]; }) };
-    var isLoop = candidate.ring === true;
+    var isLoop = candidate.ring === true && routeIsStrictLoop(points);
     var remappedCheckpoints = (quest.checkpoints || []).map(function (cp) {
       var next = {};
       Object.keys(cp || {}).forEach(function (key) { next[key] = cp[key]; });
@@ -503,7 +835,7 @@
       if (target) { next.lat = +target.lat.toFixed(6); next.lon = +target.lon.toFixed(6); }
       return next;
     });
-    var finalCert = certifyRouteAgainstWays(newRoute, remappedCheckpoints, usable);
+    var finalCert = certifyRouteAgainstWays(newRoute, remappedCheckpoints, compiled);
     if (!finalCert.certified) {
       return opts.authoritativeFullCoverage ? { status: 'impossible', reason: finalCert.reason, certification: finalCert } :
         { status: 'pending', reason: 'partial-tiles', changed: false, certification: finalCert };
@@ -566,6 +898,7 @@
     var wayGroups = {};
     var unnamedWalkableWays = [];
     var walkableWays = []; // every walkable geometry, fuel for the footpath ring network
+    var networkAllPublic = true;
     els.forEach(function (el) {
       if (el.type === 'relation' && el.tags) {
         // Geometry arrives clipped to the query bbox, so member ways can be
@@ -584,25 +917,27 @@
             ref: 'rel/' + el.id,
             name: (el.tags.name || el.tags.ref || 'Ancient Trail'),
             points: pts,
-            tags: el.tags
+            tags: el.tags,
+            namedHikingRoute: !!(el.tags.name || el.tags.ref)
           });
         }
       } else if (el.type === 'way' && el.tags && el.geometry && el.geometry.length >= 2) {
-        var highway = String(el.tags.highway || '').toLowerCase();
-        var forbidden = /^(private|no)$/i.test(el.tags.access || '') || /^(private|no)$/i.test(el.tags.foot || '');
-        var isWalkable = /^(path|footway|bridleway|track)$/.test(highway) && !forbidden;
-        if (!isWalkable) return;
-        walkableWays.push(wayToPoints(el));
-        var isPublic = /public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic/i.test(el.tags.designation || '') ||
-          /^(designated|yes|permissive)$/i.test(el.tags.foot || '') || /^(footway|bridleway)$/.test(highway);
+        var info = questWayClassification(el.tags);
+        if (!info.eligible) return;
+        var wayPoints = wayToPoints(el);
+        if (wayPoints.length < 2) return;
+        walkableWays.push(wayPoints);
+        if (!info.publicFootpath) networkAllPublic = false;
+        var isPublic = info.publicFootpath;
         var nm = el.tags.name;
         if (nm) {
           var key = nm.toLowerCase();
-          if (!wayGroups[key]) wayGroups[key] = { name: nm, ways: [], isPublic: isPublic };
+          if (!wayGroups[key]) wayGroups[key] = { name: nm, ways: [], allPublic: isPublic, explicitPublic: info.explicitPublic };
           wayGroups[key].ways.push(el);
-          if (isPublic) wayGroups[key].isPublic = true;
+          if (!isPublic) wayGroups[key].allPublic = false;
+          if (info.explicitPublic) wayGroups[key].explicitPublic = true;
         } else {
-          unnamedWalkableWays.push(el);
+          if (isPublic) unnamedWalkableWays.push(el);
         }
       }
     });
@@ -612,11 +947,12 @@
       var pts = chainWays(g.ways.map(wayToPoints));
       if (pts.length < 2) return;
       offers.push({
-        kind: g.isPublic ? 'footpath' : 'path',
+        kind: g.allPublic ? 'footpath' : 'path',
         ref: 'way/' + g.ways.map(function (w) { return w.id; }).join('+'),
         name: g.name,
         points: pts,
-        tags: g.ways[0].tags || {}
+        tags: g.ways[0].tags || {},
+        publicRightOfWay: !!g.explicitPublic && !!g.allPublic
       });
     });
 
@@ -630,7 +966,8 @@
         ref: 'footpath-cluster/' + i,
         name: 'Mapped Footpath ' + (ROMAN[i] || (i + 1)),
         points: pts,
-        tags: {}
+        tags: {},
+        publicRightOfWay: true
       });
     });
 
@@ -648,7 +985,10 @@
     // Footpaths right next to the player ALWAYS yield a quest — a ring around
     // the path network when one exists, a straight walk otherwise. Added after
     // the playable filter so short-but-adjacent paths can't be filtered away.
-    return ensureFootpathQuestNearPlayer(offers, walkableWays, playerLat, playerLon);
+    offers = ensureFootpathQuestNearPlayer(offers, walkableWays, playerLat, playerLon, {
+      publicRightOfWay: networkAllPublic && walkableWays.length > 0
+    });
+    return sortOffersByStartDistance(dedupeQuestOffers(offers)).slice(0, 12);
   }
 
   // Greedy end-to-end chaining of way fragments. Returns ALL connected chains,
@@ -664,7 +1004,7 @@
       while (joined && segs.length && guard++ < 500) {
         joined = false;
         var head = chain[0], tail = chain[chain.length - 1];
-        var bestI = -1, bestMode = null, bestD = 13; // true OSM endpoint joins only
+        var bestI = -1, bestMode = null, bestD = 1.5; // shared-node joins only; never bridge a mapped gap
         for (var i = 0; i < segs.length; i++) {
           var s = segs[i];
           var d;
@@ -698,15 +1038,20 @@
     maxLenM = maxLenM || 6000;
     if (pts.length < 2) return pts;
     var closesM = questHaversine(pts[0].lat, pts[0].lon, pts[pts.length - 1].lat, pts[pts.length - 1].lon);
-    var naturalLoop = closesM <= 180 && routeLengthM(pts) <= maxLenM * 1.5;
+    var naturalLoop = routeIsStrictLoop(pts) && routeLengthM(pts) <= maxLenM * 1.5;
     var ring = pts.slice();
-    if (naturalLoop && closesM <= 5) ring.pop(); // discard duplicate closing node before rotating
+    if (naturalLoop && closesM <= 0.25) ring.pop(); // discard only a true duplicate closing node
     var nearest = nearestPointOnRoute(ring, playerLat, playerLon, naturalLoop);
     var bestI = nearest ? nearest.segmentIndex : 0;
     var startPoint = nearest ? nearest.point : ring[bestI];
     if (naturalLoop) {
       var rotated = [startPoint].concat(ring.slice(bestI + 1), ring.slice(0, bestI + 1));
-      rotated.push({ lat: startPoint.lat, lon: startPoint.lon });
+      var last = rotated[rotated.length - 1];
+      if (!last || questHaversine(last.lat, last.lon, startPoint.lat, startPoint.lon) > 0.25) {
+        rotated.push({ lat: startPoint.lat, lon: startPoint.lon });
+      } else {
+        rotated[rotated.length - 1] = { lat: startPoint.lat, lon: startPoint.lon };
+      }
       return rotated;
     }
     // Walk outward from the nearest point in the longer direction until maxLen.
@@ -1036,8 +1381,9 @@
         ref: 'footpath-ring/' + sp.lat.toFixed(5) + ',' + sp.lon.toFixed(5),
         name: 'Footpath Ring',
         points: loop.points,
-        tags: {},
-        ring: true,
+         tags: {},
+         publicRightOfWay: !!opts.publicRightOfWay,
+         ring: true,
         lengthM: routeLengthM(loop.points),
         startDistM: questHaversine(playerLat, playerLon, sp.lat, sp.lon)
       });
@@ -1064,8 +1410,9 @@
       ref: 'footpath-near/' + pts[0].lat.toFixed(5) + ',' + pts[0].lon.toFixed(5),
       name: 'Nearby Footpath Walk',
       points: pts,
-      tags: {},
-      lengthM: routeLengthM(pts),
+       tags: {},
+       publicRightOfWay: !!opts.publicRightOfWay,
+       lengthM: routeLengthM(pts),
       startDistM: questHaversine(playerLat, playerLon, pts[0].lat, pts[0].lon)
     });
     return out;
@@ -1075,19 +1422,27 @@
   function parseMapWalkableFeatures(features, playerLat, playerLon) {
     var elements = [], seen = {};
     (features || []).forEach(function (feature, fi) {
-      if (!isEligibleMapTransportationFeature(feature)) return;
+      if (!isEligibleQuestDiscoveryFeature(feature)) return;
       var props = feature.properties || {}, geom = feature.geometry || {};
+      var cls = mapTransportationClass(feature);
+      var tags = {};
+      Object.keys(props).forEach(function (key) {
+        if (props[key] == null || typeof props[key] === 'object') return;
+        tags[key] = props[key];
+      });
+      tags.highway = cls;
+      if (!tags.name && props.ref) tags.name = props.ref;
       var lines = geom.type === 'LineString' ? [geom.coordinates] :
         geom.type === 'MultiLineString' ? geom.coordinates : [];
       lines.forEach(function (coords, li) {
         var geometry = (coords || []).filter(function (c) { return c && isFinite(c[0]) && isFinite(c[1]); })
           .map(function (c) { return { lat: Number(c[1]), lon: Number(c[0]) }; });
         if (geometry.length < 2) return;
-        var key = geometry.map(function (p) { return p.lat.toFixed(7) + ',' + p.lon.toFixed(7); }).join(';');
+        var key = canonicalWayKey(geometry);
         if (seen[key]) return;
         seen[key] = true;
         elements.push({ type: 'way', id: 'map_' + fi + '_' + li,
-          tags: { highway: 'footway', foot: 'yes', name: props.name || props.ref || '' }, geometry: geometry });
+          tags: tags, geometry: geometry });
       });
     });
     return parseOverpassTrails({ elements: elements }, playerLat, playerLon).map(function (offer, i) {
@@ -1220,16 +1575,23 @@
     });
     vias.push([]); // straight end→start: fine when the network differs anyway
     var maxLegLen = Math.max(outwardLen * 1.8, directD * 3) + 800;
-    var deadline = Date.now() + (opts.maxTotalMs || 20000);
+    // Keep loop charting responsive on a slow public router. Natural mapped
+    // loops are already preferred in discovery; this is a bounded best effort
+    // for a different-path return on an otherwise linear quest.
+    var deadline = Date.now() + (opts.maxTotalMs || 8000);
     var best = null;
     function finish(cand) {
       if (!cand) return null;
       var combined = outward.concat(cand.pts.slice(1));
+      if (!routeIsStrictLoop(combined)) return null;
       return { points: combined, loopedBack: true, returnLenM: Math.round(cand.len), totalLenM: Math.round(outwardLen + cand.len) };
     }
     function tryVia(i) {
       if (i >= vias.length || Date.now() > deadline) return Promise.resolve(finish(best));
-      return brouterRoute([end].concat(vias[i]).concat([start]), opts).then(function (legPts) {
+      var routeOpts = {};
+      Object.keys(opts).forEach(function (key) { routeOpts[key] = opts[key]; });
+      routeOpts.timeoutMs = Math.min(opts.timeoutMs || 4000, Math.max(500, deadline - Date.now()));
+      return brouterRoute([end].concat(vias[i]).concat([start]), routeOpts).then(function (legPts) {
         if (legPts && legPts.length >= 2) {
           var legLen = routeLengthM(legPts);
           if (legLen <= maxLegLen) {
@@ -1351,13 +1713,12 @@
   // Players should end where they started whenever possible. Routes whose ends
   // already meet are natural loops; linear paths become out-and-back walks with
   // the banner back at the start (one-way leg capped so the round trip stays sane).
-  var LOOP_ENDS_MEET_M = 180;
+  var LOOP_ENDS_MEET_M = REAL_LOOP_CLOSE_M;
   var OUT_AND_BACK_ONE_WAY_CAP_M = 2800;
 
   function offerLoopStyle(points) {
     if (!points || points.length < 2) return 'loop';
-    var a = points[0], b = points[points.length - 1];
-    return questHaversine(a.lat, a.lon, b.lat, b.lon) <= LOOP_ENDS_MEET_M ? 'loop' : 'out-and-back';
+    return routeIsStrictLoop(points) ? 'loop' : 'out-and-back';
   }
 
   function trimRouteToLength(pts, maxLenM) {
@@ -1759,9 +2120,15 @@
     densifyRoute: densifyRoute,
     snapRouteToWays: snapRouteToWays,
     snapPointToWays: snapPointToWays,
+    routeCoverageFraction: routeCoverageFraction,
+    routesEquivalent: routesEquivalent,
+    dedupeQuestOffers: dedupeQuestOffers,
+    offerQualityScore: offerQualityScore,
+    compileWalkableWays: compileWalkableWays,
     certifyRouteAgainstWays: certifyRouteAgainstWays,
     repairQuestRouteAgainstWays: repairQuestRouteAgainstWays,
     isEligibleMapTransportationFeature: isEligibleMapTransportationFeature,
+    isEligibleQuestDiscoveryFeature: isEligibleQuestDiscoveryFeature,
     eligibleMapTransportationWays: eligibleMapTransportationWays,
     ROUTE_ALIGNMENT_VERSION: ROUTE_ALIGNMENT_VERSION,
     rechartRouteOnWays: rechartRouteOnWays,

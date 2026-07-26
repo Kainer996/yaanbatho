@@ -149,7 +149,7 @@ def test_visible_map_footpaths_are_merged_into_quest_discovery():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724"
+    marker = "quest_core.js?v=quest-route-integrity-loops-v123-20260726"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
