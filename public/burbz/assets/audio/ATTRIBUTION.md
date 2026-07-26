@@ -1,11 +1,11 @@
 # Burbz audio pack — attribution and licences
 
-This directory contains a compact game-ready sound pack plus the Burbz Quest
-background track. Each short sound has an Ogg Vorbis preservation copy and an MP3
-runtime copy for broad iPhone/browser support; both are mono at 44.1 kHz. The short
-sounds were renamed, level-normalized, downmixed where needed, and re-encoded for
-web delivery. The two field recordings were also excerpted, high-pass filtered,
-and given short boundary fades.
+This directory contains a compact game-ready sound pack, the Burbz Quest
+background tracks, and an Empire-view ambience. The original short sound pack has
+Ogg Vorbis preservation copies and MP3 runtime copies. The bespoke 2026 Burbz
+runtime sounds, score, and ambience were generated as MP3 files with ElevenLabs.
+The two field recordings were excerpted, high-pass filtered, and given short
+boundary fades.
 
 The audio licences below apply to the corresponding audio files. This document is
 not legal advice. No original creator or licensor endorses Burbz.
@@ -24,13 +24,27 @@ not legal advice. No original creator or licensor endorses Burbz.
 | `bird-blackbird.ogg` | real common blackbird song | 2.200000 s | 21,153 | `fead210199b57e3dc9bceb12fe5b0a9e8ba99b5f4a52e3248322068bba6c4ac0` |
 | `bird-tawny-owl.ogg` | real tawny owl call | 2.200000 s | 20,857 | `ae1a55eadbd20ba9e64a620c3a1138e6857b3afd76e546876b0c66ca50cd9336` |
 | `bgm-birbs-quest.mp3` | looping instrumental background music | 60.029375 s | 1,457,390 | `3a194db0479c278513ecb1c95d0705fe8c6b0ea614821baf0185c5cb9611206e` |
+| `bgm-burbz-quest-v2.mp3` | crossfaded instrumental background music | 120.032625 s | 2,897,468 | `59485a4e859c55f5f7917353b5b270690b146cc71ceab9c72b22631964c5a9a2` |
+| `ambience-empire-treetops.mp3` | seamless Empire-view treetop ambience | 30.000000 s | 721,197 | `5b767068cd3d6df32e740f0dc052a76210a6aa231e668458d23220f40232a543` |
+| `sfx-ui-tap.mp3` | wood-and-feather interface tap | 1.000000 s | 25,389 | `8b538d448fcaf6cac8feb7840d9e3a4d54470ebbdf4b7b9e87a724aa195ca19a` |
+| `sfx-page-wing.mp3` | parchment and wing navigation movement | 1.000000 s | 25,389 | `017bd56044e8cb2a92d29d5d53237edcbab60f16b6b4de5e0d3617d14c1f8d5a` |
+| `sfx-capture.mp3` | magical bird capture | 1.000000 s | 25,389 | `aac7037e11427e0ba06e72bbaeae4483f11e4d028b4f4b40d34d0f575c8e3d24` |
+| `sfx-resource.mp3` | wooden seed-token resource pickup | 1.000000 s | 25,389 | `d9c113cdc6fe66e9b37641721ee506798d6c483edc1f8a35f1892c041a5671ab` |
+| `sfx-battle-hit.mp3` | feathered wooden battle impact | 1.000000 s | 25,389 | `493a3940f9a608023cfce0b020d9bd770e541e21e7e18f34b9f8175c3bf06baf` |
+| `sfx-battle-magic.mp3` | wind-magic battle impact | 1.000000 s | 25,389 | `adaf3c49e58dca884935f978620c7dcdeab2e31beddf11790c3419aba5d01f4b` |
+| `sfx-battle-defend.mp3` | wooden shield and wing guard | 1.000000 s | 25,389 | `ad01d6349b077d7fe6a77f9188258a4c0c6ecc6d474a0d24570a65b4421350c3` |
+| `sfx-build.mp3` | hand-built wooden perch | 1.000000 s | 25,389 | `df65c0848b4312e711b5a49b097493a64a0e4c2197abe4cb49494ddf5dd4d00a` |
+| `sfx-level-up.mp3` | woodland level-up flourish | 1.000000 s | 25,389 | `e1eea51f04c48d758f1f9baf75a99b21c7d36f2bf9d9b395a3262e4a2a2621ad` |
+| `sfx-quest-complete.mp3` | magical quest-complete seal | 1.000000 s | 25,389 | `52beba5ddebdd2885b47597ab46e6f38b0d1ae3ed6913d8293094cdaa562cee7` |
+| `sfx-victory.mp3` | restrained woodland victory sting | 1.000000 s | 25,389 | `51dbc40894dbf8c15b183f5c41083a5e87b3d7f692057d69a640cf38ab8cf26a` |
+| `sfx-defeat-error.mp3` | gentle defeat and error feedback | 1.000000 s | 25,389 | `2707e1e5fb7971ff5a3853fd617d3bf758dd3f6f12f8c9d5b0f956ca7b5c2bbc` |
 
 Short-SFX Ogg preservation payload: **99,440 bytes**. Short-SFX MP3 runtime
 payload: **118,264 bytes** (documentation excluded). Each short-SFX `.mp3` file
 is a 96 kbps runtime conversion of the same-basename `.ogg` adaptation and
 carries the same licence and attribution.
 
-## Burbz Quest background music
+## Burbz Quest background music and bespoke sound design
 
 `bgm-birbs-quest.mp3`, titled **Burbz Quest**, is an original instrumental
 generated with ElevenLabs and supplied by the Burbz project owner on 25 July
@@ -38,6 +52,21 @@ generated with ElevenLabs and supplied by the Burbz project owner on 25 July
 was `Birbs_Quest_2026-07-25T151737.mp3`; it was renamed for the runtime without
 altering its bytes. Its use remains subject to the project owner's ElevenLabs
 account and applicable service terms.
+
+`bgm-burbz-quest-v2.mp3` is a new two-minute **Burbz Quest** instrumental
+generated with ElevenLabs on 26 July 2026. It was prompted as a warm,
+hand-crafted woodland fantasy score with a loop-friendly opening and ending.
+The runtime overlaps two audio decks for a five-second crossfade at each loop.
+
+`ambience-empire-treetops.mp3` and the twelve `sfx-*.mp3` files were generated
+specifically for Burbz with ElevenLabs on 26 July 2026. Their shared sound
+direction uses polished wood, parchment, feathers, wind magic, restrained
+chimes, and natural treetop textures rather than arcade-style effects. The
+ambience was generated in ElevenLabs' seamless-looping mode. Their use remains
+subject to the Burbz project owner's ElevenLabs account and applicable service
+terms. The generated ambience and short cues were peak-normalized to
+approximately -3 dBFS for consistent game playback without changing their
+timing.
 
 ## 80 CC0 RPG SFX
 
