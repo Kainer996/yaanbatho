@@ -9,22 +9,22 @@
   'use strict';
 
   var DEFAULT_SOUND_MANIFEST = Object.freeze({
-    tap: 'assets/audio/ui-lock.mp3',
-    page: 'assets/audio/ui-book.mp3',
-    capture: 'assets/audio/ui-lock.mp3',
-    hit: 'assets/audio/ui-metal.mp3',
-    specialHit: 'assets/audio/ui-spell.mp3',
-    defend: 'assets/audio/ui-metal.mp3',
-    victory: 'assets/audio/reward-level-up.mp3',
-    defeat: 'assets/audio/ui-book.mp3',
-    levelUp: 'assets/audio/reward-level-up.mp3',
-    questComplete: 'assets/audio/reward-level-up.mp3',
-    unlock: 'assets/audio/ui-lock.mp3',
-    coins: 'assets/audio/ui-coins.mp3',
-    build: 'assets/audio/ui-wood.mp3',
+    tap: 'assets/audio/sfx-ui-tap.mp3',
+    page: 'assets/audio/sfx-page-wing.mp3',
+    capture: 'assets/audio/sfx-capture.mp3',
+    hit: 'assets/audio/sfx-battle-hit.mp3',
+    specialHit: 'assets/audio/sfx-battle-magic.mp3',
+    defend: 'assets/audio/sfx-battle-defend.mp3',
+    victory: 'assets/audio/sfx-victory.mp3',
+    defeat: 'assets/audio/sfx-defeat-error.mp3',
+    levelUp: 'assets/audio/sfx-level-up.mp3',
+    questComplete: 'assets/audio/sfx-quest-complete.mp3',
+    unlock: 'assets/audio/sfx-capture.mp3',
+    coins: 'assets/audio/sfx-resource.mp3',
+    build: 'assets/audio/sfx-build.mp3',
     bird: 'assets/audio/bird-blackbird.mp3',
     owl: 'assets/audio/bird-tawny-owl.mp3',
-    error: 'assets/audio/ui-metal.mp3'
+    error: 'assets/audio/sfx-defeat-error.mp3'
   });
 
   var DEFAULT_COOLDOWNS = Object.freeze({
@@ -258,14 +258,14 @@
       stopAll: stopAll,
       tap: function(opts) { return play('tap', opts); },
       page: function(opts) { return play('page', opts); },
-      capture: function(opts) { var result = play('capture', opts); later('bird', 80, opts); return result; },
+      capture: function(opts) { return play('capture', opts); },
       hit: function(opts) { return play('hit', opts); },
       specialHit: function(opts) { return play('specialHit', opts); },
       defend: function(opts) { return play('defend', opts); },
-      victory: function(opts) { var result = play('victory', opts); later('coins', 140, opts); return result; },
+      victory: function(opts) { return play('victory', opts); },
       defeat: function(opts) { return play('defeat', opts); },
-      levelUp: function(opts) { var result = play('levelUp', opts); later('specialHit', 110, opts); return result; },
-      questComplete: function(opts) { var result = play('questComplete', opts); later('coins', 140, opts); return result; },
+      levelUp: function(opts) { return play('levelUp', opts); },
+      questComplete: function(opts) { return play('questComplete', opts); },
       unlock: function(opts) { return play('unlock', opts); },
       coins: function(opts) { return play('coins', opts); },
       build: function(opts) { return play('build', opts); },
@@ -281,21 +281,36 @@
     return manager;
   }
 
-  // Background music is deliberately separate from the one-shot SFX manager:
-  // it owns one persistent HTMLAudioElement, never consumes the SFX polyphony
-  // budget, and keeps its playback position while gameplay is temporarily
-  // suppressed (intro video, microphone listening, or a hidden page).
+  // Looping beds are deliberately separate from one-shot SFX. Two persistent
+  // HTMLAudioElements overlap near the seam, so music and ambience never snap
+  // from the final sample straight back to the opening sample.
   function createMusicManager(options) {
     options = options || {};
     var hasOwn = Object.prototype.hasOwnProperty;
     var AudioFactory = hasOwn.call(options, 'Audio')
       ? options.Audio
       : (options.audioFactory || (root && root.Audio));
-    var src = options.src || 'assets/audio/bgm-birbs-quest.mp3';
+    var src = options.src || 'assets/audio/bgm-burbz-quest-v2.mp3';
     var volume = hasOwn.call(options, 'volume') ? Number(options.volume) : 0.2;
+    var crossfadeSeconds = hasOwn.call(options, 'crossfadeSeconds')
+      ? Number(options.crossfadeSeconds) : 4;
+    crossfadeSeconds = Math.max(0.25, Number.isFinite(crossfadeSeconds) ? crossfadeSeconds : 4);
+    var fadeStepMs = Math.max(30, Number(options.fadeStepMs) || 80);
+    var schedule = typeof options.setTimeout === 'function'
+      ? options.setTimeout
+      : (root && typeof root.setTimeout === 'function' ? root.setTimeout.bind(root) : null);
+    var cancelSchedule = typeof options.clearTimeout === 'function'
+      ? options.clearTimeout
+      : (root && typeof root.clearTimeout === 'function' ? root.clearTimeout.bind(root) : null);
+    var now = typeof options.now === 'function' ? options.now : Date.now;
     var localEnabled = options.enabled !== false;
     var wanted = false;
-    var audio = null;
+    var tracks = [];
+    var activeIndex = 0;
+    var fadeTimer = null;
+    var fading = false;
+    var fadeStartedAt = 0;
+    var fadeProgress = 0;
     var suppressed = Object.create(null);
 
     function isEnabled() {
@@ -310,33 +325,146 @@
       return Object.keys(suppressed).length > 0;
     }
 
-    function makeAudio() {
-      if (audio) return audio;
+    function targetVolume() {
+      return Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 0.2));
+    }
+
+    function makeOneAudio() {
       if (typeof AudioFactory !== 'function') return null;
-      try {
-        audio = new AudioFactory(src);
-      } catch (_) {
+      var audio = null;
+      try { audio = new AudioFactory(src); }
+      catch (_) {
         try { audio = AudioFactory(src); } catch (_) { audio = null; }
       }
       if (!audio) return null;
+      // Native looping is a fallback if a browser throttles the crossfade
+      // timer. Under normal playback the outgoing deck is paused first.
       try { audio.loop = true; } catch (_) {}
       try { audio.preload = 'auto'; } catch (_) {}
-      try { audio.volume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 0.2)); } catch (_) {}
+      try { audio.volume = 0; } catch (_) {}
       return audio;
     }
 
-    function safePause() {
-      if (!audio || typeof audio.pause !== 'function') return;
-      try { audio.pause(); } catch (_) {}
+    function makeTracks() {
+      if (tracks.length) return tracks;
+      var first = makeOneAudio();
+      if (!first) return tracks;
+      var second = makeOneAudio();
+      tracks = second ? [first, second] : [first];
+      tracks.forEach(function(track, index) {
+        var inspect = function() { maybeCrossfade(index); };
+        try {
+          if (typeof track.addEventListener === 'function') {
+            track.addEventListener('timeupdate', inspect);
+            track.addEventListener('loadedmetadata', inspect);
+          }
+        } catch (_) {}
+      });
+      try { tracks[activeIndex].volume = targetVolume(); } catch (_) {}
+      return tracks;
+    }
+
+    function safePause(track) {
+      if (!track || typeof track.pause !== 'function') return;
+      try { track.pause(); } catch (_) {}
+    }
+
+    function clearFadeTimer() {
+      if (fadeTimer !== null && cancelSchedule) {
+        try { cancelSchedule(fadeTimer); } catch (_) {}
+      }
+      fadeTimer = null;
+    }
+
+    function resetStandby() {
+      tracks.forEach(function(track, index) {
+        if (index === activeIndex) {
+          try { track.muted = false; track.volume = targetVolume(); } catch (_) {}
+          return;
+        }
+        safePause(track);
+        try { track.currentTime = 0; track.muted = false; track.volume = 0; } catch (_) {}
+      });
+    }
+
+    function settleFade() {
+      if (!fading) return;
+      if (fadeProgress >= 0.5 && tracks.length > 1) activeIndex = activeIndex === 0 ? 1 : 0;
+      fading = false;
+      fadeProgress = 0;
+      clearFadeTimer();
+      resetStandby();
+    }
+
+    function runFadeStep(fromIndex, toIndex) {
+      if (!fading || !schedule || !wanted || !isEnabled() || isSuppressed()) return;
+      var elapsed;
+      try { elapsed = Math.max(0, Number(now()) - fadeStartedAt); }
+      catch (_) { elapsed = 0; }
+      fadeProgress = Math.max(0, Math.min(1, elapsed / (crossfadeSeconds * 1000)));
+      var level = targetVolume();
+      try { tracks[fromIndex].volume = level * (1 - fadeProgress); } catch (_) {}
+      try { tracks[toIndex].volume = level * fadeProgress; } catch (_) {}
+      if (fadeProgress >= 1) {
+        safePause(tracks[fromIndex]);
+        try { tracks[fromIndex].currentTime = 0; tracks[fromIndex].volume = 0; } catch (_) {}
+        activeIndex = toIndex;
+        fading = false;
+        fadeProgress = 0;
+        fadeTimer = null;
+        return;
+      }
+      fadeTimer = schedule(function() { runFadeStep(fromIndex, toIndex); }, fadeStepMs);
+    }
+
+    function startCrossfade() {
+      if (fading || tracks.length < 2 || !schedule) return false;
+      var fromIndex = activeIndex;
+      var toIndex = fromIndex === 0 ? 1 : 0;
+      var incoming = tracks[toIndex];
+      try {
+        incoming.currentTime = 0;
+        incoming.muted = false;
+        incoming.volume = 0;
+      } catch (_) {}
+      var playResult;
+      try { playResult = incoming.play(); }
+      catch (_) { return false; }
+      Promise.resolve(playResult).then(function() {
+        if (!wanted || !isEnabled() || isSuppressed()) {
+          safePause(incoming);
+          return;
+        }
+        fading = true;
+        fadeProgress = 0;
+        try { fadeStartedAt = Number(now()); } catch (_) { fadeStartedAt = 0; }
+        runFadeStep(fromIndex, toIndex);
+      }, function() { safePause(incoming); });
+      return true;
+    }
+
+    function maybeCrossfade(index) {
+      if (index !== activeIndex || fading || tracks.length < 2 ||
+          !wanted || !isEnabled() || isSuppressed()) return false;
+      var track = tracks[index];
+      var duration = Number(track && track.duration);
+      var currentTime = Number(track && track.currentTime);
+      if (!Number.isFinite(duration) || duration <= crossfadeSeconds ||
+          !Number.isFinite(currentTime)) return false;
+      if (duration - currentTime > crossfadeSeconds) return false;
+      return startCrossfade();
     }
 
     function sync() {
       if (!wanted || !isEnabled() || isSuppressed()) {
-        safePause();
+        settleFade();
+        tracks.forEach(safePause);
         return Promise.resolve(false);
       }
-      var track = makeAudio();
+      var available = makeTracks();
+      var track = available[activeIndex];
       if (!track || typeof track.play !== 'function') return Promise.resolve(false);
+      resetStandby();
       var result;
       try { result = track.play(); }
       catch (_) { return Promise.resolve(false); }
@@ -350,8 +478,36 @@
 
     function pause() {
       wanted = false;
-      safePause();
+      settleFade();
+      tracks.forEach(safePause);
       return false;
+    }
+
+    // Prime both decks inside the first real gesture. This makes the later
+    // crossfade and Empire ambience reliable on stricter mobile browsers.
+    function prime() {
+      var available = makeTracks();
+      if (!available.length) return Promise.resolve(false);
+      return Promise.all(available.map(function(track) {
+        var wasMuted = !!track.muted;
+        var oldVolume = Number(track.volume);
+        try { track.muted = true; track.volume = 0; } catch (_) {}
+        var result;
+        try { result = track.play(); }
+        catch (_) { return Promise.resolve(false); }
+        return Promise.resolve(result).then(function() {
+          safePause(track);
+          try {
+            track.currentTime = 0;
+            track.muted = wasMuted;
+            track.volume = Number.isFinite(oldVolume) ? oldVolume : 0;
+          } catch (_) {}
+          return true;
+        }, function() {
+          safePause(track);
+          return false;
+        });
+      })).then(function(results) { resetStandby(); return results.some(Boolean); });
     }
 
     function setEnabled(value) {
@@ -369,16 +525,15 @@
     function setVolume(value) {
       var next = Number(value);
       if (Number.isFinite(next)) volume = Math.max(0, Math.min(1, next));
-      if (audio) {
-        try { audio.volume = volume; } catch (_) {}
-      }
+      if (!fading) resetStandby();
       return volume;
     }
 
     function destroy() {
       wanted = false;
-      safePause();
-      audio = null;
+      settleFade();
+      tracks.forEach(safePause);
+      tracks = [];
       suppressed = Object.create(null);
     }
 
@@ -386,6 +541,7 @@
       src: src,
       start: start,
       pause: pause,
+      prime: prime,
       sync: sync,
       setEnabled: setEnabled,
       setSuppressed: setSuppressed,
@@ -393,7 +549,8 @@
       destroy: destroy,
       isEnabled: isEnabled,
       isSuppressed: isSuppressed,
-      getAudio: function() { return audio; },
+      getAudio: function() { return tracks[activeIndex] || null; },
+      getAudios: function() { return tracks.slice(); },
       get wanted() { return wanted; }
     };
   }
