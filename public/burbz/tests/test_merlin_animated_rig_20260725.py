@@ -177,7 +177,7 @@ def test_the_rig_is_precached_so_merlin_animates_offline():
     sw = SW.read_text(encoding="utf-8")
     for part in PARTS:
         assert f"'./assets/merlin/merlin-{part}.webp'" in sw, part
-    assert "burbz-prey-hunts-kitchen-declutter-v138-20260726" in sw
+    assert "burbz-audio-prey-hunts-kitchen-v139-20260726" in sw
 
 
 def test_the_perch_position_lives_in_css_not_in_inline_pixels():

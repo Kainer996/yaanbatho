@@ -101,4 +101,4 @@ def test_spotlight_only_lights_visible_targets_and_tracks_them():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-prey-hunts-kitchen-declutter-v138-20260726" in sw
+    assert "burbz-audio-prey-hunts-kitchen-v139-20260726" in sw

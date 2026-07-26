@@ -3057,7 +3057,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-toggle on" id="toggleSfx"></div>
       </div>
       <div class="settings-row">
-        <div class="settings-label">Music</div>
+        <div class="settings-label">Music &amp; ambience</div>
         <div class="settings-toggle on" id="toggleMusic"></div>
       </div>
       <div class="settings-row">
@@ -3333,7 +3333,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=birbs-quest-music-v3-20260725"></script>
+<script src="audio_core.js?v=burbz-audio-overhaul-v1-20260726"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=merlin-compact-speech-v2-20260724"></script>
 <script>
@@ -4235,14 +4235,27 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
-      src: 'assets/audio/bgm-birbs-quest.mp3',
+      src: 'assets/audio/bgm-burbz-quest-v2.mp3',
       volume: 0.2,
+      crossfadeSeconds: 5,
+      getEnabled: () => musicEnabled
+    })
+  : null;
+
+const EMPIRE_AMBIENCE = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
+  ? window.BurbzAudioCore.createMusicManager({
+      src: 'assets/audio/ambience-empire-treetops.mp3',
+      volume: 0.08,
+      crossfadeSeconds: 3,
       getEnabled: () => musicEnabled
     })
   : null;
 
 function setBurbzMusicSuppressed(reason, value) {
   if (MUSIC && typeof MUSIC.setSuppressed === 'function') MUSIC.setSuppressed(reason, value);
+  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.setSuppressed === 'function') {
+    EMPIRE_AMBIENCE.setSuppressed(reason, value);
+  }
 }
 
 // Mobile browsers unlock media only inside a real user gesture. Prime one
@@ -4252,6 +4265,9 @@ let burbzMusicGestureSeen = false;
 function primeBurbzAudio() {
   const manager = SFX;
   if (manager && typeof manager.prime === 'function') manager.prime('tap').catch(() => {});
+  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.prime === 'function') {
+    EMPIRE_AMBIENCE.prime().catch(() => {});
+  }
   if (!burbzMusicGestureSeen) {
     burbzMusicGestureSeen = true;
     if (MUSIC && typeof MUSIC.start === 'function') MUSIC.start();
@@ -4595,6 +4611,9 @@ function loadState() {
   musicEnabled = gameState.settings.music;
   if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   if (MUSIC && typeof MUSIC.setEnabled === 'function') MUSIC.setEnabled(musicEnabled);
+  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.setEnabled === 'function') {
+    EMPIRE_AMBIENCE.setEnabled(musicEnabled);
+  }
   saveState();
 }
 
@@ -16157,6 +16176,10 @@ function switchScreen(name) {
   if (navItem) navItem.classList.add('active');
 
   currentScreen = name;
+  if (EMPIRE_AMBIENCE) {
+    if (name === 'village' && typeof EMPIRE_AMBIENCE.start === 'function') EMPIRE_AMBIENCE.start();
+    else if (typeof EMPIRE_AMBIENCE.pause === 'function') EMPIRE_AMBIENCE.pause();
+  }
   updateMerlinListeningUI();
 
   // Screen-specific init
@@ -24299,16 +24322,21 @@ function playBattleEvents(events) {
         }
         const card = $('unit_' + ev.side + '_' + idx);
         if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
-        SFX.tap();
+        if (ev.magic && SFX.specialHit) SFX.specialHit();
+        else if (SFX.hit) SFX.hit();
       }
-      if (ev.type === 'heal' && ev.healed) spawnDamageFloat(ev.side, fighterIndexByName(b, ev.side, ev.name), '+' + ev.healed, 'heal');
+      if (ev.type === 'heal' && ev.healed) {
+        spawnDamageFloat(ev.side, fighterIndexByName(b, ev.side, ev.name), '+' + ev.healed, 'heal');
+        if (SFX.specialHit) SFX.specialHit({ volume:0.45, playbackRate:1.15 });
+      }
+      if (ev.type === 'barrier' && SFX.defend) SFX.defend();
       if (ev.type === 'sway') {
         const swayIdx = ev.targetIndex != null && ev.targetIndex >= 0 ? ev.targetIndex : fighterIndexByName(b, ev.side, ev.name);
         spawnDamageFloat(ev.side, swayIdx, '🕊️ won over!', 'heal');
-        SFX.tap();
+        if (SFX.capture) SFX.capture({ volume:0.75 });
       }
-      if (ev.type === 'surge') SFX.questComplete && SFX.tap();
-      if (ev.type === 'faint' && !battleState.liberation) SFX.defeat && SFX.tap();
+      if (ev.type === 'surge' && SFX.specialHit) SFX.specialHit();
+      if (ev.type === 'faint' && !battleState.liberation && SFX.defeat) SFX.defeat();
       renderArena();
     }, delay);
     delay += ev.type === 'fact' ? 450 : ev.type === 'info' ? 380 : 620;
@@ -25600,6 +25628,9 @@ $('toggleMusic').addEventListener('click', () => {
   gameState.settings.music = el.classList.contains('on');
   musicEnabled = gameState.settings.music;
   if (MUSIC && typeof MUSIC.setEnabled === 'function') MUSIC.setEnabled(musicEnabled);
+  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.setEnabled === 'function') {
+    EMPIRE_AMBIENCE.setEnabled(musicEnabled);
+  }
   saveState();
 });
 
