@@ -230,3 +230,87 @@ def test_a_hungry_bird_is_told_which_hunt_to_send_for():
     assert "Falconry Ration Run" in roster
     assert "Carrion Round" in roster
     assert "Send a bird on the " in roster
+
+
+# ---------------------------------------------------------------------------
+# The Kitchen screen reads as a job, not a wall of reference text
+# ---------------------------------------------------------------------------
+
+def function_source(html: str, name: str) -> str:
+    start = html.index(f"function {name}(")
+    end = html.find("\nfunction ", start + 10)
+    assert end > start
+    return html[start:end]
+
+
+def test_prep_counter_leads_with_the_diet_and_folds_the_reference_material():
+    html = HTML.read_text(encoding="utf-8")
+    panel = function_source(html, "renderKitchenPanelHTML")
+    # What the bird eats is on the face of the card, as chips.
+    assert "kitchen-guest-eats" in panel
+    assert "kitchenEatsChipsHTML(chosen)" in panel
+    # Provenance, habitat clue and field notes fold away behind one line.
+    assert "Field guide &amp; sources" in panel
+    assert "kitchenDietGuidanceHTML(chosen, rule)" in panel
+    # The stock lists and the supply explainer fold away too.
+    fold_at = panel.index('<details class="kitchen-fold"><summary>🧺 Stores larder')
+    assert panel.index("Starter Stores include falcon rations") > fold_at
+    assert panel.index("kitchenPantryBridgeHTML()") > fold_at
+    # Doing the job — plate, then serve — comes before any of it.
+    assert panel.index("kitchen-plate") < fold_at
+    assert panel.index("kitchen-serve-btn") < fold_at
+    # The roster's wall of help text folds as well.
+    roster = function_source(html, "renderKitchenRosterHTML")
+    assert "Every bird eats something different" in roster
+    assert roster.index("kitchen-fold") < roster.index("Every bird eats something different")
+
+
+def test_ingredient_picker_pins_the_birds_diet_to_the_top():
+    html = HTML.read_text(encoding="utf-8")
+    picker = function_source(html, "kitchenOpenSlot")
+    assert "kitchen-sheet-diet" in picker
+    assert "data-kitchen-sheet-diet" in picker
+    assert "kitchenEatsChipsHTML(chosen)" in picker
+    # It stays put while the larder scrolls underneath it.
+    assert ".kitchen-sheet-diet { position:sticky" in html
+    # Ingredients from the bird's own diet families sort to the top.
+    assert "eaten.has((kitchenIngredientById(id) || {}).dietFamily)" in picker
+    # Prey rows name their hunters on their own line, not buried in the blurb.
+    assert "kitchen-pick-taken" in picker
+    assert ".kitchen-pick-taken {" in html
+
+
+def test_the_diet_chip_line_names_what_each_bird_really_eats():
+    out = run_node(
+        "global.window = global;"
+        "const fs = require('fs');"
+        "const html = fs.readFileSync('index.html', 'utf8');"
+        "function fnSrc(name) {"
+        "  const start = html.indexOf('function ' + name + '(');"
+        "  let i = html.indexOf('{', start), depth = 0;"
+        "  for (; i < html.length; i++) { if (html[i] === '{') depth++; else if (html[i] === '}') { depth--; if (!depth) break; } }"
+        "  return html.slice(start, i + 1);"
+        "}"
+        "require('./bird_diet_hunger_core.js');"
+        "global.escapeHtml = s => String(s == null ? '' : s);"
+        "global.kitchenDietCore = () => global.BurbzDietHungerCore;"
+        "let code = fnSrc('kitchenDietSubject') + '\\n' + fnSrc('kitchenEatsChipsHTML') + '\\n';"
+        "code += 'module.exports = { kitchenEatsChipsHTML };';"
+        "const mod = { exports:{} };"
+        "new Function('module','exports','require', code)(mod, mod.exports, require);"
+        "const chips = c => mod.exports.kitchenEatsChipsHTML(c);"
+        "console.log(JSON.stringify({"
+        "  owl: chips({ key:'barn_owl', name:'Barn Owl', commonName:'Barn Owl', scientificName:'Tyto alba' }),"
+        "  merlin: chips({ key:'merlin', name:'Merlin', merlin:true }),"
+        "  finch: chips({ key:'goldfinch', name:'European Goldfinch', commonName:'European Goldfinch', scientificName:'Carduelis carduelis' }),"
+        "  none: chips(null)"
+        "}));"
+    )
+    assert "Small mammals" in out["owl"], out["owl"]
+    assert "kitchen-eat-chip" in out["owl"]
+    assert "Small-bird prey rations" in out["merlin"]
+    assert "Seeds" in out["finch"]
+    # A finch's chips must not advertise meat.
+    assert "Carrion" not in out["finch"]
+    # No bird selected still renders something harmless.
+    assert "kitchen-eat-chip" in out["none"]

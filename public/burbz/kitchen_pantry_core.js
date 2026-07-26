@@ -11,7 +11,9 @@
   // Preparation styles — each one mirrors a real feeding behaviour.
   const PREPS = {
     whole:    { id:'whole',    label:'Whole prey ration',       icon:'🪶', desc:'Prepared whole as a tasteful prey ration for falcons and other specialists.' },
-    live:     { id:'live',     label:'Live (water tank)',        icon:'🫧', desc:'Kept alive and moving. Specialist hunters only strike living prey.' },
+    // "Live" covers a minnow in the tank and a vole in the grass alike — the
+    // old water-tank wording only ever made sense for fish.
+    live:     { id:'live',     label:'Live prey',                icon:'🫧', desc:'Kept alive and moving. Specialist hunters only strike living prey.' },
     fresh:    { id:'fresh',    label:'Fresh & whole',            icon:'🍃', desc:'Served just as nature drops it.' },
     cracked:  { id:'cracked',  label:'Cracked on the anvil stone', icon:'🪨', desc:'Smashed open the way a Song Thrush breaks snails on a stone.' },
     husked:   { id:'husked',   label:'Husked & dried',           icon:'🌾', desc:'Dry seed with the husk split — finch-bill ready.' },

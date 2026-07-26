@@ -190,6 +190,26 @@ svg.academy-room-bg { display:block; filter:none; }
 /* Kitchen & Pantry — the Prep Counter */
 .kitchen-panel { margin-bottom:14px; }
 .kitchen-help { font-size:12px; color:var(--text2); line-height:1.5; margin-bottom:10px; }
+/* Reference material the player only wants occasionally — sources, stock
+   lists, "where does food come from" — folds away so the Kitchen screen is
+   the bird, the plate and the serve button, and nothing else. */
+.kitchen-fold { margin-bottom:10px; border-radius:11px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); }
+.kitchen-fold > summary { list-style:none; cursor:pointer; padding:9px 11px; font-size:11px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; color:var(--text3); display:flex; align-items:center; gap:6px; }
+.kitchen-fold > summary::-webkit-details-marker { display:none; }
+.kitchen-fold > summary::after { content:'▾'; margin-left:auto; font-size:10px; }
+.kitchen-fold[open] > summary::after { content:'▴'; }
+.kitchen-fold-body { padding:0 11px 10px; }
+.kitchen-fold-body .kitchen-help { margin-bottom:0; }
+.kitchen-fold-body .kitchen-diet-guidance:first-child { margin-top:0; }
+.kitchen-guest-eats { margin-top:7px; display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
+.kitchen-guest-eats-label { font-size:11px; font-weight:800; color:var(--text3); text-transform:uppercase; letter-spacing:.03em; }
+.kitchen-eat-chip { padding:3px 8px; border-radius:9px; border:1px solid rgba(214,168,79,.35); background:rgba(214,168,79,.12); color:var(--accent2); font-size:11px; font-weight:700; }
+.kitchen-eat-chip.muted { border-color:rgba(255,255,255,.14); background:rgba(255,255,255,.04); color:var(--text3); font-weight:600; }
+/* The picker sheet keeps the bird's diet pinned to the top while the player
+   scrolls the larder, so choosing never means going back to check. */
+.kitchen-sheet-diet { position:sticky; top:-18px; z-index:3; margin:0 -16px 8px; padding:30px 16px 11px; border-bottom:1px solid rgba(214,168,79,.30); background:#17120a; box-shadow:0 8px 16px rgba(0,0,0,.55); }
+.kitchen-sheet-diet-name { font-family:'Russo One',sans-serif; font-size:13px; color:var(--accent2); }
+.kitchen-sheet-diet-list { margin-top:6px; display:flex; flex-wrap:wrap; gap:5px; }
 .kitchen-chip-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:10px; -webkit-overflow-scrolling:touch; }
 .kitchen-chip { flex:0 0 auto; min-height:34px; padding:0 11px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text); font:inherit; font-size:12px; font-weight:700; }
 .kitchen-chip.active { border-color:var(--accent); background:rgba(214,168,79,.18); color:var(--accent2); }
@@ -221,6 +241,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-pick-icon { font-size:22px; }
 .kitchen-pick-name { font-weight:800; font-size:13px; }
 .kitchen-pick-desc { font-size:11px; color:var(--text2); line-height:1.4; }
+.kitchen-pick-taken { font-size:10px; color:var(--accent2); line-height:1.4; margin-top:3px; font-weight:700; }
 .kitchen-prep-strip { display:flex; flex-wrap:wrap; gap:6px; }
 .kitchen-prep-chip { min-height:32px; padding:0 10px; border-radius:11px; border:1px solid rgba(214,168,79,.35); background:rgba(214,168,79,.10); color:var(--text); font:inherit; font-size:11px; font-weight:700; }
 .kitchen-clear-btn { width:100%; min-height:36px; margin-bottom:6px; border-radius:11px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:var(--text2); font:inherit; font-size:12px; }
@@ -12148,7 +12169,9 @@ function renderKitchenRosterHTML() {
   if (kitchenRosterTrayKey && !entries.some(row => row.key === kitchenRosterTrayKey)) kitchenRosterTrayKey = null;
   return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
     '<div class="room-add-title">🍽️ Companion feeding table</div>' +
-    '<div class="kitchen-help">Every bird eats something different. Scroll your companions, open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Birds of prey cannot eat seed: voles, mice, rabbits, frogs, lizards, bird-prey rations, fish and carrion all come from the hunting quests on the Quests board, from prey you find while walking, and from the village butcher counter.</div>' +
+    '<details class="kitchen-fold"><summary>How feeding works</summary><div class="kitchen-fold-body">' +
+      '<div class="kitchen-help">Every bird eats something different. Open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Birds of prey cannot eat seed: voles, mice, rabbits, frogs, lizards, bird-prey rations, fish and carrion all come from the hunting quests on the Quests board, from prey you find while walking, and from the village butcher counter.</div>' +
+    '</div></details>' +
     '<div class="kitchen-roster-list">' + entries.map(kitchenRosterRowHTML).join('') + '</div></div>';
 }
 
@@ -12281,6 +12304,9 @@ function renderKitchenPanelHTML() {
     return '<button class="kitchen-chip' + (active ? ' active' : '') + '" data-kitchen-species-choice="' + escapeHtml(row.key) + '" onclick="kitchenSelectSpecies(\'' + row.key + '\')">' + (row.merlin ? '🧙 ' : row.companion ? '🐦 ' : '🌲 ') + escapeHtml(row.name) + badge + '</button>';
   }).join('');
 
+  // The card is now two lines: who you are cooking for, and what it eats.
+  // Habitat clues, field notes and the full source provenance are real but
+  // rarely needed mid-cook, so they fold away behind one summary line.
   let speciesCard = '<div class="inventory-empty">Discover a bird first — every scan and listen adds a species you can cook for.</div>';
   if (chosen) {
     const profile = findSpeciesProfile(chosen.name);
@@ -12289,10 +12315,13 @@ function renderKitchenPanelHTML() {
     const status = chosen.merlin ? 'Permanent companion — a source-backed falcon meal feeds him properly.' : chosen.companion ? 'Companion — a good meal feeds it properly.' : 'Wild Birdex species — a perfect tray builds feeder trust (cheaper to recruit).';
     speciesCard = '<div class="kitchen-guest">' +
       '<div class="kitchen-guest-name">' + escapeHtml(chosen.name) + (badgeCount ? ' <span class="kitchen-guest-badge">🏅 Diet Badge' + (badgeCount > 1 ? ' ×' + badgeCount : '') + '</span>' : '') + '</div>' +
-      '<div class="kitchen-guest-status">' + status + '</div>' +
-      '<div class="kitchen-guest-clue">' + escapeHtml(clue) + '</div>' +
-      kitchenDietGuidanceHTML(chosen, rule) +
-      '<div class="kitchen-guest-notes">' + escapeHtml(kitchenNotesLine(chosen.key)) + '</div></div>';
+      '<div class="kitchen-guest-eats"><span class="kitchen-guest-eats-label">🍴 Eats</span>' + kitchenEatsChipsHTML(chosen) + '</div>' +
+      '<details class="kitchen-fold kitchen-guest-more"><summary>Field guide &amp; sources</summary><div class="kitchen-fold-body">' +
+        '<div class="kitchen-guest-status">' + status + '</div>' +
+        '<div class="kitchen-guest-clue">' + escapeHtml(clue) + '</div>' +
+        kitchenDietGuidanceHTML(chosen, rule) +
+        '<div class="kitchen-guest-notes">' + escapeHtml(kitchenNotesLine(chosen.key)) + '</div>' +
+      '</div></details></div>';
   }
 
   const larderRows = Object.entries(larder).filter(([, n]) => (Number(n) || 0) > 0);
@@ -12302,16 +12331,32 @@ function renderKitchenPanelHTML() {
     return '<div class="kitchen-larder-item" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(count) || 0) + '" title="' + escapeHtml(kitchenIngredientBlurb(ing)) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
   }).join('') : '<div class="inventory-empty">Larder empty — go fishing from the Quest Roost, walk the map, or shop at the Seed &amp; Sundry.</div>';
 
+  const larderCount = larderRows.reduce((sum, [, n]) => sum + Math.max(0, Number(n) || 0), 0);
+
+  // Screen order is the job itself: pick the bird, see what it eats, fill the
+  // plate, serve. Stock lists and supply explainers sit folded underneath.
   return renderKitchenRosterHTML() +
     '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
-    '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow, plus real prey for the birds of prey: field voles, a wood mouse, carrion scraps and a frog. The hunting quests (Vole Meadow Hunt, Warren Watch, Falconry Ration Run, Carrion Round, Marsh &amp; Ditch Hunt, Fishing Trip), map forage and village butchers restock the larder.</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '<div class="inventory-empty">No birds discovered yet.</div>') + '</div>' +
     speciesCard +
     '<div class="kitchen-plate">' + kitchenState.slots.map((slot, i) => kitchenSlotHTML(slot, i)).join('') + '</div>' +
     '<button class="kitchen-serve-btn" data-feed-transaction-id="" onclick="kitchenServeMeal()">🔔 Serve the tray</button>' +
-    '<div class="room-add-title kitchen-larder-title">🧺 Stores larder</div>' +
-    '<div class="kitchen-larder-grid">' + larderHtml + '</div>' +
-    kitchenPantryBridgeHTML() + '</div>';
+    '<details class="kitchen-fold"><summary>🧺 Stores larder · ' + larderCount + ' item' + (larderCount === 1 ? '' : 's') + '</summary><div class="kitchen-fold-body">' +
+      '<div class="kitchen-larder-grid">' + larderHtml + '</div>' +
+      kitchenPantryBridgeHTML() +
+      '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow, plus real prey for the birds of prey: field voles, a wood mouse, carrion scraps and a frog. The hunting quests (Vole Meadow Hunt, Warren Watch, Falconry Ration Run, Carrion Round, Marsh &amp; Ditch Hunt, Fishing Trip), map forage and village butchers restock the larder.</div>' +
+    '</div></details></div>';
+}
+
+// The bird's diet as compact chips. Shared by the Prep Counter card and the
+// ingredient picker so the same answer is in both places, worded identically.
+function kitchenEatsChipsHTML(chosen) {
+  const core = kitchenDietCore();
+  const subject = kitchenDietSubject(chosen);
+  const disc = core && subject && typeof core.dietDisclosureForSpecies === 'function' ? core.dietDisclosureForSpecies(subject) : null;
+  const labels = disc ? ((disc.primaryLabels && disc.primaryLabels.length) ? disc.primaryLabels : (disc.compatibleLabels || [])) : [];
+  if (!labels.length) return '<span class="kitchen-eat-chip muted">Diet not recorded — serve a tray and learn</span>';
+  return labels.map(label => '<span class="kitchen-eat-chip">' + escapeHtml(label) + '</span>').join('');
 }
 
 function kitchenSelectSpecies(key) {
@@ -12335,7 +12380,19 @@ function kitchenSheetEl() {
 
 function kitchenOpenSlot(index) {
   const larder = ensureLarder();
-  const rows = Object.entries(larder).filter(([id, n]) => kitchenIngredientById(id) && (Number(n) || 0) > 0);
+  const chosen = kitchenSelectedChoice();
+  // Ingredients from the families this bird actually eats float to the top of
+  // the list, so the player is not scrolling past pondweed to find a vole.
+  const core = kitchenDietCore();
+  const subject = kitchenDietSubject(chosen);
+  const disc = core && subject && typeof core.dietDisclosureForSpecies === 'function' ? core.dietDisclosureForSpecies(subject) : null;
+  const eaten = new Set((disc && disc.compatibleFamilies) || []);
+  const rows = Object.entries(larder)
+    .filter(([id, n]) => kitchenIngredientById(id) && (Number(n) || 0) > 0)
+    .sort(([a], [b]) => {
+      const rank = id => eaten.has((kitchenIngredientById(id) || {}).dietFamily) ? 0 : 1;
+      return rank(a) - rank(b);
+    });
   const el = kitchenSheetEl();
   const body = rows.length ? rows.map(([id]) => {
     const ing = kitchenIngredientById(id);
@@ -12343,10 +12400,18 @@ function kitchenOpenSlot(index) {
       const p = kitchenCore().prepById(pid);
       return '<button class="kitchen-prep-chip" data-ingredient-id="' + escapeHtml(id) + '" data-prep-id="' + escapeHtml(pid) + '" onclick="kitchenAssignSlot(' + index + ',\'' + id + '\',\'' + pid + '\')" title="' + escapeHtml(p.desc) + '">' + p.icon + ' ' + escapeHtml(p.label) + '</button>';
     }).join('');
-    return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(kitchenIngredientBlurb(ing)) + '</div></div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
+    return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(ing.desc || '') + '</div>' + (ing.takenBy ? '<div class="kitchen-pick-taken">🦅 Taken by: ' + escapeHtml(ing.takenBy) + '</div>' : '') + '</div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
   }).join('') : '<div class="inventory-empty">Nothing in the larder. Send a bird on a Fishing Trip, forage the map, or buy supplies at the Seed &amp; Sundry.</div>';
+  // The diet rides at the top of the sheet and stays pinned while the larder
+  // scrolls: choosing an ingredient never means backing out to re-read the card.
+  const dietStrip = chosen
+    ? '<div class="kitchen-sheet-diet" data-kitchen-sheet-diet="' + escapeHtml(chosen.key) + '">' +
+        '<div class="kitchen-sheet-diet-name">🍴 ' + escapeHtml(chosen.name) + ' eats</div>' +
+        '<div class="kitchen-sheet-diet-list">' + kitchenEatsChipsHTML(chosen) + '</div></div>'
+    : '';
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍳</div><div><div class="quest-name">Plate slot ' + (index + 1) + '</div><div class="quest-desc">Choose an ingredient, then how to serve it — the preparation matters as much as the food.</div></div></div>' +
+    dietStrip +
     (kitchenState.slots[index] ? '<button class="kitchen-clear-btn" onclick="kitchenClearSlot(' + index + ')">Remove current ingredient</button>' : '') +
     body + '</div>';
   el.classList.add('open');
