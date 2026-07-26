@@ -420,9 +420,8 @@ svg.academy-room-bg { display:block; filter:none; }
 #screen-map { padding: 0; overflow: hidden; background: #061312; }
 .live-map-shell { position: relative; height: calc(100dvh - 54px - var(--nav-height) - var(--safe-bottom)); min-height: 560px; overflow: hidden; background: radial-gradient(circle at 50% 15%, rgba(70,98,75,.50), rgba(6,19,18,.98)); perspective: 1200px; }
 #burbzLiveMap, .map-fallback-grid { position: absolute; inset: 0; z-index: 1; background: #183b3a; }
-#burbzLiveMap { filter: saturate(.92) brightness(.78) contrast(1.12); }
 #burbzLiveMap .maplibregl-canvas { outline: none; }
-#burbzLiveMap::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:2; background:radial-gradient(ellipse at 50% 72%, transparent 0 34%, rgba(9,30,21,.30) 60%, rgba(2,8,7,.62) 100%), linear-gradient(180deg,rgba(215,189,121,.10),rgba(0,0,0,0) 42%); mix-blend-mode:screen; }
+#burbzLiveMap::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:2; background:radial-gradient(ellipse at 50% 72%, transparent 0 34%, rgba(9,30,21,.30) 60%, rgba(2,8,7,.62) 100%), linear-gradient(180deg,rgba(215,189,121,.10),rgba(0,0,0,0) 42%); }
 .map-fallback-grid { display:none; overflow:hidden; background: radial-gradient(circle at 18% 14%, rgba(84,144,113,.72), transparent 18%), radial-gradient(circle at 72% 24%, rgba(70,125,167,.52), transparent 17%), radial-gradient(circle at 58% 70%, rgba(77,134,90,.58), transparent 24%), linear-gradient(130deg, transparent 0 44%, rgba(47,73,83,.82) 45% 48%, rgba(215,184,120,.54) 49% 50%, rgba(47,73,83,.82) 51% 54%, transparent 55%), linear-gradient(12deg, transparent 0 38%, rgba(47,73,83,.72) 39% 42%, rgba(215,184,120,.50) 43% 44%, rgba(47,73,83,.72) 45% 48%, transparent 49%), #173331; }
 .map-fallback-grid.show { display:block; }
 .map-sky-haze { position:absolute; left:0; right:0; top:0; height:46%; z-index:4; pointer-events:none; background:linear-gradient(180deg, rgba(230,213,158,.34), rgba(102,133,112,.20) 48%, rgba(6,19,18,0)); }
@@ -493,13 +492,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-poi-marker { display:grid; place-items:center; width:54px !important; height:68px !important; background:transparent; border:0; animation:markerFloat 3.2s ease-in-out infinite; }
 .burbz-poi-tower { width:42px; height:50px; display:grid; place-items:center; border-radius:18px 18px 10px 10px; background:linear-gradient(180deg,#ead794,#80612d); border:2px solid rgba(255,244,210,.88); box-shadow:0 0 0 6px rgba(214,168,79,.12),0 12px 24px rgba(0,0,0,.38); font-size:23px; }
 .burbz-poi-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:900; color:#fff7d9; text-shadow:0 1px 6px #000; text-align:center; line-height:.9; }
-.burbz-tree-marker { width:18px !important; height:26px !important; display:grid; place-items:center; background:transparent; border:0; pointer-events:none; transform-origin:50% 100%; filter:drop-shadow(0 4px 6px rgba(0,0,0,.28)); opacity:.85; z-index:1; }
-.burbz-tree-crown { width:14px; height:16px; border-radius:50% 50% 44% 44%; background:radial-gradient(circle at 35% 24%, #9bd66a 0 18%, #3f8f45 46%, #1e4e2d 100%); border:1px solid rgba(230,255,202,.48); box-shadow:inset 0 -7px 10px rgba(9,49,24,.42),0 0 0 4px rgba(78,150,68,.10); }
-.burbz-tree-crown::after { content:''; display:block; width:4px; height:8px; margin:12px auto 0; border-radius:4px; background:linear-gradient(180deg,#8a6131,#4d321d); }
-/* Medieval set dressing pinned to real map features (wells, sheep, hay carts...) */
-.burbz-prop-marker { display:grid; place-items:center; width:34px !important; height:38px !important; background:transparent; border:0; pointer-events:none; z-index:2; }
-.burbz-prop-marker .burbz-prop { font-size:21px; line-height:1; filter:drop-shadow(0 4px 5px rgba(0,0,0,.5)) sepia(.14); animation:propSway 4.6s ease-in-out infinite; }
-.burbz-prop-marker:nth-child(2n) .burbz-prop { animation-duration:5.8s; animation-delay:-2.2s; }
+/* Lightweight landmark art, anchored to the centre of real mapped features. */
+.burbz-prop-marker { display:grid; place-items:center; width:48px !important; height:48px !important; background:transparent; border:0; pointer-events:none; z-index:2; }
+.burbz-prop-marker .burbz-prop { display:block; width:46px; height:46px; object-fit:contain; }
 /* Tappable loot scattered on the map */
 /* NOTE: MapLibre positions this marker every frame by writing `transform` on
    THIS element. Never put a CSS transition on `transform` here — it makes the
@@ -649,7 +644,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-pickup-burst-glyph { font-size:26px; filter:drop-shadow(0 0 12px rgba(240,199,103,.9)); }
 .burbz-pickup-burst-text { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:.04em; color:#ffe9ad; text-shadow:0 1px 3px rgba(0,0,0,.8); white-space:nowrap; }
 @keyframes pickupBurst { 0% { opacity:0; transform:translate(-50%,-100%) scale(.5); } 18% { opacity:1; transform:translate(-50%,-118%) scale(1.15); } 40% { transform:translate(-50%,-128%) scale(1); } 100% { opacity:0; transform:translate(-50%,-190%) scale(.94); } }
-@keyframes propSway { 0%,100%{ transform:translateY(0) rotate(-1.4deg); } 50%{ transform:translateY(-2.5px) rotate(1.4deg); } }
 .burbz-map-popup .maplibregl-popup-content { background:rgba(8,18,17,.94); color:#fff; border:1px solid rgba(240,199,103,.32); border-radius:14px; box-shadow:0 12px 28px rgba(0,0,0,.38); padding:12px; }
 .burbz-map-popup .maplibregl-popup-tip { border-top-color:rgba(8,18,17,.94); border-bottom-color:rgba(8,18,17,.94); }
 .burbz-popup-title { font-family:'Russo One',sans-serif; color:var(--accent2); margin-bottom:3px; }
@@ -2586,10 +2580,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .wq-offer-pin { --quest-route-color:#58d858; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; padding:0; border:0; background:none; color:#fff; pointer-events:auto; }
 .wq-offer-stack { transform:translate(var(--quest-pin-x,0),var(--quest-pin-y,0)); display:flex; flex-direction:column; align-items:center; gap:3px; transition:transform .2s ease; }
 .wq-offer-pin .wq-offer-distance { min-width:38px; padding:3px 7px; border-radius:999px; color:#fff8dc; background:rgba(5,13,10,.92); border:1px solid rgba(240,199,103,.72); box-shadow:0 4px 12px rgba(0,0,0,.5); font:900 10px/1 'Rajdhani',sans-serif; letter-spacing:.045em; text-align:center; white-space:nowrap; }
-.wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:42px; height:42px; border-radius:50%; font-size:19px; background:radial-gradient(circle at 35% 28%,rgba(240,199,103,.28),#163126 48%,#07110e 82%); border:2px solid var(--quest-route-color); box-shadow:0 0 0 3px rgba(0,0,0,.48),0 5px 13px rgba(0,0,0,.58),0 0 15px color-mix(in srgb,var(--quest-route-color) 38%,transparent); animation:questBounce 2.6s ease-in-out infinite; }
-.wq-offer-pin.muted .wq-offer-badge { width:17px; height:17px; font-size:0; border-width:1px; animation:none; opacity:.42; }
+.wq-offer-pin .wq-offer-badge { position:relative; display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:radial-gradient(circle at 35% 28%,rgba(240,199,103,.28),#163126 48%,#07110e 82%); border:2px solid var(--quest-route-color); box-shadow:0 0 0 3px rgba(0,0,0,.48),0 5px 13px rgba(0,0,0,.58),0 0 15px color-mix(in srgb,var(--quest-route-color) 38%,transparent); }
+.wq-offer-pin .wq-offer-badge-art { display:block; width:31px; height:31px; object-fit:contain; }
+.wq-offer-pin.muted .wq-offer-badge { width:17px; height:17px; border-width:1px; opacity:.42; }
+.wq-offer-pin.muted .wq-offer-badge-art { display:none; }
 .wq-offer-pin.muted .wq-offer-distance { display:none; }
-.wq-offer-pin.selected .wq-offer-badge { width:44px; height:44px; box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 22px var(--quest-route-color); }
+.wq-offer-pin.selected .wq-offer-badge { width:44px; height:44px; box-shadow:0 0 0 3px rgba(0,0,0,.55),0 0 22px var(--quest-route-color); animation:questBounce 2.6s ease-in-out infinite; }
 @keyframes questBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
 .wq-npc-dialog { position:fixed; inset:0; z-index:640; display:flex; align-items:flex-end; justify-content:center; background:rgba(4,6,5,.55); }
 .wq-npc-panel { width:100%; max-width:520px; margin:0 10px calc(84px + var(--safe-bottom,0px)); padding:14px 16px; border-radius:18px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.45); display:flex; gap:12px; align-items:flex-start; animation:questSheetUp .25s ease-out; }
@@ -3364,7 +3360,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=charm-diplomacy-20260723"></script>
 <script src="loot_crafting_core.js?v=bird-equip-screen-20260721"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=quest-route-partial-tiles-transactional-claims-v122-20260724"></script>
+<script src="quest_core.js?v=quest-route-integrity-loops-v123-20260726"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -13898,7 +13894,27 @@ function wireMapRotateOnly() {
   liveMap.on('rotate', () => applyPlayerHeading(liveMap.getBearing()));
 }
 
-function wireMapMoveTracking() { if (!liveMap || liveMap._burbzMoveWired) return; liveMap._burbzMoveWired = true; liveMap.on('zoomstart movestart dragstart rotatestart pitchstart', () => { liveMapUserMoved = true; }); liveMap.on('moveend zoomend rotateend pitchend', () => { tuneCameraForZoom(); scheduleVillageMarkerRefresh(); scheduleZoomCollectibleRefresh(); scheduleWalkQuestRealign(); if (!liveMapOverlayOpen) return; clearTimeout(liveMapOverlayRefreshTimer); liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450); }); tuneCameraForZoom(); }
+function wireMapMoveTracking() {
+  if (!liveMap || liveMap._burbzMoveWired) return;
+  liveMap._burbzMoveWired = true;
+  const markMoved = () => { liveMapUserMoved = true; };
+  let moveEndTimer = null;
+  const finishMove = () => {
+    clearTimeout(moveEndTimer);
+    moveEndTimer = setTimeout(() => {
+      tuneCameraForZoom();
+      scheduleVillageMarkerRefresh();
+      scheduleZoomCollectibleRefresh();
+      scheduleWalkQuestRealign();
+      if (!liveMapOverlayOpen) return;
+      clearTimeout(liveMapOverlayRefreshTimer);
+      liveMapOverlayRefreshTimer = setTimeout(() => refreshLikelyBirdOverlay({ useMapView:true, reason:'Current map view' }), 450);
+    }, 80);
+  };
+  ['zoomstart', 'movestart', 'dragstart', 'rotatestart', 'pitchstart'].forEach(eventName => liveMap.on(eventName, markMoved));
+  ['moveend', 'zoomend', 'rotateend', 'pitchend'].forEach(eventName => liveMap.on(eventName, finishMove));
+  tuneCameraForZoom();
+}
 // Zooming in/out changes how much loot is revealed, so redraw the pickups when
 // the zoom band flips (debounced so a continuous pinch doesn't thrash the DOM).
 let liveMapZoomPickupBand = null, liveMapZoomPickupTimer = null;
@@ -14194,7 +14210,7 @@ function openQuestBoard() {
     const sheet = $('walkQuestSheet'); if (!offers || !sheet || !sheet.classList.contains('open')) return;
     walkQuestOffersCache = offers;
     const st = $('walkQuestSheetStatus');
-    if (st) st.textContent = offers.length ? offers.length + ' nearby quest' + (offers.length === 1 ? '' : 's') + ', ordered by distance to the start.' : 'No mapped trail starts nearby — start a Side Quest below and just explore.';
+    if (st) st.textContent = offers.length ? offers.length + ' nearby quest' + (offers.length === 1 ? '' : 's') + ', prioritising public footpaths, known trails and real loops.' : 'No mapped trail starts nearby — start a Side Quest below and just explore.';
     renderQuestOfferCards($('walkQuestOfferList'), offers, focusQuestOnMap);
   }).catch(err => {
     console.warn('BURBZ walking quest discovery failed', err);
@@ -14279,8 +14295,9 @@ async function activateWalkingQuestFromOffer(offer, retry) {
   // Activation is authoritative only after the complete route and every marker
   // certify against eligible transportation geometry in currently loaded tiles.
   const initialWays = visibleWalkablePathWays();
-  const initialRepair = window.BurbzQuestCore.repairQuestRouteAgainstWays(quest, initialWays,
-    liveMapLastPosition ? { startLat:liveMapLastPosition.lat, startLon:liveMapLastPosition.lon } : {});
+  // Repair is anchored to the quest's persisted trailhead, never the player's
+  // current GPS position, so moving around cannot select an unrelated loop.
+  const initialRepair = window.BurbzQuestCore.repairQuestRouteAgainstWays(quest, initialWays);
   if (initialRepair.status !== 'certified') {
     walkQuestPendingActivation = offer;
     installWalkQuestAlignmentReadinessRetry();
@@ -14346,13 +14363,20 @@ function clearWalkingQuestFromMap() {
 function visibleWalkablePathWays() {
   if (!liveMap || !window.BurbzQuestCore) return [];
   try { if ((liveMap.getZoom ? liveMap.getZoom() : 0) < 13.2) return []; } catch (e) { return []; }
-  const features = [];
+  const features = [], seen = new Set();
   try {
     const sources = Object.keys((liveMap.getStyle && liveMap.getStyle().sources) || {}).sort();
     sources.forEach(sourceId => {
+      if (sourceId.startsWith('burbz-')) return;
       let rows = [];
       try { rows = liveMap.querySourceFeatures(sourceId, { sourceLayer:'transportation' }) || []; } catch (e) {}
-      rows.forEach(feature => features.push(feature));
+      rows.forEach(feature => {
+        if (features.length >= 700) return;
+        const geometry = feature && feature.geometry;
+        if (!geometry) return;
+        const key = JSON.stringify(geometry) + '|' + String(feature.properties?.class || '') + '|' + String(feature.properties?.subclass || '');
+        if (!seen.has(key)) { seen.add(key); features.push(feature); }
+      });
     });
   } catch (e) {}
   return window.BurbzQuestCore.eligibleMapTransportationWays(features);
@@ -14375,8 +14399,15 @@ function alignActiveQuestRouteToMapPaths(force = false) {
   const ways = visibleWalkablePathWays();
   if (!ways.length) {
     const hasCertificate = quest.routeCertification && quest.routeCertification.status === 'certified';
+    if (hasCertificate) {
+      // Loaded vector tiles are only a viewport-sized hint. Keep a durable route
+      // visible and do not keep retrying merely because its tiles are absent.
+      uninstallWalkQuestAlignmentReadinessRetry();
+      drawWalkingQuestOnMap();
+      return false;
+    }
     const alreadyPending = quest.routeCertification && quest.routeCertification.status === 'pending' && quest.routeCertification.reason === 'tiles-not-ready';
-    if (!hasCertificate && !alreadyPending) {
+    if (!alreadyPending) {
       quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:'tiles-not-ready' };
       saveState();
     }
@@ -14386,14 +14417,18 @@ function alignActiveQuestRouteToMapPaths(force = false) {
     return false;
   }
   walkQuestAlignState = { questId: quest.id, lastAt: now };
-  const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
-  const result = core.repairQuestRouteAgainstWays(quest, ways, me ? { startLat:me.lat, startLon:me.lon } : {});
+  const result = core.repairQuestRouteAgainstWays(quest, ways);
   if (result.status === 'pending') {
     // partial-tiles is non-authoritative viewport evidence. Preserve an existing
     // certified route/certificate atomically; uncertified legacy routes stay hidden.
     const hasCertificate = quest.routeCertification && quest.routeCertification.status === 'certified';
+    if (hasCertificate) {
+      uninstallWalkQuestAlignmentReadinessRetry();
+      drawWalkingQuestOnMap();
+      return false;
+    }
     const alreadyPending = quest.routeCertification && quest.routeCertification.status === 'pending' && quest.routeCertification.reason === result.reason;
-    if (!hasCertificate && !alreadyPending) {
+    if (!alreadyPending) {
       quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
       saveState();
     }
@@ -14402,17 +14437,22 @@ function alignActiveQuestRouteToMapPaths(force = false) {
     drawWalkingQuestOnMap();
     return false;
   }
-  const finalCertification = result.status === 'certified'
-    ? core.certifyRouteAgainstWays(quest.route, quest.checkpoints, ways) : null;
+  // repairQuestRouteAgainstWays already certifies route and checkpoints against
+  // the compiled spatial index; re-running the complete 2 m scan here caused
+  // avoidable main-thread work on every tile refresh.
+  const finalCertification = result.status === 'certified' ? result.certification : null;
   if (result.status !== 'certified' || !finalCertification || !finalCertification.certified) {
     // Visible source features are viewport/tile fragments, not authoritative
     // evidence that a route is impossible. Certified routes stay drawable;
     // uncertified routes stay pending/hidden until complete tiles arrive.
     const hasCertificate = quest.routeCertification && quest.routeCertification.status === 'certified';
-    if (!hasCertificate) {
-      quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
-      saveState();
+    if (hasCertificate) {
+      uninstallWalkQuestAlignmentReadinessRetry();
+      drawWalkingQuestOnMap();
+      return false;
     }
+    quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
+    saveState();
     setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
     installWalkQuestAlignmentReadinessRetry();
     drawWalkingQuestOnMap();
@@ -14441,16 +14481,21 @@ function scheduleWalkQuestRealign() {
   clearTimeout(walkQuestRealignTimer);
   walkQuestRealignTimer = setTimeout(() => alignActiveQuestRouteToMapPaths(), 900);
 }
-const WALK_QUEST_RETRY_EVENTS = ['sourcedata', 'idle', 'styledata'];
+// Source/style readiness is enough; listening to every `idle` would feed our
+// own GeoJSON redraw back into another alignment pass.
+const WALK_QUEST_RETRY_EVENTS = ['sourcedata', 'styledata'];
 function installWalkQuestAlignmentReadinessRetry() {
   if (!liveMap) return;
   if (walkQuestAlignmentRetry.handler) {
     if (walkQuestAlignmentRetry.map === liveMap) return;
     uninstallWalkQuestAlignmentReadinessRetry(); // map was rebuilt — rebind
   }
-  const retry = () => {
+  const retry = event => {
+    const sourceId = String(event && event.sourceId || '');
+    if (sourceId.startsWith('burbz-')) return;
     clearTimeout(walkQuestRealignTimer);
     walkQuestRealignTimer = setTimeout(() => {
+      if (walkQuestAlignmentRetry.handler !== retry) return;
       if (walkQuestPendingActivation && !activeWalkingQuest()) {
         startWalkingQuestFromOffer(walkQuestPendingActivation, { retry: true });
       } else if (activeWalkingQuest()) {
@@ -14459,7 +14504,7 @@ function installWalkQuestAlignmentReadinessRetry() {
         // Nothing left to align — stop listening to every tile event.
         uninstallWalkQuestAlignmentReadinessRetry();
       }
-    }, 250);
+    }, 400);
   };
   walkQuestAlignmentRetry = { map: liveMap, handler: retry };
   WALK_QUEST_RETRY_EVENTS.forEach(eventName => {
@@ -15405,7 +15450,11 @@ function refreshQuestChainLinks(offers) {
   return offers || [];
 }
 function prepareQuestOffers(offers) {
-  const sorted = window.BurbzQuestCore.sortOffersByStartDistance(offers || []);
+  const core = window.BurbzQuestCore;
+  // Dedupe the exact geometry players will see, including a routed return leg.
+  // This is the final guard after Overpass and visible-map sources are merged.
+  const displayOffers = (offers || []).map(offer => ({ ...offer, points:questOfferDisplayPoints(offer) }));
+  const sorted = core.sortOffersByStartDistance(core.dedupeQuestOffers(displayOffers));
   return refreshQuestChainLinks(sorted);
 }
 function questChainMarkup(offer, offers) {
@@ -15445,26 +15494,10 @@ function visibleMapWalkingQuestOffers(lat, lon) {
   return window.BurbzQuestCore.parseMapWalkableFeatures(features.slice(0, 500), lat, lon);
 }
 function mergeQuestOffers(primary, visible) {
-  const merged = (primary || []).slice();
-  // The ring charted from the basemap's own path geometry matches the lines
-  // the player actually sees drawn — prefer it over a mirror-sourced ring.
-  const visibleRing = (visible || []).find(o => o && o.ring && o.points && o.points.length >= 3);
-  if (visibleRing) {
-    const mirrorRingIdx = merged.findIndex(o => o && o.ring);
-    if (mirrorRingIdx >= 0) merged.splice(mirrorRingIdx, 1, visibleRing);
-    else merged.unshift(visibleRing);
-  }
-  (visible || []).forEach(candidate => {
-    if (candidate === visibleRing) return;
-    const cp = candidate.points || [], cs = cp[0], ce = cp[cp.length - 1];
-    if (!cs || !ce) return;
-    const duplicate = merged.some(existing => {
-      const ep = existing.points || [], es = ep[0], ee = ep[ep.length - 1];
-      return es && ee && mapDistanceMeters(cs, es) < 20 && mapDistanceMeters(ce, ee) < 35;
-    });
-    if (!duplicate) merged.push(candidate);
-  });
-  return merged.slice(0, 18);
+  const merged = (primary || []).concat(visible || []);
+  // Whole-route comparison catches reversed routes, rotated loops and geometry
+  // sampled at different densities while retaining genuinely divergent walks.
+  return window.BurbzQuestCore.dedupeQuestOffers(merged).slice(0, 18);
 }
 function discoverNearbyQuestOffers(force = false) {
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) return Promise.resolve([]);
@@ -15517,7 +15550,7 @@ function drawQuestOverviewMarkers() {
     const displayOffset = questPinDisplayOffset(i);
     el.style.setProperty('--quest-pin-x', displayOffset.x + 'px');
     el.style.setProperty('--quest-pin-y', displayOffset.y + 'px');
-    el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge">' + meta.icon + '</span></span>';
+    el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge"><img class="wq-offer-badge-art" src="assets/ui/quest-compass-emblem.webp" alt="" decoding="async"></span></span>';
     el.addEventListener('click', ev => { ev.stopPropagation(); focusQuestOnMap(i); });
     const start = o.points[0];
     questOverview.markers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([start.lon, start.lat]).addTo(liveMap));
@@ -16028,29 +16061,38 @@ function enablePlayerCompass() {
 }
 function drawHabitatOverlayZones(spawns) { if (!liveMap || !liveMap.getSource('burbz-habitat-zones')) return; const features = liveMapOverlayOpen ? spawns.map(spawn => circleFeature(spawn.lat, spawn.lon, spawn.realFeature ? 135 : 90, { color:habitatColor(spawn.habitat), opacity:spawn.realFeature ? .16 : .10, habitat:spawn.habitat }, 36)) : []; liveMap.getSource('burbz-habitat-zones').setData({ type:'FeatureCollection', features }); }
 function makeHtmlMarker(className, html) { const el = document.createElement('div'); el.className = className; el.innerHTML = html; return el; }
-function isTreeHabitat(habitat) { return ['woodland','park','wetland','hills'].includes(habitat); }
-function treePlanForSpawn(spawn, index) { const count = spawn.realFeature ? (spawn.habitat === 'woodland' ? 4 : 3) : 1; const trees = []; for (let i=0;i<count;i++) { const seed = hashStr(`${spawn.seed}:tree:${i}`); const angle = ((seed % 360) * Math.PI) / 180; const dist = 28 + (seed % 95); const east = Math.sin(angle) * dist; const north = Math.cos(angle) * dist; const coords = metersToLonLat(spawn.lat, spawn.lon, east, north); trees.push({ lon:coords[0], lat:coords[1], scale:.72 + ((seed >> 3) % 38) / 100, delay:-((seed >> 6) % 20) / 10 }); } return trees; }
-function drawTreeMarkers(spawns) { if (!liveMap) return; liveMapTreeMarkers.forEach(marker => marker.remove()); liveMapTreeMarkers = []; (spawns || []).filter(spawn => isTreeHabitat(spawn.habitat)).slice(0,5).forEach((spawn, idx) => { treePlanForSpawn(spawn, idx).forEach(tree => { const el = makeHtmlMarker('burbz-tree-marker', '<div class="burbz-tree-crown"></div>'); el.style.zIndex = '1'; const crown = el.querySelector('.burbz-tree-crown'); if (crown) crown.style.transform = `scale(${tree.scale})`; el.style.animationDelay = `${tree.delay}s`; liveMapTreeMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([tree.lon, tree.lat]).addTo(liveMap)); }); }); }
+function drawTreeMarkers() {
+  liveMapTreeMarkers.forEach(marker => marker.remove());
+  liveMapTreeMarkers = [];
+}
 
-// Habitat-driven medieval set dressing: each real mapped feature seeds a small
-// prop (a well in the park, sheep on pasture, a coracle on the water...) so
-// walking the realm feels like crossing a lived-in medieval countryside.
-const MEDIEVAL_HABITAT_PROPS = { park:['⛲','🪵'], farmland:['🌾','🐑','🛖'], grassland:['🐑','🌾'], water:['🛶','🪵'], wetland:['🪷','🌾'], hills:['🪨','⛺'], woodland:['🍄','🦌'], coast:['⚓','🐚'], urban:['🛖','🏮'] };
+// One static landmark per mapped habitat category keeps the map legible and
+// avoids the cost and visual noise of randomized emoji props.
+const MAP_LANDMARK_ICONS = {
+  woodland:{ category:'grove', src:'assets/ui/map-landmark-grove.webp' },
+  park:{ category:'grove', src:'assets/ui/map-landmark-grove.webp' },
+  water:{ category:'water', src:'assets/ui/map-landmark-water.webp' },
+  wetland:{ category:'water', src:'assets/ui/map-landmark-water.webp' },
+  coast:{ category:'water', src:'assets/ui/map-landmark-water.webp' },
+  farmland:{ category:'field', src:'assets/ui/map-landmark-field.webp' },
+  grassland:{ category:'field', src:'assets/ui/map-landmark-field.webp' },
+  hills:{ category:'field', src:'assets/ui/map-landmark-field.webp' }
+};
 function drawMedievalProps(spawns) {
   if (!liveMap) return;
   liveMapPropMarkers.forEach(m => m.remove());
   liveMapPropMarkers = [];
-  (spawns || []).slice(0, 10).forEach(spawn => {
-    const props = MEDIEVAL_HABITAT_PROPS[spawn.habitat];
-    if (!props) return;
-    const seed = hashStr(`${spawn.seed}:prop`);
-    const glyph = props[seed % props.length];
-    const angle = ((seed >> 4) % 360) * Math.PI / 180;
-    const dist = 34 + ((seed >> 2) % 70);
-    const coords = metersToLonLat(spawn.lat, spawn.lon, Math.sin(angle) * dist, Math.cos(angle) * dist);
-    const el = makeHtmlMarker('burbz-prop-marker', `<div class="burbz-prop">${glyph}</div>`);
-    liveMapPropMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat(coords).addTo(liveMap));
-  });
+  const shownCategories = new Set();
+  for (const spawn of (spawns || [])) {
+    if (liveMapPropMarkers.length >= 5) break;
+    if (!spawn || !spawn.realFeature) continue;
+    const landmark = MAP_LANDMARK_ICONS[spawn.habitat];
+    const lat = Number(spawn.lat), lon = Number(spawn.lon);
+    if (!landmark || shownCategories.has(landmark.category) || !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+    shownCategories.add(landmark.category);
+    const el = makeHtmlMarker('burbz-prop-marker', `<img class="burbz-prop" src="${landmark.src}" alt="" aria-hidden="true" decoding="async">`);
+    liveMapPropMarkers.push(new maplibregl.Marker({ element:el, anchor:'center' }).setLngLat([lon, lat]).addTo(liveMap));
+  }
 }
 
 // ---- Proper RPG treasure-chest icons (inline SVG — there is no chest emoji) --
@@ -16202,6 +16244,7 @@ const MAP_PICKUP_TYPES = [
 const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
 const MAP_PICKUP_RANGE_M = 440; // doubled for normal GPS/path alignment error
 let liveMapPickupMarkers = [];
+let liveMapPickupRenderKey = null;
 
 // ---------------------------------------------------------------------------
 // STARTER TIMBER — every new player finds enough wood to raise The Roost.
@@ -16300,16 +16343,38 @@ function mapPickupsNear(lat, lon) {
   }
   return out;
 }
+function mapPickupRenderKey(lat, lon, zoomBand) {
+  return [
+    pickupDayKey(),
+    Math.floor(lat / MAP_PICKUP_CELL_DEG),
+    Math.floor(lon / MAP_PICKUP_CELL_DEG),
+    zoomBand
+  ].join(':');
+}
+function updateMapPickupReachability(lat, lon) {
+  liveMapPickupMarkers.forEach(marker => {
+    const pickup = marker._burbzPickup;
+    const el = marker.getElement && marker.getElement();
+    if (!pickup || !el) return;
+    el.classList.toggle('locked', mapDistanceMeters(pickup, { lat, lon }) > MAP_PICKUP_RANGE_M);
+  });
+}
 function drawMapPickups(lat, lon) {
-  if (!liveMap || !window.maplibregl) return;
-  const state = ensureMapPickupState();
-  liveMapPickupMarkers.forEach(m => m.remove());
-  liveMapPickupMarkers = [];
+  if (!liveMap || !window.maplibregl || !Number.isFinite(lat) || !Number.isFinite(lon)) return;
   // Zoomed out you can see more of what's scattered around, but only loot
   // within reach (MAP_PICKUP_RANGE_M) can actually be grabbed — the rest show
   // greyed-out and locked until you walk over to them.
   const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM;
   const zoomedOut = zoom < BURBZ_START_ZOOM - 0.5;
+  const zoomBand = zoomedOut ? 'wide' : 'near';
+  const renderKey = mapPickupRenderKey(lat, lon, zoomBand);
+  if (renderKey === liveMapPickupRenderKey) {
+    updateMapPickupReachability(lat, lon);
+    return;
+  }
+  const state = ensureMapPickupState();
+  liveMapPickupMarkers.forEach(m => m.remove());
+  liveMapPickupMarkers = [];
   // Starter timber first: guaranteed, always in the vicinity, never crowded
   // out by the daily loot cap below.
   starterTimberPickupsNear(lat, lon)
@@ -16325,8 +16390,11 @@ function drawMapPickups(lat, lon) {
       if (p.type.cls) el.classList.add(p.type.cls); // gear caches shimmer, relic chests glow
       if (!inReach) el.classList.add('locked');
       el.addEventListener('click', ev => { ev.stopPropagation(); collectMapPickup(p, el); });
-      liveMapPickupMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([p.lon, p.lat]).addTo(liveMap));
+      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([p.lon, p.lat]).addTo(liveMap);
+      marker._burbzPickup = p;
+      liveMapPickupMarkers.push(marker);
     });
+  liveMapPickupRenderKey = renderKey;
 }
 function collectMapPickup(pickup, el) {
   const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
@@ -16361,7 +16429,16 @@ function collectMapPickup(pickup, el) {
     shell.appendChild(burst);
     setTimeout(() => burst.remove(), 1500);
   }
-  if (el) { el.classList.add('collected'); setTimeout(() => { const m = liveMapPickupMarkers.find(mk => mk.getElement() === el); if (m) m.remove(); }, 420); }
+  if (el) {
+    el.classList.add('collected');
+    setTimeout(() => {
+      const markerIndex = liveMapPickupMarkers.findIndex(marker => marker.getElement() === el);
+      if (markerIndex >= 0) {
+        liveMapPickupMarkers[markerIndex].remove();
+        liveMapPickupMarkers.splice(markerIndex, 1);
+      }
+    }, 420);
+  }
   showToast(toastGlyph + ' ' + rewardText);
 }
 let liveMapAreaRows = [];
