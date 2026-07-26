@@ -41,7 +41,7 @@ def test_audio_assets_ship_through_offline_and_live_deployment_paths():
     version = "burbz-audio-overhaul-v1-20260726"
     assert f"audio_core.js?v={version}" in sw
     assert f"audio_core.js?v={version}" in (BURBZ / "index.html").read_text(encoding="utf-8")
-    assert "burbz-audio-prey-hunts-kitchen-v139-20260726" in sw
+    assert "burbz-one-tap-feeding-food-quests-v140-20260726" in sw
 
 
 def test_empire_ambience_and_semantic_battle_sounds_are_wired():

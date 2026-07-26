@@ -256,28 +256,28 @@ def test_prep_counter_leads_with_the_diet_and_folds_the_reference_material():
     fold_at = panel.index('<details class="kitchen-fold"><summary>🧺 Stores larder')
     assert panel.index("Starter Stores include falcon rations") > fold_at
     assert panel.index("kitchenPantryBridgeHTML()") > fold_at
-    # Doing the job — plate, then serve — comes before any of it.
-    assert panel.index("kitchen-plate") < fold_at
-    assert panel.index("kitchen-serve-btn") < fold_at
+    # Doing the job — tap one food, serve one meal — comes before any of it.
+    assert panel.index("feed-food-list") < fold_at
+    assert panel.index("kitchenCounterFoodListHTML(counterEntry)") < fold_at
     # The roster's wall of help text folds as well.
     roster = function_source(html, "renderKitchenRosterHTML")
     assert "Every bird eats something different" in roster
     assert roster.index("kitchen-fold") < roster.index("Every bird eats something different")
 
 
-def test_ingredient_picker_pins_the_birds_diet_to_the_top():
+def test_the_food_list_shows_every_food_with_the_prey_blurb_that_names_its_hunters():
     html = HTML.read_text(encoding="utf-8")
-    picker = function_source(html, "kitchenOpenSlot")
-    assert "kitchen-sheet-diet" in picker
-    assert "data-kitchen-sheet-diet" in picker
-    assert "kitchenEatsChipsHTML(chosen)" in picker
-    # It stays put while the larder scrolls underneath it.
-    assert ".kitchen-sheet-diet { position:sticky" in html
-    # Ingredients from the bird's own diet families sort to the top.
-    assert "eaten.has((kitchenIngredientById(id) || {}).dietFamily)" in picker
-    # Prey rows name their hunters on their own line, not buried in the blurb.
-    assert "kitchen-pick-taken" in picker
-    assert ".kitchen-pick-taken {" in html
+    # Each food is its own one-tap meal button, and every button carries the
+    # description — including the "Taken by:" line prey items add for the
+    # birds that really hunt them.
+    picker = function_source(html, "kitchenCounterFoodListHTML")
+    assert "feed-food-desc" in picker
+    assert "burbzFeedTap(" in picker
+    options = function_source(html, "kitchenRosterFoodOptions")
+    assert "Taken by: " in options
+    # The bird's diet still sits above the list, on the guest card.
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert panel.index("kitchenEatsChipsHTML") < panel.index("feed-food-list")
 
 
 def test_the_diet_chip_line_names_what_each_bird_really_eats():

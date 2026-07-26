@@ -269,8 +269,8 @@ async function collectState(page, label) {
         merlinDietProvenance: attr('[data-diet-surface="merlin-care"]', 'data-diet-provenance'),
         kitchenText: text('[data-kitchen-pantry-root]'),
         kitchenReachable: Boolean(document.querySelector('[data-kitchen-pantry-root="academy-kitchen"]')),
-        resultText: text('[data-feed-result-sheet="kitchen"]'),
-        resultTransactionId: attr('[data-feed-result-sheet="kitchen"]', 'data-feed-transaction-id'),
+        resultText: text('[data-feed-result-sheet="one-tap-feed"]'),
+        resultTransactionId: attr('[data-feed-result-sheet="one-tap-feed"]', 'data-feed-transaction-id'),
         visibleSmallBirdRations: attr('[data-larder-count="small_bird_prey_ration"]', 'data-count'),
         visibleMealworms: attr('[data-larder-count="mealworm_scoop"]', 'data-count'),
       },
@@ -319,8 +319,8 @@ async function dismissOverlays(page) {
     }
     const intro = document.getElementById('introCutsceneOverlay');
     if (intro) intro.classList.remove('show');
-    const sheet = document.getElementById('kitchenSlotSheet');
-    if (sheet && !sheet.querySelector('[data-feed-result-sheet="kitchen"]')) sheet.classList.remove('open');
+    const feedSheet = document.getElementById('burbzFeedSheet');
+    if (feedSheet) feedSheet.classList.remove('open');
   });
 }
 
@@ -395,19 +395,15 @@ async function showKitchen(page) {
   await dismissOverlays(page);
 }
 
-async function serveKitchenMeal(page, ingredientId, prep) {
-  await page.evaluate(({ ingredientId: ingredient, prep: prepId }) => {
-    const sheet = document.getElementById('kitchenSlotSheet');
-    if (sheet) sheet.classList.remove('open');
+// One food, one tap, one meal — there is no tray to assemble first.
+async function serveKitchenMeal(page, ingredientId) {
+  await page.evaluate((ingredient) => {
     const runtimeState = window.__burbzMapDebug.state;
     runtimeState.merlinCare.lastFedAt = 0;
     window.kitchenSelectSpecies('merlin');
-    const kitchenState = window.__burbzKitchenDebug.state();
-    kitchenState.slots = [{ ingredientId: ingredient, prep: prepId }, null, null];
     window.renderAcademyRoomInterior();
-    window.kitchenServeMeal();
-  }, { ingredientId, prep });
-  await page.waitForSelector('[data-feed-result-sheet="kitchen"]', { timeout: 30000 });
+    window.burbzFeedFood('merlin', 'larder', ingredient);
+  }, ingredientId);
   await dismissOverlays(page);
 }
 
@@ -576,17 +572,13 @@ async function runViewport(browser, url, viewport, includeActivity) {
   const kitchenInitial = await collectState(page, 'kitchen-initial');
   const kitchenShot = await screenshot(page, `diet-hunger-regression-${label}-kitchen-initial.png`);
 
-  await serveKitchenMeal(page, 'small_bird_prey_ration', 'whole');
+  await serveKitchenMeal(page, 'small_bird_prey_ration');
   const compatible = await collectState(page, 'compatible-small-bird-ration');
-  const compatibleShot = await screenshot(page, `diet-hunger-regression-${label}-compatible.png`, '[data-feed-result-sheet="kitchen"]');
+  const compatibleShot = await screenshot(page, `diet-hunger-regression-${label}-compatible.png`, '[data-feed-result-sheet="one-tap-feed"]');
 
-  await page.evaluate(() => {
-    const sheet = document.getElementById('kitchenSlotSheet');
-    if (sheet) sheet.classList.remove('open');
-  });
-  await serveKitchenMeal(page, 'mealworm_scoop', 'fresh');
+  await serveKitchenMeal(page, 'mealworm_scoop');
   const incompatible = await collectState(page, 'incompatible-mealworm');
-  const incompatibleShot = await screenshot(page, `diet-hunger-regression-${label}-incompatible.png`, '[data-feed-result-sheet="kitchen"]');
+  const incompatibleShot = await screenshot(page, `diet-hunger-regression-${label}-incompatible.png`, '[data-feed-result-sheet="one-tap-feed"]');
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(

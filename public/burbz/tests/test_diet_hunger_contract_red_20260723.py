@@ -357,7 +357,7 @@ def test_val_regression_001_cache_pins_new_diet_hunger_assets_and_keeps_protecte
     for asset in runtime_assets:
         assert asset in html, f"{asset} is not loaded by index.html"
         assert "./" + asset in sw, f"{asset} is not cached by sw.js"
-    assert "burbz-audio-prey-hunts-kitchen-v139-20260726" in sw
+    assert "burbz-one-tap-feeding-food-quests-v140-20260726" in sw
     for protected in (
         "const MERLIN_GUIDE",
         "BirdNET",

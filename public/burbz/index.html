@@ -207,9 +207,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-eat-chip.muted { border-color:rgba(255,255,255,.14); background:rgba(255,255,255,.04); color:var(--text3); font-weight:600; }
 /* The picker sheet keeps the bird's diet pinned to the top while the player
    scrolls the larder, so choosing never means going back to check. */
-.kitchen-sheet-diet { position:sticky; top:-18px; z-index:3; margin:0 -16px 8px; padding:30px 16px 11px; border-bottom:1px solid rgba(214,168,79,.30); background:#17120a; box-shadow:0 8px 16px rgba(0,0,0,.55); }
-.kitchen-sheet-diet-name { font-family:'Russo One',sans-serif; font-size:13px; color:var(--accent2); }
-.kitchen-sheet-diet-list { margin-top:6px; display:flex; flex-wrap:wrap; gap:5px; }
 .kitchen-chip-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:10px; -webkit-overflow-scrolling:touch; }
 .kitchen-chip { flex:0 0 auto; min-height:34px; padding:0 11px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text); font:inherit; font-size:12px; font-weight:700; }
 .kitchen-chip.active { border-color:var(--accent); background:rgba(214,168,79,.18); color:var(--accent2); }
@@ -221,13 +218,40 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-guest-notes { font-size:11px; color:var(--accent2); margin-top:6px; }
 .kitchen-diet-guidance { margin-top:8px; padding:8px 9px; border-radius:9px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.08); font-size:11px; line-height:1.45; color:var(--text2); }
 .kitchen-diet-source { color:var(--text3); font-size:10px; margin-top:2px; }
-.kitchen-plate { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
-.kitchen-slot { min-height:78px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 6px; border-radius:14px; border:1px solid rgba(214,168,79,.35); background:rgba(0,0,0,.25); color:var(--text); font:inherit; }
-.kitchen-slot.empty { border-style:dashed; color:var(--text3); }
-.kitchen-slot-icon { font-size:22px; }
-.kitchen-slot-label { font-size:11px; font-weight:800; text-align:center; }
-.kitchen-slot-prep { font-size:10px; color:var(--text3); text-align:center; }
-.kitchen-serve-btn { width:100%; min-height:46px; border-radius:14px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Russo One',sans-serif; font-size:14px; margin-bottom:12px; }
+/* One-tap feeding: a food list, not a plate. Every row is a whole meal. */
+.feed-food-list { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; max-height:52vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.feed-food { display:flex; align-items:center; gap:10px; width:100%; text-align:left; min-height:56px; padding:9px 11px; border-radius:13px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); color:var(--text); font:inherit; transition:border-color .15s, background .15s, transform .12s; }
+.feed-food:active { transform:scale(.985); }
+.feed-food.known-pref { border-color:rgba(214,168,79,.55); background:rgba(214,168,79,.12); }
+.feed-food[disabled] { opacity:.55; }
+.feed-food-emoji { flex:0 0 auto; font-size:24px; line-height:1; }
+.feed-food-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.feed-food-label { font-weight:800; font-size:13px; }
+.feed-food-desc { font-size:10.5px; color:var(--text3); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.feed-food-count { flex:0 0 auto; color:var(--accent2); font-weight:800; font-size:12px; }
+.feed-food.feed-food-served { border-color:var(--accent); background:rgba(214,168,79,.22); }
+.feed-sheet-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.feed-sheet-art { width:56px; height:56px; flex:0 0 auto; object-fit:contain; font-size:40px; line-height:56px; text-align:center; filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+.kitchen-counter-art { display:block; margin:0 auto 6px; }
+.feed-sheet-main { flex:1; min-width:0; }
+.feed-sheet-name { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); }
+.feed-sheet-species { font-size:11px; color:var(--text3); }
+.feed-sheet-wild { font-size:11px; color:var(--text2); margin-top:3px; line-height:1.4; }
+.feed-sheet-eats { font-size:11.5px; color:var(--text2); margin-bottom:5px; line-height:1.45; }
+.feed-sheet-hint { font-size:11px; color:var(--text3); margin-bottom:8px; line-height:1.45; }
+/* The bird itself crosses to the food it was offered. */
+.feed-flier { position:fixed; z-index:960; pointer-events:none; object-fit:contain; text-align:center; transition:transform .5s cubic-bezier(.3,.9,.4,1); filter:drop-shadow(0 5px 10px rgba(0,0,0,.6)); }
+.feed-flier.facing-left { transform-origin:center; }
+.feed-burst { background:radial-gradient(circle at 50% 45%, rgba(214,168,79,.14), rgba(4,6,5,.38)); }
+.feed-burst-badge { font-size:21px; }
+.feed-receipt { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:12px; border:1px solid rgba(214,168,79,.28); background:rgba(214,168,79,.09); margin-bottom:10px; }
+.feed-receipt-icon { font-size:20px; }
+.feed-receipt-main { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.feed-receipt-line { font-size:11.5px; font-weight:800; color:var(--accent2); }
+.feed-receipt-reward { font-size:11px; color:var(--text2); }
+.card-feed-btn { min-height:34px; border-radius:9px; padding:0 10px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
+.card-feed-btn:disabled { opacity:.5; }
+@media (prefers-reduced-motion:reduce) { .feed-flier { transition:none; } }
 .kitchen-larder-title { margin-top:2px; }
 .kitchen-larder-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
 .kitchen-larder-item { display:flex; align-items:center; gap:6px; padding:7px 9px; border-radius:11px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04); font-size:12px; }
@@ -236,27 +260,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-bridge-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:6px; margin-top:6px; }
 .kitchen-bridge-item { min-width:0; display:flex; align-items:center; gap:5px; padding:6px 8px; border-radius:9px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.035); font-size:11px; }
 .kitchen-bridge-arrow { flex:0 0 auto; color:var(--text3); font-size:10px; }
-.kitchen-pick-row { padding:10px 0; border-top:1px solid rgba(255,255,255,.08); }
-.kitchen-pick-head { display:flex; gap:9px; align-items:flex-start; margin-bottom:7px; }
-.kitchen-pick-icon { font-size:22px; }
-.kitchen-pick-name { font-weight:800; font-size:13px; }
-.kitchen-pick-desc { font-size:11px; color:var(--text2); line-height:1.4; }
-.kitchen-pick-taken { font-size:10px; color:var(--accent2); line-height:1.4; margin-top:3px; font-weight:700; }
 .kitchen-prep-strip { display:flex; flex-wrap:wrap; gap:6px; }
-.kitchen-prep-chip { min-height:32px; padding:0 10px; border-radius:11px; border:1px solid rgba(214,168,79,.35); background:rgba(214,168,79,.10); color:var(--text); font:inherit; font-size:11px; font-weight:700; }
-.kitchen-clear-btn { width:100%; min-height:36px; margin-bottom:6px; border-radius:11px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:var(--text2); font:inherit; font-size:12px; }
-.kitchen-result-row { padding:9px 0; border-top:1px solid rgba(255,255,255,.08); }
-.kitchen-result-food { font-size:13px; font-weight:800; }
-.kitchen-result-prep { font-size:11px; color:var(--text3); font-weight:600; }
-.kitchen-result-verdict { font-size:12px; font-weight:900; margin-top:2px; }
-.kitchen-result-verdict.verdict-perfect, .kitchen-result-verdict.verdict-gizzard { color:var(--hp-green); }
-.kitchen-result-verdict.verdict-close, .kitchen-result-verdict.verdict-nibbled { color:var(--accent2); }
-.kitchen-result-verdict.verdict-refused { color:var(--hp-red); }
-.kitchen-result-verdict.verdict-ignored, .kitchen-result-verdict.verdict-wasted { color:var(--text3); }
-.kitchen-result-note { font-size:12px; color:var(--text2); line-height:1.45; margin-top:2px; }
-.kitchen-result-fact { margin-top:10px; padding:9px 11px; border-radius:11px; border:1px solid rgba(214,168,79,.30); background:rgba(214,168,79,.10); font-size:12px; color:var(--accent2); line-height:1.45; }
-.kitchen-result-rewards { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-.kitchen-result-rewards span { padding:4px 9px; border-radius:9px; background:rgba(255,255,255,.07); font-size:11px; font-weight:700; }
 /* Kitchen — companion feeding roster (scrollable list; no birds wander the room) */
 .kitchen-roster-list { max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:8px; padding-right:2px; }
 .kitchen-roster-row { padding:10px 12px; border-radius:13px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.22); }
@@ -4328,11 +4332,35 @@ function hungerStatusForBird(bird, now = Date.now()) {
   const level = hunger >= 85 ? 'urgent' : hunger >= 70 ? 'hungry' : hunger >= 45 ? 'peckish' : 'fed';
   return { hunger, level, label: level === 'urgent' ? 'Urgent care' : level[0].toUpperCase() + level.slice(1), warnsWork:hunger >= 70, blocksWork:hunger >= 85, message:'' };
 }
+// Fullness is the hunger bar and nothing else. Feeding used to sit behind a
+// one-hour wall-clock cooldown, which is how a bird on 100/100 hunger could be
+// told it was "still full" and refused the meal it was starving for.
+function birdIsFull(bird, now = Date.now()) {
+  return Math.round(hungerStatusForBird(bird, now).hunger) <= 0;
+}
+// Merlin is the one bird the Kingdom cannot afford to ground. With an empty
+// larder every other companion locks up, so he keeps flying however hungry he
+// is — the cost is time, not the errand itself.
+function isMerlinCompanion(bird) {
+  return !!bird && bird.id === 'merlin-guide';
+}
+function merlinExpeditionSlowFactor(now = Date.now()) {
+  const core = dietHungerCore();
+  const care = typeof getMerlinCare === 'function' ? getMerlinCare() : (gameState && gameState.merlinCare);
+  const status = core && typeof core.hungerStatusForCare === 'function'
+    ? core.hungerStatusForCare(care, now)
+    : { warnsWork:(Number(care && care.hunger) || 0) >= 70 };
+  return status.warnsWork ? 2 : 1;
+}
 function birdWorkReadiness(bird, activityType, now = Date.now()) {
   const core = dietHungerCore();
-  if (core && typeof core.activityReadiness === 'function') return core.activityReadiness(bird, activityType, now);
-  const status = hungerStatusForBird(bird, now);
-  return { ok:!status.blocksWork, warning:status.warnsWork, status, message:status.message };
+  const readiness = core && typeof core.activityReadiness === 'function'
+    ? core.activityReadiness(bird, activityType, now)
+    : (() => { const status = hungerStatusForBird(bird, now); return { ok:!status.blocksWork, warning:status.warnsWork, status, message:status.message }; })();
+  if (isMerlinCompanion(bird) && String(activityType || '') === 'expedition' && (readiness.warning || !readiness.ok)) {
+    return { ...readiness, ok:true, warning:true, slowFactor:2, message:'Merlin will still fly hungry — the errand takes twice as long.' };
+  }
+  return readiness;
 }
 function warnOrBlockBirdWork(bird, activityType) {
   const readiness = birdWorkReadiness(bird, activityType, Date.now());
@@ -4341,7 +4369,8 @@ function warnOrBlockBirdWork(bird, activityType) {
     showToast('🍽️ ' + name + ' needs food before ' + String(activityType || 'work').replace(/_/g, ' ') + '.');
     return false;
   }
-  if (readiness.warning) showToast('🍽️ ' + name + ' is hungry — they can help, but feed them soon.');
+  // A slow-flight readiness carries its own, more specific line from the caller.
+  if (readiness.warning && !(readiness.slowFactor > 1)) showToast('🍽️ ' + name + ' is hungry — they can help, but feed them soon.');
   return true;
 }
 function applyBirdHungerTransaction(birdId, activityType, activityId, delta, now = Date.now()) {
@@ -4530,6 +4559,7 @@ function loadState() {
   }
   gameState.dietBadges = (gameState.dietBadges && typeof gameState.dietBadges === 'object' && !Array.isArray(gameState.dietBadges)) ? gameState.dietBadges : {};
   gameState.kitchenNotes = (gameState.kitchenNotes && typeof gameState.kitchenNotes === 'object' && !Array.isArray(gameState.kitchenNotes)) ? gameState.kitchenNotes : {};
+  gameState.lastFeedReceipt = (gameState.lastFeedReceipt && typeof gameState.lastFeedReceipt === 'object' && !Array.isArray(gameState.lastFeedReceipt)) ? gameState.lastFeedReceipt : null;
   gameState.flock = Array.isArray(gameState.flock) ? gameState.flock.filter(b => b && typeof b === 'object') : [];
   // Feeding-table migration: the Kitchen is where companions are FED, not a
   // room they lodge or wander in. Move any kitchen-stationed birds back to
@@ -10424,11 +10454,9 @@ function applyBirdTraining(bird, type) {
   bird.training = bird.training || { feedCount: 0, trainCount: 0, hpBonus: 0, atkBonus: 0, defBonus: 0, spdBonus: 0, intBonus: 0, staminaBonus: 0 };
 
   if (type === 'feed') {
-    // Cooldown logic for feeding
-    const now = Date.now();
-    const lastFed = bird.care.lastFed ? Date.parse(bird.care.lastFed) : 0;
-    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown
-    if (now - lastFed < COOLDOWN_MS) {
+    // Fullness is the hunger bar, never the clock: a bird on 100/100 hunger is
+    // starving no matter how recently something was last put in front of it.
+    if (birdIsFull(bird)) {
       showToast('Your pet is still full!');
       return null;
     }
@@ -10954,8 +10982,13 @@ function startBirdExpedition(birdId, templateId, loadout) {
   if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
-  if (!warnOrBlockBirdWork(birdId === 'merlin-guide' ? { ...bird, care:getMerlinCare() } : bird, 'expedition')) return;
-  const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now());
+  const merlin = birdId === 'merlin-guide' || birdId === MERLIN_GUIDE.id;
+  if (!warnOrBlockBirdWork(merlin ? { ...bird, care:getMerlinCare() } : bird, 'expedition')) return;
+  // A hungry Merlin still flies — it just takes him twice as long. That is what
+  // keeps the game moving when there is no food anywhere in the Kingdom.
+  const slowFactor = merlin ? merlinExpeditionSlowFactor() : 1;
+  if (slowFactor > 1) showToast('🍽️ Merlin is flying hungry — this errand will take him twice as long.');
+  const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now(), { slowFactor });
   // Fallout Shelter-style loadout: a pantry provision and a charm item ride
   // along and pay out as bonuses when the quest is claimed.
   const equipment = { provision: null, charm: null };
@@ -11106,6 +11139,16 @@ const QUEST_TEMPLATE_INFO = {
   ration_run:   'A trip to the old falconry mews for prepared bird-prey rations — food for merlins, sparrowhawks, peregrines and goshawks.',
   carrion_round:'Ride the thermals over the hill road with the crows. Carrion for kites, ravens, crows and vultures.',
   marsh_hunt:   'Work the flooded ditches for frogs, lizards, dragonflies and wasp grubs — herons, little owls, hobbies and honey buzzards.',
+  berry_run:    'A quick raid on the loaded hedge. Berries and soft fruit for thrushes, blackcaps and waxwings.',
+  orchard_round:'The old orchard rows after a frost. Windfall apples and late fruit for the garden birds.',
+  worm_dig:     'A run-and-stop trip across the wet lawn. Earthworms and grubs for the ground foragers.',
+  mast_gather:  'A morning in the oaks for acorns, mast and seed — plus grit off the track for the gizzard.',
+  midge_chase:  'A dusk climb into the insect column over the pond. Food for swifts, swallows and martins.',
+  bark_grub_round:'A working circuit of the trunks and garden logs. Mealworms, grubs and fat for the small insect-eaters.',
+  shore_scavenge:'The tideline as the water drops. Shellfish and shore food for waders and turnstones.',
+  sandeel_run:  'A long flight out over the shoals. Sand eels — what an entire seabird colony lives on.',
+  nectar_round: 'A round of the blossom line. Nectar for honeyeaters, lorikeets and every blossom specialist.',
+  pond_graze:   'A slow paddle at the weedy end. Pondweed and dabbled greens — proper duck food, never bread.',
   short_forage: 'An hour among the hedgerows for berries and shiny finds.',
   supply_run:   'A two-hour supply route past the squirrel market. Fills the pantry.',
   fishing_trip: 'A patient stint at the river shallows. Live fish and pondweed for the Kitchen larder — fish-hunters must be fed live prey.',
@@ -11142,7 +11185,7 @@ function renderBirdExpeditions() {
       art +
       '<div class="quest-info">' +
         '<div class="quest-name">' + q.icon + ' ' + escapeHtml(q.label) + '</div>' +
-        '<div class="quest-desc">' + escapeHtml(q.birdName) + (done ? ' is back with the loot!' : ' · ' + questTimeLeftLabel(q)) + '</div>' +
+        '<div class="quest-desc">' + escapeHtml(q.birdName) + (done ? ' is back with the loot!' : ' · ' + questTimeLeftLabel(q) + (q.hungryFlight ? ' · flying hungry (2× time)' : '')) + '</div>' +
         '<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + q.progressPct + '%"></div></div>' +
       '</div>' +
       (done ? '<button class="quest-claim-btn pulse" onclick="event.stopPropagation();claimBirdExpedition(\'' + q.id + '\')">CLAIM</button>' : '<div class="quest-away-pct">' + q.progressPct + '%</div>') +
@@ -11230,7 +11273,7 @@ function renderQuestSendSheet() {
     const tooLow = (b.level || 1) < (t.minLevel || 1);
     const readiness = birdWorkReadiness(b.id === MERLIN_GUIDE.id ? { ...b, care:getMerlinCare() } : b, 'expedition');
     const disabled = away || training || tooLow || !readiness.ok;
-    const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
+    const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
@@ -11479,13 +11522,13 @@ function renderAcademyRoomPanel(birds) {
     let actions = '';
     let tray = '';
     if (academySelectedRoom === 'dorm') {
-      const fedCd = academyCdLeft(b.care.lastFed, 60*60*1000);
-      actions = (fedCd > 0
-          ? '<button class="academy-btn" disabled>🍽️ Feed <span class="cd">' + fmtCd(fedCd) + '</span></button>'
+      const full = birdIsFull(b);
+      actions = (full
+          ? '<button class="academy-btn" disabled>🍽️ Full</button>'
           : '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>') +
         academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
         academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false);
-      if (academyFeedTrayBirdId === b.id && fedCd <= 0) tray = academyFeedTrayHTML(b);
+      if (academyFeedTrayBirdId === b.id && !full) tray = academyFeedTrayHTML(b);
     } else if (academySelectedRoom === 'training') {
       const cd = academyCdLeft(b.care.lastTrained, 90*60*1000);
       actions = ['atk|⚔️ Strength','def|🛡️ Guard','spd|💨 Agility','int|🧠 Focus'].map(d => {
@@ -11864,8 +11907,8 @@ function academyFeedFood(birdId, foodKey) {
   const name = bird.commonName || bird.species;
   const diet = inferBirdDiet(target);
 
-  if (compatibility && compatibility.verdict === 'primary' && academyCdLeft(bird.care.lastFed, 60 * 60 * 1000) > 0) {
-    showToast(name + ' is still full!');
+  if (birdIsFull(bird)) {
+    showToast(name + ' is completely full — nothing to feed right now.');
     return;
   }
 
@@ -11907,7 +11950,7 @@ function academyFeedFood(birdId, foodKey) {
   // Fallback for very old cached builds without the source-backed transaction core.
   const pref = diet ? diet.pref : ['seeds', 'insects'];
   if (dietFamilyMatches(pref, foodKey)) {
-    if (academyCdLeft(bird.care.lastFed, 60 * 60 * 1000) > 0) { showToast(name + ' is still full!'); return; }
+    if (birdIsFull(bird)) { showToast(name + ' is completely full — nothing to feed right now.'); return; }
     gameState.pantry[foodKey] = clamp((gameState.pantry[foodKey] || 0) - 1, 0, 99);
     bird.care.lastFed = new Date().toISOString();
     bird.training.feedCount = (bird.training.feedCount || 0) + 1;
@@ -12117,7 +12160,7 @@ function kitchenRosterTrayHTML(entry, options) {
   const reveal = entry.merlin || (entry.bird && entry.bird.academy && entry.bird.academy.dietKnown);
   const chips = options.map(option => {
     const pref = reveal && option.accepted;
-    return '<button class="academy-food' + (pref ? ' known-pref' : '') + '" data-kitchen-roster-food="' + escapeHtml(option.kind + ':' + option.id) + '" data-count="' + option.count + '" title="' + escapeHtml(option.desc) + '" onclick="kitchenRosterFeed(\'' + escapeHtml(entry.key) + '\',\'' + option.kind + '\',\'' + escapeHtml(option.id) + '\')">' +
+    return '<button class="academy-food' + (pref ? ' known-pref' : '') + '" data-kitchen-roster-food="' + escapeHtml(option.kind + ':' + option.id) + '" data-count="' + option.count + '" title="' + escapeHtml(option.desc) + '" onclick="burbzFeedTap(\'' + escapeHtml(entry.key) + '\',\'' + option.kind + '\',\'' + escapeHtml(option.id) + '\',this)">' +
       '<span class="academy-food-emoji">' + option.emoji + '</span>' +
       '<span class="academy-food-label">' + escapeHtml(option.label) + '</span>' +
       '<span class="academy-food-count">×' + option.count + '</span></button>';
@@ -12141,15 +12184,15 @@ function kitchenRosterRowHTML(entry) {
       small_mammals: 'Vole Meadow Hunt, Warren Watch or Marsh & Ditch Hunt',
       small_birds: 'Falconry Ration Run',
       carrion: 'Carrion Round',
-      fish: 'Fishing Trip',
-      flying_insects: 'Marsh & Ditch Hunt',
-      invertebrates: 'Marsh & Ditch Hunt or Hedgerow Forage',
-      worms: 'Hedgerow Forage',
-      molluscs_crustaceans: 'Fishing Trip',
-      seeds: 'Find Seed or Pantry Supply Run',
-      fruit_berries: 'Hedgerow Forage',
-      nectar: 'Hedgerow Forage',
-      aquatic_plants: 'Fishing Trip'
+      fish: 'Fishing Trip or Sand Eel Run',
+      flying_insects: 'Midge Swarm Chase or Marsh & Ditch Hunt',
+      invertebrates: 'Bark & Grub Round or Wormcast Dig',
+      worms: 'Wormcast Dig',
+      molluscs_crustaceans: 'Shoreline Scavenge',
+      seeds: 'Acorn & Mast Gather or Find Seed',
+      fruit_berries: 'Berry Picking or Orchard Windfall',
+      nectar: 'Blossom Nectar Round',
+      aquatic_plants: 'Dabbling Pond Graze or Fishing Trip'
     };
     const core = kitchenDietCore();
     const disc = core && typeof core.dietDisclosureForSpecies === 'function' ? core.dietDisclosureForSpecies(entry.target) : null;
@@ -12175,8 +12218,8 @@ function kitchenRosterRowHTML(entry) {
   const feedBtn = away
     ? '<button class="kitchen-roster-feed-btn" disabled>Away</button>'
     : '<button class="kitchen-roster-feed-btn" data-action="kitchen-roster-tray" onclick="kitchenRosterToggleTray(\'' + escapeHtml(entry.key) + '\')">' + (open ? 'Close tray' : '🍽️ Feed') + '</button>';
-  return '<div class="kitchen-roster-row" data-kitchen-roster-bird="' + escapeHtml(entry.key) + '">' +
-    '<div class="kitchen-roster-head">' + birdOnlyImgHTML(entry.artBird, 'kitchen-roster-art') +
+  return '<div class="kitchen-roster-row" data-feed-surface="kitchen-roster" data-kitchen-roster-bird="' + escapeHtml(entry.key) + '">' +
+    '<div class="kitchen-roster-head">' + feedArtHTML(entry.artBird, 'kitchen-roster-art') +
     '<div class="kitchen-roster-main"><div class="kitchen-roster-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
     '<div class="kitchen-roster-species">' + escapeHtml(entry.speciesLine) + '</div>' + hungerLine + '</div>' + feedBtn + '</div>' +
     eatsLine + supplyLine + activityLine + awayLine +
@@ -12212,53 +12255,367 @@ function kitchenRosterRefusalToast(entry, option, tx) {
   return '❌ ' + ((tx && tx.message) || 'That meal was refused.');
 }
 
-function kitchenRosterFeed(targetKey, kind, foodId) {
+// ============================================================================
+// ONE-TAP FEEDING — the single feeding mechanic in the game
+// ============================================================================
+// There is no tray and no plate any more. The player picks ONE food and it is
+// served the instant it is tapped: the bird crosses to the food it was
+// offered, eats it, and the reward flashes up. Every feed surface — the
+// Kitchen roster, the Prep Counter, a Birdex card, a Companions card —
+// funnels through burbzFeedFood(), so a meal means exactly the same thing
+// wherever the player happens to be standing when they serve it.
+const FEED_MEAL_REWARDS = Object.freeze({
+  primary:      { birdXp:6, trainerXp:3, coins:12, happiness:10, bondXp:5 },
+  insufficient: { birdXp:3, trainerXp:1, coins:4,  happiness:5,  bondXp:3 }
+});
+
+// Merlin, a recruited companion, or a still-wild Birdex species. Wild species
+// are fed at the feeder rather than in the hand: they gain trust, not hunger.
+function feedEntryForKey(key) {
+  const clean = String(key || '');
+  if (!clean) return null;
+  if (clean.indexOf('species:') === 0) return feedWildEntryForSpeciesKey(clean.slice('species:'.length));
+  return kitchenRosterEntryByKey(clean);
+}
+
+function feedWildEntryForSpeciesKey(wantedKey) {
+  const wanted = String(wantedKey || '');
+  if (!wanted) return null;
+  // A discovery is keyed by its record key, its species and its common name in
+  // different corners of the game; accept any of them so a card's Feed button
+  // always finds the bird it is sitting on.
+  const candidates = row => [
+    row.key,
+    speciesKey(canonicalSpeciesName(row.species || row.commonName)),
+    speciesKey(canonicalSpeciesName(row.commonName || row.species)),
+    speciesKey(row.species || row.commonName)
+  ].filter(Boolean);
+  const record = discoveredSpeciesRecords().find(row => candidates(row).includes(wanted));
+  if (!record) return null;
+  const name = canonicalSpeciesName(record.species || record.commonName) || record.commonName || record.species;
+  // Diet Badges are stored under the canonical species key everywhere else, so
+  // the entry carries that one — not whichever alias the caller happened to use.
+  const canonicalKey = speciesKey(canonicalSpeciesName(record.species || record.commonName)) || wanted;
+  return {
+    key: 'species:' + canonicalKey,
+    wild: true,
+    speciesKey: canonicalKey,
+    record,
+    name,
+    speciesLine: 'Wild Birdex species · feeder visitor',
+    target: { commonName:record.commonName || record.species, name, species:name, scientificName:record.scientificName || record.scientific || null },
+    artBird: createBirdFromDiscovery(record)
+  };
+}
+
+// Every food currently in stock, scored against this bird. Wild species are
+// scored the same way — the diet is the diet, whoever is holding the dish.
+function feedFoodOptions(entry) {
+  return kitchenRosterFoodOptions(entry);
+}
+
+// Bird art tagged as the flier for this feed surface (img or emoji glyph).
+function feedArtHTML(bird, className) {
+  return birdOnlyImgHTML(bird, className).replace('class="', 'data-feed-art="1" class="');
+}
+
+// ---- The feed sheet: one bird, one list of foods, one tap each -------------
+let feedSheetKey = null;
+
+function feedSheetEl() {
+  let el = $('burbzFeedSheet');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'burbzFeedSheet';
+    el.className = 'quest-overlay';
+    el.addEventListener('click', ev => { if (ev.target === el) closeFeedSheet(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function openFeedSheet(key) {
+  const entry = feedEntryForKey(key);
+  if (!entry) { showToast('That bird is not at the table right now.'); return; }
+  feedSheetKey = entry.key;
+  SFX.tap();
+  renderFeedSheet();
+}
+
+function closeFeedSheet() {
+  feedSheetKey = null;
+  const el = $('burbzFeedSheet');
+  if (el) el.classList.remove('open');
+}
+
+function renderFeedSheet() {
+  if (!feedSheetKey) return;
+  const entry = feedEntryForKey(feedSheetKey);
+  const el = feedSheetEl();
+  if (!entry) { closeFeedSheet(); return; }
+  const options = feedFoodOptions(entry);
+  const status = entry.wild ? null : kitchenRosterHungerStatus(entry);
+  const eats = kitchenRosterEatsLabels(entry);
+  // Diet already discovered? Then known-good picks glow, exactly as they do on
+  // the Academy tray. Otherwise nothing is revealed — choosing is the lesson.
+  const reveal = entry.merlin || entry.wild || (entry.bird && entry.bird.academy && entry.bird.academy.dietKnown);
+  const foodRows = options.map(option => {
+    const pref = reveal && option.accepted;
+    return '<button class="feed-food' + (pref ? ' known-pref' : '') + '" data-feed-food="' + escapeHtml(option.kind + ':' + option.id) + '" data-count="' + option.count + '" ' +
+      'onclick="burbzFeedTap(\'' + escapeHtml(entry.key) + '\',\'' + option.kind + '\',\'' + escapeHtml(option.id) + '\',this)">' +
+      '<span class="feed-food-emoji">' + option.emoji + '</span>' +
+      '<span class="feed-food-main"><span class="feed-food-label">' + escapeHtml(option.label) + '</span>' +
+      '<span class="feed-food-desc">' + escapeHtml(option.desc || '') + '</span></span>' +
+      '<span class="feed-food-count">×' + option.count + '</span></button>';
+  }).join('');
+  const empty = '<div class="inventory-empty">Nothing edible in the stores. Send a bird out on a food quest — every food in the game has one — or pick some up on a walk.</div>';
+  const hungerLine = status
+    ? '<div class="academy-diet hunger-status" data-hunger-state="' + status.level + '">🍽️ ' + escapeHtml(status.label) + ' · ' + Math.round(status.hunger) + '/100</div>'
+    : '<div class="feed-sheet-wild">🌲 A wild visitor — a proper meal at the feeder builds trust and makes recruiting cheaper.</div>';
+  el.innerHTML = '<div class="quest-overlay-panel feed-sheet" data-feed-surface="feed-sheet" data-feed-sheet="' + escapeHtml(entry.key) + '">' +
+    '<button class="quest-overlay-close" onclick="closeFeedSheet()">✕</button>' +
+    '<div class="feed-sheet-head">' + feedArtHTML(entry.artBird, 'feed-sheet-art') +
+      '<div class="feed-sheet-main"><div class="feed-sheet-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
+      '<div class="feed-sheet-species">' + escapeHtml(entry.speciesLine || '') + '</div>' + hungerLine + '</div></div>' +
+    '<div class="feed-sheet-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — offer a food and learn') + '</div>' +
+    '<div class="feed-sheet-hint">Tap one food to serve it. One food, one meal — nothing is mixed, and a refused food is never wasted.</div>' +
+    '<div class="feed-food-list">' + (foodRows || empty) + '</div>' + feedReceiptHTML() + '</div>';
+  el.classList.add('open');
+}
+
+// The bird crosses the screen to the food it was offered. Only then does it
+// eat — the reward lands when the bird arrives, not when the finger lifts.
+function feedFlyBirdToFood(sourceEl, targetEl, done) {
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!sourceEl || !targetEl || reduce || typeof sourceEl.getBoundingClientRect !== 'function') { done(); return; }
+  const from = sourceEl.getBoundingClientRect();
+  const to = targetEl.getBoundingClientRect();
+  if (!from.width || !to.width) { done(); return; }
+  const flier = sourceEl.cloneNode(true);
+  flier.removeAttribute('id');
+  flier.className = 'feed-flier';
+  flier.style.left = from.left + 'px';
+  flier.style.top = from.top + 'px';
+  flier.style.width = from.width + 'px';
+  flier.style.height = from.height + 'px';
+  document.body.appendChild(flier);
+  targetEl.classList.add('feed-food-served');
+  const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+  const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+  if (dx < 0) flier.classList.add('facing-left');
+  requestAnimationFrame(() => { flier.style.transform = 'translate(' + Math.round(dx) + 'px,' + Math.round(dy) + 'px) scale(.7)'; });
+  setTimeout(() => { flier.remove(); done(); }, 520);
+}
+
+// The dopamine hit: a short burst of food glyphs and the XP that was won.
+function playFeedDopamineBurst(details) {
+  document.getElementById('feedDopamineBurst')?.remove();
+  const el = document.createElement('div');
+  el.id = 'feedDopamineBurst';
+  el.className = 'quest-claim-celebration feed-burst';
+  el.setAttribute('role', 'status');
+  el.setAttribute('aria-live', 'polite');
+  el.setAttribute('data-feed-burst-transaction-id', String(details.transactionId || ''));
+  const glyphs = [details.foodIcon || '🍽️', '✨', '💛', '✨', details.foodIcon || '🍽️', '🪶'];
+  const bits = [];
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2 + (i % 3) * 0.2;
+    const d = 70 + (i % 4) * 26;
+    bits.push('<span class="qcc-bit" style="--tx:' + Math.round(Math.cos(a) * d) + 'px;--ty:' + Math.round(Math.sin(a) * d - 30) + 'px;animation-delay:' + ((i % 5) * 0.03).toFixed(2) + 's">' + glyphs[i % glyphs.length] + '</span>');
+  }
+  el.innerHTML = '<div class="qcc-center">' + bits.join('') +
+    '<div class="qcc-badge feed-burst-badge">' + escapeHtml(details.badge || 'FED!') + '</div>' +
+    '<div class="qcc-rewards" data-feed-burst-rewards="1">' + escapeHtml(details.rewardLine || '') + '</div>' +
+    (details.note ? '<div class="qcc-items"><span class="qcc-item">' + escapeHtml(details.note) + '</span></div>' : '') +
+    '</div>';
+  document.body.appendChild(el);
+  SFX.capture();
+  vibrate(25);
+  setTimeout(() => el.classList.add('fading'), 900);
+  setTimeout(() => el.remove(), 1350);
+}
+
+// Tap handler for every food button in the game: fly, then feed. The bird art
+// that flies is the one belonging to the same feed surface as the button.
+function burbzFeedTap(targetKey, kind, foodId, buttonEl) {
+  const scope = buttonEl && typeof buttonEl.closest === 'function' ? buttonEl.closest('[data-feed-surface]') : null;
+  const source = (scope && scope.querySelector('[data-feed-art]')) || document.querySelector('#burbzFeedSheet [data-feed-art]');
+  if (buttonEl) buttonEl.disabled = true;
+  feedFlyBirdToFood(source, buttonEl, () => {
+    if (buttonEl) buttonEl.disabled = false;
+    burbzFeedFood(targetKey, kind, foodId);
+  });
+}
+
+// The one feeding transaction in the game.
+function burbzFeedFood(targetKey, kind, foodId) {
   const core = kitchenDietCore();
   if (!core || typeof core.applyFeedingTransaction !== 'function') { showToast('The kitchen scales are still loading — try again in a moment.'); return; }
-  const entry = kitchenRosterEntryByKey(targetKey);
-  if (!entry) return;
+  const entry = feedEntryForKey(targetKey);
+  if (!entry) { showToast('That bird is not at the table right now.'); return; }
   refillPantry();
-  const option = kitchenRosterFoodOptions(entry).find(row => row.kind === kind && row.id === foodId);
-  if (!option) { showToast('That food is no longer in the kitchen.'); renderAcademyRoomInterior(); return; }
-  const spec = kind === 'pantry'
-    ? { pantryKey:foodId, source:'pantry' }
-    : { ingredientId:foodId, prep:option.prep };
+  const option = feedFoodOptions(entry).find(row => row.kind === kind && row.id === foodId);
+  if (!option) { showToast('That food is no longer in the stores.'); refreshFeedSurfaces(); return; }
+  if (entry.wild) { feedWildSpecies(entry, option); return; }
+
+  const spec = kind === 'pantry' ? { pantryKey:foodId, source:'pantry' } : { ingredientId:foodId, prep:option.prep };
   const now = Date.now();
-  const txId = 'kitchen-roster:' + entry.key + ':' + kind + ':' + foodId + ':' + now;
+  const txId = 'feed:' + entry.key + ':' + kind + ':' + foodId + ':' + now;
   const tx = core.applyFeedingTransaction(gameState, entry.target, spec, { transactionId:txId, now });
   gameState = tx.state;
   if (tx.ok && !tx.duplicate) {
     const verdict = tx.compatibility && tx.compatibility.verdict;
+    const reward = FEED_MEAL_REWARDS[verdict === 'primary' ? 'primary' : 'insufficient'];
+    const rewardBits = [];
     if (entry.merlin) {
       if (window.BurbzMerlinCompanionCore) {
-        gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, lastCareAt: now }, now), 5, now);
+        gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, lastCareAt: now }, now), reward.bondXp, now);
       }
+      rewardBits.push('+' + reward.bondXp + ' bond XP');
     } else {
       const bird = academyBirdById(entry.key);
       if (bird) {
         ensureBirdAcademy(bird);
+        bird.care.lastFed = new Date(now).toISOString();
+        bird.training.feedCount = (bird.training.feedCount || 0) + 1;
+        levelUpBird(bird, reward.birdXp);
+        rewardBits.push('+' + reward.birdXp + ' bird XP');
         if (verdict === 'primary') {
+          bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 1, 0, 50);
+          bird.maxHp = clamp(bird.maxHp + 1, 50, 999);
+          bird.hp = bird.maxHp;
+          recalcBirdPower(bird);
+          rewardBits.push('+1 max HP');
           const firstTime = !bird.academy.dietKnown;
           bird.academy.dietKnown = true;
-          if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 900);
+          if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 1200);
         }
         updateQuestProgress('feed_correct', 1);
       }
     }
-    saveState();
+    applyPlayerXpState(reward.trainerXp);
+    rewardBits.push('+' + reward.trainerXp + ' Trainer XP');
+    kitchenRecordFieldNote(entry.merlin ? 'merlin' : speciesKey(canonicalSpeciesName(entry.target.commonName || entry.name)), tx.compatibility && tx.compatibility.family, true);
+    gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
+    updateQuestProgress('meal_served', 1);
     const rule = inferBirdDiet(entry.target);
-    const fact = verdict === 'primary' && rule && rule.fact ? ' ' + rule.fact : (verdict === 'insufficient' ? ' (A conservative care ration — this species’ exact wild diet is not claimed.)' : '');
-    showToast('✅ ' + entry.name + ' tucks into ' + option.label.toLowerCase() + ' — hunger ' + Math.round(tx.before) + ' → ' + Math.round(tx.after) + '/100.' + fact);
-    SFX.capture();
-    vibrate(20);
+    const fact = verdict === 'primary' && rule && rule.fact ? rule.fact : (verdict === 'insufficient' ? 'A conservative care ration — this species’ exact wild diet is not claimed.' : '');
+    const burst = {
+      transactionId: txId,
+      badge: entry.name.toUpperCase() + ' FED!',
+      rewardLine: rewardBits.join(' · '),
+      note: 'Hunger ' + Math.round(tx.before) + ' → ' + Math.round(tx.after) + '/100',
+      foodIcon: option.emoji
+    };
+    recordFeedReceipt({ ...burst, name:entry.name, foodLabel:option.label, verdict });
+    saveState();
+    playFeedDopamineBurst(burst);
+    showToast('✅ ' + entry.name + ' tucks into ' + option.label.toLowerCase() + '.' + (fact ? ' ' + fact : ''));
   } else if (!tx.ok) {
+    kitchenRecordFieldNote(entry.merlin ? 'merlin' : speciesKey(canonicalSpeciesName(entry.target.commonName || entry.name)), tx.compatibility && tx.compatibility.family, false);
     saveState();
     showToast(kitchenRosterRefusalToast(entry, option, tx));
     SFX.tap();
   }
-  renderAcademyRoomInterior();
-  renderPetCompanion();
-  renderAcademy();
+  refreshFeedSurfaces();
+}
+
+// A still-wild Birdex species eats at the feeder: no hunger bar to fill, but a
+// correct meal earns coins, Trainer XP, a Diet Badge and cheaper recruiting.
+function feedWildSpecies(entry, option) {
+  const core = kitchenDietCore();
+  const spec = option.kind === 'pantry' ? { pantryKey:option.id, source:'pantry' } : { ingredientId:option.id, prep:option.prep };
+  const compatibility = core.scoreFoodCompatibility(entry.target, core.normalizeFeedingSpec ? core.normalizeFeedingSpec(spec) : spec);
+  const verdict = compatibility && compatibility.verdict;
+  if (verdict !== 'primary' && verdict !== 'insufficient') {
+    kitchenRecordFieldNote(entry.speciesKey, compatibility && compatibility.family, false);
+    saveState();
+    showToast(kitchenRosterRefusalToast(entry, option, { compatibility, ok:false }));
+    SFX.tap();
+    refreshFeedSurfaces();
+    return;
+  }
+  const txId = 'feeder-trust:' + entry.key + ':' + option.kind + ':' + option.id + ':' + Date.now();
+  if (option.kind === 'pantry') gameState.pantry[option.id] = Math.max(0, (Number(gameState.pantry[option.id]) || 0) - 1);
+  else { const larder = ensureLarder(); larder[option.id] = Math.max(0, (Number(larder[option.id]) || 0) - 1); }
+
+  const reward = FEED_MEAL_REWARDS[verdict === 'primary' ? 'primary' : 'insufficient'];
+  if (!gameState.dietBadges || typeof gameState.dietBadges !== 'object') gameState.dietBadges = {};
+  const badgesBefore = gameState.dietBadges[entry.speciesKey] || 0;
+  const badgeEarned = verdict === 'primary' && badgesBefore === 0;
+  if (verdict === 'primary') gameState.dietBadges[entry.speciesKey] = badgesBefore + 1;
+
+  let coins = reward.coins;
+  if (badgeEarned) coins += kitchenCore().FIRST_BADGE_BONUS_COINS;
+  addCoins(coins);
+  applyPlayerXpState(reward.trainerXp);
+  const rewardBits = ['+' + coins + ' 🪙', '+' + reward.trainerXp + ' Trainer XP'];
+
+  if (verdict === 'primary' && entry.record) {
+    const badges = gameState.dietBadges[entry.speciesKey] || 1;
+    const base = RARITY_RECRUIT_COST[entry.record.rarity] || entry.record.recruitCost || 150;
+    const discounted = kitchenCore().discountedRecruitCost(base, badges);
+    if (discounted < (entry.record.recruitCost || base)) {
+      entry.record.recruitCost = discounted;
+      rewardBits.push('recruit cost ' + discounted + ' 🪙');
+    }
+  }
+  kitchenRecordFieldNote(entry.speciesKey, compatibility && compatibility.family, true);
+  gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
+  updateQuestProgress('meal_served', 1);
+  updateQuestProgress('feed_correct', 1);
+  const burst = {
+    transactionId: txId,
+    badge: badgeEarned ? '🏅 DIET BADGE!' : entry.name.toUpperCase() + ' FED!',
+    rewardLine: rewardBits.join(' · '),
+    note: badgeEarned ? 'Feeder trust earned — see the badge in the Birdex' : '',
+    foodIcon: option.emoji
+  };
+  recordFeedReceipt({ ...burst, name:entry.name, foodLabel:option.label, verdict });
+  saveState();
+  playFeedDopamineBurst(burst);
+  showToast('✅ ' + entry.name + ' comes down to the feeder for ' + option.label.toLowerCase() + '.');
+  refreshFeedSurfaces();
+}
+
+// The burst is gone in a second; the receipt stays. It is what the player
+// reads back ("what did that berry actually earn me?") and it is the durable,
+// idempotent record of the meal that was committed.
+function recordFeedReceipt(details) {
+  gameState.lastFeedReceipt = {
+    transactionId: String(details.transactionId || ''),
+    name: details.name || '',
+    foodLabel: details.foodLabel || '',
+    foodIcon: details.foodIcon || '🍽️',
+    verdict: details.verdict || '',
+    rewardLine: details.rewardLine || '',
+    note: details.note || '',
+    at: Date.now()
+  };
+}
+
+function feedReceiptHTML() {
+  const receipt = gameState.lastFeedReceipt;
+  if (!receipt || !receipt.transactionId) return '';
+  return '<div class="feed-receipt" data-feed-result-sheet="one-tap-feed" data-feed-transaction-id="' + escapeHtml(receipt.transactionId) + '" data-feed-verdict="' + escapeHtml(receipt.verdict) + '">' +
+    '<span class="feed-receipt-icon">' + receipt.foodIcon + '</span>' +
+    '<span class="feed-receipt-main"><span class="feed-receipt-line">Last served: ' + escapeHtml(receipt.foodLabel) + ' to ' + escapeHtml(receipt.name) + '</span>' +
+    '<span class="feed-receipt-reward">' + escapeHtml([receipt.rewardLine, receipt.note].filter(Boolean).join(' · ')) + '</span></span></div>';
+}
+
+// Every surface that can show hunger or stock, refreshed after a meal.
+function refreshFeedSurfaces() {
+  if (feedSheetKey) renderFeedSheet();
+  try { renderAcademyRoomInterior(); } catch (e) {}
+  try { renderPetCompanion(); } catch (e) {}
+  try { renderAcademy(); } catch (e) {}
+  try { renderBirdex(); } catch (e) {}
+  try { updateHeader(); } catch (e) {}
+}
+
+// Kept as the roster's entry point so existing callers keep working.
+function kitchenRosterFeed(targetKey, kind, foodId) {
+  burbzFeedFood(targetKey, kind, foodId);
 }
 
 // Everyone the player can cook for: Merlin first as the permanent starter
@@ -12297,16 +12654,31 @@ function kitchenNotesLine(key) {
   return 'Field notes: ' + bits.join(' · ');
 }
 
-function kitchenSlotHTML(slot, index) {
-  if (!slot) {
-    return '<button class="kitchen-slot empty" onclick="kitchenOpenSlot(' + index + ')"><span class="kitchen-slot-icon">➕</span><span class="kitchen-slot-label">Add ingredient</span></button>';
+// The Prep Counter is a food list now, not a plate: every food in stock is its
+// own button and tapping one serves that single food straight away.
+function kitchenCounterFeedEntry(chosen) {
+  if (!chosen) return null;
+  if (chosen.merlin) return feedEntryForKey('merlin');
+  if (chosen.companion) return feedEntryForKey(chosen.companion.id);
+  return feedWildEntryForSpeciesKey(chosen.key);
+}
+
+function kitchenCounterFoodListHTML(entry) {
+  if (!entry) return '<div class="inventory-empty">Discover a bird first — every scan and listen adds a species you can feed.</div>';
+  const options = feedFoodOptions(entry);
+  if (!options.length) {
+    return '<div class="inventory-empty">Nothing edible in the stores. Every food in the game has its own quest on the Quests board — send a bird out for berries, worms, seed, insects, fish, shore food or prey.</div>';
   }
-  const ing = kitchenIngredientById(slot.ingredientId);
-  const prep = kitchenCore().prepById(slot.prep);
-  return '<button class="kitchen-slot" onclick="kitchenOpenSlot(' + index + ')" title="Tap to change">' +
-    '<span class="kitchen-slot-icon">' + (ing ? ing.icon : '❓') + '</span>' +
-    '<span class="kitchen-slot-label">' + escapeHtml(ing ? ing.label : slot.ingredientId) + '</span>' +
-    '<span class="kitchen-slot-prep">' + (prep ? prep.icon + ' ' + escapeHtml(prep.label) : '') + '</span></button>';
+  const reveal = entry.merlin || entry.wild || (entry.bird && entry.bird.academy && entry.bird.academy.dietKnown);
+  return options.map(option => {
+    const pref = reveal && option.accepted;
+    return '<button class="feed-food' + (pref ? ' known-pref' : '') + '" data-feed-food="' + escapeHtml(option.kind + ':' + option.id) + '" data-count="' + option.count + '" ' +
+      'onclick="burbzFeedTap(\'' + escapeHtml(entry.key) + '\',\'' + option.kind + '\',\'' + escapeHtml(option.id) + '\',this)">' +
+      '<span class="feed-food-emoji">' + option.emoji + '</span>' +
+      '<span class="feed-food-main"><span class="feed-food-label">' + escapeHtml(option.label) + '</span>' +
+      '<span class="feed-food-desc">' + escapeHtml(option.desc || '') + '</span></span>' +
+      '<span class="feed-food-count">×' + option.count + '</span></button>';
+  }).join('');
 }
 
 function renderKitchenPanelHTML() {
@@ -12352,14 +12724,18 @@ function renderKitchenPanelHTML() {
 
   const larderCount = larderRows.reduce((sum, [, n]) => sum + Math.max(0, Number(n) || 0), 0);
 
-  // Screen order is the job itself: pick the bird, see what it eats, fill the
-  // plate, serve. Stock lists and supply explainers sit folded underneath.
+  // Screen order is the job itself: pick the bird, see what it eats, tap the
+  // food. Stock lists and supply explainers sit folded underneath.
+  const counterEntry = kitchenCounterFeedEntry(chosen);
+  const counterArt = counterEntry ? feedArtHTML(counterEntry.artBird, 'feed-sheet-art kitchen-counter-art') : '';
   return renderKitchenRosterHTML() +
-    '<div class="room-add-panel kitchen-panel" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
+    '<div class="room-add-panel kitchen-panel" data-feed-surface="prep-counter" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '<div class="inventory-empty">No birds discovered yet.</div>') + '</div>' +
+    counterArt +
     speciesCard +
-    '<div class="kitchen-plate">' + kitchenState.slots.map((slot, i) => kitchenSlotHTML(slot, i)).join('') + '</div>' +
-    '<button class="kitchen-serve-btn" data-feed-transaction-id="" onclick="kitchenServeMeal()">🔔 Serve the tray</button>' +
+    '<div class="feed-sheet-hint">Tap one food to serve it. One food, one meal — a refused food is never wasted.</div>' +
+    '<div class="feed-food-list">' + kitchenCounterFoodListHTML(counterEntry) + '</div>' +
+    feedReceiptHTML() +
     '<details class="kitchen-fold"><summary>🧺 Stores larder · ' + larderCount + ' item' + (larderCount === 1 ? '' : 's') + '</summary><div class="kitchen-fold-body">' +
       '<div class="kitchen-larder-grid">' + larderHtml + '</div>' +
       kitchenPantryBridgeHTML() +
@@ -12380,87 +12756,20 @@ function kitchenEatsChipsHTML(chosen) {
 
 function kitchenSelectSpecies(key) {
   kitchenState.speciesKey = key;
-  kitchenState.slots = [null, null, null];
   SFX.tap();
   renderAcademyRoomInterior();
 }
 
-function kitchenSheetEl() {
-  let el = $('kitchenSlotSheet');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'kitchenSlotSheet';
-    el.className = 'quest-overlay';
-    el.addEventListener('click', ev => { if (ev.target === el) el.classList.remove('open'); });
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
-function kitchenOpenSlot(index) {
-  const larder = ensureLarder();
-  const chosen = kitchenSelectedChoice();
-  // Ingredients from the families this bird actually eats float to the top of
-  // the list, so the player is not scrolling past pondweed to find a vole.
-  const core = kitchenDietCore();
-  const subject = kitchenDietSubject(chosen);
-  const disc = core && subject && typeof core.dietDisclosureForSpecies === 'function' ? core.dietDisclosureForSpecies(subject) : null;
-  const eaten = new Set((disc && disc.compatibleFamilies) || []);
-  const rows = Object.entries(larder)
-    .filter(([id, n]) => kitchenIngredientById(id) && (Number(n) || 0) > 0)
-    .sort(([a], [b]) => {
-      const rank = id => eaten.has((kitchenIngredientById(id) || {}).dietFamily) ? 0 : 1;
-      return rank(a) - rank(b);
-    });
-  const el = kitchenSheetEl();
-  const body = rows.length ? rows.map(([id]) => {
-    const ing = kitchenIngredientById(id);
-    const preps = ing.preps.map(pid => {
-      const p = kitchenCore().prepById(pid);
-      return '<button class="kitchen-prep-chip" data-ingredient-id="' + escapeHtml(id) + '" data-prep-id="' + escapeHtml(pid) + '" onclick="kitchenAssignSlot(' + index + ',\'' + id + '\',\'' + pid + '\')" title="' + escapeHtml(p.desc) + '">' + p.icon + ' ' + escapeHtml(p.label) + '</button>';
-    }).join('');
-    return '<div class="kitchen-pick-row" data-ingredient-id="' + escapeHtml(id) + '"><div class="kitchen-pick-head"><span class="kitchen-pick-icon">' + ing.icon + '</span><div><div class="kitchen-pick-name">' + escapeHtml(ing.label) + ' <span class="kitchen-larder-count" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(larder[id]) || 0) + '">×' + larder[id] + '</span></div><div class="kitchen-pick-desc">' + escapeHtml(ing.desc || '') + '</div>' + (ing.takenBy ? '<div class="kitchen-pick-taken">🦅 Taken by: ' + escapeHtml(ing.takenBy) + '</div>' : '') + '</div></div><div class="kitchen-prep-strip">' + preps + '</div></div>';
-  }).join('') : '<div class="inventory-empty">Nothing in the larder. Send a bird on a Fishing Trip, forage the map, or buy supplies at the Seed &amp; Sundry.</div>';
-  // The diet rides at the top of the sheet and stays pinned while the larder
-  // scrolls: choosing an ingredient never means backing out to re-read the card.
-  const dietStrip = chosen
-    ? '<div class="kitchen-sheet-diet" data-kitchen-sheet-diet="' + escapeHtml(chosen.key) + '">' +
-        '<div class="kitchen-sheet-diet-name">🍴 ' + escapeHtml(chosen.name) + ' eats</div>' +
-        '<div class="kitchen-sheet-diet-list">' + kitchenEatsChipsHTML(chosen) + '</div></div>'
-    : '';
-  el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">🍳</div><div><div class="quest-name">Plate slot ' + (index + 1) + '</div><div class="quest-desc">Choose an ingredient, then how to serve it — the preparation matters as much as the food.</div></div></div>' +
-    dietStrip +
-    (kitchenState.slots[index] ? '<button class="kitchen-clear-btn" onclick="kitchenClearSlot(' + index + ')">Remove current ingredient</button>' : '') +
-    body + '</div>';
-  el.classList.add('open');
-  SFX.tap();
-}
-
-function kitchenAssignSlot(index, ingredientId, prep) {
-  if (!kitchenIngredientById(ingredientId)) return;
-  kitchenState.slots[index] = { ingredientId, prep };
-  const el = $('kitchenSlotSheet');
-  if (el) el.classList.remove('open');
-  SFX.tap();
-  renderAcademyRoomInterior();
-}
-
-function kitchenClearSlot(index) {
-  kitchenState.slots[index] = null;
-  const el = $('kitchenSlotSheet');
-  if (el) el.classList.remove('open');
-  renderAcademyRoomInterior();
-}
-
-function kitchenRecordFieldNotes(key, result) {
+// Field notes are written one food at a time now: every meal the player
+// offers teaches the card whether that family is taken or turned down.
+function kitchenRecordFieldNote(key, family, accepted) {
+  if (!key || !family || family === 'grit') return;
   if (!gameState.kitchenNotes || typeof gameState.kitchenNotes !== 'object') gameState.kitchenNotes = {};
   const notes = gameState.kitchenNotes[key] || { perfect: [], refused: [] };
-  result.slots.forEach(row => {
-    if (row.family === 'grit') return;
-    if ((row.verdict === 'perfect' || row.verdict === 'close') && !notes.perfect.includes(row.family)) notes.perfect.push(row.family);
-    if (row.verdict === 'refused' && !notes.refused.includes(row.family)) notes.refused.push(row.family);
-  });
+  notes.perfect = Array.isArray(notes.perfect) ? notes.perfect : [];
+  notes.refused = Array.isArray(notes.refused) ? notes.refused : [];
+  const list = accepted ? notes.perfect : notes.refused;
+  if (!list.includes(family)) list.push(family);
   gameState.kitchenNotes[key] = notes;
 }
 
@@ -12499,144 +12808,6 @@ function kitchenPantryBridgeHTML() {
   return '<div class="room-add-title kitchen-larder-title">🥣 Academy pantry bridge</div><div class="kitchen-bridge-grid">' + rows + '</div>';
 }
 
-function kitchenServeMeal() {
-  if (!kitchenCore()) return;
-  const chosen = kitchenSelectedChoice();
-  if (!chosen) { showToast('Discover a bird first — then cook for it.'); return; }
-  const slots = kitchenState.slots.filter(Boolean);
-  if (!slots.length) { showToast('The tray is empty — add at least one ingredient.'); return; }
-
-  // Companions eat the meal for real, so respect fullness before spending food.
-  const companion = chosen.companion || companionForSpecies(chosen.name);
-  if (chosen.merlin) {
-    const now = Date.now();
-    gameState.merlinCare = MERLIN_CORE.sanitizeMerlinCare(gameState.merlinCare, now);
-    const fedAt = Math.max(0, Number(gameState.merlinCare.lastFedAt) || 0);
-    if (gameState.merlinCare.hunger <= 0 || (fedAt > 0 && now - fedAt < 60 * 60 * 1000)) {
-      showToast('Merlin is still full — no food was spent.');
-      return;
-    }
-  }
-  if (companion) {
-    ensureBirdAcademy(companion);
-    if (Number(companion.care.hunger) <= 0 || academyCdLeft(companion.care.lastFed, 60 * 60 * 1000) > 0) { showToast(escapeHtml(chosen.name) + ' is still full — serve a wild Birdex species instead.'); return; }
-  }
-
-  const larder = ensureLarder();
-  const need = {};
-  slots.forEach(s => { need[s.ingredientId] = (need[s.ingredientId] || 0) + 1; });
-  const short = Object.entries(need).find(([id, n]) => (larder[id] || 0) < n);
-  if (short) { showToast('Not enough ' + (kitchenIngredientById(short[0])?.label || short[0]) + ' in the larder.'); return; }
-
-  const rule = kitchenDietRuleForChoice(chosen);
-  const result = kitchenCore().scoreMeal(rule, slots);
-  const acceptedMeal = result.refusedCount === 0 && result.perfectCount > 0;
-  const txId = 'kitchen-feed:' + chosen.key + ':' + hashStr(JSON.stringify(slots)) + ':' + Date.now();
-  result.transactionId = txId;
-  kitchenRecordFieldNotes(chosen.key, result);
-
-  const rewards = [];
-  let badgeEarned = false;
-  if (!acceptedMeal) {
-    rewards.push('No stock spent — this was not a primary compatible meal.');
-  } else {
-    Object.entries(need).forEach(([id, n]) => { larder[id] -= n; });
-  }
-
-  if (acceptedMeal && result.tier === 'field_perfect' && !chosen.merlin) {
-    if (!gameState.dietBadges || typeof gameState.dietBadges !== 'object') gameState.dietBadges = {};
-    const before = gameState.dietBadges[chosen.key] || 0;
-    gameState.dietBadges[chosen.key] = before + 1;
-    badgeEarned = before === 0;
-  }
-
-  if (chosen.merlin) {
-    if (acceptedMeal) {
-      const core = kitchenDietCore();
-      const now = Date.now();
-      const applied = core && typeof core.applyHungerDeltaToCare === 'function'
-        ? core.applyHungerDeltaToCare(gameState.merlinCare, { transactionId:txId, activityType:'feeding', activityId:'small_bird_prey_ration', delta:-42, now })
-        : { care:MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, hunger:(gameState.merlinCare.hunger || 20) - 42 }, now), transactionId:txId };
-      gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...applied.care, happiness:(applied.care.happiness || 80) + 7, energy:(applied.care.energy || 80) + 4, lastCareAt:now, lastFedAt:now }, now), 5, now);
-      rewards.push('Merlin fed · source-backed falcon ration');
-    }
-  } else if (companion) {
-    const care = companion.care = companion.care || {};
-    if (!acceptedMeal) {
-      rewards.push('The tray came back untouched.');
-    } else {
-      const hungerCut = result.tier === 'field_perfect' ? 35 : result.tier === 'hearty' ? 25 : 10;
-      applyBirdHungerTransaction(companion.id, 'feeding', txId, -hungerCut, Date.now());
-      const fedCare = companion.care = companion.care || care;
-      fedCare.happiness = clamp((fedCare.happiness || 80) + (result.tier === 'field_perfect' ? 12 : result.tier === 'hearty' ? 8 : 2), 0, 100);
-      fedCare.lastFed = new Date().toISOString();
-      companion.training = companion.training || {};
-      companion.training.feedCount = (companion.training.feedCount || 0) + 1;
-      if (result.tier === 'field_perfect') {
-        companion.training.hpBonus = clamp((companion.training.hpBonus || 0) + 2, 0, 50);
-        companion.maxHp = clamp(companion.maxHp + 2, 50, 999);
-        companion.hp = companion.maxHp;
-        companion.academy.dietKnown = true;
-        recalcBirdPower(companion);
-        updateQuestProgress('feed_correct', 1);
-        rewards.push('+2 max HP · diet mastered');
-      }
-      levelUpBird(companion, result.xp);
-      rewards.push('+' + result.xp + ' bird XP');
-    }
-  } else {
-    // A feeder tray for a wild Birdex species: coins for good field craft, and
-    // a perfect tray builds enough trust to make recruiting cheaper.
-    if (acceptedMeal) {
-      let coins = result.coins;
-      if (badgeEarned) coins += kitchenCore().FIRST_BADGE_BONUS_COINS;
-      if (coins > 0) { addCoins(coins); rewards.push('+' + coins + ' coins'); }
-      addPlayerXp(Math.ceil(result.xp / 2));
-      rewards.push('+' + Math.ceil(result.xp / 2) + ' Trainer XP');
-      if (result.tier === 'field_perfect' && chosen.record) {
-        const badges = (gameState.dietBadges || {})[chosen.key] || 1;
-        const base = RARITY_RECRUIT_COST[chosen.record.rarity] || chosen.record.recruitCost || 150;
-        const discounted = kitchenCore().discountedRecruitCost(base, badges);
-        if (discounted < (chosen.record.recruitCost || base)) {
-          chosen.record.recruitCost = discounted;
-          rewards.push('feeder trust — recruit cost now ' + discounted + ' 🪙');
-        }
-      }
-    }
-  }
-  if (badgeEarned) rewards.push('🏅 Diet Badge earned — see it in the Birdex!');
-
-  kitchenState.slots = [null, null, null];
-  gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
-  updateQuestProgress('meal_served', 1);
-  saveState(); updateHeader();
-  kitchenShowResult(chosen, rule, result, rewards);
-  renderAcademyRoomInterior();
-  try { renderBirdex(); } catch (e) {}
-  try { renderPetCompanion(); } catch (e) {}
-}
-
-function kitchenShowResult(chosen, rule, result, rewards) {
-  const el = kitchenSheetEl();
-  const verdictMeta = { perfect: ['✅', 'Perfect'], close: ['🟡', 'Close'], nibbled: ['🆗', 'Nibbled'], refused: ['❌', 'Refused'], ignored: ['💤', 'Ignored'], gizzard: ['⚙️', 'Gizzard bonus'], wasted: ['💤', 'Left over'] };
-  const slotRows = result.slots.map(row => {
-    const ing = kitchenIngredientById(row.ingredientId);
-    const prep = kitchenCore().prepById(row.prep);
-    const meta = verdictMeta[row.verdict] || ['•', row.verdict];
-    return '<div class="kitchen-result-row"><div class="kitchen-result-food">' + (ing ? ing.icon : '') + ' ' + escapeHtml(ing ? ing.label : row.ingredientId) + (prep && row.family !== 'grit' ? ' <span class="kitchen-result-prep">' + prep.icon + ' ' + escapeHtml(prep.label) + '</span>' : '') + '</div>' +
-      '<div class="kitchen-result-verdict verdict-' + row.verdict + '">' + meta[0] + ' ' + meta[1] + '</div>' +
-      '<div class="kitchen-result-note">' + escapeHtml(row.note) + '</div></div>';
-  }).join('');
-  const fact = rule && rule.fact ? '<div class="kitchen-result-fact">📖 ' + escapeHtml(rule.fact) + '</div>' : '';
-  el.innerHTML = '<div class="quest-overlay-panel" data-feed-result-sheet="kitchen" data-feed-transaction-id="' + escapeHtml(result.transactionId || '') + '"><button class="quest-overlay-close" onclick="document.getElementById(\'kitchenSlotSheet\').classList.remove(\'open\')">✕</button>' +
-    '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + result.tierIcon + '</div><div><div class="quest-name">' + escapeHtml(result.tierLabel) + '</div><div class="quest-desc">' + escapeHtml(chosen.name) + ' · ' + result.points + ' point' + (result.points === 1 ? '' : 's') + '</div></div></div>' +
-    slotRows + fact +
-    (rewards.length ? '<div class="kitchen-result-rewards">' + rewards.map(r => '<span>' + escapeHtml(r) + '</span>').join('') + '</div>' : '') +
-    '</div>';
-  el.classList.add('open');
-  if (result.tier === 'field_perfect') SFX.victory(); else SFX.tap();
-}
-
 window.__burbzKitchenDebug = {
   get larder() { return ensureLarder(); },
   get badges() { return gameState && gameState.dietBadges; },
@@ -12644,10 +12815,11 @@ window.__burbzKitchenDebug = {
   addIngredient: addLarderIngredient,
   choices: kitchenSpeciesChoices,
   select: kitchenSelectSpecies,
-  assign: kitchenAssignSlot,
-  serve: kitchenServeMeal,
   state: () => kitchenState,
   roster: kitchenRosterEntries,
+  entry: feedEntryForKey,
+  options: key => feedFoodOptions(feedEntryForKey(key)),
+  feed: burbzFeedFood,
   rosterOptions: key => kitchenRosterFoodOptions(kitchenRosterEntryByKey(key)),
   rosterFeed: kitchenRosterFeed
 };
@@ -13361,12 +13533,12 @@ Object.assign(window, {
   academyRest,
   academyDrill,
   kitchenSelectSpecies,
-  kitchenOpenSlot,
-  kitchenAssignSlot,
-  kitchenClearSlot,
-  kitchenServeMeal,
   kitchenRosterToggleTray,
   kitchenRosterFeed,
+  burbzFeedFood,
+  burbzFeedTap,
+  openFeedSheet,
+  closeFeedSheet,
   startBirdTrainingSession,
   claimBirdTrainingSession,
   academyForage,
@@ -22366,6 +22538,13 @@ function renderBirdex() {
         return;
       }
 
+      const feedBtn = e.target.closest('[data-action="feed-bird"]');
+      if (feedBtn) {
+        e.stopPropagation();
+        openFeedSheet(feedBtn.dataset.feedKey);
+        return;
+      }
+
       const renameBtn = e.target.closest('[data-action="rename-bird"]');
       if (renameBtn) {
         e.stopPropagation();
@@ -22445,6 +22624,7 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-name">${escapeHtml(birdDisplayName(bird))}</div>
             <div class="card-species">${escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species))}</div>
             <div class="card-info-hint">Hunger: ${escapeHtml(hungerStatus.label)} · ${Math.round(hungerStatus.hunger)}/100</div>
+            <button class="card-feed-btn" data-action="feed-bird" data-feed-key="${bird.id}" ${birdIsFull(bird) ? 'disabled' : ''}>${birdIsFull(bird) ? '🍽️ Full' : '🍽️ Feed'}</button>
             ${cardDietDisclosure}
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
             <div class="card-xp-bar" title="${cardXpTitle}"><div class="card-xp-fill" style="width:${cardXpPct}%"></div></div>
@@ -22476,6 +22656,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-rooms">${academyRoomButtonsHTML(bird)}</div>
           <div class="card-back-utilities">
 
+            <button class="card-pet-btn" data-action="feed-bird" data-feed-key="${bird.id}">🍽️ Feed</button>
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
             <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
@@ -22524,6 +22705,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
             </div>
+            <button class="card-feed-btn" data-action="feed-bird" data-feed-key="species:${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">🍽️ Feed at the feeder</button>
             <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🪶 Inspect at the Barracks' : '🪶 Unlock the Barracks to recruit'}</button>
             <div class="card-info-hint">Tap card to learn about the real bird</div>
           </div>

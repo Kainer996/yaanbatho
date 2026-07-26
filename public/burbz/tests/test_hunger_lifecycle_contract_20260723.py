@@ -206,7 +206,11 @@ def test_browser_activity_paths_use_transactions_readiness_and_completed_reserva
     assert "applyBirdHungerTransaction(session.birdId, 'training', session.id" in claim_training
     # Merlin can lead starter errands now, and he keeps his care state outside
     # the flock, so the guard is handed his care record rather than a flock bird.
-    assert "warnOrBlockBirdWork(birdId === 'merlin-guide' ? { ...bird, care:getMerlinCare() } : bird, 'expedition')" in start_exp
+    assert "warnOrBlockBirdWork(merlin ? { ...bird, care:getMerlinCare() } : bird, 'expedition')" in start_exp
+    # ...and a hungry Merlin is never grounded: the errand just takes twice as
+    # long, so the Kingdom keeps moving with an empty larder.
+    assert "merlinExpeditionSlowFactor()" in start_exp
+    assert "{ slowFactor }" in start_exp
     assert "warnOrBlockBirdWork(bird, 'training')" in start_training
     assert "advanceBirdExpedition" not in has_exp
     assert "advanceTrainingSession" not in has_training

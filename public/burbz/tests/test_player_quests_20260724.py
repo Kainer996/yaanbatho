@@ -104,4 +104,4 @@ def test_tutorial_introduces_player_quests():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "burbz-audio-prey-hunts-kitchen-v139-20260726" in sw
+    assert "burbz-one-tap-feeding-food-quests-v140-20260726" in sw

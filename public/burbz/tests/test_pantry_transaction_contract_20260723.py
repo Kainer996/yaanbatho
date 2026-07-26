@@ -163,7 +163,8 @@ def test_academy_and_merlin_ui_paths_use_shared_bridge_transactions():
     html = INDEX.read_text(encoding="utf-8")
     academy_feed = function_source(html, "academyFeedFood")
     merlin_care = function_source(html, "careForMerlin")
-    kitchen_serve = function_source(html, "kitchenServeMeal")
+    one_tap_feed = function_source(html, "burbzFeedFood")
+    wild_feed = function_source(html, "feedWildSpecies")
     claim_expedition = function_source(html, "claimBirdExpedition")
     ensure_larder = function_source(html, "ensureLarder")
     for marker in (
@@ -179,16 +180,23 @@ def test_academy_and_merlin_ui_paths_use_shared_bridge_transactions():
         "Merlin refuses mealworms as a main meal",
     ):
         assert marker in merlin_care, marker
+    # One food, one tap, one meal: the same shared transaction commits it, and
+    # fullness is the hunger bar inside the core — never a wall-clock cooldown.
     for marker in (
-        "const acceptedMeal = result.refusedCount === 0 && result.perfectCount > 0",
-        "No stock spent",
-        "Object.entries(need).forEach(([id, n]) => { larder[id] -= n; });",
-        "result.transactionId = txId",
-        "Merlin is still full — no food was spent.",
-        "gameState.merlinCare.hunger <= 0",
-        "Number(companion.care.hunger) <= 0",
+        "core.applyFeedingTransaction(gameState, entry.target, spec",
+        "{ transactionId:txId, now }",
+        "kitchenRosterRefusalToast(entry, option, tx)",
     ):
-        assert marker in kitchen_serve, marker
+        assert marker in one_tap_feed, marker
+    assert "academyCdLeft" not in one_tap_feed
+    # A still-wild species is fed at the feeder: nothing is spent on a refusal.
+    for marker in (
+        "core.scoreFoodCompatibility(entry.target",
+        "if (verdict !== 'primary' && verdict !== 'insufficient')",
+        "FIRST_BADGE_BONUS_COINS",
+        "discountedRecruitCost(base, badges)",
+    ):
+        assert marker in wild_feed, marker
     for marker in (
         "legacyKitchenSupplyIngredient(key)",
         "addLarderIngredient(larderKey, count)",
