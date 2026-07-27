@@ -46,6 +46,15 @@ SHA_GEO_LABELS="c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
+# $0 is just "bash" when this is piped from curl, so a printed "$0 --rollback"
+# is not a command anyone can run. Name the real one.
+SELF_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts/install-birdnet-v3.sh"
+if [[ -f "$0" && "$0" != "bash" && "$0" != "-bash" ]]; then
+  ROLLBACK_CMD="sudo bash $0 --rollback"
+else
+  ROLLBACK_CMD="curl -fsSL $SELF_URL | sudo bash -s -- --rollback"
+fi
+
 log()  { printf "\033[1;36m==>\033[0m %s\n" "$*"; }
 ok()   { printf "\033[1;32m  ✔\033[0m %s\n" "$*"; }
 warn() { printf "\033[1;33m  !\033[0m %s\n" "$*"; }
@@ -458,7 +467,7 @@ EOF
     systemctl is-active --quiet "$SVC" || {
       warn "$SVC did not come back up — showing the last log lines"
       journalctl -u "$SVC" --no-pager --lines=25 || true
-      die "Service failed to restart. Run '$0 --rollback' to restore server.py."
+      die "Service failed to restart. Restore server.py with: $ROLLBACK_CMD"
     }
   fi
   ok "$SVC restarted"
@@ -517,7 +526,7 @@ $(printf "\033[1;32m============================================================
     cd $SOUND_ID_DIR && sudo -E python3 -m sound_id.selftest -v
 
   Roll back everything this script changed:
-    sudo bash $0 --rollback
+    $ROLLBACK_CMD
 
   On your phone: close Burbz fully and reopen it TWICE so the service
   worker picks up the new build.
