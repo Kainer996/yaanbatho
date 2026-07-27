@@ -245,7 +245,7 @@ console.log(JSON.stringify({missingBoth,barracksOnly,established}));
 def test_onboarding_release_is_query_busted_and_offline():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    version = "diet-hunger-release-20260723"
+    version = "quest-categories-material-quests-20260726"
     assert f'academy_treehouse_core.js?v={version}' in html
     assert f"./academy_treehouse_core.js?v={version}" in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

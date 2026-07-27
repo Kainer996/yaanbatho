@@ -284,6 +284,40 @@
 
   function allRecipes() { return Object.keys(GEAR).map(recipeFor); }
 
+  // ---------------------------------------------------------------------------
+  // Forge timers — nothing worth having is hammered out in a heartbeat
+  // ---------------------------------------------------------------------------
+  // A commission is placed at the forge, the materials are spent up front and
+  // the smith works the clock down even while the app is closed. The band a
+  // piece sits in sets the bulk of the wait; within a band the *stronger* item
+  // always takes longer, so a Sunlance is never as quick as a Willow Wand.
+  const CRAFT_TIME_BY_RARITY = {
+    common:    45 * 1000,
+    uncommon:   4 * 60 * 1000,
+    rare:      18 * 60 * 1000,
+    epic:      55 * 60 * 1000,
+    legendary:  3 * 60 * 60 * 1000
+  };
+  // How hard the item's own power score stretches its band. 120 is chosen so
+  // the weakest piece in the catalogue adds ~9% and the strongest ~72%, with a
+  // hard ceiling so no future item can run away with the clock.
+  const CRAFT_POWER_DIVISOR = 120;
+  const CRAFT_POWER_MAX_MULTIPLIER = 1.8;
+  // Simultaneous commissions the Fletcher will take. Beyond this the queue is
+  // full and the player has to collect (or cancel) something first.
+  const FORGE_MAX_JOBS = 3;
+
+  function craftTimeMs(gearIdOrItem) {
+    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    if (!item) return 0;
+    const base = CRAFT_TIME_BY_RARITY[item.rarity] || CRAFT_TIME_BY_RARITY.common;
+    const multiplier = Math.min(CRAFT_POWER_MAX_MULTIPLIER, 1 + gearPowerScore(item) / CRAFT_POWER_DIVISOR);
+    return Math.round(base * multiplier);
+  }
+
+  // Sorting helper for any UI that wants "quickest first" inside a group.
+  function craftTimeCompare(aId, bId) { return craftTimeMs(aId) - craftTimeMs(bId); }
+
   // Transmute: 3 of a material → 1 of the next material in that craft line.
   const TRANSMUTE_RATIO = 3;
   function transmuteTargets(materialId) {
@@ -317,6 +351,8 @@
     equipmentBonuses, gearPowerScore, spellSkillFor, potionEffectFor,
     RARITY_WEIGHTS, PITY_RARE_CAP, pickRarity, rollGear, rollMaterials, rollLoot,
     CRAFT_COST_BY_RARITY, KIND_MATERIALS, recipeFor, allRecipes,
+    CRAFT_TIME_BY_RARITY, CRAFT_POWER_DIVISOR, CRAFT_POWER_MAX_MULTIPLIER, FORGE_MAX_JOBS,
+    craftTimeMs, craftTimeCompare,
     TRANSMUTE_RATIO, transmuteTargets, canCraft
   };
 });

@@ -170,9 +170,12 @@ def test_scrolls_drop_from_expeditions_map_pickups_and_the_potion_shop():
 
 def test_bag_renders_usable_scroll_cards_and_companion_cards_show_xp():
     html = HTML_PATH.read_text(encoding="utf-8")
-    bag = function_source(html, "renderInventory")
-    assert "openXpScrollPicker" in bag
-    assert "inventory-card-usable" in bag
+    # The Royal Stores overhaul split the old single grid into tabbed
+    # stockrooms; study scrolls now live on the Curios shelf, still one tap
+    # from being spent on a bird.
+    curios = function_source(html, "renderStoresCurios")
+    assert "openXpScrollPicker" in curios
+    assert "stores-res-card usable" in curios
     card = function_source(html, "createBirdCardHTML")
     assert "card-xp-bar" in card
     assert ".card-xp-bar" in html and ".card-xp-fill" in html
@@ -185,7 +188,7 @@ def test_release_ships_with_a_fresh_offline_cache_version():
     assert "const BURBZ_CACHE = 'burbz-" in sw
     for marker in (
         "quest_core.js?v=quest-route-integrity-loops-v123-20260726",
-        "academy_treehouse_core.js?v=diet-hunger-release-20260723",
+        "academy_treehouse_core.js?v=quest-categories-material-quests-20260726",
     ):
         assert marker in html
         assert f"./{marker}" in sw
