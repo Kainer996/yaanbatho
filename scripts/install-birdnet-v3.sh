@@ -71,25 +71,88 @@ done
 # ----------------------------------------------------------------
 # 1. Locate server.py — the Flask backend that serves /api/identify/sound
 # ----------------------------------------------------------------
-find_server_py() {
-  [[ -n "$SERVER_PY" ]] && { echo "$SERVER_PY"; return; }
+# Anything under a path like this is a snapshot, not the live backend.
+# Patching one of these silently does nothing and looks like success.
+is_archived_path() {
+  case "$1" in
+    *backup*|*backups*|*.bak*|*/tmp/*|*old/*|*-snapshot*|*/.git/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
+# The process that is actually serving requests is the only unambiguous
+# answer to "which server.py is live", so ask it first.
+server_py_from_process() {
+  local pid args argument cwd
+  for pid in $(pgrep -f "server\.py" 2>/dev/null || true); do
+    [[ -r "/proc/$pid/cmdline" ]] || continue
+    cwd="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)"
+    args="$(tr '\0' '\n' < "/proc/$pid/cmdline" 2>/dev/null || true)"
+    while IFS= read -r argument; do
+      case "$argument" in
+        *server.py)
+          if [[ "$argument" == /* && -f "$argument" ]]; then
+            echo "$argument"; return
+          fi
+          if [[ -n "$cwd" && -f "$cwd/${argument#./}" ]]; then
+            readlink -f "$cwd/${argument#./}"; return
+          fi
+          ;;
+      esac
+    done <<< "$args"
+  done
+}
+
+server_py_from_systemd() {
   local unit exec_start
-  for unit in burbz yaanbatho burbz-api birdnet; do
+  while IFS= read -r unit; do
     exec_start="$(systemctl show -p ExecStart --value "$unit" 2>/dev/null || true)"
     if [[ "$exec_start" =~ ([^[:space:]\"]*server\.py) ]]; then
-      [[ -f "${BASH_REMATCH[1]}" ]] && { echo "${BASH_REMATCH[1]}"; return; }
+      [[ -f "${BASH_REMATCH[1]}" ]] && ! is_archived_path "${BASH_REMATCH[1]}" \
+        && { echo "${BASH_REMATCH[1]}"; return; }
     fi
-  done
+  done < <(systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
+             | awk '{print $1}')
+}
 
-  local candidate
+# Last resort: search the disk and rank, because a box that has been running a
+# while is full of dated backup copies of server.py and the first match found
+# is very often one of them.
+server_py_from_disk() {
+  local candidate best="" best_score=-1 score
   while IFS= read -r candidate; do
-    if grep -q "identify/sound" "$candidate" 2>/dev/null; then
-      echo "$candidate"; return
-    fi
-  done < <(find /opt /srv /var/www /home /root -maxdepth 5 -name "server.py" \
-             -not -path "*/node_modules/*" 2>/dev/null | head -40)
-  echo ""
+    grep -q "identify/sound" "$candidate" 2>/dev/null || continue
+    is_archived_path "$candidate" && continue
+    score=0
+    # The live backend is the one sitting next to the package we just deployed.
+    [[ -d "$(dirname "$candidate")/sound_id" ]] && score=$((score + 100))
+    [[ -f "$(dirname "$candidate")/index.html" ]] && score=$((score + 20))
+    [[ "$candidate" == *"/burbz/"* ]] && score=$((score + 10))
+    if [[ $score -gt $best_score ]]; then best_score=$score; best="$candidate"; fi
+  done < <(find /opt /srv /var/www /home /root -maxdepth 6 -name "server.py" \
+             -not -path "*/node_modules/*" 2>/dev/null | head -200)
+  echo "$best"
+}
+
+find_server_py() {
+  [[ -n "$SERVER_PY" ]] && { echo "$SERVER_PY"; return; }
+  local found
+  found="$(server_py_from_process)"; [[ -n "$found" ]] && { echo "$found"; return; }
+  found="$(server_py_from_systemd)"; [[ -n "$found" ]] && { echo "$found"; return; }
+  server_py_from_disk
+}
+
+# The package normally sits beside server.py. If the backend lives outside the
+# web root it will not, so find where update-live-burbz.sh actually put it and
+# put that on PYTHONPATH rather than giving up.
+find_sound_id_dir() {
+  local server_dir="$1" candidate
+  [[ -d "$server_dir/sound_id" ]] && { echo "$server_dir"; return; }
+  while IFS= read -r candidate; do
+    is_archived_path "$candidate" && continue
+    [[ -f "$candidate/__init__.py" ]] || continue
+    dirname "$candidate"; return
+  done < <(find /home /opt /srv /var/www -maxdepth 6 -type d -name "sound_id" 2>/dev/null | head -40)
 }
 
 find_service() {
@@ -207,14 +270,24 @@ TARGET="$(find_server_py)"
 SERVER_DIR="$(dirname "$TARGET")"
 log "Backend: $TARGET"
 
-if [[ ! -d "$SERVER_DIR/sound_id" ]]; then
-  die "$SERVER_DIR/sound_id is missing. Run update-live-burbz.sh first — it ships the package."
+if is_archived_path "$TARGET"; then
+  die "$TARGET looks like a backup copy, not the live backend. Re-run with --server-py pointing at the real one."
 fi
+
+SOUND_ID_DIR="$(find_sound_id_dir "$SERVER_DIR")"
+[[ -n "$SOUND_ID_DIR" ]] \
+  || die "The sound_id package is nowhere on this box. Run update-live-burbz.sh first — it ships the package."
+
+if [[ "$SOUND_ID_DIR" != "$SERVER_DIR" ]]; then
+  warn "sound_id lives in $SOUND_ID_DIR, not beside server.py — adding it to PYTHONPATH"
+fi
+ok "sound_id: $SOUND_ID_DIR/sound_id"
 
 log "Self-test: identifying a known recording with V3"
 if [[ $DRY_RUN -eq 0 ]]; then
-  ( cd "$SERVER_DIR" && BURBZ_BIRDNET_V3_MODEL_DIR="$MODEL_DIR" \
-      BURBZ_SOUND_MODEL=birdnetv3 "$PY" -m sound_id.selftest ) \
+  ( cd "$SOUND_ID_DIR" && BURBZ_BIRDNET_V3_MODEL_DIR="$MODEL_DIR" \
+      BURBZ_SOUND_MODEL=birdnetv3 PYTHONPATH="$SOUND_ID_DIR${PYTHONPATH:+:$PYTHONPATH}" \
+      "$PY" -m sound_id.selftest ) \
     || die "The model did not pass its self-test. server.py has not been touched."
 else
   printf "   \033[2m[dry-run] python3 -m sound_id.selftest\033[0m\n"
@@ -255,8 +328,28 @@ else
 # ---------------------------------------------------------------------------
 try:
     import sound_id as _burbz_sound_id
-except ImportError:  # package not deployed yet — leave the V2.4 path alone
+except ImportError:
+    # The package usually sits beside server.py. When the backend lives outside
+    # the web root it does not, so try the directory the installer recorded
+    # before giving up and leaving the V2.4 path alone.
     _burbz_sound_id = None
+    try:
+        import os as _burbz_os
+        import sys as _burbz_sys
+
+        for _burbz_dir in (
+            _burbz_os.environ.get("BURBZ_SOUND_ID_DIR"),
+            _burbz_os.path.dirname(_burbz_os.path.abspath(__file__)),
+        ):
+            if _burbz_dir and _burbz_os.path.isdir(
+                _burbz_os.path.join(_burbz_dir, "sound_id")
+            ):
+                if _burbz_dir not in _burbz_sys.path:
+                    _burbz_sys.path.insert(0, _burbz_dir)
+                import sound_id as _burbz_sound_id
+                break
+    except Exception:
+        _burbz_sound_id = None
 
 try:
     # Captured before the re-bind below, so the V2.4 path stays reachable.
@@ -336,6 +429,10 @@ if [[ $DRY_RUN -eq 0 ]]; then
 # Burbz sound recognition — written by install-birdnet-v3.sh on $STAMP
 BURBZ_SOUND_MODEL=birdnetv3
 BURBZ_BIRDNET_V3_MODEL_DIR=$MODEL_DIR
+# Where the sound_id package was deployed, so server.py can import it even when
+# the backend lives outside the web root.
+PYTHONPATH=$SOUND_ID_DIR
+BURBZ_SOUND_ID_DIR=$SOUND_ID_DIR
 # Confidence threshold. V3 scores are NOT on V2.4's scale — retune, do not
 # carry the old number across. 0.15 is upstream's own default.
 BURBZ_BIRDNET_V3_MIN_CONFIDENCE=0.15
@@ -375,7 +472,7 @@ fi
 # ----------------------------------------------------------------
 if [[ $DRY_RUN -eq 0 && $NO_PATCH -eq 0 ]]; then
   log "Verifying the live endpoint"
-  CLIP="$SERVER_DIR/assets/audio/bird-tawny-owl.ogg"
+  CLIP="$SOUND_ID_DIR/assets/audio/bird-tawny-owl.ogg"
   if [[ ! -f "$CLIP" ]]; then
     warn "Reference clip not deployed yet — skipping the live check."
     warn "Run update-live-burbz.sh, then: curl -F audio=@$CLIP <host>/burbz/api/identify/sound"
@@ -417,7 +514,7 @@ $(printf "\033[1;32m============================================================
   Backup        : $TARGET.birdnet-v3-bak-$STAMP
 
   Re-run the self-test any time:
-    cd $SERVER_DIR && sudo -E python3 -m sound_id.selftest -v
+    cd $SOUND_ID_DIR && sudo -E python3 -m sound_id.selftest -v
 
   Roll back everything this script changed:
     sudo bash $0 --rollback
