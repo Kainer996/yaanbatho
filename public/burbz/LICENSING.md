@@ -120,17 +120,19 @@ Until one of those lands, do not ship a monetised build on BirdNET.
 - [ ] Audit `server.py` on the VPS: confirm which model files are installed, which
       version, and whether any custom classifier was trained on BirdNET embeddings
       (that would inherit CC BY-NC-SA and must be retrained on Perch).
-- [ ] Prototype Perch 2.0 inference behind the existing `api/identify/sound`
-      contract; benchmark accuracy and latency against current BirdNET results.
-- [ ] Serve Perch 2.0 on CPU via `bmz.Perch2ONNX` (ONNX Runtime, no TensorFlow) and
-      benchmark scan latency under concurrent load. Fall back to `Perch2LiteRT` if
-      ONNX disappoints.
-- [ ] Once switched, update player-facing copy — `index.html` names "BirdNET" in the
-      data note, tutorial, listener states and toasts; the tests in
-      `tests/test_continuous_merlin_listener.py` and
-      `tests/test_scan_anti_cheat_no_manual_correction_20260715.py` assert that
-      wording and will need updating with it.
-- [ ] Add the Apache 2.0 attribution for Perch to the credits page.
+- [x] Build Perch 2.0 inference behind the existing sound-scan contract, with
+      BirdNET retained and still the default — see [`sound_id/`](sound_id/) and
+      its [README](sound_id/README.md). CPU-only via ONNX Runtime, no TensorFlow.
+- [x] Make player-facing copy engine-neutral so a rollback needs no copy change;
+      the listener now names whichever engine the server reports.
+- [ ] **Wire `sound_id` into `server.py` on the VPS** (two edits, documented in
+      `sound_id/README.md`). Nothing is live until this is done.
+- [ ] Tune `BURBZ_PERCH_MIN_CONFIDENCE` against real recordings, then benchmark
+      accuracy and scan latency under concurrent load against BirdNET.
+- [ ] Add the Apache 2.0 attribution for Perch to the credits page **at the point
+      Perch goes live** — the wording is drafted at the end of
+      `sound_id/README.md`. Do not add it while BirdNET is still the active
+      engine, and do not ship Perch without it.
 
 ## 6. Everything else — clean
 
