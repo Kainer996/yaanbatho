@@ -310,29 +310,66 @@ if [[ $NO_PATCH -eq 1 ]]; then
 else
   PATCH_VERSION="v2"
   NEEDS_PATCH=1
+  HAS_OLD_BLOCK=0
+  # The first block shipped had no version marker, so detect it by the private
+  # name only this block ever defines. Missing that is how a box that installed
+  # once gets frozen on its first block and never receives a fix.
+  if grep -q "BURBZ-BIRDNET-V3-BEGIN\|_burbz_sound_id" "$TARGET" 2>/dev/null; then
+    HAS_OLD_BLOCK=1
+  fi
+
   if grep -q "BURBZ-BIRDNET-V3-BEGIN $PATCH_VERSION" "$TARGET" 2>/dev/null; then
     ok "server.py already carries the current wiring ($PATCH_VERSION) — no code change needed"
     NEEDS_PATCH=0
-  elif grep -q "BURBZ-BIRDNET-V3-BEGIN" "$TARGET" 2>/dev/null; then
-    # An older block from a previous run. It always runs to end of file, so it
-    # can be cut back cleanly and replaced with the current one — otherwise a
-    # fix shipped here could never reach a box that installed once already.
+  elif [[ $HAS_OLD_BLOCK -eq 1 ]]; then
+    # An earlier block, marked or not. It always runs to end of file, so it can
+    # be cut back cleanly and replaced with the current one.
     log "Replacing the older wiring block with $PATCH_VERSION"
     run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
     if [[ $DRY_RUN -eq 0 ]]; then
-      "$PY" - "$TARGET" <<'TRIM'
+      "$PY" - "$TARGET" <<'TRIM' || die "Could not remove the previous wiring block — server.py is untouched."
 import sys
+
 path = sys.argv[1]
 with open(path, encoding="utf-8") as handle:
     lines = handle.readlines()
+
+start = None
 for index, line in enumerate(lines):
     if line.startswith("# BURBZ-BIRDNET-V3-BEGIN"):
-        while index and not lines[index - 1].strip():
-            index -= 1
-        with open(path, "w", encoding="utf-8") as handle:
-            handle.writelines(lines[:index])
+        start = index
         break
+
+if start is None:
+    # Unmarked first-generation block: anchor on its opening import, then walk
+    # back over the "try:" and the comment banner that introduces it. Matching
+    # the banner text directly is not safe — it contains an em dash.
+    for index, line in enumerate(lines):
+        if "import sound_id as _burbz_sound_id" in line:
+            start = index
+            if start and lines[start - 1].strip() == "try:":
+                start -= 1
+            while start and lines[start - 1].lstrip().startswith("#"):
+                start -= 1
+            break
+
+if start is None:
+    sys.exit("no previous block found")
+
+while start and not lines[start - 1].strip():
+    start -= 1
+
+remainder = "".join(lines[:start])
+if "_burbz_sound_id" in remainder:
+    sys.exit("block boundary looks wrong - refusing to trim")
+
+with open(path, "w", encoding="utf-8") as handle:
+    handle.write(remainder)
 TRIM
+      "$PY" -m py_compile "$TARGET" || {
+        cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+        die "server.py did not compile after removing the old block — restored the backup."
+      }
     fi
   elif grep -q "sound_id.analyse" "$TARGET" 2>/dev/null; then
     ok "server.py already calls sound_id.analyse directly — leaving it alone"
