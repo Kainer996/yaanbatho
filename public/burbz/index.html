@@ -3461,7 +3461,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=charm-diplomacy-20260723"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="quest_core.js?v=quest-route-integrity-loops-v123-20260726"></script>
+<script src="quest_core.js?v=quest-alignment-authority-v124-20260727"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -14479,17 +14479,29 @@ async function activateWalkingQuestFromOffer(offer, retry) {
   const initialWays = visibleWalkablePathWays();
   // Repair is anchored to the quest's persisted trailhead, never the player's
   // current GPS position, so moving around cannot select an unrelated loop.
-  const initialRepair = window.BurbzQuestCore.repairQuestRouteAgainstWays(quest, initialWays);
-  if (initialRepair.status !== 'certified') {
-    walkQuestPendingActivation = offer;
-    installWalkQuestAlignmentReadinessRetry();
-    const pending = initialRepair.status === 'pending';
-    setWalkQuestAlignmentStatus(pending
-      ? 'Mapped footpaths are still loading — this quest will retry automatically.'
-      : 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.');
-    if (!retry) showToast(pending
-      ? 'Mapped footpaths are still loading — this quest will retry automatically.'
-      : 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.');
+  let repair = window.BurbzQuestCore.repairQuestRouteAgainstWays(quest, initialWays);
+  let blocked = repair.status === 'impossible';
+  if (repair.status !== 'certified' && !blocked) {
+    // The loaded tiles could not prove this route — and if the route lies
+    // outside them, no amount of waiting ever will. Ask the trail archive for
+    // the whole corridor instead of leaving a "still loading" banner up.
+    // Evidence the offer already carries answers instantly, so only a real wait
+    // on the archive earns a banner — and an automatic retry never does.
+    const checking = retry ? null : setTimeout(() => showToast('🧭 Checking this quest against the mapped footpaths…'), 700);
+    const verdict = await certifyQuestAgainstAuthority(quest, offer);
+    clearTimeout(checking);
+    wq = ensureWalkingQuestState();
+    if (wq.active) return; // another quest started while the archive answered
+    if (verdict === 'certified') repair = { status:'certified', changed:true };
+    else if (verdict === 'blocked') blocked = true;
+  }
+  if (repair.status !== 'certified') {
+    walkQuestPendingActivation = blocked ? null : offer;
+    if (blocked) uninstallWalkQuestAlignmentReadinessRetry();
+    else installWalkQuestAlignmentReadinessRetry('offer:' + (offer.ref || offer.name || ''));
+    const message = blocked ? WALK_QUEST_ALIGN_BLOCKED_MSG : WALK_QUEST_ALIGN_PENDING_MSG;
+    setWalkQuestAlignmentStatus(message);
+    if (!retry || blocked) showToast(message);
     return;
   }
   walkQuestPendingActivation = null;
@@ -14565,12 +14577,128 @@ function visibleWalkablePathWays() {
 }
 let walkQuestAlignState = { questId:null, lastAt:0 };
 let walkQuestRealignTimer = null;
-let walkQuestAlignmentRetry = { map: null, handler: null };
+let walkQuestAlignmentRetry = { map: null, handler: null, subject: null, deadline: 0 };
+// Three different things can stop a route being drawn, and the player must
+// never be told the wrong one — least of all "still loading" for ever:
+//   pending  — the loaded tiles have not proved it yet, more may arrive
+//   blocked  — complete mapped-path evidence says it is not on walkable ways
+//   stalled  — no evidence could be obtained at all (offline, archive down)
+const WALK_QUEST_ALIGN_PENDING_MSG = 'Mapped footpaths are still loading — this quest will retry automatically.';
+const WALK_QUEST_ALIGN_RECHART_MSG = 'Mapped footpaths are still loading — recharting this quest automatically…';
+const WALK_QUEST_ALIGN_BLOCKED_MSG = 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.';
+const WALK_QUEST_ALIGN_STALLED_MSG = 'Could not check the mapped footpaths from here — tap the quest again to retry, or start a Side Quest.';
+// Tiles that were going to arrive have arrived long before this; past it the
+// retry loop is just repeating a message it cannot make come true.
+const WALK_QUEST_RETRY_WINDOW_MS = 30000;
+function walkQuestAlignmentMessage(certification, pendingMessage) {
+  const status = certification && certification.status;
+  if (status === 'blocked') return WALK_QUEST_ALIGN_BLOCKED_MSG;
+  if (status === 'stalled') return WALK_QUEST_ALIGN_STALLED_MSG;
+  return pendingMessage || WALK_QUEST_ALIGN_RECHART_MSG;
+}
 function setWalkQuestAlignmentStatus(message) {
   const hud = $('mapQuestHudStats');
   if (hud) hud.textContent = message;
   const sheet = $('walkQuestSheetStatus');
   if (sheet) sheet.textContent = message;
+}
+
+// ---- Authoritative footpath evidence ----
+// querySourceFeatures only ever sees the tiles currently loaded for the
+// viewport, so tile disagreement means "not proved yet", never "impossible" —
+// and a route lying outside those tiles is never proved by waiting. The trail
+// archive (the same OpenStreetMap data quests are discovered from) covers the
+// whole route corridor, so it can settle the question either way.
+const WALK_QUEST_AUTHORITY_TTL_MS = 600000;
+const WALK_QUEST_AUTHORITY_BACKOFF_MS = 45000;
+let walkQuestAuthorityCache = { key:null, ways:null, at:0 };
+let walkQuestAuthorityInFlight = null;
+let walkQuestAuthorityFailedAt = 0;
+let walkQuestAuthorityAskedFor = null;
+function walkQuestRoutePoints(quest) { return ((quest && quest.route) || []).map(p => ({ lat:p[0], lon:p[1] })); }
+function walkQuestAuthorityWays(quest, offer) {
+  const core = window.BurbzQuestCore;
+  // Discovery already downloaded this corridor's walkable network — reuse it
+  // rather than making the player wait on a second archive round-trip.
+  if (offer && Array.isArray(offer.alignmentWays) && offer.alignmentWays.length) return Promise.resolve(offer.alignmentWays);
+  if (!core || !core.fetchAlignmentWays || !core.routeBounds) return Promise.resolve(null);
+  const bounds = core.routeBounds(walkQuestRoutePoints(quest), 150);
+  if (!bounds) return Promise.resolve(null);
+  const key = [bounds.minLat, bounds.minLon, bounds.maxLat, bounds.maxLon].map(v => v.toFixed(3)).join(',');
+  const now = Date.now();
+  if (walkQuestAuthorityCache.key === key && walkQuestAuthorityCache.ways && now - walkQuestAuthorityCache.at < WALK_QUEST_AUTHORITY_TTL_MS) {
+    return Promise.resolve(walkQuestAuthorityCache.ways);
+  }
+  if (walkQuestAuthorityInFlight && walkQuestAuthorityInFlight.key === key) return walkQuestAuthorityInFlight.promise;
+  if (now - walkQuestAuthorityFailedAt < WALK_QUEST_AUTHORITY_BACKOFF_MS) return Promise.resolve(null);
+  const promise = core.fetchAlignmentWays(bounds).then(ways => {
+    walkQuestAuthorityInFlight = null;
+    if (!ways || !ways.length) { walkQuestAuthorityFailedAt = Date.now(); return null; }
+    walkQuestAuthorityCache = { key, ways, at: Date.now() };
+    return ways;
+  }).catch(err => {
+    walkQuestAuthorityInFlight = null;
+    walkQuestAuthorityFailedAt = Date.now();
+    console.warn('BURBZ quest alignment archive failed', err && err.message);
+    return null;
+  });
+  walkQuestAuthorityInFlight = { key, promise };
+  return promise;
+}
+// 'certified' | 'blocked' | 'unavailable'. The corridor query covers the whole
+// route, so unlike tile evidence this verdict is final.
+function certifyQuestAgainstAuthority(quest, offer) {
+  return walkQuestAuthorityWays(quest, offer).then(ways => {
+    if (!ways || !ways.length) return 'unavailable';
+    const result = window.BurbzQuestCore.repairQuestRouteAgainstWays(quest, ways, { authoritativeFullCoverage: true });
+    return result.status === 'certified' ? 'certified' : 'blocked';
+  }).catch(() => 'unavailable');
+}
+// Asked once per quest for a saved/active route the tiles cannot certify.
+function requestAuthoritativeQuestAlignment(quest) {
+  const core = window.BurbzQuestCore;
+  if (!quest || !core || !core.repairQuestRouteAgainstWays) return;
+  if (walkQuestAuthorityAskedFor === quest.id) return;
+  if (Date.now() - walkQuestAuthorityFailedAt < WALK_QUEST_AUTHORITY_BACKOFF_MS) return;
+  walkQuestAuthorityAskedFor = quest.id;
+  certifyQuestAgainstAuthority(quest, null).then(verdict => {
+    const act = activeWalkingQuest();
+    if (!act || act.id !== quest.id) { walkQuestAuthorityAskedFor = null; return; }
+    // No answer at all — leave the tile retry to run out its window and say so.
+    if (verdict === 'unavailable') { walkQuestAuthorityAskedFor = null; return; }
+    if (verdict === 'blocked') {
+      act.routeCertification = { status:'blocked', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:'route-not-on-mapped-paths' };
+    }
+    saveState();
+    uninstallWalkQuestAlignmentReadinessRetry();
+    drawWalkingQuestOnMap();
+    updateWalkQuestHud();
+    if (verdict === 'certified') showToast('🗺️ Your saved quest was safely recharted on mapped footpaths');
+    else { setWalkQuestAlignmentStatus(WALK_QUEST_ALIGN_BLOCKED_MSG); showToast(WALK_QUEST_ALIGN_BLOCKED_MSG); }
+  });
+}
+// Tile evidence fell short: hold the route hidden, keep listening for tiles —
+// and ask the archive for the verdict tiles alone can never give.
+function holdWalkQuestAlignmentPending(quest, reason) {
+  const core = window.BurbzQuestCore;
+  const cert = quest.routeCertification;
+  // A verdict from complete mapped-path evidence is not downgraded back to
+  // "loading" by viewport tiles that were never going to prove it either.
+  if (cert && cert.status === 'blocked') {
+    setWalkQuestAlignmentStatus(WALK_QUEST_ALIGN_BLOCKED_MSG);
+    uninstallWalkQuestAlignmentReadinessRetry();
+    drawWalkingQuestOnMap();
+    return false;
+  }
+  if (!cert || cert.status !== 'pending' || cert.reason !== reason) {
+    quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason: reason };
+    saveState();
+  }
+  setWalkQuestAlignmentStatus(WALK_QUEST_ALIGN_RECHART_MSG);
+  installWalkQuestAlignmentReadinessRetry('quest:' + quest.id);
+  requestAuthoritativeQuestAlignment(quest);
+  drawWalkingQuestOnMap();
+  return false;
 }
 function alignActiveQuestRouteToMapPaths(force = false) {
   const quest = activeWalkingQuest();
@@ -14588,15 +14716,7 @@ function alignActiveQuestRouteToMapPaths(force = false) {
       drawWalkingQuestOnMap();
       return false;
     }
-    const alreadyPending = quest.routeCertification && quest.routeCertification.status === 'pending' && quest.routeCertification.reason === 'tiles-not-ready';
-    if (!alreadyPending) {
-      quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:'tiles-not-ready' };
-      saveState();
-    }
-    setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
-    installWalkQuestAlignmentReadinessRetry();
-    drawWalkingQuestOnMap();
-    return false;
+    return holdWalkQuestAlignmentPending(quest, 'tiles-not-ready');
   }
   walkQuestAlignState = { questId: quest.id, lastAt: now };
   const result = core.repairQuestRouteAgainstWays(quest, ways);
@@ -14609,15 +14729,7 @@ function alignActiveQuestRouteToMapPaths(force = false) {
       drawWalkingQuestOnMap();
       return false;
     }
-    const alreadyPending = quest.routeCertification && quest.routeCertification.status === 'pending' && quest.routeCertification.reason === result.reason;
-    if (!alreadyPending) {
-      quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
-      saveState();
-    }
-    setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
-    installWalkQuestAlignmentReadinessRetry();
-    drawWalkingQuestOnMap();
-    return false;
+    return holdWalkQuestAlignmentPending(quest, result.reason || 'partial-tiles');
   }
   // repairQuestRouteAgainstWays already certifies route and checkpoints against
   // the compiled spatial index; re-running the complete 2 m scan here caused
@@ -14633,12 +14745,7 @@ function alignActiveQuestRouteToMapPaths(force = false) {
       drawWalkingQuestOnMap();
       return false;
     }
-    quest.routeCertification = { status:'pending', schemaVersion:core.ROUTE_ALIGNMENT_VERSION, reason:result.reason || 'partial-tiles' };
-    saveState();
-    setWalkQuestAlignmentStatus('Mapped footpaths are still loading — recharting this quest automatically…');
-    installWalkQuestAlignmentReadinessRetry();
-    drawWalkingQuestOnMap();
-    return false;
+    return holdWalkQuestAlignmentPending(quest, result.reason || 'partial-tiles');
   }
   if (result.changed) {
     const routePts = quest.route.map(p => ({ lat:p[0], lon:p[1] }));
@@ -14666,10 +14773,20 @@ function scheduleWalkQuestRealign() {
 // Source/style readiness is enough; listening to every `idle` would feed our
 // own GeoJSON redraw back into another alignment pass.
 const WALK_QUEST_RETRY_EVENTS = ['sourcedata', 'styledata'];
-function installWalkQuestAlignmentReadinessRetry() {
+function installWalkQuestAlignmentReadinessRetry(subject) {
   if (!liveMap) return;
+  const key = subject || (activeWalkingQuest() ? 'quest:' + activeWalkingQuest().id : 'pending-activation');
+  const deadline = Date.now() + WALK_QUEST_RETRY_WINDOW_MS;
   if (walkQuestAlignmentRetry.handler) {
-    if (walkQuestAlignmentRetry.map === liveMap) return;
+    if (walkQuestAlignmentRetry.map === liveMap) {
+      // A different route to align is a fresh problem and earns a fresh window;
+      // re-arming for the same one must never extend it indefinitely.
+      if (walkQuestAlignmentRetry.subject !== key) {
+        walkQuestAlignmentRetry.subject = key;
+        walkQuestAlignmentRetry.deadline = deadline;
+      }
+      return;
+    }
     uninstallWalkQuestAlignmentReadinessRetry(); // map was rebuilt — rebind
   }
   const retry = event => {
@@ -14678,6 +14795,7 @@ function installWalkQuestAlignmentReadinessRetry() {
     clearTimeout(walkQuestRealignTimer);
     walkQuestRealignTimer = setTimeout(() => {
       if (walkQuestAlignmentRetry.handler !== retry) return;
+      if (Date.now() > walkQuestAlignmentRetry.deadline) { giveUpOnWalkQuestAlignment(); return; }
       if (walkQuestPendingActivation && !activeWalkingQuest()) {
         startWalkingQuestFromOffer(walkQuestPendingActivation, { retry: true });
       } else if (activeWalkingQuest()) {
@@ -14688,14 +14806,37 @@ function installWalkQuestAlignmentReadinessRetry() {
       }
     }, 400);
   };
-  walkQuestAlignmentRetry = { map: liveMap, handler: retry };
+  walkQuestAlignmentRetry = { map: liveMap, handler: retry, subject: key, deadline };
   WALK_QUEST_RETRY_EVENTS.forEach(eventName => {
     try { liveMap.on(eventName, retry); } catch (e) {}
   });
 }
+let walkQuestStalledNoticeAt = 0;
+// The retry window ran out with no tiles and no archive answer. Say that
+// plainly instead of promising a load that is never going to finish; the next
+// map move, position fix or tap starts a fresh attempt.
+function giveUpOnWalkQuestAlignment() {
+  uninstallWalkQuestAlignmentReadinessRetry();
+  walkQuestPendingActivation = null;
+  walkQuestAuthorityAskedFor = null;
+  const quest = activeWalkingQuest();
+  if (quest && quest.routeCertification && quest.routeCertification.status === 'pending') {
+    quest.routeCertification = {
+      status:'stalled', schemaVersion:window.BurbzQuestCore.ROUTE_ALIGNMENT_VERSION,
+      reason: quest.routeCertification.reason || 'tiles-not-ready'
+    };
+    saveState();
+    drawWalkingQuestOnMap();
+  }
+  setWalkQuestAlignmentStatus(WALK_QUEST_ALIGN_STALLED_MSG);
+  // Every later attempt re-arms the window, so the notice is throttled: the
+  // status line always tells the truth, the banner does not nag.
+  const now = Date.now();
+  if (now - walkQuestStalledNoticeAt > 180000) { walkQuestStalledNoticeAt = now; showToast(WALK_QUEST_ALIGN_STALLED_MSG); }
+}
 function uninstallWalkQuestAlignmentReadinessRetry() {
   const { map, handler } = walkQuestAlignmentRetry;
-  walkQuestAlignmentRetry = { map: null, handler: null };
+  walkQuestAlignmentRetry = { map: null, handler: null, subject: null, deadline: 0 };
   if (!map || !handler) return;
   clearTimeout(walkQuestRealignTimer);
   WALK_QUEST_RETRY_EVENTS.forEach(eventName => {
@@ -14709,9 +14850,7 @@ function drawWalkingQuestOnMap() {
   drawWalkingQuestRoute();
   if (!quest || !liveMap || !window.maplibregl) return;
   if (!quest.routeCertification || quest.routeCertification.status !== 'certified') {
-    setWalkQuestAlignmentStatus(quest.routeCertification && quest.routeCertification.status === 'blocked'
-      ? 'This quest cannot be aligned safely here. Retry, choose another quest, or start a Side Quest.'
-      : 'Mapped footpaths are still loading — recharting this quest automatically…');
+    setWalkQuestAlignmentStatus(walkQuestAlignmentMessage(quest.routeCertification));
     return;
   }
   quest.checkpoints.forEach((cp, idx) => {
