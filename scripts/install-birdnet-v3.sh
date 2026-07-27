@@ -308,11 +308,40 @@ fi
 if [[ $NO_PATCH -eq 1 ]]; then
   warn "--no-patch given: server.py left alone. It will keep using its current engine."
 else
-  if grep -q "sound_id.analyse" "$TARGET" 2>/dev/null; then
-    ok "server.py already calls sound_id.analyse — no code change needed"
-  else
-    log "Wiring sound_id into server.py (backup: $(basename "$TARGET").birdnet-v3-bak-$STAMP)"
+  PATCH_VERSION="v2"
+  NEEDS_PATCH=1
+  if grep -q "BURBZ-BIRDNET-V3-BEGIN $PATCH_VERSION" "$TARGET" 2>/dev/null; then
+    ok "server.py already carries the current wiring ($PATCH_VERSION) — no code change needed"
+    NEEDS_PATCH=0
+  elif grep -q "BURBZ-BIRDNET-V3-BEGIN" "$TARGET" 2>/dev/null; then
+    # An older block from a previous run. It always runs to end of file, so it
+    # can be cut back cleanly and replaced with the current one — otherwise a
+    # fix shipped here could never reach a box that installed once already.
+    log "Replacing the older wiring block with $PATCH_VERSION"
     run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
+    if [[ $DRY_RUN -eq 0 ]]; then
+      "$PY" - "$TARGET" <<'TRIM'
+import sys
+path = sys.argv[1]
+with open(path, encoding="utf-8") as handle:
+    lines = handle.readlines()
+for index, line in enumerate(lines):
+    if line.startswith("# BURBZ-BIRDNET-V3-BEGIN"):
+        while index and not lines[index - 1].strip():
+            index -= 1
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.writelines(lines[:index])
+        break
+TRIM
+    fi
+  elif grep -q "sound_id.analyse" "$TARGET" 2>/dev/null; then
+    ok "server.py already calls sound_id.analyse directly — leaving it alone"
+    NEEDS_PATCH=0
+  fi
+
+  if [[ $NEEDS_PATCH -eq 1 ]]; then
+    log "Wiring sound_id into server.py (backup: $(basename "$TARGET").birdnet-v3-bak-$STAMP)"
+    [[ -f "$TARGET.birdnet-v3-bak-$STAMP" ]] || run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
 
     # The patch is purely additive: it appends a block that re-binds the two
     # BirdNET helpers so the existing handler routes through sound_id without
@@ -322,6 +351,7 @@ else
       cat >> "$TARGET" <<'PATCH'
 
 
+# BURBZ-BIRDNET-V3-BEGIN v2
 # ---------------------------------------------------------------------------
 # BirdNET V3 — appended by scripts/install-birdnet-v3.sh
 #
@@ -332,6 +362,9 @@ else
 # _aggregate_sound_detections turns that token into a V3 identification. The
 # original functions stay available, so BURBZ_SOUND_MODEL=birdnetv2 still
 # reaches the old path unchanged.
+#
+# The version on the BEGIN marker above lets the installer replace this block
+# when it changes; everything from that marker to end of file is this block.
 #
 # Remove this block (or run install-birdnet-v3.sh --rollback) to undo.
 # ---------------------------------------------------------------------------
@@ -398,7 +431,33 @@ if _burbz_sound_id is not None:
         def __init__(self, path, lat=None, lon=None, week=None):
             self.path, self.lat, self.lon, self.week = path, lat, lon, week
 
+    def _burbz_location_from_request():
+        """Read lat/lon straight off the upload.
+
+        The range filter is only as good as the location it gets, and not every
+        server hands lat/lon to _analyse_recording — some read them later, in
+        the response builder. Without a location an African Thrush is a
+        perfectly good answer for a garden in London. The client posts lat and
+        lon as form fields, so take them from there when the call did not carry
+        them.
+        """
+        try:
+            from flask import request as _burbz_request
+
+            source = _burbz_request.values
+            values = []
+            for field in ("lat", "lon"):
+                raw = source.get(field)
+                values.append(float(raw) if raw not in (None, "") else None)
+            return values[0], values[1]
+        except Exception:
+            return None, None
+
     def _analyse_recording(audio_path, lat=None, lon=None, week=None, *args, **kwargs):
+        if lat is None or lon is None:
+            fallback_lat, fallback_lon = _burbz_location_from_request()
+            lat = lat if lat is not None else fallback_lat
+            lon = lon if lon is not None else fallback_lon
         return _BurbzRecording(audio_path, lat, lon, week)
 
     def _aggregate_sound_detections(detections, allow=None, *args, **kwargs):
