@@ -127,16 +127,40 @@ PY="$(command -v python3 || true)"
 ok "$($PY -V 2>&1)"
 
 PIP_FLAGS=""
-$PY -c "import sysconfig,sys; sys.exit(0 if sysconfig.get_config_var('Py_GIL_DISABLED') is None else 0)" 2>/dev/null || true
 if $PY -m pip install --help 2>/dev/null | grep -q -- "--break-system-packages"; then
   PIP_FLAGS="--break-system-packages"
 fi
 
-log "Installing onnxruntime and numpy (and soxr/soundfile for better audio handling)"
-run "$PY -m pip install --quiet --upgrade $PIP_FLAGS onnxruntime numpy" \
+# Install only what is actually missing, and never --upgrade: on Debian and
+# Ubuntu, numpy comes from apt without the RECORD file pip needs to uninstall
+# it, so an upgrade fails with "Cannot uninstall numpy, RECORD not found" and
+# takes the whole install down with it. The distro's numpy is fine for us.
+ensure_module() {  # ensure_module <import name> <pip spec> [optional]
+  local module="$1" spec="$2" optional="${3:-}"
+  if [[ $DRY_RUN -eq 1 ]]; then
+    printf "   \033[2m[dry-run] ensure %s\033[0m\n" "$module"; return 0
+  fi
+  if $PY -c "import $module" >/dev/null 2>&1; then
+    ok "$module already installed ($($PY -c "import $module; print(getattr($module,'__version__','?'))" 2>/dev/null))"
+    return 0
+  fi
+  log "Installing $spec"
+  if $PY -m pip install --quiet $PIP_FLAGS "$spec"; then
+    ok "$spec"
+    return 0
+  fi
+  [[ -n "$optional" ]] && { warn "$spec unavailable — continuing without it"; return 0; }
+  return 1
+}
+
+log "Checking the inference runtime"
+ensure_module numpy numpy \
+  || die "numpy is missing and could not be installed. Try: apt-get install -y python3-numpy"
+ensure_module onnxruntime onnxruntime \
   || die "Could not install onnxruntime. On a very old distro try: pip install 'onnxruntime<1.17'"
 # Optional: better resampling and non-WAV decoding. A failure here is survivable.
-run "$PY -m pip install --quiet $PIP_FLAGS soxr soundfile" || warn "soxr/soundfile unavailable — falling back to the built-in resampler"
+ensure_module soundfile soundfile optional
+ensure_module soxr soxr optional
 ok "runtime ready (no TensorFlow, no PyTorch, no GPU)"
 
 # ----------------------------------------------------------------
