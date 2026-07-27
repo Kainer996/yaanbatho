@@ -69,9 +69,26 @@ permitted with attribution, no ShareAlike, no permission needed.
 - Distributed as a TF2 SavedModel via Kaggle Models
   (`google/bird-vocalization-classifier`, variation `perch_v2`); load via
   `perch_hoplite.zoo.model_configs.load_model_by_name('perch_v2')`.
-- Caveat to plan for: Perch 2.0 currently wants TF 2.20 and a GPU; a CPU variant is
-  stated as coming. Benchmark on the VPS before committing, and check latency
-  against the current sound-scan UX.
+
+**On the GPU question — it does not need one.** Google's own model card says "This
+version of the model requires TensorFlow 2.20.rc0 and a GPU. A CPU variant will be
+added soon", but that applies to Google's official TF SavedModel path, not to the
+model itself. The backbone is a 12M-parameter EfficientNet-B3, described in the
+Perch 2.0 paper as "deployable on consumer-grade hardware". For CPU serving use the
+`bioacoustics-model-zoo` (MIT) exports instead:
+
+- `bmz.Perch2ONNX` — ONNX Runtime, no TensorFlow dependency at all. Supports
+  `headless=True` for an embedding-only model that is "much smaller and more
+  efficient" if you train your own head over the Burbz species list.
+- `bmz.Perch2LiteRT` — TFLite. Reported at roughly a 10x CPU inference speedup over
+  the TensorFlow path.
+
+The zoo notes these "may be well suited for scenarios where installing TensorFlow is
+undesirable" — which describes a Node/Caddy VPS accurately. ONNX Runtime is the
+recommended route: the backend is already Python, and it drops the TF 2.20 pin.
+
+Still benchmark end-to-end latency on the VPS against the current sound-scan UX
+before committing — the risk is response time under concurrent scans, not capability.
 
 Perch has no geographic/seasonal prior equivalent to BirdNET's location filter, so
 the existing Burbz "seen nearby" biasing becomes more important, not less.
@@ -105,7 +122,9 @@ Until one of those lands, do not ship a monetised build on BirdNET.
       (that would inherit CC BY-NC-SA and must be retrained on Perch).
 - [ ] Prototype Perch 2.0 inference behind the existing `api/identify/sound`
       contract; benchmark accuracy and latency against current BirdNET results.
-- [ ] Confirm the VPS can serve Perch (TF 2.20 / GPU vs CPU variant).
+- [ ] Serve Perch 2.0 on CPU via `bmz.Perch2ONNX` (ONNX Runtime, no TensorFlow) and
+      benchmark scan latency under concurrent load. Fall back to `Perch2LiteRT` if
+      ONNX disappoints.
 - [ ] Once switched, update player-facing copy — `index.html` names "BirdNET" in the
       data note, tutorial, listener states and toasts; the tests in
       `tests/test_continuous_merlin_listener.py` and
@@ -145,3 +164,5 @@ Reviewed as part of the same pass; no other commercial blockers found.
 - https://huggingface.co/cgeorgiaw/Perch
 - https://www.kaggle.com/models/google/bird-vocalization-classifier
 - https://creativecommons.org/licenses/by-nc-sa/4.0/
+- https://github.com/kitzeslab/bioacoustics-model-zoo
+- https://arxiv.org/abs/2508.04665
