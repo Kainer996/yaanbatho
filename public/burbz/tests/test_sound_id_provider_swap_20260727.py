@@ -1,11 +1,12 @@
-"""Swapping the sound recogniser between BirdNET and Perch 2.0.
+"""Swapping the sound recogniser between BirdNET V3, Perch 2.0 and legacy V2.4.
 
-BirdNET's weights are CC BY-NC-SA 4.0 (non-commercial); Perch 2.0 is Apache 2.0
-including weights. The swap is a runtime choice, not a rewrite: BirdNET stays
-wired up and stays the default, so rolling back is one environment variable.
+BirdNET V2.4's weights are CC BY-NC-SA 4.0 (non-commercial); BirdNET V3's are
+CC BY-SA 4.0 and Perch 2.0's are Apache 2.0, so either can ship commercially.
+V3 is the default. The choice is made at runtime, so switching engine is one
+environment variable and no code change.
 
 These tests run without onnxruntime, numpy or the production backend — the
-Perch session is faked — so they pass in a source worktree.
+model sessions are faked — so they pass in a source worktree.
 """
 import sys
 import types
@@ -42,32 +43,48 @@ def _clean_env(monkeypatch):
 
 # ---------------------------------------------------------------- selection
 
-def test_birdnet_is_the_default_so_an_untouched_deploy_is_unchanged():
-    assert sound_id.active_provider() == "birdnet"
-    assert sound_id.DEFAULT_PROVIDER == "birdnet"
+def test_birdnet_v3_is_the_default_so_a_fresh_deploy_is_commercially_clean():
+    assert sound_id.active_provider() == "birdnetv3"
+    assert sound_id.DEFAULT_PROVIDER == "birdnetv3"
+    assert sound_id.is_commercial_safe()
 
 
-def test_perch_is_selected_only_by_explicit_opt_in(monkeypatch):
-    monkeypatch.setenv("BURBZ_SOUND_MODEL", "perch")
-    assert sound_id.active_provider() == "perch"
+def test_each_engine_is_selected_by_its_own_name(monkeypatch):
+    for value, expected in [("perch", "perch"), ("birdnetv3", "birdnetv3"),
+                            ("birdnetv2", "birdnetv2"), ("v3", "birdnetv3")]:
+        monkeypatch.setenv("BURBZ_SOUND_MODEL", value)
+        assert sound_id.active_provider() == expected
+
+
+def test_a_bare_birdnet_means_v3_so_a_vague_value_never_picks_non_commercial(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "birdnet")
-    assert sound_id.active_provider() == "birdnet"
+    assert sound_id.active_provider() == "birdnetv3"
+    assert sound_id.is_commercial_safe()
+
+
+def test_the_legacy_v2_path_is_flagged_as_non_commercial(monkeypatch):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL", "birdnetv2")
+    assert not sound_id.is_commercial_safe()
+    assert "birdnetv2" in sound_id.NON_COMMERCIAL_PROVIDERS
 
 
 def test_a_typo_in_the_env_var_does_not_take_sound_scanning_down(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "prech")
-    assert sound_id.active_provider() == "birdnet"
+    assert sound_id.active_provider() == "birdnetv3"
 
 
 def test_provider_labels_match_the_client_engine_names():
-    assert sound_id.provider_label("birdnet") == "BirdNET"
+    # Both BirdNET generations read as plain "BirdNET" to a player.
+    assert sound_id.provider_label("birdnetv3") == "BirdNET"
+    assert sound_id.provider_label("birdnetv2") == "BirdNET"
     assert sound_id.provider_label("perch") == "Perch"
     assert sound_id.provider_label("nonsense") == "BirdNET"
 
 
 # ------------------------------------------------------------------ birdnet
 
-def test_birdnet_path_delegates_to_the_servers_own_helpers():
+def test_birdnet_path_delegates_to_the_servers_own_helpers(monkeypatch):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL", "birdnetv2")
     seen = {}
 
     def analyse_recording(path, **kwargs):
@@ -91,7 +108,9 @@ def test_birdnet_path_delegates_to_the_servers_own_helpers():
     assert out[0]["scientific_name"] == "Erithacus rubecula"
 
 
-def test_birdnet_helper_with_the_older_single_argument_signature():
+def test_birdnet_helper_with_the_older_single_argument_signature(monkeypatch):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL", "birdnetv2")
+
     def analyse_recording(path):
         return ["legacy"]
 
@@ -110,17 +129,56 @@ def test_unconfigured_birdnet_raises_a_pointed_error():
 
 # -------------------------------------------------------------------- perch
 
-def test_perch_failure_falls_back_to_birdnet_rather_than_failing_the_scan(monkeypatch):
+def _v3_returning(common_name):
+    return lambda *args, **kwargs: [{
+        "common_name": common_name, "scientific_name": "Erithacus rubecula",
+        "max": 0.8, "mean": 0.8, "n": 1, "is_local": True,
+    }]
+
+
+def test_perch_failure_falls_back_to_v3_rather_than_failing_the_scan(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "perch")
 
-    from sound_id import perch_provider
+    from sound_id import birdnet_v3_provider, perch_provider
 
     def explode(*args, **kwargs):
         raise perch_provider.PerchUnavailable("onnxruntime is not installed")
 
     monkeypatch.setattr(perch_provider, "analyse", explode)
+    monkeypatch.setattr(birdnet_v3_provider, "analyse", _v3_returning("Robin"))
+
+    # "House Sparrow" is what the faked V2.4 helpers return, so seeing "Robin"
+    # proves the fallback went to V3 and not to the non-commercial path.
+    assert sound_id.analyse("/tmp/clip.wav")[0]["common_name"] == "Robin"
+
+
+def test_v3_failure_falls_back_to_perch_and_never_to_non_commercial_v2(monkeypatch):
+    from sound_id import birdnet_v3_provider, perch_provider
+
+    def explode(*args, **kwargs):
+        raise birdnet_v3_provider.BirdNETV3Unavailable("weights not installed")
+
+    monkeypatch.setattr(birdnet_v3_provider, "analyse", explode)
+    monkeypatch.setattr(perch_provider, "analyse", lambda *a, **k: [{
+        "common_name": "Wren", "scientific_name": "Troglodytes troglodytes",
+        "max": 0.7, "mean": 0.7, "n": 1, "is_local": True,
+    }])
+
     out = sound_id.analyse("/tmp/clip.wav")
-    assert out[0]["common_name"] == "House Sparrow"
+    assert out[0]["common_name"] == "Wren"
+    assert out[0]["common_name"] != "House Sparrow"  # i.e. never the V2.4 helpers
+
+
+def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch):
+    """A failed scan must not be served by the non-commercial model instead."""
+    from sound_id import birdnet_v3_provider, perch_provider
+
+    def explode(*args, **kwargs):
+        raise RuntimeError("no model")
+
+    monkeypatch.setattr(birdnet_v3_provider, "analyse", explode)
+    monkeypatch.setattr(perch_provider, "analyse", explode)
+    assert sound_id.analyse("/tmp/clip.wav") == []
 
 
 def test_fallback_can_be_disabled_so_failures_are_loud_while_testing(monkeypatch):
