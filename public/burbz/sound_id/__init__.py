@@ -70,6 +70,10 @@ _FALLBACK_CHAIN = {
 
 _LABELS = {"birdnetv3": "BirdNET", "birdnetv2": "BirdNET", "perch": "Perch"}
 
+# Set once a scan has actually been served, so the announcement below is made
+# from a request that really happened rather than from start-up.
+_announced = False
+
 # Callables injected by server.py so this package never has to import it
 # (which would be circular) and so the tests can run without the backend.
 _birdnet_analyse: Optional[Callable[..., Any]] = None
@@ -168,6 +172,26 @@ def _location_from_request(lat, lon):
     return lat, lon
 
 
+def _announce(provider: str) -> None:
+    """Record, once per process, which engine actually served a scan.
+
+    Which model is *installed* and which model *answers a request* are
+    different questions, and only the second one decides whether the game can
+    be sold — V2.4's weights are NonCommercial. Logged at WARNING so it
+    survives a default production log level, because a line nobody can see is
+    no use as evidence.
+    """
+    global _announced
+    if _announced:
+        return
+    _announced = True
+    logger.warning(
+        "Burbz sound scan served by %s — weights %s for commercial use",
+        provider,
+        "ARE licensed" if is_commercial_safe(provider) else "are NOT licensed",
+    )
+
+
 def _run(provider: str, audio_path: str, allow, lat, lon, week) -> Sequence[dict]:
     if provider == "birdnetv3":
         from . import birdnet_v3_provider
@@ -220,7 +244,9 @@ def analyse(
 
     for position, candidate in enumerate(chain):
         try:
-            return _run(candidate, audio_path, allow, lat, lon, week)
+            results = _run(candidate, audio_path, allow, lat, lon, week)
+            _announce(candidate)
+            return results
         except Exception:
             if not fallback_enabled():
                 raise
