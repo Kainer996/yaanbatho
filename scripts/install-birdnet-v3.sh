@@ -44,6 +44,7 @@ SHA_ACOUSTIC_LABELS="8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef99182
 SHA_GEO_ONNX="2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017"
 SHA_GEO_LABELS="c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784"
 
+SCRIPT_VERSION="2026-07-27.6"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 # $0 is just "bash" when this is piped from curl, so a printed "$0 --rollback"
@@ -193,6 +194,12 @@ fi
 # ----------------------------------------------------------------
 # 3. Python runtime
 # ----------------------------------------------------------------
+# raw.githubusercontent caches per URL for a few minutes, and its edges expire
+# independently, so a box can fetch a stale copy of this script minutes after a
+# fix lands and silently do the old thing. Print the version so which one ran is
+# never in doubt.
+log "install-birdnet-v3.sh $SCRIPT_VERSION"
+
 log "Checking the Python runtime"
 PY="$(command -v python3 || true)"
 [[ -n "$PY" ]] || die "python3 not found"
@@ -317,6 +324,10 @@ else
   if grep -q "BURBZ-BIRDNET-V3-BEGIN\|_burbz_sound_id" "$TARGET" 2>/dev/null; then
     HAS_OLD_BLOCK=1
   fi
+  printf "   \033[2mwiring signatures: marker=%s v1-block=%s bare-call=%s\033[0m\n" \
+    "$(grep -c 'BURBZ-BIRDNET-V3-BEGIN' "$TARGET" 2>/dev/null || echo 0)" \
+    "$(grep -c '_burbz_sound_id' "$TARGET" 2>/dev/null || echo 0)" \
+    "$(grep -c 'sound_id.analyse' "$TARGET" 2>/dev/null || echo 0)"
 
   if grep -q "BURBZ-BIRDNET-V3-BEGIN $PATCH_VERSION" "$TARGET" 2>/dev/null; then
     ok "server.py already carries the current wiring ($PATCH_VERSION) — no code change needed"
