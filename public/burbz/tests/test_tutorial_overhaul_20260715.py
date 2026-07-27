@@ -27,7 +27,7 @@ def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
     assert all(len(step["title"]) <= 42 and len(step["text"]) <= 240 for step in steps)
     copy = " ".join((step["title"] + " " + step["text"]).lower() for step in steps)
     required = [
-        "live map", "likely birds", "walking quest", "sound", "birdnet", "microphone",
+        "live map", "likely birds", "walking quest", "sound", "bird-sound analysis", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
         "sanctuary", "perch league", "academy", "hospital", "training",
         "pantry", "expedition", "stores", "rank", "settings",

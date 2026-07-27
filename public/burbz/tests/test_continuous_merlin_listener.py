@@ -103,7 +103,7 @@ def test_local_frequency_energy_is_labelled_possible_until_birdnet_confirms_spec
 
 def test_audio_upload_and_optional_location_are_disclosed_before_capture():
     html = HTML.read_text(encoding="utf-8")
-    assert "Sound windows are sent to the Burbz server for BirdNET analysis" in html
+    assert "Sound windows are sent to the Burbz server for bird-sound analysis" in html
     assert 'id="merlinLocationAssist"' in html
     assert "Use my location to improve local bird matches" in html
     assert "function soundLocationAssistEnabled" in html
@@ -123,13 +123,27 @@ def test_stop_aborts_active_analysis_and_late_results_cannot_mutate_birdex():
     assert "generation" in html.split("queueSoundWindowForAnalysis({", 1)[1].split("})", 1)[0]
 
 
-def test_success_copy_calls_the_result_a_birdnet_match_not_objective_confirmation():
+def test_success_copy_calls_the_result_an_engine_match_not_objective_confirmation():
     html = HTML.read_text(encoding="utf-8")
     analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("function handleBirdIdentified", 1)[0]
-    assert "BirdNET match:" in analyse
-    assert "BirdNET identified" in analyse
+    # The engine is named by the server so BirdNET and Perch both attribute the
+    # result to a recogniser rather than asserting the bird was objectively there.
+    assert "const engine = soundEngineLabel(result)" in analyse
+    assert "engine + ' match: ' + result.species" in analyse
+    assert "engine + ' identified ' + result.species" in analyse
     assert "Heard ' + result.species" not in analyse
     assert "Merlin heard" not in analyse
+
+
+def test_engine_label_defaults_to_birdnet_so_rollback_needs_no_client_change():
+    html = HTML.read_text(encoding="utf-8")
+    helper = html.split("function soundEngineLabel(result)", 1)[1].split("}", 1)[0]
+    assert "result.provider" in helper
+    assert "SOUND_ENGINE_LABELS.birdnet" in helper
+    assert "birdnet:'BirdNET'" in html and "perch:'Perch'" in html
+    # The client must pass the server's provider through for the label to work.
+    upload = html.split("async function uploadRecording", 1)[1].split("window.__burbzSoundDebug", 1)[0]
+    assert "provider: data.provider" in upload
 
 
 def test_analysis_queue_keeps_only_the_latest_waiting_window():

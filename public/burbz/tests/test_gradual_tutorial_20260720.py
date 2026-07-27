@@ -93,7 +93,7 @@ def test_chapters_cover_every_major_system():
     data = tutorial_data()
     copy = " ".join((s["title"] + " " + s["text"]).lower() for s in data["steps"])
     required = [
-        "live map", "likely birds", "walking quest", "sound", "birdnet", "microphone",
+        "live map", "likely birds", "walking quest", "sound", "bird-sound analysis", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
         "sanctuary", "evil burbz", "academy", "hospital", "training",
         "pantry", "expedition", "stores", "rank", "settings", "forge",

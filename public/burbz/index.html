@@ -2843,7 +2843,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
         </div>
-        <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for BirdNET analysis until you tap Stop. Audio is not stored in your game.
+        <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox"> Use my location to improve local bird matches</label>
         </div>
         <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
@@ -24030,6 +24030,15 @@ function drawWaveform() {
   draw();
 }
 
+// Which recogniser produced a result. The server reports it as `provider`
+// (see sound_id/README.md); BirdNET is assumed when the field is absent so an
+// older backend, or a rollback to BirdNET, needs no client change.
+const SOUND_ENGINE_LABELS = { birdnet:'BirdNET', perch:'Perch' };
+function soundEngineLabel(result) {
+  const key = String((result && result.provider) || '').trim().toLowerCase();
+  return SOUND_ENGINE_LABELS[key] || SOUND_ENGINE_LABELS.birdnet;
+}
+
 async function analyseContinuousSoundWindow(windowData) {
   const blob = windowData && windowData.blob;
   const generation = windowData && windowData.generation;
@@ -24039,15 +24048,16 @@ async function analyseContinuousSoundWindow(windowData) {
   soundAnalysisAbortController = controller;
   setMerlinListenerState('listening', 'Checking sound…');
   try {
-    // BirdNET on the server is the only species oracle. Local frequency energy
+    // The server's recogniser is the only species oracle. Local frequency energy
     // may animate the wand, but it never logs or names a bird by itself.
     const result = await uploadRecording(blob, { signal:controller.signal });
     if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
     if (result && result.species) {
       handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
       const confidence = Math.round((Number(result.confidence) || 0) * 100);
-      setMerlinListenerState('match', 'BirdNET match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
-      showToast('🐦 BirdNET identified ' + result.species + ' — still listening');
+      const engine = soundEngineLabel(result);
+      setMerlinListenerState('match', engine + ' match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
+      showToast('🐦 ' + engine + ' identified ' + result.species + ' — still listening');
       setTimeout(() => {
         if (continuousSoundScanWanted && generation === soundListenerGeneration && soundListenerState === 'match') setMerlinListenerState('listening', 'Listening…');
       }, 5200);
@@ -24159,6 +24169,7 @@ async function uploadRecording(blob, opts = {}) {
       scientificName: data.bird.scientificName,
       confidence: data.bird.confidence,
       catalogMatched: (data.bird.catalogMatched != null ? data.bird.catalogMatched : data.catalogMatched),
+      provider: data.provider || '',
       allDetections: data.allDetections || []
     };
   }
@@ -25763,7 +25774,12 @@ function careForMerlin(action) {
 }
 
 function compactMerlinSpeech(msg) {
-  const text = String(msg || '').replace(/\bBirdNET\b/gi, 'sound scan').replace(/\s+/g, ' ').trim();
+  // Merlin never says a brand name. "Perch" is only stripped where it is the
+  // engine talking — the game's own Perch League must survive untouched.
+  const text = String(msg || '')
+    .replace(/\bBirdNET\b/gi, 'sound scan')
+    .replace(/\bPerch\b(?=\s+(?:match:|identified)\b)/gi, 'sound scan')
+    .replace(/\s+/g, ' ').trim();
   if (text.length <= 80) return text;
   const shortened = text.slice(0, 77).replace(/\s+\S*$/, '').trimEnd();
   return (shortened || text.slice(0, 77)) + '…';
@@ -26287,7 +26303,7 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Capture: taught the first time the Scan screen opens. Always first.
   { chapterId:'scan', chapter:'Capture', title:'Two ways to capture', screen:'scan', target:'.scan-mode-toggle', text:'Capture birds with Camera or Sound. Only a real, recognised bird counts — that is what powers the tablet’s magic.' },
   { chapterId:'scan', chapter:'Capture', title:'Camera', screen:'scan', target:'#scanImageBtn', text:'Snap a photo of the bird, then confirm the match. Every capture is added to your Birdex.' },
-  { chapterId:'scan', chapter:'Capture', title:'Sound', screen:'scan', target:'#scanSoundBtn', text:'Sound listens for bird song with your microphone. Short clips are uploaded for BirdNET analysis only. Location help is optional.' },
+  { chapterId:'scan', chapter:'Capture', title:'Sound', screen:'scan', target:'#scanSoundBtn', text:'Sound listens for bird song with your microphone. Short clips are uploaded for bird-sound analysis only. Location help is optional.' },
   { chapterId:'scan', chapter:'Capture', title:'Likely birds', screen:'map', target:'#mapLikelyBtn', text:'On the Map, Likely Birds hints at what may be nearby. A clue for your hunt — never a promise.' },
 
   // — Collection: taught the first time the Birdex opens.

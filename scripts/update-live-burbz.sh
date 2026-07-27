@@ -78,6 +78,13 @@ FILES=(
   "assets/merlin/merlin-body.webp"
   "assets/merlin/merlin-wing.webp"
   "assets/merlin/merlin-head.webp"
+  # Backend, not referenced by index.html: server.py imports this package to
+  # choose between BirdNET and Perch 2.0. Ship it or a synced box loses the
+  # recogniser switch and falls back to BirdNET on import error.
+  "sound_id/__init__.py"
+  "sound_id/birdnet_provider.py"
+  "sound_id/perch_provider.py"
+  "sound_id/README.md"
   "data/uk-bird-education-50.json"
   "data/regional-bird-education-20260715.json"
   "data/national-bird-completion/manifest.json"
