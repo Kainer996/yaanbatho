@@ -351,3 +351,65 @@ def test_merlin_never_says_a_brand_name_but_perch_league_survives():
     assert "/\\bBirdNET\\b/gi" in compact
     # Bare "Perch" must not be stripped — the game has a Perch League.
     assert "match:|identified" in compact
+
+
+# ------------------------------------------------------- location from upload
+
+def test_location_is_taken_from_the_upload_when_the_call_omits_it(monkeypatch):
+    """Without a location the range filter cannot exclude the wrong continent."""
+    flask = pytest.importorskip("flask")
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+
+    def capture(path, **kwargs):
+        seen.update(kwargs)
+        return []
+
+    monkeypatch.setattr(birdnet_v3_provider, "analyse", capture)
+    app = flask.Flask(__name__)
+    with app.test_request_context("/api/identify/sound", method="POST",
+                                  data={"lat": "51.5", "lon": "-0.13"}):
+        sound_id.analyse("/tmp/clip.wav")
+
+    assert (seen["lat"], seen["lon"]) == (51.5, -0.13)
+
+
+def test_an_explicit_location_is_not_overridden_by_the_upload(monkeypatch):
+    flask = pytest.importorskip("flask")
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+    monkeypatch.setattr(birdnet_v3_provider, "analyse",
+                        lambda path, **kw: seen.update(kw) or [])
+    app = flask.Flask(__name__)
+    with app.test_request_context("/api/identify/sound", method="POST",
+                                  data={"lat": "1.0", "lon": "2.0"}):
+        sound_id.analyse("/tmp/clip.wav", lat=51.5, lon=-0.13)
+
+    assert (seen["lat"], seen["lon"]) == (51.5, -0.13)
+
+
+@pytest.mark.parametrize("posted", [{}, {"lat": "abc", "lon": "xyz"}])
+def test_missing_or_malformed_coordinates_do_not_fail_the_scan(monkeypatch, posted):
+    flask = pytest.importorskip("flask")
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+    monkeypatch.setattr(birdnet_v3_provider, "analyse",
+                        lambda path, **kw: seen.update(kw) or [])
+    app = flask.Flask(__name__)
+    with app.test_request_context("/api/identify/sound", method="POST", data=posted):
+        assert sound_id.analyse("/tmp/clip.wav") == []
+    assert seen["lat"] is None and seen["lon"] is None
+
+
+def test_outside_a_request_the_location_is_simply_absent(monkeypatch):
+    """The self-test and any offline batch run have no request in flight."""
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+    monkeypatch.setattr(birdnet_v3_provider, "analyse",
+                        lambda path, **kw: seen.update(kw) or [])
+    sound_id.analyse("/tmp/clip.wav")
+    assert seen["lat"] is None and seen["lon"] is None
