@@ -137,6 +137,37 @@ def is_commercial_safe(provider: Optional[str] = None) -> bool:
     return resolve_provider(provider or active_provider()) not in NON_COMMERCIAL_PROVIDERS
 
 
+def _location_from_request(lat, lon):
+    """Fill in a missing location from the upload itself.
+
+    The range filter is only as good as the location it is given, and without
+    one an African Thrush is a perfectly good answer for a garden in London.
+    Not every server hands lat/lon down to the recogniser — some read them
+    later, in the response builder — so when the call did not carry them, take
+    them from the form fields the client posts.
+
+    Lives here rather than in the server hook so it ships with the package: a
+    box only has to redeploy ``sound_id`` to get it, with no code surgery.
+    Anything unexpected (no Flask, no request in flight, junk values) leaves
+    the location as it was.
+    """
+    if lat is not None and lon is not None:
+        return lat, lon
+    try:
+        from flask import request
+
+        source = request.values
+        if lat is None:
+            raw = source.get("lat")
+            lat = float(raw) if raw not in (None, "") else None
+        if lon is None:
+            raw = source.get("lon")
+            lon = float(raw) if raw not in (None, "") else None
+    except Exception:
+        pass
+    return lat, lon
+
+
 def _run(provider: str, audio_path: str, allow, lat, lon, week) -> Sequence[dict]:
     if provider == "birdnetv3":
         from . import birdnet_v3_provider
@@ -183,6 +214,7 @@ def analyse(
     while testing, so a broken install is loud rather than quietly served by
     the other model.
     """
+    lat, lon = _location_from_request(lat, lon)
     provider = active_provider()
     chain = (provider, *_FALLBACK_CHAIN.get(provider, ()))
 
