@@ -79,12 +79,19 @@ FILES=(
   "assets/merlin/merlin-wing.webp"
   "assets/merlin/merlin-head.webp"
   # Backend, not referenced by index.html: server.py imports this package to
-  # choose between BirdNET and Perch 2.0. Ship it or a synced box loses the
-  # recogniser switch and falls back to BirdNET on import error.
+  # choose its recogniser. BirdNET V3 (CC BY-SA 4.0) is the default; Perch 2.0
+  # and the legacy non-commercial V2.4 path remain selectable. Ship every file
+  # or a synced box loses the switch and errors on import.
   "sound_id/__init__.py"
+  "sound_id/_audio.py"
+  "sound_id/birdnet_v3_provider.py"
   "sound_id/birdnet_provider.py"
   "sound_id/perch_provider.py"
+  "sound_id/selftest.py"
   "sound_id/README.md"
+  # The self-test identifies this clip and checks it gets Strix aluco back, so
+  # it has to be on the box for `python3 -m sound_id.selftest` to mean anything.
+  "assets/audio/bird-tawny-owl.ogg"
   "data/uk-bird-education-50.json"
   "data/regional-bird-education-20260715.json"
   "data/national-bird-completion/manifest.json"

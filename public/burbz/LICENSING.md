@@ -1,140 +1,156 @@
 # Burbz — third-party licensing review (commercial release)
 
-Research date: 27 July 2026. This is an engineering summary of published licence
-terms, not legal advice. Confirm anything load-bearing with the licensor and,
-for the BirdNET question, with a solicitor before you take money.
+First reviewed 27 July 2026; revised the same day when BirdNET V3 was found to
+be licensed differently from V2.4. This is an engineering summary of published
+licence terms, not legal advice. Confirm anything load-bearing with the
+licensor before you take money.
 
-## 1. The blocker: BirdNET models
+## 1. The blocker, and why it is gone
 
-BirdNET ships under a **split licence**:
+The original finding was correct for the model Burbz was running: **BirdNET
+V2.4's weights are CC BY-NC-SA 4.0 — NonCommercial — so a monetised build
+could not ship on them.** That has not changed.
+
+What changed the answer is that **BirdNET+ V3.0 is licensed CC BY-SA 4.0**, with
+no NonCommercial term:
 
 | Part | Licence | Commercial use |
 |---|---|---|
-| BirdNET-Analyzer source code | MIT | Yes, unrestricted |
-| BirdNET **model weights** (all versions, V1.1 → V2.4, incl. the app model) | CC BY-NC-SA 4.0 | **No** — NonCommercial |
-| Custom classifiers you train on BirdNET embeddings | CC BY-NC-SA 4.0 (inherited) | **No** |
+| BirdNET-Analyzer / V3 source code | MIT | Yes |
+| BirdNET **V1.1 – V2.4** model weights | CC BY-NC-SA 4.0 | **No** — NonCommercial |
+| **BirdNET+ V3.0 model weights** | **CC BY-SA 4.0** | **Yes**, with attribution |
+| **BirdNET Geomodel V3.0.2** weights | **CC BY-SA 4.0** | **Yes**, with attribution |
+| Custom classifiers trained on V2.4 embeddings | CC BY-NC-SA 4.0 (inherited) | **No** |
 
-The models page states it plainly: "All models listed here are licensed under the
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License
-(CC BY-NC-SA 4.0)." The FAQ's carve-out is only that "all educational and research
-purposes are considered non-commercial use" — a monetised game is not that.
+Sources: the V3 repository's [`TERMS_OF_USE.md`](https://github.com/birdnet-team/birdnet-V3.0-dev/blob/main/TERMS_OF_USE.md)
+and the [Zenodo record](https://zenodo.org/records/20703646), which states the
+licence as Creative Commons Attribution Share Alike 4.0 International. The
+geomodel weights carry their own CC BY-SA 4.0 `MODEL_LICENSE.txt`.
 
-Two further consequences people miss:
+**Burbz now runs V3.** See [`sound_id/`](sound_id/) and its
+[README](sound_id/README.md).
 
-- **NC covers more than paid downloads.** CC's NonCommercial means "not primarily
-  intended for or directed toward commercial advantage or monetary compensation".
-  Ads, IAP, a paid tier, a freemium funnel, or a free app that markets a paid
-  product all sit on the wrong side of that line.
-- **SA is a second, separate problem.** ShareAlike bites on *adaptations* of the
-  model. Fine-tuned weights or a classifier head trained on BirdNET embeddings
-  would have to be released under CC BY-NC-SA 4.0 — permanently non-commercial.
+## 2. What you still have to honour
 
-Running the model server-side (as Burbz does) does not avoid this. The NC term
-constrains *use*, not just redistribution.
+CC BY-SA is permissive about commerce and strict about two other things.
 
-## 2. New versions — checked, nothing changes the answer
+**Attribution (BY).** The terms require that use is credited "either through
+citation or acknowledgment (e.g. 'Powered by BirdNET')". This is on
+`audio-credits.html`, along with the Kahl et al. 2021 citation, a link to the
+licence, and a statement that the weights are used unmodified. Do not remove it.
 
-- **BirdNET-Analyzer 2.4.0** is the current release (PyPI, uploaded 10 Nov 2025).
-  Code still MIT.
-- **Model V2.4** (June 2023, 6,000+ species) is still the newest published model.
-- **V2.5** is discussed but unreleased. Maintainer confirms it will add non-bird
-  taxa using iNatSounds data. No licence change has been announced, and adding
-  iNat-derived training data makes a permissive relicence *less* likely.
-- **BirdNET-Analyzer-Sierra** (fork) carries the same CC BY-NC-SA 4.0 terms.
+**ShareAlike (SA).** This bites on *adaptations of the model*, not on its
+output and not on Burbz's own code. Running inference and shipping the
+predictions — what Burbz does — creates no ShareAlike obligation on the game.
+But if you ever **fine-tune the V3 weights, or train a classifier head on V3
+embeddings** (the model exposes a 1,280-dimension embedding, so this is a
+tempting way to specialise it to the Burbz species list), the resulting weights
+must be released under CC BY-SA 4.0. That is a real constraint on a proprietary
+release, and it is the single most likely way to walk back into a licensing
+problem. Plain inference is safe; training is not.
 
-No newer version relaxes the restriction.
+**Prohibited uses.** The V3 terms carve out two absolute prohibitions that
+override the permissive grant: the models may not be used for poaching or
+facilitating illegal wildlife exploitation, nor for military applications
+including surveillance or targeting. Neither is a concern for Burbz, but they
+travel with the weights and would bind a licensee if the game were ever sold.
 
-## 3. Options
+## 3. The one open risk: V3 is a developer preview
 
-### Option A — get written permission from the BirdNET team
-CC licences are non-exclusive; the copyright holders can grant separate commercial
-terms. There is no public commercial-licence programme or price list, but the
-project's showroom features commercial hardware/apps (HaikuBox, BirdWeather, Terra),
-so commercial arrangements clearly exist.
+V3.0 is published as a **developer preview** (currently preview 3.1, June 2026),
+and the project says models, labels and code are expected to change before the
+final release. Two consequences:
 
-Contacts:
-- ccb-birdnet@cornell.edu (K. Lisa Yang Center for Conservation Bioacoustics, Cornell)
-- stefan.kahl@informatik.tu-chemnitz.de (Dr Stefan Kahl, TU Chemnitz — technical contact)
+- **Pin what you ship.** The installer fetches a specific Zenodo record and
+  verifies SHA-256 checksums, so a silent upstream change cannot reach players
+  without someone noticing. Do not switch that to "latest".
+- **Re-read the terms at final release.** The licence is very unlikely to become
+  *more* restrictive, but "we relied on the preview's terms" is a weak position
+  if it does. Check before a paid launch, and keep a dated copy of the terms as
+  they stood when you shipped.
 
-Note the models are a **Cornell + TU Chemnitz** collaboration, so permission may need
-to come from both institutions. Treat this as a multi-week path, not a same-week one.
+Until the final release lands, the position is: commercially usable on the
+published terms, with a preview-status caveat worth a solicitor's ten minutes
+before money changes hands.
 
-### Option B — swap to Perch 2.0 (Apache 2.0) — the unblocking move
-Google's Perch is **Apache 2.0 licensed, including the weights** — commercial use
-permitted with attribution, no ShareAlike, no permission needed.
+## 4. Options considered
 
-- Perch 2.0: ~15,000 classes (~10,000 birds plus frogs, insects, mammals) vs
-  BirdNET's ~6,000 — broader coverage, and SOTA on BirdSet/BEANS benchmarks.
-- EfficientNet-B3 embedding model (~12M params) + ~91M-param classification head.
-- Distributed as a TF2 SavedModel via Kaggle Models
-  (`google/bird-vocalization-classifier`, variation `perch_v2`); load via
-  `perch_hoplite.zoo.model_configs.load_model_by_name('perch_v2')`.
+### Option A — BirdNET V3 (chosen)
+Licence-clean, and independently the better model. Already implemented.
 
-**On the GPU question — it does not need one.** Google's own model card says "This
-version of the model requires TensorFlow 2.20.rc0 and a GPU. A CPU variant will be
-added soon", but that applies to Google's official TF SavedModel path, not to the
-model itself. The backbone is a 12M-parameter EfficientNet-B3, described in the
-Perch 2.0 paper as "deployable on consumer-grade hardware". For CPU serving use the
-`bioacoustics-model-zoo` (MIT) exports instead:
+### Option B — written permission from the BirdNET team for V2.4
+No longer needed. Worth doing only if you specifically want to keep V2.4, which
+there is now no reason to do. Contacts, if it ever matters:
+ccb-birdnet@cornell.edu and stefan.kahl@informatik.tu-chemnitz.de. Note the
+models are a Cornell + TU Chemnitz collaboration, so permission may need to come
+from both.
 
-- `bmz.Perch2ONNX` — ONNX Runtime, no TensorFlow dependency at all. Supports
-  `headless=True` for an embedding-only model that is "much smaller and more
-  efficient" if you train your own head over the Burbz species list.
-- `bmz.Perch2LiteRT` — TFLite. Reported at roughly a 10x CPU inference speedup over
-  the TensorFlow path.
+### Option C — Perch 2.0 (Google, Apache 2.0)
+Still implemented and still selectable with `BURBZ_SOUND_MODEL=perch`. Apache
+2.0 including weights, no ShareAlike at all, so it is the cleanest licence of
+the three and a genuine second source if V3's preview status ever becomes
+awkward. Retained deliberately as the fallback engine.
 
-The zoo notes these "may be well suited for scenarios where installing TensorFlow is
-undesirable" — which describes a Node/Caddy VPS accurately. ONNX Runtime is the
-recommended route: the backend is already Python, and it drops the TF 2.20 pin.
+### Option D — the Claude spectrogram path
+`app/api/identify-sound/route.ts` identifies species from a spectrogram via the
+Anthropic API against the game's own species list. Governed by ordinary API
+terms, no NC problem. Weaker as a general identifier; a viable ensemble partner.
 
-Still benchmark end-to-end latency on the VPS against the current sound-scan UX
-before committing — the risk is response time under concurrent scans, not capability.
+### Option E — release non-commercially
+No longer necessary.
 
-Perch has no geographic/seasonal prior equivalent to BirdNET's location filter, so
-the existing Burbz "seen nearby" biasing becomes more important, not less.
+## 5. Why V3 is also the better model
 
-### Option C — keep the Claude spectrogram path
-`app/api/identify-sound/route.ts` already identifies species from a spectrogram via
-the Anthropic API against the game's own species list. Commercial use is governed by
-ordinary API terms — no NC problem. Weaker as a general-purpose identifier, but it is
-already written, already constrained to the in-game catalogue, and is a viable
-fallback or ensemble partner.
+Not just a licence fix — the reason to want it anyway:
 
-### Option D — release non-commercially
-Free, no ads, no IAP, no paid tier, and BirdNET credited under CC BY-NC-SA. Legal,
-but it forecloses the commercial release.
+| | V2.4 | V3.0 preview 3.1 |
+|---|---|---|
+| Classes | ~6,000 | 11,560 (9,834 birds) |
+| Sample rate | 48 kHz | 32 kHz |
+| Input | fixed 3 s | variable length |
+| Range filter | built-in | Geomodel V3.0.2, 12,012 species |
+| Extras | — | 1,280-d embeddings |
 
-## 4. Recommendation
+Measured on this repo's own CC BY field recordings: the tawny owl is identified
+as *Strix aluco* at 0.95, and a realistic 12-second window with a blackbird
+buried in noise returns *Turdus merula* correctly.
 
-Run B and A in parallel. Start the Perch 2.0 port now so the release is not gated on
-anyone's reply, and email Cornell/TU Chemnitz the same day — if permission arrives,
-BirdNET can come back as an option rather than a dependency.
+Two V3-specific behaviours are handled in the provider and are worth knowing
+about, because both look like a broken model rather than a handling detail:
 
-Until one of those lands, do not ship a monetised build on BirdNET.
+- **The FP16 weights return NaN for every class on near-silent audio.** The
+  model normalises internally, and a quiet window underflows FP16. Burbz's
+  listener rotates 12-second windows continuously, so silent windows are
+  routine. Chunks are peak-normalised and digital silence is skipped.
+- **Zero-padding a short clip corrupts the result.** Padding this repo's 2.2 s
+  blackbird clip out to 3 s drops Common Blackbird from 0.46 to 0.04 and
+  promotes American Robin — a bird from the wrong continent — to the top. V3
+  takes variable-length input, so the provider never pads.
 
-## 5. Work items
+Thresholds are not comparable across versions. V3 scores are already
+sigmoid-activated; upstream's own default is 0.15. Recalibrate against real
+recordings rather than carrying V2.4's number across.
 
-- [ ] Email ccb-birdnet@cornell.edu and stefan.kahl@informatik.tu-chemnitz.de
-      describing Burbz, the deployment (server-side inference), and the intended
-      monetisation. Ask explicitly for written commercial permission.
-- [ ] Audit `server.py` on the VPS: confirm which model files are installed, which
-      version, and whether any custom classifier was trained on BirdNET embeddings
-      (that would inherit CC BY-NC-SA and must be retrained on Perch).
-- [x] Build Perch 2.0 inference behind the existing sound-scan contract, with
-      BirdNET retained and still the default — see [`sound_id/`](sound_id/) and
-      its [README](sound_id/README.md). CPU-only via ONNX Runtime, no TensorFlow.
-- [x] Make player-facing copy engine-neutral so a rollback needs no copy change;
-      the listener now names whichever engine the server reports.
-- [ ] **Wire `sound_id` into `server.py` on the VPS** (two edits, documented in
-      `sound_id/README.md`). Nothing is live until this is done.
-- [ ] Tune `BURBZ_PERCH_MIN_CONFIDENCE` against real recordings, then benchmark
-      accuracy and scan latency under concurrent load against BirdNET.
-- [ ] Add the Apache 2.0 attribution for Perch to the credits page **at the point
-      Perch goes live** — the wording is drafted at the end of
-      `sound_id/README.md`. Do not add it while BirdNET is still the active
-      engine, and do not ship Perch without it.
+## 6. Work items
 
-## 6. Everything else — clean
+- [x] Establish which BirdNET versions may be used commercially.
+- [x] Build V3 inference behind the existing sound-scan contract, CPU-only via
+      ONNX Runtime, with Perch and the legacy V2.4 path still selectable.
+- [x] Make V3 the default, and make sure a mid-request failure can never fall
+      back to the NonCommercial V2.4 weights.
+- [x] Add the CC BY-SA 4.0 attribution to the credits page.
+- [x] Ship a server installer that pins and checksums the weights, wires
+      `server.py` reversibly, and proves a known recording still identifies.
+- [ ] Run `scripts/install-birdnet-v3.sh` on the VPS. **Nothing is live until
+      this is done.**
+- [ ] Tune `BURBZ_BIRDNET_V3_MIN_CONFIDENCE` against real recordings, and
+      benchmark scan latency under concurrent load.
+- [ ] Re-read the V3 terms when it leaves developer preview, before a paid
+      launch.
+- [ ] Confirm no custom classifier was ever trained on V2.4 embeddings; if one
+      was, it inherits CC BY-NC-SA 4.0 and must be retrained on V3.
+
+## 7. Everything else — clean
 
 Reviewed as part of the same pass; no other commercial blockers found.
 
@@ -154,17 +170,16 @@ Reviewed as part of the same pass; no other commercial blockers found.
 
 ## Sources
 
+- https://github.com/birdnet-team/birdnet-V3.0-dev
+- https://github.com/birdnet-team/birdnet-V3.0-dev/blob/main/TERMS_OF_USE.md
+- https://zenodo.org/records/20703646
+- https://github.com/birdnet-team/geomodel
+- https://huggingface.co/tphakala/BirdNET-Geomodel
 - https://github.com/birdnet-team/BirdNET-Analyzer
-- https://birdnet-team.github.io/BirdNET-Analyzer/faq.html
 - https://birdnet-team.github.io/BirdNET-Analyzer/models.html
-- https://pypi.org/project/birdnet-analyzer/
-- https://github.com/birdnet-team/BirdNET-Analyzer/discussions/443
-- https://github.com/birdnet-team/BirdNET-Analyzer-Sierra
-- https://birdnet.cornell.edu/showroom/
+- https://birdnet-team.github.io/BirdNET-Analyzer/faq.html
 - https://birdnet.cornell.edu/legal/
-- https://github.com/google-research/perch
-- https://huggingface.co/cgeorgiaw/Perch
-- https://www.kaggle.com/models/google/bird-vocalization-classifier
+- https://creativecommons.org/licenses/by-sa/4.0/
 - https://creativecommons.org/licenses/by-nc-sa/4.0/
+- https://github.com/google-research/perch
 - https://github.com/kitzeslab/bioacoustics-model-zoo
-- https://arxiv.org/abs/2508.04665

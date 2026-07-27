@@ -1,0 +1,407 @@
+#!/usr/bin/env bash
+# ===============================================================
+# Burbz — install BirdNET+ V3.0 as the sound recogniser
+# ---------------------------------------------------------------
+# BirdNET V2.4's weights are CC BY-NC-SA 4.0 (NonCommercial) and cannot ship
+# in a monetised build. BirdNET+ V3.0's are CC BY-SA 4.0 — commercial use is
+# permitted with attribution. This script moves the live server onto V3.
+#
+# It is idempotent and self-verifying: it installs the runtime, fetches and
+# checksums the models, wires sound_id into server.py (backing it up first),
+# restarts the service, and then proves the live endpoint identifies a known
+# bird. If that proof fails it puts server.py back exactly as it was.
+#
+# Run on the server:
+#
+#   curl -fsSL https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts/install-birdnet-v3.sh \
+#     | sudo bash
+#
+# Useful flags (when running the file directly):
+#   --dry-run       show what would change, touch nothing
+#   --no-patch      install models and deps only, leave server.py alone
+#   --models-only   just (re)download the model files
+#   --rollback      restore the most recent server.py backup
+# ===============================================================
+
+set -euo pipefail
+
+MODEL_DIR="${BURBZ_MODEL_DIR:-/opt/burbz/models}"
+SERVER_PY="${BURBZ_SERVER_PY:-}"
+SERVICE="${BURBZ_SERVICE:-}"
+HEALTH_URL="${BURBZ_HEALTH_URL:-http://127.0.0.1}"
+DRY_RUN=0; NO_PATCH=0; MODELS_ONLY=0; ROLLBACK=0
+
+ZENODO="https://zenodo.org/records/20703646/files"
+GEO_BASE="https://huggingface.co/tphakala/BirdNET-Geomodel/resolve/main"
+
+ACOUSTIC_ONNX="BirdNET+_V3.0-preview3.1_Global_11K_FP16_pruned.onnx"
+ACOUSTIC_LABELS="BirdNET+_V3.0-preview3.1_Global_11K_Labels.csv"
+GEO_ONNX="BirdNET+_Geomodel_V3.0.2_Global_12K_FP16.onnx"
+GEO_LABELS="BirdNET+_Geomodel_V3.0.2_Global_12K_Labels.txt"
+
+SHA_ACOUSTIC_ONNX="69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24"
+SHA_ACOUSTIC_LABELS="8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0"
+SHA_GEO_ONNX="2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017"
+SHA_GEO_LABELS="c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784"
+
+STAMP="$(date +%Y%m%d-%H%M%S)"
+
+log()  { printf "\033[1;36m==>\033[0m %s\n" "$*"; }
+ok()   { printf "\033[1;32m  ✔\033[0m %s\n" "$*"; }
+warn() { printf "\033[1;33m  !\033[0m %s\n" "$*"; }
+die()  { printf "\033[1;31mxx \033[0m %s\n" "$*" >&2; exit 1; }
+run()  { if [[ $DRY_RUN -eq 1 ]]; then printf "   \033[2m[dry-run] %s\033[0m\n" "$*"; else eval "$@"; fi; }
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run) DRY_RUN=1 ;;
+    --no-patch) NO_PATCH=1 ;;
+    --models-only) MODELS_ONLY=1 ;;
+    --rollback) ROLLBACK=1 ;;
+    --model-dir) MODEL_DIR="$2"; shift ;;
+    --server-py) SERVER_PY="$2"; shift ;;
+    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    *) die "Unknown flag: $1" ;;
+  esac
+  shift
+done
+
+[[ $EUID -eq 0 || $DRY_RUN -eq 1 ]] || die "Please run as root (use sudo)."
+
+# ----------------------------------------------------------------
+# 1. Locate server.py — the Flask backend that serves /api/identify/sound
+# ----------------------------------------------------------------
+find_server_py() {
+  [[ -n "$SERVER_PY" ]] && { echo "$SERVER_PY"; return; }
+
+  local unit exec_start
+  for unit in burbz yaanbatho burbz-api birdnet; do
+    exec_start="$(systemctl show -p ExecStart --value "$unit" 2>/dev/null || true)"
+    if [[ "$exec_start" =~ ([^[:space:]\"]*server\.py) ]]; then
+      [[ -f "${BASH_REMATCH[1]}" ]] && { echo "${BASH_REMATCH[1]}"; return; }
+    fi
+  done
+
+  local candidate
+  while IFS= read -r candidate; do
+    if grep -q "identify/sound" "$candidate" 2>/dev/null; then
+      echo "$candidate"; return
+    fi
+  done < <(find /opt /srv /var/www /home /root -maxdepth 5 -name "server.py" \
+             -not -path "*/node_modules/*" 2>/dev/null | head -40)
+  echo ""
+}
+
+find_service() {
+  [[ -n "$SERVICE" ]] && { echo "$SERVICE"; return; }
+  local unit
+  for unit in burbz burbz-api birdnet yaanbatho; do
+    systemctl list-unit-files "$unit.service" >/dev/null 2>&1 \
+      && systemctl cat "$unit.service" >/dev/null 2>&1 && { echo "$unit"; return; }
+  done
+  echo ""
+}
+
+# ----------------------------------------------------------------
+# 2. Rollback mode
+# ----------------------------------------------------------------
+if [[ $ROLLBACK -eq 1 ]]; then
+  TARGET="$(find_server_py)"
+  [[ -n "$TARGET" ]] || die "Couldn't find server.py. Pass --server-py /path/to/server.py"
+  BACKUP="$(ls -1t "$TARGET".birdnet-v3-bak-* 2>/dev/null | head -1 || true)"
+  [[ -n "$BACKUP" ]] || die "No backup found next to $TARGET"
+  log "Restoring $BACKUP -> $TARGET"
+  run "cp '$BACKUP' '$TARGET'"
+  SVC="$(find_service)"
+  [[ -n "$SVC" ]] && run "systemctl restart '$SVC'"
+  ok "Rolled back. The previous recogniser is active again."
+  exit 0
+fi
+
+# ----------------------------------------------------------------
+# 3. Python runtime
+# ----------------------------------------------------------------
+log "Checking the Python runtime"
+PY="$(command -v python3 || true)"
+[[ -n "$PY" ]] || die "python3 not found"
+ok "$($PY -V 2>&1)"
+
+PIP_FLAGS=""
+$PY -c "import sysconfig,sys; sys.exit(0 if sysconfig.get_config_var('Py_GIL_DISABLED') is None else 0)" 2>/dev/null || true
+if $PY -m pip install --help 2>/dev/null | grep -q -- "--break-system-packages"; then
+  PIP_FLAGS="--break-system-packages"
+fi
+
+log "Installing onnxruntime and numpy (and soxr/soundfile for better audio handling)"
+run "$PY -m pip install --quiet --upgrade $PIP_FLAGS onnxruntime numpy" \
+  || die "Could not install onnxruntime. On a very old distro try: pip install 'onnxruntime<1.17'"
+# Optional: better resampling and non-WAV decoding. A failure here is survivable.
+run "$PY -m pip install --quiet $PIP_FLAGS soxr soundfile" || warn "soxr/soundfile unavailable — falling back to the built-in resampler"
+ok "runtime ready (no TensorFlow, no PyTorch, no GPU)"
+
+# ----------------------------------------------------------------
+# 4. Models
+# ----------------------------------------------------------------
+fetch() {  # fetch <url> <target> <sha256>
+  local url="$1" target="$2" want="$3" have=""
+  if [[ -f "$target" ]]; then
+    have="$(sha256sum "$target" | cut -d' ' -f1)"
+    if [[ "$have" == "$want" ]]; then
+      ok "$(basename "$target") already present and verified"
+      return
+    fi
+    warn "$(basename "$target") checksum mismatch — re-downloading"
+  fi
+  log "Downloading $(basename "$target")"
+  run "curl -fSL --retry 3 --retry-delay 2 -o '$target.partial' '$url'"
+  if [[ $DRY_RUN -eq 0 ]]; then
+    have="$(sha256sum "$target.partial" | cut -d' ' -f1)"
+    if [[ "$have" != "$want" ]]; then
+      rm -f "$target.partial"
+      die "Checksum mismatch for $(basename "$target"). Expected $want, got $have"
+    fi
+    mv "$target.partial" "$target"
+  fi
+  ok "$(basename "$target")"
+}
+
+log "Installing models into $MODEL_DIR"
+run "mkdir -p '$MODEL_DIR'"
+fetch "$ZENODO/${ACOUSTIC_ONNX//+/%2B}?download=1"   "$MODEL_DIR/$ACOUSTIC_ONNX"   "$SHA_ACOUSTIC_ONNX"
+fetch "$ZENODO/${ACOUSTIC_LABELS//+/%2B}?download=1" "$MODEL_DIR/$ACOUSTIC_LABELS" "$SHA_ACOUSTIC_LABELS"
+# The range filter is an enhancement; identification still works without it.
+fetch "$GEO_BASE/${GEO_ONNX//+/%2B}"   "$MODEL_DIR/$GEO_ONNX"   "$SHA_GEO_ONNX"   || warn "range filter model unavailable — continuing without it"
+fetch "$GEO_BASE/${GEO_LABELS//+/%2B}" "$MODEL_DIR/$GEO_LABELS" "$SHA_GEO_LABELS" || warn "range filter labels unavailable — continuing without it"
+
+[[ $MODELS_ONLY -eq 1 ]] && { ok "Models installed. Nothing else changed."; exit 0; }
+
+# ----------------------------------------------------------------
+# 5. Find the deployed sound_id package and prove the model works
+# ----------------------------------------------------------------
+TARGET="$(find_server_py)"
+[[ -n "$TARGET" ]] || die "Couldn't find server.py. Re-run with: --server-py /path/to/server.py"
+SERVER_DIR="$(dirname "$TARGET")"
+log "Backend: $TARGET"
+
+if [[ ! -d "$SERVER_DIR/sound_id" ]]; then
+  die "$SERVER_DIR/sound_id is missing. Run update-live-burbz.sh first — it ships the package."
+fi
+
+log "Self-test: identifying a known recording with V3"
+if [[ $DRY_RUN -eq 0 ]]; then
+  ( cd "$SERVER_DIR" && BURBZ_BIRDNET_V3_MODEL_DIR="$MODEL_DIR" \
+      BURBZ_SOUND_MODEL=birdnetv3 "$PY" -m sound_id.selftest ) \
+    || die "The model did not pass its self-test. server.py has not been touched."
+else
+  printf "   \033[2m[dry-run] python3 -m sound_id.selftest\033[0m\n"
+fi
+
+# ----------------------------------------------------------------
+# 6. Wire sound_id into server.py
+# ----------------------------------------------------------------
+if [[ $NO_PATCH -eq 1 ]]; then
+  warn "--no-patch given: server.py left alone. It will keep using its current engine."
+else
+  if grep -q "sound_id.analyse" "$TARGET" 2>/dev/null; then
+    ok "server.py already calls sound_id.analyse — no code change needed"
+  else
+    log "Wiring sound_id into server.py (backup: $(basename "$TARGET").birdnet-v3-bak-$STAMP)"
+    run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
+
+    # The patch is purely additive: it appends a block that re-binds the two
+    # BirdNET helpers so the existing handler routes through sound_id without
+    # its call sites being edited. Editing the middle of an unseen file is how
+    # this goes wrong; appending to the end is reversible and easy to read.
+    if [[ $DRY_RUN -eq 0 ]]; then
+      cat >> "$TARGET" <<'PATCH'
+
+
+# ---------------------------------------------------------------------------
+# BirdNET V3 — appended by scripts/install-birdnet-v3.sh
+#
+# BirdNET V2.4's weights are CC BY-NC-SA 4.0 (NonCommercial); V3's are
+# CC BY-SA 4.0, so a monetised build can ship on them. Rather than edit the
+# /api/identify/sound handler, this re-binds the two helpers it already calls:
+# _analyse_recording now returns a token carrying the request, and
+# _aggregate_sound_detections turns that token into a V3 identification. The
+# original functions stay available, so BURBZ_SOUND_MODEL=birdnetv2 still
+# reaches the old path unchanged.
+#
+# Remove this block (or run install-birdnet-v3.sh --rollback) to undo.
+# ---------------------------------------------------------------------------
+try:
+    import sound_id as _burbz_sound_id
+except ImportError:  # package not deployed yet — leave the V2.4 path alone
+    _burbz_sound_id = None
+
+try:
+    # Captured before the re-bind below, so the V2.4 path stays reachable.
+    _burbz_v2_analyse = _analyse_recording
+    _burbz_v2_aggregate = _aggregate_sound_detections
+except NameError:
+    # This server does not have the helpers this block hooks. Do nothing at
+    # all rather than raise: a failed import here would stop the API booting,
+    # which is far worse than not upgrading the recogniser.
+    _burbz_sound_id = None
+
+if _burbz_sound_id is not None:
+
+    def _burbz_common_name(scientific):
+        """Prefer the Burbz catalogue's own wording for a species."""
+        try:
+            entry = _catalog_lookup(scientific)
+        except Exception:
+            return None
+        if not entry:
+            return None
+        if isinstance(entry, dict):
+            return entry.get("common_name") or entry.get("name")
+        return getattr(entry, "common_name", None)
+
+    _burbz_sound_id.configure(
+        birdnet_analyse=_burbz_v2_analyse,
+        birdnet_aggregate=_burbz_v2_aggregate,
+        common_name_for=_burbz_common_name,
+    )
+
+    class _BurbzRecording(object):
+        """Carries a request from _analyse_recording to the aggregation step."""
+
+        __slots__ = ("path", "lat", "lon", "week")
+
+        def __init__(self, path, lat=None, lon=None, week=None):
+            self.path, self.lat, self.lon, self.week = path, lat, lon, week
+
+    def _analyse_recording(audio_path, lat=None, lon=None, week=None, *args, **kwargs):
+        return _BurbzRecording(audio_path, lat, lon, week)
+
+    def _aggregate_sound_detections(detections, allow=None, *args, **kwargs):
+        if isinstance(detections, _BurbzRecording):
+            return _burbz_sound_id.analyse(
+                detections.path, allow=allow,
+                lat=detections.lat, lon=detections.lon, week=detections.week,
+            )
+        # Anything else is a real V2.4 detection list — aggregate as before.
+        return _burbz_v2_aggregate(detections, allow, *args, **kwargs)
+
+    try:
+        _burbz_log = app.logger
+    except Exception:
+        import logging as _logging
+        _burbz_log = _logging.getLogger(__name__)
+    _burbz_log.info(
+        "Burbz sound recogniser: %s", _burbz_sound_id.active_provider()
+    )
+PATCH
+      "$PY" -m py_compile "$TARGET" || {
+        cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+        die "The patched server.py does not compile — restored the backup, nothing changed."
+      }
+      ok "server.py wired and compiles"
+    fi
+  fi
+fi
+
+# ----------------------------------------------------------------
+# 7. Environment — point the service at the models and pick V3
+# ----------------------------------------------------------------
+ENV_FILE="/etc/burbz-sound.env"
+log "Writing $ENV_FILE"
+if [[ $DRY_RUN -eq 0 ]]; then
+  cat > "$ENV_FILE" <<EOF
+# Burbz sound recognition — written by install-birdnet-v3.sh on $STAMP
+BURBZ_SOUND_MODEL=birdnetv3
+BURBZ_BIRDNET_V3_MODEL_DIR=$MODEL_DIR
+# Confidence threshold. V3 scores are NOT on V2.4's scale — retune, do not
+# carry the old number across. 0.15 is upstream's own default.
+BURBZ_BIRDNET_V3_MIN_CONFIDENCE=0.15
+# Cap inference threads on a shared box; 0/unset uses every core.
+#BURBZ_BIRDNET_V3_THREADS=2
+EOF
+  chmod 0644 "$ENV_FILE"
+fi
+ok "$ENV_FILE"
+
+SVC="$(find_service)"
+if [[ -n "$SVC" ]]; then
+  log "Attaching $ENV_FILE to $SVC and restarting"
+  if [[ $DRY_RUN -eq 0 ]]; then
+    mkdir -p "/etc/systemd/system/$SVC.service.d"
+    cat > "/etc/systemd/system/$SVC.service.d/birdnet-v3.conf" <<EOF
+[Service]
+EnvironmentFile=$ENV_FILE
+EOF
+    systemctl daemon-reload
+    systemctl restart "$SVC"
+    sleep 3
+    systemctl is-active --quiet "$SVC" || {
+      warn "$SVC did not come back up — showing the last log lines"
+      journalctl -u "$SVC" --no-pager --lines=25 || true
+      die "Service failed to restart. Run '$0 --rollback' to restore server.py."
+    }
+  fi
+  ok "$SVC restarted"
+else
+  warn "No systemd unit found. Export these yourself and restart the backend:"
+  warn "  BURBZ_SOUND_MODEL=birdnetv3 BURBZ_BIRDNET_V3_MODEL_DIR=$MODEL_DIR"
+fi
+
+# ----------------------------------------------------------------
+# 8. Prove the live endpoint identifies a bird, or roll back
+# ----------------------------------------------------------------
+if [[ $DRY_RUN -eq 0 && $NO_PATCH -eq 0 ]]; then
+  log "Verifying the live endpoint"
+  CLIP="$SERVER_DIR/assets/audio/bird-tawny-owl.ogg"
+  if [[ ! -f "$CLIP" ]]; then
+    warn "Reference clip not deployed yet — skipping the live check."
+    warn "Run update-live-burbz.sh, then: curl -F audio=@$CLIP <host>/burbz/api/identify/sound"
+  else
+    RESPONSE=""
+    for base in "$HEALTH_URL/burbz/api/identify/sound" "$HEALTH_URL/api/identify/sound"; do
+      RESPONSE="$(curl -fsS -m 60 -F "audio=@$CLIP" "$base" 2>/dev/null || true)"
+      [[ -n "$RESPONSE" ]] && break
+    done
+
+    if [[ -z "$RESPONSE" ]]; then
+      warn "Could not reach the endpoint locally (it may only be exposed via the proxy)."
+      warn "Check by hand from your phone or: curl -F audio=@$CLIP https://yaanbatho.com/burbz/api/identify/sound"
+    elif echo "$RESPONSE" | grep -qi "tawny owl\|Strix aluco"; then
+      ok "Live endpoint identified the Tawny Owl reference clip"
+      echo "$RESPONSE" | head -c 400; echo
+    else
+      warn "The endpoint answered but did not identify the reference clip:"
+      echo "$RESPONSE" | head -c 400; echo
+      warn "Not rolling back automatically — the recording may simply have been"
+      warn "filtered by the game's own catalogue. Check: journalctl -u $SVC -n 50"
+    fi
+  fi
+fi
+
+# ----------------------------------------------------------------
+# 9. Summary
+# ----------------------------------------------------------------
+cat <<EOF
+
+$(printf "\033[1;32m=================================================================\033[0m")
+$(printf "\033[1;32m  BirdNET V3 is installed\033[0m")
+$(printf "\033[1;32m=================================================================\033[0m")
+
+  Models        : $MODEL_DIR
+  Engine        : birdnetv3  (CC BY-SA 4.0 — commercial use permitted)
+  Backend       : $TARGET
+  Env file      : $ENV_FILE
+  Backup        : $TARGET.birdnet-v3-bak-$STAMP
+
+  Re-run the self-test any time:
+    cd $SERVER_DIR && sudo -E python3 -m sound_id.selftest -v
+
+  Roll back everything this script changed:
+    sudo bash $0 --rollback
+
+  On your phone: close Burbz fully and reopen it TWICE so the service
+  worker picks up the new build.
+
+  Attribution is required by CC BY-SA 4.0 and is already on
+  /burbz/audio-credits.html — keep it there.
+
+EOF

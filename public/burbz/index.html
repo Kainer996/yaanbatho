@@ -24033,7 +24033,9 @@ function drawWaveform() {
 // Which recogniser produced a result. The server reports it as `provider`
 // (see sound_id/README.md); BirdNET is assumed when the field is absent so an
 // older backend, or a rollback to BirdNET, needs no client change.
-const SOUND_ENGINE_LABELS = { birdnet:'BirdNET', perch:'Perch' };
+// Both BirdNET generations read as plain "BirdNET" to a player — which version
+// is serving is an operational detail, carried by `provider` for the logs.
+const SOUND_ENGINE_LABELS = { birdnetv3:'BirdNET', birdnetv2:'BirdNET', birdnet:'BirdNET', perch:'Perch' };
 function soundEngineLabel(result) {
   const key = String((result && result.provider) || '').trim().toLowerCase();
   return SOUND_ENGINE_LABELS[key] || SOUND_ENGINE_LABELS.birdnet;
