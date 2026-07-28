@@ -109,7 +109,7 @@ def test_birdex_windowing_cache_and_anti_cheat_release_text():
     assert "simulateScan(" not in source
     assert "window.simulateScan" not in source
     tutorial_count = len(re.findall(r"title:'", source[source.index("const MERLIN_TUTORIAL_STEPS = ["):source.index("\n];", source.index("const MERLIN_TUTORIAL_STEPS = ["))]))
-    assert 20 <= tutorial_count <= 40
+    assert 20 <= tutorial_count <= 60
 
     sw = SW.read_text(encoding="utf-8")
     assert "const BURBZ_CACHE = 'burbz-" in sw

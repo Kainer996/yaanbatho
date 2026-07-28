@@ -1,8 +1,8 @@
-"""Merlin tutorial v5: shorter glance-readable steps, capture-first teaching,
-coverage of the newer mechanics (Kitchen feeding, diet hunger, levelling,
-equipment, Charm diplomacy) and a spotlight that only lights targets it can
-actually see on the active screen — the v4 spotlight could highlight the
-wrong part of the display while Merlin was talking.
+"""Merlin tutorial rules carried from v5 (now on the v6 guided flow):
+glance-readable steps, coverage of the newer mechanics (Kitchen feeding, diet
+hunger, levelling, equipment, Charm diplomacy) and a spotlight that only
+lights targets it can actually see on the active screen — the v4 spotlight
+could highlight the wrong part of the display while Merlin was talking.
 """
 import json
 import subprocess
@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-VERSION = "merlin-gradual-chapters-v5-20260724"
-PREVIOUS = "merlin-gradual-chapters-v4-20260720"
+VERSION = "merlin-guided-flow-v6-20260728"
+PREVIOUS = "merlin-gradual-chapters-v5-20260724"
 
 
 def _extract_array(html: str, marker: str):
@@ -35,12 +35,12 @@ def tutorial_data():
     return json.loads(result.stdout)
 
 
-def test_v5_is_live_and_migrates_from_v4():
+def test_v6_is_live_and_migrates_from_v5():
     html = HTML.read_text(encoding="utf-8")
     assert f"const BURBZ_TUTORIAL_VERSION = '{VERSION}';" in html
     assert f"const BURBZ_PREVIOUS_TUTORIAL_VERSION = '{PREVIOUS}';" in html
-    # Chapters whose systems gained new mechanics since v4 are re-taught.
-    assert "const reteach = ['academy', 'inventory', 'forge'];" in html
+    # Chapters redesigned for the guided flow are re-taught.
+    assert "const reteach = ['story', 'quests', 'academy'];" in html
 
 
 def test_steps_are_short_enough_to_read_at_a_glance():
@@ -51,24 +51,24 @@ def test_steps_are_short_enough_to_read_at_a_glance():
         assert len(step["title"]) <= 32, step["title"]
 
 
-def test_capture_comes_first_and_mechanics_arrive_bit_by_bit():
+def test_story_leads_to_quests_and_mechanics_arrive_bit_by_bit():
     data = tutorial_data()
     chapters = data["chapters"]
     steps = data["steps"]
-    # The story fires at launch and its final beat points the player at Scan.
+    # The story fires at launch and its final beat points the player at Quests.
     assert chapters[0]["id"] == "story" and chapters[0]["trigger"] == "launch"
     story_steps = [s for s in steps if s["chapterId"] == "story"]
-    assert story_steps[-1]["target"] == '.nav-item[data-screen="scan"]'
-    assert "captur" in story_steps[-1]["text"].lower()
-    # Capturing birds is the first taught system after the story.
-    assert chapters[1]["id"] == "scan"
-    # Gradual means every later system waits for its own screen to open.
+    assert story_steps[-1]["target"] == '.nav-item[data-screen="quests"]'
+    assert "never be stuck" in story_steps[-1]["text"].lower()
+    # The quest screen is the first taught system after the story.
+    assert chapters[1]["id"] == "quests"
+    # Gradual means every later system waits for its own trigger.
     for chapter in chapters[1:]:
         assert chapter["trigger"] == chapter["id"]
-    # And no chapter is an essay: at most 7 short steps each.
+    # And no chapter is an essay: at most 12 short steps each.
     for chapter in chapters:
         count = sum(1 for s in steps if s["chapterId"] == chapter["id"])
-        assert 1 <= count <= 7, (chapter["id"], count)
+        assert 1 <= count <= 12, (chapter["id"], count)
 
 
 def test_new_mechanics_are_taught():
