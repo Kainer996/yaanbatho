@@ -22538,55 +22538,93 @@ window.__burbzSoundDiscoveryDebug = {
 };
 
 function handleBirdCandidates(primary, detections = [], opts = {}) {
-  const candidates = [];
-  if (primary && primary.species) candidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
+  // A single recording window can hold more than one calling bird. Stand in a
+  // rookery of rooks and jackdaws and the recogniser hears both — Merlin shows
+  // both as "best suggestions". Burbz used to keep only the single loudest
+  // candidate per window, so a flock of two corvids logged whichever was louder
+  // (the jackdaws) and never the other (the rooks), window after window.
+  // During a continuous listening session we now log every catalogue bird the
+  // recogniser is confident about in the window, not just the winner. A one-off
+  // tap-scan still resolves to a single result card, as its UI expects.
+  const SOUND_SESSION_SECONDARY_MIN_CONF = 0.25; // extra birds must clear this to log
+  const SOUND_SESSION_MAX_PER_WINDOW = 4;        // guard against a noisy window flooding the log
+
+  const rawCandidates = [];
+  if (primary && primary.species) rawCandidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
   (detections || []).forEach(d => {
     const name = d.name || d.commonName || d.species;
-    if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
+    if (name) rawCandidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
+  });
+  // The winner also appears in allDetections, and a species can be reported
+  // under two names; collapse to one entry per species, keeping the best score.
+  const candidates = [];
+  const candidateByKey = new Map();
+  rawCandidates.forEach(entry => {
+    const key = speciesKey(canonicalSpeciesName(entry.species || entry.commonName));
+    if (!key) return;
+    const existing = candidateByKey.get(key);
+    if (existing) { if ((Number(entry.confidence) || 0) > (Number(existing.confidence) || 0)) existing.confidence = entry.confidence; return; }
+    candidateByKey.set(key, entry);
+    candidates.push(entry);
   });
   const top = candidates[0];
+  if (!top) return;
   // The shipped game catalogue is the authority on what can unlock. The
   // server's catalogMatched flag only says whether the server's own species
   // list matched, and that list can lag behind the game catalogue (Buzzard,
   // then Mallard, were wrongly rejected this way). A recognised bird is only
   // "not in the catalogue" when the game catalogue itself has no profile for
   // it under any name, alias or scientific name.
-  const inGameCatalogue = !!(top && (findSpeciesProfile(top.species) || findSpeciesProfile(top.commonName) || findSpeciesProfile(top.scientificName)));
-  if (top && opts.catalogMatched === false && !inGameCatalogue) {
+  const birdInCatalogue = bird => !!(bird && (findSpeciesProfile(bird.species) || findSpeciesProfile(bird.commonName) || findSpeciesProfile(bird.scientificName)));
+  const inGameCatalogue = birdInCatalogue(top);
+  if (opts.catalogMatched === false && !inGameCatalogue) {
     showCatalogUnmatchedRecognition(top);
     return;
   }
+
+  // In a listening session, surface the winner plus every other catalogue bird
+  // the recogniser was confident about in this same window. Otherwise, just the
+  // winner — a tap-scan is a deliberate one-shot with a single result card.
+  const soundSession = opts.source === 'sound' && continuousSoundScanWanted;
+  const surfaced = soundSession
+    ? candidates.filter(bird => bird === top || (birdInCatalogue(bird) && (Number(bird.confidence) || 0) >= SOUND_SESSION_SECONDARY_MIN_CONF)).slice(0, SOUND_SESSION_MAX_PER_WINDOW)
+    : [top];
+
   const newDiscoveries = [];
-  // Only the backend's confident winner is an automatic Birdex discovery.
-  if (top && rememberDiscoveredBird(top)) newDiscoveries.push(top);
-  if (top) fetchBirdArt(top.species);
-  if (top) {
-    const isNewDiscovery = newDiscoveries.some(b => speciesKey(canonicalSpeciesName(b.species || b.commonName)) === speciesKey(canonicalSpeciesName(top.species || top.commonName)));
-    if (opts.source === 'sound' && continuousSoundScanWanted) {
-      recordSoundSessionDiscovery(top, isNewDiscovery);
+  surfaced.forEach(bird => {
+    const isNewDiscovery = rememberDiscoveredBird(bird);
+    if (isNewDiscovery) newDiscoveries.push(bird);
+    fetchBirdArt(bird.species);
+    if (soundSession) {
+      recordSoundSessionDiscovery(bird, isNewDiscovery);
     } else {
       const resultEl = $('scanResult');
       resultEl.classList.remove('sound-session');
       resultEl.classList.add('show');
-      $('scanResultName').textContent = top.commonName;
-      $('scanResultName').style.color = RARITY_COLORS[top.rarity];
-      $('scanResultSci').textContent = top.scientificName || top.species;
-      $('scanResultConf').textContent = `${Math.round((top.confidence || 0) * 100)}% confidence | ${top.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
+      $('scanResultName').textContent = bird.commonName;
+      $('scanResultName').style.color = RARITY_COLORS[bird.rarity];
+      $('scanResultSci').textContent = bird.scientificName || bird.species;
+      $('scanResultConf').textContent = `${Math.round((bird.confidence || 0) * 100)}% confidence | ${bird.rarity.toUpperCase()} | ${isNewDiscovery ? '1' : 'Known'} discovery`;
     }
-    showScanEncounterCard(top, isNewDiscovery);
-  }
-  if (top) { try { questRegisterBirdEncounter(top); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); } }
+    showScanEncounterCard(bird, isNewDiscovery);
+    try { questRegisterBirdEncounter(bird); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
+  });
+
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
     if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
-  } else if (top) {
-    const existing = companionForSpecies(top.species);
-    if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.'); }
   }
-  if (top) checkBadges();
+  // Birds heard again (already discovered): level a travelling companion, or
+  // offer recruitment outside a listening session.
+  surfaced.filter(bird => !newDiscoveries.includes(bird)).forEach(bird => {
+    const existing = companionForSpecies(bird.species);
+    if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(bird.commonName + ' spotted again! Companion +15 XP'); }
+    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Barracks.'); }
+  });
+
+  checkBadges();
 }
 
 function showCatalogUnmatchedRecognition(bird) {
