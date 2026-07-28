@@ -2039,7 +2039,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-tutorial-spotlight { position:fixed; border-radius:16px; border:2px solid rgba(240,199,103,.9); box-shadow:0 0 0 200vmax rgba(0,0,0,.8), 0 0 24px rgba(240,199,103,.5), inset 0 0 18px rgba(240,199,103,.22); transition:top .4s ease, left .4s ease, width .4s ease, height .4s ease; pointer-events:none; animation:merlinSpotPulse 1.6s ease-in-out infinite; }
 @keyframes merlinSpotPulse { 0%,100%{ border-color:rgba(240,199,103,.95);} 50%{ border-color:rgba(214,168,79,.45);} }
 .merlin-tutorial-spotlight.none { border-color:transparent; animation:none; }
-.merlin-tutorial-stage { position:absolute; left:0; right:0; bottom:calc(var(--nav-height) + 46px + var(--safe-bottom)); padding:0 14px; pointer-events:auto; transition:top .24s ease,bottom .24s ease; }
+.merlin-tutorial-stage { position:absolute; z-index:4; left:0; right:0; bottom:calc(var(--nav-height) + 46px + var(--safe-bottom)); padding:0 14px; pointer-events:auto; transition:top .24s ease,bottom .24s ease; }
 .merlin-tutorial-stage.is-top { top:calc(74px + var(--safe-top)); bottom:auto; }
 .merlin-tutorial-merlin { position:absolute; left:12px; bottom:0; width:82px; height:82px; object-fit:cover; border-radius:18px; border:2px solid var(--accent); box-shadow:0 10px 26px rgba(0,0,0,.65), 0 0 18px rgba(214,168,79,.4); animation:merlinBob 3.2s ease-in-out infinite; }
 @keyframes merlinBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
@@ -2067,14 +2067,25 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-tutorial-overlay.interactive .merlin-tutorial-shield { display:block; }
 .merlin-tutorial-overlay.free .merlin-tutorial-shield { display:none; }
 /* Lifted above the dim so the real control is bright, legible and tappable. */
-.tutorial-lift { z-index:1520 !important; }
+/* Nothing is lifted out of the dim. An earlier build raised the control's
+   container above the overlay, which put Merlin's own card on top of his
+   speech bubble and left every other button in that container tappable.
+   Instead the dim covers the whole screen — Merlin's card included — the
+   spotlight cuts one bright hole at the control he is pointing at, and the
+   four shields block taps everywhere else. The bubble lives inside the
+   overlay, so his words always read over the top. */
 .merlin-tutorial-do { display:none; margin-top:9px; align-items:center; gap:8px; padding:9px 11px; border-radius:12px; border:2px solid rgba(143,111,42,.5); background:linear-gradient(135deg,rgba(240,199,103,.28),rgba(214,168,79,.14)); color:#3b2f12; font:900 12px/1.25 'Rajdhani',sans-serif; letter-spacing:.05em; text-transform:uppercase; animation:tutorialDoPulse 1.5s ease-in-out infinite; }
 .merlin-tutorial-overlay.interactive .merlin-tutorial-do { display:flex; }
 .merlin-tutorial-do .mtd-hand { font-size:17px; animation:tutorialArrowBob 1s ease-in-out infinite; }
 @keyframes tutorialDoPulse { 0%,100% { border-color:rgba(143,111,42,.5); } 50% { border-color:rgba(240,199,103,.95); } }
 .merlin-tutorial-overlay.interactive .merlin-tutorial-actions { grid-template-columns:auto 1fr auto; }
 /* Free mode: Merlin steps aside and leaves a task chip pinned to the top. */
-.merlin-tutorial-overlay.free .merlin-tutorial-stage, .merlin-tutorial-overlay.free .merlin-tutorial-footer { display:none; }
+.merlin-tutorial-overlay.free .merlin-tutorial-stage { display:none; }
+/* The footer stays in free mode: it is the only always-tappable way out
+   while the bubble (Back/Next) is hidden. It is pointer-events:none apart
+   from the Skip button itself, so it cannot swallow the player's taps. */
+.merlin-tutorial-task-skip { flex:none; pointer-events:auto; border:1px solid rgba(240,199,103,.45); background:rgba(240,199,103,.12); color:var(--accent); border-radius:9px; padding:7px 10px; font:800 10px/1 'Rajdhani',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.merlin-tutorial-task-skip[hidden] { display:none; }
 .merlin-tutorial-task { display:none; position:fixed; top:calc(var(--safe-top) + 74px); left:50%; transform:translateX(-50%); width:min(340px,calc(100vw - 24px)); align-items:center; gap:10px; padding:10px 12px; border-radius:14px; border:2px solid rgba(240,199,103,.6); background:linear-gradient(160deg,rgba(28,24,16,.97),rgba(8,10,9,.97)); box-shadow:0 14px 34px rgba(0,0,0,.6); pointer-events:auto; z-index:1530; }
 .merlin-tutorial-overlay.free .merlin-tutorial-task { display:flex; }
 .merlin-tutorial-task img { width:38px; height:38px; border-radius:10px; object-fit:cover; border:1px solid var(--accent); flex:none; }
@@ -3322,6 +3333,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="merlin-tutorial-task-kicker">Your turn</div>
         <div class="merlin-tutorial-task-text" id="merlinTutorialTaskText"></div>
       </div>
+      <button class="merlin-tutorial-task-skip" id="merlinTutorialTaskSkip" type="button" hidden>Skip</button>
     </div>
     <div class="merlin-tutorial-stage" id="merlinTutorialStage">
       <img class="merlin-tutorial-merlin" src="assets/merlin-tutorial.png" alt="Merlin the wizard falcon">
@@ -11290,7 +11302,10 @@ function claimBirdExpedition(expeditionId) {
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
   playQuestClaimCelebration({ badge: 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
-  maybeOpenQuestKnowledgeQuiz(advanced, coins);
+  // Merlin's tutorial errand is the one claim followed by a scripted chapter:
+  // a quiz modal here would open 650ms before the dim and end up buried
+  // under it with no way to close it.
+  if (q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);
   renderPetCompanion(); renderBirdExpeditions(); renderInventory(); updateHeader();
   // Guided flow: Merlin lands from his first flight with a crafting tease,
   // then points the player at the Academy.
@@ -26453,7 +26468,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'care-lesson-fix-v150-20260728';
+const BURBZ_BUILD = 'tutorial-polish-v151-20260728';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -26490,16 +26505,16 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'This app is my magic tablet, hurled across the multiverse into your hands. Only you can unlock the darkness. Real birdwatching restores Burbz!' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'I am Merlin, your friend', screen:'map', target:null, text:'I am Merlin, wizard falcon of the kingdom \u2014 and from today, your new friend. But even a wizard needs feeding and looking after to be at his best.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Come and see to me', screen:'map', target:'#petSprite', text:'Do not just take my word for it. Tap me on my branch, up in the top-right corner, and my care menu will open.',
-    action:{ event:'merlin-care-opened', hint:'Tap Merlin on his branch \u2197', lift:'#merlinPerchAssembly' } },
+    action:{ event:'merlin-care-opened', hint:'Tap Merlin on his branch \u2197' } },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Food, cheer and energy', screen:'map', target:'.merlin-care-status', text:'Here I am! Food, happiness and energy. Let food run low and I go hungry, my spells wobble, and my errands take me twice as long.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'A falcon\u2019s proper meal', screen:'map', target:'#merlinDietGuidance', text:'As a falcon my primary meal is whole small-bird prey \u2014 there are rations in your larder. Insects are a secondary meal: not ideal, but they do.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Feed me!', screen:'map', target:'#merlinFeedBtn', text:'Go on then \u2014 tap Feed and serve me a small-bird prey ration. I am famished.',
-    action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed', lift:'#merlinCareMenu' } },
+    action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed' } },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Wonderful! Every bird\u2019s diet must be accurate to get the best from it \u2014 unlock the Kitchen later for the rest of the feeding mechanics.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Capture real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Now the real magic: find real birds out in your world. Capture them by camera or by sound, and every one lands in your Birdex.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'11,000 birds, one legend', screen:'map', target:null, text:'Your Earth holds about 11,000 known bird species. Find one my tablet does not know and you claim an ABSOLUTELY EPIC prize.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too \u2014 you\u2019ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
-    action:{ event:'tab:quests', hint:'Tap the Quests tab', lift:'.bottom-nav' } },
+    action:{ event:'tab:quests', hint:'Tap the Quests tab' } },
 
   // — Quests: two beats, then the player actually sends Merlin flying.
   { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'Stuck? Always look here. Player Quests guide you through the game step by step \u2014 follow them and you will never wonder what to do next.' },
@@ -26511,7 +26526,7 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Merlin returns: one beat, then the player walks to the Academy.
   { chapterId:'errand', chapter:'Merlin Returns', title:'Back with a prize!', screen:'quests', target:null, text:'Phew, what a flight! I brought you something \u2014 keep it safe. It will come in handy later, when you start crafting gear at the Forge.' },
   { chapterId:'errand', chapter:'Merlin Returns', title:'To the Academy!', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Now, a kingdom needs buildings. Tap the Academy tab \u2014 we have a roost to raise, and I am paying for it.',
-    action:{ event:'tab:academy', hint:'Tap the Academy tab', lift:'.bottom-nav' } },
+    action:{ event:'tab:academy', hint:'Tap the Academy tab' } },
 
   // — Academy: two beats, then the player raises the building themselves.
   { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'The heart of your kingdom! Every building in this tree unlocks a new way to house, feed, heal and train your flock.' },
@@ -26525,7 +26540,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'academy_tour', chapter:'Academy', title:'Barracks and Kitchen', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks recruits captured birds into your flock. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that wins Parleys and diplomacy quests.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Out to the world', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Your Player Quests will introduce every other building when you need it. One last thing to show you \u2014 tap the Map.',
-    action:{ event:'tab:map', hint:'Tap the Map tab', lift:'.bottom-nav' } },
+    action:{ event:'tab:map', hint:'Tap the Map tab' } },
 
   // — The real world: the finale, then the game is theirs.
   { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Likely Birds hints at what may be near \u2014 a clue for your hunt, never a promise.' },
@@ -26706,7 +26721,8 @@ function merlinTutClearAction() {
   const overlay = $('merlinTutorialOverlay');
   if (overlay) overlay.classList.remove('interactive', 'free');
   $('merlinTutorialSpotlight')?.classList.remove('soft');
-  document.querySelectorAll('.tutorial-lift').forEach(el => el.classList.remove('tutorial-lift'));
+  const taskSkip = $('merlinTutorialTaskSkip');
+  if (taskSkip) taskSkip.hidden = true;
   ['merlinTutorialShieldTop','merlinTutorialShieldBottom','merlinTutorialShieldLeft','merlinTutorialShieldRight']
     .forEach(id => { const el = $(id); if (el) el.style.display = ''; });
 }
@@ -26717,9 +26733,13 @@ function merlinTutActionIsAvailable(action) {
   try {
     switch (action.event) {
       case 'merlin-care-opened':
-      case 'merlin-fed':
         // His branch is empty while he is away on a quest.
         return !merlinIsAway();
+      case 'merlin-fed':
+        // One ration clamps his hunger to 0 and the diet core then refuses the
+        // next meal, so a re-entered feed step (Back, or a migrated save) could
+        // never be satisfied — read the lesson instead of waiting for nothing.
+        return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) > 0;
       case 'roost-built':
         return !isAcademyBuildingBuilt('dorm');
       case 'expedition-sent':
@@ -26744,9 +26764,9 @@ function merlinTutArmAction(step) {
   if (free) $('merlinTutorialSpotlight')?.classList.add('soft');
   // Interactive means the app is live again — never inert while waiting.
   setMerlinTutorialBackgroundInert(false);
-  (action.lift ? [].concat(action.lift) : []).forEach(selector => {
-    document.querySelector(selector)?.classList.add('tutorial-lift');
-  });
+  // Nothing is lifted: the dim covers everything, the spotlight hole leaves the
+  // one control bright, and the shields make it the only tappable thing on
+  // screen — so Play and Rest cannot be pressed when Merlin asks for Feed.
   const doText = $('merlinTutorialDoText');
   if (doText) doText.textContent = action.hint || 'Your turn!';
   const taskText = $('merlinTutorialTaskText');
@@ -26757,9 +26777,11 @@ function merlinTutArmAction(step) {
   merlinTutActionRescueTimer = setTimeout(() => {
     if (!merlinTutActive || merlinTutStep !== armedAt || !merlinTutAwaitingAction) return;
     const button = $('merlinTutorialNext');
-    if (!button) return;
-    button.style.display = '';
-    button.textContent = 'Skip step';
+    if (button) { button.style.display = ''; button.textContent = 'Skip step'; }
+    // Free mode hides the whole bubble, so its skip lives on the task chip —
+    // un-hiding a button inside a display:none stage would rescue nobody.
+    const taskButton = $('merlinTutorialTaskSkip');
+    if (taskButton) taskButton.hidden = false;
   }, Math.max(4000, Number(action.rescueMs) || 16000));
 }
 
@@ -27049,7 +27071,10 @@ function endMerlinTutorial(completed) {
   // A finished OR skipped chapter counts as seen — Merlin never nags twice.
   markMerlinChaptersSeen(merlinTutMode === 'full' ? MERLIN_TUTORIAL_CHAPTERS.map(c => c.id) : [merlinTutMode]);
   saveMerlinTutorialState(completed ? 'completed' : 'skipped');
-  if (currentScreen !== merlinTutOriginScreen && (merlinTutMode === 'full' || merlinTutMode === 'story')) switchScreen(merlinTutOriginScreen);
+  // Only the Settings replay walks itself back: in chapter mode a screen
+  // change at the end is the player obeying "tap Quests", and undoing it
+  // would punish them for doing exactly what Merlin asked.
+  if (currentScreen !== merlinTutOriginScreen && merlinTutMode === 'full') switchScreen(merlinTutOriginScreen);
   let gifted = false;
   try { gifted = localStorage.getItem(BURBZ_TUTORIAL_GIFT_KEY) === '1'; } catch(e) {}
   if (completed && allMerlinChaptersSeen() && !gifted) {
@@ -27060,7 +27085,7 @@ function endMerlinTutorial(completed) {
     updateHeader();
     showToast("\u{1F381} Merlin's gift for finishing the apprenticeship: +50 \u{1FA99} coins and +25 \u{1FAB5} branches!");
   } else if (completed && merlinTutMode === 'story') {
-    showToast('\u{1F9ED} Merlin waits. Tap Quests — a quest is ready for you!');
+    if (currentScreen !== 'quests') showToast('\u{1F9ED} Merlin waits. Tap Quests — a quest is ready for you!');
   } else if (completed && merlinTutMode === 'explore') {
     showToast('Merlin bows. "The Kingdom of Burbz flies with you now."');
   }
@@ -27114,6 +27139,7 @@ function maybeStartMerlinChapterForScreen(screenName) {
 $('merlinTutorialBack')?.addEventListener('click', merlinTutBack);
 $('merlinTutorialNext')?.addEventListener('click', merlinTutAdvance);
 $('merlinTutorialSkip')?.addEventListener('click', () => endMerlinTutorial(false));
+$('merlinTutorialTaskSkip')?.addEventListener('click', () => { merlinTutClearAction(); merlinTutAdvance(); });
 window.addEventListener('keydown', event => {
   if (!merlinTutActive) return;
   if (event.key === 'Tab') {
