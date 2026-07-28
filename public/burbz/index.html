@@ -2117,6 +2117,7 @@ svg.academy-room-bg { display:block; filter:none; }
   text-align: center; font-family: 'Rajdhani', sans-serif; font-weight: 700;
   color: var(--accent); cursor: pointer;
 }
+.settings-build { text-align: center; color: var(--text3); font-size: 10px; letter-spacing: .6px; padding: 10px 0 2px; }
 
 /* ========== BIRD INFO PANEL ========== */
 .bird-info-sheet { max-height: 86vh; overflow-y: auto; }
@@ -3243,6 +3244,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
       <div class="settings-danger" id="resetDataBtn">RESET ALL DATA</div>
+      <div class="settings-build" id="settingsBuildLine"></div>
     </div>
   </div>
 
@@ -26396,6 +26398,10 @@ function maybeShowIntroCutscene() {
 // v5 rules kept: every line stays short enough to read at a glance, and the
 // spotlight only ever lights a target it can actually see on the active screen.
 // ============================================================================
+// Human-readable build tag, shown at the bottom of Settings so a player (or
+// a developer on the phone) can always tell WHICH deployed build is running.
+// Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
+const BURBZ_BUILD = 'sw-self-update-v148-20260728';
 const BURBZ_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v5-20260724';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -27106,6 +27112,8 @@ function init() {
   queueActionBadgeUpdate();
   setInterval(queueActionBadgeUpdate, 30000);
   renderPetCompanion();
+  const buildLine = $('settingsBuildLine');
+  if (buildLine) buildLine.textContent = 'Build ' + BURBZ_BUILD;
   maybeShowIntroCutscene();
   if (typeof updateMerlinFlowPointer === 'function') setTimeout(updateMerlinFlowPointer, 900);
   resumeSideQuestIfAny();
@@ -27144,9 +27152,29 @@ function init() {
 }
 
 // Register Play/PWA service worker when served over HTTPS or localhost.
+// Registration also keeps the game CURRENT: a mobile tab or installed PWA can
+// sit in the background for hours without a real navigation, so it would keep
+// showing whatever build it loaded last. We re-check for a new service worker
+// whenever the app is opened or brought back to the foreground, and when an
+// UPDATED worker takes over (skipWaiting + clients.claim in sw.js) we reload
+// once so the player lands on the new build immediately. Game progress is safe
+// across that reload — every action durably saves to localStorage.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  const hadControllerAtLoad = !!navigator.serviceWorker.controller;
+  let swReloadedForUpdate = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // A first-ever install also claims the page — never reload for that; only
+    // when an updated worker replaces the one that served this page.
+    if (!hadControllerAtLoad || swReloadedForUpdate) return;
+    swReloadedForUpdate = true;
+    window.location.reload();
+  });
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+      const checkForNewBuild = () => { try { reg.update().catch(() => {}); } catch (e) {} };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForNewBuild(); });
+      checkForNewBuild();
+    }).catch(err => {
       console.warn('Burbz service worker registration failed:', err);
     });
   });
