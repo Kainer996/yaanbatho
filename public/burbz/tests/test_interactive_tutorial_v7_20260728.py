@@ -198,9 +198,48 @@ def test_an_armed_step_can_never_trap_the_player():
     assert html.count("merlinTutClearAction()") >= 5
 
 
-def test_a_stray_tap_cannot_close_the_menu_merlin_asked_for():
+def test_the_tutorial_owns_the_care_menu_for_the_whole_feeding_lesson():
+    """Regression: "Feed me!" pointed at a closed menu with nothing to tap.
+
+    Pressing Next on Merlin's own bubble bubbled out to the close-on-outside-tap
+    handler, so the menu was shut by the time the feed step arrived. The whole
+    lesson now holds the menu open, not just the armed step.
+    """
     html = HTML.read_text(encoding="utf-8")
-    assert "if (merlinTutAwaitingAction && String(merlinTutAwaitingAction.event).indexOf('merlin-') === 0) return;" in html
+    assert "function merlinTutHoldsCareMenu()" in html
+    assert "const MERLIN_CARE_STEP_TARGETS = ['.merlin-care-status', '#merlinDietGuidance', '#merlinFeedBtn', '#merlinCareMenu'];" in html
+    # Both ways the menu can be closed are gated on the lesson, not on an
+    # armed action (which is null while Merlin is merely talking).
+    assert "if (merlinTutHoldsCareMenu()) return;" in html
+    assert "if (!options.force && merlinTutHoldsCareMenu()) return;" in html
+    # Merlin flying off on a quest still wins.
+    assert "closeMerlinCareMenu({ force:true })" in html
+    # And any step of the lesson reopens the menu if something closed it.
+    assert "function merlinTutEnsureCareMenuOpen()" in html
+    assert "if (merlinTutCareMenuStep(step)) merlinTutEnsureCareMenuOpen();" in html
+    # Reopening for the player must not count as the player tapping Merlin.
+    ensure = html[html.index("function merlinTutEnsureCareMenuOpen()"):]
+    assert "burbzTutorialAction" not in ensure[:ensure.index("\n}")]
+    # Every care-lesson step targets something inside the menu.
+    care_targets = {"#petSprite", ".merlin-care-status", "#merlinDietGuidance", "#merlinFeedBtn", "#merlinCareMenu"}
+    story = steps_of("story")
+    tap = next(i for i, s in enumerate(story) if s["target"] == "#petSprite")
+    feed = next(i for i, s in enumerate(story) if s["target"] == "#merlinFeedBtn")
+    for step in story[tap:feed + 1]:
+        assert step["target"] in care_targets, step["title"]
+
+
+def test_the_diet_panel_keeps_its_id_across_renders():
+    """Regression: renderMerlinCareMenu replaced #merlinDietGuidance with an
+    id-less div, so the diet step spotlighted nothing after the first render."""
+    html = HTML.read_text(encoding="utf-8")
+    render = html[html.index("function renderMerlinCareMenu()"):]
+    render = render[:render.index("\n}")]
+    assert "menu.querySelector('.merlin-diet-guidance')" in render
+    assert "guidance.id = 'merlinDietGuidance'" in render
+    # The disclosure itself still emits no id, which is why the re-stamp exists.
+    disclosure = html[html.index("function renderDietDisclosureHTML(subject, surface, options = {})"):]
+    assert "id=\"merlinDietGuidance\"" not in disclosure[:2000]
 
 
 def test_a_chapter_ended_by_a_tab_tap_hands_over_to_the_next_chapter():
@@ -226,5 +265,5 @@ def test_the_flow_still_covers_every_beat_the_design_asks_for():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "merlin-interactive-tutorial-v149-20260728" in sw
-    assert "const BURBZ_BUILD = 'merlin-interactive-tutorial-v149-20260728';" in HTML.read_text(encoding="utf-8")
+    assert "care-lesson-fix-v150-20260728" in sw
+    assert "const BURBZ_BUILD = 'care-lesson-fix-v150-20260728';" in HTML.read_text(encoding="utf-8")

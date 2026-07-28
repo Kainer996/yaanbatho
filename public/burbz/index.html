@@ -25748,6 +25748,10 @@ function renderMerlinCareMenu() {
   const larder = gameState.inventory && gameState.inventory.larder;
   if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(larder && larder.small_bird_prey_ration) || 0));
   if ($('merlinDietGuidance')) $('merlinDietGuidance').outerHTML = renderDietDisclosureHTML(MERLIN_GUIDE, 'merlin-care', { title:'Falco columbarius diet', className:'merlin-diet-guidance' });
+  // The disclosure renders without an id, so replacing it would strip
+  // #merlinDietGuidance from the DOM for good — and the tutorial spotlights it.
+  const guidance = menu.querySelector('.merlin-diet-guidance');
+  if (guidance && !guidance.id) guidance.id = 'merlinDietGuidance';
 }
 
 // Merlin is out the moment an expedition of his is unclaimed, and stays out
@@ -25809,7 +25813,7 @@ function closeMerlinCareMenu(options = {}) {
   // Mid-lesson the menu is the thing Merlin is pointing at: closing it would
   // leave the player with nothing to tap. Only Merlin flying off (force)
   // may take it away.
-  if (!options.force && merlinTutAwaitingAction && String(merlinTutAwaitingAction.event).indexOf('merlin-') === 0) return;
+  if (!options.force && merlinTutHoldsCareMenu()) return;
   menu.hidden = true;
   if (sprite) sprite.setAttribute('aria-expanded', 'false');
   if (merlinCareReturnFocus && typeof merlinCareReturnFocus.focus === 'function') merlinCareReturnFocus.focus({ preventScroll:true });
@@ -26449,7 +26453,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-interactive-tutorial-v149-20260728';
+const BURBZ_BUILD = 'care-lesson-fix-v150-20260728';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -26653,6 +26657,28 @@ let merlinTutActionRescueTimer = 0;
 function merlinTutCurrentStep() {
   if (!merlinTutActive || merlinTutStep < 0) return null;
   return MERLIN_TUTORIAL_STEPS[merlinTutSequence[merlinTutStep]] || null;
+}
+
+// The feeding lesson reads off Merlin's open care menu, so for the whole of it
+// the tutorial OWNS that menu: nothing may close it, and if something already
+// has, it is reopened before the step is shown. Tapping "Next" on Merlin's own
+// bubble used to bubble out to the close-on-outside-tap handler and shut the
+// menu, which is how "Feed me!" ended up pointing at nothing.
+const MERLIN_CARE_STEP_TARGETS = ['.merlin-care-status', '#merlinDietGuidance', '#merlinFeedBtn', '#merlinCareMenu'];
+function merlinTutCareMenuStep(step) {
+  return !!step && MERLIN_CARE_STEP_TARGETS.indexOf(step.target) >= 0;
+}
+function merlinTutHoldsCareMenu() {
+  return merlinTutActive && merlinTutCareMenuStep(merlinTutCurrentStep());
+}
+// Opens the menu WITHOUT reporting a deed — reopening it for the player is not
+// the player tapping Merlin, so it must never satisfy the "tap me" step.
+function merlinTutEnsureCareMenuOpen() {
+  const menu = $('merlinCareMenu');
+  if (!menu || !menu.hidden) return;
+  renderMerlinCareMenu();
+  menu.hidden = false;
+  $('petSprite')?.setAttribute('aria-expanded', 'true');
 }
 
 // The one call the rest of the game makes: "the player just did X".
@@ -26956,6 +26982,9 @@ function merlinTutShowStep(i) {
   merlinTutClearAction();
   saveMerlinTutorialState('in_progress');
   if (step.screen && step.screen !== currentScreen) switchScreen(step.screen);
+  // Every step of the feeding lesson needs the care menu on screen — reopen it
+  // if anything (a reload, a Back, a stray tap) has closed it.
+  if (merlinTutCareMenuStep(step)) merlinTutEnsureCareMenuOpen();
   $('merlinTutorialChapter').textContent = step.chapter;
   $('merlinTutorialTitle').textContent = step.title;
   text.textContent = step.text;
@@ -27236,9 +27265,9 @@ document.addEventListener('keydown', event => {
 document.addEventListener('pointerdown', event => {
   const menu = $('merlinCareMenu');
   const sprite = $('petSprite');
-  // Never yank the care menu away mid-lesson: while Merlin is waiting for the
-  // player to feed him, a stray tap must not close the thing he asked for.
-  if (merlinTutAwaitingAction && String(merlinTutAwaitingAction.event).indexOf('merlin-') === 0) return;
+  // Never yank the care menu away mid-lesson — including when the tap is the
+  // player pressing Next on Merlin's own bubble.
+  if (merlinTutHoldsCareMenu()) return;
   if (menu && !menu.hidden && !menu.contains(event.target) && !(sprite && sprite.contains(event.target))) closeMerlinCareMenu();
 });
 
