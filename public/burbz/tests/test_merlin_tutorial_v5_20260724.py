@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-VERSION = "merlin-guided-flow-v6-20260728"
-PREVIOUS = "merlin-gradual-chapters-v5-20260724"
+VERSION = "merlin-interactive-flow-v7-20260728"
+PREVIOUS = "merlin-guided-flow-v6-20260728"
 
 
 def _extract_array(html: str, marker: str):
@@ -35,12 +35,12 @@ def tutorial_data():
     return json.loads(result.stdout)
 
 
-def test_v6_is_live_and_migrates_from_v5():
+def test_v7_is_live_and_migrates_from_v6():
     html = HTML.read_text(encoding="utf-8")
     assert f"const BURBZ_TUTORIAL_VERSION = '{VERSION}';" in html
     assert f"const BURBZ_PREVIOUS_TUTORIAL_VERSION = '{PREVIOUS}';" in html
-    # Chapters redesigned for the guided flow are re-taught.
-    assert "const reteach = ['story', 'quests', 'academy'];" in html
+    # Every hands-on chapter was rebuilt for v7, so all of them are re-taught.
+    assert "const reteach = ['story', 'quests', 'errand', 'academy', 'academy_tour', 'explore'];" in html
 
 
 def test_steps_are_short_enough_to_read_at_a_glance():

@@ -20,7 +20,7 @@ def tutorial_steps():
 
 def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
     html = HTML.read_text(encoding="utf-8")
-    assert "merlin-guided-flow-v6-20260728" in html
+    assert "merlin-interactive-flow-v7-20260728" in html
     steps = tutorial_steps()
     assert 20 <= len(steps) <= 60
     assert all(step.get("chapter") and step.get("title") and step.get("text") for step in steps)
