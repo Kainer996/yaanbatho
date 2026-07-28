@@ -11209,6 +11209,7 @@ function claimBirdExpedition(expeditionId) {
     return;
   }
   queueQuestClaimCloudSync();
+  updateQuestProgress('expedition_claimed', 1);
   if ((Number(gameState.player.level) || 1) > previousPlayerLevel) { SFX.levelUp(); showToast('LEVEL UP! Now Level ' + gameState.player.level); }
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
@@ -12036,6 +12037,7 @@ function academyMoveBird(birdId, room) {
   bird.academy.room = room;
   bird.academy.lastMovedAt = new Date().toISOString();
   academySelectedRoom = room;
+  updateQuestProgress('station_' + room, 1);
   saveState();
   SFX.tap();
   showToast((bird.commonName || bird.species) + ' moved to ' + ACADEMY_ROOMS[room].label);
@@ -13722,6 +13724,7 @@ function claimBirdTrainingSession(sessionId) {
   }
   session.status = 'claimed';
   applyBirdHungerTransaction(session.birdId, 'training', session.id, trainingHungerDelta, Date.now());
+  updateQuestProgress('training_claimed', 1);
   saveState();
   SFX.questComplete();
   showToast('🎓 Training complete! +' + bonus + ' ' + (rewards.statLabel || stat.toUpperCase()) + ', +' + (rewards.xp || 30) + ' XP');
@@ -15050,6 +15053,7 @@ function completeWalkingQuest() {
   wq.history.unshift(summary);
   if (wq.history.length > 60) wq.history.length = 60;
   wq.active = null;
+  updateQuestProgress('walk_completed', 1);
   saveState();
   clearWalkingQuestFromMap();
   vibrate(QUEST_BUZZ.complete);
@@ -22860,6 +22864,7 @@ function equipItemOnBird(birdId, slot, gearId) {
   if (loadout[slot]) gearBag[loadout[slot]] = (gearBag[loadout[slot]] || 0) + 1; // return old piece
   gearBag[gearId] -= 1;
   loadout[slot] = gearId;
+  updateQuestProgress('gear_equipped', 1);
   saveState();
   SFX.questComplete();
   showToast(item.icon + ' ' + item.label + ' equipped!');
@@ -25863,22 +25868,67 @@ const ACHIEVEMENT_QUESTS = [
 // game state, so a goal the player already met completes the moment its
 // turn comes.
 // ============================================================================
+function claimedExpeditionCount() {
+  return Object.keys(gameState.questClaimReceipts || {}).filter(k => k.indexOf('expedition:') === 0).length;
+}
+
 const PLAYER_QUESTS = [
   { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to capture any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
   { id:'pq_build_roost',    name:'Build The Roost', desc:'Raise The Roost at the Academy', type:'build_dorm', target:1, reward:40, coins:20, icon:'\u{1F3E0}', go:'academy',
     measure:() => isAcademyBuildingBuilt('dorm') ? 1 : 0 },
+  // Merlin can lead starter errands, so the first mission flies before the
+  // Barracks exists — the player tastes the expedition loop right away.
+  { id:'pq_expedition',     name:'Send a bird on a mission', desc:'Send Merlin out on a Kingdom Errand', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
+    measure:() => (gameState.birdExpeditions || []).length + claimedExpeditionCount() },
   { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
   { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
     measure:() => (gameState.flock || []).length },
-  { id:'pq_expedition',     name:'Send a bird questing', desc:'Send a companion on a Kingdom Errand', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
-    measure:() => (gameState.birdExpeditions || []).length },
-  { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
-    measure:() => Number(gameState.player.mealsServed) || 0 },
+  { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
+    measure:() => claimedExpeditionCount() },
+  { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy',
+    measure:() => countDiscoveredDiets() },
+  { id:'pq_species_5',      name:'Grow the Burbz book', desc:'Discover 5 different bird species with Scan', type:'discover', target:5, reward:60, coins:40, icon:'\u{1F4D6}', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_build_training', name:'Build the Training Hall', desc:'Raise the Training Hall at the Academy', type:'build_training', target:1, reward:50, coins:25, icon:'\u{1F3CB}\u{FE0F}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('training') ? 1 : 0 },
+  { id:'pq_training_drill', name:'Run a training drill', desc:'Complete and claim a Training Hall drill', type:'training_claimed', target:1, reward:50, coins:20, icon:'\u{1F94A}', go:'academy',
+    measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.training && Number(b.training.trainCount)) || 0), 0) },
+  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:50, coins:25, icon:'\u{1F9ED}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('quest_roost') ? 1 : 0 },
   { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
+  { id:'pq_equip_gear',     name:'Arm a companion', desc:'Equip a piece of gear at the Fletcher’s Forge', type:'gear_equipped', target:1, reward:45, coins:20, icon:'\u{1F5E1}\u{FE0F}', go:'forge',
+    measure:() => Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)) ? 1 : 0 },
+  { id:'pq_build_kitchen',  name:'Build the Kitchen & Pantry', desc:'Raise the Kitchen & Pantry at the Academy', type:'build_kitchen', target:1, reward:55, coins:25, icon:'\u{1F963}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
+  { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
+    measure:() => Number(gameState.player.mealsServed) || 0 },
+  { id:'pq_diet_badge',     name:'Field-Perfect chef', desc:'Earn a diet badge with a Field-Perfect meal', type:'diet_badge', target:1, reward:60, coins:30, icon:'\u{1F3C5}', go:'academy',
+    measure:() => Object.values(gameState.dietBadges || {}).filter(n => Number(n) > 0).length },
+  { id:'pq_build_hospital', name:'Build the Bird Hospital', desc:'Raise the Bird Hospital at the Academy', type:'build_hospital', target:1, reward:55, coins:25, icon:'\u{1F3E5}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('hospital') ? 1 : 0 },
+  { id:'pq_hospital_rest',  name:'Prescribe some rest', desc:'Station a companion in the Bird Hospital', type:'station_hospital', target:1, reward:45, coins:20, icon:'\u{1FA79}', go:'academy',
+    measure:() => (gameState.flock || []).some(b => b && b.academy && b.academy.room === 'hospital') ? 1 : 0 },
+  { id:'pq_win_3',          name:'Arena regular', desc:'Win 3 battles against the evil Burbz', type:'win', target:3, reward:80, coins:50, icon:'\u{1F3C6}', go:'battle',
+    measure:() => Number(gameState.player.wins) || 0 },
+  { id:'pq_walk_adventure', name:'Take a real walk', desc:'Complete a walking adventure on the live map', type:'walk_completed', target:1, reward:70, coins:40, icon:'\u{1F97E}', go:'quests',
+    measure:() => ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length },
+  { id:'pq_quiz',           name:'Bird Wisdom Check', desc:'Answer a bird knowledge question correctly', type:'bird_quiz_correct', target:1, reward:45, coins:20, icon:'\u{1F9E0}', go:'quests',
+    measure:() => Number(gameState.knowledgeQuiz && gameState.knowledgeQuiz.correct) || 0 },
   { id:'pq_liberate',       name:'Liberate a town', desc:'Free a real town from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
+    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_craft_gear',     name:'Commission the smith', desc:'Forge a piece of gear at the Fletcher’s Forge', type:'gear_crafted', target:1, reward:70, coins:40, icon:'\u{2692}\u{FE0F}', go:'forge' },
+  { id:'pq_build_crowbar',  name:'Build The Crowbar', desc:'Raise the Academy bird bar to grow Charm', type:'build_crowbar', target:1, reward:60, coins:30, icon:'\u{1F37B}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('crowbar') ? 1 : 0 },
+  { id:'pq_merlin_clue',    name:'Merlin’s first clue', desc:'Uncover one of Merlin’s Clues on an expedition', type:'merlin_clue', target:1, reward:60, coins:30, icon:'\u{1F4DC}', go:'quests',
+    measure:() => (gameState.merlinCluesFound || []).length },
+  { id:'pq_species_10',     name:'Budding ornithologist', desc:'Discover 10 different bird species', type:'discover', target:10, reward:90, coins:60, icon:'\u{1F989}', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_build_workshop', name:'Build the Nest Workshop', desc:'Raise the Nest Workshop to toughen your flock', type:'build_workshop', target:1, reward:70, coins:35, icon:'\u{1F6E0}\u{FE0F}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('workshop') ? 1 : 0 },
+  { id:'pq_liberate_3',     name:'Kingdom of the free', desc:'Liberate 3 real towns from the evil Burbz', type:'town_liberated', target:3, reward:150, coins:100, branches:40, icon:'\u{1F451}', go:'map',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
 ];
 
