@@ -79,8 +79,10 @@ def test_one_question_decides_where_merlin_is():
     assert "classList.toggle('show', !away)" in sync
     assert "classList.toggle('merlin-away', away)" in sync
     # Away takes his flight timer, his speech bubble and his care menu with him.
+    # The close is forced: a tutorial lesson can hold the menu open, but Merlin
+    # flying off always wins.
     assert "clearTimeout(petFlightTimer)" in sync
-    assert "closeMerlinCareMenu()" in sync
+    assert "closeMerlinCareMenu({ force:true })" in sync
 
     # The renderer defers to the same sync rather than duplicating the logic.
     render = function_source(html, "renderPetCompanion")

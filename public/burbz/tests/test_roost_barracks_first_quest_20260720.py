@@ -71,13 +71,13 @@ def test_tutorial_states_the_errand_then_roost_then_recruit_sequence():
     start = html.index("const MERLIN_TUTORIAL_STEPS = [")
     end = html.index("\n];", start)
     tutorial = html[start:end].lower()
-    # v6 guided flow: send Merlin on his first errand, build The Roost, then
+    # v7 hands-on flow: send Merlin on his first errand, build The Roost, then
     # the Barracks recruits the first companion.
     required = (
         "send me out",
         "build the roost",
-        "the barracks is the recruitment office",
-        "recruit a companion",
+        "the barracks recruits captured birds",
+        "recruit it at the academy barracks",
         "kingdom errands",
     )
     assert all(marker in tutorial for marker in required), [m for m in required if m not in tutorial]
@@ -88,13 +88,13 @@ def test_tutorial_states_the_errand_then_roost_then_recruit_sequence():
 
 def test_existing_tutorial_progress_replays_only_the_guided_flow_chapters():
     html = HTML_PATH.read_text(encoding="utf-8")
-    assert "const BURBZ_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728'" in html
-    assert "const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v5-20260724'" in html
+    assert "const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728'" in html
+    assert "const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728'" in html
     migration = html[
         html.index("function migratePreviousMerlinTutorialProgress()") :
         html.index("function merlinChaptersSeen()")
     ]
-    assert "const reteach = ['story', 'quests', 'academy']" in migration
+    assert "const reteach = ['story', 'quests', 'errand', 'academy', 'academy_tour', 'explore']" in migration
     assert "previousGiftKey" in migration and "BURBZ_TUTORIAL_GIFT_KEY" in migration
 
 
