@@ -26,15 +26,20 @@ def player_quests():
     return json.loads(result.stdout)
 
 
-def test_chain_starts_with_first_bird_then_roost_then_barracks():
+def test_chain_starts_with_first_bird_roost_then_a_mission_then_barracks():
     quests = player_quests()
     ids = [q["id"] for q in quests]
     assert len(ids) == len(set(ids))
-    # The exact opening the player asked for: find a bird, then the two
-    # first buildings, then the rest of the loop bit by bit.
-    assert ids[:4] == ["pq_first_bird", "pq_build_roost", "pq_build_barracks", "pq_recruit"]
+    # The exact opening the player asked for: find a bird, build The Roost,
+    # send a bird out on a mission (Merlin leads starter errands, so no
+    # Barracks is needed yet), then the Barracks and the recruit.
+    assert ids[:6] == [
+        "pq_first_bird", "pq_build_roost", "pq_expedition",
+        "pq_build_barracks", "pq_recruit", "pq_claim_errand",
+    ]
     assert quests[0]["name"] == "Find your first bird"
     assert quests[0]["type"] == "discover"
+    assert quests[2]["type"] == "expedition_sent"
     # Every link is a complete, navigable goal.
     for q in quests:
         assert q["name"] and q["desc"] and q["icon"] and q["go"], q["id"]
@@ -45,12 +50,36 @@ def test_chain_starts_with_first_bird_then_roost_then_barracks():
 
 def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
+    assert len(quests) == 28
     types = [q["type"] for q in quests]
     for needed in (
+        # The original loop…
         "discover", "build_dorm", "build_tavern", "recruit",
         "expedition_sent", "meal_served", "win", "town_liberated",
+        # …plus the mechanics the extended chain teaches, one by one.
+        "expedition_claimed", "feed_correct", "build_training",
+        "training_claimed", "build_quest_roost", "gear_equipped",
+        "build_kitchen", "diet_badge", "build_hospital", "station_hospital",
+        "walk_completed", "bird_quiz_correct", "gear_crafted",
+        "build_crowbar", "merlin_clue", "build_workshop",
     ):
         assert needed in types, needed
+
+
+def test_extended_chain_paces_buildings_with_their_unlock_levels():
+    # Rooms unlock by player level (Training L2 … Workshop L5), so the build
+    # quests must appear in unlock order and never before the early loop.
+    quests = player_quests()
+    ids = [q["id"] for q in quests]
+    order = [
+        "pq_build_roost", "pq_build_barracks", "pq_build_training",
+        "pq_build_quest_roost", "pq_build_kitchen", "pq_build_hospital",
+        "pq_build_crowbar", "pq_build_workshop",
+    ]
+    positions = [ids.index(i) for i in order]
+    assert positions == sorted(positions), positions
+    # The chain ends on the empire endgame.
+    assert ids[-1] == "pq_liberate_3"
 
 
 def test_player_quests_are_pinned_to_the_top_of_the_quests_tab():
@@ -83,12 +112,17 @@ def test_only_the_active_link_moves_and_claims_pay_out():
 def test_gameplay_hooks_feed_the_chain():
     html = HTML.read_text(encoding="utf-8")
     for hook in (
-        "updateQuestProgress('discover', 1)",         # scan discovery
-        "updateQuestProgress('build_' + id, 1)",      # roost + barracks builds
-        "updateQuestProgress('recruit', 1)",          # barracks recruitment
-        "updateQuestProgress('expedition_sent', 1)",  # bird departs on errand
-        "updateQuestProgress('meal_served', 1)",      # kitchen tray served
-        "updateQuestProgress('town_liberated', 1)",   # liberation victory
+        "updateQuestProgress('discover', 1)",           # scan discovery
+        "updateQuestProgress('build_' + id, 1)",        # academy builds
+        "updateQuestProgress('recruit', 1)",            # barracks recruitment
+        "updateQuestProgress('expedition_sent', 1)",    # bird departs on errand
+        "updateQuestProgress('expedition_claimed', 1)", # errand rewards claimed
+        "updateQuestProgress('training_claimed', 1)",   # training drill claimed
+        "updateQuestProgress('gear_equipped', 1)",      # forge equips a piece
+        "updateQuestProgress('station_' + room, 1)",    # bird stationed in a room
+        "updateQuestProgress('walk_completed', 1)",     # walking adventure done
+        "updateQuestProgress('meal_served', 1)",        # kitchen tray served
+        "updateQuestProgress('town_liberated', 1)",     # liberation victory
     ):
         assert hook in html, hook
     # The Quests nav badge counts claimable player quests too.
@@ -105,3 +139,4 @@ def test_tutorial_introduces_player_quests():
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
     assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
+    assert "player-quest-chain-v146-20260728" in sw

@@ -56,6 +56,7 @@ def test_academy_move_bird_refuses_birds_that_are_away_or_training():
         "const isAcademyRoomBuilt=()=>true;\n"
         "const showToast=m=>toasts.push(m);\n"
         "const saveState=()=>{}; const SFX={tap:()=>{}};\n"
+        "const updateQuestProgress=()=>{};\n"
         "const renderAcademy=()=>{}; const renderAcademyBuildPanel=()=>{};\n"
         "let academySelectedRoom='outdoors';\n"
         + move +
