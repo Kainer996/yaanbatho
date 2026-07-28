@@ -15598,6 +15598,9 @@ function resumeWalkingQuestIfAny() {
 // ---- Quest overview: distinct, calm route colours from above ----
 let questOverview = { on: false, offers: [], markers: [], chainMarker: null, prevZoom: null, fetchedAt: 0, at: null, selectedIndex: null, areaBirdsWasOpen: null };
 const QUEST_OVERVIEW_ZOOM = 12.6;
+// "Show Quests" stays at neighbourhood scale — close enough that the nearest
+// trailheads (tens to hundreds of metres) fill the screen, never county-wide.
+const QUEST_SCOUT_ZOOM = 15.1;
 const QUEST_OVERVIEW_COLORS = ['#63e6be','#74c0fc','#ffd166','#da77f2','#ff8f70','#66d9e8','#a9e34b','#f783ac'];
 function questOverviewColor(i) { return QUEST_OVERVIEW_COLORS[Math.abs(Number(i) || 0) % QUEST_OVERVIEW_COLORS.length]; }
 
@@ -15808,27 +15811,19 @@ function updateShowQuestsButton() {
   showBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
   showBtn.setAttribute('aria-label', active && questOverview.offers.length ? 'Show and reframe ' + questOverview.offers.length + ' local quests on the map' : 'Show all local quests on the map');
 }
+// Pressing "Show Quests" keeps the player at street scale, centred on where
+// they stand. Fitting bounds around every offer's route used to yank the
+// camera out to county scale the moment one trail sat a kilometre away —
+// the nearby quests the player can actually walk to were reduced to a blur.
 function fitAllLocalQuestRoutes(offers = questOverview.offers) {
-  if (!liveMap || !window.maplibregl || !offers || !offers.length) return;
+  if (!liveMap) return;
+  const here = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
+  const first = (offers || []).find(offer => offer && offer.points && offer.points[0]);
+  const center = here ? [here.lon, here.lat] : first ? [first.points[0].lon, first.points[0].lat] : null;
+  if (!center) return;
   try {
-    const bounds = new maplibregl.LngLatBounds();
-    let pointCount = 0;
-    offers.forEach(offer => questOfferDisplayPoints(offer).forEach(point => {
-      const lat = Number(point && point.lat), lon = Number(point && point.lon);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-      bounds.extend([lon, lat]);
-      pointCount++;
-    }));
-    if (liveMapHasPrecisePosition && liveMapLastPosition) {
-      bounds.extend([liveMapLastPosition.lon, liveMapLastPosition.lat]);
-      pointCount++;
-    }
-    if (!pointCount) return;
-    liveMap.fitBounds(bounds, { padding:{ top:190, right:40, bottom:105, left:40 }, maxZoom:13.4, pitch:0, retainPadding:false, duration:950 });
-  } catch (e) {
-    const first = offers.find(offer => offer && offer.points && offer.points[0]);
-    if (first) liveMap.easeTo({ center:[first.points[0].lon, first.points[0].lat], zoom:QUEST_OVERVIEW_ZOOM, pitch:0, duration:850 });
-  }
+    liveMap.easeTo({ center, zoom:QUEST_SCOUT_ZOOM, pitch:burbzPitchForZoom(QUEST_SCOUT_ZOOM), duration:950 });
+  } catch (e) {}
 }
 function setQuestOverview(on, opts = {}) {
   questOverview.on = !!on;

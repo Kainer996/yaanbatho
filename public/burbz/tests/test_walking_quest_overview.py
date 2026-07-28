@@ -164,12 +164,18 @@ def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action(
     assert "height:44px" in show_button_css
 
 
-def test_show_quests_reveals_and_frames_every_local_offer():
+def test_show_quests_stays_at_street_scale_centred_on_the_player():
     html = HTML.read_text(encoding="utf-8")
     assert "function showAllLocalQuests()" in html
     assert "discoverNearbyQuestOffers()" in html
     assert "function fitAllLocalQuestRoutes" in html
-    assert "liveMap.fitBounds" in html
+    # Show Quests keeps a neighbourhood zoom around the player — it must never
+    # bounds-fit the whole offer set, which pulled the camera out to county
+    # scale whenever one route sat a kilometre away.
+    assert "const QUEST_SCOUT_ZOOM = 15.1;" in html
+    assert "zoom:QUEST_SCOUT_ZOOM, pitch:burbzPitchForZoom(QUEST_SCOUT_ZOOM)" in html
+    fit = html.split("function fitAllLocalQuestRoutes", 1)[1].split("\nfunction ", 1)[0]
+    assert "fitBounds" not in fit
     assert "showBtn.addEventListener('click', showAllLocalQuests)" in html
     assert "updateShowQuestsButton" in html
 

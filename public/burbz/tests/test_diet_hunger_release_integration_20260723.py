@@ -10,7 +10,7 @@ SW = ROOT / "sw.js"
 DEPLOY_SCRIPT = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 RELEASE_PIN = "diet-hunger-release-20260723"
-CACHE_NAME = "burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-player-photo-journal-v147-20260728"
+CACHE_NAME = "burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-player-photo-journal-v147-20260728-quest-scout-zoom-v148-20260728"
 # The point of this list is that index.html and sw.js never drift apart on a
 # runtime asset — not that every asset stays frozen on the diet-hunger pin.
 # merlin_companion_core.js has moved on since (shorter Merlin speech), so it
