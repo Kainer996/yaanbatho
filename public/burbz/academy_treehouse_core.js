@@ -38,6 +38,12 @@
   const QUEST_CATEGORY_INDEX = Object.fromEntries(QUEST_CATEGORIES.map(c => [c.id, c]));
 
   const QUEST_TEMPLATES = {
+    // Merlin's First Flight: the one-off tutorial errand. It lasts seconds,
+    // not minutes, so a brand-new player sees the whole send → return → claim
+    // loop without waiting, and it always brings home a crafting material so
+    // Merlin can tease the Forge. tutorial:true keeps it off the normal board
+    // drawers — the quest screen renders it as its own one-off card.
+    merlin_first_flight: { id:'merlin_first_flight', category:'treasure', label:"Merlin's First Flight", minutes:5/60, icon:'🪄', minLevel:1, starter:true, tutorial:true, coins:[4,8], branches:[1,2], xp:8, items:['oak_twig','river_reed','iron_grit','down_tuft'], beats:['leaps from your shoulder in a shower of sparks','loops the garden once at wizard speed','snatches something useful from a hollow stump','is back before the kettle sings'] },
     find_seed: { id:'find_seed', category:'food', label:'Find Seed', minutes:3, icon:'🌾', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:6, items:['seed_satchel','sunflower_seeds'], beats:['hops straight from the garden path','checks the soft grass for fallen seed','tucks a tiny seed satchel under one wing','returns ready for another quick errand'] },
     find_coins: { id:'find_coins', category:'treasure', label:'Find Coins', minutes:4, icon:'🪙', minLevel:1, chaWeight:1, starter:true, coins:[6,16], branches:[0,1], xp:8, items:['shiny_pebble'], beats:['flutters toward a sunny lane','spots a glint beside an old root','trades a bright pebble for pocket coins','returns jingling with tiny treasure'] },
     branch_run: { id:'branch_run', category:'timber', label:'Branch Run', minutes:5, icon:'🪵', minLevel:1, starter:true, coins:[0,5], branches:[4,7], xp:8, items:['soft_moss'], beats:['glides down to the windfall thicket','tugs loose the driest fallen twigs','stacks a neat bundle of branches','hauls the timber home for the builders'] },

@@ -2420,6 +2420,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .sr-only { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 @keyframes navActionPulse { 0%,100% { transform:scale(1); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 5px rgba(255,74,92,.35); } 50% { transform:scale(1.08); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 10px rgba(255,74,92,.58); } }
 @media (prefers-reduced-motion: reduce) { .nav-action-badge { animation:none; } }
+/* Guided-flow pointer: a bouncing arrow above the next nav tab Merlin wants
+   tapped, plus a red attention dot on the tab itself. */
+.tutorial-nav-pointer { position:fixed; z-index:1200; bottom:calc(var(--nav-height) + 10px + var(--safe-bottom)); left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:2px; pointer-events:none; }
+.tutorial-nav-pointer.show { display:flex; }
+.tutorial-nav-pointer .tnp-text { background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:10px; padding:3px 9px; font:800 11px/1.3 'Rajdhani',sans-serif; letter-spacing:.4px; box-shadow:0 6px 18px rgba(0,0,0,.5); white-space:nowrap; }
+.tutorial-nav-pointer .tnp-arrow { font-size:24px; line-height:1; color:var(--accent); text-shadow:0 0 10px rgba(240,199,103,.85); animation:tutorialArrowBob 1s ease-in-out infinite; }
+@keyframes tutorialArrowBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(7px); } }
+.nav-item.tutorial-alert::after { content:''; position:absolute; top:3px; right:16%; width:9px; height:9px; border-radius:50%; background:linear-gradient(145deg,#ff6b6b,#c92f42); border:2px solid #090806; box-shadow:0 0 9px rgba(255,74,92,.9); z-index:3; pointer-events:none; animation:navActionPulse 1.8s ease-in-out infinite; }
+/* Merlin's one-off tutorial errand card glows until it is sent. */
+.quest-board-card.tutorial-errand { border:2px solid rgba(240,199,103,.75); box-shadow:0 0 16px rgba(214,168,79,.35); animation:tutorialErrandGlow 1.8s ease-in-out infinite; }
+@keyframes tutorialErrandGlow { 0%,100% { box-shadow:0 0 10px rgba(214,168,79,.28); } 50% { box-shadow:0 0 20px rgba(214,168,79,.55); } }
+@media (prefers-reduced-motion: reduce) { .tutorial-nav-pointer .tnp-arrow, .nav-item.tutorial-alert::after, .quest-board-card.tutorial-errand { animation:none; } }
 
 .academy-grad-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.78); z-index: 9999; backdrop-filter: blur(6px); animation: gradFade 0.4s ease-out; }
 @keyframes gradFade { from { opacity: 0; } to { opacity: 1; } }
@@ -3135,6 +3147,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-label">Ranks</div>
     </button>
   </nav>
+
+  <!-- Guided-flow pointer: Merlin's arrow over the next nav tab to tap -->
+  <div class="tutorial-nav-pointer" id="tutorialNavPointer" aria-hidden="true"><span class="tnp-text" id="tutorialNavPointerText">A quest awaits!</span><span class="tnp-arrow">▼</span></div>
 
   <!-- Capture Celebration Overlay -->
   <div class="capture-overlay" id="captureOverlay">
@@ -4578,7 +4593,8 @@ const DEFAULT_STATE = {
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
   starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for The Roost and Barracks
-  sideQuest: { active: null, history: [] } // Free-exploration side quests: the game charts wherever the player goes
+  sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
+  tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false } // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
 };
 
 let gameState;
@@ -10793,6 +10809,9 @@ function academyBuildBuilding(id, opts = {}) {
   else if (SFX && typeof SFX.levelUp === 'function') SFX.levelUp();
   showToast('Built ' + cfg.icon + ' ' + cfg.label + '!');
   renderAcademy();
+  // Guided flow: the first Roost is the tutorial's build lesson — celebrate
+  // it properly, then let Merlin tour the rest of the Academy.
+  if (id === 'dorm' && typeof onFirstRoostBuilt === 'function') onFirstRoostBuilt();
   return true;
 }
 
@@ -10853,7 +10872,7 @@ function renderAcademyBuildPanel() {
       : locked
         ? '<button class="academy-build-btn" disabled>LV ' + b.unlockLevel + '</button>'
         : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Place') + '</button>';
-    return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + '">' +
+    return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + '" data-building="' + id + '">' +
       '<img class="academy-building-art" src="' + b.asset + '" alt="' + escapeHtml(b.label) + ' sprite">' +
       '<div class="academy-building-name">' + b.icon + ' ' + escapeHtml(b.label) + '</div>' +
       '<div class="academy-building-effect">' + escapeHtml(b.effect) + '</div>' +
@@ -11116,6 +11135,11 @@ function startBirdExpedition(birdId, templateId, loadout) {
   if (!bird) return;
   const starterQuest = isStarterExpeditionTemplate(templateId);
   if (birdId === 'merlin-guide' && !starterQuest) { showToast('Merlin can lead starter errands; recruit companions for longer expeditions.'); return; }
+  // Merlin's First Flight is a one-off tutorial errand, flown by Merlin alone.
+  if (templateId === 'merlin_first_flight') {
+    if (birdId !== MERLIN_GUIDE.id) { showToast("This first flight is Merlin's own — send him!"); return; }
+    if (tutorialFlowState().errandClaimed || ensureBirdExpeditions().some(x => x.templateId === 'merlin_first_flight' && x.status !== 'claimed')) { showToast('Merlin has already flown his first flight.'); return; }
+  }
   if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
   if (active) { showToast((bird.commonName || bird.species) + ' is already out questing.'); return; }
@@ -11147,6 +11171,13 @@ function startBirdExpedition(birdId, templateId, loadout) {
   showToast('🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderPetCompanion();
   renderBirdExpeditions();
+  // Seconds-long errands can't wait for the 20s board refresh: redraw the
+  // moment the bird lands so the CLAIM button (and nav badge) appear at once.
+  const msLeft = quest.endMs - Date.now();
+  if (msLeft < 60000) setTimeout(() => {
+    if (currentScreen === 'quests' && !document.getElementById('questOverlay')?.classList.contains('open')) renderBirdExpeditions();
+    if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
+  }, Math.max(600, msLeft + 500));
 }
 
 function claimBirdExpedition(expeditionId) {
@@ -11198,6 +11229,8 @@ function claimBirdExpedition(expeditionId) {
         applyBirdHungerTransaction(q.birdId, 'expedition', q.id, delta, Date.now());
       }
     }
+    // Merlin's tutorial errand is one-off: the claim retires it durably.
+    if (q.templateId === 'merlin_first_flight') tutorialFlowState().errandClaimed = true;
     gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
     setQuestClaimReceipt(receiptKey, { id:receiptKey, committedAt:Date.now(), coins, branches, xp:questXp, items });
     // saveState() is intentionally replaced by one observable durable commit.
@@ -11216,6 +11249,12 @@ function claimBirdExpedition(expeditionId) {
   playQuestClaimCelebration({ badge: 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   maybeOpenQuestKnowledgeQuiz(advanced, coins);
   renderPetCompanion(); renderBirdExpeditions(); renderInventory(); updateHeader();
+  // Guided flow: Merlin lands from his first flight with a crafting tease,
+  // then points the player at the Academy.
+  if (q.templateId === 'merlin_first_flight' && typeof startMerlinTutorial === 'function' && !merlinChaptersSeen().includes('errand')) {
+    setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'errand', resume:false }); }, 1600);
+  }
+  if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
 }
 
 // ---- Claim celebration: a quick dopamine burst of coins and sparkles -------
@@ -11268,6 +11307,7 @@ function renderMerlinClueNotebook() {
 // a send sheet where you pick one bird plus its loadout; tapping a bird that is
 // out opens its procedurally generated adventure log.
 const QUEST_TEMPLATE_INFO = {
+  merlin_first_flight: 'A one-off first flight around the garden. Merlin is back in seconds — with something useful for crafting later.',
   find_seed:    'A quick hop around the gardens for spilt seed. The perfect first errand.',
   find_coins:   'Someone always drops a coin near the market lane. Send a sharp-eyed bird.',
   branch_run:   'Fallen twigs litter the windfall thicket. Haul branches home — buildings need timber.',
@@ -11315,7 +11355,8 @@ function questCategoriesList() {
 }
 
 function questDurationLabel(minutes) {
-  if (minutes < 60) return minutes + ' min';
+  if (minutes < 1) return Math.max(1, Math.round(minutes * 60)) + ' sec';
+  if (minutes < 60) return Math.round(minutes) + ' min';
   const h = minutes / 60;
   return (h % 1 === 0 ? h : h.toFixed(1)) + 'h';
 }
@@ -11323,6 +11364,7 @@ function questDurationLabel(minutes) {
 function questTimeLeftLabel(q) {
   const ms = Math.max(0, q.endMs - Date.now());
   if (ms <= 0) return 'Back home!';
+  if (ms < 60000) return Math.ceil(ms / 1000) + 's left';
   return fmtCd(ms) + ' left';
 }
 
@@ -11334,6 +11376,9 @@ function renderBirdExpeditions() {
   const rows = ensureBirdExpeditions().filter(q => q.status !== 'claimed').slice(0, 10)
     .map(q => window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now()));
   const templates = window.BurbzAcademyCore.getQuestTemplates();
+  // Tutorial one-offs render as their own card above the board, never in the
+  // category drawers — and vanish for good once claimed.
+  const boardTemplates = templates.filter(t => t.tutorial !== true);
   const roostBuilt = isAcademyBuildingBuilt('quest_roost');
 
   // Birds currently away (tap for the adventure log)
@@ -11381,13 +11426,31 @@ function renderBirdExpeditions() {
     '</div>';
   };
 
+  // Merlin's First Flight: the guided-flow errand, a few seconds long. It sits
+  // above the drawers with a glow until the player sends Merlin and claims it.
+  const tutorialTemplate = templates.find(t => t.id === 'merlin_first_flight');
+  const tutorialErrandOpen = tutorialTemplate && !tutorialFlowState().errandClaimed &&
+    !ensureBirdExpeditions().some(q => q.templateId === 'merlin_first_flight' && q.status !== 'claimed');
+  const tutorialHtml = tutorialErrandOpen
+    ? '<div class="quest-section-title">Merlin’s Errand</div>' +
+      '<div class="quest-board-card tutorial-errand" data-expedition-template="merlin_first_flight" onclick="openQuestSend(\'merlin_first_flight\')">' +
+        '<div class="quest-board-icon">' + tutorialTemplate.icon + '</div>' +
+        '<div class="quest-info">' +
+          '<div class="quest-name">' + escapeHtml(tutorialTemplate.label) + ' <span class="quest-duration">' + questDurationLabel(tutorialTemplate.minutes) + '</span></div>' +
+          '<div class="quest-desc">A one-off first errand. Send Merlin out — he is back in seconds with something useful.</div>' +
+          '<div class="quest-progress-text">~' + tutorialTemplate.coins[0] + '–' + tutorialTemplate.coins[1] + ' 🪙 · +' + (tutorialTemplate.xp || 0) + ' XP · 🎁 a crafting material</div>' +
+        '</div>' +
+        '<div class="quest-board-go">SEND ›</div>' +
+      '</div>'
+    : '';
+
   const categories = questCategoriesList();
   const known = new Set(categories.map(c => c.id));
   const drawers = categories.map(cat => {
-    const list = templates.filter(t => (t.category || 'treasure') === cat.id);
+    const list = boardTemplates.filter(t => (t.category || 'treasure') === cat.id);
     // Anything a future build adds under an unknown category still shows up,
     // swept into the last drawer rather than silently vanishing.
-    if (cat === categories[categories.length - 1]) list.push(...templates.filter(t => !known.has(t.category || 'treasure')));
+    if (cat === categories[categories.length - 1]) list.push(...boardTemplates.filter(t => !known.has(t.category || 'treasure')));
     if (!list.length) return '';
     const open = questCategoryIsOpen(cat.id);
     const unlocked = list.filter(t => t.starter === true || roostBuilt).length;
@@ -11406,7 +11469,7 @@ function renderBirdExpeditions() {
   const boardHtml = '<div class="quest-section-title">Kingdom Errands</div>' +
     '<div class="quest-category-hint">Tap a category to open it — every food in the game and every crafting material has its own errand inside.</div>' + drawers;
 
-  questScreen.innerHTML = activeHtml + boardHtml + renderMerlinClueNotebook();
+  questScreen.innerHTML = activeHtml + tutorialHtml + boardHtml + renderMerlinClueNotebook();
   scheduleQuestBoardRefresh();
 }
 
@@ -11459,8 +11522,10 @@ function closeQuestOverlay() {
 function openQuestSend(templateId) {
   const t = getExpeditionTemplate(templateId);
   if (!t) return;
+  if (t.tutorial === true && tutorialFlowState().errandClaimed) return;
   SFX.tap();
-  questSendState = { templateId, birdId: null, provision: null, charm: null };
+  // Merlin's own tutorial errand arrives with Merlin already picked.
+  questSendState = { templateId, birdId: t.tutorial === true ? MERLIN_GUIDE.id : null, provision: null, charm: null };
   renderQuestSendSheet();
 }
 
@@ -11468,9 +11533,12 @@ function renderQuestSendSheet() {
   const t = getExpeditionTemplate(questSendState.templateId);
   if (!t) return;
   const el = questOverlayEl();
-  const birds = isStarterExpeditionTemplate(t.id)
-    ? expeditionDispatchBirds(gameState.flock || [])
-    : (gameState.flock || []).filter(b => b && b.id);
+  // The tutorial errand is Merlin's own flight — no other bird may take it.
+  const birds = t.tutorial === true
+    ? expeditionDispatchBirds([])
+    : isStarterExpeditionTemplate(t.id)
+      ? expeditionDispatchBirds(gameState.flock || [])
+      : (gameState.flock || []).filter(b => b && b.id);
   const info = QUEST_TEMPLATE_INFO[t.id] || '';
 
   const birdChips = birds.length ? birds.map(b => {
@@ -16783,6 +16851,7 @@ function switchScreen(name) {
 
   // Gradual tutorial: Merlin teaches each system the first time its screen opens.
   if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
+  if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
 }
 
 // ============================================================================
@@ -25873,20 +25942,22 @@ function claimedExpeditionCount() {
 }
 
 const PLAYER_QUESTS = [
-  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to capture any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
-    measure:() => discoveredSpeciesSet().size },
-  { id:'pq_build_roost',    name:'Build The Roost', desc:'Raise The Roost at the Academy', type:'build_dorm', target:1, reward:40, coins:20, icon:'\u{1F3E0}', go:'academy',
-    measure:() => isAcademyBuildingBuilt('dorm') ? 1 : 0 },
-  // Merlin can lead starter errands, so the first mission flies before the
-  // Barracks exists — the player tastes the expedition loop right away.
+  // The chain mirrors Merlin's guided tutorial: send him on his first errand,
+  // welcome him home, raise The Roost — then out into the world for a real
+  // bird. Merlin can lead starter errands, so the first mission flies before
+  // the Barracks exists and the player tastes the expedition loop right away.
   { id:'pq_expedition',     name:'Send a bird on a mission', desc:'Send Merlin out on a Kingdom Errand', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
     measure:() => (gameState.birdExpeditions || []).length + claimedExpeditionCount() },
+  { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
+    measure:() => claimedExpeditionCount() },
+  { id:'pq_build_roost',    name:'Build The Roost', desc:'Raise The Roost at the Academy', type:'build_dorm', target:1, reward:40, coins:20, icon:'\u{1F3E0}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('dorm') ? 1 : 0 },
+  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to capture any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
   { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
   { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
     measure:() => (gameState.flock || []).length },
-  { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
-    measure:() => claimedExpeditionCount() },
   { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy',
     measure:() => countDiscoveredDiets() },
   { id:'pq_species_5',      name:'Grow the Burbz book', desc:'Discover 5 different bird species with Scan', type:'discover', target:5, reward:60, coins:40, icon:'\u{1F4D6}', go:'scan',
@@ -26310,32 +26381,43 @@ function maybeShowIntroCutscene() {
 }
 
 // ============================================================================
-// MERLIN'S TUTORIAL — the gradual apprenticeship
-// A brand-new tutorial that introduces the game mechanics gradually. It opens
-// with Merlin telling the story of the Kingdom of Burbz (the Earth of another
-// universe where birds rule, now taken by the dark force of the evil Burbz),
-// then teaches each system in a short chapter the FIRST time the player opens
-// that part of the game, instead of one giant up-front tour.
-// v5 rules: capturing birds is taught first, every line stays short enough to
-// read at a glance, and the spotlight only ever lights a target it can
-// actually see on the active screen.
+// MERLIN'S TUTORIAL — the guided apprenticeship
+// v6 is a guided FLOW, not just chapters. Merlin opens with the premise and
+// introduces himself as the player's new friend who needs feeding and care
+// (a falcon's accurate diet, primary and secondary meals, Kitchen teased for
+// later), then the game's pillars — scanning real birds, the Birdex, errands
+// and expeditions — before an arrow and a red mark point at the Quests tab.
+// From there the flow is hands-on: send Merlin on a seconds-long first errand
+// (he returns with a crafting material and teases the Forge), build The Roost
+// at the Academy with Merlin's gift of coins and timber (instant, big XP), a
+// short tour of a few Academy buildings, and finally the real-world Explore
+// Quests with a village tease. Every remaining system still teaches itself in
+// a short chapter the FIRST time its screen opens.
+// v5 rules kept: every line stays short enough to read at a glance, and the
+// spotlight only ever lights a target it can actually see on the active screen.
 // ============================================================================
-const BURBZ_TUTORIAL_VERSION = 'merlin-gradual-chapters-v5-20260724';
-const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v4-20260720';
+const BURBZ_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
+const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-gradual-chapters-v5-20260724';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:' + BURBZ_TUTORIAL_VERSION;
 
-// Chapters fire once each: 'launch' right after the intro video, the rest the
-// first time their screen is opened. Replaying from Settings runs everything.
+// Chapters fire once each: 'launch' right after the intro video, screen ids
+// the first time that screen is opened. The three guided-flow chapters
+// ('errand', 'academy_tour', 'explore') have no screen of their own — they
+// fire on progress: Merlin's errand claimed, The Roost built, the tour done.
+// Replaying from Settings runs everything in array order.
 const MERLIN_TUTORIAL_CHAPTERS = [
   { id:'story',        trigger:'launch' },
+  { id:'quests',       trigger:'quests' },
+  { id:'errand',       trigger:'errand' },
+  { id:'academy',      trigger:'academy' },
+  { id:'academy_tour', trigger:'academy_tour' },
+  { id:'explore',      trigger:'explore' },
   { id:'scan',         trigger:'scan' },
   { id:'birdex',       trigger:'birdex' },
   { id:'battle',       trigger:'battle' },
   { id:'village',      trigger:'village' },
-  { id:'academy',      trigger:'academy' },
-  { id:'quests',       trigger:'quests' },
   { id:'forge',        trigger:'forge' },
   { id:'inventory',    trigger:'inventory' },
   { id:'leaderboards', trigger:'leaderboards' },
@@ -26343,16 +26425,54 @@ const MERLIN_TUTORIAL_CHAPTERS = [
 ];
 
 const MERLIN_TUTORIAL_STEPS = [
-  // — The Tale of Burbz: a short story, then straight to capturing birds.
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'A voice across the multiverse', screen:'map', target:null, text:'I am Merlin, wizard falcon of the Kingdom of Burbz — the Earth of another universe, where birds are the dominant species.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'The darkness falls', screen:'map', target:null, text:'A dark force has taken our kingdom. The evil Burbz — shadow birds with burning red eyes — now hold every town.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Merlin’s spell-tablet', screen:'map', target:null, text:'With my last spell I hurled my magic tablet into your universe. You are holding it right now — this app is that tablet.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'You are the chosen one', screen:'map', target:null, text:'Only you can unlock the darkness. Real birdwatching restores Burbz: every real bird you find frees our kingdom, town by town.' },
+  // — The Tale of Burbz: the premise, Merlin himself, care and diet, then the
+  //   pillars (Scan, Birdex, errands) before the arrow points at Quests.
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'A kingdom in darkness', screen:'map', target:null, text:'The Kingdom of Burbz — the Earth of another universe, where birds are the dominant species — has fallen to a dark force: the evil Burbz.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'This app is my magic tablet, hurled across the multiverse into your hands. Only you can unlock the darkness. Real birdwatching restores Burbz!' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'I am Merlin', screen:'map', target:null, text:'And me? I am Merlin — wizard falcon of the kingdom, sender of the tablet, and from this day, I am your new friend. We fly together now.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Look after me', screen:'map', target:null, text:'Even a wizard needs care. If I am to be at my best, you must feed me and look after me — a hungry falcon casts wobbly spells.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'A falcon’s proper meal', screen:'map', target:null, text:'As a falcon, I choose the primary meal that is best for me: whole small-bird prey, the true diet of a Merlin. That is what keeps me sharp.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Primary and secondary', screen:'map', target:null, text:'Some birds can eat secondary meals — not ideal, but they may have to do at times. Every bird’s diet must be accurate to get the best out of them.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'The Kitchen comes later', screen:'map', target:null, text:'But we will go into food later, with the Kitchen. For now, remember: feeding birds what they truly eat is how champions are made.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Capture real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Everything begins with capturing real birds. Spot one out in your world, scan it by camera or sound, and its spirit joins our cause.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'The Birdex', screen:'map', target:'.nav-item[data-screen="birdex"]', text:'Every bird you capture is recorded in your Birdex with true facts about the species — your growing book of birds. I live on that screen too!' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'11,000 birds, one legend', screen:'map', target:null, text:'Your Earth holds about 11,000 known bird species. Find one my tablet does not know and you claim an ABSOLUTELY EPIC prize.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Nearby towns are held by the evil Burbz — one day you will free them.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'First: capture a bird', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Everything starts with capturing birds. Tap Scan and I will show you how. The rest I will teach bit by bit, when you need it.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Send us on expeditions', screen:'map', target:'.nav-item[data-screen="quests"]', text:'Your birds — and I — can be sent out on Kingdom Errands and expeditions, returning with coins, timber and treasure for the kingdom.' },
+  { chapterId:'story', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'Between quests, errands and real birds, you’ll never be stuck for something to do. See the red mark? A quest waits — tap Quests when we’re done!' },
 
-  // — Capture: taught the first time the Scan screen opens. Always first.
+  // — Quests: fires the first time the Quests screen opens. Ends on Merlin's
+  //   one-off first errand so the player sends him out straight away.
+  { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'If you’re ever stuck, look here: Player Quests guide you through the whole game, step by step — follow them and never wonder what to do next.' },
+  { chapterId:'quests', chapter:'Quests', title:'Kingdom Errands', screen:'quests', target:'#expeditionQuestList', text:'This is the kingdom quest board. Send birds out on errands and expeditions — they come home with coins, timber, food and treasures.' },
+  { chapterId:'quests', chapter:'Quests', title:'Send me out!', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'See Merlin’s First Flight? You can send me out for this one — it takes mere seconds. Tap it, send me flying, and claim your reward when I return!' },
+
+  // — Merlin returns: fires the moment his first errand is claimed.
+  { chapterId:'errand', chapter:'Merlin Returns', title:'Back with a prize!', screen:'quests', target:null, text:'Phew, what a flight! I brought you back a little something — stash it safe. It will come in handy later, when you start crafting gear.' },
+  { chapterId:'errand', chapter:'Merlin Returns', title:'To the Academy!', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Now, a kingdom needs buildings! Follow the arrow to the Academy — we have a roost to raise.' },
+
+  // — Academy: fires the first time the Academy opens. Merlin gifts the exact
+  //   cost of The Roost and asks the player to build it (instantly, this time).
+  { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'Welcome to the Academy — the heart of your kingdom! Every building in this tree unlocks a new way to house, feed, heal and train your flock.' },
+  { chapterId:'academy', chapter:'Academy', title:'A gift for The Roost', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'I have slipped 50 coins and 10 timber into your purse — exactly what The Roost costs. Buildings need coin and timber; this one is my treat.' },
+  { chapterId:'academy', chapter:'Academy', title:'Build The Roost', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'Tap Place on The Roost, then tap the tree to set it down. It will build instantly this time round — raise it, and I will show you the rest!' },
+
+  // — Academy tour: fires once The Roost stands. A few buildings, not all —
+  //   the Player Quests introduce the rest, one mechanic at a time.
+  { chapterId:'academy_tour', chapter:'Academy', title:'The Roost stands!', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'Magnificent! The Roost is raised and the flock has a home — and that experience you just felt? Building the kingdom always pays.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'The Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks is the recruitment office: captured birds join your flock there. Recruit a companion and it will quest and fight beside you.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Kitchen & Pantry', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Birds get hungry! Cook at the Kitchen & Pantry from your larder, and serve each species its true diet — accurate meals, as I promised.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Heal and train', screen:'academy', target:'.academy-building-card[data-building="hospital"]', text:'The Bird Hospital restores tired heroes, and the Training Hall sharpens their skills — birds level up as they train, quest and battle.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'The Crowbar', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The bird bar! Birds perched at The Crowbar grow Charm — the stat that wins Parleys and diplomacy quests. Send your robins and wrens.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Quests will guide you', screen:'academy', target:null, text:'No need to build everything now — your Player Quests will introduce each building and mechanic just when you need it. One last thing to see!' },
+
+  // — Explore: the real-world finale — walking quests, the village tease, and
+  //   Merlin's send-off. After this, the gameplay begins.
+  { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you as you go. Out here is where the true adventure lives.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestBtn', text:'Explore Quests offers real walking quests on public paths — every step you truly walk rewards the kingdom. Likely Birds hints at what is near.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Villages will be yours', screen:'map', target:null, text:'On your travels you will liberate villages from the evil Burbz and build them into your own empire — but you will get to that later too.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'First, either send me out on quests or get out and look for a bird! Stuck? Open Quests. Otherwise — fly free. The Kingdom of Burbz flies with you!' },
+
+  // — Capture: taught the first time the Scan screen opens.
   { chapterId:'scan', chapter:'Capture', title:'Two ways to capture', screen:'scan', target:'.scan-mode-toggle', text:'Capture birds with Camera or Sound. Only a real, recognised bird counts — that is what powers the tablet’s magic.' },
   { chapterId:'scan', chapter:'Capture', title:'Camera', screen:'scan', target:'#scanImageBtn', text:'Snap a photo of the bird, then confirm the match. Every capture is added to your Birdex.' },
   { chapterId:'scan', chapter:'Capture', title:'Sound', screen:'scan', target:'#scanSoundBtn', text:'Sound listens for bird song with your microphone. Short clips are uploaded for bird-sound analysis only. Location help is optional.' },
@@ -26372,20 +26492,6 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Realm: taught the first time the Empire screen opens.
   { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world under darkness. Every town you free lifts the shadow from its province.' },
   { chapterId:'village', chapter:'Realm', title:'Provinces pay taxes', screen:'village', target:'#empirePanel', text:'Tap a freed province to visit its village. Provinces pay coins and branches every eight hours — happy villagers pay more.' },
-
-  // — Academy: taught the first time the Academy opens.
-  { chapterId:'academy', chapter:'Academy', title:'Build your Academy', screen:'academy', target:'#academyBuildPanel', text:'Start with The Roost and the Barracks. Your starter coins and timber cover both buildings.' },
-  { chapterId:'academy', chapter:'Academy', title:'Recruit at the Barracks', screen:'academy', target:'#academyBuildPanel', text:'The Barracks is where captured birds join your flock. Recruit one — it becomes your first questing companion.' },
-  { chapterId:'academy', chapter:'Academy', title:'Kitchen & Pantry', screen:'academy', target:'#academyTreehouse', text:'Birds get hungry. Cook meals in the Kitchen from your larder — serve each species its real diet and it thrives.' },
-  { chapterId:'academy', chapter:'Academy', title:'Care and healing', screen:'academy', target:'#academyTreehouse', text:'The Bird Hospital restores HP. Other rooms cover rest, grooming and everyday care.' },
-  { chapterId:'academy', chapter:'Academy', title:'Training and levels', screen:'academy', target:'#academyTreehouse', text:'Training rooms sharpen battle skills, and birds level up as they fight and quest. Stronger birds free towns faster.' },
-  { chapterId:'academy', chapter:'Academy', title:'The Crowbar', screen:'academy', target:'#academyTreehouse', text:'The bird bar! Birds perched here grow Charm — the stat that wins Parleys and diplomacy quests. Send your robins and wrens.' },
-
-  // — Quests: taught the first time the Quests screen opens.
-  { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'Your next goal always sits here at the top. Follow the Player Quests and you will never wonder what to do next.' },
-  { chapterId:'quests', chapter:'Quests', title:'Send a bird questing', screen:'quests', target:'#expeditionQuestList', text:'Pick a starter quest, choose a recruited bird and confirm. Rewards and duration always show up front.' },
-  { chapterId:'quests', chapter:'Quests', title:'Longer expeditions', screen:'quests', target:'#expeditionQuestList', text:'Build the Quest Roost later to unlock longer expeditions with bigger rewards.' },
-  { chapterId:'quests', chapter:'Quests', title:'Walking quests', screen:'map', target:'#mapQuestBtn', text:'On the Map, Explore Quests offers real walking quests on public paths — or start a Side Quest and simply wander.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
   { chapterId:'forge', chapter:'Forge', title:'The Fletcher’s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils at the Forge.' },
@@ -26419,9 +26525,10 @@ function migratePreviousMerlinTutorialProgress() {
       const previousRaw = localStorage.getItem(previousChaptersKey);
       if (previousRaw != null) {
         const previous = JSON.parse(previousRaw);
-        // Chapters whose systems gained new mechanics since v4 (Kitchen
-        // feeding & hunger, larder, equipment) are re-taught; the rest carry.
-        const reteach = ['academy', 'inventory', 'forge'];
+        // Chapters redesigned for the v6 guided flow (the new story intro,
+        // the quests screen with Merlin's first errand, the guided Roost
+        // build) are re-taught; everything else carries over.
+        const reteach = ['story', 'quests', 'academy'];
         const retained = Array.isArray(previous)
           ? previous.filter(id => typeof id === 'string' && !reteach.includes(id))
           : [];
@@ -26496,8 +26603,80 @@ function startMerlinTutorial(options = {}) {
   setMerlinTutorialBackgroundInert(true);
   overlay.classList.add('show');
   overlay.setAttribute('aria-hidden', 'false');
+  if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
+  // The Academy lesson opens with Merlin's housewarming gift: the exact cost
+  // of The Roost, so the guided build can never be blocked by an empty purse.
+  if (merlinTutMode === 'academy') maybeGrantMerlinRoostGift();
   saveMerlinTutorialState('in_progress', resumeStep);
   merlinTutShowStep(resumeStep);
+}
+
+// ---- Guided-flow state: the beats between chapters -------------------------
+function tutorialFlowState() {
+  if (!gameState) return {};
+  if (!gameState.tutorialFlow || typeof gameState.tutorialFlow !== 'object') gameState.tutorialFlow = {};
+  return gameState.tutorialFlow;
+}
+
+function maybeGrantMerlinRoostGift() {
+  try {
+    const flow = tutorialFlowState();
+    if (flow.roostGiftGranted || isAcademyBuildingBuilt('dorm')) return;
+    flow.roostGiftGranted = true;
+    const cfg = (typeof ACADEMY_BUILDINGS !== 'undefined' && ACADEMY_BUILDINGS.dorm) || { cost:50, branches:10 };
+    addCoins(cfg.cost || 50);
+    addBranches(cfg.branches || 10);
+    saveState();
+    updateHeader();
+    showToast('🎁 Merlin’s gift: +' + (cfg.cost || 50) + ' 🪙 and +' + (cfg.branches || 10) + ' 🪵 for The Roost!');
+  } catch (e) {}
+}
+
+// The first Roost is the tutorial's build lesson: a proper celebration with
+// XP, then Merlin's tour of the rest of the Academy.
+function onFirstRoostBuilt() {
+  const flow = tutorialFlowState();
+  if (!flow.roostCelebrated) {
+    flow.roostCelebrated = true;
+    addPlayerXp(60);
+    saveState();
+    playQuestClaimCelebration({ badge:'THE ROOST IS BUILT!', coins:0, branches:0, xp:60, items:{} });
+  }
+  const seen = merlinChaptersSeen();
+  if (seen.includes('academy') && !seen.includes('academy_tour')) {
+    setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'academy_tour', resume:true }); }, 1700);
+  }
+  if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
+}
+
+// The bouncing arrow + red nav dot that walk a new player through the guided
+// flow: story done → Quests (send Merlin), errand claimed → Academy (build).
+function merlinFlowPointerTarget() {
+  try {
+    if (merlinTutActive || !gameState) return null;
+    const seen = merlinChaptersSeen();
+    if (!seen.includes('story')) return null;
+    const flow = tutorialFlowState();
+    if (!flow.errandClaimed) return currentScreen === 'quests' ? null : 'quests';
+    if (!seen.includes('academy_tour') && !isAcademyBuildingBuilt('dorm')) return currentScreen === 'academy' ? null : 'academy';
+  } catch (e) {}
+  return null;
+}
+
+function updateMerlinFlowPointer() {
+  const el = $('tutorialNavPointer');
+  if (!el) return;
+  const target = merlinFlowPointerTarget();
+  document.querySelectorAll('.nav-item.tutorial-alert').forEach(item => item.classList.remove('tutorial-alert'));
+  if (!target) { el.classList.remove('show'); return; }
+  const navItem = document.querySelector('.nav-item[data-screen="' + target + '"]');
+  if (!navItem) { el.classList.remove('show'); return; }
+  navItem.classList.add('tutorial-alert');
+  const rect = navItem.getBoundingClientRect();
+  el.style.left = (rect.left + rect.width / 2) + 'px';
+  const label = $('tutorialNavPointerText');
+  if (label) label.textContent = target === 'quests' ? 'A quest awaits!' : 'To the Academy!';
+  el.classList.add('show');
 }
 
 // Resolve a step target to an element the player can actually SEE. The old
@@ -26588,6 +26767,9 @@ function merlinTutShowStep(i) {
   $('merlinTutorialChapter').textContent = step.chapter;
   $('merlinTutorialTitle').textContent = step.title;
   text.textContent = step.text;
+  // Steps that talk about "the red mark" light the dot on that nav tab while
+  // Merlin is still speaking; updateMerlinFlowPointer takes over afterwards.
+  if (step.alertNav) document.querySelector('.nav-item[data-screen="' + step.alertNav + '"]')?.classList.add('tutorial-alert');
   $('merlinTutorialCounter').textContent = (i + 1) + ' / ' + merlinTutSequence.length;
   $('merlinTutorialBack').disabled = i === 0;
   $('merlinTutorialNext').textContent = i === merlinTutSequence.length - 1 ? 'Finish' : 'Next';
@@ -26643,8 +26825,14 @@ function endMerlinTutorial(completed) {
     updateHeader();
     showToast("\u{1F381} Merlin's gift for finishing the apprenticeship: +50 \u{1FA99} coins and +25 \u{1FAB5} branches!");
   } else if (completed && merlinTutMode === 'story') {
+    showToast('\u{1F9ED} Merlin waits. Tap Quests — a quest is ready for you!');
+  } else if (completed && merlinTutMode === 'explore') {
     showToast('Merlin bows. "The Kingdom of Burbz flies with you now."');
   }
+  // Guided-flow hand-off: the Academy tour flows straight into the real-world
+  // finale on the Map (switchScreen fires the 'explore' chapter itself).
+  if (completed && merlinTutMode === 'academy_tour' && !merlinChaptersSeen().includes('explore') && currentScreen !== 'map') switchScreen('map');
+  if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
   if (merlinTutPreviousFocus && typeof merlinTutPreviousFocus.focus === 'function') merlinTutPreviousFocus.focus({ preventScroll:true });
   merlinTutPreviousFocus = null;
 }
@@ -26655,15 +26843,30 @@ function maybeStartMerlinTutorial(delay = 600) {
   setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
 }
 
-// Gradual teaching: each remaining chapter fires the first time its screen opens.
+// Gradual teaching: each remaining chapter fires the first time its screen
+// opens — plus the guided-flow hand-offs, which fire on progress instead of
+// screens and survive reloads (an interrupted beat re-fires on the next visit).
 function maybeStartMerlinChapterForScreen(screenName) {
   if (merlinTutActive) return;
-  const chapter = MERLIN_TUTORIAL_CHAPTERS.find(c => c.trigger === screenName);
-  if (!chapter || merlinChaptersSeen().includes(chapter.id)) return;
   // The story always comes first; hold screen chapters until Merlin has spoken.
-  if (chapter.id !== 'story' && !merlinChaptersSeen().includes('story')) return;
+  if (!merlinChaptersSeen().includes('story')) return;
+  const seen = merlinChaptersSeen();
+  const chapter = MERLIN_TUTORIAL_CHAPTERS.find(c => c.trigger === screenName);
+  let chapterId = chapter && !seen.includes(chapter.id) ? chapter.id : null;
+  // Merlin's return speech: fires on the quests screen once his errand is claimed.
+  if (screenName === 'quests' && !chapterId && tutorialFlowState().errandClaimed && !seen.includes('errand')) chapterId = 'errand';
+  // A Roost that already stands (veteran save, or a reload mid-flow) skips the
+  // build lesson and goes straight to the Academy tour.
+  if (screenName === 'academy' && isAcademyBuildingBuilt('dorm')) {
+    if (chapterId === 'academy') { markMerlinChaptersSeen(['academy']); chapterId = null; }
+    if (!seen.includes('academy_tour')) chapterId = 'academy_tour';
+  }
+  // The real-world finale fires on the Map once the Academy tour is done.
+  if (screenName === 'map' && seen.includes('academy_tour') && !seen.includes('explore')) chapterId = 'explore';
+  if (!chapterId) return;
+  const startId = chapterId;
   setTimeout(() => {
-    if (!merlinTutActive && currentScreen === screenName) startMerlinTutorial({ chapterId: chapter.id, resume:true });
+    if (!merlinTutActive && currentScreen === screenName) startMerlinTutorial({ chapterId: startId, resume:true });
   }, 480);
 }
 
@@ -26692,6 +26895,7 @@ function refreshMerlinTutorialPosition() {
   }
 }
 window.addEventListener('resize', refreshMerlinTutorialPosition);
+window.addEventListener('resize', () => { if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer(); });
 window.addEventListener('scroll', refreshMerlinTutorialPosition, true);
 window.visualViewport?.addEventListener('resize', refreshMerlinTutorialPosition);
 window.visualViewport?.addEventListener('scroll', refreshMerlinTutorialPosition);
@@ -26903,6 +27107,7 @@ function init() {
   setInterval(queueActionBadgeUpdate, 30000);
   renderPetCompanion();
   maybeShowIntroCutscene();
+  if (typeof updateMerlinFlowPointer === 'function') setTimeout(updateMerlinFlowPointer, 900);
   resumeSideQuestIfAny();
   startPetWander();
   startPetCareLoop();
