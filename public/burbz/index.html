@@ -1018,7 +1018,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .card-stat-label { font-size: 8px; color: var(--text3); display: block; }
 
 /* Card back details — compact enough for a two-column mobile card. */
-.card-back-head { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:6px; min-height:24px; }
+.card-back-head { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:start; gap:6px; min-height:24px; }
 .card-back-title { min-width:0; font-family:'Russo One',sans-serif; font-size:11px; line-height:1.08; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card-back-meta { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:7.5px; font-weight:800; line-height:1.15; text-align:right; text-transform:uppercase; white-space:nowrap; }
 .card-back-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
@@ -2545,6 +2545,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 /* Bird knowledge quiz — NPCs, villages and quest returns */
 .bird-quiz-overlay { position:fixed; inset:0; z-index:920; display:none; align-items:center; justify-content:center; padding:18px; background:radial-gradient(circle at 50% 38%, rgba(214,168,79,.20), rgba(4,6,5,.78)); backdrop-filter:blur(7px); }
 .bird-quiz-overlay.open { display:flex; }
+.card-photo-btn { width:28px; height:28px; min-width:28px; border-radius:50%; border:1px solid rgba(240,199,103,.55); background:rgba(20,16,8,.85); color:#f0c767; font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center; align-self:start; box-shadow:0 2px 8px rgba(0,0,0,.35); cursor:pointer; }
+.card-photo-btn:active { transform:scale(.92); }
+.card-photo-btn.floating { position:absolute; top:8px; right:8px; z-index:3; }
+.player-photo-overlay { position:fixed; inset:0; z-index:930; display:none; align-items:center; justify-content:center; padding:18px; background:radial-gradient(circle at 50% 38%, rgba(214,168,79,.18), rgba(4,6,5,.82)); backdrop-filter:blur(7px); }
+.player-photo-overlay.open { display:flex; }
+.player-photo-card { width:min(440px, 94vw); max-height:86vh; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:16px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(165deg, rgba(34,28,16,.97), rgba(12,10,6,.98)); box-shadow:0 18px 50px rgba(0,0,0,.6); }
+.player-photo-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.player-photo-title { font-family:'Russo One',sans-serif; font-size:15px; color:#f0c767; }
+.player-photo-meta { font-size:11px; color:var(--text3); white-space:nowrap; }
+.player-photo-img { width:100%; max-height:62vh; object-fit:contain; border-radius:12px; background:#000; }
+.player-photo-loading { padding:34px 10px; text-align:center; color:var(--text3); font-size:13px; }
+.player-photo-close { min-height:40px; border-radius:10px; border:1px solid rgba(240,199,103,.45); background:rgba(240,199,103,.12); color:#f0c767; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.06em; cursor:pointer; }
 .bird-quiz-card { width:min(520px,100%); border-radius:22px; padding:18px; background:linear-gradient(180deg,#221c10,#0d0c08); border:1px solid rgba(240,199,103,.42); box-shadow:0 18px 54px rgba(0,0,0,.66), 0 0 26px rgba(214,168,79,.16); animation:questSheetUp .26s ease-out; }
 .bird-quiz-kicker { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent2); display:flex; justify-content:space-between; gap:10px; }
 .bird-quiz-title { margin:5px 0 6px; font-family:'Russo One',sans-serif; font-size:20px; color:#fff2c4; }
@@ -23037,6 +23049,149 @@ function nextDiscoverySightingCount(existing, opts = {}) {
   return existing && !opts.silent ? previous + 1 : previous;
 }
 
+// ============================================================================
+// PLAYER PHOTO JOURNAL — the real photo behind a camera discovery.
+// The shot the player actually took is squeezed to a phone-friendly JPEG and
+// kept in IndexedDB (far too big for the localStorage save); the discovery
+// record only carries a tiny photoAt flag so cards can render synchronously.
+// The photo itself lives on the device that took it.
+// ============================================================================
+const PLAYER_PHOTO_DB_NAME = 'burbz-player-photos';
+const PLAYER_PHOTO_STORE = 'photos';
+const PLAYER_PHOTO_MAX_EDGE = 1024;
+
+function openPlayerPhotoDb() {
+  if (!window.indexedDB) return Promise.reject(new Error('IndexedDB unavailable'));
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PLAYER_PHOTO_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(PLAYER_PHOTO_STORE)) db.createObjectStore(PLAYER_PHOTO_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('Photo store failed to open'));
+  });
+}
+
+async function savePlayerBirdPhoto(key, blob, meta) {
+  const db = await openPlayerPhotoDb();
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYER_PHOTO_STORE, 'readwrite');
+      tx.objectStore(PLAYER_PHOTO_STORE).put({ blob, ...(meta || {}) }, key);
+      tx.oncomplete = resolve;
+      tx.onerror = tx.onabort = () => reject(tx.error || new Error('Photo save failed'));
+    });
+  } finally { db.close(); }
+}
+
+async function loadPlayerBirdPhoto(key) {
+  const db = await openPlayerPhotoDb();
+  try {
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(PLAYER_PHOTO_STORE, 'readonly').objectStore(PLAYER_PHOTO_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error || new Error('Photo load failed'));
+    });
+  } finally { db.close(); }
+}
+
+// Shrink the capture to a card-friendly JPEG so hundreds of discoveries stay
+// well inside mobile storage quotas.
+async function compressPlayerPhoto(blob) {
+  const bitmap = await createImageBitmap(blob, { imageOrientation:'from-image' }).catch(() => createImageBitmap(blob));
+  const scale = Math.min(1, PLAYER_PHOTO_MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+  if (bitmap.close) bitmap.close();
+  const out = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  return out || blob;
+}
+
+// The first camera shot of a species is the one that goes on the card back —
+// later re-scans never overwrite the player's original discovery photo.
+async function rememberPlayerBirdPhoto(bird, blob) {
+  try {
+    const record = getDiscoveredRecordForSpecies(canonicalSpeciesName((bird && (bird.species || bird.commonName)) || ''));
+    if (!record || !record.key || record.photoAt) return;
+    const photo = await compressPlayerPhoto(blob);
+    const takenAt = new Date().toISOString();
+    await savePlayerBirdPhoto(record.key, photo, { takenAt, species: record.species });
+    record.photoAt = takenAt;
+    saveState();
+    renderBirdex();
+  } catch (e) { console.warn('Player photo journal save failed', e); }
+}
+
+function playerBirdPhotoRecord(key) {
+  const direct = (gameState.discoveredSpecies || {})[key];
+  if (direct) return direct;
+  return Object.values(gameState.discoveredSpecies || {}).find(r => r && r.key === key) || null;
+}
+
+// The little camera chip on a card back — only present once a photo exists.
+function playerPhotoChipHTML(bird, extraClass) {
+  const record = getDiscoveredRecordForSpecies(canonicalSpeciesName((bird && (bird.species || bird.commonName)) || ''));
+  if (!record || !record.photoAt) return '';
+  return '<button type="button" class="card-photo-btn' + (extraClass ? ' ' + extraClass : '') + '" data-action="view-photo" data-photo-key="' + record.key + '" title="See the photo you took of this bird" aria-label="See the photo you took of this bird">&#128247;</button>';
+}
+
+let playerPhotoObjectUrl = null;
+
+function playerPhotoOverlayEl() {
+  let el = document.getElementById('playerPhotoOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'playerPhotoOverlay';
+    el.className = 'player-photo-overlay';
+    el.addEventListener('click', e => { if (e.target === el) closePlayerBirdPhotoViewer(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function closePlayerBirdPhotoViewer() {
+  const el = document.getElementById('playerPhotoOverlay');
+  if (el) el.classList.remove('open');
+  if (playerPhotoObjectUrl) { URL.revokeObjectURL(playerPhotoObjectUrl); playerPhotoObjectUrl = null; }
+}
+
+async function openPlayerBirdPhotoViewer(key) {
+  const record = playerBirdPhotoRecord(key);
+  if (!record) return;
+  const el = playerPhotoOverlayEl();
+  el.innerHTML = '<div class="player-photo-card"><div class="player-photo-loading">&#128247; Fetching your photo…</div></div>';
+  el.classList.add('open');
+  SFX.tap();
+  try {
+    const entry = await loadPlayerBirdPhoto(record.key);
+    if (!entry || !entry.blob) {
+      closePlayerBirdPhotoViewer();
+      showToast('\u{1F4F7} That photo lives on the device that took it.');
+      return;
+    }
+    if (playerPhotoObjectUrl) URL.revokeObjectURL(playerPhotoObjectUrl);
+    playerPhotoObjectUrl = URL.createObjectURL(entry.blob);
+    const takenAt = entry.takenAt || record.photoAt;
+    const dateLabel = takenAt ? new Date(takenAt).toLocaleDateString() : '';
+    el.innerHTML = '<div class="player-photo-card">' +
+      '<div class="player-photo-head">' +
+        '<div class="player-photo-title">&#128247; ' + escapeHtml(record.commonName || record.species || 'Your bird') + '</div>' +
+        (dateLabel ? '<div class="player-photo-meta">Snapped ' + escapeHtml(dateLabel) + '</div>' : '') +
+      '</div>' +
+      '<img class="player-photo-img" src="' + playerPhotoObjectUrl + '" alt="Your photo of ' + escapeHtml(record.commonName || record.species || 'this bird') + '">' +
+      '<button type="button" class="player-photo-close" onclick="closePlayerBirdPhotoViewer()">CLOSE</button>' +
+    '</div>';
+  } catch (e) {
+    console.warn('Player photo open failed', e);
+    closePlayerBirdPhotoViewer();
+    showToast('Could not open your photo on this device.');
+  }
+}
+
 function rememberDiscoveredBird(bird, opts = {}) {
   if (!bird) return false;
   if (!gameState.discoveredSpecies || typeof gameState.discoveredSpecies !== 'object') gameState.discoveredSpecies = {};
@@ -23401,6 +23556,9 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   }
 
   const newDiscoveries = [];
+  // A camera discovery keeps the player's actual shot for the card back:
+  // handleBirdCandidates is the one funnel every accepted bird passes through.
+  if (opts.source === 'photo' && opts.blob && surfaced[0]) rememberPlayerBirdPhoto(surfaced[0], opts.blob);
   surfaced.forEach(bird => {
     const isNew = rememberDiscoveredBird(bird);
     if (isNew) newDiscoveries.push(bird);
@@ -24811,6 +24969,12 @@ function renderBirdex() {
         openBirdEquip(equipTarget.dataset.birdId || card.dataset.birdId);
         return;
       }
+      const photoTarget = e.target.closest('[data-action="view-photo"]');
+      if (photoTarget) {
+        e.stopPropagation();
+        openPlayerBirdPhotoViewer(photoTarget.dataset.photoKey);
+        return;
+      }
       const isFlipped = card.classList.toggle('flipped');
       if (isFlipped) requestAnimationFrame(() => {
         card.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -24891,6 +25055,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-head">
             <div class="card-back-title" style="color:${rarityColor}">${escapeHtml(birdDisplayName(bird))}</div>
             <div class="card-back-meta">${bird.rarity ? bird.rarity.toUpperCase() : 'COMMON'}<br>${bird.captureDate ? new Date(bird.captureDate).toLocaleDateString() : 'Unknown'}<br>${cardLv >= 50 ? 'LV.50 · MAX' : 'LV.' + cardLv + ' · ' + cardXp + '/' + cardXpNeed + ' XP'}</div>
+            ${playerPhotoChipHTML(bird)}
           </div>
           <div class="card-back-stats">
             <div class="card-back-stat"><span class="card-back-stat-label">HP</span><strong class="card-back-stat-value">${bird.maxHp || 100}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.maxHp||100)/2.5)}%;background:var(--hp-green)"></div></div></div>
@@ -24962,6 +25127,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
           </div>
         </div>
         <div class="card-back birdex-learning-back">
+          ${playerPhotoChipHTML(bird, 'floating')}
           <div class="birdex-learning-kicker">Real bird</div>
           <div class="birdex-learning-title">${escapeHtml(bird.commonName || bird.species)}</div>
           <div class="birdex-learning-scientific"><span class="birdex-learning-label">Scientific name</span>${escapeHtml(bird.scientificName || info.scientificName || 'Not recorded')}</div>
