@@ -76,7 +76,7 @@ def test_tutorial_states_the_errand_then_roost_then_recruit_sequence():
     required = (
         "send me out",
         "build the roost",
-        "the barracks recruits captured birds",
+        "the barracks recruits discovered birds",
         "recruit it at the academy barracks",
         "kingdom errands",
     )

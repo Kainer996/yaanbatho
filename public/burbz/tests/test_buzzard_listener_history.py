@@ -73,8 +73,11 @@ def test_merlin_sound_results_render_as_a_persistent_accessible_session_list():
 
     start = html.split("async function startContinuousSoundListening", 1)[1].split("function cleanupFailedSoundStart", 1)[0]
     stop = html.split("function stopContinuousSoundListening", 1)[1].split("// Live", 1)[0]
-    assert "soundDiscoveryHistory.reset()" in start
-    assert "soundDiscoveryHistory.reset()" not in stop
+    # The reset moved OUT of session start (a device-forced mic restart goes
+    # through the same path and was wiping a long listen's finds) and now runs
+    # only on the player's own STOP — a forced stop keeps the list for resume.
+    assert "soundDiscoveryHistory.reset()" not in start
+    assert "if (opts.userStop) { soundDiscoveryHistory.reset();" in stop
     assert ".scan-result-list" in html
     assert ".scan-session-discovery" in html
 

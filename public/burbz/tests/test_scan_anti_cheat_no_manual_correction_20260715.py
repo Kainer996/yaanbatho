@@ -54,8 +54,8 @@ def test_player_has_no_manual_species_entry_or_correction_path():
 
 def test_tutorial_teaches_only_camera_and_sound_identification():
     html = HTML.read_text(encoding="utf-8")
-    assert "title:'Two ways to capture'" in html
-    assert "Capture birds with Camera or Sound" in html
+    assert "title:'Two ways to discover'" in html
+    assert "Discover birds with Camera or Sound" in html
     assert "Sound" in html and "BirdNET" in html
     assert "manual species picker" not in html
     assert "chapterId:'scan'" in html
