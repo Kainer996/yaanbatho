@@ -315,7 +315,7 @@ fi
 if [[ $NO_PATCH -eq 1 ]]; then
   warn "--no-patch given: server.py left alone. It will keep using its current engine."
 else
-  PATCH_VERSION="v2"
+  PATCH_VERSION="v3"
   NEEDS_PATCH=1
   HAS_OLD_BLOCK=0
   # The first block shipped had no version marker, so detect it by the private
@@ -399,7 +399,7 @@ TRIM
       cat >> "$TARGET" <<'PATCH'
 
 
-# BURBZ-BIRDNET-V3-BEGIN v2
+# BURBZ-BIRDNET-V3-BEGIN v3
 # ---------------------------------------------------------------------------
 # BirdNET V3 — appended by scripts/install-birdnet-v3.sh
 #
@@ -410,6 +410,10 @@ TRIM
 # _aggregate_sound_detections turns that token into a V3 identification. The
 # original functions stay available, so BURBZ_SOUND_MODEL=birdnetv2 still
 # reaches the old path unchanged.
+#
+# v3 also tags the /api/identify/sound JSON with the engine that actually
+# answered, via a Flask after_request hook, so which recogniser is serving can
+# be read straight off a live scan instead of only from the service log.
 #
 # The version on the BEGIN marker above lets the installer replace this block
 # when it changes; everything from that marker to end of file is this block.
@@ -525,6 +529,44 @@ if _burbz_sound_id is not None:
     _burbz_log.info(
         "Burbz sound recogniser: %s", _burbz_sound_id.active_provider()
     )
+
+    # Name the engine in the scan response itself. Which model is installed and
+    # which model answered a request are different questions, and only the
+    # second decides whether the game can be sold — V2.4's weights are
+    # NonCommercial. The service log already records it, but a log line is not
+    # something you can read from a phone; adding it to the JSON lets the engine
+    # be checked from any live scan. The client already reads `provider`
+    # (sound_id/README.md) and ignores it when absent, so an un-updated client
+    # is unaffected. Registered as an after_request hook rather than edited into
+    # the handler, keeping this block append-only and trivial to revert.
+    try:
+        import json as _burbz_json
+
+        from flask import request as _burbz_request
+
+        @app.after_request
+        def _burbz_tag_provider(response):
+            try:
+                if not _burbz_request.path.endswith("/identify/sound"):
+                    return response
+                if response.mimetype != "application/json":
+                    return response
+                payload = response.get_json(silent=True)
+                if not isinstance(payload, dict) or "provider" in payload:
+                    return response
+                meta = _burbz_sound_id.served_meta()
+                payload["provider"] = meta["provider"]
+                payload["providerLabel"] = meta["label"]
+                payload["commercial"] = meta["commercial"]
+                response.set_data(_burbz_json.dumps(payload))
+            except Exception:
+                # Tagging the response must never be able to fail a scan.
+                pass
+            return response
+    except Exception:
+        # No Flask, or no app to hook — leave the response untagged rather than
+        # letting this stop the server booting.
+        pass
 PATCH
       "$PY" -m py_compile "$TARGET" || {
         cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"

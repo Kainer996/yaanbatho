@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from typing import Any, Callable, Iterable, Optional, Sequence
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,14 @@ _LABELS = {"birdnetv3": "BirdNET", "birdnetv2": "BirdNET", "perch": "Perch"}
 # Set once a scan has actually been served, so the announcement below is made
 # from a request that really happened rather than from start-up.
 _announced = False
+
+# The engine that actually answered the most recent scan on *this* thread. The
+# configured provider and the serving provider are not always the same value:
+# if V3 fails mid-request the call falls back to Perch, and a monetised build
+# has to be able to see which one really answered. Flask serves one request per
+# thread, so a thread-local keeps concurrent scans from reading each other's
+# result, and the response builder can read it back after analyse() returns.
+_served = threading.local()
 
 # Callables injected by server.py so this package never has to import it
 # (which would be circular) and so the tests can run without the backend.
@@ -242,9 +251,14 @@ def analyse(
     provider = active_provider()
     chain = (provider, *_FALLBACK_CHAIN.get(provider, ()))
 
+    # Clear any provider left over from an earlier scan on this thread, so a run
+    # where every engine fails does not report the previous request's engine.
+    _served.provider = None
+
     for position, candidate in enumerate(chain):
         try:
             results = _run(candidate, audio_path, allow, lat, lon, week)
+            _served.provider = candidate
             _announce(candidate)
             return results
         except Exception:
@@ -260,6 +274,34 @@ def analyse(
             )
 
     return []
+
+
+def last_served_provider() -> Optional[str]:
+    """The engine that actually answered the most recent scan on this thread.
+
+    ``None`` before any scan has run on the thread, or after one where every
+    engine failed. This is the value the response should report, not
+    :func:`active_provider`: the configured engine and the one that really
+    answered diverge whenever a fallback fires, and the whole point of naming
+    the engine in the response is to catch exactly that divergence.
+    """
+    return getattr(_served, "provider", None)
+
+
+def served_meta(provider: Optional[str] = None) -> dict:
+    """A small, JSON-ready description of the engine that served a scan.
+
+    Defaults to :func:`last_served_provider` so a caller can tag a response with
+    one call. ``commercial`` is the field that actually matters for a monetised
+    build: it is ``False`` only for the legacy V2.4 path, which nothing selects
+    automatically.
+    """
+    resolved = resolve_provider(provider or last_served_provider() or active_provider())
+    return {
+        "provider": resolved,
+        "label": provider_label(resolved),
+        "commercial": is_commercial_safe(resolved),
+    }
 
 
 def provider_label(provider: Optional[str] = None) -> str:
@@ -279,6 +321,8 @@ __all__ = [
     "configure",
     "fallback_enabled",
     "is_commercial_safe",
+    "last_served_provider",
     "provider_label",
     "resolve_provider",
+    "served_meta",
 ]

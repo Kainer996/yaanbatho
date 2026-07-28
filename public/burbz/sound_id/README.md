@@ -94,14 +94,20 @@ response builder — is untouched:
 ```
 
 `prepare_audio_for_birdnet` also stays as it is: the provider resamples to
-32 kHz itself. Include the engine in the JSON response so the UI can name it:
+32 kHz itself. Name the engine in the JSON response so the recogniser can be
+read straight off a live scan, not only from the service log:
 
 ```python
-payload["provider"] = sound_id.active_provider()
+payload.update(sound_id.served_meta())   # -> provider, label, commercial
 ```
 
-The client defaults to "BirdNET" when the field is absent, so an un-updated
-server keeps working.
+Use `served_meta()` (or `last_served_provider()`), **not** `active_provider()`:
+the configured engine and the one that actually answered diverge whenever a
+fallback fires, and reporting the engine is only worth doing if it catches that.
+The `install-birdnet-v3.sh` block does this for you with an `after_request` hook,
+so a box only has to re-run the installer to start tagging responses — no hand
+wiring. The client defaults to "BirdNET" when the field is absent, so an
+un-updated server keeps working.
 
 ### The `common_name_for` resolver
 
