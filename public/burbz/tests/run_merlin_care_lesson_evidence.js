@@ -148,7 +148,32 @@ function check(name, cond, extra) {
     return { tag: el?.tagName, id: el?.id, isFeed: el === b || b.contains(el) };
   });
   check('Feed button is the topmost element at its centre (tappable)', topAtFeed.isFeed, JSON.stringify(topAtFeed));
+  // The player's asks: Merlin's words must read OVER his card, and the card
+  // must be darkened apart from the Feed button.
+  const layering = await page.evaluate(() => {
+    const bubble = document.querySelector('.merlin-tutorial-bubble');
+    const r = bubble.getBoundingClientRect();
+    const pts = [[r.left + r.width/2, r.top + 18], [r.left + r.width/2, r.top + r.height/2]];
+    const hits = pts.map(([x,y]) => { const el = document.elementFromPoint(x,y); return bubble.contains(el) || el === bubble; });
+    const card = document.getElementById('merlinCareMenu').getBoundingClientRect();
+    // A point on the card well away from Feed must be covered by a shield.
+    const coverEl = document.elementFromPoint(card.left + 30, card.top + 30);
+    const spot = document.getElementById('merlinTutorialSpotlight');
+    return { bubbleOnTop: hits.every(Boolean), coverId: coverEl?.id || coverEl?.className?.toString?.().slice(0,30),
+             dimActive: !spot.classList.contains('soft') && !spot.classList.contains('none') };
+  });
+  check('Merlin speech reads OVER his card', layering.bubbleOnTop, JSON.stringify(layering));
+  check('card is dimmed/blocked away from Feed', /shield/i.test(String(layering.coverId)) || /merlin-tutorial/i.test(String(layering.coverId)), JSON.stringify(layering));
+  check('the dim is active (card darkened, hole bright)', layering.dimActive, JSON.stringify(layering));
+  const playBlocked = await page.evaluate(() => {
+    const b = document.getElementById('merlinPlayBtn');
+    const r = b.getBoundingClientRect();
+    const el = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+    return { blocked: !(el === b || b.contains(el)), by: el?.id || el?.className?.toString?.().slice(0,30) };
+  });
+  check('Play button is blocked while Merlin asks for Feed', playBlocked.blocked, JSON.stringify(playBlocked));
 
+  if (SHOT) await page.screenshot({ path: SHOT });
   log('\n--- The player feeds him ---');
   await page.click('#merlinFeedBtn');
   await page.waitForTimeout(1400);
@@ -175,7 +200,6 @@ function check(name, cond, extra) {
   check('no shields left blocking the app', leftovers.shields === 0, JSON.stringify(leftovers));
   check('no lifted elements left', leftovers.lifts === 0, JSON.stringify(leftovers));
 
-  if (SHOT) await page.screenshot({ path: SHOT });
   await browser.close();
   log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : failures + ' CHECK(S) FAILED'}`);
   process.exit(failures === 0 ? 0 : 1);

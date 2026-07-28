@@ -102,7 +102,6 @@ def test_feeding_is_taught_by_feeding_him():
     # 2. …then the player taps him and his care menu opens.
     tap = by_event["merlin-care-opened"]
     assert tap["target"] == "#petSprite"
-    assert tap["action"]["lift"] == "#merlinPerchAssembly"
     # 3. His needs and his real diet are read off the open menu.
     order = [s["title"] for s in story]
     needs = next(s for s in story if s["target"] == ".merlin-care-status")
@@ -113,7 +112,6 @@ def test_feeding_is_taught_by_feeding_him():
     # 4. The player presses Feed themselves.
     feed = by_event["merlin-fed"]
     assert feed["target"] == "#merlinFeedBtn"
-    assert feed["action"]["lift"] == "#merlinCareMenu"
     # 5. Merlin closes the lesson on accurate diets and teases the Kitchen.
     after = story[order.index(feed["title"]) + 1]
     assert "diet must be accurate" in after["text"].lower()
@@ -167,8 +165,10 @@ def test_interactive_steps_hand_the_app_back_and_shield_the_rest():
     for shield in ("Top", "Bottom", "Left", "Right"):
         assert f'id="merlinTutorialShield{shield}"' in html
     assert ".merlin-tutorial-overlay.interactive { pointer-events:none; }" in html
-    # The real control is lifted out of the dim so it is bright and tappable.
-    assert ".tutorial-lift { z-index:1520 !important; }" in html
+    # Nothing is lifted out of the dim: raising the control's container put
+    # Merlin's card over his own speech and left its other buttons tappable.
+    assert "tutorial-lift" not in html
+    assert ", lift:'" not in html
     # A missing target dims everything rather than leaving a hole anywhere.
     assert "merlinTutPositionShields(null);" in html
 
@@ -263,7 +263,44 @@ def test_the_flow_still_covers_every_beat_the_design_asks_for():
     assert "send me out on quests or get out and look for a bird" in explore
 
 
+def test_free_mode_always_leaves_a_way_out():
+    """Regression: free mode hid the bubble AND the footer, so a player who
+    wandered off mid-task had no Back, no Next and no Skip on a touch device —
+    and the rescue timer un-hid a button inside a display:none container."""
+    html = HTML.read_text(encoding="utf-8")
+    # The footer (and its always-tappable Skip tour) survives free mode.
+    assert ".merlin-tutorial-overlay.free .merlin-tutorial-stage { display:none; }" in html
+    assert ".merlin-tutorial-overlay.free .merlin-tutorial-footer" not in html
+    # The task chip carries its own per-step skip, revealed by the rescue.
+    assert 'id="merlinTutorialTaskSkip"' in html
+    assert "if (taskButton) taskButton.hidden = false;" in html
+    assert "$('merlinTutorialTaskSkip')?.addEventListener('click'" in html
+
+
+def test_obeying_tap_quests_is_not_undone():
+    """Regression: finishing the story chapter by tapping Quests bounced the
+    player straight back to the Map and cancelled the Quests hand-off."""
+    html = HTML.read_text(encoding="utf-8")
+    assert "if (currentScreen !== merlinTutOriginScreen && merlinTutMode === 'full') switchScreen(merlinTutOriginScreen);" in html
+    # And Merlin does not nag them to tap Quests when they just did.
+    assert "if (currentScreen !== 'quests') showToast(" in html
+
+
+def test_a_full_merlin_cannot_strand_the_feed_step():
+    """Regression: hunger clamps to 0 after one ration, so a re-entered feed
+    step (via Back, or a migrated save) armed a deed that could never fire."""
+    html = HTML.read_text(encoding="utf-8")
+    assert "return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) > 0;" in html
+
+
+def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
+    """Regression: the Bird Wisdom Check opened 650ms before the errand chapter
+    and was then buried under the tutorial dim with nothing to close it."""
+    html = HTML.read_text(encoding="utf-8")
+    assert "if (q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);" in html
+
+
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
-    assert "care-lesson-fix-v150-20260728" in sw
-    assert "const BURBZ_BUILD = 'care-lesson-fix-v150-20260728';" in HTML.read_text(encoding="utf-8")
+    assert "discoveries-quiz-pacing-v152-20260728" in sw
+    assert "const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';" in HTML.read_text(encoding="utf-8")
