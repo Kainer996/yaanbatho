@@ -127,15 +127,25 @@ server_py_from_process() {
 }
 
 server_py_from_systemd() {
-  local unit exec_start
+  local unit exec_start workdir candidate
+  # Prefer the actual Burbz unit before considering any unrelated Python API.
   while IFS= read -r unit; do
+    [[ -n "$unit" ]] || continue
     exec_start="$(systemctl show -p ExecStart --value "$unit" 2>/dev/null || true)"
     if [[ "$exec_start" =~ ([^[:space:]\"]*server\.py) ]]; then
-      [[ -f "${BASH_REMATCH[1]}" ]] && ! is_archived_path "${BASH_REMATCH[1]}" \
-        && { echo "${BASH_REMATCH[1]}"; return; }
+      candidate="${BASH_REMATCH[1]}"
+      if [[ "$candidate" != /* ]]; then
+        workdir="$(systemctl show -p WorkingDirectory --value "$unit" 2>/dev/null || true)"
+        [[ -n "$workdir" ]] && candidate="$workdir/$candidate"
+      fi
+      [[ -f "$candidate" ]] && ! is_archived_path "$candidate" \
+        && { readlink -f "$candidate"; return; }
     fi
-  done < <(systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
-             | awk '{print $1}')
+  done < <(
+    printf '%s\n' burbz.service
+    systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
+      | awk '{print $1}' | grep -v '^burbz\.service$'
+  )
 }
 
 # Last resort: search the disk and rank, because a box that has been running a
@@ -160,8 +170,8 @@ server_py_from_disk() {
 find_server_py() {
   [[ -n "$SERVER_PY" ]] && { echo "$SERVER_PY"; return; }
   local found
-  found="$(server_py_from_process)"; [[ -n "$found" ]] && { echo "$found"; return; }
   found="$(server_py_from_systemd)"; [[ -n "$found" ]] && { echo "$found"; return; }
+  found="$(server_py_from_process)"; [[ -n "$found" ]] && { echo "$found"; return; }
   server_py_from_disk
 }
 
@@ -504,10 +514,10 @@ if [[ $DRY_RUN -eq 0 ]]; then
 fi
 ok "server.py carries BirdNET integration $PATCH_VERSION before app.run"
 
-# Historical v1-v3 append-only patcher retained inert for readable rollback
-# archaeology. v4 above is the only executable patch path.
+# Main's earlier inline v4 patcher is retained inert for readable rollback
+# archaeology. The tested server_patcher v4 above is the only executable path.
 if false; then
-  PATCH_VERSION="v2"
+  PATCH_VERSION="v4"
   NEEDS_PATCH=1
   HAS_OLD_BLOCK=0
   # The first block shipped had no version marker, so detect it by the private
@@ -525,8 +535,8 @@ if false; then
     ok "server.py already carries the current wiring ($PATCH_VERSION) — no code change needed"
     NEEDS_PATCH=0
   elif [[ $HAS_OLD_BLOCK -eq 1 ]]; then
-    # An earlier block, marked or not. It always runs to end of file, so it can
-    # be cut back cleanly and replaced with the current one.
+    # Replace an earlier block. v4 has an explicit END marker because the block
+    # must sit before app.run; v1-v3 ran to end-of-file and are trimmed there.
     log "Replacing the older wiring block with $PATCH_VERSION"
     run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
     if [[ $DRY_RUN -eq 0 ]]; then
@@ -538,9 +548,17 @@ with open(path, encoding="utf-8") as handle:
     lines = handle.readlines()
 
 start = None
+end = None
 for index, line in enumerate(lines):
     if line.startswith("# BURBZ-BIRDNET-V3-BEGIN"):
         start = index
+        for end_index in range(index + 1, len(lines)):
+            if lines[end_index].startswith("# BURBZ-BIRDNET-V3-END"):
+                end = end_index + 1
+                break
+        # v1-v3 had no END marker and were appended at end-of-file.
+        if end is None:
+            end = len(lines)
         break
 
 if start is None:
@@ -554,15 +572,29 @@ if start is None:
                 start -= 1
             while start and lines[start - 1].lstrip().startswith("#"):
                 start -= 1
+            # The unmarked block shipped immediately before the direct-run
+            # guard. Preserve that guard; deleting it makes systemd's process
+            # exit cleanly without ever opening the API port.
+            end = next(
+                (
+                    guard_index
+                    for guard_index in range(index + 1, len(lines))
+                    if lines[guard_index].startswith("if __name__")
+                    and "__main__" in lines[guard_index]
+                ),
+                len(lines),
+            )
             break
 
-if start is None:
+if start is None or end is None:
     sys.exit("no previous block found")
 
 while start and not lines[start - 1].strip():
     start -= 1
+while end < len(lines) and not lines[end].strip():
+    end += 1
 
-remainder = "".join(lines[:start])
+remainder = "".join(lines[:start] + lines[end:])
 if "_burbz_sound_id" in remainder:
     sys.exit("block boundary looks wrong - refusing to trim")
 
@@ -583,15 +615,15 @@ TRIM
     log "Wiring sound_id into server.py (backup: $(basename "$TARGET").birdnet-v3-bak-$STAMP)"
     [[ -f "$TARGET.birdnet-v3-bak-$STAMP" ]] || run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
 
-    # The patch is purely additive: it appends a block that re-binds the two
-    # BirdNET helpers so the existing handler routes through sound_id without
-    # its call sites being edited. Editing the middle of an unseen file is how
-    # this goes wrong; appending to the end is reversible and easy to read.
+    # Write the block to a temporary file, then insert it before the main guard.
+    # Appending after `app.run()` makes the wiring unreachable when server.py is
+    # executed directly, because Flask blocks before the appended code can run.
     if [[ $DRY_RUN -eq 0 ]]; then
-      cat >> "$TARGET" <<'PATCH'
+      PATCH_FILE="$(mktemp)"
+      cat > "$PATCH_FILE" <<'PATCH'
 
 
-# BURBZ-BIRDNET-V3-BEGIN v2
+# BURBZ-BIRDNET-V3-BEGIN v4
 # ---------------------------------------------------------------------------
 # BirdNET V3 — appended by scripts/install-birdnet-v3.sh
 #
@@ -603,8 +635,12 @@ TRIM
 # original functions stay available, so BURBZ_SOUND_MODEL=birdnetv2 still
 # reaches the old path unchanged.
 #
-# The version on the BEGIN marker above lets the installer replace this block
-# when it changes; everything from that marker to end of file is this block.
+# v4 also tags the /api/identify/sound JSON with the engine that actually
+# answered, via a Flask after_request hook, so which recogniser is serving can
+# be read straight off a live scan instead of only from the service log.
+#
+# The BEGIN/END markers let the installer replace this block without touching
+# the server's app.run guard below it.
 #
 # Remove this block (or run install-birdnet-v3.sh --rollback) to undo.
 # ---------------------------------------------------------------------------
@@ -717,7 +753,69 @@ if _burbz_sound_id is not None:
     _burbz_log.info(
         "Burbz sound recogniser: %s", _burbz_sound_id.active_provider()
     )
+
+    # Name the engine in the scan response itself. Which model is installed and
+    # which model answered a request are different questions, and only the
+    # second decides whether the game can be sold — V2.4's weights are
+    # NonCommercial. The service log already records it, but a log line is not
+    # something you can read from a phone; adding it to the JSON lets the engine
+    # be checked from any live scan. The client already reads `provider`
+    # (sound_id/README.md) and ignores it when absent, so an un-updated client
+    # is unaffected. Registered as an after_request hook rather than edited into
+    # the handler, keeping this block append-only and trivial to revert.
+    try:
+        import json as _burbz_json
+
+        from flask import request as _burbz_request
+
+        @app.after_request
+        def _burbz_tag_provider(response):
+            try:
+                if not _burbz_request.path.endswith("/identify/sound"):
+                    return response
+                if response.mimetype != "application/json":
+                    return response
+                payload = response.get_json(silent=True)
+                if not isinstance(payload, dict) or "provider" in payload:
+                    return response
+                meta = _burbz_sound_id.served_meta()
+                payload["provider"] = meta["provider"]
+                payload["providerLabel"] = meta["label"]
+                payload["commercial"] = meta["commercial"]
+                response.set_data(_burbz_json.dumps(payload))
+            except Exception:
+                # Tagging the response must never be able to fail a scan.
+                pass
+            return response
+    except Exception:
+        # No Flask, or no app to hook — leave the response untagged rather than
+        # letting this stop the server booting.
+        pass
+# BURBZ-BIRDNET-V3-END v4
 PATCH
+      "$PY" - "$TARGET" "$PATCH_FILE" <<'INSERT' || {
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+patch_path = Path(sys.argv[2])
+original = path.read_text(encoding="utf-8")
+block = patch_path.read_text(encoding="utf-8").strip("\n")
+main_guard = re.search(r"(?m)^if __name__\s*==\s*['\"]__main__['\"]\s*:\s*$", original)
+if main_guard:
+    # The wiring must execute before a direct app.run blocks forever.
+    patched = original[:main_guard.start()].rstrip() + "\n\n" + block + "\n\n" + original[main_guard.start():]
+else:
+    # Import-based WSGI servers have no app.run guard; append in that case.
+    patched = original.rstrip() + "\n\n" + block + "\n"
+path.write_text(patched, encoding="utf-8")
+INSERT
+        rm -f "$PATCH_FILE"
+        cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+        die "Could not insert the wiring block before app.run — restored the backup."
+      }
+      rm -f "$PATCH_FILE"
       "$PY" -m py_compile "$TARGET" || {
         cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
         die "The patched server.py does not compile — restored the backup, nothing changed."

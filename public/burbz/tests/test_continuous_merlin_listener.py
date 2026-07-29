@@ -114,7 +114,7 @@ def test_audio_upload_and_optional_location_are_disclosed_before_capture():
     assert 'id="merlinLocationAssist" type="checkbox" checked' in html
     assert "Use my location to improve local bird matches (recommended; you can turn this off)" in html
     assert "function soundLocationAssistEnabled" in html
-    assert "localStorage.getItem(SOUND_LOCATION_PREF_KEY) !== '0'" in html
+    assert "storedLocationPreference === null ? true : storedLocationPreference === '1'" in html
     geo = html.split("async function getCurrentPositionForBirdnet", 1)[1].split("async function uploadRecording", 1)[0]
     assert "if (!soundLocationAssistEnabled()) return null" in geo
     assert "window.__burbzSoundTestDeps?.getCurrentPosition" in geo
@@ -271,9 +271,9 @@ def test_permission_track_end_and_api_failures_have_truthful_recoverable_states(
 def test_continuous_listener_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert 'sound_listener_core.js?v=birdnet-v3-accuracy-v4-20260729' in html
-    assert './sound_listener_core.js?v=birdnet-v3-accuracy-v4-20260729' in sw
+    assert 'sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729' in html
+    assert './sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729' in sw
     core = sw.split("const BURBZ_CORE = [", 1)[1].split("];", 1)[0]
-    assert './sound_listener_core.js?v=birdnet-v3-accuracy-v4-20260729' in core
+    assert './sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729' in core
     assert './assets/ui/merlin-wand-listener.webp' in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

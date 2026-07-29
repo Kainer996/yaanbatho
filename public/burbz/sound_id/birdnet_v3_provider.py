@@ -249,10 +249,13 @@ def _verify_asset(path: str, expected: str, description: str) -> str:
 
 
 def _search_dirs() -> List[str]:
-    dirs = []
     explicit = (os.environ.get("BURBZ_BIRDNET_V3_MODEL_DIR") or "").strip()
     if explicit:
-        dirs.append(explicit)
+        # An explicit directory is authoritative. Falling back to some other
+        # installed copy would hide a broken deployment and defeat fail-closed
+        # locality checks.
+        return [explicit]
+    dirs = []
     # Alongside the deployed Burbz tree, i.e. <webroot>/burbz/models.
     dirs.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models"))
     dirs.extend(_MODEL_DIR_CANDIDATES)
@@ -853,7 +856,14 @@ def _temporal_decision_scores(
     configured_threshold = _env_bounded_float(
         "BURBZ_BIRDNET_V3_MIN_CONFIDENCE", DEFAULT_MIN_CONFIDENCE, 0.01, 0.99
     )
-    threshold = max(configured_threshold, float(threshold_floor))
+    # An older VPS environment used 0.15.  Treat the environment setting as a
+    # way to make production *stricter*, never as a way for stale configuration
+    # to silently weaken the reviewed accuracy policy.
+    threshold = max(
+        configured_threshold,
+        DEFAULT_MIN_CONFIDENCE,
+        float(threshold_floor),
+    )
     single_threshold = _env_bounded_float(
         "BURBZ_BIRDNET_V3_SINGLE_WINDOW_CONFIDENCE",
         DEFAULT_SINGLE_WINDOW_CONFIDENCE,

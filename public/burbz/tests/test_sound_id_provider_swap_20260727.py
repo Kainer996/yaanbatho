@@ -74,6 +74,24 @@ def test_a_typo_in_the_env_var_does_not_take_sound_scanning_down(monkeypatch):
     assert sound_id.active_provider() == "birdnetv3"
 
 
+@pytest.mark.parametrize(
+    "value",
+    [None, "", "0", "false", "no", "off", "unexpected"],
+)
+def test_fallback_is_fail_closed_without_explicit_opt_in(monkeypatch, value):
+    if value is None:
+        monkeypatch.delenv("BURBZ_SOUND_MODEL_FALLBACK", raising=False)
+    else:
+        monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", value)
+    assert sound_id.fallback_enabled() is False
+
+
+@pytest.mark.parametrize("value", ["1", "true", "TRUE", "yes", "on"])
+def test_fallback_accepts_only_explicit_truthy_values(monkeypatch, value):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", value)
+    assert sound_id.fallback_enabled() is True
+
+
 def test_provider_labels_match_the_client_engine_names():
     # Both BirdNET generations read as plain "BirdNET" to a player.
     assert sound_id.provider_label("birdnetv3") == "BirdNET"
@@ -139,6 +157,7 @@ def _v3_returning(common_name):
 
 def test_perch_failure_falls_back_to_v3_rather_than_failing_the_scan(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "perch")
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "1")
 
     from sound_id import birdnet_v3_provider, perch_provider
 
@@ -154,6 +173,7 @@ def test_perch_failure_falls_back_to_v3_rather_than_failing_the_scan(monkeypatch
 
 
 def test_v3_failure_falls_back_to_perch_and_never_to_non_commercial_v2(monkeypatch):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "1")
     from sound_id import birdnet_v3_provider, perch_provider
 
     def explode(*args, **kwargs):
@@ -173,6 +193,7 @@ def test_v3_failure_falls_back_to_perch_and_never_to_non_commercial_v2(monkeypat
 
 def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch):
     """A failed scan must not be served by the non-commercial model instead."""
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "1")
     from sound_id import birdnet_v3_provider, perch_provider
 
     def explode(*args, **kwargs):
@@ -186,9 +207,8 @@ def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch
     assert not sound_id.served_meta()["providerVerified"]
 
 
-def test_fallback_can_be_disabled_so_failures_are_loud_while_testing(monkeypatch):
+def test_failures_are_loud_by_default_without_fallback_opt_in(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "perch")
-    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "0")
 
     from sound_id import perch_provider
 

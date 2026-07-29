@@ -10,7 +10,9 @@ SW = ROOT / "sw.js"
 DEPLOY_SCRIPT = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 RELEASE_PIN = "diet-hunger-release-20260723"
-CACHE_NAME = "burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-generated-art-ui-v153-20260729-birdnet-accuracy-v154-20260729"
+CACHE_MATCH = re.search(r"const BURBZ_CACHE = '([^']+)'", SW.read_text(encoding="utf-8"))
+assert CACHE_MATCH is not None
+CACHE_NAME = CACHE_MATCH.group(1)
 # The point of this list is that index.html and sw.js never drift apart on a
 # runtime asset — not that every asset stays frozen on the diet-hunger pin.
 # merlin_companion_core.js has moved on since (shorter Merlin speech), so it
@@ -20,10 +22,10 @@ PINNED_RUNTIME_ASSETS = {
     # crafting material, so the Academy core carries its own pin now.
     "academy_treehouse_core.js": "quest-categories-material-quests-20260726",
     "kitchen_pantry_core.js": RELEASE_PIN,
-    "data/bird-diet-records.js": RELEASE_PIN,
-    "bird_diet_hunger_core.js": RELEASE_PIN,
+    "data/bird-diet-records.js": "reconciled-release-v170-20260729",
+    "bird_diet_hunger_core.js": "reconciled-release-v170-20260729",
     "diet_hunger_core.js": RELEASE_PIN,
-    "merlin_companion_core.js": "merlin-compact-speech-v2-20260724",
+    "merlin_companion_core.js": "reconciled-release-v170-20260729",
 }
 BUILD_ONLY_ASSETS = ["data/bird-diet-records.json"]
 MAX_RUNTIME_DIET_JS_BYTES = 1_000_000

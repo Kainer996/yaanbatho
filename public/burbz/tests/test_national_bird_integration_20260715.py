@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -85,7 +86,7 @@ print(json.dumps({
   'routes': sorted(str(r) for r in server.app.url_map.iter_rules() if 'report' in str(r) and 'admin' not in str(r)),
 }))
 """
-    result = subprocess.run([str(ROOT / "venv" / "bin" / "python"), "-c", script], cwd=ROOT, text=True, capture_output=True, timeout=60)
+    result = subprocess.run([sys.executable, "-c", script], cwd=ROOT, text=True, capture_output=True, timeout=60)
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout.strip().splitlines()[-1])
     assert payload == {

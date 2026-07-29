@@ -115,6 +115,50 @@ def configure(
     if common_name_for is not None:
         _common_name_for = common_name_for
 
+    # A few installed servers still carry the embedded v4 adapter. Their
+    # root-owned server.py cannot be replaced by the package-only autodeploy,
+    # but it does call configure() directly at import time. Recognise only that
+    # exact adapter's private globals and give it the current request-local
+    # provenance hooks. The canonical server_integration.install() caller has
+    # none of these sentinels and therefore remains the sole adapter installer.
+    frame = None
+    try:
+        import inspect
+
+        frame = inspect.currentframe()
+        caller_globals = frame.f_back.f_globals if frame and frame.f_back else None
+        _maybe_install_legacy_v4_provenance(caller_globals)
+    except Exception:
+        logger.exception("could not install legacy v4 provenance compatibility")
+    finally:
+        del frame
+
+
+def _maybe_install_legacy_v4_provenance(namespace) -> None:
+    """Bridge the exact old embedded-v4 bootstrap to current response metadata."""
+    if not isinstance(namespace, dict):
+        return
+    try:
+        import sys
+
+        if namespace.get("_burbz_sound_id") is not sys.modules.get(__name__):
+            return
+        if not callable(namespace.get("_burbz_v2_analyse")):
+            return
+        if not callable(namespace.get("_burbz_v2_aggregate")):
+            return
+        app = namespace.get("app")
+        if app is None or not callable(getattr(app, "before_request", None)):
+            return
+
+        from . import server_integration
+
+        server_integration._install_legacy_v4_provenance(app)
+    except Exception:
+        # Compatibility metadata must never make an otherwise healthy legacy
+        # server fail to import. The canonical installer remains the repair path.
+        logger.exception("legacy v4 server provenance hook registration failed")
+
 
 def resolve_provider(raw: Optional[str]) -> str:
     """Canonical provider key for a BURBZ_SOUND_MODEL value.
@@ -143,7 +187,7 @@ def active_provider() -> str:
 
 def fallback_enabled() -> bool:
     raw = (os.environ.get("BURBZ_SOUND_MODEL_FALLBACK") or "").strip().lower()
-    return raw not in {"0", "false", "no", "off"}
+    return raw in {"1", "true", "yes", "on"}
 
 
 def is_commercial_safe(provider: Optional[str] = None) -> bool:
@@ -351,11 +395,10 @@ def analyse(
     WAV on disk. The providers resample it themselves, so the existing audio
     preparation stays as it is.
 
-    If the chosen engine fails, the call falls back to the next licence-clean
-    engine rather than failing the player's scan. Set
-    ``BURBZ_SOUND_MODEL_FALLBACK=0`` to surface the error instead — worth doing
-    while testing, so a broken install is loud rather than quietly served by
-    the other model.
+    Failures are surfaced by default so a missing model cannot silently change
+    the recogniser that serves production. Set
+    ``BURBZ_SOUND_MODEL_FALLBACK=1`` only when an explicit licence-clean
+    fallback is wanted.
     """
     clear_served_provider()
     lat, lon = _location_from_request(lat, lon)
@@ -373,8 +416,8 @@ def analyse(
                 raise
             remaining = chain[position + 1:]
             logger.exception(
-                "%s analysis failed%s. Set BURBZ_SOUND_MODEL_FALLBACK=0 to "
-                "surface the error instead.",
+                "%s analysis failed%s. BURBZ_SOUND_MODEL_FALLBACK must be "
+                "explicitly enabled to use another recogniser.",
                 candidate,
                 f" — falling back to {remaining[0]} for this request"
                 if remaining else ", and no fallback engine is left",

@@ -31,7 +31,23 @@ SUMMARY_OUT = ROOT / "data" / "bird-diet-provenance-summary.json"
 
 EXPECTED_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
 EXPECTED_PROFILE_COUNT = 951
-DIET_VERSION = "diet-hunger-20260723"
+DIET_VERSION = "diet-generalists-20260729"
+
+# Species-level refinements for well-documented opportunistic generalists.
+# These are deliberately narrow: an omnivorous label does not make every
+# ingredient safe for every bird, and specialists keep their exact menu.
+SPECIES_DIET_REFINEMENTS = {
+    "Corvus corone": {
+        "secondary": ["worms", "fruit_berries", "fish", "small_birds"],
+        "education": (
+            " Carrion Crows are opportunistic generalists; their source-backed "
+            "Kitchen menu also includes earthworms, fruit, fish and small-bird prey."
+        ),
+    },
+    "Larus argentatus": {"secondary": ["worms"]},
+    "Larus fuscus": {"secondary": ["worms"]},
+    "Larus canus": {"secondary": ["worms", "fruit_berries"]},
+}
 
 SOURCE_METADATA = {
     "name": "EltonTraits 1.0 BirdFuncDat",
@@ -375,6 +391,21 @@ def primary_secondary(scores: dict[str, int | float]) -> tuple[list[str], list[s
     return primary, secondary
 
 
+def apply_species_refinement(
+    scientific: str,
+    scores: dict[str, int | float],
+    primary: list[str],
+    secondary: list[str],
+) -> tuple[list[str], list[str], dict[str, int | float], str]:
+    refinement = SPECIES_DIET_REFINEMENTS.get(scientific, {})
+    for refined_family in refinement.get("secondary", []):
+        if refined_family not in primary and refined_family not in secondary:
+            secondary.append(refined_family)
+        if refined_family not in scores:
+            scores[refined_family] = 1
+    return primary, sorted(secondary), scores, refinement.get("education", "")
+
+
 def prep_by_family(primary: list[str], secondary: list[str]) -> dict[str, str]:
     families = primary + [family for family in secondary if family not in primary]
     return {
@@ -448,11 +479,15 @@ def record_from_parts(
         primary = []
         secondary = ["invertebrates", "seeds", "fruit_berries"]
         scores = {family: 1 for family in secondary}
+    scientific = (profile or {}).get("scientificName") or (row or {}).get("Scientific") or ctx["scientific"]
+    score_values: dict[str, int | float] = dict(scores)
+    primary, secondary, scores, refinement_education = apply_species_refinement(
+        scientific, score_values, primary, secondary
+    )
     refused = sorted(family for family in FOOD_FAMILIES if family not in set(primary + secondary))
     certainty = (row or {}).get("Diet-Certainty") or ("F" if method == "family-fallback" else "U")
     aliases = list(dict.fromkeys([str(a) for a in ((profile or {}).get("aliases") or []) if a]))
     name = (profile or {}).get("name") or (row or {}).get("English") or ctx["common"]
-    scientific = (profile or {}).get("scientificName") or (row or {}).get("Scientific") or ctx["scientific"]
     family = (profile or {}).get("family") or (row or {}).get("BLFamilyLatin") or ctx["family"]
     return {
         "id": record_id,
@@ -481,7 +516,7 @@ def record_from_parts(
         "refusedCompatibleFamilies": refused,
         "compatibleIngredientFamilies": primary + [family for family in secondary if family not in primary],
         "prepByFamily": prep_by_family(primary, secondary),
-        "education": education_text(profile, row, method, primary, secondary, fallback_reason),
+        "education": education_text(profile, row, method, primary, secondary, fallback_reason) + refinement_education,
         "provenance": {
             "matchMethod": method,
             "sourceScientificName": (row or {}).get("Scientific"),
@@ -550,6 +585,9 @@ def source_record(row: dict[str, str]) -> dict[str, Any]:
     ctx = row_context(row, None)
     scores = game_family_scores(percentages, ctx)
     primary, secondary = primary_secondary(scores)
+    primary, secondary, scores, refinement_education = apply_species_refinement(
+        str(row.get("Scientific") or ""), scores, primary, secondary
+    )
     return {
         "i": "birdfuncdat-" + str(row.get("SpecID") or profile_id_for_scientific(row.get("Scientific") or "")),
         "n": row.get("English"),
@@ -562,6 +600,7 @@ def source_record(row: dict[str, str]) -> dict[str, Any]:
         "primary": primary,
         "secondary": secondary,
         "prep": prep_by_family(primary, secondary),
+        "e": refinement_education,
     }
 
 

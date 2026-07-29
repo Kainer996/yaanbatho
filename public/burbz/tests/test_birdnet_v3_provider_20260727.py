@@ -397,6 +397,17 @@ def test_the_threshold_is_configurable_and_filters_weak_detections(monkeypatch):
     assert v3.analyse("/tmp/c.wav") == []
 
 
+def test_stale_environment_cannot_lower_the_reviewed_accuracy_floor(monkeypatch):
+    # The first V3 rollout wrote 0.15 into the VPS environment.  A package-only
+    # deployment must not let that historical value undo the reviewed 0.35
+    # decision policy.
+    monkeypatch.setenv("BURBZ_BIRDNET_V3_MIN_CONFIDENCE", "0.15")
+    decisions, _, _, _ = v3._temporal_decision_scores(
+        np.asarray([[0.25], [0.25]], dtype=np.float32)
+    )
+    assert decisions.tolist() == [0.0]
+
+
 def test_missing_geo_uses_a_stricter_precision_floor(monkeypatch):
     labels = _labels(("Turdus migratorius", "American Robin", "Aves"))
     _install(monkeypatch, labels, [[0.55], [0.55]], geo=None)

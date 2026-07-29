@@ -37,6 +37,7 @@ from . import (
 
 INTEGRATION_VERSION = 4
 _STATE_KEY = "_burbz_sound_id_integration"
+_PROVENANCE_STATE_ATTR = "_burbz_sound_id_provenance_v4"
 
 logger = logging.getLogger(__name__)
 
@@ -201,9 +202,13 @@ def _install_aggregate(namespace, original_analyse, original_aggregate):
     return wrapped_analyse, wrapped_aggregate
 
 
-def _install_response_provenance(app) -> None:
+def _install_response_provenance(app) -> dict:
     """Attach the provider that actually served, including failed/empty scans."""
     from flask import request
+
+    previous = getattr(app, _PROVENANCE_STATE_ATTR, None)
+    if isinstance(previous, dict) and previous.get("version") == INTEGRATION_VERSION:
+        return previous
 
     def is_sound_request():
         return request.path.rstrip("/").endswith("/identify/sound")
@@ -232,6 +237,26 @@ def _install_response_provenance(app) -> None:
     if hooks and hooks[-1] is clear_sound_provider:
         hooks.insert(0, hooks.pop())
     app.after_request(tag_sound_provider)
+    state = {
+        "version": INTEGRATION_VERSION,
+        "before": clear_sound_provider,
+        "after": tag_sound_provider,
+    }
+    setattr(app, _PROVENANCE_STATE_ATTR, state)
+    return state
+
+
+def _install_legacy_v4_provenance(app) -> dict:
+    """Upgrade response metadata for the old embedded-v4 adapter in place.
+
+    This intentionally installs no analysis wrappers. The embedded adapter
+    already routes through :func:`sound_id.analyse`; package-only deployments
+    merely need the current request-local clear/tag hooks until the canonical
+    AST patcher can replace that root-owned block.
+    """
+    if app is None or not callable(getattr(app, "before_request", None)):
+        raise ServerIntegrationError("legacy v4 namespace has no Flask app")
+    return _install_response_provenance(app)
 
 
 def install(namespace: MutableMapping[str, Any], *, mode: str) -> dict:

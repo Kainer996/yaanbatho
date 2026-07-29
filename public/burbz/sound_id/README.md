@@ -192,6 +192,56 @@ request's engine. The browser treats missing or mismatched provenance neutrally
 instead of claiming that BirdNET answered, and never lets an unverified result
 change the player's Birdex.
 
+The direct integration contract remains available as:
+
+```python
+candidates = sound_id.analyse(prepared_path, allow=allow, lat=lat, lon=lon, week=week)
+```
+
+and, at start-up:
+
+```python
+import sound_id
+sound_id.configure(
+    birdnet_analyse=_analyse_recording,        # legacy V2.4 path
+    birdnet_aggregate=_aggregate_sound_detections,
+    common_name_for=lambda sci: (_catalog_lookup(sci) or {}).get("common_name"),
+)
+```
+
+Both adapter modes return the shape `_aggregate_sound_detections` already produced,
+so everything downstream — `_catalog_lookup`, the private report path, the
+response builder — is untouched:
+
+```python
+[{"common_name": str, "scientific_name": str,
+  "max": float, "mean": float, "n": int, "is_local": bool}, ...]
+```
+
+`prepare_audio_for_birdnet` also stays as it is: the provider resamples to
+32 kHz itself. Name the engine in the JSON response so the recogniser can be
+read straight off a live scan, not only from the service log:
+
+```python
+payload.update(sound_id.served_meta())   # -> exact provider/model/geo/policy provenance
+```
+
+Use `served_meta()` (or `last_served_provider()`), **not** `active_provider()`:
+the configured engine and the one that actually answered diverge whenever a
+fallback fires, and reporting the engine is only worth doing if it catches that.
+The v4 server integration does this with an `after_request` hook, so a box only
+has to re-run the installer to start tagging responses. A response with missing
+or mismatched provenance remains a view-only suggestion and cannot unlock a
+Birdex entry.
+
+### The `common_name_for` resolver
+
+Unlike Perch, V3 predicts a common name as well as a binomial — but its wording
+is not always the game's. V3 says "Eurasian Blackbird" where the Burbz catalogue
+says "Common Blackbird". The resolver lets the catalogue's own name win, so the
+match toast reads like the rest of the game. Without it, V3's name is used,
+which still resolves through `_catalog_lookup`.
+
 ## Tuning
 
 | Variable | Default | Purpose |
@@ -214,7 +264,7 @@ change the player's Birdex.
 | `BURBZ_BIRDNET_V3_BIRDS_ONLY` | on | Exclude non-bird classes from the bird game. |
 | `BURBZ_BIRDNET_V3_VERIFY_HASHES` | on | Refuse mismatched weights or labels. |
 | `BURBZ_BIRDNET_V3_DIAGNOSTICS` | off | Log scores/support/timing without retaining audio. |
-| `BURBZ_SOUND_MODEL_FALLBACK` | on in the library; `0` in production | Production must prove V3 rather than silently swap engines. |
+| `BURBZ_SOUND_MODEL_FALLBACK` | off | Fallback is fail-closed unless explicitly enabled; the installer writes `0` so a broken V3 cannot silently swap engines. |
 
 Threshold changes must be validated on labelled recordings from the same
 phones and environments players use. BirdNET Analyzer explicitly cautions that

@@ -188,11 +188,12 @@ def test_client_trusts_its_own_catalogue_over_the_server_flag():
     src = function_source(html, "handleBirdCandidates")
     normalise = function_source(html, "normaliseAcceptedBirdCandidates")
     assert "const inGameCatalogue = bird =>" in src
-    assert "candidates.filter(inGameCatalogue)" in src
+    assert "eligibleCandidates.filter(inGameCatalogue)" in src
     assert "raw.common_name" in normalise
     assert "raw.scientific_name" in normalise
     # The old behaviour rejected purely on the server flag.
     assert "if (top && !catalogMatched)" not in src
+    assert "opts.catalogMatched" not in src
 
 
 def test_every_catalogue_bird_resolves_by_name_and_alias():
@@ -230,7 +231,7 @@ def test_simultaneous_sound_species_are_deduplicated_and_capped_at_four():
         "Great Tit", "Chaffinch", "Robin", "Mallard",
     ]
     assert multi["session"] == multi["remembered"]
-    assert multi["quest"] == ["Great Tit"]
+    assert multi["quest"] == multi["remembered"]
 
 
 def test_one_shot_sound_scan_preserves_primary_only_compatibility():

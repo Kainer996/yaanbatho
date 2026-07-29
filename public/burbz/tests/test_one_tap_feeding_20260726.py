@@ -210,9 +210,9 @@ def test_birdex_and_companion_cards_can_feed_the_bird():
     # A recruited companion is fed straight off its card, front and back.
     assert companion_card.count('data-action="feed-bird"') == 2
     assert 'data-feed-key="${bird.id}"' in companion_card
-    # A still-wild Birdex species is fed at the feeder.
-    assert 'data-action="feed-bird"' in known_card
-    assert 'data-feed-key="species:' in known_card
+    # A still-wild Birdex entry cannot be fed like a recruited companion.
+    assert 'data-action="feed-bird"' not in known_card
+
     # The grid delegates the tap to the shared feed sheet.
     grid = function_source(html, "renderBirdex")
     assert 'e.target.closest(\'[data-action="feed-bird"]\')' in grid
@@ -224,7 +224,7 @@ def test_the_feed_sheet_serves_one_food_per_tap_and_flies_the_bird_to_it():
     sheet = function_source(html, "renderFeedSheet")
     assert "feedFoodRowHTML(entry, option, reveal)" in sheet
     assert "burbzFeedTap(" in function_source(html, "feedFoodRowHTML")
-    assert "One food, one meal" in sheet
+    assert "Tap one food to serve it" in sheet
     fly = function_source(html, "feedFlyBirdToFood")
     assert "getBoundingClientRect" in fly
     assert "prefers-reduced-motion" in fly
@@ -330,8 +330,8 @@ def test_a_secondary_food_is_served_at_half_instead_of_refused():
     assert out["seedsAreSideSnack"] is True
     assert out["seedsAreNotMain"] is True
     assert out["seedsSpent"] == 1
-    # Sunflower seeds are worth 28 to a bird that lives on them; half here.
-    assert out["pigeonFed"] == round(28 * 0.5)
+    # A secondary meal moves an 80-hunger bird to the halfway point.
+    assert out["pigeonFed"] == 30
     # And half the bird XP a main meal pays.
     assert out["pigeonXp"] == round(6 / 2)
 
@@ -342,7 +342,7 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
     assert note, "a side food must explain itself"
     assert "side" in note["title"].lower()
     body = note["body"].lower()
-    assert "half the hunger" in body and "half the xp" in body
+    assert "fills the fullness bar halfway" in body and "half the xp" in body
     assert "woodpigeon" in body
     # The burst says it too, at a glance.
     assert "SIDE SNACK" in out["sideSnackBurst"]["badge"]

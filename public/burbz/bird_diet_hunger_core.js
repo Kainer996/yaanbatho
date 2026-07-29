@@ -40,6 +40,8 @@
   });
 
   const HUNGER_HISTORY_LIMIT = 80;
+  const DAILY_HUNGER_MS = 24 * 60 * 60 * 1000;
+  const FEEDING_HUNGER_MIN = 60;
 
   // What a side-snack is worth against a main meal, in hunger and in rewards.
   // One number, so the UI can promise the player exactly what the core pays.
@@ -326,7 +328,8 @@
       secondaryCompatibleFamilies: secondary,
       refusedCompatibleFamilies: Object.keys(FOOD_FAMILIES).filter(f => !primary.includes(f) && !secondary.includes(f)),
       compatibleIngredientFamilies: primary.concat(secondary.filter(f => !primary.includes(f))),
-      prepByFamily: record.prep || {}
+      prepByFamily: record.prep || {},
+      education: record.e || ''
     };
   }
 
@@ -660,7 +663,9 @@
 
   function hungerStatusForCare(rawCare, now) {
     const care = sanitizeCare(rawCare, now);
-    const hunger = clamp(care.hunger, 0, 100);
+    const time = Number(now) || Date.now();
+    const elapsed = Math.max(0, time - care.lastHungerAt);
+    const hunger = clamp(care.hunger + (elapsed / DAILY_HUNGER_MS) * 100, 0, 100);
     let level = 'fed';
     let label = 'Fed';
     if (hunger >= HUNGER_THRESHOLDS.urgentMin) { level = 'urgent'; label = 'Urgent care'; }
@@ -718,9 +723,14 @@
     if (txId && care.hungerTransactions.includes(txId)) {
       return { ok:true, duplicate:true, care, transactionId:txId, before:care.hunger, after:care.hunger };
     }
-    const before = care.hunger;
+    const before = hungerStatusForCare(care, now).hunger;
     const delta = Number(options.delta) || 0;
-    const after = clamp(before + delta, 0, 100);
+    // Daily time, not activity spam, controls appetite. Feeding may set an
+    // explicit new fullness level; expeditions and training merely checkpoint
+    // the time-derived hunger so they cannot create extra meals in one day.
+    const after = options.targetHunger === undefined
+      ? (String(options.activityType || options.type || '') === 'feeding' ? clamp(before + delta, 0, 100) : before)
+      : clamp(Number(options.targetHunger), 0, 100);
     care.hunger = after;
     care.lastHungerAt = now;
     if (txId) {
@@ -849,11 +859,13 @@
       return { ok:false, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, message:'No matching bird for feeding transaction.' };
     }
     subject.care = sanitizeCare(subject.care, options.now);
+    const currentHunger = hungerStatusForCare(subject.care, options.now).hunger;
+    subject.care.hunger = currentHunger;
     if (careHasTransaction(subject.care, txId, options.now)) {
       return { ok:true, duplicate:true, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:subject.care.hunger, after:subject.care.hunger, message:'Feeding transaction already applied.' };
     }
-    if (subject.care.hunger <= 0) {
-      return { ok:false, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:0, after:0, message:((target && (target.commonName || target.name)) || subject.commonName || subject.species || 'That bird') + ' is already fully fed; no food was spent.' };
+    if (subject.care.hunger < FEEDING_HUNGER_MIN) {
+      return { ok:false, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:currentHunger, after:currentHunger, message:((target && (target.commonName || target.name)) || subject.commonName || subject.species || 'That bird') + ' is still full enough for today; no food was spent.' };
     }
     // Primary, secondary and the conservative fallback ration are all served.
     // Only food this species does not eat at all is turned down.
@@ -879,7 +891,7 @@
       transactionId: txId,
       activityType: 'feeding',
       activityId: ingredientId,
-      delta: -compatibility.nourishment,
+      targetHunger: compatibility.verdict === 'secondary' ? 50 : 0,
       now: options.now
     });
     subject.care = applied.care;
@@ -926,6 +938,7 @@
     FOOD_FAMILIES,
     HUNGER_THRESHOLDS,
     ACTIVITY_HUNGER_DELTAS,
+    DAILY_HUNGER_MS,
     SECONDARY_MEAL_FRACTION,
     ACCEPTED_FEED_VERDICTS,
     PREPS,
