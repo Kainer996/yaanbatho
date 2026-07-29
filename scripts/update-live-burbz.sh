@@ -68,6 +68,7 @@ FILES=(
   "au_bird_expansion.js"
   "au_bird_expansion_2.js"
   "national_bird_completion_20260715.js"
+  "bird_art_release_20260727.js"
   "spain_boundary_20260715.js"
   "lib/three.min.js"
   "lib/maplibre-gl.js"
@@ -78,6 +79,15 @@ FILES=(
   "assets/merlin/merlin-body.webp"
   "assets/merlin/merlin-wing.webp"
   "assets/merlin/merlin-head.webp"
+  "assets/ui/burbz-icon-set/coin.webp"
+  "assets/ui/burbz-icon-set/timber.webp"
+  "assets/ui/burbz-icon-set/profile.webp"
+  "assets/ui/burbz-icon-set/settings.webp"
+  "assets/ui/burbz-icon-set/camera.webp"
+  "assets/ui/burbz-icon-set/sound.webp"
+  "assets/ui/burbz-icon-set/inventory.webp"
+  "assets/ui/burbz-icon-set/forge.webp"
+  "assets/ui/burbz-icon-set/quests.webp"
   # Backend, not referenced by index.html: server.py imports this package to
   # choose its recogniser. BirdNET V3 (CC BY-SA 4.0) is the default; Perch 2.0
   # and the legacy non-commercial V2.4 path remain selectable. Ship every file
@@ -158,6 +168,14 @@ for f in "${FILES[@]}"; do
   mkdir -p "$TMP/$(dirname "$f")"
   curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
 done
+# The generated-art mapping is the release manifest for its card paintings.
+# Pull each referenced local painting without hardcoding the release filenames.
+while IFS= read -r art_url; do
+  f="${art_url#/burbz/}"
+  FILES+=("$f")
+  mkdir -p "$TMP/$(dirname "$f")"
+  curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
+done < <(grep -o '/burbz/bird-art-cache/completion-20260726/[^"]*' "$TMP/bird_art_release_20260727.js" | sort -u)
 log "Downloaded ${#FILES[@]} files from GitHub"
 
 # sanity-check before touching the live site
