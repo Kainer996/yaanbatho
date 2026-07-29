@@ -2028,14 +2028,13 @@ svg.academy-room-bg { display:block; filter:none; }
 
 
 /* ========== INTRO CUTSCENE ========== */
-.intro-cutscene-overlay { position:fixed; inset:0; z-index:1400; display:none; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 18%, rgba(25,51,60,.72), rgba(0,0,0,.94) 68%); backdrop-filter:blur(10px); padding:calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom)); }
-.intro-cutscene-overlay.show { display:flex; }
-.intro-cutscene-shell { width:min(100%,430px); max-height:100%; display:flex; flex-direction:column; gap:10px; align-items:stretch; }
-.intro-cutscene-title { font-family:'Russo One',sans-serif; font-size:18px; color:var(--legendary); text-align:center; letter-spacing:.08em; text-transform:uppercase; text-shadow:0 0 18px rgba(214,168,79,.35); }
-.intro-cutscene-video { width:100%; max-height:calc(100dvh - 148px - var(--safe-top) - var(--safe-bottom)); aspect-ratio:9/16; object-fit:contain; border-radius:20px; background:#050403; border:1px solid rgba(214,168,79,.32); box-shadow:0 22px 70px rgba(0,0,0,.62),0 0 28px rgba(214,168,79,.16); }
-.intro-cutscene-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.intro-cutscene-btn { min-height:44px; border-radius:13px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
-.intro-cutscene-btn.primary { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--legendary)); border:0; }
+.intro-cutscene-overlay { position:fixed; inset:0; z-index:1400; display:none; background:#000; }
+.intro-cutscene-overlay.show { display:block; }
+.intro-cutscene-video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
+.intro-cutscene-skip { position:absolute; left:50%; transform:translateX(-50%); bottom:calc(20px + var(--safe-bottom)); z-index:2; min-height:44px; padding:10px 30px; border-radius:999px; border:1px solid rgba(255,255,255,.3); background:rgba(8,8,8,.55); backdrop-filter:blur(8px); color:#fff; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; letter-spacing:.14em; }
+.intro-cutscene-skip:active { background:rgba(255,255,255,.18); }
+.intro-cutscene-sound { position:absolute; left:50%; transform:translateX(-50%); top:calc(18px + var(--safe-top)); z-index:2; display:none; min-height:40px; padding:8px 22px; border-radius:999px; border:1px solid rgba(214,168,79,.55); background:rgba(8,8,8,.55); backdrop-filter:blur(8px); color:var(--legendary); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; text-transform:uppercase; letter-spacing:.1em; }
+.intro-cutscene-overlay.muted .intro-cutscene-sound { display:block; }
 
 /* ========== MERLIN TUTORIAL ========== */
 .merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
@@ -3312,14 +3311,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
   <!-- Intro Cutscene Overlay -->
   <div class="intro-cutscene-overlay" id="introCutsceneOverlay" aria-modal="true" role="dialog" aria-label="Burbz intro cutscene">
-    <div class="intro-cutscene-shell">
-      <div class="intro-cutscene-title">The Spell of the Kingdom of Burbz</div>
-      <video class="intro-cutscene-video" id="introCutsceneVideo" src="assets/cutscenes/burbz-intro-30s-seedance-20260629-discord.mp4" playsinline controls preload="metadata"></video>
-      <div class="intro-cutscene-actions">
-        <button class="intro-cutscene-btn" id="introSkipBtn">Skip</button>
-        <button class="intro-cutscene-btn primary" id="introPlayAgainBtn">Play</button>
-      </div>
-    </div>
+    <video class="intro-cutscene-video" id="introCutsceneVideo" src="assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4" playsinline preload="metadata"></video>
+    <button class="intro-cutscene-sound" id="introSoundBtn">🔊 Tap for sound</button>
+    <button class="intro-cutscene-skip" id="introSkipBtn">Skip</button>
   </div>
 
   <!-- Merlin Tutorial Overlay -->
@@ -26454,15 +26448,30 @@ function renderProfile() {
 // ============================================================================
 // INTRO CUTSCENE
 // ============================================================================
-const BURBZ_INTRO_SEEN_KEY = 'burbzIntroSeen:merlin-tablet-20260629';
+const BURBZ_INTRO_SEEN_KEY = 'burbzIntroSeen:two-part-hf-20260729';
 function showIntroCutscene(opts = {}) {
   const overlay = $('introCutsceneOverlay');
   const video = $('introCutsceneVideo');
   if (!overlay || !video) return;
   setBurbzMusicSuppressed('intro', true);
   overlay.classList.add('show');
+  overlay.classList.remove('muted');
   if (opts.replay) video.currentTime = 0;
-  if (opts.autoplay !== false) video.play().catch(() => {});
+  video.muted = false;
+  const attempt = video.play();
+  if (attempt && attempt.catch) attempt.catch(() => {
+    // Unmuted autoplay was blocked (no user gesture yet) — muted autoplay is
+    // always allowed, so start silent and offer one tap to bring the sound in.
+    video.muted = true;
+    overlay.classList.add('muted');
+    video.play().catch(() => {});
+  });
+}
+function unmuteIntroCutscene() {
+  const overlay = $('introCutsceneOverlay');
+  const video = $('introCutsceneVideo');
+  if (video) { video.muted = false; video.play().catch(() => {}); }
+  if (overlay) overlay.classList.remove('muted');
 }
 function closeIntroCutscene() {
   const overlay = $('introCutsceneOverlay');
@@ -26476,7 +26485,7 @@ function closeIntroCutscene() {
 function maybeShowIntroCutscene() {
   try {
     if (localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1') { maybeStartMerlinTutorial(800); return; }
-    setTimeout(() => showIntroCutscene({ autoplay:false }), 450);
+    setTimeout(() => showIntroCutscene(), 450);
   } catch(e) {}
 }
 
@@ -26499,7 +26508,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-art-ui-v153-20260729';
+const BURBZ_BUILD = 'intro-two-part-video-v154-20260729';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -27205,7 +27214,7 @@ $('headerProfileBtn')?.addEventListener('click', () => switchScreen('profile'));
 $('hudCoinsChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('hudTimberChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
-$('introPlayAgainBtn')?.addEventListener('click', () => showIntroCutscene({ replay:true }));
+$('introSoundBtn')?.addEventListener('click', unmuteIntroCutscene);
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
 $('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
 $('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial({ full:true, resume:false }); });

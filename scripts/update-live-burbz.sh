@@ -38,6 +38,9 @@ FILES=(
   "battle_core.js"
   "loot_crafting_core.js"
   "audio_core.js"
+  # Intro cutscene (LFS-backed; raw.githubusercontent resolves LFS to real
+  # bytes, so this curls the actual video, not a pointer file).
+  "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
   "assets/ui/quest-compass-emblem.webp"
   "assets/ui/map-landmark-field.webp"
   "assets/ui/map-landmark-grove.webp"
