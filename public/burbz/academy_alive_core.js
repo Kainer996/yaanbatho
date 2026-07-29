@@ -214,7 +214,14 @@
       try { return !!(adapter.reducedMotion && adapter.reducedMotion()); } catch (e) { return false; }
     }
     function hourNow() {
-      try { if (adapter.hourOfDay) return Number(adapter.hourOfDay()) || 12; } catch (e) {}
+      // NB: 0 is a legitimate hour (midnight) — no `|| 12` fallback here, or
+      // the scene would flash to noon daylight for the first minute of the day.
+      try {
+        if (adapter.hourOfDay) {
+          var h = Number(adapter.hourOfDay());
+          if (Number.isFinite(h)) return h;
+        }
+      } catch (e) {}
       var d = new Date(); return d.getHours() + d.getMinutes() / 60;
     }
     function screenActive() {
@@ -291,19 +298,31 @@
         return;
       }
       st.anchorSig = sig;
-      st.glows.forEach(function(g) { if (g.el && g.el.parentNode) g.el.remove(); });
+      // A render just rebuilt the room nodes; carry each light's flicker state
+      // across so a window that had gone dark doesn't snap back on. Emitters
+      // keep their next-fire time for the same reason.
+      var priorGlow = {}, priorEmit = {};
+      st.glows.forEach(function(g) {
+        priorGlow[g.key] = g;
+        if (g.el && g.el.parentNode) g.el.remove();
+      });
+      st.emitters.forEach(function(em) { priorEmit[em.key] = em; });
       st.glows = [];
       st.emitters = [];
-      var nodes = st.cont.querySelectorAll('.treehouse-room-node[data-room]');
-      Array.prototype.forEach.call(nodes, function(node) {
+      // Two passes: read every node rect first, then create and append glow
+      // divs — interleaving reads with appends forces one layout per node.
+      var entries = [];
+      Array.prototype.forEach.call(nodes0, function(node) {
         var room = node.getAttribute('data-room');
-        var sheet = ANCHORS[room];
-        if (!sheet) return;
-        var rect = node.getBoundingClientRect();
-        var box = Math.min(rect.width || SPRITE_BOX, SPRITE_BOX);
-        sheet.forEach(function(a) {
-          var ax = rect.left - contRect.left + a.fx * box;
-          var ay = rect.top - contRect.top + a.fy * box;
+        if (!ANCHORS[room]) return;
+        entries.push({ node: node, room: room, rect: node.getBoundingClientRect() });
+      });
+      entries.forEach(function(entry) {
+        var box = Math.min(entry.rect.width || SPRITE_BOX, SPRITE_BOX);
+        ANCHORS[entry.room].forEach(function(a, idx) {
+          var key = entry.room + ':' + idx;
+          var ax = entry.rect.left - contRect.left + a.fx * box;
+          var ay = entry.rect.top - contRect.top + a.fy * box;
           if (a.type === 'glow') {
             var style = GLOW_STYLES[a.glow] || GLOW_STYLES.window;
             var d = a.r * 2;
@@ -315,14 +334,19 @@
             g.style.left = (a.fx * box - a.r) + 'px';
             g.style.top = (a.fy * box - a.r) + 'px';
             g.style.background = 'radial-gradient(circle, rgba(' + style.color + ',.85) 0%, rgba(' + style.color + ',.28) 42%, rgba(' + style.color + ',0) 70%)';
-            node.appendChild(g);
+            entry.node.appendChild(g);
+            var prior = priorGlow[key];
             st.glows.push({
-              el: g, kind: a.glow, style: style,
-              phase: Math.random() * 20, speed: 5 + Math.random() * 7,
-              lit: true, switchAt: 0
+              el: g, key: key, kind: a.glow, style: style,
+              phase: prior ? prior.phase : Math.random() * 20,
+              speed: prior ? prior.speed : 5 + Math.random() * 7,
+              lit: prior ? prior.lit : true,
+              switchAt: prior ? prior.switchAt : 0,
+              cur: prior ? prior.cur : undefined
             });
           } else {
-            st.emitters.push({ type: a.type, room: room, x: ax, y: ay, power: a.power || 1, nextAt: st.clock + Math.random() * 2000 });
+            var priorE = priorEmit[key];
+            st.emitters.push({ type: a.type, key: key, room: entry.room, x: ax, y: ay, power: a.power || 1, nextAt: priorE ? priorE.nextAt : st.clock + Math.random() * 2000 });
           }
         });
       });
@@ -469,6 +493,27 @@
     }
 
     // ---- particles ----------------------------------------------------------
+
+    // Pre-rendered soft radial sprites. Building a CanvasGradient per smoke
+    // puff and firefly on every frame is the single biggest per-frame cost on
+    // a phone; one cached 64px sprite per colour, drawn via drawImage with
+    // globalAlpha, is near-free.
+    var softSprites = {};
+    function softSprite(rgb) {
+      var c = softSprites[rgb];
+      if (c) return c;
+      c = document.createElement('canvas');
+      c.width = c.height = 64;
+      var g2 = c.getContext('2d');
+      var grad = g2.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(' + rgb + ',1)');
+      grad.addColorStop(0.4, 'rgba(' + rgb + ',0.35)');
+      grad.addColorStop(1, 'rgba(' + rgb + ',0)');
+      g2.fillStyle = grad;
+      g2.beginPath(); g2.arc(32, 32, 32, 0, 7); g2.fill();
+      softSprites[rgb] = c;
+      return c;
+    }
 
     function spawnFeather(x, y, tint) {
       st.particles.push({
@@ -625,12 +670,9 @@
           ctx.beginPath(); ctx.moveTo(0, -p.size * 0.85); ctx.lineTo(0, p.size * 0.85); ctx.stroke();
           ctx.restore();
         } else if (p.kind === 'smoke') {
-          var col = st.night ? '198,206,224' : '236,233,226';
-          var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, 'rgba(' + col + ',' + (p.alpha * fade) + ')');
-          g.addColorStop(1, 'rgba(' + col + ',0)');
-          ctx.fillStyle = g;
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+          ctx.globalAlpha = p.alpha * fade;
+          ctx.drawImage(softSprite(st.night ? '198,206,224' : '236,233,226'), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+          ctx.globalAlpha = 1;
         } else if (p.kind === 'leaf') {
           ctx.save();
           ctx.translate(p.x, p.y);
@@ -718,12 +760,9 @@
         var a = (0.35 + 0.65 * Math.abs(Math.sin(t / fl.pulse + fl.p3))) * Math.min(1, st.lightBoost * 1.6);
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        var g = ctx.createRadialGradient(x, y, 0, x, y, 9);
-        g.addColorStop(0, 'rgba(217,247,161,' + (0.8 * a) + ')');
-        g.addColorStop(0.35, 'rgba(196,240,120,' + (0.3 * a) + ')');
-        g.addColorStop(1, 'rgba(196,240,120,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
+        ctx.globalAlpha = 0.8 * a;
+        ctx.drawImage(softSprite('208,244,140'), x - 9, y - 9, 18, 18);
+        ctx.globalAlpha = 1;
         ctx.fillStyle = 'rgba(245,255,214,' + a + ')';
         ctx.beginPath(); ctx.arc(x, y, 1.3, 0, 7); ctx.fill();
         ctx.restore();
@@ -802,9 +841,11 @@
       var t = st.clock / 1000;
       st.glows.forEach(function(g) {
         // Life in the windows: mostly lit, but every light in the Academy
-        // sometimes goes out for a few seconds — someone moved to another room.
+        // sometimes goes out for a few seconds — someone moved to another
+        // room. Rolls happen once per switch window (~1.7s average), so the
+        // per-roll odds are offChance×5 ≈ one dark spell every 30–90s.
         if (st.clock >= g.switchAt) {
-          if (g.lit && Math.random() < g.style.offChance * 60) {
+          if (g.lit && Math.random() < g.style.offChance * 5) {
             g.lit = false;
             g.switchAt = st.clock + 1800 + Math.random() * 5200;
           } else {
@@ -818,7 +859,12 @@
         if (g.kind === 'breath') flick = 0.72 + 0.28 * Math.sin(t * 2.1 + g.phase);
         var target = g.lit ? base * flick : 0;
         g.cur = g.cur === undefined ? target : g.cur + (target - g.cur) * Math.min(1, dt / 260);
-        g.el.style.opacity = String(Math.max(0, Math.min(1, g.cur)));
+        // Style writes on blended elements aren't free — skip imperceptible deltas.
+        var next = Math.max(0, Math.min(1, g.cur));
+        if (g.written === undefined || Math.abs(next - g.written) > 0.012) {
+          g.written = next;
+          g.el.style.opacity = String(next);
+        }
       });
     }
 
@@ -842,6 +888,9 @@
       if (typeof document !== 'undefined' && document.hidden) { st.lastT = 0; schedule(); return; }
       if (!screenActive()) { st.lastT = 0; schedule(); return; }
       if (!st.cont || !st.cont.isConnected) { pause(); return; }
+      // Ambience needs 60fps at most — on 120Hz displays every other rAF
+      // callback is skipped rather than doubling the battery cost.
+      if (st.lastT && now - st.lastT < 14) { schedule(); return; }
       var dt = st.lastT ? Math.min(50, now - st.lastT) : 16;
       st.lastT = now;
       st.clock += dt;
@@ -970,12 +1019,25 @@
       st.glows = [];
       st.emitters = [];
       st.mounted = false;
+      if (typeof document !== 'undefined' && onVisibility) {
+        document.removeEventListener('visibilitychange', onVisibility);
+        onVisibility = null;
+      }
     }
 
     // Buildings moved, were built, or the perched flock re-rendered: re-anchor.
     function refresh() {
       if (!st.mounted) return;
       scanAnchors();
+      // A companion just dispatched on an expedition is no longer at the
+      // Academy: retire its flyer now (exit leg) instead of on the 12s timer.
+      if (st.running) {
+        var present = {};
+        birdRoster().forEach(function(b) { if (b && b.id) present[b.id] = true; });
+        Object.keys(st.flyers).forEach(function(id) {
+          if (!present[id]) st.flyers[id].retiring = true;
+        });
+      }
       if (st.reduced) {
         var boost = lightBoostFor(hourNow());
         st.glows.forEach(function(g) {
@@ -984,13 +1046,10 @@
       }
     }
 
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', function() {
-        // rAF stops in hidden tabs anyway; this clears lastT so the first
-        // visible frame doesn't integrate a giant dt.
-        st.lastT = 0;
-      });
-    }
+    // rAF stops in hidden tabs anyway; this clears lastT so the first visible
+    // frame doesn't integrate a giant dt. stop() removes it again.
+    var onVisibility = typeof document !== 'undefined' ? function() { st.lastT = 0; } : null;
+    if (onVisibility) document.addEventListener('visibilitychange', onVisibility);
 
     return {
       start: start,
