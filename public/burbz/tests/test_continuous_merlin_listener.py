@@ -129,8 +129,8 @@ def test_success_copy_calls_the_result_an_engine_match_not_objective_confirmatio
     # The engine is named by the server so BirdNET and Perch both attribute the
     # result to a recogniser rather than asserting the bird was objectively there.
     assert "const engine = soundEngineLabel(result)" in analyse
-    assert "engine + ' match: ' + result.species" in analyse
-    assert "engine + ' identified ' + result.species" in analyse
+    assert "engine + ' match: ' + confirmedNames" in analyse
+    assert "engine + ' identified ' + confirmedNames" in analyse
     assert "Heard ' + result.species" not in analyse
     assert "Merlin heard" not in analyse
 

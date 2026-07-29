@@ -62,36 +62,37 @@
     const opts = options || {};
     const required = Math.max(2, Math.floor(Number(opts.required) || 2));
     const ttlMs = Math.max(1, Number(opts.ttlMs) || 60000);
-    let key = '';
-    let count = 0;
-    let lastObservedAt = 0;
+    const states = new Map();
+    let latestKey = '';
 
     function reset() {
-      key = '';
-      count = 0;
-      lastObservedAt = 0;
+      states.clear();
+      latestKey = '';
     }
 
     function snapshot() {
-      return { key, count, required, lastObservedAt };
+      const state = states.get(latestKey);
+      return {
+        key: state ? latestKey : '',
+        count: state ? state.count : 0,
+        required,
+        lastObservedAt: state ? state.lastObservedAt : 0
+      };
     }
 
     function observe(species, now) {
       const nextKey = String(species || '').trim().toLowerCase();
       const observedAt = Number.isFinite(Number(now)) ? Number(now) : Date.now();
-      if (!nextKey) {
-        reset();
-        return { ...snapshot(), confirmed:false };
-      }
-      if (nextKey !== key || !lastObservedAt || observedAt - lastObservedAt > ttlMs) {
-        key = nextKey;
-        count = 1;
-      } else {
-        count += 1;
-      }
-      lastObservedAt = observedAt;
-      const result = { ...snapshot(), confirmed:count >= required };
-      if (result.confirmed) reset();
+      if (!nextKey) return { key:'', count:0, required, lastObservedAt:0, confirmed:false };
+      const previous = states.get(nextKey);
+      const count = !previous || !previous.lastObservedAt || observedAt - previous.lastObservedAt > ttlMs
+        ? 1
+        : previous.count + 1;
+      const state = { count, lastObservedAt:observedAt };
+      states.set(nextKey, state);
+      latestKey = nextKey;
+      const result = { key:nextKey, count, required, lastObservedAt:observedAt, confirmed:count >= required };
+      if (result.confirmed) states.delete(nextKey);
       return result;
     }
 

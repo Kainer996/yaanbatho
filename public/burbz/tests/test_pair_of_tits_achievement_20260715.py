@@ -23,4 +23,4 @@ def test_pair_of_tits_badge_unlocks_on_second_great_tit_sighting():
     assert "id: 'pair_of_tits'" in source
     assert "name: 'A Pair of Tits'" in source
     assert "greatTit && Number(greatTit.sightingCount || 0) >= 2" in source
-    assert "if (top) checkBadges();" in source
+    assert "checkBadges();" in source

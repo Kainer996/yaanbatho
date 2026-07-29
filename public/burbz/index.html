@@ -22567,7 +22567,12 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     candidateByKey.set(key, entry);
     candidates.push(entry);
   });
-  const top = candidates[0];
+  const soundSession = opts.source === 'sound' && continuousSoundScanWanted;
+  const confirmedSpeciesKeys = opts.confirmedSpeciesKeys instanceof Set ? opts.confirmedSpeciesKeys : null;
+  const eligibleCandidates = soundSession && confirmedSpeciesKeys
+    ? candidates.filter(bird => confirmedSpeciesKeys.has(speciesKey(canonicalSpeciesName(bird.species || bird.commonName))))
+    : candidates;
+  const top = eligibleCandidates[0];
   if (!top) return;
   // The shipped game catalogue is the authority on what can unlock. The
   // server's catalogMatched flag only says whether the server's own species
@@ -22582,12 +22587,11 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     return;
   }
 
-  // In a listening session, surface the winner plus every other catalogue bird
-  // the recogniser was confident about in this same window. Otherwise, just the
-  // winner — a tap-scan is a deliberate one-shot with a single result card.
-  const soundSession = opts.source === 'sound' && continuousSoundScanWanted;
+  // In a listening session, surface every confirmed catalogue bird in this
+  // window. Otherwise, just the winner — a tap-scan is a deliberate one-shot
+  // with a single result card.
   const surfaced = soundSession
-    ? candidates.filter(bird => bird === top || (birdInCatalogue(bird) && (Number(bird.confidence) || 0) >= SOUND_SESSION_SECONDARY_MIN_CONF)).slice(0, SOUND_SESSION_MAX_PER_WINDOW)
+    ? eligibleCandidates.filter(bird => bird === top || (birdInCatalogue(bird) && (Number(bird.confidence) || 0) >= SOUND_SESSION_SECONDARY_MIN_CONF)).slice(0, SOUND_SESSION_MAX_PER_WINDOW)
     : [top];
 
   const newDiscoveries = [];
@@ -24628,16 +24632,38 @@ async function analyseContinuousSoundWindow(windowData) {
       return;
     }
     if (result && result.species) {
-      const consensus = soundMatchConsensus.observe(result.species, Date.now());
-      if (!consensus.confirmed) {
-        setMerlinListenerState('listening', 'Possible ' + result.species + ' · waiting for a second sound window to confirm');
+      const windowMatches = [{ name:result.species, confidence:Number(result.confidence) || 0, primary:true }]
+        .concat((result.allDetections || []).map(detection => ({
+          name:detection.name || detection.commonName || detection.species || '',
+          confidence:Number(detection.confidence) || 0,
+          primary:false
+        })))
+        .filter(match => match.name && (match.primary || match.confidence >= 0.25));
+      const uniqueWindowMatches = [];
+      const seenWindowKeys = new Set();
+      windowMatches.forEach(match => {
+        const key = speciesKey(canonicalSpeciesName(match.name));
+        if (!key || seenWindowKeys.has(key) || uniqueWindowMatches.length >= 4) return;
+        seenWindowKeys.add(key);
+        uniqueWindowMatches.push({ ...match, key });
+      });
+      const confirmedSpeciesKeys = new Set();
+      uniqueWindowMatches.forEach(match => {
+        if (soundMatchConsensus.observe(match.name, Date.now()).confirmed) confirmedSpeciesKeys.add(match.key);
+      });
+      if (!confirmedSpeciesKeys.size) {
+        const possibleNames = uniqueWindowMatches.map(match => match.name).join(' + ');
+        setMerlinListenerState('listening', 'Possible ' + possibleNames + ' · waiting for a second sound window to confirm');
         return;
       }
-      handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
+      handleBirdCandidates(result, result.allDetections || [], {
+        source:'sound', blob, catalogMatched:result.catalogMatched, confirmedSpeciesKeys
+      });
       const confidence = Math.round((Number(result.confidence) || 0) * 100);
       const engine = soundEngineLabel(result);
-      setMerlinListenerState('match', engine + ' match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
-      showToast('🐦 ' + engine + ' identified ' + result.species + ' — still listening');
+      const confirmedNames = uniqueWindowMatches.filter(match => confirmedSpeciesKeys.has(match.key)).map(match => match.name).join(' + ');
+      setMerlinListenerState('match', engine + ' match: ' + confirmedNames + (confidence && confirmedSpeciesKeys.has(uniqueWindowMatches[0]?.key) ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
+      showToast('🐦 ' + engine + ' identified ' + confirmedNames + ' — still listening');
       setTimeout(() => {
         if (continuousSoundScanWanted && generation === soundListenerGeneration && soundListenerState === 'match') setMerlinListenerState('listening', 'Listening…');
       }, 5200);

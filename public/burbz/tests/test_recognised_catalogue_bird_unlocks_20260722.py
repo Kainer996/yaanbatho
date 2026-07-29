@@ -18,10 +18,11 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 
 def test_client_verifies_catalogue_membership_itself():
     # The client-side check covers common, canonical and scientific names.
-    assert "const inGameCatalogue = !!(top &&" in HTML
-    assert "findSpeciesProfile(top.species)" in HTML
-    assert "findSpeciesProfile(top.commonName)" in HTML
-    assert "findSpeciesProfile(top.scientificName)" in HTML
+    assert "const birdInCatalogue = bird =>" in HTML
+    assert "findSpeciesProfile(bird.species)" in HTML
+    assert "findSpeciesProfile(bird.commonName)" in HTML
+    assert "findSpeciesProfile(bird.scientificName)" in HTML
+    assert "const inGameCatalogue = birdInCatalogue(top);" in HTML
 
 
 def test_catalog_match_decision_uses_client_catalogue_not_only_backend_flag():
