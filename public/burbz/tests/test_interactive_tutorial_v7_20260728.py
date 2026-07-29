@@ -13,6 +13,7 @@ rescue: if the control never appears, the Next button comes back rather than
 trapping the player.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -301,6 +302,16 @@ def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
 
 
 def test_release_cache_is_bumped():
+    """This release's marker must survive every later cache bump.
+
+    The cache name accumulates one marker per release and BURBZ_BUILD names the
+    newest, so pinning BURBZ_BUILD to *this* release would fail the moment the
+    next one shipped. Guard what is durable instead: our own marker is still in
+    the precache name, and the page's build tag is still one of that name's
+    markers rather than something invented.
+    """
     sw = SW.read_text(encoding="utf-8")
     assert "discoveries-quiz-pacing-v152-20260728" in sw
-    assert "const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';" in HTML.read_text(encoding="utf-8")
+    build = re.search(r"const BURBZ_BUILD = '([^']+)';", HTML.read_text(encoding="utf-8"))
+    assert build, "BURBZ_BUILD constant missing"
+    assert build.group(1) in sw

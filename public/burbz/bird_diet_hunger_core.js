@@ -227,6 +227,29 @@
   // meat is findable from the first minute of a new game.
   const PREY_FAMILIES = ['small_birds', 'small_mammals', 'fish', 'carrion'];
 
+  // How much trouble each family is to keep in the larder. Seed and grubs are
+  // always to hand; a live small bird is not. Mirrors FOOD_FAMILY_SUPPLY_COST
+  // in scripts/check_bird_diets.py.
+  const FOOD_FAMILY_SUPPLY_COST = {
+    invertebrates:1, seeds:1, fruit_berries:1, worms:1,
+    aquatic_plants:2, flying_insects:2, molluscs_crustaceans:2, nectar:2,
+    carrion:3, fish:3, small_mammals:4, small_birds:5
+  };
+
+  // A bird that eats almost anything is an easy companion; a bird with one
+  // food is a commitment. Mirrors FEEDING_TIERS in the generator, and is
+  // recomputed here so fallback records get a rating too.
+  const FEEDING_TIERS = [
+    { min:8, tier:'omnivore',   label:'Eats almost anything', difficulty:1,
+      summary:'Takes food from nearly every family — the easiest kind of bird to keep fed.' },
+    { min:5, tier:'generalist', label:'Wide diet',            difficulty:2,
+      summary:'Has real favourites but will accept plenty else — straightforward to keep fed.' },
+    { min:3, tier:'selective',  label:'Particular',           difficulty:3,
+      summary:'Only a few foods will do. Keep the right ones stocked before taking this bird out.' },
+    { min:0, tier:'specialist', label:'Specialist',           difficulty:4,
+      summary:'A narrow, demanding diet. Feeding this bird well is a challenge in its own right.' }
+  ];
+
   // Every verdict a bird will actually swallow.
   const ACCEPTED_FEED_VERDICTS = ['primary', 'secondary', 'insufficient'];
 
@@ -303,6 +326,24 @@
     return out;
   }
 
+  function computeFeedingProfile(primaryFamilies, secondaryFamilies) {
+    const compatible = unique((primaryFamilies || []).concat(secondaryFamilies || []));
+    const breadth = compatible.length;
+    const tier = FEEDING_TIERS.find(row => breadth >= row.min) || FEEDING_TIERS[FEEDING_TIERS.length - 1];
+    const costed = (primaryFamilies && primaryFamilies.length ? primaryFamilies : compatible)
+      .map(family => FOOD_FAMILY_SUPPLY_COST[canonicalFamily(family)] || 2);
+    return {
+      breadth,
+      familyCount: Object.keys(FOOD_FAMILIES).length,
+      tier: tier.tier,
+      label: tier.label,
+      difficulty: tier.difficulty,
+      summary: tier.summary,
+      easiestPrimarySupplyCost: costed.length ? Math.min(...costed) : 3,
+      omnivore: tier.tier === 'omnivore'
+    };
+  }
+
   function expandSourceRecord(record) {
     if (!record || !record.s) return null;
     const primary = unique(record.primary || []);
@@ -326,7 +367,9 @@
       secondaryCompatibleFamilies: secondary,
       refusedCompatibleFamilies: Object.keys(FOOD_FAMILIES).filter(f => !primary.includes(f) && !secondary.includes(f)),
       compatibleIngredientFamilies: primary.concat(secondary.filter(f => !primary.includes(f))),
-      prepByFamily: record.prep || {}
+      prepByFamily: record.prep || {},
+      feeding: computeFeedingProfile(primary, secondary),
+      dietCorrection: record.fix ? { applied:true } : null
     };
   }
 
@@ -432,8 +475,19 @@
       primaryCompatibleFamilies: [],
       secondaryCompatibleFamilies: ['invertebrates', 'seeds', 'fruit_berries'],
       prepByFamily: { invertebrates:'fresh', seeds:'husked', fruit_berries:'fresh' },
+      feeding: computeFeedingProfile([], ['invertebrates', 'seeds', 'fruit_berries']),
       education: 'Conservative unmatched fallback: no species-level diet claim is made.'
     };
+  }
+
+  // How easy this species is to keep fed. Generated records carry their own
+  // rating; anything else is rated here from the same rules.
+  function feedingProfileForSpecies(species) {
+    const record = getDietRecord(species) || fallbackRecord(species);
+    return record.feeding || computeFeedingProfile(
+      record.primaryCompatibleFamilies,
+      record.secondaryCompatibleFamilies
+    );
   }
 
   function scoreFoodCompatibility(species, ingredientSpec, prepArg) {
@@ -520,7 +574,8 @@
     const ok = unique(record.secondaryCompatibleFamilies || []);
     const avoid = Object.keys(FOOD_FAMILIES).filter(family => !pref.includes(family) && !ok.includes(family));
     const fact = record.education || ('Source-backed BirdFuncDat diet: primary ' + (pref.join(', ') || 'none') + '; secondary ' + (ok.join(', ') || 'none') + '.');
-    return { pref, ok, avoid, prep:{ ...((record && record.prepByFamily) || {}) }, fact, record };
+    const feeding = record.feeding || computeFeedingProfile(pref, ok);
+    return { pref, ok, avoid, prep:{ ...((record && record.prepByFamily) || {}) }, fact, feeding, record };
   }
 
   function dietFamilyLabel(family) {
@@ -560,7 +615,9 @@
     const compatibleFamilies = primaryFamilies.concat(secondaryFamilies.filter(family => !primaryFamilies.includes(family)));
     const method = String(record.matchMethod || 'unmatched');
     const certainty = record.certainty || 'U';
-    const provenance = dietMatchLabel(record) + ' · certainty ' + certainty;
+    const correction = record.dietCorrection || (record.corrected ? { applied:true } : null);
+    const provenance = dietMatchLabel(record) + ' · certainty ' + certainty
+      + (correction ? ' · curated field-guide correction' : '');
     let education = record.education || '';
     if (method === 'family-fallback') {
       education = education || ('Family-level fallback for ' + (record.family || 'this family') + '; no species-level prey claim is made.');
@@ -586,6 +643,8 @@
       secondaryLabels: dietFamilyLabels(secondaryFamilies),
       compatibleLabels: dietFamilyLabels(compatibleFamilies),
       education,
+      feeding: record.feeding || computeFeedingProfile(primaryFamilies, secondaryFamilies),
+      correction,
       sourceRowsUsed: Number(record.sourceRowsUsed || (record.sourceRow ? 1 : 0)) || 0,
       sourceScientificName: record.sourceScientificName || (record.sourceRow && record.sourceRow.scientificName) || null,
       sourceCommonName: record.sourceCommonName || (record.sourceRow && record.sourceRow.commonName) || null,
@@ -932,6 +991,10 @@
     INGREDIENTS,
     PANTRY_BRIDGE,
     PREY_FAMILIES,
+    FEEDING_TIERS,
+    FOOD_FAMILY_SUPPLY_COST,
+    computeFeedingProfile,
+    feedingProfileForSpecies,
     preyIngredientIds,
     metadata,
     loadPayload,

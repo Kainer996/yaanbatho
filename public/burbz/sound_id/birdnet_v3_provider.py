@@ -445,8 +445,10 @@ def _infer(session, chunks) -> "object":
 def _birdnet_week(week: Optional[int]) -> int:
     """BirdNET's week-of-year: 4 per month, 1-48.
 
-    The client sends latitude and longitude but no week, so absent one we use
-    today's — which is what the player means by "here, now".
+    The client posts this alongside latitude and longitude, read from the
+    device clock in the player's hand. Absent one — an older client, or a
+    caller that does not pass it through — we fall back to the server's own
+    date, which is the same thing whenever the two agree.
     """
     if week is not None:
         try:

@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728';
+const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-seasonal-presence-accurate-diets-v153-20260729';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -55,6 +55,7 @@ const BURBZ_ASSETS = [
   './national_bird_completion_20260715.js?v=national-completion-20260715',
   './uk_bird_expansion_4.js?v=uk-british-list-completion-20260722',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
+  './seasonal_presence_core.js?v=seasonal-presence-20260729',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
   './data/national-bird-completion/manifest.json?v=national-completion-20260715',
@@ -215,6 +216,7 @@ const BURBZ_CORE = [
   './national_bird_completion_20260715.js?v=national-completion-20260715',
   './uk_bird_expansion_4.js?v=uk-british-list-completion-20260722',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
+  './seasonal_presence_core.js?v=seasonal-presence-20260729',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
   './data/national-bird-completion/manifest.json?v=national-completion-20260715',

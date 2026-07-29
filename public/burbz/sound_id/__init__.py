@@ -172,6 +172,30 @@ def _location_from_request(lat, lon):
     return lat, lon
 
 
+def _week_from_request(week):
+    """Fill in a missing week of the year from the upload itself.
+
+    Half the range filter's job is seasonal: a Swift is a fine answer for a
+    London garden in June and an impossible one in January. The client posts
+    the week its own device clock says it is, which beats the server's clock —
+    the box may be in another timezone, or another day.
+
+    Same contract as ``_location_from_request``: anything unexpected leaves the
+    week as it was, and the provider falls back to the server date.
+    """
+    if week is not None:
+        return week
+    try:
+        from flask import request
+
+        raw = request.values.get("week")
+        if raw not in (None, ""):
+            return int(float(raw))
+    except Exception:
+        pass
+    return week
+
+
 def _announce(provider: str) -> None:
     """Record, once per process, which engine actually served a scan.
 
@@ -239,6 +263,7 @@ def analyse(
     the other model.
     """
     lat, lon = _location_from_request(lat, lon)
+    week = _week_from_request(week)
     provider = active_provider()
     chain = (provider, *_FALLBACK_CHAIN.get(provider, ()))
 

@@ -2505,6 +2505,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .diet-disclosure-row { display:block; margin-top:2px; }
 .diet-disclosure-row b { color:var(--text); font-weight:900; }
 .diet-disclosure-compatible { color:var(--text3); }
+.diet-feeding-row[data-feeding-tier="omnivore"] { color:#9be8cd; }
+.diet-feeding-row[data-feeding-tier="generalist"] { color:#cfe08a; }
+.diet-feeding-row[data-feeding-tier="selective"] { color:#e8c68a; }
+.diet-feeding-row[data-feeding-tier="specialist"] { color:#e8a08a; }
 .diet-disclosure-source { color:var(--text3); font-size:10px; margin-top:4px; }
 .diet-disclosure-note { color:#9be8cd; margin-top:5px; font-size:10.5px; line-height:1.35; }
 .diet-disclosure.compact { padding:6px 7px; font-size:9.5px; line-height:1.28; }
@@ -2765,6 +2769,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-bird-preview-card img { width:min(64vw, 260px); height:min(64vw, 260px); object-fit:contain; filter:drop-shadow(0 10px 18px rgba(0,0,0,.55)); }
 .map-bird-preview-name { margin-top:8px; font-size:20px; font-weight:900; color:#f0c767; }
 .map-bird-preview-sub { margin-top:4px; font-size:12px; color:var(--text3); }
+.map-bird-preview-season { margin-top:7px; padding:6px 8px; border-radius:8px; border:1px solid rgba(214,168,79,.24); background:rgba(214,168,79,.08); font-size:11px; line-height:1.35; color:var(--accent); }
+.map-bird-preview-season span { display:block; margin-top:3px; color:var(--text2); font-size:10.5px; }
 .map-bird-preview-close { margin-top:12px; padding:9px 22px; border-radius:13px; border:1px solid rgba(214,168,79,.5); background:rgba(214,168,79,.16); color:#f0c767; font-weight:800; font-family:inherit; }
 </style>
 </head>
@@ -2816,7 +2822,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
-        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><button class="map-area-birds-toggle" id="mapAreaBirdsToggle" aria-controls="mapAreaBirdsList" aria-expanded="true"><span class="map-area-birds-heading"><span class="map-area-birds-title">Area birds</span><span class="map-area-birds-sub">Common → rare</span></span><span class="map-area-birds-count" id="mapAreaBirdsCount"><span id="mapAreaBirdsCountValue">0</span><span class="map-area-birds-chevron" aria-hidden="true">⌄</span></span></button><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
+        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><button class="map-area-birds-toggle" id="mapAreaBirdsToggle" aria-controls="mapAreaBirdsList" aria-expanded="true"><span class="map-area-birds-heading"><span class="map-area-birds-title">Area birds</span><span class="map-area-birds-sub" id="mapAreaBirdsSeason">Common → rare</span></span><span class="map-area-birds-count" id="mapAreaBirdsCount"><span id="mapAreaBirdsCountValue">0</span><span class="map-area-birds-chevron" aria-hidden="true">⌄</span></span></button><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
         <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy"></div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button><button class="map-village-orb" id="mapVillageBtn" aria-label="Enter the village">&#127984;</button></div>
@@ -3541,6 +3547,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
+<script src="seasonal_presence_core.js?v=seasonal-presence-20260729"></script>
 <script src="audio_core.js?v=burbz-audio-overhaul-v1-20260726"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=merlin-compact-speech-v2-20260724"></script>
@@ -3579,6 +3586,14 @@ const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
 };
 const SPAIN_BOUNDARY = window.BURBZ_SPAIN_BOUNDARY_20260715 || {
   contains() { return false; }
+};
+// Season and range rules for the legacy roster the regional expansions never
+// owned. Fails open, so a missing file leaves spawning exactly as it was.
+const SEASON = window.BurbzSeasonalPresenceCore || {
+  presenceReport() { return { known:false, present:true, reason:'core-missing' }; },
+  isPresent() { return true; },
+  nowContext(date) { const d = date instanceof Date ? date : new Date(); return { month:d.getMonth() + 1, week:1, season:'', seasonLabel:'', monthLabel:'' }; },
+  seasonSummary() { return { seasonLabel:'', monthLabel:'', arrivals:[], departures:[] }; }
 };
 const MERLIN_CORE = window.BurbzMerlinCompanionCore;
 if (!MERLIN_CORE) throw new Error('Merlin companion core failed to load');
@@ -4279,8 +4294,40 @@ function dietDisclosureFor(subject) {
     secondaryLabels: labels(secondaryFamilies),
     compatibleLabels: labels(primaryFamilies.concat(secondaryFamilies || [])),
     education: rule.fact || 'Fallback field-guide rule; use this as general guidance until the source-backed diet records load.',
+    feeding: feedingProfileFor(primaryFamilies, secondaryFamilies),
     noSpeciesClaim:false
   };
+}
+
+// How hard a bird is to keep fed, from the breadth of what it will eat. The
+// diet core owns the rule; this is the fallback for when it has not loaded.
+function feedingProfileFor(primaryFamilies, secondaryFamilies) {
+  const core = dietHungerCore();
+  if (core && typeof core.computeFeedingProfile === 'function') {
+    return core.computeFeedingProfile(primaryFamilies || [], secondaryFamilies || []);
+  }
+  const breadth = new Set([...(primaryFamilies || []), ...(secondaryFamilies || [])]).size;
+  if (breadth >= 8) return { tier:'omnivore', label:'Eats almost anything', difficulty:1, breadth, omnivore:true, summary:'' };
+  if (breadth >= 5) return { tier:'generalist', label:'Wide diet', difficulty:2, breadth, omnivore:false, summary:'' };
+  if (breadth >= 3) return { tier:'selective', label:'Particular', difficulty:3, breadth, omnivore:false, summary:'' };
+  return { tier:'specialist', label:'Specialist', difficulty:4, breadth, omnivore:false, summary:'' };
+}
+
+function feedingProfileForSubject(subject) {
+  const core = dietHungerCore();
+  if (core && typeof core.feedingProfileForSpecies === 'function') return core.feedingProfileForSpecies(subject);
+  const d = dietDisclosureFor(subject);
+  return d.feeding || feedingProfileFor(d.primaryFamilies, d.secondaryFamilies);
+}
+
+// One line the player can act on: how much trouble this bird will be to keep
+// fed, before they commit to taking it on.
+function feedingDifficultyLineFor(subject) {
+  const feeding = feedingProfileForSubject(subject) || {};
+  const detail = feeding.tier === 'omnivore'
+    ? 'eats across ' + feeding.breadth + ' of ' + (feeding.familyCount || 12) + ' food families, so almost anything in the larder will do'
+    : 'takes ' + feeding.breadth + ' of ' + (feeding.familyCount || 12) + ' food families';
+  return { feeding, detail };
 }
 
 function renderDietDisclosureHTML(subject, surface, options = {}) {
@@ -4291,11 +4338,13 @@ function renderDietDisclosureHTML(subject, surface, options = {}) {
   const cls = 'diet-disclosure' + (options.compact ? ' compact' : '') + (options.className ? ' ' + options.className : '');
   const title = options.title || 'Diet guidance';
   const note = options.note || d.education || '';
-  return '<div class="' + cls + '" data-diet-surface="' + escapeHtml(surface || 'diet-guidance') + '" data-diet-guidance="' + escapeHtml(options.guidanceKey || surface || 'diet-guidance') + '" data-diet-primary="' + escapeHtml(primary) + '" data-diet-secondary="' + escapeHtml(secondary) + '" data-compatible-foods="' + escapeHtml((d.compatibleFamilies || []).join(',')) + '" data-diet-provenance="' + escapeHtml(d.provenance || '') + '" data-diet-fallback="' + escapeHtml(d.fallbackType || d.matchMethod || '') + '">' +
+  const { feeding, detail } = feedingDifficultyLineFor(subject);
+  return '<div class="' + cls + '" data-diet-surface="' + escapeHtml(surface || 'diet-guidance') + '" data-diet-guidance="' + escapeHtml(options.guidanceKey || surface || 'diet-guidance') + '" data-diet-primary="' + escapeHtml(primary) + '" data-diet-secondary="' + escapeHtml(secondary) + '" data-compatible-foods="' + escapeHtml((d.compatibleFamilies || []).join(',')) + '" data-diet-provenance="' + escapeHtml(d.provenance || '') + '" data-diet-fallback="' + escapeHtml(d.fallbackType || d.matchMethod || '') + '" data-feeding-tier="' + escapeHtml(feeding.tier || '') + '" data-feeding-difficulty="' + escapeHtml(String(feeding.difficulty || '')) + '" data-feeding-breadth="' + escapeHtml(String(feeding.breadth || 0)) + '">' +
     '<div class="diet-disclosure-title">' + escapeHtml(title) + '</div>' +
     '<span class="diet-disclosure-row"><b>Primary:</b> ' + escapeHtml(primary) + '</span>' +
     '<span class="diet-disclosure-row"><b>Secondary:</b> ' + escapeHtml(secondary) + '</span>' +
     (options.compatible === false ? '' : '<span class="diet-disclosure-row diet-disclosure-compatible"><b>Compatible:</b> ' + escapeHtml(compatible) + '</span>') +
+    '<span class="diet-disclosure-row diet-feeding-row" data-feeding-tier="' + escapeHtml(feeding.tier || '') + '"><b>Feeding:</b> ' + escapeHtml(feeding.label || '') + ' — ' + escapeHtml(detail) + '</span>' +
     '<div class="diet-disclosure-source">Source: ' + escapeHtml(d.provenance || 'Fallback field-guide rule') + '</div>' +
     (note ? '<div class="diet-disclosure-note">' + escapeHtml(note) + '</div>' : '') +
   '</div>';
@@ -9535,6 +9584,21 @@ function renderInfoBlock(title, body) {
   `;
 }
 
+// "Where is it right now" is a different question from "when does it breed",
+// and it is the one a player asks when a bird they caught last summer has
+// stopped appearing on their map.
+function renderSeasonHereBlock(bird) {
+  const presence = speciesPresenceHere(bird && (bird.commonName || bird.species || bird.name));
+  if (!presence.known) return '';
+  const now = currentSeasonContext();
+  const here = presence.present
+    ? 'Here now — ' + now.monthLabel + ' is inside its ' + presence.monthsLabel.toLowerCase() + ' window.'
+    : presence.reason === 'out-of-range'
+      ? 'Not in your part of the country. ' + presence.statusLabel + ', ' + presence.monthsLabel.toLowerCase() + '.'
+      : 'Not around in ' + now.monthLabel + '. ' + presence.statusLabel + ', ' + presence.monthsLabel.toLowerCase() + '.';
+  return renderInfoBlock('In your area now', presence.note ? here + ' ' + presence.note : here);
+}
+
 function renderEducationSections(bird, education) {
   if (!education) {
     return `
@@ -9556,6 +9620,7 @@ function renderEducationSections(bird, education) {
       ${renderInfoBlock('Habitat', education.habitat)}
       ${renderInfoBlock('Diet', education.diet)}
       ${renderInfoBlock('Breeding & seasons', education.breeding)}
+      ${renderSeasonHereBlock(bird)}
       ${renderInfoBlock('Range', education.range)}
       ${renderInfoBlock('Conservation', education.conservation)}
       <div class="bird-info-section">
@@ -16271,6 +16336,42 @@ function pickWeightedHabitatSpecies(pool, seed) {
   }
   return pool[pool.length - 1];
 }
+// ---- Season and range: is this bird here, now? ----------------------------
+// The month comes from the device clock and the position from the same
+// geolocation fix the live map already holds, so no extra permission and no
+// network call are needed to know what time of year it is where the player is.
+function currentSeasonContext(lat = null) {
+  const at = Number.isFinite(Number(lat)) ? Number(lat)
+    : (liveMapLastPosition && Number.isFinite(Number(liveMapLastPosition.lat)) ? Number(liveMapLastPosition.lat) : null);
+  return SEASON.nowContext(new Date(), at);
+}
+
+function speciesPresenceReport(species, region, lat, lon, month, habitat) {
+  return SEASON.presenceReport(canonicalSpeciesName(species), {
+    region,
+    lat,
+    lon,
+    habitat: habitat || '',
+    month: Number(month) || currentSeasonContext(lat).month
+  });
+}
+
+function speciesPresentNow(species, region, lat, lon, month, habitat) {
+  return speciesPresenceReport(species, region, lat, lon, month, habitat).present;
+}
+
+// The same question asked from the player's current position, for the UI:
+// what is this bird's season, and is it here at the moment?
+function speciesPresenceHere(species, month = null) {
+  const region = liveMapLastPosition ? mapRegionForCoords(liveMapLastPosition.lat, liveMapLastPosition.lon) : null;
+  return speciesPresenceReport(
+    species, region,
+    liveMapLastPosition && liveMapLastPosition.lat,
+    liveMapLastPosition && liveMapLastPosition.lon,
+    month, ''
+  );
+}
+
 function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, month = new Date().getMonth() + 1) {
   // Spawns must pass the closed regional whitelist — the habitat pools can be
   // extended with world-roster species for scanning, but an Emu must never
@@ -16278,7 +16379,13 @@ function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, m
   // checks only for its own species, and deliberately fails open for old saves.
   if (!region || region === 'unsupported') return null;
   const native = species => speciesNativeToRegion(species, region) && speciesAllowedInRegion(species, region);
+  // Season and range come first and apply to EVERY species, including the
+  // legacy roster the expansions never covered. A Swift over a January street
+  // or a Fieldfare in July is a bird the player could not possibly be looking
+  // at, so it never gets as far as being drawn.
+  const inSeasonHere = species => speciesPresentNow(species, region, lat, lon, month, habitat);
   const eligible = species => {
+    if (!inSeasonHere(species)) return false;
     if (NATIONAL.isEligible(region, species, lat, lon, month, habitat)) return true;
     if (NATIONAL.names.some(name => normaliseSpeciesKey(name) === normaliseSpeciesKey(species))) return false;
     if (region === 'uk') return UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat) && UK4.isEligible(species, lat, lon, month, habitat);
@@ -16768,7 +16875,22 @@ function setAreaBirdsOpen(open, persist = true) {
   }
   if (persist) { try { localStorage.setItem(BURBZ_AREA_BIRDS_OPEN_KEY, open ? '1' : '0'); } catch (e) {} }
 }
-function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); liveMapAreaRows = rows.slice(0,9); const count = $('mapAreaBirdsCountValue'); if (count) count.textContent = String(liveMapAreaRows.length); list.innerHTML = liveMapAreaRows.map((row, i) => { const img = birdOnlyImgHTML(row.bird || { commonName:row.species }, 'map-area-bird-art'); return `<div class="map-area-bird" data-area-bird="${i}" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>';
+// The panel says WHEN as well as where. The list below it is already filtered
+// to what is actually in the country this month, and the player should be able
+// to see why a bird they caught last summer is not on it today.
+function renderAreaBirdsSeasonLine() {
+  const el = $('mapAreaBirdsSeason');
+  if (!el) return;
+  const region = liveMapLastPosition ? mapRegionForCoords(liveMapLastPosition.lat, liveMapLastPosition.lon) : null;
+  const summary = SEASON.seasonSummary({ region, lat: liveMapLastPosition && liveMapLastPosition.lat, date: new Date() });
+  if (!summary.monthLabel) { el.textContent = 'Common → rare'; return; }
+  const movement = summary.arrivals.length ? summary.arrivals[0] + ' is back'
+    : summary.departures.length ? summary.departures[0] + ' has gone' : 'Common → rare';
+  el.textContent = summary.monthLabel + ' · ' + summary.seasonLabel + ' · ' + movement;
+  el.title = 'Only birds that are in your area this month are listed.';
+}
+
+function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); liveMapAreaRows = rows.slice(0,9); const count = $('mapAreaBirdsCountValue'); if (count) count.textContent = String(liveMapAreaRows.length); renderAreaBirdsSeasonLine(); list.innerHTML = liveMapAreaRows.map((row, i) => { const img = birdOnlyImgHTML(row.bird || { commonName:row.species }, 'map-area-bird-art'); return `<div class="map-area-bird" data-area-bird="${i}" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>';
   if (!list.dataset.wired) { list.dataset.wired = '1'; list.addEventListener('click', ev => { const card = ev.target.closest('[data-area-bird]'); if (!card) return; const row = liveMapAreaRows[Number(card.dataset.areaBird)]; if (row) { SFX.tap(); showMapBirdPreview(row); } }); } }
 
 // Tap a potential bird on the map screen → big art + its full name.
@@ -16777,6 +16899,11 @@ function showMapBirdPreview(row) {
   const bird = row.bird || { commonName: row.species };
   const art = getBirdArtUrl(bird);
   const habitats = row.habitats ? [...row.habitats].slice(0, 3).join(' · ') : '';
+  const presence = speciesPresenceHere(row.species);
+  const seasonLine = presence.known
+    ? '<div class="map-bird-preview-season">' + escapeHtml(presence.statusLabel) + ' · ' + escapeHtml(presence.monthsLabel)
+      + (presence.note ? '<span>' + escapeHtml(presence.note) + '</span>' : '') + '</div>'
+    : '';
   const el = document.createElement('div');
   el.id = 'mapBirdPreview';
   el.className = 'map-bird-preview';
@@ -16784,6 +16911,7 @@ function showMapBirdPreview(row) {
     (art ? '<img src="' + art + '" alt="' + escapeHtml(row.species) + '">' : '<div style="font-size:96px">' + (row.emoji || '🐦') + '</div>') +
     '<div class="map-bird-preview-name">' + escapeHtml(row.species) + '</div>' +
     '<div class="map-bird-preview-sub">' + escapeHtml(row.rarityLabel || '') + (habitats ? ' · likely near ' + escapeHtml(habitats) : '') + '</div>' +
+    seasonLine +
     '<button class="map-bird-preview-close">Close</button></div>';
   el.addEventListener('click', ev => { if (ev.target === el || ev.target.classList.contains('map-bird-preview-close')) el.remove(); });
   document.body.appendChild(el);
@@ -24306,6 +24434,12 @@ async function uploadRecording(blob, opts = {}) {
     formData.append('lat', pos.coords.latitude);
     formData.append('lon', pos.coords.longitude);
   }
+  // Where narrows the answer; when narrows it further. BirdNET's range filter
+  // takes a week of the year alongside the position, and without one the
+  // server falls back to its own clock — which may be in another timezone, or
+  // another day. The phone in the player's hand is the honest source. The
+  // number is on BirdNET's own 1-48 scale, not an ISO week.
+  formData.append('week', String(SEASON.nowContext(new Date(), pos && pos.coords && pos.coords.latitude).birdnetWeek));
 
   const response = await fetch('api/identify/sound', {
     method: 'POST',
@@ -26489,7 +26623,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';
+const BURBZ_BUILD = 'seasonal-presence-accurate-diets-v153-20260729';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

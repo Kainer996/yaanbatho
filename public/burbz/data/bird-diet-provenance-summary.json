@@ -586,8 +586,10 @@
     "commonName": "Merlin",
     "compatibleIngredientFamilies": [
       "small_birds",
+      "flying_insects",
       "invertebrates"
     ],
+    "dietCorrection": null,
     "dietPercentages": {
       "Diet-Fruit": 0,
       "Diet-Inv": 20,
@@ -603,14 +605,26 @@
     "education": "Merlin is Falco columbarius, a small falcon. BirdFuncDat records 80% endotherm vertebrate prey and 20% invertebrates; mission context teaches small birds such as Meadow Pipits, Skylarks, and other small passerines as the main prey, with insects secondary.",
     "fallbackReason": "Permanent Merlin guide is not part of the 951 national catalogue profiles.",
     "family": "Falconidae",
+    "feeding": {
+      "breadth": 3,
+      "difficulty": 3,
+      "easiestPrimarySupplyCost": 5,
+      "familyCount": 12,
+      "label": "Particular",
+      "omnivore": false,
+      "summary": "Only a few foods will do. Keep the right ones stocked before taking this bird out.",
+      "tier": "selective"
+    },
     "gameFamilyScores": {
-      "invertebrates": 20,
+      "flying_insects": 6.67,
+      "invertebrates": 13.33,
       "small_birds": 80
     },
     "id": "merlin_falco_columbarius",
     "matchMethod": "override",
     "name": "Merlin",
     "prepByFamily": {
+      "flying_insects": "tossed",
       "invertebrates": "fresh",
       "small_birds": "whole"
     },
@@ -621,6 +635,7 @@
       "small_birds"
     ],
     "provenance": {
+      "dietCorrection": null,
       "fallbackReason": "Permanent Merlin guide is not part of the 951 national catalogue profiles.",
       "matchMethod": "override",
       "sourceCommonName": "Merlin",
@@ -644,7 +659,6 @@
       "aquatic_plants",
       "carrion",
       "fish",
-      "flying_insects",
       "fruit_berries",
       "molluscs_crustaceans",
       "nectar",
@@ -655,9 +669,11 @@
     "scientific": "Falco columbarius",
     "scientificName": "Falco columbarius",
     "secondaryCompatibleFamilies": [
+      "flying_insects",
       "invertebrates"
     ],
     "secondaryDietCategories": [
+      "flying_insects",
       "invertebrates"
     ],
     "source": "EltonTraits 1.0 BirdFuncDat",

@@ -413,3 +413,55 @@ def test_outside_a_request_the_location_is_simply_absent(monkeypatch):
                         lambda path, **kw: seen.update(kw) or [])
     sound_id.analyse("/tmp/clip.wav")
     assert seen["lat"] is None and seen["lon"] is None
+
+
+# ----------------------------------------------------------- week from upload
+
+def test_the_week_is_taken_from_the_upload_when_the_call_omits_it(monkeypatch):
+    """Half the range filter is seasonal, and the client's clock beats ours.
+
+    A Swift is a fine answer for a London garden in June and an impossible one
+    in January. Falling back to the server date works only while the server and
+    the player are on the same day, in the same timezone.
+    """
+    flask = pytest.importorskip("flask")
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+    monkeypatch.setattr(birdnet_v3_provider, "analyse",
+                        lambda path, **kw: seen.update(kw) or [])
+    app = flask.Flask(__name__)
+    with app.test_request_context("/api/identify/sound", method="POST",
+                                  data={"lat": "51.5", "lon": "-0.13", "week": "23"}):
+        sound_id.analyse("/tmp/clip.wav")
+
+    assert seen["week"] == 23
+
+
+def test_an_explicit_week_is_not_overridden_by_the_upload(monkeypatch):
+    flask = pytest.importorskip("flask")
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+    monkeypatch.setattr(birdnet_v3_provider, "analyse",
+                        lambda path, **kw: seen.update(kw) or [])
+    app = flask.Flask(__name__)
+    with app.test_request_context("/api/identify/sound", method="POST", data={"week": "4"}):
+        sound_id.analyse("/tmp/clip.wav", week=41)
+
+    assert seen["week"] == 41
+
+
+@pytest.mark.parametrize("posted", [{}, {"week": ""}, {"week": "not-a-week"}])
+def test_a_missing_or_malformed_week_falls_back_to_the_server_date(monkeypatch, posted):
+    flask = pytest.importorskip("flask")
+    from sound_id import birdnet_v3_provider
+
+    seen = {}
+    monkeypatch.setattr(birdnet_v3_provider, "analyse",
+                        lambda path, **kw: seen.update(kw) or [])
+    app = flask.Flask(__name__)
+    with app.test_request_context("/api/identify/sound", method="POST", data=posted):
+        assert sound_id.analyse("/tmp/clip.wav") == []
+    # None is the provider's "use today" signal, not an error.
+    assert seen["week"] is None
