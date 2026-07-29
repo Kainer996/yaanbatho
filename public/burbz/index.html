@@ -81,7 +81,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .hud-resources { display: flex; gap: 6px; }
 .hud-chip { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 3px 8px 4px; border-radius: 9px; border: 1px solid rgba(214,168,79,.28); background: linear-gradient(135deg, rgba(214,168,79,.12), rgba(255,255,255,.03)); }
 .hud-chip:active { background: rgba(214,168,79,.24); }
-.hud-chip-icon { width: 18px; height: 18px; object-fit: contain; display: block; }
+.hud-chip-icon { font-size: 12px; line-height: 1; }
 .hud-chip-value { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 13px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hud-chip.bump .hud-chip-value { animation: hudBump .45s ease; }
 @keyframes hudBump { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--legendary); } 100% { transform: scale(1); } }
@@ -94,10 +94,6 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   border-radius:10px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
   font-size:17px; color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
-.header-profile-btn img, .header-settings img { width: 29px; height: 29px; object-fit: contain; display: block; }
-.ui-inline-icon { width: 22px; height: 22px; object-fit: contain; display: inline-block; vertical-align: middle; margin-right: 5px; }
-.scan-mode-btn .ui-inline-icon { width: 25px; height: 25px; margin-right: 6px; }
-.map-quest-show-icon .ui-inline-icon { width: 28px; height: 28px; margin: 0; }
 .merlin-listening-dock {
   position:relative; display:none; flex:0 0 36px; width:36px; height:36px; padding:3px;
   align-items:center; justify-content:center; border-radius:10px;
@@ -872,6 +868,19 @@ svg.academy-room-bg { display:block; filter:none; }
   width: 100%; height: clamp(166px, 42vw, 230px); display: flex; align-items: center; justify-content: center;
   font-size: 48px; position: relative; overflow: hidden;
 }
+.bird-family-outline .card-art::after {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  box-shadow:inset 0 0 0 2px var(--bird-family-color), inset 0 0 14px rgba(255,255,255,.08);
+  opacity:.72;
+}
+.bird-family-badge {
+  position:absolute; left:6px; bottom:6px; z-index:3; max-width:calc(100% - 12px);
+  display:inline-flex; align-items:center; gap:3px; padding:2px 6px; border-radius:999px;
+  border:1px solid var(--bird-family-color);
+  background:rgba(4,5,5,.78); color:#f8f2e8; font:900 8px/1.2 'Rajdhani',sans-serif;
+  letter-spacing:.055em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  box-shadow:0 2px 8px rgba(0,0,0,.52);
+}
 .card-art-bg {
   position: absolute; inset: 0;
   background: linear-gradient(135deg, var(--bg3), var(--bg4));
@@ -911,6 +920,15 @@ svg.academy-room-bg { display:block; filter:none; }
   font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.card-name,
+.card-nickname,
+.card-species { flex:0 0 auto; }
+.card-nickname {
+  min-height:0; color:var(--accent2); font-family:'Rajdhani',sans-serif;
+  font-size:11px; font-weight:800; line-height:1.15; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.card-nickname:empty { display:none; }
 .card-species {
   font-size: 10px; color: var(--text3); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; font-style: italic;
@@ -1429,7 +1447,7 @@ svg.academy-room-bg { display:block; filter:none; }
   min-height: calc(100dvh - var(--nav-height) - 260px);
   border-color: rgba(214,168,79,0.5); color: var(--text);
 }
-#imageScanArea .scan-upload-icon { width: 74px; height: 74px; object-fit: contain; }
+#imageScanArea .scan-upload-icon { font-size: 46px; }
 .scan-upload-subtext { font-size: 12px; font-weight: 600; color: var(--text3); }
 #nativePhotoPreview {
   max-width: 100%; max-height: 38dvh; border-radius: 12px; object-fit: contain;
@@ -1441,6 +1459,10 @@ svg.academy-room-bg { display:block; filter:none; }
   border: 1px solid rgba(255,255,255,0.18);
 }
 #imageScanArea .scan-btn:active { transform: translateX(-50%) scale(0.97); }
+/* The result card occupies the same fixed bottom slot as this redundant CTA.
+   Hide the CTA while a photo result is shown; the large photo chooser remains
+   tappable for taking another picture. */
+#screen-scan.camera-mode:has(#scanResult.show) #captureBtn { display:none; }
 @media (max-height: 740px) {
   #imageScanArea { min-height: calc(100dvh - var(--nav-height) - 94px); }
   .camera-viewfinder { height: calc(100dvh - var(--nav-height) - 96px); min-height: 390px; }
@@ -1456,7 +1478,7 @@ svg.academy-room-bg { display:block; filter:none; }
   transition: border-color 0.2s ease;
 }
 .scan-upload-area:active { border-color: var(--accent2); }
-.scan-upload-icon { width: 52px; height: 52px; object-fit: contain; }
+.scan-upload-icon { font-size: 32px; }
 .scan-upload-text { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 14px; }
 
 /* ========== BATTLE SCREEN ========== */
@@ -1521,6 +1543,10 @@ svg.academy-room-bg { display:block; filter:none; }
 .rival-card.evil .rc-art { border:1px solid rgba(224,57,43,0.45); box-shadow:0 0 10px rgba(224,57,43,0.3); }
 .rival-card.evil .rc-name { color:#ffb3a8; }
 .type-chip { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; border:1px solid; margin-top:3px; text-transform:uppercase; letter-spacing:0.5px; }
+.family-chip { display:inline-flex; align-items:center; gap:3px; max-width:100%; font-size:8px; font-weight:900; padding:2px 6px; border-radius:20px; border:1px solid; margin-top:3px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.battle-synergy-preview,.arena-synergy-banner { margin:8px 0; padding:8px 10px; border-radius:10px; border:1px solid rgba(214,168,79,.2); background:rgba(214,168,79,.06); color:var(--text2); font:800 10px/1.25 'Rajdhani',sans-serif; }
+.battle-synergy-preview.mega,.arena-synergy-banner.mega { border-color:rgba(240,199,103,.72); background:linear-gradient(135deg,rgba(214,168,79,.24),rgba(151,117,250,.13)); color:#fff1bd; box-shadow:0 0 18px rgba(214,168,79,.16); }
+.battle-synergy-preview strong,.arena-synergy-banner strong { display:block; color:var(--accent2); font-family:'Russo One',sans-serif; font-size:10px; letter-spacing:.04em; }
 .battle-team-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin:10px 0; }
 .pick-card { position:relative; text-align:center; padding:10px 6px 8px; background:var(--bg2); border:1.5px solid rgba(255,255,255,0.07); border-radius:12px; transition:border-color .15s, transform .1s; }
 .pick-card:active { transform:scale(0.96); }
@@ -1984,7 +2010,11 @@ svg.academy-room-bg { display:block; filter:none; }
 .feedback-shot img { display:block; width:100%; aspect-ratio:1; object-fit:cover; border-radius:9px; border:1px solid rgba(255,255,255,.18); }
 .feedback-shot button { width:100%; min-height:34px; margin-top:4px; border-radius:8px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08); color:inherit; font:700 11px 'Rajdhani',sans-serif; }
 .recruit-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-.recruit-list .bird-card { min-height:338px; }
+.recruit-list .bird-card,
+.recruit-list .bird-card-inner { min-height:420px; }
+.recruit-list .card-art { flex:0 0 auto; }
+.recruit-list .card-name,
+.recruit-list .card-species { flex:0 0 auto; line-height:1.2; }
 .recruit-close { width:100%; min-height:44px; margin-top:12px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
 
 
@@ -2028,14 +2058,13 @@ svg.academy-room-bg { display:block; filter:none; }
 
 
 /* ========== INTRO CUTSCENE ========== */
-.intro-cutscene-overlay { position:fixed; inset:0; z-index:1400; display:none; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 18%, rgba(25,51,60,.72), rgba(0,0,0,.94) 68%); backdrop-filter:blur(10px); padding:calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom)); }
-.intro-cutscene-overlay.show { display:flex; }
-.intro-cutscene-shell { width:min(100%,430px); max-height:100%; display:flex; flex-direction:column; gap:10px; align-items:stretch; }
-.intro-cutscene-title { font-family:'Russo One',sans-serif; font-size:18px; color:var(--legendary); text-align:center; letter-spacing:.08em; text-transform:uppercase; text-shadow:0 0 18px rgba(214,168,79,.35); }
-.intro-cutscene-video { width:100%; max-height:calc(100dvh - 148px - var(--safe-top) - var(--safe-bottom)); aspect-ratio:9/16; object-fit:contain; border-radius:20px; background:#050403; border:1px solid rgba(214,168,79,.32); box-shadow:0 22px 70px rgba(0,0,0,.62),0 0 28px rgba(214,168,79,.16); }
-.intro-cutscene-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.intro-cutscene-btn { min-height:44px; border-radius:13px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
-.intro-cutscene-btn.primary { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--legendary)); border:0; }
+.intro-cutscene-overlay { position:fixed; inset:0; z-index:1400; display:none; background:#000; }
+.intro-cutscene-overlay.show { display:block; }
+.intro-cutscene-video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
+.intro-cutscene-skip { position:absolute; left:50%; transform:translateX(-50%); bottom:calc(20px + var(--safe-bottom)); z-index:2; min-height:44px; padding:10px 30px; border-radius:999px; border:1px solid rgba(255,255,255,.3); background:rgba(8,8,8,.55); backdrop-filter:blur(8px); color:#fff; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; letter-spacing:.14em; }
+.intro-cutscene-skip:active { background:rgba(255,255,255,.18); }
+.intro-cutscene-sound { position:absolute; left:50%; transform:translateX(-50%); top:calc(18px + var(--safe-top)); z-index:2; display:none; min-height:40px; padding:8px 22px; border-radius:999px; border:1px solid rgba(214,168,79,.55); background:rgba(8,8,8,.55); backdrop-filter:blur(8px); color:var(--legendary); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; text-transform:uppercase; letter-spacing:.1em; }
+.intro-cutscene-overlay.muted .intro-cutscene-sound { display:block; }
 
 /* ========== MERLIN TUTORIAL ========== */
 .merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
@@ -2060,7 +2089,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-tutorial-counter { text-align:center; color:#806a3b; font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.08em; }
 .merlin-tutorial-footer { position:absolute; left:0; right:0; bottom:calc(10px + var(--safe-bottom)); display:flex; align-items:center; justify-content:space-between; padding:0 16px; pointer-events:none; }
 .merlin-tutorial-hint { color:rgba(244,234,212,.72); font:800 10px/1.2 'Rajdhani',sans-serif; letter-spacing:.06em; text-transform:uppercase; }
-.merlin-tutorial-skip { pointer-events:auto; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.45); color:var(--text2); border-radius:11px; padding:8px 13px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; }
 /* ---- Interactive steps: the player does the thing, not just reads about it --
    Two modes. SPOTLIGHT keeps the dim and cuts one tappable hole (four shields
    block everything else) for a single, precise tap. FREE drops the dim
@@ -2085,9 +2113,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-tutorial-overlay.interactive .merlin-tutorial-actions { grid-template-columns:auto 1fr auto; }
 /* Free mode: Merlin steps aside and leaves a task chip pinned to the top. */
 .merlin-tutorial-overlay.free .merlin-tutorial-stage { display:none; }
-/* The footer stays in free mode: it is the only always-tappable way out
-   while the bubble (Back/Next) is hidden. It is pointer-events:none apart
-   from the Skip button itself, so it cannot swallow the player's taps. */
+/* The task chip stays in free mode; its rescue button appears if the requested
+   action is not completed, without covering any bottom navigation controls. */
 .merlin-tutorial-task-skip { flex:none; pointer-events:auto; border:1px solid rgba(240,199,103,.45); background:rgba(240,199,103,.12); color:var(--accent); border-radius:9px; padding:7px 10px; font:800 10px/1 'Rajdhani',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
 .merlin-tutorial-task-skip[hidden] { display:none; }
 .merlin-tutorial-task { display:none; position:fixed; top:calc(var(--safe-top) + 74px); left:50%; transform:translateX(-50%); width:min(340px,calc(100vw - 24px)); align-items:center; gap:10px; padding:10px 12px; border-radius:14px; border:2px solid rgba(240,199,103,.6); background:linear-gradient(160deg,rgba(28,24,16,.97),rgba(8,10,9,.97)); box-shadow:0 14px 34px rgba(0,0,0,.6); pointer-events:auto; z-index:1530; }
@@ -2218,6 +2245,32 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .card-info-hint { margin-top: 4px; color: var(--accent2); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
 
+/* Companion cards carry care and diet controls as well as artwork. Keep the
+   art and identity rows rigid so flexbox can never squash a bird's name into
+   a black sliver on narrow two-column phones. */
+.bird-grid.companions-grid .bird-card,
+.bird-grid.companions-grid .bird-card-inner { min-height:540px; }
+.companions-grid .card-art { flex:0 0 auto; }
+.companions-grid .card-name,
+.companions-grid .card-species { flex:0 0 auto; line-height:1.2; }
+
+/* Birdex mode mixes recruited companions with discovered-only species in the
+   same grid, so it needs its own height contract rather than the Companions
+   tab's class. Both identity rows stay rigid on narrow phone cards. */
+.bird-grid.codex-grid .bird-card:not(.known-species):not(.locked-card),
+.bird-grid.codex-grid .bird-card:not(.known-species):not(.locked-card) .bird-card-inner { min-height:540px; }
+.bird-grid.codex-grid .bird-card.known-species,
+.bird-grid.codex-grid .bird-card.known-species .bird-card-inner { min-height:430px; }
+.bird-grid.codex-grid .card-art { flex:0 0 auto; }
+.bird-grid.codex-grid .card-name,
+.bird-grid.codex-grid .card-species { flex:0 0 auto; line-height:1.2; }
+
+.bird-hunger-bar { flex:0 0 auto; margin:3px 0 2px; }
+.bird-hunger-head { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:4px; color:var(--text2); font:900 10px/1.1 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.05em; }
+.bird-hunger-track { width:100%; height:9px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.10); }
+.bird-hunger-fill { height:100%; min-width:4px; border-radius:inherit; transition:width .3s ease,background-color .3s ease; box-shadow:inset 0 1px 2px rgba(255,255,255,.28); }
+.bird-hunger-note { margin-top:3px; color:var(--text3); font-size:9px; line-height:1.2; }
+
 /* ========== TOAST NOTIFICATIONS ========== */
 .toast-container { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(92vw, 460px); pointer-events: none; }
 .toast {
@@ -2237,9 +2290,15 @@ svg.academy-room-bg { display:block; filter:none; }
 .academy-treehouse.placing { outline:2px solid rgba(214,168,79,.78); box-shadow:0 0 0 4px rgba(214,168,79,.14), inset 0 -110px 130px rgba(0,0,0,.42); cursor:crosshair; }
 .academy-treehouse::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 18%,rgba(214,168,79,.12),transparent 28%), linear-gradient(180deg,rgba(255,255,255,.03),transparent 34%,rgba(0,0,0,.32)); pointer-events:none; }
 .treehouse-branch { display:none; }
-.treehouse-room-node { position:absolute; z-index:7; width:112px; min-height:112px; transform:translate(-50%,-50%); border-radius:18px; border:1px solid rgba(214,168,79,.20); background:radial-gradient(circle at 50% 72%,rgba(0,0,0,.34),transparent 60%); box-shadow:0 16px 28px rgba(0,0,0,.34); padding:0; text-align:center; transition:transform .18s ease, filter .18s ease; }
-.treehouse-room-node.built { border-color:rgba(81,207,102,.28); }
+/* Built rooms sit frameless on the tree so the paintings read as one scene;
+   the box chrome only returns while placing (dashed target) or when active. */
+.treehouse-room-node { position:absolute; z-index:7; width:112px; min-height:112px; transform:translate(-50%,-50%); border-radius:18px; border:1px solid transparent; background:radial-gradient(circle at 50% 72%,rgba(0,0,0,.20),transparent 58%); padding:0; text-align:center; transition:transform .18s ease, filter .18s ease; }
+.treehouse-room-node.built { border-color:transparent; }
 .treehouse-room-node.active { transform:translate(-50%,-50%) scale(1.06); filter:drop-shadow(0 0 14px rgba(214,168,79,.8)); }
+.treehouse-room-node.quest-guided { z-index:12; border:3px solid #ffd76a; box-shadow:0 0 0 7px rgba(255,215,106,.18),0 0 34px rgba(255,215,106,.92),0 16px 28px rgba(0,0,0,.42); animation:academyQuestGuidePulse 1.15s ease-in-out infinite; }
+.treehouse-quest-guide { position:absolute; z-index:14; left:50%; top:-46px; transform:translateX(-50%); min-height:34px; display:flex; align-items:center; padding:7px 12px; border-radius:999px; border:2px solid #161006; background:#ffd76a; color:#161006; box-shadow:0 8px 20px rgba(0,0,0,.55); font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; pointer-events:none; }
+@keyframes academyQuestGuidePulse { 0%,100%{box-shadow:0 0 0 7px rgba(255,215,106,.18),0 0 24px rgba(255,215,106,.62),0 16px 28px rgba(0,0,0,.42)} 50%{box-shadow:0 0 0 10px rgba(255,215,106,.24),0 0 42px rgba(255,215,106,1),0 16px 28px rgba(0,0,0,.42)} }
+@media (prefers-reduced-motion:reduce) { .treehouse-room-node.quest-guided { animation:none; } }
 .treehouse-building-sprite { width:112px; height:112px; object-fit:contain; display:block; filter:drop-shadow(0 14px 18px rgba(0,0,0,.62)); pointer-events:none; }
 .treehouse-room-name { position:absolute; left:50%; bottom:-10px; transform:translateX(-50%); max-width:116px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .treehouse-room-meta { display:none; }
@@ -2254,6 +2313,25 @@ svg.academy-room-bg { display:block; filter:none; }
 .treehouse-bird:nth-child(3n) { animation-duration:2.9s; }
 .treehouse-bird:nth-child(4n) { animation-duration:2.1s; }
 @keyframes treeBirdHop { 0%,100%{ translate:0 0; } 30%{ translate:0 -8px; } 48%{ translate:0 -1px; } 62%{ translate:0 -5px; } 76%{ translate:0 0; } }
+
+/* ---- Academy Alive: ambient life layered over the treehouse ------------- */
+/* Two canvases sandwich the buildings: sky (z4) carries distant flocks
+   behind the rooms (z7), front (z9) carries feathers, smoke, fireflies. */
+.academy-alive-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.academy-alive-sky { z-index:4; }
+.academy-alive-front { z-index:9; }
+.academy-alive-shade { position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg, rgba(10,16,42,.60), rgba(7,9,30,.38) 55%, rgba(4,5,18,.58)); opacity:0; transition:opacity 2.5s ease; }
+.academy-treehouse.alive-night .academy-alive-shade { opacity:.52; }
+.academy-alive-light { position:absolute; inset:-12%; z-index:6; pointer-events:none; mix-blend-mode:screen; opacity:.8; background:linear-gradient(112deg, transparent 22%, rgba(255,240,196,.15) 30%, transparent 37%, transparent 47%, rgba(255,240,196,.09) 55%, transparent 62%); animation:aliveRays 17s ease-in-out infinite alternate; }
+.academy-treehouse.alive-night .academy-alive-light { background:linear-gradient(112deg, transparent 30%, rgba(190,214,255,.10) 40%, transparent 50%); animation-duration:23s; }
+@keyframes aliveRays { from { transform:translateX(-2.5%) rotate(-.6deg); opacity:.55; } to { transform:translateX(2.5%) rotate(.6deg); opacity:.95; } }
+.academy-alive-flyers { position:absolute; inset:0; pointer-events:none; }
+.alive-flyer { position:absolute; left:0; top:0; width:44px; height:44px; z-index:9; pointer-events:none; will-change:transform; filter:drop-shadow(0 6px 7px rgba(0,0,0,.5)); }
+.alive-flyer.behind { z-index:5; filter:drop-shadow(0 4px 5px rgba(0,0,0,.45)) saturate(.9) brightness(.92); }
+.alive-flyer img, .alive-flyer svg { width:100%; height:100%; object-fit:contain; display:block; }
+.alive-flyer.magic { filter:drop-shadow(0 6px 7px rgba(0,0,0,.5)) drop-shadow(0 0 9px rgba(168,142,255,.55)); }
+.th-alive-glow { position:absolute; pointer-events:none; mix-blend-mode:screen; opacity:0; }
+@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } }
 
 .expedition-panel { margin:0 10px 14px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.09),rgba(0,0,0,.25)); }
 .expedition-title { font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
@@ -2791,8 +2869,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         </div>
       </div>
       <div class="hud-resources">
-        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/coin.webp" alt=""><span class="hud-chip-value" id="hudCoins">0</span></button>
-        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/timber.webp" alt=""><span class="hud-chip-value" id="hudTimber">0</span></button>
+        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><span class="hud-chip-icon">🪙</span><span class="hud-chip-value" id="hudCoins">0</span></button>
+        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><span class="hud-chip-icon">🪵</span><span class="hud-chip-value" id="hudTimber">0</span></button>
       </div>
     </div>
     <button class="merlin-listening-dock" id="merlinDockReturn" type="button" aria-label="Merlin is listening — open listener">
@@ -2800,8 +2878,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <span class="merlin-listening-pulse" aria-hidden="true"></span>
       <span class="sr-only" id="merlinDockStatus" aria-live="polite">Listening across Burbz</span>
     </button>
-    <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile"><img src="assets/ui/burbz-icon-set/profile.webp" alt=""></button>
-    <button class="header-settings" id="settingsBtn" aria-label="Settings"><img src="assets/ui/burbz-icon-set/settings.webp" alt=""></button>
+    <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile">&#128100;</button>
+    <button class="header-settings" id="settingsBtn" aria-label="Settings">&#9881;</button>
   </header>
 
   <!-- Screens -->
@@ -2816,7 +2894,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="map-quest-btn" id="mapQuestBtn" aria-label="Explore nearby quests"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-kicker">Field board</span><span class="map-quest-btn-label" id="mapQuestBtnLabel">Explore Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
-        <button class="map-quest-show-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><span class="map-quest-show-icon" aria-hidden="true"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/quests.webp" alt=""></span><span>Show Quests</span></button>
+        <button class="map-quest-show-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><span class="map-quest-show-icon" aria-hidden="true">⌖</span><span>Show Quests</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
@@ -2870,6 +2948,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="filter-btn" data-rarity="epic">Epic</button>
         <button class="filter-btn" data-rarity="legendary">Legendary</button>
       </div>
+      <div class="filter-row" id="birdFamilyFilterRow" aria-label="Filter birds by family"></div>
       <div class="bird-grid" id="birdGrid"></div>
     </div>
 
@@ -2877,8 +2956,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="screen camera-mode" id="screen-scan" data-scan-path="camera-only">
       <div class="screen-title">SCAN</div>
       <div class="scan-mode-toggle">
-        <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">Camera</button>
-        <button class="scan-mode-btn" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
+        <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image">&#128247; Camera</button>
+        <button class="scan-mode-btn" id="scanSoundBtn" data-mode="sound">&#127925; Sound</button>
       </div>
 
       <!-- Sound scan area -->
@@ -2898,7 +2977,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <canvas id="waveformCanvas"></canvas>
         </div>
         <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
-          <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox"> Use my location to improve local bird matches</label>
+          <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox"> Use my location — required for accurate local bird matches</label>
+          <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
         </div>
         <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
       </div>
@@ -2923,7 +3003,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         </div>
         <div class="scan-upload-area" id="uploadArea">
           <img id="nativePhotoPreview" alt="Your last bird photo" style="display:none;">
-          <img class="scan-upload-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">
+          <div class="scan-upload-icon">&#128247;</div>
           <div class="scan-upload-text">Choose a bird photo</div>
         </div>
         <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
@@ -2975,14 +3055,16 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="battle-select-title">Pick your four-bird squad</div>
         <div class="battle-select-copy" id="battleSelectCopy">Choose 4 birds · matchup wheel below</div>
         <div class="battle-team-grid" id="battleTeamGrid"></div>
+        <div class="battle-synergy-preview" id="battleSynergyPreview">Pick three birds of one type to unlock a MEGA BONUS.</div>
         <button class="battle-start-btn" id="battleStartBtn" disabled>START BATTLE</button>
-        <button class="battle-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">GEAR UP AT THE FLETCHER'S FORGE</button>
+        <button class="battle-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')">⚒️ GEAR UP AT THE FLETCHER'S FORGE</button>
         <div class="type-wheel" id="typeWheel"></div>
       </div>
 
       <!-- Skyclash squad arena: whole squads on the field, Combat Readiness
            turn meter, skill cooldowns, ultimates and the shared Focus pool. -->
       <div class="battle-arena" id="battleArena">
+        <div class="arena-synergy-banner" id="arenaSynergyBanner"></div>
         <div class="arena-timeline" id="arenaTimeline"></div>
         <div class="arena-squad opponent" id="arenaOppRow"></div>
         <div class="battle-log" id="battleLog"></div>
@@ -3129,9 +3211,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="screen-title">FLETCHER'S FORGE</div>
       <div class="forge-intro">Loot found on your walks becomes weapons, armour and trinkets here. Equip each bird with a weapon (talons for the strong, wands for the magical), armour and a trinket.</div>
       <div class="forge-tabs">
-        <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
-        <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
-        <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">MATERIALS</button>
+        <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')">🛡️ EQUIP</button>
+        <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')">⚒️ CRAFT</button>
+        <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')">🧺 MATERIALS</button>
       </div>
       <div id="forgeBody"></div>
     </div>
@@ -3312,14 +3394,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
   <!-- Intro Cutscene Overlay -->
   <div class="intro-cutscene-overlay" id="introCutsceneOverlay" aria-modal="true" role="dialog" aria-label="Burbz intro cutscene">
-    <div class="intro-cutscene-shell">
-      <div class="intro-cutscene-title">The Spell of the Kingdom of Burbz</div>
-      <video class="intro-cutscene-video" id="introCutsceneVideo" src="assets/cutscenes/burbz-intro-30s-seedance-20260629-discord.mp4" playsinline controls preload="metadata"></video>
-      <div class="intro-cutscene-actions">
-        <button class="intro-cutscene-btn" id="introSkipBtn">Skip</button>
-        <button class="intro-cutscene-btn primary" id="introPlayAgainBtn">Play</button>
-      </div>
-    </div>
+    <video class="intro-cutscene-video" id="introCutsceneVideo" src="assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4" playsinline preload="metadata"></video>
+    <button class="intro-cutscene-sound" id="introSoundBtn">🔊 Tap for sound</button>
+    <button class="intro-cutscene-skip" id="introSkipBtn">Skip</button>
   </div>
 
   <!-- Merlin Tutorial Overlay -->
@@ -3356,7 +3433,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
     <div class="merlin-tutorial-footer">
       <div class="merlin-tutorial-hint">← → keys also work</div>
-      <button class="merlin-tutorial-skip" id="merlinTutorialSkip">Skip tour</button>
     </div>
   </div>
 
@@ -3505,7 +3581,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="merlin-care-head"><img class="merlin-care-portrait" src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt=""><div><div class="merlin-care-kicker">Your permanent guide</div><h2 class="merlin-care-title" id="merlinCareTitle">Merlin</h2><div class="merlin-care-mood" id="merlinCareMood">Bright-eyed and magical</div></div></div>
     <div class="merlin-care-status">
       <div class="merlin-care-row"><span class="merlin-care-label">Food</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinFoodFill" style="width:80%;background:#78a66d"></div></div><span class="merlin-care-value" id="merlinFoodValue">80%</span></div>
-      <div class="merlin-care-hunger-copy" id="merlinHungerStatus">Fed · 20/100 hunger</div>
+      <div class="merlin-care-hunger-copy" id="merlinHungerStatus">One main meal lasts 24 hours.</div>
       <div class="merlin-care-row"><span class="merlin-care-label">Happiness</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinHappyFill" style="width:85%;background:#f0c767"></div></div><span class="merlin-care-value" id="merlinHappyValue">85%</span></div>
       <div class="merlin-care-row"><span class="merlin-care-label">Energy</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinEnergyFill" style="width:90%;background:#69dbc0"></div></div><span class="merlin-care-value" id="merlinEnergyValue">90%</span></div>
     </div>
@@ -3527,16 +3603,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-categories-material-quests-20260726"></script>
+<script src="academy_alive_core.js?v=academy-alive-v1-20260729"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
-<script src="data/bird-diet-records.js?v=diet-hunger-release-20260723"></script>
-<script src="bird_diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
+<script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
+<script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
-<script src="battle_core.js?v=charm-diplomacy-20260723"></script>
+<script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
+<script src="battle_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=quest-route-integrity-loops-v123-20260726"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
-<script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
+<script src="sound_listener_core.js?v=local-consensus-v4-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
@@ -3544,11 +3622,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
-<script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-audio-overhaul-v1-20260726"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
-<script src="merlin_companion_core.js?v=merlin-compact-speech-v2-20260724"></script>
+<script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -3582,8 +3659,6 @@ const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
   addToHabitatPools() {},
   isEligible() { return false; }
 };
-const GENERATED_ART_COMPLETION = window.BURBZ_GENERATED_ART_COMPLETION_20260726 || {};
-document.documentElement.dataset.burbzGeneratedArtCount = String(Object.keys(GENERATED_ART_COMPLETION).length);
 const SPAIN_BOUNDARY = window.BURBZ_SPAIN_BOUNDARY_20260715 || {
   contains() { return false; }
 };
@@ -4543,11 +4618,26 @@ function hungerStatusForBird(bird, now = Date.now()) {
   const level = hunger >= 85 ? 'urgent' : hunger >= 70 ? 'hungry' : hunger >= 45 ? 'peckish' : 'fed';
   return { hunger, level, label: level === 'urgent' ? 'Urgent care' : level[0].toUpperCase() + level.slice(1), warnsWork:hunger >= 70, blocksWork:hunger >= 85, message:'' };
 }
+
+function hungerBarHTML(status, surface = '') {
+  const hunger = clamp(Number(status && status.hunger) || 0, 0, 100);
+  const fullness = clamp(100 - hunger, 0, 100);
+  const rounded = Math.round(fullness);
+  const color = 'hsl(' + Math.round(fullness * 1.2) + ' 72% 44%)';
+  const note = status && status.blocksWork ? 'Feed before quests or training' : status && status.warnsWork ? 'Feed soon' : rounded === 100 ? 'Full for the day' : 'One main meal lasts 24 hours';
+  return '<div class="bird-hunger-bar" data-hunger-surface="' + escapeHtml(surface || 'care') + '" data-hunger-state="' + escapeHtml((status && status.level) || 'fed') + '" data-fullness="' + rounded + '" role="progressbar" aria-label="Fullness ' + rounded + ' percent" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rounded + '">' +
+    '<div class="bird-hunger-head"><span>Fullness</span><span>' + rounded + '%</span></div>' +
+    '<div class="bird-hunger-track"><div class="bird-hunger-fill" style="width:' + rounded + '%;background-color:' + color + '"></div></div>' +
+    '<div class="bird-hunger-note">' + note + '</div></div>';
+}
 // Fullness is the hunger bar and nothing else. Feeding used to sit behind a
 // one-hour wall-clock cooldown, which is how a bird on 100/100 hunger could be
 // told it was "still full" and refused the meal it was starving for.
 function birdIsFull(bird, now = Date.now()) {
-  return Math.round(hungerStatusForBird(bird, now).hunger) <= 0;
+  const status = hungerStatusForBird(bird, now);
+  const core = dietHungerCore();
+  if (core && typeof core.primaryMealActiveForCare === 'function' && core.primaryMealActiveForCare(bird && bird.care, now)) return true;
+  return Math.round(status.hunger) <= 0;
 }
 // Merlin is the one bird the Kingdom cannot afford to ground. With an empty
 // larder every other companion locks up, so he keeps flying however hungry he
@@ -10326,9 +10416,6 @@ for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
     BUILT_IN_BIRD_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
   }
 }
-// These recovered built-in ImageGen paintings ship locally with this release,
-// so apply them after the GitHub/LFS routing pass.
-Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 
 const LEGACY_BIRD_ART_REPLACEMENTS = {
   'barn_owl_ava_20260608.png': BUILT_IN_BIRD_ART['Barn Owl'],
@@ -10745,6 +10832,7 @@ const ACADEMY_ROOMS = {
 };
 let academySelectedRoom = 'outdoors';
 let academyPlacementTarget = null;
+let academyQuestGuidanceRoom = null;
 
 function academyBuildingState(id) {
   ensureAcademyBuildings(false);
@@ -11085,6 +11173,56 @@ function treehouseBirdIconHTML(bird) {
   return '<img class="treehouse-bird-cutout" src="' + escapeHtml(cutout) + '" data-fallback-mini-bird="' + escapeHtml(species) + '" alt="" aria-hidden="true">';
 }
 
+// ---- Academy Alive: the living treehouse -----------------------------------
+// A presentation-only ambience engine (academy_alive_core.js): the player's
+// real companions take wing around the tree shedding feathers, the Kitchen
+// chimney smokes, windows and lanterns flicker, The Crowbar hums with song.
+let ACADEMY_ALIVE = null;
+
+function academyAliveBirds() {
+  // Only birds actually AT the Academy fly here — companions away on an
+  // expedition are physically absent, exactly as the perch layer treats them.
+  const list = [];
+  try {
+    if (!birdHasActiveExpedition(MERLIN_GUIDE.id)) {
+      // Fly Merlin with the GitHub-hosted cutout (like every other species):
+      // the local /bird-art-cache path can be an unhydrated LFS pointer on
+      // some hosts, and a broken image would ground the guide for the session.
+      const merlinCutout = birdCutoutUrlFor(MERLIN_GUIDE.artUrl) || MERLIN_GUIDE.cutoutUrl;
+      list.push({ id: MERLIN_GUIDE.id, name: 'Merlin', species: 'Merlin', cutoutUrl: merlinCutout, tint: ['#6b5fae', '#9c8cdc'], magic: true });
+    }
+    ((gameState && gameState.flock) || []).forEach(b => {
+      if (!b || !b.id || birdHasActiveExpedition(b.id)) return;
+      const species = String(b.commonName || b.name || b.species || 'Bird');
+      const art = getBirdArtUrl(b);
+      const cutout = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())] || birdCutoutUrlFor(art);
+      list.push({ id: b.id, name: birdDisplayName(b), species, cutoutUrl: cutout || null, tint: birdTintFor(species), magic: false });
+    });
+  } catch (e) {}
+  return list;
+}
+
+function academyAliveStart() {
+  try {
+    if (!ACADEMY_ALIVE && window.BurbzAcademyAlive) {
+      ACADEMY_ALIVE = window.BurbzAcademyAlive.createAcademyAlive({
+        container: () => $('academyTreehouse'),
+        presentBirds: academyAliveBirds,
+        reducedMotion: () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches),
+        // __academyAliveForceHour lets evidence scripts photograph the night
+        // scene at noon; players get their real local dusk and dawn.
+        hourOfDay: () => { if (Number.isFinite(window.__academyAliveForceHour)) return Number(window.__academyAliveForceHour); const d = new Date(); return d.getHours() + d.getMinutes() / 60; },
+        isScreenActive: () => currentScreen === 'academy'
+      });
+    }
+    if (ACADEMY_ALIVE) ACADEMY_ALIVE.start();
+  } catch (e) {}
+}
+
+function academyAlivePause() {
+  if (ACADEMY_ALIVE) { try { ACADEMY_ALIVE.pause(); } catch (e) {} }
+}
+
 function renderAcademyTreehouse(byRoom) {
   const tree = $('academyTreehouse');
   const layer = $('treehouseRoomLayer');
@@ -11100,7 +11238,10 @@ function renderAcademyTreehouse(byRoom) {
     const count = byRoom[r.id] ? byRoom[r.id].length : 0;
     const countLabel = r.id === 'tavern' ? '🪶' : count;
     const meta = r.id === 'tavern' ? 'Recruitment' : count + ' birds';
-    return '<button class="treehouse-room-node built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' +
+    const guided = academyQuestGuidanceRoom === r.id;
+    const nodeClass = guided ? 'treehouse-room-node quest-guided' : 'treehouse-room-node';
+    const guide = guided ? '<span class="treehouse-quest-guide" aria-hidden="true">Tap Kitchen & Pantry ↓</span>' : '';
+    return '<button class="' + nodeClass + ' built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' + guide +
       '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building"><div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
   }).join('');
   let birdHtml = '';
@@ -11114,6 +11255,9 @@ function renderAcademyTreehouse(byRoom) {
     });
   });
   birds.innerHTML = birdHtml;
+  // Room nodes were just rebuilt, so the ambience glows/anchors bolted onto
+  // them were destroyed with the old markup — re-anchor them.
+  if (ACADEMY_ALIVE) { try { ACADEMY_ALIVE.refresh(); } catch (e) {} }
 }
 
 
@@ -11541,13 +11685,13 @@ function renderBirdExpeditions() {
   scheduleQuestBoardRefresh();
 }
 
-// Which category drawers the player left open. Food opens by default because
-// a hungry flock is the most common reason to be on this screen at all.
+// Which category drawers the player left open. Every drawer starts closed so
+// the quest board stays compact until the player chooses a category.
 let questCategoryOpenState = null;
 function questCategoryOpenMap() {
   if (!questCategoryOpenState) {
     questCategoryOpenState = {};
-    questCategoriesList().forEach((c, i) => { questCategoryOpenState[c.id] = i === 0; });
+    questCategoriesList().forEach(c => { questCategoryOpenState[c.id] = false; });
   }
   return questCategoryOpenState;
 }
@@ -12132,7 +12276,7 @@ function academyMeter(label, pct, cls) {
 
 function academyHungerStatusHTML(bird) {
   const status = hungerStatusForBird(bird);
-  return '<div class="academy-diet hunger-status" data-hunger-state="' + status.level + '">🍽️ ' + escapeHtml(status.label) + ' · ' + Math.round(status.hunger) + '/100' + (status.blocksWork ? ' · feed before work' : status.warnsWork ? ' · feed soon' : '') + '</div>';
+  return hungerBarHTML(status, 'academy-room');
 }
 
 function academyActionBtn(fn, id, label, cdMs, primary) {
@@ -12565,11 +12709,11 @@ function kitchenRosterRowHTML(entry) {
   }
   const awayLine = away ? '<div class="kitchen-roster-away">🧭 Away on a quest — back at the table when it returns.</div>'
     : training ? '<div class="kitchen-roster-away">🏋️ Mid-training — a meal now still counts.</div>' : '';
-  const hungerLine = '<div class="academy-diet hunger-status" data-hunger-state="' + status.level + '">🍽️ ' + escapeHtml(status.label) + ' · ' + Math.round(status.hunger) + '/100' + (status.blocksWork ? ' · feed before work' : status.warnsWork ? ' · feed soon' : '') + '</div>';
+  const hungerLine = hungerBarHTML(status, 'kitchen-roster');
   const open = kitchenRosterTrayKey === entry.key;
   const feedBtn = away
-    ? '<button class="kitchen-roster-feed-btn" disabled>Away</button>'
-    : '<button class="kitchen-roster-feed-btn" data-action="kitchen-roster-tray" onclick="kitchenRosterToggleTray(\'' + escapeHtml(entry.key) + '\')">' + (open ? 'Close tray' : '🍽️ Feed') + '</button>';
+    ? '<button type="button" class="kitchen-roster-feed-btn" disabled>Away</button>'
+    : '<button type="button" class="kitchen-roster-feed-btn" data-action="kitchen-roster-feed" onclick="event.preventDefault();event.stopPropagation();openFeedSheet(\'' + escapeHtml(entry.key) + '\',event)">🍽️ Feed</button>';
   return '<div class="kitchen-roster-row" data-feed-surface="kitchen-roster" data-kitchen-roster-bird="' + escapeHtml(entry.key) + '">' +
     '<div class="kitchen-roster-head">' + feedArtHTML(entry.artBird, 'kitchen-roster-art') +
     '<div class="kitchen-roster-main"><div class="kitchen-roster-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
@@ -12635,8 +12779,8 @@ const FEED_MEAL_REWARDS = Object.freeze({
   insufficient: { birdXp:3, trainerXp:1, coins:4,  happiness:5,  bondXp:3 }
 });
 
-// A side food is eaten, just not the mainstay: it fills half the hunger (the
-// diet core halves the nourishment) and pays half the rewards. Derived from
+// A side food is eaten, just not the mainstay: it fills the Fullness bar to
+// halfway and pays half the rewards. Derived from
 // the main-meal table rather than typed out, so "half" cannot drift.
 function feedRewardsForVerdict(verdict) {
   if (verdict === 'insufficient') return FEED_MEAL_REWARDS.insufficient;
@@ -12650,7 +12794,7 @@ function feedRewardsForVerdict(verdict) {
 function feedSideSnackExplainer(entry, option) {
   const eats = kitchenRosterEatsLabels(entry).join(' or ').toLowerCase();
   return escapeHtml(option.label) + ' is a side food for ' + escapeHtml(entry.name) + ' — eaten in the wild, but not what it lives on. '
-    + 'It still counts: it fills half the hunger and pays half the XP a main meal would'
+    + 'It still counts: it fills the Fullness bar halfway and pays half the XP a main meal would'
     + (eats ? '. A main meal for this bird is ' + escapeHtml(eats) + '.' : '.');
 }
 
@@ -12733,7 +12877,12 @@ function feedSheetEl() {
   return el;
 }
 
-function openFeedSheet(key) {
+function openFeedSheet(key, event) {
+  // The Kitchen lives inside a separately rendered Academy screen. Consume the
+  // originating mobile click before opening the sheet so it cannot bubble into
+  // navigation or a stale room handler after this control is replaced.
+  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+  if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
   const entry = feedEntryForKey(key);
   if (!entry) { showToast('That bird is not at the table right now.'); return; }
   feedSheetKey = entry.key;
@@ -12763,7 +12912,7 @@ function renderFeedSheet() {
   const empty = '<div class="inventory-empty">Nothing edible in the stores. Send a bird out on a food quest — every food in the game has one — or pick some up on a walk.</div>';
   const fullNote = '<div class="inventory-empty" data-feed-sheet-full="1">🍽️ ' + escapeHtml(entry.name) + ' is completely full — nothing to feed right now. Come back when the hunger bar rises.</div>';
   const hungerLine = status
-    ? '<div class="academy-diet hunger-status" data-hunger-state="' + status.level + '">🍽️ ' + escapeHtml(status.label) + ' · ' + Math.round(status.hunger) + '/100</div>'
+    ? hungerBarHTML(status, 'feed-sheet')
     : '<div class="feed-sheet-wild">🌲 A wild visitor — a proper meal at the feeder builds trust and makes recruiting cheaper.</div>';
   el.innerHTML = '<div class="quest-overlay-panel feed-sheet" data-feed-surface="feed-sheet" data-feed-sheet="' + escapeHtml(entry.key) + '">' +
     '<button class="quest-overlay-close" onclick="closeFeedSheet()">✕</button>' +
@@ -12771,7 +12920,7 @@ function renderFeedSheet() {
       '<div class="feed-sheet-main"><div class="feed-sheet-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
       '<div class="feed-sheet-species">' + escapeHtml(entry.speciesLine || '') + '</div>' + hungerLine + '</div></div>' +
     '<div class="feed-sheet-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — offer a food and learn') + '</div>' +
-    (full ? '' : '<div class="feed-sheet-hint">Tap one food to serve it. One food, one meal — a side food still counts, at half the hunger and half the XP.</div>') +
+    (full ? '' : '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills it halfway and gives half XP.</div>') +
     '<div class="feed-food-list">' + (full ? fullNote : (foodRows || empty)) + '</div>' + feedReceiptHTML() + '</div>';
   el.classList.add('open');
 }
@@ -12918,7 +13067,7 @@ function burbzFeedFood(targetKey, kind, foodId) {
       transactionId: txId,
       badge: sideSnack ? '🥄 SIDE SNACK' : entry.name.toUpperCase() + ' FED!',
       rewardLine: rewardBits.join(' · '),
-      note: 'Hunger ' + Math.round(tx.before) + ' → ' + Math.round(tx.after) + '/100' + (sideSnack ? ' (half a meal)' : ''),
+      note: 'Fullness ' + Math.round(100 - tx.before) + '% → ' + Math.round(100 - tx.after) + '%' + (sideSnack ? ' (half full)' : ''),
       foodIcon: option.emoji
     };
     recordFeedReceipt({ ...burst, name:entry.name, foodLabel:option.label, verdict });
@@ -13169,7 +13318,7 @@ function renderKitchenPanelHTML() {
     (everyoneFed ? '<div class="inventory-empty" data-kitchen-all-fed="1">🍽️ Everyone is fed. Full birds leave the counter — they will be back here when they are hungry again.</div>' : '') +
     counterArt +
     speciesCard +
-    '<div class="feed-sheet-hint">Tap one food to serve it. One food, one meal — a side food still counts, at half the hunger and half the XP.</div>' +
+    '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills it halfway and gives half XP.</div>' +
     '<div class="feed-food-list">' + kitchenCounterFoodListHTML(counterEntry) + '</div>' +
     feedReceiptHTML() +
     '<details class="kitchen-fold"><summary>🧺 Stores larder · ' + larderCount + ' item' + (larderCount === 1 ? '' : 's') + '</summary><div class="kitchen-fold-body">' +
@@ -13280,6 +13429,7 @@ window.__burbzDietHungerDebug = {
   core: () => window.BurbzDietHungerCore,
   record: species => window.BurbzDietHungerCore && BurbzDietHungerCore.getDietRecord(species),
   score: (species, ingredient) => window.BurbzDietHungerCore && BurbzDietHungerCore.scoreFoodCompatibility(species, ingredient),
+  hungerBarHTML,
   merlin: () => window.BurbzDietHungerCore && BurbzDietHungerCore.getDietRecord({ scientificName:'Falco columbarius', commonName:'Merlin' })
 };
 
@@ -13760,6 +13910,7 @@ function ACADEMY_ROOM_SCENES(room, label) {
 
 function openAcademyRoom(room) {
   if (!ACADEMY_ROOMS[room]) return;
+  if (room === academyQuestGuidanceRoom) academyQuestGuidanceRoom = null;
   academySelectedRoom = room;
   if (!isAcademyRoomBuilt(room)) {
     renderAcademy();
@@ -16126,6 +16277,8 @@ function openQuestOfferDetail(offer) {
 Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
+  // Academy Alive ambience: exported for QA harnesses and evidence scripts.
+  academyAliveBirds, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, birds: () => academyAliveBirds() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   __burbzQuestDebug: {
     getState: () => gameState,
@@ -16907,7 +17060,8 @@ function switchScreen(name) {
   if (name === 'map') renderLiveMap();
   if (name === 'birdex') renderBirdex();
   if (name === 'battle') renderBattleSelect();
-  if (name === 'academy') { wireAcademyZones(); renderAcademy(); }
+  if (name === 'academy') { wireAcademyZones(); renderAcademy(); academyAliveStart(); }
+  else academyAlivePause();
   if (name === 'academy-room') renderAcademyRoomInterior();
   if (name === 'village') { renderVillage(); setTimeout(onVillageResize, 60); }
   if (name === 'inventory') renderInventory();
@@ -16958,6 +17112,8 @@ function giftItemCount() { return Object.entries((gameState.inventory && gameSta
 function companionForSpecies(species) { const keys = discoveryKeysForSpecies(species); return (gameState.flock || []).find(b => discoveryKeysForSpecies(b.species || b.commonName).some(k => keys.includes(k))) || null; }
 function birdDisplayName(bird) { return (bird && String(bird.customName || '').trim()) || (bird && (bird.commonName || bird.species)) || 'Unknown Bird'; }
 function birdSpeciesLabel(bird) { return (bird && (bird.commonName || bird.species)) || 'Unknown species'; }
+// nickname-line-v167-20260729: nicknames decorate identity; they never replace taxonomy.
+function birdNickname(bird) { return (bird && String(bird.customName || '').trim()) || ''; }
 function renameCompanionBird(birdId) {
   const bird = (gameState.flock || []).find(b => b.id === birdId);
   if (!bird) return;
@@ -23425,10 +23581,48 @@ window.__burbzHudDebug = { refresh: updateHeader, getPlayer: () => gameState && 
 // BIRDEX
 // ============================================================================
 let currentFilter = 'all';
+let currentBirdFamilyFilter = 'all';
 let currentBurbzMode = 'companions';
 let currentBirdexDiscovery = 'discovered';
 const BIRDEX_PAGE_SIZE = 80;
 let birdexVisibleLimit = BIRDEX_PAGE_SIZE;
+
+function birdFamilyCore() { return window.BurbzBirdFamilyCore || null; }
+function birdFamilyMeta(bird) {
+  const core = birdFamilyCore();
+  return core ? core.classifyBirdFamily(bird && (bird.species || bird.commonName)) : { id:'songbird', label:'Songbirds', icon:'🎵', color:'#5e9fd2' };
+}
+function birdFamilyAttrs(bird) {
+  const core = birdFamilyCore();
+  const meta = birdFamilyMeta(bird);
+  const tags = core ? core.birdTypeTags(bird && (bird.species || bird.commonName)) : [meta.id];
+  return ' data-family="' + meta.id + '" data-family-tags="' + tags.join(' ') + '" style="--bird-family-color:' + meta.color + ';"';
+}
+function birdFamilyBadgeHTML(bird) {
+  const meta = birdFamilyMeta(bird);
+  return '<div class="bird-family-badge" title="Bird family: ' + escapeHtml(meta.label) + '">' + meta.icon + ' ' + escapeHtml(meta.label) + '</div>';
+}
+function familyChipHTML(bird) {
+  const meta = birdFamilyMeta(bird);
+  return '<span class="family-chip" style="color:' + meta.color + ';border-color:' + meta.color + '55;">' + meta.icon + ' ' + escapeHtml(meta.label) + '</span>';
+}
+function birdMatchesFamilyFilter(bird) {
+  if (currentBirdFamilyFilter === 'all') return true;
+  const core = birdFamilyCore();
+  return !!core && core.birdTypeTags(bird && (bird.species || bird.commonName)).includes(currentBirdFamilyFilter);
+}
+function renderBirdFamilyFilters() {
+  const host = $('birdFamilyFilterRow');
+  const core = birdFamilyCore();
+  if (!host || !core) { if (host) host.style.display = 'none'; return; }
+  host.style.display = 'flex';
+  const present = new Set();
+  WILD_BIRDS.forEach(name => core.birdTypeTags(name).forEach(id => present.add(id)));
+  (gameState.flock || []).forEach(bird => core.birdTypeTags(bird.species || bird.commonName).forEach(id => present.add(id)));
+  const ids = core.FAMILY_ORDER.filter(id => present.has(id));
+  host.innerHTML = '<button class="filter-btn' + (currentBirdFamilyFilter === 'all' ? ' active' : '') + '" data-family-filter="all">All types</button>' +
+    ids.map(id => { const meta = core.familyForTag(id); return '<button class="filter-btn' + (currentBirdFamilyFilter === id ? ' active' : '') + '" data-family-filter="' + id + '" style="border-color:' + (currentBirdFamilyFilter === id ? meta.color : 'transparent') + ';color:' + (currentBirdFamilyFilter === id ? meta.color : 'var(--text3)') + ';">' + meta.icon + ' ' + escapeHtml(meta.label) + '</button>'; }).join('');
+}
 
 function showSpeciesInBirdex(speciesName) {
   const canonical = canonicalSpeciesName(speciesName);
@@ -23436,6 +23630,7 @@ function showSpeciesInBirdex(speciesName) {
   currentBurbzMode = 'birdex';
   currentBirdexDiscovery = 'discovered';
   currentFilter = 'all';
+  currentBirdFamilyFilter = 'all';
   birdexVisibleLimit = Math.max(BIRDEX_PAGE_SIZE, discoveredSpeciesSet().size + 8);
   switchScreen('birdex');
   renderBirdex();
@@ -23467,6 +23662,7 @@ function renderBirdex() {
   $('birdexPower').textContent = flock.reduce((sum, b) => sum + (b.power || 0), 0);
   const dietsEl = $('birdexDiets'); if (dietsEl) dietsEl.textContent = countDiscoveredDiets();
   renderRpgHud();
+  renderBirdFamilyFilters();
   const title = $('burbzScreenTitle'); if (title) title.textContent = currentBurbzMode === 'companions' ? 'COMPANIONS' : 'BIRDEX';
   $$('#burbzModeTabs .burbz-mode-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === currentBurbzMode));
   const discoveryRow = $('birdexDiscoveryRow');
@@ -23486,6 +23682,7 @@ function renderBirdex() {
   if (currentBurbzMode === 'companions') {
     let companions = flock.slice();
     if (currentFilter !== 'all') companions = companions.filter(b => b.rarity === currentFilter);
+    companions = companions.filter(birdMatchesFamilyFilter);
     companions.sort((a, b) => (b.power || 0) - (a.power || 0));
     if (!companions.length) {
       grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Discover a bird, then recruit it at the Academy Barracks.</div></div>';
@@ -23510,6 +23707,7 @@ function renderBirdex() {
       return { bird, owned, discoveredRecord, discovered: !!(owned || discoveredRecord) };
     }).filter(row => {
       if (currentFilter !== 'all' && row.bird.rarity !== currentFilter) return false;
+      if (!birdMatchesFamilyFilter(row.bird)) return false;
       if (currentBirdexDiscovery === 'discovered') return row.discovered;
       if (currentBirdexDiscovery === 'undiscovered') return !row.discovered;
       return true;
@@ -23619,8 +23817,15 @@ function createBirdCardHTML(bird, idx) {
     ? '<div class="birdex-diet-badge" title="Diet mastered at the Kitchen & Pantry">🍽️ DIET</div>' : '';
   const hungerStatus = hungerStatusForBird(bird);
   const cardDietDisclosure = renderDietDisclosureHTML(bird, 'companion-card', { compact:true, compatible:false, className:'card-diet-disclosure' });
+  const showCareActions = currentBurbzMode === 'companions';
+  const frontFeedButton = showCareActions
+    ? `<button class="card-feed-btn" data-action="feed-bird" data-feed-key="${bird.id}" ${birdIsFull(bird) ? 'disabled' : ''}>${birdIsFull(bird) ? '🍽️ Full' : '🍽️ Feed'}</button>`
+    : '';
+  const backFeedButton = showCareActions
+    ? `<button class="card-pet-btn" data-action="feed-bird" data-feed-key="${bird.id}">🍽️ Feed</button>`
+    : '';
   return `
-    <div class="bird-card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}">
+    <div class="bird-card bird-family-outline" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
       <div class="bird-card-inner">
         <div class="card-front">
           ${cardDietBadge}
@@ -23628,15 +23833,17 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}15, ${rarityColor}05);"></div>
             ${artBg}
             ${birdIcon}
+            ${birdFamilyBadgeHTML(bird)}
           </div>
           <div class="card-level" title="${cardXpTitle}">LV.${cardLv}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
 
           <div class="card-info">
-            <div class="card-name">${escapeHtml(birdDisplayName(bird))}</div>
-            <div class="card-species">${escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species))}</div>
-            <div class="card-info-hint">Hunger: ${escapeHtml(hungerStatus.label)} · ${Math.round(hungerStatus.hunger)}/100</div>
-            <button class="card-feed-btn" data-action="feed-bird" data-feed-key="${bird.id}" ${birdIsFull(bird) ? 'disabled' : ''}>${birdIsFull(bird) ? '🍽️ Full' : '🍽️ Feed'}</button>
+            <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div>
+            <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
+            <div class="card-species">${escapeHtml(bird.scientificName || bird.species)}</div>
+            ${hungerBarHTML(hungerStatus, 'companion-card')}
+            ${frontFeedButton}
             ${cardDietDisclosure}
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
             <div class="card-xp-bar" title="${cardXpTitle}"><div class="card-xp-fill" style="width:${cardXpPct}%"></div></div>
@@ -23668,7 +23875,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-rooms">${academyRoomButtonsHTML(bird)}</div>
           <div class="card-back-utilities">
 
-            <button class="card-pet-btn" data-action="feed-bird" data-feed-key="${bird.id}">🍽️ Feed</button>
+            ${backFeedButton}
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
             <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
@@ -23697,7 +23904,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
   const knownDietBadge = (gameState.dietBadges || {})[speciesKey(canonicalSpeciesName(bird.species || bird.commonName))]
     ? '<div class="birdex-diet-badge" title="Diet mastered at the Kitchen & Pantry">🍽️ DIET</div>' : '';
   return `
-    <div class="bird-card known-species" data-rarity="${bird.rarity}" data-idx="known-${idx}" data-bird-id="preview:${bird.commonName || bird.species}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">
+    <div class="bird-card known-species bird-family-outline" data-rarity="${bird.rarity}" data-idx="known-${idx}" data-bird-id="preview:${bird.commonName || bird.species}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}"${birdFamilyAttrs(bird)}>
       <div class="bird-card-inner">
         <div class="card-front">
           ${knownDietBadge}
@@ -23705,6 +23912,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
             <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}12, ${rarityColor}04);"></div>
             ${artBg}
             ${birdIcon}
+            ${birdFamilyBadgeHTML(bird)}
           </div>
           <div class="card-level">DISCOVERED</div>
           <div class="card-power" style="color:${rarityColor}">&#128176;${cost}</div>
@@ -23717,7 +23925,6 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
             </div>
-            <button class="card-feed-btn" data-action="feed-bird" data-feed-key="species:${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}">🍽️ Feed at the feeder</button>
             <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🪶 Inspect at the Barracks' : '🪶 Unlock the Barracks to recruit'}</button>
             <div class="card-info-hint">Tap card to learn about the real bird</div>
           </div>
@@ -23792,6 +23999,15 @@ $('filterRow').addEventListener('click', e => {
   renderBirdex();
 });
 
+$('birdFamilyFilterRow')?.addEventListener('click', e => {
+  const btn = e.target.closest('[data-family-filter]');
+  if (!btn) return;
+  SFX.tap();
+  currentBirdFamilyFilter = btn.dataset.familyFilter || 'all';
+  birdexVisibleLimit = BIRDEX_PAGE_SIZE;
+  renderBirdex();
+});
+
 $('birdexDiscoveryRow')?.addEventListener('click', e => {
   const btn = e.target.closest('[data-discovery]');
   if (!btn) return;
@@ -23835,10 +24051,14 @@ const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(a
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
 });
 const soundDiscoveryHistory = window.BurbzSoundListenerCore.createDiscoveryHistory();
+const soundMatchConsensus = window.BurbzSoundListenerCore.createMatchConsensus({ required:2, ttlMs:60000 });
 const soundDiscoveryFlippedKeys = new Set();
 
 function soundLocationAssistEnabled() { return !!$('merlinLocationAssist')?.checked; }
-try { $('merlinLocationAssist').checked = localStorage.getItem(SOUND_LOCATION_PREF_KEY) === '1'; } catch (_) {}
+try {
+  const storedLocationPreference = localStorage.getItem(SOUND_LOCATION_PREF_KEY);
+  $('merlinLocationAssist').checked = storedLocationPreference === null ? true : storedLocationPreference === '1';
+} catch (_) { $('merlinLocationAssist').checked = true; }
 $('merlinLocationAssist').addEventListener('change', event => {
   try { localStorage.setItem(SOUND_LOCATION_PREF_KEY, event.target.checked ? '1' : '0'); } catch (_) {}
 });
@@ -23938,6 +24158,11 @@ function soundListenerDependencies() {
 }
 
 async function startContinuousSoundListening() {
+  if (!soundLocationAssistEnabled()) {
+    setMerlinListenerState('error', 'Location is required for accurate local bird matches. Tick the location box, then start again.');
+    showToast('Turn on location for accurate local matches');
+    return false;
+  }
   setBurbzMusicSuppressed('sound-scan', true);
   const deps = soundListenerDependencies();
   if (continuousSoundScanWanted && mediaStream && listenerTrack?.readyState !== 'ended') { updateMerlinListeningUI(); return true; }
@@ -24019,6 +24244,7 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
   if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
   soundAnalysisQueue.clear();
+  soundMatchConsensus.reset();
   resetBirdPickup();
   setBurbzMusicSuppressed('sound-scan', false);
   setMerlinListenerState('error', 'Listening paused by this device. Tap Merlin’s wand to resume.');
@@ -24094,6 +24320,7 @@ function stopContinuousSoundListening(opts = {}) {
   if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
   if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
   soundAnalysisQueue.clear();
+  soundMatchConsensus.reset();
   resetBirdPickup();
   setBurbzMusicSuppressed('sound-scan', false);
   // The player chose to stop: their finds are all in the Birdex, so the
@@ -24217,7 +24444,18 @@ async function analyseContinuousSoundWindow(windowData) {
     // may animate the wand, but it never logs or names a bird by itself.
     const result = await uploadRecording(blob, { signal:controller.signal });
     if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
+    if (result && result.reason === 'location_required') {
+      stopContinuousSoundListening();
+      setMerlinListenerState('error', 'Location is required for accurate local bird matches. Allow location, then start again.');
+      showToast('Location is required for accurate local matches');
+      return;
+    }
     if (result && result.species) {
+      const consensus = soundMatchConsensus.observe(result.species, Date.now());
+      if (!consensus.confirmed) {
+        setMerlinListenerState('listening', 'Possible ' + result.species + ' · waiting for a second sound window to confirm');
+        return;
+      }
       handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
       const confidence = Math.round((Number(result.confidence) || 0) * 100);
       const engine = soundEngineLabel(result);
@@ -24762,6 +25000,23 @@ async function captureCameraFrame() {
   return out;
 }
 
+async function getCurrentPositionForPhotoId() {
+  // Photo ID may already have a player-approved GPS fix from the live map. Reuse
+  // that fresh fix before falling back to the Scan screen's optional location
+  // switch, so a Delamere capture actually receives Delamere's range prior.
+  if (liveMapHasPrecisePosition && liveMapLastPosition) {
+    const lat = Number(liveMapLastPosition.lat), lon = Number(liveMapLastPosition.lon);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) return { coords:{ latitude:lat, longitude:lon } };
+  }
+  const home = gameState && gameState.lastKnownHome;
+  const homeAge = home ? Date.now() - Number(home.at || 0) : Infinity;
+  const homeLat = Number(home && home.lat), homeLon = Number(home && home.lon);
+  if (homeAge >= 0 && homeAge <= 6 * 60 * 60 * 1000 && Number.isFinite(homeLat) && Number.isFinite(homeLon)) {
+    return { coords:{ latitude:homeLat, longitude:homeLon } };
+  }
+  return getCurrentPositionForBirdnet();
+}
+
 async function identifyImage(fileOrBlob, captureSource = 'camera') {
   $('captureBtn').textContent = 'ANALYZING...';
   $('captureBtn').disabled = true;
@@ -24770,7 +25025,7 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
     const formData = new FormData();
     formData.append('image', fileOrBlob, 'photo.jpg');
     formData.append('captureSource', captureSource);
-    const pos = await getCurrentPositionForBirdnet();
+    const pos = await getCurrentPositionForPhotoId();
     if (pos && pos.coords) {
       formData.append('lat', pos.coords.latitude);
       formData.append('lon', pos.coords.longitude);
@@ -24968,7 +25223,8 @@ function showCaptureOverlay(bird) {
           <div class="card-level">NEW · LV.${bird.level}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power}</div>
           <div class="card-info">
-            <div class="card-name">${bird.commonName}</div>
+            <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div>
+            <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
             <div class="card-species" style="color:${rarityColor}">${bird.rarity.toUpperCase()} COMPANION</div>
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:100%;background:var(--hp-green)"></div></div>
             <div class="card-stats-row">
@@ -25018,8 +25274,8 @@ $('captureNameBtn').addEventListener('click', (e) => {
   if (!id) return;
   renameCompanionBird(id);
   const bird = (gameState.flock || []).find(b => b.id === id);
-  const cardName = $('captureCardWrapper')?.querySelector('.card-name');
-  if (bird && cardName) cardName.textContent = birdDisplayName(bird);
+  const cardNickname = $('captureCardWrapper')?.querySelector('.card-nickname');
+  if (bird && cardNickname) cardNickname.textContent = birdNickname(bird);
   SFX.tap();
 });
 
@@ -25243,7 +25499,7 @@ function renderBattleSelect() {
       '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
       '<div class="rc-lv">Lv ' + b.level + '</div>' +
-      typeChipHTML(core.classifySpecies(b.species)) + '</div>').join('') + '</div>';
+      typeChipHTML(core.classifySpecies(b.species)) + familyChipHTML(b) + '</div>').join('') + '</div>';
 
   // Team select grid.
   const grid = $('battleTeamGrid');
@@ -25267,12 +25523,21 @@ function renderBattleSelect() {
         '<div class="pk-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
         '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + escapeHtml(hungerMeta) + '</div>' +
         typeChipHTML(core.classifySpecies(b.species)) +
+        familyChipHTML(b) +
         '<div class="pk-hp"><div style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div>' +
         '</button>';
     }).join('');
   }
   const need = Math.min(4, flock.length);
   const selectedBattleBirds = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
+  const previewSynergies = birdFamilyCore() ? birdFamilyCore().detectTeamSynergies(selectedBattleBirds) : [];
+  const synergyPreview = $('battleSynergyPreview');
+  if (synergyPreview) {
+    synergyPreview.classList.toggle('mega', previewSynergies.length > 0);
+    synergyPreview.innerHTML = previewSynergies.length
+      ? previewSynergies.map(s => '<strong>' + s.icon + ' ' + escapeHtml(s.title) + '</strong>' + escapeHtml(s.copy)).join('<br>')
+      : '<strong>BUILD A TYPE TRIO</strong>Pick any three birds from the same family — or three mixed Birds of Prey — to unlock a +25% mega team bonus.';
+  }
   const hungerBlocked = selectedBattleBirds.some(b => !birdWorkReadiness(b, 'battle').ok);
   $('battleStartBtn').disabled = !flock.length || battleSelectedIds.length < need || hungerBlocked;
   $('battleStartBtn').textContent = flock.length ? (battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '') : hungerBlocked ? 'FEED URGENT BIRD' : liberation ? 'LIBERATE ' + liberation.name.toUpperCase() : 'START BATTLE') : 'SCAN A BIRD FIRST';
@@ -25342,6 +25607,8 @@ function startPerchBattle() {
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
+  (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
+  (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
   addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
   potionSips.forEach(t => addBattleLog('system-msg', '🧪 ' + t));
   SFX.tap();
@@ -25397,6 +25664,16 @@ function renderArena() {
   const b = battleState.battle;
   const acting = b.acting;
   const choosingTarget = battleState.pendingSkillIndex != null;
+
+  const arenaSynergy = $('arenaSynergyBanner');
+  if (arenaSynergy) {
+    const yours = (b.synergies && b.synergies.player) || [];
+    const rivals = (b.synergies && b.synergies.opponent) || [];
+    arenaSynergy.classList.toggle('mega', yours.length > 0 || rivals.length > 0);
+    arenaSynergy.innerHTML = yours.length || rivals.length
+      ? yours.map(s => '<strong>' + s.icon + ' YOUR ' + escapeHtml(s.title) + '</strong>' + escapeHtml(s.copy)).join('') + rivals.map(s => '<strong>😈 RIVAL ' + escapeHtml(s.title) + '</strong>').join('')
+      : '<strong>NO TYPE TRIO</strong>No mega family bonus in this squad.';
+  }
 
   // Turn-order forecast strip — who flies next, from live speeds.
   $('arenaTimeline').innerHTML = '<span class="tl-label">NEXT</span>' + core.forecastTurnOrder(b, 7).map((t, i) =>
@@ -25789,7 +26066,7 @@ function renderMerlinCareMenu() {
   const status = core && typeof core.hungerStatusForCare === 'function'
     ? core.hungerStatusForCare(pet, Date.now())
     : { label: pet.hunger >= 85 ? 'Urgent care' : pet.hunger >= 70 ? 'Hungry' : pet.hunger >= 45 ? 'Peckish' : 'Fed', hunger:clamp(Number(pet.hunger) || 0, 0, 100) };
-  if ($('merlinHungerStatus')) $('merlinHungerStatus').textContent = status.label + ' · ' + Math.round(status.hunger) + '/100 hunger';
+  if ($('merlinHungerStatus')) $('merlinHungerStatus').textContent = status.blocksWork ? 'Feed before quests or training.' : status.warnsWork ? 'Feed soon.' : 'One main meal lasts 24 hours.';
   if ($('merlinBondLevel')) $('merlinBondLevel').textContent = 'LV.' + pet.bondLevel;
   const larder = gameState.inventory && gameState.inventory.larder;
   if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(larder && larder.small_bird_prey_ration) || 0));
@@ -26058,7 +26335,7 @@ const PLAYER_QUESTS = [
     measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
   { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
     measure:() => (gameState.flock || []).length },
-  { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy',
+  { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy', focusRoom:'kitchen',
     measure:() => countDiscoveredDiets() },
   { id:'pq_species_5',      name:'Grow the Burbz book', desc:'Discover 5 different bird species with Scan', type:'discover', target:5, reward:60, coins:40, icon:'\u{1F4D6}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
@@ -26121,6 +26398,7 @@ function syncActivePlayerQuest() {
 }
 
 function playerQuestGo(q) {
+  academyQuestGuidanceRoom = q.focusRoom || null;
   if (q.go && q.go !== currentScreen) switchScreen(q.go);
   else if (q.go === 'quests') $('expeditionQuestList')?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -26454,15 +26732,30 @@ function renderProfile() {
 // ============================================================================
 // INTRO CUTSCENE
 // ============================================================================
-const BURBZ_INTRO_SEEN_KEY = 'burbzIntroSeen:merlin-tablet-20260629';
+const BURBZ_INTRO_SEEN_KEY = 'burbzIntroSeen:two-part-hf-20260729';
 function showIntroCutscene(opts = {}) {
   const overlay = $('introCutsceneOverlay');
   const video = $('introCutsceneVideo');
   if (!overlay || !video) return;
   setBurbzMusicSuppressed('intro', true);
   overlay.classList.add('show');
+  overlay.classList.remove('muted');
   if (opts.replay) video.currentTime = 0;
-  if (opts.autoplay !== false) video.play().catch(() => {});
+  video.muted = false;
+  const attempt = video.play();
+  if (attempt && attempt.catch) attempt.catch(() => {
+    // Unmuted autoplay was blocked (no user gesture yet) — muted autoplay is
+    // always allowed, so start silent and offer one tap to bring the sound in.
+    video.muted = true;
+    overlay.classList.add('muted');
+    video.play().catch(() => {});
+  });
+}
+function unmuteIntroCutscene() {
+  const overlay = $('introCutsceneOverlay');
+  const video = $('introCutsceneVideo');
+  if (video) { video.muted = false; video.play().catch(() => {}); }
+  if (overlay) overlay.classList.remove('muted');
 }
 function closeIntroCutscene() {
   const overlay = $('introCutsceneOverlay');
@@ -26476,7 +26769,7 @@ function closeIntroCutscene() {
 function maybeShowIntroCutscene() {
   try {
     if (localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1') { maybeStartMerlinTutorial(800); return; }
-    setTimeout(() => showIntroCutscene({ autoplay:false }), 450);
+    setTimeout(() => showIntroCutscene(), 450);
   } catch(e) {}
 }
 
@@ -26499,7 +26792,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-art-ui-v153-20260729';
+const BURBZ_BUILD = 'reconciled-release-v170-20260729';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -26543,7 +26836,6 @@ const MERLIN_TUTORIAL_STEPS = [
     action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed' } },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Wonderful! Every bird\u2019s diet must be accurate to get the best from it \u2014 unlock the Kitchen later for the rest of the feeding mechanics.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Discover real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Now the real magic: find real birds out in your world. Discover them by camera or by sound, and every one lands in your Birdex.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'11,000 birds, one legend', screen:'map', target:null, text:'Your Earth holds about 11,000 known bird species. Find one my tablet does not know and you claim an ABSOLUTELY EPIC prize.' },
   { chapterId:'story', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too \u2014 you\u2019ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
     action:{ event:'tab:quests', hint:'Tap the Quests tab' } },
 
@@ -27169,12 +27461,11 @@ function maybeStartMerlinChapterForScreen(screenName) {
 
 $('merlinTutorialBack')?.addEventListener('click', merlinTutBack);
 $('merlinTutorialNext')?.addEventListener('click', merlinTutAdvance);
-$('merlinTutorialSkip')?.addEventListener('click', () => endMerlinTutorial(false));
 $('merlinTutorialTaskSkip')?.addEventListener('click', () => { merlinTutClearAction(); merlinTutAdvance(); });
 window.addEventListener('keydown', event => {
   if (!merlinTutActive) return;
   if (event.key === 'Tab') {
-    const controls = [$('merlinTutorialBack'), $('merlinTutorialNext'), $('merlinTutorialSkip')].filter(button => button && !button.disabled && button.style.display !== 'none');
+    const controls = [$('merlinTutorialBack'), $('merlinTutorialNext')].filter(button => button && !button.disabled && button.style.display !== 'none');
     const current = controls.indexOf(document.activeElement);
     const next = event.shiftKey ? (current <= 0 ? controls.length - 1 : current - 1) : (current + 1) % controls.length;
     event.preventDefault();
@@ -27205,7 +27496,7 @@ $('headerProfileBtn')?.addEventListener('click', () => switchScreen('profile'));
 $('hudCoinsChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('hudTimberChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
-$('introPlayAgainBtn')?.addEventListener('click', () => showIntroCutscene({ replay:true }));
+$('introSoundBtn')?.addEventListener('click', unmuteIntroCutscene);
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
 $('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
 $('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial({ full:true, resume:false }); });

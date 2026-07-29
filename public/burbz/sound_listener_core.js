@@ -58,6 +58,46 @@
     return { enqueue, clear, close, snapshot };
   }
 
+  function createMatchConsensus(options) {
+    const opts = options || {};
+    const required = Math.max(2, Math.floor(Number(opts.required) || 2));
+    const ttlMs = Math.max(1, Number(opts.ttlMs) || 60000);
+    let key = '';
+    let count = 0;
+    let lastObservedAt = 0;
+
+    function reset() {
+      key = '';
+      count = 0;
+      lastObservedAt = 0;
+    }
+
+    function snapshot() {
+      return { key, count, required, lastObservedAt };
+    }
+
+    function observe(species, now) {
+      const nextKey = String(species || '').trim().toLowerCase();
+      const observedAt = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+      if (!nextKey) {
+        reset();
+        return { ...snapshot(), confirmed:false };
+      }
+      if (nextKey !== key || !lastObservedAt || observedAt - lastObservedAt > ttlMs) {
+        key = nextKey;
+        count = 1;
+      } else {
+        count += 1;
+      }
+      lastObservedAt = observedAt;
+      const result = { ...snapshot(), confirmed:count >= required };
+      if (result.confirmed) reset();
+      return result;
+    }
+
+    return { observe, reset, snapshot };
+  }
+
   function filenameForMime(mimeType) {
     const mime = String(mimeType || '').toLowerCase();
     if (mime.includes('webm')) return 'recording.webm';
@@ -101,5 +141,5 @@
     return { add, reset, snapshot };
   }
 
-  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, createDiscoveryHistory, filenameForMime });
+  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, createDiscoveryHistory, createMatchConsensus, filenameForMime });
 })(typeof window !== 'undefined' ? window : globalThis);

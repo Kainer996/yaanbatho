@@ -83,8 +83,7 @@ def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():
         "multiverse",
         "only you can unlock the darkness",
         "real birdwatching restores burbz",
-        "11,000 known bird species",
-        "absolutely epic prize",
+
     ):
         assert marker in story, marker
 

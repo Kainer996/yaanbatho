@@ -127,6 +127,7 @@ global.escapeHtml = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replac
 global.birdOnlyImgHTML = () => '<span class="kitchen-roster-art">🐦</span>';
 global.birdDisplayName = b => (b && (b.customName || b.commonName || b.species)) || 'Bird';
 global.canonicalSpeciesName = n => String(n || '');
+global.hungerBarHTML = status => '<div data-fullness="' + Math.round(100 - status.hunger) + '"></div>';
 global.birdHasActiveExpedition = () => false;
 global.birdHasActiveTraining = () => false;
 global.academyBirdById = id => gameState.flock.find(b => b.id === id) || null;

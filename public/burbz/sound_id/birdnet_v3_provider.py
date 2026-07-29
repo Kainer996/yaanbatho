@@ -137,10 +137,13 @@ def _env_flag(name: str, default: bool) -> bool:
 
 
 def _search_dirs() -> List[str]:
-    dirs = []
     explicit = (os.environ.get("BURBZ_BIRDNET_V3_MODEL_DIR") or "").strip()
     if explicit:
-        dirs.append(explicit)
+        # An explicit directory is authoritative. Falling back to some other
+        # installed copy would hide a broken deployment and defeat fail-closed
+        # locality checks.
+        return [explicit]
+    dirs = []
     # Alongside the deployed Burbz tree, i.e. <webroot>/burbz/models.
     dirs.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models"))
     dirs.extend(_MODEL_DIR_CANDIDATES)

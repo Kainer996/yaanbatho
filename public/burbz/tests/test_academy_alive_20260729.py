@@ -1,0 +1,218 @@
+"""Academy Alive — the living treehouse ambience layer (2026-07-29).
+
+The Academy screen gained a presentation-only ambience engine
+(academy_alive_core.js): the player's real companions fly around the tree
+shedding feathers, the Kitchen chimney smokes, windows and lanterns flicker
+on and off, The Crowbar hums with music notes, fireflies come out at night.
+
+These tests pin the wiring (script tag, service worker, live-update script),
+the safety rails (reduced motion, birds away on expeditions never fly,
+art-less birds stay perched), and the pure geometry/timing helpers.
+"""
+
+import json
+import re
+import subprocess
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REPO = ROOT.parents[1]
+HTML = (ROOT / "index.html").read_text(encoding="utf-8")
+CORE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
+SW = (ROOT / "sw.js").read_text(encoding="utf-8")
+UPDATE_SH = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
+
+
+def _run_node(script: str) -> dict:
+    result = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        cwd=str(ROOT),
+        timeout=60,
+    )
+    assert result.returncode == 0, f"node failed: {result.stderr}"
+    return json.loads(result.stdout.strip().splitlines()[-1])
+
+
+# ---- wiring -----------------------------------------------------------------
+
+def test_core_module_exists_and_exports():
+    assert "BurbzAcademyAlive" in CORE
+    for name in [
+        "createAcademyAlive", "ANCHORS", "isNightHour", "lightBoostFor",
+        "makeFlightLeg", "pickFlyers", "windAt", "cubicAt",
+    ]:
+        assert name in CORE, f"engine must export {name}"
+
+
+def test_index_loads_engine_with_cache_buster():
+    assert re.search(r'<script src="academy_alive_core\.js\?v=[^"]+"></script>', HTML)
+
+
+def test_switch_screen_starts_and_pauses_ambience():
+    match = re.search(r"if \(name === 'academy'\) \{[^\n]*\}\n\s*else academyAlivePause\(\);", HTML)
+    assert match, "switchScreen must start ambience on academy and pause it on every other screen"
+    assert "academyAliveStart()" in match.group(0)
+
+
+def test_treehouse_render_refreshes_anchors():
+    assert "ACADEMY_ALIVE.refresh()" in HTML, (
+        "renderAcademyTreehouse rebuilds the room nodes, so it must re-anchor the glows"
+    )
+
+
+def test_service_worker_and_live_update_ship_the_engine():
+    assert re.search(r"\./academy_alive_core\.js\?v=[^']+", SW)
+    assert "academy-alive" in SW.split("\n")[8], "BURBZ_CACHE name must be bumped for the new asset"
+    assert '"academy_alive_core.js"' in UPDATE_SH
+
+
+# ---- safety rails ------------------------------------------------------------
+
+def test_expedition_birds_never_fly():
+    match = re.search(r"function academyAliveBirds\(\) \{.*?\n\}", HTML, re.S)
+    assert match, "missing academyAliveBirds adapter"
+    body = match.group(0)
+    assert body.count("birdHasActiveExpedition") >= 2, (
+        "both Merlin and flock companions must be skipped while away on expeditions"
+    )
+
+
+def test_reduced_motion_keeps_windows_but_skips_motion():
+    assert "reducedMotion" in CORE
+    start = CORE[CORE.index("function start()"):CORE.index("function pause()")]
+    assert "st.reduced" in start and "return" in start, (
+        "start() must bail out of the animation loop under prefers-reduced-motion"
+    )
+    assert "prefers-reduced-motion" in HTML
+
+
+def test_artless_birds_stay_perched():
+    assert "b.cutoutUrl && !st.groundedIds[b.id]" in CORE, (
+        "only birds with real cutout art may fly; broken art grounds the bird"
+    )
+
+
+def test_merlin_flies_on_github_cutout():
+    assert "birdCutoutUrlFor(MERLIN_GUIDE.artUrl)" in HTML, (
+        "Merlin's flyer must use the GitHub-hosted cutout — the local "
+        "/bird-art-cache path can be an unhydrated LFS pointer on live hosts"
+    )
+
+
+def test_ambience_layers_never_eat_taps():
+    for cls in [".academy-alive-canvas", ".academy-alive-flyers", ".alive-flyer", ".th-alive-glow", ".academy-alive-light", ".academy-alive-shade"]:
+        rule = re.search(re.escape(cls) + r"[^{]*\{([^}]*)\}", HTML)
+        assert rule, f"missing CSS for {cls}"
+        assert "pointer-events:none" in rule.group(1).replace(" ", ""), (
+            f"{cls} must not intercept treehouse taps (build placement relies on them)"
+        )
+
+
+# ---- anchors: effects sit on the real paintings -------------------------------
+
+def test_anchor_sheets_cover_the_promised_effects():
+    helpers = _run_node(
+        """
+        const core = require('./academy_alive_core.js');
+        const kitchen = core.ANCHORS.kitchen || [];
+        const crowbar = core.ANCHORS.crowbar || [];
+        console.log(JSON.stringify({
+          kitchenSmoke: kitchen.some(a => a.type === 'smoke'),
+          crowbarNotes: crowbar.some(a => a.type === 'notes'),
+          crowbarLanterns: crowbar.filter(a => a.glow === 'lantern').length,
+          rooms: Object.keys(core.ANCHORS).length,
+          glowKindsValid: Object.values(core.ANCHORS).flat()
+            .filter(a => a.type === 'glow')
+            .every(a => Object.prototype.hasOwnProperty.call(core.GLOW_STYLES, a.glow)),
+          fractionsValid: Object.values(core.ANCHORS).flat()
+            .every(a => a.fx >= 0 && a.fx <= 1 && a.fy >= 0 && a.fy <= 1)
+        }));
+        """
+    )
+    assert helpers["kitchenSmoke"], "the Kitchen chimney must smoke"
+    assert helpers["crowbarNotes"], "The Crowbar must sing"
+    assert helpers["crowbarLanterns"] >= 2, "both painted Crowbar lanterns must glow"
+    assert helpers["rooms"] >= 8
+    assert helpers["glowKindsValid"], "every glow anchor must reference a defined glow style"
+    assert helpers["fractionsValid"], "anchors are fractions of the 112px sprite box"
+
+
+# ---- pure helpers --------------------------------------------------------------
+
+def test_night_and_light_curves():
+    out = _run_node(
+        """
+        const core = require('./academy_alive_core.js');
+        console.log(JSON.stringify({
+          nightAtMidnight: core.isNightHour(0),
+          nightAtNoon: core.isNightHour(12),
+          duskIsNight: core.isNightHour(20),
+          boostNoon: core.lightBoostFor(12),
+          boostMidnight: core.lightBoostFor(0),
+          duskRampMid: core.lightBoostFor(19.25),
+          boostsBounded: [0, 3, 5.5, 6.5, 12, 17.5, 18, 19, 20.9, 21, 23.9]
+            .every(h => core.lightBoostFor(h) >= 0 && core.lightBoostFor(h) <= 1)
+        }));
+        """
+    )
+    assert out["nightAtMidnight"] and not out["nightAtNoon"] and out["duskIsNight"]
+    assert out["boostNoon"] == 0 and out["boostMidnight"] == 1
+    assert 0 < out["duskRampMid"] < 1, "dusk must ramp, not snap"
+    assert out["boostsBounded"]
+
+
+def test_flight_legs_stay_flyable():
+    out = _run_node(
+        """
+        const core = require('./academy_alive_core.js');
+        const rng = core.mulberry32(42);
+        const w = 400, h = 680;
+        let ok = true, entries = 0;
+        for (let i = 0; i < 200; i++) {
+          const leg = core.makeFlightLeg(w, h, null, rng);
+          entries++;
+          if (leg.dur < 3200 || leg.dur > 12000) ok = false;
+          if (Math.abs(leg.p0.x) < 30 && leg.p0.x > 0 && leg.p0.x < w) ok = false; // must start off-screen
+          const mid = core.cubicAt(leg.p0, leg.p1, leg.p2, leg.p3, 0.5);
+          if (!Number.isFinite(mid.x) || !Number.isFinite(mid.y)) ok = false;
+          const end = core.cubicAt(leg.p0, leg.p1, leg.p2, leg.p3, 1);
+          if (Math.abs(end.x - leg.p3.x) > 1e-6 || Math.abs(end.y - leg.p3.y) > 1e-6) ok = false;
+        }
+        console.log(JSON.stringify({ ok, entries }));
+        """
+    )
+    assert out["ok"] and out["entries"] == 200
+
+
+def test_flyer_roster_caps_and_keeps_merlin():
+    out = _run_node(
+        """
+        const core = require('./academy_alive_core.js');
+        const birds = [];
+        for (let i = 0; i < 40; i++) birds.push({ id: 'b' + i, cutoutUrl: 'x.png' });
+        birds.push({ id: 'merlin-guide', magic: true, cutoutUrl: 'm.png' });
+        const picked = core.pickFlyers(birds, 5, 1234);
+        console.log(JSON.stringify({
+          count: picked.length,
+          hasMerlin: picked.some(b => b.magic),
+          small: core.pickFlyers(birds.slice(0, 2), 5, 1).length
+        }));
+        """
+    )
+    assert out["count"] == 5, "the sky holds at most five companions at once"
+    assert out["hasMerlin"], "the permanent guide always earns a sky slot"
+    assert out["small"] == 2, "small flocks all fly"
+
+
+def test_wind_is_gentle():
+    out = _run_node(
+        """
+        const core = require('./academy_alive_core.js');
+        let max = 0;
+        for (let t = 0; t < 120000; t += 250) max = Math.max(max, Math.abs(core.windAt(t)));
+        console.log(JSON.stringify({ max }));
+        """
+    )
+    assert out["max"] <= 14.001, "the shared breeze must sway, not blast"

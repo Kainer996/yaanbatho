@@ -139,7 +139,7 @@
     'Tip: Locked Birdex cards reveal their species only after discovery.',
     'Tip: Use Load More in Birdex to browse the next batch of birds.',
     'Tip: Liberation Battles free towns and awaken their sanctuaries.',
-    'Tip: Counter enemy wing classes instead of relying on power alone.',
+    'Tip: Omnivorous generalists such as Carrion Crows have broader Kitchen menus, while specialists need more exact food.',
     'Tip: Replay Merlin’s full tour from Settings whenever you need it.',
     'Tip: Listening stops when you tap Stop, close Burbz or suspend it.',
     'Tip: Equip gear from the Bag to improve a bird’s battle stats.',
@@ -268,15 +268,18 @@
 
   function tickMerlinCare(raw, elapsedMinutes, now) {
     const state = sanitizeMerlinCare(raw, now);
+    const time = Number(now) || Date.now();
+    const elapsed = Math.max(0, time - state.lastHungerAt);
+    const hunger = clamp(state.hunger + (elapsed / (24 * 60 * 60 * 1000)) * 100, 0, 100);
     const minutes = clamp(elapsedMinutes, 0, 1440);
-    const hungerGain = Math.floor(minutes / 15);
-    const hungryPenalty = state.hunger + hungerGain > 60 ? Math.floor(minutes / 30) : 0;
+    const hungryPenalty = hunger > 60 ? Math.floor(minutes / 30) : 0;
     return sanitizeMerlinCare({
       ...state,
-      hunger: state.hunger + hungerGain,
+      hunger,
       happiness: state.happiness - hungryPenalty,
       energy: state.energy + Math.floor(minutes / 20),
-      lastCareAt: Number(now) || Date.now()
+      lastCareAt: time,
+      lastHungerAt: time
     }, now);
   }
 
@@ -312,10 +315,16 @@
 
   function applyMerlinCareAction(rawCare, rawPantry, action, now) {
     const time = Number(now) || Date.now();
-    const state = sanitizeMerlinCare(rawCare, time);
+    const baseState = sanitizeMerlinCare(rawCare, time);
+    const elapsed = Math.max(0, time - baseState.lastHungerAt);
+    const state = sanitizeMerlinCare({
+      ...baseState,
+      hunger: clamp(baseState.hunger + (elapsed / (24 * 60 * 60 * 1000)) * 100, 0, 100),
+      lastHungerAt: time
+    }, time);
     const pantry = { ...(rawPantry && typeof rawPantry === 'object' ? rawPantry : {}) };
     if (action === 'feed') {
-      if (state.hunger <= 0) return { ok:false, state, pantry, consumed:{}, message:'Merlin is already fully fed; no falcon food was spent.' };
+      if (state.hunger < 60) return { ok:false, state, pantry, consumed:{}, message:'Merlin is still full enough for today; no falcon food was spent.' };
       // A Merlin hunts small birds — pipits, larks, finches — so any
       // small-bird ration up to starling size feeds him. A pigeon ration is
       // far too big for the smallest falcon in the kingdom and is not offered.
@@ -323,7 +332,8 @@
       const falconRationId = MERLIN_PREY_RATIONS.find(id => Math.max(0, Math.floor(Number(pantry[id]) || 0)) >= 1);
       if (falconRationId) {
         pantry[falconRationId] = Math.max(0, Math.floor(Number(pantry[falconRationId]) || 0)) - 1;
-        return { ok:true, pantry, consumed:{ [falconRationId]:1 }, state:addBond(sanitizeMerlinCare({ ...applyHungerDelta(state, -32, 'merlin-feed:' + falconRationId, time), happiness:state.happiness + 7, energy:state.energy + 4, lastCareAt:time, lastFedAt:time }, time), 5), message:'Falcon food served: a small-bird prey ration suits Falco columbarius.' };
+        const fedState = applyHungerDelta(state, -state.hunger, 'merlin-feed:' + falconRationId, time);
+        return { ok:true, pantry, consumed:{ [falconRationId]:1 }, state:addBond(sanitizeMerlinCare({ ...fedState, happiness:state.happiness + 7, energy:state.energy + 4, lastCareAt:time, lastFedAt:time, lastHungerAt:time }, time), 5), message:'Falcon food served: a small-bird prey ration suits Falco columbarius.' };
       }
       const insects = Math.max(0, Math.floor(Number(pantry.insects) || 0));
       if (insects > 0) return { ok:false, state, pantry, consumed:{}, message:'Merlin refuses mealworms as a main meal: Falco columbarius is a small-bird specialist, so prepare a small-bird prey ration.' };
