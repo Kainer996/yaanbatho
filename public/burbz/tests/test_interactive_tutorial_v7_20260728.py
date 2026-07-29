@@ -13,6 +13,7 @@ rescue: if the control never appears, the Next button comes back rather than
 trapping the player.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -303,4 +304,9 @@ def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
     assert "discoveries-quiz-pacing-v152-20260728" in sw
-    assert "const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';" in HTML.read_text(encoding="utf-8")
+    # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on
+    # (academy-alive-v153 did), so pin only that this release stays in the
+    # cache lineage and the build tag is not older than this release.
+    build = re.search(r"const BURBZ_BUILD = '([^']+)';", HTML.read_text(encoding="utf-8"))
+    assert build, "BURBZ_BUILD constant missing"
+    assert build.group(1) in sw, "build tag must match a cache marker"

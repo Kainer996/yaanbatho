@@ -2233,8 +2233,10 @@ svg.academy-room-bg { display:block; filter:none; }
 .academy-treehouse.placing { outline:2px solid rgba(214,168,79,.78); box-shadow:0 0 0 4px rgba(214,168,79,.14), inset 0 -110px 130px rgba(0,0,0,.42); cursor:crosshair; }
 .academy-treehouse::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 18%,rgba(214,168,79,.12),transparent 28%), linear-gradient(180deg,rgba(255,255,255,.03),transparent 34%,rgba(0,0,0,.32)); pointer-events:none; }
 .treehouse-branch { display:none; }
-.treehouse-room-node { position:absolute; z-index:7; width:112px; min-height:112px; transform:translate(-50%,-50%); border-radius:18px; border:1px solid rgba(214,168,79,.20); background:radial-gradient(circle at 50% 72%,rgba(0,0,0,.34),transparent 60%); box-shadow:0 16px 28px rgba(0,0,0,.34); padding:0; text-align:center; transition:transform .18s ease, filter .18s ease; }
-.treehouse-room-node.built { border-color:rgba(81,207,102,.28); }
+/* Built rooms sit frameless on the tree so the paintings read as one scene;
+   the box chrome only returns while placing (dashed target) or when active. */
+.treehouse-room-node { position:absolute; z-index:7; width:112px; min-height:112px; transform:translate(-50%,-50%); border-radius:18px; border:1px solid transparent; background:radial-gradient(circle at 50% 72%,rgba(0,0,0,.20),transparent 58%); padding:0; text-align:center; transition:transform .18s ease, filter .18s ease; }
+.treehouse-room-node.built { border-color:transparent; }
 .treehouse-room-node.active { transform:translate(-50%,-50%) scale(1.06); filter:drop-shadow(0 0 14px rgba(214,168,79,.8)); }
 .treehouse-building-sprite { width:112px; height:112px; object-fit:contain; display:block; filter:drop-shadow(0 14px 18px rgba(0,0,0,.62)); pointer-events:none; }
 .treehouse-room-name { position:absolute; left:50%; bottom:-10px; transform:translateX(-50%); max-width:116px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -2250,6 +2252,25 @@ svg.academy-room-bg { display:block; filter:none; }
 .treehouse-bird:nth-child(3n) { animation-duration:2.9s; }
 .treehouse-bird:nth-child(4n) { animation-duration:2.1s; }
 @keyframes treeBirdHop { 0%,100%{ translate:0 0; } 30%{ translate:0 -8px; } 48%{ translate:0 -1px; } 62%{ translate:0 -5px; } 76%{ translate:0 0; } }
+
+/* ---- Academy Alive: ambient life layered over the treehouse ------------- */
+/* Two canvases sandwich the buildings: sky (z4) carries distant flocks
+   behind the rooms (z7), front (z9) carries feathers, smoke, fireflies. */
+.academy-alive-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.academy-alive-sky { z-index:4; }
+.academy-alive-front { z-index:9; }
+.academy-alive-shade { position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg, rgba(10,16,42,.60), rgba(7,9,30,.38) 55%, rgba(4,5,18,.58)); opacity:0; transition:opacity 2.5s ease; }
+.academy-treehouse.alive-night .academy-alive-shade { opacity:.52; }
+.academy-alive-light { position:absolute; inset:-12%; z-index:6; pointer-events:none; mix-blend-mode:screen; opacity:.8; background:linear-gradient(112deg, transparent 22%, rgba(255,240,196,.15) 30%, transparent 37%, transparent 47%, rgba(255,240,196,.09) 55%, transparent 62%); animation:aliveRays 17s ease-in-out infinite alternate; }
+.academy-treehouse.alive-night .academy-alive-light { background:linear-gradient(112deg, transparent 30%, rgba(190,214,255,.10) 40%, transparent 50%); animation-duration:23s; }
+@keyframes aliveRays { from { transform:translateX(-2.5%) rotate(-.6deg); opacity:.55; } to { transform:translateX(2.5%) rotate(.6deg); opacity:.95; } }
+.academy-alive-flyers { position:absolute; inset:0; pointer-events:none; }
+.alive-flyer { position:absolute; left:0; top:0; width:44px; height:44px; z-index:9; pointer-events:none; will-change:transform; filter:drop-shadow(0 6px 7px rgba(0,0,0,.5)); }
+.alive-flyer.behind { z-index:5; filter:drop-shadow(0 4px 5px rgba(0,0,0,.45)) saturate(.9) brightness(.92); }
+.alive-flyer img, .alive-flyer svg { width:100%; height:100%; object-fit:contain; display:block; }
+.alive-flyer.magic { filter:drop-shadow(0 6px 7px rgba(0,0,0,.5)) drop-shadow(0 0 9px rgba(168,142,255,.55)); }
+.th-alive-glow { position:absolute; pointer-events:none; mix-blend-mode:screen; opacity:0; }
+@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } }
 
 .expedition-panel { margin:0 10px 14px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.09),rgba(0,0,0,.25)); }
 .expedition-title { font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
@@ -3523,6 +3544,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-categories-material-quests-20260726"></script>
+<script src="academy_alive_core.js?v=academy-alive-v1-20260729"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
@@ -11075,6 +11097,56 @@ function treehouseBirdIconHTML(bird) {
   return '<img class="treehouse-bird-cutout" src="' + escapeHtml(cutout) + '" data-fallback-mini-bird="' + escapeHtml(species) + '" alt="" aria-hidden="true">';
 }
 
+// ---- Academy Alive: the living treehouse -----------------------------------
+// A presentation-only ambience engine (academy_alive_core.js): the player's
+// real companions take wing around the tree shedding feathers, the Kitchen
+// chimney smokes, windows and lanterns flicker, The Crowbar hums with song.
+let ACADEMY_ALIVE = null;
+
+function academyAliveBirds() {
+  // Only birds actually AT the Academy fly here — companions away on an
+  // expedition are physically absent, exactly as the perch layer treats them.
+  const list = [];
+  try {
+    if (!birdHasActiveExpedition(MERLIN_GUIDE.id)) {
+      // Fly Merlin with the GitHub-hosted cutout (like every other species):
+      // the local /bird-art-cache path can be an unhydrated LFS pointer on
+      // some hosts, and a broken image would ground the guide for the session.
+      const merlinCutout = birdCutoutUrlFor(MERLIN_GUIDE.artUrl) || MERLIN_GUIDE.cutoutUrl;
+      list.push({ id: MERLIN_GUIDE.id, name: 'Merlin', species: 'Merlin', cutoutUrl: merlinCutout, tint: ['#6b5fae', '#9c8cdc'], magic: true });
+    }
+    ((gameState && gameState.flock) || []).forEach(b => {
+      if (!b || !b.id || birdHasActiveExpedition(b.id)) return;
+      const species = String(b.commonName || b.name || b.species || 'Bird');
+      const art = getBirdArtUrl(b);
+      const cutout = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())] || birdCutoutUrlFor(art);
+      list.push({ id: b.id, name: birdDisplayName(b), species, cutoutUrl: cutout || null, tint: birdTintFor(species), magic: false });
+    });
+  } catch (e) {}
+  return list;
+}
+
+function academyAliveStart() {
+  try {
+    if (!ACADEMY_ALIVE && window.BurbzAcademyAlive) {
+      ACADEMY_ALIVE = window.BurbzAcademyAlive.createAcademyAlive({
+        container: () => $('academyTreehouse'),
+        presentBirds: academyAliveBirds,
+        reducedMotion: () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches),
+        // __academyAliveForceHour lets evidence scripts photograph the night
+        // scene at noon; players get their real local dusk and dawn.
+        hourOfDay: () => { if (Number.isFinite(window.__academyAliveForceHour)) return Number(window.__academyAliveForceHour); const d = new Date(); return d.getHours() + d.getMinutes() / 60; },
+        isScreenActive: () => currentScreen === 'academy'
+      });
+    }
+    if (ACADEMY_ALIVE) ACADEMY_ALIVE.start();
+  } catch (e) {}
+}
+
+function academyAlivePause() {
+  if (ACADEMY_ALIVE) { try { ACADEMY_ALIVE.pause(); } catch (e) {} }
+}
+
 function renderAcademyTreehouse(byRoom) {
   const tree = $('academyTreehouse');
   const layer = $('treehouseRoomLayer');
@@ -11104,6 +11176,9 @@ function renderAcademyTreehouse(byRoom) {
     });
   });
   birds.innerHTML = birdHtml;
+  // Room nodes were just rebuilt, so the ambience glows/anchors bolted onto
+  // them were destroyed with the old markup — re-anchor them.
+  if (ACADEMY_ALIVE) { try { ACADEMY_ALIVE.refresh(); } catch (e) {} }
 }
 
 
@@ -16116,6 +16191,8 @@ function openQuestOfferDetail(offer) {
 Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
+  // Academy Alive ambience: exported for QA harnesses and evidence scripts.
+  academyAliveBirds, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, birds: () => academyAliveBirds() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   __burbzQuestDebug: {
     getState: () => gameState,
@@ -16897,7 +16974,8 @@ function switchScreen(name) {
   if (name === 'map') renderLiveMap();
   if (name === 'birdex') renderBirdex();
   if (name === 'battle') renderBattleSelect();
-  if (name === 'academy') { wireAcademyZones(); renderAcademy(); }
+  if (name === 'academy') { wireAcademyZones(); renderAcademy(); academyAliveStart(); }
+  else academyAlivePause();
   if (name === 'academy-room') renderAcademyRoomInterior();
   if (name === 'village') { renderVillage(); setTimeout(onVillageResize, 60); }
   if (name === 'inventory') renderInventory();
@@ -26489,7 +26567,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';
+const BURBZ_BUILD = 'academy-alive-v153-20260729';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

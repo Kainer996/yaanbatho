@@ -29,6 +29,7 @@ FILES=(
   "quest_core.js"
   "empire_map_core.js"
   "academy_treehouse_core.js"
+  "academy_alive_core.js"
   "kitchen_pantry_core.js"
   "data/bird-diet-records.js"
   "bird_diet_hunger_core.js"

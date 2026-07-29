@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728';
+const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-academy-alive-v153-20260729';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -41,6 +41,7 @@ const BURBZ_ASSETS = [
   './empire_map_core.js?v=liberation-map-v3-20260714',
   './quest_core.js?v=quest-route-integrity-loops-v123-20260726',
   './academy_treehouse_core.js?v=quest-categories-material-quests-20260726',
+  './academy_alive_core.js?v=academy-alive-v1-20260729',
   './kitchen_pantry_core.js?v=diet-hunger-release-20260723',
   './data/bird-diet-records.js?v=diet-hunger-release-20260723',
   './bird_diet_hunger_core.js?v=diet-hunger-release-20260723',
