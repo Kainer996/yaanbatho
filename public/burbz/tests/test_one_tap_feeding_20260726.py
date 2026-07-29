@@ -303,22 +303,22 @@ def test_only_merlin_is_allowed_to_fly_hungry():
 SIDE_SNACK_HARNESS = FEED_HARNESS.replace(
     "out.fullBirdIsFull = F.birdIsFull(thrush()) === true;",
     """out.fullBirdIsFull = F.birdIsFull(thrush()) === true;
-// A Woodpigeon lives on leaves, grain and mast; hedgerow berries are a real
-// but secondary food for it.
-gameState.flock.push({ id:'pigeon', species:'Woodpigeon', commonName:'Woodpigeon', scientificName:'Columba palumbus',
+// A Mallard is a dabbling duck: pondweed, grain and water invertebrates are the
+// staple, and leaves and buds are a real but secondary food for it.
+gameState.flock.push({ id:'duck', species:'Mallard', commonName:'Mallard', scientificName:'Anas platyrhynchos',
   level:1, xp:0, maxHp:100, hp:100, academy:{ room:'outdoors', dietKnown:true }, training:{ feedCount:0, hpBonus:0 },
   care:{ hunger:80, happiness:50, hungerTransactions:[], hungerTransactionLog:[] } });
-gameState.inventory.larder.hedgerow_berries = 4;
-const pigeon = () => gameState.flock.find(b => b.id === 'pigeon');
-const sideOption = F.feedFoodOptions(F.feedEntryForKey('pigeon')).find(o => o.id === 'hedgerow_berries');
+gameState.inventory.larder.leaf_bud_browse = 4;
+const duck = () => gameState.flock.find(b => b.id === 'duck');
+const sideOption = F.feedFoodOptions(F.feedEntryForKey('duck')).find(o => o.id === 'leaf_bud_browse');
 out.sideFoodAccepted = !!(sideOption && sideOption.accepted);
 out.sideFoodIsSideSnack = !!(sideOption && sideOption.sideSnack);
 out.sideFoodIsNotMain = !(sideOption && sideOption.main);
-const pigeonBefore = pigeon().care.hunger;
-F.burbzFeedFood('pigeon', 'larder', 'hedgerow_berries');
-out.pigeonFed = pigeonBefore - pigeon().care.hunger;
-out.pigeonXp = pigeon().xp;
-out.sideFoodSpent = 4 - gameState.inventory.larder.hedgerow_berries;
+const duckBefore = duck().care.hunger;
+F.burbzFeedFood('duck', 'larder', 'leaf_bud_browse');
+out.duckFed = duckBefore - duck().care.hunger;
+out.duckXp = duck().xp;
+out.sideFoodSpent = 4 - gameState.inventory.larder.leaf_bud_browse;
 out.sideSnackNote = notes[notes.length - 1] || null;
 out.sideSnackBurst = bursts[bursts.length - 1] || null;
 """
@@ -327,15 +327,14 @@ out.sideSnackBurst = bursts[bursts.length - 1] || null;
 
 def test_a_secondary_food_is_served_at_half_instead_of_refused():
     out = run_node(SIDE_SNACK_HARNESS)
-    assert out["sideFoodAccepted"] is True, "berries must be servable to a Woodpigeon"
+    assert out["sideFoodAccepted"] is True, "browse must be servable to a Mallard"
     assert out["sideFoodIsSideSnack"] is True
     assert out["sideFoodIsNotMain"] is True
     assert out["sideFoodSpent"] == 1
-    # Hedgerow berries are worth 25 to a bird that lives on them; half here,
-    # rounded the way the runtime rounds it.
-    assert out["pigeonFed"] == 13
+    # Leaf & bud browse is worth 22 to a bird that lives on it; half here.
+    assert out["duckFed"] == 11
     # And half the bird XP a main meal pays.
-    assert out["pigeonXp"] == round(6 / 2)
+    assert out["duckXp"] == round(6 / 2)
 
 
 def test_the_player_is_told_why_a_side_food_only_counted_half():
@@ -345,7 +344,7 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
     assert "side" in note["title"].lower()
     body = note["body"].lower()
     assert "half the hunger" in body and "half the xp" in body
-    assert "woodpigeon" in body
+    assert "mallard" in body
     # The burst says it too, at a glance.
     assert "SIDE SNACK" in out["sideSnackBurst"]["badge"]
 

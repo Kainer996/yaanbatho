@@ -81,7 +81,7 @@ def test_val_diet_003_runtime_core_scores_representative_families():
     out = run_node(
         """
 const D = require('./bird_diet_hunger_core.js');
-const required = ['small_birds','small_mammals','fish','flying_insects','invertebrates','worms','molluscs_crustaceans','seeds','fruit_berries','nectar','aquatic_plants','carrion'];
+const required = ['small_birds','small_mammals','fish','flying_insects','invertebrates','worms','molluscs_crustaceans','seeds','fruit_berries','nectar','aquatic_plants','foliage_buds','carrion'];
 function verdict(species, ingredientId, prep) {
   const r = D.scoreFoodCompatibility(species, { ingredientId, prep });
   return { verdict:r.verdict, nourishment:r.nourishment, family:r.family, method:r.record && r.record.matchMethod };
@@ -97,7 +97,7 @@ console.log(JSON.stringify({
   swiftMealworm: verdict({ commonName:'Common Swift' }, 'mealworm_scoop', 'fresh'),
   kingfisherFish: verdict({ scientificName:'Alcedo atthis' }, 'live_minnow', 'live'),
   spinebillNectar: verdict({ scientificName:'Acanthorhynchus superciliosus' }, 'nectar_cup', 'fresh'),
-  ostrichPlantWrongPrep: verdict({ scientificName:'Struthio camelus' }, 'pondweed_tangle', 'fresh'),
+  mallardPlantWrongPrep: verdict({ scientificName:'Anas platyrhynchos' }, 'pondweed_tangle', 'fresh'),
   vultureCarrion: verdict({ scientificName:'Gypaetus barbatus' }, 'carrion_scraps', 'fresh'),
   familyPrimaryCases: {
     small_birds: verdict({ scientificName:'Accipiter gularis' }, 'small_bird_prey_ration', 'whole'),
@@ -110,7 +110,8 @@ console.log(JSON.stringify({
     seeds: verdict({ scientificName:'Acanthis flammea' }, 'sunflower_seeds', 'husked'),
     fruit_berries: verdict({ scientificName:'Agropsar philippensis' }, 'hedgerow_berries', 'fresh'),
     nectar: verdict({ scientificName:'Acanthorhynchus superciliosus' }, 'nectar_cup', 'fresh'),
-    aquatic_plants: verdict({ scientificName:'Amytornis woodwardi' }, 'pondweed_tangle', 'floating'),
+    aquatic_plants: verdict({ scientificName:'Cygnus olor' }, 'pondweed_tangle', 'floating'),
+    foliage_buds: verdict({ scientificName:'Amytornis woodwardi' }, 'leaf_bud_browse', 'fresh'),
     carrion: verdict({ scientificName:'Aegypius monachus' }, 'carrion_scraps', 'fresh')
   },
   redpollMethod: D.getDietRecord({ scientificName:'Acanthis flammea', commonName:'Redpoll' }).matchMethod,
@@ -129,12 +130,12 @@ console.log(JSON.stringify({
     assert out["swiftMealworm"]["verdict"] == "secondary"
     assert out["kingfisherFish"]["verdict"] == "primary"
     assert out["spinebillNectar"]["verdict"] == "primary"
-    assert out["ostrichPlantWrongPrep"]["verdict"] == "wrong_prep"
+    assert out["mallardPlantWrongPrep"]["verdict"] == "wrong_prep"
     assert out["vultureCarrion"]["verdict"] == "primary"
     assert set(out["familyPrimaryCases"]) == {
         "small_birds", "small_mammals", "fish", "flying_insects",
         "invertebrates", "worms", "molluscs_crustaceans", "seeds",
-        "fruit_berries", "nectar", "aquatic_plants", "carrion",
+        "fruit_berries", "nectar", "aquatic_plants", "foliage_buds", "carrion",
     }
     assert all(case["verdict"] == "primary" for case in out["familyPrimaryCases"].values())
     assert out["redpollMethod"] == "common-name"

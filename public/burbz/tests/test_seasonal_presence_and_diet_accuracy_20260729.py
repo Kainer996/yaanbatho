@@ -152,8 +152,26 @@ const UK50 = global.BURBZ_UK_BIRD_EXPANSION_50, UK26 = global.BURBZ_UK_BIRD_EXPA
 const UK_FINAL = global.BURBZ_UK_BIRD_EXPANSION_FINAL, UK4 = global.BURBZ_UK_BIRD_EXPANSION_4;
 const AU50 = global.BURBZ_AU_BIRD_EXPANSION_50;
 const NATIONAL = global.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;
-const canonicalSpeciesName = n => String(n || '').split('(')[0].trim();
-const normaliseSpeciesKey = n => canonicalSpeciesName(n).toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+// Take the name helpers from the page rather than retyping them — a copy that
+// drifts would green-light a predicate that is not the one shipping.
+function fnSrc(name) {
+  const start = html.indexOf('function ' + name + '(');
+  if (start < 0) throw new Error('missing ' + name);
+  let i = html.indexOf('{', start), depth = 0;
+  for (; i < html.length; i++) {
+    if (html[i] === '{') depth++;
+    else if (html[i] === '}') { depth--; if (depth === 0) break; }
+  }
+  return html.slice(start, i + 1);
+}
+// canonicalSpeciesName consults the roster; this harness works from names
+// alone, so the lookup returns nothing and its plain-name branch is the one
+// under test — which is also the branch every roster name already takes.
+global.findSpeciesProfile = () => null;
+new Function(['canonicalSpeciesName', 'normaliseSpeciesKey'].map(fnSrc).join('\n')
+  + '\nglobal.canonicalSpeciesName = canonicalSpeciesName;'
+  + '\nglobal.normaliseSpeciesKey = normaliseSpeciesKey;')();
 
 const at = html.indexOf('const REGION_AREA_SPECIES = {');
 const REGION_AREA_SPECIES = eval('(' + html.slice(at, html.indexOf('\n};', at) + 2)
@@ -215,10 +233,10 @@ def test_the_gate_narrows_the_roster_without_emptying_it():
 def test_the_page_loads_the_season_core_and_gates_spawns_with_it():
     html = INDEX.read_text(encoding="utf-8")
     assert 'src="seasonal_presence_core.js' in html
-    assert "speciesPresentNow" in html
+    assert "SEASON.isPresent(species, seasonContext)" in html
     picker = html[html.index("function pickHabitatBird("):]
     picker = picker[: picker.index("\nfunction ")]
-    assert "inSeasonHere(species)" in picker
+    assert "SEASON.isPresent(species, seasonContext)" in picker
     # And the service worker ships it, or an offline player gets the old rules.
     sw = SW.read_text(encoding="utf-8")
     assert sw.count("./seasonal_presence_core.js") == 2
@@ -413,7 +431,101 @@ def test_seed_specialists_are_fed_seed_and_not_pondweed():
         assert out[key]["verdict"] == "primary", key
     assert out["lorikeetNectar"]["verdict"] == "primary", "a brush tongue is for blossom"
     # But a bird whose staple really is leafy growth keeps it.
-    assert "aquatic_plants" in out["redGrouseFamilies"]["primary"]
+    assert out["redGrouseFamilies"]["primary"] == ["foliage_buds"]
+
+
+def test_no_land_bird_is_offered_pondweed_as_a_main_meal():
+    """Diet-PlantO is "other plant material" — pondweed, clover, heather shoots,
+    buds and mast in one column — and it all used to land on the aquatic-plant
+    family, whose only ingredient is a Pondweed Tangle. Right for a Mallard,
+    absurd for a Wild Turkey. The split now follows the same ForStrat evidence
+    the invertebrate split does."""
+    out = run_node(
+        r"""
+const D = require('./bird_diet_hunger_core.js');
+const dry = ['Wild Turkey','Red Junglefowl','California Quail','Golden Pheasant','Two-barred Crossbill',
+             'Pine Grosbeak','Monk Parakeet','Red Grouse','Northern Cardinal','Great Bustard'];
+const wet = ['Mallard','Mute Swan','Canada Goose','Eurasian Coot'];
+const primary = n => ((D.getDietRecord(n) || {}).primaryCompatibleFamilies) || [];
+console.log(JSON.stringify({
+  dryBirdsOnPondweed: dry.filter(n => primary(n).includes('aquatic_plants')),
+  dryBirdsMissingRecord: dry.filter(n => !D.getDietRecord(n)),
+  waterBirdsKeepingPondweed: wet.filter(n => primary(n).includes('aquatic_plants')),
+  turkeyBrowse: D.scoreFoodCompatibility('Wild Turkey', { ingredientId:'leaf_bud_browse', prep:'fresh' }).verdict,
+  turkeyPondweed: D.scoreFoodCompatibility('Wild Turkey', { ingredientId:'pondweed_tangle', prep:'floating' }).verdict,
+  swanPondweed: D.scoreFoodCompatibility('Mute Swan', { ingredientId:'pondweed_tangle', prep:'floating' }).verdict
+}));
+"""
+    )
+    assert out["dryBirdsMissingRecord"] == []
+    assert out["dryBirdsOnPondweed"] == [], "these birds never forage in or on water"
+    assert out["waterBirdsKeepingPondweed"] == ["Mallard", "Mute Swan", "Canada Goose", "Eurasian Coot"]
+    assert out["turkeyBrowse"] == "primary"
+    assert out["turkeyPondweed"] == "refused"
+    assert out["swanPondweed"] == "primary"
+
+
+def test_a_staple_is_a_full_meal_even_when_something_else_scores_higher():
+    """Only the exact top-scoring family used to count as a main meal, so a food
+    on 30% of a bird's diet became a half portion next to one on 40%. That is
+    what made a Blackbird's berries and a Jay's acorns side dishes."""
+    out = run_node(
+        r"""
+const D = require('./bird_diet_hunger_core.js');
+const feed = (s, i) => D.scoreFoodCompatibility(s, D.normalizeFeedingSpec(i)).verdict;
+console.log(JSON.stringify({
+  blackbirdBerries: feed('Blackbird', 'hedgerow_berries'),
+  // Acorns are the seed family, and a Jay husks them like any other seed.
+  jayAcorns: D.scoreFoodCompatibility('Jay', { ingredientId:'acorn_handful', prep:'husked' }).verdict,
+  woodpigeonSeeds: feed('Wood Pigeon', 'sunflower_seeds'),
+  // The band widens the primary set; it must not make everything a main meal.
+  goldfinchFish: feed('Goldfinch', 'live_minnow'),
+  swiftWorms: feed('Swift', 'garden_worms'),
+  kingfisherSeeds: feed('Kingfisher', 'sunflower_seeds'),
+  mallardBrowse: feed('Mallard', 'leaf_bud_browse')
+}));
+"""
+    )
+    assert out["blackbirdBerries"] == "primary"
+    assert out["jayAcorns"] == "primary"
+    assert out["woodpigeonSeeds"] == "primary"
+    assert out["goldfinchFish"] == "refused"
+    assert out["swiftWorms"] == "refused"
+    assert out["kingfisherSeeds"] == "refused"
+    assert out["mallardBrowse"] == "secondary", "a real but secondary food stays a half portion"
+
+
+def test_every_expansion_species_has_a_diet_too():
+    """The expansions push 235 more names into the spawn roster at load, and none
+    of them had a diet record — so a Nightjar refused flying insects and a
+    Guillemot refused fish, both falling through to the seed-and-berry
+    fallback."""
+    out = run_node(
+        r"""
+global.window = global;
+const D = require('./bird_diet_hunger_core.js');
+const names = new Set();
+for (const f of ['uk_bird_expansion_50.js','uk_bird_expansion_2.js','uk_bird_expansion_3.js',
+                 'uk_bird_expansion_4.js','au_bird_expansion.js','au_bird_expansion_2.js']) {
+  for (const n of (require('./' + f).names || [])) names.add(n);
+}
+const feed = (s, i) => D.scoreFoodCompatibility(s, D.normalizeFeedingSpec(i)).verdict;
+console.log(JSON.stringify({
+  total: names.size,
+  missing: [...names].filter(n => !D.getDietRecord(n)),
+  nightjarMidges: feed('Nightjar', 'aerial_midges'),
+  guillemotFish: feed('Guillemot', 'sand_eel'),
+  henHarrierVole: feed('Hen Harrier', 'field_vole'),
+  woodcockWorms: feed('Woodcock', 'garden_worms')
+}));
+"""
+    )
+    assert out["total"] > 200
+    assert out["missing"] == []
+    assert out["nightjarMidges"] == "primary"
+    assert out["guillemotFish"] == "primary"
+    assert out["henHarrierVole"] == "primary"
+    assert out["woodcockWorms"] == "primary"
 
 
 def test_the_bird_whose_bill_is_a_worm_probe_gets_worms_as_a_main_meal():
@@ -435,7 +547,7 @@ def test_a_diving_fish_eater_is_allowed_fish():
 def test_a_curated_correction_says_so_rather_than_posing_as_raw_source_data():
     out = run_node(DIET_HARNESS)
     disclosure = out["disclosure"]
-    assert disclosure["correction"], "a corrected record must admit it"
+    assert disclosure["corrected"] is True, "a corrected record must admit it"
     assert "curated field-guide correction" in disclosure["provenance"]
     assert "worm" in disclosure["education"].lower()
 

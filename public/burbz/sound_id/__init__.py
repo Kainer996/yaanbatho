@@ -141,59 +141,49 @@ def is_commercial_safe(provider: Optional[str] = None) -> bool:
     return resolve_provider(provider or active_provider()) not in NON_COMMERCIAL_PROVIDERS
 
 
-def _location_from_request(lat, lon):
-    """Fill in a missing location from the upload itself.
+def _from_request(field, cast):
+    """Read one form field the client posted, or None.
 
-    The range filter is only as good as the location it is given, and without
-    one an African Thrush is a perfectly good answer for a garden in London.
-    Not every server hands lat/lon down to the recogniser — some read them
-    later, in the response builder — so when the call did not carry them, take
-    them from the form fields the client posts.
+    Not every server hands the range filter's inputs down to the recogniser —
+    some read them later, in the response builder — so when the call did not
+    carry one, take it from the upload itself.
 
     Lives here rather than in the server hook so it ships with the package: a
     box only has to redeploy ``sound_id`` to get it, with no code surgery.
-    Anything unexpected (no Flask, no request in flight, junk values) leaves
-    the location as it was.
+    Anything unexpected (no Flask, no request in flight, junk values) reads as
+    absent, which every caller already handles.
     """
-    if lat is not None and lon is not None:
-        return lat, lon
     try:
         from flask import request
 
-        source = request.values
-        if lat is None:
-            raw = source.get("lat")
-            lat = float(raw) if raw not in (None, "") else None
-        if lon is None:
-            raw = source.get("lon")
-            lon = float(raw) if raw not in (None, "") else None
+        raw = request.values.get(field)
+        return cast(raw) if raw not in (None, "") else None
     except Exception:
-        pass
+        return None
+
+
+def _location_from_request(lat, lon):
+    """Fill in a missing location from the upload.
+
+    The range filter is only as good as the location it is given, and without
+    one an African Thrush is a perfectly good answer for a garden in London.
+    """
+    if lat is None:
+        lat = _from_request("lat", float)
+    if lon is None:
+        lon = _from_request("lon", float)
     return lat, lon
 
 
 def _week_from_request(week):
-    """Fill in a missing week of the year from the upload itself.
+    """Fill in a missing week of the year from the upload.
 
     Half the range filter's job is seasonal: a Swift is a fine answer for a
-    London garden in June and an impossible one in January. The client posts
-    the week its own device clock says it is, which beats the server's clock —
-    the box may be in another timezone, or another day.
-
-    Same contract as ``_location_from_request``: anything unexpected leaves the
-    week as it was, and the provider falls back to the server date.
+    London garden in June and an impossible one in January. The client posts the
+    week its own device clock says it is, which beats the server's clock — the
+    box may be in another timezone, or another day.
     """
-    if week is not None:
-        return week
-    try:
-        from flask import request
-
-        raw = request.values.get("week")
-        if raw not in (None, ""):
-            return int(float(raw))
-    except Exception:
-        pass
-    return week
+    return week if week is not None else _from_request("week", lambda raw: int(float(raw)))
 
 
 def _announce(provider: str) -> None:

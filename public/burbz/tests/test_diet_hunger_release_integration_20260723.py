@@ -81,7 +81,10 @@ def test_browser_diet_payload_is_compact_and_excludes_global_source_table():
     assert result.returncode == 0, result.stderr
     counts = json.loads(result.stdout)
     assert counts["records"] == 952
-    assert 0 < counts["sourceRecords"] < 400
+    # One supplement per roster name the 952 profiles do not already cover —
+    # the in-page catalogue plus the 235 species the expansions append. The
+    # point of the bound is that the 9,993-row global table never ships.
+    assert 0 < counts["sourceRecords"] < 700
 
 
 def test_compact_runtime_resolves_every_legacy_wild_bird_name():

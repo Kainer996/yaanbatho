@@ -35,9 +35,9 @@
   const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
 
-  // Coarse British envelopes, matching the boxes the UK expansion already uses
-  // so the two agree about where "the north" is.
-  const UK = { latMin: 49, latMax: 61, lonMin: -9, lonMax: 3 };
+  // Coarse British envelopes, drawn per species below rather than borrowed from
+  // the UK expansion — these have to hold Orkney and Shetland (Golden Eagle,
+  // Red Grouse) and the Solent (White-tailed Eagle), which its boxes do not.
   const SCOTLAND = { latMin: 55.5, latMax: 61, lonMin: -8, lonMax: -0.5 };
   const NORTH_AND_WEST = { latMin: 51, latMax: 61, lonMin: -9, lonMax: -1 };
   const SOUTH = { latMin: 49, latMax: 54, lonMin: -6, lonMax: 3 };
@@ -56,7 +56,6 @@
     resident: 'Resident',
     summer_visitor: 'Summer visitor',
     winter_visitor: 'Winter visitor',
-    passage: 'Passage migrant',
     breeding_season: 'Breeding season only',
     irruptive: 'Irruptive visitor'
   };
@@ -77,6 +76,12 @@
   const ashore = (months, note, opts) => occurrence('breeding_season', months, { ...(opts || {}), note });
   const irruptive = (months, note, opts) => occurrence('irruptive', months, { ...(opts || {}), note });
   const resident = (note, opts) => occurrence('resident', ALL_MONTHS, { ...(opts || {}), note });
+
+  // Habitat qualifiers, for windows where "here" means a particular kind of
+  // place and not just a part of the country.
+  const SEABIRD = { habitats: ['coast', 'water'] };
+  const MOORLAND = { habitats: ['hills', 'grassland'] };
+  const FAST_RIVER = { habitats: ['water'] };
 
   const APR_SEP = [4, 5, 6, 7, 8, 9];
   const APR_AUG = [4, 5, 6, 7, 8];
@@ -133,9 +138,13 @@
     'Ruddy Turnstone': [winter([8, 9, 10, 11, 12, 1, 2, 3, 4, 5], 'A winter and passage shorebird; British Turnstones breed in Greenland and Canada.')],
 
     // --- Seabirds ashore only for the breeding season --------------------
-    'Puffin': [ashore([4, 5, 6, 7], 'Puffins are only on land from April to July. Once the young leave the burrow the whole colony vanishes onto the open Atlantic until spring.')],
-    'Gannet': [ashore([2, 3, 4, 5, 6, 7, 8, 9, 10], 'Gannets hold their colonies from February to October and winter far out at sea.')],
-    'Kittiwake': [ashore([2, 3, 4, 5, 6, 7, 8, 9], 'The one British gull that truly lives at sea — ashore only to nest, and pelagic all winter.')],
+    // These carry a habitat rule as well as a window. The habitat pools
+    // normally keep a Puffin off a suburban street, but pickHabitatBird has a
+    // fallback that draws straight from the regional roster when a pool comes
+    // back empty, and that path has no habitat of its own to check against.
+    'Puffin': [ashore([4, 5, 6, 7], 'Puffins are only on land from April to July. Once the young leave the burrow the whole colony vanishes onto the open Atlantic until spring.', SEABIRD)],
+    'Gannet': [ashore([2, 3, 4, 5, 6, 7, 8, 9, 10], 'Gannets hold their colonies from February to October and winter far out at sea.', SEABIRD)],
+    'Kittiwake': [ashore([2, 3, 4, 5, 6, 7, 8, 9], 'The one British gull that truly lives at sea — ashore only to nest, and pelagic all winter.', SEABIRD)],
 
     // --- Two-season species: same bird, different birds -------------------
     'Chiffchaff': [
@@ -150,8 +159,8 @@
     // --- Range-restricted residents --------------------------------------
     'Golden Eagle': [resident('Almost the entire British population is in the Scottish Highlands and Islands.', { bounds: SCOTLAND })],
     'White-tailed Eagle': [resident('Reintroduced to western Scotland and, more recently, the Isle of Wight.', { bounds: WEST_SCOTLAND_AND_SOLENT })],
-    'Red Grouse': [resident('A bird of heather moorland — northern and western uplands only.', { bounds: NORTH_AND_WEST })],
-    'Dipper': [resident('Dippers need fast, clean, stony rivers, which puts them in the north and west.', { bounds: NORTH_AND_WEST })],
+    'Red Grouse': [resident('A bird of heather moorland — northern and western uplands only.', { bounds: NORTH_AND_WEST, ...MOORLAND })],
+    'Dipper': [resident('Dippers need fast, clean, stony rivers, which puts them in the north and west.', { bounds: NORTH_AND_WEST, ...FAST_RIVER })],
     'Ring-necked Parakeet': [resident('The feral population is centred on London and the south-east.', { bounds: SOUTH_EAST })]
   };
 
@@ -202,24 +211,13 @@
     const set = [...new Set(months.map(Number))].sort((a, b) => a - b);
     if (set.length >= 12) return 'All year';
     if (set.length === 1) return MONTH_NAMES[set[0]];
-    // Find the longest run, wrapping December to January, so [10,11,12,1,2,3]
-    // reads "October to March" rather than a list of six month names.
-    let bestStart = set[0];
-    let bestRun = 1;
-    for (const start of set) {
-      let run = 1;
-      let cursor = start;
-      while (run < set.length) {
-        const next = cursor === 12 ? 1 : cursor + 1;
-        if (!set.includes(next)) break;
-        cursor = next;
-        run++;
-      }
-      if (run > bestRun) { bestRun = run; bestStart = start; }
-    }
-    if (bestRun !== set.length) return set.map(m => MONTH_NAMES[m].slice(0, 3)).join(', ');
-    const end = ((bestStart - 1 + bestRun - 1) % 12) + 1;
-    return MONTH_NAMES[bestStart] + ' to ' + MONTH_NAMES[end];
+    // A set of months is one unbroken run — wrapping December to January —
+    // exactly when a single member lacks its predecessor. That start is then
+    // the front of the run, so [10,11,12,1,2,3] reads "October to March"
+    // rather than a list of six month names.
+    const starts = set.filter(m => !set.includes(m === 1 ? 12 : m - 1));
+    if (starts.length !== 1) return set.map(m => MONTH_NAMES[m].slice(0, 3)).join(', ');
+    return MONTH_NAMES[starts[0]] + ' to ' + MONTH_NAMES[((starts[0] + set.length - 2) % 12) + 1];
   }
 
   // Meteorological seasons, flipped below the equator so an Australian player
@@ -232,13 +230,6 @@
         : [6, 7, 8].includes(m) ? 'summer' : 'autumn';
     if (!southern) return northern;
     return { winter: 'summer', spring: 'autumn', summer: 'winter', autumn: 'spring' }[northern];
-  }
-
-  // Week of year, 1-52.
-  function weekOfYear(date) {
-    const start = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date - start) / 86400000);
-    return Math.max(1, Math.min(52, Math.floor(days / 7) + 1));
   }
 
   // BirdNET counts four weeks to a month, 1-48, and its range filter reads the
@@ -255,70 +246,87 @@
     const month = date.getMonth() + 1;
     const season = seasonForMonth(month, lat);
     return {
-      date,
       month,
-      day: date.getDate(),
-      year: date.getFullYear(),
-      week: weekOfYear(date),
       birdnetWeek: birdnetWeek(date),
       season,
       seasonLabel: season.charAt(0).toUpperCase() + season.slice(1),
-      monthLabel: MONTH_NAMES[month],
-      hemisphere: Number.isFinite(Number(lat)) && Number(lat) < 0 ? 'south' : 'north'
+      monthLabel: MONTH_NAMES[month]
     };
   }
 
+  // The month labels are read far more often than they change — there are 16
+  // distinct ones across the whole table — so each species gets its merged
+  // month set and its label once, at load, instead of per lookup.
+  const PRESENCE_SUMMARY = new Map();
+  Object.values(PRESENCE_BY_REGION).forEach(table => {
+    Object.entries(table).forEach(([species, windows]) => {
+      const months = [...new Set(windows.flatMap(occ => occ.months))].sort((a, b) => a - b);
+      PRESENCE_SUMMARY.set(species, { months, monthsLabel: monthsLabel(months) });
+    });
+  });
+
+  // Nothing mutates the fail-open answer, and most candidates take that branch,
+  // so it is one shared object rather than a fresh one per check.
+  const UNKNOWN_PRESENCE = Object.freeze({
+    species: '', known: false, present: true, status: 'unknown', statusLabel: '',
+    months: Object.freeze(ALL_MONTHS.slice()), monthsLabel: 'All year', note: '',
+    reason: 'no-presence-rule'
+  });
+
+  function monthNow() {
+    return (new Date()).getMonth() + 1;
+  }
+
   /**
-   * Could this bird be seen here, now?
+   * Could this bird be seen here, now? Answers with a bare boolean.
    *
-   * Unknown names come back `known:false, present:true` — this core only ever
+   * This is the spawn-picker's question, asked around a thousand times per map
+   * refresh, so it stops at the answer and builds none of the display text that
+   * presenceReport does. Unknown names come back true — this core only ever
    * subtracts birds it can vouch for being absent.
    */
+  function isPresent(name, context) {
+    const ctx = context || {};
+    const windows = windowsFor(name, ctx.region);
+    if (!windows || !windows.length) return true;
+    const month = Number(ctx.month) || monthNow();
+    return windows.some(occ => windowMatches(occ, month, ctx.lat, ctx.lon, ctx.habitat));
+  }
+
+  /** The same question with the wording a player needs. For UI surfaces only. */
   function presenceReport(name, context) {
     const ctx = context || {};
-    const month = Number(ctx.month) || (new Date()).getMonth() + 1;
     const windows = windowsFor(name, ctx.region);
-    if (!windows || !windows.length) {
-      return { species: cleanName(name), known: false, present: true, status: 'unknown', statusLabel: '', months: ALL_MONTHS.slice(), monthsLabel: 'All year', note: '', reason: 'no-presence-rule' };
-    }
+    if (!windows || !windows.length) return UNKNOWN_PRESENCE;
+    const month = Number(ctx.month) || monthNow();
     const match = windows.find(occ => windowMatches(occ, month, ctx.lat, ctx.lon, ctx.habitat));
-    const allMonths = [...new Set(windows.flatMap(occ => occ.months))].sort((a, b) => a - b);
     const shown = match || windows[0];
-    const monthOnly = windows.some(occ => occ.months.includes(month));
+    const summary = PRESENCE_SUMMARY.get(cleanName(name)) || { months: ALL_MONTHS, monthsLabel: 'All year' };
     return {
       species: cleanName(name),
       known: true,
       present: !!match,
       status: shown.status,
       statusLabel: STATUS_LABELS[shown.status] || shown.status,
-      months: allMonths,
-      monthsLabel: monthsLabel(allMonths),
+      months: summary.months,
+      monthsLabel: summary.monthsLabel,
       note: shown.note || '',
       // "Wrong time of year" and "wrong part of the country" are different
       // facts, and the player deserves to be told which one it is.
-      reason: match ? 'present' : (monthOnly ? 'out-of-range' : 'out-of-season')
+      reason: match ? 'present'
+        : (windows.some(occ => occ.months.includes(month)) ? 'out-of-range' : 'out-of-season')
     };
-  }
-
-  function isPresent(name, context) {
-    return presenceReport(name, context).present;
-  }
-
-  /** Everything on the roster that a player here and now could actually meet. */
-  function filterPresent(names, context) {
-    return (names || []).filter(name => isPresent(name, context));
   }
 
   /** One line for the map: what season it is, and what that means for birds. */
   function seasonSummary(context) {
     const ctx = context || {};
     const now = nowContext(ctx.date, ctx.lat);
+    const lastMonth = now.month === 1 ? 12 : now.month - 1;
     const arrivals = [];
     const departures = [];
-    const table = PRESENCE_BY_REGION[ctx.region] || {};
-    Object.entries(table).forEach(([species, windows]) => {
+    Object.entries(PRESENCE_BY_REGION[ctx.region] || {}).forEach(([species, windows]) => {
       const here = windows.some(occ => occ.months.includes(now.month));
-      const lastMonth = now.month === 1 ? 12 : now.month - 1;
       const wasHere = windows.some(occ => occ.months.includes(lastMonth));
       if (here && !wasHere) arrivals.push(species);
       if (!here && wasHere) departures.push(species);
@@ -332,22 +340,13 @@
 
   return {
     version: 'seasonal-presence-20260729',
-    ALL_MONTHS,
-    MONTH_NAMES,
-    STATUS_LABELS,
-    UK_PRESENCE,
-    AU_PRESENCE,
-    PRESENCE_BY_REGION,
-    knownSpecies,
-    windowsFor,
-    monthsLabel,
-    seasonForMonth,
-    weekOfYear,
-    birdnetWeek,
-    nowContext,
-    presenceReport,
+    // The game's five entry points: one cheap gate, one worded report, the
+    // clock, the map's season line, and the roster for tests.
     isPresent,
-    filterPresent,
-    seasonSummary
+    presenceReport,
+    nowContext,
+    birdnetWeek,
+    seasonSummary,
+    knownSpecies
   };
 });

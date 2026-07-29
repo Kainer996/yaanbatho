@@ -20,7 +20,11 @@
     seeds: { id:'seeds', label:'Seeds', defaultPrep:'husked' },
     fruit_berries: { id:'fruit_berries', label:'Fruit and berries', defaultPrep:'fresh' },
     nectar: { id:'nectar', label:'Nectar', defaultPrep:'fresh' },
-    aquatic_plants: { id:'aquatic_plants', label:'Aquatic or leafy plants', defaultPrep:'floating' },
+    aquatic_plants: { id:'aquatic_plants', label:'Aquatic plants', defaultPrep:'floating' },
+    // BirdFuncDat files pondweed, clover, heather shoots and buds in one
+    // "other plant material" column. Splitting it means a grazing land bird is
+    // offered browse instead of a Pondweed Tangle it would never touch.
+    foliage_buds: { id:'foliage_buds', label:'Leaves, buds and shoots', defaultPrep:'fresh' },
     carrion: { id:'carrion', label:'Carrion', defaultPrep:'fresh' }
   };
 
@@ -190,7 +194,14 @@
     pondweed_tangle: {
       id:'pondweed_tangle', label:'Pondweed Tangle', family:'aquatic_plants',
       preps:['floating','fresh'], nourishment:25,
-      desc:'Aquatic or leafy plant food for dabblers and grazers.'
+      takenBy:'Mallard, Mute Swan, Coot, Canada Goose',
+      desc:'Aquatic plant food for dabblers and divers, floated on the water.'
+    },
+    leaf_bud_browse: {
+      id:'leaf_bud_browse', label:'Leaf & Bud Browse', family:'foliage_buds',
+      preps:['fresh'], nourishment:22,
+      takenBy:'Wood Pigeon, Bullfinch, Red Grouse, Grey Partridge, Pheasant',
+      desc:'Clover, brassica leaves, buds and heather shoots — what a grazing land bird actually crops.'
     },
     suet_cake: {
       id:'suet_cake', label:'Suet Cake', family:'invertebrates',
@@ -232,7 +243,7 @@
   // in scripts/check_bird_diets.py.
   const FOOD_FAMILY_SUPPLY_COST = {
     invertebrates:1, seeds:1, fruit_berries:1, worms:1,
-    aquatic_plants:2, flying_insects:2, molluscs_crustaceans:2, nectar:2,
+    aquatic_plants:2, flying_insects:2, molluscs_crustaceans:2, nectar:2, foliage_buds:1,
     carrion:3, fish:3, small_mammals:4, small_birds:5
   };
 
@@ -282,7 +293,8 @@
     meat:    { pantryKey:'meat',    ingredientId:'field_vole',      prep:'live',     label:'Small prey' },
     carrion: { pantryKey:'carrion', ingredientId:'carrion_scraps',  prep:'fresh',    label:'Carrion' },
     acorns:  { pantryKey:'acorns',  ingredientId:'acorn_handful',   prep:'fresh',    label:'Acorns / nuts' },
-    aquatic: { pantryKey:'aquatic', ingredientId:'pondweed_tangle', prep:'floating', label:'Pondweed' }
+    aquatic: { pantryKey:'aquatic', ingredientId:'pondweed_tangle', prep:'floating', label:'Pondweed' },
+    foliage: { pantryKey:'foliage', ingredientId:'leaf_bud_browse',  prep:'fresh',    label:'Leaves & buds' }
   };
 
   let payloadCache = null;
@@ -359,17 +371,13 @@
       matchMethod: 'source-row',
       certainty: record.c || 'U',
       sourceRow: { specId: record.r },
-      sourceDiet: record.p || {},
-      dietPercentages: record.p || {},
-      birdFuncDat: record.p || {},
-      gameFamilyScores: record.g || {},
       primaryCompatibleFamilies: primary,
       secondaryCompatibleFamilies: secondary,
       refusedCompatibleFamilies: Object.keys(FOOD_FAMILIES).filter(f => !primary.includes(f) && !secondary.includes(f)),
       compatibleIngredientFamilies: primary.concat(secondary.filter(f => !primary.includes(f))),
       prepByFamily: record.prep || {},
       feeding: computeFeedingProfile(primary, secondary),
-      dietCorrection: record.fix ? { applied:true } : null
+      corrected: !!record.fix
     };
   }
 
@@ -615,9 +623,9 @@
     const compatibleFamilies = primaryFamilies.concat(secondaryFamilies.filter(family => !primaryFamilies.includes(family)));
     const method = String(record.matchMethod || 'unmatched');
     const certainty = record.certainty || 'U';
-    const correction = record.dietCorrection || (record.corrected ? { applied:true } : null);
+    const corrected = !!(record.corrected || record.fix);
     const provenance = dietMatchLabel(record) + ' · certainty ' + certainty
-      + (correction ? ' · curated field-guide correction' : '');
+      + (corrected ? ' · curated field-guide correction' : '');
     let education = record.education || '';
     if (method === 'family-fallback') {
       education = education || ('Family-level fallback for ' + (record.family || 'this family') + '; no species-level prey claim is made.');
@@ -644,7 +652,7 @@
       compatibleLabels: dietFamilyLabels(compatibleFamilies),
       education,
       feeding: record.feeding || computeFeedingProfile(primaryFamilies, secondaryFamilies),
-      correction,
+      corrected,
       sourceRowsUsed: Number(record.sourceRowsUsed || (record.sourceRow ? 1 : 0)) || 0,
       sourceScientificName: record.sourceScientificName || (record.sourceRow && record.sourceRow.scientificName) || null,
       sourceCommonName: record.sourceCommonName || (record.sourceRow && record.sourceRow.commonName) || null,

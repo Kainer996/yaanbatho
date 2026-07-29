@@ -2505,6 +2505,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .diet-disclosure-row { display:block; margin-top:2px; }
 .diet-disclosure-row b { color:var(--text); font-weight:900; }
 .diet-disclosure-compatible { color:var(--text3); }
+.diet-feeding-summary { color:var(--text3); font-size:10.5px; line-height:1.32; }
 .diet-feeding-row[data-feeding-tier="omnivore"] { color:#9be8cd; }
 .diet-feeding-row[data-feeding-tier="generalist"] { color:#cfe08a; }
 .diet-feeding-row[data-feeding-tier="selective"] { color:#e8c68a; }
@@ -3592,7 +3593,18 @@ const SPAIN_BOUNDARY = window.BURBZ_SPAIN_BOUNDARY_20260715 || {
 const SEASON = window.BurbzSeasonalPresenceCore || {
   presenceReport() { return { known:false, present:true, reason:'core-missing' }; },
   isPresent() { return true; },
-  nowContext(date) { const d = date instanceof Date ? date : new Date(); return { month:d.getMonth() + 1, week:1, season:'', seasonLabel:'', monthLabel:'' }; },
+  // Same shape the real core returns, so a caller reading .birdnetWeek or
+  // .monthLabel gets a usable value rather than "undefined".
+  nowContext(date) {
+    const d = date instanceof Date ? date : new Date();
+    const month = d.getMonth() + 1;
+    return {
+      date:d, month, day:d.getDate(), year:d.getFullYear(),
+      week:Math.max(1, Math.min(52, Math.floor((d - new Date(d.getFullYear(), 0, 1)) / 604800000) + 1)),
+      birdnetWeek:(month - 1) * 4 + Math.min(3, Math.floor((d.getDate() - 1) / 7)) + 1,
+      season:'', seasonLabel:'', monthLabel:'', hemisphere:''
+    };
+  },
   seasonSummary() { return { seasonLabel:'', monthLabel:'', arrivals:[], departures:[] }; }
 };
 const MERLIN_CORE = window.BurbzMerlinCompanionCore;
@@ -4099,7 +4111,8 @@ const FOODS = {
   meat:     { label: 'Small prey',    emoji: '🐭', desc: 'Voles, small birds. Raptors and owls take live prey.' },
   carrion:  { label: 'Carrion',       emoji: '🦴', desc: 'Scavenged remains. Crows, ravens, rooks, kites.' },
   acorns:   { label: 'Acorns / nuts', emoji: '🌰', desc: 'Acorns, beech mast, hazelnuts. Jays, nuthatches, woodpeckers cache them.' },
-  aquatic:  { label: 'Pondweed',      emoji: '🌿', desc: 'Aquatic plants, snails, dabbled grains. Ducks, swans, geese.' }
+  aquatic:  { label: 'Pondweed',      emoji: '🌿', desc: 'Aquatic plants, snails, dabbled grains. Ducks, swans, geese.' },
+  foliage:  { label: 'Leaves & buds', emoji: '🍃', desc: 'Clover, brassica leaves, buds, heather shoots. Pigeons, bullfinches, grouse, partridges.' }
 };
 const FOOD_DIET_FAMILY = {
   insects:'invertebrates',
@@ -4107,6 +4120,7 @@ const FOOD_DIET_FAMILY = {
   berries:'fruit_berries',
   fruit:'fruit_berries',
   aquatic:'aquatic_plants',
+  foliage:'foliage_buds',
   meat:'small_mammals',
   acorns:'seeds',
   suet:'invertebrates'
@@ -4299,35 +4313,60 @@ function dietDisclosureFor(subject) {
   };
 }
 
-// How hard a bird is to keep fed, from the breadth of what it will eat. The
-// diet core owns the rule; this is the fallback for when it has not loaded.
+// How hard a bird is to keep fed, from the breadth of what it will eat.
+// BurbzDietHungerCore owns this rule and every live caller reaches it there —
+// this ladder mirrors its thresholds for the one case the core cannot serve,
+// which is the core not having loaded at all.
+const FEEDING_TIER_FALLBACK = [
+  { min:8, tier:'omnivore',   label:'Eats almost anything', difficulty:1 },
+  { min:5, tier:'generalist', label:'Wide diet',            difficulty:2 },
+  { min:3, tier:'selective',  label:'Particular',           difficulty:3 },
+  { min:0, tier:'specialist', label:'Specialist',           difficulty:4 }
+];
+
+function dietFoodFamilyCount() {
+  const families = dietHungerCore() && dietHungerCore().FOOD_FAMILIES;
+  return families ? Object.keys(families).length : FEEDING_TIER_FALLBACK_FAMILY_COUNT;
+}
+
+// The size of BurbzDietHungerCore.FOOD_FAMILIES, for when it is unreachable.
+const FEEDING_TIER_FALLBACK_FAMILY_COUNT = 12;
+
 function feedingProfileFor(primaryFamilies, secondaryFamilies) {
-  const core = dietHungerCore();
-  if (core && typeof core.computeFeedingProfile === 'function') {
-    return core.computeFeedingProfile(primaryFamilies || [], secondaryFamilies || []);
-  }
   const breadth = new Set([...(primaryFamilies || []), ...(secondaryFamilies || [])]).size;
-  if (breadth >= 8) return { tier:'omnivore', label:'Eats almost anything', difficulty:1, breadth, omnivore:true, summary:'' };
-  if (breadth >= 5) return { tier:'generalist', label:'Wide diet', difficulty:2, breadth, omnivore:false, summary:'' };
-  if (breadth >= 3) return { tier:'selective', label:'Particular', difficulty:3, breadth, omnivore:false, summary:'' };
-  return { tier:'specialist', label:'Specialist', difficulty:4, breadth, omnivore:false, summary:'' };
+  const tier = FEEDING_TIER_FALLBACK.find(row => breadth >= row.min);
+  return { ...tier, breadth, familyCount:dietFoodFamilyCount(), omnivore:tier.tier === 'omnivore', summary:'' };
 }
 
 function feedingProfileForSubject(subject) {
   const core = dietHungerCore();
   if (core && typeof core.feedingProfileForSpecies === 'function') return core.feedingProfileForSpecies(subject);
-  const d = dietDisclosureFor(subject);
-  return d.feeding || feedingProfileFor(d.primaryFamilies, d.secondaryFamilies);
+  return dietDisclosureFor(subject).feeding;
 }
 
-// One line the player can act on: how much trouble this bird will be to keep
-// fed, before they commit to taking it on.
+// How much trouble this bird will be to keep fed, said plainly, before the
+// player commits to taking it on. `easiestPrimarySupplyCost` is what turns the
+// tier into advice: a bird whose cheapest main meal is seed can be kept from
+// the starting pantry, and one that needs live prey cannot.
+const FEEDING_SUPPLY_ADVICE = {
+  1: 'and its main meals come straight off the pantry shelf',
+  2: 'though its main meals take some gathering',
+  3: 'and its main meals mean fish or carrion runs',
+  4: 'and it needs live prey brought in',
+  5: 'and it needs live bird prey — the hardest supply line in the game'
+};
+
 function feedingDifficultyLineFor(subject) {
-  const feeding = feedingProfileForSubject(subject) || {};
-  const detail = feeding.tier === 'omnivore'
-    ? 'eats across ' + feeding.breadth + ' of ' + (feeding.familyCount || 12) + ' food families, so almost anything in the larder will do'
-    : 'takes ' + feeding.breadth + ' of ' + (feeding.familyCount || 12) + ' food families';
-  return { feeding, detail };
+  const feeding = feedingProfileForSubject(subject) || feedingProfileFor([], []);
+  const of = feeding.breadth + ' of ' + feeding.familyCount + ' food families';
+  const supply = FEEDING_SUPPLY_ADVICE[feeding.easiestPrimarySupplyCost] || '';
+  return {
+    feeding,
+    detail: (feeding.tier === 'omnivore'
+      ? 'eats across ' + of + ', so almost anything in the larder will do'
+      : 'takes ' + of) + (supply ? ' ' + supply : ''),
+    summary: feeding.summary || ''
+  };
 }
 
 function renderDietDisclosureHTML(subject, surface, options = {}) {
@@ -4338,13 +4377,14 @@ function renderDietDisclosureHTML(subject, surface, options = {}) {
   const cls = 'diet-disclosure' + (options.compact ? ' compact' : '') + (options.className ? ' ' + options.className : '');
   const title = options.title || 'Diet guidance';
   const note = options.note || d.education || '';
-  const { feeding, detail } = feedingDifficultyLineFor(subject);
+  const { feeding, detail, summary } = feedingDifficultyLineFor(subject);
   return '<div class="' + cls + '" data-diet-surface="' + escapeHtml(surface || 'diet-guidance') + '" data-diet-guidance="' + escapeHtml(options.guidanceKey || surface || 'diet-guidance') + '" data-diet-primary="' + escapeHtml(primary) + '" data-diet-secondary="' + escapeHtml(secondary) + '" data-compatible-foods="' + escapeHtml((d.compatibleFamilies || []).join(',')) + '" data-diet-provenance="' + escapeHtml(d.provenance || '') + '" data-diet-fallback="' + escapeHtml(d.fallbackType || d.matchMethod || '') + '" data-feeding-tier="' + escapeHtml(feeding.tier || '') + '" data-feeding-difficulty="' + escapeHtml(String(feeding.difficulty || '')) + '" data-feeding-breadth="' + escapeHtml(String(feeding.breadth || 0)) + '">' +
     '<div class="diet-disclosure-title">' + escapeHtml(title) + '</div>' +
     '<span class="diet-disclosure-row"><b>Primary:</b> ' + escapeHtml(primary) + '</span>' +
     '<span class="diet-disclosure-row"><b>Secondary:</b> ' + escapeHtml(secondary) + '</span>' +
     (options.compatible === false ? '' : '<span class="diet-disclosure-row diet-disclosure-compatible"><b>Compatible:</b> ' + escapeHtml(compatible) + '</span>') +
     '<span class="diet-disclosure-row diet-feeding-row" data-feeding-tier="' + escapeHtml(feeding.tier || '') + '"><b>Feeding:</b> ' + escapeHtml(feeding.label || '') + ' — ' + escapeHtml(detail) + '</span>' +
+    (summary ? '<span class="diet-disclosure-row diet-feeding-summary">' + escapeHtml(summary) + '</span>' : '') +
     '<div class="diet-disclosure-source">Source: ' + escapeHtml(d.provenance || 'Fallback field-guide rule') + '</div>' +
     (note ? '<div class="diet-disclosure-note">' + escapeHtml(note) + '</div>' : '') +
   '</div>';
@@ -4354,8 +4394,8 @@ function renderDietDisclosureHTML(subject, surface, options = {}) {
 // Meat, fish and carrion used to restock at half the rate of seed and sit at
 // a cap of six, which starved the birds of prey — a hawk eats every day, so
 // the carnivore shelves now hold and refill like the rest of the pantry.
-const DEFAULT_PANTRY = { seeds: 6, suet: 4, insects: 5, worms: 4, berries: 4, fruit: 4, fish: 4, flying: 3, meat: 5, carrion: 4, acorns: 4, aquatic: 4 };
-const PANTRY_CAP = { seeds: 12, suet: 10, insects: 12, worms: 10, berries: 10, fruit: 10, fish: 10, flying: 8, meat: 12, carrion: 10, acorns: 10, aquatic: 10 };
+const DEFAULT_PANTRY = { seeds: 6, suet: 4, insects: 5, worms: 4, berries: 4, fruit: 4, fish: 4, flying: 3, meat: 5, carrion: 4, acorns: 4, aquatic: 4, foliage: 4 };
+const PANTRY_CAP = { seeds: 12, suet: 10, insects: 12, worms: 10, berries: 10, fruit: 10, fish: 10, flying: 8, meat: 12, carrion: 10, acorns: 10, aquatic: 10, foliage: 10 };
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -16346,30 +16386,17 @@ function currentSeasonContext(lat = null) {
   return SEASON.nowContext(new Date(), at);
 }
 
-function speciesPresenceReport(species, region, lat, lon, month, habitat) {
+// The same question asked from the player's current position, worded for the
+// UI. Names reaching here come from a card or a preview, so they are resolved
+// against the roster first; the spawn gate skips that, because the pool names
+// it works from ARE the roster's own names.
+function speciesPresenceHere(species) {
+  const region = liveMapLastPosition ? mapRegionForCoords(liveMapLastPosition.lat, liveMapLastPosition.lon) : null;
   return SEASON.presenceReport(canonicalSpeciesName(species), {
     region,
-    lat,
-    lon,
-    habitat: habitat || '',
-    month: Number(month) || currentSeasonContext(lat).month
+    lat: liveMapLastPosition && liveMapLastPosition.lat,
+    lon: liveMapLastPosition && liveMapLastPosition.lon
   });
-}
-
-function speciesPresentNow(species, region, lat, lon, month, habitat) {
-  return speciesPresenceReport(species, region, lat, lon, month, habitat).present;
-}
-
-// The same question asked from the player's current position, for the UI:
-// what is this bird's season, and is it here at the moment?
-function speciesPresenceHere(species, month = null) {
-  const region = liveMapLastPosition ? mapRegionForCoords(liveMapLastPosition.lat, liveMapLastPosition.lon) : null;
-  return speciesPresenceReport(
-    species, region,
-    liveMapLastPosition && liveMapLastPosition.lat,
-    liveMapLastPosition && liveMapLastPosition.lon,
-    month, ''
-  );
 }
 
 function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, month = new Date().getMonth() + 1) {
@@ -16383,9 +16410,9 @@ function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, m
   // legacy roster the expansions never covered. A Swift over a January street
   // or a Fieldfare in July is a bird the player could not possibly be looking
   // at, so it never gets as far as being drawn.
-  const inSeasonHere = species => speciesPresentNow(species, region, lat, lon, month, habitat);
+  const seasonContext = { region, lat, lon, habitat, month };
   const eligible = species => {
-    if (!inSeasonHere(species)) return false;
+    if (!SEASON.isPresent(species, seasonContext)) return false;
     if (NATIONAL.isEligible(region, species, lat, lon, month, habitat)) return true;
     if (NATIONAL.names.some(name => normaliseSpeciesKey(name) === normaliseSpeciesKey(species))) return false;
     if (region === 'uk') return UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat) && UK4.isEligible(species, lat, lon, month, habitat);

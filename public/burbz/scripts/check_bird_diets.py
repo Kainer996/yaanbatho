@@ -15,6 +15,7 @@ import hashlib
 import io
 import json
 import re
+import subprocess
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -106,6 +107,20 @@ GAME_BIRD_SOURCE_COMMON_NAMES = {
 # "Black-billed Magpie", so the common name alone cannot settle it either.
 GAME_BIRD_SOURCE_SCIENTIFIC_NAMES = {
     "magpie": "Pica pica",
+    # BirdFuncDat is a 2014 table, so species that taxonomy has split since then
+    # have no row of their own. Each maps to the parent taxon it was split out
+    # of — the row whose trait measurements actually included these birds.
+    "hooded crow": "Corvus corone",
+    "tundra bean goose": "Anser fabalis",
+    "cabot's tern": "Sterna sandvicensis",
+    "stejneger's stonechat": "Saxicola torquatus",
+    "arctic redpoll": "Carduelis hornemanni",
+    "crested tern": "Sterna bergii",
+    "plumed egret": "Mesophoyx intermedia",
+    "eastern cattle-egret": "Bubulcus ibis",
+    "little heron": "Butorides striata",
+    "tasmanian nativehen": "Gallinula mortierii",
+    "sahul sunbird": "Nectarinia jugularis",
 }
 
 DIET_COLUMNS = [
@@ -196,9 +211,14 @@ FOOD_FAMILIES = {
         "defaultPrep": "fresh",
     },
     "aquatic_plants": {
-        "label": "Aquatic or leafy plants",
+        "label": "Aquatic plants",
         "sourceColumns": ["Diet-PlantO"],
         "defaultPrep": "floating",
+    },
+    "foliage_buds": {
+        "label": "Leaves, buds and shoots",
+        "sourceColumns": ["Diet-PlantO"],
+        "defaultPrep": "fresh",
     },
     "carrion": {
         "label": "Carrion",
@@ -208,13 +228,6 @@ FOOD_FAMILIES = {
 }
 
 FAMILY_HINTS = {
-    "aerial_insectivore": {
-        "Apodidae",
-        "Hemiprocnidae",
-        "Hirundinidae",
-        "Caprimulgidae",
-        "Aegothelidae",
-    },
     "shore_invertebrate": {
         "Scolopacidae",
         "Charadriidae",
@@ -266,9 +279,13 @@ AERIAL_HAWKER_FAMILIES = {
     "Nyctibiidae",
     "Meropidae",
 }
-AERIAL_HAWKER_NAME_HINT = (
-    r"\b(swift|swiftlet|swallow|martin|nightjar|nighthawk|bee-?eater|flycatcher)\b"
-)
+
+# The one term the family sets cannot express. Muscicapidae holds flycatchers
+# AND the European Robin, Redstart, Wheatear and Stonechat, which are ground
+# feeders that must keep their worms — so the family is no use and the name is.
+# Every other aerial hawker is covered by the families above; adding their names
+# here too would only catch a Swift Parrot and a Swallow-tailed Kite by mistake.
+AERIAL_HAWKER_NAME_HINT = r"\bflycatcher\b"
 
 # Worms, flying insects and shellfish are claims about a particular habitat, so
 # the game only makes them when a real share of the bird's foraging happens
@@ -294,7 +311,6 @@ INVERTEBRATE_SUBFAMILY_MIN_SHARE = 0.25
 DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
     # --- Corvids: omnivores whose fruit and grain columns read zero ---------
     "Corvus corone": {
-        "promote": ["carrion"],
         "add": ["fruit_berries", "molluscs_crustaceans", "fish"],
         "reason": (
             "A Carrion Crow is one of the most catholic feeders in Britain: "
@@ -308,16 +324,6 @@ DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
         "add": ["fruit_berries"],
         "reason": "Rooks work stubble and orchards as well as pasture; the source records no fruit column at all.",
     },
-    "Pica pica": {
-        "promote": ["invertebrates"],
-        "add": ["fruit_berries", "seeds"],
-        "reason": "A Magpie lives on invertebrates through the summer and turns to carrion, scraps, fruit and grain the rest of the year — beetles and leatherjackets are a main meal, not a side one.",
-    },
-    "Garrulus glandarius": {
-        "promote": ["seeds"],
-        "reason": "The Jay is an acorn specialist — it caches thousands each autumn and plants oak woods doing it. Acorns are a main meal, not a side dish.",
-    },
-    # --- Large gulls: the textbook "eats almost anything" birds -------------
     "Larus argentatus": {
         "add": ["seeds", "fruit_berries", "aquatic_plants"],
         "reason": (
@@ -381,14 +387,6 @@ DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
         "promote": ["invertebrates", "worms"],
         "reason": "Leatherjackets and lawn grubs are the food a Starling is built for — that open-bill probe exists to lever turf apart. Fruit matters, but it is not the whole story.",
     },
-    "Turdus merula": {
-        "promote": ["fruit_berries"],
-        "reason": "A Blackbird spends half the year on worms and half on berries and windfall fruit; both are main meals, not one and a side.",
-    },
-    "Turdus viscivorus": {
-        "promote": ["fruit_berries"],
-        "reason": "The Mistle Thrush is named for the berries it eats. A single bird will hold one laden holly or rowan against all comers for a whole winter — that is a main meal by any measure.",
-    },
     "Buteo buteo": {
         "add": ["carrion", "worms", "invertebrates"],
         "reason": "The source gives the Common Buzzard nothing but vertebrate prey. Buzzards walk fields for earthworms in wet weather and are habitual carrion feeders — that is how they get through winter.",
@@ -405,19 +403,6 @@ DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
         "add": ["seeds"],
         "reason": "Canada Geese graze grass and leaves but also feed heavily on grain and grass seed.",
     },
-    "Columba palumbus": {
-        "promote": ["seeds"],
-        "reason": "Wood Pigeons strip clover and brassica leaves, but grain and beech mast are just as much a main meal.",
-    },
-    "Pyrrhula pyrrhula": {
-        "promote": ["seeds"],
-        "reason": "Bullfinches are bud and seed feeders — the heavy bill is a seed-crusher.",
-    },
-    # --- Diet-PlantO swamping the seed-eaters ------------------------------
-    # "Other plant material" — leaves, buds, shoots, roots — is the game's
-    # leafy/aquatic-plant family, and for several seed specialists the source
-    # scores it above Diet-Seed. Left alone the game would ask a player to feed
-    # a Crossbill pondweed as its main meal.
     "Loxia curvirostra": {
         "promote": ["seeds"],
         "demote": ["aquatic_plants"],
@@ -428,10 +413,6 @@ DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
         "demote": ["aquatic_plants"],
         "reason": "The source records no seed at all for the Northern Cardinal, on low certainty. That heavy conical bill is a seed-cracker, and sunflower hearts are what brings cardinals to a feeder.",
     },
-    "Perdix perdix": {
-        "promote": ["seeds"],
-        "reason": "Grey Partridges live on weed seed and spilt grain, with leaves alongside; only the chicks are true insect feeders.",
-    },
     "Alectoris rufa": {
         "promote": ["seeds"],
         "reason": "Red-legged Partridges are seed and grain feeders that also graze leaves and shoots.",
@@ -439,20 +420,6 @@ DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
     "Psittacula krameri": {
         "promote": ["seeds"],
         "reason": "Ring-necked Parakeets raid seed, grain and nuts as hard as they strip fruit — a garden feeder empties fast when they find it.",
-    },
-    "Glossopsitta concinna": {
-        "promote": ["nectar"],
-        "reason": "A lorikeet's brush-tipped tongue is built for blossom. Nectar is the main meal, with lerps, fruit and seed around it.",
-    },
-
-    # --- Other single-food misfiles ---------------------------------------
-    "Turdus pilaris": {
-        "promote": ["fruit_berries"],
-        "reason": "Fieldfares arrive for the winter berry crop and strip hawthorn and rowan flock by flock. Berries are a main meal, not a side one.",
-    },
-    "Gallinago gallinago": {
-        "promote": ["worms"],
-        "reason": "A Snipe's bill is a worm probe with a flexible tip, worked into soft mud up to the hilt. Earthworms are the mainstay.",
     },
     "Tachybaptus ruficollis": {
         "add": ["fish"],
@@ -468,6 +435,42 @@ DIET_CORRECTIONS: dict[str, dict[str, Any]] = {
         "add": ["small_birds"],
         "reason": "Kookaburras take nestlings and small birds as well as the insects, lizards and snakes the source records.",
     },
+}
+
+# Prose worth keeping for its own sake, where the derived families are already
+# right. These are field-guide notes, NOT corrections — a record carrying one
+# is still pure source-derived data and must not claim otherwise.
+SPECIES_NOTES: dict[str, str] = {
+    "Pica pica": (
+        "A Magpie lives on invertebrates through the summer and turns to carrion, scraps, fruit and grain the rest of the year — beetles and leatherjackets are a main meal, not a side one."
+    ),
+    "Garrulus glandarius": (
+        "The Jay is an acorn specialist — it caches thousands each autumn and plants oak woods doing it. Acorns are a main meal, not a side dish."
+    ),
+    "Turdus merula": (
+        "A Blackbird spends half the year on worms and half on berries and windfall fruit; both are main meals, not one and a side."
+    ),
+    "Turdus viscivorus": (
+        "The Mistle Thrush is named for the berries it eats. A single bird will hold one laden holly or rowan against all comers for a whole winter — that is a main meal by any measure."
+    ),
+    "Columba palumbus": (
+        "Wood Pigeons strip clover and brassica leaves, but grain and beech mast are just as much a main meal."
+    ),
+    "Pyrrhula pyrrhula": (
+        "Bullfinches are bud and seed feeders — the heavy bill is a seed-crusher."
+    ),
+    "Perdix perdix": (
+        "Grey Partridges live on weed seed and spilt grain, with leaves alongside; only the chicks are true insect feeders."
+    ),
+    "Glossopsitta concinna": (
+        "A lorikeet's brush-tipped tongue is built for blossom. Nectar is the main meal, with lerps, fruit and seed around it."
+    ),
+    "Turdus pilaris": (
+        "Fieldfares arrive for the winter berry crop and strip hawthorn and rowan flock by flock. Berries are a main meal, not a side one."
+    ),
+    "Gallinago gallinago": (
+        "A Snipe's bill is a worm probe with a flexible tip, worked into soft mud up to the hilt. Earthworms are the mainstay."
+    ),
 }
 
 MERLIN_CONTEXT = (
@@ -521,35 +524,37 @@ def clean_percent(value: float) -> int | float:
     return rounded
 
 
+def columns_of(row: dict[str, Any] | None, columns: list[str], empty: float = 0.0) -> dict[str, float]:
+    """One row's percentages for the named columns."""
+    return {key: percent(row, key) if row else empty for key in columns}
+
+
+def mean_columns(rows: list[dict[str, str]], columns: list[str]) -> dict[str, float]:
+    """The mean of the named columns across rows — the family-fallback case."""
+    if not rows:
+        return {key: 0.0 for key in columns}
+    return {key: sum(percent(row, key) for row in rows) / len(rows) for key in columns}
+
+
 def diet_percentages(row: dict[str, Any] | None) -> dict[str, int | float] | None:
     if not row:
         return None
-    return {key: clean_percent(percent(row, key)) for key in DIET_COLUMNS}
+    return {key: clean_percent(value) for key, value in columns_of(row, DIET_COLUMNS).items()}
 
 
 def aggregate_percentages(rows: list[dict[str, str]]) -> dict[str, int | float]:
     if not rows:
         return {key: 0 for key in DIET_COLUMNS}
-    return {
-        key: clean_percent(sum(percent(row, key) for row in rows) / len(rows))
-        for key in DIET_COLUMNS
-    }
+    return {key: clean_percent(value) for key, value in mean_columns(rows, DIET_COLUMNS).items()}
 
 
 def foraging_strata(row: dict[str, Any] | None) -> dict[str, float]:
     """The row's ForStrat percentages: where this bird takes its food."""
-    if not row:
-        return {key: 0.0 for key in FORSTRAT_COLUMNS}
-    return {key: percent(row, key) for key in FORSTRAT_COLUMNS}
+    return columns_of(row, FORSTRAT_COLUMNS)
 
 
 def aggregate_strata(rows: list[dict[str, str]]) -> dict[str, float]:
-    if not rows:
-        return {key: 0.0 for key in FORSTRAT_COLUMNS}
-    return {
-        key: sum(percent(row, key) for row in rows) / len(rows)
-        for key in FORSTRAT_COLUMNS
-    }
+    return mean_columns(rows, FORSTRAT_COLUMNS)
 
 
 def row_context(row: dict[str, Any] | None, profile: dict[str, Any] | None) -> dict[str, str]:
@@ -574,16 +579,48 @@ def add_score(scores: dict[str, float], family: str, value: float) -> None:
 def is_aerial_hawker(ctx: dict[str, str]) -> bool:
     return (
         ctx["family"] in AERIAL_HAWKER_FAMILIES
-        or ctx["family"] in FAMILY_HINTS["aerial_insectivore"]
         or has_name_hint(ctx, AERIAL_HAWKER_NAME_HINT)
     )
 
 
-def legacy_invertebrate_shares(ctx: dict[str, str]) -> dict[str, float]:
-    """Taxonomic fallback for the handful of rows with no ForStrat evidence."""
-    if ctx["family"] in SHELLFISH_FROM_GROUND_FAMILIES or has_name_hint(ctx, r"\b(oystercatcher|curlew|sandpiper|plover|godwit|turnstone|knot|snipe|duck|teal|wigeon|goose|swan|gull|tern|heron|egret|coot|moorhen|rail)\b"):
-        return {"worms": 0.6, "molluscs_crustaceans": 1.0, "invertebrates": 1.0}
-    return {"worms": 0.5, "invertebrates": 1.0}
+def strata_totals(strata: dict[str, float]) -> dict[str, float]:
+    """Foraging effort grouped into the layers the food families care about."""
+    water = strata.get("ForStrat-watbelowsurf", 0.0) + strata.get("ForStrat-wataroundsurf", 0.0)
+    ground = strata.get("ForStrat-ground", 0.0)
+    aerial = strata.get("ForStrat-aerial", 0.0)
+    vegetation = (
+        strata.get("ForStrat-understory", 0.0)
+        + strata.get("ForStrat-midhigh", 0.0)
+        + strata.get("ForStrat-canopy", 0.0)
+    )
+    return {
+        "water": water,
+        "ground": ground,
+        "aerial": aerial,
+        "vegetation": vegetation,
+        "total": water + ground + aerial + vegetation,
+    }
+
+
+def plant_shares(strata: dict[str, float]) -> dict[str, float]:
+    """Split Diet-PlantO between pondweed and leaves, buds and shoots.
+
+    "Other plant material" is one column covering pondweed, clover, brassica
+    leaves, heather shoots, buds, roots and mast, and the game had it all
+    landing on the aquatic-plant family — whose only ingredient is a Pondweed
+    Tangle. That is right for a Mallard and absurd for a Wild Turkey.
+
+    Same evidence as the invertebrate split: a bird that forages in or on water
+    gets the pondweed, and a bird that does not gets browse instead.
+    """
+    layers = strata_totals(strata)
+    if layers["total"] <= 0:
+        return {"foliage_buds": 1.0}
+    water_share = layers["water"] / layers["total"]
+    return {
+        "aquatic_plants": water_share,
+        "foliage_buds": 1.0 - water_share,
+    }
 
 
 def invertebrate_shares(ctx: dict[str, str], strata: dict[str, float]) -> dict[str, float]:
@@ -606,17 +643,16 @@ def invertebrate_shares(ctx: dict[str, str], strata: dict[str, float]) -> dict[s
         # birds, so worms and shellfish score nothing at all.
         return {"flying_insects": 1.0, "invertebrates": 0.2}
 
-    total = sum(max(0.0, strata.get(key, 0.0)) for key in FORSTRAT_COLUMNS)
+    layers = strata_totals(strata)
+    total = layers["total"]
     if total <= 0:
-        return legacy_invertebrate_shares(ctx)
+        # No ForStrat evidence at all. Every one of the 9,993 pinned source rows
+        # has some, so this is only reachable if the source is ever repointed;
+        # claim nothing beyond a general invertebrate feed.
+        return {"invertebrates": 1.0}
 
-    water = strata["ForStrat-watbelowsurf"] + strata["ForStrat-wataroundsurf"]
-    ground = strata["ForStrat-ground"]
-    aerial = strata["ForStrat-aerial"]
-    vegetation = (
-        strata["ForStrat-understory"]
-        + strata["ForStrat-midhigh"]
-        + strata["ForStrat-canopy"]
+    water, ground, aerial, vegetation = (
+        layers["water"], layers["ground"], layers["aerial"], layers["vegetation"]
     )
 
     # A mudflat probe and a lawn probe are both "ground" to BirdFuncDat. For
@@ -687,18 +723,29 @@ def game_family_scores(
     add_score(scores, "fruit_berries", float(source_percentages.get("Diet-Fruit") or 0))
     add_score(scores, "nectar", float(source_percentages.get("Diet-Nect") or 0))
     add_score(scores, "seeds", float(source_percentages.get("Diet-Seed") or 0))
-    add_score(scores, "aquatic_plants", float(source_percentages.get("Diet-PlantO") or 0))
+
+    plant_o = float(source_percentages.get("Diet-PlantO") or 0)
+    for family, share in plant_shares(strata or {}).items():
+        add_score(scores, family, plant_o * min(1.0, max(0.0, share)))
+
     return {key: clean_percent(value) for key, value in sorted(scores.items()) if value > 0}
+
+
+# A staple is a staple. Scoring 30% of a bird's diet next to something on 40%
+# does not make it a side dish, and treating only the exact top scorer as a full
+# meal is what made a Blackbird's berries and a Jay's acorns count for half.
+PRIMARY_BAND = 0.6
 
 
 def primary_secondary(scores: dict[str, int | float]) -> tuple[list[str], list[str]]:
     if not scores:
         return [], ["invertebrates", "seeds", "fruit_berries"]
     max_score = max(float(value) for value in scores.values())
+    threshold = max_score * PRIMARY_BAND
     primary = sorted(
         family
         for family, value in scores.items()
-        if float(value) == max_score and float(value) > 0
+        if float(value) >= threshold and float(value) > 0
     )
     secondary = sorted(
         family
@@ -824,6 +871,8 @@ def education_text(
         return MERLIN_CONTEXT
     if correction and correction.get("reason"):
         return correction["reason"]
+    if scientific in SPECIES_NOTES:
+        return SPECIES_NOTES[scientific]
     primary_text = ", ".join(primary) if primary else "no precise primary family"
     secondary_text = ", ".join(secondary) if secondary else "no secondary families"
     if method == "family-fallback":
@@ -926,7 +975,6 @@ def record_from_parts(
             "sourceSha256": EXPECTED_SHA256,
             "sourceLicense": SOURCE_METADATA["license"],
             "sourceDoi": SOURCE_METADATA["doi"],
-            "dietCorrection": correction,
         },
     }
 
@@ -1161,19 +1209,62 @@ RUNTIME_RECORD_FIELDS = (
 # The feeding rating is a pure function of the compatible families, and the
 # runtime recomputes it from the same rule — shipping it would put a quarter of
 # a megabyte of derived text on a phone for nothing. It stays in the full JSON,
-# where it is worth reading. `dietCorrection` ships as a bare flag for the same
+# where it is worth reading. The correction ships as a bare `fix` flag for the same
 # reason: the correction's reasoning already travels as the record's education
 # line, so the runtime only needs to know that a correction was applied.
+
+
+# The regional expansions append their own species to REGION_AREA_SPECIES at
+# runtime, so their names never appear in index.html's literal. Each exports a
+# `species` array carrying both the display name and the scientific name.
+EXPANSION_MODULES = (
+    "uk_bird_expansion_50.js",
+    "uk_bird_expansion_2.js",
+    "uk_bird_expansion_3.js",
+    "uk_bird_expansion_4.js",
+    "au_bird_expansion.js",
+    "au_bird_expansion_2.js",
+)
+
+
+def expansion_species() -> dict[str, str]:
+    """Display name -> scientific name for every expansion species.
+
+    Read through node rather than by regex: the six modules store their rows in
+    three different shapes, and asking each one for its own `species` export is
+    the only reading that cannot drift from what the game loads.
+    """
+    script = (
+        "const out = {};"
+        "for (const f of " + json.dumps(list(EXPANSION_MODULES)) + ") {"
+        "  const m = require('./' + f);"
+        "  for (const s of (m.species || [])) {"
+        "    const sci = s.scientific || s.scientificName;"
+        "    if (s.name && sci) out[s.name] = sci;"
+        "  }"
+        "}"
+        "process.stdout.write(JSON.stringify(out));"
+    )
+    result = subprocess.run(
+        ["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=120
+    )
+    if result.returncode != 0:
+        raise SystemExit(
+            "Could not read the bird expansions through node — node is required to "
+            "generate diet records.\n" + result.stderr
+        )
+    return json.loads(result.stdout)
 
 
 def game_wild_bird_names() -> list[str]:
     """Every bird name the game can put in front of a player.
 
     WILD_BIRDS is the legacy scan catalogue; REGION_AREA_SPECIES is the closed
-    whitelist the map spawns and the Area Birds panel draw from. Both need a
-    real diet: a name that reaches the runtime without one falls through to the
-    conservative fallback, and a Kittiwake that refuses fish while accepting
-    berries is worse than no record at all.
+    whitelist the map spawns and the Area Birds panel draw from, and the
+    expansions push another 240 names into it at load. All of them need a real
+    diet: a name that reaches the runtime without one falls through to the
+    conservative fallback, and a Nightjar that refuses flying insects while
+    accepting seed is worse than no record at all.
     """
     text = INDEX_PATH.read_text(encoding="utf-8")
     match = re.search(r"const WILD_BIRDS\s*=\s*\[(.*?)\n\];", text, flags=re.S)
@@ -1186,12 +1277,26 @@ def game_wild_bird_names() -> list[str]:
         raise SystemExit("Could not parse REGION_AREA_SPECIES from index.html")
     names += re.findall(r"'((?:[^'\\]|\\.)*)'", area.group(1))
 
+    names += list(expansion_species())
+
     cleaned = [name.replace("\\'", "'").split("(")[0].strip() for name in names]
     return list(dict.fromkeys(name for name in cleaned if name))
 
 
+# A phone needs the verdict, not the arithmetic behind it. The raw percentages
+# and the intermediate family scores stay in the full JSON, where they are the
+# audit trail; the runtime only ever reads the resulting families and preps.
+RUNTIME_SUPPLEMENT_FIELDS = ("i", "n", "s", "f", "c", "r", "primary", "secondary", "prep", "fix")
+
+
+def runtime_supplement(source: dict[str, Any], game_name: str) -> dict[str, Any]:
+    supplement = {key: source[key] for key in RUNTIME_SUPPLEMENT_FIELDS if key in source}
+    supplement["a"] = [game_name]
+    return supplement
+
+
 def runtime_source_records(payload: dict[str, Any], runtime_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Keep only BirdFuncDat rows needed by legacy in-page catalogue names."""
+    """Keep only the BirdFuncDat rows the in-page and expansion rosters need."""
     indexed = set()
     for record in runtime_records:
         for key in (
@@ -1206,6 +1311,10 @@ def runtime_source_records(payload: dict[str, Any], runtime_records: list[dict[s
     source_by_scientific = {norm(row.get("s")): row for row in payload.get("sourceRecords", [])}
     manual_common = {norm(key): value for key, value in GAME_BIRD_SOURCE_COMMON_NAMES.items()}
     manual_scientific = {norm(key): value for key, value in GAME_BIRD_SOURCE_SCIENTIFIC_NAMES.items()}
+    # The expansions carry their own scientific names, which pin a source row
+    # exactly and skip the vernacular guessing below entirely.
+    for name, scientific in expansion_species().items():
+        manual_scientific.setdefault(norm(name), scientific)
     supplements: list[dict[str, Any]] = []
     unresolved: list[str] = []
     for game_name in game_wild_bird_names():
@@ -1214,9 +1323,7 @@ def runtime_source_records(payload: dict[str, Any], runtime_records: list[dict[s
             continue
         pinned = source_by_scientific.get(norm(manual_scientific.get(game_key)))
         if pinned:
-            supplement = dict(pinned)
-            supplement["a"] = [game_name]
-            supplements.append(supplement)
+            supplements.append(runtime_supplement(pinned, game_name))
             indexed.add(game_key)
             continue
         candidates = [
@@ -1231,9 +1338,7 @@ def runtime_source_records(payload: dict[str, Any], runtime_records: list[dict[s
         if not source:
             unresolved.append(game_name)
             continue
-        supplement = dict(source)
-        supplement["a"] = [game_name]
-        supplements.append(supplement)
+        supplements.append(runtime_supplement(source, game_name))
         indexed.add(game_key)
     if unresolved:
         raise SystemExit("No compact BirdFuncDat runtime mapping for WILD_BIRDS: " + ", ".join(unresolved))
@@ -1243,7 +1348,7 @@ def runtime_source_records(payload: dict[str, Any], runtime_records: list[dict[s
 def runtime_record(record: dict[str, Any]) -> dict[str, Any]:
     compact_record = {key: record[key] for key in RUNTIME_RECORD_FIELDS if key in record}
     if record.get("dietCorrection"):
-        compact_record["corrected"] = 1
+        compact_record["fix"] = 1
     return compact_record
 
 
