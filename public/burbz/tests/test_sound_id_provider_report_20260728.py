@@ -13,6 +13,7 @@ onnxruntime, numpy or the production backend — the providers are faked — so 
 passes in a source worktree.
 """
 import sys
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -136,8 +137,14 @@ def test_served_meta_falls_back_to_the_configured_engine_before_any_scan():
 
 def test_the_installer_block_is_bumped_so_boxes_receive_the_change():
     text = INSTALLER.read_text(encoding="utf-8")
-    assert 'PATCH_VERSION="v3"' in text
-    assert "# BURBZ-BIRDNET-V3-BEGIN v3" in text
+    assert 'PATCH_VERSION="v4"' in text
+    assert "# BURBZ-BIRDNET-V3-BEGIN v4" in text
+    assert "# BURBZ-BIRDNET-V3-END v4" in text
+    assert "main_guard = re.search" in text
+    assert "block before app.run" in text
+    assert text.index('found="$(server_py_from_systemd)"') < text.index('found="$(server_py_from_process)"')
+    assert 'printf \'%s\\n\' burbz.service' in text
+    assert 'WorkingDirectory' in text
 
 
 def test_the_installer_tags_the_scan_response_with_the_serving_engine():
@@ -148,3 +155,44 @@ def test_the_installer_tags_the_scan_response_with_the_serving_engine():
     assert 'payload["provider"]' in text
     assert 'payload["commercial"]' in text
     assert 'endswith("/identify/sound")' in text
+
+
+def _heredoc(text, marker):
+    start = text.index("<<'" + marker + "'")
+    start = text.index("\n", start) + 1
+    end = text.index("\n" + marker + "\n", start)
+    return text[start:end]
+
+
+def test_installer_preserves_the_main_guard_when_replacing_unmarked_wiring(tmp_path):
+    text = INSTALLER.read_text(encoding="utf-8")
+    trim = _heredoc(text, "TRIM")
+    server = tmp_path / "server.py"
+    server.write_text(
+        "app = object()\n"
+        "# old wiring\n"
+        "try:\n"
+        "    import sound_id as _burbz_sound_id\n"
+        "except ImportError:\n"
+        "    _burbz_sound_id = None\n\n"
+        "if __name__ == '__main__':\n"
+        "    app.run()\n",
+        encoding="utf-8",
+    )
+    subprocess.run([sys.executable, "-", str(server)], input=trim, text=True, check=True)
+    result = server.read_text(encoding="utf-8")
+    assert "_burbz_sound_id" not in result
+    assert "if __name__ == '__main__':" in result
+    assert "app.run()" in result
+
+
+def test_installer_inserts_current_wiring_before_the_main_guard(tmp_path):
+    text = INSTALLER.read_text(encoding="utf-8")
+    insert = _heredoc(text, "INSERT")
+    server = tmp_path / "server.py"
+    block = tmp_path / "block.py"
+    server.write_text("app = object()\n\nif __name__ == '__main__':\n    app.run()\n", encoding="utf-8")
+    block.write_text("# BURBZ-BIRDNET-V3-BEGIN v4\nWIRED = True\n# BURBZ-BIRDNET-V3-END v4\n", encoding="utf-8")
+    subprocess.run([sys.executable, "-", str(server), str(block)], input=insert, text=True, check=True)
+    result = server.read_text(encoding="utf-8")
+    assert result.index("BURBZ-BIRDNET-V3-BEGIN v4") < result.index("if __name__")
