@@ -27160,18 +27160,18 @@ const MERLIN_TUTORIAL_STEPS = [
   // — The Tale of Burbz. Merlin speaks in bursts of three at most, then hands
   //   the game back: tap him, feed him, tap the Quests tab. A mechanic the
   //   player has performed once is a mechanic they own.
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'A kingdom in darkness', screen:'map', target:null, text:'The Kingdom of Burbz \u2014 the Earth of another universe, where birds are the dominant species \u2014 has fallen to a dark force: the evil Burbz.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'This app is my magic tablet, hurled across the multiverse into your hands. Only you can unlock the darkness. Real birdwatching restores Burbz!' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'I am Merlin, your friend', screen:'map', target:null, text:'I am Merlin, wizard falcon of the kingdom \u2014 and from today, your new friend. But even a wizard needs feeding and looking after to be at his best.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Come and see to me', screen:'map', target:'#petSprite', text:'Do not just take my word for it. Tap me on my branch, up in the top-right corner, and my care menu will open.',
+  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'A kingdom in darkness', screen:'map', target:null, text:'The Kingdom of Burbz \u2014 the Earth of another universe, where birds are the dominant species \u2014 has fallen to a dark force: the evil Burbz.' },
+  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'This app is my magic tablet, hurled across the multiverse into your hands. Only you can unlock the darkness. Real birdwatching restores Burbz!' },
+  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'I am Merlin, your friend', screen:'map', target:null, text:'I am Merlin, wizard falcon of the kingdom \u2014 and from today, your new friend. But even a wizard needs feeding and looking after to be at his best.' },
+  { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'Come and see to me', screen:'map', target:'#petSprite', text:'Do not just take my word for it. Tap me on my branch, up in the top-right corner, and my care menu will open.',
     action:{ event:'merlin-care-opened', hint:'Tap Merlin on his branch \u2197' } },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Food, cheer and energy', screen:'map', target:'.merlin-care-status', text:'Here I am! Food, happiness and energy. Let food run low and I go hungry, my spells wobble, and my errands take me twice as long.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'A falcon\u2019s proper meal', screen:'map', target:'#merlinDietGuidance', text:'As a falcon my primary meal is whole small-bird prey \u2014 there are rations in your larder. Insects are a secondary meal: not ideal, but they do.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Feed me!', screen:'map', target:'#merlinFeedBtn', text:'Go on then \u2014 tap Feed and serve me a small-bird prey ration. I am famished.',
+  { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'Food, cheer and energy', screen:'map', target:'.merlin-care-status', text:'Here I am! Food, happiness and energy. Let food run low and I go hungry, my spells wobble, and my errands take me twice as long.' },
+  { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'A falcon\u2019s proper meal', screen:'map', target:'#merlinDietGuidance', text:'As a falcon my primary meal is whole small-bird prey \u2014 there are rations in your larder. Insects are a secondary meal: not ideal, but they do.' },
+  { chapterId:'story', progressGroup:'story-feed', chapter:'The Tale of Burbz', title:'Feed me!', screen:'map', target:'#merlinFeedBtn', text:'Go on then \u2014 tap Feed and serve me a small-bird prey ration. I am famished.',
     action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed' } },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Wonderful! Every bird\u2019s diet must be accurate to get the best from it \u2014 unlock the Kitchen later for the rest of the feeding mechanics.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Discover real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Now the real magic: find real birds out in your world. Discover them by camera or by sound, and every one lands in your Birdex.' },
-  { chapterId:'story', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too \u2014 you\u2019ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
+  { chapterId:'story', progressGroup:'story-feed', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Wonderful! Every bird\u2019s diet must be accurate to get the best from it \u2014 unlock the Kitchen later for the rest of the feeding mechanics.' },
+  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Discover real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Now the real magic: find real birds out in your world. Discover them by camera or by sound, and every one lands in your Birdex.' },
+  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too \u2014 you\u2019ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
     action:{ event:'tab:quests', hint:'Tap the Quests tab' } },
 
   // — Quests: two beats, then the player actually sends Merlin flying.
@@ -27240,6 +27240,22 @@ const MERLIN_TUTORIAL_STEPS = [
 
 function merlinChapterStepIndices(chapterId) {
   return MERLIN_TUTORIAL_STEPS.map((step, index) => step.chapterId === chapterId ? index : -1).filter(index => index >= 0);
+}
+
+function merlinTutorialProgressGroup(step) {
+  return step && (step.progressGroup || step.chapterId);
+}
+
+function merlinTutorialProgressFor(sequencePosition) {
+  const step = MERLIN_TUTORIAL_STEPS[merlinTutSequence[sequencePosition]];
+  if (!step) return { position:0, total:0, label:'' };
+  const group = merlinTutorialProgressGroup(step);
+  const positions = merlinTutSequence
+    .map((stepIndex, position) => merlinTutorialProgressGroup(MERLIN_TUTORIAL_STEPS[stepIndex]) === group ? position : -1)
+    .filter(position => position >= 0);
+  const position = positions.indexOf(sequencePosition) + 1;
+  const total = positions.length;
+  return { position, total, label:position + ' / ' + total };
 }
 
 let merlinTutStep = -1;
@@ -27671,7 +27687,8 @@ function merlinTutShowStep(i) {
   // Steps that talk about "the red mark" light the dot on that nav tab while
   // Merlin is still speaking; updateMerlinFlowPointer takes over afterwards.
   if (step.alertNav) document.querySelector('.nav-item[data-screen="' + step.alertNav + '"]')?.classList.add('tutorial-alert');
-  $('merlinTutorialCounter').textContent = (i + 1) + ' / ' + merlinTutSequence.length;
+  const progress = merlinTutorialProgressFor(i);
+  $('merlinTutorialCounter').textContent = progress.label;
   $('merlinTutorialBack').disabled = i === 0;
   const next = $('merlinTutorialNext');
   next.style.display = '';
