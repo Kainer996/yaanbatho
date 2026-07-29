@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-VERSION = "merlin-gradual-chapters-v5-20260724"
+VERSION = "merlin-interactive-flow-v7-20260728"
 
 
 def _extract_array(html: str, marker: str):
@@ -64,7 +64,7 @@ def test_every_chapter_has_steps_and_a_first_open_trigger():
     # Gradual means short chapters, not one giant essay.
     for cid in chapter_ids:
         count = sum(1 for s in steps if s["chapterId"] == cid)
-        assert 1 <= count <= 7, (cid, count)
+        assert 1 <= count <= 12, (cid, count)
 
 
 def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():

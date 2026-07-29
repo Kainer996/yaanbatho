@@ -20,9 +20,9 @@ def tutorial_steps():
 
 def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
     html = HTML.read_text(encoding="utf-8")
-    assert "merlin-gradual-chapters-v5-20260724" in html
+    assert "merlin-interactive-flow-v7-20260728" in html
     steps = tutorial_steps()
-    assert 20 <= len(steps) <= 40
+    assert 20 <= len(steps) <= 60
     assert all(step.get("chapter") and step.get("title") and step.get("text") for step in steps)
     assert all(len(step["title"]) <= 42 and len(step["text"]) <= 240 for step in steps)
     copy = " ".join((step["title"] + " " + step["text"]).lower() for step in steps)
