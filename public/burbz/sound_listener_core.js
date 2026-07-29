@@ -101,5 +101,23 @@
     return { add, reset, snapshot };
   }
 
-  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, createDiscoveryHistory, filenameForMime });
+  function soundWindowAgeCue(windowData, now) {
+    const item = windowData || {};
+    const endedAt = Number(item.endedAt);
+    const durationMs = Math.max(0, Number(item.durationMs) || 12000);
+    if (!Number.isFinite(endedAt)) return 'the previous sound window';
+
+    const current = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const endAge = Math.max(0, Math.round((current - endedAt) / 1000));
+    const startAge = Math.max(endAge, Math.round((current - endedAt + durationMs) / 1000));
+    if (!endAge) return `the last ${Math.max(1, Math.round(durationMs / 1000))}s of sound`;
+    return `sound recorded ${startAge}\u2013${endAge}s ago`;
+  }
+
+  root.BurbzSoundListenerCore = Object.freeze({
+    createLatestTaskQueue,
+    createDiscoveryHistory,
+    filenameForMime,
+    soundWindowAgeCue
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

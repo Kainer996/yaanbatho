@@ -39,6 +39,7 @@ def _clean_env(monkeypatch):
         }],
         common_name_for=lambda scientific: None,
     )
+    sound_id.clear_served_provider()
 
 
 # ---------------------------------------------------------------- selection
@@ -167,6 +168,7 @@ def test_v3_failure_falls_back_to_perch_and_never_to_non_commercial_v2(monkeypat
     out = sound_id.analyse("/tmp/clip.wav")
     assert out[0]["common_name"] == "Wren"
     assert out[0]["common_name"] != "House Sparrow"  # i.e. never the V2.4 helpers
+    assert sound_id.last_served_provider() == "perch"
 
 
 def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch):
@@ -179,6 +181,9 @@ def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch
     monkeypatch.setattr(birdnet_v3_provider, "analyse", explode)
     monkeypatch.setattr(perch_provider, "analyse", explode)
     assert sound_id.analyse("/tmp/clip.wav") == []
+    assert sound_id.last_served_provider() is None
+    assert sound_id.served_meta()["provider"] is None
+    assert not sound_id.served_meta()["providerVerified"]
 
 
 def test_fallback_can_be_disabled_so_failures_are_loud_while_testing(monkeypatch):
@@ -193,6 +198,25 @@ def test_fallback_can_be_disabled_so_failures_are_loud_while_testing(monkeypatch
     monkeypatch.setattr(perch_provider, "analyse", explode)
     with pytest.raises(perch_provider.PerchUnavailable):
         sound_id.analyse("/tmp/clip.wav")
+    assert sound_id.last_served_provider() is None
+
+
+def test_empty_success_still_records_the_engine_that_really_answered(monkeypatch):
+    from sound_id import birdnet_v3_provider
+
+    monkeypatch.setattr(birdnet_v3_provider, "analyse", lambda *a, **k: [])
+    assert sound_id.analyse("/tmp/quiet.wav") == []
+    assert sound_id.last_served_provider() == "birdnetv3"
+
+
+def test_served_meta_never_substitutes_configured_v3_for_no_provider():
+    sound_id.clear_served_provider()
+    meta = sound_id.served_meta()
+    assert meta["configuredProvider"] == "birdnetv3"
+    assert meta["provider"] is None
+    assert meta["providerLabel"] is None
+    assert meta["commercial"] is None
+    assert meta["providerVerified"] is False
 
 
 def test_perch_labels_are_scientific_binomials_with_the_header_row_dropped(tmp_path):
@@ -330,10 +354,13 @@ def test_short_clips_are_padded_into_one_window():
 
 # ------------------------------------------------------------------- client
 
-def test_client_keeps_birdnet_as_the_fallback_engine_label():
+def test_client_keeps_known_engine_labels_but_does_not_fabricate_missing_provenance():
     html = HTML.read_text(encoding="utf-8")
-    assert "birdnet:'BirdNET'" in html and "perch:'Perch'" in html
-    assert "SOUND_ENGINE_LABELS.birdnet" in html
+    assert "birdnetv3:'BirdNET V3'" in html and "perch:'Perch'" in html
+    assert "birdnetv2:'BirdNET V2 (legacy)'" in html
+    assert "unknown:'Bird-sound model (unverified)'" in html
+    assert "result.providerVerified !== true" in html
+    assert "SOUND_ENGINE_LABELS.unknown" in html
 
 
 def test_player_facing_disclosure_is_engine_neutral():

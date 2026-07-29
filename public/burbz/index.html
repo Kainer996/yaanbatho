@@ -2898,7 +2898,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <canvas id="waveformCanvas"></canvas>
         </div>
         <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
-          <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox"> Use my location to improve local bird matches</label>
+          <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
         </div>
         <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
       </div>
@@ -3536,7 +3536,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="quest_core.js?v=quest-route-integrity-loops-v123-20260726"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
-<script src="sound_listener_core.js?v=merlin-discovery-history-v3-20260716"></script>
+<script src="sound_listener_core.js?v=birdnet-v3-accuracy-v4-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
@@ -22119,7 +22119,7 @@ function showRecruitChoiceOverlay(birds, message) {
   overlay.classList.add('show');
 }
 
-function showScanEncounterCard(bird, isNewDiscovery) {
+function showScanEncounterCard(bird, isNewDiscovery, source = 'photo') {
   const stack = $('scanEncounterStack');
   if (!stack || !bird) return;
   const cost = recruitCostForBird(bird);
@@ -22134,7 +22134,8 @@ function showScanEncounterCard(bird, isNewDiscovery) {
   card.innerHTML = media + '<div><div class="scan-encounter-kicker">' +
     (isNewDiscovery ? 'New bird heard · Always added to Birdex' : 'Bird heard again · Already in Birdex') +
     '</div><div class="scan-encounter-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
-    '<div class="scan-encounter-meta">' + Math.round((bird.confidence || 0) * 100) + '% confidence · ' +
+    '<div class="scan-encounter-meta">' + Math.round((bird.confidence || 0) * 100) +
+    (source === 'sound' ? '/100 model score · ' : '% confidence · ') +
     escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · Power ' + Math.round(Number(bird.power) || 0) +
     '<div class="scan-encounter-price">Recruitment value ' + cost + ' coins' +
     (breakdown ? ' · strength +' + (breakdown.powerPremium + breakdown.statPremium + breakdown.specialistPremium) : '') +
@@ -22173,7 +22174,7 @@ function renderSoundSessionDiscoveries() {
         '<button type="button" class="scan-session-discovery-front" data-action="flip-discovery" aria-expanded="' + (flipped ? 'true' : 'false') + '" aria-label="Show information about ' + escapeHtml(row.name) + '"' + (flipped ? ' aria-hidden="true" tabindex="-1"' : '') + '>' +
           art + '<span class="scan-session-discovery-copy"><span class="scan-session-discovery-name">' + escapeHtml(row.name) + '</span>' +
           '<span class="scan-session-discovery-sci">' + escapeHtml(row.scientificName || '') + '</span>' +
-          '<span class="scan-session-discovery-meta">' + Math.round((Number(row.confidence) || 0) * 100) + '% confidence · ' +
+          '<span class="scan-session-discovery-meta">' + Math.round((Number(row.confidence) || 0) * 100) + '/100 model score · ' +
           escapeHtml(String(row.rarity || 'common').toUpperCase()) + ' · ' + (row.isNew ? 'New discovery' : 'Known bird') +
           '<span class="scan-session-discovery-repeat">' + heardCount + '</span></span><span class="scan-session-discovery-tap">Tap card for bird facts ↻</span></span></button>' +
         '<div class="scan-session-discovery-back" ' + backState + '>' +
@@ -22242,59 +22243,176 @@ window.__burbzSoundDiscoveryDebug = {
   showInBirdex: species => showSpeciesInBirdex(species)
 };
 
-function handleBirdCandidates(primary, detections = [], opts = {}) {
+const SOUND_SESSION_MAX_PER_WINDOW = 4;
+const SOUND_AUTO_UNLOCK_SCORE = 0.75;
+const SOUND_CONFIRM_SCORE = 0.60;
+const SOUND_CONFIRM_WINDOWS = 2;
+const SOUND_CONFIRM_MAX_AGE_MS = 60000;
+const SOUND_REQUIRED_POLICY = 'burbz-v3-temporal-20260729.2';
+const SOUND_REQUIRED_MODEL_SHA = '69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24';
+const SOUND_REQUIRED_LABELS_SHA = '8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0';
+const SOUND_REQUIRED_SCORE_BLACKLIST_SHA = 'a7237606eca3e0a215d0a11c01c2a7654348916609dffc830ec9fc96e0c81366';
+const SOUND_REQUIRED_GEO_MODEL_SHA = '2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017';
+const SOUND_REQUIRED_GEO_LABELS_SHA = 'c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784';
+const soundUnlockEvidence = new Map();
+
+function normaliseAcceptedBirdCandidates(primary, detections = []) {
   const candidates = [];
-  if (primary && primary.species) candidates.push(createBirdEntry(primary.species, primary.scientificName, primary.confidence));
-  (detections || []).forEach(d => {
-    const name = d.name || d.commonName || d.species;
-    if (name) candidates.push(createBirdEntry(name, d.scientific || d.scientificName || name, d.confidence || primary.confidence || 0.5));
-  });
-  const top = candidates[0];
-  // The shipped game catalogue is the authority on what can unlock. The
-  // server's catalogMatched flag only says whether the server's own species
-  // list matched, and that list can lag behind the game catalogue (Buzzard,
-  // then Mallard, were wrongly rejected this way). A recognised bird is only
-  // "not in the catalogue" when the game catalogue itself has no profile for
-  // it under any name, alias or scientific name.
-  const inGameCatalogue = !!(top && (findSpeciesProfile(top.species) || findSpeciesProfile(top.commonName) || findSpeciesProfile(top.scientificName)));
-  if (top && opts.catalogMatched === false && !inGameCatalogue) {
-    showCatalogUnmatchedRecognition(top);
-    return;
-  }
-  const newDiscoveries = [];
-  // Only the backend's confident winner is an automatic Birdex discovery.
-  if (top && rememberDiscoveredBird(top)) newDiscoveries.push(top);
-  if (top) fetchBirdArt(top.species);
-  if (top) {
-    const isNewDiscovery = newDiscoveries.some(b => speciesKey(canonicalSpeciesName(b.species || b.commonName)) === speciesKey(canonicalSpeciesName(top.species || top.commonName)));
-    if (opts.source === 'sound' && continuousSoundScanWanted) {
-      recordSoundSessionDiscovery(top, isNewDiscovery);
-    } else {
-      const resultEl = $('scanResult');
-      resultEl.classList.remove('sound-session');
-      resultEl.classList.add('show');
-      $('scanResultName').textContent = top.commonName;
-      $('scanResultName').style.color = RARITY_COLORS[top.rarity];
-      $('scanResultSci').textContent = top.scientificName || top.species;
-      $('scanResultConf').textContent = `${Math.round((top.confidence || 0) * 100)}% confidence | ${top.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
+  const candidateByKey = new Map();
+  const addAcceptedCandidate = raw => {
+    if (!raw) return;
+    // Direct server mode emits common_name/scientific_name; aggregate and
+    // primary response objects use camelCase. Accept both so secondary birds
+    // are not lost at the JSON boundary.
+    const scientific = raw.scientificName || raw.scientific_name || raw.scientific || '';
+    const name = raw.species || raw.name || raw.commonName || raw.common_name || scientific;
+    if (!name) return;
+    const numericScore = Number(raw.confidence ?? raw.max ?? 0);
+    const score = Number.isFinite(numericScore) ? Math.max(0, Math.min(1, numericScore)) : 0;
+    const bird = createBirdEntry(name, scientific, score);
+    bird.soundSupport = Math.max(0, Number(raw.n ?? raw.support ?? raw.soundSupport ?? 0) || 0);
+    const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName)) ||
+      speciesKey(bird.scientificName || '');
+    if (!key) return;
+    const existing = candidateByKey.get(key);
+    if (existing) {
+      existing.confidence = Math.max(Number(existing.confidence) || 0, Number(bird.confidence) || 0);
+      existing.soundSupport = Math.max(Number(existing.soundSupport) || 0, bird.soundSupport);
+      return;
     }
-    showScanEncounterCard(top, isNewDiscovery);
+    candidateByKey.set(key, bird);
+    candidates.push(bird);
+  };
+  addAcceptedCandidate(primary);
+  (detections || []).forEach(addAcceptedCandidate);
+  return candidates;
+}
+
+function soundUnlockProvenanceVerified(provenance) {
+  return provenance?.providerVerified === true &&
+    String(provenance?.provider || '').toLowerCase() === 'birdnetv3' &&
+    String(provenance?.configuredProvider || '').toLowerCase() === 'birdnetv3' &&
+    provenance?.fallbackUsed === false &&
+    provenance?.modelSha256 === SOUND_REQUIRED_MODEL_SHA &&
+    provenance?.labelsSha256 === SOUND_REQUIRED_LABELS_SHA &&
+    provenance?.scoreBlacklistSha256 === SOUND_REQUIRED_SCORE_BLACKLIST_SHA &&
+    provenance?.geoModelSha256 === SOUND_REQUIRED_GEO_MODEL_SHA &&
+    provenance?.geoLabelsSha256 === SOUND_REQUIRED_GEO_LABELS_SHA &&
+    provenance?.policyVersion === SOUND_REQUIRED_POLICY &&
+    Number(provenance?.serverIntegrationVersion) === 4;
+}
+
+function soundCandidatesReadyToUnlock(candidates, provenance, windowData, now = Date.now()) {
+  // BirdNET detections are suggestions. Irreversible Birdex mutation gets a
+  // stronger independent evidence tier and only an exactly verified V3 path.
+  if (!soundUnlockProvenanceVerified(provenance)) return [];
+
+  const sequence = Number(windowData?.sequence);
+  const at = Number(windowData?.endedAt) || Number(now);
+  const ready = [];
+  for (const bird of (candidates || [])) {
+    const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName)) ||
+      speciesKey(bird.scientificName || '');
+    const score = Number(bird.confidence) || 0;
+    const support = Number(bird.soundSupport) || 0;
+    if (!key) continue;
+
+    // 0.98 is the official immediate exception. Otherwise an automatic unlock
+    // needs the stronger Burbz tier plus temporal support from the server.
+    if (score >= 0.98 || (score >= SOUND_AUTO_UNLOCK_SCORE && support >= 2)) {
+      ready.push(bird);
+      soundUnlockEvidence.delete(key);
+      continue;
+    }
+    if (score < SOUND_CONFIRM_SCORE || support < 2 || !Number.isFinite(sequence)) continue;
+
+    const previous = soundUnlockEvidence.get(key);
+    const fresh = previous && at - previous.at <= SOUND_CONFIRM_MAX_AGE_MS;
+    const distinct = fresh && previous.sequence !== sequence;
+    const hits = distinct ? previous.hits + 1 : 1;
+    soundUnlockEvidence.set(key, { hits, sequence, at });
+    if (hits >= SOUND_CONFIRM_WINDOWS) {
+      ready.push(bird);
+      soundUnlockEvidence.delete(key);
+    }
   }
-  if (top) { try { questRegisterBirdEncounter(top); } catch (err) { console.warn('BURBZ trail NPC spawn failed', err); } }
+  for (const [key, evidence] of soundUnlockEvidence) {
+    if (at - evidence.at > SOUND_CONFIRM_MAX_AGE_MS) soundUnlockEvidence.delete(key);
+  }
+  return ready;
+}
+
+function handleBirdCandidates(primary, detections = [], opts = {}) {
+  // Canonical-deduplicate the primary (normally repeated in allDetections)
+  // before any gameplay mutation.
+  const candidates = normaliseAcceptedBirdCandidates(primary, detections);
+  const top = candidates[0];
+  if (!top) return [];
+  const inGameCatalogue = bird => !!(bird && (
+    findSpeciesProfile(bird.species) ||
+    findSpeciesProfile(bird.commonName) ||
+    findSpeciesProfile(bird.scientificName)
+  ));
+  const soundSession = opts.source === 'sound' && continuousSoundScanWanted;
+  const topIsCatalogued = inGameCatalogue(top);
+  if (!topIsCatalogued) showCatalogUnmatchedRecognition(top, opts.source);
+
+  // Simultaneous BirdNET detections are independent accepted species. Surface
+  // up to four catalogue birds in a continuous window instead of silently
+  // discarding every bird except candidates[0].
+  const surfaced = soundSession
+    ? candidates.filter(inGameCatalogue).slice(0, SOUND_SESSION_MAX_PER_WINDOW)
+    : (topIsCatalogued ? [top] : []);
+  if (!surfaced.length) return [];
+
+  const newDiscoveries = [];
+  const newKeys = new Set();
+  surfaced.forEach(bird => {
+    const isNew = rememberDiscoveredBird(bird);
+    if (isNew) {
+      newDiscoveries.push(bird);
+      newKeys.add(speciesKey(canonicalSpeciesName(bird.species || bird.commonName)));
+    }
+    fetchBirdArt(bird.species);
+    if (soundSession) recordSoundSessionDiscovery(bird, isNew);
+  });
+
+  const displayedTop = surfaced[0];
+  const topIsNew = newKeys.has(
+    speciesKey(canonicalSpeciesName(displayedTop.species || displayedTop.commonName))
+  );
+  if (!soundSession) {
+    const resultEl = $('scanResult');
+    resultEl.classList.remove('sound-session');
+    resultEl.classList.add('show');
+    $('scanResultName').textContent = displayedTop.commonName;
+    $('scanResultName').style.color = RARITY_COLORS[displayedTop.rarity];
+    $('scanResultSci').textContent = displayedTop.scientificName || displayedTop.species;
+    $('scanResultConf').textContent = opts.source === 'sound'
+      ? `${Math.round((displayedTop.confidence || 0) * 100)}/100 model score | ${displayedTop.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`
+      : `${Math.round((displayedTop.confidence || 0) * 100)}% confidence | ${displayedTop.rarity.toUpperCase()} | ${newDiscoveries.length || 'Known'} discovery`;
+  }
+  showScanEncounterCard(displayedTop, topIsNew, opts.source);
+  // Preserve the old one-encounter-per-recording gameplay contract even when
+  // several independently accepted birds are added to the Birdex.
+  try { questRegisterBirdEncounter(displayedTop); }
+  catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
+
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    if (!continuousSoundScanWanted) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
+    if (!soundSession) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
-  } else if (top) {
-    const existing = companionForSpecies(top.species);
-    if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(top.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!continuousSoundScanWanted) { showRecruitChoiceOverlay([top], top.commonName + ' is already in Birdex · recruit at Barracks.'); }
+  } else {
+    const existing = companionForSpecies(displayedTop.species);
+    if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(displayedTop.commonName + ' spotted again! Companion +15 XP'); }
+    else if (!soundSession) { showRecruitChoiceOverlay([displayedTop], displayedTop.commonName + ' is already in Birdex · recruit at Barracks.'); }
   }
-  if (top) checkBadges();
+  checkBadges();
+  return surfaced;
 }
 
-function showCatalogUnmatchedRecognition(bird) {
+function showCatalogUnmatchedRecognition(bird, source = 'photo') {
   if (!bird) return;
   fetchBirdArt(bird.species);
   const resultEl = $('scanResult');
@@ -22303,7 +22421,9 @@ function showCatalogUnmatchedRecognition(bird) {
     $('scanResultName').textContent = bird.commonName || bird.species;
     $('scanResultName').style.color = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
     $('scanResultSci').textContent = bird.scientificName || bird.species;
-    $('scanResultConf').textContent = `${Math.round((bird.confidence || 0) * 100)}% confidence | Not in the Burbz catalogue yet`;
+    $('scanResultConf').textContent = source === 'sound'
+      ? `${Math.round((bird.confidence || 0) * 100)}/100 model score | Not in the Burbz catalogue yet`
+      : `${Math.round((bird.confidence || 0) * 100)}% confidence | Not in the Burbz catalogue yet`;
   }
   showToast((bird.commonName || bird.species) + ' is not in the Burbz catalogue yet.');
 }
@@ -23838,7 +23958,13 @@ const soundDiscoveryHistory = window.BurbzSoundListenerCore.createDiscoveryHisto
 const soundDiscoveryFlippedKeys = new Set();
 
 function soundLocationAssistEnabled() { return !!$('merlinLocationAssist')?.checked; }
-try { $('merlinLocationAssist').checked = localStorage.getItem(SOUND_LOCATION_PREF_KEY) === '1'; } catch (_) {}
+try {
+  // Accuracy-first default. Browser permission is still authoritative and a
+  // saved explicit opt-out always wins.
+  $('merlinLocationAssist').checked = localStorage.getItem(SOUND_LOCATION_PREF_KEY) !== '0';
+} catch (_) {
+  $('merlinLocationAssist').checked = true;
+}
 $('merlinLocationAssist').addEventListener('change', event => {
   try { localStorage.setItem(SOUND_LOCATION_PREF_KEY, event.target.checked ? '1' : '0'); } catch (_) {}
 });
@@ -24005,6 +24131,7 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   if (!continuousSoundScanWanted || generation !== soundListenerGeneration) return;
   soundListenerGeneration += 1;
   continuousSoundScanWanted = false;
+  soundUnlockEvidence.clear();
   if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
   const recorder = mediaRecorder;
@@ -24041,10 +24168,13 @@ function startSoundRecorderWindow(generation = soundListenerGeneration) {
     if (mediaRecorder === recorder) mediaRecorder = null;
     isRecording = false;
     const blob = new Blob(chunks, { type:recorder.mimeType || 'audio/webm' });
-    const durationMs = Date.now() - startedAt;
+    const endedAt = Date.now();
+    const durationMs = endedAt - startedAt;
     const beginNextWindowBeforeAnalysis = continuousSoundScanWanted && generation === soundListenerGeneration && mediaStream && listenerTrack?.readyState !== 'ended';
     if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);
-    if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) queueSoundWindowForAnalysis({ blob, sequence, durationMs, generation });
+    if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) {
+      queueSoundWindowForAnalysis({ blob, sequence, startedAt, endedAt, durationMs, generation });
+    }
   };
   try { recorder.start(); }
   catch (error) { handleSoundRecorderFailure(generation, error); return false; }
@@ -24080,6 +24210,7 @@ function queueSoundWindowForAnalysis(windowData) {
 function stopContinuousSoundListening(opts = {}) {
   soundListenerGeneration += 1;
   continuousSoundScanWanted = false;
+  soundUnlockEvidence.clear();
   if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
   const recorder = mediaRecorder;
@@ -24193,15 +24324,21 @@ function drawWaveform() {
   draw();
 }
 
-// Which recogniser produced a result. The server reports it as `provider`
-// (see sound_id/README.md); BirdNET is assumed when the field is absent so an
-// older backend, or a rollback to BirdNET, needs no client change.
-// Both BirdNET generations read as plain "BirdNET" to a player — which version
-// is serving is an operational detail, carried by `provider` for the logs.
-const SOUND_ENGINE_LABELS = { birdnetv3:'BirdNET', birdnetv2:'BirdNET', birdnet:'BirdNET', perch:'Perch' };
+// Which recogniser produced a result. Missing provenance stays neutral:
+// treating an untagged response as BirdNET hid a live integration failure and
+// made "V3 installed" impossible to verify from the phone.
+const SOUND_ENGINE_LABELS = {
+  birdnetv3:'BirdNET V3',
+  birdnetv2:'BirdNET V2 (legacy)',
+  birdnet:'BirdNET V3',
+  perch:'Perch',
+  unknown:'Bird-sound model (unverified)'
+};
 function soundEngineLabel(result) {
+  if (!result || result.providerVerified !== true) return SOUND_ENGINE_LABELS.unknown;
   const key = String((result && result.provider) || '').trim().toLowerCase();
-  return SOUND_ENGINE_LABELS[key] || SOUND_ENGINE_LABELS.birdnet;
+  const label = SOUND_ENGINE_LABELS[key] || SOUND_ENGINE_LABELS.unknown;
+  return result.fallbackUsed ? label + ' fallback' : label;
 }
 
 async function analyseContinuousSoundWindow(windowData) {
@@ -24218,11 +24355,33 @@ async function analyseContinuousSoundWindow(windowData) {
     const result = await uploadRecording(blob, { signal:controller.signal });
     if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
     if (result && result.species) {
-      handleBirdCandidates(result, result.allDetections || [], { source:'sound', blob, catalogMatched:result.catalogMatched });
-      const confidence = Math.round((Number(result.confidence) || 0) * 100);
+      const suggestions = normaliseAcceptedBirdCandidates(
+        result,
+        result.allDetections || []
+      ).slice(0, SOUND_SESSION_MAX_PER_WINDOW);
+      const unlockReady = soundCandidatesReadyToUnlock(suggestions, result, windowData);
+      const surfaced = unlockReady.length
+        ? handleBirdCandidates(unlockReady[0], unlockReady.slice(1), { source:'sound', blob, catalogMatched:result.catalogMatched })
+        : [];
       const engine = soundEngineLabel(result);
-      setMerlinListenerState('match', engine + ' match: ' + result.species + (confidence ? ' · ' + confidence + '% confidence' : '') + ' · still listening');
-      showToast('🐦 ' + engine + ' identified ' + result.species + ' — still listening');
+      const accepted = suggestions.length ? suggestions : [{
+        commonName: result.species,
+        confidence: Number(result.confidence) || 0
+      }];
+      const summary = accepted.map(bird => {
+        const name = bird.commonName || bird.species;
+        const score = Math.round((Number(bird.confidence) || 0) * 100);
+        return name + (score ? ' ' + score + '/100 model score' : '');
+      }).join(' + ');
+      const ageCue = window.BurbzSoundListenerCore.soundWindowAgeCue(windowData);
+      const unlockProvenanceVerified = soundUnlockProvenanceVerified(result);
+      const verificationCue = surfaced.length
+        ? 'Birdex verified'
+        : unlockProvenanceVerified
+          ? 'keep listening to verify'
+          : 'Birdex unchanged — accuracy proof failed';
+      setMerlinListenerState('match', engine + ' suggestion' + (accepted.length > 1 ? 's' : '') + ': ' + summary + ' · ' + verificationCue + ' · ' + ageCue + ' · still listening');
+      showToast('🐦 ' + engine + ' suggested ' + accepted.map(b => b.commonName || b.species).join(' + ') + ' in ' + ageCue);
       setTimeout(() => {
         if (continuousSoundScanWanted && generation === soundListenerGeneration && soundListenerState === 'match') setMerlinListenerState('listening', 'Listening…');
       }, 5200);
@@ -24306,6 +24465,8 @@ async function getCurrentPositionForBirdnet() {
   });
 }
 
+let lastSoundProviderMeta = null;
+
 async function uploadRecording(blob, opts = {}) {
   const formData = new FormData();
   const filename = window.BurbzSoundListenerCore.filenameForMime(blob.type);
@@ -24328,6 +24489,24 @@ async function uploadRecording(blob, opts = {}) {
     message: 'Sound ID upload failed — try again with a clearer recording.'
   }));
 
+  lastSoundProviderMeta = {
+    provider: data?.provider ?? null,
+    configuredProvider: data?.configuredProvider ?? null,
+    providerVerified: data?.providerVerified === true,
+    fallbackUsed: data?.fallbackUsed === true,
+    providerVersion: data?.providerVersion ?? null,
+    modelName: data?.modelName ?? null,
+    modelSha256: data?.modelSha256 ?? null,
+    labelsSha256: data?.labelsSha256 ?? null,
+    scoreBlacklistSha256: data?.scoreBlacklistSha256 ?? null,
+    geoModelName: data?.geoModelName ?? null,
+    geoModelVersion: data?.geoModelVersion ?? null,
+    geoModelSha256: data?.geoModelSha256 ?? null,
+    geoLabelsSha256: data?.geoLabelsSha256 ?? null,
+    policyVersion: data?.policyVersion ?? null,
+    serverIntegrationVersion: data?.serverIntegrationVersion ?? null
+  };
+
   if (data && data.found && data.bird) {
     return {
       species: data.bird.name,
@@ -24335,6 +24514,20 @@ async function uploadRecording(blob, opts = {}) {
       confidence: data.bird.confidence,
       catalogMatched: (data.bird.catalogMatched != null ? data.bird.catalogMatched : data.catalogMatched),
       provider: data.provider || '',
+      configuredProvider: data.configuredProvider || '',
+      providerVerified: data.providerVerified === true,
+      fallbackUsed: data.fallbackUsed === true,
+      providerVersion: data.providerVersion || null,
+      modelName: data.modelName || null,
+      modelSha256: data.modelSha256 || null,
+      labelsSha256: data.labelsSha256 || null,
+      scoreBlacklistSha256: data.scoreBlacklistSha256 || null,
+      geoModelName: data.geoModelName || null,
+      geoModelVersion: data.geoModelVersion || null,
+      geoModelSha256: data.geoModelSha256 || null,
+      geoLabelsSha256: data.geoLabelsSha256 || null,
+      policyVersion: data.policyVersion || null,
+      serverIntegrationVersion: data.serverIntegrationVersion || null,
       allDetections: data.allDetections || []
     };
   }
@@ -24353,7 +24546,8 @@ window.__burbzSoundDebug = {
     trackState: listenerTrack?.readyState || null,
     recorderState: mediaRecorder?.state || null,
     windowSequence: soundWindowSequence,
-    queue: soundAnalysisQueue.snapshot()
+    queue: soundAnalysisQueue.snapshot(),
+    provider: lastSoundProviderMeta ? { ...lastSoundProviderMeta } : null
   }),
   start: () => startContinuousSoundListening(),
   stop: () => stopContinuousSoundListening({ userStop:true }),
@@ -26499,7 +26693,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-art-ui-v153-20260729';
+const BURBZ_BUILD = 'birdnet-accuracy-v154-20260729';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

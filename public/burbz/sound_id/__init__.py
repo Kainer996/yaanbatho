@@ -6,9 +6,10 @@ them, and this package originally existed to swap in Perch 2.0 (Apache 2.0).
 
 **BirdNET+ V3.0 resolved that.** Its weights are CC BY-SA 4.0: commercial use
 is permitted with attribution. V3 is now the default, and it is both the
-licence-clean option and the better model — 11,560 classes against 6,000, a
-variable-length input, and a 12,012-species range filter replacing V2.4's
-built-in one. See ../LICENSING.md.
+licence-clean option and the broader model — 11,560 classes, variable-length
+input, and a 12,012-class range model replacing V2.4's built-in filter. Classes
+without an exact geo mapping get a stricter acoustic floor. See
+../LICENSING.md.
 
     BURBZ_SOUND_MODEL=birdnetv3   (default — BirdNET V3, CC BY-SA 4.0)
     BURBZ_SOUND_MODEL=perch       (Perch 2.0 via ONNX Runtime, Apache 2.0)
@@ -34,6 +35,7 @@ from __future__ import annotations
 
 import logging
 import os
+from contextvars import ContextVar
 from typing import Any, Callable, Iterable, Optional, Sequence
 
 logger = logging.getLogger(__name__)
@@ -73,6 +75,14 @@ _LABELS = {"birdnetv3": "BirdNET", "birdnetv2": "BirdNET", "perch": "Perch"}
 # Set once a scan has actually been served, so the announcement below is made
 # from a request that really happened rather than from start-up.
 _announced = False
+
+# Request/task-local provenance. It is cleared both by analyse() and by the
+# Flask integration's before_request hook, so malformed uploads and concurrent
+# scans can never inherit a previous request's provider.
+_served_provider: ContextVar[Optional[str]] = ContextVar(
+    "burbz_sound_served_provider", default=None
+)
+_REQUEST_PROVIDER_KEY = "_burbz_sound_served_provider"
 
 # Callables injected by server.py so this package never has to import it
 # (which would be circular) and so the tests can run without the backend.
@@ -192,6 +202,115 @@ def _announce(provider: str) -> None:
     )
 
 
+def clear_served_provider() -> None:
+    """Clear request-local provider provenance before a sound request."""
+    _served_provider.set(None)
+    try:
+        from flask import g, has_request_context
+
+        if has_request_context():
+            setattr(g, _REQUEST_PROVIDER_KEY, None)
+    except Exception:
+        pass
+
+
+def record_served_provider(provider: str) -> str:
+    """Record the recogniser that successfully answered this request."""
+    resolved = resolve_provider(provider)
+    _served_provider.set(resolved)
+    try:
+        from flask import g, has_request_context
+
+        if has_request_context():
+            setattr(g, _REQUEST_PROVIDER_KEY, resolved)
+    except Exception:
+        pass
+    return resolved
+
+
+def last_served_provider() -> Optional[str]:
+    """Provider that actually answered in this request/task, never configured fallback."""
+    # Flask's ``g`` is newly allocated for every request, so an auth/rate-limit
+    # before_request hook that short-circuits before our clear hook can never
+    # inherit the ContextVar value left by an earlier request on the same
+    # worker thread.
+    try:
+        from flask import g, has_request_context
+
+        if has_request_context():
+            return getattr(g, _REQUEST_PROVIDER_KEY, None)
+    except Exception:
+        pass
+    return _served_provider.get()
+
+
+def served_meta(provider: Optional[str] = None) -> dict:
+    """JSON-ready, non-fabricating identity for the engine that served.
+
+    When no recogniser ran successfully, ``provider`` is null and
+    ``providerVerified`` is false. In particular, this never substitutes the
+    configured provider merely because it was supposed to run.
+    """
+    configured = active_provider()
+    actual = resolve_provider(provider) if provider is not None else last_served_provider()
+    meta = {
+        "provider": actual,
+        "providerLabel": provider_label(actual) if actual is not None else None,
+        "configuredProvider": configured,
+        "fallbackUsed": bool(actual is not None and actual != configured),
+        "commercial": is_commercial_safe(actual) if actual is not None else None,
+        "providerVerified": actual is not None,
+        "providerVersion": None,
+        "modelName": None,
+        "modelSha256": None,
+        "labelsSha256": None,
+        "scoreBlacklistSha256": None,
+        "geoModelName": None,
+        "geoModelVersion": None,
+        "geoModelSha256": None,
+        "geoLabelsSha256": None,
+        "policyVersion": None,
+    }
+    if actual == "birdnetv3":
+        try:
+            from . import birdnet_v3_provider
+
+            model = birdnet_v3_provider.model_meta()
+            geo = birdnet_v3_provider.geo_model_meta()
+            meta.update({
+                "providerVersion": model.get("version"),
+                "modelName": model.get("name"),
+                "modelSha256": model.get("modelSha256"),
+                "labelsSha256": model.get("labelsSha256"),
+                "scoreBlacklistSha256": model.get("scoreBlacklistSha256"),
+                "geoModelName": geo.get("name"),
+                "geoModelVersion": geo.get("version"),
+                "geoModelSha256": geo.get("modelSha256"),
+                "geoLabelsSha256": geo.get("labelsSha256"),
+                "policyVersion": model.get("policyVersion"),
+            })
+            meta["providerVerified"] = all((
+                model.get("modelSha256") == birdnet_v3_provider.ONNX_SHA256,
+                model.get("labelsSha256") == birdnet_v3_provider.LABELS_SHA256,
+                model.get("scoreBlacklistSha256")
+                == birdnet_v3_provider.SCORE_BLACKLIST_SHA256,
+                model.get("policyVersion")
+                == birdnet_v3_provider.DECISION_POLICY_VERSION,
+                geo.get("modelSha256") == birdnet_v3_provider.GEO_ONNX_SHA256,
+                geo.get("labelsSha256") == birdnet_v3_provider.GEO_LABELS_SHA256,
+            ))
+        except Exception:
+            logger.exception("could not attach BirdNET V3 model provenance")
+            meta["providerVerified"] = False
+    elif actual == "perch":
+        meta["providerVersion"] = "2.0"
+        meta["modelName"] = "Perch 2.0"
+    elif actual == "birdnetv2":
+        meta["providerVersion"] = "2.4"
+        meta["modelName"] = "BirdNET V2.4"
+    return meta
+
+
 def _run(provider: str, audio_path: str, allow, lat, lon, week) -> Sequence[dict]:
     if provider == "birdnetv3":
         from . import birdnet_v3_provider
@@ -238,6 +357,7 @@ def analyse(
     while testing, so a broken install is loud rather than quietly served by
     the other model.
     """
+    clear_served_provider()
     lat, lon = _location_from_request(lat, lon)
     provider = active_provider()
     chain = (provider, *_FALLBACK_CHAIN.get(provider, ()))
@@ -245,6 +365,7 @@ def analyse(
     for position, candidate in enumerate(chain):
         try:
             results = _run(candidate, audio_path, allow, lat, lon, week)
+            record_served_provider(candidate)
             _announce(candidate)
             return results
         except Exception:
@@ -276,9 +397,13 @@ __all__ = [
     "NON_COMMERCIAL_PROVIDERS",
     "active_provider",
     "analyse",
+    "clear_served_provider",
     "configure",
     "fallback_enabled",
     "is_commercial_safe",
+    "last_served_provider",
     "provider_label",
+    "record_served_provider",
     "resolve_provider",
+    "served_meta",
 ]

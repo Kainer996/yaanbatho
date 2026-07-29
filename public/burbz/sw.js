@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-generated-art-ui-v153-20260729';
+const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-generated-art-ui-v153-20260729-birdnet-accuracy-v154-20260729';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -46,7 +46,7 @@ const BURBZ_ASSETS = [
   './bird_diet_hunger_core.js?v=diet-hunger-release-20260723',
   './diet_hunger_core.js?v=diet-hunger-release-20260723',
   './scan_economy_core.js',
-  './sound_listener_core.js?v=merlin-discovery-history-v3-20260716',
+  './sound_listener_core.js?v=birdnet-v3-accuracy-v4-20260729',
   './uk_bird_expansion_50.js?v=uk50-source-backed-20260713',
   './uk_bird_expansion_2.js?v=uk26-source-backed-20260713',
   './au_bird_expansion.js?v=au-source-backed-20260713',
@@ -190,6 +190,7 @@ const BURBZ_CORE = [
   './audio_core.js?v=burbz-audio-overhaul-v1-20260726',
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
   './merlin_companion_core.js?v=merlin-compact-speech-v2-20260724',
+  './sound_listener_core.js?v=birdnet-v3-accuracy-v4-20260729',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/bgm-birbs-quest.mp3',
   './assets/audio/bgm-burbz-quest-v2.mp3',

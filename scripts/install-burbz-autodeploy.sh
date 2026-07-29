@@ -84,10 +84,37 @@ OWNER=$(stat -c '%U:%G' "$ROOT/index.html")
 cp -f "$ROOT/index.html" "$ROOT/index.html.prev" 2>/dev/null || true
 cp -f "$ROOT/sw.js" "$ROOT/sw.js.prev" 2>/dev/null || true
 
+BACKEND_CHANGED=0
+for f in \
+  sound_id/__init__.py \
+  sound_id/_audio.py \
+  sound_id/birdnet_v3_provider.py \
+  sound_id/birdnet_provider.py \
+  sound_id/perch_provider.py \
+  sound_id/server_integration.py; do
+  if [[ ! -f "$ROOT/$f" ]] || ! cmp -s "$SRC/$f" "$ROOT/$f"; then
+    BACKEND_CHANGED=1
+    break
+  fi
+done
+
 # add/update only — never delete live-only assets
 cp -a "$SRC/." "$ROOT/"
-echo "$SHA" > "$ROOT/.burbz-deployed-sha"
 chown -R "$OWNER" "$ROOT"
+
+# Python modules stay resident, and an older server.py may carry the
+# unreachable pre-v4 hook. Run the same transactional installer/live proof as
+# a manual release; do not record the commit SHA unless exact V3 provenance,
+# model hash, policy, positive fixture and confuser regression all pass.
+if [[ $BACKEND_CHANGED -eq 1 ]]; then
+  if ! bash "$TMP/yaanbatho-main/scripts/install-birdnet-v3.sh"; then
+    logger -t burbz-sync "abort: exact BirdNET V3 live proof failed"
+    exit 1
+  fi
+  logger -t burbz-sync "BirdNET V3 live proof passed"
+fi
+
+echo "$SHA" > "$ROOT/.burbz-deployed-sha"
 logger -t burbz-sync "deployed $SHA to $ROOT"
 SYNC
 chmod +x "$SYNC_BIN"
