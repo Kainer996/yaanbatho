@@ -105,7 +105,7 @@ def test_audio_upload_and_optional_location_are_disclosed_before_capture():
     html = HTML.read_text(encoding="utf-8")
     assert "Sound windows are sent to the Burbz server for bird-sound analysis" in html
     assert 'id="merlinLocationAssist"' in html
-    assert "Use my location to improve local bird matches" in html
+    assert "Use my location — required for accurate local bird matches" in html
     assert "function soundLocationAssistEnabled" in html
     geo = html.split("async function getCurrentPositionForBirdnet", 1)[1].split("async function uploadRecording", 1)[0]
     assert "if (!soundLocationAssistEnabled()) return null" in geo
@@ -129,8 +129,8 @@ def test_success_copy_calls_the_result_an_engine_match_not_objective_confirmatio
     # The engine is named by the server so BirdNET and Perch both attribute the
     # result to a recogniser rather than asserting the bird was objectively there.
     assert "const engine = soundEngineLabel(result)" in analyse
-    assert "engine + ' match: ' + result.species" in analyse
-    assert "engine + ' identified ' + result.species" in analyse
+    assert "engine + ' match: ' + confirmedNames" in analyse
+    assert "engine + ' identified ' + confirmedNames" in analyse
     assert "Heard ' + result.species" not in analyse
     assert "Merlin heard" not in analyse
 
@@ -205,7 +205,7 @@ def test_permission_track_end_and_api_failures_have_truthful_recoverable_states(
 def test_continuous_listener_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert 'sound_listener_core.js?v=merlin-discovery-history-v3-20260716' in html
-    assert './sound_listener_core.js?v=merlin-discovery-history-v3-20260716' in sw
+    assert 'sound_listener_core.js?v=local-consensus-v4-20260729' in html
+    assert './sound_listener_core.js?v=local-consensus-v4-20260729' in sw
     assert './assets/ui/merlin-wand-listener.webp' in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

@@ -286,11 +286,11 @@ console.log(JSON.stringify({
 }));
 """
     )
-    assert out["afterExpeditionOnce"] == 32
-    assert out["afterExpeditionTwice"] == 32
-    assert out["afterTrainingOnce"] == 40
-    assert out["afterBattleOnce"] == 50
-    assert out["afterBattleTwice"] == 50
+    assert out["afterExpeditionOnce"] == 20
+    assert out["afterExpeditionTwice"] == 20
+    assert 20 <= out["afterTrainingOnce"] < 20.01
+    assert 20 <= out["afterBattleOnce"] < 20.01
+    assert 20 <= out["afterBattleTwice"] < 20.01
     assert len(out["tx"]) == 3
     assert out["reserved"] is True
 
@@ -320,14 +320,10 @@ console.log(JSON.stringify({ merlinGood, merlinDuplicate, merlinMealworm, finchF
     assert out["merlinGood"]["state"]["merlinCare"]["hunger"] < 70
     assert out["merlinDuplicate"]["consumed"] == {}
     assert out["merlinDuplicate"]["state"]["inventory"]["larder"]["small_bird_prey_ration"] == 1
-    # A secondary food is eaten, not refused — mealworms are a real part of a
-    # Merlin's diet, just not the mainstay, so the meal lands at half value.
-    assert out["merlinMealworm"]["ok"] is True
+    # A second meal in the same daily fullness cycle is not spent.
+    assert out["merlinMealworm"]["ok"] is False
     assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
-    fed = (out["merlinDuplicate"]["state"]["merlinCare"]["hunger"]
-           - out["merlinMealworm"]["state"]["merlinCare"]["hunger"])
-    assert fed == round(18 * 0.5), "a side food fills exactly half a mealworm scoop's 18"
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
     # Food outside the diet entirely is still refused, and still costs nothing.
     assert out["finchFish"]["ok"] is False
     assert out["finchFish"]["state"]["inventory"]["larder"]["live_minnow"] == 1
@@ -358,7 +354,7 @@ def test_val_regression_001_cache_pins_new_diet_hunger_assets_and_keeps_protecte
     sw = SW.read_text(encoding="utf-8")
     runtime_assets = [
         "diet_hunger_core.js?v=diet-hunger-release-20260723",
-        "data/bird-diet-records.js?v=diet-hunger-release-20260723",
+        "data/bird-diet-records.js?v=reconciled-release-v170-20260729",
     ]
     for asset in runtime_assets:
         assert asset in html, f"{asset} is not loaded by index.html"

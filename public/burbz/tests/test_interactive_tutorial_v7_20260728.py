@@ -303,4 +303,4 @@ def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
     assert "discoveries-quiz-pacing-v152-20260728" in sw
-    assert "const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';" in HTML.read_text(encoding="utf-8")
+    assert "const BURBZ_BUILD = 'reconciled-release-v170-20260729';" in HTML.read_text(encoding="utf-8")

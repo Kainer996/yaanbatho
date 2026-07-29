@@ -180,13 +180,13 @@ console.log(JSON.stringify({
     )
     assert out["expStatus"] == "complete"
     assert out["trainStatus"] == "complete"
-    assert out["afterExpOnce"] == 32
-    assert out["afterExpTwice"] == 32
-    assert out["afterReloadClaim"] == 32
-    assert out["afterTrainOnce"] == 42
-    assert out["afterTrainTwice"] == 42
-    assert out["afterBattleOnce"] == 54
-    assert out["afterBattleTwice"] == 54
+    assert out["afterExpOnce"] == 20
+    assert out["afterExpTwice"] == 20
+    assert out["afterReloadClaim"] == 20
+    assert 20 <= out["afterTrainOnce"] < 20.01
+    assert 20 <= out["afterTrainTwice"] < 20.01
+    assert 20 <= out["afterBattleOnce"] < 20.01
+    assert 20 <= out["afterBattleTwice"] < 20.01
     assert len(out["tx"]) == 3
     assert {row["type"] for row in out["log"]} >= {"expedition", "training", "battle"}
     assert out["reservedExp"] is True

@@ -29,15 +29,42 @@ FILES=(
   "quest_core.js"
   "empire_map_core.js"
   "academy_treehouse_core.js"
+  "academy_alive_core.js"
   "kitchen_pantry_core.js"
   "data/bird-diet-records.js"
   "bird_diet_hunger_core.js"
   "diet_hunger_core.js"
+  "bird_family_core.js"
   "scan_economy_core.js"
   "sound_listener_core.js"
   "battle_core.js"
   "loot_crafting_core.js"
   "audio_core.js"
+  # Intro cutscene (LFS-backed; raw.githubusercontent resolves LFS to real
+  # bytes, so this curls the actual video, not a pointer file).
+  "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
+  "assets/academy-tree-manga-20260629.png"
+  "assets/academy-buildings-manga/aviary-gardens.png"
+  "assets/academy-buildings-manga/crowbar.png"
+  "assets/academy-buildings-manga/hospital.png"
+  "assets/academy-buildings-manga/kitchen.png"
+  "assets/academy-buildings-manga/market.png"
+  "assets/academy-buildings-manga/nursery.png"
+  "assets/academy-buildings-manga/observatory.png"
+  "assets/academy-buildings-manga/quest-roost.png"
+  "assets/academy-buildings-manga/roost.png"
+  "assets/academy-buildings-manga/training-hall.png"
+  "assets/academy-buildings-manga/workshop.png"
+  "assets/academy-buildings/aviary-gardens.svg"
+  "assets/academy-buildings/crowbar.svg"
+  "assets/academy-buildings/hospital.svg"
+  "assets/academy-buildings/kitchen.svg"
+  "assets/academy-buildings/market.svg"
+  "assets/academy-buildings/nursery.svg"
+  "assets/academy-buildings/observatory.svg"
+  "assets/academy-buildings/roost.svg"
+  "assets/academy-buildings/training-hall.svg"
+  "assets/academy-buildings/workshop.svg"
   "assets/ui/quest-compass-emblem.webp"
   "assets/ui/map-landmark-field.webp"
   "assets/ui/map-landmark-grove.webp"
@@ -68,7 +95,6 @@ FILES=(
   "au_bird_expansion.js"
   "au_bird_expansion_2.js"
   "national_bird_completion_20260715.js"
-  "bird_art_release_20260727.js"
   "spain_boundary_20260715.js"
   "lib/three.min.js"
   "lib/maplibre-gl.js"
@@ -79,15 +105,6 @@ FILES=(
   "assets/merlin/merlin-body.webp"
   "assets/merlin/merlin-wing.webp"
   "assets/merlin/merlin-head.webp"
-  "assets/ui/burbz-icon-set/coin.webp"
-  "assets/ui/burbz-icon-set/timber.webp"
-  "assets/ui/burbz-icon-set/profile.webp"
-  "assets/ui/burbz-icon-set/settings.webp"
-  "assets/ui/burbz-icon-set/camera.webp"
-  "assets/ui/burbz-icon-set/sound.webp"
-  "assets/ui/burbz-icon-set/inventory.webp"
-  "assets/ui/burbz-icon-set/forge.webp"
-  "assets/ui/burbz-icon-set/quests.webp"
   # Backend, not referenced by index.html: server.py imports this package to
   # choose its recogniser. BirdNET V3 (CC BY-SA 4.0) is the default; Perch 2.0
   # and the legacy non-commercial V2.4 path remain selectable. Ship every file
@@ -103,6 +120,7 @@ FILES=(
   # it has to be on the box for `python3 -m sound_id.selftest` to mean anything.
   "assets/audio/bird-tawny-owl.ogg"
   "data/uk-bird-education-50.json"
+  "data/bird-education.json"
   "data/regional-bird-education-20260715.json"
   "data/national-bird-completion/manifest.json"
 )
@@ -168,14 +186,6 @@ for f in "${FILES[@]}"; do
   mkdir -p "$TMP/$(dirname "$f")"
   curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
 done
-# The generated-art mapping is the release manifest for its card paintings.
-# Pull each referenced local painting without hardcoding the release filenames.
-while IFS= read -r art_url; do
-  f="${art_url#/burbz/}"
-  FILES+=("$f")
-  mkdir -p "$TMP/$(dirname "$f")"
-  curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
-done < <(grep -o '/burbz/bird-art-cache/completion-20260726/[^"]*' "$TMP/bird_art_release_20260727.js" | sort -u)
 log "Downloaded ${#FILES[@]} files from GitHub"
 
 # sanity-check before touching the live site
