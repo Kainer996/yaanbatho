@@ -307,5 +307,5 @@ def test_release_cache_is_bumped():
     build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert "discoveries-quiz-pacing-v152-20260728" in sw
     assert "reconciled-release-v170-20260729" in sw
-    assert "const BURBZ_BUILD = 'generated-art-ui-restore-v174-20260730';" in html
+    assert "const BURBZ_BUILD = 'kitchen-no-duplicate-companions-v175-20260730';" in html
     assert build in sw
