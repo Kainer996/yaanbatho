@@ -26534,7 +26534,7 @@ function careForMerlin(action) {
       saveState(); renderPetCompanion();
       const message = tx.ok
         ? 'Falcon food served: a source-backed small-bird prey ration suits Falco columbarius.'
-        : (Math.max(0, Number(ensureLarder().mealworm_scoop) || 0) > 0
+        : ((Math.max(0, Number(ensureLarder().small_bird_prey_ration) || 0) < 1) && Math.max(0, Number(ensureLarder().mealworm_scoop) || 0) > 0
           ? 'Merlin refuses mealworms as a main meal: prepare a small-bird prey ration.'
           : tx.message);
       if ($('merlinCareNote')) $('merlinCareNote').textContent = message;
@@ -27127,7 +27127,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'birdnet-accuracy-v171-20260729';
+const BURBZ_BUILD = 'tutorial-merlin-feed-fix-v172-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -27413,7 +27413,9 @@ function merlinTutActionIsAvailable(action) {
         // One ration clamps his hunger to 0 and the diet core then refuses the
         // next meal, so a re-entered feed step (Back, or a migrated save) could
         // never be satisfied — read the lesson instead of waiting for nothing.
-        return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) > 0;
+        const feedingCore = dietHungerCore();
+        const feedingMinimum = Math.max(1, Number(feedingCore && feedingCore.FEEDING_HUNGER_MIN) || 60);
+        return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) >= feedingMinimum;
       case 'roost-built':
         return !isAcademyBuildingBuilt('dorm');
       case 'expedition-sent':
@@ -27430,8 +27432,6 @@ function merlinTutActionIsAvailable(action) {
 function merlinTutArmAction(step) {
   const action = step.action;
   merlinTutAwaitingAction = { event:action.event, settleMs:action.settleMs };
-  // "Feed me" must never be an instruction the player cannot carry out.
-  if (action.event === 'merlin-fed') maybeGrantTutorialFalconRation();
   const overlay = $('merlinTutorialOverlay');
   const free = action.mode === 'free';
   if (overlay) overlay.classList.add('interactive', ...(free ? ['free'] : []));
@@ -27518,11 +27518,29 @@ function tutorialFlowState() {
 function maybeGrantTutorialFalconRation() {
   try {
     const larder = ensureLarder();
-    if ((Number(larder.small_bird_prey_ration) || 0) > 0) return;
-    larder.small_bird_prey_ration = 2;
+    let changed = false;
+    let grantedRations = false;
+    if ((Number(larder.small_bird_prey_ration) || 0) < 1) {
+      larder.small_bird_prey_ration = 2;
+      changed = true;
+      grantedRations = true;
+    }
+    // Fresh players begin comfortably fed (hunger 20), but the normal feeding
+    // transaction correctly refuses meals below its 60-point threshold. The
+    // tutorial says Merlin is famished, so make that narrative state real
+    // before deciding whether the Feed action can be armed.
+    const core = dietHungerCore();
+    const feedingMinimum = Math.max(1, Number(core && core.FEEDING_HUNGER_MIN) || 60);
+    const care = getMerlinCare();
+    if (!care.lastFedAt && (Number(care.hunger) || 0) < feedingMinimum) {
+      care.hunger = feedingMinimum;
+      care.lastHungerAt = Date.now();
+      changed = true;
+    }
+    if (!changed) return;
     saveState();
     renderMerlinCareMenu();
-    showToast('\u{1FAB6} Merlin tucks two prey rations into your larder for the lesson.');
+    if (grantedRations) showToast('\u{1FAB6} Merlin tucks two prey rations into your larder for the lesson.');
   } catch (e) {}
 }
 
@@ -27681,6 +27699,10 @@ function merlinTutShowStep(i) {
   // Every step of the feeding lesson needs the care menu on screen — reopen it
   // if anything (a reload, a Back, a stray tap) has closed it.
   if (merlinTutCareMenuStep(step)) merlinTutEnsureCareMenuOpen();
+  // Prepare both the promised ration and a genuinely feedable hunger state
+  // before availability is checked; otherwise a fresh player hears a tap but
+  // the care transaction quite correctly refuses to overfeed Merlin.
+  if (step.action && step.action.event === 'merlin-fed' && merlinTutMode !== 'full') maybeGrantTutorialFalconRation();
   $('merlinTutorialChapter').textContent = step.chapter;
   $('merlinTutorialTitle').textContent = step.title;
   text.textContent = step.text;
