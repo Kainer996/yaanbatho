@@ -41,7 +41,8 @@ def test_core_module_exists_and_exports():
     assert "BurbzAcademyAlive" in CORE
     for name in [
         "createAcademyAlive", "ANCHORS", "isNightHour", "lightBoostFor",
-        "makeFlightLeg", "pickFlyers", "windAt", "cubicAt",
+        "makeFlightLeg", "BIRD_ARCHETYPES", "drawBird", "pickArchetype",
+        "windAt", "cubicAt",
     ]:
         assert name in CORE, f"engine must export {name}"
 
@@ -70,13 +71,12 @@ def test_service_worker_and_live_update_ship_the_engine():
 
 # ---- safety rails ------------------------------------------------------------
 
-def test_expedition_birds_never_fly():
-    match = re.search(r"function academyAliveBirds\(\) \{.*?\n\}", HTML, re.S)
-    assert match, "missing academyAliveBirds adapter"
-    body = match.group(0)
-    assert body.count("birdHasActiveExpedition") >= 2, (
-        "both Merlin and flock companions must be skipped while away on expeditions"
-    )
+def test_flying_birds_are_procedural_not_cutouts():
+    # Round-2 feedback: translated cutouts read as bouncing stickers. Flying
+    # birds are now drawn and wing-animated on canvas; no flyer DOM remains.
+    assert "spawnBirdActor" in CORE and "updateBirdActors" in CORE
+    assert "alive-flyer" not in HTML, "the DOM cutout flyer layer must be gone"
+    assert "academyAliveBirds" not in HTML, "the companion flyer roster adapter must be gone"
 
 
 def test_reduced_motion_keeps_windows_but_skips_motion():
@@ -88,21 +88,19 @@ def test_reduced_motion_keeps_windows_but_skips_motion():
     assert "prefers-reduced-motion" in HTML
 
 
-def test_artless_birds_stay_perched():
-    assert "b.cutoutUrl && !st.groundedIds[b.id]" in CORE, (
-        "only birds with real cutout art may fly; broken art grounds the bird"
-    )
-
-
-def test_merlin_flies_on_github_cutout():
-    assert "birdCutoutUrlFor(MERLIN_GUIDE.artUrl)" in HTML, (
-        "Merlin's flyer must use the GitHub-hosted cutout — the local "
-        "/bird-art-cache path can be an unhydrated LFS pointer on live hosts"
-    )
+def test_tree_and_branches_sway():
+    # The tree painting rides a dedicated child div with a slow wind-sway, and
+    # the engine draws swaying foreground branch tufts on the front canvas.
+    assert 'class="academy-tree-swaybg"' in HTML, "the sway div must exist in the treehouse markup"
+    rule = re.search(r"\.academy-tree-swaybg[^{]*\{([^}]*)\}", HTML)
+    assert rule and "treeSway" in rule.group(1) and "academy-tree-manga" in rule.group(1)
+    assert "@keyframes treeSway" in HTML
+    assert ".academy-tree-swaybg { animation:none; }" in HTML, "sway must respect reduced motion"
+    assert "buildFoliage" in CORE and "drawFoliage" in CORE
 
 
 def test_ambience_layers_never_eat_taps():
-    for cls in [".academy-alive-canvas", ".academy-alive-flyers", ".alive-flyer", ".th-alive-glow", ".academy-alive-light", ".academy-alive-shade"]:
+    for cls in [".academy-alive-canvas", ".th-alive-glow", ".academy-alive-light", ".academy-alive-shade", ".academy-tree-swaybg"]:
         rule = re.search(re.escape(cls) + r"[^{]*\{([^}]*)\}", HTML)
         assert rule, f"missing CSS for {cls}"
         assert "pointer-events:none" in rule.group(1).replace(" ", ""), (
@@ -186,24 +184,57 @@ def test_flight_legs_stay_flyable():
     assert out["ok"] and out["entries"] == 200
 
 
-def test_flyer_roster_caps_and_keeps_merlin():
+def test_five_varied_bird_archetypes():
     out = _run_node(
         """
         const core = require('./academy_alive_core.js');
-        const birds = [];
-        for (let i = 0; i < 40; i++) birds.push({ id: 'b' + i, cutoutUrl: 'x.png' });
-        birds.push({ id: 'merlin-guide', magic: true, cutoutUrl: 'm.png' });
-        const picked = core.pickFlyers(birds, 5, 1234);
+        const A = core.BIRD_ARCHETYPES;
+        const keys = Object.keys(A);
+        const sizes = keys.map(k => A[k].size);
+        const styles = new Set(keys.map(k => A[k].style));
+        const rigged = keys.every(k => A[k].flapHz > 0 && A[k].amp > 0 && A[k].span > 0 &&
+          A[k].back && A[k].wing && A[k].belly && A[k].weightDay >= 0 && A[k].weightNight >= 0);
         console.log(JSON.stringify({
-          count: picked.length,
-          hasMerlin: picked.some(b => b.magic),
-          small: core.pickFlyers(birds.slice(0, 2), 5, 1).length
+          count: keys.length,
+          distinctSizes: new Set(sizes).size,
+          smallest: Math.min.apply(null, sizes),
+          largest: Math.max.apply(null, sizes),
+          styles: [...styles],
+          rigged,
+          owlNocturnal: A.owl.weightNight > A.owl.weightDay * 5,
+          buzzardDiurnal: A.buzzard.weightDay > A.buzzard.weightNight * 5,
+          flapRange: Math.max.apply(null, keys.map(k => A[k].flapHz)) / Math.min.apply(null, keys.map(k => A[k].flapHz))
         }));
         """
     )
-    assert out["count"] == 5, "the sky holds at most five companions at once"
-    assert out["hasMerlin"], "the permanent guide always earns a sky slot"
-    assert out["small"] == 2, "small flocks all fly"
+    assert out["count"] == 5, "exactly five bird archetypes, as designed"
+    assert out["distinctSizes"] == 5 and out["smallest"] <= 10 and out["largest"] >= 22, (
+        "the cast must span tiny songbird to broad raptor"
+    )
+    assert set(out["styles"]) == {"bounding", "steady", "soar", "buoyant"}, (
+        "flight styles must differ, not just colours"
+    )
+    assert out["rigged"], "every archetype needs a full wing rig and palette"
+    assert out["owlNocturnal"] and out["buzzardDiurnal"], "the cast must change between day and night"
+    assert out["flapRange"] >= 3, "wingbeat speeds must genuinely vary (flutter vs slow rowing)"
+
+
+def test_archetype_picker_follows_day_and_night():
+    out = _run_node(
+        """
+        const core = require('./academy_alive_core.js');
+        const rngDay = core.mulberry32(7);
+        const rngNight = core.mulberry32(7);
+        let dayOwls = 0, nightOwls = 0;
+        for (let i = 0; i < 300; i++) {
+          if (core.pickArchetype(false, rngDay) === 'owl') dayOwls++;
+          if (core.pickArchetype(true, rngNight) === 'owl') nightOwls++;
+        }
+        console.log(JSON.stringify({ dayOwls, nightOwls }));
+        """
+    )
+    assert out["dayOwls"] < 15, "owls should barely fly in daylight"
+    assert out["nightOwls"] > 60, "owls should own the night sky"
 
 
 def test_wind_is_gentle():

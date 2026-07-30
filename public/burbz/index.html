@@ -2229,7 +2229,7 @@ svg.academy-room-bg { display:block; filter:none; }
 @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(-10px)} }
 /* ========== ACADEMY ========== */
 
-.academy-treehouse { position:relative; margin:0 10px 14px; min-height:680px; border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:linear-gradient(180deg,rgba(7,16,24,.22),rgba(7,16,24,.92)), url('assets/academy-tree-manga-20260629.png') center bottom / cover no-repeat; box-shadow:inset 0 -110px 130px rgba(0,0,0,.54), 0 18px 44px rgba(0,0,0,.42); touch-action:manipulation; }
+.academy-treehouse { position:relative; margin:0 10px 14px; min-height:680px; border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:#0a0f0c; box-shadow:inset 0 -110px 130px rgba(0,0,0,.54), 0 18px 44px rgba(0,0,0,.42); touch-action:manipulation; }
 .academy-treehouse.placing { outline:2px solid rgba(214,168,79,.78); box-shadow:0 0 0 4px rgba(214,168,79,.14), inset 0 -110px 130px rgba(0,0,0,.42); cursor:crosshair; }
 .academy-treehouse::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 18%,rgba(214,168,79,.12),transparent 28%), linear-gradient(180deg,rgba(255,255,255,.03),transparent 34%,rgba(0,0,0,.32)); pointer-events:none; }
 .treehouse-branch { display:none; }
@@ -2264,13 +2264,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .academy-alive-light { position:absolute; inset:-4%; z-index:6; pointer-events:none; mix-blend-mode:screen; opacity:.8; background:linear-gradient(112deg, transparent 22%, rgba(255,240,196,.15) 30%, transparent 37%, transparent 47%, rgba(255,240,196,.09) 55%, transparent 62%); animation:aliveRays 17s ease-in-out infinite alternate; }
 .academy-treehouse.alive-night .academy-alive-light { background:linear-gradient(112deg, transparent 30%, rgba(190,214,255,.10) 40%, transparent 50%); animation-duration:23s; }
 @keyframes aliveRays { from { transform:translateX(-2%); opacity:.55; } to { transform:translateX(2%); opacity:.95; } }
-.academy-alive-flyers { position:absolute; inset:0; pointer-events:none; }
-.alive-flyer { position:absolute; left:0; top:0; width:44px; height:44px; z-index:9; pointer-events:none; will-change:transform; filter:drop-shadow(0 6px 7px rgba(0,0,0,.5)); }
-.alive-flyer.behind { z-index:5; filter:drop-shadow(0 4px 5px rgba(0,0,0,.45)) saturate(.9) brightness(.92); }
-.alive-flyer img, .alive-flyer svg { width:100%; height:100%; object-fit:contain; display:block; }
-.alive-flyer.magic { filter:drop-shadow(0 6px 7px rgba(0,0,0,.5)) drop-shadow(0 0 9px rgba(168,142,255,.55)); }
 .th-alive-glow { position:absolute; pointer-events:none; mix-blend-mode:screen; opacity:0; }
-@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } }
+/* The tree painting itself breathes: the background image lives on this div
+   (not the container) so a slow wind-sway can rock the whole canopy. */
+.academy-tree-swaybg { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(7,16,24,.22),rgba(7,16,24,.92)), url('assets/academy-tree-manga-20260629.png') center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
+@keyframes treeSway { from { transform:rotate(-.4deg) translateX(-3px); } to { transform:rotate(.4deg) translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } }
 
 .expedition-panel { margin:0 10px 14px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.09),rgba(0,0,0,.25)); }
 .expedition-title { font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
@@ -3023,6 +3022,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="screen" id="screen-academy">
       <div class="screen-title">BURB ACADEMY</div>
       <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
+        <div class="academy-tree-swaybg" aria-hidden="true"></div>
         <div id="treehouseBranchLayer"></div>
         <div id="treehouseRoomLayer"></div>
         <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
@@ -3544,7 +3544,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-categories-material-quests-20260726"></script>
-<script src="academy_alive_core.js?v=academy-alive-v1-20260729"></script>
+<script src="academy_alive_core.js?v=academy-alive-v2-20260730"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
@@ -11098,40 +11098,17 @@ function treehouseBirdIconHTML(bird) {
 }
 
 // ---- Academy Alive: the living treehouse -----------------------------------
-// A presentation-only ambience engine (academy_alive_core.js): the player's
-// real companions take wing around the tree shedding feathers, the Kitchen
-// chimney smokes, windows and lanterns flicker, The Crowbar hums with song.
+// A presentation-only ambience engine (academy_alive_core.js): procedurally
+// animated birds beat their wings around the tree shedding feathers, the
+// Kitchen chimney smokes, windows and lanterns flicker, branches sway, and
+// The Crowbar hums with song.
 let ACADEMY_ALIVE = null;
-
-function academyAliveBirds() {
-  // Only birds actually AT the Academy fly here — companions away on an
-  // expedition are physically absent, exactly as the perch layer treats them.
-  const list = [];
-  try {
-    if (!birdHasActiveExpedition(MERLIN_GUIDE.id)) {
-      // Fly Merlin with the GitHub-hosted cutout (like every other species):
-      // the local /bird-art-cache path can be an unhydrated LFS pointer on
-      // some hosts, and a broken image would ground the guide for the session.
-      const merlinCutout = birdCutoutUrlFor(MERLIN_GUIDE.artUrl) || MERLIN_GUIDE.cutoutUrl;
-      list.push({ id: MERLIN_GUIDE.id, name: 'Merlin', species: 'Merlin', cutoutUrl: merlinCutout, tint: ['#6b5fae', '#9c8cdc'], magic: true });
-    }
-    ((gameState && gameState.flock) || []).forEach(b => {
-      if (!b || !b.id || birdHasActiveExpedition(b.id)) return;
-      const species = String(b.commonName || b.name || b.species || 'Bird');
-      const art = getBirdArtUrl(b);
-      const cutout = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())] || birdCutoutUrlFor(art);
-      list.push({ id: b.id, name: birdDisplayName(b), species, cutoutUrl: cutout || null, tint: birdTintFor(species), magic: false });
-    });
-  } catch (e) {}
-  return list;
-}
 
 function academyAliveStart() {
   try {
     if (!ACADEMY_ALIVE && window.BurbzAcademyAlive) {
       ACADEMY_ALIVE = window.BurbzAcademyAlive.createAcademyAlive({
         container: () => $('academyTreehouse'),
-        presentBirds: academyAliveBirds,
         reducedMotion: () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches),
         // __academyAliveForceHour lets evidence scripts photograph the night
         // scene at noon; players get their real local dusk and dawn.
@@ -16192,7 +16169,7 @@ Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
   // Academy Alive ambience: exported for QA harnesses and evidence scripts.
-  academyAliveBirds, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, birds: () => academyAliveBirds() },
+  __academyAliveDebug: { engine: () => ACADEMY_ALIVE },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   __burbzQuestDebug: {
     getState: () => gameState,
@@ -26567,7 +26544,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-alive-v153-20260729';
+const BURBZ_BUILD = 'academy-wingbeats-v154-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -91,6 +91,166 @@
 
   var SPRITE_BOX = 112; // px — .treehouse-building-sprite is a 112×112 square
 
+  // ==========================================================================
+  // Procedural flying birds. Five archetypes, drawn and animated on canvas —
+  // articulated wings, real flight styles — instead of translating flat art:
+  //   robin    small songbird, bounding flight (flap-burst, then folded dip)
+  //   bluetit  tiny, very fast flutter, strong undulation
+  //   crow     large corvid, slow deep steady wingbeats
+  //   buzzard  broad fingered wings, soaring circles, the odd deep flap
+  //   owl      barn owl, pale and buoyant — flies after dusk
+  // size is the body half-length in px; span is wing length in body units.
+  // weightDay/weightNight drive how often each species takes to the air.
+  // ==========================================================================
+  var BIRD_ARCHETYPES = {
+    robin: {
+      size: 12, span: 1.35, wingWidth: 0.30, flapHz: 9, style: 'bounding', tail: 0.55, amp: 0.95,
+      back: '#8a6f52', wing: '#6b563e', wingFar: '#4e3f2d', breast: '#d95f3b',
+      belly: '#eadfc8', beak: '#4a3b28', eye: '#1c150e',
+      weightDay: 26, weightNight: 3
+    },
+    bluetit: {
+      size: 9, span: 1.3, wingWidth: 0.30, flapHz: 12.5, style: 'bounding', tail: 0.5, amp: 1.0,
+      back: '#4f8fd0', wing: '#3c6ea8', wingFar: '#2c527e', breast: '#e8d44d',
+      belly: '#e8d44d', beak: '#2e2e30', eye: '#16161a',
+      weightDay: 22, weightNight: 2
+    },
+    crow: {
+      size: 21, span: 1.7, wingWidth: 0.44, flapHz: 3.2, style: 'steady', tail: 0.85, amp: 0.85, fingers: 3,
+      back: '#26262e', wing: '#1c1c24', wingFar: '#101016', breast: '#20202a',
+      belly: '#23232d', beak: '#3a3a44', eye: '#0c0c10',
+      weightDay: 18, weightNight: 14
+    },
+    buzzard: {
+      size: 24, span: 1.9, wingWidth: 0.52, flapHz: 2.4, style: 'soar', tail: 0.8, amp: 0.6, fingers: 4,
+      back: '#6e5233', wing: '#5a4228', wingFar: '#413019', breast: '#a8916b',
+      belly: '#c9b896', beak: '#3a3126', eye: '#141008',
+      weightDay: 15, weightNight: 2
+    },
+    owl: {
+      size: 17, span: 1.7, wingWidth: 0.46, flapHz: 3.0, style: 'buoyant', tail: 0.55, amp: 1.0,
+      back: '#d9c49a', wing: '#c4ab7e', wingFar: '#a8905f', breast: '#f2ead8',
+      belly: '#f7f2e6', beak: '#8a6f4a', eye: '#221a10',
+      weightDay: 1, weightNight: 28
+    }
+  };
+
+  function pickArchetype(night, rng) {
+    rng = rng || Math.random;
+    var keys = Object.keys(BIRD_ARCHETYPES);
+    var total = 0;
+    keys.forEach(function(k) { total += night ? BIRD_ARCHETYPES[k].weightNight : BIRD_ARCHETYPES[k].weightDay; });
+    var roll = rng() * total;
+    for (var i = 0; i < keys.length; i++) {
+      roll -= night ? BIRD_ARCHETYPES[keys[i]].weightNight : BIRD_ARCHETYPES[keys[i]].weightDay;
+      if (roll <= 0) return keys[i];
+    }
+    return keys[0];
+  }
+
+  // Pure renderer: one bird in side view at (0,0) of the current transform.
+  // pose = { wingAngle (rad, +ve = downstroke), wingFold (0 open..1 tucked),
+  //          dir (+1 flying right), scale (px per body unit), tilt (rad) }.
+  // Drawn far wing → tail → body → head → near wing so the layers read.
+  function drawBird(ctx, a, pose) {
+    ctx.save();
+    ctx.rotate(pose.tilt || 0);
+    ctx.scale((pose.dir || 1) * pose.scale, pose.scale);
+
+    drawBirdWing(ctx, a, pose, true);
+
+    // Tail: a slim fan off the body's rear point.
+    ctx.fillStyle = a.wing;
+    ctx.beginPath();
+    ctx.moveTo(-0.52, -0.05);
+    ctx.lineTo(-0.72 - a.tail, -0.14);
+    ctx.lineTo(-0.80 - a.tail, 0.02);
+    ctx.lineTo(-0.70 - a.tail, 0.16);
+    ctx.lineTo(-0.50, 0.10);
+    ctx.closePath();
+    ctx.fill();
+
+    // Body: teardrop, back colour over a pale belly.
+    ctx.fillStyle = a.back;
+    ctx.beginPath();
+    ctx.moveTo(0.66, -0.04);
+    ctx.quadraticCurveTo(0.24, -0.30, -0.34, -0.16);
+    ctx.quadraticCurveTo(-0.62, -0.08, -0.60, 0.02);
+    ctx.quadraticCurveTo(-0.30, 0.26, 0.28, 0.24);
+    ctx.quadraticCurveTo(0.62, 0.18, 0.66, -0.04);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = a.belly;
+    ctx.beginPath();
+    ctx.moveTo(0.60, 0.10);
+    ctx.quadraticCurveTo(0.30, 0.26, -0.30, 0.20);
+    ctx.quadraticCurveTo(-0.10, 0.10, 0.20, 0.06);
+    ctx.quadraticCurveTo(0.45, 0.03, 0.60, 0.10);
+    ctx.closePath();
+    ctx.fill();
+    // Breast patch (a robin's orange, an owl's white bib).
+    ctx.fillStyle = a.breast;
+    ctx.beginPath();
+    ctx.ellipse(0.34, 0.10, 0.24, 0.16, -0.35, 0, 7);
+    ctx.fill();
+
+    // Head + beak + eye.
+    ctx.fillStyle = a.back;
+    ctx.beginPath();
+    ctx.arc(0.55, -0.10, 0.26, 0, 7);
+    ctx.fill();
+    ctx.fillStyle = a.beak;
+    ctx.beginPath();
+    ctx.moveTo(0.76, -0.16);
+    ctx.lineTo(0.98 + (a.fingers ? 0.06 : 0), -0.06);
+    ctx.lineTo(0.76, -0.01);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = a.eye;
+    ctx.beginPath();
+    ctx.arc(0.63, -0.14, a.style === 'buoyant' ? 0.075 : 0.05, 0, 7);
+    ctx.fill();
+
+    drawBirdWing(ctx, a, pose, false);
+    ctx.restore();
+  }
+
+  function drawBirdWing(ctx, a, pose, far) {
+    var fold = pose.wingFold || 0;
+    var L = a.span * (1 - 0.68 * fold);
+    var w = a.wingWidth || 0.32;
+    var theta = (pose.wingAngle || 0) * (1 - 0.85 * fold);
+    ctx.save();
+    // Far wing pivots slightly behind the near shoulder and mirrors the beat
+    // above the back, so both wings read in side view.
+    ctx.translate(far ? 0.0 : 0.10, -0.10);
+    ctx.rotate(far ? (theta * 0.85 + 0.22) : -theta);
+    ctx.fillStyle = far ? a.wingFar : a.wing;
+    ctx.beginPath();
+    ctx.moveTo(0.05, -0.03);
+    // Leading edge: arm out, then the hand sweeps to the tip.
+    ctx.quadraticCurveTo(-L * 0.32, -0.15, -L * 0.64, -0.11);
+    ctx.quadraticCurveTo(-L * 0.88, -0.08, -L, 0.02);
+    if (a.fingers && fold < 0.5) {
+      // Splayed primaries: notches carved into the outer trailing edge.
+      var n = a.fingers;
+      for (var i = 0; i < n; i++) {
+        var fx = -L * (0.97 - 0.09 * i);
+        var edge = 0.10 + 0.05 * i;
+        ctx.lineTo(fx + L * 0.025, edge);
+        ctx.lineTo(fx + L * 0.06, edge - 0.07);
+      }
+      ctx.quadraticCurveTo(-L * 0.38, w + 0.06, 0.03, w * 0.72);
+    } else {
+      // Smooth trailing edge with a gentle secondary bulge.
+      ctx.quadraticCurveTo(-L * 0.66, 0.16, -L * 0.40, w * 0.72);
+      ctx.quadraticCurveTo(-L * 0.16, w, 0.03, w * 0.72);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   function isNightHour(h) { return h >= 19.5 || h < 6; }
 
   // 0 → full daylight, 1 → deep night, with dawn/dusk ramps so the windows
@@ -156,23 +316,6 @@
     return { p0: start, p1: c1, p2: c2, p3: end, dur: dur, exit: exit };
   }
 
-  // Which companions take to the air. Deterministic for a given roster+seed so
-  // tests can pin it; rotates through the flock over time via the seed.
-  function pickFlyers(birds, max, seed) {
-    var list = (birds || []).filter(function(b) { return b && b.id; });
-    if (list.length <= max) return list.slice();
-    var rng = mulberry32((seed >>> 0) || 1);
-    var pool = list.slice();
-    var picked = [];
-    // Merlin, the permanent guide, always earns one of the sky slots.
-    var merlinIdx = pool.findIndex(function(b) { return b.magic; });
-    if (merlinIdx >= 0) picked.push(pool.splice(merlinIdx, 1)[0]);
-    while (picked.length < max && pool.length) {
-      picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
-    }
-    return picked;
-  }
-
   function createAcademyAlive(adapter) {
     if (!adapter || typeof adapter.container !== 'function') return null;
 
@@ -185,7 +328,6 @@
       cont: null,
       sky: null, skyCtx: null,
       front: null, frontCtx: null,
-      flyerLayer: null,
       lightEl: null, shadeEl: null,
       w: 0, h: 0, dpr: 1,
       resizeObs: null,
@@ -195,11 +337,9 @@
       fireflies: [],
       butterflies: [],
       flockRuns: [],
-      flyers: {},          // birdId → flyer
-      groundedIds: {},     // birdId → true when its cutout art failed to load
+      birds: [],           // procedural flying birds (see spawnBirdActor)
+      nextBirdAt: 900,
       perchPts: [],
-      rosterSeed: 1,
-      nextRosterAt: 0,
       nextFlockAt: 3500,
       nextChirpAt: 4000,
       nextAnchorScanAt: 0,
@@ -207,7 +347,6 @@
       night: false
     };
 
-    var MAX_FLYERS = 5;
     var MAX_PARTICLES = 150;
 
     function reducedMotion() {
@@ -253,7 +392,6 @@
       st.lightEl = el('div', 'academy-alive-light', cont);
       st.sky = el('canvas', 'academy-alive-canvas academy-alive-sky', cont);
       st.front = el('canvas', 'academy-alive-canvas academy-alive-front', cont);
-      st.flyerLayer = el('div', 'academy-alive-flyers', cont);
       st.skyCtx = st.sky.getContext('2d');
       st.frontCtx = st.front.getContext('2d');
       resize();
@@ -278,6 +416,7 @@
       });
       st.skyCtx.setTransform(st.dpr, 0, 0, st.dpr, 0, 0);
       st.frontCtx.setTransform(st.dpr, 0, 0, st.dpr, 0, 0);
+      buildFoliage();
     }
 
     // ---- anchors: glows + emitters bolted onto the real building nodes -----
@@ -363,133 +502,138 @@
       });
     }
 
-    // ---- flying companions -------------------------------------------------
+    // ---- flying birds --------------------------------------------------------
+    // Procedurally drawn and animated (see BIRD_ARCHETYPES / drawBird): wings
+    // genuinely beat, songbirds fly in flap-burst-and-dip bounds, crows row
+    // steadily, the buzzard soars, the owl comes out after dusk. Birds enter
+    // from beyond the canopy, fly a few continuous legs, and leave — no
+    // hovering in place. Far-depth birds render behind the buildings.
 
-    function birdRoster() {
-      try { return (adapter.presentBirds && adapter.presentBirds()) || []; } catch (e) { return []; }
-    }
-
-    function syncFlyers(force) {
-      if (st.clock < st.nextRosterAt && !force) return;
-      st.nextRosterAt = st.clock + 12000;
-      st.rosterSeed = (st.rosterSeed * 1664525 + 1013904223) >>> 0;
-      // Only companions with real transparent cutout art take to the air — a
-      // 44px fallback glyph reads as a blob in flight, so art-less birds stay
-      // on their perches. Birds whose art failed to load are grounded too.
-      var flyable = birdRoster().filter(function(b) {
-        return b && b.cutoutUrl && !st.groundedIds[b.id];
-      });
-      var roster = pickFlyers(flyable, MAX_FLYERS, st.rosterSeed);
-      var keep = {};
-      roster.forEach(function(b) { keep[b.id] = true; });
-      // Birds that left the Academy (recruited away, sent questing) glide out
-      // on their current leg and are removed once it ends.
-      Object.keys(st.flyers).forEach(function(id) {
-        if (!keep[id]) st.flyers[id].retiring = true;
-      });
-      roster.forEach(function(b, i) {
-        if (st.flyers[b.id]) { st.flyers[b.id].retiring = false; return; }
-        spawnFlyer(b, i);
-      });
-    }
-
-    function spawnFlyer(bird, i) {
-      if (!st.flyerLayer) return;
-      var deep = Math.random() < 0.38; // some flights pass behind the buildings
-      var elWrap = document.createElement('div');
-      elWrap.className = 'alive-flyer' + (deep ? ' behind' : '') + (bird.magic ? ' magic' : '');
-      elWrap.setAttribute('aria-hidden', 'true');
-      var img = document.createElement('img');
-      img.src = bird.cutoutUrl;
-      img.alt = '';
-      img.draggable = false;
-      img.addEventListener('error', function() {
-        // Broken art: ground this bird for the session rather than flying a
-        // blank box around the canopy.
-        st.groundedIds[bird.id] = true;
-        removeFlyer(bird.id);
-      }, { once: true });
-      elWrap.appendChild(img);
-      st.flyerLayer.appendChild(elWrap);
-      var f = {
-        bird: bird, el: elWrap, deep: deep,
-        leg: null, legT: 0, restUntil: st.clock + 400 + i * 2600 + Math.random() * 3000,
-        flapPhase: Math.random() * 7,
-        nextFeatherAt: st.clock + 1500 + Math.random() * 2500,
-        x: -200, y: -200, dir: 1,
-        retiring: false
+    function spawnBirdActor() {
+      var key = pickArchetype(st.night, Math.random);
+      var a = BIRD_ARCHETYPES[key];
+      var far = key === 'buzzard' ? Math.random() < 0.7 : Math.random() < 0.3;
+      var b = {
+        arch: a, key: key, far: far,
+        scale: a.size * 1.05 * (0.88 + Math.random() * 0.24) * (far ? 0.62 : 1),
+        x: 0, y: 0, dir: 1, tilt: 0, prevTan: null,
+        leg: null, legT: 0, legsLeft: 2 + Math.floor(Math.random() * 3),
+        phase: Math.random() * 7,
+        state: 'flap', stateUntil: 0,
+        wingAngle: 0, wingFold: 0,
+        dy: 0, vy: 0,
+        nextFeatherAt: st.clock + 2500 + Math.random() * 4000
       };
-      // Park the new flyer beyond the canopy immediately — an untransformed
-      // element would sit visible in the container's top-left corner.
-      place(f);
-      st.flyers[bird.id] = f;
+      st.birds.push(b);
     }
 
-    function removeFlyer(id) {
-      var f = st.flyers[id];
-      if (!f) return;
-      if (f.el && f.el.parentNode) f.el.remove();
-      delete st.flyers[id];
+    function birdLeg(b, from) {
+      var leg = makeFlightLeg(st.w, st.h, from, Math.random, b.legsLeft <= 0);
+      // Slow, broad-winged birds cover their legs at a statelier pace.
+      var pace = b.arch.style === 'soar' ? 1.9 : (b.arch.style === 'buoyant' ? 1.35 : (b.arch.style === 'steady' ? 1.15 : 1));
+      leg.dur *= pace * (b.far ? 1.25 : 1);
+      // C1 continuity: aim the new leg's first control along the old exit
+      // tangent so the bird carries its heading instead of snapping.
+      if (from && b.prevTan) {
+        var m = Math.hypot(b.prevTan.x, b.prevTan.y) || 1;
+        var reach = Math.hypot(leg.p3.x - leg.p0.x, leg.p3.y - leg.p0.y) * 0.28;
+        leg.p1 = { x: from.x + (b.prevTan.x / m) * reach, y: from.y + (b.prevTan.y / m) * reach };
+      }
+      return leg;
     }
 
-    function updateFlyers(dt) {
-      Object.keys(st.flyers).forEach(function(id) {
-        var f = st.flyers[id];
-        if (!f.leg) {
-          if (st.clock < f.restUntil) {
-            // Between legs a bird flutters on the spot rather than freezing
-            // mid-air — hummingbird-style hover, wings still going.
-            if (f.x > -100) {
-              f.flapPhase += dt * 0.010;
-              place(f, Math.sin(f.flapPhase * 2.1) * 3.2, Math.sin(f.flapPhase * 1.1) * 4);
-            }
-            return;
-          }
-          if (f.retiring && f.x <= -100) { removeFlyer(id); return; }
-          // A retiring bird's next leg must genuinely END off-screen, so its
-          // removal happens beyond the canopy instead of popping out mid-air.
-          f.leg = makeFlightLeg(st.w, st.h, (f.x > -100 && f.x < st.w + 100) ? { x: f.x, y: f.y } : null, Math.random, f.retiring);
-          f.legT = 0;
+    function updateBirdActors(dt) {
+      var s = dt / 1000;
+      var out = [];
+      for (var i = 0; i < st.birds.length; i++) {
+        var b = st.birds[i];
+        var a = b.arch;
+        if (!b.leg) {
+          b.leg = birdLeg(b, (b.x > -100 && b.x < st.w + 100) ? { x: b.x, y: b.y } : null);
+          b.legT = 0;
         }
-        f.legT += dt / f.leg.dur;
-        if (f.legT >= 1) {
-          var wasExit = f.leg.exit;
-          f.x = f.leg.p3.x; f.y = f.leg.p3.y;
-          f.leg = null;
-          if (wasExit || f.retiring) {
-            if (f.retiring) { removeFlyer(id); return; }
-            // Slipped out beyond the canopy — rest a while, then glide back in.
-            f.x = -200; f.restUntil = st.clock + 3000 + Math.random() * 9000;
+        b.legT += dt / b.leg.dur;
+        if (b.legT >= 1) {
+          b.x = b.leg.p3.x; b.y = b.leg.p3.y;
+          var exited = b.leg.exit || b.x < -40 || b.x > st.w + 40;
+          b.leg = null;
+          b.legsLeft--;
+          if (exited || b.legsLeft < -1) continue; // flew out beyond the canopy
+          out.push(b);
+          continue;
+        }
+        var p = cubicAt(b.leg.p0, b.leg.p1, b.leg.p2, b.leg.p3, b.legT);
+        var tan = cubicTanAt(b.leg.p0, b.leg.p1, b.leg.p2, b.leg.p3, b.legT);
+        b.x = p.x; b.y = p.y;
+        b.prevTan = tan;
+        if (Math.abs(tan.x) > 4) b.dir = tan.x >= 0 ? 1 : -1;
+        // Pitch gently along the flight path, never nose-diving.
+        var slope = Math.atan2(tan.y * b.dir, Math.abs(tan.x));
+        b.tilt = Math.max(-0.3, Math.min(0.3, slope * 0.45));
+
+        // Wingbeat state machine per flight style.
+        if (a.style === 'bounding') {
+          if (st.clock >= b.stateUntil) {
+            if (b.state === 'flap') { b.state = 'fold'; b.stateUntil = st.clock + 260 + Math.random() * 320; b.vy = 14; }
+            else { b.state = 'flap'; b.stateUntil = st.clock + 420 + Math.random() * 380; }
+          }
+          if (b.state === 'flap') {
+            b.phase += s * a.flapHz * Math.PI * 2;
+            b.wingFold = Math.max(0, b.wingFold - s * 9);
+            b.wingAngle = a.amp * Math.sin(b.phase);
+            b.dy += (0 - b.dy) * Math.min(1, s * 5) + Math.cos(b.phase) * 0.25;
           } else {
-            f.restUntil = st.clock + 600 + Math.random() * 1800; // brief hover between swoops
+            // Wings tucked: a little ballistic dip before the next burst.
+            b.wingFold = Math.min(1, b.wingFold + s * 10);
+            b.wingAngle = 0.1;
+            b.vy += 70 * s;
+            b.dy = Math.min(13, b.dy + b.vy * s);
           }
-          place(f);
-          return;
+        } else if (a.style === 'soar') {
+          if (st.clock >= b.stateUntil) {
+            if (b.state === 'flap') { b.state = 'glide'; b.stateUntil = st.clock + 2800 + Math.random() * 4800; }
+            else { b.state = 'flap'; b.stateUntil = st.clock + 1150; b.phase = 0; }
+          }
+          if (b.state === 'flap') {
+            b.phase += s * a.flapHz * Math.PI * 2;
+            b.wingAngle = a.amp * Math.sin(b.phase);
+          } else {
+            // Wings held out, rocking faintly on the air.
+            b.wingAngle = 0.10 + 0.05 * Math.sin(st.clock * 0.0009 + b.phase);
+          }
+          b.wingFold = 0;
+          b.dy = Math.sin(st.clock * 0.0006 + b.phase) * 2.5;
+        } else {
+          // steady (crow) and buoyant (owl): continuous wingbeats, the body
+          // rising on each downstroke.
+          b.phase += s * a.flapHz * Math.PI * 2;
+          b.wingAngle = a.amp * Math.sin(b.phase);
+          b.wingFold = 0;
+          b.dy = -Math.sin(b.phase - 0.9) * (a.style === 'buoyant' ? 3.4 : 2.2) * (b.scale / 22);
         }
-        var p = cubicAt(f.leg.p0, f.leg.p1, f.leg.p2, f.leg.p3, f.legT);
-        var tan = cubicTanAt(f.leg.p0, f.leg.p1, f.leg.p2, f.leg.p3, f.legT);
-        f.x = p.x; f.y = p.y;
-        if (Math.abs(tan.x) > 4) f.dir = tan.x >= 0 ? 1 : -1;
-        f.flapPhase += dt * 0.012;
-        var bob = Math.sin(f.flapPhase * 2.1) * 2.6;
-        var bank = Math.max(-18, Math.min(18, (tan.y / (Math.abs(tan.x) + 40)) * 26)) * f.dir;
-        var wob = Math.sin(f.flapPhase * 2.1 + 1.2) * 3.5;
-        place(f, bob, bank + wob);
-        // A wingbeat shakes loose the odd feather; Merlin sheds sparks instead.
-        if (st.clock >= f.nextFeatherAt && st.particles.length < MAX_PARTICLES) {
-          f.nextFeatherAt = st.clock + (f.bird.magic ? 260 : 1400) + Math.random() * (f.bird.magic ? 420 : 2600);
-          if (f.bird.magic) spawnSpark(f.x - f.dir * 12, f.y + 4, true);
-          else spawnFeather(f.x, f.y + 6, f.bird.tint);
+
+        // The odd loose feather mid-flight (never while tucked in a dip).
+        if (st.clock >= b.nextFeatherAt && b.wingFold < 0.4 && st.particles.length < MAX_PARTICLES &&
+            b.x > 0 && b.x < st.w) {
+          b.nextFeatherAt = st.clock + 3000 + Math.random() * 5000;
+          spawnFeather(b.x, b.y + b.dy + 6, [a.wing, a.breast]);
         }
-      });
+        out.push(b);
+      }
+      st.birds = out;
     }
 
-    function place(f, bob, rot) {
-      var s = f.deep ? 0.72 : 1;
-      f.el.style.transform = 'translate3d(' + (f.x - 22) + 'px,' + (f.y - 22 + (bob || 0)) + 'px,0)' +
-        ' rotate(' + (rot || 0) + 'deg) scale(' + (s * f.dir * -1) + ',' + s + ')';
-      // Cutout paintings face left; scaleX is negated so a bird flying right
-      // (dir=1) is mirrored to face its own direction of travel.
+    function drawBirdActors(ctx, far) {
+      for (var i = 0; i < st.birds.length; i++) {
+        var b = st.birds[i];
+        if (b.far !== far || !b.leg) continue;
+        ctx.save();
+        ctx.translate(b.x, b.y + b.dy);
+        if (far) ctx.globalAlpha = 0.88;
+        drawBird(ctx, b.arch, { wingAngle: b.wingAngle, wingFold: b.wingFold, dir: b.dir, scale: b.scale, tilt: b.tilt });
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
     }
 
     // ---- particles ----------------------------------------------------------
@@ -791,6 +935,80 @@
       });
     }
 
+    // ---- foreground foliage: swaying branches framing the canopy -----------
+    // Each cluster (a leafy branch in deep greens) is drawn ONCE into an
+    // offscreen canvas, then swung gently around its anchor by the shared
+    // wind — so the tree's branches visibly move without repainting leaves.
+    var foliage = [];
+
+    function drawFoliageCluster(g, W, H, rng) {
+      // A dense leafy tuft: one short stem buried under overlapping leaves —
+      // it reads as the tip of a branch dipping into frame, not a whole limb.
+      var midY = H * 0.5;
+      g.lineCap = 'round';
+      g.strokeStyle = '#2c2017';
+      g.lineWidth = 6;
+      g.beginPath();
+      g.moveTo(2, midY);
+      g.quadraticCurveTo(W * 0.5, midY - H * 0.12, W * 0.9, midY + H * 0.06);
+      g.stroke();
+      var greens = ['#1e3323', '#27452c', '#315636', '#24402a', '#2c4f31'];
+      var n = 46 + Math.floor(rng() * 14);
+      for (var i = 0; i < n; i++) {
+        var tt = 0.1 + rng() * 0.9;
+        var u = 1 - tt;
+        var lx = u * u * 2 + 2 * u * tt * W * 0.5 + tt * tt * W * 0.9;
+        var ly = u * u * midY + 2 * u * tt * (midY - H * 0.12) + tt * tt * (midY + H * 0.06);
+        var spread = 10 + tt * 26; // the tuft fans out toward the branch tip
+        var s2 = 10 + rng() * 9;
+        g.save();
+        g.translate(lx + (rng() - 0.5) * spread, ly + (rng() - 0.5) * spread * 1.4);
+        g.rotate(rng() * Math.PI * 2);
+        g.fillStyle = rng() < 0.12 ? '#3d6b41' : greens[Math.floor(rng() * greens.length)];
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.quadraticCurveTo(s2 * 0.5, -s2 * 0.42, s2, 0);
+        g.quadraticCurveTo(s2 * 0.5, s2 * 0.42, 0, 0);
+        g.fill();
+        g.restore();
+      }
+    }
+
+    function buildFoliage() {
+      foliage = [];
+      if (!st.w || typeof document === 'undefined') return;
+      // Small corner fringes only — the painted tree carries the scene; these
+      // just give its nearest branch-tips visible movement.
+      var k = Math.min(1, st.w / 430);
+      var defs = [
+        { ax: -8, ay: st.h * 0.015, rot: 0.5, scale: 0.62 * k, phase: 0 },
+        { ax: st.w + 8, ay: st.h * 0.04, rot: Math.PI - 0.5, scale: 0.72 * k, phase: 2.1 }
+      ];
+      defs.forEach(function(d, i) {
+        var W = 190, H = 120;
+        var c = document.createElement('canvas');
+        c.width = W * 2; c.height = H * 2;
+        var g = c.getContext('2d');
+        g.setTransform(2, 0, 0, 2, 0, 0);
+        drawFoliageCluster(g, W, H, mulberry32(101 + i * 977));
+        foliage.push({ canvas: c, w: W, h: H, ax: d.ax, ay: d.ay, rot: d.rot, scale: d.scale, phase: d.phase });
+      });
+    }
+
+    function drawFoliage(ctx) {
+      for (var i = 0; i < foliage.length; i++) {
+        var f = foliage[i];
+        var sway = windAt(st.clock) * 0.0016 + Math.sin(st.clock * 0.00042 + f.phase) * 0.014;
+        ctx.save();
+        ctx.translate(f.ax, f.ay);
+        ctx.rotate(f.rot + sway);
+        ctx.globalAlpha = 0.94;
+        ctx.drawImage(f.canvas, -12, -f.h * f.scale * 0.5, f.w * f.scale, f.h * f.scale);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
     function updateFlockRuns(dt) {
       if (st.clock >= st.nextFlockAt && st.flockRuns.length < 2) {
         st.nextFlockAt = st.clock + 20000 + Math.random() * 26000;
@@ -908,8 +1126,14 @@
       }
 
       var wind = windAt(st.clock);
-      syncFlyers(false);
-      updateFlyers(dt);
+      // Keep a small changing cast in the air: more songbirds by day, the
+      // owl after dusk. New birds arrive one at a time, never as a flock.
+      if (st.clock >= st.nextBirdAt) {
+        // Quick arrivals while the sky is empty, then a relaxed trickle.
+        st.nextBirdAt = st.clock + (st.birds.length < 2 ? 700 + Math.random() * 1300 : 2500 + Math.random() * 5500);
+        if (st.birds.length < (st.night ? 3 : 4)) spawnBirdActor();
+      }
+      updateBirdActors(dt);
       updateEmitters();
       ensureAmbientActors();
       updateFlockRuns(dt);
@@ -924,18 +1148,22 @@
       updateParticles(dt, wind);
       updateMotes(dt);
 
-      // The sky canvas only ever holds distant flocks — skip it entirely on
-      // the (majority of) frames when none are crossing.
-      if (st.flockRuns.length || st.skyDirty) {
+      // The sky canvas holds distant flocks and far-depth birds (they pass
+      // behind the buildings) — skip it on frames when neither is around.
+      var farBirds = st.birds.some(function(b) { return b.far; });
+      if (st.flockRuns.length || farBirds || st.skyDirty) {
         st.skyCtx.clearRect(0, 0, st.w, st.h);
         drawFlockRuns(st.skyCtx);
-        st.skyDirty = st.flockRuns.length > 0;
+        drawBirdActors(st.skyCtx, true);
+        st.skyDirty = st.flockRuns.length > 0 || farBirds;
       }
       st.frontCtx.clearRect(0, 0, st.w, st.h);
       drawMotes(st.frontCtx);
+      drawBirdActors(st.frontCtx, false);
       drawParticles(st.frontCtx);
       drawFireflies(st.frontCtx);
       drawButterflies(st.frontCtx);
+      drawFoliage(st.frontCtx);
 
       schedule();
     }
@@ -993,7 +1221,6 @@
       if (st.running) return;
       st.running = true;
       st.lastT = 0;
-      syncFlyers(true);
       schedule();
     }
 
@@ -1005,13 +1232,13 @@
 
     function stop() {
       pause();
-      Object.keys(st.flyers).forEach(removeFlyer);
+      st.birds = [];
       st.particles = [];
       st.fireflies = [];
       st.butterflies = [];
       st.flockRuns = [];
       if (st.resizeObs) { st.resizeObs.disconnect(); st.resizeObs = null; }
-      ['shadeEl', 'lightEl', 'sky', 'front', 'flyerLayer'].forEach(function(k) {
+      ['shadeEl', 'lightEl', 'sky', 'front'].forEach(function(k) {
         if (st[k] && st[k].parentNode) st[k].remove();
         st[k] = null;
       });
@@ -1029,15 +1256,6 @@
     function refresh() {
       if (!st.mounted) return;
       scanAnchors();
-      // A companion just dispatched on an expedition is no longer at the
-      // Academy: retire its flyer now (exit leg) instead of on the 12s timer.
-      if (st.running) {
-        var present = {};
-        birdRoster().forEach(function(b) { if (b && b.id) present[b.id] = true; });
-        Object.keys(st.flyers).forEach(function(id) {
-          if (!present[id]) st.flyers[id].retiring = true;
-        });
-      }
       if (st.reduced) {
         var boost = lightBoostFor(hourNow());
         st.glows.forEach(function(g) {
@@ -1065,6 +1283,9 @@
     ANCHORS: ANCHORS,
     GLOW_STYLES: GLOW_STYLES,
     SPRITE_BOX: SPRITE_BOX,
+    BIRD_ARCHETYPES: BIRD_ARCHETYPES,
+    pickArchetype: pickArchetype,
+    drawBird: drawBird,
     isNightHour: isNightHour,
     lightBoostFor: lightBoostFor,
     mulberry32: mulberry32,
@@ -1072,7 +1293,6 @@
     cubicAt: cubicAt,
     cubicTanAt: cubicTanAt,
     makeFlightLeg: makeFlightLeg,
-    pickFlyers: pickFlyers,
     createAcademyAlive: createAcademyAlive
   };
 });
