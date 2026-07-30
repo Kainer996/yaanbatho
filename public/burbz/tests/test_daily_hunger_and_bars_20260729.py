@@ -32,12 +32,12 @@ primary.state.inventory.larder.sunflower_seeds = 1;
 const earlyTopUp = D.applyFeedingTransaction(primary.state, target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary-too-soon', now:2000 + 12 * 60 * 60 * 1000 });
 earlyTopUp.state.inventory.larder.sunflower_seeds = 1;
 const nextDay = D.applyFeedingTransaction(earlyTopUp.state, target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary-next-day', now:2000 + 24 * 60 * 60 * 1000 + 1 });
-console.log(JSON.stringify({ primary:{ ok:primary.ok, verdict:primary.compatibility.verdict, after:primary.after }, secondary:{ ok:secondary.ok, verdict:secondary.compatibility.verdict, after:secondary.after }, earlyTopUp:{ ok:earlyTopUp.ok, stock:earlyTopUp.state.inventory.larder.sunflower_seeds }, nextDay:{ ok:nextDay.ok, after:nextDay.after } }));
+console.log(JSON.stringify({ primary:{ ok:primary.ok, verdict:primary.compatibility.verdict, after:primary.after }, secondary:{ ok:secondary.ok, verdict:secondary.compatibility.verdict, after:secondary.after }, earlyTopUp:{ ok:earlyTopUp.ok, after:earlyTopUp.after, consumed:earlyTopUp.consumed }, nextDay:{ ok:nextDay.ok, after:nextDay.after } }));
 """
     )
     assert out["primary"] == {"ok": True, "verdict": "primary", "after": 0}
     assert out["secondary"] == {"ok": True, "verdict": "secondary", "after": 50}
-    assert out["earlyTopUp"] == {"ok": False, "stock": 1}
+    assert out["earlyTopUp"] == {"ok": True, "after": 0, "consumed": {"inventory.larder.sunflower_seeds": 1}}
     assert out["nextDay"] == {"ok": True, "after": 0}
 
 

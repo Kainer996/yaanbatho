@@ -864,9 +864,8 @@
     if (careHasTransaction(subject.care, txId, options.now)) {
       return { ok:true, duplicate:true, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:subject.care.hunger, after:subject.care.hunger, message:'Feeding transaction already applied.' };
     }
-    if (subject.care.hunger < FEEDING_HUNGER_MIN) {
-      return { ok:false, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:currentHunger, after:currentHunger, message:((target && (target.commonName || target.name)) || subject.commonName || subject.species || 'That bird') + ' is still full enough for today; no food was spent.' };
-    }
+    // A player may deliberately spend a complete ingredient to top up a bird
+    // at any fullness, including when it is already full.
     // Primary, secondary and the conservative fallback ration are all served.
     // Only food this species does not eat at all is turned down.
     const acceptedVerdict = ACCEPTED_FEED_VERDICTS.indexOf(compatibility.verdict) >= 0;
@@ -891,7 +890,7 @@
       transactionId: txId,
       activityType: 'feeding',
       activityId: ingredientId,
-      targetHunger: compatibility.verdict === 'secondary' ? 50 : 0,
+      targetHunger: compatibility.verdict === 'secondary' ? Math.min(currentHunger, 50) : 0,
       now: options.now
     });
     subject.care = applied.care;

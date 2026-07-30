@@ -85,11 +85,12 @@ console.log(JSON.stringify({ before, merlinGood, duplicateCrossStore, merlinMeal
     assert out["duplicateCrossStore"]["duplicate"] is True
     assert out["duplicateCrossStore"]["consumed"] == {}
     assert out["duplicateCrossStore"]["state"]["pantry"]["meat"] == 1
-    # A second meal in the same daily fullness cycle is refused without spend.
-    assert out["merlinMealworm"]["ok"] is False
+    # A player-chosen side snack may top Merlin up and spends one whole scoop.
+    assert out["merlinMealworm"]["ok"] is True
     assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
-    assert out["merlinMealworm"]["consumed"] == {}
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
+    assert out["merlinMealworm"]["consumed"] == {"inventory.larder.mealworm_scoop": 1}
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
+    assert out["merlinMealworm"]["state"]["merlinCare"]["hunger"] < 0.001
     assert out["titMealworm"]["ok"] is True
     assert out["titMealworm"]["consumed"] == {"pantry.insects": 1}
     assert out["titMealworm"]["state"]["pantry"]["insects"] == 1
@@ -111,7 +112,7 @@ console.log(JSON.stringify({ before, merlinGood, duplicateCrossStore, merlinMeal
     assert out["reloaded"]["flock"][1]["care"]["hunger"] == out["finchSeed"]["state"]["flock"][1]["care"]["hunger"]
 
 
-def test_fully_fed_birds_and_merlin_do_not_waste_inventory():
+def test_fully_fed_birds_and_merlin_may_spend_a_whole_ingredient_to_top_up():
     out = run_node(
         """
 const D = require('./diet_hunger_core.js');
@@ -126,12 +127,14 @@ const finch = D.applyFeedingTransaction(merlin.state, { target:'bird', birdId:'f
 console.log(JSON.stringify({ merlin, finch }));
 """
     )
-    assert out["merlin"]["ok"] is False
-    assert out["merlin"]["consumed"] == {}
-    assert out["merlin"]["state"]["inventory"]["larder"]["small_bird_prey_ration"] == 1
-    assert out["finch"]["ok"] is False
-    assert out["finch"]["consumed"] == {}
-    assert out["finch"]["state"]["inventory"]["larder"]["sunflower_seeds"] == 1
+    assert out["merlin"]["ok"] is True
+    assert out["merlin"]["consumed"] == {"inventory.larder.small_bird_prey_ration": 1}
+    assert out["merlin"]["state"]["inventory"]["larder"]["small_bird_prey_ration"] == 0
+    assert out["finch"]["ok"] is True
+    assert out["finch"]["consumed"] == {"inventory.larder.sunflower_seeds": 1}
+    assert out["finch"]["state"]["inventory"]["larder"]["sunflower_seeds"] == 0
+    assert out["merlin"]["after"] == 0
+    assert out["finch"]["after"] == 0
 
 
 def test_legacy_expedition_food_rewards_migrate_to_larder_once():

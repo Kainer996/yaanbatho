@@ -308,6 +308,7 @@ def test_release_cache_is_bumped():
     build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert "discoveries-quiz-pacing-v152-20260728" in sw
     assert "reconciled-release-v170-20260729" in sw
+    assert "companion-feeding-only-v176-20260730" in sw
     # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on,
     # so pin only that the build tag stays a marker in the cache lineage —
     # a hardcoded tag here goes stale on the very next release.

@@ -3602,7 +3602,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="merlin-care-head"><img class="merlin-care-portrait" src="/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" alt=""><div><div class="merlin-care-kicker">Your permanent guide</div><h2 class="merlin-care-title" id="merlinCareTitle">Merlin</h2><div class="merlin-care-mood" id="merlinCareMood">Bright-eyed and magical</div></div></div>
     <div class="merlin-care-status">
       <div class="merlin-care-row"><span class="merlin-care-label">Food</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinFoodFill" style="width:80%;background:#78a66d"></div></div><span class="merlin-care-value" id="merlinFoodValue">80%</span></div>
-      <div class="merlin-care-hunger-copy" id="merlinHungerStatus">One main meal lasts 24 hours.</div>
+      <div class="merlin-care-hunger-copy" id="merlinHungerStatus">Feed anytime — each tap uses one whole ingredient.</div>
       <div class="merlin-care-row"><span class="merlin-care-label">Happiness</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinHappyFill" style="width:85%;background:#f0c767"></div></div><span class="merlin-care-value" id="merlinHappyValue">85%</span></div>
       <div class="merlin-care-row"><span class="merlin-care-label">Energy</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinEnergyFill" style="width:90%;background:#69dbc0"></div></div><span class="merlin-care-value" id="merlinEnergyValue">90%</span></div>
     </div>
@@ -4649,7 +4649,7 @@ function hungerBarHTML(status, surface = '') {
   const fullness = clamp(100 - hunger, 0, 100);
   const rounded = Math.round(fullness);
   const color = 'hsl(' + Math.round(fullness * 1.2) + ' 72% 44%)';
-  const note = status && status.blocksWork ? 'Feed before quests or training' : status && status.warnsWork ? 'Feed soon' : rounded === 100 ? 'Full for the day' : 'One main meal lasts 24 hours';
+  const note = status && status.blocksWork ? 'Feed before quests or training' : status && status.warnsWork ? 'Feed soon' : rounded === 100 ? 'Full — optional top-ups still use one ingredient' : 'Feed anytime — each tap uses one whole ingredient';
   return '<div class="bird-hunger-bar" data-hunger-surface="' + escapeHtml(surface || 'care') + '" data-hunger-state="' + escapeHtml((status && status.level) || 'fed') + '" data-fullness="' + rounded + '" role="progressbar" aria-label="Fullness ' + rounded + ' percent" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rounded + '">' +
     '<div class="bird-hunger-head"><span>Fullness</span><span>' + rounded + '%</span></div>' +
     '<div class="bird-hunger-track"><div class="bird-hunger-fill" style="width:' + rounded + '%;background-color:' + color + '"></div></div>' +
@@ -12117,13 +12117,10 @@ function renderAcademyRoomPanel(birds) {
     let actions = '';
     let tray = '';
     if (academySelectedRoom === 'dorm') {
-      const full = birdIsFull(b);
-      actions = (full
-          ? '<button class="academy-btn" disabled>🍽️ Full</button>'
-          : '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>') +
+      actions = '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>' +
         academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
         academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false);
-      if (academyFeedTrayBirdId === b.id && !full) tray = academyFeedTrayHTML(b);
+      if (academyFeedTrayBirdId === b.id) tray = academyFeedTrayHTML(b);
     } else if (academySelectedRoom === 'training') {
       const cd = academyCdLeft(b.care.lastTrained, 90*60*1000);
       actions = ['atk|⚔️ Strength','def|🛡️ Guard','spd|💨 Agility','int|🧠 Focus'].map(d => {
@@ -12503,11 +12500,6 @@ function academyFeedFood(birdId, foodKey) {
   const name = bird.commonName || bird.species;
   const diet = inferBirdDiet(target);
 
-  if (birdIsFull(bird)) {
-    showToast(name + ' is completely full — nothing to feed right now.');
-    return;
-  }
-
   if (core && typeof core.applyFeedingTransaction === 'function') {
     const now = Date.now();
     const txId = 'academy-feed:' + bird.id + ':' + foodKey + ':' + now;
@@ -12546,7 +12538,6 @@ function academyFeedFood(birdId, foodKey) {
   // Fallback for very old cached builds without the source-backed transaction core.
   const pref = diet ? diet.pref : ['seeds', 'insects'];
   if (dietFamilyMatches(pref, foodKey)) {
-    if (birdIsFull(bird)) { showToast(name + ' is completely full — nothing to feed right now.'); return; }
     gameState.pantry[foodKey] = clamp((gameState.pantry[foodKey] || 0) - 1, 0, 99);
     bird.care.lastFed = new Date().toISOString();
     bird.training.feedCount = (bird.training.feedCount || 0) + 1;
@@ -12831,22 +12822,19 @@ function kitchenRosterRowHTML(entry) {
     (open ? kitchenRosterTrayHTML(entry, options) : '') + '</div>';
 }
 
-// Only birds that still need feeding. A full bird has nothing to do at the
-// table, so it steps off the list until hunger brings it back.
-function kitchenRosterHungryEntries() {
-  return kitchenRosterEntries().filter(entry => {
-    if (entry.merlin) return Math.round(kitchenRosterHungerStatus(entry).hunger) > 0;
-    return entry.bird ? !birdIsFull(entry.bird) : true;
-  });
+// Merlin and every recruited companion stay at the table so the player may
+// spend a whole ingredient to keep any of them topped up whenever they choose.
+function kitchenRosterEntriesForFeeding() {
+  return kitchenRosterEntries();
 }
 
 function renderKitchenRosterHTML() {
-  const entries = kitchenRosterHungryEntries();
+  const entries = kitchenRosterEntriesForFeeding();
   if (kitchenRosterTrayKey && !entries.some(row => row.key === kitchenRosterTrayKey)) kitchenRosterTrayKey = null;
   if (!entries.length) {
     return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
       '<div class="room-add-title">🍽️ Companion feeding table</div>' +
-      '<div class="inventory-empty" data-kitchen-all-fed="1">Every companion is fed. They come back to the table on their own once they are hungry again.</div></div>';
+      '<div class="inventory-empty" data-kitchen-all-fed="1">No companions are at the table yet.</div></div>';
   }
   return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
     '<div class="room-add-title">🍽️ Companion feeding table</div>' +
@@ -13011,14 +12999,13 @@ function renderFeedSheet() {
   if (!entry) { closeFeedSheet(); return; }
   const options = feedFoodOptions(entry);
   const status = entry.wild ? null : kitchenRosterHungerStatus(entry);
-  const full = !entry.wild && Math.round(status.hunger) <= 0;
   const eats = kitchenRosterEatsLabels(entry);
   // Diet already discovered? Then known-good picks glow, exactly as they do on
   // the Academy tray. Otherwise nothing is revealed — choosing is the lesson.
   const reveal = entry.merlin || entry.wild || (entry.bird && entry.bird.academy && entry.bird.academy.dietKnown);
   const foodRows = options.map(option => feedFoodRowHTML(entry, option, reveal)).join('');
   const empty = '<div class="inventory-empty">Nothing edible in the stores. Send a bird out on a food quest — every food in the game has one — or pick some up on a walk.</div>';
-  const fullNote = '<div class="inventory-empty" data-feed-sheet-full="1">🍽️ ' + escapeHtml(entry.name) + ' is completely full — nothing to feed right now. Come back when the hunger bar rises.</div>';
+
   const hungerLine = status
     ? hungerBarHTML(status, 'feed-sheet')
     : '<div class="feed-sheet-wild">🌲 A wild visitor — a proper meal at the feeder builds trust and makes recruiting cheaper.</div>';
@@ -13028,8 +13015,8 @@ function renderFeedSheet() {
       '<div class="feed-sheet-main"><div class="feed-sheet-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
       '<div class="feed-sheet-species">' + escapeHtml(entry.speciesLine || '') + '</div>' + hungerLine + '</div></div>' +
     '<div class="feed-sheet-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — offer a food and learn') + '</div>' +
-    (full ? '' : '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills it halfway and gives half XP.</div>') +
-    '<div class="feed-food-list">' + (full ? fullNote : (foodRows || empty)) + '</div>' + feedReceiptHTML() + '</div>';
+    '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills up to halfway without lowering current fullness and gives half XP. Topping up still uses one complete ingredient.</div>' +
+    '<div class="feed-food-list">' + (foodRows || empty) + '</div>' + feedReceiptHTML() + '</div>';
   el.classList.add('open');
 }
 
@@ -24094,7 +24081,7 @@ function createBirdCardHTML(bird, idx) {
   const cardDietDisclosure = renderDietDisclosureHTML(bird, 'companion-card', { compact:true, compatible:false, className:'card-diet-disclosure' });
   const showCareActions = currentBurbzMode === 'companions';
   const frontFeedButton = showCareActions
-    ? `<button class="card-feed-btn" data-action="feed-bird" data-feed-key="${bird.id}" ${birdIsFull(bird) ? 'disabled' : ''}>${birdIsFull(bird) ? '🍽️ Full' : '🍽️ Feed'}</button>`
+    ? `<button class="card-feed-btn" data-action="feed-bird" data-feed-key="${bird.id}">🍽️ Feed</button>`
     : '';
   const backFeedButton = showCareActions
     ? `<button class="card-pet-btn" data-action="feed-bird" data-feed-key="${bird.id}">🍽️ Feed</button>`
@@ -24307,6 +24294,7 @@ $('burbzModeTabs')?.addEventListener('click', e => {
 let scanMode = 'image';
 let isRecording = false;
 let mediaRecorder = null;
+let soundRecorderLanes = [];
 let analyserNode = null;
 let listenerSourceNode = null;
 let listenerTrack = null;
@@ -24320,7 +24308,26 @@ let soundListenerState = 'stopped';
 let soundListenerDetail = 'Tap once and Merlin will keep listening while you explore Burbz.';
 let listenerSampleRate = 48000;
 let soundAnalysisAbortController = null;
-const SOUND_WINDOW_MS = 12000;
+// Sliding, overlapping recognition windows — the shape that makes Merlin feel
+// instant. Each analysed clip is SOUND_WINDOW_MS long (enough for the server to
+// cut it into the 3s / 50%-overlap sub-windows its two-window temporal-support
+// gate needs), but a fresh clip is opened every SOUND_HOP_MS instead of only
+// when the previous one closes. Consecutive clips therefore overlap by
+// (window − hop): a bird call up to one hop long is always captured whole inside
+// at least one clip, so a song that used to be sliced across a 12s clip boundary
+// — and rejected by both halves — is now recognised on the very next hop. To
+// keep several clips in flight at once, SOUND_WINDOW_LANES staggered recorders
+// run on the one microphone stream, each offset by a hop; every hop the oldest
+// full lane is closed and analysed while a new lane opens.
+//
+// 5s window + 2.5s hop → first bird at ~5s+inference (was 12–24s), then a fresh
+// overlapping result about every 2.5s: Merlin-class cadence with no boundary
+// splitting. Keep the window at/above ~4.5s (room for two 3s sub-windows) or
+// confident detections stop earning temporal support, and keep the hop ≤ the
+// window so lanes actually overlap.
+const SOUND_WINDOW_MS = 5000;
+const SOUND_HOP_MS = 2500;
+const SOUND_WINDOW_LANES = Math.max(1, Math.round(SOUND_WINDOW_MS / SOUND_HOP_MS));
 const SOUND_LOCATION_PREF_KEY = 'burbzSoundLocationAssist:v1';
 const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(analyseContinuousSoundWindow, {
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
@@ -24385,7 +24392,8 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     setMerlinListenerState('listening', 'Listening in the background while Burbz stays open.');
   } else {
-    if (mediaStream && listenerTrack?.readyState !== 'ended' && (!mediaRecorder || mediaRecorder.state === 'inactive')) startSoundRecorderWindow();
+    const laneActive = soundRecorderLanes.some(lane => lane && lane.state === 'recording');
+    if (mediaStream && listenerTrack?.readyState !== 'ended' && !laneActive) { startSoundRecorderWindow(); scheduleSoundHop(soundListenerGeneration); }
     setMerlinListenerState('listening', 'Merlin kept listening while you were away.');
   }
 });
@@ -24478,6 +24486,7 @@ async function startContinuousSoundListening() {
     drawWaveform();
     setMerlinListenerState('listening', 'Listening…');
     startSoundRecorderWindow(generation);
+    scheduleSoundHop(generation);
     return true;
   } catch (error) {
     if (generation !== soundListenerGeneration) return false;
@@ -24497,6 +24506,7 @@ function cleanupFailedSoundStart() {
   mediaStream = null;
   listenerTrack = null;
   mediaRecorder = null;
+  soundRecorderLanes = [];
   isRecording = false;
   if (listenerSourceNode) { try { listenerSourceNode.disconnect(); } catch (_) {} listenerSourceNode = null; }
   if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
@@ -24510,9 +24520,10 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   soundUnlockEvidence.clear();
   if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const recorder = mediaRecorder;
+  const lanes = soundRecorderLanes.slice();
+  soundRecorderLanes = [];
   mediaRecorder = null;
-  if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
+  lanes.forEach(recorder => { if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} } });
   if (listenerTrack) listenerTrack.onended = null;
   if (mediaStream) mediaStream.getTracks().forEach(track => { track.onended = null; if (track.readyState !== 'ended') track.stop(); });
   mediaStream = null;
@@ -24528,9 +24539,12 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   setMerlinListenerState('error', 'Listening paused by this device. Tap Merlin’s wand to resume.');
 }
 
+// Open one overlapping recording lane. It records until the hop clock closes it
+// (after ~SOUND_WINDOW_MS), then its finished clip is queued for recognition.
+// The hop clock — not this function — opens the next lane, so several lanes
+// capture the same moment offset by a hop and no call is lost to a boundary.
 function startSoundRecorderWindow(generation = soundListenerGeneration) {
   if (!continuousSoundScanWanted || generation !== soundListenerGeneration || !mediaStream || listenerTrack?.readyState === 'ended') return false;
-  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
   const chunks = [];
   const sequence = ++soundWindowSequence;
   const startedAt = Date.now();
@@ -24538,27 +24552,40 @@ function startSoundRecorderWindow(generation = soundListenerGeneration) {
   const options = Recorder.isTypeSupported?.('audio/webm;codecs=opus') ? { mimeType:'audio/webm;codecs=opus' } : {};
   let recorder;
   try { recorder = new Recorder(mediaStream, options); }
-  catch (error) { handleSoundRecorderFailure(generation, error); return false; }
-  mediaRecorder = recorder;
+  catch (error) { handleSoundLaneFailure(generation, error); return false; }
   recorder.ondataavailable = event => { if (event.data && event.data.size > 0) chunks.push(event.data); };
   recorder.onstop = () => {
-    if (mediaRecorder === recorder) mediaRecorder = null;
-    isRecording = false;
+    soundRecorderLanes = soundRecorderLanes.filter(lane => lane !== recorder);
+    if (mediaRecorder === recorder) mediaRecorder = soundRecorderLanes[soundRecorderLanes.length - 1] || null;
+    isRecording = soundRecorderLanes.length > 0;
     const blob = new Blob(chunks, { type:recorder.mimeType || 'audio/webm' });
     const endedAt = Date.now();
     const durationMs = endedAt - startedAt;
+    // Overlapping lanes are opened by the hop clock, not from here; this guard
+    // only decides whether this finished clip is still worth analysing.
     const beginNextWindowBeforeAnalysis = continuousSoundScanWanted && generation === soundListenerGeneration && mediaStream && listenerTrack?.readyState !== 'ended';
-    if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);
     if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) {
       queueSoundWindowForAnalysis({ blob, sequence, startedAt, endedAt, durationMs, generation });
     }
   };
   try { recorder.start(); }
-  catch (error) { handleSoundRecorderFailure(generation, error); return false; }
+  catch (error) { handleSoundLaneFailure(generation, error); return false; }
+  soundRecorderLanes.push(recorder);
+  mediaRecorder = recorder;
   isRecording = true;
-  soundScanChunkTimer = setTimeout(rotateContinuousSoundWindow, SOUND_WINDOW_MS);
   updateMerlinListeningUI();
   return true;
+}
+
+// A single lane failed to open. While any other lane is still capturing this is
+// a transient hiccup on one overlapping window — leave the session running and
+// let the next hop retry. Only a total loss of lanes is a real microphone
+// failure worth tearing the listener down for.
+function handleSoundLaneFailure(generation, error) {
+  console.warn('BURBZ sound lane failed', error);
+  if (generation !== soundListenerGeneration) return;
+  if (soundRecorderLanes.some(lane => lane && lane.state === 'recording')) return;
+  handleSoundRecorderFailure(generation, error);
 }
 
 function handleSoundRecorderFailure(generation, error) {
@@ -24568,14 +24595,34 @@ function handleSoundRecorderFailure(generation, error) {
   setMerlinListenerState('error', 'Microphone unavailable. Tap Merlin’s wand to try again.');
 }
 
-function rotateContinuousSoundWindow() {
+// The hop clock. Every SOUND_HOP_MS: close the oldest lane once the lanes are at
+// full staggered strength (that queues its finished clip), then open a fresh
+// lane. One self-re-arming timer drives the whole cadence so the lanes stay
+// evenly offset instead of drifting into phase and losing their overlap.
+function scheduleSoundHop(generation = soundListenerGeneration) {
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const recorder = mediaRecorder;
-  if (!continuousSoundScanWanted || !recorder || recorder.state === 'inactive') return false;
+  soundScanChunkTimer = setTimeout(() => runSoundHop(generation), SOUND_HOP_MS);
+}
+
+function runSoundHop(generation) {
+  soundScanChunkTimer = null;
+  if (!continuousSoundScanWanted || generation !== soundListenerGeneration || !mediaStream || listenerTrack?.readyState === 'ended') return;
+  if (soundRecorderLanes.length >= SOUND_WINDOW_LANES) rotateContinuousSoundWindow();
+  startSoundRecorderWindow(generation);
+  scheduleSoundHop(generation);
+}
+
+// Close the oldest open lane; its onstop queues the finished overlapping clip.
+// The lane is dropped from the roster synchronously so the hop clock always
+// counts live lanes accurately, even before the async onstop fires.
+function rotateContinuousSoundWindow() {
+  const recorder = soundRecorderLanes[0];
+  if (!recorder) return false;
+  soundRecorderLanes = soundRecorderLanes.filter(lane => lane !== recorder);
+  if (mediaRecorder === recorder) mediaRecorder = soundRecorderLanes[soundRecorderLanes.length - 1] || null;
+  if (recorder.state === 'inactive') return false;
   try { recorder.stop(); return true; } catch (error) {
     console.warn('BURBZ sound window rotation failed', error);
-    const generation = soundListenerGeneration;
-    if (continuousSoundScanWanted) setTimeout(() => startSoundRecorderWindow(generation), 250);
     return false;
   }
 }
@@ -24590,9 +24637,10 @@ function stopContinuousSoundListening(opts = {}) {
   soundUnlockEvidence.clear();
   if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const recorder = mediaRecorder;
+  const lanes = soundRecorderLanes.slice();
+  soundRecorderLanes = [];
   mediaRecorder = null;
-  if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
+  lanes.forEach(recorder => { if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} } });
   if (listenerTrack) listenerTrack.onended = null;
   if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
   mediaStream = null;
@@ -24938,6 +24986,7 @@ window.__burbzSoundDebug = {
     stream: !!mediaStream,
     trackState: listenerTrack?.readyState || null,
     recorderState: mediaRecorder?.state || null,
+    lanes: soundRecorderLanes.length,
     windowSequence: soundWindowSequence,
     queue: soundAnalysisQueue.snapshot(),
     provider: lastSoundProviderMeta ? { ...lastSoundProviderMeta } : null
@@ -26415,7 +26464,7 @@ function renderMerlinCareMenu() {
   const status = core && typeof core.hungerStatusForCare === 'function'
     ? core.hungerStatusForCare(pet, Date.now())
     : { label: pet.hunger >= 85 ? 'Urgent care' : pet.hunger >= 70 ? 'Hungry' : pet.hunger >= 45 ? 'Peckish' : 'Fed', hunger:clamp(Number(pet.hunger) || 0, 0, 100) };
-  if ($('merlinHungerStatus')) $('merlinHungerStatus').textContent = status.blocksWork ? 'Feed before quests or training.' : status.warnsWork ? 'Feed soon.' : 'One main meal lasts 24 hours.';
+  if ($('merlinHungerStatus')) $('merlinHungerStatus').textContent = status.blocksWork ? 'Feed before quests or training.' : status.warnsWork ? 'Feed soon.' : 'Feed anytime — each tap uses one whole ingredient.';
   if ($('merlinBondLevel')) $('merlinBondLevel').textContent = 'LV.' + pet.bondLevel;
   const larder = gameState.inventory && gameState.inventory.larder;
   if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(larder && larder.small_bird_prey_ration) || 0));
@@ -27146,7 +27195,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-3d-v179-20260730';
+const BURBZ_BUILD = 'academy-3d-v180-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

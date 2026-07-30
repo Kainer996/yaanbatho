@@ -189,6 +189,7 @@ let continuousSoundScanWanted = true;
 let soundAnalysisAbortController = null;
 let soundScanChunkTimer = null;
 let mediaRecorder = null;
+let soundRecorderLanes = [];
 let listenerTrack = null;
 let mediaStream = null;
 let isRecording = false;
