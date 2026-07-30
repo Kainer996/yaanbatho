@@ -22539,10 +22539,6 @@ window.__burbzSoundDiscoveryDebug = {
 };
 
 const SOUND_SESSION_MAX_PER_WINDOW = 4;
-const SOUND_AUTO_UNLOCK_SCORE = 0.75;
-const SOUND_CONFIRM_SCORE = 0.60;
-const SOUND_CONFIRM_WINDOWS = 2;
-const SOUND_CONFIRM_MAX_AGE_MS = 60000;
 const SOUND_REQUIRED_POLICY = 'burbz-v3-temporal-20260729.2';
 const SOUND_REQUIRED_MODEL_SHA = '69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24';
 const SOUND_REQUIRED_LABELS_SHA = '8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0';
@@ -22598,41 +22594,31 @@ function soundUnlockProvenanceVerified(provenance) {
 }
 
 function soundCandidatesReadyToUnlock(candidates, provenance, windowData, now = Date.now()) {
-  // BirdNET detections are suggestions. Irreversible Birdex mutation gets a
-  // stronger independent evidence tier and only an exactly verified V3 path.
+  // The recogniser is the accuracy authority, not the client. A verified
+  // BirdNET V3 response has already applied the geographic range model — the
+  // player's location and the week of the year — and its temporal,
+  // precision-first confirmation before it will name a species at all. Every
+  // candidate here is therefore a bird the server has already confirmed for
+  // this place and this season, so once the provenance is exactly verified the
+  // client trusts it and gives the player the bird.
+  //
+  // Layering a second, stricter score gate on top of that decision is what
+  // stranded confident detections: a buzzard's broad mewing call pools into the
+  // mid confidence range, cleared the server but not the old client threshold,
+  // and sat on "keep listening" forever. Provenance verification (exact V3
+  // acoustic + geomodel weights, reviewed policy, no fallback) remains the sole
+  // gate, because that is precisely what proves location and season were taken
+  // into account.
   if (!soundUnlockProvenanceVerified(provenance)) return [];
 
-  const sequence = Number(windowData?.sequence);
-  const at = Number(windowData?.endedAt) || Number(now);
   const ready = [];
   for (const bird of (candidates || [])) {
     const key = speciesKey(canonicalSpeciesName(bird.species || bird.commonName)) ||
       speciesKey(bird.scientificName || '');
-    const score = Number(bird.confidence) || 0;
-    const support = Number(bird.soundSupport) || 0;
     if (!key) continue;
-
-    // 0.98 is the official immediate exception. Otherwise an automatic unlock
-    // needs the stronger Burbz tier plus temporal support from the server.
-    if (score >= 0.98 || (score >= SOUND_AUTO_UNLOCK_SCORE && support >= 2)) {
-      ready.push(bird);
-      soundUnlockEvidence.delete(key);
-      continue;
-    }
-    if (score < SOUND_CONFIRM_SCORE || support < 2 || !Number.isFinite(sequence)) continue;
-
-    const previous = soundUnlockEvidence.get(key);
-    const fresh = previous && at - previous.at <= SOUND_CONFIRM_MAX_AGE_MS;
-    const distinct = fresh && previous.sequence !== sequence;
-    const hits = distinct ? previous.hits + 1 : 1;
-    soundUnlockEvidence.set(key, { hits, sequence, at });
-    if (hits >= SOUND_CONFIRM_WINDOWS) {
-      ready.push(bird);
-      soundUnlockEvidence.delete(key);
-    }
-  }
-  for (const [key, evidence] of soundUnlockEvidence) {
-    if (at - evidence.at > SOUND_CONFIRM_MAX_AGE_MS) soundUnlockEvidence.delete(key);
+    ready.push(bird);
+    // A confirmed bird carries no pending cross-window state.
+    soundUnlockEvidence.delete(key);
   }
   return ready;
 }
