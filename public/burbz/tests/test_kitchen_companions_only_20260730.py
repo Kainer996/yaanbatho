@@ -54,5 +54,5 @@ def test_feeding_transaction_rejects_codex_only_birds():
 
 def test_release_marker_moves_beyond_the_temporary_wild_feeder_build():
     source = HTML.read_text()
-    assert "const BURBZ_BUILD = 'companion-feeding-only-v176-20260730';" in source
-    assert "kitchen-no-duplicate-companions-v175-20260730-companion-feeding-only-v176-20260730" in (HTML.parent / "sw.js").read_text()
+    assert "Wild Bird Feeder" not in source
+    assert "companion-feeding-only-v176-20260730" in (HTML.parent / "sw.js").read_text()

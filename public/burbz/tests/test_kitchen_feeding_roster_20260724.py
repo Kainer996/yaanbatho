@@ -180,7 +180,7 @@ code += html.slice(html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({'),
 for (const n of ['legacyKitchenSupplyIngredient','refillPantry','ensureLarder','feedOptionVerdict','feedRewardsForVerdict','kitchenRosterEntries',
                  'kitchenRosterEntryByKey','kitchenRosterWantedPrep','kitchenRosterFoodOptions',
                  'kitchenRosterEatsLabels','kitchenRosterHungerStatus','kitchenRosterTrayHTML',
-                 'kitchenRosterRowHTML','birdIsFull','kitchenRosterHungryEntries','renderKitchenRosterHTML','kitchenRosterToggleTray',
+                 'kitchenRosterRowHTML','birdIsFull','kitchenRosterEntriesForFeeding','renderKitchenRosterHTML','kitchenRosterToggleTray',
                  'kitchenRosterRefusalToast','feedEntryForKey','feedWildEntryForSpeciesKey',
                  'feedFoodOptions','feedArtHTML','kitchenRecordFieldNote','burbzFeedFood','feedWildSpecies',
                  'kitchenRosterFeed']) code += fnSrc(n) + '\n';

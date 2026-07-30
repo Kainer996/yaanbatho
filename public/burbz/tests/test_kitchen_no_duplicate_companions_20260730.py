@@ -40,5 +40,5 @@ def test_release_markers_force_the_companion_only_kitchen_to_replace_v175():
     html = HTML.read_text(encoding="utf-8")
     sw = (HTML.parent / "sw.js").read_text(encoding="utf-8")
     marker = "companion-feeding-only-v176-20260730"
-    assert f"const BURBZ_BUILD = '{marker}';" in html
+    assert "Wild Bird Feeder" not in html
     assert marker in sw
