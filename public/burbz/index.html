@@ -24208,7 +24208,21 @@ let soundListenerState = 'stopped';
 let soundListenerDetail = 'Tap once and Merlin will keep listening while you explore Burbz.';
 let listenerSampleRate = 48000;
 let soundAnalysisAbortController = null;
-const SOUND_WINDOW_MS = 12000;
+// How long each rolling recording clip is before it's stopped and sent for
+// recognition. This is the dominant driver of "time to first bird": nothing is
+// analysed until the current clip closes, so a 12s clip meant a clearly-audible
+// bird could wait 12s+upload+inference before it was even looked at — and a call
+// that landed late in one clip, or straddled a clip boundary, kept failing the
+// server's two-window temporal-support rule and cycling "Checking…"→"Listening"
+// without ever naming the bird (a dunnock this happened to, while Merlin — which
+// works in ~3s windows — named it almost instantly). 6s roughly halves that
+// latency and doubles the number of recognition attempts per minute, while
+// staying long enough for the server to still cut it into the 3s / 50%-overlap
+// sub-windows its precision gate needs (a 6s clip yields ~3–4 sub-windows, so
+// the two-window support rule is unchanged). Do not drop this below ~4.5s: a
+// clip too short to hold two 3s sub-windows can no longer earn temporal support,
+// and confident detections would stop unlocking.
+const SOUND_WINDOW_MS = 6000;
 const SOUND_LOCATION_PREF_KEY = 'burbzSoundLocationAssist:v1';
 const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(analyseContinuousSoundWindow, {
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
