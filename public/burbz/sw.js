@@ -265,7 +265,9 @@ self.addEventListener('fetch', event => {
       .then(response => {
         const copy = response.clone();
         const cacheableArtHost = url.hostname === 'github.com' || url.hostname === 'raw.githubusercontent.com';
-        if (response.ok && (url.origin === self.location.origin || cacheableArtHost)) {
+        // 206 partial responses (video/audio range requests) are rejected by
+        // Cache.put with a TypeError, so don't try to store them.
+        if (response.ok && response.status !== 206 && (url.origin === self.location.origin || cacheableArtHost)) {
           caches.open(BURBZ_CACHE).then(cache => cache.put(request, copy));
         }
         return response;
