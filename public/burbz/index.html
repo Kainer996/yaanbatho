@@ -4557,20 +4557,8 @@ const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicM
     })
   : null;
 
-const EMPIRE_AMBIENCE = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
-  ? window.BurbzAudioCore.createMusicManager({
-      src: 'assets/audio/ambience-empire-treetops.mp3',
-      volume: 0.08,
-      crossfadeSeconds: 3,
-      getEnabled: () => musicEnabled
-    })
-  : null;
-
 function setBurbzMusicSuppressed(reason, value) {
   if (MUSIC && typeof MUSIC.setSuppressed === 'function') MUSIC.setSuppressed(reason, value);
-  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.setSuppressed === 'function') {
-    EMPIRE_AMBIENCE.setSuppressed(reason, value);
-  }
 }
 
 // Mobile browsers unlock media only inside a real user gesture. Prime one
@@ -4580,9 +4568,6 @@ let burbzMusicGestureSeen = false;
 function primeBurbzAudio() {
   const manager = SFX;
   if (manager && typeof manager.prime === 'function') manager.prime('tap').catch(() => {});
-  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.prime === 'function') {
-    EMPIRE_AMBIENCE.prime().catch(() => {});
-  }
   if (!burbzMusicGestureSeen) {
     burbzMusicGestureSeen = true;
     if (MUSIC && typeof MUSIC.start === 'function') MUSIC.start();
@@ -4970,9 +4955,6 @@ function loadState() {
   musicEnabled = gameState.settings.music;
   if (SFX && typeof SFX.setEnabled === 'function') SFX.setEnabled(sfxEnabled);
   if (MUSIC && typeof MUSIC.setEnabled === 'function') MUSIC.setEnabled(musicEnabled);
-  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.setEnabled === 'function') {
-    EMPIRE_AMBIENCE.setEnabled(musicEnabled);
-  }
   saveState();
 }
 
@@ -17204,10 +17186,6 @@ function switchScreen(name) {
   if (navItem) navItem.classList.add('active');
 
   currentScreen = name;
-  if (EMPIRE_AMBIENCE) {
-    if (name === 'village' && typeof EMPIRE_AMBIENCE.start === 'function') EMPIRE_AMBIENCE.start();
-    else if (typeof EMPIRE_AMBIENCE.pause === 'function') EMPIRE_AMBIENCE.pause();
-  }
   updateMerlinListeningUI();
 
   // Screen-specific init
@@ -27195,7 +27173,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-3d-v180-20260730';
+const BURBZ_BUILD = 'empire-silent-v181-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -28006,9 +27984,6 @@ $('toggleMusic').addEventListener('click', () => {
   gameState.settings.music = el.classList.contains('on');
   musicEnabled = gameState.settings.music;
   if (MUSIC && typeof MUSIC.setEnabled === 'function') MUSIC.setEnabled(musicEnabled);
-  if (EMPIRE_AMBIENCE && typeof EMPIRE_AMBIENCE.setEnabled === 'function') {
-    EMPIRE_AMBIENCE.setEnabled(musicEnabled);
-  }
   saveState();
 });
 
