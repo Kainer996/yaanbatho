@@ -39,6 +39,7 @@ def _clean_env(monkeypatch):
         }],
         common_name_for=lambda scientific: None,
     )
+    sound_id.clear_served_provider()
 
 
 # ---------------------------------------------------------------- selection
@@ -71,6 +72,24 @@ def test_the_legacy_v2_path_is_flagged_as_non_commercial(monkeypatch):
 def test_a_typo_in_the_env_var_does_not_take_sound_scanning_down(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "prech")
     assert sound_id.active_provider() == "birdnetv3"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [None, "", "0", "false", "no", "off", "unexpected"],
+)
+def test_fallback_is_fail_closed_without_explicit_opt_in(monkeypatch, value):
+    if value is None:
+        monkeypatch.delenv("BURBZ_SOUND_MODEL_FALLBACK", raising=False)
+    else:
+        monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", value)
+    assert sound_id.fallback_enabled() is False
+
+
+@pytest.mark.parametrize("value", ["1", "true", "TRUE", "yes", "on"])
+def test_fallback_accepts_only_explicit_truthy_values(monkeypatch, value):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", value)
+    assert sound_id.fallback_enabled() is True
 
 
 def test_provider_labels_match_the_client_engine_names():
@@ -138,6 +157,7 @@ def _v3_returning(common_name):
 
 def test_perch_failure_falls_back_to_v3_rather_than_failing_the_scan(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "perch")
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "1")
 
     from sound_id import birdnet_v3_provider, perch_provider
 
@@ -153,6 +173,7 @@ def test_perch_failure_falls_back_to_v3_rather_than_failing_the_scan(monkeypatch
 
 
 def test_v3_failure_falls_back_to_perch_and_never_to_non_commercial_v2(monkeypatch):
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "1")
     from sound_id import birdnet_v3_provider, perch_provider
 
     def explode(*args, **kwargs):
@@ -167,10 +188,12 @@ def test_v3_failure_falls_back_to_perch_and_never_to_non_commercial_v2(monkeypat
     out = sound_id.analyse("/tmp/clip.wav")
     assert out[0]["common_name"] == "Wren"
     assert out[0]["common_name"] != "House Sparrow"  # i.e. never the V2.4 helpers
+    assert sound_id.last_served_provider() == "perch"
 
 
 def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch):
     """A failed scan must not be served by the non-commercial model instead."""
+    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "1")
     from sound_id import birdnet_v3_provider, perch_provider
 
     def explode(*args, **kwargs):
@@ -179,11 +202,13 @@ def test_when_every_commercial_engine_fails_the_scan_returns_nothing(monkeypatch
     monkeypatch.setattr(birdnet_v3_provider, "analyse", explode)
     monkeypatch.setattr(perch_provider, "analyse", explode)
     assert sound_id.analyse("/tmp/clip.wav") == []
+    assert sound_id.last_served_provider() is None
+    assert sound_id.served_meta()["provider"] is None
+    assert not sound_id.served_meta()["providerVerified"]
 
 
-def test_fallback_can_be_disabled_so_failures_are_loud_while_testing(monkeypatch):
+def test_failures_are_loud_by_default_without_fallback_opt_in(monkeypatch):
     monkeypatch.setenv("BURBZ_SOUND_MODEL", "perch")
-    monkeypatch.setenv("BURBZ_SOUND_MODEL_FALLBACK", "0")
 
     from sound_id import perch_provider
 
@@ -193,6 +218,25 @@ def test_fallback_can_be_disabled_so_failures_are_loud_while_testing(monkeypatch
     monkeypatch.setattr(perch_provider, "analyse", explode)
     with pytest.raises(perch_provider.PerchUnavailable):
         sound_id.analyse("/tmp/clip.wav")
+    assert sound_id.last_served_provider() is None
+
+
+def test_empty_success_still_records_the_engine_that_really_answered(monkeypatch):
+    from sound_id import birdnet_v3_provider
+
+    monkeypatch.setattr(birdnet_v3_provider, "analyse", lambda *a, **k: [])
+    assert sound_id.analyse("/tmp/quiet.wav") == []
+    assert sound_id.last_served_provider() == "birdnetv3"
+
+
+def test_served_meta_never_substitutes_configured_v3_for_no_provider():
+    sound_id.clear_served_provider()
+    meta = sound_id.served_meta()
+    assert meta["configuredProvider"] == "birdnetv3"
+    assert meta["provider"] is None
+    assert meta["providerLabel"] is None
+    assert meta["commercial"] is None
+    assert meta["providerVerified"] is False
 
 
 def test_perch_labels_are_scientific_binomials_with_the_header_row_dropped(tmp_path):
@@ -330,10 +374,13 @@ def test_short_clips_are_padded_into_one_window():
 
 # ------------------------------------------------------------------- client
 
-def test_client_keeps_birdnet_as_the_fallback_engine_label():
+def test_client_keeps_known_engine_labels_but_does_not_fabricate_missing_provenance():
     html = HTML.read_text(encoding="utf-8")
-    assert "birdnet:'BirdNET'" in html and "perch:'Perch'" in html
-    assert "SOUND_ENGINE_LABELS.birdnet" in html
+    assert "birdnetv3:'BirdNET V3'" in html and "perch:'Perch'" in html
+    assert "birdnetv2:'BirdNET V2 (legacy)'" in html
+    assert "unknown:'Bird-sound model (unverified)'" in html
+    assert "result.providerVerified !== true" in html
+    assert "SOUND_ENGINE_LABELS.unknown" in html
 
 
 def test_player_facing_disclosure_is_engine_neutral():

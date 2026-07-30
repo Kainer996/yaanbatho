@@ -138,9 +138,12 @@ def test_automatic_alignment_retries_do_not_re_announce_the_same_status():
     assert "async function startWalkingQuestFromOffer(offer, { retry = false } = {})" in src
     assert "startWalkingQuestFromOffer(walkQuestPendingActivation, { retry: true })" in src, \
         "the tile-readiness retry must identify itself as an automatic retry"
-    assert "if (!retry) showToast(" in body, "retries update the status line instead of toasting"
-    assert "setWalkQuestAlignmentStatus(pending" in body, \
+    assert "retry ? null : setTimeout(" in body, \
+        "an automatic retry never re-announces the wait, it updates the status line"
+    assert "setWalkQuestAlignmentStatus(message)" in body, \
         "the pending status must still be reported on the quest sheet/HUD"
+    # A blocked verdict is final, so it is announced even on an automatic retry.
+    assert "if (!retry || blocked) showToast(message)" in body
 
 
 def test_readiness_listeners_are_removed_once_there_is_nothing_to_align():

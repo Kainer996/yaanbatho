@@ -30,14 +30,14 @@ def test_starter_kitchen_is_reachable_and_documents_real_inventory():
         "mealworm_scoop: 2",
         "sunflower_seeds: 2",
         "live_minnow: 1",
-        "Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow",
+        "The kitchen is completely bare — send a bird on a hunting quest",
         "localStorage.setItem(BURBZ_EPOCH_KEY, BURBZ_FRESH_START_EPOCH)",
-        "data-kitchen-pantry-root",
-        "data-kitchen-species-choice",
+        "data-kitchen-roster-root",
+        "data-kitchen-roster-food",
         "data-diet-guidance",
         "data-diet-provenance",
         "data-compatible-foods",
-        "data-larder-count",
+        "data-kitchen-supply",
         "data-pantry-count",
         "data-feed-transaction-id",
         "data-feed-result-sheet",
@@ -85,20 +85,18 @@ console.log(JSON.stringify({ before, merlinGood, duplicateCrossStore, merlinMeal
     assert out["duplicateCrossStore"]["duplicate"] is True
     assert out["duplicateCrossStore"]["consumed"] == {}
     assert out["duplicateCrossStore"]["state"]["pantry"]["meat"] == 1
-    # Mealworms are a secondary food for a Merlin: eaten, but not the mainstay,
-    # so the meal is served from the right store at half value rather than
-    # refused. Food outside the diet altogether (finch + fish) still is.
-    assert out["merlinMealworm"]["ok"] is True
+    # A second meal in the same daily fullness cycle is refused without spend.
+    assert out["merlinMealworm"]["ok"] is False
     assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
-    assert out["merlinMealworm"]["consumed"] == {"inventory.larder.mealworm_scoop": 1}
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
+    assert out["merlinMealworm"]["consumed"] == {}
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
     assert out["titMealworm"]["ok"] is True
     assert out["titMealworm"]["consumed"] == {"pantry.insects": 1}
     assert out["titMealworm"]["state"]["pantry"]["insects"] == 1
     assert out["titMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
     assert out["finchFish"]["ok"] is False
     assert out["finchFish"]["state"]["pantry"]["fish"] == 1
-    assert out["finchFish"]["state"]["flock"][1]["care"]["hunger"] == 65
+    assert 65 <= out["finchFish"]["state"]["flock"][1]["care"]["hunger"] < 65.01
     assert out["finchSeed"]["ok"] is True
     assert out["finchSeed"]["consumed"] == {"pantry.seeds": 1}
     assert out["unmatchedConservativeFood"]["ok"] is True

@@ -125,7 +125,7 @@ def test_feeding_is_taught_by_feeding_him():
 def test_feeding_never_dead_ends_on_an_empty_larder():
     html = HTML.read_text(encoding="utf-8")
     assert "function maybeGrantTutorialFalconRation()" in html
-    assert "if (action.event === 'merlin-fed') maybeGrantTutorialFalconRation();" in html
+    assert "if (step.action && step.action.event === 'merlin-fed' && merlinTutMode !== 'full') maybeGrantTutorialFalconRation();" in html
     assert "larder.small_bird_prey_ration = 2;" in html
 
 
@@ -291,7 +291,8 @@ def test_a_full_merlin_cannot_strand_the_feed_step():
     """Regression: hunger clamps to 0 after one ration, so a re-entered feed
     step (via Back, or a migrated save) armed a deed that could never fire."""
     html = HTML.read_text(encoding="utf-8")
-    assert "return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) > 0;" in html
+    assert "(Number(getMerlinCare().hunger) || 0) >= feedingMinimum" in html
+    assert "if (!care.lastFedAt && (Number(care.hunger) || 0) < feedingMinimum)" in html
 
 
 def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
@@ -303,10 +304,11 @@ def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
+    html = HTML.read_text(encoding="utf-8")
+    build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert "discoveries-quiz-pacing-v152-20260728" in sw
-    # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on
-    # (academy-alive-v153 did), so pin only that this release stays in the
-    # cache lineage and the build tag is not older than this release.
-    build = re.search(r"const BURBZ_BUILD = '([^']+)';", HTML.read_text(encoding="utf-8"))
-    assert build, "BURBZ_BUILD constant missing"
-    assert build.group(1) in sw, "build tag must match a cache marker"
+    assert "reconciled-release-v170-20260729" in sw
+    # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on,
+    # so pin only that the build tag stays a marker in the cache lineage —
+    # a hardcoded tag here goes stale on the very next release.
+    assert build in sw

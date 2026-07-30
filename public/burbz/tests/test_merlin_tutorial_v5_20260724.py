@@ -90,8 +90,10 @@ def test_spotlight_only_lights_visible_targets_and_tracks_them():
     assert "if (screen && !screen.classList.contains('active')) return null;" in html
     # Mostly off-screen targets dim fully instead of clamping to a wrong spot.
     assert "< 0.4) return null;" in html
-    # The spotlight is re-measured every frame for the life of the step.
-    assert "function merlinTutTrackTarget(selector)" in html
+    # The spotlight is re-measured every frame for the life of the step, and
+    # multi-stage actions resolve their current live target on each frame.
+    assert "function merlinTutTrackTarget(step)" in html
+    assert "const selector = merlinTutTargetSelector(step);" in html
     assert "requestAnimationFrame(tick)" in html
     assert "merlinTutStopTracking()" in html
     assert "cancelAnimationFrame(merlinTutTrackHandle)" in html

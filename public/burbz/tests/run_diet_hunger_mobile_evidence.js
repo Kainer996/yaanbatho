@@ -184,7 +184,7 @@ function seededStorageScript() {
   };
   Object.keys(localStorage).filter(key => /^burbz/i.test(key)).forEach(key => localStorage.removeItem(key));
   localStorage.setItem('burbz_epoch', 'new-dawn-evil-burbz-20260720');
-  localStorage.setItem('burbzIntroSeen:merlin-tablet-20260629', '1');
+  localStorage.setItem('burbzIntroSeen:two-part-hf-20260729', '1');
   localStorage.setItem('burbzTutorialSeen:merlin-gradual-chapters-v4-20260720', '1');
   localStorage.setItem('burbzTutorialChapters:merlin-gradual-chapters-v4-20260720', JSON.stringify(['story','scan','birdex','battle','village','academy','quests','forge','inventory','leaderboards','profile']));
   localStorage.setItem('burbzTutorialState:merlin-gradual-chapters-v4-20260720', JSON.stringify({ version: 'merlin-gradual-chapters-v4-20260720', status: 'completed', mode: 'full', currentStep: 0 }));

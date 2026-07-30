@@ -34,7 +34,7 @@ def test_recruitment_cost_uses_rarity_power_and_stats():
 def test_continuous_scan_shows_a_non_blocking_card_for_every_detection():
     assert 'id="scanEncounterStack"' in HTML
     assert "function showScanEncounterCard" in HTML
-    assert "showScanEncounterCard(top" in HTML
+    assert "showScanEncounterCard(bird" in HTML
     assert "continuous-sound-discovery-v2-20260709" in HTML
     # Existing loop must remain user-controlled and continue after each chunk.
     assert "continuousSoundScanWanted = true" in HTML
@@ -42,9 +42,19 @@ def test_continuous_scan_shows_a_non_blocking_card_for_every_detection():
     assert "if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);" in HTML
 
 
-def test_only_the_confident_winner_is_auto_logged_not_weaker_alternatives():
-    assert "if (top && rememberDiscoveredBird(top)) newDiscoveries.push(top);" in HTML
-    assert "candidates.forEach(bird => { if (rememberDiscoveredBird(bird))" not in HTML
+def test_only_confirmed_confident_catalogue_matches_are_auto_logged():
+    assert "const confirmedSpeciesKeys = new Set();" in HTML
+    assert "const SOUND_REQUIRED_POLICY = 'burbz-v3-temporal-20260729.2';" in HTML
+    assert "const SOUND_REQUIRED_MODEL_SHA =" in HTML
+    assert "const SOUND_REQUIRED_LABELS_SHA =" in HTML
+    assert "const SOUND_REQUIRED_SCORE_BLACKLIST_SHA =" in HTML
+    assert "const SOUND_REQUIRED_GEO_MODEL_SHA =" in HTML
+    assert "const SOUND_REQUIRED_GEO_LABELS_SHA =" in HTML
+    assert "function soundCandidatesReadyToUnlock" in HTML
+    assert "const unlockReady = soundCandidatesReadyToUnlock" in HTML
+    assert "eligibleCandidates.filter" in HTML
+    assert "surfaced.forEach(bird =>" in HTML
+    assert "rememberDiscoveredBird(bird)" in HTML
 
 
 def test_encounter_card_explains_birdex_and_dynamic_price():

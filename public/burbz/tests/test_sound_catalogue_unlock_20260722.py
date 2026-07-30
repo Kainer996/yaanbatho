@@ -63,16 +63,17 @@ const generateBirdStats = () => ({ hp: 80, maxHp: 80, atk: 50, def: 50, spd: 50 
 const hashStr = () => 1;
 const resolveBuiltInBirdArt = () => null;
 const BIRD_BIOLOGY_STATS_VERSION = 1;
-const calls = { unmatched: [], remembered: [] };
+const SOUND_SESSION_MAX_PER_WINDOW = 4;
+const calls = { unmatched: [], remembered: [], session: [], quest: [] };
 const showCatalogUnmatchedRecognition = b => calls.unmatched.push(b.commonName || b.species);
 const rememberDiscoveredBird = b => { calls.remembered.push(b.species); return true; };
 const fetchBirdArt = () => {};
-const continuousSoundScanWanted = false;
-const recordSoundSessionDiscovery = () => {};
+let continuousSoundScanWanted = false;
+const recordSoundSessionDiscovery = b => calls.session.push(b.species);
 const $ = () => ({ classList: { add(){}, remove(){}, toggle(){} }, style: {}, textContent: '' });
 const RARITY_COLORS = { common: '#fff', uncommon: '#fff', rare: '#fff', epic: '#fff', legendary: '#fff' };
 const showScanEncounterCard = () => {};
-const questRegisterBirdEncounter = () => {};
+const questRegisterBirdEncounter = b => calls.quest.push(b.species);
 const addPlayerXp = () => {}; const saveState = () => {}; const updateHeader = () => {};
 const renderBirdex = () => {}; const renderProfile = () => {};
 const showRecruitChoiceOverlay = () => {}; const showToast = () => {};
@@ -81,6 +82,44 @@ function detect(name, scientificName, catalogMatched) {
   calls.unmatched.length = 0; calls.remembered.length = 0;
   handleBirdCandidates({ species: name, scientificName: scientificName || '', confidence: 0.9 }, [], { source: 'sound', catalogMatched });
   return { unmatched: [...calls.unmatched], remembered: [...calls.remembered] };
+}
+function detectMany() {
+  calls.unmatched.length = 0; calls.remembered.length = 0; calls.session.length = 0; calls.quest.length = 0;
+  continuousSoundScanWanted = true;
+  const surfaced = handleBirdCandidates(
+    { species:'Great Tit', scientificName:'Parus major', confidence:0.71 },
+    [
+      { common_name:'Great Tit', scientific_name:'Parus major', confidence:0.88 },
+      { common_name:'Common Chaffinch', scientific_name:'Fringilla coelebs', confidence:0.76 },
+      { common_name:'Common Chaffinch', scientific_name:'Fringilla coelebs', confidence:0.74 },
+      { common_name:'European Robin', scientific_name:'Erithacus rubecula', confidence:0.72 },
+      { common_name:'Mallard', scientific_name:'Anas platyrhynchos', confidence:0.70 },
+      { common_name:'Common Blackbird', scientific_name:'Turdus merula', confidence:0.69 }
+    ],
+    { source:'sound', catalogMatched:true }
+  );
+  continuousSoundScanWanted = false;
+  return {
+    surfaced: surfaced.map(b => ({ name:b.species, confidence:b.confidence })),
+    remembered:[...calls.remembered],
+    session:[...calls.session],
+    quest:[...calls.quest],
+    unmatched:[...calls.unmatched]
+  };
+}
+function detectOneShotWithSecondary() {
+  calls.remembered.length = 0; calls.quest.length = 0;
+  continuousSoundScanWanted = false;
+  const surfaced = handleBirdCandidates(
+    { species:'Great Tit', scientificName:'Parus major', confidence:0.88 },
+    [{ common_name:'Common Chaffinch', scientific_name:'Fringilla coelebs', confidence:0.86 }],
+    { source:'sound', catalogMatched:true }
+  );
+  return {
+    surfaced: surfaced.map(b => b.species),
+    remembered:[...calls.remembered],
+    quest:[...calls.quest]
+  };
 }
 """
     functions = "\n".join(
@@ -91,6 +130,7 @@ function detect(name, scientificName, catalogMatched) {
             "speciesKey",
             "canonicalSpeciesName",
             "createBirdEntry",
+            "normaliseAcceptedBirdCandidates",
             "handleBirdCandidates",
         )
     )
@@ -117,6 +157,8 @@ console.log(JSON.stringify({
   mallard: detect('Mallard', 'Anas platyrhynchos', false),
   mallardServerMatched: detect('Mallard', 'Anas platyrhynchos', true),
   unknown: detect('Console Gull', 'Larus consolensis', false),
+  multi: detectMany(),
+  oneShot: detectOneShotWithSecondary(),
 }));
 """
     return prelude + catalogue + stubs + functions + driver
@@ -144,10 +186,14 @@ def run_node_harness() -> dict:
 def test_client_trusts_its_own_catalogue_over_the_server_flag():
     html = HTML.read_text(encoding="utf-8")
     src = function_source(html, "handleBirdCandidates")
-    assert "const inGameCatalogue" in src
-    assert "opts.catalogMatched === false && !inGameCatalogue" in src
+    normalise = function_source(html, "normaliseAcceptedBirdCandidates")
+    assert "const inGameCatalogue = bird =>" in src
+    assert "eligibleCandidates.filter(inGameCatalogue)" in src
+    assert "raw.common_name" in normalise
+    assert "raw.scientific_name" in normalise
     # The old behaviour rejected purely on the server flag.
     assert "if (top && !catalogMatched)" not in src
+    assert "opts.catalogMatched" not in src
 
 
 def test_every_catalogue_bird_resolves_by_name_and_alias():
@@ -172,6 +218,29 @@ def test_mallard_detection_unlocks_despite_wrong_server_flag():
 def test_unknown_species_still_shows_the_catalogue_notice():
     out = run_node_harness()
     assert out["unknown"] == {"unmatched": ["Console Gull"], "remembered": []}
+
+
+def test_simultaneous_sound_species_are_deduplicated_and_capped_at_four():
+    multi = run_node_harness()["multi"]
+    assert multi["unmatched"] == []
+    assert [row["name"] for row in multi["surfaced"]] == [
+        "Great Tit", "Chaffinch", "Robin", "Mallard",
+    ]
+    assert multi["surfaced"][0]["confidence"] == 0.88
+    assert multi["remembered"] == [
+        "Great Tit", "Chaffinch", "Robin", "Mallard",
+    ]
+    assert multi["session"] == multi["remembered"]
+    assert multi["quest"] == multi["remembered"]
+
+
+def test_one_shot_sound_scan_preserves_primary_only_compatibility():
+    one_shot = run_node_harness()["oneShot"]
+    assert one_shot == {
+        "surfaced": ["Great Tit"],
+        "remembered": ["Great Tit"],
+        "quest": ["Great Tit"],
+    }
 
 
 def test_birdnet_style_qualified_labels_resolve_to_catalogue_profiles():
