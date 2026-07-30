@@ -24195,6 +24195,7 @@ $('burbzModeTabs')?.addEventListener('click', e => {
 let scanMode = 'image';
 let isRecording = false;
 let mediaRecorder = null;
+let soundRecorderLanes = [];
 let analyserNode = null;
 let listenerSourceNode = null;
 let listenerTrack = null;
@@ -24208,7 +24209,26 @@ let soundListenerState = 'stopped';
 let soundListenerDetail = 'Tap once and Merlin will keep listening while you explore Burbz.';
 let listenerSampleRate = 48000;
 let soundAnalysisAbortController = null;
-const SOUND_WINDOW_MS = 12000;
+// Sliding, overlapping recognition windows — the shape that makes Merlin feel
+// instant. Each analysed clip is SOUND_WINDOW_MS long (enough for the server to
+// cut it into the 3s / 50%-overlap sub-windows its two-window temporal-support
+// gate needs), but a fresh clip is opened every SOUND_HOP_MS instead of only
+// when the previous one closes. Consecutive clips therefore overlap by
+// (window − hop): a bird call up to one hop long is always captured whole inside
+// at least one clip, so a song that used to be sliced across a 12s clip boundary
+// — and rejected by both halves — is now recognised on the very next hop. To
+// keep several clips in flight at once, SOUND_WINDOW_LANES staggered recorders
+// run on the one microphone stream, each offset by a hop; every hop the oldest
+// full lane is closed and analysed while a new lane opens.
+//
+// 5s window + 2.5s hop → first bird at ~5s+inference (was 12–24s), then a fresh
+// overlapping result about every 2.5s: Merlin-class cadence with no boundary
+// splitting. Keep the window at/above ~4.5s (room for two 3s sub-windows) or
+// confident detections stop earning temporal support, and keep the hop ≤ the
+// window so lanes actually overlap.
+const SOUND_WINDOW_MS = 5000;
+const SOUND_HOP_MS = 2500;
+const SOUND_WINDOW_LANES = Math.max(1, Math.round(SOUND_WINDOW_MS / SOUND_HOP_MS));
 const SOUND_LOCATION_PREF_KEY = 'burbzSoundLocationAssist:v1';
 const soundAnalysisQueue = window.BurbzSoundListenerCore.createLatestTaskQueue(analyseContinuousSoundWindow, {
   onError: error => console.warn('BURBZ sound analysis queue failed', error)
@@ -24273,7 +24293,8 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     setMerlinListenerState('listening', 'Listening in the background while Burbz stays open.');
   } else {
-    if (mediaStream && listenerTrack?.readyState !== 'ended' && (!mediaRecorder || mediaRecorder.state === 'inactive')) startSoundRecorderWindow();
+    const laneActive = soundRecorderLanes.some(lane => lane && lane.state === 'recording');
+    if (mediaStream && listenerTrack?.readyState !== 'ended' && !laneActive) { startSoundRecorderWindow(); scheduleSoundHop(soundListenerGeneration); }
     setMerlinListenerState('listening', 'Merlin kept listening while you were away.');
   }
 });
@@ -24366,6 +24387,7 @@ async function startContinuousSoundListening() {
     drawWaveform();
     setMerlinListenerState('listening', 'Listening…');
     startSoundRecorderWindow(generation);
+    scheduleSoundHop(generation);
     return true;
   } catch (error) {
     if (generation !== soundListenerGeneration) return false;
@@ -24385,6 +24407,7 @@ function cleanupFailedSoundStart() {
   mediaStream = null;
   listenerTrack = null;
   mediaRecorder = null;
+  soundRecorderLanes = [];
   isRecording = false;
   if (listenerSourceNode) { try { listenerSourceNode.disconnect(); } catch (_) {} listenerSourceNode = null; }
   if (analyserNode) { try { analyserNode.disconnect(); } catch (_) {} analyserNode = null; }
@@ -24398,9 +24421,10 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   soundUnlockEvidence.clear();
   if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const recorder = mediaRecorder;
+  const lanes = soundRecorderLanes.slice();
+  soundRecorderLanes = [];
   mediaRecorder = null;
-  if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
+  lanes.forEach(recorder => { if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} } });
   if (listenerTrack) listenerTrack.onended = null;
   if (mediaStream) mediaStream.getTracks().forEach(track => { track.onended = null; if (track.readyState !== 'ended') track.stop(); });
   mediaStream = null;
@@ -24416,9 +24440,12 @@ function handleContinuousSoundTrackEnded(generation = soundListenerGeneration) {
   setMerlinListenerState('error', 'Listening paused by this device. Tap Merlin’s wand to resume.');
 }
 
+// Open one overlapping recording lane. It records until the hop clock closes it
+// (after ~SOUND_WINDOW_MS), then its finished clip is queued for recognition.
+// The hop clock — not this function — opens the next lane, so several lanes
+// capture the same moment offset by a hop and no call is lost to a boundary.
 function startSoundRecorderWindow(generation = soundListenerGeneration) {
   if (!continuousSoundScanWanted || generation !== soundListenerGeneration || !mediaStream || listenerTrack?.readyState === 'ended') return false;
-  if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
   const chunks = [];
   const sequence = ++soundWindowSequence;
   const startedAt = Date.now();
@@ -24426,27 +24453,40 @@ function startSoundRecorderWindow(generation = soundListenerGeneration) {
   const options = Recorder.isTypeSupported?.('audio/webm;codecs=opus') ? { mimeType:'audio/webm;codecs=opus' } : {};
   let recorder;
   try { recorder = new Recorder(mediaStream, options); }
-  catch (error) { handleSoundRecorderFailure(generation, error); return false; }
-  mediaRecorder = recorder;
+  catch (error) { handleSoundLaneFailure(generation, error); return false; }
   recorder.ondataavailable = event => { if (event.data && event.data.size > 0) chunks.push(event.data); };
   recorder.onstop = () => {
-    if (mediaRecorder === recorder) mediaRecorder = null;
-    isRecording = false;
+    soundRecorderLanes = soundRecorderLanes.filter(lane => lane !== recorder);
+    if (mediaRecorder === recorder) mediaRecorder = soundRecorderLanes[soundRecorderLanes.length - 1] || null;
+    isRecording = soundRecorderLanes.length > 0;
     const blob = new Blob(chunks, { type:recorder.mimeType || 'audio/webm' });
     const endedAt = Date.now();
     const durationMs = endedAt - startedAt;
+    // Overlapping lanes are opened by the hop clock, not from here; this guard
+    // only decides whether this finished clip is still worth analysing.
     const beginNextWindowBeforeAnalysis = continuousSoundScanWanted && generation === soundListenerGeneration && mediaStream && listenerTrack?.readyState !== 'ended';
-    if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);
     if (beginNextWindowBeforeAnalysis && durationMs >= 2500 && blob.size > 800) {
       queueSoundWindowForAnalysis({ blob, sequence, startedAt, endedAt, durationMs, generation });
     }
   };
   try { recorder.start(); }
-  catch (error) { handleSoundRecorderFailure(generation, error); return false; }
+  catch (error) { handleSoundLaneFailure(generation, error); return false; }
+  soundRecorderLanes.push(recorder);
+  mediaRecorder = recorder;
   isRecording = true;
-  soundScanChunkTimer = setTimeout(rotateContinuousSoundWindow, SOUND_WINDOW_MS);
   updateMerlinListeningUI();
   return true;
+}
+
+// A single lane failed to open. While any other lane is still capturing this is
+// a transient hiccup on one overlapping window — leave the session running and
+// let the next hop retry. Only a total loss of lanes is a real microphone
+// failure worth tearing the listener down for.
+function handleSoundLaneFailure(generation, error) {
+  console.warn('BURBZ sound lane failed', error);
+  if (generation !== soundListenerGeneration) return;
+  if (soundRecorderLanes.some(lane => lane && lane.state === 'recording')) return;
+  handleSoundRecorderFailure(generation, error);
 }
 
 function handleSoundRecorderFailure(generation, error) {
@@ -24456,14 +24496,34 @@ function handleSoundRecorderFailure(generation, error) {
   setMerlinListenerState('error', 'Microphone unavailable. Tap Merlin’s wand to try again.');
 }
 
-function rotateContinuousSoundWindow() {
+// The hop clock. Every SOUND_HOP_MS: close the oldest lane once the lanes are at
+// full staggered strength (that queues its finished clip), then open a fresh
+// lane. One self-re-arming timer drives the whole cadence so the lanes stay
+// evenly offset instead of drifting into phase and losing their overlap.
+function scheduleSoundHop(generation = soundListenerGeneration) {
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const recorder = mediaRecorder;
-  if (!continuousSoundScanWanted || !recorder || recorder.state === 'inactive') return false;
+  soundScanChunkTimer = setTimeout(() => runSoundHop(generation), SOUND_HOP_MS);
+}
+
+function runSoundHop(generation) {
+  soundScanChunkTimer = null;
+  if (!continuousSoundScanWanted || generation !== soundListenerGeneration || !mediaStream || listenerTrack?.readyState === 'ended') return;
+  if (soundRecorderLanes.length >= SOUND_WINDOW_LANES) rotateContinuousSoundWindow();
+  startSoundRecorderWindow(generation);
+  scheduleSoundHop(generation);
+}
+
+// Close the oldest open lane; its onstop queues the finished overlapping clip.
+// The lane is dropped from the roster synchronously so the hop clock always
+// counts live lanes accurately, even before the async onstop fires.
+function rotateContinuousSoundWindow() {
+  const recorder = soundRecorderLanes[0];
+  if (!recorder) return false;
+  soundRecorderLanes = soundRecorderLanes.filter(lane => lane !== recorder);
+  if (mediaRecorder === recorder) mediaRecorder = soundRecorderLanes[soundRecorderLanes.length - 1] || null;
+  if (recorder.state === 'inactive') return false;
   try { recorder.stop(); return true; } catch (error) {
     console.warn('BURBZ sound window rotation failed', error);
-    const generation = soundListenerGeneration;
-    if (continuousSoundScanWanted) setTimeout(() => startSoundRecorderWindow(generation), 250);
     return false;
   }
 }
@@ -24478,9 +24538,10 @@ function stopContinuousSoundListening(opts = {}) {
   soundUnlockEvidence.clear();
   if (soundAnalysisAbortController) { soundAnalysisAbortController.abort(); soundAnalysisAbortController = null; }
   if (soundScanChunkTimer) { clearTimeout(soundScanChunkTimer); soundScanChunkTimer = null; }
-  const recorder = mediaRecorder;
+  const lanes = soundRecorderLanes.slice();
+  soundRecorderLanes = [];
   mediaRecorder = null;
-  if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} }
+  lanes.forEach(recorder => { if (recorder && recorder.state !== 'inactive') { try { recorder.stop(); } catch (_) {} } });
   if (listenerTrack) listenerTrack.onended = null;
   if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
   mediaStream = null;
@@ -24826,6 +24887,7 @@ window.__burbzSoundDebug = {
     stream: !!mediaStream,
     trackState: listenerTrack?.readyState || null,
     recorderState: mediaRecorder?.state || null,
+    lanes: soundRecorderLanes.length,
     windowSequence: soundWindowSequence,
     queue: soundAnalysisQueue.snapshot(),
     provider: lastSoundProviderMeta ? { ...lastSoundProviderMeta } : null
