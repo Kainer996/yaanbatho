@@ -302,22 +302,23 @@ def test_map_forage_and_shop_stock_feed_the_larder():
 # UI wiring, migration, badges and the service worker
 # ---------------------------------------------------------------------------
 
-def test_kitchen_prep_counter_is_wired_into_the_kitchen_room():
+def test_companion_feeding_table_is_wired_into_the_kitchen_room():
     html = HTML.read_text(encoding="utf-8")
     for marker in (
         '<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>',
         "room === 'kitchen' ? renderKitchenPanelHTML()",
         "function renderKitchenPanelHTML(",
-        "function kitchenCounterFoodListHTML(",
+        "function renderKitchenRosterHTML(",
         "function burbzFeedTap(",
-        "🌲 Wild Bird Feeder",
-        "🧺 Stores larder",
-        "kitchenSelectSpecies,",
-        "burbzFeedFood,",
+        'data-kitchen-roster-root="academy-kitchen"',
+        'data-action="kitchen-roster-feed"',
         ".feed-food-list {",
         ".feed-food {",
     ):
         assert marker in html, marker
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "Wild Bird Feeder" not in panel
+    assert "data-kitchen-pantry-root" not in panel
 
 
 def test_the_add_ingredient_tray_mechanic_is_gone():

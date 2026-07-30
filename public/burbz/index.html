@@ -12847,8 +12847,7 @@ function feedWildEntryForSpeciesKey(wantedKey) {
   };
 }
 
-// Every food currently in stock, scored against this bird. Wild species are
-// scored the same way — the diet is the diet, whoever is holding the dish.
+// Every food currently in stock, scored against this companion's real diet.
 function feedFoodOptions(entry) {
   return kitchenRosterFoodOptions(entry);
 }
@@ -13238,13 +13237,10 @@ function kitchenNotesLine(key) {
   return 'Field notes: ' + bits.join(' · ');
 }
 
-// The Prep Counter is a food list now, not a plate: every food in stock is its
-// own button and tapping one serves that single food straight away.
 function kitchenCounterFeedEntry(chosen) {
-  if (!chosen) return null;
+  if (!chosen || (!chosen.merlin && !chosen.companion)) return null;
   if (chosen.merlin) return feedEntryForKey('merlin');
-  if (chosen.companion) return feedEntryForKey(chosen.companion.id);
-  return feedWildEntryForSpeciesKey(chosen.key);
+  return feedEntryForKey(chosen.companion.id);
 }
 
 function kitchenCounterFoodListHTML(entry) {
@@ -13258,68 +13254,7 @@ function kitchenCounterFoodListHTML(entry) {
 }
 
 function renderKitchenPanelHTML() {
-  if (!kitchenCore()) return '<div class="room-add-panel"><div class="inventory-empty">The Prep Counter is still warming up — reopen the Kitchen in a moment.</div></div>';
-  const rosterHtml = renderKitchenRosterHTML();
-  const choices = kitchenPrepCounterChoices();
-  if (!choices.length) return rosterHtml;
-  const chosen = kitchenPrepCounterSelectedChoice(choices);
-  if (chosen && kitchenState.speciesKey !== chosen.key) kitchenState.speciesKey = chosen.key;
-  const larder = ensureLarder();
-  const rule = kitchenDietRuleForChoice(chosen);
-
-  const chips = choices.slice(0, 60).map(row => {
-    const active = chosen && row.key === chosen.key;
-    const badge = (gameState.dietBadges || {})[row.key] ? ' 🏅' : '';
-    return '<button class="kitchen-chip' + (active ? ' active' : '') + '" data-kitchen-species-choice="' + escapeHtml(row.key) + '" onclick="kitchenSelectSpecies(\'' + row.key + '\')">' + (row.merlin ? '🧙 ' : row.companion ? '🐦 ' : '🌲 ') + escapeHtml(row.name) + badge + '</button>';
-  }).join('');
-
-  // The card is now two lines: who you are cooking for, and what it eats.
-  // Habitat clues, field notes and the full source provenance are real but
-  // rarely needed mid-cook, so they fold away behind one summary line.
-  let speciesCard = '<div class="inventory-empty">Discover a bird first — every scan and listen adds a species you can cook for.</div>';
-  if (chosen) {
-    const profile = findSpeciesProfile(chosen.name);
-    const clue = profile ? [profile.habitat, profile.diet ? 'Diet clue: ' + profile.diet : null].filter(Boolean).join(' · ') : 'Watch where you met it for clues.';
-    const badgeCount = (gameState.dietBadges || {})[chosen.key] || 0;
-    const status = chosen.merlin ? 'Permanent companion — a source-backed falcon meal feeds him properly.' : chosen.companion ? 'Companion — a good meal feeds it properly.' : 'Wild Birdex species — a perfect tray builds feeder trust (cheaper to recruit).';
-    speciesCard = '<div class="kitchen-guest">' +
-      '<div class="kitchen-guest-name">' + escapeHtml(chosen.name) + (badgeCount ? ' <span class="kitchen-guest-badge">🏅 Diet Badge' + (badgeCount > 1 ? ' ×' + badgeCount : '') + '</span>' : '') + '</div>' +
-      kitchenGuestHungerHTML(chosen) +
-      '<div class="kitchen-guest-eats"><span class="kitchen-guest-eats-label">🍴 Eats</span>' + kitchenEatsChipsHTML(chosen) + '</div>' +
-      '<details class="kitchen-fold kitchen-guest-more"><summary>Field guide &amp; sources</summary><div class="kitchen-fold-body">' +
-        '<div class="kitchen-guest-status">' + status + '</div>' +
-        '<div class="kitchen-guest-clue">' + escapeHtml(clue) + '</div>' +
-        kitchenDietGuidanceHTML(chosen, rule) +
-        '<div class="kitchen-guest-notes">' + escapeHtml(kitchenNotesLine(chosen.key)) + '</div>' +
-      '</div></details></div>';
-  }
-
-  const larderRows = Object.entries(larder).filter(([, n]) => (Number(n) || 0) > 0);
-  const larderHtml = larderRows.length ? larderRows.map(([id, count]) => {
-    const ing = kitchenIngredientById(id);
-    if (!ing) return '';
-    return '<div class="kitchen-larder-item" data-larder-count="' + escapeHtml(id) + '" data-count="' + Math.max(0, Number(count) || 0) + '" title="' + escapeHtml(kitchenIngredientBlurb(ing)) + '"><span>' + ing.icon + '</span><span class="kitchen-larder-label">' + escapeHtml(ing.label) + '</span><span class="kitchen-larder-count">×' + count + '</span></div>';
-  }).join('') : '<div class="inventory-empty">Larder empty — go fishing from the Quest Roost, walk the map, or shop at the Seed &amp; Sundry.</div>';
-
-  const larderCount = larderRows.reduce((sum, [, n]) => sum + Math.max(0, Number(n) || 0), 0);
-
-  // Screen order is the job itself: pick the bird, see what it eats, tap the
-  // food. Stock lists and supply explainers sit folded underneath.
-  const counterEntry = kitchenCounterFeedEntry(chosen);
-  const counterArt = counterEntry ? feedArtHTML(counterEntry.artBird, 'feed-sheet-art kitchen-counter-art') : '';
-  return rosterHtml +
-    '<div class="room-add-panel kitchen-panel" data-feed-surface="prep-counter" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🌲 Wild Bird Feeder</div>' +
-    '<div class="kitchen-chip-strip">' + (chips || '') + '</div>' +
-    counterArt +
-    speciesCard +
-    '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills it halfway and gives half XP.</div>' +
-    '<div class="feed-food-list">' + kitchenCounterFoodListHTML(counterEntry) + '</div>' +
-    feedReceiptHTML() +
-    '<details class="kitchen-fold"><summary>🧺 Stores larder · ' + larderCount + ' item' + (larderCount === 1 ? '' : 's') + '</summary><div class="kitchen-fold-body">' +
-      '<div class="kitchen-larder-grid">' + larderHtml + '</div>' +
-      kitchenPantryBridgeHTML() +
-      '<div class="kitchen-help">Starter Stores include falcon rations, mealworms, sunflower seeds and a live minnow, plus real prey for the birds of prey: field voles, a wood mouse, carrion scraps and a frog. The hunting quests (Vole Meadow Hunt, Warren Watch, Falconry Ration Run, Carrion Round, Marsh &amp; Ditch Hunt, Fishing Trip), map forage and village butchers restock the larder.</div>' +
-    '</div></details></div>';
+  return renderKitchenRosterHTML();
 }
 
 // How hungry the bird in front of you actually is, as a bar and a number, so
@@ -27107,7 +27042,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'kitchen-no-duplicate-companions-v175-20260730';
+const BURBZ_BUILD = 'companion-feeding-only-v176-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
