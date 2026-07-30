@@ -6,7 +6,6 @@ REPO = BURBZ.parents[1]
 
 NEW_AUDIO = {
     "bgm-burbz-quest-v2.mp3",
-    "ambience-empire-treetops.mp3",
     "sfx-ui-tap.mp3",
     "sfx-page-wing.mp3",
     "sfx-capture.mp3",
@@ -44,12 +43,10 @@ def test_audio_assets_ship_through_offline_and_live_deployment_paths():
     assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
 
 
-def test_empire_ambience_and_semantic_battle_sounds_are_wired():
+def test_empire_ambience_is_retired_and_semantic_battle_sounds_are_wired():
     index = (BURBZ / "index.html").read_text(encoding="utf-8")
-    assert "const EMPIRE_AMBIENCE" in index
-    assert "name === 'village'" in index
-    assert "EMPIRE_AMBIENCE.setSuppressed(reason, value)" in index
-    assert "EMPIRE_AMBIENCE.setEnabled(musicEnabled)" in index
+    assert "const EMPIRE_AMBIENCE" not in index
+    assert "ambience-empire-treetops.mp3" not in index
     assert "ev.magic && SFX.specialHit" in index
     assert "ev.type === 'barrier' && SFX.defend" in index
     assert "ev.type === 'faint' && !battleState.liberation && SFX.defeat" in index
