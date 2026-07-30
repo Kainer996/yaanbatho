@@ -11763,7 +11763,7 @@ function renderQuestSendSheet() {
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
-    return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
+    return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
       '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
@@ -27127,7 +27127,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'tutorial-merlin-feed-fix-v172-20260730';
+const BURBZ_BUILD = 'tutorial-merlin-spotlight-fix-v173-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -27178,7 +27178,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'Stuck? Always look here. Player Quests guide you through the game step by step \u2014 follow them and you will never wonder what to do next.' },
   { chapterId:'quests', chapter:'Quests', title:'Kingdom Errands', screen:'quests', target:'#expeditionQuestList', text:'Below sits the errand board. Send birds out on quests and expeditions and they come home with coins, timber, food and treasure.' },
   { chapterId:'quests', chapter:'Quests', title:'Send me out!', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'See Merlin\u2019s First Flight? You can send me out for this one \u2014 it takes mere seconds. Tap it, choose me, and press Send.',
-    action:{ event:'expedition-sent', mode:'free', hint:'Tap Merlin\u2019s First Flight, then send me on my way' } },
+    action:{ event:'expedition-sent', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Tap Merlin\u2019s First Flight, then send me on my way' } },
   { chapterId:'quests', chapter:'Quests', title:'Now we wait \u2014 briefly', screen:'quests', target:null, text:'Off I go! I will be back in seconds. The moment I land, tap CLAIM and take what I have brought you.' },
 
   // — Merlin returns: one beat, then the player walks to the Academy.
@@ -27676,11 +27676,21 @@ let merlinTutTrackHandle = 0;
 function merlinTutStopTracking() {
   if (merlinTutTrackHandle) { cancelAnimationFrame(merlinTutTrackHandle); merlinTutTrackHandle = 0; }
 }
-function merlinTutTrackTarget(selector) {
+function merlinTutTargetSelector(step) {
+  if (!step || typeof step === 'string') return step || null;
+  const overlayTarget = step.action && step.action.overlayTarget;
+  return overlayTarget && merlinTutVisibleTarget(overlayTarget) ? overlayTarget : step.target;
+}
+
+function merlinTutTrackTarget(step) {
   merlinTutStopTracking();
   const stepAtStart = merlinTutStep;
   const tick = () => {
     if (!merlinTutActive || merlinTutStep !== stepAtStart) { merlinTutTrackHandle = 0; return; }
+    // Multi-stage actions can replace their first control with a sheet/modal.
+    // Resolve on every frame so the glow follows the live control rather than
+    // measuring the now-obscured quest-board card behind the dispatch sheet.
+    const selector = merlinTutTargetSelector(step);
     merlinTutSpotlightTarget(selector);
     positionMerlinTutorialStage(selector);
     merlinTutTrackHandle = requestAnimationFrame(tick);
@@ -27732,7 +27742,7 @@ function merlinTutShowStep(i) {
     if (el && (!screen || screen.classList.contains('active'))) {
       try { el.scrollIntoView({ block:'nearest', inline:'nearest' }); } catch (e) {}
     }
-    merlinTutTrackTarget(step.target);
+    merlinTutTrackTarget(step);
     $('merlinTutorialNext')?.focus({ preventScroll:true });
   }, step.screen ? 360 : 70);
 }
