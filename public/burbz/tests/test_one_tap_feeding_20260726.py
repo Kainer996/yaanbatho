@@ -188,8 +188,9 @@ def test_no_wall_clock_cooldown_gates_feeding_anywhere():
     for name in ("academyFeedFood", "burbzFeedFood", "feedWildSpecies"):
         src = function_source(html, name)
         assert "academyCdLeft" not in src, name
-    # The Academy's own Feed button reads the hunger bar, not a timer.
-    assert "const full = birdIsFull(b);" in html
+    # Fullness is information, never a gate on a player-chosen meal.
+    assert "disabled>🍽️ Full" not in html
+    assert "const full = birdIsFull(b);" not in html
     assert "function birdIsFull(" in html
 
 
@@ -361,13 +362,13 @@ def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
 
 def test_only_companions_use_the_feeding_surface():
     html = HTML.read_text(encoding="utf-8")
-    # Full companions leave the upper feeding table.
-    assert "kitchenRosterHungryEntries()" in function_source(html, "renderKitchenRosterHTML")
+    # Full companions remain in the upper feeding table for optional top-ups.
+    assert "kitchenRosterEntriesForFeeding()" in function_source(html, "renderKitchenRosterHTML")
     panel = function_source(html, "renderKitchenPanelHTML")
     assert "return renderKitchenRosterHTML();" in panel
     assert "kitchenPrepCounterChoices" not in panel
     assert 'data-kitchen-pantry-root="academy-kitchen"' not in panel
-    # The companion table still explains the all-fed state rather than going blank.
+    # The companion table still explains the genuinely empty-roster state.
     assert 'data-kitchen-all-fed="1"' in html
 
 

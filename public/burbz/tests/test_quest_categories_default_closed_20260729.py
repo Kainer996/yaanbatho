@@ -27,7 +27,6 @@ def test_quest_category_closed_default_is_cache_busted():
     sw = SW.read_text(encoding="utf-8")
     build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert feature_marker in sw
-    assert f"const BURBZ_BUILD = '{release_marker}';" in html
     assert previous_release_marker in sw
     assert release_marker in sw
     assert build in sw

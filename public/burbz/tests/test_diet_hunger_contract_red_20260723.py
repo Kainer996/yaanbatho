@@ -320,10 +320,12 @@ console.log(JSON.stringify({ merlinGood, merlinDuplicate, merlinMealworm, finchF
     assert out["merlinGood"]["state"]["merlinCare"]["hunger"] < 70
     assert out["merlinDuplicate"]["consumed"] == {}
     assert out["merlinDuplicate"]["state"]["inventory"]["larder"]["small_bird_prey_ration"] == 1
-    # A second meal in the same daily fullness cycle is not spent.
-    assert out["merlinMealworm"]["ok"] is False
+    # A player-chosen side snack may top Merlin up and spends one whole scoop.
+    assert out["merlinMealworm"]["ok"] is True
     assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
+    assert out["merlinMealworm"]["consumed"] == {"inventory.larder.mealworm_scoop": 1}
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
+    assert out["merlinMealworm"]["state"]["merlinCare"]["hunger"] < 0.001
     # Food outside the diet entirely is still refused, and still costs nothing.
     assert out["finchFish"]["ok"] is False
     assert out["finchFish"]["state"]["inventory"]["larder"]["live_minnow"] == 1
