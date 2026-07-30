@@ -54,5 +54,11 @@ def test_feeding_transaction_rejects_codex_only_birds():
 
 def test_release_marker_moves_beyond_the_temporary_wild_feeder_build():
     source = HTML.read_text()
+    sw = (HTML.parent / "sw.js").read_text()
     assert "Wild Bird Feeder" not in source
-    assert "companion-feeding-only-v176-20260730" in (HTML.parent / "sw.js").read_text()
+    # BURBZ_BUILD tracks the NEWEST release marker and later releases move it
+    # on, so pin only that this release stayed in the cache lineage and the
+    # current build tag is a real marker in that lineage.
+    assert "kitchen-no-duplicate-companions-v175-20260730-companion-feeding-only-v176-20260730" in sw
+    build = source.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
+    assert build in sw

@@ -27,6 +27,8 @@ def test_quest_category_closed_default_is_cache_busted():
     sw = SW.read_text(encoding="utf-8")
     build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert feature_marker in sw
+    # release_marker pinned this feature's own release; BURBZ_BUILD moves on
+    # with every later release, so only require the lineage plus a valid tag.
     assert previous_release_marker in sw
     assert release_marker in sw
     assert build in sw

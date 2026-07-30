@@ -79,5 +79,10 @@ def test_every_companion_stays_visible_and_feed_controls_stay_actionable_when_fu
 def test_v177_application_and_service_worker_markers_match():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{MARKER}';" in html
+    # This release must stay in the service worker's cache lineage...
     assert MARKER in sw
+    # ...but BURBZ_BUILD names the NEWEST release, and later ones move it on,
+    # so pin only that the build tag is itself a real marker in that lineage.
+    # Hardcoding this release's tag here goes red on the very next release.
+    build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
+    assert build in sw
