@@ -81,7 +81,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .hud-resources { display: flex; gap: 6px; }
 .hud-chip { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 3px 8px 4px; border-radius: 9px; border: 1px solid rgba(214,168,79,.28); background: linear-gradient(135deg, rgba(214,168,79,.12), rgba(255,255,255,.03)); }
 .hud-chip:active { background: rgba(214,168,79,.24); }
-.hud-chip-icon { font-size: 12px; line-height: 1; }
+.hud-chip-icon { width: 18px; height: 18px; object-fit: contain; display: block; }
 .hud-chip-value { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 13px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hud-chip.bump .hud-chip-value { animation: hudBump .45s ease; }
 @keyframes hudBump { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--legendary); } 100% { transform: scale(1); } }
@@ -94,6 +94,10 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   border-radius:10px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
   font-size:17px; color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
+.header-profile-btn img, .header-settings img { width: 29px; height: 29px; object-fit: contain; display: block; }
+.ui-inline-icon { width: 22px; height: 22px; object-fit: contain; display: inline-block; vertical-align: middle; margin-right: 5px; }
+.scan-mode-btn .ui-inline-icon { width: 25px; height: 25px; margin-right: 6px; }
+.map-quest-show-icon .ui-inline-icon { width: 28px; height: 28px; margin: 0; }
 .merlin-listening-dock {
   position:relative; display:none; flex:0 0 36px; width:36px; height:36px; padding:3px;
   align-items:center; justify-content:center; border-radius:10px;
@@ -1447,7 +1451,7 @@ svg.academy-room-bg { display:block; filter:none; }
   min-height: calc(100dvh - var(--nav-height) - 260px);
   border-color: rgba(214,168,79,0.5); color: var(--text);
 }
-#imageScanArea .scan-upload-icon { font-size: 46px; }
+#imageScanArea .scan-upload-icon { width: 74px; height: 74px; object-fit: contain; }
 .scan-upload-subtext { font-size: 12px; font-weight: 600; color: var(--text3); }
 #nativePhotoPreview {
   max-width: 100%; max-height: 38dvh; border-radius: 12px; object-fit: contain;
@@ -1478,7 +1482,7 @@ svg.academy-room-bg { display:block; filter:none; }
   transition: border-color 0.2s ease;
 }
 .scan-upload-area:active { border-color: var(--accent2); }
-.scan-upload-icon { font-size: 32px; }
+.scan-upload-icon { width: 52px; height: 52px; object-fit: contain; }
 .scan-upload-text { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 14px; }
 
 /* ========== BATTLE SCREEN ========== */
@@ -2869,8 +2873,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         </div>
       </div>
       <div class="hud-resources">
-        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><span class="hud-chip-icon">🪙</span><span class="hud-chip-value" id="hudCoins">0</span></button>
-        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><span class="hud-chip-icon">🪵</span><span class="hud-chip-value" id="hudTimber">0</span></button>
+        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/coin.webp" alt=""><span class="hud-chip-value" id="hudCoins">0</span></button>
+        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/timber.webp" alt=""><span class="hud-chip-value" id="hudTimber">0</span></button>
       </div>
     </div>
     <button class="merlin-listening-dock" id="merlinDockReturn" type="button" aria-label="Merlin is listening — open listener">
@@ -2878,8 +2882,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <span class="merlin-listening-pulse" aria-hidden="true"></span>
       <span class="sr-only" id="merlinDockStatus" aria-live="polite">Listening across Burbz</span>
     </button>
-    <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile">&#128100;</button>
-    <button class="header-settings" id="settingsBtn" aria-label="Settings">&#9881;</button>
+    <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile"><img src="assets/ui/burbz-icon-set/profile.webp" alt=""></button>
+    <button class="header-settings" id="settingsBtn" aria-label="Settings"><img src="assets/ui/burbz-icon-set/settings.webp" alt=""></button>
   </header>
 
   <!-- Screens -->
@@ -2894,7 +2898,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="map-quest-btn" id="mapQuestBtn" aria-label="Explore nearby quests"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-kicker">Field board</span><span class="map-quest-btn-label" id="mapQuestBtnLabel">Explore Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
-        <button class="map-quest-show-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><span class="map-quest-show-icon" aria-hidden="true">⌖</span><span>Show Quests</span></button>
+        <button class="map-quest-show-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><span class="map-quest-show-icon" aria-hidden="true"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/quests.webp" alt=""></span><span>Show Quests</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
@@ -2956,8 +2960,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="screen camera-mode" id="screen-scan" data-scan-path="camera-only">
       <div class="screen-title">SCAN</div>
       <div class="scan-mode-toggle">
-        <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image">&#128247; Camera</button>
-        <button class="scan-mode-btn" id="scanSoundBtn" data-mode="sound">&#127925; Sound</button>
+        <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">Camera</button>
+        <button class="scan-mode-btn" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
       </div>
 
       <!-- Sound scan area -->
@@ -3003,7 +3007,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         </div>
         <div class="scan-upload-area" id="uploadArea">
           <img id="nativePhotoPreview" alt="Your last bird photo" style="display:none;">
-          <div class="scan-upload-icon">&#128247;</div>
+          <img class="scan-upload-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">
           <div class="scan-upload-text">Choose a bird photo</div>
         </div>
         <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
@@ -3057,7 +3061,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="battle-team-grid" id="battleTeamGrid"></div>
         <div class="battle-synergy-preview" id="battleSynergyPreview">Pick three birds of one type to unlock a MEGA BONUS.</div>
         <button class="battle-start-btn" id="battleStartBtn" disabled>START BATTLE</button>
-        <button class="battle-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')">⚒️ GEAR UP AT THE FLETCHER'S FORGE</button>
+        <button class="battle-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">GEAR UP AT THE FLETCHER'S FORGE</button>
         <div class="type-wheel" id="typeWheel"></div>
       </div>
 
@@ -3211,9 +3215,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="screen-title">FLETCHER'S FORGE</div>
       <div class="forge-intro">Loot found on your walks becomes weapons, armour and trinkets here. Equip each bird with a weapon (talons for the strong, wands for the magical), armour and a trinket.</div>
       <div class="forge-tabs">
-        <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')">🛡️ EQUIP</button>
-        <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')">⚒️ CRAFT</button>
-        <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')">🧺 MATERIALS</button>
+        <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
+        <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
+        <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">MATERIALS</button>
       </div>
       <div id="forgeBody"></div>
     </div>
@@ -3622,6 +3626,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
+<script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-audio-overhaul-v1-20260726"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
@@ -3659,6 +3664,8 @@ const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
   addToHabitatPools() {},
   isEligible() { return false; }
 };
+const GENERATED_ART_COMPLETION = window.BURBZ_GENERATED_ART_COMPLETION_20260726 || {};
+document.documentElement.dataset.burbzGeneratedArtCount = String(Object.keys(GENERATED_ART_COMPLETION).length);
 const SPAIN_BOUNDARY = window.BURBZ_SPAIN_BOUNDARY_20260715 || {
   contains() { return false; }
 };
@@ -10416,6 +10423,9 @@ for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
     BUILT_IN_BIRD_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
   }
 }
+// These recovered built-in ImageGen paintings ship locally with this release,
+// so apply them after the GitHub/LFS routing pass.
+Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 
 const LEGACY_BIRD_ART_REPLACEMENTS = {
   'barn_owl_ava_20260608.png': BUILT_IN_BIRD_ART['Barn Owl'],
@@ -27127,7 +27137,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'tutorial-merlin-spotlight-fix-v173-20260730';
+const BURBZ_BUILD = 'generated-art-ui-restore-v174-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
