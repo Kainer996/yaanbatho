@@ -21,8 +21,8 @@ def test_every_quest_category_defaults_closed():
 
 def test_quest_category_closed_default_is_cache_busted():
     feature_marker = "quest-drawers-closed-v165-20260729"
-    previous_release_marker = "reconciled-release-v170-20260729"
-    release_marker = "birdnet-accuracy-v171-20260729"
+    previous_release_marker = "birdnet-accuracy-v171-20260729"
+    release_marker = "tutorial-merlin-feed-fix-v172-20260730"
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
