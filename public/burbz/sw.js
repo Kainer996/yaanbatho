@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-quest-alignment-authority-v146-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-bird-families-mega-v1-20260728-photo-locality-v153-20260728-tutorial-copy-cleanup-v154-20260729-camera-result-overlap-v155-20260729-kitchen-quest-guide-v156-20260729-sound-local-consensus-v157-20260729-kitchen-feed-sheet-v158-20260729-simple-locality-v160-20260729-recruit-card-name-v161-20260729-daily-hunger-bars-v162-20260729-birdex-card-names-v163-20260729-birdex-no-feed-v164-20260729-quest-drawers-closed-v165-20260729-generalist-diets-v166-20260729-generated-art-ui-v153-20260729-nickname-line-v167-20260729-intro-two-part-video-v154-20260729-academy-alive-v153-20260729-reconciled-release-v170-20260729-tutorial-chunked-progress-v171-20260729-birdnet-accuracy-v171-20260729-tutorial-merlin-feed-fix-v172-20260730-tutorial-merlin-spotlight-fix-v173-20260730';
+const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-quest-alignment-authority-v146-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-bird-families-mega-v1-20260728-photo-locality-v153-20260728-tutorial-copy-cleanup-v154-20260729-camera-result-overlap-v155-20260729-kitchen-quest-guide-v156-20260729-sound-local-consensus-v157-20260729-kitchen-feed-sheet-v158-20260729-simple-locality-v160-20260729-recruit-card-name-v161-20260729-daily-hunger-bars-v162-20260729-birdex-card-names-v163-20260729-birdex-no-feed-v164-20260729-quest-drawers-closed-v165-20260729-generalist-diets-v166-20260729-generated-art-ui-v153-20260729-nickname-line-v167-20260729-intro-two-part-video-v154-20260729-academy-alive-v153-20260729-reconciled-release-v170-20260729-tutorial-chunked-progress-v171-20260729-birdnet-accuracy-v171-20260729-tutorial-merlin-feed-fix-v172-20260730-tutorial-merlin-spotlight-fix-v173-20260730-generated-art-ui-restore-v174-20260730';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -55,6 +55,7 @@ const BURBZ_ASSETS = [
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './national_bird_completion_20260715.js?v=national-completion-20260715',
   './uk_bird_expansion_4.js?v=uk-british-list-completion-20260722',
+  './bird_art_release_20260727.js?v=builtin-imagegen-1026',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
@@ -65,6 +66,15 @@ const BURBZ_ASSETS = [
   './assets/ui/map-landmark-grove.webp',
   './assets/ui/map-landmark-water.webp',
   './assets/ui/merlin-wand-listener.webp',
+  './assets/ui/burbz-icon-set/coin.webp',
+  './assets/ui/burbz-icon-set/timber.webp',
+  './assets/ui/burbz-icon-set/profile.webp',
+  './assets/ui/burbz-icon-set/settings.webp',
+  './assets/ui/burbz-icon-set/camera.webp',
+  './assets/ui/burbz-icon-set/sound.webp',
+  './assets/ui/burbz-icon-set/inventory.webp',
+  './assets/ui/burbz-icon-set/forge.webp',
+  './assets/ui/burbz-icon-set/quests.webp',
   // Merlin's perched companion is a four-piece puppet, not one flat cutout.
   './assets/merlin/merlin-back.webp',
   './assets/merlin/merlin-body.webp',
@@ -182,6 +192,15 @@ const BURBZ_CORE = [
   './action_badge_core.js?v=nav-action-badges-v1-20260721',
   './merlin_companion_core.js?v=reconciled-release-v170-20260729',
   './sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729',
+  './assets/ui/burbz-icon-set/coin.webp',
+  './assets/ui/burbz-icon-set/timber.webp',
+  './assets/ui/burbz-icon-set/profile.webp',
+  './assets/ui/burbz-icon-set/settings.webp',
+  './assets/ui/burbz-icon-set/camera.webp',
+  './assets/ui/burbz-icon-set/sound.webp',
+  './assets/ui/burbz-icon-set/inventory.webp',
+  './assets/ui/burbz-icon-set/forge.webp',
+  './assets/ui/burbz-icon-set/quests.webp',
   './bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   './assets/audio/bgm-birbs-quest.mp3',
   './assets/audio/bgm-burbz-quest-v2.mp3',
@@ -216,6 +235,7 @@ const BURBZ_CORE = [
   './au_bird_expansion_2.js?v=au50-source-backed-r2-20260715',
   './national_bird_completion_20260715.js?v=national-completion-20260715',
   './uk_bird_expansion_4.js?v=uk-british-list-completion-20260722',
+  './bird_art_release_20260727.js?v=builtin-imagegen-1026',
   './spain_boundary_20260715.js?v=spain-mainland-balearics-20260715',
   './data/uk-bird-education-50.json?v=au-source-backed-20260713',
   './data/regional-bird-education-20260715.json?v=regional-birds-v75-20260715',
