@@ -224,7 +224,7 @@ const vibrate = () => {};
 """
     functions = "\n".join(function_source(html, name) for name in (
         "kitchenCore", "kitchenIngredientById", "legacyKitchenSupplyIngredient", "ensureLarder", "addLarderIngredient",
-        "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNote",
+        "kitchenSpeciesChoices", "kitchenPrepCounterChoices", "kitchenPrepCounterSelectedChoice", "kitchenRecordFieldNote",
         "kitchenDietSubject", "kitchenDietRuleForChoice", "kitchenRosterWantedPrep",
         "feedOptionVerdict", "feedRewardsForVerdict", "feedSideSnackExplainer",
         "kitchenRosterFoodOptions", "kitchenRosterRefusalToast", "feedEntryForKey",
@@ -310,7 +310,7 @@ def test_kitchen_prep_counter_is_wired_into_the_kitchen_room():
         "function renderKitchenPanelHTML(",
         "function kitchenCounterFoodListHTML(",
         "function burbzFeedTap(",
-        "🍳 The Prep Counter",
+        "🌲 Wild Bird Feeder",
         "🧺 Stores larder",
         "kitchenSelectSpecies,",
         "burbzFeedFood,",

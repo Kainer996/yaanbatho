@@ -359,19 +359,19 @@ def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
     assert "SECONDARY_MEAL_FRACTION" in core.split("verdict: record.matchMethod")[1][:400]
 
 
-def test_a_full_bird_leaves_the_feeding_screen():
+def test_companions_and_wild_visitors_use_separate_feeding_surfaces():
     html = HTML.read_text(encoding="utf-8")
-    hungry = function_source(html, "kitchenChoiceIsHungry")
-    assert "birdIsFull(row.companion)" in hungry
-    # Wild Birdex visitors have no hunger bar, so they always stay.
-    assert "return true;" in hungry
-    # Both lists on that screen filter, and the selection moves on by itself.
-    assert "function kitchenHungryChoices(" in html
-    assert "const choices = kitchenHungryChoices();" in html
+    # Full companions leave the upper feeding table.
     assert "kitchenRosterHungryEntries()" in function_source(html, "renderKitchenRosterHTML")
-    selected = function_source(html, "kitchenSelectedChoice")
-    assert "kitchenHungryChoices()" in selected
-    # And the screen says so rather than going blank when everyone is fed.
+    # The lower feeder is only for still-wild Birdex visitors; Merlin and
+    # recruited companions cannot be rendered there a second time.
+    choices = function_source(html, "kitchenPrepCounterChoices")
+    assert "!row.merlin" in choices
+    assert "!row.companion" in choices
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "const choices = kitchenPrepCounterChoices();" in panel
+    assert "if (!choices.length) return rosterHtml;" in panel
+    # The companion table still explains the all-fed state rather than going blank.
     assert 'data-kitchen-all-fed="1"' in html
 
 

@@ -13216,31 +13216,15 @@ function kitchenSpeciesChoices() {
   return rows;
 }
 
-// The feeding screen is a queue of birds that need feeding. A companion on a
-// full stomach has nothing to do here, so it drops off the list until it is
-// hungry again. Wild Birdex visitors have no hunger bar and always stay.
-function kitchenChoiceIsHungry(row) {
-  if (!row) return false;
-  if (row.merlin) {
-    const core = kitchenDietCore();
-    const care = getMerlinCare();
-    const hunger = core && typeof core.hungerStatusForCare === 'function'
-      ? core.hungerStatusForCare(care, Date.now()).hunger
-      : Number(care && care.hunger) || 0;
-    return Math.round(hunger) > 0;
-  }
-  if (row.companion) return !birdIsFull(row.companion);
-  return true;
+// Merlin and recruited companions already have complete Fullness cards and
+// Feed buttons in the companion table above. The lower counter is only for
+// still-wild Birdex visitors, so no bird appears twice with an inverse-looking
+// Hunger bar.
+function kitchenPrepCounterChoices() {
+  return kitchenSpeciesChoices().filter(row => row && !row.merlin && !row.companion);
 }
 
-function kitchenHungryChoices() {
-  return kitchenSpeciesChoices().filter(kitchenChoiceIsHungry);
-}
-
-function kitchenSelectedChoice() {
-  // Pick from the birds still on the screen; a bird that filled up while it was
-  // selected hands over to the next one that needs feeding.
-  const rows = kitchenHungryChoices();
+function kitchenPrepCounterSelectedChoice(rows = kitchenPrepCounterChoices()) {
   return rows.find(r => r.key === kitchenState.speciesKey) || rows[0] || null;
 }
 
@@ -13275,8 +13259,10 @@ function kitchenCounterFoodListHTML(entry) {
 
 function renderKitchenPanelHTML() {
   if (!kitchenCore()) return '<div class="room-add-panel"><div class="inventory-empty">The Prep Counter is still warming up — reopen the Kitchen in a moment.</div></div>';
-  const choices = kitchenHungryChoices();
-  const chosen = kitchenSelectedChoice();
+  const rosterHtml = renderKitchenRosterHTML();
+  const choices = kitchenPrepCounterChoices();
+  if (!choices.length) return rosterHtml;
+  const chosen = kitchenPrepCounterSelectedChoice(choices);
   if (chosen && kitchenState.speciesKey !== chosen.key) kitchenState.speciesKey = chosen.key;
   const larder = ensureLarder();
   const rule = kitchenDietRuleForChoice(chosen);
@@ -13286,7 +13272,6 @@ function renderKitchenPanelHTML() {
     const badge = (gameState.dietBadges || {})[row.key] ? ' 🏅' : '';
     return '<button class="kitchen-chip' + (active ? ' active' : '') + '" data-kitchen-species-choice="' + escapeHtml(row.key) + '" onclick="kitchenSelectSpecies(\'' + row.key + '\')">' + (row.merlin ? '🧙 ' : row.companion ? '🐦 ' : '🌲 ') + escapeHtml(row.name) + badge + '</button>';
   }).join('');
-  const everyoneFed = !choices.length;
 
   // The card is now two lines: who you are cooking for, and what it eats.
   // Habitat clues, field notes and the full source provenance are real but
@@ -13322,10 +13307,9 @@ function renderKitchenPanelHTML() {
   // food. Stock lists and supply explainers sit folded underneath.
   const counterEntry = kitchenCounterFeedEntry(chosen);
   const counterArt = counterEntry ? feedArtHTML(counterEntry.artBird, 'feed-sheet-art kitchen-counter-art') : '';
-  return renderKitchenRosterHTML() +
-    '<div class="room-add-panel kitchen-panel" data-feed-surface="prep-counter" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🍳 The Prep Counter</div>' +
+  return rosterHtml +
+    '<div class="room-add-panel kitchen-panel" data-feed-surface="prep-counter" data-kitchen-pantry-root="academy-kitchen"><div class="room-add-title">🌲 Wild Bird Feeder</div>' +
     '<div class="kitchen-chip-strip">' + (chips || '') + '</div>' +
-    (everyoneFed ? '<div class="inventory-empty" data-kitchen-all-fed="1">🍽️ Everyone is fed. Full birds leave the counter — they will be back here when they are hungry again.</div>' : '') +
     counterArt +
     speciesCard +
     '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills it halfway and gives half XP.</div>' +
@@ -27123,7 +27107,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-art-ui-restore-v174-20260730';
+const BURBZ_BUILD = 'kitchen-no-duplicate-companions-v175-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
