@@ -52,9 +52,18 @@ def test_index_loads_engine_with_cache_buster():
 
 
 def test_switch_screen_starts_and_pauses_ambience():
-    match = re.search(r"if \(name === 'academy'\) \{[^\n]*\}\n\s*else academyAlivePause\(\);", HTML)
-    assert match, "switchScreen must start ambience on academy and pause it on every other screen"
-    assert "academyAliveStart()" in match.group(0)
+    # Since the 3D Academy landed, switchScreen hands the Academy to a view
+    # router that runs whichever of the two Academies the player chose; leaving
+    # the screen must still stop every engine.
+    match = re.search(r"if \(name === 'academy'\) \{[^\n]*\}\n\s*else academyViewPause\(\);", HTML)
+    assert match, "switchScreen must open the Academy view and pause it on every other screen"
+    assert "applyAcademyView()" in match.group(0)
+    router = re.search(r"function applyAcademyView\(\) \{.*?\n\}", HTML, re.S)
+    assert router and "academyAliveStart()" in router.group(0), (
+        "the 2D ambience must still be started whenever the painted Academy is shown"
+    )
+    pauser = re.search(r"function academyViewPause\(\) \{.*?\n\}", HTML, re.S)
+    assert pauser and "academyAlivePause()" in pauser.group(0)
 
 
 def test_treehouse_render_refreshes_anchors():

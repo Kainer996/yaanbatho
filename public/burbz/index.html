@@ -2336,6 +2336,15 @@ svg.academy-room-bg { display:block; filter:none; }
 @keyframes treeSway { from { transform:rotate(-.4deg) translateX(-3px); } to { transform:rotate(.4deg) translateX(3px); } }
 @media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } }
 
+/* ---- The 3D Academy: the same tree, modelled ---------------------------- */
+.academy-stage-wrap { position:relative; }
+.academy-stage-3d { position:relative; margin:0 10px 14px; height:clamp(420px, 72vh, 680px); border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:#0a0f1c; box-shadow:inset 0 -90px 120px rgba(0,0,0,.35), 0 18px 44px rgba(0,0,0,.42); touch-action:none; }
+.academy-stage-3d canvas { display:block; width:100%; height:100%; }
+.academy-view-toggle { position:absolute; right:20px; top:12px; z-index:20; min-height:36px; padding:0 12px; border-radius:12px; background:rgba(8,7,5,.72); border:1px solid rgba(214,168,79,.42); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; backdrop-filter:blur(8px); }
+.academy-view-toggle:active { transform:scale(.96); }
+.academy-3d-hint { position:absolute; left:50%; bottom:26px; transform:translateX(-50%); z-index:19; padding:6px 12px; border-radius:999px; background:rgba(8,7,5,.62); border:1px solid rgba(255,255,255,.10); color:var(--text2); font-size:10px; letter-spacing:.04em; pointer-events:none; backdrop-filter:blur(6px); opacity:1; transition:opacity .6s ease; }
+.academy-3d-hint.faded { opacity:0; }
+
 .expedition-panel { margin:0 10px 14px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.09),rgba(0,0,0,.25)); }
 .expedition-title { font-family:'Rajdhani',sans-serif; font-weight:900; color:var(--accent2); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
 .expedition-card { padding:10px; border-radius:13px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.08); margin-top:8px; }
@@ -3090,12 +3099,20 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- ACADEMY SCREEN -->
     <div class="screen" id="screen-academy">
       <div class="screen-title">BURB ACADEMY</div>
-      <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
-        <div class="academy-tree-swaybg" aria-hidden="true"></div>
-        <div id="treehouseBranchLayer"></div>
-        <div id="treehouseRoomLayer"></div>
-        <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
+      <!-- Two Academies, one screen: the painted 2D tree and the modelled 3D
+           one. The toggle switches between them and the choice is remembered;
+           if 3D cannot start on this device we fall back to 2D by itself. -->
+      <div class="academy-stage-wrap" id="academyStageWrap">
+        <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
+          <div class="academy-tree-swaybg" aria-hidden="true"></div>
+          <div id="treehouseBranchLayer"></div>
+          <div id="treehouseRoomLayer"></div>
+          <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
 
+        </div>
+        <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — drag to look around, tap a building to go inside" hidden></div>
+        <button class="academy-view-toggle" id="academyViewToggle" type="button" onclick="toggleAcademyView()">🌳 3D</button>
+        <div class="academy-3d-hint" id="academy3dHint" hidden>Drag to look around · pinch to zoom · tap a building</div>
       </div>
 
       <div id="academyBuildPanel"></div>
@@ -3608,6 +3625,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-categories-material-quests-20260726"></script>
 <script src="academy_alive_core.js?v=academy-alive-v2-20260730"></script>
+<script src="academy_3d_core.js?v=academy-3d-v1-20260730"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
@@ -11210,6 +11228,108 @@ function academyAlivePause() {
   if (ACADEMY_ALIVE) { try { ACADEMY_ALIVE.pause(); } catch (e) {} }
 }
 
+// ---- The 3D Academy --------------------------------------------------------
+// The same Academy, modelled in three.js: a gnarled tree you can walk around
+// with the ten treehouses standing on its branches. The painted 2D Academy is
+// untouched — the toggle switches between them, the choice is remembered, and
+// anything that goes wrong in 3D drops the player straight back to 2D.
+let ACADEMY_3D = null;
+let academy3dBroken = false;
+const ACADEMY_VIEW_KEY = 'burbzAcademyView';
+
+function academyViewMode() {
+  if (academy3dBroken) return '2d';
+  try { return localStorage.getItem(ACADEMY_VIEW_KEY) === '2d' ? '2d' : '3d'; } catch (e) { return '3d'; }
+}
+
+function academySupports3D() {
+  if (academy3dBroken || !window.THREE || !window.BurbzAcademy3D) return false;
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl'));
+  } catch (e) { return false; }
+}
+
+function academyBuiltRoomIds() {
+  try {
+    return Object.keys(window.BurbzAcademy3D.ANCHORS).filter(id => isAcademyBuildingBuilt(id));
+  } catch (e) { return []; }
+}
+
+function academy3dEnsure() {
+  if (ACADEMY_3D || !academySupports3D()) return ACADEMY_3D;
+  ACADEMY_3D = window.BurbzAcademy3D.createAcademy3D({
+    container: () => $('academyStage3D'),
+    three: window.THREE,
+    builtRooms: academyBuiltRoomIds,
+    onRoomTap: id => { SFX.tap(); openAcademyRoom(id); },
+    reducedMotion: () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches),
+    // Shared with the 2D engine so evidence scripts can photograph either
+    // Academy at night; players get their real local dusk and dawn.
+    hourOfDay: () => { if (Number.isFinite(window.__academyAliveForceHour)) return Number(window.__academyAliveForceHour); const d = new Date(); return d.getHours() + d.getMinutes() / 60; },
+    isScreenActive: () => currentScreen === 'academy'
+  });
+  return ACADEMY_3D;
+}
+
+// Show whichever Academy the player picked, and run only that one.
+function applyAcademyView() {
+  const wrap2d = $('academyTreehouse');
+  const stage3d = $('academyStage3D');
+  const toggle = $('academyViewToggle');
+  const hint = $('academy3dHint');
+  if (!wrap2d || !stage3d) return;
+  const want3d = academyViewMode() === '3d' && academySupports3D();
+  if (want3d) {
+    try {
+      const eng = academy3dEnsure();
+      if (!eng) throw new Error('3D engine unavailable');
+      wrap2d.hidden = true;
+      stage3d.hidden = false;
+      academyAlivePause();
+      if (!eng.start()) throw new Error('3D start failed');
+      eng.refresh();
+      if (toggle) toggle.textContent = '🖼️ 2D';
+      if (hint) {
+        hint.hidden = false;
+        hint.classList.remove('faded');
+        clearTimeout(academy3dHintTimer);
+        academy3dHintTimer = setTimeout(() => hint.classList.add('faded'), 5200);
+      }
+      return;
+    } catch (err) {
+      // Never strand the player on a black canvas: fall back to the painting.
+      console.warn('BURBZ Academy: 3D failed, using the 2D tree', err);
+      academy3dBroken = true;
+      try { if (ACADEMY_3D) ACADEMY_3D.stop(); } catch (e) {}
+      ACADEMY_3D = null;
+    }
+  }
+  stage3d.hidden = true;
+  wrap2d.hidden = false;
+  if (hint) hint.hidden = true;
+  if (ACADEMY_3D) { try { ACADEMY_3D.pause(); } catch (e) {} }
+  if (toggle) {
+    toggle.textContent = academy3dBroken ? '🖼️ 2D' : '🌳 3D';
+    toggle.hidden = academy3dBroken;
+  }
+  academyAliveStart();
+}
+let academy3dHintTimer = 0;
+
+function toggleAcademyView() {
+  const next = academyViewMode() === '3d' ? '2d' : '3d';
+  try { localStorage.setItem(ACADEMY_VIEW_KEY, next); } catch (e) {}
+  SFX.tap();
+  applyAcademyView();
+  showToast(next === '3d' ? '🌳 The Academy in 3D — drag to look around.' : '🖼️ Back to the painted Academy.');
+}
+
+function academyViewPause() {
+  academyAlivePause();
+  if (ACADEMY_3D) { try { ACADEMY_3D.pause(); } catch (e) {} }
+}
+
 function renderAcademyTreehouse(byRoom) {
   const tree = $('academyTreehouse');
   const layer = $('treehouseRoomLayer');
@@ -11245,6 +11365,8 @@ function renderAcademyTreehouse(byRoom) {
   // Room nodes were just rebuilt, so the ambience glows/anchors bolted onto
   // them were destroyed with the old markup — re-anchor them.
   if (ACADEMY_ALIVE) { try { ACADEMY_ALIVE.refresh(); } catch (e) {} }
+  // A building may have just gone up: the 3D tree grows it too.
+  if (ACADEMY_3D) { try { ACADEMY_3D.refresh(); } catch (e) {} }
 }
 
 
@@ -16323,7 +16445,7 @@ Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
   // Academy Alive ambience: exported for QA harnesses and evidence scripts.
-  __academyAliveDebug: { engine: () => ACADEMY_ALIVE },
+  toggleAcademyView, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, engine3d: () => ACADEMY_3D, view: () => academyViewMode() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   __burbzQuestDebug: {
     getState: () => gameState,
@@ -17105,8 +17227,8 @@ function switchScreen(name) {
   if (name === 'map') renderLiveMap();
   if (name === 'birdex') renderBirdex();
   if (name === 'battle') renderBattleSelect();
-  if (name === 'academy') { wireAcademyZones(); renderAcademy(); academyAliveStart(); }
-  else academyAlivePause();
+  if (name === 'academy') { wireAcademyZones(); renderAcademy(); applyAcademyView(); }
+  else academyViewPause();
   if (name === 'academy-room') renderAcademyRoomInterior();
   if (name === 'village') { renderVillage(); setTimeout(onVillageResize, 60); }
   if (name === 'inventory') renderInventory();
@@ -27024,7 +27146,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-wingbeats-v178-20260730';
+const BURBZ_BUILD = 'academy-3d-v179-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
