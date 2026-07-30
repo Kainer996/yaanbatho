@@ -1,9 +1,12 @@
 """Behavioural proof for the continuous BirdNET V3 Birdex unlock gate.
 
-BirdNET suggestions remain visible immediately, but a sound result may mutate
-the Birdex only when the exact production V3 provenance and the stronger
-client-side evidence policy agree.  These tests execute the functions extracted
-from ``index.html`` in Node rather than reimplementing the policy in Python.
+The recogniser is the accuracy authority. A verified BirdNET V3 response has
+already applied the geographic range model (the player's location and the week
+of the year) and its temporal, precision-first confirmation before it names a
+species, so a sound result mutates the Birdex whenever — and only when — that
+exact production V3 provenance is verified. These tests execute the functions
+extracted from ``index.html`` in Node rather than reimplementing the policy in
+Python.
 """
 
 import json
@@ -118,46 +121,36 @@ def build_gate_harness() -> str:
 const out = {};
 const provenance = exactV3();
 
+// A verified V3 response is trusted immediately: the server has already
+// weighed the player's location and the week of the year and confirmed the
+// bird temporally. A mid-range score with a single supporting window — a
+// mewing buzzard — still unlocks. This is the regression the policy fixes.
 soundUnlockEvidence.clear();
-out.immediate98 = names(soundCandidatesReadyToUnlock(
-  acceptedBirds(0.98, 0), provenance, {sequence:1, endedAt:1000}, 1000
+out.buzzardMidRange = names(soundCandidatesReadyToUnlock(
+  acceptedBirds(0.42, 1, 'Common Buzzard', 'Buteo buteo'),
+  provenance, {sequence:1, endedAt:1000}, 1000
 ));
-
-soundUnlockEvidence.clear();
-out.supported75 = names(soundCandidatesReadyToUnlock(
-  acceptedBirds(0.75, 2), provenance, {sequence:2, endedAt:2000}, 2000
-));
-
-function twoWindow(score, firstSequence, secondSequence, elapsedMs) {
-  soundUnlockEvidence.clear();
-  const birds = acceptedBirds(score, 2);
-  const first = names(soundCandidatesReadyToUnlock(
-    birds, provenance, {sequence:firstSequence, endedAt:10000}, 10000
-  ));
-  const evidenceAfterFirst = Array.from(soundUnlockEvidence.values())
-    .map(item => ({hits:item.hits, sequence:item.sequence, at:item.at}));
-  const second = names(soundCandidatesReadyToUnlock(
-    birds, provenance,
-    {sequence:secondSequence, endedAt:10000 + elapsedMs},
-    10000 + elapsedMs
-  ));
-  const evidenceAfterSecond = Array.from(soundUnlockEvidence.values())
-    .map(item => ({hits:item.hits, sequence:item.sequence, at:item.at}));
-  return { first, second, evidenceAfterFirst, evidenceAfterSecond };
-}
-
-out.confirm60 = twoWindow(0.60, 10, 11, 12000);
-out.confirm749 = twoWindow(0.749, 20, 21, 12000);
-out.sameWindow = twoWindow(0.70, 30, 30, 12000);
-out.at60Seconds = twoWindow(0.70, 35, 36, 60000);
-out.expired = twoWindow(0.70, 40, 41, 60001);
-out.below60 = twoWindow(0.599, 50, 51, 12000);
+out.buzzardEvidence = soundUnlockEvidence.size;
 
 soundUnlockEvidence.clear();
-out.unsupported80 = names(soundCandidatesReadyToUnlock(
-  acceptedBirds(0.80, 1), provenance, {sequence:60, endedAt:60000}, 60000
+out.high = names(soundCandidatesReadyToUnlock(
+  acceptedBirds(0.98, 3), provenance, {sequence:2, endedAt:2000}, 2000
 ));
-out.unsupportedEvidence = soundUnlockEvidence.size;
+
+// Every catalogue bird the verified server named in one window unlocks
+// together, not only the loudest, and none leave pending cross-window state.
+soundUnlockEvidence.clear();
+out.multiple = names(soundCandidatesReadyToUnlock(
+  normaliseAcceptedBirdCandidates(
+    { species:'Great Tit', scientificName:'Parus major', confidence:0.55 },
+    [
+      { common_name:'Great Tit', scientific_name:'Parus major', confidence:0.55, n:1 },
+      { common_name:'Common Chaffinch', scientific_name:'Fringilla coelebs', confidence:0.61, n:2 }
+    ]
+  ),
+  provenance, {sequence:3, endedAt:3000}, 3000
+));
+out.multipleEvidence = soundUnlockEvidence.size;
 
 function blockedBy(overrides) {
   soundUnlockEvidence.clear();
@@ -235,40 +228,17 @@ def gate_results() -> dict:
     return run_node(build_gate_harness())
 
 
-def test_verified_v3_immediate_and_supported_auto_unlock_boundaries():
+def test_verified_v3_trusts_server_and_unlocks_confident_detections():
     out = gate_results()
-    assert out["immediate98"] == ["Great Tit"]
-    assert out["supported75"] == ["Great Tit"]
-    assert out["unsupported80"] == []
-    assert out["unsupportedEvidence"] == 0
-
-
-def test_supported_medium_scores_need_two_fresh_distinct_windows():
-    out = gate_results()
-    for key in ("confirm60", "confirm749"):
-        assert out[key]["first"] == []
-        assert out[key]["evidenceAfterFirst"] == [
-            {"hits": 1, "sequence": 10 if key == "confirm60" else 20, "at": 10000}
-        ]
-        assert out[key]["second"] == ["Great Tit"]
-        assert out[key]["evidenceAfterSecond"] == []
-
-    assert out["sameWindow"]["first"] == []
-    assert out["sameWindow"]["second"] == []
-    assert out["sameWindow"]["evidenceAfterSecond"][0]["hits"] == 1
-
-    assert out["at60Seconds"]["first"] == []
-    assert out["at60Seconds"]["second"] == ["Great Tit"]
-    assert out["at60Seconds"]["evidenceAfterSecond"] == []
-
-    assert out["expired"]["first"] == []
-    assert out["expired"]["second"] == []
-    assert out["expired"]["evidenceAfterSecond"][0]["hits"] == 1
-
-    assert out["below60"]["first"] == []
-    assert out["below60"]["second"] == []
-    assert out["below60"]["evidenceAfterFirst"] == []
-    assert out["below60"]["evidenceAfterSecond"] == []
+    # The buzzard regression: a mid-range pooled score with a single supporting
+    # window unlocks, because a verified V3 response has already confirmed the
+    # bird for the player's location and season.
+    assert out["buzzardMidRange"] == ["Common Buzzard"]
+    assert out["buzzardEvidence"] == 0
+    assert out["high"] == ["Great Tit"]
+    # All catalogue birds the server named in one window unlock together.
+    assert out["multiple"] == ["Great Tit", "Chaffinch"]
+    assert out["multipleEvidence"] == 0
 
 
 def test_unverified_legacy_fallback_and_mismatched_policy_can_never_unlock():
@@ -415,7 +385,7 @@ def analysis_results() -> dict:
 def test_analysis_displays_all_suggestions_but_mutates_only_unlock_ready_species():
     out = analysis_results()
     assert out["handled"] == [
-        {"primary": "Chaffinch", "detections": [], "source": "sound"}
+        {"primary": "Great Tit", "detections": ["Chaffinch"], "source": "sound"}
     ]
     assert out["exactMatch"] is not None
     exact_detail = out["exactMatch"]["detail"]
@@ -431,6 +401,4 @@ def test_analysis_displays_all_suggestions_but_mutates_only_unlock_ready_species
     assert "Birdex unchanged" in failed_detail
     assert "accuracy proof failed" in failed_detail
     assert "Great Tit + Chaffinch" in out["failedToast"]
-    assert out["evidence"] == [
-        ["great_tit", {"hits": 1, "sequence": 101, "at": 100000}]
-    ]
+    assert out["evidence"] == []
