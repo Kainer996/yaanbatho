@@ -26993,9 +26993,14 @@ function showIntroCutscene(opts = {}) {
   if (opts.replay) video.currentTime = 0;
   video.muted = false;
   const attempt = video.play();
-  if (attempt && attempt.catch) attempt.catch(() => {
-    // Unmuted autoplay was blocked (no user gesture yet) — muted autoplay is
-    // always allowed, so start silent and offer one tap to bring the sound in.
+  if (attempt && attempt.catch) attempt.catch(err => {
+    // Skip during buffering pauses the still-pending play(), which rejects it
+    // with AbortError — only a NotAllowedError on a still-visible overlay is a
+    // genuine autoplay block. Anything else must not restart the hidden video.
+    if (!overlay.classList.contains('show')) return;
+    if (err && err.name && err.name !== 'NotAllowedError') return;
+    // Muted autoplay is always allowed, so start silent and offer one tap to
+    // bring the sound in.
     video.muted = true;
     overlay.classList.add('muted');
     video.play().catch(() => {});
@@ -27042,7 +27047,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'companion-feeding-only-v176-20260730';
+const BURBZ_BUILD = 'intro-hardening-v177-20260730';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -27797,6 +27802,11 @@ $('hudTimberChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('i
 $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
 $('introSoundBtn')?.addEventListener('click', unmuteIntroCutscene);
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
+// A video that cannot load (offline first run, bad deploy) must not strand the
+// player on a black fullscreen with suppressed music — close and move on.
+$('introCutsceneVideo')?.addEventListener('error', () => {
+  if ($('introCutsceneOverlay')?.classList.contains('show')) closeIntroCutscene();
+});
 $('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
 $('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial({ full:true, resume:false }); });
 $('replayTutorialBtn')?.addEventListener('keydown', event => {

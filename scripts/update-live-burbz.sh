@@ -21,6 +21,14 @@
 set -euo pipefail
 
 BASE="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/public/burbz"
+# LFS-tracked files MUST come from this endpoint instead: raw.githubusercontent
+# answers 200 with the ~130-byte pointer text for LFS blobs in this repo, while
+# github.com/raw redirects to media.githubusercontent and serves the real bytes
+# (same endpoint index.html's BIRD_ART_GITHUB_RAW_BASE relies on).
+LFS_BASE="https://github.com/Kainer996/yaanbatho/raw/refs/heads/main/public/burbz"
+LFS_FILES=(
+  "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
+)
 BIRDNET_INSTALLER_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts/install-birdnet-v3.sh"
 
 FILES=(
@@ -41,9 +49,6 @@ FILES=(
   "battle_core.js"
   "loot_crafting_core.js"
   "audio_core.js"
-  # Intro cutscene (LFS-backed; raw.githubusercontent resolves LFS to real
-  # bytes, so this curls the actual video, not a pointer file).
-  "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
   "assets/academy-tree-manga-20260629.png"
   "assets/academy-buildings-manga/aviary-gardens.png"
   "assets/academy-buildings-manga/crowbar.png"
@@ -212,6 +217,11 @@ for f in "${FILES[@]}"; do
   mkdir -p "$TMP/$(dirname "$f")"
   curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
 done
+for f in "${LFS_FILES[@]}"; do
+  mkdir -p "$TMP/$(dirname "$f")"
+  curl -fsSL "$LFS_BASE/$f" -o "$TMP/$f" || die "Download failed (LFS): $f"
+  FILES+=("$f")
+done
 curl -fsSL "$BIRDNET_INSTALLER_URL" -o "$TMP/install-birdnet-v3.sh" \
   || die "Download failed: scripts/install-birdnet-v3.sh"
 bash -n "$TMP/install-birdnet-v3.sh" \
@@ -234,6 +244,14 @@ for piece in back body wing head; do
   [[ "$(head -c 4 "$TMP/assets/merlin/merlin-$piece.webp")" == "RIFF" ]] \
     || die "Merlin's $piece layer is not a WebP — aborting, live site untouched"
 done
+# LFS downloads can silently yield the ~130-byte pointer text with HTTP 200 if
+# the endpoint or quota misbehaves — a black intro for every player. Real MP4s
+# are megabytes and carry 'ftyp' at byte offset 4.
+INTRO_MP4="$TMP/assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
+[[ "$(wc -c < "$INTRO_MP4")" -gt 1000000 ]] \
+  || die "Intro cutscene is tiny (LFS pointer, not video?) — aborting, live site untouched"
+[[ "$(dd if="$INTRO_MP4" bs=1 skip=4 count=4 2>/dev/null)" == "ftyp" ]] \
+  || die "Intro cutscene is not an MP4 — aborting, live site untouched"
 # The feedback screen with screenshot attachments once lived only on the server,
 # outside git, and a deploy from main would have deleted it. It is in main now;
 # this check makes sure it never silently leaves again.
