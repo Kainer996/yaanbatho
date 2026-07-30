@@ -46,7 +46,7 @@ def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
 
 def test_quest_route_clarity_release_is_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "./quest_core.js?v=quest-route-integrity-loops-v123-20260726" in sw
+    assert "./quest_core.js?v=quest-alignment-authority-v124-20260727" in sw
 
 
 def test_nearby_quests_prioritise_public_paths_and_known_hiking_routes():
@@ -195,7 +195,7 @@ def test_distance_markers_use_inner_visual_offsets_without_moving_maplibre_ancho
 def test_show_quests_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-route-integrity-loops-v123-20260726"
+    marker = "quest_core.js?v=quest-alignment-authority-v124-20260727"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

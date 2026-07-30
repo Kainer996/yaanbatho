@@ -29,6 +29,7 @@ LFS_BASE="https://github.com/Kainer996/yaanbatho/raw/refs/heads/main/public/burb
 LFS_FILES=(
   "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
 )
+BIRDNET_INSTALLER_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts/install-birdnet-v3.sh"
 
 FILES=(
   "index.html"
@@ -37,15 +38,39 @@ FILES=(
   "quest_core.js"
   "empire_map_core.js"
   "academy_treehouse_core.js"
+  "academy_alive_core.js"
   "kitchen_pantry_core.js"
   "data/bird-diet-records.js"
   "bird_diet_hunger_core.js"
   "diet_hunger_core.js"
+  "bird_family_core.js"
   "scan_economy_core.js"
   "sound_listener_core.js"
   "battle_core.js"
   "loot_crafting_core.js"
   "audio_core.js"
+  "assets/academy-tree-manga-20260629.png"
+  "assets/academy-buildings-manga/aviary-gardens.png"
+  "assets/academy-buildings-manga/crowbar.png"
+  "assets/academy-buildings-manga/hospital.png"
+  "assets/academy-buildings-manga/kitchen.png"
+  "assets/academy-buildings-manga/market.png"
+  "assets/academy-buildings-manga/nursery.png"
+  "assets/academy-buildings-manga/observatory.png"
+  "assets/academy-buildings-manga/quest-roost.png"
+  "assets/academy-buildings-manga/roost.png"
+  "assets/academy-buildings-manga/training-hall.png"
+  "assets/academy-buildings-manga/workshop.png"
+  "assets/academy-buildings/aviary-gardens.svg"
+  "assets/academy-buildings/crowbar.svg"
+  "assets/academy-buildings/hospital.svg"
+  "assets/academy-buildings/kitchen.svg"
+  "assets/academy-buildings/market.svg"
+  "assets/academy-buildings/nursery.svg"
+  "assets/academy-buildings/observatory.svg"
+  "assets/academy-buildings/roost.svg"
+  "assets/academy-buildings/training-hall.svg"
+  "assets/academy-buildings/workshop.svg"
   "assets/ui/quest-compass-emblem.webp"
   "assets/ui/map-landmark-field.webp"
   "assets/ui/map-landmark-grove.webp"
@@ -105,18 +130,34 @@ FILES=(
   "sound_id/birdnet_v3_provider.py"
   "sound_id/birdnet_provider.py"
   "sound_id/perch_provider.py"
+  "sound_id/server_integration.py"
+  "sound_id/server_patcher.py"
   "sound_id/selftest.py"
   "sound_id/README.md"
-  # The self-test identifies this clip and checks it gets Strix aluco back, so
-  # it has to be on the box for `python3 -m sound_id.selftest` to mean anything.
+  # The self-test identifies the owl and makes sure the known blackbird
+  # confuser never becomes Mistle Thrush, so both fixtures must reach the box.
   "assets/audio/bird-tawny-owl.ogg"
+  "assets/audio/bird-blackbird.ogg"
   "data/uk-bird-education-50.json"
+  "data/bird-education.json"
   "data/regional-bird-education-20260715.json"
   "data/national-bird-completion/manifest.json"
 )
 
 log()  { printf "\033[1;36m==>\033[0m %s\n" "$*"; }
+warn() { printf "\033[1;33m  !\033[0m %s\n" "$*"; }
 die()  { printf "\033[1;31mxx \033[0m %s\n" "$*" >&2; exit 1; }
+
+BACKEND_FILES=(
+  "sound_id/__init__.py"
+  "sound_id/_audio.py"
+  "sound_id/birdnet_v3_provider.py"
+  "sound_id/birdnet_provider.py"
+  "sound_id/perch_provider.py"
+  "sound_id/server_integration.py"
+  "sound_id/server_patcher.py"
+  "sound_id/selftest.py"
+)
 
 # ----------------------------------------------------------------
 # 1. Find the Burbz folder (the one serving yaanbatho.com/burbz)
@@ -181,6 +222,10 @@ for f in "${LFS_FILES[@]}"; do
   curl -fsSL "$LFS_BASE/$f" -o "$TMP/$f" || die "Download failed (LFS): $f"
   FILES+=("$f")
 done
+curl -fsSL "$BIRDNET_INSTALLER_URL" -o "$TMP/install-birdnet-v3.sh" \
+  || die "Download failed: scripts/install-birdnet-v3.sh"
+bash -n "$TMP/install-birdnet-v3.sh" \
+  || die "Downloaded BirdNET installer failed its shell syntax check"
 # The generated-art mapping is the release manifest for its card paintings.
 # Pull each referenced local painting without hardcoding the release filenames.
 while IFS= read -r art_url; do
@@ -214,6 +259,13 @@ grep -q 'id="feedbackScreenshots"' "$TMP/index.html" \
   || die "index.html has no feedback screenshots — that build would delete a live feature. Aborting, live site untouched"
 
 OWNER="$(stat -c '%U:%G' "$ROOT/index.html")"
+BACKEND_CHANGED=0
+for f in "${BACKEND_FILES[@]}"; do
+  if [[ ! -f "$ROOT/$f" ]] || ! cmp -s "$TMP/$f" "$ROOT/$f"; then
+    BACKEND_CHANGED=1
+    break
+  fi
+done
 
 for f in "${FILES[@]}"; do
   mkdir -p "$ROOT/$(dirname "$f")"
@@ -221,6 +273,16 @@ for f in "${FILES[@]}"; do
   chown "$OWNER" "$ROOT/$f"
 done
 log "Installed new Burbz files (owner $OWNER)"
+
+# Python imports are process-cached, and the first V4 rollout may still have an
+# unreachable legacy hook in server.py. The transactional installer identifies
+# the exact backend/service, patches before app.run, restarts it, and proves
+# exact live V3 provenance before this updater may claim success.
+if [[ $BACKEND_CHANGED -eq 1 ]]; then
+  log "Sound-recognition code changed; installing and proving exact BirdNET V3"
+  bash "$TMP/install-birdnet-v3.sh" \
+    || die "BirdNET V3 live proof failed; the updater will not report success"
+fi
 
 # ----------------------------------------------------------------
 # 4. Verify

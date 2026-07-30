@@ -124,7 +124,7 @@ def test_feeding_is_taught_by_feeding_him():
 def test_feeding_never_dead_ends_on_an_empty_larder():
     html = HTML.read_text(encoding="utf-8")
     assert "function maybeGrantTutorialFalconRation()" in html
-    assert "if (action.event === 'merlin-fed') maybeGrantTutorialFalconRation();" in html
+    assert "if (step.action && step.action.event === 'merlin-fed' && merlinTutMode !== 'full') maybeGrantTutorialFalconRation();" in html
     assert "larder.small_bird_prey_ration = 2;" in html
 
 
@@ -290,7 +290,8 @@ def test_a_full_merlin_cannot_strand_the_feed_step():
     """Regression: hunger clamps to 0 after one ration, so a re-entered feed
     step (via Back, or a migrated save) armed a deed that could never fire."""
     html = HTML.read_text(encoding="utf-8")
-    assert "return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) > 0;" in html
+    assert "(Number(getMerlinCare().hunger) || 0) >= feedingMinimum" in html
+    assert "if (!care.lastFedAt && (Number(care.hunger) || 0) < feedingMinimum)" in html
 
 
 def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
@@ -302,5 +303,9 @@ def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
 
 def test_release_cache_is_bumped():
     sw = SW.read_text(encoding="utf-8")
+    html = HTML.read_text(encoding="utf-8")
+    build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert "discoveries-quiz-pacing-v152-20260728" in sw
-    assert "const BURBZ_BUILD = 'discoveries-quiz-pacing-v152-20260728';" in HTML.read_text(encoding="utf-8")
+    assert "reconciled-release-v170-20260729" in sw
+    assert "const BURBZ_BUILD = 'companion-feeding-only-v176-20260730';" in html
+    assert build in sw

@@ -165,14 +165,20 @@
   // Shape-preserving cap: drop redundant vertices but keep every corner, so the
   // drawn line still lies ON the footpath. (Even resampling — the old approach
   // for stored routes — chorded bends into straight cuts across the map.)
-  function simplifyRoute(pts, maxPts, startEpsM) {
+  function simplifyRoute(pts, maxPts, startEpsM, maxEpsM) {
     maxPts = maxPts || 320;
     if (!pts || pts.length <= 2) return (pts || []).slice();
     var kept = null;
-    for (var eps = startEpsM || 1.2; eps <= 500; eps *= 1.7) {
+    var epsCap = isFinite(maxEpsM) ? Number(maxEpsM) : 500;
+    for (var eps = startEpsM || 1.2; eps <= epsCap; eps *= 1.7) {
       kept = douglasPeuckerKeep(pts, eps);
       if (kept.length <= maxPts) break;
     }
+    // With an epsilon cap, a dense path keeps its extra vertices rather than
+    // being cut off its own source geometry: a route that strays further than
+    // the certification corridor from the path it was built from could never
+    // be certified, not even against authoritative mapped-path data.
+    if (isFinite(maxEpsM)) return (kept || douglasPeuckerKeep(pts, epsCap)).map(function (k) { return pts[k]; });
     if (!kept || kept.length > maxPts) {
       kept = [];
       for (var i = 0; i < maxPts; i++) kept.push(Math.round(i * (pts.length - 1) / (maxPts - 1)));
@@ -422,6 +428,25 @@
       });
     });
     return ways;
+  }
+
+  // Padded lat/lon window around a route — the corridor an authoritative
+  // mapped-path query must cover to judge that route as a whole.
+  function routeBounds(points, padM) {
+    var pts = routePointsFrom(points);
+    if (!pts.length) return null;
+    var minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+    pts.forEach(function (p) {
+      minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
+      minLon = Math.min(minLon, p.lon); maxLon = Math.max(maxLon, p.lon);
+    });
+    var pad = isFinite(padM) ? Math.max(0, Number(padM)) : 0;
+    var dLat = pad / 111320;
+    var dLon = pad / (111320 * Math.max(0.2, Math.cos(toRad((minLat + maxLat) / 2))));
+    return {
+      minLat: minLat - dLat, minLon: minLon - dLon,
+      maxLat: maxLat + dLat, maxLon: maxLon + dLon
+    };
   }
 
   function routeObjects(route) {
@@ -889,6 +914,51 @@
       .map(function (g) { return { lat: g.lat, lon: g.lon }; });
   }
 
+  // ---- Authoritative alignment evidence ----
+  // Basemap vector tiles only ever describe the tiles currently loaded for the
+  // viewport, so they can never prove a route is unwalkable — only that the
+  // evidence has not arrived yet. That is why tile disagreement is "pending".
+  // These helpers read the SAME OpenStreetMap data quests are discovered from,
+  // across the whole route corridor, so alignment can reach a FINAL verdict
+  // instead of waiting for tiles that will never settle the question.
+  var ALIGNMENT_HIGHWAY_CLASSES = /^(path|footway|pedestrian|steps|bridleway|track|cycleway)$/;
+
+  // Same allow-list as isEligibleMapTransportationFeature, read from OSM tags
+  // rather than vector-tile properties. Explicit private/no-foot always wins.
+  function isAlignmentEligibleTags(tags) {
+    tags = tags || {};
+    if (/^(no|private)$/i.test(String(tags.access || '').trim())) return false;
+    if (/^(no|private)$/i.test(String(tags.foot || '').trim())) return false;
+    return ALIGNMENT_HIGHWAY_CLASSES.test(String(tags.highway || '').trim().toLowerCase());
+  }
+
+  function buildAlignmentOverpassQuery(bounds) {
+    var box = [bounds.minLat, bounds.minLon, bounds.maxLat, bounds.maxLon]
+      .map(function (v) { return Number(v).toFixed(6); }).join(',');
+    return '[out:json][timeout:20];(' +
+      'way[highway~"^(path|footway|pedestrian|steps|bridleway|track|cycleway)$"]' +
+      '[access!~"^(private|no)$"][foot!~"^(private|no)$"](' + box + ');' +
+      ');out geom 1500;';
+  }
+
+  // Only tag-verified walkable ways count as evidence. Relation members arrive
+  // without tags under `out geom`, so a hiking route along a lane can never
+  // certify itself — its genuine footpath members are returned as ways anyway.
+  function overpassAlignmentWays(json) {
+    var els = (json && json.elements) || [];
+    var ways = [], seen = {};
+    els.forEach(function (el) {
+      if (!el || el.type !== 'way' || !isAlignmentEligibleTags(el.tags)) return;
+      var pts = wayToPoints(el);
+      if (pts.length < 2) return;
+      var key = canonicalWayKey(pts);
+      if (seen[key]) return;
+      seen[key] = true;
+      ways.push(pts);
+    });
+    return ways;
+  }
+
   // Overpass returns hiking relations (named long trails) and footpath ways.
   // Turn them into quest offers: relations first (legendary trails), then named
   // footpaths grouped by name, then unnamed public footpaths.
@@ -988,7 +1058,13 @@
     offers = ensureFootpathQuestNearPlayer(offers, walkableWays, playerLat, playerLon, {
       publicRightOfWay: networkAllPublic && walkableWays.length > 0
     });
-    return sortOffersByStartDistance(dedupeQuestOffers(offers)).slice(0, 12);
+    var finalOffers = sortOffersByStartDistance(dedupeQuestOffers(offers)).slice(0, 12);
+    // Carry the walkable network this discovery already downloaded. Starting a
+    // quest can then certify its route against complete mapped-path evidence
+    // immediately, instead of waiting on whichever tiles happen to be loaded.
+    var alignmentWays = overpassAlignmentWays(json);
+    if (alignmentWays.length) finalOffers.forEach(function (o) { o.alignmentWays = alignmentWays; });
+    return finalOffers;
   }
 
   // Greedy end-to-end chaining of way fragments. Returns ALL connected chains,
@@ -1004,7 +1080,11 @@
       while (joined && segs.length && guard++ < 500) {
         joined = false;
         var head = chain[0], tail = chain[chain.length - 1];
-        var bestI = -1, bestMode = null, bestD = 1.5; // shared-node joins only; never bridge a mapped gap
+        // Shared-node joins only; never bridge a mapped gap. The threshold is
+        // PATH_MERGE_M so a chained offer can always certify: a chain joined
+        // across a gap the way-graph calls disconnected would be a quest whose
+        // route could never be aligned, on any evidence.
+        var bestI = -1, bestMode = null, bestD = PATH_MERGE_M;
         for (var i = 0; i < segs.length; i++) {
           var s = segs[i];
           var d;
@@ -1776,8 +1856,10 @@
     var loopStyle = offer.kind === 'adventure' ? 'loop' : offerLoopStyle(rawPts);
     if (loopStyle === 'out-and-back') rawPts = trimRouteToLength(rawPts, OUT_AND_BACK_ONE_WAY_CAP_M);
     // Shape-preserving: the stored route must trace the real footpath, corners
-    // included, or the drawn line sends the player the wrong way.
-    var pts = simplifyRoute(rawPts, 320);
+    // included, or the drawn line sends the player the wrong way. The epsilon is
+    // capped inside the certification corridor so the stored route can always be
+    // certified against the very paths it was built from.
+    var pts = simplifyRoute(rawPts, 320, 1.2, ROUTE_CERTIFICATION_TOLERANCE_M * 0.6);
     var oneWayM = routeLengthM(pts);
     var lenM = loopStyle === 'out-and-back' ? oneWayM * 2 : oneWayM; // walking distance incl. return leg
     // Flags roughly every 350m of the polyline they sit on (the one-way leg for
@@ -2104,28 +2186,24 @@
 
   // ---------------- Discovery entry point ----------------
 
-  function fetchTrailOffers(lat, lon, opts) {
+  function runOverpassQuery(query, opts) {
     opts = opts || {};
-    var radius = opts.radiusM || 3000;
-    var q = buildOverpassQuery(lat, lon, radius);
     var endpoints = opts.endpoints || OVERPASS_ENDPOINTS;
     var fetchFn = opts.fetchFn || (typeof fetch !== 'undefined' ? fetch.bind(window) : null);
-    if (!fetchFn) return Promise.resolve([]);
+    if (!fetchFn) return Promise.resolve(null);
     function tryEndpoint(i) {
-      if (i >= endpoints.length) return Promise.resolve([]);
+      if (i >= endpoints.length) return Promise.resolve(null);
       var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
       var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, opts.timeoutMs || 16000) : null;
       return fetchFn(endpoints[i], {
         method: 'POST',
-        body: 'data=' + encodeURIComponent(q),
+        body: 'data=' + encodeURIComponent(query),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         signal: ctrl ? ctrl.signal : undefined
       }).then(function (r) {
         if (timer) clearTimeout(timer);
         if (!r.ok) throw new Error('overpass ' + r.status);
         return r.json();
-      }).then(function (json) {
-        return parseOverpassTrails(json, lat, lon);
       }).catch(function (err) {
         if (timer) clearTimeout(timer);
         console.warn('BURBZ quest overpass endpoint failed:', endpoints[i], err && err.message);
@@ -2133,6 +2211,21 @@
       });
     }
     return tryEndpoint(0);
+  }
+
+  function fetchTrailOffers(lat, lon, opts) {
+    opts = opts || {};
+    return runOverpassQuery(buildOverpassQuery(lat, lon, opts.radiusM || 3000), opts)
+      .then(function (json) { return json ? parseOverpassTrails(json, lat, lon) : []; });
+  }
+
+  // Complete walkable evidence for one route corridor. Unlike viewport tiles
+  // this covers the whole quest, so its verdict is final: a route that cannot
+  // certify against it is genuinely not on mapped walkable ways.
+  function fetchAlignmentWays(bounds, opts) {
+    if (!bounds) return Promise.resolve([]);
+    return runOverpassQuery(buildAlignmentOverpassQuery(bounds), opts)
+      .then(function (json) { return json ? overpassAlignmentWays(json) : []; });
   }
 
   window.BurbzQuestCore = {
@@ -2157,12 +2250,19 @@
     isEligibleMapTransportationFeature: isEligibleMapTransportationFeature,
     isEligibleQuestDiscoveryFeature: isEligibleQuestDiscoveryFeature,
     eligibleMapTransportationWays: eligibleMapTransportationWays,
+    isAlignmentEligibleTags: isAlignmentEligibleTags,
+    overpassAlignmentWays: overpassAlignmentWays,
+    buildAlignmentOverpassQuery: buildAlignmentOverpassQuery,
+    fetchAlignmentWays: fetchAlignmentWays,
+    routeBounds: routeBounds,
     ROUTE_ALIGNMENT_VERSION: ROUTE_ALIGNMENT_VERSION,
+    ROUTE_CERTIFICATION_TOLERANCE_M: ROUTE_CERTIFICATION_TOLERANCE_M,
     rechartRouteOnWays: rechartRouteOnWays,
     buildOverpassQuery: buildOverpassQuery,
     parseOverpassTrails: parseOverpassTrails,
     parseMapWalkableFeatures: parseMapWalkableFeatures,
     chainWays: chainWays,
+    clusterChains: clusterChains,
     buildPathNetwork: buildPathNetwork,
     insertNetworkStart: insertNetworkStart,
     networkShortestPath: networkShortestPath,

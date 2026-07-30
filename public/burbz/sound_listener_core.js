@@ -58,6 +58,47 @@
     return { enqueue, clear, close, snapshot };
   }
 
+  function createMatchConsensus(options) {
+    const opts = options || {};
+    const required = Math.max(2, Math.floor(Number(opts.required) || 2));
+    const ttlMs = Math.max(1, Number(opts.ttlMs) || 60000);
+    const states = new Map();
+    let latestKey = '';
+
+    function reset() {
+      states.clear();
+      latestKey = '';
+    }
+
+    function snapshot() {
+      const state = states.get(latestKey);
+      return {
+        key: state ? latestKey : '',
+        count: state ? state.count : 0,
+        required,
+        lastObservedAt: state ? state.lastObservedAt : 0
+      };
+    }
+
+    function observe(species, now) {
+      const nextKey = String(species || '').trim().toLowerCase();
+      const observedAt = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+      if (!nextKey) return { key:'', count:0, required, lastObservedAt:0, confirmed:false };
+      const previous = states.get(nextKey);
+      const count = !previous || !previous.lastObservedAt || observedAt - previous.lastObservedAt > ttlMs
+        ? 1
+        : previous.count + 1;
+      const state = { count, lastObservedAt:observedAt };
+      states.set(nextKey, state);
+      latestKey = nextKey;
+      const result = { key:nextKey, count, required, lastObservedAt:observedAt, confirmed:count >= required };
+      if (result.confirmed) states.delete(nextKey);
+      return result;
+    }
+
+    return { observe, reset, snapshot };
+  }
+
   function filenameForMime(mimeType) {
     const mime = String(mimeType || '').toLowerCase();
     if (mime.includes('webm')) return 'recording.webm';
@@ -101,5 +142,24 @@
     return { add, reset, snapshot };
   }
 
-  root.BurbzSoundListenerCore = Object.freeze({ createLatestTaskQueue, createDiscoveryHistory, filenameForMime });
+  function soundWindowAgeCue(windowData, now) {
+    const item = windowData || {};
+    const endedAt = Number(item.endedAt);
+    const durationMs = Math.max(0, Number(item.durationMs) || 12000);
+    if (!Number.isFinite(endedAt)) return 'the previous sound window';
+
+    const current = Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const endAge = Math.max(0, Math.round((current - endedAt) / 1000));
+    const startAge = Math.max(endAge, Math.round((current - endedAt + durationMs) / 1000));
+    if (!endAge) return `the last ${Math.max(1, Math.round(durationMs / 1000))}s of sound`;
+    return `sound recorded ${startAge}\u2013${endAge}s ago`;
+  }
+
+  root.BurbzSoundListenerCore = Object.freeze({
+    createLatestTaskQueue,
+    createDiscoveryHistory,
+    createMatchConsensus,
+    filenameForMime,
+    soundWindowAgeCue
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

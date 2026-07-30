@@ -210,9 +210,9 @@ def test_birdex_and_companion_cards_can_feed_the_bird():
     # A recruited companion is fed straight off its card, front and back.
     assert companion_card.count('data-action="feed-bird"') == 2
     assert 'data-feed-key="${bird.id}"' in companion_card
-    # A still-wild Birdex species is fed at the feeder.
-    assert 'data-action="feed-bird"' in known_card
-    assert 'data-feed-key="species:' in known_card
+    # A still-wild Birdex entry cannot be fed like a recruited companion.
+    assert 'data-action="feed-bird"' not in known_card
+
     # The grid delegates the tap to the shared feed sheet.
     grid = function_source(html, "renderBirdex")
     assert 'e.target.closest(\'[data-action="feed-bird"]\')' in grid
@@ -224,7 +224,7 @@ def test_the_feed_sheet_serves_one_food_per_tap_and_flies_the_bird_to_it():
     sheet = function_source(html, "renderFeedSheet")
     assert "feedFoodRowHTML(entry, option, reveal)" in sheet
     assert "burbzFeedTap(" in function_source(html, "feedFoodRowHTML")
-    assert "One food, one meal" in sheet
+    assert "Tap one food to serve it" in sheet
     fly = function_source(html, "feedFlyBirdToFood")
     assert "getBoundingClientRect" in fly
     assert "prefers-reduced-motion" in fly
@@ -330,8 +330,8 @@ def test_a_secondary_food_is_served_at_half_instead_of_refused():
     assert out["seedsAreSideSnack"] is True
     assert out["seedsAreNotMain"] is True
     assert out["seedsSpent"] == 1
-    # Sunflower seeds are worth 28 to a bird that lives on them; half here.
-    assert out["pigeonFed"] == round(28 * 0.5)
+    # A secondary meal moves an 80-hunger bird to the halfway point.
+    assert out["pigeonFed"] == 30
     # And half the bird XP a main meal pays.
     assert out["pigeonXp"] == round(6 / 2)
 
@@ -342,7 +342,7 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
     assert note, "a side food must explain itself"
     assert "side" in note["title"].lower()
     body = note["body"].lower()
-    assert "half the hunger" in body and "half the xp" in body
+    assert "fills the fullness bar halfway" in body and "half the xp" in body
     assert "woodpigeon" in body
     # The burst says it too, at a glance.
     assert "SIDE SNACK" in out["sideSnackBurst"]["badge"]
@@ -359,29 +359,23 @@ def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
     assert "SECONDARY_MEAL_FRACTION" in core.split("verdict: record.matchMethod")[1][:400]
 
 
-def test_a_full_bird_leaves_the_feeding_screen():
+def test_only_companions_use_the_feeding_surface():
     html = HTML.read_text(encoding="utf-8")
-    hungry = function_source(html, "kitchenChoiceIsHungry")
-    assert "birdIsFull(row.companion)" in hungry
-    # Wild Birdex visitors have no hunger bar, so they always stay.
-    assert "return true;" in hungry
-    # Both lists on that screen filter, and the selection moves on by itself.
-    assert "function kitchenHungryChoices(" in html
-    assert "const choices = kitchenHungryChoices();" in html
+    # Full companions leave the upper feeding table.
     assert "kitchenRosterHungryEntries()" in function_source(html, "renderKitchenRosterHTML")
-    selected = function_source(html, "kitchenSelectedChoice")
-    assert "kitchenHungryChoices()" in selected
-    # And the screen says so rather than going blank when everyone is fed.
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "return renderKitchenRosterHTML();" in panel
+    assert "kitchenPrepCounterChoices" not in panel
+    assert 'data-kitchen-pantry-root="academy-kitchen"' not in panel
+    # The companion table still explains the all-fed state rather than going blank.
     assert 'data-kitchen-all-fed="1"' in html
 
 
-def test_the_prep_counter_shows_the_hunger_it_is_there_to_fill():
+def test_the_companion_table_shows_fullness_it_is_there_to_fill():
     html = HTML.read_text(encoding="utf-8")
-    panel = function_source(html, "renderKitchenPanelHTML")
-    assert "kitchenGuestHungerHTML(chosen)" in panel
-    metre = function_source(html, "kitchenGuestHungerHTML")
-    assert 'data-hunger-surface="prep-counter"' in metre
-    assert "academy-meter-fill hunger" in metre
-    assert "/100 hunger" in metre
-    # A wild visitor has no hunger bar to show, and is told so instead.
-    assert "entry.wild" in metre
+    row = function_source(html, "kitchenRosterRowHTML")
+    assert "hungerBarHTML(status, 'kitchen-roster')" in row
+    metre = function_source(html, "hungerBarHTML")
+    assert 'data-hunger-surface="' in metre
+    assert "Fullness" in metre
+    assert "data-fullness" in metre

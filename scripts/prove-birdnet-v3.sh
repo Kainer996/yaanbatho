@@ -21,8 +21,17 @@ set -uo pipefail
 ENV_FILE="${BURBZ_ENV_FILE:-/etc/burbz-sound.env}"
 PUBLIC_URL="${BURBZ_PUBLIC_URL:-https://yaanbatho.com/burbz/api/identify/sound}"
 SERVICE="${BURBZ_SERVICE:-burbz}"
-CLIP="${BURBZ_CLIP:-/home/ubuntu/yaanbatho/burbz/assets/audio/bird-tawny-owl.ogg}"
+SOURCE_CLIP="${BURBZ_CLIP:-/home/ubuntu/yaanbatho/burbz/assets/audio/bird-tawny-owl.ogg}"
+CLIP="$SOURCE_CLIP"
+PROOF_CLIP=""
 BACKUP="/tmp/burbz-sound.env.prove-$$"
+EXPECTED_MODEL_SHA256="69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24"
+EXPECTED_LABELS_SHA256="8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0"
+EXPECTED_GEO_MODEL_SHA256="2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017"
+EXPECTED_GEO_LABELS_SHA256="c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784"
+EXPECTED_SCORE_BLACKLIST_SHA256="a7237606eca3e0a215d0a11c01c2a7654348916609dffc830ec9fc96e0c81366"
+EXPECTED_POLICY_VERSION="burbz-v3-temporal-20260729.2"
+EXPECTED_INTEGRATION_VERSION=4
 
 log()  { printf "\n\033[1;36m==> %s\033[0m\n" "$*"; }
 ok()   { printf "\033[1;32m  ✔\033[0m %s\n" "$*"; }
@@ -30,6 +39,9 @@ warn() { printf "\033[1;33m  !\033[0m %s\n" "$*"; }
 bad()  { printf "\033[1;31m  ✘\033[0m %s\n" "$*"; }
 
 restore() {
+  if [[ -n "$PROOF_CLIP" && -f "$PROOF_CLIP" ]]; then
+    rm -f -- "$PROOF_CLIP"
+  fi
   if [[ -f "$BACKUP" ]]; then
     cp "$BACKUP" "$ENV_FILE"
     rm -f "$BACKUP"
@@ -41,10 +53,74 @@ trap restore EXIT INT TERM
 
 [[ $EUID -eq 0 ]] || { bad "Run with sudo."; exit 1; }
 [[ -f "$ENV_FILE" ]] || { bad "$ENV_FILE not found — run install-birdnet-v3.sh first."; exit 1; }
-[[ -f "$CLIP" ]] || { bad "Reference clip not found: $CLIP"; exit 1; }
+[[ -f "$SOURCE_CLIP" ]] || { bad "Reference clip not found: $SOURCE_CLIP"; exit 1; }
+
+# The default owl file is only 2.2 seconds. Current V3 policy deliberately
+# refuses an ordinary single-window score, so test the same repeated 12-second
+# shape that the continuous browser listener uploads.
+if [[ -z "${BURBZ_CLIP:-}" ]]; then
+  PROOF_CLIP="$(mktemp /tmp/burbz-tawny-proof.XXXXXX.wav)"
+  python3 - "$SOURCE_CLIP" "$PROOF_CLIP" <<'PY'
+import sys
+import numpy as np
+import soundfile
+
+source, destination = sys.argv[1:3]
+data, rate = soundfile.read(source, dtype="float32", always_2d=True)
+mono = data.mean(axis=1)
+gap = np.zeros(int(rate * 0.8), dtype=np.float32)
+blocks = []
+while sum(block.size for block in blocks) < int(rate * 12):
+    blocks.extend((mono, gap))
+soundfile.write(
+    destination,
+    np.concatenate(blocks)[:int(rate * 12)],
+    rate,
+    subtype="PCM_16",
+)
+PY
+  CLIP="$PROOF_CLIP"
+fi
 
 scan() { curl -sS -m 90 -F "audio=@$CLIP" -F "lat=51.5" -F "lon=-0.13" "$PUBLIC_URL" 2>/dev/null; }
 found_owl() { echo "${1:-}" | grep -qi "Strix aluco\|Tawny Owl"; }
+require_exact_provenance() {
+  printf "%s" "${1:-}" | python3 -c '
+import json
+import sys
+
+try:
+    payload = json.load(sys.stdin)
+except Exception as exc:
+    print(f"invalid JSON response: {exc}", file=sys.stderr)
+    raise SystemExit(1)
+
+expected = {
+    "provider": "birdnetv3",
+    "configuredProvider": "birdnetv3",
+    "fallbackUsed": False,
+    "providerVerified": True,
+    "modelSha256": sys.argv[1],
+    "labelsSha256": sys.argv[2],
+    "geoModelSha256": sys.argv[3],
+    "geoLabelsSha256": sys.argv[4],
+    "scoreBlacklistSha256": sys.argv[5],
+    "policyVersion": sys.argv[6],
+    "serverIntegrationVersion": int(sys.argv[7]),
+}
+wrong = {
+    key: {"actual": payload.get(key), "expected": value}
+    for key, value in expected.items()
+    if payload.get(key) != value
+}
+if wrong:
+    print("exact provenance mismatch: " + json.dumps(wrong, sort_keys=True), file=sys.stderr)
+    raise SystemExit(1)
+' "$EXPECTED_MODEL_SHA256" "$EXPECTED_LABELS_SHA256" \
+    "$EXPECTED_GEO_MODEL_SHA256" "$EXPECTED_GEO_LABELS_SHA256" \
+    "$EXPECTED_SCORE_BLACKLIST_SHA256" "$EXPECTED_POLICY_VERSION" \
+    "$EXPECTED_INTEGRATION_VERSION"
+}
 
 # ----------------------------------------------------------------
 log "1/4  Baseline — the reference tawny owl at the normal threshold"
@@ -54,6 +130,11 @@ echo "  $(echo "$BASE" | head -c 170)"
 if [[ -z "$BASE" ]]; then
   bad "The endpoint did not answer. Is the site up?"; exit 1
 fi
+if ! require_exact_provenance "$BASE"; then
+  bad "The endpoint did not prove the exact reviewed V3 build."
+  exit 1
+fi
+ok "exact acoustic, labels, geo, blacklist, policy and integration provenance verified"
 if ! found_owl "$BASE"; then
   warn "The reference clip was not identified even at the normal threshold."
   warn "Fix that first — this test needs a working baseline."
@@ -79,6 +160,10 @@ log "3/4  Asking the live endpoint the same question again"
 # ----------------------------------------------------------------
 RAISED="$(scan)"
 echo "  $(echo "$RAISED" | head -c 170)"
+if [[ -n "$RAISED" ]] && ! require_exact_provenance "$RAISED"; then
+  bad "The second response lost or changed exact V3 provenance."
+  exit 1
+fi
 
 # ----------------------------------------------------------------
 log "4/4  Verdict"

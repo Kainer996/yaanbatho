@@ -9,7 +9,8 @@
 # It is idempotent and self-verifying: it installs the runtime, fetches and
 # checksums the models, wires sound_id into server.py (backing it up first),
 # restarts the service, and then proves the live endpoint identifies a known
-# bird. If that proof fails it puts server.py back exactly as it was.
+# bird and rejects a known confuser. If proof fails it restores server.py,
+# the environment file, and the systemd drop-in exactly as they were.
 #
 # Run on the server:
 #
@@ -23,13 +24,22 @@
 #   --rollback      restore the most recent server.py backup
 # ===============================================================
 
-set -euo pipefail
+set -Eeuo pipefail
 
 MODEL_DIR="${BURBZ_MODEL_DIR:-/opt/burbz/models}"
 SERVER_PY="${BURBZ_SERVER_PY:-}"
 SERVICE="${BURBZ_SERVICE:-}"
 HEALTH_URL="${BURBZ_HEALTH_URL:-http://127.0.0.1}"
+ENV_FILE="${BURBZ_ENV_FILE:-/etc/burbz-sound.env}"
 DRY_RUN=0; NO_PATCH=0; MODELS_ONLY=0; ROLLBACK=0
+PROOF_CLIP=""
+
+cleanup_proof_clip() {
+  if [[ -n "${PROOF_CLIP:-}" && -f "$PROOF_CLIP" ]]; then
+    rm -f -- "$PROOF_CLIP"
+  fi
+}
+trap cleanup_proof_clip EXIT
 
 ZENODO="https://zenodo.org/records/20703646/files"
 GEO_BASE="https://huggingface.co/tphakala/BirdNET-Geomodel/resolve/main"
@@ -43,8 +53,11 @@ SHA_ACOUSTIC_ONNX="69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9b
 SHA_ACOUSTIC_LABELS="8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0"
 SHA_GEO_ONNX="2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017"
 SHA_GEO_LABELS="c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784"
+SHA_SCORE_BLACKLIST="a7237606eca3e0a215d0a11c01c2a7654348916609dffc830ec9fc96e0c81366"
+EXPECTED_POLICY_VERSION="burbz-v3-temporal-20260729.2"
+EXPECTED_INTEGRATION_VERSION=4
 
-SCRIPT_VERSION="2026-07-27.6"
+SCRIPT_VERSION="2026-07-29.accuracy-v5"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 # $0 is just "bash" when this is piped from curl, so a printed "$0 --rollback"
@@ -114,15 +127,25 @@ server_py_from_process() {
 }
 
 server_py_from_systemd() {
-  local unit exec_start
+  local unit exec_start workdir candidate
+  # Prefer the actual Burbz unit before considering any unrelated Python API.
   while IFS= read -r unit; do
+    [[ -n "$unit" ]] || continue
     exec_start="$(systemctl show -p ExecStart --value "$unit" 2>/dev/null || true)"
     if [[ "$exec_start" =~ ([^[:space:]\"]*server\.py) ]]; then
-      [[ -f "${BASH_REMATCH[1]}" ]] && ! is_archived_path "${BASH_REMATCH[1]}" \
-        && { echo "${BASH_REMATCH[1]}"; return; }
+      candidate="${BASH_REMATCH[1]}"
+      if [[ "$candidate" != /* ]]; then
+        workdir="$(systemctl show -p WorkingDirectory --value "$unit" 2>/dev/null || true)"
+        [[ -n "$workdir" ]] && candidate="$workdir/$candidate"
+      fi
+      [[ -f "$candidate" ]] && ! is_archived_path "$candidate" \
+        && { readlink -f "$candidate"; return; }
     fi
-  done < <(systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
-             | awk '{print $1}')
+  done < <(
+    printf '%s\n' burbz.service
+    systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
+      | awk '{print $1}' | grep -v '^burbz\.service$'
+  )
 }
 
 # Last resort: search the disk and rank, because a box that has been running a
@@ -147,8 +170,8 @@ server_py_from_disk() {
 find_server_py() {
   [[ -n "$SERVER_PY" ]] && { echo "$SERVER_PY"; return; }
   local found
-  found="$(server_py_from_process)"; [[ -n "$found" ]] && { echo "$found"; return; }
   found="$(server_py_from_systemd)"; [[ -n "$found" ]] && { echo "$found"; return; }
+  found="$(server_py_from_process)"; [[ -n "$found" ]] && { echo "$found"; return; }
   server_py_from_disk
 }
 
@@ -167,11 +190,52 @@ find_sound_id_dir() {
 
 find_service() {
   [[ -n "$SERVICE" ]] && { echo "$SERVICE"; return; }
-  local unit
-  for unit in burbz burbz-api birdnet yaanbatho; do
-    systemctl list-unit-files "$unit.service" >/dev/null 2>&1 \
-      && systemctl cat "$unit.service" >/dev/null 2>&1 && { echo "$unit"; return; }
-  done
+  local target="${1:-${TARGET:-}}" target_real="" pid cwd argument candidate cgroup unit
+  [[ -n "$target" ]] && target_real="$(readlink -f "$target" 2>/dev/null || true)"
+
+  # First bind the exact running server.py process to its systemd cgroup.
+  if [[ -n "$target_real" ]]; then
+    for pid in $(pgrep -f "server\.py" 2>/dev/null || true); do
+      [[ -r "/proc/$pid/cmdline" ]] || continue
+      cwd="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)"
+      while IFS= read -r argument; do
+        candidate=""
+        case "$argument" in
+          *server.py)
+            if [[ "$argument" == /* ]]; then
+              candidate="$(readlink -f "$argument" 2>/dev/null || true)"
+            elif [[ -n "$cwd" ]]; then
+              candidate="$(readlink -f "$cwd/${argument#./}" 2>/dev/null || true)"
+            fi
+            ;;
+        esac
+        [[ "$candidate" == "$target_real" ]] || continue
+        cgroup="$(cat "/proc/$pid/cgroup" 2>/dev/null || true)"
+        unit="$(printf "%s\n" "$cgroup" | sed -n 's#.*system\.slice/\([^/]*\.service\).*#\1#p' | head -1)"
+        if [[ -n "$unit" ]] && systemctl is-active --quiet "$unit" 2>/dev/null; then
+          echo "${unit%.service}"
+          return
+        fi
+      done < <(tr '\0' '\n' < "/proc/$pid/cmdline" 2>/dev/null || true)
+    done
+  fi
+
+  # Fall back only to a running unit whose ExecStart/WorkingDirectory matches
+  # the selected backend. Never guess from a generic service name.
+  while IFS= read -r unit; do
+    local exec_start working
+    exec_start="$(systemctl show -p ExecStart --value "$unit" 2>/dev/null || true)"
+    working="$(systemctl show -p WorkingDirectory --value "$unit" 2>/dev/null || true)"
+    if [[ -n "$target_real" ]]; then
+      if [[ "$exec_start" == *"$target_real"* ]] \
+          || { [[ "$(readlink -f "$working" 2>/dev/null || true)" == "$(dirname "$target_real")" ]] \
+               && [[ "$exec_start" == *"server.py"* ]]; }; then
+        echo "${unit%.service}"
+        return
+      fi
+    fi
+  done < <(systemctl list-units --type=service --state=running --no-legend --plain 2>/dev/null \
+             | awk '{print $1}')
   echo ""
 }
 
@@ -183,11 +247,26 @@ if [[ $ROLLBACK -eq 1 ]]; then
   [[ -n "$TARGET" ]] || die "Couldn't find server.py. Pass --server-py /path/to/server.py"
   BACKUP="$(ls -1t "$TARGET".birdnet-v3-bak-* 2>/dev/null | head -1 || true)"
   [[ -n "$BACKUP" ]] || die "No backup found next to $TARGET"
+  TX_STAMP="${BACKUP##*.birdnet-v3-bak-}"
   log "Restoring $BACKUP -> $TARGET"
-  run "cp '$BACKUP' '$TARGET'"
-  SVC="$(find_service)"
+  run "cp -a '$BACKUP' '$TARGET'"
+  if [[ -f "$ENV_FILE.birdnet-v3-bak-$TX_STAMP" ]]; then
+    run "cp -a '$ENV_FILE.birdnet-v3-bak-$TX_STAMP' '$ENV_FILE'"
+  elif [[ -f "$ENV_FILE.birdnet-v3-absent-$TX_STAMP" ]]; then
+    run "rm -f '$ENV_FILE'"
+  fi
+  SVC="$(find_service "$TARGET")"
+  if [[ -n "$SVC" ]]; then
+    DROPIN="/etc/systemd/system/$SVC.service.d/birdnet-v3.conf"
+    if [[ -f "$DROPIN.birdnet-v3-bak-$TX_STAMP" ]]; then
+      run "cp -a '$DROPIN.birdnet-v3-bak-$TX_STAMP' '$DROPIN'"
+    elif [[ -f "$DROPIN.birdnet-v3-absent-$TX_STAMP" ]]; then
+      run "rm -f '$DROPIN'"
+    fi
+    run "systemctl daemon-reload"
+  fi
   [[ -n "$SVC" ]] && run "systemctl restart '$SVC'"
-  ok "Rolled back. The previous recogniser is active again."
+  ok "Rolled back the server, sound environment and systemd drop-in."
   exit 0
 fi
 
@@ -237,9 +316,13 @@ ensure_module numpy numpy \
   || die "numpy is missing and could not be installed. Try: apt-get install -y python3-numpy"
 ensure_module onnxruntime onnxruntime \
   || die "Could not install onnxruntime. On a very old distro try: pip install 'onnxruntime<1.17'"
-# Optional: better resampling and non-WAV decoding. A failure here is survivable.
-ensure_module soundfile soundfile optional
-ensure_module soxr soxr optional
+# These are accuracy dependencies, not cosmetics. The linear-interpolation
+# fallback aliases high bird frequencies and makes phone recordings diverge
+# from the waveform the model was trained on.
+ensure_module soundfile soundfile \
+  || die "soundfile is required for reliable BirdNET V3 audio decoding"
+ensure_module soxr soxr \
+  || die "soxr is required for band-limited BirdNET V3 resampling"
 ok "runtime ready (no TensorFlow, no PyTorch, no GPU)"
 
 # ----------------------------------------------------------------
@@ -272,9 +355,11 @@ log "Installing models into $MODEL_DIR"
 run "mkdir -p '$MODEL_DIR'"
 fetch "$ZENODO/${ACOUSTIC_ONNX//+/%2B}?download=1"   "$MODEL_DIR/$ACOUSTIC_ONNX"   "$SHA_ACOUSTIC_ONNX"
 fetch "$ZENODO/${ACOUSTIC_LABELS//+/%2B}?download=1" "$MODEL_DIR/$ACOUSTIC_LABELS" "$SHA_ACOUSTIC_LABELS"
-# The range filter is an enhancement; identification still works without it.
-fetch "$GEO_BASE/${GEO_ONNX//+/%2B}"   "$MODEL_DIR/$GEO_ONNX"   "$SHA_GEO_ONNX"   || warn "range filter model unavailable — continuing without it"
-fetch "$GEO_BASE/${GEO_LABELS//+/%2B}" "$MODEL_DIR/$GEO_LABELS" "$SHA_GEO_LABELS" || warn "range filter labels unavailable — continuing without it"
+# Production accuracy depends on place/date filtering. The recogniser can
+# still abstain safely when a player denies location permission, but a server
+# install without the geomodel must fail rather than silently losing this layer.
+fetch "$GEO_BASE/${GEO_ONNX//+/%2B}"   "$MODEL_DIR/$GEO_ONNX"   "$SHA_GEO_ONNX"
+fetch "$GEO_BASE/${GEO_LABELS//+/%2B}" "$MODEL_DIR/$GEO_LABELS" "$SHA_GEO_LABELS"
 
 [[ $MODELS_ONLY -eq 1 ]] && { ok "Models installed. Nothing else changed."; exit 0; }
 
@@ -302,20 +387,137 @@ ok "sound_id: $SOUND_ID_DIR/sound_id"
 log "Self-test: identifying a known recording with V3"
 if [[ $DRY_RUN -eq 0 ]]; then
   ( cd "$SOUND_ID_DIR" && BURBZ_BIRDNET_V3_MODEL_DIR="$MODEL_DIR" \
-      BURBZ_SOUND_MODEL=birdnetv3 PYTHONPATH="$SOUND_ID_DIR${PYTHONPATH:+:$PYTHONPATH}" \
+      BURBZ_SOUND_MODEL=birdnetv3 BURBZ_SOUND_MODEL_FALLBACK=0 \
+      PYTHONPATH="$SOUND_ID_DIR${PYTHONPATH:+:$PYTHONPATH}" \
       "$PY" -m sound_id.selftest ) \
     || die "The model did not pass its self-test. server.py has not been touched."
 else
   printf "   \033[2m[dry-run] python3 -m sound_id.selftest\033[0m\n"
 fi
 
+# --no-patch is an offline model/runtime check only. It must not write a V3
+# service environment, restart an untouched legacy server, or claim V3 served.
+if [[ $NO_PATCH -eq 1 ]]; then
+  ok "V3 models and runtime passed the offline self-test; server.py was not changed."
+  warn "Serving-engine provenance is unverified because --no-patch was requested."
+  exit 0
+fi
+
+# Arm a single transaction before changing server.py or service settings.
+# Any ordinary shell error after this point restores every file captured here;
+# explicit live-proof failures call the same restoration path.
+SVC="$(find_service "$TARGET")"
+ENV_EXISTED=0
+ENV_BACKUP="$ENV_FILE.birdnet-v3-bak-$STAMP"
+DROPIN=""
+DROPIN_EXISTED=0
+DROPIN_BACKUP=""
+if [[ -f "$ENV_FILE" ]]; then
+  ENV_EXISTED=1
+  [[ $DRY_RUN -eq 1 ]] || cp -a "$ENV_FILE" "$ENV_BACKUP"
+elif [[ $DRY_RUN -eq 0 ]]; then
+  touch "$ENV_FILE.birdnet-v3-absent-$STAMP"
+fi
+if [[ -n "$SVC" ]]; then
+  DROPIN="/etc/systemd/system/$SVC.service.d/birdnet-v3.conf"
+  DROPIN_BACKUP="$DROPIN.birdnet-v3-bak-$STAMP"
+  if [[ -f "$DROPIN" ]]; then
+    DROPIN_EXISTED=1
+    [[ $DRY_RUN -eq 1 ]] || cp -a "$DROPIN" "$DROPIN_BACKUP"
+  elif [[ $DRY_RUN -eq 0 ]]; then
+    mkdir -p "$(dirname "$DROPIN")"
+    touch "$DROPIN.birdnet-v3-absent-$STAMP"
+  fi
+fi
+
+restore_install_files() {
+  if [[ -f "$TARGET.birdnet-v3-bak-$STAMP" ]]; then
+    cp -a "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+  fi
+  if [[ $ENV_EXISTED -eq 1 && -f "$ENV_BACKUP" ]]; then
+    cp -a "$ENV_BACKUP" "$ENV_FILE"
+  elif [[ $ENV_EXISTED -eq 0 ]]; then
+    rm -f "$ENV_FILE"
+  fi
+  if [[ -n "$DROPIN" ]]; then
+    if [[ $DROPIN_EXISTED -eq 1 && -f "$DROPIN_BACKUP" ]]; then
+      cp -a "$DROPIN_BACKUP" "$DROPIN"
+    elif [[ $DROPIN_EXISTED -eq 0 ]]; then
+      rm -f "$DROPIN"
+    fi
+  fi
+  systemctl daemon-reload >/dev/null 2>&1 || true
+}
+
+TRANSACTION_ARMED=0
+transaction_failed() {
+  local status="${1:-1}"
+  trap - ERR INT TERM
+  set +e
+  if [[ $TRANSACTION_ARMED -eq 1 ]]; then
+    warn "Install interrupted or failed — restoring the pre-install server and settings"
+    restore_install_files
+    if [[ -n "$SVC" ]]; then
+      systemctl restart "$SVC" >/dev/null 2>&1 || true
+    fi
+  fi
+  exit "$status"
+}
+if [[ $DRY_RUN -eq 0 ]]; then
+  TRANSACTION_ARMED=1
+  trap 'transaction_failed $?' ERR
+  trap 'transaction_failed 130' INT
+  trap 'transaction_failed 143' TERM
+fi
+
 # ----------------------------------------------------------------
 # 6. Wire sound_id into server.py
 # ----------------------------------------------------------------
-if [[ $NO_PATCH -eq 1 ]]; then
-  warn "--no-patch given: server.py left alone. It will keep using its current engine."
-else
-  PATCH_VERSION="v2"
+PATCH_VERSION="v4"
+[[ -f "$SOUND_ID_DIR/sound_id/server_integration.py" ]] \
+  || die "sound_id/server_integration.py is missing. Deploy the current sound_id package first."
+[[ -f "$SOUND_ID_DIR/sound_id/server_patcher.py" ]] \
+  || die "sound_id/server_patcher.py is missing. Deploy the current sound_id package first."
+if [[ $DRY_RUN -eq 0 ]]; then
+  PYTHONPATH="$SOUND_ID_DIR${PYTHONPATH:+:$PYTHONPATH}" "$PY" -c '
+from sound_id.birdnet_v3_provider import DECISION_POLICY_VERSION
+from sound_id.birdnet_v3_provider import (
+    GEO_LABELS_SHA256,
+    GEO_ONNX_SHA256,
+    LABELS_SHA256,
+    ONNX_SHA256,
+    SCORE_BLACKLIST_SHA256,
+)
+from sound_id.server_integration import INTEGRATION_VERSION
+assert ONNX_SHA256 == "69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24", ONNX_SHA256
+assert LABELS_SHA256 == "8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0", LABELS_SHA256
+assert GEO_ONNX_SHA256 == "2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017", GEO_ONNX_SHA256
+assert GEO_LABELS_SHA256 == "c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784", GEO_LABELS_SHA256
+assert SCORE_BLACKLIST_SHA256 == "a7237606eca3e0a215d0a11c01c2a7654348916609dffc830ec9fc96e0c81366", SCORE_BLACKLIST_SHA256
+assert INTEGRATION_VERSION == 4, INTEGRATION_VERSION
+assert DECISION_POLICY_VERSION == "burbz-v3-temporal-20260729.2", DECISION_POLICY_VERSION
+' || die "Deployed sound_id code is not the reviewed integration/policy version."
+fi
+
+log "Installing the tested BirdNET server adapter before the Flask main guard"
+run "cp -a '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
+if [[ $DRY_RUN -eq 0 ]]; then
+  if ! PYTHONPATH="$SOUND_ID_DIR${PYTHONPATH:+:$PYTHONPATH}" \
+      "$PY" -m sound_id.server_patcher "$TARGET"; then
+    cp -a "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+    die "The live server contract is unsupported. Restored server.py unchanged."
+  fi
+  "$PY" -m py_compile "$TARGET" || {
+    cp -a "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+    die "The patched server.py did not compile. Restored the backup."
+  }
+fi
+ok "server.py carries BirdNET integration $PATCH_VERSION before app.run"
+
+# Main's earlier inline v4 patcher is retained inert for readable rollback
+# archaeology. The tested server_patcher v4 above is the only executable path.
+if false; then
+  PATCH_VERSION="v4"
   NEEDS_PATCH=1
   HAS_OLD_BLOCK=0
   # The first block shipped had no version marker, so detect it by the private
@@ -333,8 +535,8 @@ else
     ok "server.py already carries the current wiring ($PATCH_VERSION) — no code change needed"
     NEEDS_PATCH=0
   elif [[ $HAS_OLD_BLOCK -eq 1 ]]; then
-    # An earlier block, marked or not. It always runs to end of file, so it can
-    # be cut back cleanly and replaced with the current one.
+    # Replace an earlier block. v4 has an explicit END marker because the block
+    # must sit before app.run; v1-v3 ran to end-of-file and are trimmed there.
     log "Replacing the older wiring block with $PATCH_VERSION"
     run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
     if [[ $DRY_RUN -eq 0 ]]; then
@@ -346,9 +548,17 @@ with open(path, encoding="utf-8") as handle:
     lines = handle.readlines()
 
 start = None
+end = None
 for index, line in enumerate(lines):
     if line.startswith("# BURBZ-BIRDNET-V3-BEGIN"):
         start = index
+        for end_index in range(index + 1, len(lines)):
+            if lines[end_index].startswith("# BURBZ-BIRDNET-V3-END"):
+                end = end_index + 1
+                break
+        # v1-v3 had no END marker and were appended at end-of-file.
+        if end is None:
+            end = len(lines)
         break
 
 if start is None:
@@ -362,15 +572,29 @@ if start is None:
                 start -= 1
             while start and lines[start - 1].lstrip().startswith("#"):
                 start -= 1
+            # The unmarked block shipped immediately before the direct-run
+            # guard. Preserve that guard; deleting it makes systemd's process
+            # exit cleanly without ever opening the API port.
+            end = next(
+                (
+                    guard_index
+                    for guard_index in range(index + 1, len(lines))
+                    if lines[guard_index].startswith("if __name__")
+                    and "__main__" in lines[guard_index]
+                ),
+                len(lines),
+            )
             break
 
-if start is None:
+if start is None or end is None:
     sys.exit("no previous block found")
 
 while start and not lines[start - 1].strip():
     start -= 1
+while end < len(lines) and not lines[end].strip():
+    end += 1
 
-remainder = "".join(lines[:start])
+remainder = "".join(lines[:start] + lines[end:])
 if "_burbz_sound_id" in remainder:
     sys.exit("block boundary looks wrong - refusing to trim")
 
@@ -391,15 +615,15 @@ TRIM
     log "Wiring sound_id into server.py (backup: $(basename "$TARGET").birdnet-v3-bak-$STAMP)"
     [[ -f "$TARGET.birdnet-v3-bak-$STAMP" ]] || run "cp '$TARGET' '$TARGET.birdnet-v3-bak-$STAMP'"
 
-    # The patch is purely additive: it appends a block that re-binds the two
-    # BirdNET helpers so the existing handler routes through sound_id without
-    # its call sites being edited. Editing the middle of an unseen file is how
-    # this goes wrong; appending to the end is reversible and easy to read.
+    # Write the block to a temporary file, then insert it before the main guard.
+    # Appending after `app.run()` makes the wiring unreachable when server.py is
+    # executed directly, because Flask blocks before the appended code can run.
     if [[ $DRY_RUN -eq 0 ]]; then
-      cat >> "$TARGET" <<'PATCH'
+      PATCH_FILE="$(mktemp)"
+      cat > "$PATCH_FILE" <<'PATCH'
 
 
-# BURBZ-BIRDNET-V3-BEGIN v2
+# BURBZ-BIRDNET-V3-BEGIN v4
 # ---------------------------------------------------------------------------
 # BirdNET V3 — appended by scripts/install-birdnet-v3.sh
 #
@@ -411,8 +635,12 @@ TRIM
 # original functions stay available, so BURBZ_SOUND_MODEL=birdnetv2 still
 # reaches the old path unchanged.
 #
-# The version on the BEGIN marker above lets the installer replace this block
-# when it changes; everything from that marker to end of file is this block.
+# v4 also tags the /api/identify/sound JSON with the engine that actually
+# answered, via a Flask after_request hook, so which recogniser is serving can
+# be read straight off a live scan instead of only from the service log.
+#
+# The BEGIN/END markers let the installer replace this block without touching
+# the server's app.run guard below it.
 #
 # Remove this block (or run install-birdnet-v3.sh --rollback) to undo.
 # ---------------------------------------------------------------------------
@@ -525,7 +753,69 @@ if _burbz_sound_id is not None:
     _burbz_log.info(
         "Burbz sound recogniser: %s", _burbz_sound_id.active_provider()
     )
+
+    # Name the engine in the scan response itself. Which model is installed and
+    # which model answered a request are different questions, and only the
+    # second decides whether the game can be sold — V2.4's weights are
+    # NonCommercial. The service log already records it, but a log line is not
+    # something you can read from a phone; adding it to the JSON lets the engine
+    # be checked from any live scan. The client already reads `provider`
+    # (sound_id/README.md) and ignores it when absent, so an un-updated client
+    # is unaffected. Registered as an after_request hook rather than edited into
+    # the handler, keeping this block append-only and trivial to revert.
+    try:
+        import json as _burbz_json
+
+        from flask import request as _burbz_request
+
+        @app.after_request
+        def _burbz_tag_provider(response):
+            try:
+                if not _burbz_request.path.endswith("/identify/sound"):
+                    return response
+                if response.mimetype != "application/json":
+                    return response
+                payload = response.get_json(silent=True)
+                if not isinstance(payload, dict) or "provider" in payload:
+                    return response
+                meta = _burbz_sound_id.served_meta()
+                payload["provider"] = meta["provider"]
+                payload["providerLabel"] = meta["label"]
+                payload["commercial"] = meta["commercial"]
+                response.set_data(_burbz_json.dumps(payload))
+            except Exception:
+                # Tagging the response must never be able to fail a scan.
+                pass
+            return response
+    except Exception:
+        # No Flask, or no app to hook — leave the response untagged rather than
+        # letting this stop the server booting.
+        pass
+# BURBZ-BIRDNET-V3-END v4
 PATCH
+      "$PY" - "$TARGET" "$PATCH_FILE" <<'INSERT' || {
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+patch_path = Path(sys.argv[2])
+original = path.read_text(encoding="utf-8")
+block = patch_path.read_text(encoding="utf-8").strip("\n")
+main_guard = re.search(r"(?m)^if __name__\s*==\s*['\"]__main__['\"]\s*:\s*$", original)
+if main_guard:
+    # The wiring must execute before a direct app.run blocks forever.
+    patched = original[:main_guard.start()].rstrip() + "\n\n" + block + "\n\n" + original[main_guard.start():]
+else:
+    # Import-based WSGI servers have no app.run guard; append in that case.
+    patched = original.rstrip() + "\n\n" + block + "\n"
+path.write_text(patched, encoding="utf-8")
+INSERT
+        rm -f "$PATCH_FILE"
+        cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
+        die "Could not insert the wiring block before app.run — restored the backup."
+      }
+      rm -f "$PATCH_FILE"
       "$PY" -m py_compile "$TARGET" || {
         cp "$TARGET.birdnet-v3-bak-$STAMP" "$TARGET"
         die "The patched server.py does not compile — restored the backup, nothing changed."
@@ -538,7 +828,6 @@ fi
 # ----------------------------------------------------------------
 # 7. Environment — point the service at the models and pick V3
 # ----------------------------------------------------------------
-ENV_FILE="/etc/burbz-sound.env"
 log "Writing $ENV_FILE"
 if [[ $DRY_RUN -eq 0 ]]; then
   cat > "$ENV_FILE" <<EOF
@@ -549,9 +838,22 @@ BURBZ_BIRDNET_V3_MODEL_DIR=$MODEL_DIR
 # the backend lives outside the web root.
 PYTHONPATH=$SOUND_ID_DIR
 BURBZ_SOUND_ID_DIR=$SOUND_ID_DIR
-# Confidence threshold. V3 scores are NOT on V2.4's scale — retune, do not
-# carry the old number across. 0.15 is upstream's own default.
-BURBZ_BIRDNET_V3_MIN_CONFIDENCE=0.15
+# Precision-first BirdNET Live policy. 0.15 is only the developer export floor;
+# it is not safe for automatic game unlocks.
+BURBZ_BIRDNET_V3_MIN_CONFIDENCE=0.35
+BURBZ_BIRDNET_V3_NO_GEO_MIN_CONFIDENCE=0.60
+BURBZ_BIRDNET_V3_SINGLE_WINDOW_CONFIDENCE=0.98
+BURBZ_BIRDNET_V3_MISTLE_THRUSH_MIN_CONFIDENCE=0.90
+BURBZ_BIRDNET_V3_MISTLE_THRUSH_MIN_HIGH_WINDOWS=2
+BURBZ_BIRDNET_V3_OVERLAP=0.50
+BURBZ_BIRDNET_V3_MIN_SUPPORT_WINDOWS=2
+BURBZ_BIRDNET_V3_GEO_THRESHOLD=0.03
+BURBZ_BIRDNET_V3_MIN_RMS=0.0001
+BURBZ_BIRDNET_V3_VERIFY_HASHES=1
+BURBZ_BIRDNET_V3_DIAGNOSTICS=1
+# Burbz must use V3. A broken V3 install abstains loudly; it must not silently
+# switch engines and make the live recogniser impossible to verify.
+BURBZ_SOUND_MODEL_FALLBACK=0
 # Cap inference threads on a shared box; 0/unset uses every core.
 #BURBZ_BIRDNET_V3_THREADS=2
 EOF
@@ -559,7 +861,6 @@ EOF
 fi
 ok "$ENV_FILE"
 
-SVC="$(find_service)"
 if [[ -n "$SVC" ]]; then
   log "Attaching $ENV_FILE to $SVC and restarting"
   if [[ $DRY_RUN -eq 0 ]]; then
@@ -574,7 +875,9 @@ EOF
     systemctl is-active --quiet "$SVC" || {
       warn "$SVC did not come back up — showing the last log lines"
       journalctl -u "$SVC" --no-pager --lines=25 || true
-      die "Service failed to restart. Restore server.py with: $ROLLBACK_CMD"
+      restore_install_files
+      systemctl restart "$SVC" >/dev/null 2>&1 || true
+      die "Service failed to restart. The pre-install server and settings were restored."
     }
   fi
   ok "$SVC restarted"
@@ -587,32 +890,153 @@ fi
 # 8. Prove the live endpoint identifies a bird, or roll back
 # ----------------------------------------------------------------
 if [[ $DRY_RUN -eq 0 && $NO_PATCH -eq 0 ]]; then
-  log "Verifying the live endpoint"
-  CLIP="$SOUND_ID_DIR/assets/audio/bird-tawny-owl.ogg"
-  if [[ ! -f "$CLIP" ]]; then
-    warn "Reference clip not deployed yet — skipping the live check."
-    warn "Run update-live-burbz.sh, then: curl -F audio=@$CLIP <host>/burbz/api/identify/sound"
+  log "Verifying the live endpoint, serving engine, model hash and abstention policy"
+  SOURCE_CLIP="$SOUND_ID_DIR/assets/audio/bird-tawny-owl.ogg"
+  BLACKBIRD_CLIP="$SOUND_ID_DIR/assets/audio/bird-blackbird.ogg"
+  LIVE_ENDPOINT=""
+  restore_failed_install() {
+    warn "Live V3 proof failed — restoring the pre-install server and settings"
+    restore_install_files
+    if [[ -n "$SVC" ]]; then
+      systemctl restart "$SVC" || true
+    fi
+    die "BirdNET V3 was NOT installed. Inspect the proof response and service log."
+  }
+  if [[ ! -f "$SOURCE_CLIP" ]]; then
+    warn "Tawny Owl proof clip is missing: $SOURCE_CLIP"
+    restore_failed_install
+  elif [[ ! -f "$BLACKBIRD_CLIP" ]]; then
+    warn "Common Blackbird confuser clip is missing: $BLACKBIRD_CLIP"
+    restore_failed_install
   else
+    # A 2.2-second file is a single inference window. The precision policy
+    # deliberately requires 0.98 when temporal confirmation is impossible, so
+    # prove the live listener with the same 12-second, repeated-window shape
+    # that the browser uploads.
+    PROOF_CLIP="$(mktemp /tmp/burbz-tawny-proof.XXXXXX.wav)"
+    "$PY" - "$SOURCE_CLIP" "$PROOF_CLIP" <<'PY'
+import sys
+import numpy as np
+import soundfile
+
+source, destination = sys.argv[1:3]
+data, rate = soundfile.read(source, dtype="float32", always_2d=True)
+mono = data.mean(axis=1)
+gap = np.zeros(int(rate * 0.8), dtype=np.float32)
+blocks = []
+while sum(block.size for block in blocks) < int(rate * 12):
+    blocks.extend((mono, gap))
+soundfile.write(
+    destination,
+    np.concatenate(blocks)[:int(rate * 12)],
+    rate,
+    subtype="PCM_16",
+)
+PY
+    CLIP="$PROOF_CLIP"
     RESPONSE=""
     for base in "$HEALTH_URL/burbz/api/identify/sound" "$HEALTH_URL/api/identify/sound"; do
-      RESPONSE="$(curl -fsS -m 60 -F "audio=@$CLIP" "$base" 2>/dev/null || true)"
-      [[ -n "$RESPONSE" ]] && break
+      RESPONSE="$(curl -fsS -m 90 -F "audio=@$CLIP" -F "lat=53.228" -F "lon=-2.598" "$base" 2>/dev/null || true)"
+      if [[ -n "$RESPONSE" ]] && printf "%s" "$RESPONSE" | "$PY" -c \
+          'import json,sys; raise SystemExit(0 if isinstance(json.load(sys.stdin), dict) else 1)' \
+          >/dev/null 2>&1; then
+        LIVE_ENDPOINT="$base"
+        break
+      fi
     done
 
     if [[ -z "$RESPONSE" ]]; then
-      warn "Could not reach the endpoint locally (it may only be exposed via the proxy)."
-      warn "Check by hand from your phone or: curl -F audio=@$CLIP https://yaanbatho.com/burbz/api/identify/sound"
-    elif echo "$RESPONSE" | grep -qi "tawny owl\|Strix aluco"; then
-      ok "Live endpoint identified the Tawny Owl reference clip"
-      echo "$RESPONSE" | head -c 400; echo
-    else
-      warn "The endpoint answered but did not identify the reference clip:"
-      echo "$RESPONSE" | head -c 400; echo
-      warn "Not rolling back automatically — the recording may simply have been"
-      warn "filtered by the game's own catalogue. Check: journalctl -u $SVC -n 50"
+      warn "Could not reach either local sound endpoint. Set BURBZ_HEALTH_URL to the reachable proxy origin."
+      restore_failed_install
     fi
+
+    if ! printf "%s" "$RESPONSE" | "$PY" -c '
+import json, sys
+p = json.load(sys.stdin)
+bird = p.get("bird") or {}
+name = " ".join(str(x or "") for x in (
+    bird.get("name"), bird.get("scientificName"),
+    p.get("birdnetName"), p.get("scientificName"),
+)).lower()
+checks = [
+    p.get("found") is True,
+    p.get("provider") == "birdnetv3",
+    p.get("configuredProvider") == "birdnetv3",
+    p.get("fallbackUsed") is False,
+    p.get("providerVerified") is True,
+    p.get("modelSha256") == "69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24",
+    p.get("labelsSha256") == "8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0",
+    p.get("geoModelSha256") == "2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017",
+    p.get("geoLabelsSha256") == "c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784",
+    p.get("scoreBlacklistSha256") == "a7237606eca3e0a215d0a11c01c2a7654348916609dffc830ec9fc96e0c81366",
+    p.get("policyVersion") == "burbz-v3-temporal-20260729.2",
+    p.get("serverIntegrationVersion") == 4,
+    ("tawny owl" in name or "strix aluco" in name),
+]
+raise SystemExit(0 if all(checks) else 1)
+'; then
+      warn "The endpoint answered, but exact V3 provenance/Tawny Owl proof failed:"
+      printf "%s\n" "${RESPONSE:0:1200}"
+      restore_failed_install
+    fi
+    ok "Live response proves the exact acoustic, geo, blacklist, policy and integration build"
+
+    BLACKBIRD_RESPONSE="$(curl -sS -m 90 -F "audio=@$BLACKBIRD_CLIP" -F "lat=53.228" -F "lon=-2.598" "$LIVE_ENDPOINT" 2>/dev/null || true)"
+    if ! printf "%s" "$BLACKBIRD_RESPONSE" | "$PY" -c '
+import json, sys
+p = json.load(sys.stdin)
+bird = p.get("bird") or {}
+all_text = " ".join(
+    [str(bird.get("name") or ""), str(bird.get("scientificName") or "")]
+    + [str(row) for row in (p.get("allDetections") or [])]
+).lower()
+checks = [
+    p.get("provider") == "birdnetv3",
+    p.get("configuredProvider") == "birdnetv3",
+    p.get("fallbackUsed") is False,
+    p.get("providerVerified") is True,
+    p.get("modelSha256") == "69cfc8db3ebec163feb6329e546eb56e1aadac2a309f1ee99aecfabd1aa9bd24",
+    p.get("labelsSha256") == "8124b0ea2d187104c5e2cd95a0f937165647e20349c8fd34d4d5ef991821f8f0",
+    p.get("geoModelSha256") == "2bc5a9b1e7c24115730015a97dbb688e9e8cd49c02c34a011439182c65ef0017",
+    p.get("geoLabelsSha256") == "c15818db07e55978d909a9bcd916cd0615b0183f789227d9516059151787c784",
+    p.get("scoreBlacklistSha256") == "a7237606eca3e0a215d0a11c01c2a7654348916609dffc830ec9fc96e0c81366",
+    p.get("policyVersion") == "burbz-v3-temporal-20260729.2",
+    p.get("serverIntegrationVersion") == 4,
+    "mistle thrush" not in all_text,
+    "turdus viscivorus" not in all_text,
+    "american robin" not in all_text,
+    "turdus migratorius" not in all_text,
+    (p.get("found") is False or "turdus merula" in all_text or "common blackbird" in all_text),
+]
+raise SystemExit(0 if all(checks) else 1)
+'; then
+      warn "The known Common Blackbird confuser regression failed:"
+      printf "%s\n" "${BLACKBIRD_RESPONSE:0:1200}"
+      restore_failed_install
+    fi
+    ok "Known Common Blackbird audio no longer unlocks Mistle Thrush/American Robin"
+
+    MALFORMED_RESPONSE="$(curl -sS -m 30 -X POST "$LIVE_ENDPOINT" 2>/dev/null || true)"
+    if ! printf "%s" "$MALFORMED_RESPONSE" | "$PY" -c '
+import json, sys
+p = json.load(sys.stdin)
+checks = [
+    p.get("provider") is None,
+    p.get("providerVerified") is False,
+    p.get("serverIntegrationVersion") == 4,
+]
+raise SystemExit(0 if all(checks) else 1)
+'; then
+      warn "Malformed-request provenance retained or fabricated a provider:"
+      printf "%s\n" "${MALFORMED_RESPONSE:0:1200}"
+      restore_failed_install
+    fi
+    ok "Request-local provenance cannot leak from a previous successful scan"
   fi
 fi
+
+TRANSACTION_ARMED=0
+trap - ERR INT TERM
 
 # ----------------------------------------------------------------
 # 9. Summary

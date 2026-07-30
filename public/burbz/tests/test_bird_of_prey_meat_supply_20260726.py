@@ -243,23 +243,13 @@ def function_source(html: str, name: str) -> str:
     return html[start:end]
 
 
-def test_prep_counter_leads_with_the_diet_and_folds_the_reference_material():
+def test_companion_table_leads_with_diet_and_supply_guidance():
     html = HTML.read_text(encoding="utf-8")
-    panel = function_source(html, "renderKitchenPanelHTML")
-    # What the bird eats is on the face of the card, as chips.
-    assert "kitchen-guest-eats" in panel
-    assert "kitchenEatsChipsHTML(chosen)" in panel
-    # Provenance, habitat clue and field notes fold away behind one line.
-    assert "Field guide &amp; sources" in panel
-    assert "kitchenDietGuidanceHTML(chosen, rule)" in panel
-    # The stock lists and the supply explainer fold away too.
-    fold_at = panel.index('<details class="kitchen-fold"><summary>🧺 Stores larder')
-    assert panel.index("Starter Stores include falcon rations") > fold_at
-    assert panel.index("kitchenPantryBridgeHTML()") > fold_at
-    # Doing the job — tap one food, serve one meal — comes before any of it.
-    assert panel.index("feed-food-list") < fold_at
-    assert panel.index("kitchenCounterFoodListHTML(counterEntry)") < fold_at
-    # The roster's wall of help text folds as well.
+    row = function_source(html, "kitchenRosterRowHTML")
+    assert "kitchen-roster-eats" in row
+    assert "kitchenRosterEatsLabels(entry)" in row
+    assert "kitchen-roster-supply" in row
+    assert "kitchenRosterTrayHTML(entry, options)" in row
     roster = function_source(html, "renderKitchenRosterHTML")
     assert "Every bird eats something different" in roster
     assert roster.index("kitchen-fold") < roster.index("Every bird eats something different")
@@ -270,19 +260,14 @@ def test_the_food_list_shows_every_food_with_the_prey_blurb_that_names_its_hunte
     # Each food is its own one-tap meal button, and every button carries the
     # description — including the "Taken by:" line prey items add for the
     # birds that really hunt them.
-    # Both food lists render through one row builder, so the counter and the
-    # feed sheet can never drift apart.
-    assert "feedFoodRowHTML(entry, option, reveal)" in function_source(html, "kitchenCounterFoodListHTML")
-    row = function_source(html, "feedFoodRowHTML")
-    assert "feed-food-desc" in row
-    assert "burbzFeedTap(" in row
-    # A half-value side food says so on its face, before it is tapped.
-    assert "Side snack" in row
     options = function_source(html, "kitchenRosterFoodOptions")
     assert "Taken by: " in options
-    # The bird's diet still sits above the list, on the guest card.
-    panel = function_source(html, "renderKitchenPanelHTML")
-    assert panel.index("kitchenEatsChipsHTML") < panel.index("feed-food-list")
+    tray = function_source(html, "kitchenRosterTrayHTML")
+    assert "options.map(option" in tray
+    assert "option.desc" in tray
+    assert "burbzFeedTap(" in tray
+    row = function_source(html, "kitchenRosterRowHTML")
+    assert row.index("kitchenRosterEatsLabels") < row.index("kitchenRosterTrayHTML")
 
 
 def test_the_diet_chip_line_names_what_each_bird_really_eats():
