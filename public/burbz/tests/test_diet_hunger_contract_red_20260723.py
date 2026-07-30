@@ -333,11 +333,11 @@ console.log(JSON.stringify({ merlinGood, merlinDuplicate, merlinMealworm, finchF
 def test_val_pantry_001_and_003_reachable_kitchen_flow_exposes_diet_guidance_and_inventory_bridge():
     html = INDEX.read_text(encoding="utf-8")
     required = [
-        'data-kitchen-pantry-root',
+        'data-kitchen-roster-root',
         'data-diet-guidance',
         'data-diet-provenance',
         'data-compatible-foods',
-        'data-larder-count',
+        'data-kitchen-roster-food',
         'data-pantry-count',
         'data-feed-transaction-id',
         'data-feed-result-sheet',

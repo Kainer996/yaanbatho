@@ -359,29 +359,23 @@ def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
     assert "SECONDARY_MEAL_FRACTION" in core.split("verdict: record.matchMethod")[1][:400]
 
 
-def test_companions_and_wild_visitors_use_separate_feeding_surfaces():
+def test_only_companions_use_the_feeding_surface():
     html = HTML.read_text(encoding="utf-8")
     # Full companions leave the upper feeding table.
     assert "kitchenRosterHungryEntries()" in function_source(html, "renderKitchenRosterHTML")
-    # The lower feeder is only for still-wild Birdex visitors; Merlin and
-    # recruited companions cannot be rendered there a second time.
-    choices = function_source(html, "kitchenPrepCounterChoices")
-    assert "!row.merlin" in choices
-    assert "!row.companion" in choices
     panel = function_source(html, "renderKitchenPanelHTML")
-    assert "const choices = kitchenPrepCounterChoices();" in panel
-    assert "if (!choices.length) return rosterHtml;" in panel
+    assert "return renderKitchenRosterHTML();" in panel
+    assert "kitchenPrepCounterChoices" not in panel
+    assert 'data-kitchen-pantry-root="academy-kitchen"' not in panel
     # The companion table still explains the all-fed state rather than going blank.
     assert 'data-kitchen-all-fed="1"' in html
 
 
-def test_the_prep_counter_shows_the_hunger_it_is_there_to_fill():
+def test_the_companion_table_shows_fullness_it_is_there_to_fill():
     html = HTML.read_text(encoding="utf-8")
-    panel = function_source(html, "renderKitchenPanelHTML")
-    assert "kitchenGuestHungerHTML(chosen)" in panel
-    metre = function_source(html, "kitchenGuestHungerHTML")
-    assert 'data-hunger-surface="prep-counter"' in metre
-    assert "academy-meter-fill hunger" in metre
-    assert "/100 hunger" in metre
-    # A wild visitor has no hunger bar to show, and is told so instead.
-    assert "entry.wild" in metre
+    row = function_source(html, "kitchenRosterRowHTML")
+    assert "hungerBarHTML(status, 'kitchen-roster')" in row
+    metre = function_source(html, "hungerBarHTML")
+    assert 'data-hunger-surface="' in metre
+    assert "Fullness" in metre
+    assert "data-fullness" in metre

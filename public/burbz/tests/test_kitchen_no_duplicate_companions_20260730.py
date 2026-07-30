@@ -1,8 +1,7 @@
 """Regression for the duplicated companion cards in Kitchen & Pantry.
 
 The companion feeding table is the only care surface for Merlin and recruited
-companions.  The lower feeder is reserved for still-wild Birdex visitors, so a
-bird cannot appear twice with opposite-looking Fullness/Hunger bars.
+companions. Codex-only birds are never rendered as feeding targets.
 """
 from pathlib import Path
 
@@ -15,37 +14,31 @@ def function_source(text: str, name: str) -> str:
     return text[start:] if next_function < 0 else text[start:next_function]
 
 
-def test_prep_counter_excludes_merlin_and_recruited_companions():
+def test_codex_only_birds_cannot_become_feed_entries():
     html = HTML.read_text(encoding="utf-8")
-    choices = function_source(html, "kitchenPrepCounterChoices")
-    assert "kitchenSpeciesChoices()" in choices
-    assert "!row.merlin" in choices
-    assert "!row.companion" in choices
+    entry = function_source(html, "kitchenCounterFeedEntry")
+    assert "!chosen.merlin && !chosen.companion" in entry
+    assert "feedWildEntryForSpeciesKey" not in entry
 
 
-def test_kitchen_uses_companion_roster_then_wild_feeder_without_duplicate_hunger_bar():
-    html = HTML.read_text(encoding="utf-8")
-    panel = function_source(html, "renderKitchenPanelHTML")
-    assert "const rosterHtml = renderKitchenRosterHTML();" in panel
-    assert "const choices = kitchenPrepCounterChoices();" in panel
-    assert "if (!choices.length) return rosterHtml;" in panel
-    assert "kitchenPrepCounterSelectedChoice(choices)" in panel
-    assert "Wild Bird Feeder" in panel
-    assert "kitchenGuestHungerHTML(chosen)" in panel
-
-
-def test_wild_feeder_has_no_companion_hunger_meter():
+def test_kitchen_uses_only_the_companion_roster():
     html = HTML.read_text(encoding="utf-8")
     panel = function_source(html, "renderKitchenPanelHTML")
-    choices = function_source(html, "kitchenPrepCounterChoices")
-    assert "kitchenHungryChoices()" not in panel
-    assert "kitchenSelectedChoice()" not in panel
-    assert "row.merlin" in choices and "row.companion" in choices
+    assert "return renderKitchenRosterHTML();" in panel
+    assert "kitchenPrepCounterChoices" not in panel
+    assert "data-kitchen-pantry-root" not in panel
 
 
-def test_release_markers_force_the_fixed_kitchen_shell_to_replace_v174():
+def test_no_secondary_hunger_surface_is_rendered():
+    html = HTML.read_text(encoding="utf-8")
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "kitchenGuestHungerHTML" not in panel
+    assert 'data-hunger-surface="prep-counter"' not in panel
+
+
+def test_release_markers_force_the_companion_only_kitchen_to_replace_v175():
     html = HTML.read_text(encoding="utf-8")
     sw = (HTML.parent / "sw.js").read_text(encoding="utf-8")
-    marker = "kitchen-no-duplicate-companions-v175-20260730"
+    marker = "companion-feeding-only-v176-20260730"
     assert f"const BURBZ_BUILD = '{marker}';" in html
     assert marker in sw
