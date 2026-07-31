@@ -3638,7 +3638,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=burbz-audio-overhaul-v1-20260726"></script>
+<script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script>
@@ -4162,6 +4162,8 @@ const BURBZ_MAP_VERSION = 'flat-fast-map-terrain-reverted-v4-20260722';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
+const BURBZ_MUSIC_BASE_VOLUME = 0.2;
+const BURBZ_MUSIC_SILENT_ZOOM = BURBZ_MAX_ZOOM - 0.1;
 // Gentler pitch curve than before: extreme pitch (70°+) forced MapLibre to
 // stream a huge wedge of far-horizon tiles every frame, which is what made the
 // map feel slow and stuttery on phones. 44–58° keeps the Pokémon-Go feel cheap.
@@ -14255,7 +14257,22 @@ function showToast(msg) {
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapPropMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; } };
+function syncBurbzMusicForMapZoom() {
+  if (!MUSIC || typeof MUSIC.setVolume !== 'function') return BURBZ_MUSIC_BASE_VOLUME;
+  if (currentScreen !== 'map' || !liveMap || !window.BurbzAudioCore || typeof window.BurbzAudioCore.musicVolumeForZoom !== 'function') {
+    MUSIC.setVolume(BURBZ_MUSIC_BASE_VOLUME);
+    return BURBZ_MUSIC_BASE_VOLUME;
+  }
+  const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM;
+  const volume = window.BurbzAudioCore.musicVolumeForZoom(zoom, {
+    normalZoom: BURBZ_START_ZOOM,
+    silentZoom: BURBZ_MUSIC_SILENT_ZOOM,
+    maxVolume: BURBZ_MUSIC_BASE_VOLUME
+  });
+  MUSIC.setVolume(volume);
+  return volume;
+}
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -14384,7 +14401,9 @@ function wireMapMoveTracking() {
   };
   ['zoomstart', 'movestart', 'dragstart', 'rotatestart', 'pitchstart'].forEach(eventName => liveMap.on(eventName, markMoved));
   ['moveend', 'zoomend', 'rotateend', 'pitchend'].forEach(eventName => liveMap.on(eventName, finishMove));
+  liveMap.on('zoom', syncBurbzMusicForMapZoom);
   tuneCameraForZoom();
+  syncBurbzMusicForMapZoom();
 }
 // Zooming in/out changes how much loot is revealed, so redraw the pickups when
 // the zoom band flips (debounced so a continuous pinch doesn't thrash the DOM).
@@ -17192,6 +17211,7 @@ function switchScreen(name) {
   if (navItem) navItem.classList.add('active');
 
   currentScreen = name;
+  syncBurbzMusicForMapZoom();
   updateMerlinListeningUI();
 
   // Screen-specific init
@@ -27185,7 +27205,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'show-quests-close-v186-20260731';
+const BURBZ_BUILD = 'map-music-fade-v187-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -281,6 +281,21 @@
     return manager;
   }
 
+  function musicVolumeForZoom(zoom, options) {
+    options = options || {};
+    var normalZoom = Number(options.normalZoom);
+    var silentZoom = Number(options.silentZoom);
+    var maxVolume = Number(options.maxVolume);
+    normalZoom = Number.isFinite(normalZoom) ? normalZoom : 16.35;
+    silentZoom = Number.isFinite(silentZoom) ? silentZoom : 19.1;
+    maxVolume = Number.isFinite(maxVolume) ? Math.max(0, Math.min(1, maxVolume)) : 0.2;
+    var currentZoom = Number(zoom);
+    if (!Number.isFinite(currentZoom) || currentZoom <= normalZoom) return maxVolume;
+    if (currentZoom >= silentZoom || silentZoom <= normalZoom) return 0;
+    var closeProgress = (currentZoom - normalZoom) / (silentZoom - normalZoom);
+    return maxVolume * (1 - Math.max(0, Math.min(1, closeProgress)));
+  }
+
   // Looping beds are deliberately separate from one-shot SFX. Two persistent
   // HTMLAudioElements overlap near the seam, so music and ambience never snap
   // from the final sample straight back to the opening sample.
@@ -551,6 +566,7 @@
       isSuppressed: isSuppressed,
       getAudio: function() { return tracks[activeIndex] || null; },
       getAudios: function() { return tracks.slice(); },
+      get volume() { return targetVolume(); },
       get wanted() { return wanted; }
     };
   }
@@ -559,6 +575,7 @@
     DEFAULT_SOUND_MANIFEST: DEFAULT_SOUND_MANIFEST,
     createAudioManager: createAudioManager,
     createMusicManager: createMusicManager,
+    musicVolumeForZoom: musicVolumeForZoom,
     classifyInteraction: classifyInteraction
   };
 });

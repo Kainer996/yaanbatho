@@ -37,7 +37,7 @@ def test_audio_assets_ship_through_offline_and_live_deployment_paths():
         assert web_path in sw, web_path
         assert web_path in sync, web_path
 
-    version = "burbz-audio-overhaul-v1-20260726"
+    version = "burbz-map-music-fade-v187-20260731"
     assert f"audio_core.js?v={version}" in sw
     assert f"audio_core.js?v={version}" in (BURBZ / "index.html").read_text(encoding="utf-8")
     assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
@@ -50,3 +50,14 @@ def test_empire_ambience_is_retired_and_semantic_battle_sounds_are_wired():
     assert "ev.magic && SFX.specialHit" in index
     assert "ev.type === 'barrier' && SFX.defend" in index
     assert "ev.type === 'faint' && !battleState.liberation && SFX.defeat" in index
+
+
+def test_field_map_zoom_continuously_controls_music_and_other_tabs_restore_it():
+    index = (BURBZ / "index.html").read_text(encoding="utf-8")
+    assert "function syncBurbzMusicForMapZoom()" in index
+    assert "liveMap.on('zoom', syncBurbzMusicForMapZoom)" in index
+    assert "window.BurbzAudioCore.musicVolumeForZoom" in index
+    assert "silentZoom: BURBZ_MUSIC_SILENT_ZOOM" in index
+    assert "MUSIC.setVolume(BURBZ_MUSIC_BASE_VOLUME)" in index
+    assert "syncBurbzMusicForMapZoom();" in index.split("currentScreen = name;", 1)[1]
+    assert "zoomend', syncBurbzMusicForMapZoom" not in index
