@@ -88,10 +88,12 @@ def test_fallback_plumage_uses_the_species_palette():
     assert "#d95f3b" in result["robin"] and "#8a6f52" in result["robin"]
 
 
-def test_treehouse_renderer_calls_the_new_icon_helper():
-    renderer = _function_source("renderAcademyTreehouse")
-    assert "treehouseBirdIconHTML(b)" in renderer
-    assert "miniBirdSVG(b.commonName || b.species)" not in renderer
+def test_the_tree_no_longer_perches_companion_sprites():
+    """The icon helpers still back broken-image fallbacks elsewhere in the app,
+    but the Academy tree itself stopped perching companion cutouts."""
+    assert "function miniBirdSVG" in HTML, "still the fallback for broken bird art"
+    assert 'class="treehouse-bird"' not in HTML
+
 
 
 def test_treehouse_icons_are_large_enough_to_read_on_mobile():

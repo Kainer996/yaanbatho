@@ -105,16 +105,6 @@
 
   var GLOW_WARM = 0xffc06a, GLOW_COOL = 0xa8c8ff;
 
-  // Five bird archetypes to circle the canopy. Sizes and palettes deliberately
-  // match the 2D engine's cast so the two Academies feel like one place.
-  var BIRDS = {
-    robin:   { size: 0.16, span: 1.5, flap: 8.5, body: 0x8a6f52, wing: 0x6b563e, breast: 0xd95f3b, night: 0.1 },
-    bluetit: { size: 0.12, span: 1.5, flap: 11,  body: 0x4f8fd0, wing: 0x3c6ea8, breast: 0xe8d44d, night: 0.1 },
-    crow:    { size: 0.27, span: 2.0, flap: 3.4, body: 0x26262e, wing: 0x1a1a22, breast: 0x22222c, night: 0.8 },
-    buzzard: { size: 0.32, span: 2.4, flap: 2.2, body: 0x6e5233, wing: 0x54401f, breast: 0xa8916b, night: 0.15 },
-    owl:     { size: 0.24, span: 2.1, flap: 3.0, body: 0xd9c49a, wing: 0xc4ab7e, breast: 0xf4ecdc, night: 1.6 }
-  };
-
   function mulberry32(seed) {
     var a = seed >>> 0;
     return function() {
@@ -445,13 +435,28 @@
     // genuinely carried by the tree rather than floating beside it.
     Object.keys(ANCHORS).forEach(function(id) {
       var a = anchorPosition(id);
-      var start = new V(Math.sin(a.angle) * 0.5, a.y - 0.85, Math.cos(a.angle) * 0.5);
-      var end = new V(a.x, a.y - 0.16, a.z);
-      g.add(limb(start, end, 0.34, 0.17, mats.bark, 0.55));
-      // The branch carries on well past the house before it leafs out, so the
-      // canopy never swallows the building it is supposed to be holding up.
-      var beyond = new V(a.x * 2.35, a.y + 1.5 + rng() * 0.8, a.z * 2.35);
-      g.add(limb(end, beyond, 0.16, 0.05, mats.bark, 0.7));
+      var sa = Math.sin(a.angle), ca = Math.cos(a.angle);
+      var st2 = STYLES[id];
+      var halfW = (st2 ? Math.max(st2.w, st2.d) : 2) * 0.5 * a.cfg.scale;
+      // The bough runs UNDER the platform and stops there — a branch spearing
+      // out through the middle of a house looked wrong. The deck rests on it.
+      var start = new V(sa * 0.5, a.y - 0.85, ca * 0.5);
+      var deckUnder = new V(sa * (a.cfg.reach - 0.15), a.y - 0.44, ca * (a.cfg.reach - 0.15));
+      g.add(limb(start, deckUnder, 0.36, 0.20, mats.bark, 0.5));
+      // A forked crutch under the far corners, so the house is visibly carried.
+      [-1, 1].forEach(function(sgn) {
+        var forkFrom = new V(sa * (a.cfg.reach * 0.52), a.y - 0.72, ca * (a.cfg.reach * 0.52));
+        var fa = a.angle + sgn * 0.30;
+        var forkTo = new V(Math.sin(fa) * (a.cfg.reach + halfW * 0.30), a.y - 0.30, Math.cos(fa) * (a.cfg.reach + halfW * 0.30));
+        g.add(limb(forkFrom, forkTo, 0.15, 0.07, mats.bark, 0.35));
+      });
+      // The limb carries on past the house — but it branches away BEFORE the
+      // wall and clears it to the side, so nothing pierces the building.
+      var offA = a.angle + (rng() < 0.5 ? -1 : 1) * (0.40 + rng() * 0.18);
+      var sideFrom = new V(sa * (a.cfg.reach * 0.62), a.y - 0.58, ca * (a.cfg.reach * 0.62));
+      var clear = a.cfg.reach + halfW + 1.5 + rng();
+      var beyond = new V(Math.sin(offA) * clear, a.y + 1.6 + rng() * 0.9, Math.cos(offA) * clear);
+      g.add(limb(sideFrom, beyond, 0.17, 0.05, mats.bark, 0.7));
       tips.push({ p: beyond, small: true });
     });
 
@@ -583,8 +588,11 @@
   }
 
   // ---- one treehouse -------------------------------------------------------
-  // Shared shell (platform, posts, railing, body, roof, ladder) plus the
-  // per-building extras that make each one recognisably itself.
+  // Modelled to match the manga paintings: shingled roofs laid row by row,
+  // mullioned windows with sills and shutters, planked decks on visible
+  // brackets, rope lashings where the house grips its branch, and the props
+  // each building is known for. Every static part merges into one mesh at the
+  // end, so all this detail still costs a single draw call per house.
 
   function buildTreehouse(id, mats, rng) {
     var st = STYLES[id];
@@ -596,330 +604,531 @@
     var wallMat = new T.MeshLambertMaterial({ color: st.wall });
     var darkMat = new T.MeshLambertMaterial({ color: st.wallDark });
     var roofMat = new T.MeshLambertMaterial({ color: st.roofCol });
+    var roofMat2 = new T.MeshLambertMaterial({ color: shade(st.roofCol, 0.82) });
     var trimMat = new T.MeshLambertMaterial({ color: st.trim });
+    var ropeMat = new T.MeshLambertMaterial({ color: 0xa89068 });
+    var ironMat = new T.MeshLambertMaterial({ color: 0x4a4a52 });
+    var interiorMat = new T.MeshLambertMaterial({ color: 0x1c1208 });
 
-    // Deck
-    var deck = box(W + 0.5, 0.14, D + 0.5, mats.plank, 0, 0, 0);
-    g.add(deck);
-    // Plank lines
-    for (var pl = -2; pl <= 2; pl++) {
-      g.add(box(W + 0.5, 0.02, 0.03, darkMat, 0, 0.08, pl * (D + 0.5) / 5.5));
+    function shade(hex, f) {
+      var r = Math.round(((hex >> 16) & 255) * f), gg = Math.round(((hex >> 8) & 255) * f), b = Math.round((hex & 255) * f);
+      return (r << 16) | (gg << 8) | b;
     }
-    // Support posts angling down to the branch
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(s) {
-      var post = cyl(0.07, 0.09, 0.9, 6, trimMat, s[0] * W * 0.42, -0.5, s[1] * D * 0.42);
-      post.rotation.set(s[1] * 0.14, 0, -s[0] * 0.14);
-      g.add(post);
+
+    // ---- deck: planks with gaps, on brackets ----
+    var deckY = 0;
+    var planks = 9;
+    for (var pi = 0; pi < planks; pi++) {
+      var pz = -(D + 0.55) / 2 + (pi + 0.5) * (D + 0.55) / planks;
+      g.add(box(W + 0.62, 0.09, (D + 0.55) / planks - 0.035, pi % 2 ? mats.plank : darkMat, 0, deckY, pz));
+    }
+    // Deck edge beams and corner brackets
+    g.add(box(W + 0.70, 0.10, 0.10, trimMat, 0, deckY - 0.06, (D + 0.55) / 2));
+    g.add(box(W + 0.70, 0.10, 0.10, trimMat, 0, deckY - 0.06, -(D + 0.55) / 2));
+    g.add(box(0.10, 0.10, D + 0.55, trimMat, (W + 0.62) / 2, deckY - 0.06, 0));
+    g.add(box(0.10, 0.10, D + 0.55, trimMat, -(W + 0.62) / 2, deckY - 0.06, 0));
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(c) {
+      var br = box(0.09, 0.52, 0.09, trimMat, c[0] * W * 0.44, -0.28, c[1] * D * 0.44);
+      br.rotation.set(-c[1] * 0.36, 0, c[0] * 0.36);
+      g.add(br);
+    });
+    // Rope lashings where the deck grips the bough below.
+    for (var lr = 0; lr < 3; lr++) {
+      var ring = new T.Mesh(new T.TorusGeometry(0.30 + lr * 0.05, 0.035, 5, 12), ropeMat);
+      ring.rotation.x = Math.PI / 2 + 0.2;
+      ring.position.set((lr - 1) * 0.34, -0.40, 0);
+      g.add(ring);
+    }
+
+    // ---- railing: posts, top rail, mid rail; front left open ----
+    var railY = 0.44;
+    var perim = [];
+    for (var rp = 0; rp < 22; rp++) {
+      var t = rp / 22 * Math.PI * 2;
+      var rx = Math.sin(t) * (W + 0.56) * 0.5, rz = Math.cos(t) * (D + 0.50) * 0.5;
+      if (rz > D * 0.26) continue; // the front stays open for the ladder
+      perim.push([rx, rz]);
+      g.add(cyl(0.032, 0.038, railY, 5, trimMat, rx, railY / 2, rz));
+    }
+    perim.forEach(function(pt, i) {
+      var nx = perim[i + 1];
+      if (!nx) return;
+      var mx = (pt[0] + nx[0]) / 2, mz = (pt[1] + nx[1]) / 2;
+      var len = Math.hypot(nx[0] - pt[0], nx[1] - pt[1]) * 1.06;
+      var ang = Math.atan2(nx[0] - pt[0], nx[1] - pt[1]);
+      [railY, railY * 0.55].forEach(function(hy, k) {
+        var bar = box(0.05, 0.05, len, k ? ropeMat : trimMat, mx, hy, mz);
+        bar.rotation.y = ang;
+        g.add(bar);
+      });
     });
 
-    // Railing around the open deck
-    var railY = 0.42;
-    var rp = 0;
-    for (rp = 0; rp < 12; rp++) {
-      var ang = (rp / 12) * Math.PI * 2;
-      var rx = Math.sin(ang) * (W + 0.34) * 0.5, rz = Math.cos(ang) * (D + 0.34) * 0.5;
-      if (rz > D * 0.30) continue; // leave the front open
-      g.add(cyl(0.035, 0.04, railY, 5, trimMat, rx, railY / 2, rz));
-    }
-    var rail = new T.Mesh(new T.TorusGeometry((W + D) * 0.25 + 0.12, 0.035, 5, 18), trimMat);
-    rail.rotation.x = Math.PI / 2;
-    rail.position.y = railY;
-    rail.scale.set(1, (D + 0.34) / (W + 0.34), 1);
-    g.add(rail);
-
-    // Body
-    var bodyY = 0.07 + H / 2;
+    // ---- body ----
+    var bodyY = 0.05 + H / 2;
     if (st.roof === 'egg') {
-      var egg = new T.Mesh(new T.SphereGeometry(W * 0.56, 16, 14), wallMat);
-      egg.scale.set(1, H / (W * 1.02), 0.92);
-      egg.position.y = 0.07 + H * 0.52;
+      var egg = new T.Mesh(new T.SphereGeometry(W * 0.56, 18, 16), wallMat);
+      egg.scale.set(1, H / (W * 1.02), 0.94);
+      egg.position.y = 0.05 + H * 0.52;
       egg.castShadow = true; egg.receiveShadow = true;
       g.add(egg);
+      // Timber ribs hooping the shell.
+      for (var eb = 0; eb < 5; eb++) {
+        var hoop = new T.Mesh(new T.TorusGeometry(W * 0.545 * Math.sin(0.5 + eb * 0.42), 0.028, 4, 16), trimMat);
+        hoop.rotation.x = Math.PI / 2;
+        hoop.position.y = 0.05 + H * (0.16 + eb * 0.18);
+        g.add(hoop);
+      }
     } else {
-      var body = box(W, H, D, wallMat, 0, bodyY, 0);
-      g.add(body);
-      // Corner timbers
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(s) {
-        g.add(box(0.11, H, 0.11, trimMat, s[0] * W / 2, bodyY, s[1] * D / 2));
+      g.add(box(W, H, D, wallMat, 0, bodyY, 0));
+      // Vertical board-and-batten cladding.
+      var battens = Math.max(4, Math.round(W / 0.28));
+      for (var bt = 0; bt <= battens; bt++) {
+        var bx = -W / 2 + (bt / battens) * W;
+        g.add(box(0.05, H * 0.94, 0.04, darkMat, bx, bodyY, D / 2 + 0.005));
+        g.add(box(0.05, H * 0.94, 0.04, darkMat, bx, bodyY, -D / 2 - 0.005));
+      }
+      for (var bs = 0; bs <= 4; bs++) {
+        var bz = -D / 2 + (bs / 4) * D;
+        g.add(box(0.04, H * 0.94, 0.05, darkMat, W / 2 + 0.005, bodyY, bz));
+        g.add(box(0.04, H * 0.94, 0.05, darkMat, -W / 2 - 0.005, bodyY, bz));
+      }
+      // Corner posts and a waist rail.
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(c) {
+        g.add(box(0.13, H + 0.06, 0.13, trimMat, c[0] * W / 2, bodyY, c[1] * D / 2));
       });
-      // Plank shading on the sides
-      g.add(box(W + 0.02, 0.06, D + 0.02, darkMat, 0, bodyY + H * 0.18, 0));
+      g.add(box(W + 0.06, 0.07, D + 0.06, trimMat, 0, 0.05 + H * 0.62, 0));
     }
 
-    // Roof
-    var roofBase = 0.07 + H;
-    if (st.roof === 'gable' || st.roof === 'steep') {
-      var pitch = st.roof === 'steep' ? 1.15 : 0.72;
-      var slab = new T.Mesh(new T.BoxGeometry(W * 0.78, 0.10, D + 0.55), roofMat);
-      for (var sgn = -1; sgn <= 1; sgn += 2) {
-        var half = slab.clone();
-        half.material = roofMat;
-        half.position.set(sgn * W * 0.27, roofBase + pitch * 0.42, 0);
-        half.rotation.z = -sgn * Math.atan2(pitch, W * 0.55);
-        half.scale.x = Math.hypot(pitch, W * 0.55) / (W * 0.78) * 1.5;
-        half.castShadow = true; half.receiveShadow = true;
-        g.add(half);
-      }
-      g.add(box(0.13, 0.13, D + 0.6, trimMat, 0, roofBase + pitch * 0.82, 0)); // ridge beam
-    } else if (st.roof === 'pagoda') {
-      for (var tier = 0; tier < 2; tier++) {
-        var tw = (W + 0.85) * (1 - tier * 0.26);
-        var cone = new T.Mesh(new T.ConeGeometry(tw * 0.72, 0.5, 4, 1), roofMat);
-        cone.rotation.y = Math.PI / 4;
-        cone.position.y = roofBase + 0.18 + tier * 0.52;
-        cone.castShadow = true; cone.receiveShadow = true;
-        g.add(cone);
-        // Upturned eave tips
-        for (var e = 0; e < 4; e++) {
-          var ea = e * Math.PI / 2 + Math.PI / 4;
-          var tipM = cyl(0.03, 0.05, 0.3, 5, trimMat, Math.sin(ea) * tw * 0.5, roofBase + 0.16 + tier * 0.52, Math.cos(ea) * tw * 0.5);
-          tipM.rotation.set(Math.cos(ea) * 0.7, 0, -Math.sin(ea) * 0.7);
-          g.add(tipM);
+    // ---- roof: laid in overlapping shingle courses ----
+    var roofBase = 0.05 + H;
+    function shingleSlope(cx, cy, cz, slopeLen, spanZ, rot, tilt) {
+      var grp = new T.Group();
+      grp.add(box(slopeLen, 0.06, spanZ, roofMat2, 0, 0, 0)); // the boarding
+      var courses = Math.max(3, Math.round(slopeLen / 0.21));
+      for (var c2 = 0; c2 < courses; c2++) {
+        var lx = ((c2 + 0.5) / courses - 0.5) * slopeLen;
+        // Each course overlaps the one below it, like real shingles.
+        grp.add(box(slopeLen / courses + 0.075, 0.055, spanZ, (c2 % 2) ? roofMat : roofMat2, lx, 0.05, 0));
+        // Split the course into tiles with visible seams.
+        var tiles = Math.max(3, Math.round(spanZ / 0.26));
+        for (var tl2 = 0; tl2 < tiles; tl2++) {
+          grp.add(box(slopeLen / courses * 0.86, 0.02, 0.035, roofMat2,
+            lx, 0.085, -spanZ / 2 + (tl2 + 0.5) * (spanZ / tiles)));
         }
       }
-      g.add(cyl(0.05, 0.05, 0.34, 6, trimMat, 0, roofBase + 1.14, 0));
+      grp.rotation.set(0, rot, tilt);
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+    }
+    if (st.roof === 'gable' || st.roof === 'steep') {
+      var pitch = st.roof === 'steep' ? 1.25 : 0.78;
+      var run = W * 0.60;
+      var slopeLen = Math.hypot(pitch, run);
+      var ang = Math.atan2(pitch, run);
+      for (var sgn = -1; sgn <= 1; sgn += 2) {
+        shingleSlope(sgn * run * 0.5, roofBase + pitch * 0.5, 0, slopeLen, D + 0.62, 0, -sgn * ang);
+      }
+      g.add(box(0.16, 0.14, D + 0.70, trimMat, 0, roofBase + pitch + 0.03, 0)); // ridge
+      // Gable-end boards.
+      [-1, 1].forEach(function(sz) {
+        var gable = new T.Mesh(new T.BufferGeometry(), darkMat);
+        var tri = new T.Shape();
+        tri.moveTo(-W * 0.6, 0); tri.lineTo(W * 0.6, 0); tri.lineTo(0, pitch);
+        gable.geometry = new T.ShapeGeometry(tri);
+        gable.position.set(0, roofBase, sz * (D / 2 + 0.02));
+        if (sz < 0) gable.rotation.y = Math.PI;
+        g.add(gable);
+        g.add(box(0.07, 0.07, 0.07, trimMat, 0, roofBase + pitch, sz * (D / 2 + 0.05)));
+      });
+      // Eave beams poking out under the overhang.
+      [-1, 1].forEach(function(sz2) {
+        for (var eb2 = -1; eb2 <= 1; eb2++) {
+          g.add(box(0.07, 0.07, 0.34, trimMat, eb2 * W * 0.34, roofBase - 0.04, sz2 * (D / 2 + 0.20)));
+        }
+      });
+    } else if (st.roof === 'pagoda') {
+      for (var tier = 0; tier < 2; tier++) {
+        var tw = (W + 0.95) * (1 - tier * 0.27);
+        var ty = roofBase + 0.16 + tier * 0.54;
+        var cone = new T.Mesh(new T.ConeGeometry(tw * 0.72, 0.46, 4, 1), tier ? roofMat2 : roofMat);
+        cone.rotation.y = Math.PI / 4;
+        cone.position.y = ty;
+        cone.castShadow = true; cone.receiveShadow = true;
+        g.add(cone);
+        // Ribbed tiles running down each pitch, and upturned eave tips.
+        for (var e = 0; e < 4; e++) {
+          var ea = e * Math.PI / 2 + Math.PI / 4;
+          var tipM = cyl(0.035, 0.055, 0.34, 5, trimMat, Math.sin(ea) * tw * 0.50, ty - 0.02, Math.cos(ea) * tw * 0.50);
+          tipM.rotation.set(Math.cos(ea) * 0.8, 0, -Math.sin(ea) * 0.8);
+          g.add(tipM);
+          g.add(box(0.10, 0.10, 0.10, trimMat, Math.sin(ea) * tw * 0.56, ty + 0.10, Math.cos(ea) * tw * 0.56));
+        }
+      }
+      g.add(cyl(0.055, 0.075, 0.40, 6, trimMat, 0, roofBase + 1.20, 0));
+      g.add(new T.Mesh(new T.SphereGeometry(0.09, 8, 6), trimMat).translateY(roofBase + 1.42));
     } else if (st.roof === 'layered') {
       for (var L = 0; L < 3; L++) {
-        var lw = (W + 0.7) * (1 - L * 0.19);
-        var ring = new T.Mesh(new T.ConeGeometry(lw * 0.62, 0.34, 8, 1), roofMat);
-        ring.position.y = roofBase + 0.05 + L * 0.29;
-        ring.castShadow = true; ring.receiveShadow = true;
-        g.add(ring);
+        var lw = (W + 0.80) * (1 - L * 0.19);
+        var ly = roofBase + 0.04 + L * 0.30;
+        var ring2 = new T.Mesh(new T.ConeGeometry(lw * 0.62, 0.32, 9, 1), L % 2 ? roofMat2 : roofMat);
+        ring2.position.y = ly;
+        ring2.castShadow = true; ring2.receiveShadow = true;
+        g.add(ring2);
+        // A shingle lip under each tier instead of loose floating boards.
+        var lip = new T.Mesh(new T.CylinderGeometry(lw * 0.635, lw * 0.60, 0.07, 18), roofMat2);
+        lip.position.y = ly - 0.15;
+        g.add(lip);
       }
+      g.add(cyl(0.04, 0.05, 0.30, 5, trimMat, 0, roofBase + 1.02, 0));
     } else if (st.roof === 'shingle') {
-      var hut = new T.Mesh(new T.ConeGeometry((W + 0.55) * 0.6, 0.95, 9, 2), roofMat);
-      hut.position.y = roofBase + 0.4;
-      hut.castShadow = true; hut.receiveShadow = true;
-      g.add(hut);
+      for (var hc = 0; hc < 4; hc++) {
+        var hr = (W + 0.62) * 0.6 * (1 - hc * 0.21);
+        var hut = new T.Mesh(new T.ConeGeometry(hr, 0.34, 10, 1), hc % 2 ? roofMat2 : roofMat);
+        hut.position.y = roofBase + 0.06 + hc * 0.235;
+        hut.castShadow = true; hut.receiveShadow = true;
+        g.add(hut);
+      }
     } else if (st.roof === 'dome') {
-      var dome = new T.Mesh(new T.SphereGeometry(W * 0.62, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
+      var dome = new T.Mesh(new T.SphereGeometry(W * 0.62, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
       dome.position.y = roofBase - 0.04;
       dome.castShadow = true; dome.receiveShadow = true;
       g.add(dome);
-      // Gold meridian ribs
-      for (var mr = 0; mr < 4; mr++) {
-        var rib = new T.Mesh(new T.TorusGeometry(W * 0.62, 0.022, 4, 14, Math.PI), trimMat);
-        rib.rotation.y = mr * Math.PI / 4;
-        rib.rotation.z = Math.PI / 2;
-        rib.position.y = roofBase - 0.04;
-        g.add(rib);
+      for (var mr = 0; mr < 6; mr++) {
+        var rib2 = new T.Mesh(new T.TorusGeometry(W * 0.625, 0.024, 4, 16, Math.PI), trimMat);
+        rib2.rotation.y = mr * Math.PI / 6;
+        rib2.rotation.z = Math.PI / 2;
+        rib2.position.y = roofBase - 0.04;
+        g.add(rib2);
+      }
+      var band = new T.Mesh(new T.TorusGeometry(W * 0.63, 0.045, 5, 22), trimMat);
+      band.rotation.x = Math.PI / 2;
+      band.position.y = roofBase - 0.02;
+      g.add(band);
+      // Little brass stars studding the dome.
+      for (var stz = 0; stz < 9; stz++) {
+        var sph = 0.5 + rng() * 0.9, sth = rng() * Math.PI * 2;
+        g.add(new T.Mesh(new T.OctahedronGeometry(0.05), trimMat).translateX(Math.sin(sph) * Math.cos(sth) * W * 0.63)
+          .translateY(roofBase - 0.04 + Math.cos(sph) * W * 0.63).translateZ(Math.sin(sph) * Math.sin(sth) * W * 0.63));
       }
     } else if (st.roof === 'egg') {
-      var cap = new T.Mesh(new T.SphereGeometry(W * 0.30, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
-      cap.position.y = 0.07 + H * 0.98;
+      var cap = new T.Mesh(new T.SphereGeometry(W * 0.31, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
+      cap.position.y = 0.05 + H * 0.97;
       g.add(cap);
     }
 
-    // Windows — emissive planes that the engine dims and flickers.
+    // ---- openings: dark interior, frames, mullions, sills, shutters ----
     (st.windows || []).forEach(function(w) {
       var col = w.cool ? GLOW_COOL : GLOW_WARM;
+      // Windows sit ON the front wall. The old `w.z * D/2` put them a few
+      // centimetres INSIDE the body, so every pane was hidden by its own wall.
+      var frontZ = st.roof === 'egg' ? W * 0.50 : D / 2;
+      var wx = w.x * W, wy = 0.05 + w.y * H + H * 0.12, wz = frontZ + 0.015;
+      var ww = w.r * (w.wide ? 2.1 : 1.1), wh = w.r * (w.wide ? 1.15 : 1.35);
+      // Recessed dark interior behind the glass gives the opening depth.
+      g.add(box(ww * 0.98, wh * 0.98, 0.10, interiorMat, wx, wy, wz - 0.09));
       var mat = new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.92 });
-      var geo = w.round ? new T.CircleGeometry(w.r, 14)
-        : new T.PlaneGeometry(w.r * (w.wide ? 2.1 : 1.1), w.r * (w.wide ? 1.15 : 1.35));
+      var geo = w.round ? new T.CircleGeometry(w.r, 18) : new T.PlaneGeometry(ww, wh);
       var pane = new T.Mesh(geo, mat);
-      pane.position.set(w.x * W, 0.07 + w.y * H + H * 0.12, (w.z || 0.8) * D / 2 + 0.03);
+      pane.position.set(wx, wy, wz + 0.03);
       g.add(pane);
-      // Frame
-      var fr = new T.Mesh(w.round ? new T.TorusGeometry(w.r + 0.02, 0.03, 4, 14)
-        : new T.BoxGeometry(w.r * (w.wide ? 2.2 : 1.2), w.r * (w.wide ? 1.25 : 1.45), 0.04), trimMat);
-      fr.position.copy(pane.position);
-      fr.position.z -= 0.015;
-      g.add(fr);
-      // Light spilling out of the opening — a lit window has to bleed into the
-      // dark, or after sunset it just reads as a flat bright rectangle.
+      // Frame + mullions.
+      if (w.round) {
+        g.add(new T.Mesh(new T.TorusGeometry(w.r + 0.03, 0.038, 5, 18), trimMat).translateX(wx).translateY(wy).translateZ(wz + 0.02));
+        g.add(box(0.045, w.r * 2, 0.045, trimMat, wx, wy, wz + 0.045));
+        g.add(box(w.r * 2, 0.045, 0.045, trimMat, wx, wy, wz + 0.045));
+      } else {
+        g.add(box(ww + 0.10, 0.06, 0.07, trimMat, wx, wy + wh / 2, wz + 0.035));
+        g.add(box(ww + 0.10, 0.06, 0.07, trimMat, wx, wy - wh / 2, wz + 0.035));
+        g.add(box(0.06, wh, 0.07, trimMat, wx - ww / 2, wy, wz + 0.035));
+        g.add(box(0.06, wh, 0.07, trimMat, wx + ww / 2, wy, wz + 0.035));
+        var bars = w.wide ? 3 : 1;
+        for (var mb = 1; mb <= bars; mb++) {
+          g.add(box(0.038, wh, 0.05, trimMat, wx - ww / 2 + (mb / (bars + 1)) * ww, wy, wz + 0.045));
+        }
+        g.add(box(ww, 0.04, 0.05, trimMat, wx, wy, wz + 0.045));
+        // Sill with a lip, and shutters either side.
+        g.add(box(ww + 0.26, 0.06, 0.16, trimMat, wx, wy - wh / 2 - 0.05, wz + 0.07));
+        [-1, 1].forEach(function(sd) {
+          var sht = box(ww * 0.32, wh * 0.96, 0.05, darkMat, wx + sd * (ww / 2 + ww * 0.17), wy, wz + 0.06);
+          sht.rotation.y = -sd * 0.45;
+          g.add(sht);
+        });
+      }
       var halo = new T.Sprite(new T.SpriteMaterial({
         map: sharedSoft(w.cool ? '150,190,255' : '255,186,104'),
-        transparent: true, opacity: 0, depthWrite: false, fog: false,
-        blending: T.AdditiveBlending
+        transparent: true, opacity: 0, depthWrite: false, fog: false, blending: T.AdditiveBlending
       }));
       var hs = w.r * (w.wide ? 3.4 : 2.7) * (w.cool ? 0.7 : 1);
       halo.scale.set(hs, hs * 0.82, 1);
-      halo.position.copy(pane.position);
-      halo.position.z += 0.12;
+      halo.position.set(wx, wy, wz + 0.14);
       g.add(halo);
       glows.push({ mat: mat, halo: halo.material, warm: !w.cool, base: 0.92 });
     });
 
-    // Ladder down to the branch
+    // ---- ladder down to the bough ----
     var lad = new T.Group();
-    lad.add(box(0.05, 1.5, 0.05, trimMat, -0.17, -0.75, 0));
-    lad.add(box(0.05, 1.5, 0.05, trimMat, 0.17, -0.75, 0));
-    for (var rg = 0; rg < 5; rg++) lad.add(box(0.42, 0.04, 0.04, trimMat, 0, -0.25 - rg * 0.28, 0));
-    lad.position.set(0, 0, D * 0.5 + 0.16);
+    lad.add(box(0.055, 1.6, 0.055, trimMat, -0.19, -0.8, 0));
+    lad.add(box(0.055, 1.6, 0.055, trimMat, 0.19, -0.8, 0));
+    for (var rg = 0; rg < 6; rg++) lad.add(box(0.46, 0.045, 0.055, ropeMat, 0, -0.22 - rg * 0.26, 0));
+    lad.position.set(W * 0.22, 0, D * 0.5 + 0.20);
+    lad.rotation.x = -0.10;
     g.add(lad);
 
-    // ---- per-building extras ----
+    // ---- per-building props ----
     var ex = st.extras || [];
-    function lantern(x, y, z) {
+    function lantern(x, y, z, cool) {
       var lg = new T.Group();
-      lg.add(cyl(0.015, 0.015, 0.26, 4, trimMat, 0, 0.2, 0));
-      var glassMat = new T.MeshBasicMaterial({ color: GLOW_WARM, transparent: true, opacity: 0.95 });
-      var glass = new T.Mesh(new T.BoxGeometry(0.14, 0.18, 0.14), glassMat);
-      lg.add(glass);
-      lg.add(box(0.18, 0.04, 0.18, trimMat, 0, 0.11, 0));
-      lg.add(box(0.17, 0.03, 0.17, trimMat, 0, -0.10, 0));
+      lg.add(cyl(0.016, 0.016, 0.30, 4, ironMat, 0, 0.22, 0));
+      lg.add(new T.Mesh(new T.TorusGeometry(0.05, 0.012, 4, 8), ironMat).translateY(0.36).rotateX(Math.PI / 2));
+      var glassMat = new T.MeshBasicMaterial({ color: cool ? GLOW_COOL : GLOW_WARM, transparent: true, opacity: 0.95 });
+      lg.add(new T.Mesh(new T.CylinderGeometry(0.085, 0.095, 0.19, 6), glassMat));
+      // Cage bars, cap and base.
+      for (var cb = 0; cb < 4; cb++) {
+        var cba = cb * Math.PI / 2 + Math.PI / 4;
+        lg.add(box(0.018, 0.20, 0.018, ironMat, Math.sin(cba) * 0.085, 0, Math.cos(cba) * 0.085));
+      }
+      var capm = new T.Mesh(new T.ConeGeometry(0.13, 0.10, 6), ironMat);
+      capm.position.y = 0.15;
+      lg.add(capm);
+      lg.add(new T.Mesh(new T.CylinderGeometry(0.10, 0.11, 0.035, 6), ironMat).translateY(-0.11));
       var lhalo = new T.Sprite(new T.SpriteMaterial({
-        map: sharedSoft('255,196,120'), transparent: true, opacity: 0,
+        map: sharedSoft(cool ? '170,200,255' : '255,196,120'), transparent: true, opacity: 0,
         depthWrite: false, fog: false, blending: T.AdditiveBlending
       }));
       lhalo.scale.set(0.72, 0.72, 1);
       lg.add(lhalo);
       lg.position.set(x, y, z);
       g.add(lg);
-      glows.push({ mat: glassMat, halo: lhalo.material, warm: true, base: 0.95, lantern: true });
+      glows.push({ mat: glassMat, halo: lhalo.material, warm: !cool, base: 0.95, lantern: true });
       return lg;
     }
-    if (ex.indexOf('lantern-left') >= 0) lantern(-(W / 2 + 0.30), 0.95, D * 0.22);
-    if (ex.indexOf('lantern-right') >= 0) lantern(W / 2 + 0.30, 0.92, D * 0.22);
+    function barrel(x, y, z, s) {
+      s = s || 1;
+      var bm = new T.MeshLambertMaterial({ color: 0x6a4826 });
+      g.add(cyl(0.19 * s, 0.17 * s, 0.42 * s, 12, bm, x, y + 0.21 * s, z));
+      [0.32, 0.11].forEach(function(hy) {
+        g.add(new T.Mesh(new T.TorusGeometry(0.19 * s, 0.02 * s, 4, 12), ironMat).translateX(x).translateY(y + hy * s).translateZ(z).rotateX(Math.PI / 2));
+      });
+    }
+    function crate(x, y, z, s) {
+      s = s || 1;
+      g.add(box(0.30 * s, 0.26 * s, 0.30 * s, new T.MeshLambertMaterial({ color: 0x7a5a32 }), x, y + 0.13 * s, z));
+      g.add(box(0.32 * s, 0.04 * s, 0.32 * s, trimMat, x, y + 0.24 * s, z));
+      g.add(box(0.32 * s, 0.04 * s, 0.32 * s, trimMat, x, y + 0.04 * s, z));
+    }
+
+    if (ex.indexOf('lantern-left') >= 0) lantern(-(W / 2 + 0.34), 0.98, D * 0.24, id === 'observatory');
+    if (ex.indexOf('lantern-right') >= 0) lantern(W / 2 + 0.34, 0.94, D * 0.24, false);
     if (ex.indexOf('chimney') >= 0) {
-      var ch = box(0.30, 0.85, 0.30, darkMat, W * 0.30, roofBase + 0.75, -D * 0.12);
-      g.add(ch);
-      g.add(box(0.38, 0.09, 0.38, trimMat, W * 0.30, roofBase + 1.18, -D * 0.12));
-      g.userData.chimney = new T.Vector3(W * 0.30, roofBase + 1.28, -D * 0.12);
+      // Stone stack, laid in courses, with an iron cowl.
+      for (var ch = 0; ch < 5; ch++) {
+        var cw = 0.34 - ch * 0.012;
+        g.add(box(cw, 0.17, cw, ch % 2 ? new T.MeshLambertMaterial({ color: 0x6b6156 }) : new T.MeshLambertMaterial({ color: 0x7a6f62 }),
+          W * 0.30, roofBase + 0.42 + ch * 0.17, -D * 0.10));
+      }
+      g.add(box(0.44, 0.08, 0.44, ironMat, W * 0.30, roofBase + 1.30, -D * 0.10));
+      g.add(box(0.30, 0.10, 0.30, ironMat, W * 0.30, roofBase + 1.40, -D * 0.10));
+      g.userData.chimney = new T.Vector3(W * 0.30, roofBase + 1.52, -D * 0.10);
     }
     if (ex.indexOf('cross') >= 0) {
       var crossMat = new T.MeshBasicMaterial({ color: 0x9ef0b8 });
-      var plate = new T.Mesh(new T.CircleGeometry(0.30, 16), new T.MeshLambertMaterial({ color: 0x2f5c38 }));
-      plate.position.set(0, 0.07 + H * 0.86, D / 2 + 0.04);
-      g.add(plate);
-      var cv = new T.Mesh(new T.PlaneGeometry(0.12, 0.34), crossMat);
-      cv.position.set(0, 0.07 + H * 0.86, D / 2 + 0.06);
+      g.add(new T.Mesh(new T.CylinderGeometry(0.32, 0.32, 0.05, 20), new T.MeshLambertMaterial({ color: 0x2f5c38 }))
+        .translateY(0.05 + H * 0.86).translateZ(D / 2 + 0.05).rotateX(Math.PI / 2));
+      g.add(new T.Mesh(new T.TorusGeometry(0.32, 0.028, 5, 20), trimMat).translateY(0.05 + H * 0.86).translateZ(D / 2 + 0.06));
+      var cv = new T.Mesh(new T.PlaneGeometry(0.13, 0.36), crossMat);
+      cv.position.set(0, 0.05 + H * 0.86, D / 2 + 0.08);
       g.add(cv);
-      var chz = new T.Mesh(new T.PlaneGeometry(0.34, 0.12), crossMat);
+      var chz = new T.Mesh(new T.PlaneGeometry(0.36, 0.13), crossMat);
       chz.position.copy(cv.position);
       g.add(chz);
       glows.push({ mat: crossMat, warm: false, base: 1, pulse: true });
     }
     if (ex.indexOf('sign') >= 0) {
-      var arm = box(0.05, 0.05, 0.62, trimMat, W / 2 + 0.30, 0.07 + H * 0.92, 0);
-      g.add(arm);
-      var signMat = new T.MeshLambertMaterial({ color: 0x6b4a28 });
-      var sign = new T.Mesh(new T.CylinderGeometry(0.27, 0.27, 0.05, 14), signMat);
-      sign.rotation.x = Math.PI / 2;
-      sign.position.set(W / 2 + 0.30, 0.07 + H * 0.62, 0.26);
-      g.add(sign);
-      var crow = new T.Mesh(new T.SphereGeometry(0.11, 8, 6), new T.MeshLambertMaterial({ color: 0x1c1c22 }));
-      crow.position.set(W / 2 + 0.30, 0.07 + H * 0.62, 0.30);
-      g.add(crow);
-      g.userData.sign = sign;
+      g.add(box(0.06, 0.06, 0.70, trimMat, W / 2 + 0.34, 0.05 + H * 0.94, 0));
+      g.add(box(0.06, 0.34, 0.06, trimMat, W / 2 + 0.34, 0.05 + H * 0.94 - 0.17, 0.30));
+      var signG = new T.Group();
+      signG.add(new T.Mesh(new T.CylinderGeometry(0.29, 0.29, 0.055, 18), new T.MeshLambertMaterial({ color: 0x6b4a28 })).rotateX(Math.PI / 2));
+      signG.add(new T.Mesh(new T.TorusGeometry(0.29, 0.03, 5, 18), trimMat));
+      var crow = new T.Mesh(new T.SphereGeometry(0.11, 10, 8), new T.MeshLambertMaterial({ color: 0x1c1c22 }));
+      crow.scale.set(1.3, 1, 0.7);
+      crow.position.z = 0.05;
+      signG.add(crow);
+      signG.add(new T.Mesh(new T.ConeGeometry(0.04, 0.11, 5), new T.MeshLambertMaterial({ color: 0xd8a03a })).translateX(0.15).translateZ(0.05).rotateZ(-Math.PI / 2));
+      signG.position.set(W / 2 + 0.34, 0.05 + H * 0.62, 0.30);
+      g.add(signG);
+      g.userData.sign = signG;
     }
-    if (ex.indexOf('barrel') >= 0) {
-      var bar = cyl(0.19, 0.19, 0.42, 10, new T.MeshLambertMaterial({ color: 0x6a4826 }), -W * 0.42, 0.28, D * 0.10);
-      g.add(bar);
-      g.add(new T.Mesh(new T.TorusGeometry(0.20, 0.018, 4, 12), trimMat).translateX(-W * 0.42).translateY(0.36).translateZ(D * 0.10));
-    }
+    if (ex.indexOf('barrel') >= 0) { barrel(-W * 0.44, 0.05, D * 0.06); crate(-W * 0.44, 0.05, -D * 0.26, 0.8); }
     if (ex.indexOf('stools') >= 0) {
       for (var s2 = -1; s2 <= 1; s2++) {
-        g.add(cyl(0.10, 0.09, 0.22, 8, trimMat, s2 * 0.42, 0.18, D * 0.30));
+        g.add(cyl(0.11, 0.10, 0.06, 10, trimMat, s2 * 0.44, 0.30, D * 0.30));
+        for (var lgs = 0; lgs < 3; lgs++) {
+          var la2 = lgs * 2.1;
+          var leg = cyl(0.02, 0.025, 0.28, 4, darkMat, s2 * 0.44 + Math.sin(la2) * 0.07, 0.15, D * 0.30 + Math.cos(la2) * 0.07);
+          leg.rotation.set(Math.cos(la2) * 0.12, 0, -Math.sin(la2) * 0.12);
+          g.add(leg);
+        }
+      }
+      // Bottles on a back shelf.
+      g.add(box(W * 0.82, 0.05, 0.14, trimMat, 0, 0.05 + H * 0.52, -D * 0.30));
+      for (var bo = 0; bo < 6; bo++) {
+        g.add(cyl(0.035, 0.045, 0.17, 6, new T.MeshLambertMaterial({ color: [0x3c6b43, 0x6b4a28, 0x2f4f6b][bo % 3] }),
+          -W * 0.32 + bo * (W * 0.64 / 5), 0.05 + H * 0.52 + 0.11, -D * 0.30));
       }
     }
     if (ex.indexOf('target') >= 0) {
-      var tgt = new T.Mesh(new T.CylinderGeometry(0.30, 0.30, 0.05, 16), new T.MeshLambertMaterial({ color: 0xe8dcc0 }));
-      tgt.rotation.x = Math.PI / 2;
-      tgt.position.set(0, 0.07 + H * 0.55, -D * 0.42);
-      g.add(tgt);
-      var ring2 = new T.Mesh(new T.TorusGeometry(0.19, 0.035, 6, 16), new T.MeshLambertMaterial({ color: 0xa8322a }));
-      ring2.position.set(0, 0.07 + H * 0.55, -D * 0.39);
-      g.add(ring2);
-      var bull = new T.Mesh(new T.CircleGeometry(0.07, 12), new T.MeshLambertMaterial({ color: 0xa8322a }));
-      bull.position.set(0, 0.07 + H * 0.55, -D * 0.37);
-      g.add(bull);
+      var tg = new T.Group();
+      tg.add(new T.Mesh(new T.CylinderGeometry(0.32, 0.32, 0.06, 20), new T.MeshLambertMaterial({ color: 0xe8dcc0 })).rotateX(Math.PI / 2));
+      tg.add(new T.Mesh(new T.TorusGeometry(0.32, 0.028, 5, 20), trimMat));
+      tg.add(new T.Mesh(new T.TorusGeometry(0.20, 0.035, 6, 18), new T.MeshLambertMaterial({ color: 0xa8322a })).translateZ(0.03));
+      tg.add(new T.Mesh(new T.CircleGeometry(0.075, 14), new T.MeshLambertMaterial({ color: 0xa8322a })).translateZ(0.05));
+      tg.position.set(0, 0.05 + H * 0.55, -D * 0.44);
+      tg.rotation.y = Math.PI;
+      g.add(tg);
     }
     if (ex.indexOf('training-posts') >= 0) {
       for (var tp = -1; tp <= 1; tp += 2) {
-        g.add(cyl(0.05, 0.06, 0.62, 6, trimMat, tp * W * 0.52, 0.38, D * 0.34));
-        g.add(box(0.09, 0.09, 0.09, new T.MeshLambertMaterial({ color: 0x8a3a2e }), tp * W * 0.52, 0.72, D * 0.34));
+        g.add(cyl(0.055, 0.07, 0.70, 8, trimMat, tp * W * 0.54, 0.40, D * 0.32));
+        g.add(new T.Mesh(new T.TorusGeometry(0.09, 0.022, 4, 10), ropeMat).translateX(tp * W * 0.54).translateY(0.66).translateZ(D * 0.32).rotateX(Math.PI / 2));
+        g.add(box(0.11, 0.11, 0.11, new T.MeshLambertMaterial({ color: 0x8a3a2e }), tp * W * 0.54, 0.80, D * 0.32));
       }
     }
     if (ex.indexOf('roof-nest') >= 0) {
-      var nest = new T.Mesh(new T.TorusGeometry(0.30, 0.11, 6, 12), new T.MeshLambertMaterial({ color: 0x8a6a3c }));
+      var nest = new T.Mesh(new T.TorusGeometry(0.32, 0.12, 7, 14), new T.MeshLambertMaterial({ color: 0x8a6a3c }));
       nest.rotation.x = Math.PI / 2;
-      nest.position.y = roofBase + 0.92;
+      nest.position.y = roofBase + 1.0;
       g.add(nest);
-      var eggm = new T.Mesh(new T.SphereGeometry(0.10, 8, 6), new T.MeshLambertMaterial({ color: 0xefe4c8 }));
+      for (var tw2 = 0; tw2 < 7; tw2++) {
+        var twg = box(0.035, 0.035, 0.42, ropeMat, 0, roofBase + 1.02, 0);
+        twg.rotation.set(0.2, tw2 * 0.9, 0.1);
+        g.add(twg);
+      }
+      var eggm = new T.Mesh(new T.SphereGeometry(0.11, 10, 8), new T.MeshLambertMaterial({ color: 0xefe4c8 }));
       eggm.scale.y = 1.3;
-      eggm.position.y = roofBase + 0.95;
+      eggm.position.y = roofBase + 1.04;
       g.add(eggm);
     }
     if (ex.indexOf('hanging-nest') >= 0 || ex.indexOf('hanging-cradle') >= 0) {
       var hang = new T.Group();
-      hang.add(cyl(0.012, 0.012, 0.42, 4, trimMat, 0, 0.21, 0));
-      var basket = new T.Mesh(new T.SphereGeometry(0.19, 10, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new T.MeshLambertMaterial({ color: 0x9a7440 }));
+      [-1, 1].forEach(function(hz) { hang.add(cyl(0.012, 0.012, 0.44, 4, ropeMat, hz * 0.10, 0.22, 0)); });
+      var basket = new T.Mesh(new T.SphereGeometry(0.21, 12, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new T.MeshLambertMaterial({ color: 0x9a7440 }));
       hang.add(basket);
-      hang.position.set(-(W / 2 + 0.42), 0.55, D * 0.1);
+      hang.add(new T.Mesh(new T.TorusGeometry(0.21, 0.022, 4, 14), trimMat));
+      hang.position.set(-(W / 2 + 0.46), 0.52, D * 0.08);
       g.add(hang);
-      g.add(box(0.05, 0.05, 0.5, trimMat, -(W / 2 + 0.24), 0.76, D * 0.1));
+      g.add(box(0.06, 0.06, 0.56, trimMat, -(W / 2 + 0.26), 0.76, D * 0.08));
       g.userData.swing = hang;
     }
     if (ex.indexOf('crossed-poles') >= 0) {
       for (var cp = -1; cp <= 1; cp += 2) {
-        var pole = cyl(0.035, 0.045, 1.0, 5, trimMat, cp * 0.22, 0.07 + H * 1.02, 0);
+        var pole = cyl(0.04, 0.05, 1.05, 6, trimMat, cp * 0.24, 0.05 + H * 1.02, 0);
         pole.rotation.z = cp * 0.34;
         g.add(pole);
       }
+      g.add(new T.Mesh(new T.TorusGeometry(0.09, 0.022, 4, 10), ropeMat).translateY(0.05 + H * 1.24).rotateY(0.4));
     }
     if (ex.indexOf('crescent') >= 0) {
       var moonMat = new T.MeshBasicMaterial({ color: 0xf0dc9a });
-      var moon = new T.Mesh(new T.TorusGeometry(0.17, 0.045, 6, 14, Math.PI * 1.35), moonMat);
-      moon.position.y = roofBase + W * 0.62 + 0.22;
+      var moon = new T.Mesh(new T.TorusGeometry(0.19, 0.05, 7, 16, Math.PI * 1.35), moonMat);
+      moon.position.y = roofBase + W * 0.62 + 0.28;
       moon.rotation.z = -0.6;
       g.add(moon);
-      g.add(cyl(0.02, 0.02, 0.2, 4, trimMat, 0, roofBase + W * 0.62 + 0.06, 0));
+      g.add(cyl(0.022, 0.022, 0.26, 5, trimMat, 0, roofBase + W * 0.62 + 0.10, 0));
       glows.push({ mat: moonMat, warm: false, base: 1, always: true });
     }
     if (ex.indexOf('telescope') >= 0) {
       var scope = new T.Group();
-      scope.add(cyl(0.055, 0.085, 0.62, 10, new T.MeshLambertMaterial({ color: 0x9a8a5c })));
+      scope.add(cyl(0.06, 0.095, 0.68, 12, new T.MeshLambertMaterial({ color: 0x9a8a5c })));
+      scope.add(new T.Mesh(new T.TorusGeometry(0.075, 0.018, 4, 12), trimMat).translateY(0.14));
+      scope.add(new T.Mesh(new T.TorusGeometry(0.095, 0.02, 4, 12), trimMat).translateY(-0.30));
+      scope.add(cyl(0.04, 0.045, 0.16, 8, trimMat, 0, 0.42, 0));
       scope.rotation.set(-0.85, 0.5, 0);
-      scope.position.set(-W * 0.20, 0.07 + H * 0.72, D * 0.24);
+      scope.position.set(-W * 0.20, 0.05 + H * 0.74, D * 0.24);
       g.add(scope);
-      g.add(cyl(0.05, 0.07, 0.34, 6, trimMat, -W * 0.20, 0.07 + H * 0.36, D * 0.24));
+      // Tripod.
+      for (var tl = 0; tl < 3; tl++) {
+        var ta = tl * 2.1;
+        var tleg = cyl(0.022, 0.028, 0.46, 5, trimMat, -W * 0.20 + Math.sin(ta) * 0.11, 0.05 + H * 0.40, D * 0.24 + Math.cos(ta) * 0.11);
+        tleg.rotation.set(Math.cos(ta) * 0.24, 0, -Math.sin(ta) * 0.24);
+        g.add(tleg);
+      }
       g.userData.scope = scope;
     }
     if (ex.indexOf('weathervane') >= 0) {
       var vane = new T.Group();
-      vane.add(cyl(0.02, 0.02, 0.5, 4, trimMat, 0, 0.25, 0));
-      var arrow = new T.Mesh(new T.ConeGeometry(0.07, 0.22, 4), trimMat);
+      vane.add(cyl(0.022, 0.022, 0.54, 5, ironMat, 0, 0.27, 0));
+      var arrow = new T.Mesh(new T.ConeGeometry(0.075, 0.24, 5), ironMat);
       arrow.rotation.z = -Math.PI / 2;
-      arrow.position.set(0.2, 0.46, 0);
+      arrow.position.set(0.24, 0.50, 0);
       vane.add(arrow);
-      vane.add(box(0.16, 0.14, 0.02, trimMat, -0.16, 0.46, 0));
-      vane.position.set(-W * 0.42, roofBase + 0.5, D * 0.3);
+      vane.add(box(0.18, 0.16, 0.02, ironMat, -0.19, 0.50, 0));
+      vane.add(box(0.40, 0.03, 0.03, ironMat, 0.02, 0.50, 0));
+      vane.position.set(-W * 0.40, roofBase + 0.52, D * 0.28);
       g.add(vane);
       g.userData.vane = vane;
+      // Compass ring below it.
+      g.add(new T.Mesh(new T.TorusGeometry(0.13, 0.02, 4, 14), trimMat).translateX(-W * 0.40).translateY(roofBase + 0.46).translateZ(D * 0.28).rotateX(Math.PI / 2));
     }
     if (ex.indexOf('awning') >= 0) {
-      var aw = box(W + 0.5, 0.06, 0.55, new T.MeshLambertMaterial({ color: 0x53381f }), 0, 0.07 + H * 0.74, D / 2 + 0.24);
-      aw.rotation.x = -0.28;
+      var aw = box(W + 0.62, 0.07, 0.62, new T.MeshLambertMaterial({ color: 0x53381f }), 0, 0.05 + H * 0.76, D / 2 + 0.28);
+      aw.rotation.x = -0.30;
       g.add(aw);
+      [-1, 1].forEach(function(ax) {
+        g.add(cyl(0.03, 0.035, 0.62, 5, trimMat, ax * (W * 0.46), 0.05 + H * 0.48, D / 2 + 0.50));
+      });
+      // Herbs hung under the awning.
+      for (var hb = 0; hb < 5; hb++) {
+        var hx = -W * 0.36 + hb * (W * 0.72 / 4);
+        g.add(cyl(0.012, 0.012, 0.16, 4, ropeMat, hx, 0.05 + H * 0.66, D / 2 + 0.22));
+        var bunch = new T.Mesh(new T.ConeGeometry(0.055, 0.20, 6), new T.MeshLambertMaterial({ color: [0x5c7a34, 0x7a5c34, 0x8a4a3a][hb % 3] }));
+        bunch.position.set(hx, 0.05 + H * 0.58, D / 2 + 0.22);
+        g.add(bunch);
+      }
     }
     if (ex.indexOf('sacks') >= 0) {
       for (var sk = 0; sk < 3; sk++) {
-        var sack = new T.Mesh(new T.SphereGeometry(0.13, 8, 6), new T.MeshLambertMaterial({ color: 0xbfa478 }));
-        sack.scale.set(1, 1.25, 1);
-        sack.position.set(-0.5 + sk * 0.42, 0.22, D * 0.34);
+        var sack = new T.Mesh(new T.SphereGeometry(0.15, 10, 8), new T.MeshLambertMaterial({ color: 0xbfa478 }));
+        sack.scale.set(1, 1.3, 1);
+        sack.position.set(-W * 0.40 + sk * 0.36, 0.20, D * 0.32);
         g.add(sack);
+        g.add(new T.Mesh(new T.TorusGeometry(0.055, 0.018, 4, 8), ropeMat).translateX(-W * 0.40 + sk * 0.36).translateY(0.36).translateZ(D * 0.32).rotateX(Math.PI / 2));
       }
+      barrel(W * 0.40, 0.05, D * 0.30, 0.75);
     }
     if (ex.indexOf('rope-belt') >= 0) {
-      var rope = new T.Mesh(new T.TorusGeometry(W * 0.56, 0.035, 5, 16), new T.MeshLambertMaterial({ color: 0xb49a68 }));
-      rope.rotation.x = Math.PI / 2;
-      rope.position.y = 0.07 + H * 0.30;
-      g.add(rope);
+      for (var rb = 0; rb < 2; rb++) {
+        var rope2 = new T.Mesh(new T.TorusGeometry(W * 0.57, 0.038, 6, 20), ropeMat);
+        rope2.rotation.x = Math.PI / 2;
+        rope2.position.y = 0.05 + H * (0.26 + rb * 0.09);
+        g.add(rope2);
+      }
     }
     if (ex.indexOf('hole-door') >= 0) {
-      var hole = new T.Mesh(new T.CircleGeometry(0.20, 14), new T.MeshBasicMaterial({ color: 0x120c07 }));
-      hole.position.set(0, 0.07 + H * 0.13, D / 2 + 0.035);
-      g.add(hole);
+      g.add(new T.Mesh(new T.CircleGeometry(0.22, 16), new T.MeshBasicMaterial({ color: 0x0f0a05 })).translateY(0.05 + H * 0.14).translateZ(D / 2 + 0.04));
+      g.add(new T.Mesh(new T.TorusGeometry(0.24, 0.035, 5, 16), trimMat).translateY(0.05 + H * 0.14).translateZ(D / 2 + 0.03));
+      g.add(cyl(0.03, 0.03, 0.22, 5, trimMat, 0, 0.05 + H * 0.14 - 0.30, D / 2 + 0.10)); // perch
     }
     if (ex.indexOf('open-front') >= 0) {
-      var dark = new T.Mesh(new T.PlaneGeometry(W * 0.82, H * 0.52), new T.MeshBasicMaterial({ color: 0x1a1108 }));
-      dark.position.set(0, 0.07 + H * 0.36, D / 2 + 0.02);
-      g.add(dark);
+      g.add(box(W * 0.84, H * 0.52, 0.06, interiorMat, 0, 0.05 + H * 0.38, -D * 0.34));
+      g.add(box(W * 0.84, 0.06, D * 0.66, interiorMat, 0, 0.05 + H * 0.11, -D * 0.02));
+      g.add(box(W * 0.90, 0.07, 0.10, trimMat, 0, 0.05 + H * 0.64, D / 2 + 0.02));
+      g.add(box(W * 0.90, 0.07, 0.10, trimMat, 0, 0.05 + H * 0.12, D / 2 + 0.02));
+      [-1, 1].forEach(function(ox) { g.add(box(0.08, H * 0.54, 0.10, trimMat, ox * W * 0.45, 0.05 + H * 0.38, D / 2 + 0.02)); });
+    }
+    // Every house gets a window box of flowers and a coil of rope — the small
+    // signs of somebody living there.
+    if (ex.indexOf('open-front') < 0 && id !== 'observatory') {
+      var pbW = W * 0.30;
+      g.add(box(pbW, 0.10, 0.12, darkMat, -W * 0.26, 0.05 + H * 0.13, D / 2 + 0.07));
+      g.add(box(pbW + 0.03, 0.03, 0.13, trimMat, -W * 0.26, 0.05 + H * 0.13 + 0.06, D / 2 + 0.07));
+      for (var fw = 0; fw < 3; fw++) {
+        g.add(new T.Mesh(new T.SphereGeometry(0.032, 6, 5), new T.MeshLambertMaterial({ color: [0xe8697d, 0xf0c04a, 0xc27ad6][fw] }))
+          .translateX(-W * 0.26 - pbW * 0.34 + fw * (pbW * 0.34)).translateY(0.05 + H * 0.13 + 0.10).translateZ(D / 2 + 0.07));
+      }
     }
 
-    // Swinging and turning parts must keep their own transforms; everything
-    // else in the house is baked into one mesh.
+    // Swinging and turning parts keep their own transforms; the rest of the
+    // house — every plank, shingle, mullion and rail — bakes into one mesh.
     var moving = [g.userData.swing, g.userData.sign, g.userData.vane, g.userData.scope].filter(Boolean);
     mergeStatic(g, {
       name: id + '-shell',
@@ -938,58 +1147,6 @@
     return g;
   }
 
-  // ---- a bird ---------------------------------------------------------------
-
-  function buildBird(kind) {
-    var b = BIRDS[kind] || BIRDS.robin;
-    var g = new T.Group();
-    var bodyMat = new T.MeshLambertMaterial({ color: b.body });
-    var wingMat = new T.MeshLambertMaterial({ color: b.wing, side: T.DoubleSide });
-    var s = b.size;
-    var body = new T.Mesh(new T.SphereGeometry(s, 9, 7), bodyMat);
-    body.scale.set(1.6, 0.92, 0.92);
-    g.add(body);
-    var head = new T.Mesh(new T.SphereGeometry(s * 0.62, 8, 6), bodyMat);
-    head.position.set(s * 1.42, s * 0.30, 0);
-    g.add(head);
-    var beak = new T.Mesh(new T.ConeGeometry(s * 0.20, s * 0.55, 5), new T.MeshLambertMaterial({ color: 0xd8a03a }));
-    beak.rotation.z = -Math.PI / 2;
-    beak.position.set(s * 2.05, s * 0.26, 0);
-    g.add(beak);
-    var breast = new T.Mesh(new T.SphereGeometry(s * 0.66, 8, 6), new T.MeshLambertMaterial({ color: b.breast }));
-    breast.scale.set(1.15, 0.85, 0.85);
-    breast.position.set(s * 0.72, -s * 0.24, 0);
-    g.add(breast);
-    var tail = new T.Mesh(new T.BoxGeometry(s * 1.25, s * 0.10, s * 0.60), wingMat);
-    tail.position.set(-s * 1.75, s * 0.06, 0);
-    g.add(tail);
-    // Wings pivot at the shoulders so they beat rather than slide.
-    var wings = [];
-    for (var side = -1; side <= 1; side += 2) {
-      var pivot = new T.Group();
-      pivot.position.set(0, s * 0.34, side * s * 0.42);
-      var wing = new T.Mesh(new T.PlaneGeometry(s * 1.5, s * b.span, 1, 1), wingMat);
-      wing.rotation.x = Math.PI / 2;
-      wing.position.set(-s * 0.12, 0, side * s * b.span * 0.5);
-      pivot.add(wing);
-      g.add(pivot);
-      wings.push({ pivot: pivot, side: side });
-    }
-    // Body parts bake into one mesh; the wings stay separate so they can beat.
-    mergeStatic(g, {
-      name: 'bird-body',
-      only: function(o) {
-        var q = o;
-        while (q) { if (q.parent && q.parent.isGroup && wings.some(function(w) { return w.pivot === q.parent || w.pivot === q; })) return false; q = q.parent; }
-        return true;
-      }
-    });
-    g.userData.wings = wings;
-    g.userData.kind = kind;
-    g.userData.flap = b.flap;
-    return g;
-  }
-
   // ---- scene ---------------------------------------------------------------
 
   function createAcademy3D(adapter) {
@@ -1003,7 +1160,7 @@
       w: 0, h: 0, night: false, boost: 0,
       cam: { az: 0.55, polar: 1.46, dist: 33, lastInput: 0 },
       pointers: new Map(), orbitStart: null, pinchLast: null, dragged: false,
-      houses: [], glows: [], smokes: [], birds: [], fireflies: null, leafFall: [],
+      houses: [], glows: [], smokes: [], fireflies: null, leafFall: [],
       labels: [], sun: null, moon: null, hemi: null, sky: null,
       builtKey: '', shadowTick: 0, disposed: false
     };
@@ -1037,6 +1194,7 @@
         leaf: new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }),
         // alphaTest (not transparency) keeps the cards depth-sorted for free.
         leafCard: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
+        leafLitter: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
         plank: new T.MeshLambertMaterial({ color: 0x8a6236 }),
         barkTex: bark, leafTex: leafTex
       };
@@ -1071,43 +1229,102 @@
       var gc = document.createElement('canvas');
       gc.width = gc.height = 256;
       var gg = gc.getContext('2d');
-      gg.fillStyle = '#33512d'; gg.fillRect(0, 0, 256, 256);
+      gg.fillStyle = '#5a4a30'; gg.fillRect(0, 0, 256, 256);
       for (var gp = 0; gp < 420; gp++) {
-        gg.fillStyle = 'rgba(' + (rng() < 0.5 ? '30,58,26' : '78,110,52') + ',' + (0.10 + rng() * 0.30) + ')';
+        gg.fillStyle = 'rgba(' + (rng() < 0.42 ? '38,28,17' : (rng() < 0.5 ? '92,74,45' : '58,74,40')) + ',' + (0.12 + rng() * 0.34) + ')';
         gg.beginPath();
         gg.ellipse(rng() * 256, rng() * 256, 4 + rng() * 26, 3 + rng() * 18, rng() * 3, 0, 7);
         gg.fill();
       }
       var groundTex = new T.CanvasTexture(gc);
       groundTex.wrapS = groundTex.wrapT = T.RepeatWrapping;
-      groundTex.repeat.set(9, 9);
+      groundTex.repeat.set(14, 14);
       if (T.SRGBColorSpace) groundTex.colorSpace = T.SRGBColorSpace;
       st.groundTex = groundTex;
-      var ground = new T.Mesh(new T.CircleGeometry(70, 44), new T.MeshLambertMaterial({ map: groundTex, color: 0xa8bf9a }));
+      var ground = new T.Mesh(new T.CircleGeometry(70, 44), new T.MeshLambertMaterial({ map: groundTex, color: 0xd2c0a2 }));
       ground.rotation.x = -Math.PI / 2;
       ground.position.y = -0.2;
       ground.receiveShadow = true;
       scene.add(ground);
-      // Undergrowth around the roots
-      var bushGeo = new T.IcosahedronGeometry(0.5, 0);
-      var bushes = new T.InstancedMesh(bushGeo, new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }), 120);
-      var dm = new T.Object3D(), bc = new T.Color();
-      var bushDark = new T.Color(0x2b4a22), bushLite = new T.Color(0x5d8c3d);
-      for (var i = 0; i < 120; i++) {
-        var ba = rng() * Math.PI * 2, br = 3.4 + rng() * 12;
-        dm.position.set(Math.sin(ba) * br, -0.1 + rng() * 0.2, Math.cos(ba) * br);
-        dm.rotation.set(rng(), rng() * 3, rng());
-        var bs = 0.35 + rng() * 0.75;
-        dm.scale.set(bs, bs * (0.5 + rng() * 0.4), bs);
+      // The forest floor under a big tree is leaf litter, not shrubbery:
+      // fallen leaves, twigs, moss, a few stones and toadstools.
+      var floor = new T.Group();
+
+      // Fallen leaves lying flat, using the same leaf art as the canopy.
+      var litterCount = 520;
+      var litter = new T.InstancedMesh(new T.PlaneGeometry(1, 1), mats.leafLitter, litterCount);
+      litter.receiveShadow = true;
+      var dm = new T.Object3D(), lc = new T.Color();
+      var litterDry = new T.Color(0x6b5a2c), litterFresh = new T.Color(0x4a6b2c);
+      for (var li = 0; li < litterCount; li++) {
+        var la = rng() * Math.PI * 2, lr = 2.0 + Math.pow(rng(), 0.55) * 22;
+        dm.position.set(Math.sin(la) * lr, -0.17 + rng() * 0.03, Math.cos(la) * lr);
+        dm.rotation.set(-Math.PI / 2 + (rng() - 0.5) * 0.35, rng() * Math.PI * 2, 0);
+        var ls = 0.24 + rng() * 0.22;
+        dm.scale.set(ls, ls * 1.3, 1);
         dm.updateMatrix();
-        bushes.setMatrixAt(i, dm.matrix);
-        bc.copy(bushDark).lerp(bushLite, rng());
-        bushes.setColorAt(i, bc);
+        litter.setMatrixAt(li, dm.matrix);
+        litter.setColorAt(li, lc.copy(litterDry).lerp(litterFresh, rng() * 0.8));
       }
-      bushes.instanceMatrix.needsUpdate = true;
-      if (bushes.instanceColor) bushes.instanceColor.needsUpdate = true;
-      bushes.receiveShadow = true;
-      scene.add(bushes);
+      litter.instanceMatrix.needsUpdate = true;
+      if (litter.instanceColor) litter.instanceColor.needsUpdate = true;
+      floor.add(litter);
+
+      // Fallen twigs and bark scraps.
+      for (var tw = 0; tw < 26; tw++) {
+        var ta = rng() * Math.PI * 2, tr = 2.6 + rng() * 11;
+        var twig = box(0.035 + rng() * 0.03, 0.035, 0.30 + rng() * 0.55,
+          new T.MeshLambertMaterial({ color: rng() < 0.5 ? 0x5a4630 : 0x6b573c }),
+          Math.sin(ta) * tr, -0.15, Math.cos(ta) * tr);
+        twig.rotation.set(0, rng() * Math.PI, (rng() - 0.5) * 0.2);
+        floor.add(twig);
+      }
+      // Mossy stones settled among the roots.
+      for (var sn = 0; sn < 16; sn++) {
+        var sa3 = rng() * Math.PI * 2, sr3 = 2.8 + rng() * 9;
+        var stone = new T.Mesh(new T.DodecahedronGeometry(0.14 + rng() * 0.20, 0),
+          new T.MeshLambertMaterial({ color: rng() < 0.4 ? 0x5e6354 : 0x6d6f66, flatShading: true }));
+        stone.position.set(Math.sin(sa3) * sr3, -0.14 + rng() * 0.05, Math.cos(sa3) * sr3);
+        stone.rotation.set(rng() * 3, rng() * 3, rng() * 3);
+        stone.scale.y = 0.6 + rng() * 0.3;
+        stone.castShadow = true; stone.receiveShadow = true;
+        floor.add(stone);
+      }
+      // Moss patches creeping out from the trunk.
+      for (var mp = 0; mp < 13; mp++) {
+        var ma = rng() * Math.PI * 2, mr = 2.2 + rng() * 6;
+        var moss = new T.Mesh(new T.CircleGeometry(0.28 + rng() * 0.42, 7),
+          new T.MeshLambertMaterial({ color: rng() < 0.5 ? 0x2f4423 : 0x3a5229 }));
+        moss.rotation.x = -Math.PI / 2;
+        moss.rotation.z = rng() * 3;
+        moss.position.set(Math.sin(ma) * mr, -0.178, Math.cos(ma) * mr);
+        floor.add(moss);
+      }
+      // Toadstools, because every old tree has them.
+      for (var ts = 0; ts < 8; ts++) {
+        var tsa = rng() * Math.PI * 2, tsr = 2.4 + rng() * 8;
+        var tx = Math.sin(tsa) * tsr, tz = Math.cos(tsa) * tsr;
+        var hgt = 0.07 + rng() * 0.07;
+        floor.add(cyl(0.022, 0.030, hgt, 6, new T.MeshLambertMaterial({ color: 0xe6dcc4 }), tx, -0.17 + hgt / 2, tz));
+        var capm2 = new T.Mesh(new T.SphereGeometry(0.048 + rng() * 0.03, 9, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+          new T.MeshLambertMaterial({ color: rng() < 0.4 ? 0xb04a3a : 0x8a6a48 }));
+        capm2.scale.y = 0.7;
+        capm2.position.set(tx, -0.17 + hgt, tz);
+        floor.add(capm2);
+      }
+      // A few ferns for height, kept sparse and away from the camera's lap.
+      for (var fn = 0; fn < 18; fn++) {
+        var fa2 = rng() * Math.PI * 2, fr3 = 4.5 + rng() * 8;
+        var fx = Math.sin(fa2) * fr3, fz = Math.cos(fa2) * fr3;
+        for (var fr4 = 0; fr4 < 5; fr4++) {
+          var frond = box(0.05, 0.02, 0.46 + rng() * 0.2, new T.MeshLambertMaterial({ color: 0x3d6b30 }), fx, -0.05, fz);
+          frond.rotation.set(-0.55 - rng() * 0.25, (fr4 / 5) * Math.PI * 2 + rng() * 0.4, 0);
+          frond.position.y = -0.02 + rng() * 0.06;
+          floor.add(frond);
+        }
+      }
+      mergeStatic(floor, { name: 'forest-floor', flat: true });
+      scene.add(floor);
 
       // The tree
       var tree = buildTree(mats, rng);
@@ -1212,7 +1429,7 @@
       // The Aviary Gardens: the ground-level room, planted around the roots.
       var garden = new T.Group();
       var petals = [0xe8697d, 0xf0c04a, 0xe4e2ec, 0xc27ad6, 0xf08a3c];
-      for (var fl2 = 0; fl2 < 46; fl2++) {
+      for (var fl2 = 0; fl2 < 26; fl2++) {
         var fa = rng() * Math.PI * 2, fr2 = 3.6 + rng() * 4.6;
         var stem = cyl(0.012, 0.016, 0.3, 4, new T.MeshLambertMaterial({ color: 0x4a7a38 }), Math.sin(fa) * fr2, 0.05, Math.cos(fa) * fr2);
         garden.add(stem);
@@ -1222,7 +1439,7 @@
         garden.add(head);
       }
       // A little pond with a feeder standing beside it.
-      var pond = new T.Mesh(new T.CircleGeometry(1.5, 22), new T.MeshLambertMaterial({ color: 0x2f6b86 }));
+      var pond = new T.Mesh(new T.CircleGeometry(1.4, 24), new T.MeshLambertMaterial({ color: 0x2a4a58 }));
       pond.rotation.x = -Math.PI / 2;
       pond.position.set(4.6, -0.16, 3.4);
       pond.scale.set(1, 0.72, 1);
@@ -1266,10 +1483,6 @@
       st.fireflies = ffGroup;
       st.ffTex = ffTex;
 
-      // Birds circling the canopy
-      st.birds = [];
-      for (var bi = 0; bi < 5; bi++) spawnBird(scene);
-
       // Drifting leaves
       var leafFallGeo = new T.PlaneGeometry(0.16, 0.11);
       st.leafFall = [];
@@ -1283,30 +1496,6 @@
       st.scene = scene;
       st.builtKey = built.slice().sort().join(',');
       st.shadowTick = 0;
-    }
-
-    function spawnBird(scene) {
-      var night = st.night;
-      var keys = Object.keys(BIRDS);
-      var pool = [];
-      keys.forEach(function(k) {
-        var w = night ? BIRDS[k].night : (1 - BIRDS[k].night * 0.5);
-        for (var n = 0; n < Math.max(1, Math.round(w * 6)); n++) pool.push(k);
-      });
-      var kind = pool[Math.floor(Math.random() * pool.length)] || 'robin';
-      var b = buildBird(kind);
-      b.userData.orbit = {
-        r: 6 + Math.random() * 7,
-        y: 3.5 + Math.random() * 7,
-        sp: (0.10 + Math.random() * 0.16) * (Math.random() < 0.5 ? 1 : -1),
-        a: Math.random() * Math.PI * 2,
-        bobAmp: 0.3 + Math.random() * 0.7,
-        bobSp: 0.5 + Math.random() * 0.9,
-        phase: Math.random() * 7
-      };
-      scene.add(b);
-      st.birds.push(b);
-      return b;
     }
 
     // ---- renderer / mount ----
@@ -1459,7 +1648,7 @@
         var flick = g.lantern ? (0.78 + 0.22 * Math.sin(t * g.speed + g.phase) * Math.sin(t * g.speed * 0.4 + g.phase))
           : (0.90 + 0.10 * Math.sin(t * g.speed * 0.5 + g.phase));
         if (g.pulse) flick = 0.62 + 0.38 * Math.sin(t * 1.7 + g.phase);
-        var day = g.always ? 0.85 : 0.24;
+        var day = g.always ? 0.85 : 0.42;
         var target = g.lit ? (day + (g.base - day) * boost) * flick : 0.04;
         g.mat.opacity = g.mat.opacity + (target - g.mat.opacity) * Math.min(1, s * 5);
         var haloAmt = g.mat.opacity * (0.08 + boost * 0.40);
@@ -1484,22 +1673,6 @@
           sp.material.opacity = 0.60 * Math.sin(Math.PI * Math.min(1, p * 1.05));
         });
       });
-
-      // Birds: circle, bank and beat their wings
-      for (var b = 0; b < st.birds.length; b++) {
-        var bird = st.birds[b], o = bird.userData.orbit;
-        o.a += s * o.sp;
-        var x = Math.sin(o.a) * o.r, z = Math.cos(o.a) * o.r;
-        var y = o.y + Math.sin(t * o.bobSp + o.phase) * o.bobAmp;
-        bird.position.set(x, y, z);
-        // Face along the tangent of the circle
-        bird.rotation.y = Math.atan2(Math.cos(o.a) * o.sp, -Math.sin(o.a) * o.sp) + (o.sp > 0 ? 0 : Math.PI);
-        bird.rotation.z = -Math.sin(t * o.bobSp + o.phase) * 0.16;
-        var beat = Math.sin(t * bird.userData.flap + o.phase);
-        bird.userData.wings.forEach(function(w) {
-          w.pivot.rotation.x = w.side * beat * 0.85;
-        });
-      }
 
       // Fireflies come out with the dark
       if (st.fireflies) {
@@ -1620,7 +1793,7 @@
         });
       });
       st.scene = null;
-      st.houses = []; st.glows = []; st.smokes = []; st.birds = []; st.labels = []; st.leafFall = [];
+      st.houses = []; st.glows = []; st.smokes = []; st.labels = []; st.leafFall = [];
       st.fireflies = null; st.moon = null; st.moonDisc = null;
     }
 
@@ -1657,7 +1830,6 @@
   return {
     ANCHORS: ANCHORS,
     STYLES: STYLES,
-    BIRDS: BIRDS,
     isNightHour: isNightHour,
     lightBoostFor: lightBoostFor,
     anchorPosition: anchorPosition,

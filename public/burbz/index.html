@@ -3622,8 +3622,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=quest-categories-material-quests-20260726"></script>
-<script src="academy_alive_core.js?v=academy-alive-v2-20260730"></script>
-<script src="academy_3d_core.js?v=academy-canopy-v2-20260730"></script>
+<script src="academy_alive_core.js?v=academy-no-birds-v3-20260731"></script>
+<script src="academy_3d_core.js?v=academy-no-birds-v4-20260731"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
@@ -11331,16 +11331,9 @@ function renderAcademyTreehouse(byRoom) {
     return '<button class="' + nodeClass + ' built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' + guide +
       '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building"><div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
   }).join('');
-  let birdHtml = '';
-  rooms.forEach(r => {
-    const list = byRoom[r.id] || [];
-    const pos = r.id === 'outdoors' ? { x: 50, y: 88 } : academyRoomPosition(r.id, r);
-    const perches = (ACADEMY_ROOMS[r.id] && ACADEMY_ROOMS[r.id].perches) || [[pos.x,pos.y]];
-    list.slice(0, 120).forEach((b, i) => {
-      const perch = r.id === 'outdoors' ? [pos.x + ((i % 7) - 3) * 5, pos.y + (Math.floor(i / 7) % 3) * 3] : [pos.x + ((i % 5) - 2) * 3, pos.y + 7 + (Math.floor(i / 5) % 2) * 3];
-      birdHtml += '<div class="treehouse-bird" title="' + escapeHtml(birdDisplayName(b)) + '" style="left:' + perch[0] + '%;top:' + perch[1] + '%;animation-delay:-' + ((i * .17) % 1.2).toFixed(2) + 's">' + treehouseBirdIconHTML(b) + '</div>';
-    });
-  });
+  // Companion sprites no longer perch on the tree — the Academy reads as a
+  // place, not a bird cage. Each room's badge still shows how many live there.
+  const birdHtml = '';
   birds.innerHTML = birdHtml;
   // Room nodes were just rebuilt, so the ambience glows/anchors bolted onto
   // them were destroyed with the old markup — re-anchor them.
@@ -27196,7 +27189,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'quest-map-pan-v184-20260731';
+const BURBZ_BUILD = 'academy-no-birds-v185-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

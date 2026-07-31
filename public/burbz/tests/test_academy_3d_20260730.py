@@ -35,7 +35,7 @@ def _run_node(script: str) -> dict:
 
 def test_core_module_exists_and_exports():
     assert "BurbzAcademy3D" in CORE3D
-    for name in ["createAcademy3D", "ANCHORS", "STYLES", "BIRDS", "mergeStatic",
+    for name in ["createAcademy3D", "ANCHORS", "STYLES", "mergeStatic",
                  "isNightHour", "lightBoostFor", "anchorPosition"]:
         assert name in CORE3D, f"the 3D engine must define {name}"
 
@@ -156,23 +156,10 @@ def test_every_academy_room_has_a_place_on_the_tree():
     assert len(out["roofs"]) >= 5, "the buildings must not all wear the same roof"
 
 
-def test_the_cast_of_birds_matches_the_2d_academy():
-    out = _run_node(
-        """
-        const c = require('./academy_3d_core.js');
-        const k = Object.keys(c.BIRDS);
-        console.log(JSON.stringify({
-          kinds: k.sort(),
-          sized: new Set(k.map(x => c.BIRDS[x].size)).size,
-          owlNocturnal: c.BIRDS.owl.night > c.BIRDS.robin.night * 5,
-          flapRange: Math.max(...k.map(x => c.BIRDS[x].flap)) / Math.min(...k.map(x => c.BIRDS[x].flap))
-        }));
-        """
-    )
-    assert out["kinds"] == ["bluetit", "buzzard", "crow", "owl", "robin"]
-    assert out["sized"] == 5, "each archetype needs its own size"
-    assert out["owlNocturnal"], "owls belong to the night here too"
-    assert out["flapRange"] >= 3, "wingbeat speeds must differ between species"
+def test_no_birds_in_the_3d_academy_either():
+    """Birds were pulled from both Academies, so neither may grow them back."""
+    for gone in ("buildBird", "spawnBird", "BIRDS", "userData.wings"):
+        assert gone not in CORE3D, f"the 3D engine still carries {gone}"
 
 
 def test_day_and_night_curves_match_the_2d_engine():
@@ -196,7 +183,7 @@ def test_geometry_is_merged_for_phones():
     # A treehouse is ~40 primitives and the tree ~45 limbs. Without the merge
     # pass the scene cost 780 draw calls; merged it is ~130.
     assert "function mergeStatic(" in CORE3D
-    for site in ["'tree-bark'", "id + '-shell'", "'bird-body'", "'lantern-string'", "'gardens'"]:
+    for site in ["'tree-bark'", "id + '-shell'", "'lantern-string'", "'gardens'", "'forest-floor'"]:
         assert site in CORE3D, f"merge pass missing for {site}"
     assert "vertexColors: true" in CORE3D, "merged parts keep their colours as vertex colours"
 
