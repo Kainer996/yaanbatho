@@ -17,8 +17,13 @@ INDEX = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERLIN_CORE = ROOT / "merlin_companion_core.js"
 PROFILES = ROOT / "data" / "national-bird-completion" / "profiles.json"
-BIRDFUNCDAT = Path("/tmp/BirdFuncDat.txt")
 BIRDFUNCDAT_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
+# Resolve the EltonTraits oracle the same way check_bird_diets.py does: prefer a
+# local /tmp download for fast iteration, otherwise fall back to the committed
+# source cache so a fresh clone still verifies offline.
+_TMP_BIRDFUNCDAT = Path("/tmp/BirdFuncDat.txt")
+_CACHED_BIRDFUNCDAT = ROOT / "data" / "national-bird-completion" / "source-cache" / "BirdFuncDat.txt"
+BIRDFUNCDAT = _TMP_BIRDFUNCDAT if _TMP_BIRDFUNCDAT.exists() else _CACHED_BIRDFUNCDAT
 
 DIET_ARTIFACT_CANDIDATES = [
     ROOT / "data" / "bird-diet-records.json",
