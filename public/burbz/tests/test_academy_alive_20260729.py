@@ -1,13 +1,17 @@
 """Academy Alive — the living treehouse ambience layer (2026-07-29).
 
-The Academy screen gained a presentation-only ambience engine
-(academy_alive_core.js): the player's real companions fly around the tree
-shedding feathers, the Kitchen chimney smokes, windows and lanterns flicker
-on and off, The Crowbar hums with music notes, fireflies come out at night.
+The Academy screen has a presentation-only ambience engine
+(academy_alive_core.js): the Kitchen chimney smokes, windows and lanterns
+flicker on and off, The Crowbar hums with music notes, leaves drift down and
+fireflies come out at night, all on one shared breeze.
+
+Birds were deliberately taken off this screen — see
+test_no_birds_anywhere_on_the_academy_tree, which is the rule the rest of the
+ambience has to live within.
 
 These tests pin the wiring (script tag, service worker, live-update script),
-the safety rails (reduced motion, birds away on expeditions never fly,
-art-less birds stay perched), and the pure geometry/timing helpers.
+the safety rails (reduced motion, taps passing through), and the pure
+timing helpers.
 """
 
 import json
@@ -41,8 +45,7 @@ def test_core_module_exists_and_exports():
     assert "BurbzAcademyAlive" in CORE
     for name in [
         "createAcademyAlive", "ANCHORS", "isNightHour", "lightBoostFor",
-        "makeFlightLeg", "BIRD_ARCHETYPES", "drawBird", "pickArchetype",
-        "windAt", "cubicAt",
+        "windAt", "mulberry32",
     ]:
         assert name in CORE, f"engine must export {name}"
 
@@ -80,12 +83,27 @@ def test_service_worker_and_live_update_ship_the_engine():
 
 # ---- safety rails ------------------------------------------------------------
 
-def test_flying_birds_are_procedural_not_cutouts():
-    # Round-2 feedback: translated cutouts read as bouncing stickers. Flying
-    # birds are now drawn and wing-animated on canvas; no flyer DOM remains.
-    assert "spawnBirdActor" in CORE and "updateBirdActors" in CORE
-    assert "alive-flyer" not in HTML, "the DOM cutout flyer layer must be gone"
-    assert "academyAliveBirds" not in HTML, "the companion flyer roster adapter must be gone"
+def test_no_birds_anywhere_on_the_academy_tree():
+    """The Academy reads as a place, not a bird cage.
+
+    Every bird was pulled off this screen at the player's request: the
+    procedural flyers, the distant flocks, the companion sprites perched on
+    the tree, and the feathers they shed. Nothing may quietly reintroduce one.
+    """
+    for gone in ("spawnBirdActor", "updateBirdActors", "drawBirdActors",
+                 "BIRD_ARCHETYPES", "drawBirdWing", "flockRuns",
+                 "spawnFeather", "'feather'"):
+        assert gone not in CORE, f"the 2D engine still carries {gone}"
+    assert "alive-flyer" not in HTML, "the DOM flyer layer must be gone"
+    assert "academyAliveBirds" not in HTML, "the flyer roster adapter must be gone"
+    assert 'class="treehouse-bird"' not in HTML, "companion sprites must not perch on the tree"
+
+
+def test_the_tree_is_still_alive_without_them():
+    # What must survive: smoke, window and lantern light, drifting leaves,
+    # fireflies, and the swaying canopy.
+    for kept in ("spawnSmoke", "updateGlows", "spawnLeaf", "drawFireflies", "drawFoliage"):
+        assert kept in CORE, f"removing the birds must not cost us {kept}"
 
 
 def test_reduced_motion_keeps_windows_but_skips_motion():
@@ -168,82 +186,6 @@ def test_night_and_light_curves():
     assert out["boostNoon"] == 0 and out["boostMidnight"] == 1
     assert 0 < out["duskRampMid"] < 1, "dusk must ramp, not snap"
     assert out["boostsBounded"]
-
-
-def test_flight_legs_stay_flyable():
-    out = _run_node(
-        """
-        const core = require('./academy_alive_core.js');
-        const rng = core.mulberry32(42);
-        const w = 400, h = 680;
-        let ok = true, entries = 0;
-        for (let i = 0; i < 200; i++) {
-          const leg = core.makeFlightLeg(w, h, null, rng);
-          entries++;
-          if (leg.dur < 3200 || leg.dur > 12000) ok = false;
-          if (Math.abs(leg.p0.x) < 30 && leg.p0.x > 0 && leg.p0.x < w) ok = false; // must start off-screen
-          const mid = core.cubicAt(leg.p0, leg.p1, leg.p2, leg.p3, 0.5);
-          if (!Number.isFinite(mid.x) || !Number.isFinite(mid.y)) ok = false;
-          const end = core.cubicAt(leg.p0, leg.p1, leg.p2, leg.p3, 1);
-          if (Math.abs(end.x - leg.p3.x) > 1e-6 || Math.abs(end.y - leg.p3.y) > 1e-6) ok = false;
-        }
-        console.log(JSON.stringify({ ok, entries }));
-        """
-    )
-    assert out["ok"] and out["entries"] == 200
-
-
-def test_five_varied_bird_archetypes():
-    out = _run_node(
-        """
-        const core = require('./academy_alive_core.js');
-        const A = core.BIRD_ARCHETYPES;
-        const keys = Object.keys(A);
-        const sizes = keys.map(k => A[k].size);
-        const styles = new Set(keys.map(k => A[k].style));
-        const rigged = keys.every(k => A[k].flapHz > 0 && A[k].amp > 0 && A[k].span > 0 &&
-          A[k].back && A[k].wing && A[k].belly && A[k].weightDay >= 0 && A[k].weightNight >= 0);
-        console.log(JSON.stringify({
-          count: keys.length,
-          distinctSizes: new Set(sizes).size,
-          smallest: Math.min.apply(null, sizes),
-          largest: Math.max.apply(null, sizes),
-          styles: [...styles],
-          rigged,
-          owlNocturnal: A.owl.weightNight > A.owl.weightDay * 5,
-          buzzardDiurnal: A.buzzard.weightDay > A.buzzard.weightNight * 5,
-          flapRange: Math.max.apply(null, keys.map(k => A[k].flapHz)) / Math.min.apply(null, keys.map(k => A[k].flapHz))
-        }));
-        """
-    )
-    assert out["count"] == 5, "exactly five bird archetypes, as designed"
-    assert out["distinctSizes"] == 5 and out["smallest"] <= 10 and out["largest"] >= 22, (
-        "the cast must span tiny songbird to broad raptor"
-    )
-    assert set(out["styles"]) == {"bounding", "steady", "soar", "buoyant"}, (
-        "flight styles must differ, not just colours"
-    )
-    assert out["rigged"], "every archetype needs a full wing rig and palette"
-    assert out["owlNocturnal"] and out["buzzardDiurnal"], "the cast must change between day and night"
-    assert out["flapRange"] >= 3, "wingbeat speeds must genuinely vary (flutter vs slow rowing)"
-
-
-def test_archetype_picker_follows_day_and_night():
-    out = _run_node(
-        """
-        const core = require('./academy_alive_core.js');
-        const rngDay = core.mulberry32(7);
-        const rngNight = core.mulberry32(7);
-        let dayOwls = 0, nightOwls = 0;
-        for (let i = 0; i < 300; i++) {
-          if (core.pickArchetype(false, rngDay) === 'owl') dayOwls++;
-          if (core.pickArchetype(true, rngNight) === 'owl') nightOwls++;
-        }
-        console.log(JSON.stringify({ dayOwls, nightOwls }));
-        """
-    )
-    assert out["dayOwls"] < 15, "owls should barely fly in daylight"
-    assert out["nightOwls"] > 60, "owls should own the night sky"
 
 
 def test_wind_is_gentle():

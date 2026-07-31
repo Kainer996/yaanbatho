@@ -105,16 +105,6 @@
 
   var GLOW_WARM = 0xffc06a, GLOW_COOL = 0xa8c8ff;
 
-  // Five bird archetypes to circle the canopy. Sizes and palettes deliberately
-  // match the 2D engine's cast so the two Academies feel like one place.
-  var BIRDS = {
-    robin:   { size: 0.16, span: 1.5, flap: 8.5, body: 0x8a6f52, wing: 0x6b563e, breast: 0xd95f3b, night: 0.1 },
-    bluetit: { size: 0.12, span: 1.5, flap: 11,  body: 0x4f8fd0, wing: 0x3c6ea8, breast: 0xe8d44d, night: 0.1 },
-    crow:    { size: 0.27, span: 2.0, flap: 3.4, body: 0x26262e, wing: 0x1a1a22, breast: 0x22222c, night: 0.8 },
-    buzzard: { size: 0.32, span: 2.4, flap: 2.2, body: 0x6e5233, wing: 0x54401f, breast: 0xa8916b, night: 0.15 },
-    owl:     { size: 0.24, span: 2.1, flap: 3.0, body: 0xd9c49a, wing: 0xc4ab7e, breast: 0xf4ecdc, night: 1.6 }
-  };
-
   function mulberry32(seed) {
     var a = seed >>> 0;
     return function() {
@@ -1157,58 +1147,6 @@
     return g;
   }
 
-  // ---- a bird ---------------------------------------------------------------
-
-  function buildBird(kind) {
-    var b = BIRDS[kind] || BIRDS.robin;
-    var g = new T.Group();
-    var bodyMat = new T.MeshLambertMaterial({ color: b.body });
-    var wingMat = new T.MeshLambertMaterial({ color: b.wing, side: T.DoubleSide });
-    var s = b.size;
-    var body = new T.Mesh(new T.SphereGeometry(s, 9, 7), bodyMat);
-    body.scale.set(1.6, 0.92, 0.92);
-    g.add(body);
-    var head = new T.Mesh(new T.SphereGeometry(s * 0.62, 8, 6), bodyMat);
-    head.position.set(s * 1.42, s * 0.30, 0);
-    g.add(head);
-    var beak = new T.Mesh(new T.ConeGeometry(s * 0.20, s * 0.55, 5), new T.MeshLambertMaterial({ color: 0xd8a03a }));
-    beak.rotation.z = -Math.PI / 2;
-    beak.position.set(s * 2.05, s * 0.26, 0);
-    g.add(beak);
-    var breast = new T.Mesh(new T.SphereGeometry(s * 0.66, 8, 6), new T.MeshLambertMaterial({ color: b.breast }));
-    breast.scale.set(1.15, 0.85, 0.85);
-    breast.position.set(s * 0.72, -s * 0.24, 0);
-    g.add(breast);
-    var tail = new T.Mesh(new T.BoxGeometry(s * 1.25, s * 0.10, s * 0.60), wingMat);
-    tail.position.set(-s * 1.75, s * 0.06, 0);
-    g.add(tail);
-    // Wings pivot at the shoulders so they beat rather than slide.
-    var wings = [];
-    for (var side = -1; side <= 1; side += 2) {
-      var pivot = new T.Group();
-      pivot.position.set(0, s * 0.34, side * s * 0.42);
-      var wing = new T.Mesh(new T.PlaneGeometry(s * 1.5, s * b.span, 1, 1), wingMat);
-      wing.rotation.x = Math.PI / 2;
-      wing.position.set(-s * 0.12, 0, side * s * b.span * 0.5);
-      pivot.add(wing);
-      g.add(pivot);
-      wings.push({ pivot: pivot, side: side });
-    }
-    // Body parts bake into one mesh; the wings stay separate so they can beat.
-    mergeStatic(g, {
-      name: 'bird-body',
-      only: function(o) {
-        var q = o;
-        while (q) { if (q.parent && q.parent.isGroup && wings.some(function(w) { return w.pivot === q.parent || w.pivot === q; })) return false; q = q.parent; }
-        return true;
-      }
-    });
-    g.userData.wings = wings;
-    g.userData.kind = kind;
-    g.userData.flap = b.flap;
-    return g;
-  }
-
   // ---- scene ---------------------------------------------------------------
 
   function createAcademy3D(adapter) {
@@ -1222,7 +1160,7 @@
       w: 0, h: 0, night: false, boost: 0,
       cam: { az: 0.55, polar: 1.46, dist: 33, lastInput: 0 },
       pointers: new Map(), orbitStart: null, pinchLast: null, dragged: false,
-      houses: [], glows: [], smokes: [], birds: [], fireflies: null, leafFall: [],
+      houses: [], glows: [], smokes: [], fireflies: null, leafFall: [],
       labels: [], sun: null, moon: null, hemi: null, sky: null,
       builtKey: '', shadowTick: 0, disposed: false
     };
@@ -1545,10 +1483,6 @@
       st.fireflies = ffGroup;
       st.ffTex = ffTex;
 
-      // Birds circling the canopy
-      st.birds = [];
-      for (var bi = 0; bi < 5; bi++) spawnBird(scene);
-
       // Drifting leaves
       var leafFallGeo = new T.PlaneGeometry(0.16, 0.11);
       st.leafFall = [];
@@ -1562,30 +1496,6 @@
       st.scene = scene;
       st.builtKey = built.slice().sort().join(',');
       st.shadowTick = 0;
-    }
-
-    function spawnBird(scene) {
-      var night = st.night;
-      var keys = Object.keys(BIRDS);
-      var pool = [];
-      keys.forEach(function(k) {
-        var w = night ? BIRDS[k].night : (1 - BIRDS[k].night * 0.5);
-        for (var n = 0; n < Math.max(1, Math.round(w * 6)); n++) pool.push(k);
-      });
-      var kind = pool[Math.floor(Math.random() * pool.length)] || 'robin';
-      var b = buildBird(kind);
-      b.userData.orbit = {
-        r: 6 + Math.random() * 7,
-        y: 3.5 + Math.random() * 7,
-        sp: (0.10 + Math.random() * 0.16) * (Math.random() < 0.5 ? 1 : -1),
-        a: Math.random() * Math.PI * 2,
-        bobAmp: 0.3 + Math.random() * 0.7,
-        bobSp: 0.5 + Math.random() * 0.9,
-        phase: Math.random() * 7
-      };
-      scene.add(b);
-      st.birds.push(b);
-      return b;
     }
 
     // ---- renderer / mount ----
@@ -1764,22 +1674,6 @@
         });
       });
 
-      // Birds: circle, bank and beat their wings
-      for (var b = 0; b < st.birds.length; b++) {
-        var bird = st.birds[b], o = bird.userData.orbit;
-        o.a += s * o.sp;
-        var x = Math.sin(o.a) * o.r, z = Math.cos(o.a) * o.r;
-        var y = o.y + Math.sin(t * o.bobSp + o.phase) * o.bobAmp;
-        bird.position.set(x, y, z);
-        // Face along the tangent of the circle
-        bird.rotation.y = Math.atan2(Math.cos(o.a) * o.sp, -Math.sin(o.a) * o.sp) + (o.sp > 0 ? 0 : Math.PI);
-        bird.rotation.z = -Math.sin(t * o.bobSp + o.phase) * 0.16;
-        var beat = Math.sin(t * bird.userData.flap + o.phase);
-        bird.userData.wings.forEach(function(w) {
-          w.pivot.rotation.x = w.side * beat * 0.85;
-        });
-      }
-
       // Fireflies come out with the dark
       if (st.fireflies) {
         var ffOn = Math.max(0, boost * 1.3 - 0.25);
@@ -1899,7 +1793,7 @@
         });
       });
       st.scene = null;
-      st.houses = []; st.glows = []; st.smokes = []; st.birds = []; st.labels = []; st.leafFall = [];
+      st.houses = []; st.glows = []; st.smokes = []; st.labels = []; st.leafFall = [];
       st.fireflies = null; st.moon = null; st.moonDisc = null;
     }
 
@@ -1936,7 +1830,6 @@
   return {
     ANCHORS: ANCHORS,
     STYLES: STYLES,
-    BIRDS: BIRDS,
     isNightHour: isNightHour,
     lightBoostFor: lightBoostFor,
     anchorPosition: anchorPosition,
