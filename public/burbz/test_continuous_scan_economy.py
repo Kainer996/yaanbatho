@@ -37,9 +37,15 @@ def test_continuous_scan_shows_a_non_blocking_card_for_every_detection():
     assert "showScanEncounterCard(bird" in HTML
     assert "continuous-sound-discovery-v2-20260709" in HTML
     # Existing loop must remain user-controlled and continue after each chunk.
+    # (The hop clock re-opens recording lanes; the finished clip is only queued
+    # for analysis while the session is still wanted and the mic is live.)
     assert "continuousSoundScanWanted = true" in HTML
     assert "const beginNextWindowBeforeAnalysis = continuousSoundScanWanted" in HTML
-    assert "if (beginNextWindowBeforeAnalysis) startSoundRecorderWindow(generation);" in HTML
+    assert "queueSoundWindowForAnalysis({ blob, sequence, startedAt, endedAt, durationMs, generation });" in HTML
+    hop = HTML[HTML.index("function runSoundHop(generation)"):]
+    hop = hop[:hop.index("\n}")]
+    assert "startSoundRecorderWindow(generation);" in hop
+    assert "scheduleSoundHop(generation);" in hop
 
 
 def test_only_confirmed_confident_catalogue_matches_are_auto_logged():
