@@ -14330,9 +14330,24 @@ function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getS
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
   if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':9, 'line-opacity':.18, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':3.2, 'line-opacity':.92, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
-// Pokémon Go / Jurassic World Alive movement model: you are pinned to your real
-// GPS position, cannot pan ("walk") the map, and a one-finger left/right swipe
-// spins the camera a full 360° around you so you can look in any direction.
+// Pokémon Go / Jurassic World Alive movement model: normal play stays pinned to
+// real GPS and a one-finger swipe rotates the view. A selected quest temporarily
+// enables drag-pan so the player can inspect the route behind the briefing card.
+function questMapInspectionMode() {
+  return !!$('liveMapShell')?.classList.contains('quest-focused');
+}
+function setQuestMapInspectionMode(enabled) {
+  if (!liveMap) return;
+  try {
+    if (enabled) liveMap.dragPan.enable();
+    else liveMap.dragPan.disable();
+  } catch (e) {}
+  const canvas = liveMap.getCanvasContainer && liveMap.getCanvasContainer();
+  if (canvas) {
+    canvas.style.cursor = enabled ? 'grab' : 'ew-resize';
+    canvas.dataset.questPan = enabled ? 'enabled' : 'disabled';
+  }
+}
 function wireMapRotateOnly() {
   if (!liveMap || liveMap._burbzRotateWired) return;
   liveMap._burbzRotateWired = true;
@@ -14346,10 +14361,12 @@ function wireMapRotateOnly() {
   let active = false, startX = 0, startBearing = 0;
   canvas.addEventListener('pointerdown', e => {
     pointers.add(e.pointerId);
+    if (questMapInspectionMode()) { active = false; return; }
     if (pointers.size === 1) { active = true; startX = e.clientX; startBearing = liveMap.getBearing(); }
     else active = false; // a second finger → let MapLibre pinch-zoom/rotate take over
   });
   canvas.addEventListener('pointermove', e => {
+    if (questMapInspectionMode()) { active = false; return; }
     if (!active || pointers.size !== 1) return;
     liveMap.setBearing(startBearing - (e.clientX - startX) * 0.6); // ~one screen-width ≈ 250°
   });
@@ -16196,6 +16213,7 @@ function closeQuestMapFocus(opts = {}) {
   if (card && questFocusResizeObserver) questFocusResizeObserver.unobserve(card);
   if (card) card.classList.remove('show');
   shell?.classList.remove('quest-focused');
+  setQuestMapInspectionMode(false);
   shell?.style.removeProperty('--quest-focus-card-height');
   shell?.style.removeProperty('--quest-focus-lift');
   shell?.style.removeProperty('--quest-focus-max-height');
@@ -16317,6 +16335,7 @@ function renderQuestMapFocusCard(moveFocus = false) {
   card.scrollTop = 0;
   card.classList.add('show');
   $('liveMapShell')?.classList.add('quest-focused');
+  setQuestMapInspectionMode(true);
   if (!questFocusResizeObserver && typeof ResizeObserver === 'function') questFocusResizeObserver = new ResizeObserver(syncQuestMapFocusLayout);
   if (questFocusResizeObserver) questFocusResizeObserver.observe(card);
   requestAnimationFrame(() => { syncQuestMapFocusLayout(); if (moveFocus) focusQuestMapPrimaryAction(); });
@@ -27177,7 +27196,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'battle-flow-v183-20260731';
+const BURBZ_BUILD = 'quest-map-pan-v184-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

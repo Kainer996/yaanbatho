@@ -153,6 +153,20 @@ def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_abov
     assert "const BURBZ_CACHE = 'burbz-" in SW.read_text(encoding="utf-8")
 
 
+def test_selected_quest_brief_keeps_the_uncovered_map_drag_pannable():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function setQuestMapInspectionMode(enabled)" in html
+    inspection = html.split("function setQuestMapInspectionMode(enabled)", 1)[1].split("function wireMapRotateOnly", 1)[0]
+    assert "liveMap.dragPan.enable()" in inspection
+    assert "liveMap.dragPan.disable()" in inspection
+    rotate_only = html.split("function wireMapRotateOnly()", 1)[1].split("function wireMapMoveTracking", 1)[0]
+    assert "questMapInspectionMode()" in rotate_only
+    focus = html.split("function renderQuestMapFocusCard", 1)[1].split("function focusQuestOnMap", 1)[0]
+    assert "setQuestMapInspectionMode(true)" in focus
+    close = html.split("function closeQuestMapFocus", 1)[1].split("function restoreQuestMapFocus", 1)[0]
+    assert "setQuestMapInspectionMode(false)" in close
+
+
 def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():
     html = HTML.read_text(encoding="utf-8")
     assert html.count('id="mapQuestShowBtn"') == 1
