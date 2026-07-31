@@ -134,7 +134,7 @@ def test_ring_quest_builds_as_a_loop_with_finish_back_at_the_start():
 def test_ring_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-alignment-authority-v124-20260727"
+    marker = "quest_core.js?v=begin-quest-loop-authority-v188-20260731"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
