@@ -105,6 +105,24 @@ test('looping beds preserve suppression and enabled controls', async () => {
 
   manager.setEnabled(false);
   assert.ok(tracks.every(track => track.paused));
+  manager.setVolume(0.075);
+  assert.equal(manager.volume, 0.075, 'the intended level remains inspectable while paused');
+});
+
+test('field-map music fades continuously to silence as the player zooms close', () => {
+  const volumeAt = zoom => audioCore.musicVolumeForZoom(zoom, {
+    normalZoom: 16.35,
+    silentZoom: 19.1,
+    maxVolume: 0.2
+  });
+
+  assert.equal(volumeAt(4), 0.2, 'wide views keep the full score');
+  assert.equal(volumeAt(16.35), 0.2, 'the normal outside view keeps the full score');
+  assert.ok(volumeAt(17.1) < volumeAt(16.35));
+  assert.ok(volumeAt(17.85) < volumeAt(17.1));
+  assert.ok(volumeAt(18.6) < volumeAt(17.85));
+  assert.equal(volumeAt(19.1), 0, 'the closest view is silent');
+  assert.equal(volumeAt(30), 0, 'zoom values beyond the cap remain silent');
 });
 
 test('bespoke cues play once without legacy composite follow-ups', async () => {

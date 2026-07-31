@@ -224,5 +224,5 @@ def test_show_quests_release_is_query_busted_and_cached_offline():
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
-    assert "const BURBZ_BUILD = 'show-quests-close-v186-20260731'" in html
+    assert "const BURBZ_BUILD = 'map-music-fade-v187-20260731'" in html
     assert "show-quests-close-v186-20260731" in sw
