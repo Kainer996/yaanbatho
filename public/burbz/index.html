@@ -3655,8 +3655,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=empire-realms-trade-v188-20260731"></script>
-<script src="quest_core.js?v=quest-alignment-authority-v124-20260727"></script>
+<script src="empire_realm_core.js?v=empire-realms-trade-v189-20260731"></script>
+<script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -14808,7 +14808,12 @@ async function activateWalkingQuestFromOffer(offer, retry) {
     if (wq.active) return; // another quest started while the loop was charting
   }
   const questOffer = (offer._loop && offer._loop.loopedBack)
-    ? { ...offer, points: offer._loop.points.map(p => ({ lat: p.lat, lon: p.lon })), loopedBack: true }
+    ? {
+        ...offer,
+        points: offer._loop.points.map(p => ({ lat: p.lat, lon: p.lon })),
+        alignmentWays: Array.isArray(offer._loop.alignmentWays) ? offer._loop.alignmentWays : [],
+        loopedBack: true
+      }
     : offer;
   const quest = window.BurbzQuestCore.buildQuestFromOffer(questOffer);
   quest.likelyBirds = Array.isArray(offer.likelyBirds) ? offer.likelyBirds.slice(0, 8) : [];
@@ -14826,7 +14831,7 @@ async function activateWalkingQuestFromOffer(offer, retry) {
     // Evidence the offer already carries answers instantly, so only a real wait
     // on the archive earns a banner — and an automatic retry never does.
     const checking = retry ? null : setTimeout(() => showToast('🧭 Checking this quest against the mapped footpaths…'), 700);
-    const verdict = await certifyQuestAgainstAuthority(quest, offer);
+    const verdict = await certifyQuestAgainstAuthority(quest, questOffer);
     clearTimeout(checking);
     wq = ensureWalkingQuestState();
     if (wq.active) return; // another quest started while the archive answered
@@ -14957,7 +14962,8 @@ function walkQuestRoutePoints(quest) { return ((quest && quest.route) || []).map
 function walkQuestAuthorityWays(quest, offer) {
   const core = window.BurbzQuestCore;
   // Discovery already downloaded this corridor's walkable network — reuse it
-  // rather than making the player wait on a second archive round-trip.
+  // rather than making the player wait on a second archive round-trip. Routed
+  // loops carry evidence for both the outward and return legs here too.
   if (offer && Array.isArray(offer.alignmentWays) && offer.alignmentWays.length) return Promise.resolve(offer.alignmentWays);
   if (!core || !core.fetchAlignmentWays || !core.routeBounds) return Promise.resolve(null);
   const bounds = core.routeBounds(walkQuestRoutePoints(quest), 150);
@@ -27491,7 +27497,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-realms-trade-v188-20260731';
+const BURBZ_BUILD = 'empire-realms-trade-v189-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

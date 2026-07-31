@@ -210,7 +210,8 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     darkness canvas so routes glow across unliberated land.
   - Tests: `tests/test_empire_realms_trade_20260731.py` covers the core maths
     via Node and pins the HTML/UI contracts. SW cache bumped
-    (`empire-realms-trade-v188-20260731`).
+    (`empire-realms-trade-v189-20260731`, on top of main's
+    `begin-quest-loop-authority-v188-20260731`).
 
 - **2026-07-31 — full codebase review (Claude).** Brought the suite to green on
   a fresh clone and closed the fragilities that would have bitten later:
