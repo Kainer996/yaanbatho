@@ -93,13 +93,16 @@ def test_area_birds_has_a_persistent_accessible_toggle():
     assert ".map-area-birds-panel.collapsed" in html
 
 
-def test_map_has_one_premium_quest_control_not_two_competing_buttons():
+def test_map_has_one_premium_show_quests_control_not_two_competing_buttons():
     html = HTML.read_text(encoding="utf-8")
-    assert html.count('id="mapQuestBtn"') == 1
+    assert 'id="mapQuestBtn"' not in html
+    assert html.count('id="mapQuestShowBtn"') == 1
     assert 'id="mapQuestOverviewBtn"' not in html
     assert 'assets/ui/quest-compass-emblem.webp' in html
-    assert 'id="mapQuestBtnLabel">Explore Quests<' in html
-    assert "openQuestBoard" in html
+    assert 'class="map-quest-btn" id="mapQuestShowBtn"' in html
+    assert 'class="map-quest-btn-label">Show Quests<' in html
+    assert 'class="map-quest-btn-kicker">Field board<' not in html
+    assert 'id="mapQuestBtnLabel">Explore Quests<' not in html
 
 
 def test_quest_board_prioritises_start_distance_and_focuses_a_selection_on_the_map():
@@ -135,7 +138,7 @@ def test_map_quest_focus_moves_keyboard_focus_and_restores_it_on_close():
     assert "focusQuestMapPrimaryAction" in html
     assert "mapQuestFocusBegin.focus" in html
     assert "restoreQuestMapFocus" in html
-    assert "mapQuestBtn.focus" in html
+    assert "showBtn.focus" in html
 
 
 def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_above_it():
@@ -167,15 +170,13 @@ def test_selected_quest_brief_keeps_the_uncovered_map_drag_pannable():
     assert "setQuestMapInspectionMode(false)" in close
 
 
-def test_show_quests_button_sits_below_the_field_board_as_a_separate_map_action():
+def test_show_quests_uses_the_large_premium_button_without_a_second_map_action():
     html = HTML.read_text(encoding="utf-8")
     assert html.count('id="mapQuestShowBtn"') == 1
-    assert 'class="map-quest-show-btn"' in html
+    assert 'class="map-quest-show-btn"' not in html
     assert 'aria-pressed="false"' in html
     assert '>Show Quests<' in html
-    assert html.index('id="mapQuestBtn"') < html.index('id="mapQuestShowBtn"')
-    show_button_css = html.split(".map-quest-show-btn {", 1)[1].split("}", 1)[0]
-    assert "height:44px" in show_button_css
+    assert html.count('class="map-quest-btn"') == 1
 
 
 def test_show_quests_reveals_and_frames_every_local_offer():
@@ -186,6 +187,16 @@ def test_show_quests_reveals_and_frames_every_local_offer():
     assert "liveMap.fitBounds" in html
     assert "showBtn.addEventListener('click', showAllLocalQuests)" in html
     assert "updateShowQuestsButton" in html
+
+
+def test_show_quests_frames_local_starts_at_a_close_readable_zoom():
+    html = HTML.read_text(encoding="utf-8")
+    fit = html.split("function fitAllLocalQuestRoutes", 1)[1].split("function setQuestOverview", 1)[0]
+    assert "const QUEST_OVERVIEW_MIN_ZOOM = 14.8" in html
+    assert "const start = offer && offer.points && offer.points[0]" in fit
+    assert "questOfferDisplayPoints" not in fit
+    assert "liveMap.cameraForBounds" in fit
+    assert "Math.max(QUEST_OVERVIEW_MIN_ZOOM" in fit
 
 
 def test_overview_markers_are_distance_labelled_circles_that_open_the_full_brief():
@@ -213,3 +224,5 @@ def test_show_quests_release_is_query_busted_and_cached_offline():
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
+    assert "const BURBZ_BUILD = 'show-quests-close-v186-20260731'" in html
+    assert "show-quests-close-v186-20260731" in sw
