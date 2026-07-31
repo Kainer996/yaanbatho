@@ -3055,10 +3055,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
     </div>
 
-    <!-- BATTLE SCREEN — Perch League (Pokémon-style turn battles) -->
+    <!-- BATTLE SCREEN — town liberation and optional league battles -->
     <div class="screen" id="screen-battle">
-      <div class="screen-title">PERCH LEAGUE</div>
-
       <!-- League home: ladder status, rival preview, team select -->
       <div class="battle-select" id="battleSelect">
         <div id="liberationBattleBanner"></div>
@@ -25846,9 +25844,11 @@ function renderBattleSelect() {
   const tier = core.LEAGUE_TIERS[league.tier];
   const flock = getBattleFlock();
   const liberation = pendingEmpireLiberation();
+  const leagueHeader = $('leagueHeader');
+  if (leagueHeader) leagueHeader.hidden = !!liberation;
   const liberationBanner = $('liberationBattleBanner');
   if (liberationBanner) liberationBanner.innerHTML = liberation
-    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A garrison of evil Burbz — the dark force\'s shadow-bound occupying flock — holds this town. Scatter them to break the usurper\'s hold, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">PAUSE LIBERATION · PLAY PERCH LEAGUE</button></div>'
+    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A garrison of evil Burbz — the dark force\'s shadow-bound occupying flock — holds this town. Scatter them to break the usurper\'s hold, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">LEAVE TOWN BATTLE</button></div>'
     : '';
   $('liberationCancelBtn')?.addEventListener('click', cancelEmpireLiberation, { once:true });
   const selectCopy = $('battleSelectCopy');
@@ -25972,7 +25972,11 @@ function startPerchBattle() {
   });
   if (potionSips.length) saveState();
   const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
+  const family = birdFamilyCore();
+  const playerSynergies = family ? family.applyTeamSynergies(playerFighters) : [];
+  const opponentSynergies = family ? family.applyTeamSynergies(opponentFighters) : [];
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
+  battle.synergies = { player: playerSynergies, opponent: opponentSynergies };
   battle.activityId = 'battle_' + battle.seed;
   battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
   $('battleSelect').style.display = 'none';
@@ -27173,7 +27177,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-canopy-v182-20260730';
+const BURBZ_BUILD = 'battle-flow-v183-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
