@@ -172,6 +172,66 @@
     return tx;
   }
 
+  // A sheet of four leaf shapes with a cut-out alpha, drawn rather than
+  // downloaded. Instanced onto thousands of little cards it gives the canopy
+  // actual foliage — veins, notched edges and all — instead of smooth blobs.
+  function leafCardTexture() {
+    var S = 128;
+    var c = document.createElement('canvas');
+    c.width = c.height = S * 2;
+    var g = c.getContext('2d');
+    var rng = mulberry32(4471);
+    for (var q = 0; q < 4; q++) {
+      var ox = (q % 2) * S, oy = Math.floor(q / 2) * S;
+      g.save();
+      g.translate(ox + S / 2, oy + S / 2);
+      var len = S * 0.44, wide = S * (0.17 + rng() * 0.07);
+      // Blade: two curves meeting at tip and stalk, with a slight lean.
+      g.rotate((rng() - 0.5) * 0.5);
+      var grad = g.createLinearGradient(0, -len, 0, len);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.55, '#e2e2e2');
+      grad.addColorStop(1, '#bdbdbd');
+      g.fillStyle = grad;
+      g.beginPath();
+      g.moveTo(0, -len);
+      g.bezierCurveTo(wide * 1.5, -len * 0.45, wide * 1.15, len * 0.45, 0, len * 0.86);
+      g.bezierCurveTo(-wide * 1.15, len * 0.45, -wide * 1.5, -len * 0.45, 0, -len);
+      g.closePath();
+      g.fill();
+      // Serrated edge: nick the outline so it is not a smooth almond.
+      g.globalCompositeOperation = 'destination-out';
+      for (var n = 0; n < 9; n++) {
+        var t = 0.12 + n * 0.09;
+        var yy = -len + t * len * 1.8;
+        var xx = wide * 1.32 * Math.sin(Math.PI * t);
+        g.beginPath(); g.arc(xx, yy, wide * 0.20, 0, 7); g.fill();
+        g.beginPath(); g.arc(-xx, yy + wide * 0.3, wide * 0.18, 0, 7); g.fill();
+      }
+      g.globalCompositeOperation = 'source-over';
+      // Midrib and side veins.
+      g.strokeStyle = 'rgba(120,120,120,.55)';
+      g.lineWidth = 1.6;
+      g.beginPath(); g.moveTo(0, -len * 0.92); g.lineTo(0, len * 0.8); g.stroke();
+      g.lineWidth = 1;
+      g.strokeStyle = 'rgba(140,140,140,.42)';
+      for (var vn = 0; vn < 6; vn++) {
+        var vy = -len * 0.7 + vn * (len * 0.27);
+        var reach = wide * 1.05 * Math.cos(vn * 0.25);
+        g.beginPath(); g.moveTo(0, vy); g.quadraticCurveTo(reach * 0.6, vy + len * 0.06, reach, vy + len * 0.14); g.stroke();
+        g.beginPath(); g.moveTo(0, vy); g.quadraticCurveTo(-reach * 0.6, vy + len * 0.06, -reach, vy + len * 0.14); g.stroke();
+      }
+      // Stalk.
+      g.strokeStyle = 'rgba(150,150,150,.75)';
+      g.lineWidth = 2.2;
+      g.beginPath(); g.moveTo(0, len * 0.8); g.lineTo(0, len * 0.98); g.stroke();
+      g.restore();
+    }
+    var tx = new T.CanvasTexture(c);
+    if (T.SRGBColorSpace) tx.colorSpace = T.SRGBColorSpace;
+    return tx;
+  }
+
   function labelTexture(text) {
     var c = document.createElement('canvas');
     var pad = 26;
@@ -443,24 +503,75 @@
         s: 1.05 + rng() * 1.25, tone: rng()
       });
     }
-    var leafGeo = new T.IcosahedronGeometry(0.62, 0);
-    var leaves = new T.InstancedMesh(leafGeo, mats.leaf, clusters.length);
-    leaves.castShadow = true; leaves.receiveShadow = true;
+    // The canopy is two layers. Underneath, dark blobs give it solid volume so
+    // you cannot see straight through the tree. Over them, thousands of real
+    // leaf cards catch the light — that is what stops it reading as fluff.
+    var canopy = new T.Group();
     var dummy = new T.Object3D();
     var col = new T.Color();
-    var leafBase = new T.Color(0x3f6b38);
+    var leafDeep = new T.Color(0x1f3d1a);   // shaded, inside the canopy
+    var leafMid = new T.Color(0x3f7231);
+    var leafSun = new T.Color(0x7fb14a);    // top leaves catching the light
+    function leafShade(tone, y) {
+      // 0 at the shaded underside, 1 in the sunlit crown.
+      var t = Math.max(0, Math.min(1, (y - 9.5) / 6.5)) * 0.62 + tone * 0.38;
+      return t < 0.5 ? col.copy(leafDeep).lerp(leafMid, t * 2)
+                     : col.copy(leafMid).lerp(leafSun, (t - 0.5) * 2);
+    }
+
+    var coreGeo = new T.IcosahedronGeometry(0.46, 0);
+    var cores = new T.InstancedMesh(coreGeo, mats.leaf, clusters.length);
+    cores.castShadow = true; cores.receiveShadow = true;
     clusters.forEach(function(cl, idx) {
       dummy.position.set(cl.x, cl.y, cl.z);
       dummy.rotation.set(rng() * 3, rng() * 3, rng() * 3);
-      dummy.scale.set(cl.s * (0.9 + rng() * 0.4), cl.s * (0.72 + rng() * 0.3), cl.s * (0.9 + rng() * 0.4));
+      dummy.scale.set(cl.s * (0.86 + rng() * 0.35), cl.s * (0.66 + rng() * 0.28), cl.s * (0.86 + rng() * 0.35));
       dummy.updateMatrix();
-      leaves.setMatrixAt(idx, dummy.matrix);
-      col.copy(leafBase).offsetHSL((cl.tone - 0.5) * 0.06, (cl.tone - 0.5) * 0.14, (cl.tone - 0.5) * 0.16);
-      leaves.setColorAt(idx, col);
+      cores.setMatrixAt(idx, dummy.matrix);
+      // The inner mass stays darker than the leaves hanging off it.
+      cores.setColorAt(idx, leafShade(cl.tone * 0.5, cl.y - 1.5));
     });
-    leaves.instanceMatrix.needsUpdate = true;
-    if (leaves.instanceColor) leaves.instanceColor.needsUpdate = true;
-    g.add(leaves);
+    cores.instanceMatrix.needsUpdate = true;
+    if (cores.instanceColor) cores.instanceColor.needsUpdate = true;
+    canopy.add(cores);
+
+    // Individual leaves, scattered over the shell of every cluster.
+    var cards = [];
+    clusters.forEach(function(cl) {
+      var buried = cl.y > 12 && Math.hypot(cl.x, cl.z) < 2.4;
+      var n = Math.round((10 + cl.s * 10) * (buried ? 0.35 : 1));
+      for (var k = 0; k < n; k++) {
+        // Point on a sphere around the cluster, biased to its upper surface
+        // where real foliage is densest.
+        var u = rng() * Math.PI * 2, v = Math.acos(1 - 2 * Math.pow(rng(), 1.35));
+        var rad = cl.s * (0.46 + rng() * 0.56);
+        cards.push({
+          x: cl.x + Math.sin(v) * Math.cos(u) * rad,
+          y: cl.y + Math.cos(v) * rad * 0.78 + cl.s * 0.12,
+          z: cl.z + Math.sin(v) * Math.sin(u) * rad,
+          s: 0.34 + rng() * 0.36,
+          tone: rng(),
+          rx: rng() * Math.PI * 2, ry: rng() * Math.PI * 2, rz: rng() * Math.PI * 2
+        });
+      }
+    });
+    var cardGeo = new T.PlaneGeometry(1, 1);
+    var leafCards = new T.InstancedMesh(cardGeo, mats.leafCard, cards.length);
+    leafCards.receiveShadow = true; // alpha-tested cards cast messy shadows
+    cards.forEach(function(cd, idx) {
+      dummy.position.set(cd.x, cd.y, cd.z);
+      dummy.rotation.set(cd.rx, cd.ry, cd.rz);
+      dummy.scale.set(cd.s, cd.s * (1.25 + rng() * 0.5), 1);
+      dummy.updateMatrix();
+      leafCards.setMatrixAt(idx, dummy.matrix);
+      leafCards.setColorAt(idx, leafShade(cd.tone, cd.y));
+    });
+    leafCards.instanceMatrix.needsUpdate = true;
+    if (leafCards.instanceColor) leafCards.instanceColor.needsUpdate = true;
+    canopy.add(leafCards);
+
+    g.add(canopy);
+    var leaves = canopy;
 
     // Forty-odd limbs collapse into a single textured mesh.
     mergeStatic(g, {
@@ -827,21 +938,6 @@
     return g;
   }
 
-  // A translucent blueprint of a building that has not been raised yet.
-  function buildGhost(id) {
-    var st = STYLES[id];
-    var g = new T.Group();
-    var mat = new T.MeshBasicMaterial({ color: 0xd6a84f, transparent: true, opacity: 0.13, wireframe: true });
-    var m = new T.Mesh(new T.BoxGeometry(st.w, st.h, st.d), mat);
-    m.position.y = 0.07 + st.h / 2;
-    g.add(m);
-    var disc = new T.Mesh(new T.CircleGeometry((st.w + st.d) * 0.28, 18), new T.MeshBasicMaterial({ color: 0xd6a84f, transparent: true, opacity: 0.10 }));
-    disc.rotation.x = -Math.PI / 2;
-    g.add(disc);
-    g.userData.ghost = true;
-    return g;
-  }
-
   // ---- a bird ---------------------------------------------------------------
 
   function buildBird(kind) {
@@ -934,11 +1030,15 @@
     function makeMaterials() {
       var bark = barkTexture();
       bark.repeat.set(2, 1.4);
+      var leafTex = leafCardTexture();
+      leafTex.repeat.set(0.5, 0.5); // one of the four leaves on the sheet
       return {
         bark: new T.MeshLambertMaterial({ map: bark, color: 0xc0a884 }),
         leaf: new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }),
+        // alphaTest (not transparency) keeps the cards depth-sorted for free.
+        leafCard: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
         plank: new T.MeshLambertMaterial({ color: 0x8a6236 }),
-        barkTex: bark
+        barkTex: bark, leafTex: leafTex
       };
     }
 
@@ -991,7 +1091,8 @@
       // Undergrowth around the roots
       var bushGeo = new T.IcosahedronGeometry(0.5, 0);
       var bushes = new T.InstancedMesh(bushGeo, new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }), 120);
-      var dm = new T.Object3D(), bc = new T.Color(), bbase = new T.Color(0x3a5c2e);
+      var dm = new T.Object3D(), bc = new T.Color();
+      var bushDark = new T.Color(0x2b4a22), bushLite = new T.Color(0x5d8c3d);
       for (var i = 0; i < 120; i++) {
         var ba = rng() * Math.PI * 2, br = 3.4 + rng() * 12;
         dm.position.set(Math.sin(ba) * br, -0.1 + rng() * 0.2, Math.cos(ba) * br);
@@ -1000,7 +1101,7 @@
         dm.scale.set(bs, bs * (0.5 + rng() * 0.4), bs);
         dm.updateMatrix();
         bushes.setMatrixAt(i, dm.matrix);
-        bc.copy(bbase).offsetHSL((rng() - 0.5) * 0.07, 0, (rng() - 0.5) * 0.14);
+        bc.copy(bushDark).lerp(bushLite, rng());
         bushes.setColorAt(i, bc);
       }
       bushes.instanceMatrix.needsUpdate = true;
@@ -1041,15 +1142,15 @@
       var built = builtRooms();
       Object.keys(ANCHORS).forEach(function(id) {
         var a = anchorPosition(id);
-        var isBuilt = built.indexOf(id) >= 0;
-        var node = isBuilt ? buildTreehouse(id, mats, rng) : buildGhost(id);
+        if (built.indexOf(id) < 0) return; // its branch waits, bare
+        var node = buildTreehouse(id, mats, rng);
         if (!node) return;
         node.position.set(a.x, a.y, a.z);
         node.rotation.y = a.angle; // face outward, away from the trunk
         node.scale.setScalar(a.cfg.scale);
         scene.add(node);
-        if (isBuilt) {
-          st.houses.push(node);
+        st.houses.push(node);
+        {
           (node.userData.glows || []).forEach(function(gl) { st.glows.push(gl); });
           if (node.userData.chimney) {
             var wp = node.userData.chimney.clone().applyEuler(new T.Euler(0, a.angle, 0))
@@ -1514,7 +1615,7 @@
         var mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
         mats.forEach(function(m) {
           var mp = m.map;
-          if (mp && mp.dispose && !(mp.userData && mp.userData.shared) && mp !== st.smokeTex && mp !== st.ffTex && mp !== st.groundTex && mp !== (st.mats && st.mats.barkTex)) mp.dispose();
+          if (mp && mp.dispose && !(mp.userData && mp.userData.shared) && mp !== st.smokeTex && mp !== st.ffTex && mp !== st.groundTex && mp !== (st.mats && st.mats.leafTex) && mp !== (st.mats && st.mats.barkTex)) mp.dispose();
           m.dispose();
         });
       });
@@ -1529,6 +1630,7 @@
       if (st.smokeTex) { st.smokeTex.dispose(); st.smokeTex = null; }
       if (st.ffTex) { st.ffTex.dispose(); st.ffTex = null; }
       if (st.groundTex) { st.groundTex.dispose(); st.groundTex = null; }
+      if (st.mats && st.mats.leafTex) { st.mats.leafTex.dispose(); st.mats.leafTex = null; }
       if (st.mats && st.mats.barkTex) { st.mats.barkTex.dispose(); st.mats.barkTex = null; }
       clearSharedTex();
       if (st.renderer) {
