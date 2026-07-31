@@ -83,8 +83,24 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .hud-chip:active { background: rgba(214,168,79,.24); }
 .hud-chip-icon { width: 18px; height: 18px; object-fit: contain; display: block; }
 .hud-chip-value { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 13px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-chip-copy { display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-width:0; }
+.hud-chip-label { font-family:'Rajdhani',sans-serif; font-size:8px; font-weight:900; line-height:1; letter-spacing:.04em; text-transform:uppercase; color:var(--text3); }
 .hud-chip.bump .hud-chip-value { animation: hudBump .45s ease; }
 @keyframes hudBump { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--legendary); } 100% { transform: scale(1); } }
+.global-money-hud {
+  position:fixed; z-index:10020; top:max(10px,env(safe-area-inset-top)); right:12px;
+  display:none; align-items:center; gap:7px; min-width:106px; min-height:42px; padding:7px 12px;
+  border-radius:14px; border:1px solid rgba(240,199,103,.55);
+  background:linear-gradient(145deg,rgba(35,27,13,.98),rgba(8,7,5,.98));
+  box-shadow:0 10px 28px rgba(0,0,0,.62),0 0 18px rgba(214,168,79,.18);
+  pointer-events:none;
+}
+.global-money-hud.show { display:flex; }
+.global-money-hud-icon { width:24px; height:24px; object-fit:contain; flex:none; }
+.global-money-copy { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
+.global-money-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:900; line-height:1; letter-spacing:.11em; text-transform:uppercase; color:#c5b48d; }
+.global-money-hud .hud-chip-value { font-family:'Russo One',sans-serif; font-size:16px; color:#f0c767; overflow:visible; }
+.global-money-hud.bump .hud-chip-value { animation:hudBump .45s ease; }
 .header-settings {
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   border-radius: 8px; background: var(--bg3); font-size: 18px; color: var(--text2);
@@ -2905,7 +2921,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         </div>
       </div>
       <div class="hud-resources">
-        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/coin.webp" alt=""><span class="hud-chip-value" id="hudCoins">0</span></button>
+        <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/coin.webp" alt=""><span class="hud-chip-copy"><span class="hud-chip-label">Coins</span><span class="hud-chip-value" id="hudCoins">0</span></span></button>
         <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/timber.webp" alt=""><span class="hud-chip-value" id="hudTimber">0</span></button>
       </div>
     </div>
@@ -2917,6 +2933,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile"><img src="assets/ui/burbz-icon-set/profile.webp" alt=""></button>
     <button class="header-settings" id="settingsBtn" aria-label="Settings"><img src="assets/ui/burbz-icon-set/settings.webp" alt=""></button>
   </header>
+  <div class="global-money-hud" id="globalMoneyHud" role="status" aria-live="polite" aria-label="Player money">
+    <img class="global-money-hud-icon" src="assets/ui/burbz-icon-set/coin.webp" alt="">
+    <span class="global-money-copy"><span class="global-money-label">Coins</span><span class="hud-chip-value" id="globalMoneyValue">0</span></span>
+  </div>
 
   <!-- Screens -->
   <div class="screens">
@@ -3347,7 +3367,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="barracks-recruit-title">🪶 Recruit Birds</div>
         <button class="barracks-recruit-close" id="barracksRecruitClose">Close</button>
       </div>
-      <div class="barracks-recruit-wallet" id="barracksRecruitWallet">Coins: 0</div>
+      <div class="barracks-recruit-wallet" id="barracksRecruitWallet">No birds awaiting recruitment</div>
       <div class="barracks-recruit-sort" id="barracksRecruitSort" role="group" aria-label="Sort recruitable birds">
         <span class="barracks-recruit-sort-label">Sort</span>
         <button class="barracks-recruit-sort-btn active" data-barracks-sort="rarity" aria-label="Sort by rarity, highest first" aria-pressed="true">Rarity ↓</button>
@@ -12234,7 +12254,7 @@ function renderBarracksRecruitList() {
   const sortBar = $('barracksRecruitSort');
   if (!list || !detail) return;
   const candidates = sortBarracksCandidates(barracksRecruitCandidates(), barracksRecruitSort);
-  if (wallet) wallet.textContent = 'Trainer funds: ' + (gameState.player.coins || 0) + ' coins · ' + candidates.length + ' awaiting recruitment';
+  if (wallet) wallet.textContent = candidates.length + (candidates.length === 1 ? ' bird awaiting recruitment' : ' birds awaiting recruitment');
   if (sortBar) sortBar.querySelectorAll('[data-barracks-sort]').forEach(btn => {
     const active = btn.dataset.barracksSort === barracksRecruitSort;
     btn.classList.toggle('active', active);
@@ -24127,10 +24147,44 @@ function updateHeader() {
   const xpText = $('hudXpText'); if (xpText) xpText.textContent = formatHudAmount(xp) + ' / ' + formatHudAmount(xpNeeded) + ' XP';
   const xpBar = $('hudXpBar'); if (xpBar) xpBar.setAttribute('aria-valuenow', Math.round(pct));
   setHudChipValue('hudCoinsChip', 'hudCoins', gameState.player.coins || 0);
+  setHudChipValue('globalMoneyHud', 'globalMoneyValue', gameState.player.coins || 0);
+  syncGlobalMoneyHud();
   setHudChipValue('hudTimberChip', 'hudTimber', playerBranches());
   const cameraHudLevel = $('cameraHudLevel');
   if (cameraHudLevel) cameraHudLevel.textContent = 'LV. ' + lv;
   renderRpgHud();
+}
+
+let globalMoneyHudObserver = null;
+let globalMoneyHudFrame = 0;
+function syncGlobalMoneyHud() {
+  const hud = $('globalMoneyHud');
+  const header = document.querySelector('.header');
+  const coinChip = $('hudCoinsChip');
+  if (!hud || !header || !coinChip || !gameState || !gameState.player) return;
+  const amount = Math.max(0, Math.floor(Number(gameState.player.coins) || 0));
+  hud.setAttribute('aria-label', 'Player money: ' + amount + ' coins');
+  const rect = coinChip.getBoundingClientRect();
+  let headerOwnsCoinPosition = rect.width > 0 && rect.height > 0;
+  if (headerOwnsCoinPosition && typeof document.elementsFromPoint === 'function') {
+    const stack = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    const topLayer = stack.find(el => el !== hud && !hud.contains(el));
+    headerOwnsCoinPosition = !!topLayer && header.contains(topLayer);
+  }
+  hud.classList.toggle('show', !headerOwnsCoinPosition);
+}
+function queueGlobalMoneyHudSync() {
+  if (globalMoneyHudFrame) cancelAnimationFrame(globalMoneyHudFrame);
+  globalMoneyHudFrame = requestAnimationFrame(() => { globalMoneyHudFrame = 0; syncGlobalMoneyHud(); });
+}
+function initGlobalMoneyHud() {
+  if (globalMoneyHudObserver || !$('app')) return;
+  // Overlay class changes happen in a microtask; sync immediately so the
+  // fallback badge never flashes over the normal header for a painted frame.
+  globalMoneyHudObserver = new MutationObserver(syncGlobalMoneyHud);
+  globalMoneyHudObserver.observe($('app'), {subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  window.addEventListener('resize', queueGlobalMoneyHudSync, {passive:true});
+  queueGlobalMoneyHudSync();
 }
 
 window.__burbzHudDebug = { refresh: updateHeader, getPlayer: () => gameState && gameState.player };
@@ -27497,7 +27551,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-realms-trade-v189-20260731';
+const BURBZ_BUILD = 'global-money-hud-v190-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -28444,6 +28498,7 @@ function addDemoBirds() {
 // ============================================================================
 function init() {
   loadState();
+  initGlobalMoneyHud();
   if (new URLSearchParams(window.location.search).get('demo') === '1') addDemoBirds();
   wireBirdArtFallbacks();
   initParticles();
