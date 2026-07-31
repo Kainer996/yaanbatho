@@ -1664,7 +1664,17 @@
       if (!cand) return null;
       var combined = outward.concat(cand.pts.slice(1));
       if (!routeIsStrictLoop(combined)) return null;
-      return { points: combined, loopedBack: true, returnLenM: Math.round(cand.len), totalLenM: Math.round(outwardLen + cand.len) };
+      // Both legs are already snapped by authoritative mapped-route sources:
+      // discovery supplied the outward path and BRouter's hiking profile supplied
+      // the return. Carry that complete evidence into activation; the outward-only
+      // discovery corridor cannot certify a different route home.
+      return {
+        points: combined,
+        alignmentWays: [combined.map(function (p) { return { lat:p.lat, lon:p.lon }; })],
+        loopedBack: true,
+        returnLenM: Math.round(cand.len),
+        totalLenM: Math.round(outwardLen + cand.len)
+      };
     }
     function tryVia(i) {
       if (i >= vias.length || Date.now() > deadline) return Promise.resolve(finish(best));
