@@ -70,6 +70,22 @@ def test_liberation_battle_has_story_context_in_team_select_and_arena():
     assert "break the usurper's hold" in battle.replace("\\'", "'")
 
 
+def test_liberation_battle_removes_league_chrome_and_reaches_the_playable_arena():
+    html = HTML.read_text(encoding="utf-8")
+    battle_screen = html[html.index('id="screen-battle"'):html.index('id="screen-academy"')]
+    battle = battle_logic(html)
+    start = battle[battle.index("function startPerchBattle("):battle.index("\nfunction hpBarColor", battle.index("function startPerchBattle("))]
+
+    assert '<div class="screen-title">PERCH LEAGUE</div>' not in battle_screen
+    assert "leagueHeader.hidden = !!liberation" in battle
+    assert "PAUSE LIBERATION · PLAY PERCH LEAGUE" not in battle
+    assert "applyTeamSynergies(playerFighters)" in start
+    assert "applyTeamSynergies(opponentFighters)" in start
+    assert "battle.synergies = { player: playerSynergies, opponent: opponentSynergies }" in start
+    assert start.index("battle.synergies =") < start.index("battle.synergies.player")
+    assert start.index("battle.synergies.player") < start.index("battleAdvance()")
+
+
 def test_story_canon_connects_real_world_liberation_to_the_kingdom_of_burbz():
     story = STORY.read_text(encoding="utf-8")
     required = [
