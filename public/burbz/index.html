@@ -97,7 +97,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .header-profile-btn img, .header-settings img { width: 29px; height: 29px; object-fit: contain; display: block; }
 .ui-inline-icon { width: 22px; height: 22px; object-fit: contain; display: inline-block; vertical-align: middle; margin-right: 5px; }
 .scan-mode-btn .ui-inline-icon { width: 25px; height: 25px; margin-right: 6px; }
-.map-quest-show-icon .ui-inline-icon { width: 28px; height: 28px; margin: 0; }
+
 .merlin-listening-dock {
   position:relative; display:none; flex:0 0 36px; width:36px; height:36px; padding:3px;
   align-items:center; justify-content:center; border-radius:10px;
@@ -2718,12 +2718,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-quest-btn-kicker { display:block; margin-bottom:4px; color:#75dcb8; font:800 9px/1 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; }
 .map-quest-btn-label { display:block; color:#fff2c6; font:900 14px/1 'Russo One',sans-serif; letter-spacing:.025em; white-space:nowrap; }
 .map-quest-btn-arrow { position:relative; z-index:1; margin-left:auto; color:#f0c767; font-size:18px; }
-.map-quest-btn.on-quest { border-color:rgba(126,217,131,.72); box-shadow:0 12px 28px rgba(0,0,0,.5),0 0 22px rgba(126,217,131,.2); }
-.map-quest-show-btn { position:absolute; right:12px; top:134px; z-index:44; min-width:178px; height:44px; padding:5px 13px 5px 7px; border-radius:14px; border:1px solid rgba(118,221,184,.46); background:linear-gradient(145deg,rgba(12,29,23,.94),rgba(7,15,12,.97)); color:#eafff7; display:flex; align-items:center; gap:9px; box-shadow:0 8px 20px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.07); font:900 12px/1 'Russo One',sans-serif; letter-spacing:.045em; text-transform:uppercase; transition:border-color .2s ease,box-shadow .2s ease,opacity .2s ease,transform .2s ease; }
-.map-quest-show-icon { width:28px; height:28px; flex:none; display:grid; place-items:center; border-radius:50%; border:1px solid rgba(240,199,103,.54); background:radial-gradient(circle at 34% 28%,rgba(240,199,103,.23),rgba(28,67,53,.52) 52%,rgba(5,14,11,.94)); color:#f5d77f; font-size:15px; box-shadow:0 0 0 2px rgba(0,0,0,.28),0 0 12px rgba(92,218,175,.16); }
-.map-quest-show-btn.active { border-color:rgba(240,199,103,.72); box-shadow:0 8px 20px rgba(0,0,0,.44),0 0 18px rgba(93,220,177,.2); }
-.map-quest-show-btn.active .map-quest-show-icon { background:radial-gradient(circle at 34% 28%,#f5dc91,#bb8536 72%); color:#102019; }
-.map-quest-btn:focus-visible,.map-quest-show-btn:focus-visible,.map-area-birds-toggle:focus-visible,.map-quest-focus-card button:focus-visible,.walk-quest-offer:focus-visible,.wq-offer-pin:focus-visible { outline:3px solid #fff7dc; outline-offset:3px; }
+.map-quest-btn.on-quest,.map-quest-btn.active { border-color:rgba(126,217,131,.72); box-shadow:0 12px 28px rgba(0,0,0,.5),0 0 22px rgba(126,217,131,.2); }
+.map-quest-btn:focus-visible,.map-area-birds-toggle:focus-visible,.map-quest-focus-card button:focus-visible,.walk-quest-offer:focus-visible,.wq-offer-pin:focus-visible { outline:3px solid #fff7dc; outline-offset:3px; }
 /* Starts right of the Area Birds column so the two never overlap. */
 .map-quest-hud { position:absolute; left:calc(15px + min(124px, 32vw)); right:12px; top:184px; z-index:43; display:none; align-items:center; gap:10px; padding:8px 12px; border-radius:14px; background:linear-gradient(180deg,rgba(27,24,16,.92),rgba(13,12,8,.92)); border:1px solid rgba(214,168,79,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
 @media (max-height:720px) { .map-quest-hud { left:calc(15px + min(116px, 32vw)); } }
@@ -2773,11 +2769,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .live-map-shell.quest-focused .map-quest-btn { min-width:0; width:48px; height:48px; padding:4px; border-radius:15px; opacity:.72; }
 .live-map-shell.quest-focused .map-quest-btn-copy,.live-map-shell.quest-focused .map-quest-btn-arrow { display:none; }
 .live-map-shell.quest-focused .map-quest-btn-art { width:38px; height:38px; border-radius:11px; }
-.live-map-shell.quest-focused .map-quest-show-btn { opacity:0; pointer-events:none; transform:translateY(-5px); }
 .live-map-shell.quest-focused .map-zoom-controls { top:124px; bottom:auto; opacity:.52; }
 .live-map-shell.quest-focused .maplibregl-ctrl-bottom-right { bottom:var(--quest-focus-attribution-bottom, 265px); }
 .wq-chain-pin { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:rgba(5,18,14,.9); border:1px solid rgba(101,214,174,.55); color:#84e1c0; font-size:12px; box-shadow:0 5px 14px rgba(0,0,0,.45); }
-@media (max-width:380px) { .map-quest-btn,.map-quest-show-btn { min-width:162px; } .map-quest-btn-label{font-size:12px} .map-quest-btn-art{width:45px;height:45px} }
+@media (max-width:380px) { .map-quest-btn { min-width:162px; } .map-quest-btn-label{font-size:12px} .map-quest-btn-art{width:45px;height:45px} }
 @media (prefers-reduced-motion:reduce) { .map-quest-btn::after,.wq-offer-pin .wq-offer-badge { animation:none !important; } .map-quest-focus-card.show { animation:none; } }
 .walk-quest-offer.legendary-trail { border-color:rgba(190,120,255,.45); }
 .walk-quest-offer.legendary-trail .wqo-name { color:#d9a8ff; }
@@ -2905,8 +2900,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Live conditions</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
-        <button class="map-quest-btn" id="mapQuestBtn" aria-label="Explore nearby quests"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-kicker">Field board</span><span class="map-quest-btn-label" id="mapQuestBtnLabel">Explore Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
-        <button class="map-quest-show-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><span class="map-quest-show-icon" aria-hidden="true"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/quests.webp" alt=""></span><span>Show Quests</span></button>
+        <button class="map-quest-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/burbz-icon-set/quests.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label">Show Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
@@ -15215,12 +15209,10 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function updateWalkQuestHud() {
-  const hud = $('mapQuestHud'), btnLabel = $('mapQuestBtnLabel'), btn = $('mapQuestBtn');
+  const hud = $('mapQuestHud');
   const quest = activeWalkingQuest();
   const side = quest ? null : sideQuestActive();
   if (quest || side) acquireQuestWakeLock(); else releaseQuestWakeLock();
-  if (btnLabel) btnLabel.textContent = quest ? 'Quest Log' : side ? 'Side Quest' : 'Explore Quests';
-  if (btn) btn.classList.toggle('on-quest', !!(quest || side));
   if (!hud) return;
   if (side) {
     hud.classList.add('active');
@@ -16016,7 +16008,9 @@ function resumeWalkingQuestIfAny() {
 
 // ---- Quest overview: distinct, calm route colours from above ----
 let questOverview = { on: false, offers: [], markers: [], chainMarker: null, prevZoom: null, fetchedAt: 0, at: null, selectedIndex: null, areaBirdsWasOpen: null };
-const QUEST_OVERVIEW_ZOOM = 12.6;
+const QUEST_OVERVIEW_ZOOM = 14.8;
+const QUEST_OVERVIEW_MIN_ZOOM = 14.8;
+const QUEST_OVERVIEW_MAX_ZOOM = 15.35;
 const QUEST_OVERVIEW_COLORS = ['#63e6be','#74c0fc','#ffd166','#da77f2','#ff8f70','#66d9e8','#a9e34b','#f783ac'];
 function questOverviewColor(i) { return QUEST_OVERVIEW_COLORS[Math.abs(Number(i) || 0) % QUEST_OVERVIEW_COLORS.length]; }
 
@@ -16217,8 +16211,8 @@ function closeQuestMapFocus(opts = {}) {
   if (wasShown && opts.restoreFocus !== false) requestAnimationFrame(restoreQuestMapFocus);
 }
 function restoreQuestMapFocus() {
-  const mapQuestBtn = $('mapQuestBtn');
-  if (mapQuestBtn && mapQuestBtn.offsetParent !== null) mapQuestBtn.focus({ preventScroll:true });
+  const showBtn = $('mapQuestShowBtn');
+  if (showBtn && showBtn.offsetParent !== null) showBtn.focus({ preventScroll:true });
 }
 function updateShowQuestsButton() {
   const showBtn = $('mapQuestShowBtn');
@@ -16233,18 +16227,21 @@ function fitAllLocalQuestRoutes(offers = questOverview.offers) {
   try {
     const bounds = new maplibregl.LngLatBounds();
     let pointCount = 0;
-    offers.forEach(offer => questOfferDisplayPoints(offer).forEach(point => {
-      const lat = Number(point && point.lat), lon = Number(point && point.lon);
+    offers.forEach(offer => {
+      const start = offer && offer.points && offer.points[0];
+      const lat = Number(start && start.lat), lon = Number(start && start.lon);
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
       bounds.extend([lon, lat]);
       pointCount++;
-    }));
+    });
     if (liveMapHasPrecisePosition && liveMapLastPosition) {
       bounds.extend([liveMapLastPosition.lon, liveMapLastPosition.lat]);
       pointCount++;
     }
     if (!pointCount) return;
-    liveMap.fitBounds(bounds, { padding:{ top:190, right:40, bottom:105, left:40 }, maxZoom:13.4, pitch:0, retainPadding:false, duration:950 });
+    const camera = liveMap.cameraForBounds(bounds, { padding:{ top:150, right:34, bottom:88, left:34 }, maxZoom:QUEST_OVERVIEW_MAX_ZOOM });
+    if (!camera) return;
+    liveMap.easeTo({ center:camera.center, zoom:Math.max(QUEST_OVERVIEW_MIN_ZOOM, Math.min(QUEST_OVERVIEW_MAX_ZOOM, camera.zoom)), bearing:camera.bearing || 0, pitch:0, duration:950 });
   } catch (e) {
     const first = offers.find(offer => offer && offer.points && offer.points[0]);
     if (first) liveMap.easeTo({ center:[first.points[0].lon, first.points[0].lat], zoom:QUEST_OVERVIEW_ZOOM, pitch:0, duration:850 });
@@ -16455,7 +16452,6 @@ function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn 
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); }
-  const questBtn = $('mapQuestBtn'); if (questBtn && !questBtn.dataset.wired) { questBtn.dataset.wired = '1'; questBtn.addEventListener('click', () => { try { openQuestBoard(); } catch (err) { console.error('BURBZ quest board failed', err); showToast('Quest board jammed — try again'); } }); }
   const showBtn = $('mapQuestShowBtn'); if (showBtn && !showBtn.dataset.wired) { showBtn.dataset.wired = '1'; showBtn.addEventListener('click', showAllLocalQuests); updateShowQuestsButton(); }
   const questHud = $('mapQuestHud'); if (questHud && !questHud.dataset.wired) { questHud.dataset.wired = '1'; questHud.addEventListener('click', () => { SFX.tap(); openActiveWalkQuestSheet(); }); }
   const areaBirdsToggle = $('mapAreaBirdsToggle'); if (areaBirdsToggle && !areaBirdsToggle.dataset.wired) { areaBirdsToggle.dataset.wired = '1'; setAreaBirdsOpen(areaBirdsOpenPreference(), false); areaBirdsToggle.addEventListener('click', () => { SFX.tap(); setAreaBirdsOpen(!areaBirdsToggle.getAttribute('aria-expanded').includes('true')); }); }
@@ -27189,7 +27185,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-no-birds-v185-20260731';
+const BURBZ_BUILD = 'show-quests-close-v186-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -27264,7 +27260,7 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — The real world: the finale, then the game is theirs.
   { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Likely Birds hints at what may be near \u2014 a clue for your hunt, never a promise.' },
-  { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestBtn', text:'Explore Quests offers real walking quests on public paths. Out there you will free villages from the evil Burbz \u2014 but that comes later.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestShowBtn', text:'Show Quests reveals real walking quests on public paths around you. Out there you will free villages from the evil Burbz \u2014 but that comes later.' },
   { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'First, either send me out on quests or get out and look for a bird! Stuck? Open Quests. The Kingdom of Burbz flies with you now.' },
 
   // — Discovery: taught the first time the Scan screen opens.
