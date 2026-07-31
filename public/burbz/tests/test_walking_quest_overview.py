@@ -224,5 +224,11 @@ def test_show_quests_release_is_query_busted_and_cached_offline():
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
-    assert "const BURBZ_BUILD = 'begin-quest-loop-authority-v188-20260731'" in html
+    # These releases must stay in the service worker's cache lineage...
     assert "show-quests-close-v186-20260731" in sw
+    assert "begin-quest-loop-authority-v188-20260731" in sw
+    # ...but BURBZ_BUILD names the NEWEST release and later ones move it on, so
+    # pin only that the current build tag is itself a marker in that lineage
+    # (hardcoding any one release's tag here goes red on the very next one).
+    build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
+    assert build in sw

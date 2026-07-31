@@ -32,7 +32,7 @@ Burbz grew as a monolith with satellite modules. Here is the honest map.
 | Thing | What it is |
 | --- | --- |
 | `index.html` (~1.7 MB) | The entire game. UI, state, screens, the sound listener, scan economy, tutorial — all inline in one big `<script>`. This is the heart. When a test says `assert "..." in HTML`, it is pinning a contract against a string in here. |
-| `*_core.js` | Extracted, individually-testable modules (`scan_economy_core.js`, `bird_diet_hunger_core.js`, `diet_hunger_core.js`, `merlin_companion_core.js`, `quest_core.js`, `academy_*_core.js`, `battle_core.js`, …). Each is loaded by `index.html` **and** `require()`d by a test. They export via the `(function(root){ … })(globalThis)` UMD-ish pattern so they run in both the browser and Node. |
+| `*_core.js` | Extracted, individually-testable modules (`scan_economy_core.js`, `bird_diet_hunger_core.js`, `diet_hunger_core.js`, `merlin_companion_core.js`, `quest_core.js`, `academy_*_core.js`, `battle_core.js`, `empire_map_core.js`, `empire_realm_core.js`, …). Each is loaded by `index.html` **and** `require()`d by a test. They export via the `(function(root){ … })(globalThis)` UMD-ish pattern so they run in both the browser and Node. `empire_realm_core.js` is the Crusader-Kings endgame maths: village→region clustering, feudal tiers, crown titles, and trade-route income/cost/arcs; `index.html` surfaces none of it until the first region actually exists. |
 | `*_bird_expansion*.js`, `national_bird_completion_20260715.js` | Generated species catalogues (UK, AU, national). Large. Loaded by both `index.html` and `sw.js` via `importScripts`. |
 | `data/` | JSON the game reads at runtime. **`data/bird-diet-records.json` / `.js` are generated — do not hand-edit** (see §4). |
 | `data/national-bird-completion/source-cache/` | Committed copies of the external source datasets (EltonTraits, AVONET, geoboundaries, …) so the build/verify pipeline is reproducible offline. Large files live here on purpose. |
@@ -191,6 +191,27 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-07-31 — endgame realms & trade (Claude).** Added the Crusader-Kings
+  endgame layer on top of village liberation, keeping the pre-region game
+  untouched-simple:
+  - New `empire_realm_core.js` (pure, Node-testable): proximity clustering of
+    liberated villages into regions (150 km chains, 3 villages to found),
+    County→Duchy→Kingdom tiers, crown-title ladder, trade-route candidates /
+    costs / income (distance pays), seeded export goods, great-circle arcs.
+  - `index.html`: regions grant +15% unity taxes to member villages; founded
+    regions discount new birdhouses (10% each, max 30%); the Royal Ledger grows
+    a "THE REALM" section (region rows, trade-route open/establish UI) that
+    only renders once a region exists; trade income folds into the same 8-hour
+    tribute strongbox (`empire.tradeRoutes` state, healed in
+    `ensureEmpireState`).
+  - Map: gold dashed great-circle trade roads (`empire-trade` source), region
+    banner markers at cluster centroids, and the same arcs re-struck onto the
+    darkness canvas so routes glow across unliberated land.
+  - Tests: `tests/test_empire_realms_trade_20260731.py` covers the core maths
+    via Node and pins the HTML/UI contracts. SW cache bumped
+    (`empire-realms-trade-v189-20260731`, on top of main's
+    `begin-quest-loop-authority-v188-20260731`).
 
 - **2026-07-31 — full codebase review (Claude).** Brought the suite to green on
   a fresh clone and closed the fragilities that would have bitten later:
