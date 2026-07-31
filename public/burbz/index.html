@@ -666,6 +666,35 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-village-meta { font-size:10.5px; color:var(--text3); }
 .empire-village-income { text-align:right; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:#cfe3ac; line-height:1.35; white-space:nowrap; }
 .empire-empty { padding:14px; border-radius:13px; background:rgba(0,0,0,.3); border:1px dashed rgba(255,255,255,.14); color:var(--text3); font-size:12px; line-height:1.55; text-align:center; }
+
+/* THE REALM — the Crusader-Kings desk that appears once regions exist */
+.realm-section { margin:10px 0; padding:10px; border-radius:12px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(40,28,11,.55),rgba(14,10,4,.72)); box-shadow:inset 0 0 22px rgba(240,199,103,.05); display:grid; gap:8px; }
+.realm-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.07em; color:#ffe9a8; }
+.realm-sub-title { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; letter-spacing:.12em; color:#d9c893; text-transform:uppercase; }
+.realm-region-row { width:100%; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(46,32,12,.62),rgba(12,8,3,.72)); color:inherit; text-align:left; }
+.realm-region-row:active { transform:scale(.99); border-color:rgba(240,199,103,.6); }
+.realm-region-icon { display:grid; place-items:center; width:34px; height:38px; font-size:18px; border-radius:7px 7px 50% 50% / 7px 7px 60% 60%; border:1.5px solid rgba(240,199,103,.8); background:linear-gradient(160deg,#6a5220 0%,#3a2b0e 70%); box-shadow:inset 0 1px 0 rgba(255,240,200,.3); }
+.realm-region-main { flex:1; min-width:0; }
+.realm-region-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px; color:var(--text); letter-spacing:.04em; }
+.realm-region-meta { font-size:10.5px; color:var(--text3); }
+.realm-region-tier { font-family:'Russo One',sans-serif; font-size:9px; letter-spacing:.14em; color:#f0c767; }
+.trade-route-row { width:100%; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; border:1px dashed rgba(240,199,103,.45); background:rgba(18,13,5,.6); color:inherit; text-align:left; }
+.trade-route-row.is-open { border-style:solid; border-color:rgba(142,227,154,.5); background:linear-gradient(180deg,rgba(26,38,18,.6),rgba(10,14,6,.7)); }
+.trade-route-row:active { transform:scale(.99); }
+.trade-route-icon { font-size:18px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+.trade-route-main { flex:1; min-width:0; }
+.trade-route-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13.5px; color:var(--text); letter-spacing:.04em; }
+.trade-route-meta { font-size:10.5px; color:var(--text3); }
+.trade-route-cost { text-align:right; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; letter-spacing:.08em; color:#ffe9a8; line-height:1.4; white-space:nowrap; }
+.trade-route-cost.is-open { color:#8ee39a; }
+.realm-hint { padding:10px 12px; border-radius:11px; border:1px dashed rgba(240,199,103,.35); background:rgba(24,17,7,.5); color:#d9c893; font-size:11px; line-height:1.55; }
+
+/* Region banners on the royal atlas — grander than a village pin */
+.empire-map-marker.is-region { z-index:6; }
+.empire-map-marker.is-region .empire-map-marker-icon { width:38px; height:42px; border-color:#ffe08a; background:linear-gradient(160deg,#7a5f22 0%,#4a380f 58%,#2b1f07 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.4), inset 0 0 9px rgba(0,0,0,.4), 0 0 18px rgba(240,199,103,.55); }
+.empire-map-marker.is-region .empire-map-marker-icon > span { font-size:19px; }
+.empire-map-marker.is-region .empire-map-marker-banner { border-top-color:#ffe08a; }
+.empire-map-marker.is-region .empire-map-marker-label { border-color:rgba(255,224,138,.7); color:#ffe08a; }
 /* ---- Province management: population, needs, construction ------------------ */
 #villageManagePanel { margin:10px 2px 4px; }
 #villageManagePanel:empty { display:none; }
@@ -3626,6 +3655,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
+<script src="empire_realm_core.js?v=empire-realms-trade-v188-20260731"></script>
 <script src="quest_core.js?v=quest-alignment-authority-v124-20260727"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -17708,6 +17738,7 @@ function ensureEmpireState() {
   if (!gameState.empire || typeof gameState.empire !== 'object' || Array.isArray(gameState.empire)) gameState.empire = {};
   if (!gameState.empire.villages || typeof gameState.empire.villages !== 'object' || Array.isArray(gameState.empire.villages)) gameState.empire.villages = {};
   if (!gameState.empire.liberationVictories || typeof gameState.empire.liberationVictories !== 'object' || Array.isArray(gameState.empire.liberationVictories)) gameState.empire.liberationVictories = {};
+  if (!gameState.empire.tradeRoutes || typeof gameState.empire.tradeRoutes !== 'object' || Array.isArray(gameState.empire.tradeRoutes)) gameState.empire.tradeRoutes = {};
   const empire = gameState.empire;
   if (empire.pendingLiberation && (Array.isArray(empire.pendingLiberation) || !validPendingLiberation(empire.pendingLiberation))) {
     empire.pendingLiberation = null;
@@ -17778,6 +17809,7 @@ function returnToLiberatedVillage() {
 const EMPIRE_TERRITORY_RADIUS_M = 2200;
 const EMPIRE_MAP_LOAD_TIMEOUT_MS = 12000;
 let empireMap = null, empireMapReady = false, empireMapInitPromise = null, empireMapMarkers = [], empireMapHasFramed = false;
+let empireRegionMarkers = [], empireTradeArcs = [];
 
 function resetEmpireMapAfterFailure(mapToRemove) {
   clearEmpireMapMarkers();
@@ -17802,6 +17834,8 @@ function empireMappableVillages() {
 function clearEmpireMapMarkers() {
   empireMapMarkers.forEach(marker => { try { marker.remove(); } catch (e) {} });
   empireMapMarkers = [];
+  empireRegionMarkers.forEach(marker => { try { marker.remove(); } catch (e) {} });
+  empireRegionMarkers = [];
 }
 
 /* Crusader-Kings-style medieval atlas: parchment land, ink lettering, scribe-blue
@@ -17947,6 +17981,31 @@ function updateEmpireFogMask() {
     ctx.fill();
   });
   ctx.globalCompositeOperation = 'source-over';
+  // Caravan roads glow through the shadow: the same great-circle arcs the
+  // atlas draws in gold are re-struck onto the veil, so an open trade route
+  // stays visible even across lands the usurper's darkness still holds.
+  if (empireTradeArcs.length) {
+    ctx.save();
+    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = 'rgba(240,199,103,.8)';
+    ctx.shadowColor = 'rgba(240,199,103,.65)';
+    ctx.shadowBlur = 6;
+    ctx.setLineDash([7, 6]);
+    empireTradeArcs.forEach(arc => {
+      ctx.beginPath();
+      let started = false;
+      arc.forEach(point => {
+        try {
+          const wrapped = wrappedLongitudeNear(point[0], referenceLon);
+          const p = empireMap.project([wrapped, Number(point[1])]);
+          if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+          else ctx.lineTo(p.x, p.y);
+        } catch (e) {}
+      });
+      if (started) ctx.stroke();
+    });
+    ctx.restore();
+  }
 }
 // The veil is static — no animation loop repaints it — so restore it when the
 // page returns to view, in case the browser purged the 2D canvas while the
@@ -18018,6 +18077,24 @@ function focusEmpireVillage(seed) {
   empireMap.flyTo({ center:[Number(village.lon), Number(village.lat)], zoom:Math.max(11.5, empireMap.getZoom()), duration:850 });
 }
 
+// Frame a whole region — the atlas glides out to hold every sanctuary the
+// region contains, so tapping "Duchy of Delamere" shows the duchy, not a town.
+function frameEmpireRegion(regionId) {
+  const region = empireRegionById(regionId);
+  const core = window.BurbzEmpireMapCore;
+  if (!region || !core || !empireMap) return;
+  const card = $('empireMapCard');
+  if (card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
+  const bounds = core.claimBounds(region.villages);
+  if (!bounds) return;
+  empireMapUserAdjusted = true;
+  if (region.villages.length === 1 || (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])) {
+    empireMap.easeTo({ center:[Number(region.villages[0].lon), Number(region.villages[0].lat)], zoom:9.5, duration:900 });
+  } else {
+    empireMap.fitBounds(bounds, { padding:{ top:122, right:58, bottom:112, left:58 }, maxZoom:10.5, duration:900 });
+  }
+}
+
 // Tapping a liberated province on the royal map travels to its 3D village:
 // a heraldic transition scroll covers the journey while the scene builds.
 let empireTravelTimer = null, empireTravelFadeTimer = null;
@@ -18051,9 +18128,15 @@ function refreshEmpireMap(options = {}) {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const villages = empireMappableVillages();
   const core = window.BurbzEmpireMapCore;
+  const rc = realmCore();
+  const regions = empireRegionsInfo().regions;
+  // Open trade routes become gold roads between region capitals.
+  const openRoutes = rc ? empireTradeRouteRecords().map(({ key, a, b }) => ({ key, from: a.villages[0], to: b.villages[0] })) : [];
+  empireTradeArcs = rc ? openRoutes.map(route => rc.greatCircleArc(route.from, route.to, 48)).filter(Boolean) : [];
   try {
     empireMap.getSource('empire-claims')?.setData(core.claimFeatureCollection(villages));
     empireMap.getSource('empire-territory')?.setData(core.territoryFeatureCollection(villages));
+    if (rc) empireMap.getSource('empire-trade')?.setData(rc.tradeRouteFeatureCollection(openRoutes, 48));
   } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
   clearEmpireMapMarkers();
   villages.forEach(village => {
@@ -18066,13 +18149,28 @@ function refreshEmpireMap(options = {}) {
     const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(village.lon), Number(village.lat)]).addTo(empireMap);
     empireMapMarkers.push(marker);
   });
+  // Region banners: one heraldic standard per founded region, floating at its
+  // heart. Tapping it frames the whole region — county, duchy or kingdom.
+  regions.forEach(region => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'empire-map-marker is-region is-visible show-label';
+    el.setAttribute('aria-label', 'Frame your region ' + region.name);
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + region.tierIcon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(region.name) + '</span>';
+    el.addEventListener('click', ev => { ev.stopPropagation(); frameEmpireRegion(region.id); });
+    const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(region.centroid.lon), Number(region.centroid.lat)]).addTo(empireMap);
+    empireRegionMarkers.push(marker);
+  });
   updateEmpireMarkerDetail();
   updateEmpireFogMask();
   const card = $('empireMapCard');
   card?.classList.toggle('is-empty', villages.length === 0);
   const status = $('empireMapStatus');
   if (status) status.textContent = villages.length
-    ? 'Daylight restored over ' + villages.length + ' province' + (villages.length === 1 ? '' : 's') + ' · tap a banner to travel to its village'
+    ? 'Daylight restored over ' + villages.length + ' province' + (villages.length === 1 ? '' : 's') +
+      (regions.length ? ' · ' + regions.length + ' region' + (regions.length === 1 ? '' : 's') + ' united' : '') +
+      (openRoutes.length ? ' · ' + openRoutes.length + ' trade route' + (openRoutes.length === 1 ? '' : 's') + ' flying' : '') +
+      ' · tap a banner to travel to its village'
     : 'The whole world sleeps in darkness — liberate your first town to bring back its light';
   if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
 }
@@ -18123,6 +18221,12 @@ function initialiseEmpireMap() {
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-claim-halo', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,4,11,14], 'circle-color':'#7ed983', 'circle-opacity':.28, 'circle-blur':.45 } });
         map.addLayer({ id:'empire-claim-core', type:'circle', source:'empire-claims', paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],2,2.4,11,5], 'circle-color':'#dfffe2', 'circle-stroke-color':'#2c693f', 'circle-stroke-width':1.4 } });
+        // Trade routes: gold great-circle roads between region capitals,
+        // Crusader-map style. The same arcs are re-struck onto the darkness
+        // canvas in updateEmpireFogMask, so a caravan road stays visible even
+        // where it crosses lands still under the usurper's shadow.
+        map.addSource('empire-trade', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+        map.addLayer({ id:'empire-trade-route', type:'line', source:'empire-trade', layout:{ 'line-cap':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':['interpolate',['linear'],['zoom'],1,1.4,8,3], 'line-dasharray':[2,1.8], 'line-opacity':.85 } });
         empireMapReady = true;
         settled = true;
         if (loadTimeout) clearTimeout(loadTimeout);
@@ -18171,11 +18275,122 @@ window.__burbzEmpireMapDebug = {
 };
 const EMPIRE_RANKS = [[50, 'World Emperor'], [35, 'Kingdom Monarch'], [20, 'Realm Duke'], [10, 'Shire Count'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
 function empireRankTitle(count) { for (const [n, t] of EMPIRE_RANKS) { if (count >= n) return t; } return 'Wandering Trainer'; }
+// ============================================================================
+// REALMS & TRADE — the Crusader-Kings endgame. Liberate enough villages close
+// together and they FOUND A REGION (County → Duchy → Kingdom as it grows);
+// hold two or more regions and their capitals can open TRADE ROUTES between
+// free sanctuaries. None of this appears before the first region exists, so
+// the early game stays exactly as simple as it always was: walk, listen,
+// befriend, liberate. All the maths lives in empire_realm_core.js.
+// ============================================================================
+function realmCore() { return window.BurbzEmpireRealmCore; }
+let empireRegionsCache = null, empireRegionsCacheKey = '';
+function empireRegionsInfo() {
+  const core = realmCore();
+  if (!core) return { regions: [], unassigned: [], largestCluster: 0, clusterCount: 0 };
+  const villages = empireVillages();
+  const key = villages.map(v => String(v.seed >>> 0)).sort().join(',');
+  if (!empireRegionsCache || empireRegionsCacheKey !== key) {
+    empireRegionsCache = core.deriveRegions(villages);
+    empireRegionsCacheKey = key;
+  }
+  return empireRegionsCache;
+}
+function empireRegionOfSeed(seed) {
+  const key = String(Number(seed) >>> 0);
+  return empireRegionsInfo().regions.find(r => r.villages.some(v => String(v.seed >>> 0) === key)) || null;
+}
+function empireRegionById(id) {
+  return empireRegionsInfo().regions.find(r => r.id === String(id)) || null;
+}
+function empireRegionPopulation(region) {
+  return region ? region.villages.reduce((sum, v) => sum + (villageEconomySnapshot(v)?.pop || 0), 0) : 0;
+}
+// The player's realm-wide style: feudal crown titles once regions exist,
+// the humble village ladder before then. Simple game, simple title.
+function empireCrownTitle() {
+  const core = realmCore();
+  const regions = empireRegionsInfo().regions;
+  const crowned = core && regions.length ? core.crownTitle(regions) : null;
+  return crowned || empireRankTitle(empireVillages().length);
+}
+// ---- Trade routes between free regions -------------------------------------
+// Stored as empire.tradeRoutes[key] = { a, b, openedAt, lastTradeAt } where
+// a/b are region ids (capital seeds). If two regions ever grow into one, any
+// route between them turns internal and is pruned here — caravans inside a
+// single region are just its own roads.
+function empireTradeRouteRecords() {
+  const empire = ensureEmpireState();
+  if (!empire) return [];
+  const routes = [];
+  let pruned = false;
+  Object.entries(empire.tradeRoutes).forEach(([key, rec]) => {
+    const a = rec && empireRegionById(rec.a), b = rec && empireRegionById(rec.b);
+    if (!a || !b || a.id === b.id) { delete empire.tradeRoutes[key]; pruned = true; return; }
+    routes.push({ key, rec, a, b });
+  });
+  if (pruned) saveState();
+  return routes;
+}
+function empireTradeRouteIncome(a, b) {
+  const core = realmCore();
+  if (!core) return { coins: 0, goodsQty: 0 };
+  const capA = a.villages[0], capB = b.villages[0];
+  const distanceKm = core.haversineKm(capA.lat, capA.lon, capB.lat, capB.lon);
+  return core.tradeRouteIncome(empireRegionPopulation(a), empireRegionPopulation(b), distanceKm);
+}
+function empireTradeDue(now) {
+  const t = Number(now) || Date.now();
+  const core = realmCore();
+  const due = { coins: 0, materials: {} };
+  if (!core) return due;
+  empireTradeRouteRecords().forEach(({ rec, a, b }) => {
+    const base = Number(rec.lastTradeAt) || Date.parse(rec.openedAt) || t;
+    const periods = Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((t - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
+    if (!periods) return;
+    const income = empireTradeRouteIncome(a, b);
+    due.coins += periods * income.coins;
+    core.tradeRouteGoods(a.capitalSeed, b.capitalSeed).forEach(id => {
+      due.materials[id] = (due.materials[id] || 0) + periods * income.goodsQty;
+    });
+  });
+  return due;
+}
+function empireOpenTradeRoute(key) {
+  const core = realmCore();
+  const empire = ensureEmpireState();
+  if (!core || !empire) return;
+  const candidate = core.tradeRouteCandidates(empireRegionsInfo().regions).find(c => c.key === String(key));
+  if (!candidate) { showToast('That caravan road is no longer on the charts — the realm has changed shape.'); renderEmpirePanel(); return; }
+  if (empire.tradeRoutes[candidate.key]) { showToast('🕊️ That trade route is already open.'); return; }
+  const cost = core.tradeRouteCost(Object.keys(empire.tradeRoutes).length);
+  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to fit out the first sky-caravan — collect taxes from your provinces.'); return; }
+  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for waystations along the road — send birds on Branch Run or Timber Haul quests.'); return; }
+  addCoins(-cost.coins);
+  addBranches(-cost.branches);
+  const a = empireRegionById(candidate.a), b = empireRegionById(candidate.b);
+  empire.tradeRoutes[candidate.key] = { a: candidate.a, b: candidate.b, openedAt: new Date().toISOString(), lastTradeAt: Date.now() };
+  addPlayerXp(30);
+  saveState();
+  SFX.victory();
+  vibrate(60);
+  const income = a && b ? empireTradeRouteIncome(a, b) : { coins: 0 };
+  showToast('🕊️ Trade route open: ' + (a ? a.capitalName : '?') + ' ⇄ ' + (b ? b.capitalName : '?') + '! Sky-caravans now fly between your free sanctuaries — about +' + income.coins + ' 🪙 of goods every 8 hours.');
+  refreshEmpireMap();
+  updateHeader();
+  renderEmpirePanel();
+}
 // Each new sanctuary costs a little more than the last, so an empire is a
 // journey: the branch economy (Branch Run / Timber Haul quests) feeds this.
+// Founded regions run supply lines that discount every new birdhouse — 10%
+// per region up to 30% — so the endgame widens instead of walling up.
 function birdhouseCostForNextVillage() {
   const owned = empireVillages().length;
-  return { coins: 60 + Math.min(owned, 12) * 15, branches: 15 + Math.min(owned, 12) * 5 };
+  const logistics = 1 - Math.min(0.3, empireRegionsInfo().regions.length * 0.1);
+  return {
+    coins: Math.max(30, Math.round((60 + Math.min(owned, 12) * 15) * logistics)),
+    branches: Math.max(8, Math.round((15 + Math.min(owned, 12) * 5) * logistics))
+  };
 }
 // ============================================================================
 // PROVINCE ECONOMY — every liberated village is a small living province with a
@@ -18416,9 +18631,14 @@ function villageEconomySnapshot(rec) {
   // An empty province pays nothing — taxes and timber need residents to raise
   // them. Miserable villagers still pay a trickle (0.35 floor); a content,
   // market-run town of 40 pays several times a raw hamlet's rate.
-  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost)) + flatCoins);
+  // Region unity: a sanctuary inside a founded region pays 15% more — free
+  // neighbours trade favours, share granaries and keep the roads safe.
+  const unityCore = realmCore();
+  const inRegion = !!empireRegionOfSeed(rec.seed);
+  const unity = inRegion && unityCore ? 1 + unityCore.REGION_TAX_BONUS : 1;
+  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * unity) + flatCoins);
   const branches = pop <= 0 ? 0 : 2 + flatBranches;
-  return { pop, needs, happiness, taxes, branches, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
+  return { pop, needs, happiness, taxes, branches, inRegion, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
 // housing cap, hungry or joyless ones empty out (never below a stubborn few —
@@ -18524,7 +18744,11 @@ function empireTributeReady() {
     mergeResourceTotals(materials, snap.production.materials, periods);
     mergeResourceTotals(larder, snap.production.larder, periods);
   });
-  return { coins, branches, materials, larder };
+  // Caravans between free regions bank their cargo in the same strongbox.
+  const trade = empireTradeDue(now);
+  coins += trade.coins;
+  mergeResourceTotals(materials, trade.materials, 1);
+  return { coins, branches, materials, larder, tradeCoins: trade.coins };
 }
 // The whole realm's output in one object — the ledger the Royal Stores screen
 // reads. `perCycle` is what every province between them ships each 8 hours;
@@ -18577,6 +18801,9 @@ function collectEmpireTribute() {
   const now = Date.now();
   let tributeChests = 0;
   empireVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) { v.lastTributeAt = now; tributeChests += 1; } });
+  // Caravans hand over their ledgers too — each open route resets its clock.
+  const empireForTrade = ensureEmpireState();
+  if (empireForTrade) empireTradeRouteRecords().forEach(({ key }) => { empireForTrade.tradeRoutes[key].lastTradeAt = now; });
   addCoins(due.coins);
   addBranches(due.branches);
   // What the quarries, lumber camps, farms and markets actually dug, felled,
@@ -18613,6 +18840,7 @@ function claimCurrentVillage() {
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
+  const regionsBefore = empireRegionsInfo().regions.map(r => r.id + ':' + r.tier).join('|');
   const liberatedAt = new Date().toISOString();
   empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: liberatedAt, liberatedAt, lastTributeAt: Date.now() };
   addPlayerXp(40);
@@ -18627,7 +18855,17 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The town armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! The town stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireRankTitle(count) + claimLootText);
+  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! The town stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  // Did this liberation found a region — or raise one to a higher tier? The
+  // realm layer only ever announces itself here, when it actually happens.
+  const regionsNow = empireRegionsInfo().regions;
+  if (regionsNow.map(r => r.id + ':' + r.tier).join('|') !== regionsBefore) {
+    const grown = regionsNow.find(r => r.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0)));
+    if (grown) setTimeout(() => {
+      showToast('🏰 ' + grown.tierIcon + ' The free villages around ' + grown.capitalName + ' unite: the ' + grown.name + ' is founded! ' + (regionsNow.length >= 2 ? 'Open trade routes between your regions from the Royal Ledger.' : 'Found a second region abroad and your regions can trade.'));
+      SFX.victory();
+    }, 1600);
+  }
   setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
@@ -18719,7 +18957,7 @@ function renderVillageManagePanel() {
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours · happy villagers multiply and pay more</div>'
+      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.inRegion ? ' · 🏰 region unity is raising its taxes' : '') + ' · happy villagers multiply and pay more</div>'
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
@@ -18743,13 +18981,58 @@ function renderEmpirePanel() {
     const snap = villageEconomySnapshot(v);
     totalPop += snap.pop; taxesPerCycle += snap.taxes; branchesPerCycle += snap.branches;
     const yieldText = empireResourceSummary({ materials: snap.production.materials, larder: snap.production.larder }, 4);
+    const region = empireRegionOfSeed(v.seed);
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + '</span><br>' +
-      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + (yieldText ? ' · 🏭 ' + yieldText : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
+      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (region ? ' · ' + region.tierIcon + ' ' + escapeHtml(region.name) : '') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + (yieldText ? ' · 🏭 ' + yieldText : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
-  panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank">' + escapeHtml(empireRankTitle(count)) + '</div></div>' +
+  // ---- THE REALM — regions and trade. Deliberately invisible until the
+  // player's liberations actually form a region, so the early game stays
+  // simple; from the first region on, this is the Crusader-Kings desk.
+  const realm = empireRegionsInfo();
+  const regions = realm.regions;
+  const rc = realmCore();
+  let realmHtml = '';
+  if (regions.length && rc) {
+    const regionRows = regions.map(r => {
+      const pop = empireRegionPopulation(r);
+      return '<button type="button" class="realm-region-row" data-action="empire-region" data-region="' + escapeHtml(r.id) + '">' +
+        '<span class="realm-region-icon">' + r.tierIcon + '</span>' +
+        '<span class="realm-region-main"><span class="realm-region-name">' + escapeHtml(r.name) + '</span><br>' +
+        '<span class="realm-region-meta">🏘️ ' + r.villageCount + ' sanctuaries · 👥 ' + pop + ' · capital ' + escapeHtml(r.capitalName) + ' · unity +' + Math.round(rc.REGION_TAX_BONUS * 100) + '% taxes</span></span>' +
+        '<span class="realm-region-tier">' + escapeHtml(r.tierLabel.toUpperCase()) + '</span></button>';
+    }).join('');
+    let tradeHtml = '';
+    if (regions.length >= 2) {
+      const open = empireTradeRouteRecords();
+      const openKeys = new Set(open.map(o => o.key));
+      const openRows = open.map(({ a, b }) => {
+        const income = empireTradeRouteIncome(a, b);
+        const goods = rc.tradeRouteGoods(a.capitalSeed, b.capitalSeed).map(id => { try { const m = lootCore().materialById(id); return m ? m.icon : '📦'; } catch (e) { return '📦'; } }).join('');
+        return '<div class="trade-route-row is-open"><span class="trade-route-icon">🕊️</span><span class="trade-route-main"><span class="trade-route-name">' + escapeHtml(a.capitalName) + ' ⇄ ' + escapeHtml(b.capitalName) + '</span><br>' +
+          '<span class="trade-route-meta">sky-caravans flying · +' + income.coins + ' 🪙 and ' + goods + '×' + income.goodsQty + ' every 8h</span></span><span class="trade-route-cost is-open">OPEN</span></div>';
+      }).join('');
+      const cost = rc.tradeRouteCost(open.length);
+      const candidateRows = rc.tradeRouteCandidates(regions).filter(c => !openKeys.has(c.key)).map(c => {
+        const a = empireRegionById(c.a), b = empireRegionById(c.b);
+        if (!a || !b) return '';
+        const income = empireTradeRouteIncome(a, b);
+        return '<button type="button" class="trade-route-row" data-action="open-trade" data-route="' + escapeHtml(c.key) + '">' +
+          '<span class="trade-route-icon">🧭</span><span class="trade-route-main"><span class="trade-route-name">' + escapeHtml(a.capitalName) + ' ⇄ ' + escapeHtml(b.capitalName) + '</span><br>' +
+          '<span class="trade-route-meta">' + c.distanceKm + ' km apart · far roads carry rarer cargo · ~+' + income.coins + ' 🪙/8h</span></span>' +
+          '<span class="trade-route-cost">ESTABLISH<br>' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</span></button>';
+      }).join('');
+      tradeHtml = '<div class="realm-sub-title">🕊️ TRADE ROUTES · sky-caravans between free regions</div>' + openRows + candidateRows;
+    } else {
+      tradeHtml = '<div class="realm-hint">🧭 Found a second region — ' + rc.REGION_MIN_VILLAGES + ' liberated villages near each other, anywhere on Earth — and your regions can open trade routes between their capitals.</div>';
+    }
+    realmHtml = '<div class="realm-section"><div class="realm-title">🏰 THE REALM · ' + regions.length + ' region' + (regions.length === 1 ? '' : 's') + '</div>' + regionRows + tradeHtml + '</div>';
+  } else if (count >= 2 && rc) {
+    realmHtml = '<div class="realm-hint">🏰 Liberate ' + rc.REGION_MIN_VILLAGES + ' villages within ' + rc.REGION_RADIUS_KM + ' km of each other and they unite into a region' + (realm.largestCluster >= 2 ? ' — your best cluster already holds ' + realm.largestCluster : '') + '. Regions pay unity taxes and unlock trade between free lands.</div>';
+  }
+  panel.innerHTML = '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank">' + escapeHtml(empireCrownTitle()) + '</div></div>' +
     (count ? '<div class="empire-stats-row">' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Provinces</div></div>' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + totalPop + '</div><div class="empire-stat-label">Subjects</div></div>' +
@@ -18757,8 +19040,11 @@ function renderEmpirePanel() {
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
       '</div>' : '') +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROWING — CHECK BACK LATER') + '</button>' : '') +
+    realmHtml +
     '<div class="empire-village-list">' + rows + '</div>';
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
+  panel.querySelectorAll('[data-action="open-trade"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireOpenTradeRoute(btn.dataset.route); }));
+  panel.querySelectorAll('[data-action="empire-region"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); frameEmpireRegion(btn.dataset.region); }));
 }
 
 // ---- Scene state ------------------------------------------------------------
@@ -27205,7 +27491,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'map-music-fade-v187-20260731';
+const BURBZ_BUILD = 'empire-realms-trade-v188-20260731';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

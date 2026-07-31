@@ -25,6 +25,18 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
+## Regions, crowns and the trade of free realms
+
+The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes:
+
+- When enough liberated villages stand close together in the real world, their free folk unite and **found a region** — a rescued piece of the Kingdom of Burbz with the earliest-freed sanctuary as its capital. Regions grow through feudal tiers as more villages join them: **County → Duchy → Kingdom**.
+- Villages inside a founded region prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox.
+- The player's own style grows with the realm — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed towns.
+- Once the realm holds **two or more regions** — say the free woods around Delamere and a liberated corner of the south of France — their capitals can open **trade routes**. Sky-caravans of free birds carry each region's signature goods along great-circle roads drawn in gold on the liberation map; the farther the road, the rarer the cargo it returns.
+- Trade routes glow even across lands the usurper's shadow still holds: a caravan road is a ribbon of light through the darkness, proof that the free realms reach each other in defiance of the evil Burbz.
+
+This is the long game: liberate villages until they make a region, liberate regions until they make a realm, and bind the realm together with trade — region by region, the whole Kingdom of Burbz wakes.
+
 ## The evil Burbz — the enemies the birds fight
 
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.
