@@ -89,6 +89,29 @@
     return REGION_TIERS[REGION_TIERS.length - 1];
   }
 
+  /* Tier-ladder progress for the Region Hall: which tier comes next and how
+     many more liberated sanctuaries it takes. null once the region already
+     sits at the top of the ladder (a Kingdom has nowhere higher to climb). */
+  function nextRegionTier(villageCount) {
+    const n = Math.max(0, Math.floor(Number(villageCount) || 0));
+    const ladder = REGION_TIERS.slice().sort((a, b) => a.min - b.min);
+    for (const tier of ladder) { if (n < tier.min) return { next: tier, needed: tier.min - n }; }
+    return null;
+  }
+
+  /* How far a founded region's daylight reaches on the royal atlas: from its
+     centroid out past its farthest sanctuary, plus padding so the region's
+     countryside wakes too. Founding a region unlocks the WHOLE region of the
+     map — the county's lands, not just pinpricks around its towns. */
+  function regionCoverageRadiusKm(region, paddingKm) {
+    const villages = region && Array.isArray(region.villages) ? region.villages.filter(validVillage) : [];
+    if (!villages.length) return 0;
+    const centre = region.centroid && validVillage(region.centroid) ? region.centroid : centroidOf(villages);
+    let reach = 0;
+    villages.forEach(v => { reach = Math.max(reach, haversineKm(centre.lat, centre.lon, v.lat, v.lon)); });
+    return reach + Math.max(0, Number(paddingKm) || 0);
+  }
+
   function centroidOf(villages) {
     // Average on unit vectors so a region straddling the dateline still gets
     // a sane centre for its banner.
@@ -272,6 +295,8 @@
     haversineKm,
     clusterVillages,
     regionTier,
+    nextRegionTier,
+    regionCoverageRadiusKm,
     centroidOf,
     deriveRegions,
     crownTitle,

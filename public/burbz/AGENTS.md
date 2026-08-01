@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-07-31 (full codebase review pass — see "Review log" at the bottom).
+Last curated: 2026-08-01 (location-anchored empire + Region Hall — see "Review log" at the bottom).
 
 ---
 
@@ -32,7 +32,7 @@ Burbz grew as a monolith with satellite modules. Here is the honest map.
 | Thing | What it is |
 | --- | --- |
 | `index.html` (~1.7 MB) | The entire game. UI, state, screens, the sound listener, scan economy, tutorial — all inline in one big `<script>`. This is the heart. When a test says `assert "..." in HTML`, it is pinning a contract against a string in here. |
-| `*_core.js` | Extracted, individually-testable modules (`scan_economy_core.js`, `bird_diet_hunger_core.js`, `diet_hunger_core.js`, `merlin_companion_core.js`, `quest_core.js`, `academy_*_core.js`, `battle_core.js`, `empire_map_core.js`, `empire_realm_core.js`, …). Each is loaded by `index.html` **and** `require()`d by a test. They export via the `(function(root){ … })(globalThis)` UMD-ish pattern so they run in both the browser and Node. `empire_realm_core.js` is the Crusader-Kings endgame maths: village→region clustering, feudal tiers, crown titles, and trade-route income/cost/arcs; `index.html` surfaces none of it until the first region actually exists. |
+| `*_core.js` | Extracted, individually-testable modules (`scan_economy_core.js`, `bird_diet_hunger_core.js`, `diet_hunger_core.js`, `merlin_companion_core.js`, `quest_core.js`, `academy_*_core.js`, `battle_core.js`, `empire_map_core.js`, `empire_realm_core.js`, …). Each is loaded by `index.html` **and** `require()`d by a test. They export via the `(function(root){ … })(globalThis)` UMD-ish pattern so they run in both the browser and Node. `empire_realm_core.js` is the Crusader-Kings endgame maths: village→region clustering, feudal tiers (plus `nextRegionTier` ladder progress), crown titles, region map-coverage radius (`regionCoverageRadiusKm`), and trade-route income/cost/arcs; `index.html` surfaces none of it until the first region actually exists — from then on each region is run from its own Region Hall screen (`screen-region`). |
 | `*_bird_expansion*.js`, `national_bird_completion_20260715.js` | Generated species catalogues (UK, AU, national). Large. Loaded by both `index.html` and `sw.js` via `importScripts`. |
 | `data/` | JSON the game reads at runtime. **`data/bird-diet-records.json` / `.js` are generated — do not hand-edit** (see §4). |
 | `data/national-bird-completion/source-cache/` | Committed copies of the external source datasets (EltonTraits, AVONET, geoboundaries, …) so the build/verify pipeline is reproducible offline. Large files live here on purpose. |
@@ -191,6 +191,36 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-01 — location-anchored empire + Region Hall (Claude).** The empire
+  now follows the player wherever they physically go (the "I'm in Snowdonia
+  but the empire view doesn't show it" report):
+  - **Waysteads** (`index.html` village grid): `villagesNearLatLng` split into
+    `villageInCell` + `waysteadInBlock`. Any 3×3 cell block (~6.6 km square)
+    whose nine cells all roll empty deterministically hosts one waystead from
+    the block's own hash (`burbz-waystead:bi:bj`), so there is ALWAYS a
+    settlement to liberate near the player — worst case ~5 km anywhere on
+    Earth. `villageInCell` reproduces the legacy per-cell formula exactly
+    (pinned by test) so existing claims keep their seeds and coordinates.
+  - **The atlas knows where you are**: `empirePlayerPosition()` (live GPS fix,
+    else `lastKnownHome`) drives a pulsing sovereign's banner (`is-player`),
+    a scout's-lantern half-light window in the darkness veil, and up to three
+    dark frontier banners (`is-frontier`) on the nearest unclaimed villages —
+    tapping one travels into the village and its Liberation Battle claim bar.
+    `rememberHomeFix` debounce-refreshes the atlas on real moves only.
+  - **Regions unlock their whole map area**: `updateEmpireFogMask` punches one
+    gold-rimmed daylight window per founded region (centroid +
+    `regionCoverageRadiusKm`, new in `empire_realm_core.js` along with
+    `nextRegionTier`), not just per-village pinpricks.
+  - **Region Hall** (`screen-region`, `renderRegionScreen`): once a region
+    exists the player runs it as one realm — tier-ladder progress bar,
+    region-scoped tax strongbox (`collectRegionTribute` resets only that
+    region's clocks), sanctuary list, unity bonus, caravan roads. Ledger
+    region rows and atlas region banners open the hall (`openEmpireRegion`);
+    the old map framing lives on as its "VIEW ON ROYAL ATLAS" button.
+  - Tests: `tests/test_location_empire_unlock_20260801.py` (Node-driven core +
+    extracted village-grid determinism + HTML contracts). SW cache bumped
+    (`empire-here-regions-v193-20260801`).
 
 - **2026-07-31 — endgame realms & trade (Claude).** Added the Crusader-Kings
   endgame layer on top of village liberation, keeping the pre-region game
