@@ -2,7 +2,6 @@ import json
 import subprocess
 from pathlib import Path
 
-from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -262,7 +261,7 @@ def test_final_offer_merge_and_display_both_apply_whole_route_deduplication():
     assert "mapDistanceMeters(cs, es)" not in html
 
 
-def test_generated_map_landmarks_are_small_transparent_and_cached_offline():
+def test_generated_map_landmarks_are_retired_from_the_live_map():
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
     names = [
@@ -271,15 +270,8 @@ def test_generated_map_landmarks_are_small_transparent_and_cached_offline():
         "map-landmark-water.webp",
     ]
     for name in names:
-        path = ROOT / "assets" / "ui" / name
-        assert path.exists()
-        assert path.stat().st_size < 15_000
-        with Image.open(path) as image:
-            assert image.size == (144, 144)
-            assert image.mode == "RGBA"
-            assert image.getextrema()[3][0] == 0
-        assert f"assets/ui/{name}" in html
-        assert f"./assets/ui/{name}" in sw
-    assert "MEDIEVAL_HABITAT_PROPS" not in html
-    assert "propSway" not in html
-    assert "if (!spawn || !spawn.realFeature) continue;" in html
+        assert f"assets/ui/{name}" not in html
+        assert f"./assets/ui/{name}" not in sw
+    assert "MAP_LANDMARK_ICONS" not in html
+    assert "drawMedievalProps" not in html
+    assert "burbz-prop-marker" not in html

@@ -578,9 +578,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-poi-marker { display:grid; place-items:center; width:54px !important; height:68px !important; background:transparent; border:0; animation:markerFloat 3.2s ease-in-out infinite; }
 .burbz-poi-tower { width:42px; height:50px; display:grid; place-items:center; border-radius:18px 18px 10px 10px; background:linear-gradient(180deg,#ead794,#80612d); border:2px solid rgba(255,244,210,.88); box-shadow:0 0 0 6px rgba(214,168,79,.12),0 12px 24px rgba(0,0,0,.38); font-size:23px; }
 .burbz-poi-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:900; color:#fff7d9; text-shadow:0 1px 6px #000; text-align:center; line-height:.9; }
-/* Lightweight landmark art, anchored to the centre of real mapped features. */
-.burbz-prop-marker { display:grid; place-items:center; width:48px !important; height:48px !important; background:transparent; border:0; pointer-events:none; z-index:2; }
-.burbz-prop-marker .burbz-prop { display:block; width:46px; height:46px; object-fit:contain; }
 /* Tappable loot scattered on the map */
 /* NOTE: MapLibre positions this marker every frame by writing `transform` on
    THIS element. Never put a CSS transition on `transform` here — it makes the
@@ -14306,7 +14303,7 @@ function showToast(msg) {
 // LIVE REAL-WORLD HABITAT MAP
 // ============================================================================
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
-let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapPropMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
+let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
 function syncBurbzMusicForMapZoom() {
   if (!MUSIC || typeof MUSIC.setVolume !== 'function') return BURBZ_MUSIC_BASE_VOLUME;
   if (currentScreen !== 'map' || !liveMap || !window.BurbzAudioCore || typeof window.BurbzAudioCore.musicVolumeForZoom !== 'function') {
@@ -16758,35 +16755,6 @@ function drawTreeMarkers() {
   liveMapTreeMarkers = [];
 }
 
-// One static landmark per mapped habitat category keeps the map legible and
-// avoids the cost and visual noise of randomized emoji props.
-const MAP_LANDMARK_ICONS = {
-  woodland:{ category:'grove', src:'assets/ui/map-landmark-grove.webp' },
-  park:{ category:'grove', src:'assets/ui/map-landmark-grove.webp' },
-  water:{ category:'water', src:'assets/ui/map-landmark-water.webp' },
-  wetland:{ category:'water', src:'assets/ui/map-landmark-water.webp' },
-  coast:{ category:'water', src:'assets/ui/map-landmark-water.webp' },
-  farmland:{ category:'field', src:'assets/ui/map-landmark-field.webp' },
-  grassland:{ category:'field', src:'assets/ui/map-landmark-field.webp' },
-  hills:{ category:'field', src:'assets/ui/map-landmark-field.webp' }
-};
-function drawMedievalProps(spawns) {
-  if (!liveMap) return;
-  liveMapPropMarkers.forEach(m => m.remove());
-  liveMapPropMarkers = [];
-  const shownCategories = new Set();
-  for (const spawn of (spawns || [])) {
-    if (liveMapPropMarkers.length >= 5) break;
-    if (!spawn || !spawn.realFeature) continue;
-    const landmark = MAP_LANDMARK_ICONS[spawn.habitat];
-    const lat = Number(spawn.lat), lon = Number(spawn.lon);
-    if (!landmark || shownCategories.has(landmark.category) || !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
-    shownCategories.add(landmark.category);
-    const el = makeHtmlMarker('burbz-prop-marker', `<img class="burbz-prop" src="${landmark.src}" alt="" aria-hidden="true" decoding="async">`);
-    liveMapPropMarkers.push(new maplibregl.Marker({ element:el, anchor:'center' }).setLngLat([lon, lat]).addTo(liveMap));
-  }
-}
-
 // ---- Proper RPG treasure-chest icons (inline SVG — there is no chest emoji) --
 const CHEST_SVG =
   '<svg class="rpg-chest" viewBox="0 0 32 28" width="1.2em" height="1.05em" aria-hidden="true">' +
@@ -17168,7 +17136,7 @@ function showMapBirdPreview(row) {
   el.addEventListener('click', ev => { if (ev.target === el || ev.target.classList.contains('map-bird-preview-close')) el.remove(); });
   document.body.appendChild(el);
 }
-function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawMedievalProps(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); }
+function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); }
 function addMapBirdChip(coords, species, birdSymbol, spawn) { const shell = $('liveMapShell'); if (!shell || !liveMap) return; const point = liveMap.project(coords); const chip = makeHtmlMarker('burbz-map-bird-chip', `<div class="burbz-marker-orb">${birdSymbol}</div><div class="burbz-marker-label">${escapeHtml(species)}</div>`); chip.style.left = Math.max(56, Math.min(shell.clientWidth - 56, point.x)) + 'px'; chip.style.top = Math.max(190, Math.min(shell.clientHeight - 190, point.y)) + 'px'; chip.addEventListener('click', () => updateNearbyCard([spawn], 1)); shell.appendChild(chip); liveMapBirdChips.push(chip); }
 function createBirdSpawnPopup(spawn) { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const source = spawn.realFeature ? 'mapped habitat clue' : 'local habitat estimate'; return `<div class="burbz-popup-title">${escapeHtml(species)}</div><div class="burbz-popup-copy">${escapeHtml(habitat)} · ${source}</div><button class="burbz-popup-btn" onclick="document.querySelector('[data-screen=scan]')?.click()">Scan this spot</button>`; }
 function updateNearbyCard(spawns, featureCount) { const first = spawns[0]; if (!first) return; const species = first.bird.commonName || first.bird.name || first.bird.species; const habitat = HABITAT_LABELS[first.habitat] || HABITAT_LABELS.default; if ($('mapNearbyIcon')) $('mapNearbyIcon').innerHTML = birdOnlyImgHTML(first.bird, 'map-nearby-art'); $('mapNearbyTitle').textContent = `${species} nearby`; $('mapNearbyCopy').textContent = `${habitat}: ${featureCount ? featureCount + ' mapped clues' : 'likely in this area'} — check the area list.`; }
@@ -27551,7 +27519,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'training-claim-terminal-v191-20260801';
+const BURBZ_BUILD = 'remove-dead-map-icons-v192-20260801';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
