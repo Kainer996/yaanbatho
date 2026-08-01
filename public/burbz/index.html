@@ -3664,7 +3664,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=quest-categories-material-quests-20260726"></script>
+<script src="academy_treehouse_core.js?v=training-claim-terminal-v191-20260801"></script>
 <script src="academy_alive_core.js?v=academy-no-birds-v3-20260731"></script>
 <script src="academy_3d_core.js?v=academy-no-birds-v4-20260731"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
@@ -14065,7 +14065,7 @@ function renderTrainingHallPanel(birds, others) {
     return '<div class="training-hall-panel" data-feature="training-hall-sessions"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">The training scrolls are still being carried up the tree — reopen this room in a moment.</div></div>';
   }
   const sessions = ensureBirdTrainingSessions().map(s => core.advanceTrainingSession(s, Date.now()));
-  const active = sessions.filter(s => s.status !== 'claimed');
+  const active = sessions.filter(s => !['claimed','cancelled','failed'].includes(s.status));
   const templates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
   const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id));
   const sessionHtml = active.length ? active.map(t => {
@@ -27551,7 +27551,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'global-money-hud-v190-20260731';
+const BURBZ_BUILD = 'training-claim-terminal-v191-20260801';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -33,8 +33,10 @@ def test_global_money_hud_detects_any_layer_covering_the_header_without_an_overl
 
 def test_release_cache_is_bumped_for_the_global_money_hud():
     marker = 'global-money-hud-v190-20260731'
-    assert f"const BURBZ_BUILD = '{marker}';" in HTML
     assert marker in SW
+    # Later releases legitimately replace BURBZ_BUILD; the shared build/cache
+    # contract is covered by test_sw_self_update_20260728.py.
+    assert "const BURBZ_BUILD = '" in HTML
 
 
 def _function_source(name: str) -> str:

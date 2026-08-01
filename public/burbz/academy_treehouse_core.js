@@ -168,7 +168,11 @@
     const total = Math.max(1, session.endMs - session.startMs);
     const elapsed = clamp(nowMs - session.startMs, 0, total);
     const progressPct = Math.round((elapsed / total) * 100);
-    const status = progressPct >= 100 ? 'complete' : 'active';
+    // Progress refreshes must never resurrect a session after its reward has
+    // been claimed (or after another terminal outcome).
+    const status = ['claimed', 'cancelled', 'failed'].includes(session.status)
+      ? session.status
+      : (progressPct >= 100 ? 'complete' : 'active');
     const visibleCount = clamp(Math.floor((progressPct / 100) * template.beats.length) + 1, 1, template.beats.length);
     const events = template.beats.slice(0, visibleCount).map((text, i) => ({
       atMs: session.startMs + Math.round((total / Math.max(1, template.beats.length - 1)) * i),
@@ -225,7 +229,9 @@
     const total = Math.max(1, expedition.endMs - expedition.startMs);
     const elapsed = clamp(nowMs - expedition.startMs, 0, total);
     const progressPct = Math.round((elapsed / total) * 100);
-    const status = progressPct >= 100 ? 'complete' : 'active';
+    const status = ['claimed', 'cancelled', 'failed'].includes(expedition.status)
+      ? expedition.status
+      : (progressPct >= 100 ? 'complete' : 'active');
     const visibleCount = clamp(Math.floor((progressPct / 100) * template.beats.length) + 1, 1, template.beats.length);
     const events = template.beats.slice(0, visibleCount).map((text, i) => ({
       atMs: expedition.startMs + Math.round((total / Math.max(1, template.beats.length - 1)) * i),
