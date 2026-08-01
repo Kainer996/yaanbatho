@@ -38,5 +38,8 @@ def test_real_interactive_map_markers_remain_and_release_is_bumped():
     assert "drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon)" in html
     assert "drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon)" in html
     assert "id=\"mapQuestShowBtn\"" in html
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
+    # RELEASE_PIN named this feature's own release; BURBZ_BUILD moves on with
+    # every later release, so only require the lineage plus a valid tag.
+    build = html.split("const BURBZ_BUILD = '", 1)[1].split("';", 1)[0]
     assert RELEASE_PIN in sw
+    assert build in sw
