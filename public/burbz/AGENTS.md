@@ -192,6 +192,19 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-01 — back never quits (Claude).** The Android/browser back button
+  is trapped behind a history guard entry (`armBurbzBackGuard`, re-armed
+  inside `popstate` before anything else, so mashing back can't exhaust it).
+  Each press closes the topmost open layer (`closeTopBurbzLayer`: bird
+  equipment, village shop, walk-quest sheet, any `.modal-overlay.show`), else
+  pops the visited-screen trail (`recordScreenTrail` fed by `switchScreen`,
+  back-navigation itself not recorded), else falls back to the map and stays
+  put with a throttled hint. Leaving is deliberate: ⚙️ Settings → 🚪 Exit
+  Burbz (`exitBurbzGame`) confirms, saves, sets `burbzExitArmed`, unwinds the
+  guard and `window.close()`s where the platform allows. Tests:
+  `tests/test_back_stays_in_game_20260801.py`. SW cache + BURBZ_BUILD bumped
+  (`back-stays-in-game-v194-20260801`).
+
 - **2026-08-01 — location-anchored empire + Region Hall (Claude).** The empire
   now follows the player wherever they physically go (the "I'm in Snowdonia
   but the empire view doesn't show it" report):

@@ -3458,6 +3458,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-label">&#128260; Start New Game</div>
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
+      <div class="settings-row" id="exitGameBtn" role="button" tabindex="0" aria-label="Save and exit Burbz">
+        <div class="settings-label">&#128682; Exit Burbz</div>
+        <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
+      </div>
       <div class="settings-danger" id="resetDataBtn">RESET ALL DATA</div>
       <div class="settings-build" id="settingsBuildLine"></div>
     </div>
@@ -17260,6 +17264,7 @@ let currentScreen = 'map';
 function switchScreen(name) {
   if (name === currentScreen) return;
   SFX.page();
+  recordScreenTrail(currentScreen);
 
   $$('.screen').forEach(s => s.classList.remove('active'));
   $$('.nav-item').forEach(n => n.classList.remove('active'));
@@ -27836,7 +27841,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-here-regions-v193-20260801';
+const BURBZ_BUILD = 'back-stays-in-game-v194-20260801';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -28695,6 +28700,83 @@ $('resetDataBtn').addEventListener('click', () => {
 });
 $('cloudSignOutBtn')?.addEventListener('click', signOutCloud);
 
+// ============================================================================
+// ANDROID BACK — pressing back never quits mid-adventure. The hardware or
+// browser back button first closes whatever sheet is open, then walks back
+// through the screens the player visited, and at the map it simply stays put.
+// Actually LEAVING Burbz is a deliberate act: ⚙️ Settings → 🚪 Exit Burbz.
+// A guard entry is pushed onto the history stack and re-armed on every back
+// press, so the page itself never unwinds past the game.
+// ============================================================================
+const BURBZ_BACK_GUARD = 'burbz-stay';
+let burbzScreenTrail = [];        // screens visited, oldest first
+let burbzBackNavigating = false;  // true while back itself is switching screens
+let burbzExitArmed = false;       // Settings → Exit flips this; the guard stands down
+let burbzBackHintAt = 0;
+
+function recordScreenTrail(from) {
+  if (burbzBackNavigating || !from) return;
+  if (burbzScreenTrail[burbzScreenTrail.length - 1] === from) return;
+  burbzScreenTrail.push(from);
+  if (burbzScreenTrail.length > 40) burbzScreenTrail.shift();
+}
+
+// Close the topmost open layer, if any. Returns true when something closed —
+// one back press, one layer, exactly like a native app.
+function closeTopBurbzLayer() {
+  const equip = $('birdEquipOverlay');
+  if (equip && equip.classList.contains('show')) { closeBirdEquip(); return true; }
+  const shop = $('villageShopOverlay');
+  if (shop && shop.classList.contains('show')) { villageCloseShop(); return true; }
+  const sheet = $('walkQuestSheet');
+  if (sheet && sheet.classList.contains('open')) { closeWalkQuestSheet(); return true; }
+  const modal = document.querySelector('.modal-overlay.show');
+  if (modal) { modal.classList.remove('show'); return true; }
+  return false;
+}
+
+function armBurbzBackGuard() {
+  try { history.pushState({ [BURBZ_BACK_GUARD]: true }, '', location.href); } catch (e) {}
+}
+
+function handleBurbzBackPress() {
+  if (closeTopBurbzLayer()) return;
+  const prev = burbzScreenTrail.pop();
+  const target = prev || (currentScreen !== 'map' ? 'map' : null);
+  if (target && target !== currentScreen) {
+    burbzBackNavigating = true;
+    try { switchScreen(target); } finally { burbzBackNavigating = false; }
+    return;
+  }
+  // Nowhere further back to go — the game stays open, and (occasionally)
+  // reminds the player where the real door is.
+  const now = Date.now();
+  if (now - burbzBackHintAt > 12000) {
+    burbzBackHintAt = now;
+    showToast('🏰 Burbz stays open on an adventure — leave from ⚙️ Settings → 🚪 Exit Burbz.');
+  }
+}
+
+window.addEventListener('popstate', () => {
+  if (burbzExitArmed) return;   // the player chose Exit: let the page actually go
+  armBurbzBackGuard();          // re-arm FIRST so the next back press is caught too
+  try { handleBurbzBackPress(); } catch (e) { console.warn('BURBZ back press failed', e); }
+});
+
+// The one true exit: saves, stands the back guard down, and closes the app
+// where the platform allows it (installed PWA windows do; a plain browser tab
+// unwinds instead, so the very next back press leaves the page).
+function exitBurbzGame() {
+  if (!confirm('Leave Burbz? Your adventure is saved right here.')) return;
+  try { saveState(); } catch (e) {}
+  burbzExitArmed = true;
+  $('settingsModal')?.classList.remove('show');
+  try { history.back(); } catch (e) {}
+  setTimeout(() => { try { window.close(); } catch (e) {} }, 120);
+  setTimeout(() => { showToast('👋 Progress saved — press back once more to leave Burbz.'); }, 700);
+}
+$('exitGameBtn')?.addEventListener('click', () => { SFX.tap(); exitBurbzGame(); });
+
 // Merlin care controls. Tapping the permanent top-right character opens
 // care instead of selecting or replacing him with a recruited bird.
 $('petSprite')?.addEventListener('click', openMerlinCareMenu);
@@ -28783,6 +28865,7 @@ function addDemoBirds() {
 // ============================================================================
 function init() {
   loadState();
+  armBurbzBackGuard(); // back never quits the game — see the ANDROID BACK section
   initGlobalMoneyHud();
   if (new URLSearchParams(window.location.search).get('demo') === '1') addDemoBirds();
   wireBirdArtFallbacks();
