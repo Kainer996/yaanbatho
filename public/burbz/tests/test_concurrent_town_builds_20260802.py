@@ -42,6 +42,7 @@ const gameState = { player: { coins: 5000, branches: 5000 } };
 const empire = { villages: {} };
 const ensureEmpireState = () => empire;
 const empireCompleteConstructions = () => false;
+const settlementBuildFactorForSeed = () => 1;  // lone-village baseline: no merged-guild speed-up
 const villageRuinDefsFor = () => [];
 const villageRngFrom = () => () => 0.5;
 const VILLAGE_RUIN_KINDS = { house: {} };

@@ -25,6 +25,17 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
+## Villages grow into towns, towns into cities
+
+Freedom is contagious between neighbours. Liberate **three neighbouring villages** — sanctuaries whose lands touch, chained within a short walk of each other — and their free folk tear down the old fences and merge into **one town**, named for the earliest-freed village at its heart. Raise **three neighbouring towns** and they grow together again into **one city**, gold-crowned on the liberation map.
+
+- A merged settlement is one community: its districts share market squares (**bonus taxes**) and its guilds pool their masons (**faster construction** in every district).
+- On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.
+- In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
+- Nothing is conquered and nothing is renamed away: every village keeps its own name, its own governor's desk and its own story — it is simply *part of something bigger now*.
+
+Towns and cities are the street-level layer of the realm; regions (below) are the map-level layer above them, and the two grow independently.
+
 ## Regions, crowns and the trade of free realms
 
 The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes:

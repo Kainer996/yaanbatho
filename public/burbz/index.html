@@ -639,6 +639,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-village-marker.owned .burbz-village-icon { box-shadow:0 5px 14px rgba(0,0,0,.5), 0 0 0 2px rgba(240,199,103,.85), 0 0 18px rgba(240,199,103,.45); }
 .burbz-village-marker.owned .burbz-village-name { color:#ffe9a8; }
 .burbz-village-marker .burbz-village-crown { position:absolute; margin-top:-14px; font-size:14px; filter:drop-shadow(0 1px 3px rgba(0,0,0,.8)); }
+/* Merged settlements on the walking map: town districts glow green, city
+   boroughs gold, each with the settlement's name chipped beneath its own */
+.burbz-village-marker .burbz-village-settlement { margin-top:2px; padding:1px 7px; border-radius:999px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:8.5px; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; background:rgba(14,26,12,.8); border:1px solid rgba(142,227,154,.55); color:#bfe9c2; text-shadow:0 1px 2px rgba(0,0,0,.6); }
+.burbz-village-marker .burbz-village-settlement.is-city { background:rgba(30,24,8,.82); border-color:rgba(240,199,103,.65); color:#ffe9a8; }
+.burbz-village-marker.in-town .burbz-village-icon { box-shadow:0 5px 14px rgba(0,0,0,.5), 0 0 0 2px rgba(142,227,154,.85), 0 0 18px rgba(142,227,154,.45); }
+.burbz-village-marker.in-city .burbz-village-icon { box-shadow:0 5px 16px rgba(0,0,0,.5), 0 0 0 2.5px rgba(240,199,103,.95), 0 0 24px rgba(240,199,103,.6); }
 #villageClaimBar { margin:0 14px 10px; }
 #villageClaimBar:empty { display:none; }
 .village-claim-btn { width:100%; min-height:54px; border-radius:15px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.06em; box-shadow:0 10px 24px rgba(0,0,0,.4); }
@@ -739,12 +745,42 @@ svg.academy-room-bg { display:block; filter:none; }
 .trade-route-cost.is-open { color:#8ee39a; }
 .realm-hint { padding:10px 12px; border-radius:11px; border:1px dashed rgba(240,199,103,.35); background:rgba(24,17,7,.5); color:#d9c893; font-size:11px; line-height:1.55; }
 
+/* TOWNS & CITIES — the merge desk: 3 neighbouring villages make a town,
+   3 neighbouring towns make a city. Green for towns, gold for cities. */
+.settlement-section { margin:10px 0; padding:10px; border-radius:12px; border:1px solid rgba(142,227,154,.4); background:linear-gradient(180deg,rgba(20,36,18,.55),rgba(6,14,6,.72)); box-shadow:inset 0 0 22px rgba(142,227,154,.05); display:grid; gap:8px; }
+.settlement-row { width:100%; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; border:1px solid rgba(142,227,154,.4); background:linear-gradient(180deg,rgba(22,40,20,.62),rgba(6,12,5,.72)); color:inherit; text-align:left; }
+.settlement-row.is-city { border-color:rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(46,36,12,.62),rgba(14,10,3,.72)); box-shadow:0 0 14px rgba(240,199,103,.12); }
+.settlement-row:active { transform:scale(.99); border-color:rgba(142,227,154,.7); }
+.settlement-row.is-city:active { border-color:rgba(240,199,103,.8); }
+.settlement-icon { display:grid; place-items:center; width:34px; height:38px; font-size:18px; border-radius:7px 7px 50% 50% / 7px 7px 60% 60%; border:1.5px solid rgba(142,227,154,.8); background:linear-gradient(160deg,#2c5226 0%,#152a10 70%); box-shadow:inset 0 1px 0 rgba(220,255,220,.3); }
+.settlement-row.is-city .settlement-icon { border-color:rgba(240,199,103,.85); background:linear-gradient(160deg,#6a5220 0%,#3a2b0e 70%); box-shadow:inset 0 1px 0 rgba(255,240,200,.3), 0 0 10px rgba(240,199,103,.35); }
+.settlement-main { flex:1; min-width:0; }
+.settlement-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px; color:var(--text); letter-spacing:.04em; }
+.settlement-meta { font-size:10.5px; color:var(--text3); }
+.settlement-tier { font-family:'Russo One',sans-serif; font-size:9px; letter-spacing:.14em; color:#8ee39a; }
+.settlement-tier.is-city { color:#f0c767; }
+/* The governor's desk line naming the settlement a province belongs to */
+.province-settlement { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.55); color:#bfe9c2; font-size:11px; line-height:1.5; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.03em; }
+.province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
+
 /* Region banners on the royal atlas — grander than a village pin */
 .empire-map-marker.is-region { z-index:6; }
 .empire-map-marker.is-region .empire-map-marker-icon { width:38px; height:42px; border-color:#ffe08a; background:linear-gradient(160deg,#7a5f22 0%,#4a380f 58%,#2b1f07 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.4), inset 0 0 9px rgba(0,0,0,.4), 0 0 18px rgba(240,199,103,.55); }
 .empire-map-marker.is-region .empire-map-marker-icon > span { font-size:19px; }
 .empire-map-marker.is-region .empire-map-marker-banner { border-top-color:#ffe08a; }
 .empire-map-marker.is-region .empire-map-marker-label { border-color:rgba(255,224,138,.7); color:#ffe08a; }
+/* Town & city standards — merged settlements fly their own banner: liberation
+   green for a town of three villages, gold (and grander) for a city of towns */
+.empire-map-marker.is-settlement { z-index:6; }
+.empire-map-marker.is-settlement.is-town .empire-map-marker-icon { width:34px; height:38px; border-color:#8ee39a; background:linear-gradient(160deg,#2c5226 0%,#1a3312 58%,#0c1a06 100%); box-shadow:inset 0 1px 0 rgba(220,255,220,.35), inset 0 0 8px rgba(0,0,0,.4), 0 0 14px rgba(142,227,154,.5); }
+.empire-map-marker.is-settlement.is-town .empire-map-marker-banner { border-top-color:#8ee39a; }
+.empire-map-marker.is-settlement.is-town .empire-map-marker-label { border-color:rgba(142,227,154,.7); color:#bfe9c2; }
+.empire-map-marker.is-settlement.is-city { z-index:7; }
+.empire-map-marker.is-settlement.is-city .empire-map-marker-icon { width:42px; height:46px; border-color:#ffe08a; background:linear-gradient(160deg,#8a6c26 0%,#54400f 58%,#2b1f07 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.45), inset 0 0 9px rgba(0,0,0,.4), 0 0 22px rgba(240,199,103,.65); animation:empire-city-glow 3s ease-in-out infinite; }
+.empire-map-marker.is-settlement.is-city .empire-map-marker-icon > span { font-size:21px; }
+.empire-map-marker.is-settlement.is-city .empire-map-marker-banner { border-top-color:#ffe08a; }
+.empire-map-marker.is-settlement.is-city .empire-map-marker-label { border-color:rgba(255,224,138,.8); color:#ffe9a8; }
+@keyframes empire-city-glow { 0%,100% { box-shadow:inset 0 1px 0 rgba(255,240,200,.45), inset 0 0 9px rgba(0,0,0,.4), 0 0 14px rgba(240,199,103,.45); } 50% { box-shadow:inset 0 1px 0 rgba(255,240,200,.45), inset 0 0 9px rgba(0,0,0,.4), 0 0 26px rgba(240,199,103,.85); } }
 /* The sovereign's own banner — where the player is standing right now */
 .empire-map-marker.is-player { z-index:7; cursor:default; }
 .empire-map-marker.is-player .empire-map-marker-icon { border-color:#9fd4ff; background:linear-gradient(160deg,#2a4a72 0%,#152a48 58%,#0a1626 100%); box-shadow:inset 0 1px 0 rgba(220,240,255,.4), inset 0 0 8px rgba(0,0,0,.4), 0 0 16px rgba(120,190,255,.55); animation:empire-player-pulse 2.6s ease-in-out infinite; }
@@ -3876,12 +3912,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="bird_size_core.js?v=bird-size-roles-v201-20260802"></script>
-<script src="bird_roles_core.js?v=bird-size-roles-v201-20260802"></script>
+<script src="bird_size_core.js?v=settlement-tiers-v202-20260802"></script>
+<script src="bird_roles_core.js?v=settlement-tiers-v202-20260802"></script>
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=empire-here-regions-v193-20260801"></script>
+<script src="empire_realm_core.js?v=settlement-tiers-v202-20260802"></script>
 <script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -18342,11 +18378,17 @@ function drawVillageMarkers(lat, lon) {
     // out, only villages you've genuinely walked near stay enterable.
     const visitable = idx < VILLAGE_VISITABLE_COUNT && (!zoomedOut || v.dist <= VILLAGE_VISIT_RANGE_M);
     const owned = empireOwnsVillage(v.seed);
+    // A liberated village that has merged with its neighbours wears its
+    // settlement's mark on the walking map too: town districts fly 🏘️, city
+    // boroughs 🏙️, with the settlement's name on a chip beneath.
+    const settle = owned ? empireSettlementOfSeed(v.seed) : null;
     const el = makeHtmlMarker('burbz-village-marker',
-      '<div class="burbz-village-icon">🏰</div>' +
+      '<div class="burbz-village-icon">' + (settle ? settle.icon : '🏰') + '</div>' +
       (owned ? '<div class="burbz-village-crown">👑</div>' : (visitable ? '' : '<div class="burbz-village-lock">🔒</div>')) +
-      '<div class="burbz-village-name">' + escapeHtml(v.name) + '</div>');
+      '<div class="burbz-village-name">' + escapeHtml(v.name) + '</div>' +
+      (settle ? '<div class="burbz-village-settlement is-' + settle.tier + '">' + escapeHtml(settle.label) + '</div>' : ''));
     if (owned) el.classList.add('owned');
+    if (settle) el.classList.add('in-' + settle.tier);
     if (!visitable) el.classList.add('locked');
     el.style.zIndex = visitable ? '3' : '2';
     el.addEventListener('click', e => {
@@ -18661,7 +18703,9 @@ function updateEmpireFogMask() {
       const villageLon = Number(village.lon);
       const wrappedLon = wrappedLongitudeNear(villageLon, referenceLon);
       const centre = empireMap.project([wrappedLon, Number(village.lat)]);
-      const east = core.destination(Number(village.lat), villageLon, Math.PI / 2, EMPIRE_TERRITORY_RADIUS_M);
+      // Merged towns and cities lift wider windows of daylight per district,
+      // so their neighbouring holes fuse into one continuous glow.
+      const east = core.destination(Number(village.lat), villageLon, Math.PI / 2, empireVillageTerritoryRadiusM(village.seed));
       const wrappedEast = [wrappedLon + (Number(east[0]) - villageLon), Number(east[1])];
       const edge = empireMap.project(wrappedEast);
       const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 4, 1400);
@@ -18874,6 +18918,24 @@ function frameEmpireRegion(regionId) {
   }
 }
 
+// Frame a merged settlement — the atlas glides to hold every district of the
+// town (or every borough of the city), one fused pool of daylight.
+function frameEmpireSettlement(settlementId) {
+  const settlement = empireSettlementById(settlementId);
+  const core = window.BurbzEmpireMapCore;
+  if (!settlement || !core || !empireMap) return;
+  const card = $('empireMapCard');
+  if (card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
+  const bounds = core.claimBounds(settlement.villages);
+  if (!bounds) return;
+  empireMapUserAdjusted = true;
+  if (settlement.villages.length === 1 || (bounds[0][0] === bounds[1][0] && bounds[0][1] === bounds[1][1])) {
+    empireMap.easeTo({ center:[Number(settlement.villages[0].lon), Number(settlement.villages[0].lat)], zoom:11.5, duration:900 });
+  } else {
+    empireMap.fitBounds(bounds, { padding:{ top:122, right:58, bottom:112, left:58 }, maxZoom:12.5, duration:900 });
+  }
+}
+
 // Tapping a liberated province on the royal map travels to its 3D village:
 // a heraldic transition scroll covers the journey while the scene builds.
 let empireTravelTimer = null, empireTravelFadeTimer = null;
@@ -18914,7 +18976,13 @@ function refreshEmpireMap(options = {}) {
   empireTradeArcs = rc ? openRoutes.map(route => rc.greatCircleArc(route.from, route.to, 48)).filter(Boolean) : [];
   try {
     empireMap.getSource('empire-claims')?.setData(core.claimFeatureCollection(villages));
-    empireMap.getSource('empire-territory')?.setData(core.territoryFeatureCollection(villages));
+    // Each claim's green territory grows with its settlement tier: districts
+    // of a merged town or city paint wider circles, so three neighbouring
+    // liberations visibly fuse into one continuous patch of freed land.
+    empireMap.getSource('empire-territory')?.setData({
+      type:'FeatureCollection',
+      features: villages.map(v => core.territoryCircle(v, empireVillageTerritoryRadiusM(v.seed))).filter(Boolean)
+    });
     if (rc) empireMap.getSource('empire-trade')?.setData(rc.tradeRouteFeatureCollection(openRoutes, 48));
   } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
   clearEmpireMapMarkers();
@@ -18927,6 +18995,18 @@ function refreshEmpireMap(options = {}) {
     el.addEventListener('click', ev => { ev.stopPropagation(); openEmpireVillage(village.seed); });
     const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(village.lon), Number(village.lat)]).addTo(empireMap);
     empireMapMarkers.push(marker);
+  });
+  // Town & city standards: one banner per merged settlement, flying over its
+  // heart. Tapping it frames the whole settlement — every district at once.
+  const settlementsOnMap = empireSettlementsInfo();
+  settlementsOnMap.cities.concat(settlementsOnMap.towns.filter(t => !t.cityId)).forEach(settlement => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'empire-map-marker is-settlement is-' + settlement.tier + ' is-visible show-label';
+    el.setAttribute('aria-label', 'Frame your ' + settlement.label);
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + settlement.icon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(settlement.label) + '</span>';
+    el.addEventListener('click', ev => { ev.stopPropagation(); SFX.tap(); frameEmpireSettlement(settlement.id); });
+    empireRegionMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(settlement.centroid.lon), Number(settlement.centroid.lat)]).addTo(empireMap));
   });
   // Region banners: one heraldic standard per founded region, floating at its
   // heart. Tapping it frames the whole region — county, duchy or kingdom.
@@ -18974,6 +19054,8 @@ function refreshEmpireMap(options = {}) {
   const nextTarget = empireFrontierVillages.length ? empireFrontierVillages[0] : null;
   if (status) status.textContent = villages.length
     ? 'Daylight restored over ' + villages.length + ' province' + (villages.length === 1 ? '' : 's') +
+      (settlementsOnMap.townCount ? ' · 🏘️ ' + settlementsOnMap.townCount + ' town' + (settlementsOnMap.townCount === 1 ? '' : 's') + ' grown from merged villages' : '') +
+      (settlementsOnMap.cityCount ? ' · 🏙️ ' + settlementsOnMap.cityCount + ' cit' + (settlementsOnMap.cityCount === 1 ? 'y' : 'ies') + ' crowned' : '') +
       (regions.length ? ' · ' + regions.length + ' region' + (regions.length === 1 ? '' : 's') + ' united' : '') +
       (openRoutes.length ? ' · ' + openRoutes.length + ' trade route' + (openRoutes.length === 1 ? '' : 's') + ' flying' : '') +
       (nextTarget ? ' · ⚔️ ' + nextTarget.name + ' awaits liberation where you stand' : '') +
@@ -19087,6 +19169,17 @@ window.__burbzEmpireMapDebug = {
   palette: () => applyEmpireAtlasPalette(empireMap),
   markers: () => empireMapMarkers.map(marker => marker.getElement())
 };
+// Exported for QA harnesses and evidence scripts (the game script is an IIFE),
+// in the same spirit as __burbzSizeRolesDebug and __burbzEmpireMapDebug.
+window.__burbzSettlementsDebug = {
+  info: () => empireSettlementsInfo(),
+  ofSeed: seed => empireSettlementOfSeed(seed),
+  byId: id => empireSettlementById(id),
+  territoryM: seed => empireVillageTerritoryRadiusM(seed),
+  buildFactor: seed => settlementBuildFactorForSeed(seed),
+  snapshot: seed => { const e = ensureEmpireState(); return e && e.villages[String(Number(seed) >>> 0)] ? villageEconomySnapshot(e.villages[String(Number(seed) >>> 0)]) : null; },
+  ledger: () => renderEmpirePanel()
+};
 const EMPIRE_RANKS = [[50, 'World Emperor'], [35, 'Kingdom Monarch'], [20, 'Realm Duke'], [10, 'Shire Count'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
 function empireRankTitle(count) { for (const [n, t] of EMPIRE_RANKS) { if (count >= n) return t; } return 'Wandering Trainer'; }
 // ============================================================================
@@ -19119,6 +19212,53 @@ function empireRegionById(id) {
 }
 function empireRegionPopulation(region) {
   return region ? region.villages.reduce((sum, v) => sum + (villageEconomySnapshot(v)?.pop || 0), 0) : 0;
+}
+// ============================================================================
+// SETTLEMENTS — village → town → city, the street-level merge layer BELOW
+// regions. Liberate 3 neighbouring villages (chained within 5 km) and they
+// grow together into one TOWN; raise 3 neighbouring towns (squares within
+// 15 km) and they merge into one CITY. Derived deterministically from the
+// same liberation claims as regions — nothing extra is stored, nothing can
+// drift. All the maths lives in empire_realm_core.js (deriveSettlements).
+// ============================================================================
+let empireSettlementsCache = null, empireSettlementsCacheKey = '';
+function empireSettlementsInfo() {
+  const core = realmCore();
+  if (!core || !core.deriveSettlements) return { towns: [], cities: [], tierBySeed: {}, townCount: 0, cityCount: 0, largestVillageCluster: 0, largestTownCluster: 0 };
+  const villages = empireVillages();
+  const key = villages.map(v => String(v.seed >>> 0)).sort().join(',');
+  if (!empireSettlementsCache || empireSettlementsCacheKey !== key) {
+    empireSettlementsCache = core.deriveSettlements(villages);
+    empireSettlementsCacheKey = key;
+  }
+  return empireSettlementsCache;
+}
+// The town or city a liberated village has merged into — null while it still
+// stands alone as a village (or is not liberated at all).
+function empireSettlementOfSeed(seed) {
+  const entry = empireSettlementsInfo().tierBySeed[String(Number(seed) >>> 0)];
+  return entry && entry.tier !== 'village' ? entry : null;
+}
+function empireSettlementById(id) {
+  const info = empireSettlementsInfo();
+  return info.cities.find(c => c.id === String(id)) || info.towns.find(t => t.id === String(id)) || null;
+}
+// How far a liberated settlement's daylight reaches on the royal atlas:
+// districts of a merged town or city glow wider, so neighbouring pools of
+// light fuse into one — three villages literally become one patch of day.
+function empireVillageTerritoryRadiusM(seed) {
+  const core = realmCore();
+  if (!core || !core.settlementTierInfo) return EMPIRE_TERRITORY_RADIUS_M;
+  const settle = empireSettlementOfSeed(seed);
+  return core.settlementTierInfo(settle ? settle.tier : 'village').territoryRadiusM || EMPIRE_TERRITORY_RADIUS_M;
+}
+// Shared guilds: a merged town's builders raise structures 15% faster, a
+// city's 30% — one district's masons walk over to help the next.
+function settlementBuildFactorForSeed(seed) {
+  const core = realmCore();
+  const settle = empireSettlementOfSeed(seed);
+  if (!settle || !core || !core.settlementTierInfo) return 1;
+  return core.settlementTierInfo(settle.tier).buildTimeFactor || 1;
 }
 // The player's realm-wide style: feudal crown titles once regions exist,
 // the humble village ladder before then. Simple game, simple title.
@@ -19457,15 +19597,19 @@ function villageEconomySnapshot(rec) {
   const region = empireRegionOfSeed(rec.seed);
   const inRegion = !!region;
   const unity = inRegion && unityCore ? 1 + unityCore.REGION_TAX_BONUS : 1;
+  // Merged settlements prosper together: districts of a town pay +10% taxes,
+  // boroughs of a city +25% — one market square now serves them all.
+  const settlement = empireSettlementOfSeed(rec.seed);
+  const merged = settlement && unityCore && unityCore.settlementTierInfo ? 1 + (unityCore.settlementTierInfo(settlement.tier).taxBonus || 0) : 1;
   // Who runs the place: a village Steward keeps the ledger, and above them a
   // region Warden keeps the roads open. Both pay into the same purse — half
   // weight for the Warden, who is looking after several towns at once.
   const steward = villageRoleMultiplier(rec.seed);
   const warden = inRegion ? 1 + (regionRoleMultiplier(region.id) - 1) * 0.5 : 1;
   const governance = steward * warden;
-  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * unity * governance) + flatCoins);
+  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * merged * unity * governance) + flatCoins);
   const branches = pop <= 0 ? 0 : Math.round((2 + flatBranches) * governance);
-  return { pop, needs, happiness, taxes, branches, inRegion, steward, warden, governance, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
+  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
 // housing cap, hungry or joyless ones empty out (never below a stubborn few —
@@ -19513,13 +19657,16 @@ function empireBuildStructure(seed, buildingId) {
   addCoins(-cost.coins);
   addBranches(-cost.branches);
   // Costs are paid up front; the structure itself takes real time to rise.
+  // Merged settlements raise it faster: a town's shared guilds shave 15% off
+  // the clock, a city's 30% — masons walk over from every district.
   const now = Date.now();
-  const buildMs = villageBuildTimeMs(building, level);
+  const guildFactor = settlementBuildFactorForSeed(rec.seed);
+  const buildMs = Math.max(30000, Math.round(villageBuildTimeMs(building, level) * guildFactor));
   eco.construction = { id: building.id, toLevel: level + 1, startMs: now, endMs: now + buildMs };
   saveState();
   SFX.questComplete();
   vibrate(35);
-  showToast('🏗️ ' + building.icon + ' ' + building.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.');
+  showToast('🏗️ ' + building.icon + ' ' + building.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
   // Rebuild the 3D scene so the scaffolded site appears in the village itself
   if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   updateHeader();
@@ -19668,6 +19815,8 @@ function claimCurrentVillage() {
   addCoins(-cost.coins);
   addBranches(-cost.branches);
   const regionsBefore = empireRegionsInfo().regions.map(r => r.id + ':' + r.tier).join('|');
+  const settlementsBefore = empireSettlementsInfo();
+  const townsBefore = settlementsBefore.townCount, citiesBefore = settlementsBefore.cityCount;
   const liberatedAt = new Date().toISOString();
   empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: liberatedAt, liberatedAt, lastTributeAt: Date.now() };
   if (typeof logDiary === 'function') logDiary('village', { name: v.name, count: empireVillages().length });
@@ -19684,6 +19833,25 @@ function claimCurrentVillage() {
     saveState();
   } catch (e) {}
   showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! The town stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  // Did this liberation merge villages into a TOWN — or towns into a CITY?
+  // Three neighbouring liberated villages grow together into one town; three
+  // neighbouring towns rise as one city. Announced only when it happens.
+  const settlementsNow = empireSettlementsInfo();
+  const mySettlement = empireSettlementOfSeed(v.seed);
+  if (settlementsNow.cityCount > citiesBefore && mySettlement && mySettlement.tier === 'city') {
+    const city = empireSettlementById(mySettlement.id);
+    setTimeout(() => {
+      showToast('🏙️ ' + (city ? city.townCount : 3) + ' neighbouring towns merge into one — the ' + mySettlement.label + ' rises! Its boroughs pay +25% taxes and its united guilds build 30% faster. Watch its daylight fuse into one great glow on the royal atlas.');
+      SFX.victory();
+    }, 1100);
+  } else if (settlementsNow.townCount > townsBefore && mySettlement && mySettlement.tier === 'town') {
+    const town = empireSettlementById(mySettlement.id);
+    const united = town ? town.villages.slice(0, 3).map(x => x.name).join(', ') : v.name;
+    setTimeout(() => {
+      showToast('🏘️ ' + united + ' grow together — the ' + mySettlement.label + ' stands! Its districts pay +10% taxes and its shared guilds build 15% faster. Two more neighbouring towns and a city rises.');
+      SFX.victory();
+    }, 1100);
+  }
   // Did this liberation found a region — or raise one to a higher tier? The
   // realm layer only ever announces itself here, when it actually happens.
   const regionsNow = empireRegionsInfo().regions;
@@ -19709,7 +19877,8 @@ function renderVillageClaimBar() {
   if (empireOwnsVillage(v.seed)) {
     const rec = ensureEmpireState().villages[String(v.seed >>> 0)];
     const when = rec && rec.claimedAt ? new Date(rec.claimedAt).toLocaleDateString() : '';
-    bar.innerHTML = '<div class="village-owned-banner">🕊️ ' + escapeHtml(v.name) + ' is liberated' + (when ? ' · freed ' + escapeHtml(when) : '') + '</div>';
+    const settle = empireSettlementOfSeed(v.seed);
+    bar.innerHTML = '<div class="village-owned-banner">🕊️ ' + escapeHtml(v.name) + ' is liberated' + (when ? ' · freed ' + escapeHtml(when) : '') + (settle ? ' · ' + settle.icon + ' part of the ' + escapeHtml(settle.label) : '') + '</div>';
     return;
   }
   const cost = birdhouseCostForNextVillage();
@@ -19780,12 +19949,19 @@ function renderVillageManagePanel() {
       '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
       '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn + '</div>';
   }).join('');
+  // The settlement this province has merged into, if any: shown on the desk,
+  // so a governor always knows they are running a district of something bigger.
+  const settleHere = empireSettlementOfSeed(rec.seed);
+  const settleLine = settleHere
+    ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Heart of the ' : 'District of the ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
+    : '';
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' GOVERN ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
+    settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.inRegion ? ' · 🏰 region unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
+      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🏰 region unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     // A town is run by a bird, not by the player alone: appoint a Steward here.
     rolePostCardHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' }) +
@@ -19812,12 +19988,44 @@ function renderEmpirePanel() {
     totalPop += snap.pop; taxesPerCycle += snap.taxes; branchesPerCycle += snap.branches;
     const yieldText = empireResourceSummary({ materials: snap.production.materials, larder: snap.production.larder }, 4);
     const region = empireRegionOfSeed(v.seed);
+    const settle = empireSettlementOfSeed(v.seed);
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + '</span><br>' +
-      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (region ? ' · ' + region.tierIcon + ' ' + escapeHtml(region.name) : '') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + (yieldText ? ' · 🏭 ' + yieldText : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
+      '<span class="empire-village-meta">👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (settle ? ' · ' + settle.icon + ' ' + escapeHtml(settle.label) : '') + (region ? ' · ' + region.tierIcon + ' ' + escapeHtml(region.name) : '') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + (yieldText ? ' · 🏭 ' + yieldText : '') + ' · liberated ' + escapeHtml(v.claimedAt ? new Date(v.claimedAt).toLocaleDateString() : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('') : '<div class="empire-empty">No provinces yet · open a nearby town from Map, win its Liberation Battle and raise a birdhouse</div>';
+  // ---- TOWNS & CITIES — the street-level merge layer. Liberate 3 neighbouring
+  // villages and they make one town; 3 neighbouring towns make one city.
+  // Invisible until the first town actually stands, so nothing gets busier
+  // for a player whose liberations are still scattered.
+  const settlements = empireSettlementsInfo();
+  const rcTiers = realmCore();
+  let settlementHtml = '';
+  if ((settlements.cities.length || settlements.towns.length) && rcTiers && rcTiers.settlementTierInfo) {
+    const cityTier = rcTiers.settlementTierInfo('city'), townTier = rcTiers.settlementTierInfo('town');
+    const settlementPop = list => list.reduce((sum, x) => sum + (villageEconomySnapshot(x)?.pop || 0), 0);
+    const cityRows = settlements.cities.map(c => {
+      return '<button type="button" class="settlement-row is-city" data-action="empire-settlement" data-settlement="' + escapeHtml(c.id) + '">' +
+        '<span class="settlement-icon">' + c.icon + '</span>' +
+        '<span class="settlement-main"><span class="settlement-name">' + escapeHtml(c.label) + '</span><br>' +
+        '<span class="settlement-meta">' + c.townCount + ' towns united · 🏡 ' + c.villageCount + ' districts · 👥 ' + settlementPop(c.villages) + ' · +' + Math.round(cityTier.taxBonus * 100) + '% taxes · guilds ' + Math.round((1 - cityTier.buildTimeFactor) * 100) + '% faster</span></span>' +
+        '<span class="settlement-tier is-city">CITY</span></button>';
+    }).join('');
+    const townRows = settlements.towns.filter(t => !t.cityId).map(t => {
+      return '<button type="button" class="settlement-row is-town" data-action="empire-settlement" data-settlement="' + escapeHtml(t.id) + '">' +
+        '<span class="settlement-icon">' + t.icon + '</span>' +
+        '<span class="settlement-main"><span class="settlement-name">' + escapeHtml(t.label) + '</span><br>' +
+        '<span class="settlement-meta">' + t.villages.map(x => escapeHtml(x.name)).join(' + ') + ' · 👥 ' + settlementPop(t.villages) + ' · +' + Math.round(townTier.taxBonus * 100) + '% taxes · guilds ' + Math.round((1 - townTier.buildTimeFactor) * 100) + '% faster</span></span>' +
+        '<span class="settlement-tier">TOWN</span></button>';
+    }).join('');
+    const cityNudge = !settlements.cities.length && settlements.largestTownCluster >= 2
+      ? '<div class="realm-hint">🏙️ Two of your towns stand near each other — raise a third within ' + rcTiers.SETTLEMENT_CITY_RADIUS_KM + ' km and the three merge into a city.</div>'
+      : '';
+    settlementHtml = '<div class="settlement-section"><div class="realm-title">🏘️ TOWNS &amp; CITIES · 3 neighbouring villages make a town · 3 neighbouring towns make a city</div>' + cityRows + townRows + cityNudge + '</div>';
+  } else if (count >= 2 && rcTiers && settlements.largestVillageCluster >= 2) {
+    settlementHtml = '<div class="realm-hint">🏘️ Two of your villages stand side by side — liberate a third within ' + rcTiers.SETTLEMENT_TOWN_RADIUS_KM + ' km and the three grow together into a town: +10% taxes, guilds that build 15% faster, one great pool of daylight on the atlas.</div>';
+  }
   // ---- THE REALM — regions and trade. Deliberately invisible until the
   // player's liberations actually form a region, so the early game stays
   // simple; from the first region on, this is the Crusader-Kings desk.
@@ -19870,11 +20078,13 @@ function renderEmpirePanel() {
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
       '</div>' : '') +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROWING — CHECK BACK LATER') + '</button>' : '') +
+    settlementHtml +
     realmHtml +
     '<div class="empire-village-list">' + rows + '</div>';
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="open-trade"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireOpenTradeRoute(btn.dataset.route); }));
   panel.querySelectorAll('[data-action="empire-region"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); openEmpireRegion(btn.dataset.region); }));
+  panel.querySelectorAll('[data-action="empire-settlement"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); frameEmpireSettlement(btn.dataset.settlement); }));
 }
 
 // ============================================================================
@@ -20029,16 +20239,24 @@ function renderVillage() {
   empireCompleteConstructions(); // finish any timed-out builds before drawing
   const v = currentVillage();
   const owned = empireOwnsVillage(v.seed);
+  // A liberated village that has merged into a town or city wears the
+  // settlement's name in its title: its heart carries the standard outright,
+  // its districts show both names.
+  const settleTitle = owned ? empireSettlementOfSeed(v.seed) : null;
   const title = $('villageTitle');
-  if (title) title.textContent = (owned ? '👑 ' : '') + v.name.toUpperCase();
+  if (title) title.textContent = (owned ? '👑 ' : '') +
+    (settleTitle && settleTitle.role === 'heart'
+      ? settleTitle.icon + ' ' + settleTitle.label.toUpperCase()
+      : v.name.toUpperCase() + (settleTitle ? ' · ' + settleTitle.icon + ' ' + settleTitle.label.toUpperCase() : ''));
   const sub = $('villageSub');
   if (sub) {
     const rec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
+    const settleNote = settleTitle ? ' ' + settleTitle.icon + ' Its neighbours have grown together: this is now ' + (settleTitle.role === 'heart' ? 'the heart of' : 'a district of') + ' the ' + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
     if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
-    else if (dev <= 0) sub.textContent = 'Your province, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.';
-    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.';
+    else if (dev <= 0) sub.textContent = 'Your province, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
+    else sub.textContent = 'Your province. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.' + settleNote;
   }
   renderVillageClaimBar();
   renderVillageManagePanel();
@@ -21214,6 +21432,47 @@ function villageMakeMaypole(r, pal) {
   const steps = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 0.25, 10), new THREE.MeshLambertMaterial({ color: pal.stone }));
   steps.position.y = 0.12; grp.add(steps);
   grp.add(villageBlobShadow(1.2));
+  return grp;
+}
+
+// The merged-settlement standard: raised by the square the day three
+// neighbouring villages grow together into one town (liberation-green
+// banners), and gilded the day three towns rise as one city (gold, with a
+// crown that glows). One district pennant rings the charter stone for every
+// member the settlement holds — capped so a metropolis isn't a hedgehog.
+function villageMakeSettlementStandard(r, pal, settle) {
+  const grp = new THREE.Group();
+  const isCity = settle.tier === 'city';
+  const accent = isCity ? 0xf0c767 : 0x8ee39a; // gold for a city, liberation green for a town
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.2, 0.3, 10), stoneMat);
+  plinth.position.y = 0.15; grp.add(plinth);
+  const mastH = isCity ? 5.2 : 4.2;
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, mastH, 8), beamMat);
+  mast.position.y = mastH / 2 + 0.28; grp.add(mast);
+  const banner = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.62),
+    new THREE.MeshBasicMaterial({ color: accent, side: THREE.DoubleSide, transparent: true, opacity: 0.94 }));
+  banner.position.set(0.62, mastH - 0.35, 0); grp.add(banner);
+  if (isCity) {
+    const crown = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.07, 6, 12), new THREE.MeshBasicMaterial({ color: 0xffe08a }));
+    crown.rotation.x = Math.PI / 2; crown.position.y = mastH + 0.42; grp.add(crown);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('240,199,103'), transparent: true, depthWrite: false, opacity: 0.65 }));
+    glow.scale.set(2.6, 2.6, 1); glow.position.y = mastH + 0.42; grp.add(glow);
+  }
+  const pennants = Math.max(3, Math.min(9, Math.floor(Number(settle.memberCount) || 3)));
+  for (let i = 0; i < pennants; i++) {
+    const a = (i / pennants) * Math.PI * 2;
+    const px = Math.cos(a) * 1.9, pz = Math.sin(a) * 1.9;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 1.9, 6), beamMat);
+    pole.position.set(px, 0.95, pz); grp.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.3),
+      new THREE.MeshBasicMaterial({ color: i === 0 ? accent : (isCity ? 0xe8c84a : 0x3e8a4a), side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
+    flag.position.set(px + Math.cos(a + Math.PI / 2) * 0.28, 1.66, pz + Math.sin(a + Math.PI / 2) * 0.28);
+    flag.rotation.y = -a - Math.PI / 2;
+    grp.add(flag);
+  }
+  grp.add(villageBlobShadow(1.6));
   return grp;
 }
 
@@ -22814,6 +23073,21 @@ function buildVillageScene(v) {
 
   // Village centrepiece: well, market cross, fountain, birdbath or maypole
   villageScene.add(villageMakeCentrepiece(r, pal));
+
+  // The merged-settlement standard: once this liberated village has grown
+  // together with its neighbours into a town (or a city), its charter stone
+  // and banners stand by the square — green pennants for a town's districts,
+  // gold and a glowing crown for a city's boroughs.
+  if (econRec) {
+    const settleHere = empireSettlementOfSeed(v.seed);
+    if (settleHere) {
+      const settleRecord = empireSettlementById(settleHere.id);
+      const spot = scatterSpot(6.8, 9.6, 2.1, dryArc.c, dryArc.s);
+      const standard = villageMakeSettlementStandard(r, pal, { ...settleHere, memberCount: settleRecord ? settleRecord.villageCount : 3 });
+      standard.position.set(spot ? spot.x : 0, 0, spot ? spot.z : -7.4);
+      villageScene.add(standard);
+    }
+  }
 
   // Market stalls around the plaza — most keep a vendor minding the counter
   // (traders only return once the settlement is flourishing again)
@@ -28848,7 +29122,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-size-roles-v201-20260802';
+const BURBZ_BUILD = 'settlement-tiers-v202-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

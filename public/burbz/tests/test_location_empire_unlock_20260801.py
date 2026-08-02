@@ -290,6 +290,10 @@ def test_region_collection_resets_only_that_regions_clocks():
 def test_release_is_versioned_for_the_service_worker():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert "empire_realm_core.js?v=empire-here-regions-v193-20260801" in html
-    assert "./empire_realm_core.js?v=empire-here-regions-v193-20260801" in sw
+    # empire_realm_core.js ships new maths per release; its cache-buster moves
+    # with whichever release last touched it (settlement tiers, 2026-08-02).
+    core_pin = "settlement-tiers-v202-20260802"
+    assert f"empire_realm_core.js?v={core_pin}" in html
+    assert f"./empire_realm_core.js?v={core_pin}" in sw
+    # This release's own segment stays in the cache lineage forever.
     assert "empire-here-regions-v193-20260801" in sw.split("const BURBZ_CACHE = ", 1)[1].split("\n", 1)[0]

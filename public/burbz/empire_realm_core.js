@@ -37,6 +37,26 @@
   // capital seed. Ids must exist in loot_crafting_core MATERIALS.
   const TRADE_GOODS = ['oak_twig', 'river_reed', 'iron_grit', 'down_tuft', 'storm_glass', 'moon_dust'];
 
+  // ---- Settlement tiers: village → town → city ------------------------------
+  // The street-level layer BELOW regions. Liberate 3 neighbouring villages
+  // (chained within SETTLEMENT_TOWN_RADIUS_KM of each other) and they grow
+  // together into one TOWN; raise 3 neighbouring towns (squares chained within
+  // SETTLEMENT_CITY_RADIUS_KM) and they merge into one CITY. Merged districts
+  // pay bonus taxes and their shared guilds build faster; on the atlas their
+  // daylight pools fuse into one glow. Regions (150 km) sit far above this.
+  const SETTLEMENT_TOWN_RADIUS_KM = 5;
+  const SETTLEMENT_TOWN_MIN_VILLAGES = 3;
+  const SETTLEMENT_CITY_RADIUS_KM = 15;
+  const SETTLEMENT_CITY_MIN_TOWNS = 3;
+  const SETTLEMENT_TIERS = {
+    village: { rank: 'village', label: 'Village', icon: '🏡', taxBonus: 0,    buildTimeFactor: 1,    territoryRadiusM: 2200 },
+    town:    { rank: 'town',    label: 'Town',    icon: '🏘️', taxBonus: 0.10, buildTimeFactor: 0.85, territoryRadiusM: 3200 },
+    city:    { rank: 'city',    label: 'City',    icon: '🏙️', taxBonus: 0.25, buildTimeFactor: 0.70, territoryRadiusM: 4200 }
+  };
+  function settlementTierInfo(rank) {
+    return SETTLEMENT_TIERS[rank] || SETTLEMENT_TIERS.village;
+  }
+
   function toRad(deg) { return Number(deg) * Math.PI / 180; }
 
   function validVillage(v) {
@@ -161,6 +181,85 @@
     // Progress hint for the pre-region game: how close is the best cluster?
     const largestCluster = clusters.reduce((best, c) => Math.max(best, c.length), 0);
     return { regions, unassigned, largestCluster, clusterCount: clusters.length };
+  }
+
+  /* Settlement growth: liberated villages → towns → cities.
+     A town keeps the name of its HEART — the earliest-liberated village of the
+     cluster — and a city keeps the name of its earliest-founded town, so names
+     and ids survive new liberations exactly like region capitals do. Towns
+     that join a city keep existing (they are its boroughs); tierBySeed maps
+     every liberated village straight to the top settlement it belongs to. */
+  function deriveSettlements(villages, options) {
+    const opts = options || {};
+    const townRadiusKm = Number(opts.townRadiusKm) || SETTLEMENT_TOWN_RADIUS_KM;
+    const cityRadiusKm = Number(opts.cityRadiusKm) || SETTLEMENT_CITY_RADIUS_KM;
+    const minVillages = Math.max(2, Math.floor(Number(opts.minVillages) || SETTLEMENT_TOWN_MIN_VILLAGES));
+    const minTowns = Math.max(2, Math.floor(Number(opts.minTowns) || SETTLEMENT_CITY_MIN_TOWNS));
+    const clusters = clusterVillages(villages, townRadiusKm);
+    const towns = [];
+    let largestVillageCluster = 0;
+    clusters.forEach(cluster => {
+      if (cluster.length < minVillages) { largestVillageCluster = Math.max(largestVillageCluster, cluster.length); return; }
+      const heart = cluster[0];
+      towns.push({
+        id: 'town-' + (Number(heart.seed) >>> 0),
+        tier: 'town',
+        heartSeed: Number(heart.seed) >>> 0,
+        name: String(heart.name || 'Freehold'),
+        label: 'Town of ' + String(heart.name || 'Freehold'),
+        icon: SETTLEMENT_TIERS.town.icon,
+        villageCount: cluster.length,
+        villages: cluster,
+        centroid: centroidOf(cluster),
+        foundedAt: cluster[minVillages - 1].claimedAt || cluster[0].claimedAt || '',
+        cityId: null
+      });
+    });
+    // Towns whose market squares chain within cityRadiusKm merge into cities.
+    const townPoints = towns.map(t => ({ seed: t.heartSeed, name: t.name, lat: t.centroid.lat, lon: t.centroid.lon, claimedAt: t.foundedAt }));
+    const townClusters = clusterVillages(townPoints, cityRadiusKm);
+    const townBySeed = new Map(towns.map(t => [String(t.heartSeed), t]));
+    const cities = [];
+    let largestTownCluster = 0;
+    townClusters.forEach(cluster => {
+      if (cluster.length < minTowns) { largestTownCluster = Math.max(largestTownCluster, cluster.length); return; }
+      const members = cluster.map(p => townBySeed.get(String(Number(p.seed) >>> 0))).filter(Boolean);
+      if (members.length < minTowns) return;
+      const heartTown = members[0];
+      const cityVillages = members.reduce((all, t) => all.concat(t.villages), []).sort((a, b) => claimTime(a) - claimTime(b));
+      const city = {
+        id: 'city-' + heartTown.heartSeed,
+        tier: 'city',
+        heartSeed: heartTown.heartSeed,
+        name: heartTown.name,
+        label: 'City of ' + heartTown.name,
+        icon: SETTLEMENT_TIERS.city.icon,
+        townCount: members.length,
+        towns: members,
+        villageCount: cityVillages.length,
+        villages: cityVillages,
+        centroid: centroidOf(cityVillages),
+        foundedAt: cluster[minTowns - 1].claimedAt || heartTown.foundedAt || ''
+      };
+      members.forEach(t => { t.cityId = city.id; });
+      cities.push(city);
+    });
+    // Every liberated village knows what it now belongs to.
+    const tierBySeed = {};
+    towns.forEach(town => {
+      const s = town.cityId ? cities.find(c => c.id === town.cityId) : town;
+      town.villages.forEach(v => {
+        tierBySeed[String(Number(v.seed) >>> 0)] = {
+          tier: s.tier,
+          role: (Number(v.seed) >>> 0) === s.heartSeed ? 'heart' : 'district',
+          id: s.id,
+          name: s.name,
+          label: s.label,
+          icon: s.icon
+        };
+      });
+    });
+    return { towns, cities, tierBySeed, townCount: towns.length, cityCount: cities.length, largestVillageCluster, largestTownCluster };
   }
 
   /* Crown ladder — the player's realm-wide title once regions exist. Score is
@@ -291,6 +390,13 @@
     REGION_TIERS,
     TRADE_ROUTE_COLOR,
     TRADE_GOODS,
+    SETTLEMENT_TOWN_RADIUS_KM,
+    SETTLEMENT_TOWN_MIN_VILLAGES,
+    SETTLEMENT_CITY_RADIUS_KM,
+    SETTLEMENT_CITY_MIN_TOWNS,
+    SETTLEMENT_TIERS,
+    settlementTierInfo,
+    deriveSettlements,
     validVillage,
     haversineKm,
     clusterVillages,
