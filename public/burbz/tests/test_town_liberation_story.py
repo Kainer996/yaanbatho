@@ -78,6 +78,12 @@ def test_liberation_battle_removes_league_chrome_and_reaches_the_playable_arena(
 
     assert '<div class="screen-title">PERCH LEAGUE</div>' not in battle_screen
     assert "leagueHeader.hidden = !!liberation" in battle
+    # Setting .hidden is not enough on its own: .league-header carries an author
+    # display:flex, which beats the UA sheet's [hidden]{display:none}. Without
+    # this rule the Garden Perch tier card stays on screen over the town battle.
+    assert ".league-header[hidden] { display:none; }" in html
+    league_rule = html.index(".league-header {")
+    assert html.index(".league-header[hidden]") > league_rule
     assert "PAUSE LIBERATION · PLAY PERCH LEAGUE" not in battle
     assert "applyTeamSynergies(playerFighters)" in start
     assert "applyTeamSynergies(opponentFighters)" in start

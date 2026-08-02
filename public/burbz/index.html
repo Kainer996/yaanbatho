@@ -1618,6 +1618,10 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-log-entry.system-msg { background: rgba(255,212,59,0.06); border-left: 2px solid var(--legendary); color: var(--legendary); }
 /* ========== PERCH LEAGUE (turn-based battles) ========== */
 .league-header { display:flex; align-items:center; gap:12px; padding:12px; background:linear-gradient(135deg, var(--bg3), var(--bg2)); border:1px solid rgba(214,168,79,0.25); border-radius:14px; margin-bottom:12px; }
+/* renderBattleSelect() sets leagueHeader.hidden during a town liberation, but an
+   author `display:flex` beats the UA sheet's [hidden]{display:none}, so the
+   Garden Perch tier card kept showing over the town battle. Honour it here. */
+.league-header[hidden] { display:none; }
 .league-tier-icon { font-size:34px; line-height:1; }
 .league-tier-name { font-family:'Russo One', sans-serif; font-size:15px; color:var(--accent); }
 .league-tier-copy { font-size:11px; color:var(--text3); margin-top:2px; }
@@ -3727,9 +3731,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=academy-library-v198-20260802"></script>
-<script src="academy_alive_core.js?v=academy-library-v198-20260802"></script>
-<script src="academy_3d_core.js?v=academy-library-v198-20260802"></script>
+<script src="academy_treehouse_core.js?v=liberation-hides-league-v199-20260802"></script>
+<script src="academy_alive_core.js?v=liberation-hides-league-v199-20260802"></script>
+<script src="academy_3d_core.js?v=liberation-hides-league-v199-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
@@ -27997,7 +28001,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-library-v198-20260802';
+const BURBZ_BUILD = 'liberation-hides-league-v199-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

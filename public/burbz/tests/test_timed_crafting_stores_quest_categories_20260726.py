@@ -304,7 +304,7 @@ def test_the_quest_board_renders_collapsible_category_drawers():
 def test_academy_core_and_loot_core_ship_fresh_pins_and_a_bumped_cache():
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
     for pin in (
-        "academy_treehouse_core.js?v=academy-library-v198-20260802",
+        "academy_treehouse_core.js?v=liberation-hides-league-v199-20260802",
         "loot_crafting_core.js?v=timed-crafting-20260726",
     ):
         assert pin in HTML, pin
