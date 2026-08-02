@@ -35,6 +35,7 @@
     crowbar:     { angle: 48,  y: 6.90, reach: 4.2, scale: 1.02 },
     workshop:    { angle: 232, y: 7.60, reach: 4.0, scale: 0.96 },
     nursery:     { angle: 128, y: 8.60, reach: 3.7, scale: 0.94 },
+    library:     { angle: 272, y: 8.20, reach: 3.9, scale: 0.97 },
     observatory: { angle: 318, y: 9.40, reach: 3.5, scale: 0.96 }
   };
   // Per-building character, read off the manga paintings: the Roost really is
@@ -94,6 +95,12 @@
       wall: 0x425081, wallDark: 0x2c3660, roofCol: 0x323d69, trim: 0xc6a44c,
       windows: [{ x: 0, y: 0.30, z: 0.80, r: 0.34, cool: true }],
       extras: ['crescent', 'telescope', 'lantern-left']
+    },
+    library: {
+      label: 'The Library', roof: 'gable', w: 1.9, d: 1.7, h: 1.55,
+      wall: 0x9a6c40, wallDark: 0x684a2b, roofCol: 0x554260, trim: 0xc6a44c,
+      windows: [{ x: -0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0, y: 0.10, z: 0.90, r: 0.46, wide: true, warm: true }],
+      extras: ['open-front', 'lantern-left', 'rope-belt']
     },
     quest_roost: {
       label: 'Quest Roost', roof: 'gable', w: 1.9, d: 1.7, h: 1.35,

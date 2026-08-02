@@ -77,6 +77,17 @@
       { fx: 0.335, fy: 0.475, type: 'glow', glow: 'lantern', r: 18 },
       { fx: 0.80, fy: 0.46, type: 'glow', glow: 'lantern', r: 20 },
       { fx: 0.52, fy: 0.50, type: 'glow', glow: 'window', r: 24 }
+    ],
+    // The Library sprite is the hand-drawn SVG (assets/academy-buildings/
+    // library.svg), so these fractions are read off its own geometry: the
+    // attic rose window, the twin reading windows, the book-arch hearth glow
+    // and the eave lantern.
+    library: [
+      { fx: 0.50, fy: 0.34, type: 'glow', glow: 'window', r: 18 },
+      { fx: 0.383, fy: 0.492, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.617, fy: 0.492, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.50, fy: 0.656, type: 'glow', glow: 'hearth', r: 26 },
+      { fx: 0.293, fy: 0.52, type: 'glow', glow: 'lantern', r: 16 }
     ]
   };
 

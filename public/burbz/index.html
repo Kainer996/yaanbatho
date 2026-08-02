@@ -3727,9 +3727,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=training-claim-terminal-v191-20260801"></script>
-<script src="academy_alive_core.js?v=academy-no-birds-v3-20260731"></script>
-<script src="academy_3d_core.js?v=academy-no-birds-v4-20260731"></script>
+<script src="academy_treehouse_core.js?v=academy-library-v198-20260802"></script>
+<script src="academy_alive_core.js?v=academy-library-v198-20260802"></script>
+<script src="academy_3d_core.js?v=academy-library-v198-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
@@ -10930,7 +10930,7 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', library:'assets/academy-buildings/library.svg' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
@@ -10945,6 +10945,7 @@ const ACADEMY_ROOMS = {
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
+  library: { label:'THE LIBRARY', icon:'📚', buildingId:'library', desc:'The Academy reading room. Field guides, story scrolls and quiet candlelight — birds stationed among the stacks grow cleverer by the hour, and the Quiet Study drill teaches MIND battle moves.', perk:'Passive: +1 INT every 30 min', perches:[[75,29],[71,33],[79,33]] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
 let academySelectedRoom = 'outdoors';
@@ -13615,7 +13616,10 @@ const ACADEMY_ROOM_STAT_EFFECTS = {
   // No kitchen entry: the Kitchen is a feeding table, not a posting — birds
   // are never stationed there. Its STAM growth lives in the Pantry Gauntlet drill.
   workshop:    { stat:'def',     label:'DEF' },
-  observatory: { stat:'int',     label:'INT' }
+  observatory: { stat:'int',     label:'INT' },
+  // Two INT rooms on purpose: the Observatory charts the sky, the Library
+  // reads about it — both make a stationed bird cleverer.
+  library:     { stat:'int',     label:'INT' }
 };
 const ACADEMY_STAT_MINUTES = 30;   // minutes stationed per +1 stat point
 const ACADEMY_ROOM_STAT_CAP = 400; // passive growth stops here; drills go further
@@ -13959,6 +13963,46 @@ const ACADEMY_ROOM_SVG_FALLBACKS = (() => {
       s += `<circle cx="400" cy="240" r="150" fill="url(#ri-teal)" opacity=".3"/>`;
       return s + motes('#bfe8f0');
     },
+    library() {
+      let s = wall() + beam() + runes(560, 16, 5);
+      // Two tall bookcases, spines picked from the room's own palette so the
+      // stacks read as loved and mismatched rather than printed wallpaper.
+      const SPINES = ['#8a2f2a', TEAL, GOLD, '#4a5f8a', '#58351d', '#6b8a4a'];
+      const bookcase = (x, w, top) => {
+        let b = `<rect x="${x - 10}" y="${top - 14}" width="${w + 20}" height="${462 - top}" rx="8" fill="#3f2c15" stroke="${INK}" stroke-width="4"/>`;
+        for (let row = 0; row < 4; row++) {
+          const sy = top + row * 82;
+          b += `<rect x="${x}" y="${sy}" width="${w}" height="70" fill="#241809"/><rect x="${x}" y="${sy + 70}" width="${w}" height="10" rx="3" fill="#58402c" stroke="${INK}" stroke-width="2.2"/>`;
+          let bx = x + 6;
+          for (let i = 0; bx < x + w - 20; i++) {
+            const bw = 13 + ((x + row * 7 + i * 5) % 9);
+            const bh = 46 + ((row * 11 + i * 7) % 18);
+            const lean = (i % 5 === 3) ? ' transform="rotate(-8 ' + (bx + bw / 2) + ' ' + (sy + 70) + ')"' : '';
+            b += `<rect x="${bx}" y="${sy + 70 - bh}" width="${bw}" height="${bh}" rx="2.5" fill="${SPINES[(row + i) % SPINES.length]}" opacity=".92" stroke="${INK}" stroke-width="1.8"${lean}/><path d="M${bx + 3} ${sy + 76 - bh}h${bw - 6}" stroke="${GOLDHI}" stroke-width="1.6" opacity=".6"${lean}/>`;
+            bx += bw + 3;
+          }
+        }
+        return b;
+      };
+      s += bookcase(56, 190, 96) + bookcase(556, 180, 110);
+      // A rolling ladder leaning into the left stacks.
+      s += `<g stroke="#8a6a3a" stroke-width="5" stroke-linecap="round"><line x1="212" y1="132" x2="164" y2="452"/><line x1="248" y1="140" x2="200" y2="458"/></g>`;
+      for (let i = 0; i < 7; i++) s += `<line x1="${207 - i * 7}" y1="${166 + i * 44}" x2="${243 - i * 7}" y2="${172 + i * 44}" stroke="#6b4a26" stroke-width="4.4" stroke-linecap="round"/>`;
+      s += roundWindow(400, 168, 62);
+      s += lightShaft(400, 236, 130, 216);
+      s += lantern(310, 92, .9, 44) + lantern(500, 96, .8, 48);
+      s += floor(452);
+      // The reading table: a great open storybook, ink pot and a candle jar.
+      s += table(300, 452, 200, 34, 26);
+      s += `<g stroke="${INK}" stroke-width="2.6"><path d="M330 442q34-16 68-2 34-14 68 2l-6 14q-30-12-62 0-32-12-62 0z" fill="${CREAM}"/><path d="M398 440v16" stroke-width="3"/><path d="M342 442q26-9 50 0M410 442q26-9 50 0M344 450q24-8 46 0M412 450q24-8 46 0" stroke="#8a6a3a" stroke-width="2" fill="none"/></g>`;
+      s += jar(516, 420, 24, 32, '#2e5f66', '#f0c76744') + `<ellipse cx="528" cy="418" rx="5" ry="7" fill="#ffdf9e"><animate attributeName="opacity" values=".65;1;.75;1;.65" dur="2.8s" repeatCount="indefinite"/></ellipse>`;
+      s += `<rect x="268" y="430" width="26" height="16" rx="4" fill="#17100a" stroke="${INK}" stroke-width="2.2"/><path d="M281 430q-2-12 10-16" stroke="#8a6a3a" stroke-width="2.6" fill="none"/>`;
+      // Scroll basket and a stray pile of books on the boards.
+      s += `<path d="M96 500l-5 52q26 13 56 0l-5-52z" fill="#6b4a26" stroke="${INK}" stroke-width="2.8"/><path d="M92 500h64" stroke="${INK}" stroke-width="3"/><rect x="104" y="478" width="13" height="56" rx="6" fill="#d9c493" stroke="${INK}" stroke-width="2.2" transform="rotate(-11 110 506)"/><rect x="126" y="474" width="13" height="60" rx="6" fill="#cbb68a" stroke="${INK}" stroke-width="2.2" transform="rotate(7 132 504)"/>`;
+      for (let i = 0; i < 3; i++) s += `<rect x="${648 - i * 9}" y="${532 - i * 17}" width="${104 + i * 14}" height="16" rx="4" fill="${SPINES[i]}" opacity=".92" stroke="${INK}" stroke-width="2.4"/>`;
+      s += `<circle cx="400" cy="430" r="120" fill="url(#ri-gold)" opacity=".22"/>`;
+      return s + motes();
+    },
     quest_roost() {
       let s = wall() + beam() + runes(80, 16, 4);
       s += `<polygon points="60,64 60,168 96,140 132,168 132,64" fill="${GOLD}" opacity=".9" stroke="${INK}" stroke-width="2.6"/><polygon points="148,64 148,150 178,126 208,150 208,64" fill="${TEAL}" opacity=".9" stroke="${INK}" stroke-width="2.6"/>`;
@@ -14001,7 +14045,9 @@ const ACADEMY_ROOM_INTERIOR_ASSETS = {
 };
 
 function ACADEMY_ROOM_SCENES(room, label) {
-  const src = ACADEMY_ROOM_INTERIOR_ASSETS[room] || ACADEMY_ROOM_INTERIOR_ASSETS.outdoors;
+  const src = ACADEMY_ROOM_INTERIOR_ASSETS[room];
+  // Rooms without a painted interior (the Library) draw their inline scene.
+  if (!src) return ACADEMY_ROOM_SVG_FALLBACKS(room, label);
   return `<img class="academy-room-bg" src="${src}" alt="${label} interior" draggable="false" decoding="async">`;
 }
 
@@ -14153,7 +14199,7 @@ function renderTrainingHallPanel(birds, others) {
       }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
     return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Six disciplines, one per Academy room: each timed session raises a stat AND teaches Perch League battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat AND teaches Perch League battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function renderAcademyRoomInterior() {
@@ -27951,7 +27997,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-bond-meter-v197-20260802';
+const BURBZ_BUILD = 'academy-library-v198-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

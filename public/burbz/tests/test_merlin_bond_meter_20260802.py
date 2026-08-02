@@ -13,8 +13,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "merlin-bond-meter-v197-20260802"
-PREVIOUS_RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
+RELEASE_PIN = "academy-library-v198-20260802"
+# This release's own marker stays on the cache lineage even after later
+# releases move BURBZ_BUILD on.
+OWN_RELEASE_PIN = "merlin-bond-meter-v197-20260802"
 
 
 def run_node(source: str) -> dict:
@@ -115,6 +117,6 @@ def test_release_is_versioned_for_service_worker_self_update():
         line for line in SW.read_text(encoding="utf-8").splitlines()
         if line.startswith("const BURBZ_CACHE = ")
     )
-    assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
+    assert OWN_RELEASE_PIN in cache_line  # lineage kept
     assert cache_line.rstrip("';").endswith(RELEASE_PIN)
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML.read_text(encoding="utf-8")
