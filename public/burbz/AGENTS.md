@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-02 (empire opens on the player + sound session shelf — see "Review log" at the bottom).
+Last curated: 2026-08-02 (the Academy Library + Merlin bond meter — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,41 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-02 — the Academy Library (Claude).** A new buildable room that
+  makes birds cleverer, requested by Yaan:
+  - **Room**: `library` in `academy_treehouse_core.js` TREEHOUSE_ROOMS
+    (floor 5, right branch, 210 coins / 55 branches, unlock level 6,
+    `trainStat:'int'`). Two INT rooms exist on purpose — the Observatory
+    charts the sky, the Library reads about it. Stationed birds gain
+    +1 INT / 30 min via `ACADEMY_ROOM_STAT_EFFECTS.library`.
+  - **Drill**: `quiet_study` (150 min, +1 INT, +50 XP, happiness +2), room
+    `library`, school `mind` — so its sessions advance the same
+    Sharp Eyes → Outsmart → Master Plan move line as the Focus Roost. The
+    Training Hall notice-board copy now says "Seven timed drills".
+  - **Art without Higgsfield**: the user's image-gen subscription lapsed, so
+    the Library is the first room with hand-drawn SVG art: the tree sprite is
+    `assets/academy-buildings/library.svg` (precached in `sw.js`), and the
+    interior is an inline `library()` scene in ACADEMY_ROOM_SVG_FALLBACKS —
+    `ACADEMY_ROOM_SCENES` now falls back to the inline scene for any room with
+    no painted-PNG interior entry. `academy_alive_core.js` glow anchors are
+    read off the SVG's own geometry; `academy_3d_core.js` gained a
+    `library` ANCHOR (272°, y 8.2) + STYLE. If the room ever gets manga
+    paintings, add the PNGs to the two asset maps and the fallback retires
+    itself.
+  - Tests: `tests/test_academy_library_20260802.py`; release pins repointed
+    per convention. SW cache + BURBZ_BUILD bumped
+    (`academy-library-v198-20260802`), and the three academy core files'
+    `?v=` cache-busters moved to the same tag.
+
+- **2026-08-02 — Merlin bond meter (Claude).** The bond the player has with
+  Merlin (tracked since the tamagotchi release: feed +5 / play +8 / rest +3
+  bond XP, 100 XP per level) is now visible: a fourth amethyst bar in the
+  care menu (`#merlinBondFill` / `#merlinBondXpValue`) fills toward the next
+  level, successful care actions pop a "+X bond" chip (`showMerlinBondGain`),
+  and level-ups sparkle + announce themselves. Tests:
+  `tests/test_merlin_bond_meter_20260802.py`. SW cache + BURBZ_BUILD bumped
+  (`merlin-bond-meter-v197-20260802`).
 
 - **2026-08-02 — empire opens on the player + sound session shelf (Claude).**
   Three player reports in one release:
