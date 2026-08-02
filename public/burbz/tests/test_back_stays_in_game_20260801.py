@@ -11,7 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "back-stays-in-game-v194-20260801"
+RELEASE_PIN = "back-guard-gesture-v195-20260802"
+PREVIOUS_RELEASE_PIN = "back-stays-in-game-v194-20260801"
 
 
 def back_section(html: str) -> str:
@@ -23,7 +24,7 @@ def back_section(html: str) -> str:
 def test_history_guard_is_armed_at_boot_and_rearmed_on_every_back_press():
     html = HTML.read_text(encoding="utf-8")
     section = back_section(html)
-    assert "function armBurbzBackGuard()" in section
+    assert "function armBurbzBackGuard(fromGesture)" in section
     assert "history.pushState({ [BURBZ_BACK_GUARD]: true }" in section
     # Armed once at startup...
     init_start = html.index("function init() {")
@@ -34,6 +35,28 @@ def test_history_guard_is_armed_at_boot_and_rearmed_on_every_back_press():
     pop_start = section.index("window.addEventListener('popstate'")
     handler = section[pop_start:section.index("});", pop_start)]
     assert handler.index("armBurbzBackGuard()") < handler.index("handleBurbzBackPress()")
+
+
+def test_guard_survives_chromes_back_button_intervention():
+    """Chrome skips history entries pushed without a user gesture — the exact
+    shape of a boot-time guard — so the guard must be re-armed from inside
+    real taps, and modern engines get the Navigation API cancel instead."""
+    section = back_section(HTML.read_text(encoding="utf-8"))
+    # One live gesture-armed guard at a time, re-armed on any tap...
+    assert "burbzGuardGestureArmed" in section
+    assert "document.addEventListener('pointerdown'" in section
+    assert "armBurbzBackGuard(true);" in section
+    # ...consumed flag cleared when a back press pops it, so the next tap re-arms.
+    pop_start = section.index("window.addEventListener('popstate'")
+    handler = section[pop_start:section.index("});", pop_start)]
+    assert "burbzGuardGestureArmed = false;" in handler
+    # Navigation API: cancel the traversal outright where the engine allows it,
+    # and stand down once the player chose Exit.
+    nav_start = section.index("window.navigation.addEventListener('navigate'")
+    nav = section[nav_start:]
+    assert "event.navigationType === 'traverse' && event.cancelable" in nav
+    assert "event.preventDefault();" in nav
+    assert "if (burbzExitArmed) return;" in nav
 
 
 def test_back_closes_the_topmost_layer_before_changing_screens():
@@ -90,4 +113,5 @@ def test_release_is_versioned_for_the_service_worker():
     sw = SW.read_text(encoding="utf-8")
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
     cache_line = sw.split("const BURBZ_CACHE = ", 1)[1].split("\n", 1)[0]
+    assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert cache_line.rstrip("';").endswith(RELEASE_PIN)

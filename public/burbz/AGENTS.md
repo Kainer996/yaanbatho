@@ -192,6 +192,18 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-02 — back guard vs Chrome's intervention (Claude).** v194's back
+  trap failed on real Android: Chrome's back-button intervention SKIPS history
+  entries pushed without a user gesture (the boot-time guard and popstate
+  re-pushes both are), so hardware back still closed the app. Fix: the guard
+  is re-armed from inside genuine taps (`pointerdown`, capture+passive — one
+  live gesture-armed entry at a time, tracked by `burbzGuardGestureArmed`),
+  and on modern engines the Navigation API cancels the traversal outright
+  (`navigate` event, `traverse` + `cancelable` → `preventDefault`), with the
+  popstate path kept as the fallback. Lesson for next time: **a pushState
+  back-trap that is not armed from a user gesture does not work in Chrome.**
+  SW cache + BURBZ_BUILD bumped (`back-guard-gesture-v195-20260802`).
+
 - **2026-08-01 — back never quits (Claude).** The Android/browser back button
   is trapped behind a history guard entry (`armBurbzBackGuard`, re-armed
   inside `popstate` before anything else, so mashing back can't exhaust it).

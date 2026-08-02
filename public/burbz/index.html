@@ -27841,7 +27841,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'back-stays-in-game-v194-20260801';
+const BURBZ_BUILD = 'back-guard-gesture-v195-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -28735,9 +28735,22 @@ function closeTopBurbzLayer() {
   return false;
 }
 
-function armBurbzBackGuard() {
+function armBurbzBackGuard(fromGesture) {
   try { history.pushState({ [BURBZ_BACK_GUARD]: true }, '', location.href); } catch (e) {}
+  if (fromGesture) burbzGuardGestureArmed = true;
 }
+
+// Chrome's back-button intervention SKIPS history entries that were pushed
+// without a user gesture — which is exactly what the boot-time guard and the
+// popstate re-pushes are, so on Android the hardware back sailed straight
+// past them and closed the app. Entries born inside a genuine tap are
+// honoured, and a game is made of taps: keep exactly one live gesture-armed
+// guard on top of the stack at all times.
+let burbzGuardGestureArmed = false;
+document.addEventListener('pointerdown', () => {
+  if (burbzExitArmed || burbzGuardGestureArmed) return;
+  armBurbzBackGuard(true);
+}, { capture: true, passive: true });
 
 function handleBurbzBackPress() {
   if (closeTopBurbzLayer()) return;
@@ -28759,9 +28772,24 @@ function handleBurbzBackPress() {
 
 window.addEventListener('popstate', () => {
   if (burbzExitArmed) return;   // the player chose Exit: let the page actually go
+  burbzGuardGestureArmed = false; // the press consumed the honoured entry; next tap re-arms
   armBurbzBackGuard();          // re-arm FIRST so the next back press is caught too
   try { handleBurbzBackPress(); } catch (e) { console.warn('BURBZ back press failed', e); }
 });
+
+// Modern engines (Chrome 108+): the Navigation API can cancel a back
+// traversal outright — no history juggling, no intervention to dodge. Where
+// it works, the back press never even pops the guard; elsewhere the popstate
+// path above still catches it.
+if (window.navigation && typeof window.navigation.addEventListener === 'function') {
+  window.navigation.addEventListener('navigate', event => {
+    if (burbzExitArmed) return;
+    if (event.navigationType === 'traverse' && event.cancelable) {
+      event.preventDefault();
+      try { handleBurbzBackPress(); } catch (e) { console.warn('BURBZ back intercept failed', e); }
+    }
+  });
+}
 
 // The one true exit: saves, stands the back guard down, and closes the app
 // where the platform allows it (installed PWA windows do; a plain browser tab
