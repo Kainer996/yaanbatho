@@ -152,5 +152,6 @@ def test_repeat_suppression_matches_the_discovery_history_counts():
 # ---------------------------------------------------------------------------
 
 def test_release_is_versioned_for_service_worker_self_update():
+    # Lineage: this release's segment stays in the ever-growing cache name.
+    # (The current-build equality check lives with the NEWEST release's test.)
     assert RELEASE_PIN in SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML.read_text(encoding="utf-8")

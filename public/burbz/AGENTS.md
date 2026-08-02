@@ -192,6 +192,18 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-02 — per-town builders, verified + explained (Claude).** Player
+  asked for concurrent builds across different towns. Verified (Node harness
+  driving the real `empireBuildStructure` + a headless-browser run) that this
+  ALREADY works: the lock is `eco.construction` on each village's own economy
+  record, so only a second project in the SAME town is refused. The confusion
+  was the copy — the refusal toast said "one project at a time" with no scope.
+  It now names the town and says other towns can build meanwhile, and the
+  Construction Yard header says "builders busy here — other towns can still
+  build". Contract pinned in `tests/test_concurrent_town_builds_20260802.py`
+  so the per-town lock never silently becomes global. SW cache + BURBZ_BUILD
+  bumped (`per-town-builders-copy-v197-20260802`).
+
 - **2026-08-02 — empire opens on the player + sound session shelf (Claude).**
   Three player reports in one release:
   - **Empire atlas starts where the player is standing.** New

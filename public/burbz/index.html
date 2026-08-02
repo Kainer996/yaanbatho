@@ -18901,7 +18901,7 @@ function empireBuildStructure(seed, buildingId) {
   const eco = ensureVillageEconomy(rec);
   if (eco.construction) {
     const busy = EMPIRE_BUILDING_INDEX[eco.construction.id];
-    showToast('🏗️ Your builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project at a time.');
+    showToast('🏗️ ' + rec.name + '’s builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project per town. Your other towns can build meanwhile.');
     return;
   }
   const level = eco.buildings[building.id] || 0;
@@ -19187,7 +19187,7 @@ function renderVillageManagePanel() {
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
-    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy' : '') + '</div>' +
+    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy here — other towns can still build' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     '</div>';
   if (construction) ensureProvinceCountdownTicker();
@@ -27912,7 +27912,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-player-start-sound-shelf-v196-20260802';
+const BURBZ_BUILD = 'per-town-builders-copy-v197-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
