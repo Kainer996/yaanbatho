@@ -23,7 +23,7 @@
 <meta name="twitter:description" content="Turn birds you hear or photograph into collectible manga fighter companions. A playful field-guide game in progress.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Russo+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="lib/maplibre-gl.css?v=5.24.0" onerror="this.onerror=null;this.href='https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css';">
 <style>
 /* ========== RESET & BASE ========== */
@@ -412,6 +412,43 @@ svg.academy-room-bg { display:block; filter:none; }
   content: ''; flex: 1; height: 2px; border-radius: 1px;
   background: linear-gradient(90deg, var(--accent), rgba(214,168,79,.25) 55%, transparent);
 }
+
+/* ========== ADVENTURER'S DIARY ==========
+   An RPG storybook: dark leather binding around aged-parchment pages, quill
+   serif type, day chapters with small-cap headings and an illuminated
+   drop-cap on the front page — the diary Merlin keeps of the whole adventure. */
+.diary-book {
+  margin: 4px 2px 18px; padding: 7px; border-radius: 14px;
+  background: linear-gradient(160deg, #4a2f1b, #2c1a0e 70%);
+  border: 1px solid rgba(240,199,103,0.35);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.55);
+}
+.diary-page {
+  border-radius: 9px; padding: 18px 16px 24px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255,246,214,0.5), rgba(255,246,214,0) 60%),
+    linear-gradient(175deg, #f3e6c2, #e7d3a4 55%, #d9bf8a);
+  color: #3b2a17; font-family: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  box-shadow: inset 0 0 34px rgba(122,84,40,0.38), inset 0 0 4px rgba(122,84,40,0.4);
+}
+.diary-crest { text-align: center; font-size: 30px; filter: drop-shadow(0 2px 3px rgba(90,60,20,0.35)); }
+.diary-main-title { text-align: center; font-size: 24px; letter-spacing: 0.04em; color: #5b3714; text-shadow: 0 1px 0 rgba(255,250,230,0.6); }
+.diary-sub { text-align: center; font-style: italic; font-size: 13px; color: #7a5a33; margin-top: 2px; }
+.diary-rule { text-align: center; color: #8a6435; margin: 10px 0 8px; font-size: 16px; }
+.diary-rule::before, .diary-rule::after { content: '——'; letter-spacing: -1px; margin: 0 8px; opacity: 0.55; }
+.diary-intro { font-size: 14.5px; line-height: 1.6; text-align: justify; margin: 4px 2px 10px; }
+.diary-intro::first-letter { font-size: 300%; float: left; line-height: 0.85; padding: 2px 6px 0 0; color: #7c1f1a; }
+.diary-stats { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 2px 0 6px; }
+.diary-stat { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(122,84,40,0.4); background: rgba(255,248,225,0.5); color: #5b3d1c; }
+.diary-chapter { margin-top: 16px; padding-top: 10px; border-top: 1px dashed rgba(122,84,40,0.45); }
+.diary-day-head { text-align: center; font-size: 15px; letter-spacing: 0.06em; color: #6d2019; font-variant: small-caps; }
+.diary-day-summary { font-style: italic; font-size: 13.5px; line-height: 1.55; color: #6a4a24; margin: 7px 2px 9px; text-align: center; }
+.diary-entry { display: flex; gap: 9px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid rgba(122,84,40,0.16); }
+.diary-entry:last-child { border-bottom: none; }
+.diary-entry-icon { flex: none; font-size: 15px; margin-top: 1px; filter: sepia(0.3); }
+.diary-entry-text { font-size: 13.8px; line-height: 1.5; color: #43301a; }
+.diary-entry-time { display: inline-block; margin-left: 7px; font-size: 11px; font-style: italic; color: #8a6a3f; white-space: nowrap; }
+.diary-blank { text-align: center; font-style: italic; color: #7a5a33; padding: 18px 8px 8px; line-height: 1.6; }
 
 /* ========== BOTTOM NAV ==========
    Monoline SVG icons instead of mixed emoji, one quiet accent colour, and the
@@ -1018,7 +1055,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .card-stat-label { font-size: 8px; color: var(--text3); display: block; }
 
 /* Card back details — compact enough for a two-column mobile card. */
-.card-back-head { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:6px; min-height:24px; }
+.card-back-head { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:start; gap:6px; min-height:24px; }
 .card-back-title { min-width:0; font-family:'Russo One',sans-serif; font-size:11px; line-height:1.08; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card-back-meta { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:7.5px; font-weight:800; line-height:1.15; text-align:right; text-transform:uppercase; white-space:nowrap; }
 .card-back-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
@@ -1618,6 +1655,10 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-log-entry.system-msg { background: rgba(255,212,59,0.06); border-left: 2px solid var(--legendary); color: var(--legendary); }
 /* ========== PERCH LEAGUE (turn-based battles) ========== */
 .league-header { display:flex; align-items:center; gap:12px; padding:12px; background:linear-gradient(135deg, var(--bg3), var(--bg2)); border:1px solid rgba(214,168,79,0.25); border-radius:14px; margin-bottom:12px; }
+/* renderBattleSelect() sets leagueHeader.hidden during a town liberation, but an
+   author `display:flex` beats the UA sheet's [hidden]{display:none}, so the
+   Garden Perch tier card kept showing over the town battle. Honour it here. */
+.league-header[hidden] { display:none; }
 .league-tier-icon { font-size:34px; line-height:1; }
 .league-tier-name { font-family:'Russo One', sans-serif; font-size:15px; color:var(--accent); }
 .league-tier-copy { font-size:11px; color:var(--text3); margin-top:2px; }
@@ -2541,6 +2582,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 /* Bird knowledge quiz — NPCs, villages and quest returns */
 .bird-quiz-overlay { position:fixed; inset:0; z-index:920; display:none; align-items:center; justify-content:center; padding:18px; background:radial-gradient(circle at 50% 38%, rgba(214,168,79,.20), rgba(4,6,5,.78)); backdrop-filter:blur(7px); }
 .bird-quiz-overlay.open { display:flex; }
+.card-photo-btn { width:28px; height:28px; min-width:28px; border-radius:50%; border:1px solid rgba(240,199,103,.55); background:rgba(20,16,8,.85); color:#f0c767; font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center; align-self:start; box-shadow:0 2px 8px rgba(0,0,0,.35); cursor:pointer; }
+.card-photo-btn:active { transform:scale(.92); }
+.card-photo-btn.floating { position:absolute; top:8px; right:8px; z-index:3; }
+.player-photo-overlay { position:fixed; inset:0; z-index:930; display:none; align-items:center; justify-content:center; padding:18px; background:radial-gradient(circle at 50% 38%, rgba(214,168,79,.18), rgba(4,6,5,.82)); backdrop-filter:blur(7px); }
+.player-photo-overlay.open { display:flex; }
+.player-photo-card { width:min(440px, 94vw); max-height:86vh; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:16px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(165deg, rgba(34,28,16,.97), rgba(12,10,6,.98)); box-shadow:0 18px 50px rgba(0,0,0,.6); }
+.player-photo-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.player-photo-title { font-family:'Russo One',sans-serif; font-size:15px; color:#f0c767; }
+.player-photo-meta { font-size:11px; color:var(--text3); white-space:nowrap; }
+.player-photo-img { width:100%; max-height:62vh; object-fit:contain; border-radius:12px; background:#000; }
+.player-photo-loading { padding:34px 10px; text-align:center; color:var(--text3); font-size:13px; }
+.player-photo-close { min-height:40px; border-radius:10px; border:1px solid rgba(240,199,103,.45); background:rgba(240,199,103,.12); color:#f0c767; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.06em; cursor:pointer; }
 .bird-quiz-card { width:min(520px,100%); border-radius:22px; padding:18px; background:linear-gradient(180deg,#221c10,#0d0c08); border:1px solid rgba(240,199,103,.42); box-shadow:0 18px 54px rgba(0,0,0,.66), 0 0 26px rgba(214,168,79,.16); animation:questSheetUp .26s ease-out; }
 .bird-quiz-kicker { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent2); display:flex; justify-content:space-between; gap:10px; }
 .bird-quiz-title { margin:5px 0 6px; font-family:'Russo One',sans-serif; font-size:20px; color:#fff2c4; }
@@ -2945,6 +2998,31 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-bird-preview-name { margin-top:8px; font-size:20px; font-weight:900; color:#f0c767; }
 .map-bird-preview-sub { margin-top:4px; font-size:12px; color:var(--text3); }
 .map-bird-preview-close { margin-top:12px; padding:9px 22px; border-radius:13px; border:1px solid rgba(214,168,79,.5); background:rgba(214,168,79,.16); color:#f0c767; font-weight:800; font-family:inherit; }
+
+/* ========== SECRET: THE NIGHTWING (hidden bat Easter egg) ========== */
+.bat-secret-overlay { position:fixed; inset:0; z-index:1500; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:calc(16px + var(--safe-top)) 18px calc(16px + var(--safe-bottom)); background:radial-gradient(circle at 50% 14%, rgba(64,48,118,.55), rgba(3,2,10,.97) 66%); backdrop-filter:blur(10px); }
+.bat-secret-overlay.show { display:flex; }
+.bat-secret-kicker { font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.34em; text-transform:uppercase; color:#cdbcff; text-shadow:0 0 22px rgba(147,112,255,.85); animation:batKickerGlow 2.4s ease-in-out infinite; }
+@keyframes batKickerGlow { 0%,100% { opacity:.75; } 50% { opacity:1; text-shadow:0 0 32px rgba(176,144,255,1); } }
+.bat-card { position:relative; width:min(100%,330px); max-height:min(72vh,540px); overflow:auto; padding:22px 18px 18px; border-radius:22px; text-align:center; background:linear-gradient(180deg,#191233 0%,#0b0820 55%,#050311 100%); border:1px solid rgba(147,112,255,.55); box-shadow:0 0 44px rgba(122,84,255,.38), inset 0 1px 0 rgba(255,255,255,.10); animation:batCardArrive .7s cubic-bezier(.2,1.5,.4,1); }
+@keyframes batCardArrive { 0% { transform:scale(.6) rotate(-4deg); opacity:0; } 100% { transform:scale(1) rotate(0deg); opacity:1; } }
+.bat-card-moon { position:absolute; top:14px; right:16px; width:52px; height:52px; border-radius:50%; background:radial-gradient(circle at 38% 34%, #f5f0dc, #b9aed6 70%); box-shadow:0 0 30px rgba(240,235,210,.5); opacity:.9; pointer-events:none; }
+.bat-card-art { font-size:96px; line-height:1.15; filter:drop-shadow(0 10px 24px rgba(122,84,255,.55)); animation:batFloat 3.4s ease-in-out infinite; }
+@keyframes batFloat { 0%,100% { transform:translateY(0) rotate(-2deg); } 50% { transform:translateY(-9px) rotate(2deg); } }
+.bat-card-rarity { margin-top:6px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.26em; color:#b48ad6; text-transform:uppercase; }
+.bat-card-name { margin-top:2px; font-family:'Russo One',sans-serif; font-size:30px; letter-spacing:.06em; color:#e7ddff; text-shadow:0 0 26px rgba(147,112,255,.8); }
+.bat-card-species { margin-top:3px; font-size:12px; color:#8f86b8; font-style:italic; }
+.bat-card-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:14px 0 12px; }
+.bat-card-stat { padding:8px 4px; border-radius:12px; background:rgba(147,112,255,.10); border:1px solid rgba(147,112,255,.28); }
+.bat-card-stat span { display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:#8f86b8; }
+.bat-card-stat b { display:block; margin-top:2px; font-family:'Russo One',sans-serif; font-size:18px; color:#cdbcff; }
+.bat-card-quote { font-size:12px; line-height:1.5; color:#b3a8dd; }
+.bat-card-reward { margin-top:12px; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.13); border:1px solid rgba(214,168,79,.32); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; color:var(--legendary); }
+.bat-card-reward:empty { display:none; }
+.bat-secret-close { min-height:46px; padding:0 30px; border-radius:14px; border:1px solid rgba(147,112,255,.5); background:rgba(147,112,255,.16); color:#e7ddff; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; letter-spacing:.1em; text-transform:uppercase; }
+.bat-secret-close:active { background:rgba(147,112,255,.3); }
+.profile-badge.secret.locked .profile-badge-icon { filter:grayscale(1); }
+.profile-badge.earned[data-badge="nightwing_secret"] { cursor:pointer; border-color:#9370ff; box-shadow:0 0 12px rgba(147,112,255,.4); }
 </style>
 </head>
 <body>
@@ -3256,6 +3334,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div id="questsList"></div>
     </div>
 
+    <!-- ADVENTURER'S DIARY SCREEN -->
+    <div class="screen" id="screen-diary">
+      <div class="screen-title">ADVENTURER'S DIARY</div>
+      <div class="diary-book" id="diaryBook"></div>
+    </div>
+
     <!-- PROFILE SCREEN -->
     <div class="screen" id="screen-profile">
       <div class="screen-title">PROFILE</div>
@@ -3386,6 +3470,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7"/><path d="M7 4a2 2 0 0 0-2 2v1.5h4V6a2 2 0 0 0-2-2ZM7 20a2 2 0 0 1-2-2v-1h4v1a2 2 0 0 1-2 2ZM10.5 9.5H16M10.5 13h5.5"/></svg></div>
       <div class="nav-label">Quests</div>
     </button>
+    <button class="nav-item" data-screen="diary" aria-label="Diary">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.8 4.2c-4.6.5-8.2 2.5-10.4 6.1-1 1.7-1.6 3.6-1.8 5.7 2.1-.2 4-.8 5.7-1.8 3.6-2.2 5.6-5.8 6.1-10.4Z"/><path d="M4 20c2.8-2.8 5.6-5.6 9-9"/></svg></div>
+      <div class="nav-label">Diary</div>
+    </button>
     <button class="nav-item" data-screen="leaderboards" aria-label="Ranks">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4Z"/><path d="M8 5.5H5a3 3 0 0 0 3 3.8M16 5.5h3a3 3 0 0 1-3 3.8M12 13.5v2.5M9.5 19c0-1.7 1.1-3 2.5-3s2.5 1.3 2.5 3M7.5 20h9"/></svg></div>
       <div class="nav-label">Ranks</div>
@@ -3415,6 +3503,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="recruit-list" id="recruitList"></div>
       <button class="recruit-close" id="recruitClose">Keep exploring</button>
     </div>
+  </div>
+
+  <!-- SECRET: The Nightwing — hidden Easter egg card for players who catch a real bat on camera or sound. Sssh. -->
+  <div class="bat-secret-overlay" id="batSecretOverlay" role="dialog" aria-modal="true" aria-label="Secret discovery">
+    <div class="bat-secret-kicker">Secret Discovery</div>
+    <div class="bat-card">
+      <div class="bat-card-moon" aria-hidden="true"></div>
+      <div class="bat-card-art" aria-hidden="true">🦇</div>
+      <div class="bat-card-rarity">Mythic · Secret Card</div>
+      <div class="bat-card-name">NIGHTWING</div>
+      <div class="bat-card-species">Order Chiroptera · not a bird at all</div>
+      <div class="bat-card-stats">
+        <div class="bat-card-stat"><span>Echolocation</span><b>99</b></div>
+        <div class="bat-card-stat"><span>Silent flight</span><b>97</b></div>
+        <div class="bat-card-stat"><span>Mystery</span><b>&#8734;</b></div>
+      </div>
+      <div class="bat-card-quote">&ldquo;That&hellip; is no bird, friend. Of every flier in your world, you found the one with fur. Even my tablet fell silent. It will remember this night &mdash; and so shall I.&rdquo; &mdash; Merlin</div>
+      <div class="bat-card-reward" id="batSecretReward"></div>
+    </div>
+    <button class="bat-secret-close" id="batSecretClose">Keep the secret</button>
   </div>
 
   <!-- Barracks: compact discovered-bird roster and full recruitment card -->
@@ -3727,9 +3835,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=academy-library-v198-20260802"></script>
-<script src="academy_alive_core.js?v=academy-library-v198-20260802"></script>
-<script src="academy_3d_core.js?v=academy-library-v198-20260802"></script>
+<script src="academy_treehouse_core.js?v=restored-lost-features-v200-20260802"></script>
+<script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
+<script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
@@ -3754,6 +3862,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
+<script src="diary_core.js?v=restored-lost-features-v200-20260802"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -4862,7 +4971,8 @@ const DEFAULT_STATE = {
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
   starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for The Roost and Barracks
   sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
-  tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false } // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
+  tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
+  diary: { entries: [] } // Adventurer's Diary — Merlin's chronicle of everything the player has done
 };
 
 let gameState;
@@ -5012,6 +5122,7 @@ function loadState() {
   gameState.tavernPatrons = Array.isArray(gameState.tavernPatrons) ? gameState.tavernPatrons.filter(p => p && typeof p === 'object' && p.species) : [];
   gameState.mapExploredCells = Array.isArray(gameState.mapExploredCells) ? [...new Set(gameState.mapExploredCells.filter(Boolean))].slice(-180) : [];
   gameState.league = (gameState.league && typeof gameState.league === 'object' && !Array.isArray(gameState.league)) ? gameState.league : {}; // Perch League ladder (fully healed in ensureLeagueState)
+  gameState.diary = window.BurbzDiaryCore ? window.BurbzDiaryCore.sanitizeDiaryState(gameState.diary) : ((gameState.diary && typeof gameState.diary === 'object') ? gameState.diary : { entries: [] });
 
   // Diet-discovery achievement: any save with already-known diets should reflect
   // the current count at boot so the badge unlocks aren't gated behind a future feed.
@@ -5105,6 +5216,16 @@ function setQuestClaimReceipt(key, receipt) {
   gameState.questClaimReceipts[key] = receipt;
 }
 function queueQuestClaimCloudSync() { queueCloudSave(); queueActionBadgeUpdate(); }
+
+// Adventurer's Diary: every notable deed is appended here as a typed event.
+// Callers all save right after, so this only records — it never re-renders.
+function logDiary(type, data) {
+  try {
+    if (!window.BurbzDiaryCore || !gameState) return;
+    gameState.diary = window.BurbzDiaryCore.sanitizeDiaryState(gameState.diary);
+    window.BurbzDiaryCore.appendDiaryEvent(gameState.diary, { type, ...(data || {}) }, Date.now());
+  } catch (e) {}
+}
 
 function apiHeaders(extra) {
   const headers = { 'Content-Type': 'application/json', ...(extra || {}) };
@@ -10866,6 +10987,7 @@ function levelUpBird(bird, xpGain, options = {}) {
       showToast('🎉 ' + birdDisplayName(bird) + ' reached LV.' + bird.level + '!');
       SFX.levelUp();
     } catch (e) {}
+    if (typeof logDiary === 'function') logDiary('bird_level', { species: bird.commonName || bird.species, level: bird.level });
   }
   return levelsGained;
 }
@@ -11644,6 +11766,10 @@ function claimBirdExpedition(expeditionId) {
   }
   queueQuestClaimCloudSync();
   updateQuestProgress('expedition_claimed', 1);
+  const diaryBird = academyBirdById(q.birdId);
+  const diaryTemplate = getExpeditionTemplate(q.templateId);
+  if (typeof logDiary === 'function') logDiary('expedition', { quest: (diaryTemplate && diaryTemplate.label) || 'an expedition', bird: (diaryBird && (diaryBird.commonName || diaryBird.species)) || 'A companion', coins, xp: questXp });
+  if (foundNewClue && typeof logDiary === 'function') logDiary('clue', { title: advanced.story.title });
   if ((Number(gameState.player.level) || 1) > previousPlayerLevel) { SFX.levelUp(); showToast('LEVEL UP! Now Level ' + gameState.player.level); }
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
@@ -13305,6 +13431,7 @@ function feedWildSpecies(entry, option) {
     }
   }
   kitchenRecordFieldNote(entry.speciesKey, compatibility && compatibility.family, true);
+  if (badgeEarned && typeof logDiary === 'function') logDiary('meal', { species: entry.name });
   gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
   updateQuestProgress('meal_served', 1);
   updateQuestProgress('feed_correct', 1);
@@ -14339,6 +14466,7 @@ function addPlayerXp(amount) {
   if (leveledUp) {
     SFX.levelUp();
     showToast('LEVEL UP! Now Level ' + gameState.player.level);
+    if (typeof logDiary === 'function') logDiary('level_up', { level: gameState.player.level, title: getPlayerTitle() });
   }
   updateHeader();
   saveState();
@@ -15657,6 +15785,7 @@ function completeWalkingQuest() {
   gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), summary.merlinBondXp, Date.now());
   const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
   if (bonusCoins) addCoins(bonusCoins);
+  if (typeof logDiary === 'function') logDiary('walk_quest', { name: summary.name, km: summary.distanceKm, markers: summary.checkpointsHit, markersTotal: summary.checkpointsTotal, xp: summary.xp });
   wq.history.unshift(summary);
   if (wq.history.length > 60) wq.history.length = 60;
   wq.active = null;
@@ -16017,6 +16146,7 @@ async function endSideQuest() {
     path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
     sharedDraft: false
   };
+  if (typeof logDiary === 'function') logDiary('side_quest', { km: +(summary.distanceM / 1000).toFixed(2), discoveries: summary.discoveries, xp });
   sq.history.unshift(summary);
   if (sq.history.length > 40) sq.history.length = 40;
   sq.active = null;
@@ -17366,6 +17496,7 @@ function switchScreen(name) {
   if (name === 'inventory') renderInventory();
   if (name === 'forge') renderForge();
   if (name === 'quests') renderQuests();
+  if (name === 'diary') renderDiary();
   if (name === 'leaderboards') renderLeaderboards();
   if (name === 'profile') renderProfile();
   queueActionBadgeUpdate();
@@ -18956,7 +19087,7 @@ function empireBuildStructure(seed, buildingId) {
   const eco = ensureVillageEconomy(rec);
   if (eco.construction) {
     const busy = EMPIRE_BUILDING_INDEX[eco.construction.id];
-    showToast('🏗️ Your builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project at a time.');
+    showToast('🏗️ ' + rec.name + '’s builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project per town. Your other towns can build meanwhile.');
     return;
   }
   const level = eco.buildings[building.id] || 0;
@@ -19124,6 +19255,7 @@ function claimCurrentVillage() {
   const regionsBefore = empireRegionsInfo().regions.map(r => r.id + ':' + r.tier).join('|');
   const liberatedAt = new Date().toISOString();
   empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: liberatedAt, liberatedAt, lastTributeAt: Date.now() };
+  if (typeof logDiary === 'function') logDiary('village', { name: v.name, count: empireVillages().length });
   addPlayerXp(40);
   saveState();
   SFX.victory();
@@ -19242,7 +19374,7 @@ function renderVillageManagePanel() {
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
-    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy' : '') + '</div>' +
+    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy here — other towns can still build' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     '</div>';
   if (construction) ensureProvinceCountdownTicker();
@@ -23033,6 +23165,149 @@ function nextDiscoverySightingCount(existing, opts = {}) {
   return existing && !opts.silent ? previous + 1 : previous;
 }
 
+// ============================================================================
+// PLAYER PHOTO JOURNAL — the real photo behind a camera discovery.
+// The shot the player actually took is squeezed to a phone-friendly JPEG and
+// kept in IndexedDB (far too big for the localStorage save); the discovery
+// record only carries a tiny photoAt flag so cards can render synchronously.
+// The photo itself lives on the device that took it.
+// ============================================================================
+const PLAYER_PHOTO_DB_NAME = 'burbz-player-photos';
+const PLAYER_PHOTO_STORE = 'photos';
+const PLAYER_PHOTO_MAX_EDGE = 1024;
+
+function openPlayerPhotoDb() {
+  if (!window.indexedDB) return Promise.reject(new Error('IndexedDB unavailable'));
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PLAYER_PHOTO_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(PLAYER_PHOTO_STORE)) db.createObjectStore(PLAYER_PHOTO_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('Photo store failed to open'));
+  });
+}
+
+async function savePlayerBirdPhoto(key, blob, meta) {
+  const db = await openPlayerPhotoDb();
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYER_PHOTO_STORE, 'readwrite');
+      tx.objectStore(PLAYER_PHOTO_STORE).put({ blob, ...(meta || {}) }, key);
+      tx.oncomplete = resolve;
+      tx.onerror = tx.onabort = () => reject(tx.error || new Error('Photo save failed'));
+    });
+  } finally { db.close(); }
+}
+
+async function loadPlayerBirdPhoto(key) {
+  const db = await openPlayerPhotoDb();
+  try {
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(PLAYER_PHOTO_STORE, 'readonly').objectStore(PLAYER_PHOTO_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error || new Error('Photo load failed'));
+    });
+  } finally { db.close(); }
+}
+
+// Shrink the capture to a card-friendly JPEG so hundreds of discoveries stay
+// well inside mobile storage quotas.
+async function compressPlayerPhoto(blob) {
+  const bitmap = await createImageBitmap(blob, { imageOrientation:'from-image' }).catch(() => createImageBitmap(blob));
+  const scale = Math.min(1, PLAYER_PHOTO_MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+  if (bitmap.close) bitmap.close();
+  const out = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  return out || blob;
+}
+
+// The first camera shot of a species is the one that goes on the card back —
+// later re-scans never overwrite the player's original discovery photo.
+async function rememberPlayerBirdPhoto(bird, blob) {
+  try {
+    const record = getDiscoveredRecordForSpecies(canonicalSpeciesName((bird && (bird.species || bird.commonName)) || ''));
+    if (!record || !record.key || record.photoAt) return;
+    const photo = await compressPlayerPhoto(blob);
+    const takenAt = new Date().toISOString();
+    await savePlayerBirdPhoto(record.key, photo, { takenAt, species: record.species });
+    record.photoAt = takenAt;
+    saveState();
+    renderBirdex();
+  } catch (e) { console.warn('Player photo journal save failed', e); }
+}
+
+function playerBirdPhotoRecord(key) {
+  const direct = (gameState.discoveredSpecies || {})[key];
+  if (direct) return direct;
+  return Object.values(gameState.discoveredSpecies || {}).find(r => r && r.key === key) || null;
+}
+
+// The little camera chip on a card back — only present once a photo exists.
+function playerPhotoChipHTML(bird, extraClass) {
+  const record = getDiscoveredRecordForSpecies(canonicalSpeciesName((bird && (bird.species || bird.commonName)) || ''));
+  if (!record || !record.photoAt) return '';
+  return '<button type="button" class="card-photo-btn' + (extraClass ? ' ' + extraClass : '') + '" data-action="view-photo" data-photo-key="' + record.key + '" title="See the photo you took of this bird" aria-label="See the photo you took of this bird">&#128247;</button>';
+}
+
+let playerPhotoObjectUrl = null;
+
+function playerPhotoOverlayEl() {
+  let el = document.getElementById('playerPhotoOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'playerPhotoOverlay';
+    el.className = 'player-photo-overlay';
+    el.addEventListener('click', e => { if (e.target === el) closePlayerBirdPhotoViewer(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function closePlayerBirdPhotoViewer() {
+  const el = document.getElementById('playerPhotoOverlay');
+  if (el) el.classList.remove('open');
+  if (playerPhotoObjectUrl) { URL.revokeObjectURL(playerPhotoObjectUrl); playerPhotoObjectUrl = null; }
+}
+
+async function openPlayerBirdPhotoViewer(key) {
+  const record = playerBirdPhotoRecord(key);
+  if (!record) return;
+  const el = playerPhotoOverlayEl();
+  el.innerHTML = '<div class="player-photo-card"><div class="player-photo-loading">&#128247; Fetching your photo…</div></div>';
+  el.classList.add('open');
+  SFX.tap();
+  try {
+    const entry = await loadPlayerBirdPhoto(record.key);
+    if (!entry || !entry.blob) {
+      closePlayerBirdPhotoViewer();
+      showToast('\u{1F4F7} That photo lives on the device that took it.');
+      return;
+    }
+    if (playerPhotoObjectUrl) URL.revokeObjectURL(playerPhotoObjectUrl);
+    playerPhotoObjectUrl = URL.createObjectURL(entry.blob);
+    const takenAt = entry.takenAt || record.photoAt;
+    const dateLabel = takenAt ? new Date(takenAt).toLocaleDateString() : '';
+    el.innerHTML = '<div class="player-photo-card">' +
+      '<div class="player-photo-head">' +
+        '<div class="player-photo-title">&#128247; ' + escapeHtml(record.commonName || record.species || 'Your bird') + '</div>' +
+        (dateLabel ? '<div class="player-photo-meta">Snapped ' + escapeHtml(dateLabel) + '</div>' : '') +
+      '</div>' +
+      '<img class="player-photo-img" src="' + playerPhotoObjectUrl + '" alt="Your photo of ' + escapeHtml(record.commonName || record.species || 'this bird') + '">' +
+      '<button type="button" class="player-photo-close" onclick="closePlayerBirdPhotoViewer()">CLOSE</button>' +
+    '</div>';
+  } catch (e) {
+    console.warn('Player photo open failed', e);
+    closePlayerBirdPhotoViewer();
+    showToast('Could not open your photo on this device.');
+  }
+}
+
 function rememberDiscoveredBird(bird, opts = {}) {
   if (!bird) return false;
   if (!gameState.discoveredSpecies || typeof gameState.discoveredSpecies !== 'object') gameState.discoveredSpecies = {};
@@ -23057,7 +23332,10 @@ function rememberDiscoveredBird(bird, opts = {}) {
   };
   gameState.discoveredSpecies[key] = record;
   discoveryKeysForSpecies(canonical).forEach(aliasKey => { if (aliasKey && aliasKey !== key) gameState.discoveredSpecies[aliasKey] = record; });
-  if (!existing && !opts.silent) addCoins(discoveryRewardForBird(bird));
+  if (!existing && !opts.silent) {
+    addCoins(discoveryRewardForBird(bird));
+    if (typeof logDiary === 'function') logDiary('discover', { species: canonical, rarity: record.rarity });
+  }
   if (!existing) updateQuestProgress('discover', 1);
   return !existing;
 }
@@ -23089,6 +23367,7 @@ function recruitDiscoveredBird(key) {
   bird.recruitedAt = new Date().toISOString();
   ensureBirdAcademy(bird);
   gameState.flock.push(bird);
+  if (typeof logDiary === 'function') logDiary('recruit', { species: bird.commonName || bird.species, rarity: bird.rarity, cost });
   gameState.player.totalCaptures = gameState.flock.length;
   addPlayerXp(20 + (bird.rarity === 'legendary' ? 100 : bird.rarity === 'epic' ? 50 : bird.rarity === 'rare' ? 30 : bird.rarity === 'uncommon' ? 15 : 10));
   updateQuestProgress('capture', 1);
@@ -23397,6 +23676,9 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   }
 
   const newDiscoveries = [];
+  // A camera discovery keeps the player's actual shot for the card back:
+  // handleBirdCandidates is the one funnel every accepted bird passes through.
+  if (opts.source === 'photo' && opts.blob && surfaced[0]) rememberPlayerBirdPhoto(surfaced[0], opts.blob);
   surfaced.forEach(bird => {
     const isNew = rememberDiscoveredBird(bird);
     if (isNew) newDiscoveries.push(bird);
@@ -24243,6 +24525,9 @@ function collectForgeJob(jobId) {
   const item = lootCore().gearById(job.gearId);
   gameState.forgeJobs = jobs.filter(j => j.id !== jobId);
   gameState.inventory.gear[job.gearId] = (gameState.inventory.gear[job.gearId] || 0) + 1;
+  // Timed crafting landed after the diary was written: the piece is real when
+  // it leaves the anvil, not when the commission is placed, so log it here.
+  if (typeof logDiary === 'function') logDiary('craft', { item: item.label });
   updateQuestProgress('gear_crafted', 1);
   saveState();
   updateHeader();
@@ -24807,6 +25092,12 @@ function renderBirdex() {
         openBirdEquip(equipTarget.dataset.birdId || card.dataset.birdId);
         return;
       }
+      const photoTarget = e.target.closest('[data-action="view-photo"]');
+      if (photoTarget) {
+        e.stopPropagation();
+        openPlayerBirdPhotoViewer(photoTarget.dataset.photoKey);
+        return;
+      }
       const isFlipped = card.classList.toggle('flipped');
       if (isFlipped) requestAnimationFrame(() => {
         card.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -24887,6 +25178,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-head">
             <div class="card-back-title" style="color:${rarityColor}">${escapeHtml(birdDisplayName(bird))}</div>
             <div class="card-back-meta">${bird.rarity ? bird.rarity.toUpperCase() : 'COMMON'}<br>${bird.captureDate ? new Date(bird.captureDate).toLocaleDateString() : 'Unknown'}<br>${cardLv >= 50 ? 'LV.50 · MAX' : 'LV.' + cardLv + ' · ' + cardXp + '/' + cardXpNeed + ' XP'}</div>
+            ${playerPhotoChipHTML(bird)}
           </div>
           <div class="card-back-stats">
             <div class="card-back-stat"><span class="card-back-stat-label">HP</span><strong class="card-back-stat-value">${bird.maxHp || 100}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.maxHp||100)/2.5)}%;background:var(--hp-green)"></div></div></div>
@@ -24958,6 +25250,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
           </div>
         </div>
         <div class="card-back birdex-learning-back">
+          ${playerPhotoChipHTML(bird, 'floating')}
           <div class="birdex-learning-kicker">Real bird</div>
           <div class="birdex-learning-title">${escapeHtml(bird.commonName || bird.species)}</div>
           <div class="birdex-learning-scientific"><span class="birdex-learning-label">Scientific name</span>${escapeHtml(bird.scientificName || info.scientificName || 'Not recorded')}</div>
@@ -25546,6 +25839,14 @@ async function analyseContinuousSoundWindow(windowData) {
     // may animate the wand, but it never logs or names a bird by itself.
     const result = await uploadRecording(blob, { signal:controller.signal });
     if (generation !== soundListenerGeneration || !continuousSoundScanWanted) return;
+    // A bat is never a Birdex entry — the secret card is its whole reward, so
+    // the mythic Nightwing claims the window before any bird handling runs.
+    const batLabel = batLabelInIdentifyResult(result);
+    if (batLabel) triggerBatEasterEgg('sound', batLabel);
+    if (looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName)) {
+      setMerlinListenerState('listening', 'Something furry flew past… still listening');
+      return;
+    }
     if (result && result.reason === 'location_required') {
       stopContinuousSoundListening();
       setMerlinListenerState('error', 'Location is required for accurate local bird matches. Allow location, then start again.');
@@ -26205,9 +26506,12 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
       message: 'Photo ID upload failed — try a clearer bird photo.'
     }));
 
-    if (result && result.found && result.species) {
+    const batLabel = batLabelInIdentifyResult(result);
+    if (batLabel) triggerBatEasterEgg('photo', batLabel);
+    const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
+    if (result && result.found && result.species && !mainMatchIsBat) {
       handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
-    } else {
+    } else if (!batLabel) {
       showToast(result && result.message ? result.message : 'No bird found in that photo');
     }
   } catch(e) {
@@ -27073,6 +27377,7 @@ function endPerchBattle() {
     bird.care.happiness = clamp((bird.care.happiness || 80) + (won ? 4 : -3), 0, 100);
     levelUpBird(bird, rewards.birdXp);
   });
+  if (typeof logDiary === 'function') logDiary('battle', { won, tier: tier.label, liberated: liberatedTown ? (liberatedTown.name || null) : null, promoted });
   leagueRivalCache = null; // next rival rolls fresh
   checkBadges();
   saveState();
@@ -27812,6 +28117,7 @@ function renderQuests() {
       const q = allQ.find(x => x.id === qId);
       if (q && gameState.quests[qId] && !gameState.quests[qId].claimed) {
         gameState.quests[qId].claimed = true;
+        if (typeof logDiary === 'function') logDiary('quest_claim', { name: q.name, kind: DAILY_QUESTS.includes(q) ? 'daily' : WEEKLY_QUESTS.includes(q) ? 'weekly' : 'achievement' });
         addPlayerXp(q.reward);
         saveState();
         playQuestClaimCelebration({ badge: 'QUEST REWARD!', coins: 0, xp: q.reward, items: {} });
@@ -27826,6 +28132,68 @@ function renderQuests() {
     });
   });
 }
+
+// ============================================================================
+// SECRET: THE NIGHTWING — a hidden Easter egg, never hinted at anywhere in the
+// UI. If a real bat ever comes back from photo or sound identification, the
+// player unlocks a mythic secret card and a one-time trove of XP and coins.
+// ============================================================================
+const BAT_SECRET_XP = 400;
+const BAT_SECRET_COINS = 300;
+// Word 'bat' alone would false-positive on real birds (Bat Falcon, Bat Hawk),
+// so require either a non-raptor 'bat' mention or a known chiropteran name.
+const BAT_NAME_HINTS = /(pipistrelle|pipistrellus|noctule|nyctalus|serotine|eptesicus|barbastelle|barbastella|myotis|plecotus|rhinolophus|vespertilio|tadarida|lasiurus|molossidae|chiroptera|pteropus|flying fox)/i;
+function looksLikeBatLabel(label) {
+  if (!label) return false;
+  const text = String(label);
+  if (BAT_NAME_HINTS.test(text)) return true;
+  return /\bbats?\b/i.test(text) && !/\bbat\s+(falcon|hawk)\b/i.test(text);
+}
+// Sweep every field an identify endpoint might name a species in — the main
+// match, the message copy, and the full detection list — so the egg hatches no
+// matter how the server phrases its surprise.
+function batLabelInIdentifyResult(result) {
+  if (!result) return null;
+  const labels = [result.species, result.scientificName, result.commonName, result.message];
+  (Array.isArray(result.allDetections) ? result.allDetections : []).forEach(d => {
+    if (d) labels.push(d.species, d.name, d.commonName, d.scientificName, d.label);
+  });
+  return labels.find(looksLikeBatLabel) || null;
+}
+
+function batSecretFound() { return !!(gameState.batEasterEgg && gameState.batEasterEgg.found); }
+
+function triggerBatEasterEgg(source, label) {
+  if (batSecretFound()) {
+    showToast('🦇 The Nightwing stirs again — its secret is already yours.');
+    return;
+  }
+  gameState.batEasterEgg = { found: true, at: Date.now(), source: source || 'unknown', label: String(label || 'bat') };
+  addCoins(BAT_SECRET_COINS);
+  addPlayerXp(BAT_SECRET_XP); // also refreshes the header and saves
+  checkBadges();
+  SFX.questComplete();
+  vibrate(60);
+  openBatSecretCard(true);
+}
+
+function openBatSecretCard(justEarned) {
+  const overlay = $('batSecretOverlay');
+  if (!overlay) return;
+  const reward = $('batSecretReward');
+  if (reward) reward.textContent = justEarned ? '+' + BAT_SECRET_XP + ' Trainer XP · +' + BAT_SECRET_COINS + ' 🪙 · Secret achievement unlocked' : '';
+  overlay.classList.add('show');
+}
+
+$('batSecretClose')?.addEventListener('click', () => { SFX.tap(); $('batSecretOverlay')?.classList.remove('show'); });
+
+// Deliberately undocumented debug hook, matching the other __burbz*Debug hooks.
+window.__burbzBatDebug = {
+  trigger: (source, label) => triggerBatEasterEgg(source || 'debug', label || 'Common Pipistrelle'),
+  found: () => batSecretFound(),
+  card: () => openBatSecretCard(false),
+  matches: looksLikeBatLabel
+};
 
 // ============================================================================
 // PROFILE
@@ -27843,14 +28211,69 @@ const BADGES = [
   { id: 'level_5', name: 'Rank 5', icon: '\u{2B50}', condition: () => gameState.player.level >= 5 },
   { id: 'level_10', name: 'Rank 10', icon: '\u{1F31F}', condition: () => gameState.player.level >= 10 },
   { id: 'ten_wins', name: 'Champion', icon: '\u{1F396}\u{FE0F}', condition: () => gameState.player.wins >= 10 },
-  { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 }
+  { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 },
+  // Shown as ??? until earned — the game never explains how to get this one.
+  { id: 'nightwing_secret', name: 'Not A Bird', icon: '\u{1F987}', secret: true, condition: () => batSecretFound() }
 ];
+
+// ============================================================================
+// ADVENTURER'S DIARY — Merlin's storybook chronicle of the whole adventure
+// ============================================================================
+function renderDiary() {
+  const book = $('diaryBook');
+  if (!book) return;
+  const core = window.BurbzDiaryCore;
+  if (!core) { book.innerHTML = ''; return; }
+  gameState.diary = core.sanitizeDiaryState(gameState.diary);
+  const entries = gameState.diary.entries;
+  const totals = {
+    name: gameState.player.name || 'the chosen one',
+    level: gameState.player.level || 1,
+    title: getPlayerTitle(),
+    discovered: discoveredSpeciesSet().size,
+    companions: (gameState.flock || []).length,
+    towns: empireVillages().length,
+    wins: gameState.player.wins || 0
+  };
+  const now = Date.now();
+  const stats = [
+    ['🐦', totals.discovered + ' species'],
+    ['🪶', totals.companions + ' companion' + (totals.companions === 1 ? '' : 's')],
+    ['🏰', totals.towns + ' town' + (totals.towns === 1 ? '' : 's') + ' freed'],
+    ['🏆', totals.wins + ' ' + (totals.wins === 1 ? 'victory' : 'victories')]
+  ].map(([icon, label]) => '<span class="diary-stat">' + icon + ' ' + escapeHtml(label) + '</span>').join('');
+
+  const chapters = core.groupEntriesByDay(entries).map(day => {
+    const lines = day.entries.map(e => {
+      const line = core.formatDiaryLine(e);
+      const when = new Date(e.t);
+      const time = when.getHours() + ':' + String(when.getMinutes()).padStart(2, '0');
+      return '<div class="diary-entry"><span class="diary-entry-icon">' + line.icon + '</span>' +
+        '<div class="diary-entry-text">' + escapeHtml(line.text) + '<span class="diary-entry-time">' + time + '</span></div></div>';
+    }).join('');
+    return '<div class="diary-chapter">' +
+      '<div class="diary-day-head">' + escapeHtml(core.diaryDayHeading(day.key, now)) + '</div>' +
+      '<p class="diary-day-summary">' + escapeHtml(core.composeDayChronicle(day.entries)) + '</p>' +
+      lines + '</div>';
+  }).join('');
+
+  book.innerHTML = '<div class="diary-page">' +
+    '<div class="diary-crest">🪶</div>' +
+    '<div class="diary-main-title">The Chronicle of Burbz</div>' +
+    '<div class="diary-sub">as recorded by Merlin, wizard falcon of the kingdom</div>' +
+    '<div class="diary-rule">❦</div>' +
+    '<p class="diary-intro">' + escapeHtml(core.diaryStorySoFar(entries, totals)) + '</p>' +
+    '<div class="diary-stats">' + stats + '</div>' +
+    (chapters || '<div class="diary-blank">The pages beyond lie blank. Go out into the world, chosen one — every bird you discover, every trail you walk and every town you free will be written here.</div>') +
+    '</div>';
+}
 
 function checkBadges() {
   if (!gameState.badges) gameState.badges = {};
   BADGES.forEach(b => {
     if (!gameState.badges[b.id] && b.condition()) {
       gameState.badges[b.id] = true;
+      if (typeof logDiary === 'function') logDiary('badge', { name: b.name });
       showToast('Badge earned: ' + b.name + '!');
     }
   });
@@ -27920,14 +28343,23 @@ function renderProfile() {
   badgesGrid.innerHTML = '';
   BADGES.forEach(b => {
     const earned = gameState.badges && gameState.badges[b.id];
+    const masked = b.secret && !earned;
     badgesGrid.innerHTML += `
-      <div class="profile-badge ${earned ? 'earned' : 'locked'}">
-        <div class="profile-badge-icon">${b.icon}</div>
-        <div class="profile-badge-name">${b.name}</div>
+      <div class="profile-badge ${earned ? 'earned' : 'locked'}${b.secret ? ' secret' : ''}" data-badge="${b.id}">
+        <div class="profile-badge-icon">${masked ? '❓' : b.icon}</div>
+        <div class="profile-badge-name">${masked ? '???' : b.name}</div>
       </div>
     `;
   });
 }
+
+// The earned Nightwing badge is the one place the secret card can be revisited.
+$('profileBadges')?.addEventListener('click', event => {
+  const badge = event.target.closest('.profile-badge.earned[data-badge="nightwing_secret"]');
+  if (!badge) return;
+  SFX.tap();
+  openBatSecretCard(false);
+});
 
 // ============================================================================
 // INTRO CUTSCENE
@@ -27997,7 +28429,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-library-v198-20260802';
+const BURBZ_BUILD = 'restored-lost-features-v200-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -28020,6 +28452,7 @@ const MERLIN_TUTORIAL_CHAPTERS = [
   { id:'birdex',       trigger:'birdex' },
   { id:'battle',       trigger:'battle' },
   { id:'village',      trigger:'village' },
+  { id:'diary',        trigger:'diary' },
   { id:'forge',        trigger:'forge' },
   { id:'inventory',    trigger:'inventory' },
   { id:'leaderboards', trigger:'leaderboards' },
@@ -28093,6 +28526,9 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Realm: taught the first time the Empire screen opens.
   { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world under darkness. Every town you free lifts the shadow from its province.' },
   { chapterId:'village', chapter:'Realm', title:'Provinces pay taxes', screen:'village', target:'#empirePanel', text:'Tap a freed province to visit its village. Provinces pay coins and branches every eight hours \u2014 happy villagers pay more.' },
+
+  // — Diary: taught the first time the Adventurer's Diary opens.
+  { chapterId:'diary', chapter:'The Chronicle', title:'Your adventuring diary', screen:'diary', target:'#diaryBook', text:'Every bird found, town freed and trail walked, I set down here with my own quill. Lost your place? Read the tale back, day by day.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
   { chapterId:'forge', chapter:'Forge', title:'The Fletcher\u2019s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils at the Forge.' },
