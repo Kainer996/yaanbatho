@@ -22,7 +22,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
+RELEASE_PIN = "merlin-bond-meter-v197-20260802"
+# This release's own marker stays on the cache lineage even after later
+# releases move BURBZ_BUILD on.
+OWN_RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
 
 
 # ---------------------------------------------------------------------------
@@ -152,5 +155,5 @@ def test_repeat_suppression_matches_the_discovery_history_counts():
 # ---------------------------------------------------------------------------
 
 def test_release_is_versioned_for_service_worker_self_update():
-    assert RELEASE_PIN in SW.read_text(encoding="utf-8")
+    assert OWN_RELEASE_PIN in SW.read_text(encoding="utf-8")  # lineage kept
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML.read_text(encoding="utf-8")
