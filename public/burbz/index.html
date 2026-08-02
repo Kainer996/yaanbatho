@@ -1336,7 +1336,22 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-listener-status { margin-top:5px; color:#fff1c5; font:900 14px/1.08 'Russo One',sans-serif; }
 .merlin-listener-activity { margin-top:6px; min-height:31px; color:#c7c1b2; font-size:11px; line-height:1.35; }
 .merlin-listener-privacy { margin-top:7px; color:#9be8cd; font:800 9px/1.25 'Rajdhani',sans-serif; letter-spacing:.04em; text-transform:uppercase; }
-.merlin-data-note { margin:-4px 0 12px; padding:9px 11px; border:1px solid rgba(105,224,184,.24); border-radius:13px; background:rgba(10,21,17,.76); color:#bdb7a7; font-size:10px; line-height:1.35; }
+.merlin-data-note { margin:16px 0 12px; padding:9px 11px; border:1px solid rgba(105,224,184,.24); border-radius:13px; background:rgba(10,21,17,.76); color:#bdb7a7; font-size:10px; line-height:1.35; }
+/* Session shelf: a compact grid of every bird discovered this listening
+   session, sitting where the data note used to be (the note now lives below
+   the start button). */
+.sound-session-shelf { margin:-4px 0 12px; padding:10px 11px 11px; border:1px solid rgba(240,199,103,.26); border-radius:13px; background:rgba(20,17,9,.72); }
+.sound-session-shelf-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 1px 8px; color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
+.sound-session-shelf-empty { color:var(--text3); font-size:11px; line-height:1.4; }
+.sound-session-shelf-grid { display:none; grid-template-columns:repeat(auto-fill,minmax(74px,1fr)); gap:8px; }
+.sound-session-shelf.has-birds .sound-session-shelf-grid { display:grid; }
+.sound-session-shelf.has-birds .sound-session-shelf-empty { display:none; }
+.sound-session-tile { position:relative; display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px 7px; border:1px solid color-mix(in srgb, var(--tile-colour,#7ed983) 34%, transparent); border-radius:11px; background:rgba(255,255,255,.03); color:inherit; font:inherit; cursor:pointer; }
+.sound-session-tile-art { position:relative; width:46px; height:46px; border-radius:50%; overflow:hidden; display:grid; place-items:center; font-size:23px; line-height:1; background:radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--tile-colour,#7ed983) 30%, transparent), rgba(255,255,255,.04)); border:1.5px solid color-mix(in srgb, var(--tile-colour,#7ed983) 55%, transparent); }
+.sound-session-tile-art img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.sound-session-tile-name { font-size:9.5px; line-height:1.15; text-align:center; color:var(--text2); font-weight:700; }
+.sound-session-tile-count { position:absolute; top:3px; right:3px; min-width:16px; padding:1px 4px; border-radius:999px; background:rgba(240,199,103,.92); color:#241b06; font-size:9px; font-weight:900; text-align:center; }
+.sound-session-tile.is-new .sound-session-tile-name::after { content:' ✦'; color:#f0c767; }
 .merlin-location-opt { display:flex; align-items:center; gap:8px; min-height:44px; margin-top:5px; color:#e8ddbc; font:800 10px/1.2 'Rajdhani',sans-serif; }
 .merlin-location-opt input { width:18px; height:18px; accent-color:#62dab3; flex:0 0 auto; }
 
@@ -3053,11 +3068,16 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
         </div>
+        <div class="sound-session-shelf" id="soundSessionShelf">
+          <div class="sound-session-shelf-head"><span>&#128038; Birds heard this session</span><span class="scan-result-count" id="soundSessionShelfCount">0</span></div>
+          <div class="sound-session-shelf-grid" id="soundSessionShelfGrid" aria-label="Birds discovered this listening session"></div>
+          <div class="sound-session-shelf-empty" id="soundSessionShelfEmpty">No birds yet — start Merlin&rsquo;s wand and every bird you discover will perch here.</div>
+        </div>
+        <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
         <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
           <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
         </div>
-        <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
       </div>
 
       <!-- Image scan area -->
@@ -18202,8 +18222,22 @@ function requestEmpireHomeFix() {
     const lat = Number(pos && pos.coords && pos.coords.latitude), lon = Number(pos && pos.coords && pos.coords.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
     rememberHomeFix(lat, lon);
-    if (empireMap && !empireMapUserAdjusted && !empireMappableVillages().length) empireMap.easeTo({ center:[lon, lat], zoom:EMPIRE_HOME_ZOOM, duration:900 });
+    // A late first fix glides the atlas onto the player themselves — the same
+    // close framing a stored position would have given at open.
+    if (empireMap && !empireMapUserAdjusted) empireMap.easeTo({ center:[lon, lat], zoom:EMPIRE_PLAYER_ZOOM, duration:900 });
   }, () => {}, { enableHighAccuracy:false, timeout:9000, maximumAge:600000 });
+}
+// The atlas opens on the sovereign in person: wherever the player is standing
+// RIGHT NOW (live GPS fix, else the remembered home fix), zoomed close enough
+// to read the streets around them. The realm framing lives on behind the
+// 👑 MY REALM button and as the fallback while no position is known yet.
+const EMPIRE_PLAYER_ZOOM = 11.1;
+function frameEmpirePlayer() {
+  if (!empireMap) return;
+  const here = empirePlayerPosition();
+  if (!here) { frameEmpireTerritory(); return; }
+  empireMap.easeTo({ center:[here.lon, here.lat], zoom:EMPIRE_PLAYER_ZOOM, duration:900 });
+  empireMapHasFramed = true;
 }
 function frameEmpireTerritory() {
   if (!empireMap) return;
@@ -18359,7 +18393,11 @@ function refreshEmpireMap(options = {}) {
     : (nextTarget
       ? 'The whole world sleeps in darkness — ⚔️ ' + nextTarget.name + ' waits right where you are; tap its dark banner to free your first town'
       : 'The whole world sleeps in darkness — liberate your first town to bring back its light');
-  if (options.frame || !empireMapHasFramed) frameEmpireTerritory();
+  // Explicit reframes (liberating a village) hold the whole realm; the very
+  // first framing of a session centres on the player instead, so opening the
+  // Empire tab always starts where they are actually standing.
+  if (options.frame) frameEmpireTerritory();
+  else if (!empireMapHasFramed) frameEmpirePlayer();
 }
 
 function initialiseEmpireMap() {
@@ -18367,9 +18405,10 @@ function initialiseEmpireMap() {
   if (empireMapInitPromise) return empireMapInitPromise;
   empireMapInitPromise = loadMapLibreIfNeeded().then(() => new Promise((resolve, reject) => {
     if (!window.maplibregl || !$('empireWorldMap')) throw new Error('MapLibre unavailable for Empire map');
-    const home = empireHomeCenter();
+    const here = empirePlayerPosition();
+    const home = here || empireHomeCenter();
     const map = new maplibregl.Map({
-      container:'empireWorldMap', style:burbzMapStyle(), center: home ? [home.lon, home.lat] : [0,22], zoom: home ? EMPIRE_HOME_ZOOM : 1.45,
+      container:'empireWorldMap', style:burbzMapStyle(), center: home ? [home.lon, home.lat] : [0,22], zoom: here ? EMPIRE_PLAYER_ZOOM : (home ? EMPIRE_HOME_ZOOM : 1.45),
       minZoom:1, maxZoom:17, dragPan:true, scrollZoom:true, touchZoomRotate:true,
       pitchWithRotate:false, attributionControl:false
     });
@@ -18417,7 +18456,7 @@ function initialiseEmpireMap() {
         empireMapReady = true;
         settled = true;
         if (loadTimeout) clearTimeout(loadTimeout);
-        refreshEmpireMap({ frame:true });
+        refreshEmpireMap(); // first framing centres on the player (frameEmpirePlayer)
         resolve(map);
       } catch (error) { fail(error); }
     });
@@ -23062,7 +23101,34 @@ function showScanEncounterCard(bird, isNewDiscovery, source = 'photo') {
   setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 260); }, 6500);
 }
 
+// The session shelf on the sound screen: one small tile per species heard in
+// this listening session — its art (or emoji), name, and a ×N badge when the
+// same bird keeps calling. Tapping a tile opens the bird in the Birdex.
+function renderSoundSessionShelf() {
+  const shelf = $('soundSessionShelf');
+  const grid = $('soundSessionShelfGrid');
+  if (!shelf || !grid) return;
+  const discoveries = soundDiscoveryHistory.snapshot();
+  const count = $('soundSessionShelfCount');
+  if (count) count.textContent = String(discoveries.length);
+  shelf.classList.toggle('has-birds', !!discoveries.length);
+  grid.innerHTML = discoveries.map(row => {
+    const colour = RARITY_COLORS[row.rarity] || RARITY_COLORS.common;
+    const bird = createRosterBird(row.name);
+    const artUrl = resolveBuiltInBirdArt(row.name, bird.commonName) || getBirdArtUrl(bird);
+    return '<button type="button" class="sound-session-tile' + (row.isNew ? ' is-new' : '') + '" data-species-name="' + escapeHtml(row.name) + '" style="--tile-colour:' + escapeHtml(colour) + '" aria-label="Show ' + escapeHtml(row.name) + ' in Birdex">' +
+      '<span class="sound-session-tile-art">' + (bird.emoji || '&#128038;') + (artUrl ? '<img src="' + escapeHtml(artUrl) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</span>' +
+      (row.count > 1 ? '<span class="sound-session-tile-count">&times;' + row.count + '</span>' : '') +
+      '<span class="sound-session-tile-name">' + escapeHtml(row.name) + '</span></button>';
+  }).join('');
+  grid.onclick = event => {
+    const tile = event.target.closest('.sound-session-tile');
+    if (tile && tile.dataset.speciesName) showSpeciesInBirdex(tile.dataset.speciesName);
+  };
+}
+
 function renderSoundSessionDiscoveries() {
+  renderSoundSessionShelf();
   const resultEl = $('scanResult');
   const list = $('scanResultList');
   const count = $('scanResultCount');
@@ -23281,7 +23347,12 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (isNew) newDiscoveries.push(bird);
     fetchBirdArt(bird.species);
     if (soundSession) {
-      recordSoundSessionDiscovery(bird, isNew);
+      const recorded = recordSoundSessionDiscovery(bird, isNew);
+      // The full-width encounter banner announces a species ONCE per listening
+      // session — the first time it is heard. When the same bird keeps calling
+      // it only ticks up its tile on the session shelf instead of re-covering
+      // the screen every window.
+      if (!recorded || !(Number(recorded.count) > 1)) showScanEncounterCard(bird, isNew, opts.source);
     } else {
       const resultEl = $('scanResult');
       resultEl.classList.remove('sound-session');
@@ -23292,8 +23363,8 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
       $('scanResultConf').textContent = opts.source === 'sound'
         ? `${Math.round((bird.confidence || 0) * 100)}/100 model score | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`
         : `${Math.round((bird.confidence || 0) * 100)}% confidence | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`;
+      showScanEncounterCard(bird, isNew, opts.source);
     }
-    showScanEncounterCard(bird, isNew, opts.source);
     try { questRegisterBirdEncounter(bird); }
     catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
   });
@@ -27841,7 +27912,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'back-guard-gesture-v195-20260802';
+const BURBZ_BUILD = 'empire-player-start-sound-shelf-v196-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
