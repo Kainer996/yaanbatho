@@ -1189,6 +1189,14 @@ svg.academy-room-bg { display:block; filter:none; }
 .merlin-care-value { color:var(--text); text-align:right; font:900 10px/1 'Rajdhani',sans-serif; }
 .merlin-care-meta { display:flex; justify-content:space-between; gap:8px; margin-top:12px; padding:9px 10px; border-radius:12px; background:rgba(255,255,255,.045); color:var(--text2); font-size:11px; }
 .merlin-care-meta b { color:var(--accent2); }
+.merlin-bond-row { position:relative; grid-template-columns:72px 1fr 44px; }
+.merlin-bond-fill { background:linear-gradient(90deg,#8f6ad8,#d9a1f2); box-shadow:0 0 10px rgba(197,146,240,.35); }
+.merlin-bond-fill.bond-bump { animation:merlinBondBump .6s ease; }
+@keyframes merlinBondBump { 0%,100% { filter:brightness(1); } 40% { filter:brightness(1.65); } }
+.merlin-bond-value { color:#d9a1f2; }
+.merlin-bond-gain { position:absolute; right:50px; top:-13px; pointer-events:none; opacity:0; color:#d9a1f2; font:900 10px/1 'Rajdhani',sans-serif; letter-spacing:.06em; text-shadow:0 1px 4px rgba(0,0,0,.6); }
+.merlin-bond-gain.show { animation:merlinBondGainPop 1.5s ease forwards; }
+@keyframes merlinBondGainPop { 0% { opacity:0; transform:translateY(8px); } 18% { opacity:1; transform:translateY(0); } 75% { opacity:1; transform:translateY(-8px); } 100% { opacity:0; transform:translateY(-12px); } }
 .merlin-care-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }
 .merlin-care-action { min-height:46px; padding:7px 5px; border-radius:12px; border:1px solid rgba(214,168,79,.34); background:rgba(214,168,79,.10); color:var(--text); font:900 11px/1.15 'Rajdhani',sans-serif; }
 .merlin-care-note { min-height:28px; margin-top:10px; color:#9be8cd; font-size:10px; line-height:1.35; }
@@ -3700,6 +3708,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="merlin-care-hunger-copy" id="merlinHungerStatus">Feed anytime — each tap uses one whole ingredient.</div>
       <div class="merlin-care-row"><span class="merlin-care-label">Happiness</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinHappyFill" style="width:85%;background:#f0c767"></div></div><span class="merlin-care-value" id="merlinHappyValue">85%</span></div>
       <div class="merlin-care-row"><span class="merlin-care-label">Energy</span><div class="merlin-care-track"><div class="merlin-care-fill" id="merlinEnergyFill" style="width:90%;background:#69dbc0"></div></div><span class="merlin-care-value" id="merlinEnergyValue">90%</span></div>
+      <div class="merlin-care-row merlin-bond-row"><span class="merlin-care-label">Bond</span><div class="merlin-care-track"><div class="merlin-care-fill merlin-bond-fill" id="merlinBondFill" style="width:0%"></div></div><span class="merlin-care-value merlin-bond-value" id="merlinBondXpValue">0/100</span><span class="merlin-bond-gain" id="merlinBondGain" aria-hidden="true"></span></div>
     </div>
     <div class="merlin-care-meta"><span>Bond <b id="merlinBondLevel">LV.1</b></span><span>Falcon food <b id="merlinMealworms">0</b></span></div>
     <div id="merlinDietGuidance" class="merlin-diet-guidance" data-diet-surface="merlin-care" data-diet-provenance="BirdFuncDat Merlin override · certainty A">Primary: small-bird prey rations; Secondary: insects.</div>
@@ -27183,6 +27192,9 @@ function renderMerlinCareMenu() {
     : { label: pet.hunger >= 85 ? 'Urgent care' : pet.hunger >= 70 ? 'Hungry' : pet.hunger >= 45 ? 'Peckish' : 'Fed', hunger:clamp(Number(pet.hunger) || 0, 0, 100) };
   if ($('merlinHungerStatus')) $('merlinHungerStatus').textContent = status.blocksWork ? 'Feed before quests or training.' : status.warnsWork ? 'Feed soon.' : 'Feed anytime — each tap uses one whole ingredient.';
   if ($('merlinBondLevel')) $('merlinBondLevel').textContent = 'LV.' + pet.bondLevel;
+  const bondXp = clamp(Math.round(Number(pet.bondXp) || 0), 0, 100);
+  if ($('merlinBondFill')) $('merlinBondFill').style.width = bondXp + '%';
+  if ($('merlinBondXpValue')) $('merlinBondXpValue').textContent = bondXp + '/100';
   const larder = gameState.inventory && gameState.inventory.larder;
   if ($('merlinMealworms')) $('merlinMealworms').textContent = String(Math.max(0, Number(larder && larder.small_bird_prey_ration) || 0));
   if ($('merlinDietGuidance')) $('merlinDietGuidance').outerHTML = renderDietDisclosureHTML(MERLIN_GUIDE, 'merlin-care', { title:'Falco columbarius diet', className:'merlin-diet-guidance' });
@@ -27296,7 +27308,34 @@ function startPetCareLoop() {
   petCareTimer = setInterval(() => { tickPetCare(); tickAcademy(); tickEmpireConstruction(); }, 60000);
 }
 
+function merlinBondTotal(care) {
+  const pet = MERLIN_CORE.sanitizeMerlinCare(care || {}, Date.now());
+  return (pet.bondLevel - 1) * 100 + pet.bondXp;
+}
+
+// Pop a "+X bond" chip over the bond meter and pulse its fill so care actions
+// visibly grow the bond instead of only bumping a hidden counter.
+let merlinBondGainTimer = null;
+function showMerlinBondGain(gained, leveledUp) {
+  if (!(gained > 0)) return;
+  const fill = $('merlinBondFill');
+  if (fill) { fill.classList.remove('bond-bump'); void fill.offsetWidth; fill.classList.add('bond-bump'); }
+  const chip = $('merlinBondGain');
+  if (chip) {
+    chip.textContent = (leveledUp ? 'Bond up! ' : '') + '+' + Math.round(gained) + ' bond';
+    chip.classList.remove('show'); void chip.offsetWidth; chip.classList.add('show');
+    clearTimeout(merlinBondGainTimer);
+    merlinBondGainTimer = setTimeout(() => chip.classList.remove('show'), 1600);
+  }
+  if (leveledUp) {
+    makePetSparkles(12);
+    petSay('Our bond grows stronger — bond level ' + getMerlinCare().bondLevel + '!');
+  }
+}
+
 function careForMerlin(action) {
+  const bondBefore = merlinBondTotal(getMerlinCare());
+  const bondLevelBefore = getMerlinCare().bondLevel;
   if (action === 'feed') {
     const core = dietHungerCore();
     if (core && typeof core.applyFeedingTransaction === 'function') {
@@ -27319,7 +27358,7 @@ function careForMerlin(action) {
           : tx.message);
       if ($('merlinCareNote')) $('merlinCareNote').textContent = message;
       petSay(message);
-      if (tx.ok) { makePetSparkles(5); SFX.capture(); vibrate(20); }
+      if (tx.ok) { makePetSparkles(5); SFX.capture(); vibrate(20); showMerlinBondGain(merlinBondTotal(getMerlinCare()) - bondBefore, getMerlinCare().bondLevel > bondLevelBefore); }
       else SFX.tap();
       if (tx.ok && typeof burbzTutorialAction === 'function') burbzTutorialAction('merlin-fed');
       return tx.ok;
@@ -27335,7 +27374,7 @@ function careForMerlin(action) {
   saveState(); renderPetCompanion();
   if ($('merlinCareNote')) $('merlinCareNote').textContent = result.message;
   petSay(result.message);
-  if (result.ok) { makePetSparkles(action === 'play' ? 8 : 5); SFX.capture(); vibrate(20); }
+  if (result.ok) { makePetSparkles(action === 'play' ? 8 : 5); SFX.capture(); vibrate(20); showMerlinBondGain(merlinBondTotal(getMerlinCare()) - bondBefore, getMerlinCare().bondLevel > bondLevelBefore); }
   else SFX.tap();
   if (result.ok && action === 'feed' && typeof burbzTutorialAction === 'function') burbzTutorialAction('merlin-fed');
   return result.ok;
@@ -27912,7 +27951,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-player-start-sound-shelf-v196-20260802';
+const BURBZ_BUILD = 'merlin-bond-meter-v197-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
