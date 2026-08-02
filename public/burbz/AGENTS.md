@@ -192,6 +192,56 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-02 — the Garden Perch card, and four features that never landed
+  (Claude).** Yaan reported the Perch League tier card reappearing over the
+  town liberation battle after he had removed it. Nothing reverted it:
+  `renderBattleSelect()` has set `leagueHeader.hidden = !!liberation` since
+  PR #143 (31 July), but `.league-header` carries an author `display:flex`,
+  which beats the UA sheet's `[hidden]{display:none}`, so the attribute never
+  had a visible effect. The guarding test asserted the JS line was present —
+  which it always was — so the suite stayed green over a broken screen. Fixed
+  with `.league-header[hidden] { display:none; }` and a test that checks the
+  CSS rule, not the source string.
+
+  Auditing the rest of his "changes keep vanishing" hunch: every branch was
+  compared against main **by content**, since squash-merges make commit
+  subjects useless for this. Four features were genuinely missing, each for
+  the same reason — the work was pushed to a branch *after* that branch's PR
+  had already merged, or no PR was opened at all, so nothing was watching it.
+  All four are restored here:
+
+  - **Nightwing** (`d72ea7c`, pushed 27 min after PR #72 merged) — the secret
+    bat easter egg and mythic card. On restore the sound path claims the
+    window before any bird handling, since a bat is never a Birdex entry.
+  - **Adventurer's Diary** (`a018ade`, no PR ever opened) — `diary_core.js`,
+    the Chronicle screen and 15 `logDiary` hooks. Six hooks needed regrafting
+    onto code main has since rewritten: the craft entry now fires when a piece
+    leaves the anvil (timed crafting landed after the diary was written), the
+    meal entry hangs off `badgeEarned` in the current Kitchen, and the diary
+    chapter was re-registered in MERLIN_TUTORIAL_CHAPTERS and its copy cut to
+    the v7 tutorial's 150-character limit.
+  - **Player photo journal** (`f0b13d4`, pushed 33 min after PR #121 merged) —
+    the player's own camera shot on the back of the Birdex card. Its hook moved
+    to `surfaced[0]`: main's `handleBirdCandidates` now surfaces several sound
+    birds per window and `top` is only the raw winner.
+  - **Per-town construction copy** (`3162be2`, pushed 25 min after PR #154
+    merged) — see the entry below.
+
+  Cleared as already-landed-under-another-name: PR #83's catalogue unlock (in
+  main as `inGameCatalogue`), PR #89's Kitchen fix, "The Crow's Perch" (now
+  The Crowbar), and the Show Quests framing work (redone by PR #146). Still
+  outstanding and deliberately NOT restored: the seasonal spawn gating + root
+  diet fix on `claude/burbz-location-season-diets-r4w11u` (~20k lines, and it
+  deletes `bird-education.json`, which main has since gained) — that one needs
+  a hand-reconciliation, not a cherry-pick.
+
+  Shipped as `restored-lost-features-v200-20260802`. 733 tests pass; the 5
+  failures are the pre-existing git-lfs pointer cases, which fail on a clean
+  main too. Browser-checked in Chromium: the league header computes
+  `display:none` when hidden (and `flex` again the moment that one rule is
+  deleted), the Nightwing card opens from the egg, and the Diary screen renders
+  real entries.
+
 - **2026-08-02 — the Academy Library (Claude).** A new buildable room that
   makes birds cleverer, requested by Yaan:
   - **Room**: `library` in `academy_treehouse_core.js` TREEHOUSE_ROOMS

@@ -270,9 +270,15 @@ def test_stopping_listener_clears_cross_window_unlock_evidence():
 def build_analysis_harness() -> str:
     html = HTML.read_text(encoding="utf-8")
     constants = gate_constants(html)
-    functions = "\n".join(
+    # The Nightwing egg inspects every window before any bird handling runs, so
+    # its two pure predicates are part of the path under test.
+    bat_hints_start = html.index("const BAT_NAME_HINTS")
+    bat_hints = html[bat_hints_start:html.index("\n", bat_hints_start)]
+    functions = bat_hints + "\n" + "\n".join(
         function_source(html, name)
         for name in (
+            "looksLikeBatLabel",
+            "batLabelInIdentifyResult",
             "normaliseAcceptedBirdCandidates",
             "soundUnlockProvenanceVerified",
             "soundCandidatesReadyToUnlock",
@@ -297,6 +303,9 @@ function setMerlinListenerState(state, detail) {
   states.push({state, detail});
 }
 function soundEngineLabel() { return 'BirdNET V3'; }
+// No bat in these fixtures: the egg must never fire, and must never be the
+// reason a bird window goes unhandled.
+function triggerBatEasterEgg() { throw new Error('the Nightwing fired on a bird window'); }
 function showToast(message) { toasts.push(message); }
 function handleBirdCandidates(primary, detections, opts) {
   handled.push({
