@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-01 (location-anchored empire + Region Hall — see "Review log" at the bottom).
+Last curated: 2026-08-02 (empire opens on the player + sound session shelf — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,29 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-02 — empire opens on the player + sound session shelf (Claude).**
+  Three player reports in one release:
+  - **Empire atlas starts where the player is standing.** New
+    `frameEmpirePlayer()` (zoom `EMPIRE_PLAYER_ZOOM` = 11.1) is the session's
+    FIRST framing — `refreshEmpireMap` only calls `frameEmpireTerritory()` on
+    an explicit `frame:true` (village liberation), and the map constructor +
+    late-first-GPS-fix glide both use the player position too. 👑 MY REALM
+    still frames the whole territory.
+  - **Sound screen session shelf.** `#soundSessionShelf` (rendered by
+    `renderSoundSessionShelf` from the same `soundDiscoveryHistory`) shows a
+    grid of every bird discovered this listening session — art/emoji tile,
+    ×N repeat badge, tap → Birdex — sitting where the BirdNET data note used
+    to be; the note moved below the START button.
+  - **Encounter banner pops once per species per session.** In
+    `handleBirdCandidates` the sound-session branch gates
+    `showScanEncounterCard` on the history's repeat count
+    (`recorded.count > 1` → silent), so the same wren calling every window no
+    longer re-covers the screen. Photo scans are unchanged.
+  - Tests: `tests/test_empire_player_start_sound_shelf_20260802.py`; the
+    release-pin test in `test_back_stays_in_game_20260801.py` repointed per
+    convention. SW cache + BURBZ_BUILD bumped
+    (`empire-player-start-sound-shelf-v196-20260802`).
 
 - **2026-08-02 — back guard vs Chrome's intervention (Claude).** v194's back
   trap failed on real Android: Chrome's back-button intervention SKIPS history

@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "back-guard-gesture-v195-20260802"
-PREVIOUS_RELEASE_PIN = "back-stays-in-game-v194-20260801"
+RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
+PREVIOUS_RELEASE_PIN = "back-guard-gesture-v195-20260802"
 
 
 def back_section(html: str) -> str:
