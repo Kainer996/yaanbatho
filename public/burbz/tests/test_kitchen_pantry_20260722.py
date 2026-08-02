@@ -210,6 +210,8 @@ const hashStr = str => Array.from(String(str)).reduce((h, ch) => Math.abs(((h <<
 const $ = () => null;
 const applyPlayerXpState = () => {};
 const refillPantry = () => {};
+// Unstaffed Kitchen: no Head Chef bonus in this harness.
+const academyRoleMultiplier = () => 1;
 const kitchenDietCore = () => global.BurbzDietHungerCore;
 const dietHungerCore = () => global.BurbzDietHungerCore;
 const kitchenRosterEntryByKey = () => null;

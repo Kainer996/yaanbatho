@@ -192,6 +192,61 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-02 — weight tells, and every bird gets a job (Claude).** Two rules
+  Yaan asked for, both new cores plus wiring:
+  - **Size** (`bird_size_core.js`): one 0-100 size score per species, from
+    AVONET's *measured* body mass where the catalogue carries it
+    (`profile.statProvenance.derivedInputs.mass` — the ~951 national-completion
+    profiles) and from the profile's own HP/STRENGTH where it does not (the
+    hand-curated UK/AU roster has no mass; `speciesSize().source` says which
+    was used, and the bird card's copy is honest about it). Five classes:
+    tiny / small / medium / large / giant. The score drives **carrying**
+    (capacity in load units, 1 for a goldcrest to 8+ for a swan, plus a haul
+    multiplier of 0.55×–1.70×; expedition payouts are scaled then capped, and
+    the overflow is left behind with a toast that says why) and **battle**
+    (a 0.75×–1.30× multiplier on HP/ATK/DEF/MAG). **The battle multiplier is
+    applied exactly once, in `generateBirdStats`** — `battle_core.js`
+    deliberately does not re-apply it, it only carries `sizeClass` for display.
+    SPD/INT/CHA are size-free on purpose: a swift still outflies a swan.
+    - *This changes an old design claim.* Skyclash's header used to say a
+      goldcrest could duel an eagle and win, because MAG was purely inverse to
+      bulk. MAG is now scaled by size as well, so magic is the little bird's
+      *edge*, not an equaliser — bigger is strictly stronger. The comment in
+      `battle_core.js` was updated to match; don't "fix" it back.
+    - `BIRD_BIOLOGY_STATS_VERSION` bumped to `…v3-size-20260802`, so every
+      existing companion is re-derived on load. Size is re-read from the
+      profile on migration, never preserved from the save: a well-fed robin is
+      still a robin.
+  - **Roles** (`bird_roles_core.js`): 14 posts — one per Academy room, plus a
+    village Steward and a region Warden. `roleAptitude` scores a bird on the
+    stats that job names (the Librarian is pure INT, by request), 0-100 against
+    a mastery bar of 250, and `roleEffectiveness` turns that into a multiplier
+    of 1.0–1.75. **A vacant post multiplies by exactly 1**, so every posting is
+    upside only and nothing regressed for players who ignore the feature. One
+    bird holds one job (`assignRole` vacates the old post), and
+    `pruneRoleState` drops posts held by birds that have left the flock.
+    Wired into: room stat-gain rate, Hospital healing, Roost resting, Crowbar
+    and Nursery/Gardens morale, `feedRewardsForVerdict` (Head Chef),
+    `recruitCostForBird` (Recruiting Officer), expedition payouts
+    (Quartermaster), `villageEconomySnapshot` taxes/timber/production
+    (Steward) and `empireTradeRouteIncome` (Warden). State lives in
+    `gameState.birdRoles`; the appointment card (`rolePostCardHTML`) is the
+    same component in an Academy room, a village hall and a region hall, driven
+    by one delegated `data-action="role-assign"` listener.
+  - **The game script is an IIFE.** Harnesses (and inline `onclick`s) only see
+    window-exported names — this cost an hour of confusion, so there is now a
+    `__burbzSizeRolesDebug` export alongside `__academyAliveDebug` and
+    `__burbzQuestDebug`. Browser-checked in Chromium: goldcrest carries 1 and
+    generates ATK 10/HP 50, mute swan carries 8 at ATK 115/HP 179; an empty
+    Library multiplies ×1.00, a dim bird ×1.12, a 240-INT raven ×1.72; posting
+    that raven to the Kitchen vacated the Library and took meal XP from 6 to 9.
+  - Tests: `tests/test_bird_size_and_roles_20260802.py`. Four existing Node
+    harnesses gained one-line stubs (`academyRoleMultiplier → 1`, i.e. the
+    unstaffed baseline) and `test_biological_runtime_stats_20260715.py` now
+    loads the real size core, since size is part of the biology now. Release
+    pins repointed per convention; SW cache + `BURBZ_BUILD` bumped
+    (`bird-size-roles-v201-20260802`).
+
 - **2026-08-02 — the Garden Perch card, and four features that never landed
   (Claude).** Yaan reported the Perch League tier card reappearing over the
   town liberation battle after he had removed it. Nothing reverted it:

@@ -786,6 +786,39 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-need-fill.mid { background:linear-gradient(90deg,#a68b3f,#d3b96a); }
 .province-income-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.22); background:rgba(0,0,0,.3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#e6d9ae; text-align:center; }
 .province-build-title { font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.14em; color:var(--text2); margin:2px 2px 7px; text-transform:uppercase; }
+
+/* Posts: the card that appoints a bird to run a room, a village or a region.
+   One set of rules for all three so the Library, the Kitchen, a town hall and
+   a region hall all read the same way. */
+.role-post-card { margin:10px 0; padding:11px; border-radius:14px; border:1px solid rgba(214,168,79,.28); background:linear-gradient(160deg,rgba(48,36,14,.62),rgba(10,8,4,.78)); }
+.role-post-head { display:flex; gap:10px; align-items:flex-start; margin-bottom:9px; }
+.role-post-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:21px; border-radius:11px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.3), rgba(0,0,0,.45)); border:1px solid rgba(214,168,79,.3); }
+.role-post-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; color:var(--legendary); }
+.role-post-copy { font-size:10.5px; line-height:1.45; color:var(--text3); margin-top:2px; }
+.role-vacant { padding:9px 10px; border-radius:11px; border:1px dashed rgba(214,168,79,.42); background:rgba(0,0,0,.3); font-size:11px; line-height:1.45; color:var(--text2); }
+.role-holder { display:flex; gap:9px; align-items:flex-start; padding:9px; border-radius:11px; border:1px solid rgba(240,199,103,.3); background:rgba(240,199,103,.09); }
+.role-holder-art { width:44px; height:44px; flex:none; border-radius:10px; object-fit:cover; background:rgba(0,0,0,.32); }
+.role-holder-main { flex:1; min-width:0; }
+.role-holder-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; color:var(--text); }
+.role-holder-rank { font-size:10px; color:var(--accent2); margin-top:1px; }
+.role-holder-bar { height:5px; border-radius:3px; background:rgba(0,0,0,.45); overflow:hidden; margin:5px 0 4px; }
+.role-holder-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--accent),var(--legendary)); }
+.role-holder-effect { font-size:10.5px; line-height:1.4; color:var(--text2); }
+.role-dismiss { flex:none; align-self:center; min-height:30px; padding:0 9px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.32); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; }
+.role-candidate-label { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--text3); margin:9px 2px 5px; }
+.role-candidate-list { display:flex; flex-direction:column; gap:5px; max-height:216px; overflow-y:auto; }
+.role-candidate { display:flex; gap:8px; align-items:center; width:100%; padding:6px 8px; border-radius:10px; border:1px solid rgba(255,255,255,.09); background:rgba(0,0,0,.3); color:var(--text); text-align:left; font:inherit; }
+.role-candidate-art { width:32px; height:32px; flex:none; border-radius:8px; object-fit:cover; background:rgba(0,0,0,.3); }
+.role-candidate-main { flex:1; min-width:0; }
+.role-candidate-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.role-candidate-meta { display:block; font-size:9.5px; color:var(--text3); }
+.role-candidate-gain { flex:none; font-family:'Russo One',sans-serif; font-size:12px; color:var(--legendary); }
+.role-empty { padding:9px; border-radius:10px; background:rgba(0,0,0,.28); font-size:10.5px; color:var(--text3); }
+
+/* Size chips on a bird's card: weight class, carrying capacity, battle swing. */
+.bird-size-chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 7px; }
+.bird-size-chip { padding:3px 9px; border-radius:9px; border:1px solid rgba(240,199,103,.34); background:rgba(240,199,103,.11); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:var(--accent2); }
+.bird-size-chip.is-weak { border-color:rgba(224,89,74,.38); background:rgba(224,89,74,.12); color:#e8a196; }
 .province-build-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .province-building { position:relative; display:flex; flex-direction:column; gap:4px; padding:9px 9px 8px; border-radius:10px; border:1px solid rgba(240,199,103,.24); background:linear-gradient(180deg,rgba(36,25,10,.62),rgba(12,8,3,.78)); }
 .province-building.is-built { border-color:rgba(126,217,131,.45); box-shadow:inset 0 0 14px rgba(126,217,131,.07); }
@@ -3843,7 +3876,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="battle_core.js?v=bird-families-mega-v1-20260728"></script>
+<script src="bird_size_core.js?v=bird-size-roles-v201-20260802"></script>
+<script src="bird_roles_core.js?v=bird-size-roles-v201-20260802"></script>
+<script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=empire-here-regions-v193-20260801"></script>
@@ -4972,7 +5007,8 @@ const DEFAULT_STATE = {
   starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for The Roost and Barracks
   sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
   tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
-  diary: { entries: [] } // Adventurer's Diary — Merlin's chronicle of everything the player has done
+  diary: { entries: [] }, // Adventurer's Diary — Merlin's chronicle of everything the player has done
+  birdRoles: { academy: {}, villages: {}, regions: {} } // Who runs what: Librarian, Head Chef, village Stewards, region Wardens
 };
 
 let gameState;
@@ -9988,6 +10024,8 @@ function openBirdInfo(birdId) {
       <div class="bird-info-stat"><span class="bird-info-stat-label">STAM</span><span class="bird-info-stat-value">${bird.stamina || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">CHA</span><span class="bird-info-stat-value">${bird.cha || 0}</span></div>
     </div>
+    ${renderBirdSizePanel(bird)}
+    ${renderBirdPostLine(bird)}
     <div class="bird-info-section">
       <div class="bird-info-section-title">Natural range</div>
       <div class="bird-info-section-body">${escapeHTML(info.range || info.origin || 'Range data not yet available')}</div>
@@ -10014,6 +10052,39 @@ function openBirdInfo(birdId) {
 
 function closeBirdInfo() {
   $('birdInfoModal').classList.remove('show');
+}
+
+// The size card: what this bird weighs, what that lets it carry, and what it is
+// worth in a fight. Says where the weight came from, because a measured mass and
+// an estimate are not the same claim.
+function renderBirdSizePanel(bird) {
+  const size = birdSizeSummary(bird);
+  if (!size) return '';
+  const massLine = bird && Number(bird.massG) > 0
+    ? 'about ' + (Number(bird.massG) >= 1000 ? (Number(bird.massG) / 1000).toFixed(1) + ' kg' : Math.round(Number(bird.massG)) + ' g') + ' (measured, AVONET)'
+    : 'weight class read from its field biology';
+  return `
+    <div class="bird-info-section bird-size-panel">
+      <div class="bird-info-section-title">${size.icon} Size &amp; carrying</div>
+      <div class="bird-size-chips">
+        <span class="bird-size-chip">${escapeHTML(size.label)}</span>
+        <span class="bird-size-chip">🧺 carries ${size.capacity} load${size.capacity === 1 ? '' : 's'}</span>
+        <span class="bird-size-chip${size.battlePct < 0 ? ' is-weak' : ''}">⚔️ ${escapeHTML(size.battleLabel)}</span>
+      </div>
+      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home from expeditions and hit harder in battle; smaller birds carry less and fight weaker — ${escapeHTML(massLine)}.</div>
+    </div>`;
+}
+
+// The post this bird holds, if any — the Library is only as good as its Librarian.
+function renderBirdPostLine(bird) {
+  const post = birdPostLabel(bird);
+  if (!post) return '';
+  const fx = rolePostState(post.scope, post.key);
+  return `
+    <div class="bird-info-section bird-post-line">
+      <div class="bird-info-section-title">${post.icon} ${escapeHTML(post.title)}</div>
+      <div class="bird-info-section-body">Serving as ${escapeHTML(post.title)} of ${escapeHTML(post.where)} — ${escapeHTML(fx.rank ? fx.rank.label : 'Novice')}, ${escapeHTML(post.role.effect.label.toLowerCase())} +${fx.bonusPct}%.</div>
+    </div>`;
 }
 
 // ============================================================================
@@ -10087,6 +10158,257 @@ function speciesCharmBase(profile) {
   return clamp(score, 1, 10);
 }
 
+// ============================================================================
+// SIZE: how much a bird can carry, and how hard it hits.
+// One rule, stated plainly and applied once, here at the source: a bigger bird
+// carries more and is stronger in battle; a little bird carries less and is
+// weaker in battle. The size score itself is real biology — measured body mass
+// where the catalogue has it, read back off the biology stats where it does
+// not — and lives in bird_size_core.js.
+// ============================================================================
+function birdSizeCore() { return window.BurbzBirdSizeCore || null; }
+function speciesSizeInfo(profile) {
+  const core = birdSizeCore();
+  if (!core) return { score: 45, classId: 'medium', massG: null, source: 'default' };
+  return core.speciesSize(profile);
+}
+function birdSizeSummary(bird) {
+  const core = birdSizeCore();
+  return core ? core.sizeSummary(bird) : null;
+}
+function birdCarryCapacity(bird) {
+  const core = birdSizeCore();
+  return core ? core.carryCapacity(bird) : 3;
+}
+
+// ============================================================================
+// ROLES: every bird can be given a job.
+// A room of the Academy to run, a village to steward, a region to hold. The
+// post is only as good as the bird in it — and for the thinking jobs (Librarian,
+// Star Charter, Head Chef, Steward, Warden) "as good as" means INT. Put the
+// cleverest bird in the Library and the Library itself gets better for every
+// bird studying there. The maths lives in bird_roles_core.js; this is the wiring
+// that spends it.
+// ============================================================================
+function birdRolesCore() { return window.BurbzBirdRolesCore || null; }
+
+function ensureRolesState() {
+  const core = birdRolesCore();
+  if (!core || !gameState) return { academy:{}, villages:{}, regions:{} };
+  const liveIds = (gameState.flock || []).map(b => b && b.id).filter(Boolean);
+  gameState.birdRoles = core.pruneRoleState(gameState.birdRoles, liveIds);
+  return gameState.birdRoles;
+}
+
+// The role definition for a post, whatever its scope.
+function roleDefFor(scope, key) {
+  const core = birdRolesCore();
+  if (!core) return null;
+  if (scope === 'academy') return core.academyRoleForRoom(key);
+  if (scope === 'village') return core.villageRole();
+  if (scope === 'region') return core.regionRole();
+  return null;
+}
+
+// Who holds this post, and how well they hold it. `staffed:false` means the
+// building works exactly as it always did — a posting is upside only.
+function rolePostState(scope, key) {
+  const core = birdRolesCore();
+  const role = roleDefFor(scope, key);
+  if (!core || !role) return { role:null, bird:null, staffed:false, aptitude:0, multiplier:1, bonusPct:0, rank:null };
+  const birdId = core.assignedBirdId(ensureRolesState(), scope, key);
+  const bird = birdId ? (gameState.flock || []).find(b => b && b.id === birdId) : null;
+  if (!bird) return { role, bird:null, staffed:false, aptitude:0, multiplier:1, bonusPct:0, rank:null };
+  return { ...core.roleEffectiveness(bird, role), role, bird };
+}
+
+// The single number the rest of the game multiplies by.
+function roleMultiplier(scope, key) {
+  return rolePostState(scope, key).multiplier || 1;
+}
+function academyRoleMultiplier(roomId) { return roleMultiplier('academy', roomId); }
+function villageRoleMultiplier(seed) { return roleMultiplier('village', String(Number(seed) >>> 0)); }
+function regionRoleMultiplier(regionId) { return roleMultiplier('region', String(regionId || '')); }
+
+// The post this bird currently holds, phrased for a card: "📚 Librarian · The Library".
+function birdPostLabel(bird) {
+  const core = birdRolesCore();
+  if (!core || !bird || !bird.id) return null;
+  const posts = core.postsHeldBy(ensureRolesState(), bird.id);
+  if (!posts.length) return null;
+  const post = posts[0];
+  const role = roleDefFor(post.scope, post.key);
+  if (!role) return null;
+  let where = '';
+  if (post.scope === 'academy') where = (ACADEMY_ROOMS[post.key] && ACADEMY_ROOMS[post.key].label) || post.key;
+  else if (post.scope === 'village') {
+    const rec = ensureEmpireState().villages[String(post.key)];
+    where = rec ? rec.name : 'a village';
+  } else if (post.scope === 'region') {
+    const region = empireRegionById(post.key);
+    where = region ? region.name : 'a region';
+  }
+  return { icon: role.icon, title: role.title, where, scope: post.scope, key: post.key, role };
+}
+
+function assignBirdRole(scope, key, birdId) {
+  const core = birdRolesCore();
+  const role = roleDefFor(scope, key);
+  const bird = (gameState.flock || []).find(b => b && b.id === birdId);
+  if (!core || !role || !bird) return;
+  // A bird cannot hold a post and be away at the same time — the job is the
+  // point of it being here.
+  if (birdHasActiveExpedition(bird.id)) { showToast(birdDisplayName(bird) + ' is away on a quest — call them home first.'); return; }
+  const previous = core.postsHeldBy(ensureRolesState(), bird.id)[0] || null;
+  gameState.birdRoles = core.assignRole(ensureRolesState(), scope, key, bird.id);
+  // An Academy post means the bird lives in that room — except the Kitchen and
+  // the Barracks, which are a feeding table and a front desk: nobody is ever
+  // stationed in either, so their heads keep their own perch.
+  if (scope === 'academy' && key !== 'kitchen' && key !== 'tavern') { ensureBirdAcademy(bird); bird.academy.room = key; }
+  const fx = core.roleEffectiveness(bird, role);
+  saveState();
+  SFX.tap();
+  const moved = previous && !(previous.scope === scope && previous.key === key)
+    ? ' (stepping down from their old post — one bird, one job)' : '';
+  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' + moved);
+  refreshRoleSurfaces();
+}
+
+function clearBirdRole(scope, key) {
+  const core = birdRolesCore();
+  if (!core) return;
+  const before = rolePostState(scope, key);
+  gameState.birdRoles = core.unassignRole(ensureRolesState(), scope, key);
+  saveState();
+  SFX.tap();
+  if (before.bird && before.role) showToast(before.role.icon + ' ' + birdDisplayName(before.bird) + ' stands down as ' + before.role.title + '.');
+  refreshRoleSurfaces();
+}
+
+// One redraw for every screen a posting can be visible on.
+function refreshRoleSurfaces() {
+  try { if (currentScreen === 'academy-room') renderAcademyRoomInterior(); } catch (e) {}
+  try { if (currentScreen === 'academy') renderAcademy(); } catch (e) {}
+  try { if (currentScreen === 'village') { renderVillageManagePanel(); renderEmpirePanel(); } } catch (e) {}
+  try { if (currentScreen === 'region') renderRegionScreen(); } catch (e) {}
+}
+
+// Birds free to take a post: in the flock, home, and not already posted here.
+function roleCandidateBirds(scope, key) {
+  const core = birdRolesCore();
+  const holder = core ? core.assignedBirdId(ensureRolesState(), scope, key) : null;
+  return (gameState.flock || []).filter(b => b && b.id && b.id !== holder && !birdHasActiveExpedition(b.id));
+}
+
+// The shared card every posting is offered and displayed through, so the
+// Library, the Kitchen, a village hall and a region hall all read the same.
+function rolePostCardHTML(scope, key, options = {}) {
+  const core = birdRolesCore();
+  const role = roleDefFor(scope, key);
+  if (!core || !role) return '';
+  const post = rolePostState(scope, key);
+  const dataAttrs = ' data-role-scope="' + escapeHtml(scope) + '" data-role-key="' + escapeHtml(String(key)) + '"';
+  const candidates = core.rankCandidates(roleCandidateBirds(scope, key), role).slice(0, 8);
+  const optionsHtml = candidates.length
+    ? candidates.map(c =>
+        '<button type="button" class="role-candidate" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
+          birdOnlyImgHTML(c.bird, 'role-candidate-art') +
+          '<span class="role-candidate-main"><span class="role-candidate-name">' + escapeHtml(birdDisplayName(c.bird)) + '</span>' +
+          '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span></span>' +
+          '<span class="role-candidate-gain">+' + c.bonusPct + '%</span>' +
+        '</button>').join('')
+    : '<div class="role-empty">No companion is free for this post right now — recruit a bird, or wait for one to fly home.</div>';
+  const held = post.staffed
+    ? '<div class="role-holder">' + birdOnlyImgHTML(post.bird, 'role-holder-art') +
+        '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
+        '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(role.title) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
+        '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
+        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b> — ' + escapeHtml(role.effect.copy) + '</div></div>' +
+        '<button type="button" class="role-dismiss" data-action="role-clear"' + dataAttrs + '>Stand down</button></div>'
+    : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(role.effect.copy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
+  return '<div class="role-post-card"' + dataAttrs + '>' +
+    '<div class="role-post-head"><span class="role-post-icon">' + role.icon + '</span>' +
+    '<div><div class="role-post-title">' + escapeHtml(options.titlePrefix ? options.titlePrefix + role.title : role.title) + '</div>' +
+    '<div class="role-post-copy">' + escapeHtml(role.copy) + '</div></div></div>' +
+    held +
+    '<div class="role-candidate-label">' + (post.staffed ? 'Replace with' : 'Appoint') + '</div>' +
+    '<div class="role-candidate-list">' + optionsHtml + '</div>' +
+  '</div>';
+}
+
+// "INT 180" / "INT 180 · CHA 90" — the stats this particular job is judged on.
+function roleStatLine(role, bird) {
+  return Object.keys(role.stats || {})
+    .sort((a, b) => (role.stats[b] - role.stats[a]) || a.localeCompare(b))
+    .slice(0, 2)
+    .map(stat => stat.toUpperCase() + ' ' + Math.round(Number(bird && bird[stat]) || 0))
+    .join(' · ');
+}
+
+// One delegated listener for every posting card in the game.
+document.addEventListener('click', event => {
+  const btn = event.target && event.target.closest ? event.target.closest('[data-action="role-assign"],[data-action="role-clear"]') : null;
+  if (!btn) return;
+  const scope = btn.dataset.roleScope;
+  const key = btn.dataset.roleKey;
+  if (!scope || !key) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (btn.dataset.action === 'role-clear') clearBirdRole(scope, key);
+  else assignBirdRole(scope, key, btn.dataset.birdId);
+});
+
+// Exported for QA harnesses and evidence scripts (the game script is an IIFE),
+// in the same spirit as __academyAliveDebug and __burbzQuestDebug.
+Object.assign(window, {
+  __burbzSizeRolesDebug: {
+    stats: (species, rarity) => generateBirdStats(species, null, rarity || 'common'),
+    size: bird => birdSizeSummary(bird),
+    capacity: bird => birdCarryCapacity(bird),
+    post: (scope, key) => rolePostState(scope, key),
+    multiplier: (scope, key) => roleMultiplier(scope, key),
+    assign: (scope, key, birdId) => assignBirdRole(scope, key, birdId),
+    clear: (scope, key) => clearBirdRole(scope, key),
+    postCardHTML: (scope, key) => rolePostCardHTML(scope, key),
+    sizePanelHTML: bird => renderBirdSizePanel(bird),
+    planExpedition: (quest, bird) => applyExpeditionCarryLimit(applyQuartermasterPlanning(quest), bird),
+    mealRewards: verdict => feedRewardsForVerdict(verdict),
+    state: () => ensureRolesState(),
+    flock: () => gameState.flock
+  }
+});
+
+// ---- Carrying, applied to expeditions ---------------------------------------
+// The Quartermaster plans the trip: better planning, heavier payout.
+function applyQuartermasterPlanning(quest) {
+  if (!quest || !quest.rewards) return quest;
+  const mult = academyRoleMultiplier('quest_roost');
+  if (mult <= 1) return quest;
+  quest.rewards.coins = Math.round((Number(quest.rewards.coins) || 0) * mult);
+  quest.rewards.branches = Math.round((Number(quest.rewards.branches) || 0) * mult);
+  quest.quartermasterMultiplier = mult;
+  return quest;
+}
+
+// …and the bird's own back decides how much of the plan comes home. A giant
+// hauls nearly double a mid-sized bird's load; a goldcrest manages one unit and
+// leaves the rest where it found it.
+function applyExpeditionCarryLimit(quest, bird) {
+  const core = birdSizeCore();
+  if (!core || !quest || !quest.rewards) return quest;
+  const carried = core.applyCarryLimit(quest.rewards, bird);
+  quest.rewards.branches = carried.branches;
+  quest.rewards.items = carried.items;
+  quest.carry = {
+    capacity: carried.capacity,
+    haulMultiplier: carried.haulMultiplier,
+    unitsUsed: carried.unitsUsed,
+    leftBehind: carried.leftBehind,
+    sizeClass: bird && bird.sizeClass ? bird.sizeClass : core.sizeClassForScore(core.birdSizeScore(bird)).id
+  };
+  return quest;
+}
+
 function generateBirdStats(speciesName, basePower, rarity) {
   const profile = findSpeciesProfile(speciesName);
   if (profile) {
@@ -10094,16 +10416,24 @@ function generateBirdStats(speciesName, basePower, rarity) {
     // rewards only; it must never turn a tiny vagrant into a heavyweight.
     // Legacy basePower is intentionally ignored for canonical profiles.
     const baseStats = profile.stats;
-    const hp = 40 + Math.round(baseStats.hp * 10);
+    // Weight tells: everything that decides a fight — bulk, blows, armour and
+    // even raw magic — is scaled by how big the bird actually is, so a giant is
+    // strictly stronger than a large, a large than a medium, and so on down to
+    // the goldcrest. SPD/INT/CHA are deliberately untouched: a swift still
+    // outflies a swan and a robin still out-talks an eagle.
+    const size = speciesSizeInfo(profile);
+    const sizeMult = birdSizeCore() ? birdSizeCore().battlePowerMultiplier(size.score) : 1;
+    const hp = Math.round((40 + Math.round(baseStats.hp * 10)) * sizeMult);
     const stamina = Math.round(baseStats.stamina * 10);
-    const strength = Math.round(baseStats.strength * 10);
-    const def = Math.round(baseStats.def * 10);
+    const strength = Math.round(baseStats.strength * 10 * sizeMult);
+    const def = Math.round(baseStats.def * 10 * sizeMult);
     const spd = Math.round(baseStats.spd * 10);
     const int = Math.round(baseStats.int * 10);
     const cha = Math.round(speciesCharmBase(profile) * 10);
-    // MAG — the Kingdom's magic flows strongest through its smallest birds.
-    // Inverse of physical bulk (strength + hp) so a goldcrest out-spells an eagle.
-    const mag = clamp(Math.round((11.5 - (baseStats.strength * 0.6 + baseStats.hp * 0.5)) * 10), 20, 100);
+    // MAG — the Kingdom's magic still flows strongest through its smallest
+    // birds, and that is the little bird's edge: an edge, not an equaliser.
+    // The size multiplier applies here too, so weight wins a straight fight.
+    const mag = clamp(Math.round((11.5 - (baseStats.strength * 0.6 + baseStats.hp * 0.5)) * 10 * sizeMult), 20, 100);
 
     const specialMoveIndex = hashStr(speciesName + '_move') % SPECIAL_MOVES.length;
     const specialMove = SPECIAL_MOVES[specialMoveIndex];
@@ -10122,6 +10452,10 @@ function generateBirdStats(speciesName, basePower, rarity) {
       cha: clamp(cha, 10, 999),
       stamina: clamp(stamina, 10, 999),
       mag: clamp(mag, 10, 999),
+      sizeScore: size.score,
+      sizeClass: size.classId,
+      massG: size.massG,
+      sizeSource: size.source,
       specialMove,
       emoji,
       power: clamp(finalPower, 20, 9999),
@@ -10143,12 +10477,20 @@ function generateBirdStats(speciesName, basePower, rarity) {
     const chaBase = 15 + Math.floor(rng() * 45);
     const magBase = clamp(112 - atkBase - Math.floor((hpBase - 60) / 2), 25, 95); // small birds carry the magic
 
-    const hp = Math.floor(hpBase * mult * (bp / 60));
-    const atk = Math.floor(atkBase * mult * (bp / 60));
-    const def = Math.floor(defBase * mult * (bp / 60));
+    // Unknown species still get a size: the rolled bulk is read on the same
+    // 1-10 biology scale the catalogue uses, so the carry/battle rule holds for
+    // every bird in the game and not just the catalogued ones.
+    const sizeCore = birdSizeCore();
+    const rolledSize = sizeCore ? sizeCore.sizeScoreFromStats({ hp: (hpBase - 40) / 10, strength: atkBase / 10 }) : null;
+    const sizeScore = rolledSize == null ? 45 : rolledSize;
+    const sizeMult = sizeCore ? sizeCore.battlePowerMultiplier(sizeScore) : 1;
+
+    const hp = Math.floor(hpBase * mult * (bp / 60) * sizeMult);
+    const atk = Math.floor(atkBase * mult * (bp / 60) * sizeMult);
+    const def = Math.floor(defBase * mult * (bp / 60) * sizeMult);
     const spd = Math.floor(spdBase * mult * (bp / 60));
     const cha = Math.floor(chaBase * mult * (bp / 60));
-    const mag = Math.floor(magBase * mult * (bp / 60));
+    const mag = Math.floor(magBase * mult * (bp / 60) * sizeMult);
 
     const moveIndex = seed % SPECIAL_MOVES.length;
     const specialMove = SPECIAL_MOVES[moveIndex];
@@ -10163,6 +10505,10 @@ function generateBirdStats(speciesName, basePower, rarity) {
       def: clamp(def, 10, 120),
       spd: clamp(spd, 10, 120),
       cha: clamp(cha, 10, 120),
+      sizeScore,
+      sizeClass: sizeCore ? sizeCore.sizeClassForScore(sizeScore).id : 'medium',
+      massG: null,
+      sizeSource: 'estimate',
       specialMove,
       emoji,
       power: clamp(power, 20, 999),
@@ -10174,7 +10520,9 @@ function generateBirdStats(speciesName, basePower, rarity) {
   }
 }
 
-const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v2-20260715';
+// v3 re-derives every companion so the size rule (bigger = stronger, smaller =
+// weaker) reaches birds recruited before it existed.
+const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v3-size-20260802';
 
 function migrateBirdToBiologyStats(bird) {
   if (!bird || bird.biologyStatsVersion === BIRD_BIOLOGY_STATS_VERSION) return bird;
@@ -10197,6 +10545,14 @@ function migrateBirdToBiologyStats(bird) {
   bird.stamina = clamp(Math.floor(base.stamina * levelMult) + Number(training.staminaBonus || 0), 10, 999);
   bird.cha = clamp(Math.floor(base.cha * levelMult) + Number(training.chaBonus || 0), 10, 999);
   bird.mag = clamp(Math.floor((base.mag || 40) * levelMult) + Number(training.magBonus || 0), 10, 999);
+  // Size is a property of the species, never of the save: a well-fed, heavily
+  // trained robin is still a robin, so this is re-read from the profile rather
+  // than preserved from whatever an older build wrote.
+  bird.sizeScore = base.sizeScore;
+  bird.sizeClass = base.sizeClass;
+  bird.massG = base.massG;
+  bird.sizeSource = base.sizeSource;
+  bird.carryCapacity = birdCarryCapacity(bird);
   bird.basePower = base.basePower;
   bird.power = clamp(Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (levelMult * 0.7)), 20, 9999);
   bird.biologyStatsVersion = BIRD_BIOLOGY_STATS_VERSION;
@@ -11296,6 +11652,9 @@ function ensureBirdAcademy(bird) {
 function recalcBirdPower(bird) {
   bird.power = Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def * 1.0 + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (1 + bird.level * 0.04) * 0.7);
   bird.power = clamp(bird.power, 20, 9999);
+  // Levelling and stamina drills let a bird pack a little better; its size —
+  // and so the bulk of its carrying capacity — never changes.
+  bird.carryCapacity = birdCarryCapacity(bird);
 }
 
 function academyCdLeft(iso, cooldownMs) {
@@ -11672,6 +12031,10 @@ function startBirdExpedition(birdId, templateId, loadout) {
   const slowFactor = merlin ? merlinExpeditionSlowFactor() : 1;
   if (slowFactor > 1) showToast('🍽️ Merlin is flying hungry — this errand will take him twice as long.');
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now(), { slowFactor });
+  // The Quest Roost's Quartermaster plans the trip; the bird's own back decides
+  // how much of it comes home.
+  applyQuartermasterPlanning(quest);
+  applyExpeditionCarryLimit(quest, bird);
   // Fallout Shelter-style loadout: a pantry provision and a charm item ride
   // along and pay out as bonuses when the quest is claimed.
   const equipment = { provision: null, charm: null };
@@ -11774,6 +12137,13 @@ function claimBirdExpedition(expeditionId) {
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
   playQuestClaimCelebration({ badge: 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  // Say it plainly when a load was left in the field: it is the size rule doing
+  // its job, not a bug.
+  if (q.carry && q.carry.leftBehind > 0) {
+    const sizeLabel = (birdSizeCore() && birdSizeCore().SIZE_CLASS_INDEX[q.carry.sizeClass]) || null;
+    setTimeout(() => showToast('🧺 ' + escapeHtml(q.birdName) + ' could only carry ' + q.carry.capacity + ' load' + (q.carry.capacity === 1 ? '' : 's') +
+      (sizeLabel ? ' — a ' + sizeLabel.label.toLowerCase() + ' bird' : '') + '. Send a bigger bird to bring it all home.'), 2100);
+  }
   // Merlin's tutorial errand is the one claim followed by a scripted chapter:
   // a quiz modal here would open 650ms before the dim and end up buried
   // under it with no way to close it.
@@ -11920,7 +12290,8 @@ function renderBirdExpeditions() {
       art +
       '<div class="quest-info">' +
         '<div class="quest-name">' + q.icon + ' ' + escapeHtml(q.label) + '</div>' +
-        '<div class="quest-desc">' + escapeHtml(q.birdName) + (done ? ' is back with the loot!' : ' · ' + questTimeLeftLabel(q) + (q.hungryFlight ? ' · flying hungry (2× time)' : '')) + '</div>' +
+        '<div class="quest-desc">' + escapeHtml(q.birdName) + (done ? ' is back with the loot!' : ' · ' + questTimeLeftLabel(q) + (q.hungryFlight ? ' · flying hungry (2× time)' : '')) +
+          (q.carry ? ' · 🧺 ' + q.carry.unitsUsed + '/' + q.carry.capacity + (q.carry.leftBehind ? ' · too small to carry it all' : '') : '') + '</div>' +
         '<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + q.progressPct + '%"></div></div>' +
       '</div>' +
       (done ? '<button class="quest-claim-btn pulse" onclick="event.stopPropagation();claimBirdExpedition(\'' + q.id + '\')">CLAIM</button>' : '<div class="quest-away-pct">' + q.progressPct + '%</div>') +
@@ -12077,7 +12448,11 @@ function renderQuestSendSheet() {
     const tooLow = (b.level || 1) < (t.minLevel || 1);
     const readiness = birdWorkReadiness(b.id === MERLIN_GUIDE.id ? { ...b, care:getMerlinCare() } : b, 'expedition');
     const disabled = away || training || tooLow || !readiness.ok;
-    const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
+    // Carrying capacity is the whole reason to send the big bird: it rides on
+    // the chip so the choice is made with the load in mind, not after it.
+    const carry = birdSizeSummary(b);
+    const carryNote = carry ? ' · ' + carry.icon + ' carries ' + carry.capacity : '';
+    const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
@@ -13090,8 +13465,16 @@ const FEED_MEAL_REWARDS = Object.freeze({
 // the main-meal table rather than typed out, so "half" cannot drift.
 function feedRewardsForVerdict(verdict) {
   if (verdict === 'insufficient') return FEED_MEAL_REWARDS.insufficient;
-  if (verdict !== 'secondary') return FEED_MEAL_REWARDS.primary;
-  const half = value => Math.max(1, Math.round(Number(value) / 2));
+  // The Head Chef of the Kitchen improves every plate that leaves it. A clever
+  // chef knows what each species really eats and how to prepare it, so the same
+  // ingredient does more good.
+  const chef = academyRoleMultiplier('kitchen');
+  const cooked = value => Math.max(1, Math.round(Number(value) * chef));
+  if (verdict !== 'secondary') {
+    const main = FEED_MEAL_REWARDS.primary;
+    return { birdXp:cooked(main.birdXp), trainerXp:cooked(main.trainerXp), coins:cooked(main.coins), happiness:cooked(main.happiness), bondXp:cooked(main.bondXp) };
+  }
+  const half = value => Math.max(1, Math.round((Number(value) / 2) * chef));
   const main = FEED_MEAL_REWARDS.primary;
   return { birdXp:half(main.birdXp), trainerXp:half(main.trainerXp), coins:half(main.coins), happiness:half(main.happiness), bondXp:half(main.bondXp) };
 }
@@ -13761,10 +14144,16 @@ function tickAcademy() {
     ensureBirdAcademy(b);
     const room = isAcademyRoomBuilt(b.academy.room) ? b.academy.room : 'outdoors';
     b.academy.room = room;
+    // The bird running this room makes it better for everyone in it: a clever
+    // Librarian means the shelves teach faster, a good Head Healer means wings
+    // mend sooner. An empty post is a multiplier of exactly 1.
+    const roomBoost = academyRoleMultiplier(room);
     const fx = ACADEMY_ROOM_STAT_EFFECTS[room];
     if (fx) {
       if (b.academy.statRoom !== room) { b.academy.statRoom = room; b.academy.statMinutes = 0; }
-      b.academy.statMinutes = (b.academy.statMinutes || 0) + elapsedMin;
+      // Everyone in the room learns faster, the head included — running the
+      // Library is its own education.
+      b.academy.statMinutes = (b.academy.statMinutes || 0) + elapsedMin * roomBoost;
       const gained = Math.floor(b.academy.statMinutes / ACADEMY_STAT_MINUTES);
       if (gained > 0) {
         b.academy.statMinutes -= gained * ACADEMY_STAT_MINUTES;
@@ -13775,19 +14164,24 @@ function tickAcademy() {
       }
     }
     if (room === 'dorm') {
-      b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04)), 1, b.maxHp || 100);
+      b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04 * roomBoost)), 1, b.maxHp || 100);
       adjustBirdHungerUntracked(b, 1, now);
     } else if (room === 'hospital') {
-      b.hp = clamp((b.hp || b.maxHp) + Math.max(2, Math.round((b.maxHp || 100) * 0.10)), 1, b.maxHp || 100);
+      b.hp = clamp((b.hp || b.maxHp) + Math.max(2, Math.round((b.maxHp || 100) * 0.10 * roomBoost)), 1, b.maxHp || 100);
       adjustBirdHungerUntracked(b, 1, now);
     } else if (room === 'training') {
-      b.xp = (b.xp || 0) + 1;
+      b.xp = (b.xp || 0) + Math.max(1, Math.round(roomBoost));
       adjustBirdHungerUntracked(b, 4, now);
       b.care.happiness = clamp((b.care.happiness || 80) - 1, 0, 100);
     } else if (room === 'crowbar') {
       // The bar is fun: morale climbs alongside Charm.
-      b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
+      b.care.happiness = clamp((b.care.happiness || 80) + Math.round(2 * roomBoost), 0, 100);
       adjustBirdHungerUntracked(b, 2, now);
+    } else if (room === 'nursery' || room === 'outdoors') {
+      // The Nest Nanny and the Head Gardener both work on morale — and a well
+      // kept garden means less time spent hungry.
+      b.care.happiness = clamp((b.care.happiness || 80) + Math.round(2 * roomBoost), 0, 100);
+      adjustBirdHungerUntracked(b, Math.max(1, Math.round(2 / roomBoost)), now);
     } else {
       b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
       adjustBirdHungerUntracked(b, 2, now);
@@ -14341,6 +14735,7 @@ function renderAcademyRoomInterior() {
     if (room === 'tavern') {
       const waiting = barracksRecruitCandidates().length;
       root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage"></div></div>' +
+        rolePostCardHTML('academy', 'tavern') +
         '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
       $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
       root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
@@ -14360,6 +14755,9 @@ function renderAcademyRoomInterior() {
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
+    // Every room can be run by a bird. Which bird decides how well the room
+    // works — the Library by its Librarian, the Kitchen by its Head Chef.
+    const rolePanel = rolePostCardHTML('academy', room);
     // The Kitchen is a feeding table: birds never lodge or wander there (the
     // migration + move guards keep its stationed list empty), and there is no
     // "add a bird to this room" panel — the feeding roster replaces it.
@@ -14368,7 +14766,7 @@ function renderAcademyRoomInterior() {
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
     const roomAddPanel = room === 'kitchen' ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + trainingPanel + kitchenPanel + roomAddPanel;
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + '</div></div>' + rolePanel + trainingPanel + kitchenPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -17573,6 +17971,10 @@ function recruitCostForBird(bird) {
     const record = getDiscoveredRecordForSpecies((bird && (bird.species || bird.commonName)) || '');
     if (record && Number(record.recruitCost) > 0) trusted = Math.min(fullCost, Number(record.recruitCost));
   } catch (e) {}
+  // The Barracks' Recruiting Officer talks the price down. A charming, sharp
+  // officer can shave up to a third off — never below a token fee.
+  const officer = academyRoleMultiplier('tavern');
+  if (officer > 1) trusted = Math.max(10, Math.round(trusted / (1 + (officer - 1) * 0.5)));
   const firstCompanion = gameState && Array.isArray(gameState.flock) && gameState.flock.length === 0;
   return firstCompanion ? Math.min(trusted, FIRST_RECRUIT_MAX_COST) : trusted;
 }
@@ -18749,7 +19151,10 @@ function empireTradeRouteIncome(a, b) {
   if (!core) return { coins: 0, goodsQty: 0 };
   const capA = a.villages[0], capB = b.villages[0];
   const distanceKm = core.haversineKm(capA.lat, capA.lon, capB.lat, capB.lon);
-  return core.tradeRouteIncome(empireRegionPopulation(a), empireRegionPopulation(b), distanceKm);
+  const income = core.tradeRouteIncome(empireRegionPopulation(a), empireRegionPopulation(b), distanceKm);
+  // A road is only as safe and as busy as the Wardens at both ends keep it.
+  const wardens = (regionRoleMultiplier(a.id) + regionRoleMultiplier(b.id)) / 2;
+  return { ...income, coins: Math.round((income.coins || 0) * wardens) };
 }
 function empireTradeDue(now) {
   const t = Number(now) || Date.now();
@@ -19008,11 +19413,14 @@ function villageProductionSnapshot(rec) {
   const eco = ensureVillageEconomy(rec);
   const out = { materials: {}, larder: {} };
   if (!eco || eco.population <= 0) return out;
+  // A Steward makes the same fields and quarries yield more: better rotas,
+  // better records, less waste.
+  const steward = villageRoleMultiplier(rec && rec.seed);
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
     if (!level || !b.produces) return;
-    Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + per * level; });
-    Object.entries(b.produces.larder || {}).forEach(([id, per]) => { out.larder[id] = (out.larder[id] || 0) + per * level; });
+    Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + Math.round(per * level * steward); });
+    Object.entries(b.produces.larder || {}).forEach(([id, per]) => { out.larder[id] = (out.larder[id] || 0) + Math.round(per * level * steward); });
   });
   return out;
 }
@@ -19046,11 +19454,18 @@ function villageEconomySnapshot(rec) {
   // Region unity: a sanctuary inside a founded region pays 15% more — free
   // neighbours trade favours, share granaries and keep the roads safe.
   const unityCore = realmCore();
-  const inRegion = !!empireRegionOfSeed(rec.seed);
+  const region = empireRegionOfSeed(rec.seed);
+  const inRegion = !!region;
   const unity = inRegion && unityCore ? 1 + unityCore.REGION_TAX_BONUS : 1;
-  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * unity) + flatCoins);
-  const branches = pop <= 0 ? 0 : 2 + flatBranches;
-  return { pop, needs, happiness, taxes, branches, inRegion, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
+  // Who runs the place: a village Steward keeps the ledger, and above them a
+  // region Warden keeps the roads open. Both pay into the same purse — half
+  // weight for the Warden, who is looking after several towns at once.
+  const steward = villageRoleMultiplier(rec.seed);
+  const warden = inRegion ? 1 + (regionRoleMultiplier(region.id) - 1) * 0.5 : 1;
+  const governance = steward * warden;
+  const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * unity * governance) + flatCoins);
+  const branches = pop <= 0 ? 0 : Math.round((2 + flatBranches) * governance);
+  return { pop, needs, happiness, taxes, branches, inRegion, steward, warden, governance, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
 // housing cap, hungry or joyless ones empty out (never below a stubborn few —
@@ -19370,8 +19785,10 @@ function renderVillageManagePanel() {
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.inRegion ? ' · 🏰 region unity is raising its taxes' : '') + ' · happy villagers multiply and pay more</div>'
+      ? '<div class="province-income-line">🏦 This province pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.inRegion ? ' · 🏰 region unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
+    // A town is run by a bird, not by the player alone: appoint a Steward here.
+    rolePostCardHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' }) +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy here — other towns can still build' : '') + '</div>' +
@@ -19577,6 +19994,8 @@ function renderRegionScreen() {
     '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branches + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
     '</div>' +
     '<div class="region-hall-unity">🤝 Region unity: every sanctuary here pays +' + Math.round(rc.REGION_TAX_BONUS * 100) + '% taxes for standing together.</div>' +
+    // One bird holds the whole region: the Warden rides between sanctuaries.
+    rolePostCardHTML('region', String(region.id)) +
     ladderHtml +
     '<button class="empire-tribute-btn" data-action="region-collect"' + (hasDue ? '' : ' disabled') + '>' +
     (hasDue ? '💰 COLLECT THIS REGION’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ REGION TAXES GROWING — CHECK BACK LATER') + '</button>' +
@@ -28429,7 +28848,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'restored-lost-features-v200-20260802';
+const BURBZ_BUILD = 'bird-size-roles-v201-20260802';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

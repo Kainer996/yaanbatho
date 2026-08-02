@@ -84,6 +84,9 @@ global.getMerlinCare = () => gameState.merlinCare;
 global.MERLIN_CORE = { grantMerlinBondXp: c => c, sanitizeMerlinCare: c => c };
 global.birdHasActiveExpedition = () => false;
 global.birdHasActiveTraining = () => false;
+// No bird is posted as Head Chef in this harness, so the Kitchen runs at its
+// unstaffed baseline of 1.0.
+global.academyRoleMultiplier = () => 1;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
 global.applyPlayerXpState = n => { gameState.player.xp += n; };
@@ -352,7 +355,9 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
 def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
     html = HTML.read_text(encoding="utf-8")
     rewards = function_source(html, "feedRewardsForVerdict")
-    assert "Math.round(Number(value) / 2)" in rewards
+    # Half is still computed from the main-meal table (the Head Chef multiplier
+    # rides on top of both the whole and the half, so it cannot make them drift).
+    assert "Number(value) / 2" in rewards
     assert "FEED_MEAL_REWARDS.primary" in rewards
     # The hunger half lives in the diet core, as one number.
     core = (ROOT / "bird_diet_hunger_core.js").read_text(encoding="utf-8")
