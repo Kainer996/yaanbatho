@@ -21,7 +21,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "bird-size-roles-v201-20260802"
+RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
 def run_node(source: str) -> dict:
