@@ -150,6 +150,11 @@ const ACADEMY_BUILDINGS = {
   tavern:{cost:60,branches:8,unlockLevel:1,room:'tavern',label:'Barracks',icon:'🪶',x:76,y:80}
 };
 let academySelectedRoom = 'outdoors';
+// No Recruiting Officer is posted in the Barracks here, so recruiting runs
+// at its unstaffed baseline price.
+function academyRoleMultiplier(){ return 1; }
+function applyQuartermasterPlanning(quest){ return quest; }
+function applyExpeditionCarryLimit(quest){ return quest; }
 let gameState = {player:{level:1,coins:220,branches:18,totalCaptures:0},academyBuildings:{outdoors:{built:true}},discoveredSpecies:{},flock:[],birdExpeditions:[],pantry:{},inventory:{items:{}},activePetId:null};
 const SFX={levelUp(){},capture(){},tap(){}};
 const MERLIN_GUIDE = { id:'merlin-guide', commonName:'Merlin', species:'Merlin' };

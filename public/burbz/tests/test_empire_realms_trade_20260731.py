@@ -161,7 +161,9 @@ def test_unity_taxes_and_crown_titles_are_wired_into_the_economy():
     snap_end = logic.index("\n// Population drifts", snap_start)
     snap = logic[snap_start:snap_end]
     assert "REGION_TAX_BONUS" in snap
-    assert "* unity)" in snap
+    # Unity still multiplies the tax take — alongside the governance multiplier
+    # a posted Steward (and the region's Warden) contribute.
+    assert "* unity * governance)" in snap
     # The empty-province rule survives: both taxes and branches still gate.
     assert snap.count("pop <= 0 ? 0") == 2
     assert "function empireCrownTitle()" in logic
