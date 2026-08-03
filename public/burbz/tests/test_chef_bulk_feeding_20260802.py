@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
-PREVIOUS_RELEASE_PIN = "bird-size-roles-v201-20260802"
+RELEASE_PIN = "settlement-tiers-v203-20260803"
+PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
 def function_source(html: str, name: str) -> str:

@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-02 (the Head Chef's whole-species table service — see "Review log" at the bottom).
+Last curated: 2026-08-03 (settlement tiers: villages merge into towns, towns into cities — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,53 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-03 — villages merge into towns, towns into cities (Claude).** Yaan
+  asked for the street-level merge layer: liberate **3 neighbouring villages
+  and they make 1 town; 3 neighbouring towns make 1 city**, with gameplay and
+  graphics adjusted to match.
+  - **Maths** (`empire_realm_core.js`): `deriveSettlements(villages)` — the
+    same union-find chaining as regions, but at street scale: villages chained
+    within `SETTLEMENT_TOWN_RADIUS_KM` (5 km) merge into a town at 3+; town
+    centroids chained within `SETTLEMENT_CITY_RADIUS_KM` (15 km) merge into a
+    city at 3+ towns. A town keeps the name of its HEART (earliest-liberated
+    village) and a city the name of its earliest-founded town, so ids survive
+    growth exactly like region capitals. `SETTLEMENT_TIERS` carries the whole
+    balance sheet per tier: taxBonus (0 / +10% / +25%), buildTimeFactor
+    (1 / 0.85 / 0.70) and territoryRadiusM (2200 / 3200 / 4200). Everything is
+    DERIVED from the liberation claims — no settlement state is stored, so
+    nothing can drift; `empireSettlementsInfo()` caches per claim-set like
+    `empireRegionsInfo()` does.
+  - **Gameplay**: the merged multiplier composes into
+    `villageEconomySnapshot` as `* merged * unity * governance` (region unity
+    still stacks on top — different layers, different bonuses); construction
+    in `empireBuildStructure` multiplies its clock by
+    `settlementBuildFactorForSeed` (the per-town `eco.construction` lock is
+    untouched — the concurrent-builds harness gained the conventional
+    one-line stub `settlementBuildFactorForSeed → 1`). `claimCurrentVillage`
+    announces a founding only when it actually happens, same pattern as
+    regions. The Royal Ledger grows a green **TOWNS & CITIES** section
+    (rows frame the settlement on the atlas via `frameEmpireSettlement`),
+    with "two of three" nudges before the first merge; the governor's desk,
+    claim bar and village title all name the settlement a district belongs to.
+  - **Graphics**: on the royal atlas each district's daylight window and green
+    territory circle grow with tier (`empireVillageTerritoryRadiusM`), so the
+    three circles literally FUSE into one glow — that is the merge, visually.
+    Town standards fly green banners at the settlement centroid, city
+    standards gold with an `empire-city-glow` pulse. Walking-map markers swap
+    🏰 for 🏘️/🏙️ with a settlement-name chip. In the 3D village,
+    `villageMakeSettlementStandard` raises a charter stone by the square —
+    one pennant per district, green for towns, gold + glowing crown for
+    cities.
+  - Tests: `tests/test_settlement_tiers_20260802.py` (Node-driven core, an
+    end-to-end harness running the REAL snapshot/build functions to verify
+    +10%/+25% taxes and 15%/30% faster builds, and the HTML/CSS contracts).
+    Release pins repointed per convention;
+    `test_location_empire_unlock_20260801.py`'s realm-core `?v=` pin moved
+    with the core (its v193 cache lineage is still asserted). STORY.md gained
+    the "Villages grow into towns, towns into cities" canon. SW cache +
+    `BURBZ_BUILD` bumped (`settlement-tiers-v203-20260803` — renumbered over the
+    same-day chef release, which took v202 on main first).
 
 - **2026-08-02 — the Head Chef feeds the whole species (Claude).** Three player
   asks in one release:
