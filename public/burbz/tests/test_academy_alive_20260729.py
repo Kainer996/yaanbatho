@@ -32,6 +32,7 @@ def _run_node(script: str) -> dict:
         ["node", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         cwd=str(ROOT),
         timeout=60,
     )
@@ -77,7 +78,8 @@ def test_treehouse_render_refreshes_anchors():
 
 def test_service_worker_and_live_update_ship_the_engine():
     assert re.search(r"\./academy_alive_core\.js\?v=[^']+", SW)
-    assert "academy-alive" in SW.split("\n")[8], "BURBZ_CACHE name must be bumped for the new asset"
+    cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
+    assert "academy-alive" in cache_line, "BURBZ_CACHE name must retain the release lineage"
     assert '"academy_alive_core.js"' in UPDATE_SH
 
 

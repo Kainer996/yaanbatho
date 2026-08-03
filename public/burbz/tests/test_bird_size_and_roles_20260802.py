@@ -21,12 +21,13 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "empire-clarity-v205-20260803"
+ROLE_CORE_PIN = "empire-clarity-v205-20260803"
+CURRENT_BUILD = "empire-live-reconcile-v217-20260803"
 
 
 def run_node(source: str) -> dict:
     result = subprocess.run(
-        ["node", "-e", source], cwd=ROOT, text=True, capture_output=True, check=False, timeout=60
+        ["node", "-e", source], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False, timeout=60
     )
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
@@ -316,16 +317,37 @@ def test_role_state_is_saved_and_healed():
     assert "core.pruneRoleState(gameState.birdRoles, liveIds)" in html
 
 
+def test_role_holders_are_reserved_from_quests_training_and_battles():
+    html = HTML.read_text(encoding="utf-8")
+    assert "function birdAssignedPost(birdId)" in html
+    assert "const assignedPost = birdAssignedPost(b.id);" in html
+    assert "const disabled = Boolean(assignedPost) || away || training || tooLow || !readiness.ok;" in html
+    assert "assignedPost ? assignedPost.role.title" in html
+    assert "if (assignedPost) { showToast" in html
+    assert "!birdAssignedPost(b.id)" in html
+    assert "!birdHasActiveTraining(b.id)" in html
+    assert "!birdHasActiveExpedition(b.id)" in html
+    assert "return !b.care.sleeping;" in html
+    assert "const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);" in html
+    assert "const posted = team.find(b => birdAssignedPost(b.id));" in html
+    # Role holders cannot silently move into a second post; stand them down first.
+    assert "const currentPost = birdAssignedPost(bird.id);" in html
+    assert "No companion is free for this post right now" in html
+    assert html.count("!birdAssignedPost(b.id)") >= 3
+    # A bird cannot be appointed while another timed activity still owns it.
+    assert "if (birdHasActiveTraining(bird.id))" in html
+
+
 def test_release_is_versioned_for_service_worker_self_update():
     sw = SW.read_text(encoding="utf-8")
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
     assert "restored-lost-features-v200-20260802" in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(RELEASE_PIN)
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML.read_text(encoding="utf-8")
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML.read_text(encoding="utf-8")
     # Both new cores ship, and are precached for offline play.
     assert SIZE_CORE.exists() and ROLES_CORE.exists()
-    assert f"'./bird_size_core.js?v={RELEASE_PIN}'" in sw
-    assert f"'./bird_roles_core.js?v={RELEASE_PIN}'" in sw
+    assert f"'./bird_size_core.js?v={ROLE_CORE_PIN}'" in sw
+    assert f"'./bird_roles_core.js?v={ROLE_CORE_PIN}'" in sw
     html = HTML.read_text(encoding="utf-8")
-    assert f'src="bird_size_core.js?v={RELEASE_PIN}"' in html
-    assert f'src="bird_roles_core.js?v={RELEASE_PIN}"' in html
+    assert f'src="bird_size_core.js?v={ROLE_CORE_PIN}"' in html
+    assert f'src="bird_roles_core.js?v={ROLE_CORE_PIN}"' in html

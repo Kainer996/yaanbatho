@@ -195,12 +195,19 @@ def slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower().replace("’", "_").replace("'", "_")).strip("_")
 
 
+TEXT_FILE_SUFFIXES = {".geojson", ".html", ".js", ".json", ".svg", ".txt"}
+
+
+def canonical_file_bytes(path: Path) -> bytes:
+    """Return repository-stable bytes for text files on every checkout OS."""
+    raw = path.read_bytes()
+    if path.suffix.lower() in TEXT_FILE_SUFFIXES:
+        return raw.replace(b"\r\n", b"\n")
+    return raw
+
+
 def sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for block in iter(lambda: fh.read(1024 * 1024), b""):
-            h.update(block)
-    return h.hexdigest()
+    return hashlib.sha256(canonical_file_bytes(path)).hexdigest()
 
 
 def canonical_json_bytes(data: object) -> bytes:
@@ -943,7 +950,8 @@ def build_manifest(source_dir: Path, uk_fixture, au_fixture, au_exclusion, nirbc
     source_files = {}
     for name, meta in SOURCE_META.items():
         path = source_dir / name
-        source_files[name] = {**meta, "sha256": sha256(path), "bytes": path.stat().st_size}
+        raw = canonical_file_bytes(path)
+        source_files[name] = {**meta, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
     generated_source_fixtures = {
         "au-wlab-v4.3-species.json": au_fixture,
         "missing-summary.json": {"ukMissing": load_json(source_dir, "missing-summary.json")["ukMissing"], "auMissing": au_missing},
@@ -1089,18 +1097,28 @@ def write_outputs(payload: dict[str, object], root: Path) -> None:
     }
     for path, data in files.items():
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     for profile in payload["profiles"]:
         rel = profile["art"].replace("/burbz/", "")
         path = root / rel
-        path.write_text(placeholder_svg(profile), encoding="utf-8")
+        path.write_text(placeholder_svg(profile), encoding="utf-8", newline="\n")
     # Fill art hashes after SVGs exist, then rewrite the manifest.
     art_manifest = payload["artManifest"]
     for scientific, row in art_manifest.items():
         path = root / row["path"].replace("/burbz/", "")
         row["hash"] = sha256(path)
-    (out / "art-manifest.json").write_text(json.dumps(art_manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-    (root / "national_bird_completion_20260715.js").write_text(js_module(payload), encoding="utf-8")
+    (out / "art-manifest.json").write_text(
+        json.dumps(art_manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (root / "national_bird_completion_20260715.js").write_text(
+        js_module(payload), encoding="utf-8", newline="\n"
+    )
 
 
 def compare_trees(expected_root: Path, actual_root: Path) -> list[str]:
@@ -1127,7 +1145,7 @@ def compare_trees(expected_root: Path, actual_root: Path) -> list[str]:
         a, b = expected_root / rel, actual_root / rel
         if not b.exists():
             diffs.append(f"missing {rel}")
-        elif a.read_bytes() != b.read_bytes():
+        elif canonical_file_bytes(a) != canonical_file_bytes(b):
             diffs.append(f"changed {rel}")
     return diffs
 

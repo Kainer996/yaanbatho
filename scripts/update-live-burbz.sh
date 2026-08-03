@@ -28,6 +28,7 @@ BASE="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/public/burbz"
 LFS_BASE="https://github.com/Kainer996/yaanbatho/raw/refs/heads/main/public/burbz"
 LFS_FILES=(
   "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
+  "bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png"
 )
 BIRDNET_INSTALLER_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts/install-birdnet-v3.sh"
 
@@ -37,18 +38,23 @@ FILES=(
   "manifest.json"
   "quest_core.js"
   "empire_map_core.js"
+  "empire_realm_core.js"
   "academy_treehouse_core.js"
   "academy_alive_core.js"
   "academy_3d_core.js"
   "kitchen_pantry_core.js"
   "data/bird-diet-records.js"
   "bird_diet_hunger_core.js"
+  "bird_sleep_core.js"
   "diet_hunger_core.js"
   "bird_family_core.js"
+  "bird_size_core.js"
+  "bird_roles_core.js"
   "scan_economy_core.js"
   "sound_listener_core.js"
   "battle_core.js"
   "loot_crafting_core.js"
+  "diary_core.js"
   "audio_core.js"
   "assets/academy-tree-manga-20260629.png"
   "assets/academy-buildings-manga/aviary-gardens.png"
@@ -93,16 +99,19 @@ FILES=(
   "assets/audio/sfx-defeat-error.mp3"
   "assets/audio/ATTRIBUTION.md"
   "audio-credits.html"
+  "privacy.html"
   "action_badge_core.js"
   "merlin_companion_core.js"
   "uk_bird_expansion_50.js"
   "uk_bird_expansion_2.js"
   "uk_bird_expansion_3.js"
   "uk_bird_expansion_4.js"
+  "uk_bird_alias_completion_20260803.js"
   "au_bird_expansion.js"
   "au_bird_expansion_2.js"
   "national_bird_completion_20260715.js"
   "bird_art_release_20260727.js"
+  "bird_art_release_20260803.js"
   "spain_boundary_20260715.js"
   "lib/three.min.js"
   "lib/maplibre-gl.js"
@@ -122,6 +131,54 @@ FILES=(
   "assets/ui/burbz-icon-set/inventory.webp"
   "assets/ui/burbz-icon-set/forge.webp"
   "assets/ui/burbz-icon-set/quests.webp"
+  "assets/academy-buildings/library.svg"
+  "assets/academy-interiors-manga/aviary-gardens.png"
+  "assets/academy-interiors-manga/barracks.png"
+  "assets/academy-interiors-manga/crowbar.png"
+  "assets/academy-interiors-manga/hospital.png"
+  "assets/academy-interiors-manga/kitchen.png"
+  "assets/academy-interiors-manga/nursery.png"
+  "assets/academy-interiors-manga/observatory.png"
+  "assets/academy-interiors-manga/quest-roost.png"
+  "assets/academy-interiors-manga/roost.png"
+  "assets/academy-interiors-manga/training-hall.png"
+  "assets/academy-interiors-manga/workshop.png"
+  "assets/village-interiors-manga/birders-guild.png"
+  "assets/village-interiors-manga/gilded-beak.png"
+  "assets/village-interiors-manga/puffins-rest.png"
+  "assets/village-interiors-manga/seed-and-sundry.png"
+  "assets/village-interiors-manga/talon-and-anvil.png"
+  "assets/audio/bird-blackbird.mp3"
+  "assets/audio/bird-tawny-owl.mp3"
+  "assets/audio/reward-level-up.mp3"
+  "assets/audio/ui-book.mp3"
+  "assets/audio/ui-coins.mp3"
+  "assets/audio/ui-lock.mp3"
+  "assets/audio/ui-metal.mp3"
+  "assets/audio/ui-spell.mp3"
+  "assets/audio/ui-wood.mp3"
+  "assets/burbz-logo-yaan-transparent-20260608.png"
+  "assets/evil-burbz/evil-burb-1.png"
+  "assets/evil-burbz/evil-burb-2.png"
+  "assets/evil-burbz/evil-burb-3.png"
+  "assets/evil-burbz/evil-burb-4.png"
+  "assets/merlin-tutorial.png"
+  "assets/tex/cobble_c.jpg"
+  "assets/tex/cobble_n.jpg"
+  "assets/tex/grass_c.jpg"
+  "assets/tex/grass_n.jpg"
+  "assets/ui/merlin-wand-listener.webp"
+  "icons/icon-48.png"
+  "icons/icon-72.png"
+  "icons/icon-96.png"
+  "icons/icon-128.png"
+  "icons/icon-144.png"
+  "icons/icon-152.png"
+  "icons/icon-192.png"
+  "icons/icon-384.png"
+  "icons/icon-512.png"
+  "icons/maskable-192.png"
+  "icons/maskable-512.png"
   # Backend, not referenced by index.html: server.py imports this package to
   # choose its recogniser. BirdNET V3 (CC BY-SA 4.0) is the default; Perch 2.0
   # and the legacy non-commercial V2.4 path remain selectable. Ship every file
@@ -221,20 +278,55 @@ done
 for f in "${LFS_FILES[@]}"; do
   mkdir -p "$TMP/$(dirname "$f")"
   curl -fsSL "$LFS_BASE/$f" -o "$TMP/$f" || die "Download failed (LFS): $f"
+  [[ "$(wc -c < "$TMP/$f")" -gt 300 ]] || die "LFS download is still a pointer: $f"
+  ! grep -q '^version https://git-lfs.github.com/spec/v1$' "$TMP/$f" || die "LFS pointer reached staging: $f"
   FILES+=("$f")
 done
 curl -fsSL "$BIRDNET_INSTALLER_URL" -o "$TMP/install-birdnet-v3.sh" \
   || die "Download failed: scripts/install-birdnet-v3.sh"
 bash -n "$TMP/install-birdnet-v3.sh" \
   || die "Downloaded BirdNET installer failed its shell syntax check"
-# The generated-art mapping is the release manifest for its card paintings.
-# Pull each referenced local painting without hardcoding the release filenames.
-while IFS= read -r art_url; do
-  f="${art_url#/burbz/}"
-  FILES+=("$f")
+# The two art modules are manifests for LFS-backed paintings. Download through
+# the LFS endpoint, including v204's portrait + transparent-cutout pairs and
+# its habitat backgrounds; raw.githubusercontent would silently return pointer
+# text for these files.
+declare -A SEEN_ART=()
+for managed_file in "${FILES[@]}"; do
+  SEEN_ART["$managed_file"]=1
+done
+download_lfs_art() {
+  local f="$1"
+  [[ -n "$f" && -z "${SEEN_ART[$f]:-}" ]] || return
   mkdir -p "$TMP/$(dirname "$f")"
-  curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
+  curl -fsSL "$LFS_BASE/$f" -o "$TMP/$f" || die "Download failed (LFS art): $f"
+  if [[ "$(wc -c < "$TMP/$f")" -le 300 ]]; then
+    rm -f "$TMP/$f"
+    die "LFS art is still a pointer: $f"
+  fi
+  SEEN_ART["$f"]=1
+  FILES+=("$f")
+}
+
+while IFS= read -r art_url; do
+  download_lfs_art "${art_url#/burbz/}"
 done < <(grep -o '/burbz/bird-art-cache/completion-20260726/[^"]*' "$TMP/bird_art_release_20260727.js" | sort -u)
+
+# Index and the service worker also own hundreds of older literal PNG paths.
+# Discover them from the staged release so a clean server gets the same art as
+# an existing one instead of depending on files left behind by an old deploy.
+while IFS= read -r art_url; do
+  download_lfs_art "${art_url#/burbz/}"
+done < <(grep -hoE '/burbz/bird-art-cache/[a-zA-Z0-9_./-]+\.(png|webp)' "$TMP/index.html" "$TMP/sw.js" | sort -u)
+
+while IFS= read -r slug; do
+  [[ "$slug" =~ ^[a-z0-9_]+$ ]] || continue
+  download_lfs_art "bird-art-cache/${slug}_burbz_manga_warrior_20260802.png"
+  download_lfs_art "bird-art-cache/cutouts/${slug}_burbz_manga_warrior_20260802_cutout.png"
+done < <(awk '/const warriorSlugs = new Set\(`/ { capture=1; next } /`\.trim\(\)\.split/ { capture=0 } capture { print }' "$TMP/bird_art_release_20260803.js" | tr '[:space:]' '\n' | sed '/^$/d')
+
+while IFS= read -r art_url; do
+  download_lfs_art "${art_url#/burbz/}"
+done < <(grep -oE '/burbz/bird-art-cache/habitat-backgrounds/[a-z0-9_./-]+' "$TMP/bird_art_release_20260803.js" | sort -u)
 log "Downloaded ${#FILES[@]} files from GitHub"
 
 # sanity-check before touching the live site

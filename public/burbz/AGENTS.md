@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-03 (empire clarity: the Empire tab UI overhaul — locator strip, map key, tap cards, ledger drawers — see "Review log" at the bottom).
+Last curated: 2026-08-03 (unified v217: recovered the live-only v204-v216 line, reconciled it with manga art + Empire clarity, and hardened deployment — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,26 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-03 — live v216 recovery + Empire reconciliation v217 (Codex).**
+  The production VPS had advanced directly from deployed Git commit `198893f`
+  through battle fullness, two-side snacks, role reservations, the proper-meal
+  quest, Roost sleep, duration-tier errands, nearby real-walk navigation, diet
+  corrections, card locations and the 636-species BOU alias overlay. None of
+  those v204-v216 runtime blobs existed in GitHub. The seven exact live runtime
+  deltas were recovered from `/home/ubuntu/yaanbatho/burbz`, committed on
+  `codex/recover-live-v216`, then three-way merged with manga habitats and the
+  Empire clarity v205 line. `BURBZ_BUILD` and the service-worker cache now end
+  in `empire-live-reconcile-v217-20260803`, while every divergent release marker
+  remains in the cache lineage. Recovered generators and tests were normalized
+  for repo paths and explicit UTF-8 subprocess decoding. v217 also closes
+  double-booking holes: posted birds cannot be moved (or spend resources on a
+  build-and-move), and questing/training birds cannot enter battle through a
+  stale selection. Deployment is fail-closed on unmanaged live drift, hydrates
+  LFS at an immutable commit, records managed hashes atomically, and the manual
+  updater now includes every current PWA dependency plus warrior/cutout/habitat
+  art. Tests: `test_activity_reservation_guards_20260803.py`,
+  `test_live_updater_completeness_20260803.py`, and the recovered v204-v216 set.
 
 - **2026-08-03 — empire clarity: the Empire tab UI overhaul (Claude).** Yaan
   found the empire layer "very difficult to follow … hard to know on the map

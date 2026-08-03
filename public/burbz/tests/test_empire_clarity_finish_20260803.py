@@ -6,7 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "empire-clarity-v205-20260803"
+OWN_RELEASE_PIN = "empire-clarity-v205-20260803"
+CURRENT_BUILD = "empire-live-reconcile-v217-20260803"
 
 
 def html_text() -> str:
@@ -50,7 +51,7 @@ def test_cycle_countdown_handles_past_boundaries_and_future_device_clocks():
         f"empireCycleCountdownMs({now - interval - 30_000},{now}),"
         f"empireCycleCountdownMs({now + 3 * interval},{now})]));"
     )
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == [interval, interval - 30_000, 4 * interval]
 
@@ -76,7 +77,7 @@ routes = [];
 const future = empireNextTributeCountdownMs({now});
 console.log(JSON.stringify([earliest, future]));
 """
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == [60 * 60 * 1000, 17 * 60 * 60 * 1000]
 
@@ -125,7 +126,7 @@ now = 5000;
 scheduled[0]();
 console.log(JSON.stringify({{scheduled:scheduled.length, cleared, renders, tickingText, timer:empireTributeCountdownTimer}}));
 """
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == {
         "scheduled": 1,
@@ -155,8 +156,10 @@ def test_programmatic_map_focus_dismisses_stale_cards_and_the_key():
 def test_final_release_pin_is_consistent_and_the_provisional_pin_is_gone():
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}'" in html
-    assert f"-empire-clarity-v205-20260803';" in sw
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}'" in html
+    cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
+    assert OWN_RELEASE_PIN in cache_line
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     provisional_pin = "empire-clarity-v" + "204-20260803"
     assert provisional_pin not in html
     assert provisional_pin not in sw

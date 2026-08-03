@@ -19,7 +19,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-RELEASE_PIN = "empire-clarity-v205-20260803"
+REALM_CORE_PIN = "empire-clarity-v205-20260803"
+CURRENT_BUILD = "empire-live-reconcile-v217-20260803"
+OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
 TRIO = [
@@ -44,7 +46,7 @@ TRI_CITY = cluster(10, "Alph", 53.20, -2.70, 1) + cluster(20, "Beth", 53.20, -2.
 
 def run_core(expression: str):
     script = f"const core=require({json.dumps(str(CORE))}); console.log(JSON.stringify({expression}));"
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
@@ -201,7 +203,7 @@ let villageActive = null, villageBuiltSeed = null;
 
 
 def run_harness(villages_js: str, probe_js: str):
-    result = subprocess.run(["node", "-e", build_harness(villages_js, probe_js)], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(["node", "-e", build_harness(villages_js, probe_js)], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
@@ -393,10 +395,11 @@ def test_story_canon_documents_the_merge_layer():
 def test_release_is_pinned_and_realm_core_cache_buster_moved():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert cache_line.rstrip("';").endswith(RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     # deriveSettlements ships in empire_realm_core.js — its cache-buster must
     # move with this release so installed players actually receive it.
-    assert f'src="empire_realm_core.js?v={RELEASE_PIN}"' in html
-    assert f"'./empire_realm_core.js?v={RELEASE_PIN}'" in sw
+    assert f'src="empire_realm_core.js?v={REALM_CORE_PIN}"' in html
+    assert f"'./empire_realm_core.js?v={REALM_CORE_PIN}'" in sw

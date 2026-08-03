@@ -15,6 +15,7 @@ wild species' recruit cost. The player-facing "Bag" is renamed "Stores".
 """
 import json
 import subprocess
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,9 +33,24 @@ def function_source(html: str, name: str) -> str:
 
 
 def run_node(script: str) -> dict:
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=60)
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
+    # Windows limits the command line to roughly 32 KiB; some extracted
+    # end-to-end harnesses are larger than that. A real temporary script is
+    # portable and also avoids shell/argument quoting differences.
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".js", prefix="burbz-kitchen-test-",
+        dir=ROOT, encoding="utf-8", delete=False,
+    ) as handle:
+        handle.write(script)
+        script_path = Path(handle.name)
+    try:
+        result = subprocess.run(
+            ["node", str(script_path)], cwd=ROOT, text=True, encoding="utf-8",
+            capture_output=True, timeout=60,
+        )
+        assert result.returncode == 0, result.stderr
+        return json.loads(result.stdout)
+    finally:
+        script_path.unlink(missing_ok=True)
 
 
 def diet_rules_source() -> str:

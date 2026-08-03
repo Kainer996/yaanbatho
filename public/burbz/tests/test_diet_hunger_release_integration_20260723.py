@@ -20,10 +20,10 @@ CACHE_NAME = CACHE_MATCH.group(1)
 PINNED_RUNTIME_ASSETS = {
     # The quest board moved on with the categorised errands + one quest per
     # crafting material, so the Academy core carries its own pin now.
-    "academy_treehouse_core.js": "restored-lost-features-v200-20260802",
+    "academy_treehouse_core.js": "quest-duration-tiers-v211-20260803",
     "kitchen_pantry_core.js": RELEASE_PIN,
-    "data/bird-diet-records.js": "reconciled-release-v170-20260729",
-    "bird_diet_hunger_core.js": "reconciled-release-v170-20260729",
+    "data/bird-diet-records.js": "real-walk-nearby-quests-v215-20260803",
+    "bird_diet_hunger_core.js": "real-walk-nearby-quests-v215-20260803",
     "diet_hunger_core.js": RELEASE_PIN,
     "merlin_companion_core.js": "reconciled-release-v170-20260729",
 }
@@ -77,6 +77,7 @@ def test_browser_diet_payload_is_compact_and_excludes_global_source_table():
         ["node", "-e", "const p=require('./data/bird-diet-records.js'); console.log(JSON.stringify({records:p.records.length, sourceRecords:p.sourceRecords.length}));"],
         cwd=ROOT,
         text=True,
+        encoding="utf-8",
         capture_output=True,
         timeout=30,
     )
@@ -97,7 +98,9 @@ const D = require('./bird_diet_hunger_core.js');
 const names = {json.dumps(names)};
 console.log(JSON.stringify(names.filter(name => !D.getDietRecord({{ commonName:name, name }}))));
 """
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=30)
+    result = subprocess.run(
+        ["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=30
+    )
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == []
 
@@ -154,6 +157,7 @@ Promise.resolve(installWork)
         ["node", "-e", script],
         cwd=ROOT,
         text=True,
+        encoding="utf-8",
         capture_output=True,
         timeout=30,
     )
@@ -191,6 +195,7 @@ def test_protected_regression_references_remain_in_the_app_shell():
             ["node", "-"],
             cwd=ROOT,
             text=True,
+            encoding="utf-8",
             input=f"new Function({json.dumps(body)});\n",
             capture_output=True,
             timeout=30,

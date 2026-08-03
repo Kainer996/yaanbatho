@@ -61,7 +61,10 @@ def test_feeding_core_has_no_fullness_threshold_and_never_makes_a_top_up_hungrie
     core = CORE.read_text(encoding="utf-8")
     transaction = core[core.index("function applyFeedingTransaction"):core.index("function applyActivityHungerTransaction")]
     assert "subject.care.hunger < FEEDING_HUNGER_MIN" not in transaction
-    assert "Math.min(currentHunger, 50)" in transaction
+    # Side snacks now add 50 percentage points instead of merely filling up to
+    # the halfway mark. Clamping the subtraction keeps a nearly-full bird from
+    # becoming hungrier while still allowing an optional whole-ingredient top-up.
+    assert "Math.max(0, currentHunger - 50)" in transaction
 
 
 def test_every_companion_stays_visible_and_feed_controls_stay_actionable_when_full():
@@ -73,7 +76,8 @@ def test_every_companion_stays_visible_and_feed_controls_stay_actionable_when_fu
     assert "disabled>🍽️ Full" not in html
     assert "birdIsFull(bird) ? 'disabled'" not in html
     assert "is completely full — nothing to feed right now" not in html
-    assert "Topping up still uses one complete ingredient." in html
+    assert "Feed at any Fullness" in html
+    assert "every accepted serving uses one complete ingredient" in html
 
 
 def test_v177_application_and_service_worker_markers_match():

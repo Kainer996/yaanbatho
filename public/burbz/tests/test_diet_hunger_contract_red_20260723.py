@@ -15,6 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "index.html"
 SW = ROOT / "sw.js"
+DIET_HUNGER_CORE_PIN = "diet-hunger-release-20260723"
+DIET_RECORDS_PIN = "real-walk-nearby-quests-v215-20260803"
 MERLIN_CORE = ROOT / "merlin_companion_core.js"
 PROFILES = ROOT / "data" / "national-bird-completion" / "profiles.json"
 BIRDFUNCDAT_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
@@ -360,8 +362,8 @@ def test_val_regression_001_cache_pins_new_diet_hunger_assets_and_keeps_protecte
     html = INDEX.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     runtime_assets = [
-        "diet_hunger_core.js?v=diet-hunger-release-20260723",
-        "data/bird-diet-records.js?v=reconciled-release-v170-20260729",
+        f"diet_hunger_core.js?v={DIET_HUNGER_CORE_PIN}",
+        f"data/bird-diet-records.js?v={DIET_RECORDS_PIN}",
     ]
     for asset in runtime_assets:
         assert asset in html, f"{asset} is not loaded by index.html"

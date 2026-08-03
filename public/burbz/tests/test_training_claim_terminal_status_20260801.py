@@ -8,7 +8,7 @@ INDEX = ROOT / "index.html"
 SW = ROOT / "sw.js"
 # The treehouse core's CURRENT ?v pin — later releases that touch the core
 # move this on (the cache-lineage assert below keeps this release's own marker).
-RELEASE_PIN = "restored-lost-features-v200-20260802"
+RELEASE_PIN = "quest-duration-tiers-v211-20260803"
 
 
 def _academy_core_json(script: str):
@@ -16,6 +16,7 @@ def _academy_core_json(script: str):
         ["node", "-e", script],
         cwd=ROOT,
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=True,
     )

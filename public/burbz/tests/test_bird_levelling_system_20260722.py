@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 QUEST_CORE_PATH = ROOT / "quest_core.js"
+QUEST_CORE_PIN = "begin-quest-loop-authority-v188-20260731"
+ACADEMY_CORE_PIN = "quest-duration-tiers-v211-20260803"
 
 
 def function_source(html: str, name: str) -> str:
@@ -187,8 +189,8 @@ def test_release_ships_with_a_fresh_offline_cache_version():
     html = HTML_PATH.read_text(encoding="utf-8")
     assert "const BURBZ_CACHE = 'burbz-" in sw
     for marker in (
-        "quest_core.js?v=begin-quest-loop-authority-v188-20260731",
-        "academy_treehouse_core.js?v=restored-lost-features-v200-20260802",
+        f"quest_core.js?v={QUEST_CORE_PIN}",
+        f"academy_treehouse_core.js?v={ACADEMY_CORE_PIN}",
     ):
         assert marker in html
         assert f"./{marker}" in sw

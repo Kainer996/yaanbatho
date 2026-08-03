@@ -71,10 +71,62 @@ SHA=$(curl -fsSL -m 20 "https://api.github.com/repos/$REPO/commits/main" 2>/dev/
 CUR=$(cat "$ROOT/.burbz-deployed-sha" 2>/dev/null || echo none)
 [[ "$SHA" == "$CUR" ]] && exit 0
 
+# Never overwrite live edits that have not yet been promoted to GitHub. The
+# previous deploy records hashes only for files managed by GitHub, so live-only
+# assets remain allowed while changed managed files make the deploy fail closed.
+MANAGED_HASHES="$ROOT/.burbz-managed-hashes.sha256"
+if [[ -f "$MANAGED_HASHES" ]]; then
+  DRIFT=$(mktemp)
+  if ! (cd "$ROOT" && sha256sum --quiet -c "$MANAGED_HASHES") >"$DRIFT" 2>&1; then
+    logger -t burbz-sync "abort: live managed files differ from last deployment; promote or back them up before deploying $SHA"
+    sed -n '1,20p' "$DRIFT" | logger -t burbz-sync
+    rm -f "$DRIFT"
+    exit 1
+  fi
+  rm -f "$DRIFT"
+fi
+
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-curl -fsSL -m 300 "https://codeload.github.com/$REPO/tar.gz/refs/heads/main" -o "$TMP/repo.tgz"
-tar -xzf "$TMP/repo.tgz" -C "$TMP"
-SRC="$TMP/yaanbatho-main/public/burbz"
+mkdir "$TMP/repo"
+curl -fsSL -m 300 "https://codeload.github.com/$REPO/tar.gz/$SHA" -o "$TMP/repo.tgz"
+tar -xzf "$TMP/repo.tgz" -C "$TMP/repo" --strip-components=1
+SRC="$TMP/repo/public/burbz"
+
+# GitHub source archives contain pointer text for Git LFS files. Hydrate every
+# such file at the same immutable commit before it can reach production.
+while IFS= read -r -d '' candidate; do
+  [[ $(stat -c '%s' "$candidate") -le 300 ]] || continue
+  grep -q '^version https://git-lfs.github.com/spec/v1$' "$candidate" || continue
+  rel=${candidate#"$SRC/"}
+  hydrated="$candidate.hydrated"
+  pointer_oid=$(sed -n 's/^oid sha256://p' "$candidate")
+  pointer_size=$(sed -n 's/^size //p' "$candidate")
+  [[ $pointer_oid =~ ^[0-9a-f]{64}$ && $pointer_size =~ ^[0-9]+$ ]] || {
+    logger -t burbz-sync "abort: invalid LFS pointer for $rel"
+    exit 1
+  }
+
+  # Code-only releases should not re-download gigabytes of unchanged art. A
+  # live file is reusable only when both its LFS size and SHA-256 match the
+  # immutable pointer in this exact commit; otherwise fetch the pinned blob.
+  existing="$ROOT/$rel"
+  if [[ -f "$existing" && $(stat -c '%s' "$existing") == "$pointer_size" ]]; then
+    existing_oid=$(sha256sum "$existing" | cut -d' ' -f1)
+    if [[ $existing_oid == "$pointer_oid" ]]; then
+      cp --reflink=auto --preserve=mode,timestamps "$existing" "$hydrated"
+    fi
+  fi
+  if [[ ! -f "$hydrated" ]]; then
+    curl -fsSL -m 300 "https://media.githubusercontent.com/media/$REPO/$SHA/public/burbz/$rel" -o "$hydrated"
+  fi
+  hydrated_size=$(stat -c '%s' "$hydrated")
+  hydrated_oid=$(sha256sum "$hydrated" | cut -d' ' -f1)
+  [[ $hydrated_size == "$pointer_size" && $hydrated_oid == "$pointer_oid" ]] || {
+    logger -t burbz-sync "abort: LFS hydration verification failed for $rel"
+    exit 1
+  }
+  mv -f "$hydrated" "$candidate"
+done < <(find "$SRC" -type f -print0)
 
 # sanity: never install something that doesn't look like the game
 [[ -f "$SRC/index.html" && -f "$SRC/manifest.json" ]] || { logger -t burbz-sync "abort: tarball missing burbz files"; exit 1; }
@@ -107,14 +159,20 @@ chown -R "$OWNER" "$ROOT"
 # a manual release; do not record the commit SHA unless exact V3 provenance,
 # model hash, policy, positive fixture and confuser regression all pass.
 if [[ $BACKEND_CHANGED -eq 1 ]]; then
-  if ! bash "$TMP/yaanbatho-main/scripts/install-birdnet-v3.sh"; then
+  if ! bash "$TMP/repo/scripts/install-birdnet-v3.sh"; then
     logger -t burbz-sync "abort: exact BirdNET V3 live proof failed"
     exit 1
   fi
   logger -t burbz-sync "BirdNET V3 live proof passed"
 fi
 
-echo "$SHA" > "$ROOT/.burbz-deployed-sha"
+# Publish the managed manifest first and the commit marker last. Atomic renames
+# ensure an interrupted sync never advertises a deployment it did not finish.
+(cd "$SRC" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$ROOT/.burbz-managed-hashes.sha256.new"
+printf '%s\n' "$SHA" > "$ROOT/.burbz-deployed-sha.new"
+chown "$OWNER" "$ROOT/.burbz-managed-hashes.sha256.new" "$ROOT/.burbz-deployed-sha.new"
+mv -f "$ROOT/.burbz-managed-hashes.sha256.new" "$ROOT/.burbz-managed-hashes.sha256"
+mv -f "$ROOT/.burbz-deployed-sha.new" "$ROOT/.burbz-deployed-sha"
 logger -t burbz-sync "deployed $SHA to $ROOT"
 SYNC
 chmod +x "$SYNC_BIN"
@@ -131,6 +189,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+TimeoutStartSec=30min
 ExecStart=$SYNC_BIN
 EOF
 

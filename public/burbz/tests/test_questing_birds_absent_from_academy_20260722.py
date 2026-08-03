@@ -52,6 +52,7 @@ def test_academy_move_bird_refuses_birds_that_are_away_or_training():
         "let questing=true, training=false;\n"
         "const birdHasActiveExpedition=()=>questing;\n"
         "const birdHasActiveTraining=()=>training;\n"
+        "const birdAssignedPost=()=>null;\n"
         "const ensureBirdAcademy=()=>{};\n"
         "const isAcademyRoomBuilt=()=>true;\n"
         "const showToast=m=>toasts.push(m);\n"

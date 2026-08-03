@@ -14,59 +14,76 @@ def function_source(html: str, name: str) -> str:
     return html[start:end]
 
 
-def keyframes_source(html: str, name: str) -> str:
-    start = html.index(f"@keyframes {name}")
-    end = html.index("\n}", start) + 2
-    return html[start:end]
-
-
-def test_hospital_birds_render_accessible_health_bars_above_the_actor():
+def test_hospital_birds_keep_accessible_health_inside_the_static_grid():
     html = HTML_PATH.read_text(encoding="utf-8")
-    health = function_source(html, "roomBirdHealthHTML")
-    sprite = function_source(html, "roomBirdSpriteHTML")
-    assert "role=\"progressbar\"" in health
-    assert "aria-valuemin=\"0\"" in health
-    assert "aria-valuemax=\"" in health
-    assert "aria-valuenow=\"" in health
-    assert "room-bird-health-fill" in health
-    assert "room === 'hospital'" in sprite
-    assert "room-bird-actor" in sprite
-    assert ".room-bird-health {" in html
-    assert "bottom:calc(100%" in html
+    grid = function_source(html, "roomBirdGridHTML")
+    assert "room === 'hospital'" in grid
+    assert 'role="progressbar"' in grid
+    assert 'aria-label="Health ' in grid
+    assert 'aria-valuemin="0"' in grid
+    assert 'aria-valuemax="' in grid
+    assert 'aria-valuenow="' in grid
+    assert "const hp = clamp" in grid
+    assert ".room-bird-grid-hp" in html
 
 
-def test_hospital_health_bar_math_keeps_zero_hp_and_clamps_width():
+def test_hospital_health_grid_clamps_hp_and_renders_exact_aria_values():
     html = HTML_PATH.read_text(encoding="utf-8")
-    health = function_source(html, "roomBirdHealthHTML")
-    script = "const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));\n" + health + "\nconsole.log(JSON.stringify([roomBirdHealthHTML({hp:0,maxHp:80}),roomBirdHealthHTML({hp:120,maxHp:80})]));"
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    grid = function_source(html, "roomBirdGridHTML")
+    script = """
+const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+const rolePostState = () => null;
+const normalizeBirdCare = bird => { bird.care ||= {}; };
+const escapeHtml = value => String(value);
+const birdDisplayName = bird => bird.name;
+const birdOnlyImgHTML = () => '<img>';
+const ACADEMY_ROOMS = { hospital:{ label:'Hospital' }, library:{ label:'Library' } };
+""" + grid + """
+const zero = roomBirdGridHTML([{ id:'zero', name:'Zero', hp:0, maxHp:80, care:{ tiredness:0 } }], 'hospital');
+const overflow = roomBirdGridHTML([{ id:'overflow', name:'Overflow', hp:120, maxHp:80, care:{ tiredness:0 } }], 'hospital');
+const outsideHospital = roomBirdGridHTML([{ id:'library', name:'Library', hp:40, maxHp:80, care:{ tiredness:0 } }], 'library');
+console.log(JSON.stringify({ zero, overflow, outsideHospital }));
+"""
+    result = subprocess.run(
+        ["node", "-e", script],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        timeout=30,
+    )
     assert result.returncode == 0, result.stderr
-    zero, overflow = json.loads(result.stdout)
-    assert 'aria-valuenow="0"' in zero
-    assert 'style="width:0%"' in zero
-    assert 'data-hp-state="low"' in zero
-    assert 'aria-valuenow="80"' in overflow
-    assert 'style="width:100%"' in overflow
+    rendered = json.loads(result.stdout)
+    assert 'aria-label="Health 0 of 80"' in rendered["zero"]
+    assert 'aria-valuemin="0"' in rendered["zero"]
+    assert 'aria-valuemax="80"' in rendered["zero"]
+    assert 'aria-valuenow="0"' in rendered["zero"]
+    assert '♥ 0/80' in rendered["zero"]
+    assert 'aria-label="Health 80 of 80"' in rendered["overflow"]
+    assert 'aria-valuenow="80"' in rendered["overflow"]
+    assert '♥ 80/80' in rendered["overflow"]
+    assert "room-bird-grid-hp" not in rendered["outsideHospital"]
+    assert 'aria-label="Health ' not in rendered["outsideHospital"]
 
 
-def test_room_birds_face_the_direction_they_are_walking():
+def test_room_birds_are_calm_grid_portraits_not_walking_actors():
     html = HTML_PATH.read_text(encoding="utf-8")
-    travel = keyframes_source(html, "roomBirdTravel")
-    facing = keyframes_source(html, "roomBirdFacing")
-    assert "46%{translate:min(64vw,520px) 0}" in travel
-    assert "96%{translate:2vw 0}" in travel
-    assert "scale:" not in travel
-    assert "0%{scale:1 1}" in facing
-    assert "46%{scale:1 1}" in facing
-    assert "50%{scale:-1 1}" in facing
-    assert "96%{scale:-1 1}" in facing
-    assert "animation:roomBirdFacing" in html
-
-
-def test_room_renderer_passes_room_context_to_each_bird_actor():
-    html = HTML_PATH.read_text(encoding="utf-8")
+    assert "@keyframes roomBirdTravel" not in html
+    assert "@keyframes roomBirdFacing" not in html
+    assert "@keyframes roomBirdBounce" not in html
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('')" in render
+    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdSpriteHTML" not in render
+    assert "room-bird-actor" not in render
+
+
+def test_room_grid_keeps_room_context_and_tiredness_visible():
+    html = HTML_PATH.read_text(encoding="utf-8")
+    grid = function_source(html, "roomBirdGridHTML")
+    assert "rolePostState('academy', room)" in grid
+    assert "Tiredness " in grid
+    assert "Sleeping" in grid
+    assert ".room-bird-grid { position:absolute;" in html
 
 
 def test_hospital_bird_ui_is_part_of_the_offline_app_shell():

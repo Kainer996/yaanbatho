@@ -26,7 +26,9 @@ def function_source(html: str, name: str) -> str:
 
 
 def run_node(script: str) -> dict:
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=60)
+    result = subprocess.run(
+        ["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=60
+    )
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
@@ -54,8 +56,10 @@ def test_no_birds_are_stationed_or_walking_in_the_kitchen():
     # The room interior shows no "Add a bird to this room" panel for the Kitchen.
     render = function_source(html, "renderAcademyRoomInterior")
     assert "const roomAddPanel = room === 'kitchen' ? ''" in render
-    # The shared sprite stage expression survives for every other room.
-    assert "birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('')" in render
+    # Every room now uses the calm assignment grid; the Kitchen can show its
+    # appointed Head Chef without treating that bird as a lodger.
+    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdSpriteHTML" not in render
 
 
 # ---------------------------------------------------------------------------

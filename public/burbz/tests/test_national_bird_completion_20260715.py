@@ -14,6 +14,14 @@ ART = ROOT / "bird-art-cache" / "national-completion"
 SOURCE_DIR = DATA / "source-cache"
 STATS = {"hp", "stamina", "strength", "def", "spd", "int"}
 HABITATS = {"water", "wetland", "woodland", "heath", "park", "farmland", "grassland", "urban", "coast", "hills", "default"}
+TEXT_FILE_SUFFIXES = {".geojson", ".html", ".js", ".json", ".svg", ".txt"}
+
+
+def canonical_sha256(path: Path) -> str:
+    raw = path.read_bytes()
+    if path.suffix.lower() in TEXT_FILE_SUFFIXES:
+        raw = raw.replace(b"\r\n", b"\n")
+    return hashlib.sha256(raw).hexdigest()
 
 
 def norm(value: str) -> str:
@@ -51,10 +59,10 @@ def test_contract_arithmetic_and_raw_source_provenance():
         expected_retrieved = "2026-07-16" if name == "spain-gbif-locality-grid-20260716.json" else "2026-07-15"
         assert row["retrieved"] == expected_retrieved
         assert row["url"]
-        assert row["sha256"] == hashlib.sha256((SOURCE_DIR / name).read_bytes()).hexdigest()
+        assert row["sha256"] == canonical_sha256(SOURCE_DIR / name)
     checked_in_wiki = DATA / "wikipedia-field-guide-fixture.json"
     assert checked_in_wiki.exists()
-    assert hashlib.sha256(checked_in_wiki.read_bytes()).hexdigest() == manifest["sourceFiles"]["wikipedia-field-guide-fixture.json"]["sha256"]
+    assert canonical_sha256(checked_in_wiki) == manifest["sourceFiles"]["wikipedia-field-guide-fixture.json"]["sha256"]
     assert {"au-wlab-v4.3-species.json", "missing-summary.json", "nirbc-abc-2020.json", "nirbc-list-2020.html"} <= set(manifest["sourceFiles"])
 
 
@@ -291,7 +299,7 @@ def test_education_entries_and_honest_svg_art_manifest():
         assert "FIELD GUIDE ART" in text and "PENDING" in text and "No bird or plumage depiction" in text
         assert row["kind"] == "generated_placeholder"
         assert row["license"].startswith("generated placeholder")
-        assert row["hash"] == hashlib.sha256(path.read_bytes()).hexdigest()
+        assert row["hash"] == canonical_sha256(path)
         ET.fromstring(text)
     assert len(list(ART.glob("*.svg"))) == 951
 

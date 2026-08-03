@@ -10,6 +10,7 @@ HTML_PATH = ROOT / "index.html"
 CORE_PATH = ROOT / "academy_treehouse_core.js"
 ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
+ACADEMY_CORE_PIN = "quest-duration-tiers-v211-20260803"
 
 
 def _node_json(source: str):
@@ -198,6 +199,7 @@ function renderBirdExpeditions(){}
 function academyBirdById(id){return gameState.flock.find(b=>b.id===id)||null;}
 function isStarterExpeditionTemplate(id){return ['find_seed','find_coins','branch_run','scavenge'].includes(id);}
 function birdHasActiveExpedition(){return false;}
+function birdAssignedPost(){return null;}
 function warnOrBlockBirdWork(){return true;}
 """ + actual_functions + """
 const roostBuilt=academyBuildBuilding('dorm');
@@ -255,7 +257,6 @@ console.log(JSON.stringify({missingBoth,barracksOnly,established}));
 def test_onboarding_release_is_query_busted_and_offline():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    version = "restored-lost-features-v200-20260802"
-    assert f'academy_treehouse_core.js?v={version}' in html
-    assert f"./academy_treehouse_core.js?v={version}" in sw
+    assert f'academy_treehouse_core.js?v={ACADEMY_CORE_PIN}' in html
+    assert f"./academy_treehouse_core.js?v={ACADEMY_CORE_PIN}" in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

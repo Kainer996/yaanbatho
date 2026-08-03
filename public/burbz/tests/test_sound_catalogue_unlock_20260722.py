@@ -16,6 +16,7 @@ sound detection whose server flag wrongly claims "unmatched".
 """
 import json
 import subprocess
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 
@@ -29,6 +30,7 @@ EXPANSION_MODULES = [
     "au_bird_expansion.js",
     "uk_bird_expansion_3.js",
     "uk_bird_expansion_4.js",
+    "uk_bird_alias_completion_20260803.js",
     "au_bird_expansion_2.js",
     "national_bird_completion_20260715.js",
 ]
@@ -55,6 +57,7 @@ def build_harness_script() -> str:
         "const UK4 = window.BURBZ_UK_BIRD_EXPANSION_4;\n"
         "const AU50 = window.BURBZ_AU_BIRD_EXPANSION_50;\n"
         "const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;\n"
+        "const UK_BIRD_ALIASES = window.BURBZ_UK_BIRD_ALIAS_COMPLETION_20260803;\n"
         "console.warn = () => {};\n"
     )
     stubs = """
@@ -126,6 +129,7 @@ function detectOneShotWithSecondary() {
         function_source(html, name)
         for name in (
             "dietHungerCore",
+            "birdSleepCore",
             "defaultBirdCare",
             "speciesKey",
             "canonicalSpeciesName",
@@ -167,11 +171,24 @@ console.log(JSON.stringify({
 @lru_cache(maxsize=1)
 def harness_results() -> dict:
     script = build_harness_script()
-    script_path = ROOT / "tests" / "_sound_catalogue_unlock_harness.js"
-    script_path.write_text(script, encoding="utf-8")
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".js",
+        prefix="sound_catalogue_unlock_",
+        dir=ROOT / "tests",
+        encoding="utf-8",
+        delete=False,
+    ) as harness:
+        harness.write(script)
+        script_path = Path(harness.name)
     try:
         result = subprocess.run(
-            ["node", script_path.name], cwd=ROOT / "tests", text=True, capture_output=True, timeout=120,
+            ["node", script_path.name],
+            cwd=ROOT / "tests",
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            timeout=120,
         )
     finally:
         script_path.unlink(missing_ok=True)

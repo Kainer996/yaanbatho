@@ -334,8 +334,9 @@ def test_a_secondary_food_is_served_at_half_instead_of_refused():
     assert out["seedsAreSideSnack"] is True
     assert out["seedsAreNotMain"] is True
     assert out["seedsSpent"] == 1
-    # A secondary meal moves an 80-hunger bird to the halfway point.
-    assert out["pigeonFed"] == 30
+    # A secondary meal adds half a Fullness bar, so an 80-hunger bird moves
+    # from 20% to 70% full (80 hunger to 30 hunger).
+    assert out["pigeonFed"] == 50
     # And half the bird XP a main meal pays.
     assert out["pigeonXp"] == round(6 / 2)
 
@@ -346,7 +347,7 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
     assert note, "a side food must explain itself"
     assert "side" in note["title"].lower()
     body = note["body"].lower()
-    assert "fills the fullness bar halfway" in body and "half the xp" in body
+    assert "adds 50 percentage points" in body and "half the xp" in body
     assert "woodpigeon" in body
     # The burst says it too, at a glance.
     assert "SIDE SNACK" in out["sideSnackBurst"]["badge"]
