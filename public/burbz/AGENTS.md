@@ -196,7 +196,7 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
   found the empire layer "very difficult to follow … hard to know on the map
   what [is what]" and asked for a UI-only simplification: keep every mechanic,
   make it obvious where the player, their town and their region are. Release
-  `empire-clarity-v204-20260803`. **No gameplay maths changed** — every edit is
+  `empire-clarity-v205-20260803`. **No gameplay maths changed** — every edit is
   in the render/HTML/CSS layer of `index.html` (plus pins).
   - **Map card**: a `📍 ME` button (frames the player via `frameEmpirePlayer`)
     and a `🗺️ KEY` button (static legend card explaining every marker type +
@@ -233,8 +233,15 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
   - **Terminology**: one noun per level — village, town/city, region
     (County/Duchy/Kingdom as badges). "Province"/"sanctuary" survive only in
     pinned strings and flavour copy.
-  - Tests: all empire suites green untouched except release pins
-    (`RELEASE_PIN` in 7 files + `core_pin`) per convention; sw.js cache got
+  - **Final verification polish**: the idle tax clock now ticks live and
+    includes caravan clocks; future device timestamps cannot wrap the timer.
+    Town/city locator chips frame the whole settlement, far zoom hides detail
+    banners (including them from the keyboard tab order), green territory taps
+    use the same explain-first card as banner taps, and map reframing dismisses
+    stale cards. Tap-card text is escaped at the shared rendering boundary.
+  - Tests: all Empire suites green, including focused v205 clarity contracts.
+    The existing release pins (`RELEASE_PIN` in 7 prior files + `core_pin`)
+    moved per convention; the focused clarity test pins v205 too; sw.js got
     the new lineage segment; `empire_realm_core.js`/`bird_size_core.js`/
     `bird_roles_core.js` cache-busters repointed in both loaders.
 

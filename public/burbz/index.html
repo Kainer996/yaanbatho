@@ -4006,12 +4006,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="bird_size_core.js?v=empire-clarity-v204-20260803"></script>
-<script src="bird_roles_core.js?v=empire-clarity-v204-20260803"></script>
+<script src="bird_size_core.js?v=empire-clarity-v205-20260803"></script>
+<script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=empire-clarity-v204-20260803"></script>
+<script src="empire_realm_core.js?v=empire-clarity-v205-20260803"></script>
 <script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -18854,17 +18854,17 @@ function applyEmpireAtlasPalette(map) {
 function updateEmpireMarkerDetail() {
   if (!empireMap) return;
   const zoom = empireMap.getZoom();
-  const showMarker = zoom >= 1;
+  const showVillages = zoom >= 4;
   const showLabel = zoom >= 8;
   const worldPin = zoom < 5;
   empireMapMarkers.forEach(marker => {
     const element = marker.getElement();
     if (!element) return;
-    element.classList.toggle('is-visible', showMarker);
+    element.classList.toggle('is-visible', showVillages);
     element.classList.toggle('show-label', showLabel);
     element.classList.toggle('is-world-pin', worldPin);
-    element.setAttribute('aria-hidden', showMarker ? 'false' : 'true');
-    element.tabIndex = showMarker ? 0 : -1;
+    element.setAttribute('aria-hidden', showVillages ? 'false' : 'true');
+    element.tabIndex = showVillages ? 0 : -1;
   });
   // Semantic zoom for the standing banners, so the world view never turns to
   // banner soup: far out only region banners (and the player beacon) fly; town
@@ -18877,12 +18877,14 @@ function updateEmpireMarkerDetail() {
     if (!element || !element.classList.contains('is-settlement')) return;
     element.classList.toggle('is-visible', showSettlements);
     element.setAttribute('aria-hidden', showSettlements ? 'false' : 'true');
+    element.tabIndex = showSettlements ? 0 : -1;
   });
   empireHereMarkers.forEach(marker => {
     const element = marker.getElement();
     if (!element || !element.classList.contains('is-frontier')) return;
     element.classList.toggle('is-visible', showFrontier);
     element.setAttribute('aria-hidden', showFrontier ? 'false' : 'true');
+    element.tabIndex = showFrontier ? 0 : -1;
   });
   // The focus buttons double as a "which layer am I looking at" indicator.
   const meBtn = $('empireMapMeBtn'), realmBtn = $('empireMapRealmBtn'), worldBtn = $('empireMapWorldBtn');
@@ -18917,21 +18919,61 @@ function showEmpireMapCard(info) {
   const card = $('empireMapTapCard');
   if (!card || !info) return;
   hideEmpireMapKey();
-  const facts = (info.facts || []).filter(Boolean).map(f => '<span class="empire-tapcard-fact">' + f + '</span>').join('');
+  const actions = Array.isArray(info.actions) ? info.actions.filter(a => a && typeof a.run === 'function') : [];
+  const facts = (Array.isArray(info.facts) ? info.facts : []).filter(Boolean).map(f => '<span class="empire-tapcard-fact">' + escapeHtml(f) + '</span>').join('');
   card.innerHTML = '<div class="empire-tapcard-head">' +
-    '<span class="empire-tapcard-crest">' + (info.crest || '🏰') + '</span>' +
+    '<span class="empire-tapcard-crest">' + escapeHtml(info.crest || '🏰') + '</span>' +
     '<span class="empire-tapcard-titles"><span class="empire-tapcard-name">' + escapeHtml(info.name || '') + '</span>' +
     '<span class="empire-tapcard-kind">' + escapeHtml(info.kind || '') + '</span></span>' +
     '<button type="button" class="empire-tapcard-close" data-tapcard-close aria-label="Close">✕</button></div>' +
     (facts ? '<div class="empire-tapcard-facts">' + facts + '</div>' : '') +
-    '<div class="empire-tapcard-actions">' + (info.actions || []).map((a, i) =>
-      '<button type="button" class="empire-tapcard-btn' + (i > 0 ? ' secondary' : '') + '" data-tapcard-action="' + i + '">' + a.label + '</button>').join('') +
+    '<div class="empire-tapcard-actions">' + actions.map((a, i) =>
+      '<button type="button" class="empire-tapcard-btn' + (i > 0 ? ' secondary' : '') + '" data-tapcard-action="' + i + '">' + escapeHtml(a.label || '') + '</button>').join('') +
     '</div>';
   card.querySelector('[data-tapcard-close]')?.addEventListener('click', ev => { ev.stopPropagation(); SFX.tap(); hideEmpireMapCard(); });
-  (info.actions || []).forEach((a, i) => {
+  actions.forEach((a, i) => {
     card.querySelector('[data-tapcard-action="' + i + '"]')?.addEventListener('click', ev => { ev.stopPropagation(); SFX.tap(); hideEmpireMapCard(); a.run(); });
   });
   card.classList.add('show');
+}
+
+// One source of truth for liberated-village tap cards. Both the banner and its
+// green territory use it, so a near-miss beside the pin still explains the
+// place instead of surprise-travelling to the 3D village.
+function showEmpireVillageMapCard(village) {
+  if (!village) return;
+  const snap = villageEconomySnapshot(village);
+  const settle = empireSettlementOfSeed(village.seed);
+  showEmpireMapCard({
+    crest: empireVillageCrest(village.seed),
+    name: village.name,
+    kind: 'Your village' + (settle ? ' · part of the ' + settle.label : ''),
+    facts: [
+      snap ? (snap.pop > 0 ? '👥 ' + snap.pop + ' ' + happinessFace(snap.happiness) : '🏚️ empty — build homes') : '',
+      snap && snap.pop > 0 ? '+' + snap.taxes + ' 🪙 / 8h' : '',
+      villageConstructionFor(village) ? '🏗️ building' : ''
+    ],
+    actions: [{ label: '🕊️ TRAVEL & GOVERN', run: () => openEmpireVillage(village.seed) }]
+  });
+}
+
+function empireVillageRecordBySeed(seed) {
+  const numeric = Number(seed);
+  if (!Number.isFinite(numeric) || numeric < 0) return null;
+  const key = String(numeric >>> 0);
+  return empireVillages().find(v => String(v.seed >>> 0) === key) || null;
+}
+
+function empireTerritoryVillageAtPoint(map, event) {
+  try {
+    if (!event || !event.point || !map.getLayer('empire-territory-fill')) return null;
+    const features = map.queryRenderedFeatures(event.point, { layers:['empire-territory-fill'] });
+    for (const feature of features) {
+      const village = empireVillageRecordBySeed(feature && feature.properties && feature.properties.seed);
+      if (village) return village;
+    }
+  } catch (e) {}
+  return null;
 }
 
 function wrappedLongitudeNear(lon, referenceLon) {
@@ -19139,6 +19181,8 @@ function requestEmpireHomeFix() {
 const EMPIRE_PLAYER_ZOOM = 11.1;
 function frameEmpirePlayer() {
   if (!empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
   const here = empirePlayerPosition();
   if (!here) { frameEmpireTerritory(); return; }
   empireMap.easeTo({ center:[here.lon, here.lat], zoom:EMPIRE_PLAYER_ZOOM, duration:900 });
@@ -19146,6 +19190,8 @@ function frameEmpirePlayer() {
 }
 function frameEmpireTerritory() {
   if (!empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
   const core = window.BurbzEmpireMapCore;
   const villages = empireMappableVillages();
   const bounds = core && core.claimBounds ? core.claimBounds(villages) : null;
@@ -19163,6 +19209,8 @@ function frameEmpireTerritory() {
 
 function showEmpireWorld() {
   if (!empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
   empireMapUserAdjusted = true; // an explicit world view must not be recentred by a late location fix
   empireMap.easeTo({ center:[0, 22], zoom:1.45, duration:1000 });
 }
@@ -19170,6 +19218,8 @@ function showEmpireWorld() {
 function focusEmpireVillage(seed) {
   const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
   if (!village || !window.BurbzEmpireMapCore || !window.BurbzEmpireMapCore.validClaim(village) || !empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
   empireMap.flyTo({ center:[Number(village.lon), Number(village.lat)], zoom:Math.max(11.5, empireMap.getZoom()), duration:850 });
 }
 
@@ -19179,6 +19229,8 @@ function frameEmpireRegion(regionId) {
   const region = empireRegionById(regionId);
   const core = window.BurbzEmpireMapCore;
   if (!region || !core || !empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
   const card = $('empireMapCard');
   if (card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
   const bounds = core.claimBounds(region.villages);
@@ -19197,6 +19249,8 @@ function frameEmpireSettlement(settlementId) {
   const settlement = empireSettlementById(settlementId);
   const core = window.BurbzEmpireMapCore;
   if (!settlement || !core || !empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
   const card = $('empireMapCard');
   if (card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
   const bounds = core.claimBounds(settlement.villages);
@@ -19269,19 +19323,7 @@ function refreshEmpireMap(options = {}) {
     el.addEventListener('click', ev => {
       ev.stopPropagation();
       SFX.tap();
-      const snap = villageEconomySnapshot(village);
-      const settle = empireSettlementOfSeed(village.seed);
-      showEmpireMapCard({
-        crest: empireVillageCrest(village.seed),
-        name: village.name,
-        kind: 'Your village' + (settle ? ' · part of the ' + settle.label : ''),
-        facts: [
-          snap ? (snap.pop > 0 ? '👥 ' + snap.pop + ' ' + happinessFace(snap.happiness) : '🏚️ empty — build homes') : '',
-          snap && snap.pop > 0 ? '+' + snap.taxes + ' 🪙 / 8h' : '',
-          villageConstructionFor(village) ? '🏗️ building' : ''
-        ],
-        actions: [{ label: '🕊️ TRAVEL & GOVERN', run: () => openEmpireVillage(village.seed) }]
-      });
+      showEmpireVillageMapCard(village);
     });
     const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(village.lon), Number(village.lat)]).addTo(empireMap);
     empireMapMarkers.push(marker);
@@ -19331,7 +19373,7 @@ function refreshEmpireMap(options = {}) {
         kind: region.tierLabel + ' — a region of your empire',
         facts: [
           '🏡 ' + region.villageCount + ' villages',
-          '👑 capital ' + escapeHtml(region.capitalName),
+          '👑 capital ' + region.capitalName,
           '+' + Math.round(((rc && rc.REGION_TAX_BONUS) || 0.15) * 100) + '% unity taxes'
         ],
         actions: [
@@ -19424,7 +19466,15 @@ function initialiseEmpireMap() {
     });
     empireMap = map;
     map.on('dragstart', () => { empireMapUserAdjusted = true; hideEmpireMapCard(); });
-    map.on('click', () => { hideEmpireMapCard(); hideEmpireMapKey(); });
+    map.on('click', event => {
+      // Territory and banner taps share the same explain-first village card.
+      // Handle the rendered fill here instead of registering a second click
+      // listener whose ordering would vary across MapLibre releases.
+      const village = empireTerritoryVillageAtPoint(map, event);
+      if (village) { SFX.tap(); showEmpireVillageMapCard(village); return; }
+      hideEmpireMapCard();
+      hideEmpireMapKey();
+    });
     map.on('zoomstart', event => { if (event && event.originalEvent) empireMapUserAdjusted = true; });
     let settled = false;
     let loadTimeout = null;
@@ -19445,14 +19495,10 @@ function initialiseEmpireMap() {
         const fogCanvas = $('empireFogCanvas');
         if (fogCanvas) map.getCanvasContainer().appendChild(fogCanvas);
         // Realm territory: each liberated province paints its lands in the
-        // realm's green, Crusader-map style. The fill is tappable — touching
-        // your territory travels to its 3D village.
+        // realm's green, Crusader-map style. The fill is tappable and opens
+        // the same explain-first card as its village banner.
         map.addSource('empire-territory', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territory', paint:{ 'fill-color':'#7ed983', 'fill-opacity':.18 } });
-        map.on('click', 'empire-territory-fill', event => {
-          const feature = event.features && event.features[0];
-          if (feature && feature.properties && feature.properties.seed) openEmpireVillage(feature.properties.seed);
-        });
         map.on('mouseenter', 'empire-territory-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'empire-territory-fill', () => { map.getCanvas().style.cursor = ''; });
         map.addSource('empire-claims', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
@@ -19564,18 +19610,64 @@ function empireHomeVillageRec() {
   }
   return villages.slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0))[0];
 }
-// Milliseconds until the next tax cycle lands anywhere in the realm — shown on
-// the collect button while nothing is banked, so "check back later" becomes a
-// real countdown instead of a shrug.
-function empireNextTributeCountdownMs() {
-  const now = Date.now();
+// Milliseconds until one clock's NEXT cycle. A future timestamp can happen
+// after the device clock moves backwards; do not fold it through signed `%`
+// and accidentally promise taxes a whole cycle (or several) too early.
+function empireCycleCountdownMs(baseValue, nowValue) {
+  const base = Number(baseValue);
+  const now = Number(nowValue);
+  if (!Number.isFinite(base) || !Number.isFinite(now)) return null;
+  if (base > now) return (base - now) + EMPIRE_TRIBUTE_INTERVAL_MS;
+  const remainder = (now - base) % EMPIRE_TRIBUTE_INTERVAL_MS;
+  return remainder === 0 ? EMPIRE_TRIBUTE_INTERVAL_MS : EMPIRE_TRIBUTE_INTERVAL_MS - remainder;
+}
+// Milliseconds until the next tax OR caravan cycle lands anywhere in the
+// shared realm strongbox. Regional collections can desynchronise village and
+// trade clocks, so both must compete for the earliest countdown.
+function empireNextTributeCountdownMs(nowValue) {
+  const suppliedNow = Number(nowValue);
+  const now = Number.isFinite(suppliedNow) ? suppliedNow : Date.now();
   let next = Infinity;
+  const epochMs = value => {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    const parsed = typeof value === 'string' ? Date.parse(value) : NaN;
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const consider = (lastAt, createdAt) => {
+    const base = epochMs(lastAt) ?? epochMs(createdAt) ?? now;
+    const remaining = empireCycleCountdownMs(base, now);
+    if (remaining !== null && remaining > 0 && remaining < next) next = remaining;
+  };
   empireVillages().forEach(v => {
-    const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
-    const remaining = EMPIRE_TRIBUTE_INTERVAL_MS - ((now - base) % EMPIRE_TRIBUTE_INTERVAL_MS);
-    if (remaining > 0 && remaining < next) next = remaining;
+    consider(v.lastTributeAt, v.claimedAt);
   });
+  if (realmCore()) empireTradeRouteRecords().forEach(({ rec }) => consider(rec && rec.lastTradeAt, rec && rec.openedAt));
   return Number.isFinite(next) ? next : null;
+}
+// Keep the disabled strongbox button honest while the Empire tab stays open.
+// The target time lives on the fresh DOM node, so a wholesale ledger re-render
+// updates the existing timer without stacking another interval.
+let empireTributeCountdownTimer = null;
+function stopEmpireTributeCountdownTicker() {
+  if (empireTributeCountdownTimer) clearInterval(empireTributeCountdownTimer);
+  empireTributeCountdownTimer = null;
+}
+function ensureEmpireTributeCountdownTicker() {
+  if (empireTributeCountdownTimer) return;
+  empireTributeCountdownTimer = setInterval(() => {
+    const label = document.querySelector('[data-empire-tribute-countdown]');
+    if (!label || currentScreen !== 'village') { stopEmpireTributeCountdownTicker(); return; }
+    const target = Number(label.dataset.empireTributeAt);
+    const remaining = target - Date.now();
+    if (!Number.isFinite(target)) { stopEmpireTributeCountdownTicker(); return; }
+    if (remaining <= 0) {
+      stopEmpireTributeCountdownTicker();
+      renderEmpirePanel();
+      return;
+    }
+    label.textContent = '— NEXT IN ' + formatBuildCountdown(remaining);
+  }, 1000);
 }
 // ============================================================================
 // REALMS & TRADE — the Crusader-Kings endgame. Liberate enough villages close
@@ -20515,7 +20607,7 @@ function renderEmpirePanel() {
     const homeRegion = home ? empireRegionOfSeed(home.seed) : null;
     locatorHtml = '<div class="empire-locator">' +
       '<button type="button" class="empire-locator-chip is-you" data-action="locator-me"><span class="empire-locator-label">📍 You</span><span class="empire-locator-value">Show on map</span></button>' +
-      (home ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"><span class="empire-locator-label">' + (homeSettle ? homeSettle.icon + ' Your ' + (homeSettle.tier === 'city' ? 'city' : 'town') : '🏡 Your village') + '</span><span class="empire-locator-value">' + escapeHtml(homeSettle ? homeSettle.name : home.name) + '</span></button>' : '') +
+      (home ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"' + (homeSettle ? ' data-settlement="' + escapeHtml(homeSettle.id) + '"' : '') + '><span class="empire-locator-label">' + (homeSettle ? homeSettle.icon + ' Your ' + (homeSettle.tier === 'city' ? 'city' : 'town') : '🏡 Your village') + '</span><span class="empire-locator-value">' + escapeHtml(homeSettle ? homeSettle.name : home.name) + '</span></button>' : '') +
       (homeRegion
         ? '<button type="button" class="empire-locator-chip" data-action="locator-region" data-region="' + escapeHtml(homeRegion.id) + '"><span class="empire-locator-label">' + homeRegion.tierIcon + ' Your region</span><span class="empire-locator-value">' + escapeHtml(homeRegion.name) + '</span></button>'
         : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🏰 Your region</span><span class="empire-locator-value">None founded yet</span></div>') +
@@ -20528,7 +20620,9 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages grow into a town</b> (+10% taxes) — and <b>3 neighbouring towns rise into a city</b> (+25%). This happens by itself as you free villages close together.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>3 villages within 150 km unite into a region</b> — a County, then a Duchy, then a Kingdom as it grows. Regions pay +15% unity taxes and are run from their own Region Hall.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🕊️</span><span><b>Two regions can trade.</b> Sky-caravans fly between their capitals and pay into every tax day. The farther apart, the richer the cargo.</span></div>') : '';
-  const nextMs = hasTribute ? null : empireNextTributeCountdownMs();
+  const tributeNow = Date.now();
+  const nextMs = hasTribute ? null : empireNextTributeCountdownMs(tributeNow);
+  const nextTributeAt = nextMs !== null ? tributeNow + nextMs : null;
   panel.innerHTML = locatorHtml +
     '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank">' + escapeHtml(empireCrownTitle()) + '</div></div>' +
     (count ? '<div class="empire-stats-row">' +
@@ -20537,7 +20631,7 @@ function renderEmpirePanel() {
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxesPerCycle + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
       '</div>' : '') +
-    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextMs ? ' — NEXT IN ' + formatBuildCountdown(nextMs) : '')) + '</button>' : '') +
+    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— NEXT IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
     (count
       ? empireDrawerHTML('villages', true, '🏡', 'YOUR VILLAGES', 'Tap a village to visit and govern it', count, '<div class="empire-village-list">' + rows + '</div>')
       : '<div class="empire-onboarding"><div class="empire-onboarding-title">🕊️ FREE YOUR FIRST VILLAGE</div>' +
@@ -20555,12 +20649,20 @@ function renderEmpirePanel() {
   // Locator taps point at the map: scroll it into view, then frame the target.
   const scrollMapIntoView = () => $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' });
   panel.querySelector('[data-action="locator-me"]')?.addEventListener('click', () => { SFX.tap(); scrollMapIntoView(); empireMapUserAdjusted = true; frameEmpirePlayer(); });
-  panel.querySelector('[data-action="locator-home"]')?.addEventListener('click', ev => { SFX.tap(); scrollMapIntoView(); focusEmpireVillage(ev.currentTarget.dataset.seed); });
+  panel.querySelector('[data-action="locator-home"]')?.addEventListener('click', ev => {
+    SFX.tap();
+    scrollMapIntoView();
+    const settlementId = ev.currentTarget.dataset.settlement;
+    if (settlementId) frameEmpireSettlement(settlementId);
+    else focusEmpireVillage(ev.currentTarget.dataset.seed);
+  });
   panel.querySelector('[data-action="locator-region"]')?.addEventListener('click', ev => { SFX.tap(); frameEmpireRegion(ev.currentTarget.dataset.region); });
   // Drawers remember whether the player left them open, across re-renders.
   panel.querySelectorAll('details[data-empire-drawer]').forEach(drawer => {
     drawer.addEventListener('toggle', () => { empireDrawerOpenState[drawer.dataset.empireDrawer] = drawer.open; });
   });
+  if (nextTributeAt) ensureEmpireTributeCountdownTicker();
+  else stopEmpireTributeCountdownTicker();
 }
 
 // ============================================================================
@@ -29611,7 +29713,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-clarity-v204-20260803';
+const BURBZ_BUILD = 'empire-clarity-v205-20260803';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

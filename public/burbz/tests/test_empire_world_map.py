@@ -82,7 +82,7 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert 'id="empireFogCanvas"' in html
     assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
-    assert "showMarker = zoom >= 1" in html
+    assert "showVillages = zoom >= 4" in html
     assert "is-visible" in html
 
 
@@ -128,9 +128,17 @@ def test_world_palette_is_a_medieval_atlas_with_town_names_and_no_roads():
     assert "const BURBZ_CACHE = 'burbz-" in SW.read_text(encoding="utf-8")
 
 
-def test_liberated_icons_remain_visible_at_world_zoom():
+def test_semantic_zoom_keeps_world_view_clear_and_hidden_markers_unfocusable():
     html = HTML.read_text(encoding="utf-8")
-    assert "const showMarker = zoom >= 1" in html
+    detail_start = html.index("function updateEmpireMarkerDetail(")
+    detail_end = html.index("\n// Tap cards:", detail_start)
+    detail = html[detail_start:detail_end]
+    assert "const showVillages = zoom >= 4" in detail
+    assert "const showSettlements = zoom >= 4" in detail
+    assert "const showFrontier = zoom >= 6.5" in detail
+    assert "element.tabIndex = showVillages ? 0 : -1" in detail
+    assert "element.tabIndex = showSettlements ? 0 : -1" in detail
+    assert "element.tabIndex = showFrontier ? 0 : -1" in detail
     assert "const worldPin = zoom < 5" in html
     assert "is-world-pin" in html
     assert ".empire-map-marker.is-world-pin" in html
@@ -156,6 +164,18 @@ def test_liberated_darkness_windows_union_into_one_soft_edged_reveal():
     assert "map.addSource('empire-territory'" in html
     assert "map.addLayer({ id:'empire-territory-fill'" in html
     assert "map.addLayer({ id:'empire-territory-border'" not in html
+    resolver_start = html.index("function empireTerritoryVillageAtPoint(")
+    resolver_end = html.index("\nfunction wrappedLongitudeNear", resolver_start)
+    resolver = html[resolver_start:resolver_end]
+    assert "queryRenderedFeatures" in resolver
+    assert "empireVillageRecordBySeed" in resolver
+    init_start = html.index("function initialiseEmpireMap(")
+    click_start = html.index("map.on('click', event => {", init_start)
+    click_end = html.index("map.on('zoomstart'", click_start)
+    territory_click = html[click_start:click_end]
+    assert "empireTerritoryVillageAtPoint(map, event)" in territory_click
+    assert "showEmpireVillageMapCard(village)" in territory_click
+    assert "openEmpireVillage(" not in territory_click
 
 
 def test_empire_copy_describes_liberation_not_conquest_or_gold_capture():

@@ -21,7 +21,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "empire-clarity-v204-20260803"
+RELEASE_PIN = "empire-clarity-v205-20260803"
 
 
 def run_node(source: str) -> dict:
