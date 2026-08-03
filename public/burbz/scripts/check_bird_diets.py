@@ -52,6 +52,20 @@ DIET_VERSION = "diet-generalists-20260729"
 # These are deliberately narrow: an omnivorous label does not make every
 # ingredient safe for every bird, and specialists keep their exact menu.
 SPECIES_DIET_REFINEMENTS = {
+    "Dendrocopos major": {
+        # BirdFuncDat's broad Diet-Vend bucket means warm-blooded vertebrate prey;
+        # for this species BTO and Woodland Trust identify eggs and young birds,
+        # not small mammals. Carrion is omitted from the playable menu because
+        # neither British field guide treats it as a meaningful feeding category.
+        "remove": ["small_mammals", "carrion"],
+        "secondary": ["small_birds"],
+        "scores": {"small_birds": 10},
+        "source": "BTO + Woodland Trust",
+        "education": (
+            " BTO and Woodland Trust identify insects and larvae as the main food, "
+            "with tree seeds plus the eggs and young of smaller birds also eaten."
+        ),
+    },
     "Corvus corone": {
         "secondary": ["worms", "fruit_berries", "fish", "small_birds"],
         "education": (
@@ -413,6 +427,12 @@ def apply_species_refinement(
     secondary: list[str],
 ) -> tuple[list[str], list[str], dict[str, int | float], str]:
     refinement = SPECIES_DIET_REFINEMENTS.get(scientific, {})
+    for removed_family in refinement.get("remove", []):
+        scores.pop(removed_family, None)
+        primary = [family for family in primary if family != removed_family]
+        secondary = [family for family in secondary if family != removed_family]
+    for refined_family, refined_score in refinement.get("scores", {}).items():
+        scores[refined_family] = clean_percent(refined_score)
     for refined_family in refinement.get("secondary", []):
         if refined_family not in primary and refined_family not in secondary:
             secondary.append(refined_family)
@@ -603,6 +623,7 @@ def source_record(row: dict[str, str]) -> dict[str, Any]:
     primary, secondary, scores, refinement_education = apply_species_refinement(
         str(row.get("Scientific") or ""), scores, primary, secondary
     )
+    refinement = SPECIES_DIET_REFINEMENTS.get(str(row.get("Scientific") or ""), {})
     return {
         "i": "birdfuncdat-" + str(row.get("SpecID") or profile_id_for_scientific(row.get("Scientific") or "")),
         "n": row.get("English"),
@@ -616,6 +637,7 @@ def source_record(row: dict[str, str]) -> dict[str, Any]:
         "secondary": secondary,
         "prep": prep_by_family(primary, secondary),
         "e": refinement_education,
+        "x": refinement.get("source"),
     }
 
 
@@ -703,14 +725,14 @@ def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             # Record a stable, repo-relative path so the artifact is byte-identical
             # no matter where the oracle was read from (/tmp vs committed cache).
             # The bytes are pinned by sha256 below, so the location is cosmetic.
-            "path": str(CACHED_SOURCE.relative_to(ROOT)),
+            "path": CACHED_SOURCE.relative_to(ROOT).as_posix(),
             "sha256": sha,
             "rowCount": len(rows),
             "rawParsedRowCount": raw_row_count,
             "usableScientificRowCount": len(rows),
         },
         "profiles": {
-            "path": str(PROFILES_PATH.relative_to(ROOT)),
+            "path": PROFILES_PATH.relative_to(ROOT).as_posix(),
             "count": len(profiles),
             "uniqueIds": len(set(profile_ids)),
             "uniqueScientificNames": len(set(profile_scientific)),

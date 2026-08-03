@@ -24,6 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "settlement-tiers-v203-20260803"
+CURRENT_BUILD = "uk-bird-alias-completion-v216-20260803"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -273,23 +274,23 @@ def test_the_feed_surfaces_tell_the_player_about_table_service():
 
 
 # ---------------------------------------------------------------------------
-# 4. The chef stands in the Kitchen as a background-free sprite
+# 4. The chef appears calmly in the Kitchen's assigned-bird grid
 # ---------------------------------------------------------------------------
 
-def test_the_appointed_chef_is_drawn_on_the_kitchen_stage_as_a_cutout_sprite():
+def test_the_appointed_chef_is_drawn_in_the_kitchen_assignment_grid():
     html = HTML.read_text(encoding="utf-8")
-    sprite = function_source(html, "kitchenChefSpriteHTML")
-    # Only the Kitchen, only when staffed, and always the transparent
-    # bird-only art — never the framed painting.
-    assert "if (room !== 'kitchen') return '';" in sprite
-    assert "if (!post.staffed || !post.bird) return '';" in sprite
-    assert "birdOnlyImgHTML(post.bird, 'kitchen-chef-sprite')" in sprite
-    assert "Head Chef" in sprite
+    grid = function_source(html, "roomBirdGridHTML")
+    # Posted room staff are included even when their home room is elsewhere,
+    # using the transparent bird-only artwork rather than a wandering sprite.
+    assert "rolePostState('academy', room)" in grid
+    assert "post.staffed && post.bird" in grid
+    assert "birdOnlyImgHTML(bird, 'room-bird-grid-art')" in grid
+    assert "entry.role" in grid
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "+ kitchenChefSpriteHTML(room) +" in render
-    # The sprite has real styling on the room stage.
-    assert ".kitchen-chef-actor { position:absolute;" in html
-    assert ".kitchen-chef-sprite {" in html and "object-fit:contain" in html
+    assert "roomBirdGridHTML(birds, room)" in render
+    assert "kitchenChefSpriteHTML(room)" not in render
+    assert ".room-bird-grid { position:absolute;" in html
+    assert ".room-bird-grid-art" in html and "object-fit:contain" in html
 
 
 # ---------------------------------------------------------------------------
@@ -300,8 +301,8 @@ def test_release_is_versioned_for_service_worker_self_update():
     sw = SW.read_text(encoding="utf-8")
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(RELEASE_PIN)
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML.read_text(encoding="utf-8")
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML.read_text(encoding="utf-8")
     # The edited roles core ships under the new tag everywhere it is loaded.
     assert f"'./bird_roles_core.js?v={RELEASE_PIN}'" in sw
     assert f'src="bird_roles_core.js?v={RELEASE_PIN}"' in HTML.read_text(encoding="utf-8")

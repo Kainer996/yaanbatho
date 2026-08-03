@@ -210,7 +210,8 @@ def test_browser_activity_paths_use_transactions_readiness_and_completed_reserva
     # ...and a hungry Merlin is never grounded: the errand just takes twice as
     # long, so the Kingdom keeps moving with an empty larder.
     assert "merlinExpeditionSlowFactor()" in start_exp
-    assert "{ slowFactor }" in start_exp
+    assert "slowFactor," in start_exp
+    assert "durationMinutes: loadout && loadout.durationMinutes" in start_exp
     assert "warnOrBlockBirdWork(bird, 'training')" in start_training
     assert "advanceBirdExpedition" not in has_exp
     assert "advanceTrainingSession" not in has_training

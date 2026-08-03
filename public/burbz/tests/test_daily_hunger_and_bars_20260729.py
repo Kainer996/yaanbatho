@@ -20,25 +20,45 @@ def function_source(html: str, name: str, next_name: str) -> str:
     return html[start:end]
 
 
-def test_primary_meal_fills_completely_and_secondary_meal_fills_halfway():
+def test_two_side_snacks_fill_completely_and_every_accepted_feed_spends_one_ration():
     out = run_node(
         """
 const D = require('./bird_diet_hunger_core.js');
 const target = { birdId:'goldie', commonName:'European Goldfinch', scientificName:'Carduelis carduelis' };
-function state(food) { return { flock:[{ id:'goldie', commonName:target.commonName, scientificName:target.scientificName, care:{ hunger:95, lastHungerAt:1000 } }], inventory:{ larder:{ [food]:1 } }, pantry:{} }; }
+function state(food, hunger=100, count=2) { return { flock:[{ id:'goldie', commonName:target.commonName, scientificName:target.scientificName, care:{ hunger, lastHungerAt:2000 } }], inventory:{ larder:{ [food]:count } }, pantry:{} }; }
 const primary = D.applyFeedingTransaction(state('sunflower_seeds'), target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary', now:2000 });
-const secondary = D.applyFeedingTransaction(state('mealworm_scoop'), target, { ingredientId:'mealworm_scoop', prep:'fresh' }, { transactionId:'secondary', now:2000 });
-primary.state.inventory.larder.sunflower_seeds = 1;
-const earlyTopUp = D.applyFeedingTransaction(primary.state, target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary-too-soon', now:2000 + 12 * 60 * 60 * 1000 });
-earlyTopUp.state.inventory.larder.sunflower_seeds = 1;
-const nextDay = D.applyFeedingTransaction(earlyTopUp.state, target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary-next-day', now:2000 + 24 * 60 * 60 * 1000 + 1 });
-console.log(JSON.stringify({ primary:{ ok:primary.ok, verdict:primary.compatibility.verdict, after:primary.after }, secondary:{ ok:secondary.ok, verdict:secondary.compatibility.verdict, after:secondary.after }, earlyTopUp:{ ok:earlyTopUp.ok, after:earlyTopUp.after, consumed:earlyTopUp.consumed }, nextDay:{ ok:nextDay.ok, after:nextDay.after } }));
+const firstSide = D.applyFeedingTransaction(state('mealworm_scoop'), target, { ingredientId:'mealworm_scoop', prep:'fresh' }, { transactionId:'side-1', now:2000 });
+const secondSide = D.applyFeedingTransaction(firstSide.state, target, { ingredientId:'mealworm_scoop', prep:'fresh' }, { transactionId:'side-2', now:2001 });
+const sideFromMostlyFull = D.applyFeedingTransaction(state('mealworm_scoop', 25, 1), target, { ingredientId:'mealworm_scoop', prep:'fresh' }, { transactionId:'side-mostly-full', now:2000 });
+const primaryFromHalf = D.applyFeedingTransaction(state('sunflower_seeds', 50, 1), target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary-half', now:2000 });
+const primaryFromFull = D.applyFeedingTransaction(state('sunflower_seeds', 0, 1), target, { ingredientId:'sunflower_seeds', prep:'husked' }, { transactionId:'primary-full', now:2000 });
+console.log(JSON.stringify({
+  primary:{ ok:primary.ok, after:primary.after, left:primary.state.inventory.larder.sunflower_seeds },
+  firstSide:{ ok:firstSide.ok, after:firstSide.after, left:firstSide.state.inventory.larder.mealworm_scoop },
+  secondSide:{ ok:secondSide.ok, after:secondSide.after, left:secondSide.state.inventory.larder.mealworm_scoop },
+  sideFromMostlyFull:{ ok:sideFromMostlyFull.ok, after:sideFromMostlyFull.after, left:sideFromMostlyFull.state.inventory.larder.mealworm_scoop },
+  primaryFromHalf:{ ok:primaryFromHalf.ok, after:primaryFromHalf.after, left:primaryFromHalf.state.inventory.larder.sunflower_seeds },
+  primaryFromFull:{ ok:primaryFromFull.ok, after:primaryFromFull.after, left:primaryFromFull.state.inventory.larder.sunflower_seeds }
+}));
 """
     )
-    assert out["primary"] == {"ok": True, "verdict": "primary", "after": 0}
-    assert out["secondary"] == {"ok": True, "verdict": "secondary", "after": 50}
-    assert out["earlyTopUp"] == {"ok": True, "after": 0, "consumed": {"inventory.larder.sunflower_seeds": 1}}
-    assert out["nextDay"] == {"ok": True, "after": 0}
+    assert out["primary"] == {"ok": True, "after": 0, "left": 1}
+    assert out["firstSide"] == {"ok": True, "after": 50, "left": 1}
+    assert out["secondSide"] == {"ok": True, "after": 0, "left": 0}
+    assert out["sideFromMostlyFull"] == {"ok": True, "after": 0, "left": 0}
+    assert out["primaryFromHalf"] == {"ok": True, "after": 0, "left": 0}
+    assert out["primaryFromFull"] == {"ok": True, "after": 0, "left": 0}
+
+
+def test_feed_sheet_explains_stackable_side_snacks_and_full_ration_spend():
+    html = INDEX.read_text(encoding="utf-8")
+    sheet = function_source(html, "renderFeedSheet", "feedFlyBirdToFood")
+    explainer = function_source(html, "feedSideSnackExplainer", "feedEntryForKey")
+    assert "adds 50 percentage points of Fullness" in sheet
+    assert "two side snacks fill an empty bar" in sheet
+    assert "every accepted serving uses one complete ingredient" in sheet
+    assert "adds 50 percentage points to the Fullness bar" in explainer
+    assert "fills up to halfway" not in sheet
 
 
 def test_fullness_drains_evenly_over_one_day_and_activity_does_not_create_extra_meals():
@@ -93,12 +113,26 @@ def test_hunger_bar_is_green_when_full_and_red_when_empty():
     assert ".bird-hunger-fill { height:100%; min-width:4px;" in html
 
 
+def test_battle_cards_show_fullness_separately_from_health():
+    html = INDEX.read_text(encoding="utf-8")
+    battle = function_source(html, "renderBattleSelect", "battlePickToggle")
+    assert "const fullnessPct = Math.round(clamp(100 - readiness.status.hunger" in battle
+    assert 'data-fullness="' in battle
+    assert "<span>HP</span>" in battle
+    assert "<span>Full</span>" in battle
+    assert "width:' + fullnessPct + '%" in battle
+    assert ".pick-card .pk-meter-row" in html
+
+
 def test_current_diet_and_hunger_release_is_query_busted_and_precached():
-    marker = "reconciled-release-v170-20260729"
     html = INDEX.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert marker in sw
-    for asset in ("bird_diet_hunger_core.js", "merlin_companion_core.js"):
+    versions = {
+        "bird_diet_hunger_core.js": "real-walk-nearby-quests-v215-20260803",
+        "merlin_companion_core.js": "reconciled-release-v170-20260729",
+    }
+    assert "two-side-snacks-v205-20260803" in sw
+    for asset, marker in versions.items():
         versioned = f"{asset}?v={marker}"
         assert versioned in html
         assert f"'./{versioned}'" in sw

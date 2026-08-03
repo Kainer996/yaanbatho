@@ -62,7 +62,7 @@ def test_chain_covers_the_whole_core_loop():
         # …plus the mechanics the extended chain teaches, one by one.
         "expedition_claimed", "feed_correct", "build_training",
         "training_claimed", "build_quest_roost", "gear_equipped",
-        "build_kitchen", "diet_badge", "build_hospital", "station_hospital",
+        "build_kitchen", "proper_meal_fed", "build_hospital", "station_hospital",
         "walk_completed", "bird_quiz_correct", "gear_crafted",
         "build_crowbar", "merlin_clue", "build_workshop",
     ):

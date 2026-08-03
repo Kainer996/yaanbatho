@@ -29,6 +29,7 @@ EXPANSION_MODULES = [
     "au_bird_expansion.js",
     "uk_bird_expansion_3.js",
     "uk_bird_expansion_4.js",
+    "uk_bird_alias_completion_20260803.js",
     "au_bird_expansion_2.js",
     "national_bird_completion_20260715.js",
 ]
@@ -55,6 +56,7 @@ def build_harness_script() -> str:
         "const UK4 = window.BURBZ_UK_BIRD_EXPANSION_4;\n"
         "const AU50 = window.BURBZ_AU_BIRD_EXPANSION_50;\n"
         "const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715;\n"
+        "const UK_BIRD_ALIASES = window.BURBZ_UK_BIRD_ALIAS_COMPLETION_20260803;\n"
         "console.warn = () => {};\n"
     )
     stubs = """
@@ -126,6 +128,7 @@ function detectOneShotWithSecondary() {
         function_source(html, name)
         for name in (
             "dietHungerCore",
+            "birdSleepCore",
             "defaultBirdCare",
             "speciesKey",
             "canonicalSpeciesName",
