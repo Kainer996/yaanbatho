@@ -6,7 +6,7 @@ importScripts('./au_bird_expansion_2.js?v=au50-source-backed-r2-20260715');
 importScripts('./national_bird_completion_20260715.js?v=national-completion-20260715');
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 
-const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-quest-alignment-authority-v146-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-bird-families-mega-v1-20260728-photo-locality-v153-20260728-tutorial-copy-cleanup-v154-20260729-camera-result-overlap-v155-20260729-kitchen-quest-guide-v156-20260729-sound-local-consensus-v157-20260729-kitchen-feed-sheet-v158-20260729-simple-locality-v160-20260729-recruit-card-name-v161-20260729-daily-hunger-bars-v162-20260729-birdex-card-names-v163-20260729-birdex-no-feed-v164-20260729-quest-drawers-closed-v165-20260729-generalist-diets-v166-20260729-generated-art-ui-v153-20260729-nickname-line-v167-20260729-intro-two-part-video-v154-20260729-academy-alive-v153-20260729-reconciled-release-v170-20260729-tutorial-chunked-progress-v171-20260729-birdnet-accuracy-v171-20260729-tutorial-merlin-feed-fix-v172-20260730-tutorial-merlin-spotlight-fix-v173-20260730-generated-art-ui-restore-v174-20260730-kitchen-no-duplicate-companions-v175-20260730-companion-feeding-only-v176-20260730-intro-hardening-v177-20260730-companion-always-top-up-v178-20260730-academy-wingbeats-v179-20260730-academy-3d-v180-20260730-empire-silent-v181-20260730-academy-canopy-v182-20260730-battle-flow-v183-20260731-quest-map-pan-v184-20260731-academy-detail-v184-20260731-academy-no-birds-v185-20260731-show-quests-close-v186-20260731-map-music-fade-v187-20260731-begin-quest-loop-authority-v188-20260731-empire-realms-trade-v189-20260731-global-money-hud-v190-20260731-training-claim-terminal-v191-20260801-remove-dead-map-icons-v192-20260801-empire-here-regions-v193-20260801-back-stays-in-game-v194-20260801-back-guard-gesture-v195-20260802-empire-player-start-sound-shelf-v196-20260802-merlin-bond-meter-v197-20260802-academy-library-v198-20260802-liberation-hides-league-v199-20260802-restored-lost-features-v200-20260802-bird-size-roles-v201-20260802-chef-bulk-feeding-v202-20260802-settlement-tiers-v203-20260803-manga-warrior-habitats-v204-20260803';
+const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-quest-alignment-authority-v146-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-bird-families-mega-v1-20260728-photo-locality-v153-20260728-tutorial-copy-cleanup-v154-20260729-camera-result-overlap-v155-20260729-kitchen-quest-guide-v156-20260729-sound-local-consensus-v157-20260729-kitchen-feed-sheet-v158-20260729-simple-locality-v160-20260729-recruit-card-name-v161-20260729-daily-hunger-bars-v162-20260729-birdex-card-names-v163-20260729-birdex-no-feed-v164-20260729-quest-drawers-closed-v165-20260729-generalist-diets-v166-20260729-generated-art-ui-v153-20260729-nickname-line-v167-20260729-intro-two-part-video-v154-20260729-academy-alive-v153-20260729-reconciled-release-v170-20260729-tutorial-chunked-progress-v171-20260729-birdnet-accuracy-v171-20260729-tutorial-merlin-feed-fix-v172-20260730-tutorial-merlin-spotlight-fix-v173-20260730-generated-art-ui-restore-v174-20260730-kitchen-no-duplicate-companions-v175-20260730-companion-feeding-only-v176-20260730-intro-hardening-v177-20260730-companion-always-top-up-v178-20260730-academy-wingbeats-v179-20260730-academy-3d-v180-20260730-empire-silent-v181-20260730-academy-canopy-v182-20260730-battle-flow-v183-20260731-quest-map-pan-v184-20260731-academy-detail-v184-20260731-academy-no-birds-v185-20260731-show-quests-close-v186-20260731-map-music-fade-v187-20260731-begin-quest-loop-authority-v188-20260731-empire-realms-trade-v189-20260731-global-money-hud-v190-20260731-training-claim-terminal-v191-20260801-remove-dead-map-icons-v192-20260801-empire-here-regions-v193-20260801-back-stays-in-game-v194-20260801-back-guard-gesture-v195-20260802-empire-player-start-sound-shelf-v196-20260802-merlin-bond-meter-v197-20260802-academy-library-v198-20260802-liberation-hides-league-v199-20260802-restored-lost-features-v200-20260802-bird-size-roles-v201-20260802-chef-bulk-feeding-v202-20260802-settlement-tiers-v203-20260803-manga-warrior-habitats-v204-20260803-empire-clarity-v205-20260803';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -39,7 +39,7 @@ const BURBZ_ASSETS = [
   './lib/maplibre-gl.js?v=5.24.0',
   './lib/maplibre-gl.css?v=5.24.0',
   './empire_map_core.js?v=liberation-map-v3-20260714',
-  './empire_realm_core.js?v=settlement-tiers-v203-20260803',
+  './empire_realm_core.js?v=empire-clarity-v205-20260803',
   './quest_core.js?v=begin-quest-loop-authority-v188-20260731',
   './academy_treehouse_core.js?v=restored-lost-features-v200-20260802',
   './academy_alive_core.js?v=restored-lost-features-v200-20260802',
@@ -109,8 +109,8 @@ const BURBZ_ASSETS = [
   './assets/village-interiors-manga/puffins-rest.png',
   './assets/village-interiors-manga/birders-guild.png',
   './bird_family_core.js?v=bird-families-mega-v1-20260728',
-  './bird_size_core.js?v=settlement-tiers-v203-20260803',
-  './bird_roles_core.js?v=settlement-tiers-v203-20260803',
+  './bird_size_core.js?v=empire-clarity-v205-20260803',
+  './bird_roles_core.js?v=empire-clarity-v205-20260803',
   './battle_core.js?v=bird-size-roles-v201-20260802',
   './loot_crafting_core.js?v=timed-crafting-20260726',
   './audio_core.js?v=burbz-map-music-fade-v187-20260731',
@@ -189,8 +189,8 @@ const BURBZ_CORE = [
   './bird_diet_hunger_core.js?v=reconciled-release-v170-20260729',
   './diet_hunger_core.js?v=diet-hunger-release-20260723',
   './bird_family_core.js?v=bird-families-mega-v1-20260728',
-  './bird_size_core.js?v=settlement-tiers-v203-20260803',
-  './bird_roles_core.js?v=settlement-tiers-v203-20260803',
+  './bird_size_core.js?v=empire-clarity-v205-20260803',
+  './bird_roles_core.js?v=empire-clarity-v205-20260803',
   './battle_core.js?v=bird-size-roles-v201-20260802',
   './loot_crafting_core.js?v=timed-crafting-20260726',
   './audio_core.js?v=burbz-map-music-fade-v187-20260731',

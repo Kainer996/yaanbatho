@@ -8,6 +8,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 CACHE = BURBZ / "bird-art-cache"
 RELEASE = BURBZ / "bird_art_release_20260803.js"
 INDEX = BURBZ / "index.html"
+SW = BURBZ / "sw.js"
 
 
 def release_slugs():
@@ -62,3 +63,11 @@ def test_runtime_layers_completion_warriors_cutouts_and_habitats():
     assert "legacySlugAliases" in release
     assert "rock_pigeon: 'feral_pigeon'" in release
     assert "robin: 'european_robin'" in release
+
+
+def test_art_release_remains_in_service_worker_cache_lineage():
+    cache_line = next(
+        line for line in SW.read_text(encoding="utf-8").splitlines()
+        if line.startswith("const BURBZ_CACHE = ")
+    )
+    assert "manga-warrior-habitats-v204-20260803" in cache_line
