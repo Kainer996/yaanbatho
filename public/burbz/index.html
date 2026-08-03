@@ -1070,6 +1070,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .card-art-bg {
   position: absolute; inset: 0;
   background: linear-gradient(135deg, var(--bg3), var(--bg4));
+  background-position: center;
+  background-size: cover;
 }
 .card-art img {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
@@ -2410,9 +2412,11 @@ svg.academy-room-bg { display:block; filter:none; }
   width: 86px; height: 86px; border-radius: 16px; overflow: hidden;
   display: flex; align-items: center; justify-content: center; font-size: 42px;
   background: radial-gradient(circle at 30% 20%, rgba(214,168,79,0.20), rgba(201,201,201,0.08));
+  background-position: center;
+  background-size: cover;
   border: 1px solid rgba(255,255,255,0.12);
 }
-.bird-info-art img { width: 100%; height: 100%; object-fit: contain; background: radial-gradient(circle at 50% 42%, rgba(214,168,79,0.16), rgba(0,0,0,0.74)); }
+.bird-info-art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,.48)); }
 .bird-info-name { font-family: 'Russo One', sans-serif; font-size: 19px; line-height: 1.15; }
 .bird-info-sci { color: var(--text3); font-style: italic; font-size: 12px; margin-top: 4px; }
 .bird-info-rarity { margin-top: 8px; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -3938,6 +3942,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
+<script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
@@ -10037,9 +10042,9 @@ function openBirdInfo(birdId) {
 
   const info = getBirdInfo(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  const artUrl = getBirdArtUrl(bird);
-  const art = artUrl
-    ? `<img src="${escapeHTML(artUrl)}" alt="${escapeHTML(bird.commonName || bird.species)}">`
+  const infoArt = birdCardImgAttrs(bird);
+  const art = infoArt
+    ? `<img src="${escapeHTML(infoArt.src)}"${infoArt.extra} alt="${escapeHTML(bird.commonName || bird.species)}">`
     : `<span>${bird.emoji || '&#128038;'}</span>`;
   const summary = info.summary || info.rationale || `${bird.commonName || bird.species} is part of your Burbz collection. More field-guide detail will be added as the species database grows.`;
   const mapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(info.lat || BIRD_INFO_MAP_CENTER.lat)}&mlon=${encodeURIComponent(info.lon || BIRD_INFO_MAP_CENTER.lon)}#map=${BIRD_INFO_MAP_CENTER.zoom}/${encodeURIComponent(info.lat || BIRD_INFO_MAP_CENTER.lat)}/${encodeURIComponent(info.lon || BIRD_INFO_MAP_CENTER.lon)}`;
@@ -10050,7 +10055,7 @@ function openBirdInfo(birdId) {
   $('birdInfoContent').dataset.currentBirdId = String(birdId);
   $('birdInfoContent').innerHTML = `
     <div class="bird-info-hero">
-      <div class="bird-info-art">${art}</div>
+      <div class="bird-info-art" style="${birdHabitatBackgroundStyle(bird, rarityColor)}">${art}</div>
       <div>
         <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
         <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
@@ -11058,6 +11063,49 @@ for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
 // These recovered built-in ImageGen paintings ship locally with this release,
 // so apply them after the GitHub/LFS routing pass.
 Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
+if (window.applyBurbzMangaWarriorArt20260803) {
+  window.applyBurbzMangaWarriorArt20260803(BUILT_IN_BIRD_ART);
+  for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
+    if (/^\/burbz\/bird-art-cache\/[^?#]+_manga_warrior_20260802\.png$/i.test(artUrl)) {
+      BUILT_IN_BIRD_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
+    }
+  }
+}
+
+function birdHabitatArtKey(bird) {
+  const species = String((bird && (bird.commonName || bird.name || bird.species)) || '');
+  const profile = findSpeciesProfile(species) || {};
+  const info = getBirdInfo(bird || { species }) || {};
+  const habitatText = [
+    ...(Array.isArray(bird && bird.habitats) ? bird.habitats : []),
+    bird && bird.habitat,
+    ...(Array.isArray(profile.habitats) ? profile.habitats : []),
+    profile.habitat,
+    info.habitat
+  ].filter(Boolean).join(' ').toLowerCase();
+  const rangeText = [species, profile.origin, profile.range, info.origin, info.range]
+    .filter(Boolean).join(' ').toLowerCase();
+  const has = words => words.some(word => habitatText.includes(word));
+
+  if (has(['coast', 'marine', 'shore', 'ocean', 'sea'])) return 'coast';
+  if (has(['wetland', 'water', 'marsh', 'reed', 'lake', 'river', 'pond'])) return 'wetland';
+  if (/australia|australas|melbourne/.test(rangeText) && has(['woodland', 'forest', 'bush', 'scrub'])) return 'eucalypt';
+  if (has(['eucalypt', 'tropical', 'rainforest', 'bush'])) return 'eucalypt';
+  if (has(['hill', 'mountain', 'alpine', 'upland', 'cliff'])) return 'mountain';
+  if (has(['heath', 'moor', 'scrub', 'desert'])) return 'heath';
+  if (has(['woodland', 'forest', 'wood'])) return 'woodland';
+  if (has(['garden', 'urban', 'park', 'town'])) return 'garden';
+  if (has(['grassland', 'farmland', 'meadow', 'field', 'open'])) return 'grassland';
+  return 'woodland';
+}
+
+function birdHabitatBackgroundStyle(bird, rarityColor) {
+  const backgrounds = window.BURBZ_HABITAT_BACKGROUNDS_20260803 || {};
+  const background = backgrounds[birdHabitatArtKey(bird)] || backgrounds.woodland;
+  const tint = rarityColor || RARITY_COLORS.common;
+  if (!background) return `background:linear-gradient(135deg, ${tint}22, ${tint}08);`;
+  return `background-image:linear-gradient(135deg, ${tint}24, rgba(0,0,0,.10)),url('${escapeHtml(background)}');background-position:center;background-size:cover;`;
+}
 
 const LEGACY_BIRD_ART_REPLACEMENTS = {
   'barn_owl_ava_20260608.png': BUILT_IN_BIRD_ART['Barn Owl'],
@@ -11232,10 +11280,12 @@ function birdOnlyImgHTML(bird, className) {
 function birdCardImgAttrs(bird) {
   const art = getBirdArtUrl(bird);
   if (!art) return null;
+  const cutout = birdCutoutUrlFor(art);
   const emoji = getBirdMarkerEmoji(String((bird && (bird.commonName || bird.species)) || '')) || '🐦';
   return {
-    src: art,
-    extra: ' data-fallback-emoji="' + escapeHtml(emoji) + '"'
+    src: cutout || art,
+    extra: (cutout ? ' data-fallback-art="' + escapeHtml(art) + '"' : '') +
+      ' data-fallback-emoji="' + escapeHtml(emoji) + '"'
   };
 }
 
@@ -25964,7 +26014,7 @@ function createBirdCardHTML(bird, idx) {
         <div class="card-front">
           ${cardDietBadge}
           <div class="card-art" data-action="open-equip" data-bird-id="${bird.id}" title="Tap your bird to open its equipment">
-            <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}15, ${rarityColor}05);"></div>
+            <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>
             ${artBg}
             ${birdIcon}
             ${birdFamilyBadgeHTML(bird)}
@@ -26044,7 +26094,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
         <div class="card-front">
           ${knownDietBadge}
           <div class="card-art">
-            <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}12, ${rarityColor}04);"></div>
+            <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>
             ${artBg}
             ${birdIcon}
             ${birdFamilyBadgeHTML(bird)}
@@ -27500,7 +27550,7 @@ function showCaptureOverlay(bird) {
       <div class="bird-card-inner">
         <div class="card-front">
           <div class="card-art">
-            <div class="card-art-bg" style="background:linear-gradient(135deg, ${rarityColor}30, ${rarityColor}10);"></div>
+            <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>
             ${artHtml}
           </div>
           <div class="card-level">NEW · LV.${bird.level}</div>
@@ -29244,7 +29294,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'settlement-tiers-v203-20260803';
+const BURBZ_BUILD = 'manga-warrior-habitats-v204-20260803';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
