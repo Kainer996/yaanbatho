@@ -66,8 +66,17 @@ REPO="Kainer996/yaanbatho"
 ROOT="$(cat /etc/burbz-webroot)"
 [[ -d "$ROOT" ]] || exit 0
 
-SHA=$(curl -fsSL -m 20 "https://api.github.com/repos/$REPO/commits/main" 2>/dev/null | grep -m1 '"sha"' | cut -d'"' -f4 || true)
-[[ -n "$SHA" ]] || exit 0
+command -v flock >/dev/null 2>&1 || { logger -t burbz-sync "abort: flock is required"; exit 1; }
+exec 9>/run/lock/burbz-sync.lock
+flock -n 9 || exit 0
+
+# Normal timer runs follow main. A release operator can pin one immutable SHA
+# with BURBZ_DEPLOY_SHA so a verified commit cannot be overtaken mid-promotion.
+SHA="${BURBZ_DEPLOY_SHA:-}"
+if [[ -z "$SHA" ]]; then
+  SHA=$(curl -fsSL -m 20 "https://api.github.com/repos/$REPO/commits/main" 2>/dev/null | grep -m1 '"sha"' | cut -d'"' -f4 || true)
+fi
+[[ $SHA =~ ^[0-9a-f]{40}$ ]] || { logger -t burbz-sync "abort: invalid deployment SHA"; exit 1; }
 CUR=$(cat "$ROOT/.burbz-deployed-sha" 2>/dev/null || echo none)
 [[ "$SHA" == "$CUR" ]] && exit 0
 

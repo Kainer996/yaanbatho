@@ -66,6 +66,9 @@ def test_manga_portraits_cutouts_and_habitats_use_the_lfs_endpoint():
 
 
 def test_autodeploy_is_commit_pinned_fail_closed_and_reuses_only_verified_lfs():
+    assert "flock -n 9 || exit 0" in AUTODEPLOY
+    assert 'SHA="${BURBZ_DEPLOY_SHA:-}"' in AUTODEPLOY
+    assert "[[ $SHA =~ ^[0-9a-f]{40}$ ]]" in AUTODEPLOY
     assert 'tar.gz/$SHA' in AUTODEPLOY
     assert '$REPO/$SHA/public/burbz/$rel' in AUTODEPLOY
     assert "pointer_oid=$(sed -n 's/^oid sha256://p'" in AUTODEPLOY
