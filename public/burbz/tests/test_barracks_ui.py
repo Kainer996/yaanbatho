@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 CORE = (ROOT / "academy_treehouse_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
+ART_RELEASE = (ROOT / "bird_art_release_20260803.js").read_text(encoding="utf-8")
 
 
 def test_tavern_room_is_presented_as_barracks_not_a_pub():
@@ -122,13 +123,19 @@ def test_every_mapped_bird_has_a_real_transparent_cutout():
     )
     assert expansions.returncode == 0, expansions.stderr
     expected.update(Path(value).stem + "_cutout.png" for value in json.loads(expansions.stdout))
+    warrior_block = re.search(r"const warriorSlugs = new Set\(`(.*?)`\.trim", ART_RELEASE, re.S)
+    assert warrior_block
+    expected.update(
+        f"{slug}_burbz_manga_warrior_20260802_cutout.png"
+        for slug in warrior_block.group(1).split()
+    )
     cutout_dir = ROOT / "bird-art-cache" / "cutouts"
     actual = {path.name for path in cutout_dir.glob("*_cutout.png")}
     # The legacy Lapwing and Magpie variants were retired; every remaining
     # cutout must now correspond to an actively mapped bird-art entry.
     assert expected <= actual
     assert not (actual - expected)
-    assert len(actual) == 559
+    assert len(actual) == 702
     for path in cutout_dir.glob("*_cutout.png"):
         with Image.open(path) as image:
             assert image.mode == "RGBA", path.name
