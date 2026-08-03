@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-RELEASE_PIN = "settlement-tiers-v203-20260803"
+RELEASE_PIN = "empire-clarity-v204-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
 TRIO = [

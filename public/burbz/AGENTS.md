@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-03 (settlement tiers: villages merge into towns, towns into cities — see "Review log" at the bottom).
+Last curated: 2026-08-03 (empire clarity: the Empire tab UI overhaul — locator strip, map key, tap cards, ledger drawers — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,52 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-03 — empire clarity: the Empire tab UI overhaul (Claude).** Yaan
+  found the empire layer "very difficult to follow … hard to know on the map
+  what [is what]" and asked for a UI-only simplification: keep every mechanic,
+  make it obvious where the player, their town and their region are. Release
+  `empire-clarity-v204-20260803`. **No gameplay maths changed** — every edit is
+  in the render/HTML/CSS layer of `index.html` (plus pins).
+  - **Map card**: a `📍 ME` button (frames the player via `frameEmpirePlayer`)
+    and a `🗺️ KEY` button (static legend card explaining every marker type +
+    "daylight = your lands") join MY REALM/WORLD; the focus buttons highlight
+    by zoom band so they double as a "which layer am I looking at" indicator.
+    Marker taps now open a **tap card** (`showEmpireMapCard`) naming the thing
+    (Your village / Town / Region / Still in darkness) with 2-3 fact chips and
+    explicit action buttons — travel/govern, Region Hall, frame, liberate — so
+    a mis-tap teaches instead of teleporting. Semantic zoom in
+    `updateEmpireMarkerDetail`: settlement standards appear from zoom 4,
+    frontier swords from 6.5, so world zoom is regions + the player beacon
+    (which gained an expanding ring). Region/town/city labels carry a
+    ` · REGION`/` · TOWN`/` · CITY` suffix via CSS so gold never means two
+    things. The status line is now ONE message by priority (empty world →
+    nearest ⚔️ target → counts), keeping all its pinned fragments.
+  - **Royal Ledger** (`renderEmpirePanel`): a `📍 locator strip` on top always
+    answers "you / your town / your region", each chip framing the map. Stats
+    chips relabelled Provinces→Villages (the Stores screen keeps the pinned
+    `'Provinces'` literal). The collect button shows a real countdown when
+    idle. The three flat sections became `<details class="empire-drawer">`
+    accordions (same pattern as the quest board, session-persisted open
+    state): YOUR VILLAGES (rows cut to three facts, **grouped under their
+    region** with a "Farther afield" group), TOWNS & CITIES, THE REALM (region
+    rows gain a `💰 READY` chip via `regionTributeReady`), plus a new
+    closed-by-default **HOW YOUR EMPIRE WORKS** drawer that explains the whole
+    village→town→city→region→trade ladder in plain words. A 0-village player
+    gets a single 3-step onboarding card instead of empty chrome. All gating
+    stays code-identical (`if (regions.length && rc) {` /
+    `} else if (count >= 2 && rc) {`).
+  - **Governor's desk / Region Hall**: unchanged mechanics; the huge
+    Steward/Warden appointment cards folded behind one-line drawers
+    (summary shows the incumbent), Region Hall copy de-jargoned
+    (sanctuaries→villages; `Heart of the`/`District of the` stay — pinned).
+  - **Terminology**: one noun per level — village, town/city, region
+    (County/Duchy/Kingdom as badges). "Province"/"sanctuary" survive only in
+    pinned strings and flavour copy.
+  - Tests: all empire suites green untouched except release pins
+    (`RELEASE_PIN` in 7 files + `core_pin`) per convention; sw.js cache got
+    the new lineage segment; `empire_realm_core.js`/`bird_size_core.js`/
+    `bird_roles_core.js` cache-busters repointed in both loaders.
 
 - **2026-08-03 — villages merge into towns, towns into cities (Claude).** Yaan
   asked for the street-level merge layer: liberate **3 neighbouring villages
