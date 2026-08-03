@@ -329,7 +329,8 @@
       refusedCompatibleFamilies: Object.keys(FOOD_FAMILIES).filter(f => !primary.includes(f) && !secondary.includes(f)),
       compatibleIngredientFamilies: primary.concat(secondary.filter(f => !primary.includes(f))),
       prepByFamily: record.prep || {},
-      education: record.e || ''
+      education: record.e || '',
+      refinementSource: record.x || ''
     };
   }
 
@@ -537,6 +538,7 @@
 
   function dietMatchLabel(record) {
     const method = String(record && record.matchMethod || 'unmatched');
+    if (record && record.refinementSource) return 'BirdFuncDat + ' + record.refinementSource + ' refinement';
     if (method === 'override') return 'BirdFuncDat Merlin override';
     if (method === 'exact' || method === 'source-row') return 'BirdFuncDat exact match';
     if (method === 'scientific-alias') return 'BirdFuncDat scientific-alias match';
@@ -886,11 +888,18 @@
       return { ok:false, state, consumed:{}, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:subject.care.hunger, after:subject.care.hunger, message:normalizedSpec.inventoryPath === 'pantry' ? 'Food is not available in the pantry.' : 'Ingredient is not available in the larder.' };
     }
     const consumed = consumeFeedingInventory(state, normalizedSpec);
+    // A side snack always adds half a bar. Two snacks therefore fill an
+    // empty bird, while serving one to a partly full bird tops up to 100%.
+    // Snap sub-second clock drift to full so two immediate snacks show 100%.
+    const sideSnackTarget = Math.max(0, currentHunger - 50);
+    const feedingTargetHunger = compatibility.verdict === 'secondary'
+      ? (sideSnackTarget < 0.01 ? 0 : sideSnackTarget)
+      : 0;
     const applied = applyHungerDeltaToCare(subject.care, {
       transactionId: txId,
       activityType: 'feeding',
       activityId: ingredientId,
-      targetHunger: compatibility.verdict === 'secondary' ? Math.min(currentHunger, 50) : 0,
+      targetHunger: feedingTargetHunger,
       now: options.now
     });
     subject.care = applied.care;
@@ -901,7 +910,7 @@
     const feedMessage = compatibility.verdict === 'insufficient'
       ? 'Fed a conservative care ration; the exact wild diet is not claimed for this fallback record.'
       : compatibility.verdict === 'secondary'
-        ? 'Fed a source-backed side food: eaten in the wild, but not the mainstay, so it fills half as much.'
+        ? 'Fed a source-backed side food: eaten in the wild, but not the mainstay, so it adds half a Fullness bar.'
         : 'Fed a source-backed primary meal.';
     return { ok:true, duplicate:false, state, consumed, compatibility, transactionId:txId, inventoryPath:normalizedSpec.inventoryPath, before:applied.before, after:applied.after, message:feedMessage };
   }

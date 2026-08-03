@@ -230,42 +230,20 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .academy-room-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.96) brightness(.82); }
 svg.academy-room-bg { display:block; filter:none; }
 .academy-room-vignette { position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, transparent 0 54%, rgba(0,0,0,.34) 100%), linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.34)); pointer-events:none; }
-.academy-room-stage { position:absolute; left:0; right:0; bottom:8%; height:46%; overflow:hidden; }
-.room-bird-actor { position:absolute; bottom:0; left:8%; width:66px; height:66px; translate:0 0; will-change:translate; animation:roomBirdTravel 11s ease-in-out infinite; }
-.room-bird-sprite { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 10px 10px rgba(0,0,0,.50)); transform-origin:50% 88%; rotate:0deg; scale:1 1; will-change:scale,transform; animation:roomBirdFacing 11s ease-in-out infinite, roomBirdBounce .82s ease-in-out infinite; }
-.room-bird-sprite.fallback-bg { -webkit-mask-image:radial-gradient(ellipse at 50% 50%, #000 0 58%, rgba(0,0,0,.65) 72%, transparent 100%); mask-image:radial-gradient(ellipse at 50% 50%, #000 0 58%, rgba(0,0,0,.65) 72%, transparent 100%); }
-.room-bird-actor:nth-child(2n) { width:61px; height:61px; animation-duration:12.6s; animation-delay:-3.1s; }
-.room-bird-actor:nth-child(2n) .room-bird-sprite { animation-duration:12.6s,.74s; animation-delay:-3.1s,-.18s; }
-.room-bird-actor:nth-child(3n) { width:58px; height:58px; animation-duration:9.8s; animation-delay:-6.2s; }
-.room-bird-actor:nth-child(3n) .room-bird-sprite { animation-duration:9.8s,.9s; animation-delay:-6.2s,-.35s; }
-.room-bird-health { position:absolute; z-index:4; left:50%; bottom:calc(100% - 3px); translate:-50% 0; width:58px; height:11px; overflow:hidden; border:1px solid rgba(255,255,255,.84); border-radius:7px; background:rgba(7,10,8,.92); box-shadow:0 2px 5px rgba(0,0,0,.72); pointer-events:none; }
-.room-bird-health-fill { position:absolute; inset:1px auto 1px 1px; border-radius:5px; background:linear-gradient(90deg,#43b96b,#79df75); transition:width .35s ease; }
-.room-bird-health[data-hp-state="mid"] .room-bird-health-fill { background:linear-gradient(90deg,#d49a35,#f0cf59); }
-.room-bird-health[data-hp-state="low"] .room-bird-health-fill { background:linear-gradient(90deg,#c64642,#f06d58); }
-.room-bird-health-text { position:absolute; inset:0; display:grid; place-items:center; font-family:'Rajdhani',sans-serif; font-size:8px; line-height:1; font-weight:900; color:#fff; text-shadow:0 1px 2px #000,0 0 2px #000; }
-/* The actor travels across the room. Its bird sprite flips independently so
-   the health bar stays upright and the beak always points in the walk direction. */
-@keyframes roomBirdTravel {
-  0%{translate:0 0}
-  46%{translate:min(64vw,520px) 0}
-  50%{translate:min(66vw,540px) 0}
-  96%{translate:2vw 0}
-  100%{translate:0 0}
-}
-@keyframes roomBirdFacing {
-  0%{scale:1 1}
-  46%{scale:1 1}
-  50%{scale:-1 1}
-  96%{scale:-1 1}
-  100%{scale:1 1}
-}
-/* Bounce uses `transform`, independently composing with the `scale` property
-   controlled by roomBirdFacing. */
-@keyframes roomBirdBounce {
-  0%,100%{transform:translateY(0)}
-  40%{transform:translateY(-12px)}
-  62%{transform:translateY(-3px)}
-}
+.academy-room-stage { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+/* Assigned companions stay readable and calm while full room animation art is
+   still being made: a compact top-right roster replaces awkward roaming. */
+.room-bird-grid { position:absolute; top:68px; right:12px; z-index:4; width:min(46%,220px); display:grid; grid-template-columns:repeat(auto-fit,minmax(58px,1fr)); gap:6px; padding:7px; border-radius:14px; border:1px solid rgba(214,168,79,.34); background:rgba(5,7,6,.72); box-shadow:0 8px 22px rgba(0,0,0,.38); backdrop-filter:blur(9px); pointer-events:auto; }
+.room-bird-grid:empty { display:none; }
+.room-bird-grid-item { position:relative; min-width:0; padding:5px 4px 6px; border-radius:10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09); text-align:center; overflow:hidden; }
+.room-bird-grid-item.sleeping { border-color:rgba(130,166,255,.55); background:rgba(74,91,145,.22); }
+.room-bird-grid-art { width:42px; height:42px; display:block; margin:0 auto 2px; object-fit:contain; filter:drop-shadow(0 5px 5px rgba(0,0,0,.45)); }
+.room-bird-grid-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; line-height:1.2; font-weight:900; color:#fff; }
+.room-bird-grid-status { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; font-size:8px; line-height:1.2; color:var(--accent2); }
+.room-bird-grid-tired { height:3px; margin-top:4px; overflow:hidden; border-radius:3px; background:rgba(255,255,255,.12); }
+.room-bird-grid-tired > i { display:block; height:100%; background:linear-gradient(90deg,#7edc8a,#f0c767,#e96b68); }
+.room-bird-grid-hp { display:block; margin-top:3px; font-size:8px; line-height:1.1; color:#86dc91; font-weight:800; }
+@media(max-width:420px){.room-bird-grid{top:64px;right:8px;width:min(48%,180px);grid-template-columns:repeat(2,minmax(50px,1fr));}.room-bird-grid-art{width:36px;height:36px;}}
 .academy-room-topbar { position:absolute; left:12px; right:12px; top:12px; z-index:3; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .academy-room-title-card { padding:10px 12px; border-radius:15px; background:rgba(0,0,0,.58); border:1px solid rgba(214,168,79,.26); backdrop-filter:blur(10px); }
 .academy-room-title { font-family:'Russo One',sans-serif; font-size:18px; color:var(--accent2); }
@@ -1770,8 +1748,11 @@ svg.academy-room-bg { display:block; filter:none; }
 .pick-card .pk-name { font-size:10px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pick-card .pk-meta { font-size:9px; color:var(--text3); margin-top:1px; }
 .pick-card .pk-order { position:absolute; top:5px; left:6px; width:18px; height:18px; border-radius:50%; background:var(--accent); color:#000; font-size:11px; font-weight:800; line-height:18px; }
-.pick-card .pk-hp { height:3px; border-radius:2px; background:var(--bg4); margin-top:5px; overflow:hidden; }
-.pick-card .pk-hp > div { height:100%; border-radius:2px; background:var(--hp-green); }
+.pick-card .pk-meters { display:grid; gap:2px; margin-top:5px; }
+.pick-card .pk-meter-row { display:grid; grid-template-columns:22px 1fr 22px; align-items:center; gap:3px; color:var(--text3); font:700 7px/1 'Rajdhani',sans-serif; text-transform:uppercase; }
+.pick-card .pk-meter-track { height:3px; border-radius:2px; background:var(--bg4); overflow:hidden; }
+.pick-card .pk-meter-fill { height:100%; border-radius:2px; }
+.pick-card .pk-meter-fill.hp { background:var(--hp-green); }
 .type-wheel { margin-top:16px; padding:12px; background:var(--bg2); border-radius:12px; border:1px solid rgba(255,255,255,0.05); }
 .type-wheel-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
 .type-wheel-row { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text2); padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.05); }
@@ -2457,6 +2438,13 @@ svg.academy-room-bg { display:block; filter:none; }
   font-family:'Rajdhani', sans-serif; font-weight: 900; font-size: 15px;
 }
 .card-info-hint { margin-top: 4px; color: var(--accent2); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.card-location-btn { width:100%; min-height:34px; margin:5px 0 3px; padding:5px 8px; display:flex; align-items:center; gap:6px; border-radius:9px; border:1px solid rgba(65,185,174,.48); background:linear-gradient(180deg,rgba(35,111,106,.30),rgba(18,65,62,.26)); color:#d9fffa; font:900 10px/1.1 'Rajdhani',sans-serif; letter-spacing:.035em; text-transform:uppercase; text-align:left; cursor:pointer; }
+.card-location-btn.quest-complete,.card-location-btn.training-complete { border-color:rgba(240,199,103,.72); background:linear-gradient(180deg,rgba(214,168,79,.34),rgba(109,76,25,.28)); color:#fff1c3; }
+.card-location-btn:hover,.card-location-btn:focus-visible { border-color:#6ed8ce; outline:none; box-shadow:0 0 0 2px rgba(65,185,174,.17); }
+.card-location-btn.quest-complete:focus-visible,.card-location-btn.training-complete:focus-visible { border-color:#f0c767; box-shadow:0 0 0 2px rgba(240,199,103,.18); }
+.card-location-icon,.card-location-arrow { flex:0 0 auto; font-size:12px; }
+.card-location-label { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-location-arrow { font-size:18px; line-height:10px; opacity:.88; }
 
 /* Companion cards carry care and diet controls as well as artwork. Keep the
    art and identity rows rigid so flexbox can never squash a bird's name into
@@ -2638,6 +2626,12 @@ img.quest-bird-chip-art, .quest-bird-chip-art { width:44px; height:44px; border-
 .quest-bird-chip-name { font-size:10.5px; font-weight:700; color:#f4ead4; text-align:center; line-height:1.15; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .quest-bird-chip-note { font-size:9px; font-weight:800; letter-spacing:.06em; color:var(--text3); text-transform:uppercase; }
 .quest-equip-row { display:flex; flex-wrap:wrap; gap:6px; }
+.quest-duration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 12px;}
+.quest-duration-choice{min-width:0;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:var(--text2);text-align:left;}
+.quest-duration-choice.selected{border-color:var(--accent);background:rgba(214,168,79,.18);box-shadow:0 0 12px rgba(214,168,79,.2);}
+.quest-duration-choice strong{display:block;color:#ffe9ad;font-family:'Rajdhani',sans-serif;font-size:15px;line-height:1.1;}
+.quest-duration-choice span{display:block;margin-top:3px;color:var(--text3);font-size:10px;line-height:1.25;overflow-wrap:anywhere;}
+.quest-duration-economy-note{margin:-2px 0 8px;color:#d8bd7b;font-size:11px;line-height:1.35;}
 .quest-equip-chip { padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.3); color:var(--text2); font-size:12px; font-weight:700; transition:border-color .15s ease; }
 .quest-equip-chip.selected { border-color:var(--accent); background:rgba(214,168,79,.18); color:#ffe9ad; box-shadow:0 0 10px rgba(214,168,79,.25); }
 .quest-equip-count { font-size:10px; color:var(--text3); }
@@ -2712,9 +2706,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-plaque-text { font-size: 14px; font-weight: 700; fill: var(--text2); letter-spacing: 0.06em; }
 .academy-banner-text { font-size: 15px; font-weight: 800; fill: #11100d; letter-spacing: 0.1em; }
 .academy-count-text { font-size: 13px; font-weight: 800; fill: #11100d; }
-.academy-bird-glyph { font-size: 20px; cursor: pointer; transform-box: fill-box; transform-origin: center; }
-.academy-bird-glyph.wander { animation: academyHop 2.6s ease-in-out infinite; }
-@keyframes academyHop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.academy-bird-glyph { display:none; }
 
 #academyRoomPanel { margin: 0 10px 90px; }
 .academy-room-head { display: flex; align-items: baseline; gap: 8px; margin: 14px 4px 4px; }
@@ -2764,8 +2756,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-build-btn[disabled] { opacity:.48; filter:grayscale(.45); }
 .academy-zone.unbuilt { opacity:.34; filter:grayscale(.72); }
 .academy-zone.unbuilt .zone-plaque rect { stroke-dasharray:5 5; }
-.academy-bird-glyph.just-moved { animation: academyArrive .72s ease-out, academyHop 2.6s .72s ease-in-out infinite; filter:drop-shadow(0 0 10px rgba(214,168,79,.9)); }
-@keyframes academyArrive { from { transform:translateY(-22px) scale(.55); opacity:.1; } 60% { transform:translateY(-7px) scale(1.25); opacity:1; } to { transform:translateY(0) scale(1); opacity:1; } }
 .academy-locked-room { padding:16px 14px; border:1px dashed rgba(214,168,79,.30); border-radius:14px; background:rgba(214,168,79,.06); color:var(--text2); font-size:12px; line-height:1.45; }
 .academy-move-btn.locked { opacity:.82; border-color:rgba(214,168,79,.34); color:var(--accent2); }
 @media (min-width: 720px) { .academy-build-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
@@ -3913,12 +3903,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=restored-lost-features-v200-20260802"></script>
+<script src="academy_treehouse_core.js?v=quest-duration-tiers-v211-20260803"></script>
 <script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
-<script src="data/bird-diet-records.js?v=reconciled-release-v170-20260729"></script>
-<script src="bird_diet_hunger_core.js?v=reconciled-release-v170-20260729"></script>
+<script src="data/bird-diet-records.js?v=real-walk-nearby-quests-v215-20260803"></script>
+<script src="bird_diet_hunger_core.js?v=real-walk-nearby-quests-v215-20260803"></script>
+<script src="bird_sleep_core.js?v=roost-sleep-v208-20260803"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=settlement-tiers-v203-20260803"></script>
@@ -3937,6 +3928,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
+<script src="uk_bird_alias_completion_20260803.js?v=uk-bird-alias-completion-v216-20260803"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
@@ -3975,6 +3967,9 @@ const NATIONAL = window.BURBZ_NATIONAL_BIRD_COMPLETION_20260715 || {
   addToRegionalPools() {},
   addToHabitatPools() {},
   isEligible() { return false; }
+};
+const UK_BIRD_ALIASES = window.BURBZ_UK_BIRD_ALIAS_COMPLETION_20260803 || {
+  applyToProfiles() { return { species: 0, aliasesAdded: 0, unresolved: [], collisions: [] }; }
 };
 const GENERATED_ART_COMPLETION = window.BURBZ_GENERATED_ART_COMPLETION_20260726 || {};
 document.documentElement.dataset.burbzGeneratedArtCount = String(Object.keys(GENERATED_ART_COMPLETION).length);
@@ -4898,17 +4893,22 @@ function vibrate(ms) {
 // empty flock never costs more than the coins left after both opening builds.
 const FIRST_RECRUIT_MAX_COST = 110;
 function dietHungerCore() { return window.BurbzDietHungerCore || null; }
+function birdSleepCore() { return window.BurbzBirdSleepCore || null; }
 function defaultBirdCare(now = Date.now()) {
-  const care = { hunger: 20, happiness: 80, lastCare: null, lastFed: null, lastTrained: null, lastHungerAt: now, hungerTransactions: [], hungerTransactionLog: [] };
-  const core = dietHungerCore();
-  return core && typeof core.sanitizeCare === 'function' ? core.sanitizeCare(care, now) : care;
+  const care = { hunger: 20, happiness: 80, tiredness: 20, sleeping: false, sleepingSince: null, sleepReturnRoom: null, sleepReason: null, lastCare: null, lastFed: null, lastTrained: null, lastHungerAt: now, lastTirednessAt: now, hungerTransactions: [], hungerTransactionLog: [] };
+  const hungerCore = dietHungerCore();
+  const fedCare = hungerCore && typeof hungerCore.sanitizeCare === 'function' ? hungerCore.sanitizeCare(care, now) : care;
+  const sleepCore = birdSleepCore();
+  return sleepCore && typeof sleepCore.sanitizeSleepCare === 'function' ? sleepCore.sanitizeSleepCare(fedCare, now) : fedCare;
 }
 function normalizeBirdCare(bird, now = Date.now()) {
   if (!bird) return null;
-  const core = dietHungerCore();
-  bird.care = core && typeof core.sanitizeCare === 'function'
-    ? core.sanitizeCare(bird.care || defaultBirdCare(now), now)
+  const hungerCore = dietHungerCore();
+  bird.care = hungerCore && typeof hungerCore.sanitizeCare === 'function'
+    ? hungerCore.sanitizeCare(bird.care || defaultBirdCare(now), now)
     : { ...defaultBirdCare(now), ...(bird.care && typeof bird.care === 'object' ? bird.care : {}) };
+  const sleepCore = birdSleepCore();
+  if (sleepCore && typeof sleepCore.sanitizeSleepCare === 'function') bird.care = sleepCore.sanitizeSleepCare(bird.care, now);
   return bird.care;
 }
 function migrateAllHungerState(now = Date.now()) {
@@ -4945,6 +4945,72 @@ function birdIsFull(bird, now = Date.now()) {
   if (core && typeof core.primaryMealActiveForCare === 'function' && core.primaryMealActiveForCare(bird && bird.care, now)) return true;
   return Math.round(status.hunger) <= 0;
 }
+// Sleep is a separate care system: HP, Fullness and Tiredness never substitute
+// for one another. Nocturnal birds sleep 06:00–18:00 local time and wake for
+// the early evening; any companion automatically uses The Roost at 85% tired.
+function reconcileBirdSleep(bird, now = Date.now()) {
+  if (!bird) return { changed:false, sleeping:false };
+  const core = birdSleepCore();
+  if (!core || typeof core.sleepPlan !== 'function') return { changed:false, sleeping:false };
+  if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room:'outdoors', lastGroom:null, lastRest:null, lastForage:null };
+  const beforeTick = Number(bird.care && bird.care.lastTirednessAt) || now;
+  bird.care = core.advanceTiredness(normalizeBirdCare(bird, now), now);
+  const busy = birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id);
+  const roostBuilt = isAcademyRoomBuilt('dorm');
+  const plan = core.sleepPlan(bird.care, bird, { now, localHour:new Date(now).getHours(), roostBuilt, busy });
+  let changed = false;
+  if (plan.shouldSleep) {
+    if (bird.academy.room !== 'dorm') bird.care.sleepReturnRoom = bird.academy.room || 'outdoors';
+    bird.care.sleeping = true;
+    bird.care.sleepingSince = now;
+    bird.care.sleepReason = plan.reason || 'tired';
+    bird.care.lastTirednessAt = now;
+    bird.academy.room = 'dorm';
+    bird.academy.lastMovedAt = new Date(now).toISOString();
+    changed = true;
+  } else if (plan.shouldWake) {
+    const requested = bird.care.sleepReturnRoom;
+    const returnRoom = requested && ACADEMY_ROOMS[requested] && requested !== 'tavern' && requested !== 'kitchen' && isAcademyRoomBuilt(requested) ? requested : 'outdoors';
+    bird.care.sleeping = false;
+    bird.care.sleepingSince = null;
+    bird.care.sleepReason = null;
+    bird.care.sleepReturnRoom = null;
+    bird.care.lastTirednessAt = now;
+    bird.academy.room = returnRoom;
+    bird.academy.lastMovedAt = new Date(now).toISOString();
+    changed = true;
+  }
+  return { changed, persistDue:now - beforeTick >= 5*60*1000, sleeping:!!bird.care.sleeping, plan };
+}
+function reconcileAllBirdSleep(now = Date.now()) {
+  let shouldSave = false;
+  (gameState && gameState.flock || []).forEach(bird => {
+    const result = reconcileBirdSleep(bird, now);
+    if (result.changed || result.persistDue) shouldSave = true;
+  });
+  if (shouldSave) saveState();
+  return shouldSave;
+}
+function sleepReadinessForBird(bird, now = Date.now()) {
+  const reconciled = reconcileBirdSleep(bird, now);
+  if (reconciled.changed) saveState();
+  const core = birdSleepCore();
+  if (!core || typeof core.sleepReadiness !== 'function') return { ok:true, warning:false, sleeping:false, tiredness:0, message:'' };
+  return core.sleepReadiness(bird.care, bird, { now, localHour:new Date(now).getHours(), roostBuilt:isAcademyRoomBuilt('dorm'), busy:birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id) });
+}
+function academySleepStatusHTML(bird, now = Date.now()) {
+  const core = birdSleepCore();
+  const care = normalizeBirdCare(bird, now) || {};
+  const tiredness = clamp(Math.round(Number(care.tiredness) || 0), 0, 100);
+  const nocturnal = !!(core && core.isNocturnalBird && core.isNocturnalBird(bird));
+  const sleeping = !!care.sleeping;
+  const copy = sleeping
+    ? (nocturnal && core.isScheduledSleepTime(bird, new Date(now).getHours()) ? '💤 Sleeping through the day · wakes from 18:00' : '💤 Sleeping in The Roost until rested')
+    : nocturnal ? '🌙 Nocturnal · awake from 18:00 through the night'
+    : tiredness >= 70 ? '🥱 Getting tired · will go to The Roost automatically' : '☀️ Awake and rested';
+  return '<div class="academy-hunger-status" data-sleeping="' + (sleeping ? 'true' : 'false') + '">' + copy + '</div>';
+}
+
 // Merlin is the one bird the Kingdom cannot afford to ground. With an empty
 // larder every other companion locks up, so he keeps flying however hungry he
 // is — the cost is time, not the errand itself.
@@ -4964,20 +5030,27 @@ function birdWorkReadiness(bird, activityType, now = Date.now()) {
   const readiness = core && typeof core.activityReadiness === 'function'
     ? core.activityReadiness(bird, activityType, now)
     : (() => { const status = hungerStatusForBird(bird, now); return { ok:!status.blocksWork, warning:status.warnsWork, status, message:status.message }; })();
+  const sleep = sleepReadinessForBird(bird, now);
+  if (!sleep.ok) return { ...readiness, ok:false, warning:true, sleep, sleepBlocked:true, message:sleep.message };
+  const combined = { ...readiness, warning:!!(readiness.warning || sleep.warning), sleep };
   if (isMerlinCompanion(bird) && String(activityType || '') === 'expedition' && (readiness.warning || !readiness.ok)) {
-    return { ...readiness, ok:true, warning:true, slowFactor:2, message:'Merlin will still fly hungry — the errand takes twice as long.' };
+    return { ...combined, ok:true, warning:true, slowFactor:2, message:'Merlin will still fly hungry — the errand takes twice as long.' };
   }
-  return readiness;
+  return combined;
 }
 function warnOrBlockBirdWork(bird, activityType) {
   const readiness = birdWorkReadiness(bird, activityType, Date.now());
   const name = birdDisplayName ? birdDisplayName(bird) : ((bird && (bird.commonName || bird.species)) || 'This bird');
   if (!readiness.ok) {
-    showToast('🍽️ ' + name + ' needs food before ' + String(activityType || 'work').replace(/_/g, ' ') + '.');
+    if (readiness.sleepBlocked) showToast('💤 ' + name + ' is ' + (readiness.sleep && readiness.sleep.sleeping ? 'sleeping in The Roost' : 'too tired and needs The Roost') + '.');
+    else showToast('🍽️ ' + name + ' needs food before ' + String(activityType || 'work').replace(/_/g, ' ') + '.');
     return false;
   }
   // A slow-flight readiness carries its own, more specific line from the caller.
-  if (readiness.warning && !(readiness.slowFactor > 1)) showToast('🍽️ ' + name + ' is hungry — they can help, but feed them soon.');
+  if (readiness.warning && !(readiness.slowFactor > 1)) {
+    if (readiness.sleep && readiness.sleep.warning) showToast('🥱 ' + name + ' is getting tired — The Roost is ready when they need it.');
+    else showToast('🍽️ ' + name + ' is hungry — they can help, but feed them soon.');
+  }
   return true;
 }
 function applyBirdHungerTransaction(birdId, activityType, activityId, delta, now = Date.now()) {
@@ -9822,6 +9895,10 @@ function addNationalSpeciesProfiles(targetProfiles, nationalProfiles) {
   });
 }
 addNationalSpeciesProfiles(BURBZ_SPECIES_PROFILES, NATIONAL.profiles);
+const UK_BIRD_ALIAS_RESULT = UK_BIRD_ALIASES.applyToProfiles(BURBZ_SPECIES_PROFILES);
+if (UK_BIRD_ALIAS_RESULT.unresolved.length || UK_BIRD_ALIAS_RESULT.collisions.length) {
+  console.warn('Burbz UK bird alias completion was incomplete', UK_BIRD_ALIAS_RESULT);
+}
 
 const BIRD_INFO_MAP_CENTER = { lat: 54.5, lon: -2.5, zoom: 4 }; // Centered on UK, suitable for general bird info
 const BIRD_INFO = {}; // Populated dynamically from BURBZ_SPECIES_PROFILES for quick lookup
@@ -10277,13 +10354,10 @@ function regionRoleMultiplier(regionId) { return roleMultiplier('region', String
 
 // The post this bird currently holds, phrased for a card: "📚 Librarian · The Library".
 function birdPostLabel(bird) {
-  const core = birdRolesCore();
-  if (!core || !bird || !bird.id) return null;
-  const posts = core.postsHeldBy(ensureRolesState(), bird.id);
-  if (!posts.length) return null;
-  const post = posts[0];
-  const role = roleDefFor(post.scope, post.key);
-  if (!role) return null;
+  if (!bird || !bird.id) return null;
+  const post = birdAssignedPost(bird.id);
+  if (!post) return null;
+  const role = post.role;
   let where = '';
   if (post.scope === 'academy') where = (ACADEMY_ROOMS[post.key] && ACADEMY_ROOMS[post.key].label) || post.key;
   else if (post.scope === 'village') {
@@ -10296,15 +10370,33 @@ function birdPostLabel(bird) {
   return { icon: role.icon, title: role.title, where, scope: post.scope, key: post.key, role };
 }
 
+// A posted bird is working: the assignment owns that bird until it stands
+// down, just as a quest or timed training session does.
+function birdAssignedPost(birdId) {
+  const core = birdRolesCore();
+  if (!core || !birdId) return null;
+  const post = core.postsHeldBy(ensureRolesState(), birdId)[0] || null;
+  if (!post) return null;
+  const role = roleDefFor(post.scope, post.key);
+  return role ? { ...post, role } : null;
+}
+
 function assignBirdRole(scope, key, birdId) {
   const core = birdRolesCore();
   const role = roleDefFor(scope, key);
   const bird = (gameState.flock || []).find(b => b && b.id === birdId);
   if (!core || !role || !bird) return;
+  const currentPost = birdAssignedPost(bird.id);
+  if (currentPost && !(currentPost.scope === scope && String(currentPost.key) === String(key))) {
+    showToast(birdDisplayName(bird) + ' is already working as ' + currentPost.role.title + ' — stand them down first.');
+    return;
+  }
   // A bird cannot hold a post and be away at the same time — the job is the
   // point of it being here.
   if (birdHasActiveExpedition(bird.id)) { showToast(birdDisplayName(bird) + ' is away on a quest — call them home first.'); return; }
-  const previous = core.postsHeldBy(ensureRolesState(), bird.id)[0] || null;
+  if (birdHasActiveTraining(bird.id)) { showToast(birdDisplayName(bird) + ' is training — finish the session first.'); return; }
+  normalizeBirdCare(bird);
+  if (bird.care.sleeping) { showToast(birdDisplayName(bird) + ' is sleeping in The Roost — wait until they wake.'); return; }
   gameState.birdRoles = core.assignRole(ensureRolesState(), scope, key, bird.id);
   // An Academy post means the bird lives in that room — except the Kitchen and
   // the Barracks, which are a feeding table and a front desk: nobody is ever
@@ -10313,9 +10405,7 @@ function assignBirdRole(scope, key, birdId) {
   const fx = core.roleEffectiveness(bird, role);
   saveState();
   SFX.tap();
-  const moved = previous && !(previous.scope === scope && previous.key === key)
-    ? ' (stepping down from their old post — one bird, one job)' : '';
-  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' + moved);
+  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%');
   // Appointing a Head Chef unlocks whole-species table service — taught with a
   // tutorial tip the moment the post is filled, right when the perk is earned.
   if (scope === 'academy' && key === 'kitchen' && typeof showChefBulkFeedTip === 'function') showChefBulkFeedTip(bird);
@@ -10345,7 +10435,11 @@ function refreshRoleSurfaces() {
 function roleCandidateBirds(scope, key) {
   const core = birdRolesCore();
   const holder = core ? core.assignedBirdId(ensureRolesState(), scope, key) : null;
-  return (gameState.flock || []).filter(b => b && b.id && b.id !== holder && !birdHasActiveExpedition(b.id));
+  return (gameState.flock || []).filter(b => {
+    if (!b || !b.id || b.id === holder || birdAssignedPost(b.id) || birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)) return false;
+    normalizeBirdCare(b);
+    return !b.care.sleeping;
+  });
 }
 
 // The shared card every posting is offered and displayed through, so the
@@ -11461,7 +11555,7 @@ const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
-  dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'A cosy branch home. Birds resting here heal up while you feed, groom and tuck them in.', perk:'Passive: heals HP, hunger grows slowly', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
+  dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'The Academy sleep room. Assign any companion here, and tired birds come automatically; nocturnal birds sleep through the day and wake from 18:00.', perk:'Sleep: restores Tiredness and HP', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
   tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
@@ -12062,6 +12156,8 @@ function expeditionBirdById(id) {
 function startBirdExpedition(birdId, templateId, loadout) {
   const bird = expeditionBirdById(birdId);
   if (!bird) return;
+  const assignedPost = birdAssignedPost(birdId);
+  if (assignedPost) { showToast(birdDisplayName(bird) + ' is working as ' + assignedPost.role.title + ' — stand them down first.'); return; }
   const starterQuest = isStarterExpeditionTemplate(templateId);
   if (birdId === 'merlin-guide' && !starterQuest) { showToast('Merlin can lead starter errands; recruit companions for longer expeditions.'); return; }
   // Merlin's First Flight is a one-off tutorial errand, flown by Merlin alone.
@@ -12078,7 +12174,10 @@ function startBirdExpedition(birdId, templateId, loadout) {
   // keeps the game moving when there is no food anywhere in the Kingdom.
   const slowFactor = merlin ? merlinExpeditionSlowFactor() : 1;
   if (slowFactor > 1) showToast('🍽️ Merlin is flying hungry — this errand will take him twice as long.');
-  const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now(), { slowFactor });
+  const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now(), {
+    slowFactor,
+    durationMinutes: loadout && loadout.durationMinutes
+  });
   // The Quest Roost's Quartermaster plans the trip; the bird's own back decides
   // how much of it comes home.
   applyQuartermasterPlanning(quest);
@@ -12352,6 +12451,8 @@ function renderBirdExpeditions() {
   const questCard = t => {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
+    const durationOptions = t.tutorial === true ? [] : window.BurbzAcademyCore.getQuestDurationOptions(t.id);
+    const durationBadge = durationOptions.length ? '5m–24h' : questDurationLabel(t.minutes);
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
     // Show the food an errand actually brings home. The hunting quests exist
     // so the birds of prey can eat, and that has to be readable at a glance.
@@ -12363,11 +12464,13 @@ function renderBirdExpeditions() {
       const mats = [...new Set((t.items || []).map(id => lootCore().materialById(id)).filter(Boolean))];
       if (mats.length) matHint = ' · ' + mats.slice(0, 3).map(m => m.icon + ' ' + m.label).join(', ');
     } catch (e) {}
-    const rewardHint = '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
+    const rewardHint = durationOptions.length
+      ? '6 durations · choose balanced loot & XP · quick runs pay best per hour' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
+      : '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
-        '<div class="quest-name">' + escapeHtml(t.label) + ' <span class="quest-duration">' + questDurationLabel(t.minutes) + '</span></div>' +
+        '<div class="quest-name">' + escapeHtml(t.label) + ' <span class="quest-duration">' + durationBadge + '</span></div>' +
         '<div class="quest-desc">' + escapeHtml(info) + '</div>' +
         '<div class="quest-progress-text">' + (locked ? '🔒 Build the Quest Roost in the Academy to unlock' : rewardHint) + '</div>' +
       '</div>' +
@@ -12447,7 +12550,7 @@ function scheduleQuestBoardRefresh() {
 }
 
 // ---- Send sheet: pick a bird + loadout (Fallout Shelter style) --------------
-let questSendState = { templateId: null, birdId: null, provision: null, charm: null };
+let questSendState = { templateId: null, durationMinutes: 5, birdId: null, provision: null, charm: null };
 
 function questOverlayEl() {
   let el = document.getElementById('questOverlay');
@@ -12473,8 +12576,9 @@ function openQuestSend(templateId) {
   if (!t) return;
   if (t.tutorial === true && tutorialFlowState().errandClaimed) return;
   SFX.tap();
-  // Merlin's own tutorial errand arrives with Merlin already picked.
-  questSendState = { templateId, birdId: t.tutorial === true ? MERLIN_GUIDE.id : null, provision: null, charm: null };
+  // Merlin's own tutorial errand arrives with Merlin already picked. Normal
+  // errands start on the quick five-minute tier; players can switch before send.
+  questSendState = { templateId, durationMinutes: t.tutorial === true ? t.minutes : 5, birdId: t.tutorial === true ? MERLIN_GUIDE.id : null, provision: null, charm: null };
   renderQuestSendSheet();
 }
 
@@ -12483,24 +12587,40 @@ function renderQuestSendSheet() {
   if (!t) return;
   const el = questOverlayEl();
   // The tutorial errand is Merlin's own flight — no other bird may take it.
-  const birds = t.tutorial === true
+  const dispatchBirds = t.tutorial === true
     ? expeditionDispatchBirds([])
     : isStarterExpeditionTemplate(t.id)
       ? expeditionDispatchBirds(gameState.flock || [])
       : (gameState.flock || []).filter(b => b && b.id);
+  const birds = dispatchBirds.filter(b => b.id === MERLIN_GUIDE.id || !sleepReadinessForBird(b, Date.now()).sleeping);
   const info = QUEST_TEMPLATE_INFO[t.id] || '';
+  const durationOptions = t.tutorial === true ? [] : window.BurbzAcademyCore.getQuestDurationOptions(t.id);
+  const selectedDuration = durationOptions.find(o => o.minutes === Number(questSendState.durationMinutes)) || null;
+  const durationChoices = durationOptions.map(o => {
+    const selected = selectedDuration && selectedDuration.minutes === o.minutes ? ' selected' : '';
+    const branchLine = o.branches && o.branches[1] > 0 ? ' · ' + o.branches[0] + '–' + o.branches[1] + ' 🪵' : '';
+    const findLine = o.expectedItemRolls >= 1 ? ' · ~' + (Math.round(o.expectedItemRolls * 10) / 10) + ' finds' : ' · chance of a find';
+    return '<button class="quest-duration-choice' + selected + '" onclick="selectQuestDuration(' + o.minutes + ')">' +
+      '<strong>' + questDurationLabel(o.minutes) + '</strong>' +
+      '<span>~' + o.coins[0] + '–' + o.coins[1] + ' 🪙' + branchLine + ' · +' + o.xp + ' XP' + findLine + '</span></button>';
+  }).join('');
+  const selectedCoins = selectedDuration ? selectedDuration.coins : t.coins;
+  const selectedBranches = selectedDuration ? selectedDuration.branches : t.branches;
+  const selectedXp = selectedDuration ? selectedDuration.xp : (t.xp || 0);
+  const selectedMinutes = selectedDuration ? selectedDuration.minutes : t.minutes;
 
   const birdChips = birds.length ? birds.map(b => {
+    const assignedPost = birdAssignedPost(b.id);
     const away = birdHasActiveExpedition(b.id);
     const training = birdHasActiveTraining(b.id);
     const tooLow = (b.level || 1) < (t.minLevel || 1);
     const readiness = birdWorkReadiness(b.id === MERLIN_GUIDE.id ? { ...b, care:getMerlinCare() } : b, 'expedition');
-    const disabled = away || training || tooLow || !readiness.ok;
+    const disabled = Boolean(assignedPost) || away || training || tooLow || !readiness.ok;
     // Carrying capacity is the whole reason to send the big bird: it rides on
     // the chip so the choice is made with the load in mind, not after it.
     const carry = birdSizeSummary(b);
     const carryNote = carry ? ' · ' + carry.icon + ' carries ' + carry.capacity : '';
-    const baseNote = away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
+    const baseNote = assignedPost ? assignedPost.role.title : away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
@@ -12527,8 +12647,9 @@ function renderQuestSendSheet() {
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
-      '<div class="quest-overlay-sub">' + questDurationLabel(t.minutes) + ' · ~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + ((t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '') + ' · +' + (t.xp || 0) + ' XP</div></div></div>' +
+      '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') + '</div>' +
+    (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-economy-note">Quick quests pay best per hour; longer quests bring home much bigger totals while you are away.</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
     '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins &amp; branches</span></div>' +
@@ -12539,6 +12660,14 @@ function renderQuestSendSheet() {
       (questSendState.birdId ? '🧭 SEND ON QUEST' : 'PICK A BIRD FIRST') + '</button>' +
   '</div>';
   el.classList.add('open');
+}
+
+function selectQuestDuration(minutes) {
+  const options = window.BurbzAcademyCore.getQuestDurationOptions(questSendState.templateId);
+  if (!options.some(o => o.minutes === Number(minutes))) return;
+  SFX.tap();
+  questSendState.durationMinutes = Number(minutes);
+  renderQuestSendSheet();
 }
 
 function selectQuestBird(birdId) {
@@ -12555,7 +12684,7 @@ function toggleQuestEquip(slot, key) {
 
 function confirmQuestSend() {
   if (!questSendState.birdId || !questSendState.templateId) return;
-  startBirdExpedition(questSendState.birdId, questSendState.templateId, { provision: questSendState.provision, charm: questSendState.charm });
+  startBirdExpedition(questSendState.birdId, questSendState.templateId, { durationMinutes: questSendState.durationMinutes, provision: questSendState.provision, charm: questSendState.charm });
   closeQuestOverlay();
   renderQuests();
 }
@@ -12669,6 +12798,7 @@ function openQuestLog(expeditionId, silentRefresh) {
 function renderAcademy() {
   ensureAcademyBuildings(false);
   gameState.flock.forEach(ensureBirdAcademy);
+  reconcileAllBirdSleep(Date.now());
 
   // Zone counts + active highlight
   const byRoom = Object.fromEntries(Object.keys(ACADEMY_ROOMS).map(r => [r, []]));
@@ -12688,24 +12818,10 @@ function renderAcademy() {
     }
   });
 
-  // Bird glyphs perched around campus
+  // Room totals stay on the tree; companion portraits live in the calm,
+  // top-right room grids so no bird bounces awkwardly around the campus map.
   const markers = $('academyBirdMarkers');
-  if (markers) {
-    let html = '';
-    Object.keys(byRoom).forEach(room => {
-      const perches = ACADEMY_ROOMS[room].perches;
-      byRoom[room].slice(0, perches.length).forEach((b, i) => {
-        const [x, y] = perches[i];
-        const recentMove = b.academy.lastMovedAt && (Date.now() - Date.parse(b.academy.lastMovedAt) < 1600);
-        const wander = (recentMove ? ' just-moved' : (room === 'outdoors' ? ' wander' : ''));
-        const delay = (i * 0.45).toFixed(2);
-        const needs = (b.care.hunger || 0) >= 70 || (b.care.happiness || 100) <= 30 || (b.hp || 1) < (b.maxHp || 1) * 0.4;
-        const alert = needs ? '<circle cx="' + (x + 12) + '" cy="' + (y - 14) + '" r="5" fill="#ff6b6b" stroke="#11100d" stroke-width="1.5"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.4s" repeatCount="indefinite"/></circle><text x="' + (x + 12) + '" y="' + (y - 11) + '" text-anchor="middle" style="font-size:8px;font-weight:800;fill:#11100d">!</text>' : '';
-        html += '<text x="' + x + '" y="' + y + '" text-anchor="middle" class="academy-bird-glyph' + wander + '" style="animation-delay:' + delay + 's" data-room="' + room + '">' + getBirdMarkerEmoji(b.commonName || b.species) + '</text>' + alert;
-      });
-    });
-    markers.innerHTML = html;
-  }
+  if (markers) markers.innerHTML = '';
 
   renderAcademyRoomPanel(byRoom[academySelectedRoom]);
   renderAcademyBuildPanel();
@@ -12745,6 +12861,7 @@ function renderAcademyRoomPanel(birds) {
     const hpPct = clamp(Math.round((b.hp / (b.maxHp || 1)) * 100), 0, 100);
     const hungerPct = clamp(Math.round(b.care.hunger || 0), 0, 100);
     const happyPct = clamp(Math.round(b.care.happiness || 0), 0, 100);
+    const tirednessPct = clamp(Math.round(b.care.tiredness || 0), 0, 100);
 
     let actions = '';
     let tray = '';
@@ -12784,6 +12901,8 @@ function renderAcademyRoomPanel(birds) {
         academyMeter('HUNGER', hungerPct, 'hunger') +
         academyHungerStatusHTML(b) +
         academyMeter('HAPPY', happyPct, 'happy') +
+        academyMeter('TIREDNESS', tirednessPct, 'tiredness') +
+        academySleepStatusHTML(b) +
         academyDietLine(b) +
       '</div>' +
       '<div class="academy-actions">' + actions + '</div>' +
@@ -13046,13 +13165,31 @@ function academyMoveBird(birdId, room) {
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
+  if (bird.care && bird.care.sleeping && room !== 'dorm') { showToast((bird.commonName || bird.species) + ' is sleeping in The Roost — they will wake when rested.'); return; }
   if (!isAcademyRoomBuilt(room)) {
     const building = ACADEMY_BUILDINGS[ACADEMY_ROOMS[room].buildingId || room];
     showToast('Build ' + building.label + ' before sending birds there.');
     renderAcademyBuildPanel();
     return;
   }
+  const previousRoom = bird.academy.room || 'outdoors';
   bird.academy.room = room;
+  if (room === 'dorm') {
+    // Manual Roost assignment means sleep now; automatic tired/scheduled sleep
+    // uses the same fields, so both paths recover at the same fair rate.
+    if (!bird.care || typeof bird.care !== 'object') bird.care = { tiredness:20 };
+    bird.care.sleepReturnRoom = previousRoom === 'dorm' ? (bird.care.sleepReturnRoom || 'outdoors') : previousRoom;
+    bird.care.sleeping = true;
+    bird.care.sleepingSince = Date.now();
+    bird.care.sleepReason = 'manual';
+    bird.care.lastTirednessAt = Date.now();
+  } else if (bird.care && bird.care.sleeping) {
+    bird.care.sleeping = false;
+    bird.care.sleepingSince = null;
+    bird.care.sleepReason = null;
+    bird.care.sleepReturnRoom = null;
+    bird.care.lastTirednessAt = Date.now();
+  }
   bird.academy.lastMovedAt = new Date().toISOString();
   academySelectedRoom = room;
   updateQuestProgress('station_' + room, 1);
@@ -13153,6 +13290,7 @@ function academyFeedFood(birdId, foodKey) {
       bird.academy.dietKnown = true;
       academyFeedTrayBirdId = null;
       updateQuestProgress('feed_correct', 1);
+      if (tx.compatibility && tx.compatibility.verdict === 'primary') updateQuestProgress('proper_meal_fed', 1);
       saveState();
       showToast('✅ ' + food.emoji + ' Primary meal! ' + (diet ? diet.fact : tx.message) + ' +2 HP, +4 XP' + (firstTime ? ' · Diet discovered!' : ''));
       SFX.tap();
@@ -13184,6 +13322,7 @@ function academyFeedFood(birdId, foodKey) {
     bird.academy.dietKnown = true;
     academyFeedTrayBirdId = null;
     updateQuestProgress('feed_correct', 1);
+    updateQuestProgress('proper_meal_fed', 1);
     saveState();
     showToast('✅ ' + food.emoji + ' Perfect! ' + (diet ? diet.fact : name + ' happily eats ' + food.label.toLowerCase() + '.') + ' +2 HP, +4 XP' + (firstTime ? ' · Diet discovered!' : ''));
     SFX.tap();
@@ -13527,11 +13666,11 @@ function feedRewardsForVerdict(verdict) {
   return { birdXp:half(main.birdXp), trainerXp:half(main.trainerXp), coins:half(main.coins), happiness:half(main.happiness), bondXp:half(main.bondXp) };
 }
 
-// The one line that explains a half meal, wherever it needs explaining.
+// The one line that explains a side snack, wherever it needs explaining.
 function feedSideSnackExplainer(entry, option) {
   const eats = kitchenRosterEatsLabels(entry).join(' or ').toLowerCase();
   return escapeHtml(option.label) + ' is a side food for ' + escapeHtml(entry.name) + ' — eaten in the wild, but not what it lives on. '
-    + 'It still counts: it fills the Fullness bar halfway and pays half the XP a main meal would'
+    + 'It still counts: it adds 50 percentage points to the Fullness bar, so two side snacks fill an empty bird, and pays half the XP a main meal would'
     + (eats ? '. A main meal for this bird is ' + escapeHtml(eats) + '.' : '.');
 }
 
@@ -13656,7 +13795,7 @@ function renderFeedSheet() {
       '<div class="feed-sheet-main"><div class="feed-sheet-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
       '<div class="feed-sheet-species">' + escapeHtml(entry.speciesLine || '') + '</div>' + hungerLine + '</div></div>' +
     '<div class="feed-sheet-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — offer a food and learn') + '</div>' + chefNotice +
-    '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food fills up to halfway without lowering current fullness and gives half XP. Topping up still uses one complete ingredient.</div>' +
+    '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food adds 50 percentage points of Fullness, so two side snacks fill an empty bar, and gives half XP. Feed at any Fullness — every accepted serving uses one complete ingredient.</div>' +
     '<div class="feed-food-list">' + (foodRows || empty) + '</div>' + feedReceiptHTML() + '</div>';
   el.classList.add('open');
 }
@@ -13836,6 +13975,7 @@ function chefBulkFeedSameSpecies(entry, kind, foodId, option, now) {
         bird.hp = bird.maxHp;
         recalcBirdPower(bird);
         bird.academy.dietKnown = true;
+        updateQuestProgress('proper_meal_fed', 1);
       }
       updateQuestProgress('feed_correct', 1);
     }
@@ -13890,6 +14030,7 @@ function burbzFeedFood(targetKey, kind, foodId) {
           rewardBits.push('+1 max HP');
           const firstTime = !bird.academy.dietKnown;
           bird.academy.dietKnown = true;
+          updateQuestProgress('proper_meal_fed', 1);
           if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 1200);
         }
         updateQuestProgress('feed_correct', 1);
@@ -13906,7 +14047,7 @@ function burbzFeedFood(targetKey, kind, foodId) {
       transactionId: txId,
       badge: sideSnack ? '🥄 SIDE SNACK' : entry.name.toUpperCase() + ' FED!',
       rewardLine: rewardBits.join(' · '),
-      note: 'Fullness ' + Math.round(100 - tx.before) + '% → ' + Math.round(100 - tx.after) + '%' + (sideSnack ? ' (half full)' : ''),
+      note: 'Fullness ' + Math.round(100 - tx.before) + '% → ' + Math.round(100 - tx.after) + '%' + (sideSnack ? ' (side snack)' : ''),
       foodIcon: option.emoji
     };
     // 🥣 With a Head Chef appointed, one serving feeds the whole species.
@@ -14220,9 +14361,17 @@ function academyRest(birdId) {
   if (academyCdLeft(bird.academy.lastRest, 2*60*60*1000) > 0) { showToast('Not sleepy yet!'); return; }
   bird.academy.lastRest = new Date().toISOString();
   bird.hp = bird.maxHp;
+  bird.care.tiredness = 0;
+  bird.care.lastTirednessAt = Date.now();
+  bird.care.sleeping = false;
+  bird.care.sleepingSince = null;
+  bird.care.sleepReason = null;
+  const returnRoom = bird.care.sleepReturnRoom;
+  bird.care.sleepReturnRoom = null;
+  if (returnRoom && ACADEMY_ROOMS[returnRoom] && returnRoom !== 'tavern' && returnRoom !== 'kitchen' && isAcademyRoomBuilt(returnRoom)) bird.academy.room = returnRoom;
   bird.care.happiness = clamp((bird.care.happiness || 80) + 6, 0, 100);
   saveState();
-  showToast('💤 ' + (bird.commonName || bird.species) + ' slept deeply — fully healed!');
+  showToast('💤 ' + (bird.commonName || bird.species) + ' slept deeply — fully rested and healed!');
   SFX.tap();
   renderAcademy();
 }
@@ -14744,26 +14893,41 @@ function openAcademyRoom(room) {
 }
 
 
-function roomBirdHealthHTML(bird) {
-  const maxHp = Math.max(1, Math.round(Number(bird && bird.maxHp) || Number(bird && bird.hp) || 1));
-  const rawHp = Number(bird && bird.hp);
-  const hp = Number.isFinite(rawHp) ? clamp(Math.round(rawHp), 0, maxHp) : maxHp;
-  const pct = clamp(Math.round((hp / maxHp) * 100), 0, 100);
-  const state = pct <= 30 ? 'low' : (pct <= 60 ? 'mid' : 'healthy');
-  return '<div class="room-bird-health" data-hp-state="' + state + '" role="progressbar" aria-label="Health ' + hp + ' of ' + maxHp + '" aria-valuemin="0" aria-valuemax="' + maxHp + '" aria-valuenow="' + hp + '"><div class="room-bird-health-fill" style="width:' + pct + '%"></div><span class="room-bird-health-text">♥ ' + hp + '/' + maxHp + '</span></div>';
+function roomBirdGridHTML(birds, room) {
+  const entries = [];
+  const seen = new Set();
+  (birds || []).forEach(bird => { if (bird && !seen.has(bird.id)) { seen.add(bird.id); entries.push({ bird, role:null }); } });
+  const post = rolePostState('academy', room);
+  if (post && post.staffed && post.bird) {
+    const existing = entries.find(entry => entry.bird.id === post.bird.id);
+    if (existing) existing.role = post.role && post.role.title;
+    else { seen.add(post.bird.id); entries.push({ bird:post.bird, role:post.role && post.role.title }); }
+  }
+  const items = entries.map(entry => {
+    const bird = entry.bird;
+    normalizeBirdCare(bird);
+    const tiredness = clamp(Math.round(Number(bird.care.tiredness) || 0), 0, 100);
+    const sleeping = !!bird.care.sleeping;
+    const status = sleeping ? 'Sleeping' : entry.role ? entry.role : 'In this room';
+    const maxHp = Math.max(1, Math.round(Number(bird.maxHp) || Number(bird.hp) || 1));
+    const hp = clamp(Math.round(Number.isFinite(Number(bird.hp)) ? Number(bird.hp) : maxHp), 0, maxHp);
+    const hospitalHealth = room === 'hospital' ? '<span class="room-bird-grid-hp" role="progressbar" aria-label="Health ' + hp + ' of ' + maxHp + '" aria-valuemin="0" aria-valuemax="' + maxHp + '" aria-valuenow="' + hp + '">♥ ' + hp + '/' + maxHp + '</span>' : '';
+    return '<div class="room-bird-grid-item' + (sleeping ? ' sleeping' : '') + '" data-room-bird-id="' + escapeHtml(bird.id) + '" title="' + escapeHtml(birdDisplayName(bird) + ' · ' + status) + '">' +
+      birdOnlyImgHTML(bird, 'room-bird-grid-art') +
+      '<span class="room-bird-grid-name">' + escapeHtml(birdDisplayName(bird)) + '</span>' +
+      '<span class="room-bird-grid-status">' + (sleeping ? '💤 ' : '') + escapeHtml(status) + '</span>' +
+      hospitalHealth +
+      '<span class="room-bird-grid-tired" role="progressbar" aria-label="Tiredness ' + tiredness + ' percent" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + tiredness + '"><i style="width:' + tiredness + '%"></i></span>' +
+    '</div>';
+  }).join('');
+  return '<div class="room-bird-grid" aria-label="Birds assigned to ' + escapeHtml((ACADEMY_ROOMS[room] && ACADEMY_ROOMS[room].label) || room) + '">' + items + '</div>';
 }
-
-function roomBirdSpriteHTML(bird, index, room) {
-  // Bird-only art: the transparent cutout, or an emoji glyph. Never the full
-  // painting — a square scene sliding around the room looks broken.
-  const health = room === 'hospital' ? roomBirdHealthHTML(bird) : '';
-  return '<div class="room-bird-actor" data-bird-index="' + index + '">' + health + birdOnlyImgHTML(bird, 'room-bird-sprite') + '</div>';
-}
-
 
 function startBirdTrainingSession(birdId, templateId) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
+  const assignedPost = birdAssignedPost(birdId);
+  if (assignedPost) { showToast(birdDisplayName(bird) + ' is working as ' + assignedPost.role.title + ' — stand them down first.'); return; }
   const tpl = trainingTemplateById(templateId);
   const tplRoom = (tpl && tpl.room) || 'training';
   if (!isAcademyBuildingBuilt('training')) { showToast('Build the Training Hall first.'); return; }
@@ -14855,7 +15019,7 @@ function renderTrainingHallPanel(birds, others) {
   const sessions = ensureBirdTrainingSessions().map(s => core.advanceTrainingSession(s, Date.now()));
   const active = sessions.filter(s => !['claimed','cancelled','failed'].includes(s.status));
   const templates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
-  const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id));
+  const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
   const sessionHtml = active.length ? active.map(t => {
     const done = t.status === 'complete';
     const bird = academyBirdById(t.birdId) || { commonName:t.birdName };
@@ -14887,12 +15051,13 @@ function renderAcademyRoomInterior() {
   const room = academyInteriorRoom || academySelectedRoom || 'outdoors';
   const cfg = ACADEMY_ROOMS[room] || ACADEMY_ROOMS.outdoors;
   try {
+    reconcileAllBirdSleep(Date.now());
     const birds = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room === room && !birdHasActiveExpedition(b.id); });
     const others = (gameState.flock || []).filter(b => { ensureBirdAcademy(b); return b.academy.room !== room || birdHasActiveExpedition(b.id); });
     const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
     if (room === 'tavern') {
       const waiting = barracksRecruitCandidates().length;
-      root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage"></div></div>' +
+      root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML([], room) + '</div></div>' +
         rolePostCardHTML('academy', 'tavern') +
         '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
       $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
@@ -14903,11 +15068,13 @@ function renderAcademyRoomInterior() {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       const away = birdHasActiveExpedition(b.id);
       const training = birdHasActiveTraining(b.id);
+      const sleeping = !!(b.care && b.care.sleeping);
       const meta = away ? '🧭 Away on a quest — rejoins the Academy when it finishes'
         : training ? '🏋️ Mid-training in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'the Training Hall')
+        : sleeping ? '💤 Sleeping in The Roost — wakes when rested'
         : 'Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy');
-      const action = (away || training)
-        ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : 'Training') + '</button>'
+      const action = (away || training || sleeping)
+        ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : training ? 'Training' : 'Sleeping') + '</button>'
         : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
       return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
@@ -14924,7 +15091,7 @@ function renderAcademyRoomInterior() {
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
     const roomAddPanel = room === 'kitchen' ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + birds.map((bird, index) => roomBirdSpriteHTML(bird, index, room)).join('') + kitchenChefSpriteHTML(room) + '</div></div>' + rolePanel + trainingPanel + kitchenPanel + roomAddPanel;
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(birds, room) + '</div></div>' + rolePanel + trainingPanel + kitchenPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -25889,6 +26056,12 @@ function renderBirdex() {
         renameCompanionBird(renameBtn.dataset.birdId);
         return;
       }
+      const locationBtn = e.target.closest('[data-action="bird-location"]');
+      if (locationBtn) {
+        e.stopPropagation();
+        gotoBirdCardLocation(locationBtn.dataset.birdId);
+        return;
+      }
       const roomBtn = e.target.closest('[data-action="send-room"]');
       if (roomBtn) {
         e.stopPropagation();
@@ -25927,6 +26100,82 @@ function renderBirdex() {
   }, { once:true });
 }
 
+
+function resolveBirdCardLocation(bird, context = {}) {
+  const now = Number.isFinite(Number(context.now)) ? Number(context.now) : Date.now();
+  const rooms = context.rooms || ACADEMY_ROOMS || {};
+  const owns = key => Object.prototype.hasOwnProperty.call(context, key);
+  const expeditionRows = owns('expeditions') ? (context.expeditions || []) : ensureBirdExpeditions();
+  const trainingRows = owns('trainingSessions') ? (context.trainingSessions || []) : ensureBirdTrainingSessions();
+  const expeditions = expeditionRows.filter(row => row && row.birdId === bird.id && !['claimed','cancelled','failed'].includes(String(row.status || '').toLowerCase()));
+  const expedition = expeditions.map(row => {
+    if (context.advanceExpedition) return context.advanceExpedition(row, now);
+    if (typeof window !== 'undefined' && window.BurbzAcademyCore && typeof window.BurbzAcademyCore.advanceBirdExpedition === 'function') return window.BurbzAcademyCore.advanceBirdExpedition(row, now);
+    return { ...row, status:Number(row.endMs) <= now ? 'complete' : (row.status || 'active') };
+  }).sort((a, b) => Number(b.endMs || 0) - Number(a.endMs || 0))[0];
+  if (expedition) {
+    const complete = String(expedition.status || '').toLowerCase() === 'complete' || Number(expedition.endMs) <= now;
+    return complete
+      ? { kind:'quest-complete', icon:'✅', label:'Quest finished', detail:expedition.label || 'Kingdom errand', screen:'quests' }
+      : { kind:'quest-active', icon:'🧭', label:'On quest', detail:expedition.label || 'Kingdom errand', screen:'quests' };
+  }
+
+  const sessions = trainingRows.filter(row => row && row.birdId === bird.id && !['claimed','cancelled','failed'].includes(String(row.status || '').toLowerCase()));
+  const training = sessions.map(row => {
+    if (context.advanceTraining) return context.advanceTraining(row, now);
+    if (typeof window !== 'undefined' && window.BurbzAcademyCore && typeof window.BurbzAcademyCore.advanceTrainingSession === 'function') return window.BurbzAcademyCore.advanceTrainingSession(row, now);
+    return { ...row, status:Number(row.endMs) <= now ? 'complete' : (row.status || 'active') };
+  }).sort((a, b) => Number(b.endMs || 0) - Number(a.endMs || 0))[0];
+  if (training) {
+    let room = training.room;
+    if (!room && !owns('trainingSessions')) {
+      const template = trainingTemplateById(training.templateId);
+      room = template && template.room;
+    }
+    room = rooms[room] ? room : 'training';
+    const complete = String(training.status || '').toLowerCase() === 'complete' || Number(training.endMs) <= now;
+    return { kind:complete ? 'training-complete' : 'training-active', icon:complete ? '✅' : '🏋️', label:complete ? 'Training finished' : 'Training', detail:training.label || (rooms[room] && rooms[room].label) || 'Training Hall', screen:'academy-room', room };
+  }
+
+  if (bird && bird.care && bird.care.sleeping) {
+    return { kind:'sleeping', icon:'💤', label:(rooms.dorm && rooms.dorm.label) || 'THE ROOST', detail:'Sleeping', screen:'academy-room', room:'dorm' };
+  }
+
+  const post = owns('post') ? context.post : birdPostLabel(bird);
+  if (post) {
+    const label = [post.title, post.where].filter(Boolean).join(' · ');
+    if (post.scope === 'academy') return { kind:'academy-post', icon:post.icon || '📍', label, detail:post.where || '', screen:'academy-room', room:String(post.key) };
+    if (post.scope === 'village') return { kind:'village-post', icon:post.icon || '🏘️', label, detail:post.where || '', screen:'village', key:String(post.key) };
+    if (post.scope === 'region') return { kind:'region-post', icon:post.icon || '🗺️', label, detail:post.where || '', screen:'region', key:String(post.key) };
+  }
+
+  const requestedRoom = bird && bird.academy && bird.academy.room;
+  const room = requestedRoom && rooms[requestedRoom] ? requestedRoom : 'outdoors';
+  const roomInfo = rooms[room] || { label:'AVIARY GARDENS', icon:'🌱' };
+  return { kind:'academy-room', icon:roomInfo.icon || '📍', label:roomInfo.label || room, detail:'At the Academy', screen:'academy-room', room };
+}
+
+function birdCardLocationButtonHTML(bird) {
+  const location = resolveBirdCardLocation(bird);
+  return `<button type="button" class="card-location-btn ${escapeHtml(location.kind)}" data-action="bird-location" data-bird-id="${escapeHtml(bird.id)}" aria-label="Find ${escapeHtml(birdDisplayName(bird))}: ${escapeHtml(location.label)}"><span class="card-location-icon" aria-hidden="true">${location.icon}</span><span class="card-location-label">${escapeHtml(location.label)}</span><span class="card-location-arrow" aria-hidden="true">›</span></button>`;
+}
+
+function gotoBirdCardLocation(birdId) {
+  const bird = (gameState.flock || []).find(row => row && String(row.id) === String(birdId));
+  if (!bird) return;
+  const location = resolveBirdCardLocation(bird);
+  SFX.tap();
+  if (location.screen === 'quests') { switchScreen('quests'); return; }
+  if (location.screen === 'academy-room') {
+    const roomScreen = $('screen-academy-room');
+    if (currentScreen === 'academy-room' && roomScreen && !roomScreen.classList.contains('active')) currentScreen = '';
+    openAcademyRoom(location.room);
+    return;
+  }
+  if (location.screen === 'village') { openEmpireVillage(location.key); return; }
+  if (location.screen === 'region') { openEmpireRegion(location.key); return; }
+  switchScreen('birdex');
+}
 
 function createBirdCardHTML(bird, idx) {
   ensureBirdAcademy(bird);
@@ -25976,6 +26225,7 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div>
             <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
             <div class="card-species">${escapeHtml(bird.scientificName || bird.species)}</div>
+            ${birdCardLocationButtonHTML(bird)}
             ${hungerBarHTML(hungerStatus, 'companion-card')}
             ${frontFeedButton}
             ${cardDietDisclosure}
@@ -27751,7 +28001,7 @@ function renderBattleSelect() {
   const core = battleCore();
   const league = ensureLeagueState();
   const tier = core.LEAGUE_TIERS[league.tier];
-  const flock = getBattleFlock();
+  const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
   const liberation = pendingEmpireLiberation();
   const leagueHeader = $('leagueHeader');
   if (leagueHeader) leagueHeader.hidden = !!liberation;
@@ -27800,6 +28050,8 @@ function renderBattleSelect() {
       const hpPct = Math.round(clamp((b.hp || b.maxHp) / (b.maxHp || 1), 0, 1) * 100);
       const moves = core.trainedMoves(b.academy && b.academy.disciplines).length;
       const readiness = birdWorkReadiness(b, 'battle');
+      const fullnessPct = Math.round(clamp(100 - readiness.status.hunger, 0, 100));
+      const fullnessColor = 'hsl(' + Math.round(fullnessPct * 1.2) + ' 72% 44%)';
       const hungerMeta = ' · ' + readiness.status.label;
       return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (!readiness.ok ? ' hungry-blocked' : readiness.warning ? ' hungry-warn' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
@@ -27809,7 +28061,10 @@ function renderBattleSelect() {
         '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + escapeHtml(hungerMeta) + '</div>' +
         typeChipHTML(core.classifySpecies(b.species)) +
         familyChipHTML(b) +
-        '<div class="pk-hp"><div style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div>' +
+        '<div class="pk-meters" data-fullness="' + fullnessPct + '">' +
+          '<div class="pk-meter-row"><span>HP</span><div class="pk-meter-track"><div class="pk-meter-fill hp" style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div><span>' + hpPct + '%</span></div>' +
+          '<div class="pk-meter-row"><span>Full</span><div class="pk-meter-track"><div class="pk-meter-fill" style="width:' + fullnessPct + '%;background:' + fullnessColor + '"></div></div><span>' + fullnessPct + '%</span></div>' +
+        '</div>' +
         '</button>';
     }).join('');
   }
@@ -27839,7 +28094,7 @@ function renderBattleSelect() {
 }
 
 function battlePickToggle(birdId) {
-  const flock = getBattleFlock();
+  const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
   if (!flock.some(b => b.id === birdId)) return;
   const idx = battleSelectedIds.indexOf(birdId);
   if (idx >= 0) battleSelectedIds.splice(idx, 1);
@@ -27859,9 +28114,17 @@ function startPerchBattle() {
   const flock = getBattleFlock();
   const team = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
   if (!team.length) return;
+  const posted = team.find(b => birdAssignedPost(b.id));
+  if (posted) { const post = birdAssignedPost(posted.id); showToast(birdDisplayName(posted) + ' is working as ' + post.role.title + ' — stand them down first.'); renderBattleSelect(); return; }
   const blocked = team.find(b => !birdWorkReadiness(b, 'battle').ok);
-  if (blocked) { showToast('🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'); renderBattleSelect(); return; }
-  if (team.some(b => birdWorkReadiness(b, 'battle').warning)) showToast('🍽️ One or more selected birds are hungry — feed them after this battle.');
+  if (blocked) {
+    const readiness = birdWorkReadiness(blocked, 'battle');
+    showToast((readiness.sleepBlocked ? '💤 ' + birdDisplayName(blocked) + ' is sleeping or needs The Roost.' : '🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'));
+    renderBattleSelect();
+    return;
+  }
+  const warningStates = team.map(b => birdWorkReadiness(b, 'battle')).filter(r => r.warning);
+  if (warningStates.length) showToast(warningStates.some(r => r.sleep && r.sleep.warning) ? '🥱 One or more selected birds are getting tired — let them rest after this battle.' : '🍽️ One or more selected birds are hungry — feed them after this battle.');
   const liberation = pendingEmpireLiberation();
   const rival = leagueRivalOpponents();
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter.
@@ -28673,8 +28936,7 @@ const PLAYER_QUESTS = [
     measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
     measure:() => Number(gameState.player.mealsServed) || 0 },
-  { id:'pq_diet_badge',     name:'Field-Perfect chef', desc:'Earn a diet badge with a Field-Perfect meal', type:'diet_badge', target:1, reward:60, coins:30, icon:'\u{1F3C5}', go:'academy',
-    measure:() => Object.values(gameState.dietBadges || {}).filter(n => Number(n) > 0).length },
+  { id:'pq_diet_badge',     name:'Feed a bird the right meal', desc:'Give any companion one of its proper foods', type:'proper_meal_fed', target:1, reward:60, coins:30, icon:'\u{1F37D}\u{FE0F}', go:'academy', focusRoom:'kitchen' },
   { id:'pq_build_hospital', name:'Build the Bird Hospital', desc:'Raise the Bird Hospital at the Academy', type:'build_hospital', target:1, reward:55, coins:25, icon:'\u{1F3E5}', go:'academy',
     measure:() => isAcademyBuildingBuilt('hospital') ? 1 : 0 },
   { id:'pq_hospital_rest',  name:'Prescribe some rest', desc:'Station a companion in the Bird Hospital', type:'station_hospital', target:1, reward:45, coins:20, icon:'\u{1FA79}', go:'academy',
@@ -28719,6 +28981,11 @@ function syncActivePlayerQuest() {
 
 function playerQuestGo(q) {
   academyQuestGuidanceRoom = q.focusRoom || null;
+  if (q.id === 'pq_walk_adventure') {
+    if (currentScreen !== 'quests') switchScreen('quests');
+    openQuestBoard();
+    return;
+  }
   if (q.go && q.go !== currentScreen) switchScreen(q.go);
   else if (q.go === 'quests') $('expeditionQuestList')?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -29244,7 +29511,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'settlement-tiers-v203-20260803';
+const BURBZ_BUILD = 'uk-bird-alias-completion-v216-20260803';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

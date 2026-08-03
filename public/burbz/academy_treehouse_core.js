@@ -38,6 +38,43 @@
   ];
   const QUEST_CATEGORY_INDEX = Object.fromEntries(QUEST_CATEGORIES.map(c => [c.id, c]));
 
+  // Every normal Kingdom errand offers the same six timer choices. The reward
+  // curve rises sub-linearly: longer flights pay much larger totals for players
+  // who are away, while repeating quick flights remains the best reward per
+  // minute for attentive play (the familiar mobile-simulation trade-off).
+  const QUEST_DURATION_MINUTES = Object.freeze([5, 10, 30, 60, 120, 1440]);
+  function questDurationMultiplier(minutes) {
+    return Math.pow(Math.max(5, Number(minutes) || 5) / 5, 0.9);
+  }
+  // Physical finds grow more gently than coins/XP because birds still have a
+  // believable carrying limit; a day-long errand brings a useful bundle, not
+  // hundreds of nominal items that would immediately be left behind.
+  function questItemMultiplier(minutes) {
+    return Math.pow(Math.max(5, Number(minutes) || 5) / 5, 0.45);
+  }
+  function scaledQuestRange(range, ratio) {
+    const source = Array.isArray(range) ? range : [0, 0];
+    const scale = Math.max(0, Number(ratio) || 0);
+    const low = source[0] > 0 ? Math.max(0, Math.round(source[0] * scale)) : 0;
+    const high = source[1] > 0 ? Math.max(1, Math.round(source[1] * scale)) : 0;
+    return [Math.min(low, high), Math.max(low, high)];
+  }
+  function questRewardsForDuration(template, minutes) {
+    const selectedMinutes = QUEST_DURATION_MINUTES.includes(Number(minutes)) ? Number(minutes) : Math.max(5, Number(template && template.minutes) || 5);
+    const baseMultiplier = questDurationMultiplier(template && template.minutes);
+    const ratio = questDurationMultiplier(selectedMinutes) / Math.max(0.0001, baseMultiplier);
+    const physicalRatio = questItemMultiplier(selectedMinutes) / Math.max(0.0001, questItemMultiplier(template && template.minutes));
+    return {
+      minutes: selectedMinutes,
+      ratio,
+      physicalRatio,
+      coins: scaledQuestRange(template && template.coins, ratio),
+      branches: scaledQuestRange(template && template.branches, physicalRatio),
+      xp: Math.max(1, Math.round((Number(template && template.xp) || 1) * ratio)),
+      expectedItemRolls: physicalRatio
+    };
+  }
+
   const QUEST_TEMPLATES = {
     // Merlin's First Flight: the one-off tutorial errand. It lasts seconds,
     // not minutes, so a brand-new player sees the whole send → return → claim
@@ -140,6 +177,11 @@
 
   function getAcademyRooms() { return TREEHOUSE_ROOMS.map(r => ({...r})); }
   function getQuestTemplates() { return Object.values(QUEST_TEMPLATES).map(q => ({...q, category:q.category || 'treasure', items:[...q.items], beats:[...q.beats], branches:Array.isArray(q.branches) ? [...q.branches] : [0,0]})); }
+  function getQuestDurationOptions(templateId) {
+    const template = QUEST_TEMPLATES[templateId];
+    if (!template || template.tutorial === true) return [];
+    return QUEST_DURATION_MINUTES.map(minutes => ({ ...questRewardsForDuration(template, minutes) }));
+  }
   function getQuestCategories() { return QUEST_CATEGORIES.map(c => ({...c})); }
   function questCategory(id) { const c = QUEST_CATEGORY_INDEX[id]; return c ? {...c} : null; }
   function getTrainingTemplates() { return Object.values(TRAINING_TEMPLATES).map(t => ({...t, beats:[...t.beats]})); }
@@ -194,23 +236,47 @@
     const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
     const seed = hashString(`${bird.id || birdName}|${template.id}|${nowMs}`);
     const slowFactor = Math.max(1, Number(options && options.slowFactor) || 1);
-    const durationMs = Math.round(template.minutes * 60 * 1000 * slowFactor);
+    // Tutorial/legacy calls keep their authored timer. Normal UI dispatches may
+    // only use one of the six catalogued choices; caller-authored arbitrary
+    // timers and rewards are deliberately ignored.
+    const requestedDuration = Number(options && options.durationMinutes);
+    const durationMinutes = template.tutorial !== true && QUEST_DURATION_MINUTES.includes(requestedDuration)
+      ? requestedDuration
+      : template.minutes;
+    const economy = template.tutorial === true
+      ? { ratio:1, physicalRatio:1, coins:[...template.coins], branches:Array.isArray(template.branches) ? [...template.branches] : [0,0], xp:template.xp || 1, expectedItemRolls:1 }
+      : questRewardsForDuration(template, durationMinutes);
+    const durationMs = Math.round(durationMinutes * 60 * 1000 * slowFactor);
     const endMs = nowMs + durationMs;
-    const baseCoins = rand(seed, template.coins[0], template.coins[1]);
-    const powerBonus = Math.floor(((bird.power || 80) + (bird.int || 40) + (bird.spd || 40) + (bird.stamina || 40)) / 90);
+    const baseCoins = rand(seed, economy.coins[0], economy.coins[1]);
+    const powerBonus = Math.max(0, Math.round(Math.floor(((bird.power || 80) + (bird.int || 40) + (bird.spd || 40) + (bird.stamina || 40)) / 90) * economy.ratio));
     // Charm pays on social and diplomacy quests: charming birds haggle better prices.
-    const charmBonus = template.chaWeight ? Math.floor(((bird.cha || 40) * template.chaWeight) / 60) : 0;
+    const charmBonus = template.chaWeight ? Math.max(0, Math.round(Math.floor(((bird.cha || 40) * template.chaWeight) / 60) * economy.ratio)) : 0;
     // Branch (timber) payout: stronger, steadier birds haul a little extra.
-    const branchRange = Array.isArray(template.branches) ? template.branches : [0, 0];
+    const branchRange = economy.branches;
     const baseBranches = rand(seed + 7, branchRange[0], branchRange[1]);
-    const branchBonus = baseBranches > 0 ? Math.floor(((bird.stamina || 40) + (bird.power || 80)) / 160) : 0;
-    const item = template.items[seed % template.items.length];
-    const bonusItem = template.items[(seed + 1) % template.items.length];
-    const rewardItems = { [item]: 1 };
-    // Charmers (high Charm) make friends out there and get gifts more often.
+    const branchBonus = baseBranches > 0 ? Math.max(0, Math.round(Math.floor(((bird.stamina || 40) + (bird.power || 80)) / 160) * economy.physicalRatio)) : 0;
+    // Item loot scales as expected rolls, including a deterministic fractional
+    // chance at short tiers and multiple finds on long tiers.
+    const expectedItemRolls = Math.max(0, Number(economy.expectedItemRolls) || 0);
+    let itemRolls = Math.floor(expectedItemRolls);
+    const fractionalRoll = expectedItemRolls - itemRolls;
+    if (((seed + 19) % 10000) / 10000 < fractionalRoll) itemRolls += 1;
+    const rewardItems = {};
+    for (let i = 0; i < itemRolls; i++) {
+      const item = template.items[(seed + i) % template.items.length];
+      rewardItems[item] = (rewardItems[item] || 0) + 1;
+    }
+    // Charmers (high Charm) make friends out there and get one extra gift often.
     const bonusRoll = (bird.cha || 0) >= 120 ? 2 : 3;
-    if (seed % bonusRoll === 0) rewardItems[bonusItem] = (rewardItems[bonusItem] || 0) + 1;
-    const clue = template.clueId ? MERLIN_CLUES[template.clueId] : null;
+    if (itemRolls > 0 && seed % bonusRoll === 0) {
+      const bonusItem = template.items[(seed + itemRolls) % template.items.length];
+      rewardItems[bonusItem] = (rewardItems[bonusItem] || 0) + 1;
+      itemRolls += 1;
+    }
+    // Story clues remain proper discoveries rather than five-minute spam: the
+    // selected flight must be at least as substantial as the authored quest.
+    const clue = template.clueId && durationMinutes >= template.minutes ? MERLIN_CLUES[template.clueId] : null;
     return {
       id: `exp_${nowMs}_${String(bird.id || birdName).replace(/[^a-z0-9]+/gi,'_')}`,
       birdId: bird.id || null,
@@ -220,10 +286,11 @@
       icon: template.icon,
       startMs: nowMs,
       endMs,
+      durationMinutes,
       status: 'active',
       slowFactor,
       hungryFlight: slowFactor > 1,
-      rewards: { coins: baseCoins + powerBonus + charmBonus, charmBonus, branches: baseBranches + branchBonus, xp: template.xp || (10 + Math.floor(template.minutes / 10)), items: rewardItems },
+      rewards: { coins: baseCoins + powerBonus + charmBonus, charmBonus, branches: baseBranches + branchBonus, xp: economy.xp, items: rewardItems, itemRolls },
       story: clue ? { clueId: clue.id, title: clue.title, copy: clue.copy, unlocksTrial: clue.unlocksTrial } : null,
       seed
     };
@@ -245,5 +312,5 @@
     return { ...expedition, status, progressPct, events };
   }
 
-  return { getAcademyRooms, getQuestTemplates, getQuestCategories, questCategory, getTrainingTemplates, getMerlinClues, createTrainingSession, advanceTrainingSession, createBirdExpedition, advanceBirdExpedition };
+  return { QUEST_DURATION_MINUTES, questDurationMultiplier, getQuestDurationOptions, getAcademyRooms, getQuestTemplates, getQuestCategories, questCategory, getTrainingTemplates, getMerlinClues, createTrainingSession, advanceTrainingSession, createBirdExpedition, advanceBirdExpedition };
 });
