@@ -94,7 +94,7 @@
     {
       id:'head_chef', title:'Head Chef', icon:'🥣', scope:'academy', key:'kitchen',
       stats:{ int:0.6, stamina:0.4 },
-      effect:{ id:'meal_quality', label:'Meal quality', copy:'Every meal served pays more XP, coins and cheer.' },
+      effect:{ id:'meal_quality', label:'Meal quality', copy:'Every meal served pays more XP, coins and cheer — and one serving feeds every companion of the same species at once.' },
       copy:'The Kitchen wants a thinker. A clever chef knows what every species really eats and how to prepare it, so every plate does more good.'
     },
     {
@@ -279,6 +279,29 @@
     return next;
   }
 
+  // ---------------------------------------------------------------------------
+  // The Head Chef's table service: one order, the whole species
+  // ---------------------------------------------------------------------------
+  // With a Head Chef appointed, feeding one companion plates the same food for
+  // every hungry flock-mate of the same species in the same sitting, instead of
+  // the player tapping through each duplicate bird. Pure planning: the caller
+  // passes whether the post is staffed, the flock-mate rows ({ key, hunger })
+  // and how many servings are in stock. The plan says who eats, who was already
+  // full (nothing is wasted on a full bird), and how many went short because
+  // the stores ran dry. No chef → nobody is bulk-served, exactly as before.
+  function chefServicePlan(staffed, rows, stockCount) {
+    if (!staffed) return { fed:[], alreadyFull:[], shortBy:0 };
+    const list = Array.isArray(rows) ? rows.filter(r => r && r.key != null) : [];
+    const hungry = list.filter(r => Number(r.hunger) > 0);
+    const alreadyFull = list.filter(r => !(Number(r.hunger) > 0)).map(r => String(r.key));
+    const stock = Math.max(0, Math.floor(Number(stockCount) || 0));
+    return {
+      fed: hungry.slice(0, stock).map(r => String(r.key)),
+      alreadyFull,
+      shortBy: Math.max(0, hungry.length - stock)
+    };
+  }
+
   // Drop posts held by birds that have left the flock (released, or a save
   // healed across builds), so a vacancy is never invisible.
   function pruneRoleState(state, liveBirdIds) {
@@ -312,6 +335,7 @@
     postsHeldBy,
     assignRole,
     unassignRole,
+    chefServicePlan,
     pruneRoleState
   };
 });
