@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-02 (the Academy Library + Merlin bond meter — see "Review log" at the bottom).
+Last curated: 2026-08-02 (the Head Chef's whole-species table service — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,35 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-02 — the Head Chef feeds the whole species (Claude).** Three player
+  asks in one release:
+  - **Bulk feeding.** With a Head Chef appointed to the Kitchen & Pantry,
+    serving one companion feeds every flock-mate of the same species in the
+    same sitting. The planning maths (`chefServicePlan` — who eats, who was
+    already full, how many went short when the stores ran dry) is pure and
+    lives in `bird_roles_core.js`; `chefBulkFeedSameSpecies` in `index.html`
+    spends it, running each bulk meal through the SAME
+    `applyFeedingTransaction` pipeline with full per-bird rewards, one
+    ingredient per bird. No chef → nothing changes. The call from
+    `burbzFeedFood` is `typeof`-guarded (same idiom as `logDiary`) so the four
+    existing Node feed harnesses run unmodified.
+  - **Tutorial tip.** `assignBirdRole` fires `showChefBulkFeedTip` the moment
+    the Kitchen post is filled; it rides the shared `showFeedNotePopup`
+    component, which now takes a third `noteId` param (default `side-snack`,
+    the tip is `chef-bulk-feed`). The feed sheet also grows a
+    `data-chef-bulk-notice` line naming the chef and the species-wide serving,
+    and the Head Chef's role-card effect copy advertises the perk.
+  - **The chef is visibly in the room.** `kitchenChefSpriteHTML` draws the
+    appointed bird's transparent cutout (`birdOnlyImgHTML` — never the framed
+    painting) on the Kitchen room stage with a nameplate. It's appended after
+    the pinned `birds.map(...roomBirdSpriteHTML...)` expression, so the old
+    stage contract strings survive.
+  - Tests: `tests/test_chef_bulk_feeding_20260802.py` (Node-driven plan maths
+    plus a real end-to-end bulk-feed harness in the one-tap style). Release
+    pins repointed per convention; SW cache + `BURBZ_BUILD` bumped
+    (`chef-bulk-feeding-v202-20260802`), and both role/size core `?v=` tags
+    moved to the same tag.
 
 - **2026-08-02 — weight tells, and every bird gets a job (Claude).** Two rules
   Yaan asked for, both new cores plus wiring:
