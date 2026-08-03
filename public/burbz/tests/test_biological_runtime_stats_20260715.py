@@ -15,6 +15,12 @@ def _runtime_stats(profile, rarity, base_power):
 const profile = {json.dumps(profile)};
 function findSpeciesProfile() {{ return profile; }}
 function speciesCharmBase() {{ return 5; }}
+// Size is part of the biology now: weight scales HP/ATK/DEF/MAG, so the real
+// size core is loaded rather than stubbed away.
+const SIZE_CORE = require('./bird_size_core.js');
+function birdSizeCore() {{ return SIZE_CORE; }}
+function speciesSizeInfo(p) {{ return SIZE_CORE.speciesSize(p); }}
+function birdCarryCapacity(bird) {{ return SIZE_CORE.carryCapacity(bird); }}
 function clamp(value, min, max) {{ return Math.max(min, Math.min(max, value)); }}
 function hashStr() {{ return 0; }}
 function seededRandom() {{ return () => 0.5; }}
@@ -82,6 +88,10 @@ def test_legacy_flock_migration_recalibrates_stats_but_preserves_level_training_
 const profile = {json.dumps(profile)};
 function findSpeciesProfile(name) {{ return name === profile.name ? profile : null; }}
 function speciesCharmBase() {{ return 5; }}
+const SIZE_CORE = require('./bird_size_core.js');
+function birdSizeCore() {{ return SIZE_CORE; }}
+function speciesSizeInfo(p) {{ return SIZE_CORE.speciesSize(p); }}
+function birdCarryCapacity(bird) {{ return SIZE_CORE.carryCapacity(bird); }}
 function clamp(value, min, max) {{ return Math.max(min, Math.min(max, value)); }}
 function hashStr() {{ return 0; }}
 function seededRandom() {{ return () => 0.5; }}
@@ -97,10 +107,15 @@ console.log(JSON.stringify({{migrated, unknown:migrateBirdToBiologyStats(unknown
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     bird = payload["migrated"]
-    assert bird["biologyStatsVersion"] == "bird-biology-runtime-v2-20260715"
-    assert bird["maxHp"] == 106  # biology 80 * level 1.2, plus 10 trained HP
-    assert bird["hp"] == 53      # preserves the prior 50% health ratio
-    assert bird["atk"] == 41     # biology 30 * level 1.2, plus 5 trained ATK
-    assert bird["int"] == 98     # biology 80 * level 1.2, plus 2 trained INT
+    assert bird["biologyStatsVersion"] == "bird-biology-runtime-v3-size-20260802"
+    # v3: weight scales the combat stats. This bird is a small one (HP 4,
+    # STRENGTH 3 on the 1-10 biology scale => size score 29, x0.91), so its
+    # bulk and blows come out below the raw biology numbers — while INT, which
+    # size never touches, is unchanged from v2.
+    assert bird["sizeClass"] == "small"
+    assert bird["maxHp"] == 97   # biology 80 * size 0.91 * level 1.2, plus 10 trained HP
+    assert bird["hp"] == 49      # preserves the prior 50% health ratio
+    assert bird["atk"] == 37     # biology 30 * size 0.91 * level 1.2, plus 5 trained ATK
+    assert bird["int"] == 98     # biology 80 * level 1.2, plus 2 trained INT — size-free
     assert payload["unknown"] == {"species": "Unknown Legacy Bird", "hp": 77, "maxHp": 88}
     assert "b = migrateBirdToBiologyStats(b);" in source

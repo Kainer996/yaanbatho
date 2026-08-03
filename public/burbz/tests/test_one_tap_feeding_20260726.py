@@ -84,6 +84,9 @@ global.getMerlinCare = () => gameState.merlinCare;
 global.MERLIN_CORE = { grantMerlinBondXp: c => c, sanitizeMerlinCare: c => c };
 global.birdHasActiveExpedition = () => false;
 global.birdHasActiveTraining = () => false;
+// No bird is posted as Head Chef in this harness, so the Kitchen runs at its
+// unstaffed baseline of 1.0.
+global.academyRoleMultiplier = () => 1;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
 global.applyPlayerXpState = n => { gameState.player.xp += n; };
@@ -188,8 +191,9 @@ def test_no_wall_clock_cooldown_gates_feeding_anywhere():
     for name in ("academyFeedFood", "burbzFeedFood", "feedWildSpecies"):
         src = function_source(html, name)
         assert "academyCdLeft" not in src, name
-    # The Academy's own Feed button reads the hunger bar, not a timer.
-    assert "const full = birdIsFull(b);" in html
+    # Fullness is information, never a gate on a player-chosen meal.
+    assert "disabled>🍽️ Full" not in html
+    assert "const full = birdIsFull(b);" not in html
     assert "function birdIsFull(" in html
 
 
@@ -351,7 +355,9 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
 def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
     html = HTML.read_text(encoding="utf-8")
     rewards = function_source(html, "feedRewardsForVerdict")
-    assert "Math.round(Number(value) / 2)" in rewards
+    # Half is still computed from the main-meal table (the Head Chef multiplier
+    # rides on top of both the whole and the half, so it cannot make them drift).
+    assert "Number(value) / 2" in rewards
     assert "FEED_MEAL_REWARDS.primary" in rewards
     # The hunger half lives in the diet core, as one number.
     core = (ROOT / "bird_diet_hunger_core.js").read_text(encoding="utf-8")
@@ -359,29 +365,23 @@ def test_half_is_derived_from_the_main_meal_not_typed_out_twice():
     assert "SECONDARY_MEAL_FRACTION" in core.split("verdict: record.matchMethod")[1][:400]
 
 
-def test_a_full_bird_leaves_the_feeding_screen():
+def test_only_companions_use_the_feeding_surface():
     html = HTML.read_text(encoding="utf-8")
-    hungry = function_source(html, "kitchenChoiceIsHungry")
-    assert "birdIsFull(row.companion)" in hungry
-    # Wild Birdex visitors have no hunger bar, so they always stay.
-    assert "return true;" in hungry
-    # Both lists on that screen filter, and the selection moves on by itself.
-    assert "function kitchenHungryChoices(" in html
-    assert "const choices = kitchenHungryChoices();" in html
-    assert "kitchenRosterHungryEntries()" in function_source(html, "renderKitchenRosterHTML")
-    selected = function_source(html, "kitchenSelectedChoice")
-    assert "kitchenHungryChoices()" in selected
-    # And the screen says so rather than going blank when everyone is fed.
+    # Full companions remain in the upper feeding table for optional top-ups.
+    assert "kitchenRosterEntriesForFeeding()" in function_source(html, "renderKitchenRosterHTML")
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "return renderKitchenRosterHTML();" in panel
+    assert "kitchenPrepCounterChoices" not in panel
+    assert 'data-kitchen-pantry-root="academy-kitchen"' not in panel
+    # The companion table still explains the genuinely empty-roster state.
     assert 'data-kitchen-all-fed="1"' in html
 
 
-def test_the_prep_counter_shows_the_hunger_it_is_there_to_fill():
+def test_the_companion_table_shows_fullness_it_is_there_to_fill():
     html = HTML.read_text(encoding="utf-8")
-    panel = function_source(html, "renderKitchenPanelHTML")
-    assert "kitchenGuestHungerHTML(chosen)" in panel
-    metre = function_source(html, "kitchenGuestHungerHTML")
-    assert 'data-hunger-surface="prep-counter"' in metre
-    assert "academy-meter-fill hunger" in metre
-    assert "/100 hunger" in metre
-    # A wild visitor has no hunger bar to show, and is told so instead.
-    assert "entry.wild" in metre
+    row = function_source(html, "kitchenRosterRowHTML")
+    assert "hungerBarHTML(status, 'kitchen-roster')" in row
+    metre = function_source(html, "hungerBarHTML")
+    assert 'data-hunger-surface="' in metre
+    assert "Fullness" in metre
+    assert "data-fullness" in metre

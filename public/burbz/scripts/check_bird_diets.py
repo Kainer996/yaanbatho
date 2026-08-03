@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 """Generate and verify source-backed Burbz diet records.
 
-The oracle is EltonTraits 1.0 BirdFuncDat at /tmp/BirdFuncDat.txt. The script
-produces deterministic JSON plus a browser-friendly JS wrapper, and --check
-fails if the source hash, catalogue count, match counts, or generated files
-drift.
+The oracle is EltonTraits 1.0 BirdFuncDat (Wilman et al. 2014, Ecology 95:2027,
+doi:10.1890/13-1917.1, CC BY 4.0). The script produces deterministic JSON plus a
+browser-friendly JS wrapper, and --check fails if the source hash, catalogue
+count, match counts, or generated files drift.
+
+Source resolution order (first that exists wins):
+  1. --source PATH, if given
+  2. /tmp/BirdFuncDat.txt (legacy download location; kept for muscle memory)
+  3. data/national-bird-completion/source-cache/BirdFuncDat.txt (committed, so
+     this script and its tests run offline on a fresh clone — do not delete it)
+
+NOTE FOR FUTURE AGENTS: the committed cache is the source of truth for offline
+reproducibility. Its bytes are pinned by EXPECTED_SHA256 below; if you ever
+refresh the oracle, update that constant, BIRDFUNCDAT_SHA256 in the diet tests,
+and re-run this script with --check.
 """
 
 from __future__ import annotations
@@ -22,7 +33,11 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = Path("/tmp/BirdFuncDat.txt")
+CACHED_SOURCE = ROOT / "data" / "national-bird-completion" / "source-cache" / "BirdFuncDat.txt"
+TMP_SOURCE = Path("/tmp/BirdFuncDat.txt")
+# Prefer the ephemeral /tmp copy if present (fast local iteration), otherwise
+# fall back to the committed cache so a fresh clone still verifies offline.
+DEFAULT_SOURCE = TMP_SOURCE if TMP_SOURCE.exists() else CACHED_SOURCE
 PROFILES_PATH = ROOT / "data" / "national-bird-completion" / "profiles.json"
 INDEX_PATH = ROOT / "index.html"
 JSON_OUT = ROOT / "data" / "bird-diet-records.json"
@@ -685,7 +700,10 @@ def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "generatedBy": "public/burbz/scripts/check_bird_diets.py",
         "source": {
             **SOURCE_METADATA,
-            "path": str(source_path),
+            # Record a stable, repo-relative path so the artifact is byte-identical
+            # no matter where the oracle was read from (/tmp vs committed cache).
+            # The bytes are pinned by sha256 below, so the location is cosmetic.
+            "path": str(CACHED_SOURCE.relative_to(ROOT)),
             "sha256": sha,
             "rowCount": len(rows),
             "rawParsedRowCount": raw_row_count,

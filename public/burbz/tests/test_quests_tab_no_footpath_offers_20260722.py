@@ -33,11 +33,11 @@ def test_nearby_offer_renderer_is_gone_from_the_quest_tab_entirely():
     assert "walkingQuestNearbyList" not in HTML
 
 
-def test_footpath_offers_still_ship_on_the_map_explore_board():
-    assert 'id="mapQuestBtn"' in HTML
-    assert "function discoverNearbyQuestOffers(" in HTML
-    assert "renderQuestOfferCards(" in HTML
-
+def test_footpath_offers_still_ship_on_the_map_show_quests_control():
+    assert 'id="mapQuestShowBtn"' in HTML
+    assert "showAllLocalQuests" in HTML
+    assert "discoverNearbyQuestOffers" in HTML
+    assert "fetchTrailOffers" in HTML
 
 def test_change_ships_with_a_fresh_offline_cache_version():
     assert "const BURBZ_CACHE = 'burbz-" in SW

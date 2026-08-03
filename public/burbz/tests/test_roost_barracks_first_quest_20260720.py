@@ -150,6 +150,11 @@ const ACADEMY_BUILDINGS = {
   tavern:{cost:60,branches:8,unlockLevel:1,room:'tavern',label:'Barracks',icon:'🪶',x:76,y:80}
 };
 let academySelectedRoom = 'outdoors';
+// No Recruiting Officer is posted in the Barracks here, so recruiting runs
+// at its unstaffed baseline price.
+function academyRoleMultiplier(){ return 1; }
+function applyQuartermasterPlanning(quest){ return quest; }
+function applyExpeditionCarryLimit(quest){ return quest; }
 let gameState = {player:{level:1,coins:220,branches:18,totalCaptures:0},academyBuildings:{outdoors:{built:true}},discoveredSpecies:{},flock:[],birdExpeditions:[],pantry:{},inventory:{items:{}},activePetId:null};
 const SFX={levelUp(){},capture(){},tap(){}};
 const MERLIN_GUIDE = { id:'merlin-guide', commonName:'Merlin', species:'Merlin' };
@@ -250,7 +255,7 @@ console.log(JSON.stringify({missingBoth,barracksOnly,established}));
 def test_onboarding_release_is_query_busted_and_offline():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    version = "quest-categories-material-quests-20260726"
+    version = "restored-lost-features-v200-20260802"
     assert f'academy_treehouse_core.js?v={version}' in html
     assert f"./academy_treehouse_core.js?v={version}" in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

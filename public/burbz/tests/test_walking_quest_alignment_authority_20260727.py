@@ -144,6 +144,27 @@ def test_a_quest_certifies_against_the_paths_it_was_built_from():
     assert result["status"] == "certified", "the quest is playable, not stuck loading"
 
 
+def test_router_loop_carries_complete_mapped_route_evidence():
+    outward = [{"lat": 53 + i * 0.0001, "lon": -2} for i in range(31)]
+    returned = [
+        [-2, 53.003],
+        [-1.999, 53.003],
+        [-1.999, 53.0],
+        [-2, 53.0],
+    ]
+    result = run_core_async(
+        "q.fetchLoopBackRoute(" + json.dumps(outward) + ", {"
+        " fetchFn:()=>Promise.resolve({ok:true,json:()=>Promise.resolve({features:[{geometry:{coordinates:"
+        + json.dumps(returned) + "}}]})}), maxTotalMs:2000"
+        "}).then(loop => ({loopedBack:loop.loopedBack, points:loop.points.length, "
+        " ways:loop.alignmentWays.length, evidencePoints:loop.alignmentWays[0].length}))"
+    )
+    assert result["loopedBack"] is True
+    assert result["ways"] == 1
+    assert result["evidencePoints"] == result["points"], \
+        "activation needs evidence for the outward and router-added return legs"
+
+
 def test_authoritative_evidence_never_answers_pending():
     # Whatever the route, a full-coverage query gives a verdict the UI can act
     # on. "pending" would put the retry loop straight back where it started.
@@ -351,6 +372,43 @@ def test_a_quest_starts_even_when_no_tiles_can_prove_it():
     assert result["listeners"] == 0, "nothing left to retry"
 
 
+def test_a_router_loop_fetches_authority_for_the_complete_loop_before_starting():
+    result = run_alignment(
+        """
+        const outward = Array.from({length: 31}, (_, i) => ({lat:53 + i * 0.0001, lon:-2}));
+        const returned = Array.from({length: 31}, (_, i) => ({lat:53.003 - i * 0.0001, lon:-1.999}));
+        const loop = outward.concat(returned).concat([{lat:53, lon:-2}]);
+        const offer = {
+          kind:'footpath', name:'Mapped Footpath V', ref:'way/5', points:outward,
+          alignmentWays:[outward],
+          _loop:{loopedBack:true, points:loop, alignmentWays:[loop], totalLenM:900}
+        };
+        let authorityCalls = 0;
+        window.BurbzQuestCore.fetchAlignmentWays = () => {
+          authorityCalls += 1;
+          return Promise.resolve([loop]);
+        };
+        (async () => {
+          visibleTileWays = [];
+          await startWalkingQuestFromOffer(offer);
+          await settle();
+          const quest = gameState.walkingQuests.active;
+          console.log(JSON.stringify({
+            started: !!quest,
+            certification: quest && quest.routeCertification.status,
+            authorityCalls,
+            last: toasts[toasts.length - 1] || null,
+          }));
+        })();
+        """
+    )
+    assert result["started"] is True, "Begin This Quest must activate the routed loop"
+    assert result["certification"] == "certified"
+    assert result["authorityCalls"] == 0, \
+        "the mapped hiking route already carries complete evidence and must not wait on another archive"
+    assert not (result["last"] or "").startswith("This quest cannot be aligned safely here")
+
+
 def test_an_unanswerable_quest_stops_retrying_and_says_so():
     result = run_alignment(
         offer_js() +
@@ -413,7 +471,7 @@ def test_a_route_off_every_mapped_path_is_refused_immediately():
 def test_index_asks_for_a_verdict_instead_of_waiting_on_tiles_for_ever():
     src = html_source()
     activate = extract("activateWalkingQuestFromOffer", src)
-    assert "certifyQuestAgainstAuthority(quest, offer)" in activate, \
+    assert "certifyQuestAgainstAuthority(quest, questOffer)" in activate, \
         "starting a quest the tiles cannot prove must consult complete evidence"
     assert "walkQuestPendingActivation = blocked ? null : offer" in activate, \
         "a blocked quest must not be retried for ever"
@@ -461,7 +519,7 @@ def test_the_retry_loop_has_an_end_and_says_so():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = html_source()
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=quest-alignment-authority-v124-20260727"
+    marker = "quest_core.js?v=begin-quest-loop-authority-v188-20260731"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

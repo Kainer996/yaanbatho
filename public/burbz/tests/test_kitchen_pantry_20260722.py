@@ -210,6 +210,8 @@ const hashStr = str => Array.from(String(str)).reduce((h, ch) => Math.abs(((h <<
 const $ = () => null;
 const applyPlayerXpState = () => {};
 const refillPantry = () => {};
+// Unstaffed Kitchen: no Head Chef bonus in this harness.
+const academyRoleMultiplier = () => 1;
 const kitchenDietCore = () => global.BurbzDietHungerCore;
 const dietHungerCore = () => global.BurbzDietHungerCore;
 const kitchenRosterEntryByKey = () => null;
@@ -224,7 +226,7 @@ const vibrate = () => {};
 """
     functions = "\n".join(function_source(html, name) for name in (
         "kitchenCore", "kitchenIngredientById", "legacyKitchenSupplyIngredient", "ensureLarder", "addLarderIngredient",
-        "kitchenSpeciesChoices", "kitchenSelectedChoice", "kitchenRecordFieldNote",
+        "kitchenSpeciesChoices", "kitchenPrepCounterChoices", "kitchenPrepCounterSelectedChoice", "kitchenRecordFieldNote",
         "kitchenDietSubject", "kitchenDietRuleForChoice", "kitchenRosterWantedPrep",
         "feedOptionVerdict", "feedRewardsForVerdict", "feedSideSnackExplainer",
         "kitchenRosterFoodOptions", "kitchenRosterRefusalToast", "feedEntryForKey",
@@ -302,22 +304,23 @@ def test_map_forage_and_shop_stock_feed_the_larder():
 # UI wiring, migration, badges and the service worker
 # ---------------------------------------------------------------------------
 
-def test_kitchen_prep_counter_is_wired_into_the_kitchen_room():
+def test_companion_feeding_table_is_wired_into_the_kitchen_room():
     html = HTML.read_text(encoding="utf-8")
     for marker in (
         '<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>',
         "room === 'kitchen' ? renderKitchenPanelHTML()",
         "function renderKitchenPanelHTML(",
-        "function kitchenCounterFoodListHTML(",
+        "function renderKitchenRosterHTML(",
         "function burbzFeedTap(",
-        "🍳 The Prep Counter",
-        "🧺 Stores larder",
-        "kitchenSelectSpecies,",
-        "burbzFeedFood,",
+        'data-kitchen-roster-root="academy-kitchen"',
+        'data-action="kitchen-roster-feed"',
         ".feed-food-list {",
         ".feed-food {",
     ):
         assert marker in html, marker
+    panel = function_source(html, "renderKitchenPanelHTML")
+    assert "Wild Bird Feeder" not in panel
+    assert "data-kitchen-pantry-root" not in panel
 
 
 def test_the_add_ingredient_tray_mechanic_is_gone():

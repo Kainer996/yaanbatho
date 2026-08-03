@@ -14,7 +14,7 @@ def function_source(html: str, name: str, next_name: str) -> str:
 
 def test_kitchen_roster_feed_is_a_non_navigating_button_that_opens_the_feed_sheet():
     html = HTML.read_text(encoding="utf-8")
-    row = function_source(html, "kitchenRosterRowHTML", "kitchenRosterHungryEntries")
+    row = function_source(html, "kitchenRosterRowHTML", "kitchenRosterEntriesForFeeding")
     assert 'type="button"' in row
     assert "event.preventDefault();event.stopPropagation();openFeedSheet(" in row
     assert "kitchenRosterToggleTray(" not in row

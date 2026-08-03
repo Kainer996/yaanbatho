@@ -17,8 +17,13 @@ INDEX = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERLIN_CORE = ROOT / "merlin_companion_core.js"
 PROFILES = ROOT / "data" / "national-bird-completion" / "profiles.json"
-BIRDFUNCDAT = Path("/tmp/BirdFuncDat.txt")
 BIRDFUNCDAT_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
+# Resolve the EltonTraits oracle the same way check_bird_diets.py does: prefer a
+# local /tmp download for fast iteration, otherwise fall back to the committed
+# source cache so a fresh clone still verifies offline.
+_TMP_BIRDFUNCDAT = Path("/tmp/BirdFuncDat.txt")
+_CACHED_BIRDFUNCDAT = ROOT / "data" / "national-bird-completion" / "source-cache" / "BirdFuncDat.txt"
+BIRDFUNCDAT = _TMP_BIRDFUNCDAT if _TMP_BIRDFUNCDAT.exists() else _CACHED_BIRDFUNCDAT
 
 DIET_ARTIFACT_CANDIDATES = [
     ROOT / "data" / "bird-diet-records.json",
@@ -320,10 +325,12 @@ console.log(JSON.stringify({ merlinGood, merlinDuplicate, merlinMealworm, finchF
     assert out["merlinGood"]["state"]["merlinCare"]["hunger"] < 70
     assert out["merlinDuplicate"]["consumed"] == {}
     assert out["merlinDuplicate"]["state"]["inventory"]["larder"]["small_bird_prey_ration"] == 1
-    # A second meal in the same daily fullness cycle is not spent.
-    assert out["merlinMealworm"]["ok"] is False
+    # A player-chosen side snack may top Merlin up and spends one whole scoop.
+    assert out["merlinMealworm"]["ok"] is True
     assert out["merlinMealworm"]["compatibility"]["verdict"] == "secondary"
-    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 2
+    assert out["merlinMealworm"]["consumed"] == {"inventory.larder.mealworm_scoop": 1}
+    assert out["merlinMealworm"]["state"]["inventory"]["larder"]["mealworm_scoop"] == 1
+    assert out["merlinMealworm"]["state"]["merlinCare"]["hunger"] < 0.001
     # Food outside the diet entirely is still refused, and still costs nothing.
     assert out["finchFish"]["ok"] is False
     assert out["finchFish"]["state"]["inventory"]["larder"]["live_minnow"] == 1
@@ -333,11 +340,11 @@ console.log(JSON.stringify({ merlinGood, merlinDuplicate, merlinMealworm, finchF
 def test_val_pantry_001_and_003_reachable_kitchen_flow_exposes_diet_guidance_and_inventory_bridge():
     html = INDEX.read_text(encoding="utf-8")
     required = [
-        'data-kitchen-pantry-root',
+        'data-kitchen-roster-root',
         'data-diet-guidance',
         'data-diet-provenance',
         'data-compatible-foods',
-        'data-larder-count',
+        'data-kitchen-roster-food',
         'data-pantry-count',
         'data-feed-transaction-id',
         'data-feed-result-sheet',

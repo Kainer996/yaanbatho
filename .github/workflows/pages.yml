@@ -26,6 +26,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Bird art (bird-art-cache/**/*.png) and videos (*.mp4) are stored in
+          # Git LFS. Without this, checkout copies 132-byte LFS *pointer* files
+          # into _site and Pages serves broken images. This MUST stay true.
+          lfs: true
 
       - name: Stage Burbz for Pages
         run: |

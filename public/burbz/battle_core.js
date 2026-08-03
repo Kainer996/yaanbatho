@@ -4,8 +4,11 @@
 // Combat Readiness meter, skills run on cooldowns, signatures are ultimates,
 // and a shared team Focus pool can be burned to Surge a skill. Physical
 // attacks scale off ATK against DEF; spells scale off MAG against RES —
-// small birds carry the magic of the Kingdom, so a goldcrest can duel an
-// eagle and win. Diplomacy runs on CHA: every bird can Parley, sapping a
+// small birds carry the magic of the Kingdom, so a goldcrest has a way to
+// hurt an eagle. It is an edge, not an equaliser: since the size rule landed
+// (bird_size_core.js) weight scales HP, ATK, DEF and MAG together, so a
+// bigger bird is stronger in a straight fight and a little bird is weaker,
+// magic or no magic. Diplomacy runs on CHA: every bird can Parley, sapping a
 // foe's will to fight, and a charming bird can win a weakened foe over
 // without a blow — the robin's road to victory where the eagle slugs it
 // out. Wing classes and real-bird type matchups are kept from v2.
@@ -406,6 +409,11 @@
       type: typeId,
       level: n(bird.level, 1),
       rarity: bird.rarity || 'common',
+      // Carried for display only: the size multiplier is already baked into the
+      // stats above, applied once where they were generated. Applying it again
+      // here would double-count it.
+      sizeClass: bird.sizeClass || null,
+      sizeScore: Number.isFinite(Number(bird.sizeScore)) ? Number(bird.sizeScore) : null,
       artUrl: bird.artUrl || null,
       emoji: bird.emoji || '🐦',
       maxHp, hp,

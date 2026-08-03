@@ -122,6 +122,9 @@ global.saveState = () => {};
 global.renderAcademyRoomInterior = () => {};
 global.renderPetCompanion = () => {};
 global.renderAcademy = () => {};
+// No bird is posted as Head Chef in this harness, so the Kitchen runs at its
+// unstaffed baseline of 1.0.
+global.academyRoleMultiplier = () => 1;
 global.updateQuestProgress = () => {};
 global.escapeHtml = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 global.birdOnlyImgHTML = () => '<span class="kitchen-roster-art">🐦</span>';
@@ -180,7 +183,7 @@ code += html.slice(html.indexOf('const FEED_MEAL_REWARDS = Object.freeze({'),
 for (const n of ['legacyKitchenSupplyIngredient','refillPantry','ensureLarder','feedOptionVerdict','feedRewardsForVerdict','kitchenRosterEntries',
                  'kitchenRosterEntryByKey','kitchenRosterWantedPrep','kitchenRosterFoodOptions',
                  'kitchenRosterEatsLabels','kitchenRosterHungerStatus','kitchenRosterTrayHTML',
-                 'kitchenRosterRowHTML','birdIsFull','kitchenRosterHungryEntries','renderKitchenRosterHTML','kitchenRosterToggleTray',
+                 'kitchenRosterRowHTML','birdIsFull','kitchenRosterEntriesForFeeding','renderKitchenRosterHTML','kitchenRosterToggleTray',
                  'kitchenRosterRefusalToast','feedEntryForKey','feedWildEntryForSpeciesKey',
                  'feedFoodOptions','feedArtHTML','kitchenRecordFieldNote','burbzFeedFood','feedWildSpecies',
                  'kitchenRosterFeed']) code += fnSrc(n) + '\n';
