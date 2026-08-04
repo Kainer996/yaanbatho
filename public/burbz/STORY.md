@@ -55,7 +55,7 @@ This is the long game: liberate villages until they make a region, liberate regi
 - Their silhouettes echo raptors, corvids, owls and other powerful bird forms — each evil Burb keeps the wing class of the form it was cast around, so real matchup knowledge still wins fights — but they must never be presented as biological versions of those species. They do not belong in Birdex and cannot become companions.
 - Their purpose is to occupy, intimidate and hold places under the shadow spell until the player's living flock breaks it.
 - When an evil Burb is beaten it is **dispelled**: its dark magic unravels and the black form scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death.
-- The Perch League is the war effort's proving ground: each habitat tier is patrolled by stronger evil Burbz, up to the usurper's legendary guard.
+
 
 ### Canonical visual direction
 

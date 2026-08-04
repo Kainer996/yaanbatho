@@ -396,7 +396,7 @@ def test_merlin_never_says_a_brand_name_but_perch_league_survives():
     html = HTML.read_text(encoding="utf-8")
     compact = html.split("function compactMerlinSpeech(msg)", 1)[1].split("function petSay", 1)[0]
     assert "/\\bBirdNET\\b/gi" in compact
-    # Bare "Perch" must not be stripped — the game has a Perch League.
+    # Bare "Perch" is an ordinary bird word and must not be stripped.
     assert "match:|identified" in compact
 
 

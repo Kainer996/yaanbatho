@@ -823,7 +823,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Perch League — the war's front line against the evil Burbz.
+  // Legacy solo battle ladder against the evil Burbz.
   // Each habitat tier is patrolled by stronger shadow squads; ladder + reward
   // economy stays tunable in one place.
   // ---------------------------------------------------------------------------

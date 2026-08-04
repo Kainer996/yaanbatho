@@ -141,7 +141,7 @@
   };
 
   // Six battle disciplines, one per Academy room. Each claimed session raises
-  // the stat AND counts toward that discipline's Perch League move tier
+  // the stat AND counts toward that discipline's battle-move tier
   // (1 session = move I, 3 = move II, 6 = move III — see battle_core.js).
   const TRAINING_TEMPLATES = {
     wing_sprints: { id:'wing_sprints', label:'Wing Sprints', minutes:120, icon:'🪽', stat:'spd', statLabel:'SPD', school:'aero', moveLine:'Quick Dart → Wind Slash → Sonic Dive', room:'training', roomLabel:'Training Hall', xp:38, bonus:1, hunger:10, happiness:-2, copy:'Two-hour agility drills. Teaches AERO battle moves — fast strikes that always go first.', beats:['warms up on the lantern perch','runs short wing-burst laps','practises soft landings','finishes with brighter reactions'] },

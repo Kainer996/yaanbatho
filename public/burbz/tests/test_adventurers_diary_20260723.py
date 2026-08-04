@@ -79,7 +79,7 @@ def test_all_notable_deeds_are_logged():
         "logDiary('recruit'",      # bird joins the flock
         "logDiary('level_up'",     # trainer level up
         "logDiary('bird_level'",   # companion level up
-        "logDiary('battle'",       # Perch League / liberation battles
+        "logDiary('battle'",       # battle history
         "logDiary('village'",      # sanctuary birdhouse raised
         "logDiary('walk_quest'",   # walking quest completed
         "logDiary('side_quest'",   # side quest ended

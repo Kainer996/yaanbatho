@@ -29,7 +29,7 @@ def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
     required = [
         "live map", "likely birds", "walking quest", "sound", "bird-sound analysis", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
-        "sanctuary", "perch league", "academy", "hospital", "training",
+        "sanctuary", "academy", "hospital", "training",
         "pantry", "expedition", "stores", "rank", "settings",
     ]
     assert all(term in copy for term in required), [term for term in required if term not in copy]

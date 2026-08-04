@@ -3,6 +3,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
+CURRENT_COPY_FILES = (
+    HTML,
+    STORY,
+    ROOT / "battle_core.js",
+    ROOT / "academy_treehouse_core.js",
+    ROOT / "diary_core.js",
+)
+
+
+def test_future_multiplayer_league_name_is_absent_from_current_copy():
+    retired_name = "perch" + " league"
+    for path in CURRENT_COPY_FILES:
+        assert retired_name not in path.read_text(encoding="utf-8").lower(), path.name
 
 
 def empire_logic(html: str) -> str:
@@ -76,7 +89,7 @@ def test_liberation_battle_removes_league_chrome_and_reaches_the_playable_arena(
     battle = battle_logic(html)
     start = battle[battle.index("function startPerchBattle("):battle.index("\nfunction hpBarColor", battle.index("function startPerchBattle("))]
 
-    assert '<div class="screen-title">PERCH LEAGUE</div>' not in battle_screen
+    assert '<div class="screen-title">' not in battle_screen
     assert "leagueHeader.hidden = !!liberation" in battle
     # Setting .hidden is not enough on its own: .league-header carries an author
     # display:flex, which beats the UA sheet's [hidden]{display:none}. Without
@@ -84,7 +97,7 @@ def test_liberation_battle_removes_league_chrome_and_reaches_the_playable_arena(
     assert ".league-header[hidden] { display:none; }" in html
     league_rule = html.index(".league-header {")
     assert html.index(".league-header[hidden]") > league_rule
-    assert "PAUSE LIBERATION · PLAY PERCH LEAGUE" not in battle
+    assert "PAUSE LIBERATION · PLAY" not in battle
     assert "applyTeamSynergies(playerFighters)" in start
     assert "applyTeamSynergies(opponentFighters)" in start
     assert "battle.synergies = { player: playerSynergies, opponent: opponentSynergies }" in start

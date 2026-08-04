@@ -1785,7 +1785,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-log-entry.player-action { background: rgba(214,168,79,0.08); border-left: 2px solid var(--accent2); }
 .battle-log-entry.enemy-action { background: rgba(224,57,43,0.08); border-left: 2px solid #e0392b; }
 .battle-log-entry.system-msg { background: rgba(255,212,59,0.06); border-left: 2px solid var(--legendary); color: var(--legendary); }
-/* ========== PERCH LEAGUE (turn-based battles) ========== */
+/* ========== SOLO BATTLES ========== */
 .league-header { display:flex; align-items:center; gap:12px; padding:12px; background:linear-gradient(135deg, var(--bg3), var(--bg2)); border:1px solid rgba(214,168,79,0.25); border-radius:14px; margin-bottom:12px; }
 /* renderBattleSelect() sets leagueHeader.hidden during a town liberation, but an
    author `display:flex` beats the UA sheet's [hidden]{display:none}, so the
@@ -5205,7 +5205,7 @@ const DEFAULT_STATE = {
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' }, kitchen: { built: true, builtAt: 'starter-kitchen', x: 50, y: 52 } }, // Campus building ownership
   academyBuilderVersion: 7,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
-  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // Perch League ladder
+  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
   walkingQuests: { active: null, history: [] }, // Real-world walking adventures on the live map
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
@@ -5365,7 +5365,7 @@ function loadState() {
   gameState.merlinCluesFound = Array.isArray(gameState.merlinCluesFound) ? [...new Set(gameState.merlinCluesFound.filter(Boolean))] : [];
   gameState.tavernPatrons = Array.isArray(gameState.tavernPatrons) ? gameState.tavernPatrons.filter(p => p && typeof p === 'object' && p.species) : [];
   gameState.mapExploredCells = Array.isArray(gameState.mapExploredCells) ? [...new Set(gameState.mapExploredCells.filter(Boolean))].slice(-180) : [];
-  gameState.league = (gameState.league && typeof gameState.league === 'object' && !Array.isArray(gameState.league)) ? gameState.league : {}; // Perch League ladder (fully healed in ensureLeagueState)
+  gameState.league = (gameState.league && typeof gameState.league === 'object' && !Array.isArray(gameState.league)) ? gameState.league : {}; // legacy battle state (fully healed in ensureLeagueState)
   gameState.diary = window.BurbzDiaryCore ? window.BurbzDiaryCore.sanitizeDiaryState(gameState.diary) : ((gameState.diary && typeof gameState.diary === 'object') ? gameState.diary : { entries: [] });
 
   // Diet-discovery achievement: any save with already-known diets should reflect
@@ -11919,7 +11919,7 @@ function ensureBirdAcademy(bird) {
   if (!bird.training || typeof bird.training !== 'object') bird.training = { feedCount: 0, trainCount: 0 };
   if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null };
   if (!bird.academy.disciplines || typeof bird.academy.disciplines !== 'object') {
-    // Migrate old drill investment into Perch League move disciplines so
+    // Migrate old drill investment into battle move disciplines so
     // already-trained birds arrive with their moves unlocked.
     const tb = bird.training || {};
     const seedFrom = b => (b >= 12 ? 6 : b >= 5 ? 3 : b >= 1 ? 1 : 0);
@@ -15108,7 +15108,7 @@ function claimBirdTrainingSession(sessionId) {
   bird.training.trainCount = (bird.training.trainCount || 0) + 1;
   bird.training[bonusKey] = clamp((bird.training[bonusKey] || 0) + bonus, 0, 30);
   bird[stat] = clamp((bird[stat] || 10) + bonus, 10, 999);
-  // Perch League: each claimed session advances this discipline's move tier.
+  // Each claimed session advances this discipline's battle-move tier.
   const school = rewards.school || (trainingTemplateById(session.templateId) || {}).school;
   if (school) {
     bird.academy.disciplines = (bird.academy.disciplines && typeof bird.academy.disciplines === 'object') ? bird.academy.disciplines : {};
@@ -15119,7 +15119,7 @@ function claimBirdTrainingSession(sessionId) {
       const tierAfter = window.BurbzBattleCore.disciplineTier(before + 1);
       const line = window.BurbzBattleCore.MOVE_LINES[school];
       if (tierAfter > tierBefore && line && line[tierAfter - 1]) {
-        setTimeout(() => showToast('🥊 ' + (bird.commonName || bird.species) + ' learned ' + line[tierAfter - 1].label + ' for the Perch League!'), 900);
+        setTimeout(() => showToast('🥊 ' + (bird.commonName || bird.species) + ' learned ' + line[tierAfter - 1].label + '!'), 900);
       }
     }
   }
@@ -15183,7 +15183,7 @@ function renderTrainingHallPanel(birds, others) {
       }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
     return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat AND teaches Perch League battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function renderAcademyRoomInterior() {
@@ -18928,7 +18928,7 @@ function cancelEmpireLiberation() {
   const townName = empire.pendingLiberation.name;
   empire.pendingLiberation = null;
   saveState();
-  showToast('Liberation of ' + townName + ' paused — Perch League restored.');
+  showToast('Liberation of ' + townName + ' paused.');
   renderBattleSelect();
 }
 
@@ -28568,7 +28568,7 @@ function renderBattleSelect() {
     battleSelectedIds = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 4).map(b => b.id);
   }
   if (!flock.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px 0; color:var(--text3);">📡 Scan or identify a bird, then bring it to the Perch League.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px 0; color:var(--text3);">📡 Scan a bird, befriend it, then return to choose your squad.</div>';
   } else {
     grid.innerHTML = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).map(b => {
       const order = battleSelectedIds.indexOf(b.id);
@@ -29337,8 +29337,7 @@ function careForMerlin(action) {
 }
 
 function compactMerlinSpeech(msg) {
-  // Merlin never says a brand name. "Perch" is only stripped where it is the
-  // engine talking — the game's own Perch League must survive untouched.
+  // Merlin never says a provider brand name; keep ordinary bird words intact.
   const text = String(msg || '')
     .replace(/\bBirdNET\b/gi, 'sound scan')
     .replace(/\bPerch\b(?=\s+(?:match:|identified)\b)/gi, 'sound scan')
@@ -30147,7 +30146,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'inventory', chapter:'Resources', title:'Your Stores', screen:'inventory', target:'#storesTabs', text:'Everything the kingdom owns, in four stockrooms: Materials, Food, Armoury and Curios. The Ledger tab collects what your provinces produce.' },
 
   // — Community: taught the first time Ranks opens.
-  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Compare your collection with the world, and climb the Perch League by winning battles.' },
+  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Compare your bird discoveries and collection progress with the world.' },
 
   // — Finish: taught the first time the Profile opens.
   { chapterId:'profile', chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your level, achievements and cloud save live here. Replay this tutorial any time from Settings.' },

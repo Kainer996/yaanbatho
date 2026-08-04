@@ -18,7 +18,7 @@
     'recruit',    // a bird joined the flock
     'level_up',   // the trainer levelled up
     'bird_level', // a companion levelled up
-    'battle',     // a Perch League / liberation battle ended
+    'battle',     // a liberation or legacy solo battle ended
     'village',    // a liberated town received its sanctuary birdhouse
     'walk_quest', // a real-world walking quest was completed
     'side_quest', // a free-exploration side quest was ended
@@ -152,13 +152,13 @@
         if (e.liberated) return { icon: '🕊️', text: 'The squad shattered the garrison of ' + e.liberated + ' — another town wrested from the evil Burbz!' };
         if (e.won) {
           const base = pick([
-            'Victory in the ' + (e.tier || 'Perch League') + ' — the shadow retreats a little further.',
+            'Victory in the ' + (e.tier || 'battle') + ' — the shadow retreats a little further.',
             'The flock fought upon the ' + (e.tier || 'league') + ' perch and carried the day.'
           ], seed);
           return { icon: '🏆', text: base + (e.promoted ? ' Promoted to a higher perch!' : '') };
         }
         return { icon: '🪶', text: pick([
-          'Defeat in the ' + (e.tier || 'Perch League') + '. The flock returned bruised, but unbowed.',
+          'Defeat in the ' + (e.tier || 'battle') + '. The flock returned bruised, but unbowed.',
           'The evil Burbz held the ' + (e.tier || 'league') + ' perch this day — the flock will heal, and return.'
         ], seed) };
       }
