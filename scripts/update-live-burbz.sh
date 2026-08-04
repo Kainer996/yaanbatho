@@ -124,6 +124,7 @@ FILES=(
   "assets/merlin/merlin-head.webp"
   "assets/ui/burbz-icon-set/coin.webp"
   "assets/ui/burbz-icon-set/timber.webp"
+  "assets/ui/burbz-icon-set/stone.svg"
   "assets/ui/burbz-icon-set/profile.webp"
   "assets/ui/burbz-icon-set/settings.webp"
   "assets/ui/burbz-icon-set/camera.webp"

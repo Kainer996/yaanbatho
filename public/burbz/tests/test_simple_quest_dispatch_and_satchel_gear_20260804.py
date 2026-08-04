@@ -141,5 +141,7 @@ def test_satchel_release_assets_are_versioned_for_installed_pwa():
     assert f"loot_crafting_core.js?v={version}" in HTML
     assert f"'./bird_size_core.js?v={version}'" in SW
     assert f"'./loot_crafting_core.js?v={version}'" in SW
-    assert f"const BURBZ_BUILD = '{version}'" in HTML
+    # Historical release marker remains in the cache lineage after newer
+    # gameplay releases become the visible BURBZ_BUILD.
+    assert version in SW
     assert version in next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
