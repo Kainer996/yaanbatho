@@ -34,19 +34,20 @@ Freedom is contagious between neighbours. Liberate **three neighbouring villages
 - In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
 - Nothing is conquered and nothing is renamed away: every village keeps its own name, its own governor's desk and its own story — it is simply *part of something bigger now*.
 
-Towns and cities are the street-level layer of the realm; regions (below) are the map-level layer above them, and the two grow independently.
+Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer above them, and the two grow independently.
 
-## Regions, crowns and the trade of free realms
+## Counties, crowns and the trade of free realms
 
-The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes:
+The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes. The feudal ladder is a simplified Crusader Kings: **every tier is made of the tier below it**, never of loose villages — **County → Duchy → Kingdom → Empire**.
 
-- When enough liberated villages stand close together in the real world, their free folk unite and **found a region** — a rescued piece of the Kingdom of Burbz with the earliest-freed sanctuary as its capital. Regions grow through feudal tiers as more villages join them: **County → Duchy → Kingdom**.
-- Villages inside a founded region prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox.
-- The player's own style grows with the realm — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed towns.
-- Once the realm holds **two or more regions** — say the free woods around Delamere and a liberated corner of the south of France — their capitals can open **trade routes**. Sky-caravans of free birds carry each region's signature goods along great-circle roads drawn in gold on the liberation map; the farther the road, the rarer the cargo it returns.
+- When **three liberated villages** stand close together in the real world (within 150 km of each other), their free folk unite and **found a County** — a rescued piece of the Kingdom of Burbz with the earliest-freed sanctuary as its capital, run from its own County Hall. A county stays a county however many villages join it; the higher titles are built from counties, not from headcounts.
+- **Two Counties** whose capitals stand within 600 km unite into a **Duchy**; **two Duchies** within 2000 km proclaim a **Kingdom**; and **two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies**. Each title keeps the name of its earliest-founded member's seat.
+- Villages inside a founded county prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox — and the taxes rise as the county's liege chain climbs (+15% for a lone county, +20% under a duchy, +25% inside a kingdom, +30% beneath the empire).
+- The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed towns.
+- Once the realm holds **two or more counties** — say the free woods around Delamere and a liberated corner of the south of France — their capitals can open **trade routes**. Sky-caravans of free birds carry each county's signature goods along great-circle roads drawn in gold on the liberation map; the farther the road, the rarer the cargo it returns.
 - Trade routes glow even across lands the usurper's shadow still holds: a caravan road is a ribbon of light through the darkness, proof that the free realms reach each other in defiance of the evil Burbz.
 
-This is the long game: liberate villages until they make a region, liberate regions until they make a realm, and bind the realm together with trade — region by region, the whole Kingdom of Burbz wakes.
+This is the long game: liberate villages until they make a county, unite counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
 
 ## The evil Burbz — the enemies the birds fight
 

@@ -208,12 +208,16 @@ def test_the_scouts_lantern_half_lights_the_darkness_around_the_player():
 # 3. Regions unlock their whole map area and are run from the Region Hall
 # ---------------------------------------------------------------------------
 
-def test_core_reports_the_next_tier_on_the_ladder():
-    step = run_core("core.nextRegionTier(3)")
-    assert step["next"]["rank"] == "duchy" and step["needed"] == 2
-    step = run_core("core.nextRegionTier(5)")
-    assert step["next"]["rank"] == "kingdom" and step["needed"] == 3
-    assert run_core("core.nextRegionTier(8)") is None  # a kingdom is the summit
+def test_core_annotates_each_county_with_its_liege_chain():
+    # The nested ladder replaced the per-region size ladder: a county's next
+    # rung is a NEIGHBOURING county (→ duchy), never more of its own villages.
+    realm = run_core(f"core.deriveRealm({json.dumps(CHESHIRE)})")
+    county = realm["regions"][0]
+    assert county["tier"] == "county"
+    assert county["duchyId"] is None and county["kingdomId"] is None
+    assert county["liegeTier"] == "county"
+    assert realm["duchies"] == [] and realm["kingdoms"] == [] and realm["empire"] is None
+    assert run_core(f"core.regionUnityBonus(core.deriveRealm({json.dumps(CHESHIRE)}).regions[0])") == 0.15
 
 
 def test_core_region_coverage_radius_spans_the_whole_region():
@@ -260,8 +264,9 @@ def test_region_hall_runs_the_region_as_one_realm():
     logic = empire_logic(html)
     hall_start = logic.index("function renderRegionScreen()")
     hall = logic[hall_start:]
-    # Tier ladder with progress toward the next rank.
-    assert "nextRegionTier(region.villageCount)" in hall
+    # The liege chain up the nested feudal ladder, with the next rung hinted.
+    assert "region.duchyId" in hall
+    assert "region-hall-liege" in hall
     assert "region-hall-ladder" in hall
     # Region-scoped taxes: its own strongbox, collected without touching the
     # rest of the realm.
@@ -292,7 +297,7 @@ def test_release_is_versioned_for_the_service_worker():
     sw = SW.read_text(encoding="utf-8")
     # empire_realm_core.js ships new maths per release; its cache-buster moves
     # with whichever release last touched it (settlement tiers, 2026-08-02).
-    core_pin = "empire-clarity-v205-20260803"
+    core_pin = "feudal-hierarchy-v222-20260804"
     assert f"empire_realm_core.js?v={core_pin}" in html
     assert f"./empire_realm_core.js?v={core_pin}" in sw
     # This release's own segment stays in the cache lineage forever.

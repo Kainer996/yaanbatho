@@ -19,8 +19,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "quarry-stone-economy-v221-20260804"
+REALM_CORE_PIN = "feudal-hierarchy-v222-20260804"
+CURRENT_BUILD = "feudal-hierarchy-v222-20260804"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

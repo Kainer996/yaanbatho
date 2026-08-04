@@ -71,14 +71,18 @@ def test_distant_clusters_form_separate_regions_delamere_and_south_of_france():
     assert names == ["County of Delamere", "County of Gordes"]
 
 
-def test_regions_scale_up_the_feudal_ladder_as_they_grow():
+def test_counties_never_relabel_themselves_and_crowns_come_from_nesting():
+    # Simplified Crusader Kings: a county is a county at 3 villages and STILL
+    # a county at 8 — higher tiers are made of the tier below (2 counties →
+    # duchy, 2 duchies → kingdom, 2 kingdoms → empire), never of headcounts.
     assert run_core("core.regionTier(3)")["rank"] == "county"
-    assert run_core("core.regionTier(5)")["rank"] == "duchy"
-    assert run_core("core.regionTier(8)")["rank"] == "kingdom"
-    # Crown titles scale with the whole realm.
+    assert run_core("core.regionTier(5)")["rank"] == "county"
+    assert run_core("core.regionTier(8)")["rank"] == "county"
+    # Delamere and the Luberon are ~1200 km apart — two counties too far to
+    # unite into a duchy (600 km), so the crown stays a Count's.
     both = CHESHIRE + PROVENCE
     crown = run_core(f"core.crownTitle(core.deriveRegions({json.dumps(both)}).regions)")
-    assert crown == "Duke of Delamere"
+    assert crown == "Count of Delamere"
     assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(CHESHIRE)}).regions)") == "Count of Delamere"
 
 
@@ -189,7 +193,7 @@ def test_royal_ledger_renders_realm_and_trade_sections():
     assert "TRADE ROUTES" in html
     assert 'data-action="open-trade"' in html
     assert 'data-action="empire-region"' in html
-    assert "sky-caravans between free regions" in html
+    assert "sky-caravans between free counties" in html
     assert 'class="realm-hint"' in html
 
 
@@ -230,8 +234,8 @@ def test_founding_a_region_is_announced_in_liberation_flow():
 def test_story_canon_covers_regions_crowns_and_trade():
     story = STORY.read_text(encoding="utf-8")
     for marker in [
-        "found a region",
-        "County → Duchy → Kingdom",
+        "found a County",
+        "County → Duchy → Kingdom → Empire",
         "unity taxes",
         "Emperor of the Liberated Skies",
         "trade routes",

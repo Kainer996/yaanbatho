@@ -1,16 +1,25 @@
 /* Burbz Empire Realm Core — the Crusader-Kings layer of the liberation war.
  *
  * Pure, deterministic helpers only. Villages the player has liberated from the
- * evil Burbz cluster into REGIONS by real-world proximity; regions carry
- * feudal tiers (County → Duchy → Kingdom), grant a unity tax bonus to their
- * member sanctuaries, and — once the realm holds two or more regions — can
- * open TRADE ROUTES between their capitals. All of it stays liberation-themed:
- * every region is a rescued piece of the Kingdom of Burbz, every caravan flies
- * between free sanctuaries, and nothing here ever conquers anyone.
+ * evil Burbz cluster into COUNTIES by real-world proximity, and the feudal
+ * ladder above them NESTS the way Crusader Kings' does — every tier is made
+ * of the tier below, never of loose villages:
+ *
+ *   3 villages within REGION_RADIUS_KM      → found a COUNTY
+ *   2 counties within DUCHY_RADIUS_KM       → unite into a DUCHY
+ *   2 duchies within KINGDOM_RADIUS_KM      → proclaim a KINGDOM
+ *   2 kingdoms anywhere on Earth            → proclaim the EMPIRE
+ *
+ * Counties grant a unity tax bonus to their member sanctuaries (rising as
+ * their liege chain climbs), and — once the realm holds two or more counties
+ * — can open TRADE ROUTES between their capitals. All of it stays
+ * liberation-themed: every county is a rescued piece of the Kingdom of Burbz,
+ * every caravan flies between free sanctuaries, and nothing here ever
+ * conquers anyone.
  *
  * The game stays deliberately simple before this layer exists: none of these
  * mechanics surface until the player has liberated enough villages to found a
- * region (REGION_MIN_VILLAGES within REGION_RADIUS_KM of each other).
+ * county (REGION_MIN_VILLAGES within REGION_RADIUS_KM of each other).
  */
 (function (root, factory) {
   const api = factory();
@@ -24,14 +33,25 @@
   const REGION_RADIUS_KM = 150;
   // A cluster founds a region once it holds this many liberated villages.
   const REGION_MIN_VILLAGES = 3;
-  // Region unity: sanctuaries inside a founded region pay 15% more taxes.
+  // County unity: sanctuaries inside a founded county pay 15% more taxes.
   const REGION_TAX_BONUS = 0.15;
-  // Feudal ladder per region size — the "scales up from there" curve.
-  const REGION_TIERS = [
-    { min: 8, rank: 'kingdom', label: 'Kingdom', icon: '👑', weight: 3 },
-    { min: 5, rank: 'duchy',   label: 'Duchy',   icon: '🏰', weight: 2 },
-    { min: 0, rank: 'county',  label: 'County',  icon: '🛡️', weight: 1 }
-  ];
+  // The nested feudal ladder above counties — simplified Crusader Kings.
+  // Each tier is made OF the tier below: a duchy is 2+ counties whose
+  // capitals chain within DUCHY_RADIUS_KM, a kingdom is 2+ duchies whose
+  // seats chain within KINGDOM_RADIUS_KM, and the empire is proclaimed the
+  // moment 2 kingdoms stand anywhere on Earth. A county never "grows into"
+  // a duchy by itself, however many villages it holds.
+  const COUNTY_TIER = { rank: 'county', label: 'County', icon: '🛡️' };
+  const DUCHY_RADIUS_KM = 600;
+  const DUCHY_MIN_COUNTIES = 2;
+  const KINGDOM_RADIUS_KM = 2000;
+  const KINGDOM_MIN_DUCHIES = 2;
+  const EMPIRE_MIN_KINGDOMS = 2;
+  const EMPIRE_NAME = 'Empire of the Liberated Skies';
+  // Unity taxes rise as a county's liege chain climbs: a lone county pays
+  // +15%, one sworn to a duchy +20%, one inside a kingdom +25%, and every
+  // county of the proclaimed empire +30%.
+  const LIEGE_TAX_BONUS = { county: 0.15, duchy: 0.20, kingdom: 0.25, empire: 0.30 };
   const TRADE_ROUTE_COLOR = '#f0c767';
   // Deterministic export goods a region's caravans carry, keyed off its
   // capital seed. Ids must exist in loot_crafting_core MATERIALS.
@@ -103,20 +123,16 @@
     return clusters;
   }
 
-  function regionTier(villageCount) {
-    const n = Math.max(0, Math.floor(Number(villageCount) || 0));
-    for (const tier of REGION_TIERS) { if (n >= tier.min) return tier; }
-    return REGION_TIERS[REGION_TIERS.length - 1];
-  }
+  /* Every region on the ground is a COUNTY, whatever its size — the higher
+     tiers are made of counties, not of village counts. */
+  function regionTier() { return COUNTY_TIER; }
 
-  /* Tier-ladder progress for the Region Hall: which tier comes next and how
-     many more liberated sanctuaries it takes. null once the region already
-     sits at the top of the ladder (a Kingdom has nowhere higher to climb). */
-  function nextRegionTier(villageCount) {
-    const n = Math.max(0, Math.floor(Number(villageCount) || 0));
-    const ladder = REGION_TIERS.slice().sort((a, b) => a.min - b.min);
-    for (const tier of ladder) { if (n < tier.min) return { next: tier, needed: tier.min - n }; }
-    return null;
+  /* The unity tax bonus a county's villages actually enjoy: the base county
+     bonus, raised by the county's liege chain (annotated by realmFromRegions:
+     liegeTier is 'county', 'duchy', 'kingdom' or 'empire'). */
+  function regionUnityBonus(region) {
+    const tier = region && region.liegeTier;
+    return (tier && LIEGE_TAX_BONUS[tier]) || REGION_TAX_BONUS;
   }
 
   /* How far a founded region's daylight reaches on the royal atlas: from its
@@ -148,10 +164,10 @@
     return { lat: Math.atan2(z, hyp) * 180 / Math.PI, lon: Math.atan2(y, x) * 180 / Math.PI };
   }
 
-  /* The heart of the endgame: liberated villages → founded regions.
+  /* The heart of the endgame: liberated villages → founded counties.
      Capital = the earliest-liberated village of the cluster (the sanctuary
-     that anchored the freedom spell first). Region id = its capital seed, so
-     ids survive new liberations unless two regions genuinely grow together. */
+     that anchored the freedom spell first). County id = its capital seed, so
+     ids survive new liberations unless two counties genuinely grow together. */
   function deriveRegions(villages, options) {
     const opts = options || {};
     const radiusKm = Number(opts.radiusKm) || REGION_RADIUS_KM;
@@ -162,25 +178,129 @@
     clusters.forEach(cluster => {
       if (cluster.length < minVillages) { unassigned.push(...cluster); return; }
       const capital = cluster[0];
-      const tier = regionTier(cluster.length);
       regions.push({
         id: String(Number(capital.seed) >>> 0),
         capitalSeed: Number(capital.seed) >>> 0,
         capitalName: String(capital.name || 'Sanctuary'),
-        name: tier.label + ' of ' + String(capital.name || 'the Free Marches'),
-        tier: tier.rank,
-        tierLabel: tier.label,
-        tierIcon: tier.icon,
-        tierWeight: tier.weight,
+        name: COUNTY_TIER.label + ' of ' + String(capital.name || 'the Free Marches'),
+        tier: COUNTY_TIER.rank,
+        tierLabel: COUNTY_TIER.label,
+        tierIcon: COUNTY_TIER.icon,
         villageCount: cluster.length,
         villages: cluster,
         centroid: centroidOf(cluster),
-        foundedAt: cluster[minVillages - 1].claimedAt || cluster[0].claimedAt || ''
+        foundedAt: cluster[minVillages - 1].claimedAt || cluster[0].claimedAt || '',
+        duchyId: null,
+        kingdomId: null,
+        liegeTier: 'county'
       });
     });
-    // Progress hint for the pre-region game: how close is the best cluster?
+    // Progress hint for the pre-county game: how close is the best cluster?
     const largestCluster = clusters.reduce((best, c) => Math.max(best, c.length), 0);
     return { regions, unassigned, largestCluster, clusterCount: clusters.length };
+  }
+
+  /* Nest the counties into the full feudal pyramid — the simplified Crusader
+     Kings ladder where every title CONTAINS the tier below it. Reuses the
+     same union-find chaining as counties, but over county capitals (for
+     duchies) and duchy seats (for kingdoms). Seats keep the naming rule the
+     whole game uses: the earliest-founded member anchors the title, so a
+     Duchy of Delamere stays the Duchy of Delamere as it grows. The counties
+     passed in are annotated in place (duchyId / kingdomId / liegeTier) so
+     the economy and UI can read the liege chain straight off the region. */
+  function realmFromRegions(regions) {
+    const counties = Array.isArray(regions) ? regions.filter(Boolean) : [];
+    counties.forEach(c => { c.duchyId = null; c.kingdomId = null; c.liegeTier = 'county'; });
+    const capitalOf = c => (c.villages && c.villages[0]) || c.centroid || {};
+    const countyBySeed = new Map(counties.map(c => [String(Number(c.capitalSeed) >>> 0), c]));
+    const duchies = [];
+    const capitalPoints = counties.map(c => {
+      const cap = capitalOf(c);
+      return { seed: c.capitalSeed, name: c.capitalName, lat: cap.lat, lon: cap.lon, claimedAt: cap.claimedAt };
+    });
+    clusterVillages(capitalPoints, DUCHY_RADIUS_KM).forEach(cluster => {
+      if (cluster.length < DUCHY_MIN_COUNTIES) return;
+      const members = cluster.map(p => countyBySeed.get(String(Number(p.seed) >>> 0))).filter(Boolean);
+      if (members.length < DUCHY_MIN_COUNTIES) return;
+      const seat = members[0];
+      const allVillages = members.reduce((all, c) => all.concat(c.villages || []), []);
+      const duchy = {
+        id: 'duchy-' + (Number(seat.capitalSeed) >>> 0),
+        tier: 'duchy', tierLabel: 'Duchy', tierIcon: '🏰',
+        name: 'Duchy of ' + seat.capitalName,
+        seatName: seat.capitalName,
+        seatSeed: Number(seat.capitalSeed) >>> 0,
+        countyCount: members.length,
+        counties: members,
+        villageCount: allVillages.length,
+        villages: allVillages,
+        centroid: centroidOf(allVillages),
+        foundedAt: cluster[DUCHY_MIN_COUNTIES - 1].claimedAt || '',
+        kingdomId: null
+      };
+      members.forEach(c => { c.duchyId = duchy.id; c.liegeTier = 'duchy'; });
+      duchies.push(duchy);
+    });
+    const duchyBySeed = new Map(duchies.map(d => [String(d.seatSeed), d]));
+    const kingdoms = [];
+    const seatPoints = duchies.map(d => {
+      const cap = capitalOf(d.counties[0]);
+      return { seed: d.seatSeed, name: d.seatName, lat: cap.lat, lon: cap.lon, claimedAt: d.foundedAt };
+    });
+    clusterVillages(seatPoints, KINGDOM_RADIUS_KM).forEach(cluster => {
+      if (cluster.length < KINGDOM_MIN_DUCHIES) return;
+      const members = cluster.map(p => duchyBySeed.get(String(Number(p.seed) >>> 0))).filter(Boolean);
+      if (members.length < KINGDOM_MIN_DUCHIES) return;
+      const seat = members[0];
+      const allVillages = members.reduce((all, d) => all.concat(d.villages), []);
+      const kingdom = {
+        id: 'kingdom-' + seat.seatSeed,
+        tier: 'kingdom', tierLabel: 'Kingdom', tierIcon: '👑',
+        name: 'Kingdom of ' + seat.seatName,
+        seatName: seat.seatName,
+        seatSeed: seat.seatSeed,
+        duchyCount: members.length,
+        duchies: members,
+        countyCount: members.reduce((sum, d) => sum + d.countyCount, 0),
+        villageCount: allVillages.length,
+        villages: allVillages,
+        centroid: centroidOf(allVillages),
+        foundedAt: cluster[KINGDOM_MIN_DUCHIES - 1].claimedAt || ''
+      };
+      members.forEach(d => {
+        d.kingdomId = kingdom.id;
+        d.counties.forEach(c => { c.kingdomId = kingdom.id; c.liegeTier = 'kingdom'; });
+      });
+      kingdoms.push(kingdom);
+    });
+    let empire = null;
+    if (kingdoms.length >= EMPIRE_MIN_KINGDOMS) {
+      empire = {
+        tier: 'empire', tierLabel: 'Empire', tierIcon: '☀️',
+        name: EMPIRE_NAME,
+        kingdomCount: kingdoms.length,
+        kingdoms,
+        villageCount: kingdoms.reduce((sum, k) => sum + k.villageCount, 0)
+      };
+      kingdoms.forEach(k => k.duchies.forEach(d => d.counties.forEach(c => { c.liegeTier = 'empire'; })));
+    }
+    return { duchies, kingdoms, empire };
+  }
+
+  /* One call for the whole realm: counties from villages, then the nested
+     duchy/kingdom/empire pyramid on top, plus the pre-county progress hints. */
+  function deriveRealm(villages, options) {
+    const base = deriveRegions(villages, options);
+    const pyramid = realmFromRegions(base.regions);
+    return {
+      regions: base.regions,
+      unassigned: base.unassigned,
+      largestCluster: base.largestCluster,
+      clusterCount: base.clusterCount,
+      duchies: pyramid.duchies,
+      kingdoms: pyramid.kingdoms,
+      empire: pyramid.empire
+    };
   }
 
   /* Settlement growth: liberated villages → towns → cities.
@@ -262,17 +382,18 @@
     return { towns, cities, tierBySeed, townCount: towns.length, cityCount: cities.length, largestVillageCluster, largestTownCluster };
   }
 
-  /* Crown ladder — the player's realm-wide title once regions exist. Score is
-     the sum of region tier weights, so a Kingdom counts triple a County. */
+  /* Crown ladder — the player's realm-wide style is the highest title they
+     actually hold on the nested ladder, exactly as in Crusader Kings:
+     Count of a county, Duke once counties unite, Monarch once duchies unite,
+     Emperor of the Liberated Skies once two kingdoms stand. */
   function crownTitle(regions) {
-    const list = Array.isArray(regions) ? regions : [];
+    const list = Array.isArray(regions) ? regions.filter(Boolean) : [];
     if (!list.length) return null;
-    const score = list.reduce((sum, r) => sum + (Number(r.tierWeight) || 1), 0);
-    const best = list.slice().sort((a, b) => (b.tierWeight || 0) - (a.tierWeight || 0) || (b.villageCount || 0) - (a.villageCount || 0))[0];
-    if (score >= 8) return 'Emperor of the Liberated Skies';
-    if (score >= 5) return 'High Monarch of the Free Realms';
-    if (score >= 3) return 'Monarch of ' + best.capitalName;
-    if (score >= 2) return 'Duke of ' + best.capitalName;
+    const pyramid = realmFromRegions(list);
+    if (pyramid.empire) return 'Emperor of the Liberated Skies';
+    if (pyramid.kingdoms.length) return 'Monarch of ' + pyramid.kingdoms[0].seatName;
+    if (pyramid.duchies.length) return 'Duke of ' + pyramid.duchies[0].seatName;
+    const best = list.slice().sort((a, b) => (b.villageCount || 0) - (a.villageCount || 0) || claimTime(a.villages && a.villages[0]) - claimTime(b.villages && b.villages[0]))[0];
     return 'Count of ' + best.capitalName;
   }
 
@@ -387,7 +508,14 @@
     REGION_RADIUS_KM,
     REGION_MIN_VILLAGES,
     REGION_TAX_BONUS,
-    REGION_TIERS,
+    COUNTY_TIER,
+    DUCHY_RADIUS_KM,
+    DUCHY_MIN_COUNTIES,
+    KINGDOM_RADIUS_KM,
+    KINGDOM_MIN_DUCHIES,
+    EMPIRE_MIN_KINGDOMS,
+    EMPIRE_NAME,
+    LIEGE_TAX_BONUS,
     TRADE_ROUTE_COLOR,
     TRADE_GOODS,
     SETTLEMENT_TOWN_RADIUS_KM,
@@ -401,10 +529,12 @@
     haversineKm,
     clusterVillages,
     regionTier,
-    nextRegionTier,
+    regionUnityBonus,
     regionCoverageRadiusKm,
     centroidOf,
     deriveRegions,
+    realmFromRegions,
+    deriveRealm,
     crownTitle,
     tradeRouteKey,
     tradeRouteCandidates,

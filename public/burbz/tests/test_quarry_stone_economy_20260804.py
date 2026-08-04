@@ -214,7 +214,8 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     empire = function_source(html, "renderEmpirePanel")
     assert "stonePerCycle += snap.production.stone" in empire
     assert "Stone / 8h" in empire
-    assert "quarry-stone-economy-v221-20260804" in html
+    # BURBZ_BUILD tracks the NEWEST release marker; later releases move it
+    # on, but this release's own segment stays in the cache lineage forever.
     assert "quarry-stone-economy-v221-20260804" in sw
     assert "./assets/ui/burbz-icon-set/stone.svg" in sw
     assert STONE_ICON.exists()
