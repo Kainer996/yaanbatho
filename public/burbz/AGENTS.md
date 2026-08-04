@@ -192,6 +192,18 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-04 — walking quests enforce ordered waymarkers (Ava).** A live
+  Footpath Ring could mark a later checkpoint merely because a loop or nearby
+  route leg passed within the shared GPS radius. That exposed a different icon
+  underneath and made guidance appear to reverse toward an earlier missed stop.
+  Release `ordered-quest-markers-v224-20260804` fixes the shared quest engine,
+  so every walking quest can advance only its first unfinished checkpoint.
+  Completed non-finish markers now disappear, the current marker always renders
+  above muted future markers, and the finish stays hidden until the ordered route
+  is genuinely done. Regression coverage includes overlapping markers, nearby
+  loop legs, marker rendering, and PWA cache/version propagation. Verification:
+  `880 passed, 18 skipped`, Node syntax checks, and a 375×812 Chromium smoke test.
+
 - **2026-08-04 — the Royal Ledger opens as one realm dropdown (Claude).** Yaan
   reported two things at once: the feudal-ladder deploy "still hasn't updated"
   after several refreshes, and the ledger reads upside down — villages spilling

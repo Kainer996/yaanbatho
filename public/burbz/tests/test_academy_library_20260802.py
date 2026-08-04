@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "realm-dropdown-v223-20260804"
+RELEASE_PIN = "ordered-quest-markers-v224-20260804"
 PREVIOUS_RELEASE_PIN = "merlin-bond-meter-v197-20260802"
 
 

@@ -149,7 +149,7 @@ def test_visible_map_footpaths_are_merged_into_quest_discovery():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=begin-quest-loop-authority-v188-20260731"
+    marker = "quest_core.js?v=ordered-quest-markers-v224-20260804"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

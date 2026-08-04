@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "realm-dropdown-v223-20260804"
+CURRENT_BUILD = "ordered-quest-markers-v224-20260804"
 
 
 def html_text() -> str:
