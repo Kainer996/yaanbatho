@@ -192,6 +192,33 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-04 — the Royal Ledger opens as one realm dropdown (Claude).** Yaan
+  reported two things at once: the feudal-ladder deploy "still hasn't updated"
+  after several refreshes, and the ledger reads upside down — villages spilling
+  from the top of the screen, with the realm buried underneath. Release
+  `realm-dropdown-v223-20260804` fixes both.
+  - **Layout** (`index.html`, `renderEmpirePanel`): the ledger body is now a
+    single **closed** drawer — 👑 *YOUR REALM*, "Click to open your realm —
+    counties, then towns, then villages". Everything unfolds inside it in
+    ladder order: the crown banner, liege pyramid, counties, ladder nudge and
+    trade routes first (`realm-sub-title` + new `.realm-lead` line, no drawer of
+    its own any more), then a nested 🏘️ *TOWNS & CITIES* drawer, then a nested
+    🏡 *YOUR VILLAGES* drawer — both folded by default. New helper
+    `empireSubDrawerHTML()` wraps `empireDrawerHTML()` with the existing
+    `.empire-drawer.is-sub` class. A one-village player still gets a realm hint
+    at the top of the dropdown so it never opens on nothing. Locator strip,
+    stats, the taxes button and the 📜 help drawer are unchanged.
+  - **Staleness** (`sw.js`): `cache.add()` reuses the browser's HTTP cache, so
+    a Pages `index.html` still inside its `max-age` was being reinstalled into
+    the brand-new worker cache — the worker updated, the screen didn't. Install
+    now goes through `cacheFreshCopy()`, which fetches each shell entry with
+    `cache: 'reload'`. `BURBZ_CACHE` + `BURBZ_BUILD` bumped (Settings shows
+    `Build realm-dropdown-v223-20260804` once the new build is running).
+    `empire_realm_core.js` is untouched, so its cache-buster stays on v222.
+  - Tests: `tests/test_realm_dropdown_20260804.py`; release pins repointed per
+    convention; the v222 test's `BURBZ_BUILD` equality relaxed to the standard
+    lineage check.
+
 - **2026-08-04 — the feudal ladder nests like Crusader Kings' (Claude).** Yaan
   spotted the structural inconsistency in the empire layer: "three villages
   form a county" — and that same county then relabelled itself a Duchy at 5
