@@ -4038,6 +4038,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="au_bird_expansion_2.js?v=au50-source-backed-r2-20260715"></script>
 <script src="national_bird_completion_20260715.js?v=national-completion-20260715"></script>
 <script src="uk_bird_expansion_4.js?v=uk-british-list-completion-20260722"></script>
+<script src="bird_seasonality_core.js?v=seasonal-vs-rarity-20260804"></script>
 <script src="uk_bird_alias_completion_20260803.js?v=uk-bird-alias-completion-v216-20260803"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
@@ -4566,6 +4567,25 @@ Object.assign(REAL_WORLD_COMMONNESS, NATIONAL.commonness);
 Object.assign(REAL_WORLD_COMMONNESS, UK4.commonness);
 function realWorldRarityScore(species) { return REAL_WORLD_COMMONNESS[String(species || '').split('(')[0].trim()] ?? 34; }
 function realWorldRarityLabel(species) { const score = realWorldRarityScore(species); if (score >= 80) return 'common'; if (score >= 55) return 'regular'; if (score >= 30) return 'uncommon'; if (score >= 12) return 'scarce'; return 'rare'; }
+// Seasonal availability is separate from all-time rarity. The seasonality
+// engine (bird_seasonality_core.js) needs each species' baseline commonness,
+// habitats and migratory status; pull those from the field-guide profile so
+// summer/winter migrants outside the engine's explicit table are still gated.
+function seasonalityHintsFor(species) {
+  const profile = findSpeciesProfile(species) || {};
+  let habitats = profile.habitats || profile.habitat || null;
+  if (habitats && !Array.isArray(habitats)) habitats = String(habitats).split(/\s*,\s*/).map(h => h.trim().toLowerCase());
+  const statusText = [profile.ukStatus, profile.conservation, profile.range, profile.origin].filter(Boolean).join(' ');
+  return { commonness: realWorldRarityScore(species), habitats, statusText, months: profile.months, traits: profile.traits };
+}
+// True when a species could not realistically be met here this week / in this
+// habitat (winter duck in August, waterbird away from water). Fails open if
+// the engine is unavailable so old behaviour is never worse than before.
+function seasonallyAbsentHere(species, habitat, week) {
+  if (!window.BurbzSeasonality) return false;
+  return !window.BurbzSeasonality.isPresent(species, { week, habitat, hints: seasonalityHintsFor(species) });
+}
+function currentSeasonWeek() { return window.BurbzSeasonality ? window.BurbzSeasonality.weekOfYear(new Date()) : 1; }
 const BURBZ_MAP_VERSION = 'flat-fast-map-terrain-reverted-v4-20260722';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
@@ -17778,7 +17798,7 @@ function pickWeightedHabitatSpecies(pool, seed) {
   }
   return pool[pool.length - 1];
 }
-function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, month = new Date().getMonth() + 1) {
+function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, month = new Date().getMonth() + 1, week = currentSeasonWeek()) {
   // Spawns must pass the closed regional whitelist — the habitat pools can be
   // extended with world-roster species for scanning, but an Emu must never
   // appear as an "area bird" in Cheshire. UK50 adds season and coarse-range
@@ -17786,6 +17806,11 @@ function pickHabitatBird(habitat, seed, region = 'uk', lat = null, lon = null, m
   if (!region || region === 'unsupported') return null;
   const native = species => speciesNativeToRegion(species, region) && speciesAllowedInRegion(species, region);
   const eligible = species => {
+    // Seasonal availability gate: never spawn a species whose week-of-year x
+    // habitat probability is effectively zero (a winter duck in August, a
+    // waterbird away from water). This is separate from — and applied on top
+    // of — the coarse month/range whitelists below, and never fires on rarity.
+    if (seasonallyAbsentHere(species, habitat, week)) return false;
     if (NATIONAL.isEligible(region, species, lat, lon, month, habitat)) return true;
     if (NATIONAL.names.some(name => normaliseSpeciesKey(name) === normaliseSpeciesKey(species))) return false;
     if (region === 'uk') return UK50.isEligible(species, lat, lon, month, habitat) && UK26.isEligible(species, lat, lon, month, habitat) && UK_FINAL.isEligible(species, lat, lon, month, habitat) && UK4.isEligible(species, lat, lon, month, habitat);
@@ -17802,10 +17827,11 @@ function buildBirdSpawns(lat, lon, features) {
   const region = mapRegionForCoords(lat, lon);
   if (region === 'unsupported') return [];
   const month = new Date().getMonth() + 1;
+  const week = currentSeasonWeek();
   const useful = features.slice(0,18).map((feature,i) => {
     const habitat = classifyHabitat(feature.tags);
     const seed = hashStr(`${feature.lat.toFixed(5)},${feature.lon.toFixed(5)},${habitat},${region},${i}`);
-    const bird = pickHabitatBird(habitat, seed, region, feature.lat, feature.lon, month);
+    const bird = pickHabitatBird(habitat, seed, region, feature.lat, feature.lon, month, week);
     return bird ? { lat:feature.lat, lon:feature.lon, habitat, bird, seed, realFeature:true, region } : null;
   }).filter(Boolean);
   const seenHabitats = new Set(useful.map(s => s.habitat));
@@ -17816,7 +17842,7 @@ function buildBirdSpawns(lat, lon, features) {
     const spawnLat = lat + Math.cos(angle) * dist;
     const spawnLon = lon + Math.sin(angle) * dist / Math.max(.35, Math.cos(lat * Math.PI / 180));
     const seed = hashStr(`${spawnLat.toFixed(5)},${spawnLon.toFixed(5)},${habitat},${region}`);
-    const bird = pickHabitatBird(habitat, seed, region, spawnLat, spawnLon, month);
+    const bird = pickHabitatBird(habitat, seed, region, spawnLat, spawnLon, month, week);
     if (bird) useful.push({ lat:spawnLat, lon:spawnLon, habitat, bird, seed, realFeature:false, region });
   });
   if (region === 'au' && !useful.some(spawn => (spawn.bird.commonName || spawn.bird.name || spawn.bird.species) === 'Australian Raven')) {
@@ -18272,7 +18298,43 @@ function createBirdSpawnPopup(spawn) { const species = spawn.bird.commonName || 
 function updateNearbyCard(spawns, featureCount) { const first = spawns[0]; if (!first) return; const species = first.bird.commonName || first.bird.name || first.bird.species; const habitat = HABITAT_LABELS[first.habitat] || HABITAT_LABELS.default; if ($('mapNearbyIcon')) $('mapNearbyIcon').innerHTML = birdOnlyImgHTML(first.bird, 'map-nearby-art'); $('mapNearbyTitle').textContent = `${species} nearby`; $('mapNearbyCopy').textContent = `${habitat}: ${featureCount ? featureCount + ' mapped clues' : 'likely in this area'} — check the area list.`; }
 function mapDistanceMeters(a, b) { const lat1 = (a.lat ?? a[1]) * Math.PI/180, lat2 = (b.lat ?? b[1]) * Math.PI/180; const dLat = lat2-lat1, dLon = ((b.lng ?? b.lon ?? b[0]) - (a.lng ?? a.lon ?? a[0])) * Math.PI/180; const x = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2; return 6371000 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x)); }
 function mapViewRadiusMeters() { if (!liveMap) return 1400; const c = liveMap.getCenter(); const b = liveMap.getBounds(); const n = b.getNorthEast(); const meters = mapDistanceMeters(c, n) * .75; return Math.max(500, Math.min(8000, meters)); }
-function likelyBirdRows(spawns) { const bySpecies = new Map(); spawns.forEach(spawn => { const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species; const habitat = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default; const existing = bySpecies.get(species) || { species, bird:spawn.bird, habitats:new Set(), mapped:0, fallback:0, emoji:getBirdMarkerEmoji(species), commonness:realWorldRarityScore(species), rarityLabel:realWorldRarityLabel(species) }; existing.habitats.add(habitat); if (spawn.realFeature) existing.mapped++; else existing.fallback++; bySpecies.set(species, existing); }); return [...bySpecies.values()].sort((a,b) => (b.commonness - a.commonness) || (b.mapped - a.mapped) || a.species.localeCompare(b.species)); }
+function likelyBirdRows(spawns) {
+  // Roll up spawns per species, then rank and LABEL each by its live candidate
+  // probability — local occurrence x week-of-year x habitat x time-of-day
+  // detectability — instead of a single all-time commonness score. Species
+  // that cannot realistically be here this week (a winter visitor in August)
+  // are dropped, not relabelled "uncommon".
+  const week = currentSeasonWeek();
+  const hour = new Date().getHours();
+  const bySpecies = new Map();
+  spawns.forEach(spawn => {
+    const species = spawn.bird.commonName || spawn.bird.name || spawn.bird.species;
+    const habitatLabel = HABITAT_LABELS[spawn.habitat] || HABITAT_LABELS.default;
+    const existing = bySpecies.get(species) || { species, bird:spawn.bird, habitats:new Set(), rawHabitats:new Set(), mapped:0, fallback:0, emoji:getBirdMarkerEmoji(species), commonness:realWorldRarityScore(species), rarityLabel:realWorldRarityLabel(species) };
+    existing.habitats.add(habitatLabel);
+    existing.rawHabitats.add(spawn.habitat);
+    if (spawn.realFeature) existing.mapped++; else existing.fallback++;
+    bySpecies.set(species, existing);
+  });
+  const rows = [];
+  bySpecies.forEach(row => {
+    if (!window.BurbzSeasonality) { row.prob = row.commonness / 100; rows.push(row); return; }
+    // Score against the species' best-matching local habitat.
+    const hints = seasonalityHintsFor(row.species);
+    let best = { p:0, presence:0 };
+    row.rawHabitats.forEach(h => {
+      const c = window.BurbzSeasonality.candidateProbability(row.species, { week, hour, habitat:h, hints });
+      if (c.p >= best.p) best = { p:c.p, presence:c.seasonalPresence };
+    });
+    row.prob = best.p;
+    row.rarityLabel = window.BurbzSeasonality.rarityLabelForProbability(best.p);
+    // Exclusion is seasonal/habitat, not time-of-day: a crepuscular bird stays
+    // (dimmed to "rare" by day), a winter or off-habitat species is removed.
+    if (best.presence < window.BurbzSeasonality.PRESENCE_FLOOR) return;
+    rows.push(row);
+  });
+  return rows.sort((a,b) => (b.prob - a.prob) || (b.mapped - a.mapped) || a.species.localeCompare(b.species));
+}
 function renderLikelyBirdOverlay(spawns = liveMapSpawns, featureCount = liveMapFeatureCount, source = 'Current map view') { const overlay = $('mapBirdOverlay'); if (!overlay) return; if (!spawns || !spawns.length) spawns = buildBirdSpawns((liveMapLastPosition || getFallbackMapCenter()).lat, (liveMapLastPosition || getFallbackMapCenter()).lon, []); const habitats = [...new Set(spawns.map(s => s.habitat))]; const rows = likelyBirdRows(spawns); overlay.innerHTML = `<div class="map-overlay-head"><div><div class="map-overlay-title">Likely birds</div><div class="map-overlay-sub">${escapeHtml(source)} · ${featureCount ? featureCount + ' mapped habitat clues' : 'habitat estimate'}</div></div><button class="map-overlay-close" id="mapOverlayClose" aria-label="Close likely birds overlay">×</button></div><div class="map-habitat-chip-row">${habitats.map(h => `<span class="map-habitat-chip" style="border-color:${habitatColor(h)}66;color:${habitatColor(h)}">${escapeHtml(HABITAT_LABELS[h] || h)}</span>`).join('')}</div><div class="map-likely-grid">${rows.slice(0,10).map((row, i) => `<div class="map-likely-card" data-likely-bird="${i}" style="cursor:pointer"><div class="map-likely-species">${row.emoji} ${escapeHtml(row.species)}</div><div class="map-likely-why">Near ${escapeHtml([...row.habitats].slice(0,2).join(' + '))}</div><span class="map-likely-tag">${escapeHtml(row.rarityLabel)} · ${row.mapped ? row.mapped + ' mapped' : 'estimated'}</span></div>`).join('')}</div>`; $('mapOverlayClose')?.addEventListener('click', () => toggleLikelyBirdOverlay(false), { once:true }); overlay.querySelectorAll('[data-likely-bird]').forEach(card => card.addEventListener('click', () => { const row = rows[Number(card.dataset.likelyBird)]; if (row) { SFX.tap(); showMapBirdPreview(row); } })); drawHabitatOverlayZones(spawns); }
 async function refreshLikelyBirdOverlay(opts = {}) { if (!liveMapOverlayOpen) return; const overlay = $('mapBirdOverlay'); if (overlay) overlay.innerHTML = '<div class="map-overlay-title">Likely birds</div><div class="map-overlay-sub">Reading real habitat clues around this enchanted map view...</div>'; const center = (opts.useMapView && liveMap) ? liveMap.getCenter() : (liveMapLastPosition || getFallbackMapCenter()); const lat = center.lat, lon = center.lng ?? center.lon; const radius = opts.useMapView ? mapViewRadiusMeters() : 1400; const features = await fetchNearbyHabitatFeatures(lat, lon, radius).catch(() => []); const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); renderLikelyBirdOverlay(spawns, features.length, opts.reason || (opts.useMapView ? 'Current map view' : 'Your live position')); }
 function toggleLikelyBirdOverlay(force) { liveMapOverlayOpen = typeof force === 'boolean' ? force : !liveMapOverlayOpen; const overlay = $('mapBirdOverlay'), btn = $('mapLikelyBtn'); overlay?.classList.toggle('show', liveMapOverlayOpen); btn?.classList.toggle('active', liveMapOverlayOpen); if (!liveMapOverlayOpen) { drawHabitatOverlayZones([]); return; } renderLikelyBirdOverlay(); refreshLikelyBirdOverlay({ useMapView: !!liveMap, reason:'Current map view' }); }
