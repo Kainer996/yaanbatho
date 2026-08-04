@@ -28,6 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
+CURRENT_BUILD = "realm-dropdown-v223-20260804"
 
 
 def trio(seed, name, lat, lon, day):
@@ -245,8 +246,13 @@ def test_story_canon_teaches_the_nested_ladder():
 def test_release_is_versioned_and_the_realm_core_cache_buster_moved():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on,
+    # but this release's own segment stays in the cache lineage forever.
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
+    # empire_realm_core.js still ships this release's maths, so its own
+    # cache-buster stays put until the core itself changes again.
     assert f'src="empire_realm_core.js?v={OWN_RELEASE_PIN}"' in html
     assert f"'./empire_realm_core.js?v={OWN_RELEASE_PIN}'" in sw

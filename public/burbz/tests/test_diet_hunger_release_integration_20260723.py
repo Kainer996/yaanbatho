@@ -131,7 +131,9 @@ const caches = {
     opened.push(name);
     return {
       add: async asset => { added.push(asset); },
-      put: async () => {}
+      // The install fetches each shell entry with cache:'reload' and puts the
+      // fresh copy, so precaching is observed on put(), not add().
+      put: async (asset) => { added.push(typeof asset === 'string' ? asset : asset.url); }
     };
   },
   keys: async () => [],
