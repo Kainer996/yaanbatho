@@ -54,7 +54,6 @@ def test_dynamic_quest_controls_are_explicit_non_submit_buttons():
     for marker in (
         'type="button" class="quest-duration-choice',
         'type="button" class="quest-bird-chip',
-        'type="button" class="quest-equip-chip',
         'type="button" class="quest-send-btn',
     ):
         assert marker in sheet

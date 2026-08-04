@@ -115,8 +115,8 @@ def test_all_five_equip_categories_are_presented():
     assert "label: 'Spell'" in HTML
     assert "label: 'Potion'" in HTML
     # the forge craft tab groups the new categories too
-    assert "spell: '📜 Spells — scrolls & sigils'" in HTML
-    assert "potion: '🧪 Potions — battle brews'" in HTML
+    assert "label:'📜 Spells — scrolls & sigils'" in HTML
+    assert "label:'🧪 Potions — battle brews'" in HTML
 
 
 def test_tapping_your_bird_opens_the_screen_from_the_main_surfaces():
@@ -168,8 +168,9 @@ def test_drunk_potions_restock_from_the_bag():
 # ---------------------------------------------------------------------------
 
 def test_loot_core_version_is_bumped_and_consistent():
-    assert 'loot_crafting_core.js?v=timed-crafting-20260726' in HTML
-    assert "'./loot_crafting_core.js?v=timed-crafting-20260726'" in SW
+    pin = 'loot_crafting_core.js?v=forge-satchels-v220-20260804'
+    assert pin in HTML
+    assert f"'./{pin}'" in SW
     assert "fletchers-forge-20260719" not in HTML
     assert "fletchers-forge-20260719" not in SW
     assert "const BURBZ_CACHE = 'burbz-" in SW

@@ -97,7 +97,7 @@ console.log(JSON.stringify({
     assert payload["atkGain"] == 12 and payload["defGain"] == 10
     assert payload["hpGain"] == 18 and payload["spdGain"] == 7
     assert payload["craftOkExact"] is True and payload["craftBlockedEmpty"] is False
-    assert payload["recipeCount"] == 30  # + spells & potions since the bird equipment screen
+    assert payload["recipeCount"] == 35  # + spells, potions and five Forge-only satchels
     assert payload["everyGearHasSlot"] is True
     assert payload["pityForcesRare"] is True
 

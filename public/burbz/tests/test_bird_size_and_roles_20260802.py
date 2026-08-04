@@ -22,7 +22,8 @@ SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 ROLE_CORE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "empire-live-reconcile-v217-20260803"
+SIZE_CORE_PIN = "forge-satchels-v220-20260804"
+CURRENT_BUILD = "forge-satchels-v220-20260804"
 
 
 def run_node(source: str) -> dict:
@@ -346,8 +347,8 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML.read_text(encoding="utf-8")
     # Both new cores ship, and are precached for offline play.
     assert SIZE_CORE.exists() and ROLES_CORE.exists()
-    assert f"'./bird_size_core.js?v={ROLE_CORE_PIN}'" in sw
+    assert f"'./bird_size_core.js?v={SIZE_CORE_PIN}'" in sw
     assert f"'./bird_roles_core.js?v={ROLE_CORE_PIN}'" in sw
     html = HTML.read_text(encoding="utf-8")
-    assert f'src="bird_size_core.js?v={ROLE_CORE_PIN}"' in html
+    assert f'src="bird_size_core.js?v={SIZE_CORE_PIN}"' in html
     assert f'src="bird_roles_core.js?v={ROLE_CORE_PIN}"' in html

@@ -3559,7 +3559,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <!-- The forge sits at the very top: it is the thing players come here to do. -->
       <button class="stores-forge-btn" id="storesForgeBtn" onclick="switchScreen('forge')">
         <span class="sfb-icon">⚒️</span>
-        <span class="sfb-main"><span class="sfb-title">FLETCHER'S FORGE</span><span class="sfb-sub" id="storesForgeSub">Craft &amp; equip weapons, armour, spells and potions</span></span>
+        <span class="sfb-main"><span class="sfb-title">FLETCHER'S FORGE</span><span class="sfb-sub" id="storesForgeSub">Craft &amp; equip weapons, armour, satchels, spells and potions</span></span>
         <span class="sfb-go">›</span>
       </button>
       <div id="storesTreasury"></div>
@@ -3570,7 +3570,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- FLETCHER'S FORGE — equip weapons & armour, craft gear from found loot -->
     <div class="screen" id="screen-forge">
       <div class="screen-title">FLETCHER'S FORGE</div>
-      <div class="forge-intro">Loot found on your walks becomes weapons, armour and trinkets here. Equip each bird with a weapon (talons for the strong, wands for the magical), armour and a trinket.</div>
+      <div class="forge-intro">Loot found on your walks becomes weapons, armour, satchels and trinkets here. Equip each bird at the Forge; satchels let it carry more home from quests.</div>
       <div class="forge-tabs">
         <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
         <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
@@ -4001,10 +4001,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_sleep_core.js?v=roost-sleep-v208-20260803"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="bird_size_core.js?v=empire-clarity-v205-20260803"></script>
+<script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
-<script src="loot_crafting_core.js?v=timed-crafting-20260726"></script>
+<script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=empire-clarity-v205-20260803"></script>
 <script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
@@ -10386,7 +10386,8 @@ function speciesSizeInfo(profile) {
 }
 function birdSizeSummary(bird) {
   const core = birdSizeCore();
-  return core ? core.sizeSummary(bird) : null;
+  const carryBonus = Math.max(0, Number(birdGearBonuses(bird).carryBonus) || 0);
+  return core ? core.sizeSummary(bird, carryBonus) : null;
 }
 function birdCarryCapacity(bird) {
   const core = birdSizeCore();
@@ -10628,7 +10629,8 @@ function applyQuartermasterPlanning(quest) {
 function applyExpeditionCarryLimit(quest, bird) {
   const core = birdSizeCore();
   if (!core || !quest || !quest.rewards) return quest;
-  const carried = core.applyCarryLimit(quest.rewards, bird);
+  const carryBonus = Math.max(0, Number(birdGearBonuses(bird).carryBonus) || 0);
+  const carried = core.applyCarryLimit(quest.rewards, bird, carryBonus);
   quest.rewards.branches = carried.branches;
   quest.rewards.items = carried.items;
   quest.carry = {
@@ -10636,6 +10638,7 @@ function applyExpeditionCarryLimit(quest, bird) {
     haulMultiplier: carried.haulMultiplier,
     unitsUsed: carried.unitsUsed,
     leftBehind: carried.leftBehind,
+    satchelBonus: carryBonus,
     sizeClass: bird && bird.sizeClass ? bird.sizeClass : core.sizeClassForScore(core.birdSizeScore(bird)).id
   };
   return quest;
@@ -12321,18 +12324,8 @@ function startBirdExpedition(birdId, templateId, loadout) {
   // how much of it comes home.
   applyQuartermasterPlanning(quest);
   applyExpeditionCarryLimit(quest, bird);
-  // Fallout Shelter-style loadout: a pantry provision and a charm item ride
-  // along and pay out as bonuses when the quest is claimed.
-  const equipment = { provision: null, charm: null };
-  if (loadout && loadout.provision && (gameState.pantry[loadout.provision] || 0) > 0) {
-    gameState.pantry[loadout.provision] -= 1;
-    equipment.provision = loadout.provision;
-  }
-  if (loadout && loadout.charm && (gameState.inventory.items[loadout.charm] || 0) > 0) {
-    gameState.inventory.items[loadout.charm] -= 1;
-    equipment.charm = loadout.charm;
-  }
-  quest.equipment = equipment;
+  // Expedition gear is durable and automatic. An equipped Forge satchel was
+  // already included in the carry limit above; dispatch never spends supplies.
   gameState.birdExpeditions.unshift(quest);
   updateQuestProgress('expedition_sent', 1);
   saveState();
@@ -12369,6 +12362,8 @@ function claimBirdExpedition(expeditionId) {
   let birdLevelsGained = 0;
   try {
     q.status = 'claimed';
+    // Save compatibility: quests already launched by older builds may contain
+    // paid provision/charm equipment. Honour that promised one-off bonus.
     const equipment = q.equipment || {};
     coins = advanced.rewards.coins || 0;
     branches = Math.max(0, Math.floor(Number(advanced.rewards.branches) || 0));
@@ -12490,7 +12485,7 @@ function renderMerlinClueNotebook() {
 
 // ---- Fallout Shelter-style quest board --------------------------------------
 // The board shows the quests themselves (no bird lists). Tapping a quest opens
-// a send sheet where you pick one bird plus its loadout; tapping a bird that is
+// a send sheet where you pick one bird and duration; tapping a bird that is
 // out opens its procedurally generated adventure log.
 const QUEST_TEMPLATE_INFO = {
   merlin_first_flight: 'A one-off first flight around the garden. Merlin is back in seconds — with something useful for crafting later.',
@@ -12688,8 +12683,8 @@ function scheduleQuestBoardRefresh() {
   }, 20000);
 }
 
-// ---- Send sheet: pick a bird + loadout (Fallout Shelter style) --------------
-let questSendState = { templateId: null, durationMinutes: 5, birdId: null, provision: null, charm: null };
+// ---- Send sheet: pick a bird and duration -----------------------------------
+let questSendState = { templateId: null, durationMinutes: 5, birdId: null };
 
 function questOverlayEl() {
   let el = document.getElementById('questOverlay');
@@ -12720,7 +12715,7 @@ function openQuestSend(templateId) {
   SFX.tap();
   // Merlin's own tutorial errand arrives with Merlin already picked. Normal
   // errands start on the quick five-minute tier; players can switch before send.
-  questSendState = { templateId, durationMinutes: t.tutorial === true ? t.minutes : 5, birdId: t.tutorial === true ? MERLIN_GUIDE.id : null, provision: null, charm: null };
+  questSendState = { templateId, durationMinutes: t.tutorial === true ? t.minutes : 5, birdId: t.tutorial === true ? MERLIN_GUIDE.id : null };
   renderQuestSendSheet();
 }
 
@@ -12773,17 +12768,6 @@ function renderQuestSendSheet() {
     '</button>';
   }).join('') : '<div class="academy-empty">No flock companions are ready for this expedition yet.</div>';
 
-  const provisions = Object.keys(FOODS).filter(k => (gameState.pantry && gameState.pantry[k] || 0) > 0);
-  const provisionChips = provisions.length ? provisions.map(k => {
-    const sel = questSendState.provision === k ? ' selected' : '';
-    return '<button type="button" class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'provision\',\'' + k + '\')">' + FOODS[k].emoji + ' ' + escapeHtml(FOODS[k].label) + ' <span class="quest-equip-count">×' + gameState.pantry[k] + '</span></button>';
-  }).join('') : '<div class="quest-equip-none">Pantry is empty — buy food in a village.</div>';
-
-  const charms = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
-  const charmChips = charms.length ? charms.map(([k, n]) => {
-    const sel = questSendState.charm === k ? ' selected' : '';
-    return '<button type="button" class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'charm\',\'' + k + '\')">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' <span class="quest-equip-count">×' + n + '</span></button>';
-  }).join('') : '<div class="quest-equip-none">No lucky charms in the Stores yet — quests award them.</div>';
 
   el.innerHTML = '<div class="quest-overlay-panel" data-hunger-surface="expedition-dispatch">' +
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
@@ -12794,10 +12778,7 @@ function renderQuestSendSheet() {
     (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-economy-note">Quick quests pay best per hour; longer quests bring home much bigger totals while you are away.</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
-    '<div class="quest-overlay-label">Provision <span class="quest-overlay-hint">+25% coins &amp; branches</span></div>' +
-    '<div class="quest-equip-row">' + provisionChips + '</div>' +
-    '<div class="quest-overlay-label">Lucky charm <span class="quest-overlay-hint">+1 bonus find</span></div>' +
-    '<div class="quest-equip-row">' + charmChips + '</div>' +
+
     '<button type="button" class="quest-send-btn" id="questSendBtn" ' + (questSendState.birdId ? '' : 'disabled') + ' onclick="confirmQuestSend()">' +
       (questSendState.birdId ? '🧭 SEND ON QUEST' : 'PICK A BIRD FIRST') + '</button>' +
   '</div>';
@@ -12818,15 +12799,9 @@ function selectQuestBird(birdId) {
   renderQuestSendSheet();
 }
 
-function toggleQuestEquip(slot, key) {
-  SFX.tap();
-  questSendState[slot] = questSendState[slot] === key ? null : key;
-  renderQuestSendSheet();
-}
-
 function confirmQuestSend() {
   if (!questSendState.birdId || !questSendState.templateId) return;
-  startBirdExpedition(questSendState.birdId, questSendState.templateId, { durationMinutes: questSendState.durationMinutes, provision: questSendState.provision, charm: questSendState.charm });
+  startBirdExpedition(questSendState.birdId, questSendState.templateId, { durationMinutes: questSendState.durationMinutes });
   closeQuestOverlay();
   renderQuests();
 }
@@ -25813,7 +25788,7 @@ function renderInventory() {
     const ready = forgeJobsReady().length;
     sub.textContent = ready ? ready + ' commission' + (ready === 1 ? '' : 's') + ' ready to collect'
       : jobs.length ? jobs.length + ' piece' + (jobs.length === 1 ? '' : 's') + ' on the anvil'
-      : 'Craft & equip weapons, armour, spells and potions';
+      : 'Craft & equip weapons, armour, satchels, spells and potions';
   }
   const btn = $('storesForgeBtn');
   if (btn) btn.classList.toggle('ready', forgeJobsReady().length > 0);
@@ -25839,7 +25814,7 @@ let forgeState = { tab: 'equip', birdId: null, slotPicker: null };
 const FORGE_SLOT_META = {
   weapon:  { label: 'Weapon',      empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
   armour:  { label: 'Armour',      empty: '🛡️', hint: 'DEF, HP and magic resist' },
-  trinket: { label: 'Enhancement', empty: '💍', hint: 'Speed and critical strikes' },
+  trinket: { label: 'Enhancement', empty: '🎒', hint: 'Satchels carry more · charms boost battle' },
   spell:   { label: 'Spell',       empty: '📜', hint: 'Grants an extra battle skill' },
   potion:  { label: 'Potion',      empty: '🧪', hint: 'Drunk automatically as battle begins' }
 };
@@ -25865,6 +25840,7 @@ function forgeGearStatLine(item) {
   if (s.spd) parts.push('+' + s.spd + ' SPD');
   if (s.maxHp) parts.push('+' + s.maxHp + ' HP');
   if (s.critBonus) parts.push('+' + Math.round(s.critBonus * 100) + '% CRIT');
+  if (item.carryBonus) parts.push('🎒 carries +' + item.carryBonus + (item.carryBonus === 1 ? ' find' : ' finds'));
   if (item.spell) {
     const sp = item.spell;
     if (sp.kind === 'attack') parts.push('✨ PWR ' + sp.power + (sp.aoe ? ' · hits all' : '') + (sp.rider ? ' · -' + sp.rider.stat.toUpperCase() : ''));
@@ -26125,11 +26101,18 @@ function renderForgeCraft(body) {
   const stock = gameState.inventory.items || {};
   const coins = gameState.player.coins || 0;
   const queueFull = forgeQueueIsFull();
-  const groups = { weapon: '🗡️ Weapons — talons & wands', armour: '🛡️ Armour', trinket: '💍 Enhancements', spell: '📜 Spells — scrolls & sigils', potion: '🧪 Potions — battle brews' };
+  const groups = [
+    { label:'🗡️ Weapons — talons & wands', items:L.gearBySlot('weapon') },
+    { label:'🛡️ Armour', items:L.gearBySlot('armour') },
+    { label:'💍 Enhancements', items:L.gearBySlot('trinket').filter(item => item.kind !== 'satchel') },
+    { label:'🎒 Satchels — carry more quest loot', items:L.gearBySlot('trinket').filter(item => item.kind === 'satchel') },
+    { label:'📜 Spells — scrolls & sigils', items:L.gearBySlot('spell') },
+    { label:'🧪 Potions — battle brews', items:L.gearBySlot('potion') }
+  ];
   let html = renderForgeQueue();
-  Object.keys(groups).forEach(slot => {
-    html += '<div class="forge-recipe-group">' + groups[slot] + '</div>';
-    html += L.gearBySlot(slot).sort((a, b) => L.rarityIndex(a.rarity) - L.rarityIndex(b.rarity)).map(item => {
+  groups.forEach(group => {
+    html += '<div class="forge-recipe-group">' + group.label + '</div>';
+    html += group.items.sort((a, b) => L.rarityIndex(a.rarity) - L.rarityIndex(b.rarity)).map(item => {
       const recipe = L.recipeFor(item.id);
       const check = L.canCraft(recipe, stock, coins);
       const color = L.RARITY_META[item.rarity].color;
@@ -29051,11 +29034,11 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
-['openQuestSend', 'openQuestLog', 'claimBirdExpedition', 'confirmQuestSend', 'selectQuestDuration', 'selectQuestBird', 'toggleQuestEquip', 'startBirdExpedition'].forEach(fnName => {
+['openQuestSend', 'openQuestLog', 'claimBirdExpedition', 'confirmQuestSend', 'selectQuestDuration', 'selectQuestBird', 'startBirdExpedition'].forEach(fnName => {
   const fn = window[fnName];
   if (typeof fn !== 'function') return;
   window[fnName] = function(...args) {
@@ -30040,7 +30023,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'quest-sheet-input-fix-v219-20260804';
+const BURBZ_BUILD = 'forge-satchels-v220-20260804';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -30142,7 +30125,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'diary', chapter:'The Chronicle', title:'Your adventuring diary', screen:'diary', target:'#diaryBook', text:'Every bird found, town freed and trail walked, I set down here with my own quill. Lost your place? Read the tale back, day by day.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
-  { chapterId:'forge', chapter:'Forge', title:'The Fletcher\u2019s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour and trinkets from battle spoils at the Forge.' },
+  { chapterId:'forge', chapter:'Forge', title:'The Fletcher\u2019s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour, satchels and trinkets from battle spoils at the Forge. Equipped satchels carry more finds home from quests.' },
   { chapterId:'forge', chapter:'Forge', title:'Equip your birds', screen:'forge', target:'#screen-forge', text:'Open a bird\u2019s equipment screen to gear it up. Gear raises its battle stats directly.' },
 
   // — Resources: taught the first time the Stores open.

@@ -41,7 +41,7 @@
   // ---------------------------------------------------------------------------
   // Gear catalogue
   // ---------------------------------------------------------------------------
-  // Slots: weapon (ATK or MAG), armour (DEF/HP/RES), trinket (SPD/crit/utility).
+  // Slots: weapon (ATK or MAG), armour (DEF/HP/RES), trinket (SPD/crit/utility/carry).
   // Stat keys match battle_core fighter fields: atk, mag, def, res, spd,
   // maxHp, critBonus.
   const GEAR = {
@@ -69,6 +69,12 @@
     stormglass_anklet:{ id:'stormglass_anklet', slot:'trinket', kind:'trinket', rarity:'rare', label:'Stormglass Anklet', icon:'⚡', stats:{ spd:8, critBonus:0.04 }, copy:'Crackles when the wearer banks hard.' },
     gale_pendant:   { id:'gale_pendant',   slot:'trinket', kind:'trinket', rarity:'epic',      label:'Gale Pendant',    icon:'🌀', stats:{ spd:12, critBonus:0.06, mag:6 }, copy:'A bottled tailwind on a golden thread.' },
     heart_of_sky:   { id:'heart_of_sky',   slot:'trinket', kind:'trinket', rarity:'legendary', label:'Heart of the Sky',icon:'💎', stats:{ spd:16, critBonus:0.09, atk:8, mag:8 }, copy:'The open sky itself, cut and set.' },
+    // --- Satchels — durable Forge gear, never a quest-send consumable ---
+    reed_satchel:      { id:'reed_satchel',       slot:'trinket', kind:'satchel', rarity:'common',    label:'Reed Satchel',       icon:'🎒', stats:{}, carryBonus:1, craftOnly:true, copy:'A light woven pouch that carries one extra find.' },
+    oakframe_satchel:  { id:'oakframe_satchel',   slot:'trinket', kind:'satchel', rarity:'uncommon',  label:'Oakframe Satchel',   icon:'🎒', stats:{}, carryBonus:2, craftOnly:true, copy:'An oak-braced field bag that carries two extra finds.' },
+    stormweave_satchel:{ id:'stormweave_satchel', slot:'trinket', kind:'satchel', rarity:'rare',      label:'Stormweave Satchel', icon:'🎒', stats:{}, carryBonus:3, craftOnly:true, copy:'Weatherproof weaving keeps three extra finds secure in flight.' },
+    gilded_satchel:    { id:'gilded_satchel',     slot:'trinket', kind:'satchel', rarity:'epic',      label:'Gilded Satchel',     icon:'🎒', stats:{}, carryBonus:4, craftOnly:true, copy:'A balanced courier bag that carries four extra finds.' },
+    royal_satchel:     { id:'royal_satchel',      slot:'trinket', kind:'satchel', rarity:'legendary', label:'Royal Satchel',      icon:'🎒', stats:{}, carryBonus:5, craftOnly:true, copy:'The finest expedition pack in the Kingdom: five extra finds.' },
     // --- Spells — an equipped scroll grants the bird an extra battle skill ---
     ember_wisp:     { id:'ember_wisp',     slot:'spell', kind:'spell', rarity:'common',    label:'Ember Wisp',       icon:'🔥', stats:{}, spell:{ power:56, cd:2, kind:'attack' }, copy:'A darting mote of flame, eager to bite.' },
     mending_light:  { id:'mending_light',  slot:'spell', kind:'spell', rarity:'uncommon',  label:'Mending Light',    icon:'💫', stats:{}, spell:{ power:0, cd:3, kind:'heal', healPct:0.28 }, copy:'Warm dawnlight knits feather and bone.' },
@@ -92,12 +98,13 @@
   // Sum the stat bonuses of an equipped loadout {weapon:id, armour:id, trinket:id}.
   // Returns the `gear` shape battle_core.buildFighter consumes.
   function equipmentBonuses(loadout) {
-    const total = { atk:0, mag:0, def:0, res:0, spd:0, maxHp:0, critBonus:0 };
+    const total = { atk:0, mag:0, def:0, res:0, spd:0, maxHp:0, critBonus:0, carryBonus:0 };
     if (!loadout || typeof loadout !== 'object') return total;
     GEAR_SLOTS.forEach(slot => {
       const item = gearById(loadout[slot]);
       if (!item) return;
       Object.keys(item.stats || {}).forEach(k => { total[k] = (total[k] || 0) + item.stats[k]; });
+      total.carryBonus += Math.max(0, Number(item.carryBonus) || 0);
     });
     return total;
   }
@@ -140,7 +147,7 @@
 
   function gearPowerScore(item) {
     const s = item.stats || {};
-    let score = Math.round((s.atk || 0) * 1.5 + (s.mag || 0) * 1.5 + (s.def || 0) * 1.2 + (s.res || 0) + (s.spd || 0) * 1.3 + (s.maxHp || 0) * 0.25 + (s.critBonus || 0) * 200);
+    let score = Math.round((s.atk || 0) * 1.5 + (s.mag || 0) * 1.5 + (s.def || 0) * 1.2 + (s.res || 0) + (s.spd || 0) * 1.3 + (s.maxHp || 0) * 0.25 + (s.critBonus || 0) * 200 + (item.carryBonus || 0) * 10);
     if (item.spell) score += Math.round((item.spell.power || 0) * 0.5 + (item.spell.healPct || 0) * 100 + (item.spell.aoe ? 15 : 0) + (item.spell.teamWide ? 15 : 0));
     if (item.battle) score += Math.round((item.battle.healPct || 0) * 80 + (item.battle.barrierPct || 0) * 80 + (item.battle.mods || []).reduce((n, m) => n + m.pct * 100, 0) + (item.battle.crStart || 0) * 40);
     return score;
@@ -191,7 +198,7 @@
   // rollGear: one equipment piece of a rolled rarity (any slot).
   function rollGear(source, rng, pity) {
     const rarity = pickRarity(RARITY_WEIGHTS[source] || RARITY_WEIGHTS.map_cache, rng, pity);
-    const pool = Object.values(GEAR).filter(g => g.rarity === rarity);
+    const pool = Object.values(GEAR).filter(g => g.rarity === rarity && !g.craftOnly);
     const item = pickFrom(pool, rng) || GEAR.thorn_talons;
     return { kind:'gear', id:item.id, qty:1 };
   }
@@ -262,6 +269,7 @@
     wand:    ['river_reed', 'moon_dust', 'storm_glass', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     armour:  ['down_tuft', 'oak_twig', 'iron_grit', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     trinket: ['river_reed', 'storm_glass', 'moon_dust', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
+    satchel: ['river_reed', 'oak_twig', 'down_tuft', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     spell:   ['river_reed', 'moon_dust', 'sun_amber', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     potion:  ['river_reed', 'down_tuft', 'moon_dust', 'sun_amber', 'ancient_rune', 'phoenix_ember']
   };

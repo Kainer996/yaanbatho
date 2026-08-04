@@ -133,12 +133,13 @@
   const MIN_CARRY_UNITS = 1;
   const MAX_CARRY_UNITS = 12;
 
-  function carryCapacity(bird) {
+  function carryCapacity(bird, equipmentBonus) {
     const score = birdSizeScore(bird);
     const base = 1 + score / 14;                                     // 1.0 tiny .. 8.1 giant
     const staminaBonus = Math.max(0, (n(bird && bird.stamina, 50) - 50) / 120);
     const levelBonus = Math.max(0, (n(bird && bird.level, 1) - 1) / 10);
-    return clamp(Math.round(base + staminaBonus + levelBonus), MIN_CARRY_UNITS, MAX_CARRY_UNITS);
+    const satchelBonus = Math.max(0, Math.floor(n(equipmentBonus, 0)));
+    return clamp(Math.round(base + staminaBonus + levelBonus) + satchelBonus, MIN_CARRY_UNITS, MAX_CARRY_UNITS);
   }
 
   // How much a bird of this size finds room for on the way home, as a multiple
@@ -153,8 +154,8 @@
   // counts scale by the haul multiplier, then the whole load is capped at what
   // the bird can physically carry — anything over the cap is left behind, and
   // named so the player can see why.
-  function applyCarryLimit(rewards, bird) {
-    const capacity = carryCapacity(bird);
+  function applyCarryLimit(rewards, bird, equipmentBonus) {
+    const capacity = carryCapacity(bird, equipmentBonus);
     const mult = haulMultiplier(bird);
     const source = rewards && typeof rewards === 'object' ? rewards : {};
     const branchesWanted = Math.max(0, Math.round(n(source.branches, 0) * mult));
@@ -213,7 +214,7 @@
   }
 
   // One line for the card: "🦅 Giant · carries 8 · +30% in battle".
-  function sizeSummary(bird) {
+  function sizeSummary(bird, equipmentBonus) {
     const score = birdSizeScore(bird);
     const cls = sizeClassForScore(score);
     const mult = battlePowerMultiplier(score);
@@ -224,7 +225,7 @@
       label: cls.label,
       icon: cls.icon,
       blurb: cls.blurb,
-      capacity: carryCapacity(bird),
+      capacity: carryCapacity(bird, equipmentBonus),
       haulMultiplier: haulMultiplier(bird),
       battleMultiplier: mult,
       battlePct: pct,
