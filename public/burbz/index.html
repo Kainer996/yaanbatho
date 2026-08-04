@@ -716,6 +716,11 @@ svg.academy-room-bg { display:block; filter:none; }
 .realm-sub-title { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; letter-spacing:.12em; color:#d9c893; text-transform:uppercase; }
 .realm-region-row { width:100%; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(46,32,12,.62),rgba(12,8,3,.72)); color:inherit; text-align:left; }
 .realm-region-row:active { transform:scale(.99); border-color:rgba(240,199,103,.6); }
+/* The feudal pyramid above the counties: duchy and kingdom rows sit at the
+   top of THE REALM, each one a whole title's lands framed with a tap. */
+.realm-liege-row.is-duchy { border-color:rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(58,40,14,.7),rgba(16,11,4,.78)); }
+.realm-liege-row.is-kingdom { border-color:rgba(255,224,138,.75); background:linear-gradient(180deg,rgba(74,52,16,.78),rgba(20,13,5,.84)); box-shadow:0 0 12px rgba(240,199,103,.25); }
+.realm-empire-banner { margin:2px 0 4px; padding:10px 12px; border-radius:11px; border:1px solid rgba(255,224,138,.85); background:linear-gradient(135deg,rgba(94,66,18,.9),rgba(34,22,7,.92)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12.5px; letter-spacing:.04em; text-align:center; box-shadow:0 0 16px rgba(240,199,103,.35), inset 0 1px 0 rgba(255,240,200,.25); }
 .realm-region-icon { display:grid; place-items:center; width:34px; height:38px; font-size:18px; border-radius:7px 7px 50% 50% / 7px 7px 60% 60%; border:1.5px solid rgba(240,199,103,.8); background:linear-gradient(160deg,#6a5220 0%,#3a2b0e 70%); box-shadow:inset 0 1px 0 rgba(255,240,200,.3); }
 .realm-region-main { flex:1; min-width:0; }
 .realm-region-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px; color:var(--text); letter-spacing:.04em; }
@@ -750,7 +755,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-settlement { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.55); color:#bfe9c2; font-size:11px; line-height:1.5; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.03em; }
 .province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
 
-/* Region banners on the royal atlas — grander than a village pin */
+/* County banners on the royal atlas — grander than a village pin */
 .empire-map-marker.is-region { z-index:6; }
 .empire-map-marker.is-region .empire-map-marker-icon { width:38px; height:42px; border-color:#ffe08a; background:linear-gradient(160deg,#7a5f22 0%,#4a380f 58%,#2b1f07 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.4), inset 0 0 9px rgba(0,0,0,.4), 0 0 18px rgba(240,199,103,.55); }
 .empire-map-marker.is-region .empire-map-marker-icon > span { font-size:19px; }
@@ -785,7 +790,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-marker.is-player .empire-map-marker-icon::after { content:''; position:absolute; inset:-6px; border-radius:inherit; border:2px solid rgba(159,212,255,.75); animation:empire-beacon-ring 2.2s ease-out infinite; pointer-events:none; }
 @keyframes empire-beacon-ring { 0% { transform:scale(.7); opacity:.9; } 70% { transform:scale(1.5); opacity:0; } 100% { transform:scale(1.5); opacity:0; } }
 /* Every banner says what KIND of thing it is, so gold never means two things. */
-.empire-map-marker.is-region .empire-map-marker-label::after { content:' · REGION'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
+.empire-map-marker.is-region .empire-map-marker-label::after { content:' · COUNTY'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
 .empire-map-marker.is-settlement.is-town .empire-map-marker-label::after { content:' · TOWN'; color:#9fd0a6; font-size:8px; letter-spacing:.08em; }
 .empire-map-marker.is-settlement.is-city .empire-map-marker-label::after { content:' · CITY'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
 .empire-map-btn.is-active { border-color:rgba(255,232,165,.95); background:linear-gradient(180deg,rgba(88,62,22,.96),rgba(40,26,9,.96)); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.3), 0 0 10px rgba(240,199,103,.4); }
@@ -853,7 +858,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-help-row { display:flex; align-items:flex-start; gap:9px; padding:7px 9px; border-radius:10px; background:rgba(0,0,0,.25); border:1px solid rgba(240,199,103,.18); font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; line-height:1.45; color:var(--text2); }
 .empire-help-row .ehr-icon { flex:none; font-size:16px; }
 .empire-help-row b { color:var(--text); }
-/* ---- Region Hall — run a whole region of the map --------------------------- */
+/* ---- County Hall — run a whole county of the map --------------------------- */
 #regionHallPanel { padding:0 2px 14px; }
 .region-hall-nav { display:flex; justify-content:space-between; gap:8px; margin:4px 0 10px; }
 .region-hall-back, .region-hall-atlas { appearance:none; cursor:pointer; border:1px solid rgba(240,199,103,.5); border-radius:11px; background:linear-gradient(180deg,rgba(46,32,12,.8),rgba(14,10,4,.85)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.06em; padding:9px 12px; }
@@ -867,6 +872,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .region-hall-ladder-label { display:flex; justify-content:space-between; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; color:#ffe9a8; letter-spacing:.05em; }
 .region-hall-ladder-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#8a6a2a,#f0c767); box-shadow:0 0 10px rgba(240,199,103,.5); transition:width .4s ease; }
 .region-hall-ladder-hint { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; color:#cdb98a; }
+.region-hall-liege { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12.5px; color:#ffe9a8; letter-spacing:.04em; line-height:1.6; }
+.region-hall-liege .rhl-arrow { color:#cdb98a; padding:0 2px; }
 /* ---- Province management: population, needs, construction ------------------ */
 #villageManagePanel { margin:10px 2px 4px; }
 #villageManagePanel:empty { display:none; }
@@ -3454,9 +3461,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="empire-map-key-row"><span class="empire-map-key-swatch you">🧭</span>You — your blue beacon, always pulsing</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch village">🕊️</span>A village you freed — tap to visit &amp; govern</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch settlement">🏘️</span>Town / City — neighbouring villages grown together</div>
-          <div class="empire-map-key-row"><span class="empire-map-key-swatch region">👑</span>Region banner — a whole area of freed villages</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch region">🛡️</span>County banner — 3+ freed villages united (Counties unite into Duchies, then Kingdoms, then your Empire)</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch frontier">⚔️</span>A dark village near you, waiting to be freed</div>
-          <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your regions</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your counties</div>
           <div class="empire-map-key-foot">Daylight on the map = lands you have freed. Darkness = lands still waiting.</div>
         </div>
         <div class="empire-map-tapcard" id="empireMapTapCard" role="dialog" aria-live="polite"></div>
@@ -3475,11 +3482,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
     <div id="empireTravelOverlay" aria-hidden="true"><div class="empire-travel-card"><div class="empire-travel-crest" id="empireTravelCrest">🕊️</div><div class="empire-travel-name" id="empireTravelName"></div><div class="empire-travel-sub">Travelling to your village…</div></div></div>
 
-    <!-- REGION HALL — once liberated villages unite into a region, the player
-         runs that whole region of the map from this Crusader-Kings desk
+    <!-- COUNTY HALL — once liberated villages unite into a county, the player
+         runs that whole county of the map from this Crusader-Kings desk
          instead of village by village. -->
     <div class="screen" id="screen-region">
-      <div class="screen-title" id="regionScreenTitle">REGION HALL</div>
+      <div class="screen-title" id="regionScreenTitle">COUNTY HALL</div>
       <div id="regionHallPanel"></div>
     </div>
 
@@ -4006,7 +4013,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=empire-clarity-v205-20260803"></script>
+<script src="empire_realm_core.js?v=feudal-hierarchy-v221-20260804"></script>
 <script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -19229,7 +19236,7 @@ function updateEmpireFogMask() {
       holes.push({ x: centre.x, y: centre.y, r: radius });
     } catch (e) {}
   });
-  // Founding a region unlocks that whole region of the map: one great window
+  // Founding a county unlocks that whole region of the map: one great window
   // of daylight covers the county's entire lands — centroid out past its
   // farthest sanctuary — instead of pinpricks around each town. Its rim is
   // struck in the realm's gold, a founded border on the Crusader map.
@@ -19424,8 +19431,8 @@ function focusEmpireVillage(seed) {
   empireMap.flyTo({ center:[Number(village.lon), Number(village.lat)], zoom:Math.max(11.5, empireMap.getZoom()), duration:850 });
 }
 
-// Frame a whole region — the atlas glides out to hold every sanctuary the
-// region contains, so tapping "Duchy of Delamere" shows the duchy, not a town.
+// Frame a whole county — the atlas glides out to hold every sanctuary the
+// county contains, so tapping "County of Delamere" shows the county, not a town.
 function frameEmpireRegion(regionId) {
   const region = empireRegionById(regionId);
   const core = window.BurbzEmpireMapCore;
@@ -19442,6 +19449,22 @@ function frameEmpireRegion(regionId) {
   } else {
     empireMap.fitBounds(bounds, { padding:{ top:122, right:58, bottom:112, left:58 }, maxZoom:10.5, duration:900 });
   }
+}
+
+// Frame a duchy or kingdom — the atlas glides out until every county the
+// title contains sits inside the view, the whole liege's lands at once.
+function frameEmpireLiege(liegeId) {
+  const liege = empireLiegeById(liegeId);
+  const core = window.BurbzEmpireMapCore;
+  if (!liege || !core || !empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
+  const card = $('empireMapCard');
+  if (card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
+  const bounds = core.claimBounds(liege.villages);
+  if (!bounds) return;
+  empireMapUserAdjusted = true;
+  empireMap.fitBounds(bounds, { padding:{ top:122, right:58, bottom:112, left:58 }, maxZoom:9.5, duration:900 });
 }
 
 // Frame a merged settlement — the atlas glides to hold every district of the
@@ -19557,28 +19580,30 @@ function refreshEmpireMap(options = {}) {
     });
     empireRegionMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(settlement.centroid.lon), Number(settlement.centroid.lat)]).addTo(empireMap));
   });
-  // Region banners: one heraldic standard per founded region, floating at its
-  // heart. Tapping it explains the region, with the Region Hall a chosen tap away.
+  // County banners: one heraldic standard per founded county, floating at its
+  // heart. Tapping it explains the county, with the County Hall a chosen tap
+  // away — and names the duchy or kingdom the county is sworn to, if any.
   regions.forEach(region => {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'empire-map-marker is-region is-visible show-label';
-    el.setAttribute('aria-label', 'Your region ' + region.name);
+    el.setAttribute('aria-label', 'Your county ' + region.name);
     el.innerHTML = '<span class="empire-map-marker-icon"><span>' + region.tierIcon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(region.name) + '</span>';
     el.addEventListener('click', ev => {
       ev.stopPropagation();
       SFX.tap();
+      const liege = region.duchyId ? empireLiegeById(region.duchyId) : null;
       showEmpireMapCard({
         crest: region.tierIcon,
         name: region.name,
-        kind: region.tierLabel + ' — a region of your empire',
+        kind: region.tierLabel + ' of your realm' + (liege ? ' · sworn to the ' + liege.name : ''),
         facts: [
           '🏡 ' + region.villageCount + ' villages',
           '👑 capital ' + region.capitalName,
-          '+' + Math.round(((rc && rc.REGION_TAX_BONUS) || 0.15) * 100) + '% unity taxes'
+          '+' + Math.round(((rc && rc.regionUnityBonus ? rc.regionUnityBonus(region) : (rc && rc.REGION_TAX_BONUS)) || 0.15) * 100) + '% unity taxes'
         ],
         actions: [
-          { label: '🏰 OPEN REGION HALL', run: () => openEmpireRegion(region.id) },
+          { label: '🛡️ OPEN COUNTY HALL', run: () => openEmpireRegion(region.id) },
           { label: '🗺️ SHOW ON MAP', run: () => frameEmpireRegion(region.id) }
         ]
       });
@@ -19642,7 +19667,7 @@ function refreshEmpireMap(options = {}) {
       status.textContent = 'Daylight over ' + villages.length + ' free village' + (villages.length === 1 ? '' : 's') +
         (settlementsOnMap.townCount ? ' · 🏘️ ' + settlementsOnMap.townCount + ' town' + (settlementsOnMap.townCount === 1 ? '' : 's') + ' grown from merged villages' : '') +
         (settlementsOnMap.cityCount ? ' · 🏙️ ' + settlementsOnMap.cityCount + ' cit' + (settlementsOnMap.cityCount === 1 ? 'y' : 'ies') + ' crowned' : '') +
-        (regions.length ? ' · ' + regions.length + ' region' + (regions.length === 1 ? '' : 's') + ' united' : '') +
+        (regions.length ? ' · 🛡️ ' + regions.length + ' count' + (regions.length === 1 ? 'y' : 'ies') + ' united' : '') +
         (openRoutes.length ? ' · ' + openRoutes.length + ' trade route' + (openRoutes.length === 1 ? '' : 's') + ' flying' : '');
     }
   }
@@ -19772,7 +19797,11 @@ window.__burbzSettlementsDebug = {
   snapshot: seed => { const e = ensureEmpireState(); return e && e.villages[String(Number(seed) >>> 0)] ? villageEconomySnapshot(e.villages[String(Number(seed) >>> 0)]) : null; },
   ledger: () => renderEmpirePanel()
 };
-const EMPIRE_RANKS = [[50, 'World Emperor'], [35, 'Kingdom Monarch'], [20, 'Realm Duke'], [10, 'Shire Count'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
+// The humble pre-county ladder, by villages liberated. It deliberately tops
+// out at Baron — the Crusader-Kings rung BELOW Count — because Count, Duke,
+// Monarch and Emperor are structural titles now, earned only by actually
+// founding counties, duchies, kingdoms and the empire (empireCrownTitle).
+const EMPIRE_RANKS = [[10, 'High Baron of the Free Villages'], [5, 'Town Baron'], [3, 'Village Warden'], [1, 'Hamlet Keeper']];
 function empireRankTitle(count) { for (const [n, t] of EMPIRE_RANKS) { if (count >= n) return t; } return 'Wandering Trainer'; }
 // ---- Royal Ledger drawers -------------------------------------------------
 // Which ledger drawers the player left open. Session-only, like the quest
@@ -19871,25 +19900,34 @@ function ensureEmpireTributeCountdownTicker() {
   }, 1000);
 }
 // ============================================================================
-// REALMS & TRADE — the Crusader-Kings endgame. Liberate enough villages close
-// together and they FOUND A REGION (County → Duchy → Kingdom as it grows);
-// hold two or more regions and their capitals can open TRADE ROUTES between
-// free sanctuaries. None of this appears before the first region exists, so
-// the early game stays exactly as simple as it always was: walk, listen,
-// befriend, liberate. All the maths lives in empire_realm_core.js.
+// REALMS & TRADE — the Crusader-Kings endgame, with the feudal ladder nested
+// the way Crusader Kings' actually is: 3 villages close together FOUND A
+// COUNTY; 2 counties within 600 km unite into a DUCHY; 2 duchies within
+// 2000 km proclaim a KINGDOM; 2 kingdoms anywhere on Earth proclaim the
+// EMPIRE. Every tier is made of the tier below — a county never relabels
+// itself a duchy just by growing. Hold two or more counties and their
+// capitals can open TRADE ROUTES between free sanctuaries.
+// None of this appears before the first region exists, so the early game
+// stays exactly as simple as it always was: walk, listen, befriend,
+// liberate. All the maths lives in empire_realm_core.js.
 // ============================================================================
 function realmCore() { return window.BurbzEmpireRealmCore; }
 let empireRegionsCache = null, empireRegionsCacheKey = '';
 function empireRegionsInfo() {
   const core = realmCore();
-  if (!core) return { regions: [], unassigned: [], largestCluster: 0, clusterCount: 0 };
+  if (!core) return { regions: [], duchies: [], kingdoms: [], empire: null, unassigned: [], largestCluster: 0, clusterCount: 0 };
   const villages = empireVillages();
   const key = villages.map(v => String(v.seed >>> 0)).sort().join(',');
   if (!empireRegionsCache || empireRegionsCacheKey !== key) {
-    empireRegionsCache = core.deriveRegions(villages);
+    empireRegionsCache = core.deriveRealm ? core.deriveRealm(villages) : core.deriveRegions(villages);
     empireRegionsCacheKey = key;
   }
   return empireRegionsCache;
+}
+// The duchy or kingdom a county answers to, straight off the cached realm.
+function empireLiegeById(id) {
+  const info = empireRegionsInfo();
+  return (info.duchies || []).find(d => d.id === String(id)) || (info.kingdoms || []).find(k => k.id === String(id)) || null;
 }
 function empireRegionOfSeed(seed) {
   const key = String(Number(seed) >>> 0);
@@ -20279,12 +20317,14 @@ function villageEconomySnapshot(rec) {
   // An empty province pays nothing — taxes and timber need residents to raise
   // them. Miserable villagers still pay a trickle (0.35 floor); a content,
   // market-run town of 40 pays several times a raw hamlet's rate.
-  // Region unity: a sanctuary inside a founded region pays 15% more — free
-  // neighbours trade favours, share granaries and keep the roads safe.
+  // County unity: a sanctuary inside a founded county pays 15% more — free
+  // neighbours trade favours, share granaries and keep the roads safe — and
+  // more again as the county's liege chain climbs the feudal ladder (+20%
+  // under a duchy, +25% inside a kingdom, +30% beneath the empire).
   const unityCore = realmCore();
   const region = empireRegionOfSeed(rec.seed);
   const inRegion = !!region;
-  const unity = inRegion && unityCore ? 1 + unityCore.REGION_TAX_BONUS : 1;
+  const unity = inRegion && unityCore ? 1 + (unityCore.regionUnityBonus ? unityCore.regionUnityBonus(region) : unityCore.REGION_TAX_BONUS) : 1;
   // Merged settlements prosper together: districts of a town pay +10% taxes,
   // boroughs of a city +25% — one market square now serves them all.
   const settlement = empireSettlementOfSeed(rec.seed);
@@ -20502,7 +20542,13 @@ function claimCurrentVillage() {
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
-  const regionsBefore = empireRegionsInfo().regions.map(r => r.id + ':' + r.tier).join('|');
+  // The realm's shape before this liberation: county ids plus every rung of
+  // the feudal pyramid, so foundings AND proclamations can be announced.
+  const realmBefore = empireRegionsInfo();
+  const regionsBefore = realmBefore.regions.map(r => r.id).join('|');
+  const duchiesBefore = (realmBefore.duchies || []).length;
+  const kingdomsBefore = (realmBefore.kingdoms || []).length;
+  const empireBefore = !!realmBefore.empire;
   const settlementsBefore = empireSettlementsInfo();
   const townsBefore = settlementsBefore.townCount, citiesBefore = settlementsBefore.cityCount;
   const liberatedAt = new Date().toISOString();
@@ -20540,15 +20586,38 @@ function claimCurrentVillage() {
       SFX.victory();
     }, 1100);
   }
-  // Did this liberation found a region — or raise one to a higher tier? The
-  // realm layer only ever announces itself here, when it actually happens.
-  const regionsNow = empireRegionsInfo().regions;
-  if (regionsNow.map(r => r.id + ':' + r.tier).join('|') !== regionsBefore) {
+  // Did this liberation found a county — or push the feudal pyramid up a
+  // rung? Simplified Crusader Kings: counties unite into duchies, duchies
+  // into kingdoms, kingdoms into the empire. The realm layer only ever
+  // announces itself here, when a founding or proclamation actually happens.
+  const realmNow = empireRegionsInfo();
+  const regionsNow = realmNow.regions;
+  if (regionsNow.map(r => r.id).join('|') !== regionsBefore) {
     const grown = regionsNow.find(r => r.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0)));
     if (grown) setTimeout(() => {
-      showToast('🏰 ' + grown.tierIcon + ' The free villages around ' + grown.capitalName + ' unite: the ' + grown.name + ' is founded! Its lands wake on the royal atlas — tap it in the Royal Ledger to run the whole region from its Region Hall. ' + (regionsNow.length >= 2 ? 'Open trade routes between your regions from the Royal Ledger.' : 'Found a second region abroad and your regions can trade.'));
+      showToast('🛡️ The free villages around ' + grown.capitalName + ' unite: the ' + grown.name + ' is founded! Its lands wake on the royal atlas — tap it in the Royal Ledger to run the whole county from its County Hall. ' + (regionsNow.length >= 2 ? 'Open trade routes between your counties from the Royal Ledger.' : 'Found a second county abroad and your counties can trade.'));
       SFX.victory();
     }, 1600);
+  }
+  if ((realmNow.duchies || []).length > duchiesBefore) {
+    const duchy = realmNow.duchies.find(d => d.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) || realmNow.duchies[realmNow.duchies.length - 1];
+    setTimeout(() => {
+      showToast('🏰 Two Counties stand together: the ' + duchy.name + ' is proclaimed! You are now ' + empireCrownTitle() + ' — every village under the duchy pays +20% unity taxes.');
+      SFX.victory();
+    }, 2200);
+  }
+  if ((realmNow.kingdoms || []).length > kingdomsBefore) {
+    const kingdom = realmNow.kingdoms.find(k => k.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) || realmNow.kingdoms[realmNow.kingdoms.length - 1];
+    setTimeout(() => {
+      showToast('👑 Two Duchies unite: the ' + kingdom.name + ' is proclaimed! You are now ' + empireCrownTitle() + ' — every village of the kingdom pays +25% unity taxes.');
+      SFX.victory();
+    }, 2800);
+  }
+  if (!empireBefore && realmNow.empire) {
+    setTimeout(() => {
+      showToast('☀️ Two free Kingdoms stand across the Earth: the ' + realmNow.empire.name + ' is proclaimed! You are Emperor of the Liberated Skies — every village of the empire pays +30% unity taxes.');
+      SFX.victory();
+    }, 3400);
   }
   setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
@@ -20661,7 +20730,7 @@ function renderVillageManagePanel() {
     settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🏰 region unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
@@ -20754,11 +20823,28 @@ function renderEmpirePanel() {
   } else if (count >= 2 && rcTiers && settlements.largestVillageCluster >= 2) {
     settlementHtml = '<div class="realm-hint">🏘️ Two of your villages stand side by side — liberate a third within ' + rcTiers.SETTLEMENT_TOWN_RADIUS_KM + ' km and the three grow together into a town: +10% taxes, guilds that build 15% faster, one great pool of daylight on the atlas.</div>';
   }
-  // ---- THE REALM — regions and trade. Deliberately invisible until the
-  // player's liberations actually form a region, so the early game stays
-  // simple; from the first region on, this is the Crusader-Kings desk.
+  // ---- THE REALM — counties, the feudal pyramid above them, and trade.
+  // Deliberately invisible until the player's liberations actually form a
+  // county, so the early game stays simple; from the first county on, this
+  // is the Crusader-Kings desk. The pyramid nests upward: counties unite
+  // into duchies, duchies into kingdoms, kingdoms into the empire.
   let realmHtml = '';
   if (regions.length && rc) {
+    // The higher rungs first — empire banner, kingdoms, duchies — each row
+    // framing the whole title's lands on the atlas when tapped.
+    const liegeRow = t =>
+      '<button type="button" class="realm-region-row realm-liege-row is-' + t.tier + '" data-action="empire-liege" data-liege="' + escapeHtml(t.id) + '">' +
+      '<span class="realm-region-icon">' + t.tierIcon + '</span>' +
+      '<span class="realm-region-main"><span class="realm-region-name">' + escapeHtml(t.name) + '</span><br>' +
+      '<span class="realm-region-meta">' + (t.tier === 'kingdom' ? '🏰 ' + t.duchyCount + ' duchies · ' : '') + '🛡️ ' + t.countyCount + ' counties · 🏡 ' + t.villageCount + ' villages</span></span>' +
+      '<span class="realm-region-tier">' + escapeHtml(t.tierLabel.toUpperCase()) + '</span></button>';
+    const pyramid = (realm.kingdoms || []).map(liegeRow).join('') + (realm.duchies || []).map(liegeRow).join('');
+    const empireBanner = realm.empire
+      ? '<div class="realm-empire-banner">☀️ <b>' + escapeHtml(realm.empire.name) + '</b> — ' + realm.empire.kingdomCount + ' free kingdoms under one crown</div>'
+      : '';
+    const pyramidHtml = (empireBanner || pyramid)
+      ? empireBanner + pyramid + '<div class="realm-sub-title">🛡️ COUNTIES · tap one to run it from its County Hall</div>'
+      : '';
     const regionRows = regions.map(r => {
       const pop = empireRegionPopulation(r);
       const regionDue = tributeHasAnything(regionTributeReady(r));
@@ -20789,15 +20875,22 @@ function renderEmpirePanel() {
           '<span class="trade-route-meta">' + c.distanceKm + ' km apart · far roads carry rarer cargo · ~+' + income.coins + ' 🪙/8h</span></span>' +
           '<span class="trade-route-cost">ESTABLISH<br>' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</span></button>';
       }).join('');
-      tradeHtml = '<div class="realm-sub-title">🕊️ TRADE ROUTES · sky-caravans between free regions</div>' + openRows + candidateRows;
+      tradeHtml = '<div class="realm-sub-title">🕊️ TRADE ROUTES · sky-caravans between free counties</div>' + openRows + candidateRows;
     } else {
-      tradeHtml = '<div class="realm-hint">🧭 Found a second region — ' + rc.REGION_MIN_VILLAGES + ' liberated villages near each other, anywhere on Earth — and your regions can open trade routes between their capitals.</div>';
+      tradeHtml = '<div class="realm-hint">🧭 Found a second county — ' + rc.REGION_MIN_VILLAGES + ' liberated villages near each other, anywhere on Earth — and your counties can open trade routes between their capitals.</div>';
+    }
+    // A one-line nudge toward the next rung of the pyramid, once it applies.
+    let ladderNudge = '';
+    if (!realm.empire && rc.DUCHY_RADIUS_KM) {
+      if (!(realm.duchies || []).length && regions.length >= 1) ladderNudge = '<div class="realm-hint">🏰 Found a second County within ' + rc.DUCHY_RADIUS_KM + ' km of ' + escapeHtml(regions[0].capitalName) + ' and the two unite into a Duchy — you become a Duke, and its villages pay +20% unity taxes.</div>';
+      else if ((realm.duchies || []).length && !(realm.kingdoms || []).length) ladderNudge = '<div class="realm-hint">👑 Unite a second Duchy within ' + rc.KINGDOM_RADIUS_KM + ' km and a Kingdom is proclaimed — you become a Monarch, and its villages pay +25% unity taxes.</div>';
+      else if ((realm.kingdoms || []).length) ladderNudge = '<div class="realm-hint">☀️ Proclaim a second Kingdom anywhere on Earth and the Empire of the Liberated Skies rises — you become Emperor, and every village pays +30% unity taxes.</div>';
     }
     realmHtml = empireDrawerHTML('realm', true, '🏰', 'THE REALM',
-      'Your regions — tap one to run it from its Region Hall', regions.length,
-      '<div class="realm-section">' + regionRows + tradeHtml + '</div>');
+      'Your counties — tap one to run it from its County Hall', regions.length,
+      '<div class="realm-section">' + pyramidHtml + regionRows + ladderNudge + tradeHtml + '</div>');
   } else if (count >= 2 && rc) {
-    realmHtml = '<div class="realm-hint">🏰 Liberate ' + rc.REGION_MIN_VILLAGES + ' villages within ' + rc.REGION_RADIUS_KM + ' km of each other and they unite into a region' + (realm.largestCluster >= 2 ? ' — your best cluster already holds ' + realm.largestCluster : '') + '. Regions pay unity taxes and unlock trade between free lands.</div>';
+    realmHtml = '<div class="realm-hint">🛡️ Liberate ' + rc.REGION_MIN_VILLAGES + ' villages within ' + rc.REGION_RADIUS_KM + ' km of each other and they unite into a County' + (realm.largestCluster >= 2 ? ' — your best cluster already holds ' + realm.largestCluster : '') + '. Counties pay unity taxes, unlock trade between free lands, and unite into Duchies, Kingdoms and your Empire.</div>';
   }
   // ---- 📍 Locator strip — always answers "where am I, where is my town,
   // where is my region" with one glance and one tap each.
@@ -20810,8 +20903,8 @@ function renderEmpirePanel() {
       '<button type="button" class="empire-locator-chip is-you" data-action="locator-me"><span class="empire-locator-label">📍 You</span><span class="empire-locator-value">Show on map</span></button>' +
       (home ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"' + (homeSettle ? ' data-settlement="' + escapeHtml(homeSettle.id) + '"' : '') + '><span class="empire-locator-label">' + (homeSettle ? homeSettle.icon + ' Your ' + (homeSettle.tier === 'city' ? 'city' : 'town') : '🏡 Your village') + '</span><span class="empire-locator-value">' + escapeHtml(homeSettle ? homeSettle.name : home.name) + '</span></button>' : '') +
       (homeRegion
-        ? '<button type="button" class="empire-locator-chip" data-action="locator-region" data-region="' + escapeHtml(homeRegion.id) + '"><span class="empire-locator-label">' + homeRegion.tierIcon + ' Your region</span><span class="empire-locator-value">' + escapeHtml(homeRegion.name) + '</span></button>'
-        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🏰 Your region</span><span class="empire-locator-value">None founded yet</span></div>') +
+        ? '<button type="button" class="empire-locator-chip" data-action="locator-region" data-region="' + escapeHtml(homeRegion.id) + '"><span class="empire-locator-label">' + homeRegion.tierIcon + ' Your county</span><span class="empire-locator-value">' + escapeHtml(homeRegion.name) + '</span></button>'
+        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🛡️ Your county</span><span class="empire-locator-value">None founded yet</span></div>') +
       '</div>';
   }
   // ---- 📜 A plain-words guide to the whole ladder, folded away until asked.
@@ -20819,8 +20912,9 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Rebuild them.</b> Each village has a governor’s desk below — clear rubble, raise buildings, and residents move in and pay taxes every 8 hours.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages grow into a town</b> (+10% taxes) — and <b>3 neighbouring towns rise into a city</b> (+25%). This happens by itself as you free villages close together.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>3 villages within 150 km unite into a region</b> — a County, then a Duchy, then a Kingdom as it grows. Regions pay +15% unity taxes and are run from their own Region Hall.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🕊️</span><span><b>Two regions can trade.</b> Sky-caravans fly between their capitals and pay into every tax day. The farther apart, the richer the cargo.</span></div>') : '';
+    '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 villages within 150 km unite into a County</b> — run from its own County Hall, with +15% unity taxes for every village in it.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🕊️</span><span><b>Two counties can trade.</b> Sky-caravans fly between their capitals and pay into every tax day. The farther apart, the richer the cargo.</span></div>') : '';
   const tributeNow = Date.now();
   const nextMs = hasTribute ? null : empireNextTributeCountdownMs(tributeNow);
   const nextTributeAt = nextMs !== null ? tributeNow + nextMs : null;
@@ -20846,6 +20940,7 @@ function renderEmpirePanel() {
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="open-trade"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireOpenTradeRoute(btn.dataset.route); }));
   panel.querySelectorAll('[data-action="empire-region"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); openEmpireRegion(btn.dataset.region); }));
+  panel.querySelectorAll('[data-action="empire-liege"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' }); frameEmpireLiege(btn.dataset.liege); }));
   panel.querySelectorAll('[data-action="empire-settlement"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); frameEmpireSettlement(btn.dataset.settlement); }));
   // Locator taps point at the map: scroll it into view, then frame the target.
   const scrollMapIntoView = () => $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -20867,10 +20962,11 @@ function renderEmpirePanel() {
 }
 
 // ============================================================================
-// REGION HALL — running a region of the map. Once liberated villages unite
-// into a region, the player no longer governs it village by village: this
+// COUNTY HALL — running a county of the map. Once liberated villages unite
+// into a county, the player no longer governs it village by village: this
 // Crusader-Kings desk runs the whole county at once — its sanctuaries, its
-// tier ladder, its own tax chest and the caravan roads that touch it.
+// liege chain up the feudal pyramid, its own tax chest and the caravan roads
+// that touch it. (Code identifiers keep the historical "region" name.)
 // ============================================================================
 let regionHallActiveId = null;
 function openEmpireRegion(regionId) {
@@ -20880,7 +20976,7 @@ function openEmpireRegion(regionId) {
   if (currentScreen !== 'region') switchScreen('region');
   else renderRegionScreen();
 }
-// Back out of the hall onto the royal atlas, framed on this region's lands.
+// Back out of the hall onto the royal atlas, framed on this county's lands.
 function showRegionOnAtlas(regionId) {
   switchScreen('village');
   setTimeout(() => frameEmpireRegion(regionId), 420);
@@ -20947,32 +21043,36 @@ function renderRegionScreen() {
       '<span class="empire-village-meta">' + (isCapital ? 'regional capital · ' : '') + '👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
   }).join('');
-  // The tier ladder: how this county grows into a duchy, and on to a kingdom.
-  const currentTier = rc.regionTier(region.villageCount);
-  const next = rc.nextRegionTier(region.villageCount);
-  let ladderHtml;
-  if (next) {
-    const base = Math.max(0, Number(currentTier.min) || 0);
-    const pct = Math.round(Math.min(1, Math.max(0, (region.villageCount - base) / Math.max(1, next.next.min - base))) * 100);
-    ladderHtml = '<div class="region-hall-ladder"><div class="region-hall-ladder-label"><span>' + region.tierIcon + ' ' + escapeHtml(region.tierLabel) + '</span><span>' + next.next.icon + ' ' + escapeHtml(next.next.label) + ' at ' + next.next.min + '</span></div>' +
-      '<div class="province-need-bar"><div class="region-hall-ladder-fill" style="width:' + pct + '%"></div></div>' +
-      '<div class="region-hall-ladder-hint">Liberate ' + next.needed + ' more nearby village' + (next.needed === 1 ? '' : 's') + ' and the ' + escapeHtml(region.tierLabel) + ' rises to a ' + escapeHtml(next.next.label) + '.</div></div>';
-  } else {
-    ladderHtml = '<div class="region-hall-ladder"><div class="region-hall-ladder-hint">👑 A full Kingdom — the highest tier a region can reach. Its story continues through trade.</div></div>';
-  }
+  // The liege chain: who this county answers to on the nested feudal ladder
+  // (simplified Crusader Kings — a duchy is made of counties, a kingdom of
+  // duchies, the empire of kingdoms), and what founds the next rung.
+  const realmInfo = empireRegionsInfo();
+  const liegeDuchy = region.duchyId ? (realmInfo.duchies || []).find(d => d.id === region.duchyId) : null;
+  const liegeKingdom = region.kingdomId ? (realmInfo.kingdoms || []).find(k => k.id === region.kingdomId) : null;
+  const chain = [region.tierIcon + ' ' + escapeHtml(region.name)];
+  if (liegeDuchy) chain.push(liegeDuchy.tierIcon + ' ' + escapeHtml(liegeDuchy.name));
+  if (liegeKingdom) chain.push(liegeKingdom.tierIcon + ' ' + escapeHtml(liegeKingdom.name));
+  if (realmInfo.empire && liegeKingdom) chain.push(realmInfo.empire.tierIcon + ' ' + escapeHtml(realmInfo.empire.name));
+  let ladderHint;
+  if (!liegeDuchy) ladderHint = 'This county stands alone. Found another County within ' + rc.DUCHY_RADIUS_KM + ' km and the two unite into a Duchy — its villages then pay +20% unity taxes.';
+  else if (!liegeKingdom) ladderHint = 'Unite a second Duchy within ' + rc.KINGDOM_RADIUS_KM + ' km of the ' + liegeDuchy.name + ' and a Kingdom is proclaimed — its villages then pay +25% unity taxes.';
+  else if (!realmInfo.empire) ladderHint = 'Proclaim a second Kingdom anywhere on Earth and the Empire of the Liberated Skies rises — every village then pays +30% unity taxes.';
+  else ladderHint = '☀️ The Empire of the Liberated Skies stands — the whole feudal ladder is complete. Its story continues through trade.';
+  const ladderHtml = '<div class="region-hall-ladder"><div class="region-hall-liege">' + chain.join(' <span class="rhl-arrow">→</span> ') + '</div>' +
+    '<div class="region-hall-ladder-hint">' + ladderHint + '</div></div>';
   const due = regionTributeReady(region);
   const hasDue = tributeHasAnything(due);
-  // Caravan roads that touch this region, run from this desk too.
+  // Caravan roads that touch this county, run from this desk too.
   const touchingRoutes = empireTradeRouteRecords().filter(({ a, b }) => a.id === region.id || b.id === region.id);
   const routesHtml = touchingRoutes.length
-    ? '<div class="realm-sub-title">🕊️ CARAVAN ROADS OF THIS REGION</div>' + touchingRoutes.map(({ a, b }) => {
+    ? '<div class="realm-sub-title">🕊️ CARAVAN ROADS OF THIS COUNTY</div>' + touchingRoutes.map(({ a, b }) => {
         const income = empireTradeRouteIncome(a, b);
         const other = a.id === region.id ? b : a;
         return '<div class="trade-route-row is-open"><span class="trade-route-icon">🕊️</span><span class="trade-route-main"><span class="trade-route-name">' + escapeHtml(region.capitalName) + ' ⇄ ' + escapeHtml(other.capitalName) + '</span><br>' +
           '<span class="trade-route-meta">sky-caravans flying · ~+' + income.coins + ' 🪙 every 8h to the realm chest</span></span><span class="trade-route-cost is-open">OPEN</span></div>';
       }).join('')
-    : '<div class="realm-hint">🧭 No caravan roads touch this region yet — open trade routes from the Royal Ledger once a second region stands.</div>';
-  // One bird holds the whole region: the Warden rides between its villages.
+    : '<div class="realm-hint">🧭 No caravan roads touch this county yet — open trade routes from the Royal Ledger once a second county stands.</div>';
+  // One bird holds the whole county: the Warden rides between its villages.
   // Like the village Steward, the appointment card folds behind one line.
   const wardenCard = rolePostCardHTML('region', String(region.id));
   let wardenHtml = '';
@@ -20980,7 +21080,7 @@ function renderRegionScreen() {
     let wardenPost = null;
     try { wardenPost = rolePostState('region', String(region.id)); } catch (e) {}
     wardenHtml = empireDrawerHTML('warden-' + region.id, false, '🦅', 'WARDEN',
-      wardenPost && wardenPost.staffed ? escapeHtml(birdDisplayName(wardenPost.bird)) + ' keeps the roads — tap to manage' : 'Vacant — appoint a bird and the whole region prospers', null,
+      wardenPost && wardenPost.staffed ? escapeHtml(birdDisplayName(wardenPost.bird)) + ' keeps the roads — tap to manage' : 'Vacant — appoint a bird and the whole county prospers', null,
       wardenCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
   }
   panel.innerHTML =
@@ -20993,11 +21093,11 @@ function renderRegionScreen() {
     '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxes + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
     '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branches + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
     '</div>' +
-    '<div class="region-hall-unity">🤝 Region unity: every village here pays +' + Math.round(rc.REGION_TAX_BONUS * 100) + '% taxes for standing together.</div>' +
+    '<div class="region-hall-unity">🤝 County unity: every village here pays +' + Math.round((rc.regionUnityBonus ? rc.regionUnityBonus(region) : rc.REGION_TAX_BONUS) * 100) + '% taxes for standing together' + (liegeDuchy ? ' beneath the ' + escapeHtml((liegeKingdom || liegeDuchy).name) : '') + '.</div>' +
     ladderHtml +
     '<button class="empire-tribute-btn" data-action="region-collect"' + (hasDue ? '' : ' disabled') + '>' +
-    (hasDue ? '💰 COLLECT THIS REGION’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ REGION TAXES GROWING — CHECK BACK LATER') + '</button>' +
-    '<div class="realm-sub-title">🏘️ VILLAGES OF THIS REGION · tap one to govern it</div>' +
+    (hasDue ? '💰 COLLECT THIS COUNTY’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ COUNTY TAXES GROWING — CHECK BACK LATER') + '</button>' +
+    '<div class="realm-sub-title">🏘️ VILLAGES OF THIS COUNTY · tap one to govern it</div>' +
     '<div class="empire-village-list">' + rows + '</div>' +
     wardenHtml +
     routesHtml;
@@ -30023,7 +30123,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'forge-satchels-v220-20260804';
+const BURBZ_BUILD = 'feudal-hierarchy-v221-20260804';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

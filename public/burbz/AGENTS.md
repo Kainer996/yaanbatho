@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-03 (unified v217: recovered the live-only v204-v216 line, reconciled it with manga art + Empire clarity, and hardened deployment — see "Review log" at the bottom).
+Last curated: 2026-08-04 (feudal hierarchy v221: the empire's feudal ladder now nests like Crusader Kings' — counties → duchies → kingdoms → empire — see "Review log" at the bottom).
 
 ---
 
@@ -32,7 +32,7 @@ Burbz grew as a monolith with satellite modules. Here is the honest map.
 | Thing | What it is |
 | --- | --- |
 | `index.html` (~1.7 MB) | The entire game. UI, state, screens, the sound listener, scan economy, tutorial — all inline in one big `<script>`. This is the heart. When a test says `assert "..." in HTML`, it is pinning a contract against a string in here. |
-| `*_core.js` | Extracted, individually-testable modules (`scan_economy_core.js`, `bird_diet_hunger_core.js`, `diet_hunger_core.js`, `merlin_companion_core.js`, `quest_core.js`, `academy_*_core.js`, `battle_core.js`, `empire_map_core.js`, `empire_realm_core.js`, …). Each is loaded by `index.html` **and** `require()`d by a test. They export via the `(function(root){ … })(globalThis)` UMD-ish pattern so they run in both the browser and Node. `empire_realm_core.js` is the Crusader-Kings endgame maths: village→region clustering, feudal tiers (plus `nextRegionTier` ladder progress), crown titles, region map-coverage radius (`regionCoverageRadiusKm`), and trade-route income/cost/arcs; `index.html` surfaces none of it until the first region actually exists — from then on each region is run from its own Region Hall screen (`screen-region`). |
+| `*_core.js` | Extracted, individually-testable modules (`scan_economy_core.js`, `bird_diet_hunger_core.js`, `diet_hunger_core.js`, `merlin_companion_core.js`, `quest_core.js`, `academy_*_core.js`, `battle_core.js`, `empire_map_core.js`, `empire_realm_core.js`, …). Each is loaded by `index.html` **and** `require()`d by a test. They export via the `(function(root){ … })(globalThis)` UMD-ish pattern so they run in both the browser and Node. `empire_realm_core.js` is the Crusader-Kings endgame maths: village→county clustering plus the NESTED feudal pyramid (`deriveRealm`: 3 villages → County, 2 counties/600 km → Duchy, 2 duchies/2000 km → Kingdom, 2 kingdoms → Empire — every tier made of the tier below, never of headcounts), liege-aware crown titles and unity taxes (`crownTitle`, `regionUnityBonus`), county map-coverage radius (`regionCoverageRadiusKm`), and trade-route income/cost/arcs; `index.html` surfaces none of it until the first county actually exists — from then on each county is run from its own County Hall screen (code ids keep the historical `region` name: `screen-region`). |
 | `*_bird_expansion*.js`, `national_bird_completion_20260715.js` | Generated species catalogues (UK, AU, national). Large. Loaded by both `index.html` and `sw.js` via `importScripts`. |
 | `data/` | JSON the game reads at runtime. **`data/bird-diet-records.json` / `.js` are generated — do not hand-edit** (see §4). |
 | `data/national-bird-completion/source-cache/` | Committed copies of the external source datasets (EltonTraits, AVONET, geoboundaries, …) so the build/verify pipeline is reproducible offline. Large files live here on purpose. |
@@ -191,6 +191,59 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-04 — the feudal ladder nests like Crusader Kings' (Claude).** Yaan
+  spotted the structural inconsistency in the empire layer: "three villages
+  form a county" — and that same county then relabelled itself a Duchy at 5
+  villages and a Kingdom at 8, while 3 villages *also* made a town in the
+  settlement layer. Titles were size badges, not a hierarchy. Fixed as a
+  simplified Crusader Kings 3, release `feudal-hierarchy-v221-20260804`:
+  - **Maths** (`empire_realm_core.js`): a 150 km cluster of 3+ villages is
+    now ALWAYS a County (`COUNTY_TIER`; `regionTier()` is constant, the
+    size-based `REGION_TIERS`/`nextRegionTier` are gone). New
+    `realmFromRegions`/`deriveRealm` build the nested pyramid with the same
+    union-find chaining, one level up each time: county capitals within
+    `DUCHY_RADIUS_KM` (600) unite 2+ counties into a Duchy; duchy seats
+    within `KINGDOM_RADIUS_KM` (2000) unite 2+ duchies into a Kingdom;
+    `EMPIRE_MIN_KINGDOMS` (2) kingdoms proclaim the Empire of the Liberated
+    Skies. Every title keeps its earliest-founded member's seat name, and
+    counties are annotated in place (`duchyId`/`kingdomId`/`liegeTier`).
+    `crownTitle` is now the highest title actually held (Count → Duke →
+    Monarch → Emperor), and `regionUnityBonus` scales unity taxes with the
+    liege chain (`LIEGE_TAX_BONUS` 15/20/25/30%) — the growth reward the old
+    relabelling used to provide. Settlements (village→town→city) are
+    untouched: they are the holdings layer, a different axis.
+  - **Gameplay** (`index.html`): `empireRegionsInfo()` caches `deriveRealm`;
+    `villageEconomySnapshot` unity reads `regionUnityBonus` (falling back to
+    `REGION_TAX_BONUS`, keeping the pinned strings); `claimCurrentVillage`
+    announces duchy/kingdom/empire proclamations alongside county foundings
+    (`is proclaimed!` × 3, staggered); `EMPIRE_RANKS` (the loose-village
+    honorific ladder) now tops out at Baron — the CK rung *below* Count —
+    since everything from Count up is structural.
+  - **UI**: the Region Hall is the **County Hall**; its headcount tier ladder
+    became a liege-chain display (`region-hall-liege`) with a next-rung hint.
+    THE REALM drawer lists the pyramid above the county rows (kingdom/duchy
+    `realm-liege-row`s frame their whole lands via `frameEmpireLiege`, plus a
+    `realm-empire-banner`), the atlas county banner (` · COUNTY` suffix, 🛡️)
+    names the county's liege on its tap card, and the help drawer / map key /
+    locator / status line teach the nested ladder. User-visible "region"
+    copy became "county"; code identifiers deliberately keep `region`
+    (`empireRegionsInfo`, `screen-region`, …) — grep before renaming.
+  - **Canon** (`STORY.md`): "Counties, crowns and the trade of free realms"
+    rewrites the ladder as County → Duchy → Kingdom → Empire with the
+    unity-tax escalation; crown line (Count/Duke/Monarch/Emperor) unchanged.
+  - Tests: `tests/test_feudal_hierarchy_20260804.py` (Node-driven pyramid
+    maths — including the old bug as a regression: a 9-village blob is still
+    one County — plus HTML/story contracts). The two suites that pinned the
+    size ladder (`test_empire_realms_trade_20260731.py`,
+    `test_location_empire_unlock_20260801.py`) were repointed at the nested
+    behaviour. Release pins moved per convention (this release also caught up
+    the stale v217/v220 `CURRENT_BUILD`/`RELEASE_PIN` constants that v218-220
+    never repointed, including relaxing the satchel test's `BURBZ_BUILD`
+    equality to the standard lineage check). SW cache + `BURBZ_BUILD` bumped;
+    `empire_realm_core.js` cache-busters repointed in both loaders. The only
+    remaining local failures are the 7 documented git-lfs pointer-file art
+    tests (no `git lfs` in the container).
 
 - **2026-08-03 — live v216 recovery + Empire reconciliation v217 (Codex).**
   The production VPS had advanced directly from deployed Git commit `198893f`
