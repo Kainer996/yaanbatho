@@ -12707,7 +12707,10 @@ function closeQuestOverlay() {
   clearTimeout(questLogRefreshTimer);
   const el = document.getElementById('questOverlay');
   if (el) el.classList.remove('open');
-  if (currentScreen === 'quests') scheduleQuestBoardRefresh();
+  if (currentScreen === 'quests') {
+    scheduleQuestBoardRefresh();
+    maybeStartMerlinChapterForScreen('quests');
+  }
 }
 
 function openQuestSend(templateId) {
@@ -12739,7 +12742,7 @@ function renderQuestSendSheet() {
     const selected = selectedDuration && selectedDuration.minutes === o.minutes ? ' selected' : '';
     const branchLine = o.branches && o.branches[1] > 0 ? ' · ' + o.branches[0] + '–' + o.branches[1] + ' 🪵' : '';
     const findLine = o.expectedItemRolls >= 1 ? ' · ~' + (Math.round(o.expectedItemRolls * 10) / 10) + ' finds' : ' · chance of a find';
-    return '<button class="quest-duration-choice' + selected + '" onclick="selectQuestDuration(' + o.minutes + ')">' +
+    return '<button type="button" class="quest-duration-choice' + selected + '" onclick="selectQuestDuration(' + o.minutes + ')">' +
       '<strong>' + questDurationLabel(o.minutes) + '</strong>' +
       '<span>~' + o.coins[0] + '–' + o.coins[1] + ' 🪙' + branchLine + ' · +' + o.xp + ' XP' + findLine + '</span></button>';
   }).join('');
@@ -12763,7 +12766,7 @@ function renderQuestSendSheet() {
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
-    return '<button class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
+    return '<button type="button" class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
       '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
@@ -12773,13 +12776,13 @@ function renderQuestSendSheet() {
   const provisions = Object.keys(FOODS).filter(k => (gameState.pantry && gameState.pantry[k] || 0) > 0);
   const provisionChips = provisions.length ? provisions.map(k => {
     const sel = questSendState.provision === k ? ' selected' : '';
-    return '<button class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'provision\',\'' + k + '\')">' + FOODS[k].emoji + ' ' + escapeHtml(FOODS[k].label) + ' <span class="quest-equip-count">×' + gameState.pantry[k] + '</span></button>';
+    return '<button type="button" class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'provision\',\'' + k + '\')">' + FOODS[k].emoji + ' ' + escapeHtml(FOODS[k].label) + ' <span class="quest-equip-count">×' + gameState.pantry[k] + '</span></button>';
   }).join('') : '<div class="quest-equip-none">Pantry is empty — buy food in a village.</div>';
 
   const charms = Object.entries((gameState.inventory && gameState.inventory.items) || {}).filter(([, n]) => (Number(n) || 0) > 0);
   const charmChips = charms.length ? charms.map(([k, n]) => {
     const sel = questSendState.charm === k ? ' selected' : '';
-    return '<button class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'charm\',\'' + k + '\')">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' <span class="quest-equip-count">×' + n + '</span></button>';
+    return '<button type="button" class="quest-equip-chip' + sel + '" onclick="toggleQuestEquip(\'charm\',\'' + k + '\')">' + inventoryIcon(k) + ' ' + escapeHtml(inventoryLabel(k)) + ' <span class="quest-equip-count">×' + n + '</span></button>';
   }).join('') : '<div class="quest-equip-none">No lucky charms in the Stores yet — quests award them.</div>';
 
   el.innerHTML = '<div class="quest-overlay-panel" data-hunger-surface="expedition-dispatch">' +
@@ -12795,7 +12798,7 @@ function renderQuestSendSheet() {
     '<div class="quest-equip-row">' + provisionChips + '</div>' +
     '<div class="quest-overlay-label">Lucky charm <span class="quest-overlay-hint">+1 bonus find</span></div>' +
     '<div class="quest-equip-row">' + charmChips + '</div>' +
-    '<button class="quest-send-btn" id="questSendBtn" ' + (questSendState.birdId ? '' : 'disabled') + ' onclick="confirmQuestSend()">' +
+    '<button type="button" class="quest-send-btn" id="questSendBtn" ' + (questSendState.birdId ? '' : 'disabled') + ' onclick="confirmQuestSend()">' +
       (questSendState.birdId ? '🧭 SEND ON QUEST' : 'PICK A BIRD FIRST') + '</button>' +
   '</div>';
   el.classList.add('open');
@@ -29048,11 +29051,11 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, toggleQuestEquip, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
-['openQuestSend', 'openQuestLog', 'claimBirdExpedition', 'confirmQuestSend', 'selectQuestBird', 'toggleQuestEquip', 'startBirdExpedition'].forEach(fnName => {
+['openQuestSend', 'openQuestLog', 'claimBirdExpedition', 'confirmQuestSend', 'selectQuestDuration', 'selectQuestBird', 'toggleQuestEquip', 'startBirdExpedition'].forEach(fnName => {
   const fn = window[fnName];
   if (typeof fn !== 'function') return;
   window[fnName] = function(...args) {
@@ -30037,7 +30040,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-live-reconcile-v217-20260803';
+const BURBZ_BUILD = 'quest-sheet-input-fix-v219-20260804';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -30753,7 +30756,9 @@ function maybeStartMerlinChapterForScreen(screenName) {
   if (!chapterId) return;
   const startId = chapterId;
   setTimeout(() => {
-    if (!merlinTutActive && currentScreen === screenName) startMerlinTutorial({ chapterId: startId, resume:true });
+    if (merlinTutActive || currentScreen !== screenName) return;
+    if (screenName === 'quests' && document.getElementById('questOverlay')?.classList.contains('open')) return;
+    startMerlinTutorial({ chapterId: startId, resume:true });
   }, 480);
 }
 
