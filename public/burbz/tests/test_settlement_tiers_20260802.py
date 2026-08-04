@@ -19,8 +19,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "feudal-hierarchy-v221-20260804"
-CURRENT_BUILD = "feudal-hierarchy-v221-20260804"
+REALM_CORE_PIN = "feudal-hierarchy-v222-20260804"
+CURRENT_BUILD = "feudal-hierarchy-v222-20260804"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -168,6 +168,7 @@ def build_harness(villages_js: str, probe_js: str) -> str:
             "villageProductionSnapshot",
             "villageEconomySnapshot",
             "villageBuildTimeMs",
+            "empireHasQuarryInvestment",
             "villageBuildingCost",
             "empireBuildStructure",
         )
@@ -179,7 +180,7 @@ const realmCore = () => window.BurbzEmpireRealmCore;
 let empireSettlementsCache = null, empireSettlementsCacheKey = '';
 const EMPIRE_TERRITORY_RADIUS_M = 2200;
 const toasts = [];
-const gameState = {{ player: {{ coins: 5000, branches: 5000 }} }};
+const gameState = {{ player: {{ coins: 5000, branches: 5000, stone: 5000 }} }};
 const villages = {villages_js};
 const empire = {{ villages: Object.fromEntries(villages.map(v => [String(v.seed >>> 0), v])) }};
 const ensureEmpireState = () => empire;
@@ -191,8 +192,13 @@ const regionRoleMultiplier = () => 1;
 const villageRuinDefsFor = () => [];
 const VILLAGE_RUIN_KINDS = {{ house: {{}} }};
 const playerBranches = () => gameState.player.branches;
+const playerStone = () => gameState.player.stone;
 const addCoins = n => {{ gameState.player.coins += n; }};
 const addBranches = n => {{ gameState.player.branches += n; }};
+const addStone = n => {{ gameState.player.stone += n; }};
+const snapshotGameState = () => JSON.parse(JSON.stringify(gameState));
+const restoreGameStateSnapshot = () => {{}};
+const durableSaveState = () => ({{ ok:true }});
 const saveState = () => {{}}; const updateHeader = () => {{}}; const renderVillage = () => {{}};
 const SFX = {{ questComplete: () => {{}} }}; const vibrate = () => {{}};
 const showToast = t => toasts.push(t);

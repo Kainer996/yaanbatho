@@ -87,6 +87,16 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .hud-chip-label { font-family:'Rajdhani',sans-serif; font-size:8px; font-weight:900; line-height:1; letter-spacing:.04em; text-transform:uppercase; color:var(--text3); }
 .hud-chip.bump .hud-chip-value { animation: hudBump .45s ease; }
 @keyframes hudBump { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--legendary); } 100% { transform: scale(1); } }
+@media (max-width:480px) {
+  /* Three real economy resources share a very narrow header beside Merlin,
+     Profile and Settings. Keep both icon and amount legible instead of letting
+     flexbox crop the new Stone balance. */
+  .hud-resources { gap:3px; }
+  .hud-chip { gap:1px; padding:3px 2px; min-height:24px; }
+  .hud-chip-icon { width:12px; height:12px; }
+  .hud-chip-value { font-size:10px; text-overflow:clip; }
+  .hud-chip-label { display:none; }
+}
 .global-money-hud {
   position:fixed; z-index:10020; top:max(10px,env(safe-area-inset-top)); right:12px;
   display:none; align-items:center; gap:7px; min-width:106px; min-height:42px; padding:7px 12px;
@@ -153,12 +163,13 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .stores-forge-btn .sfb-go { font-family:'Russo One',sans-serif; font-size:20px; color:var(--accent); flex:none; }
 
 .stores-treasury {
-  display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:5px; margin:0 0 12px; padding:9px;
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; margin:0 0 12px; padding:9px;
   border-radius:14px; border:1px solid rgba(214,168,79,.26);
   background:linear-gradient(180deg,rgba(40,30,12,.82),rgba(0,0,0,.42));
 }
 .stores-treasury-stat { text-align:center; padding:7px 2px; border-radius:10px; background:rgba(0,0,0,.30); border:1px solid rgba(255,255,255,.05); }
 .stores-treasury-stat .stt-icon { font-size:14px; line-height:1.1; }
+.stores-treasury-stat .stt-icon img { width:16px; height:16px; object-fit:contain; display:inline-block; }
 .stores-treasury-stat .stt-value { font-family:'Russo One',sans-serif; font-size:14px; color:var(--legendary); line-height:1.25; }
 .stores-treasury-stat .stt-label { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:8px; color:var(--text3); text-transform:uppercase; letter-spacing:.04em; }
 @media (max-width:360px) { .stores-treasury-stat .stt-value { font-size:12px; } }
@@ -694,7 +705,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
 
 /* ---- Royal ledger: realm stats + provinces --------------------------------- */
-.empire-stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:0 0 10px; }
+.empire-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 0 10px; }
 .empire-stat-chip { padding:8px 4px; border-radius:10px; border:1px solid rgba(240,199,103,.28); background:linear-gradient(180deg,rgba(36,25,10,.7),rgba(14,10,4,.8)); text-align:center; }
 .empire-stat-value { font-family:'Russo One',sans-serif; font-size:14px; color:#ffe9a8; }
 .empire-stat-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:8.5px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
@@ -933,9 +944,10 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-pip { width:7px; height:7px; border-radius:2px; transform:rotate(45deg); background:rgba(255,255,255,.12); border:1px solid rgba(240,199,103,.3); }
 .province-pip.on { background:#f0c767; box-shadow:0 0 6px rgba(240,199,103,.7); }
 .province-building-desc { font-size:9.5px; line-height:1.4; color:var(--text3); min-height:26px; }
-.province-build-btn { min-height:34px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
+.province-build-btn { min-height:44px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
 .province-build-btn:active { transform:scale(.97); }
 .province-build-btn[disabled] { opacity:.45; }
+.province-build-shortage { min-height:14px; font-size:9px; line-height:1.25; color:#ffc4a0; text-align:center; }
 .province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
 .province-build-btn.busy { opacity:.55; filter:grayscale(.35); }
 .province-ruin-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px; }
@@ -3199,6 +3211,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="hud-resources">
         <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/coin.webp" alt=""><span class="hud-chip-copy"><span class="hud-chip-label">Coins</span><span class="hud-chip-value" id="hudCoins">0</span></span></button>
         <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/timber.webp" alt=""><span class="hud-chip-value" id="hudTimber">0</span></button>
+        <button class="hud-chip" id="hudStoneChip" title="Stone — cut by your quarries; spent on village and town buildings" aria-label="Stone — open Royal Stores"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/stone.svg" alt=""><span class="hud-chip-value" id="hudStone">0</span></button>
       </div>
     </div>
     <button class="merlin-listening-dock" id="merlinDockReturn" type="button" aria-label="Merlin is listening — open listener">
@@ -4013,7 +4026,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=feudal-hierarchy-v221-20260804"></script>
+<script src="empire_realm_core.js?v=feudal-hierarchy-v222-20260804"></script>
 <script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -5191,7 +5204,7 @@ function adjustBirdHungerUntracked(bird, delta, now = Date.now()) {
 const STARTER_PREY_LARDER = { field_vole: 3, wood_mouse: 2, carrion_scraps: 2, common_frog: 1 };
 
 const DEFAULT_STATE = {
-  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0 },
+  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0, stone: 0 },
   flock: [],
   discoveredSpecies: {},
   inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
@@ -5199,6 +5212,7 @@ const DEFAULT_STATE = {
   kitchenNotes: {}, // speciesKey → { perfect:[families], refused:[families] } — the player's own field notes
   kitchenStarterLarderVersion: 1, // One-time documented starter stock for the reachable Kitchen/Pantry proof.
   kitchenPreyLarderVersion: 1, // One-time prey top-up so existing saves get meat for their birds of prey too.
+  stoneEconomyVersion: 1, // Quarries produce persistent Stone used by every settlement construction yard.
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
   forgeJobs: [], // commissions on the Fletcher's anvil: { id, gearId, startMs, endMs }
   quests: {},
@@ -5300,12 +5314,22 @@ function loadState() {
   const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
   const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
   const needsKitchenPreyLarderGrant = (Number(gameState.kitchenPreyLarderVersion) || 0) < 1;
+  const needsStoneEconomyGrant = (Number(gameState.stoneEconomyVersion) || 0) < 1;
   for (const k of Object.keys(DEFAULT_STATE)) {
     if (gameState[k] === undefined) gameState[k] = JSON.parse(JSON.stringify(DEFAULT_STATE[k]));
   }
   if (needsAcademyBuilderGrant) gameState.academyBuilderVersion = academyBuilderVersionBeforeDefaults;
   gameState.player = { ...DEFAULT_STATE.player, ...(gameState.player && typeof gameState.player === 'object' ? gameState.player : {}) };
   if (typeof gameState.player.coins !== 'number') gameState.player.coins = DEFAULT_STATE.player.coins;
+  gameState.player.stone = normaliseStoneAmount(gameState.player.stone);
+  // Old saves may already own a completed Quarry whose one-time first cut
+  // happened before Stone existed. Give exactly that missed bootstrap output.
+  if (needsStoneEconomyGrant) {
+    const legacyVillages = gameState.empire && gameState.empire.villages && typeof gameState.empire.villages === 'object' ? Object.values(gameState.empire.villages) : [];
+    const hadQuarry = legacyVillages.some(v => Number(v && v.economy && v.economy.buildings && v.economy.buildings.quarry) > 0);
+    if (hadQuarry) gameState.player.stone = Math.max(gameState.player.stone, QUARRY_FIRST_CUT_STONE);
+    gameState.stoneEconomyVersion = 1;
+  }
   ensureAcademyBuildings(needsAcademyBuilderGrant);
   gameState.settings = { ...DEFAULT_STATE.settings, ...(gameState.settings && typeof gameState.settings === 'object' ? gameState.settings : {}) };
   gameState.quests = (gameState.quests && typeof gameState.quests === 'object' && !Array.isArray(gameState.quests)) ? gameState.quests : {};
@@ -15276,12 +15300,23 @@ Object.assign(window, {
 // Stores/Forge economy is otherwise unreachable from a console or a test.
 window.__burbzStoresDebug = {
   get state() { return gameState; },
+  get stone() { return playerStone(); },
   get forgeJobs() { return gameState && gameState.forgeJobs; },
   get stock() { return gameState && gameState.inventory && gameState.inventory.items; },
   get gear() { return gameState && gameState.inventory && gameState.inventory.gear; },
   get larder() { return gameState && gameState.inventory && gameState.inventory.larder; },
   craftTimeMs: id => lootCore().craftTimeMs(id),
   ledger: () => empireLedger(),
+  buildingCost: (id, level = 0) => EMPIRE_BUILDING_INDEX[id] ? villageBuildingCost(EMPIRE_BUILDING_INDEX[id], level) : null,
+  openVillage: seed => {
+    const rec = ensureEmpireState().villages[String(Number(seed) >>> 0)];
+    if (!rec) return false;
+    villageActive = { seed: rec.seed >>> 0, name: rec.name, lat: rec.lat, lon: rec.lon };
+    switchScreen('village');
+    renderVillage();
+    return true;
+  },
+  completeConstructions: now => empireCompleteConstructions(now),
   setTab: storesSetTab,
   render: renderInventory
 };
@@ -18433,6 +18468,16 @@ function discoveryRewardForBird(bird) { return RARITY_DISCOVERY_REWARD[(bird && 
 function addCoins(amount) { gameState.player.coins = Math.max(0, Math.floor((Number(gameState.player.coins) || 0) + amount)); return gameState.player.coins; }
 function addBranches(amount) { gameState.player.branches = Math.max(0, Math.floor((Number(gameState.player.branches) || 0) + amount)); return gameState.player.branches; }
 function playerBranches() { return Math.max(0, Math.floor(Number(gameState.player.branches) || 0)); }
+function normaliseStoneAmount(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
+function addStone(amount) {
+  const delta = Number(amount);
+  gameState.player.stone = normaliseStoneAmount(playerStone() + (Number.isFinite(delta) ? delta : 0));
+  return gameState.player.stone;
+}
+function playerStone() { return normaliseStoneAmount(gameState.player.stone); }
 
 // ============================================================================
 // BIRD KNOWLEDGE QUIZ — repeatable learning dopamine for quests and villages
@@ -20107,15 +20152,16 @@ const EMPIRE_NEEDS = [
 // of coins and timber: `materials` land in the Fletcher's Forge stock, `larder`
 // in the Kitchen stores. A province with no residents produces nothing — an
 // empty quarry is just a hole in a hill.
+const QUARRY_FIRST_CUT_STONE = 10;
 const EMPIRE_BUILDINGS = [
-  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10 }, buildMinutes: 5,  need: 'food',    perLevel: 14, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level.' },
-  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
-  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18 }, buildMinutes: 8,  need: 'shelter', perLevel: 12, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12 }, buildMinutes: 6,  need: 'joy',     perLevel: 12, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
-  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6 },  buildMinutes: 5,  branchesPerLevel: 3, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level.' },
-  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20 }, buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts stone: +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass per cycle per level.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16 }, buildMinutes: 15, taxBoost: 0.25, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level.' }
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level.' },
+  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8,  stone: 6 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 8,  need: 'shelter', perLevel: 12, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 6,  need: 'joy',     perLevel: 12, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -20177,7 +20223,10 @@ function villageTotalDevelopment(rec) {
 // decide what to refresh (returns true when something completed).
 function empireCompleteConstructions(now) {
   const t = Number(now) || Date.now();
+  let snapshot = null;
+  const notices = [];
   let completed = false;
+  let levelledUp = false;
   empireVillages().forEach(rec => {
     const eco = ensureVillageEconomy(rec);
     const con = eco && eco.construction;
@@ -20185,11 +20234,22 @@ function empireCompleteConstructions(now) {
     const building = EMPIRE_BUILDING_INDEX[con.id];
     if (!building) { delete eco.construction; return; }
     if (t < Number(con.endMs)) return;
+    if (!snapshot) snapshot = snapshotGameState();
+    const isFirstRealmQuarry = building.id === 'quarry' && (eco.buildings.quarry || 0) === 0 &&
+      !empireVillages().some(other => other !== rec && villageBuildingLevel(other, 'quarry') > 0);
     const level = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(con.toLevel) || ((eco.buildings[building.id] || 0) + 1)));
     eco.buildings[building.id] = level;
     delete eco.construction;
     completed = true;
-    addPlayerXp(12);
+    levelledUp = applyPlayerXpState(12) || levelledUp;
+    // The first quarry must bootstrap the stone economy: its opening cut is
+    // enough for the first Cottage Row, while its founding crew keeps digging
+    // Stone even before permanent residents arrive.
+    let firstCutStone = 0;
+    if (isFirstRealmQuarry && level === 1) {
+      firstCutStone = QUARRY_FIRST_CUT_STONE;
+      addStone(QUARRY_FIRST_CUT_STONE);
+    }
     // New homes draw new residents: finishing a shelter building brings the
     // first families straight in (half its fresh capacity), and the rest of
     // the rooms fill up over the 8-hour tax cycles as the town thrives.
@@ -20199,11 +20259,24 @@ function empireCompleteConstructions(now) {
       movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
       eco.population += movedIn;
     }
-    showToast('🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!' + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : ''));
-    if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
+    notices.push({ seed: rec.seed >>> 0, text: '🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
   });
-  if (completed) { saveState(); SFX.questComplete(); vibrate(35); }
-  return completed;
+  if (!completed) return false;
+  try {
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    console.warn('Settlement construction completion rolled back', error);
+    showToast('Construction finished, but its result could not be saved. Please try again.');
+    return false;
+  }
+  if (levelledUp) { SFX.levelUp(); showToast('LEVEL UP! Now Level ' + gameState.player.level); }
+  notices.forEach(notice => {
+    showToast(notice.text);
+    if (villageActive && (villageActive.seed >>> 0) === notice.seed) villageBuiltSeed = null;
+  });
+  SFX.questComplete(); vibrate(35);
+  return true;
 }
 function tickEmpireConstruction() {
   if (!empireCompleteConstructions()) return;
@@ -20273,18 +20346,21 @@ function villageNeedCapacity(rec, needId) {
   return cap;
 }
 // What a province's yards, fields and mines ship home each tax cycle, on top
-// of coins and timber. Deserted provinces produce nothing: the quarry needs
-// quarrymen, the farm needs farmhands.
+// of coins and timber. A completed Quarry keeps a small founding crew, so its
+// Stone output can rescue an empty first settlement; every other yard needs
+// residents before it produces anything.
 function villageProductionSnapshot(rec) {
   const eco = ensureVillageEconomy(rec);
-  const out = { materials: {}, larder: {} };
-  if (!eco || eco.population <= 0) return out;
+  const out = { stone: 0, materials: {}, larder: {} };
+  if (!eco) return out;
   // A Steward makes the same fields and quarries yield more: better rotas,
   // better records, less waste.
   const steward = villageRoleMultiplier(rec && rec.seed);
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
-    if (!level || !b.produces) return;
+    if (!level) return;
+    out.stone += Math.round((b.stonePerLevel || 0) * level * steward);
+    if (eco.population <= 0 || !b.produces) return;
     Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + Math.round(per * level * steward); });
     Object.entries(b.produces.larder || {}).forEach(([id, per]) => { out.larder[id] = (out.larder[id] || 0) + Math.round(per * level * steward); });
   });
@@ -20362,8 +20438,22 @@ function simulateAllVillageEconomies() {
   const now = Date.now();
   empireVillages().forEach(v => simulateVillageEconomy(v, now));
 }
+function empireHasQuarryInvestment() {
+  return empireVillages().some(v => {
+    const eco = ensureVillageEconomy(v);
+    return villageBuildingLevel(v, 'quarry') > 0 || !!(eco.construction && eco.construction.id === 'quarry');
+  });
+}
 function villageBuildingCost(building, level) {
-  return { coins: building.cost.coins * (level + 1), branches: building.cost.branches * (level + 1) };
+  // The realm's first Quarry is the source of Stone, so charging Stone for
+  // that one build would deadlock a fresh kingdom. Once one is built or under
+  // construction, later quarries and every upgrade pay normally.
+  const bootstrapQuarry = building.id === 'quarry' && level === 0 && !empireHasQuarryInvestment();
+  return {
+    coins: building.cost.coins * (level + 1),
+    branches: building.cost.branches * (level + 1),
+    stone: bootstrapQuarry ? 0 : (building.cost.stone || 0) * (level + 1)
+  };
 }
 function empireBuildStructure(seed, buildingId) {
   empireCompleteConstructions();
@@ -20382,8 +20472,11 @@ function empireBuildStructure(seed, buildingId) {
   const cost = villageBuildingCost(building, level);
   if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to raise the ' + building.name + ' — collect taxes and win battles.'); return; }
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the ' + building.name + ' — send birds on Branch Run or Timber Haul quests.'); return; }
+  if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — build a Quarry and collect its provincial output.'); return; }
+  const snapshot = snapshotGameState();
   addCoins(-cost.coins);
   addBranches(-cost.branches);
+  addStone(-cost.stone);
   // Costs are paid up front; the structure itself takes real time to rise.
   // Merged settlements raise it faster: a town's shared guilds shave 15% off
   // the clock, a city's 30% — masons walk over from every district.
@@ -20391,7 +20484,14 @@ function empireBuildStructure(seed, buildingId) {
   const guildFactor = settlementBuildFactorForSeed(rec.seed);
   const buildMs = Math.max(30000, Math.round(villageBuildTimeMs(building, level) * guildFactor));
   eco.construction = { id: building.id, toLevel: level + 1, startMs: now, endMs: now + buildMs };
-  saveState();
+  try {
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    console.warn('Settlement construction start rolled back', error);
+    showToast('Construction could not be saved, so no resources were spent. Please try again.');
+    return;
+  }
   SFX.questComplete();
   vibrate(35);
   showToast('🏗️ ' + building.icon + ' ' + building.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
@@ -20435,7 +20535,7 @@ function empireVillageTributePeriods(v, now) {
 function empireTributeReady() {
   simulateAllVillageEconomies();
   const now = Date.now();
-  let coins = 0, branches = 0;
+  let coins = 0, branches = 0, stone = 0;
   const materials = {}, larder = {};
   empireVillages().forEach(v => {
     const periods = empireVillageTributePeriods(v, now);
@@ -20443,6 +20543,7 @@ function empireTributeReady() {
     const snap = villageEconomySnapshot(v);
     coins += periods * snap.taxes;
     branches += periods * snap.branches;
+    stone += periods * snap.production.stone;
     mergeResourceTotals(materials, snap.production.materials, periods);
     mergeResourceTotals(larder, snap.production.larder, periods);
   });
@@ -20450,7 +20551,7 @@ function empireTributeReady() {
   const trade = empireTradeDue(now);
   coins += trade.coins;
   mergeResourceTotals(materials, trade.materials, 1);
-  return { coins, branches, materials, larder, tradeCoins: trade.coins };
+  return { coins, branches, stone, materials, larder, tradeCoins: trade.coins };
 }
 // The whole realm's output in one object — the ledger the Royal Stores screen
 // reads. `perCycle` is what every province between them ships each 8 hours;
@@ -20458,7 +20559,7 @@ function empireTributeReady() {
 function empireLedger() {
   const villages = empireVillages();
   const ledger = {
-    provinces: villages.length, population: 0, coins: 0, branches: 0,
+    provinces: villages.length, population: 0, coins: 0, branches: 0, stone: 0,
     materials: {}, larder: {}, buildings: {}, due: empireTributeReady()
   };
   villages.forEach(v => {
@@ -20466,6 +20567,7 @@ function empireLedger() {
     ledger.population += snap.pop;
     ledger.coins += snap.taxes;
     ledger.branches += snap.branches;
+    ledger.stone += snap.production.stone;
     mergeResourceTotals(ledger.materials, snap.production.materials, 1);
     mergeResourceTotals(ledger.larder, snap.production.larder, 1);
     EMPIRE_BUILDINGS.forEach(b => {
@@ -20476,7 +20578,7 @@ function empireLedger() {
   return ledger;
 }
 function tributeHasAnything(due) {
-  return !!due && (due.coins > 0 || due.branches > 0 ||
+  return !!due && (due.coins > 0 || due.branches > 0 || due.stone > 0 ||
     Object.keys(due.materials || {}).length > 0 || Object.keys(due.larder || {}).length > 0);
 }
 // Short "+2 🪙 +3 🪵 ⚙️4 🌻2" style summary of any production/tribute bundle.
@@ -20485,6 +20587,7 @@ function empireResourceSummary(bundle, limit) {
   const bits = [];
   if (bundle.coins > 0) bits.push('+' + bundle.coins + ' 🪙');
   if (bundle.branches > 0) bits.push('+' + bundle.branches + ' 🪵');
+  if (bundle.stone > 0) bits.push('+' + bundle.stone + ' stone');
   Object.entries(bundle.materials || {}).forEach(([id, qty]) => {
     let icon = '📦';
     try { const m = lootCore().materialById(id); if (m) icon = m.icon; } catch (e) {}
@@ -20498,6 +20601,7 @@ function empireResourceSummary(bundle, limit) {
   return bits.slice(0, max).join(' ') + (bits.length > max ? ' +' + (bits.length - max) : '');
 }
 function collectEmpireTribute() {
+  const snapshot = snapshotGameState();
   const due = empireTributeReady();
   if (!tributeHasAnything(due)) { showToast('No taxes ready yet — provinces pay every 8 hours.'); return; }
   const now = Date.now();
@@ -20508,6 +20612,7 @@ function collectEmpireTribute() {
   if (empireForTrade) empireTradeRouteRecords().forEach(({ key }) => { empireForTrade.tradeRoutes[key].lastTradeAt = now; });
   addCoins(due.coins);
   addBranches(due.branches);
+  addStone(due.stone);
   // What the quarries, lumber camps, farms and markets actually dug, felled,
   // harvested and traded for over the cycle.
   Object.entries(due.materials || {}).forEach(([id, qty]) => {
@@ -20523,10 +20628,17 @@ function collectEmpireTribute() {
     const lines = grantLootDrops(drops);
     if (lines.length) tributeText = ' · ' + lootLinesToText(lines);
   } catch (e) {}
-  saveState();
+  try {
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    console.warn('Provincial collection rolled back', error);
+    showToast('The collection could not be saved, so nothing was taken or reset. Please try again.');
+    return;
+  }
   SFX.questComplete();
   vibrate(40);
-  showToast('👑 Taxes collected: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵' + (producedText ? ' · 🏭 ' + producedText : '') + tributeText);
+  showToast('👑 Taxes collected: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵 +' + due.stone + ' stone' + (producedText ? ' · 🏭 ' + producedText : '') + tributeText);
   updateHeader(); renderEmpirePanel(); renderVillageClaimBar(); renderVillageManagePanel();
   if (currentScreen === 'inventory') renderInventory();
 }
@@ -20660,6 +20772,7 @@ function renderVillageManagePanel() {
   const snap = villageEconomySnapshot(rec);
   const wallet = gameState.player.coins || 0;
   const timber = playerBranches();
+  const stone = playerStone();
   const needsHtml = snap.needs.map(n => {
     const pct = Math.round(n.sat * 100);
     const tone = n.sat >= 0.95 ? '' : n.sat >= 0.6 ? ' mid' : ' low';
@@ -20693,7 +20806,11 @@ function renderVillageManagePanel() {
     const level = villageBuildingLevel(rec, b.id);
     const maxed = level >= b.maxLevel;
     const cost = maxed ? null : villageBuildingCost(b, level);
-    const affordable = cost && wallet >= cost.coins && timber >= cost.branches;
+    const shortages = [];
+    if (cost && wallet < cost.coins) shortages.push((cost.coins - wallet) + ' 🪙');
+    if (cost && timber < cost.branches) shortages.push((cost.branches - timber) + ' 🪵');
+    if (cost && stone < cost.stone) shortages.push((cost.stone - stone) + ' stone');
+    const affordable = cost && !shortages.length;
     const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
     const inProgress = construction && construction.id === b.id;
     const busyElsewhere = construction && construction.id !== b.id;
@@ -20701,10 +20818,11 @@ function renderVillageManagePanel() {
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
-      (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
+      (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
       '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
-      '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn + '</div>';
+      '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn +
+      (shortages.length && !construction ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
   }).join('');
   // The settlement this province has merged into, if any: shown on the desk,
   // so a governor always knows they are running a district of something bigger.
@@ -20734,7 +20852,7 @@ function renderVillageManagePanel() {
       : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
-    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵' + (construction ? ' · builders busy here — other towns can still build' : '') + '</div>' +
+    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other towns can still build' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     stewardHtml +
     '</div>';
@@ -20762,10 +20880,10 @@ function renderEmpirePanel() {
   // ---- YOUR VILLAGES — one simple row per village, three facts at most.
   // Region and production detail live one tap deeper (the governor's desk);
   // the row answers only "how is it doing" and "what does it pay".
-  let totalPop = 0, taxesPerCycle = 0, branchesPerCycle = 0;
+  let totalPop = 0, taxesPerCycle = 0, branchesPerCycle = 0, stonePerCycle = 0;
   const villageRow = v => {
     const snap = villageEconomySnapshot(v);
-    totalPop += snap.pop; taxesPerCycle += snap.taxes; branchesPerCycle += snap.branches;
+    totalPop += snap.pop; taxesPerCycle += snap.taxes; branchesPerCycle += snap.branches; stonePerCycle += snap.production.stone;
     const settle = empireSettlementOfSeed(v.seed);
     const badges = (settle ? '<span class="evr-badge" title="' + escapeHtml(settle.label) + '">' + settle.icon + '</span>' : '') +
       (villageConstructionFor(v) ? '<span class="evr-badge" title="Building">🏗️</span>' : '');
@@ -20773,7 +20891,7 @@ function renderEmpirePanel() {
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + (badges ? ' <span class="evr-badges">' + badges + '</span>' : '') + '</span><br>' +
       '<span class="empire-village-meta">' + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ empty · build homes') + '</span></span>' +
-      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
+      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵' + (snap.production.stone ? '<br>+' + snap.production.stone + ' stone' : '') + '</span></button>';
   };
   let rows;
   if (!count) {
@@ -20910,7 +21028,7 @@ function renderEmpirePanel() {
   // ---- 📜 A plain-words guide to the whole ladder, folded away until asked.
   const helpHtml = count ? empireDrawerHTML('help', false, '📜', 'HOW YOUR EMPIRE WORKS', 'The whole ladder, in plain words', null,
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Rebuild them.</b> Each village has a governor’s desk below — clear rubble, raise buildings, and residents move in and pay taxes every 8 hours.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Rebuild them.</b> Start with a Quarry: its first cut gives enough stone for Cottage Row, then its founding crew cuts more every 8 hours even before residents arrive. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages grow into a town</b> (+10% taxes) — and <b>3 neighbouring towns rise into a city</b> (+25%). This happens by itself as you free villages close together.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 villages within 150 km unite into a County</b> — run from its own County Hall, with +15% unity taxes for every village in it.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
@@ -20924,7 +21042,8 @@ function renderEmpirePanel() {
       '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Villages</div></div>' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + totalPop + '</div><div class="empire-stat-label">Subjects</div></div>' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxesPerCycle + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
-      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Timber / 8h</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + stonePerCycle + ' stone</div><div class="empire-stat-label">Stone / 8h</div></div>' +
       '</div>' : '') +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— NEXT IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
     (count
@@ -21041,7 +21160,7 @@ function renderRegionScreen() {
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + (isCapital ? ' 👑' : '') + '</span><br>' +
       '<span class="empire-village-meta">' + (isCapital ? 'regional capital · ' : '') + '👥 ' + snap.pop + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + '</span></span>' +
-      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
+      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵' + (snap.production.stone ? '<br>+' + snap.production.stone + ' stone' : '') + '</span></button>';
   }).join('');
   // The liege chain: who this county answers to on the nested feudal ladder
   // (simplified Crusader Kings — a duchy is made of counties, a kingdom of
@@ -25690,6 +25809,7 @@ function renderStoresTreasury() {
   el.innerHTML = '<div class="stores-treasury">' +
     stat('🪙', formatHudAmount(gameState.player.coins || 0), 'Treasury') +
     stat('🪵', formatHudAmount(playerBranches()), 'Timber') +
+    stat('<img src="assets/ui/burbz-icon-set/stone.svg" alt="">', formatHudAmount(playerStone()), 'Stone') +
     stat('⛏️', formatHudAmount(counts.materials), 'Materials') +
     stat('🍞', formatHudAmount(counts.food), 'Food') +
     stat('🏰', formatHudAmount(ledger.provinces), 'Provinces') +
@@ -25727,19 +25847,28 @@ function renderStoresLedger() {
     html += '<div class="stores-panel"><div class="stores-panel-title">🏰 Provincial output</div>' +
       '<div class="inventory-empty">No provinces yet · open a nearby town from the Map, win its Liberation Battle and raise a birdhouse. Liberated towns then work their farms, quarries, lumber camps and markets for you.</div></div>';
   } else {
-    const yardRows = EMPIRE_BUILDINGS.filter(b => b.produces && ledger.buildings[b.id]).map(b => {
+    const yardRows = EMPIRE_BUILDINGS.filter(b => (b.produces || b.stonePerLevel) && ledger.buildings[b.id]).map(b => {
       const levels = ledger.buildings[b.id];
+      let stoneCycle = 0;
       const perCycle = {};
-      Object.entries(b.produces.materials || {}).forEach(([id, per]) => { perCycle[id] = per * levels; });
       const larderCycle = {};
-      Object.entries(b.produces.larder || {}).forEach(([id, per]) => { larderCycle[id] = per * levels; });
+      empireVillages().forEach(v => {
+        const level = villageBuildingLevel(v, b.id);
+        if (!level) return;
+        const steward = villageRoleMultiplier(v.seed);
+        stoneCycle += Math.round((b.stonePerLevel || 0) * level * steward);
+        const eco = ensureVillageEconomy(v);
+        if (eco.population <= 0) return;
+        Object.entries((b.produces && b.produces.materials) || {}).forEach(([id, per]) => { perCycle[id] = (perCycle[id] || 0) + Math.round(per * level * steward); });
+        Object.entries((b.produces && b.produces.larder) || {}).forEach(([id, per]) => { larderCycle[id] = (larderCycle[id] || 0) + Math.round(per * level * steward); });
+      });
       return '<div class="stores-ledger-row">' +
         '<span class="slr-icon">' + b.icon + '</span>' +
         '<span class="slr-main"><span class="slr-name">' + escapeHtml(b.name) + '</span>' +
         '<span class="slr-meta">' + levels + ' level' + (levels === 1 ? '' : 's') + ' across the realm</span></span>' +
-        '<span class="slr-yield">' + escapeHtml(empireResourceSummary({ materials: perCycle, larder: larderCycle }, 5)) + '</span></div>';
+        '<span class="slr-yield">' + escapeHtml(empireResourceSummary({ stone: stoneCycle, materials: perCycle, larder: larderCycle }, 5)) + '</span></div>';
     }).join('');
-    const idleYards = EMPIRE_BUILDINGS.filter(b => b.produces && !ledger.buildings[b.id]);
+    const idleYards = EMPIRE_BUILDINGS.filter(b => (b.produces || b.stonePerLevel) && !ledger.buildings[b.id]);
     html += '<div class="stores-panel"><div class="stores-panel-title">🏭 Provincial output · every 8h</div>' +
       '<div class="stores-ledger-row header"><span class="slr-icon">👑</span>' +
       '<span class="slr-main"><span class="slr-name">Taxes &amp; timber</span><span class="slr-meta">' + ledger.provinces + ' province' + (ledger.provinces === 1 ? '' : 's') + ' · 👥 ' + ledger.population + ' subjects</span></span>' +
@@ -26444,6 +26573,7 @@ function updateHeader() {
   setHudChipValue('globalMoneyHud', 'globalMoneyValue', gameState.player.coins || 0);
   syncGlobalMoneyHud();
   setHudChipValue('hudTimberChip', 'hudTimber', playerBranches());
+  setHudChipValue('hudStoneChip', 'hudStone', playerStone());
   const cameraHudLevel = $('cameraHudLevel');
   if (cameraHudLevel) cameraHudLevel.textContent = 'LV. ' + lv;
   renderRpgHud();
@@ -30123,7 +30253,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'feudal-hierarchy-v221-20260804';
+const BURBZ_BUILD = 'feudal-hierarchy-v222-20260804';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -30881,6 +31011,7 @@ window.visualViewport?.addEventListener('scroll', refreshMerlinTutorialPosition)
 $('headerProfileBtn')?.addEventListener('click', () => switchScreen('profile'));
 $('hudCoinsChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('hudTimberChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
+$('hudStoneChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('inventory'); });
 $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
 $('introSoundBtn')?.addEventListener('click', unmuteIntroCutscene);
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);

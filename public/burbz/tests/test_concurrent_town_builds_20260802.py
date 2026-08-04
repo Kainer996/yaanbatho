@@ -31,6 +31,8 @@ def build_harness() -> str:
             "villageBuildTimeMs",
             "villageConstructionFor",
             "ensureVillageEconomy",
+            "villageBuildingLevel",
+            "empireHasQuarryInvestment",
             "villageBuildingCost",
             "empireBuildStructure",
         )
@@ -38,9 +40,10 @@ def build_harness() -> str:
     stubs = """
 global.window = global;
 const toasts = [];
-const gameState = { player: { coins: 5000, branches: 5000 } };
+const gameState = { player: { coins: 5000, branches: 5000, stone: 5000 } };
 const empire = { villages: {} };
 const ensureEmpireState = () => empire;
+const empireVillages = () => Object.values(empire.villages);
 const empireCompleteConstructions = () => false;
 const settlementBuildFactorForSeed = () => 1;  // lone-village baseline: no merged-guild speed-up
 const villageRuinDefsFor = () => [];
@@ -49,8 +52,13 @@ const VILLAGE_RUIN_KINDS = { house: {} };
 const VILLAGE_BASE_POPULATION = 0, VILLAGE_MAX_POPULATION = 60;
 const EMPIRE_NEEDS = [];
 const playerBranches = () => gameState.player.branches;
+const playerStone = () => gameState.player.stone;
 const addCoins = n => { gameState.player.coins += n; };
 const addBranches = n => { gameState.player.branches += n; };
+const addStone = n => { gameState.player.stone += n; };
+const snapshotGameState = () => JSON.parse(JSON.stringify(gameState));
+const restoreGameStateSnapshot = () => {};
+const durableSaveState = () => ({ ok:true });
 const saveState = () => {}; const updateHeader = () => {}; const renderVillage = () => {};
 const SFX = { questComplete: () => {} }; const vibrate = () => {};
 const showToast = t => toasts.push(t);

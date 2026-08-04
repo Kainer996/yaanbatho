@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-04 (feudal hierarchy v221: the empire's feudal ladder now nests like Crusader Kings' — counties → duchies → kingdoms → empire — see "Review log" at the bottom).
+Last curated: 2026-08-04 (feudal hierarchy v222: the empire's feudal ladder now nests like Crusader Kings' — counties → duchies → kingdoms → empire — see "Review log" at the bottom).
 
 ---
 
@@ -197,7 +197,9 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
   form a county" — and that same county then relabelled itself a Duchy at 5
   villages and a Kingdom at 8, while 3 villages *also* made a town in the
   settlement layer. Titles were size badges, not a hierarchy. Fixed as a
-  simplified Crusader Kings 3, release `feudal-hierarchy-v221-20260804`:
+  simplified Crusader Kings 3, release `feudal-hierarchy-v222-20260804`
+  (renumbered over the same-day quarry stone release, which took v221 on
+  main first — same convention as the v202/v203 chef/settlement pair):
   - **Maths** (`empire_realm_core.js`): a 150 km cluster of 3+ villages is
     now ALWAYS a County (`COUNTY_TIER`; `regionTier()` is constant, the
     size-based `REGION_TIERS`/`nextRegionTier` are gone). New

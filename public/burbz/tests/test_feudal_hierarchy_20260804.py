@@ -27,7 +27,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-OWN_RELEASE_PIN = "feudal-hierarchy-v221-20260804"
+OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
 
 
 def trio(seed, name, lat, lon, day):

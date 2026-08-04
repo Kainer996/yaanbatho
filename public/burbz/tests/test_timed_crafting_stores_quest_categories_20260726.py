@@ -172,7 +172,7 @@ def test_stores_screen_shows_the_collective_output_of_every_town():
     screen = function_source("renderStoresLedger")
     assert "empireLedger()" in screen
     assert "collectEmpireTribute()" in screen
-    assert "EMPIRE_BUILDINGS.filter(b => b.produces" in screen
+    assert "EMPIRE_BUILDINGS.filter(b => (b.produces || b.stonePerLevel)" in screen
 
 
 # ---------------------------------------------------------------------------
