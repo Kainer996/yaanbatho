@@ -2019,6 +2019,19 @@
   var MAX_DISTANCE_ACCURACY_M = 60;
   var MAX_CHECKPOINT_ACCURACY_M = 120;
 
+  // Quest markers are an ordered trail, not independent proximity pickups.
+  // A loop can pass within the reach radius of a much later marker (or two
+  // markers can overlap on a short path), so only the first unfinished marker
+  // may react to a GPS fix. This prevents the map jumping the player to the
+  // return leg or finish before they have actually walked the route.
+  function questNextCheckpointIndex(quest) {
+    var checkpoints = quest && Array.isArray(quest.checkpoints) ? quest.checkpoints : [];
+    for (var i = 0; i < checkpoints.length; i++) {
+      if (checkpoints[i] && checkpoints[i].kind !== 'finish' && !checkpoints[i].reached) return i;
+    }
+    return -1;
+  }
+
   // Feed a geolocation fix into the active quest. Mutates quest; returns events.
   function questProcessFix(quest, lat, lon, accuracy, now) {
     var events = [];
@@ -2035,22 +2048,23 @@
     }
     quest.lastFix = { lat: lat, lon: lon, t: now, accuracy: accuracy };
 
-    quest.checkpoints.forEach(function (cp, idx) {
-      if (cp.reached) return;
-      if (cp.kind === 'finish') return; // finish checked after the loop, needs the rest done
+    var nextCheckpointIndex = questNextCheckpointIndex(quest);
+    if (nextCheckpointIndex >= 0) {
+      var cp = quest.checkpoints[nextCheckpointIndex];
+      var idx = nextCheckpointIndex;
       if (questHaversine(lat, lon, cp.lat, cp.lon) <= REACH_RADIUS_M) {
         if (cp.kind === 'chest') {
           // Chest reach is only an intent. The UI transaction validates rewards,
           // writes the receipt and reached/count state durably, then shows success.
           events.push({ type: cp.kind, checkpoint: cp, index: idx, reachedAt: now });
-          return;
+        } else {
+          cp.reached = true;
+          cp.reachedAt = now;
+          events.push({ type: cp.kind, checkpoint: cp, index: idx });
+          quest._finishNudged = false; // fresh progress re-arms the missed-waymarker nudge
         }
-        cp.reached = true;
-        cp.reachedAt = now;
-        events.push({ type: cp.kind, checkpoint: cp, index: idx });
-        quest._finishNudged = false; // fresh progress re-arms the missed-waymarker nudge
       }
-    });
+    }
 
     // Trail bird NPCs and the wandering tavern are bonus stops — they never
     // gate the finish banner, so they're checked outside the checkpoint list.
@@ -2302,6 +2316,7 @@
     offerLoopStyle: offerLoopStyle,
     trimRouteToLength: trimRouteToLength,
     questProcessFix: questProcessFix,
+    questNextCheckpointIndex: questNextCheckpointIndex,
     questPendingCheckpoints: questPendingCheckpoints,
     questFinishIsReady: questFinishIsReady,
     questIsComplete: questIsComplete,

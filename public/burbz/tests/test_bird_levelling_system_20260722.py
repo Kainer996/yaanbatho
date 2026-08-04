@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 QUEST_CORE_PATH = ROOT / "quest_core.js"
-QUEST_CORE_PIN = "begin-quest-loop-authority-v188-20260731"
+QUEST_CORE_PIN = "ordered-quest-markers-v224-20260804"
 ACADEMY_CORE_PIN = "quest-duration-tiers-v211-20260803"
 
 

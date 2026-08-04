@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "realm-dropdown-v223-20260804"
+CURRENT_BUILD = "ordered-quest-markers-v224-20260804"
 
 
 def trio(seed, name, lat, lon, day):

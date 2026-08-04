@@ -3092,6 +3092,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
    inner .quest-marker child. */
 .quest-marker-pin { cursor:pointer; }
 .quest-marker { position:relative; display:grid; place-items:center; font-size:26px; filter:drop-shadow(0 3px 5px rgba(0,0,0,.55)); transition:transform .25s ease, opacity .25s ease; }
+.quest-marker-pin.is-future .quest-marker { opacity:.48; transform:scale(.84); }
+.quest-marker.active { transform:scale(1.08); filter:drop-shadow(0 0 8px rgba(240,199,103,.9)) drop-shadow(0 3px 5px rgba(0,0,0,.55)); }
 .quest-marker.reached { opacity:.45; transform:scale(.8); }
 .quest-marker.qm-npc { width:52px; height:52px; border-radius:50%; overflow:hidden; border:2.5px solid #f0c767; background:radial-gradient(circle at 40% 30%, #3a2f18, #14100a); box-shadow:0 0 14px rgba(240,199,103,.55); }
 .quest-marker.qm-npc img { width:100%; height:100%; object-fit:cover; }
@@ -4028,7 +4030,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=feudal-hierarchy-v222-20260804"></script>
-<script src="quest_core.js?v=begin-quest-loop-authority-v188-20260731"></script>
+<script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -16339,16 +16341,20 @@ function drawWalkingQuestOnMap() {
     setWalkQuestAlignmentStatus(walkQuestAlignmentMessage(quest.routeCertification));
     return;
   }
+  const nextRequiredIdx = window.BurbzQuestCore.questNextCheckpointIndex(quest);
   quest.checkpoints.forEach((cp, idx) => {
     if (cp.kind === 'finish' && !window.BurbzQuestCore.questFinishIsReady(quest)) return;
-    if (cp.kind === 'chest' && cp.reached) return;
+    if (cp.reached && cp.kind !== 'finish') return;
     // Outer pin belongs to MapLibre (inline transform positioning); all visuals,
     // transitions and bounce animations live on the inner .quest-marker child.
     const el = document.createElement('div');
     el.className = 'quest-marker-pin';
+    if (idx !== nextRequiredIdx && cp.kind !== 'finish') el.classList.add('is-future');
+    el.style.zIndex = idx === nextRequiredIdx ? '20' : '1';
     el.dataset.questCp = String(idx);
     const face = document.createElement('div');
     face.className = 'quest-marker qm-' + cp.kind + (cp.reached ? ' reached' : '');
+    face.classList.toggle('active', idx === nextRequiredIdx);
     if (cp.kind === 'npc') face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
     else if (cp.kind === 'chest') face.innerHTML = CHEST_SVG;
     else face.textContent = cp.kind === 'finish' ? '🏁' : (cp.reached ? '✅' : '🚩');
@@ -16652,7 +16658,14 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       if (face) { face.classList.add('reached'); if (ev.checkpoint.kind === 'chest') face.innerHTML = CHEST_OPEN_SVG; else if (ev.checkpoint.kind === 'flag') face.textContent = '✅'; }
     }
   });
-  if (!finishWasReady && activeWalkingQuest() === quest && window.BurbzQuestCore.questFinishIsReady(quest)) drawWalkingQuestOnMap();
+  // Rebuild markers after every ordered checkpoint advance: the completed pin
+  // disappears and the next pin becomes the single bright, topmost target.
+  // (Previously only the final advance redrew, leaving a green old marker over
+  // a muted next marker until some unrelated map refresh.)
+  const checkpointProgressed = events.some(ev => ev.checkpoint && ev.checkpoint.kind !== 'chest') ||
+    (chestClaimHandled && !chestClaimFailed);
+  const finishJustUnlocked = !finishWasReady && window.BurbzQuestCore.questFinishIsReady(quest);
+  if (activeWalkingQuest() === quest && (checkpointProgressed || finishJustUnlocked)) drawWalkingQuestOnMap();
   updateWalkQuestHud();
   const now = Date.now();
   if (!chestClaimFailed && !chestClaimHandled && (events.length || now - walkQuestLastSave > 20000)) { walkQuestLastSave = now; saveState(); }
@@ -30281,7 +30294,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'realm-dropdown-v223-20260804';
+const BURBZ_BUILD = 'ordered-quest-markers-v224-20260804';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
