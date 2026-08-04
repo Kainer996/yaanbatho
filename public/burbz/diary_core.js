@@ -149,7 +149,7 @@
           'Sharper talons, keener eyes — the ' + species + ' rose to Level ' + (e.level || '?') + '.'
         ], seed) };
       case 'battle': {
-        if (e.liberated) return { icon: '🕊️', text: 'The squad shattered the garrison of ' + e.liberated + ' — another town wrested from the evil Burbz!' };
+        if (e.liberated) return { icon: '🕊️', text: 'The squad shattered the garrison of ' + e.liberated + ' Village — another village freed from the evil Burbz!' };
         if (e.won) {
           const base = pick([
             'Victory in the ' + (e.tier || 'battle') + ' — the shadow retreats a little further.',
@@ -163,7 +163,7 @@
         ], seed) };
       }
       case 'village':
-        return { icon: '🏰', text: 'A sanctuary birdhouse was raised in ' + (e.name || 'a freed town') + (e.count ? ' — ' + countWord(e.count, 'town now stands', 'towns now stand') + ' free in the empire.' : '.') };
+        return { icon: '🏰', text: 'A sanctuary birdhouse was raised in ' + (e.name || 'a freed village') + (e.count ? ' — ' + countWord(e.count, 'village now stands', 'villages now stand') + ' free in the empire.' : '.') };
       case 'walk_quest':
         return { icon: '🥾', text: 'The trail “' + (e.name || 'a walking quest') + '” was walked to its end — ' + fmtKm(e.km) + ' km' +
           (Number.isFinite(Number(e.markersTotal)) && e.markersTotal > 0 ? ', ' + (e.markers || 0) + '/' + e.markersTotal + ' waymarkers' : '') +

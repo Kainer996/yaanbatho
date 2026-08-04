@@ -106,10 +106,10 @@ def test_construction_lock_is_stored_per_village_record():
     assert "eco.construction = { id: building.id" in build
 
 
-def test_player_facing_copy_says_the_limit_is_per_town():
+def test_player_facing_copy_says_the_limit_is_per_village():
     html = HTML.read_text(encoding="utf-8")
-    # The refusal toast names the town and says other towns can keep building.
-    assert "one project per town. Your other towns can build meanwhile." in html
+    # The refusal toast names the village and says other villages can keep building.
+    assert "one project per village. Your other villages can build meanwhile." in html
     # The Construction Yard header makes the same promise while builders work.
-    assert "builders busy here — other towns can still build" in html
+    assert "builders busy here — other villages can still build" in html
     assert "' · builders busy'" not in html

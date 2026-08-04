@@ -7,6 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "ordered-quest-markers-v224-20260804"
+CURRENT_BUILD = "unique-place-names-v225-20260804"
 
 
 def run_core(expression: str):
@@ -78,6 +79,7 @@ def test_release_reaches_the_live_pwa_instead_of_an_old_cached_core():
     sw = SW.read_text(encoding="utf-8")
     assert f"quest_core.js?v={RELEASE}" in html
     assert f"./quest_core.js?v={RELEASE}" in sw
-    assert f"const BURBZ_BUILD = '{RELEASE}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
-    assert cache_line.rstrip("';").endswith(RELEASE)
+    assert RELEASE in cache_line
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)

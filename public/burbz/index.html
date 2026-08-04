@@ -702,7 +702,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .liberation-cancel-btn:focus-visible { outline:3px solid #fff; outline-offset:3px; }
 .empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
-.empire-rank { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
+.empire-rank { display:flex; flex-direction:column; align-items:flex-end; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
+.empire-rank-label { font-size:8px; line-height:1; color:var(--text3); letter-spacing:.15em; }
 
 /* ---- Royal ledger: realm stats + provinces --------------------------------- */
 .empire-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 0 10px; }
@@ -805,6 +806,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-marker.is-region .empire-map-marker-label::after { content:' · COUNTY'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
 .empire-map-marker.is-settlement.is-town .empire-map-marker-label::after { content:' · TOWN'; color:#9fd0a6; font-size:8px; letter-spacing:.08em; }
 .empire-map-marker.is-settlement.is-city .empire-map-marker-label::after { content:' · CITY'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
+.empire-map-marker.is-village .empire-map-marker-label::after,
+.empire-map-marker.is-frontier .empire-map-marker-label::after { content:' · VILLAGE'; color:#a8cda9; font-size:8px; letter-spacing:.08em; }
 .empire-map-btn.is-active { border-color:rgba(255,232,165,.95); background:linear-gradient(180deg,rgba(88,62,22,.96),rgba(40,26,9,.96)); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.3), 0 0 10px rgba(240,199,103,.4); }
 .empire-map-key { position:absolute; z-index:8; top:54px; left:10px; right:10px; max-width:320px; display:none; padding:10px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(38,26,10,.96),rgba(14,9,3,.97)); box-shadow:0 14px 30px rgba(0,0,0,.6); backdrop-filter:blur(8px); }
 .empire-map-key.show { display:block; }
@@ -834,14 +837,16 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-tapcard-btn { flex:1; min-height:40px; border-radius:10px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.05em; }
 .empire-tapcard-btn.secondary { background:linear-gradient(180deg,rgba(46,32,12,.9),rgba(16,11,4,.92)); color:#ffe9a8; }
 .empire-tapcard-btn:active { transform:scale(.98); }
-/* Locator strip: one line that always answers where you and yours are. */
-.empire-locator { display:flex; align-items:stretch; gap:6px; margin:0 0 9px; }
-.empire-locator-chip { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; padding:7px 9px; border-radius:11px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(36,25,10,.72),rgba(12,8,3,.82)); color:inherit; text-align:left; }
+/* Locator strip is the explicit hierarchy: position, home village, merged
+   town/city and county are separate cards, never one overloaded place name. */
+.empire-locator { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); align-items:stretch; gap:6px; margin:0 0 9px; }
+.empire-locator-chip { min-width:0; display:flex; flex-direction:column; gap:1px; padding:7px 9px; border-radius:11px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(36,25,10,.72),rgba(12,8,3,.82)); color:inherit; text-align:left; }
 .empire-locator-chip:active { transform:scale(.98); border-color:rgba(240,199,103,.7); }
 .empire-locator-chip.is-you { border-color:rgba(159,212,255,.55); }
 .empire-locator-label { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:8.5px; letter-spacing:.13em; color:var(--text3); text-transform:uppercase; }
-.empire-locator-value { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.empire-locator-value { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; line-height:1.12; color:var(--text); white-space:normal; overflow-wrap:anywhere; }
 .empire-locator-chip.is-empty .empire-locator-value { color:var(--text3); }
+@media (max-width:480px) { .empire-locator { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 /* Ledger drawers: the quest-board accordion, dressed for the throne room. */
 .empire-drawer { margin:0 0 9px; border-radius:14px; border:1px solid rgba(214,168,79,.26); background:linear-gradient(150deg,rgba(214,168,79,.08),rgba(0,0,0,.32)); overflow:hidden; }
 .empire-drawer[open] { border-color:rgba(240,199,103,.46); }
@@ -3011,6 +3016,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .burbz-village-marker { display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto; }
 .burbz-village-marker .burbz-village-icon { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #4a3418, #241a0d 78%); box-shadow: 0 6px 14px rgba(0,0,0,0.45), 0 0 0 2.5px rgba(240,199,103,0.4); animation: villageMarkerBob 3.2s ease-in-out infinite; }
 .burbz-village-marker .burbz-village-name { margin-top: 3px; padding: 2px 8px; border-radius: 999px; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 0.06em; color: #f4ead4; background: rgba(22,18,10,0.72); border: 1px solid rgba(240,199,103,0.35); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+.burbz-village-marker .burbz-village-kind { margin-top:1px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:7.5px; line-height:1; letter-spacing:.16em; color:#b9ad8d; text-shadow:0 1px 2px rgba(0,0,0,.75); }
 .burbz-village-marker:active .burbz-village-icon { transform: scale(0.92); }
 @keyframes villageMarkerBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
@@ -4029,7 +4035,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=feudal-hierarchy-v222-20260804"></script>
+<script src="empire_realm_core.js?v=unique-place-names-v225-20260804"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -4047,7 +4053,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
-<script src="diary_core.js?v=restored-lost-features-v200-20260802"></script>
+<script src="diary_core.js?v=unique-place-names-v225-20260804"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -5207,6 +5213,7 @@ function adjustBirdHungerUntracked(bird, delta, now = Date.now()) {
 const STARTER_PREY_LARDER = { field_vole: 3, wood_mouse: 2, carrion_scraps: 2, common_frog: 1 };
 
 const DEFAULT_STATE = {
+  placeNameVersion: 0,
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0, stone: 0 },
   flock: [],
   discoveredSpecies: {},
@@ -5313,6 +5320,11 @@ function loadState() {
   if (!gameState || typeof gameState !== 'object' || Array.isArray(gameState)) {
     gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
+  // v224 place migration: villages keep every scrap of progression while old
+  // lossy coordinate-hash keys are rekeyed to collision-free world-cell ids and
+  // receive the globally unique name tied to that identity. Every stored seed
+  // reference is healed together so old saves never split or lose a place.
+  gameState = migrateGamePlaceNames(gameState);
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
   const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
   const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
@@ -5596,7 +5608,8 @@ function mergeCloudState(cloudState) {
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
   const core = dietHungerCore();
-  return core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
+  const hungerMigrated = core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
+  return migrateGamePlaceNames(hungerMigrated);
 }
 
 async function loadCloudProgress() {
@@ -18715,11 +18728,11 @@ function villageRngFrom(seed) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-const VILLAGE_NAME_HEADS = ['Wren', 'Thrush', 'Raven', 'Finch', 'Owl', 'Heron', 'Kestrel', 'Robin', 'Swift', 'Lark', 'Magpie', 'Dove', 'Rook', 'Siskin', 'Plover', 'Crake'];
-const VILLAGE_NAME_TAILS = ['ford', 'bury', 'stead', 'wick', 'holm', 'combe', 'garth', 'thorpe', 'dale', 'moor', 'brook', 'field', 'ley', 'den', 'worth', 'hollow'];
 function villageNameFromSeed(seed) {
-  const r = villageRngFrom(seed ^ 0x5f356495);
-  return VILLAGE_NAME_HEADS[Math.floor(r() * VILLAGE_NAME_HEADS.length)] + VILLAGE_NAME_TAILS[Math.floor(r() * VILLAGE_NAME_TAILS.length)];
+  const core = (typeof globalThis !== 'undefined' && globalThis.BurbzEmpireRealmCore)
+    || (typeof require === 'function' ? require('./empire_realm_core.js') : null);
+  if (!core || typeof core.placeName !== 'function') throw new Error('Burbz place-name core is unavailable');
+  return core.placeName('village', seed);
 }
 
 // Twilight palettes — one is picked per village seed. `weather` sets the
@@ -18771,16 +18784,22 @@ const VILLAGE_BLOCK_CELLS = 3;
 let liveMapVillageMarkers = [], liveMapVillageRefreshTimer = null;
 
 function villageInCell(i, j) {
+  const core = globalThis.BurbzEmpireRealmCore;
+  const seed = core && typeof core.villageCellSeed === 'function' ? core.villageCellSeed(i, j) : null;
+  if (seed === null || seed === undefined) return null;
   const h = burbzHash32('burbz-village:' + i + ':' + j);
   if (h % 100 >= 34) return null;
   const r = villageRngFrom(h);
   const cs = VILLAGE_CELL_DEG;
-  return { seed: h, name: villageNameFromSeed(h), lat: (i + 0.18 + r() * 0.64) * cs, lon: (j + 0.18 + r() * 0.64) * cs };
+  return { seed, name: villageNameFromSeed(seed), lat: (i + 0.18 + r() * 0.64) * cs, lon: (j + 0.18 + r() * 0.64) * cs };
 }
 
 // The waystead guarantee: a block whose nine cells all rolled empty founds one
 // settlement from the block's own hash — same block, same waystead, forever.
 function waysteadInBlock(bi, bj) {
+  const core = globalThis.BurbzEmpireRealmCore;
+  const seed = core && typeof core.waysteadBlockSeed === 'function' ? core.waysteadBlockSeed(bi, bj) : null;
+  if (seed === null || seed === undefined) return null;
   const n = VILLAGE_BLOCK_CELLS;
   for (let di = 0; di < n; di++) {
     for (let dj = 0; dj < n; dj++) { if (villageInCell(bi * n + di, bj * n + dj)) return null; }
@@ -18789,7 +18808,7 @@ function waysteadInBlock(bi, bj) {
   const r = villageRngFrom(h);
   const i = bi * n + Math.floor(r() * n), j = bj * n + Math.floor(r() * n);
   const cs = VILLAGE_CELL_DEG;
-  return { seed: h, name: villageNameFromSeed(h), lat: (i + 0.18 + r() * 0.64) * cs, lon: (j + 0.18 + r() * 0.64) * cs };
+  return { seed, name: villageNameFromSeed(seed), lat: (i + 0.18 + r() * 0.64) * cs, lon: (j + 0.18 + r() * 0.64) * cs };
 }
 
 function villagesNearLatLng(lat, lon, span) {
@@ -18860,6 +18879,7 @@ function drawVillageMarkers(lat, lon) {
       '<div class="burbz-village-icon">' + (settle ? settle.icon : '🏰') + '</div>' +
       (owned ? '<div class="burbz-village-crown">👑</div>' : (visitable ? '' : '<div class="burbz-village-lock">🔒</div>')) +
       '<div class="burbz-village-name">' + escapeHtml(v.name) + '</div>' +
+      '<div class="burbz-village-kind">VILLAGE</div>' +
       (settle ? '<div class="burbz-village-settlement is-' + settle.tier + '">' + escapeHtml(settle.label) + '</div>' : ''));
     if (owned) el.classList.add('owned');
     if (settle) el.classList.add('in-' + settle.tier);
@@ -18907,7 +18927,7 @@ function currentVillage() {
     const near = nearestVillageTo(liveMapLastPosition.lat, liveMapLastPosition.lon);
     if (near) { villageActive = { seed: near.seed, name: near.name }; return villageActive; }
   }
-  villageActive = { seed: 1206870301, name: 'Burbholm' };
+  villageActive = { seed: 1206870301, name: villageNameFromSeed(1206870301) };
   return villageActive;
 }
 
@@ -18946,16 +18966,16 @@ function beginVillageLiberation(village) {
   const empire = ensureEmpireState();
   if (!empire || !village) return;
   if (!window.BurbzEmpireMapCore || !window.BurbzEmpireMapCore.validClaim(village)) {
-    showToast('Open a real town from the Map tab to begin its Liberation Battle.');
+    showToast('Open a real village from the Map tab to begin its Liberation Battle.');
     return;
   }
   if (!Array.isArray(gameState.flock) || !gameState.flock.length) {
-    showToast('Befriend a bird first — your flock will help liberate this town.');
+    showToast('Befriend a bird first — your flock will help liberate this village.');
     return;
   }
   empire.pendingLiberation = {
     seed:village.seed >>> 0,
-    name:String(village.name || 'this town'),
+    name:String(village.name || 'this village'),
     lat:normaliseVillageCoordinate(village.lat, -90, 90),
     lon:normaliseVillageCoordinate(village.lon, -180, 180),
     startedAt:new Date().toISOString()
@@ -19255,7 +19275,7 @@ function wrappedLongitudeNear(lon, referenceLon) {
    details sleep in shadow. The veil multiplies over the atlas (see
    .empire-fog-overlay), so water stays water-blue and land stays land-warm
    instead of vanishing under a flat wash; only names and features are lost to
-   the dark. Each liberated town lifts the darkness in a soft-edged window so
+   the dark. Each liberated village lifts the darkness in a soft-edged window so
    the true medieval map shows in daylight beneath. */
 const EMPIRE_DARKNESS_FILL = '#39434f'; // multiplied over parchment and sea, this reads as a moonlit Earth
 
@@ -19600,9 +19620,9 @@ function refreshEmpireMap(options = {}) {
   villages.forEach(village => {
     const el = document.createElement('button');
     el.type = 'button';
-    el.className = 'empire-map-marker';
+    el.className = 'empire-map-marker is-village';
     el.setAttribute('aria-label', 'Your village ' + village.name);
-    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + empireVillageCrest(village.seed) + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(village.name) + '</span>';
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + empireVillageCrest(village.seed) + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">VILLAGE · ' + escapeHtml(village.name) + '</span>';
     el.addEventListener('click', ev => {
       ev.stopPropagation();
       SFX.tap();
@@ -19619,7 +19639,7 @@ function refreshEmpireMap(options = {}) {
     el.type = 'button';
     el.className = 'empire-map-marker is-settlement is-' + settlement.tier + ' is-visible show-label';
     el.setAttribute('aria-label', 'Frame your ' + settlement.label);
-    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + settlement.icon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(settlement.name) + '</span>';
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + settlement.icon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + settlement.tier.toUpperCase() + ' · ' + escapeHtml(settlement.name) + '</span>';
     el.addEventListener('click', ev => {
       ev.stopPropagation();
       SFX.tap();
@@ -19647,7 +19667,7 @@ function refreshEmpireMap(options = {}) {
     el.type = 'button';
     el.className = 'empire-map-marker is-region is-visible show-label';
     el.setAttribute('aria-label', 'Your county ' + region.name);
-    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + region.tierIcon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(region.name) + '</span>';
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + region.tierIcon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">COUNTY · ' + escapeHtml(region.properName) + '</span>';
     el.addEventListener('click', ev => {
       ev.stopPropagation();
       SFX.tap();
@@ -19685,8 +19705,8 @@ function refreshEmpireMap(options = {}) {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'empire-map-marker is-frontier is-visible show-label';
-      el.setAttribute('aria-label', 'Liberate the nearby settlement ' + village.name);
-      el.innerHTML = '<span class="empire-map-marker-icon"><span>⚔️</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + escapeHtml(village.name) + '</span>';
+      el.setAttribute('aria-label', 'Liberate the nearby village ' + village.name);
+      el.innerHTML = '<span class="empire-map-marker-icon"><span>⚔️</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">VILLAGE · ' + escapeHtml(village.name) + '</span>';
       el.addEventListener('click', ev => {
         ev.stopPropagation();
         SFX.tap();
@@ -19718,8 +19738,8 @@ function refreshEmpireMap(options = {}) {
   if (status) {
     if (!villages.length) {
       status.textContent = nextTarget
-        ? 'The whole world sleeps in darkness — ⚔️ ' + nextTarget.name + ' waits right where you are; tap its dark banner to free your first town'
-        : 'The whole world sleeps in darkness — liberate your first town to bring back its light';
+        ? 'The whole world sleeps in darkness — ⚔️ ' + nextTarget.name + ' Village waits right where you are; tap its dark banner to free it'
+        : 'The whole world sleeps in darkness — liberate your first village to bring back its light';
     } else if (nextTarget) {
       status.textContent = '⚔️ ' + nextTarget.name + ' awaits liberation where you stand — tap its dark sword banner';
     } else {
@@ -20013,6 +20033,23 @@ function empireRegionPopulation(region) {
 // drift. All the maths lives in empire_realm_core.js (deriveSettlements).
 // ============================================================================
 let empireSettlementsCache = null, empireSettlementsCacheKey = '';
+function migrateGamePlaceNames(state) {
+  const core = window.BurbzEmpireRealmCore;
+  const migrated = core && typeof core.migratePlaceNames === 'function'
+    ? core.migratePlaceNames(state)
+    : state;
+  // Cloud imports can happen after the atlas has already been opened. Never
+  // leave an old copied place name in a derived cache or the active village.
+  empireRegionsCache = null;
+  empireRegionsCacheKey = '';
+  empireSettlementsCache = null;
+  empireSettlementsCacheKey = '';
+  if (villageActive && migrated && migrated.lastVillage && Number.isFinite(Number(migrated.lastVillage.seed)) &&
+      (Number(villageActive.seed) >>> 0) === (Number(migrated.lastVillage.seed) >>> 0)) {
+    villageActive.name = migrated.lastVillage.name;
+  }
+  return migrated;
+}
 function empireSettlementsInfo() {
   const core = realmCore();
   if (!core || !core.deriveSettlements) return { towns: [], cities: [], tierBySeed: {}, townCount: 0, cityCount: 0, largestVillageCluster: 0, largestTownCluster: 0 };
@@ -20150,7 +20187,7 @@ function birdhouseCostForNextVillage() {
 const EMPIRE_TRIBUTE_INTERVAL_MS = 8 * 60 * 60 * 1000; // each village pays every 8h
 const EMPIRE_TRIBUTE_MAX_PERIODS = 3;                  // strongbox stores up to a day away
 const EMPIRE_SIM_MAX_CYCLES = 21;                      // a week of population catch-up
-// A freshly liberated town stands empty — the darkness scattered everyone, so
+// A freshly liberated village stands empty — the darkness scattered everyone, so
 // settlers only return once the governor raises homes for them to live in.
 const VILLAGE_BASE_POPULATION = 0;
 const VILLAGE_MIN_POPULATION = 4; // once settled, a town never empties below a stubborn few
@@ -20484,7 +20521,7 @@ function empireBuildStructure(seed, buildingId) {
   const eco = ensureVillageEconomy(rec);
   if (eco.construction) {
     const busy = EMPIRE_BUILDING_INDEX[eco.construction.id];
-    showToast('🏗️ ' + rec.name + '’s builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project per town. Your other towns can build meanwhile.');
+    showToast('🏗️ ' + rec.name + '’s builders are still raising the ' + (busy ? busy.name : 'last project') + ' — one project per village. Your other villages can build meanwhile.');
     return;
   }
   const level = eco.buildings[building.id] || 0;
@@ -20691,14 +20728,14 @@ function claimCurrentVillage() {
   SFX.victory();
   vibrate(80);
   const count = empireVillages().length;
-  // The freed town opens its hidden armoury: a guaranteed piece of gear plus materials.
+  // The freed village opens its hidden armoury: a guaranteed piece of gear plus materials.
   let claimLootText = '';
   try {
     const lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true }));
-    if (lines.length) claimLootText = ' The town armoury opens: ' + lootLinesToText(lines);
+    if (lines.length) claimLootText = ' The village armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' is liberated — its sanctuary wakes in green! The town stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
   // Did this liberation merge villages into a TOWN — or towns into a CITY?
   // Three neighbouring liberated villages grow together into one town; three
   // neighbouring towns rise as one city. Announced only when it happens.
@@ -20848,7 +20885,7 @@ function renderVillageManagePanel() {
   // so a governor always knows they are running a district of something bigger.
   const settleHere = empireSettlementOfSeed(rec.seed);
   const settleLine = settleHere
-    ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Heart of the ' : 'District of the ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
+    ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Village centre of ' : 'Village district of ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
     : '';
   // A town is run by a bird, not by the player alone: appoint a Steward here.
   // The full appointment card folds away behind one line, so the desk stays
@@ -20863,16 +20900,16 @@ function renderVillageManagePanel() {
       stewardCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
   }
   panel.innerHTML = '<div class="province-panel">' +
-    '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' GOVERN ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
+    '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
     settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
       ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
-      : '<div class="province-income-line">🏚️ The town stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
+      : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
-    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other towns can still build' : '') + '</div>' +
+    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other villages can still build' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     stewardHtml +
     '</div>';
@@ -21061,11 +21098,14 @@ function renderEmpirePanel() {
     const homeSettle = home ? empireSettlementOfSeed(home.seed) : null;
     const homeRegion = home ? empireRegionOfSeed(home.seed) : null;
     locatorHtml = '<div class="empire-locator">' +
-      '<button type="button" class="empire-locator-chip is-you" data-action="locator-me"><span class="empire-locator-label">📍 You</span><span class="empire-locator-value">Show on map</span></button>' +
-      (home ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"' + (homeSettle ? ' data-settlement="' + escapeHtml(homeSettle.id) + '"' : '') + '><span class="empire-locator-label">' + (homeSettle ? homeSettle.icon + ' Your ' + (homeSettle.tier === 'city' ? 'city' : 'town') : '🏡 Your village') + '</span><span class="empire-locator-value">' + escapeHtml(homeSettle ? homeSettle.name : home.name) + '</span></button>' : '') +
+      '<button type="button" class="empire-locator-chip is-you" data-action="locator-me"><span class="empire-locator-label">📍 YOU</span><span class="empire-locator-value">Show on map</span></button>' +
+      (home ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"><span class="empire-locator-label">🏡 HOME VILLAGE</span><span class="empire-locator-value">' + escapeHtml(home.name) + '</span></button>' : '') +
+      (homeSettle
+        ? '<button type="button" class="empire-locator-chip" data-action="locator-settlement" data-settlement="' + escapeHtml(homeSettle.id) + '"><span class="empire-locator-label">' + homeSettle.icon + (homeSettle.tier === 'city' ? ' YOUR CITY' : ' YOUR TOWN') + '</span><span class="empire-locator-value">' + escapeHtml(homeSettle.name) + '</span></button>'
+        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🏘️ YOUR TOWN</span><span class="empire-locator-value">Not formed yet</span></div>') +
       (homeRegion
-        ? '<button type="button" class="empire-locator-chip" data-action="locator-region" data-region="' + escapeHtml(homeRegion.id) + '"><span class="empire-locator-label">' + homeRegion.tierIcon + ' Your county</span><span class="empire-locator-value">' + escapeHtml(homeRegion.name) + '</span></button>'
-        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🛡️ Your county</span><span class="empire-locator-value">None founded yet</span></div>') +
+        ? '<button type="button" class="empire-locator-chip" data-action="locator-region" data-region="' + escapeHtml(homeRegion.id) + '"><span class="empire-locator-label">' + homeRegion.tierIcon + ' YOUR COUNTY</span><span class="empire-locator-value">' + escapeHtml(homeRegion.name) + '</span></button>'
+        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🛡️ YOUR COUNTY</span><span class="empire-locator-value">Not founded yet</span></div>') +
       '</div>';
   }
   // ---- 📜 A plain-words guide to the whole ladder, folded away until asked.
@@ -21080,7 +21120,7 @@ function renderEmpirePanel() {
   const nextMs = hasTribute ? null : empireNextTributeCountdownMs(tributeNow);
   const nextTributeAt = nextMs !== null ? tributeNow + nextMs : null;
   panel.innerHTML = locatorHtml +
-    '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank">' + escapeHtml(empireCrownTitle()) + '</div></div>' +
+    '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank"><span class="empire-rank-label">YOUR TITLE</span><span>' + escapeHtml(empireCrownTitle()) + '</span></div></div>' +
     (count ? '<div class="empire-stats-row">' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Villages</div></div>' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + totalPop + '</div><div class="empire-stat-label">Subjects</div></div>' +
@@ -21108,10 +21148,9 @@ function renderEmpirePanel() {
   panel.querySelector('[data-action="locator-home"]')?.addEventListener('click', ev => {
     SFX.tap();
     scrollMapIntoView();
-    const settlementId = ev.currentTarget.dataset.settlement;
-    if (settlementId) frameEmpireSettlement(settlementId);
-    else focusEmpireVillage(ev.currentTarget.dataset.seed);
+    focusEmpireVillage(ev.currentTarget.dataset.seed);
   });
+  panel.querySelector('[data-action="locator-settlement"]')?.addEventListener('click', ev => { SFX.tap(); scrollMapIntoView(); frameEmpireSettlement(ev.currentTarget.dataset.settlement); });
   panel.querySelector('[data-action="locator-region"]')?.addEventListener('click', ev => { SFX.tap(); frameEmpireRegion(ev.currentTarget.dataset.region); });
   // Drawers remember whether the player left them open, across re-renders.
   panel.querySelectorAll('details[data-empire-drawer]').forEach(drawer => {
@@ -21291,21 +21330,17 @@ function renderVillage() {
   empireCompleteConstructions(); // finish any timed-out builds before drawing
   const v = currentVillage();
   const owned = empireOwnsVillage(v.seed);
-  // A liberated village that has merged into a town or city wears the
-  // settlement's name in its title: its heart carries the standard outright,
-  // its districts show both names.
+  // The page always names the VILLAGE first. Its town/city is a separate line;
+  // never replace a village identity with the name of a larger settlement.
   const settleTitle = owned ? empireSettlementOfSeed(v.seed) : null;
   const title = $('villageTitle');
-  if (title) title.textContent = (owned ? '👑 ' : '') +
-    (settleTitle && settleTitle.role === 'heart'
-      ? settleTitle.icon + ' ' + settleTitle.label.toUpperCase()
-      : v.name.toUpperCase() + (settleTitle ? ' · ' + settleTitle.icon + ' ' + settleTitle.label.toUpperCase() : ''));
+  if (title) title.textContent = (owned ? '👑 ' : '🏡 ') + v.name.toUpperCase() + ' · VILLAGE';
   const sub = $('villageSub');
   if (sub) {
     const rec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
-    const settleNote = settleTitle ? ' ' + settleTitle.icon + ' Its neighbours have grown together: this is now ' + (settleTitle.role === 'heart' ? 'the heart of' : 'a district of') + ' the ' + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
+    const settleNote = settleTitle ? ' ' + settleTitle.icon + ' This village is the ' + (settleTitle.role === 'heart' ? 'centre of ' : 'district of ') + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
     if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
     else if (dev <= 0) sub.textContent = 'Your village, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
     else sub.textContent = 'Your village. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.' + settleNote;
@@ -28789,12 +28824,12 @@ function renderBattleSelect() {
   if (leagueHeader) leagueHeader.hidden = !!liberation;
   const liberationBanner = $('liberationBattleBanner');
   if (liberationBanner) liberationBanner.innerHTML = liberation
-    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + '</strong><br>A garrison of evil Burbz — the dark force\'s shadow-bound occupying flock — holds this town. Scatter them to break the usurper\'s hold, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">LEAVE TOWN BATTLE</button></div>'
+    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + ' VILLAGE</strong><br>A garrison of evil Burbz — the dark force\'s shadow-bound occupying flock — holds this village. Scatter them to break the usurper\'s hold, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">LEAVE VILLAGE BATTLE</button></div>'
     : '';
   $('liberationCancelBtn')?.addEventListener('click', cancelEmpireLiberation, { once:true });
   const selectCopy = $('battleSelectCopy');
   if (selectCopy) selectCopy.textContent = liberation
-    ? 'Choose the four birds who will free this town. The whole squad fights at once — counter the evil Burbz garrison\'s wing classes and gear up at the Forge before you begin.'
+    ? 'Choose the four birds who will free this village. The whole squad fights at once — counter the evil Burbz garrison\'s wing classes and gear up at the Forge before you begin.'
     : 'Tap birds to add them. The whole squad fights at once, ordered by the Speed meter. Counter the evil Burbz squad\'s wing classes — the wheel below shows who beats whom.';
 
   // Header: current tier, record, promotion pips.
@@ -29730,7 +29765,7 @@ const PLAYER_QUESTS = [
     measure:() => ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length },
   { id:'pq_quiz',           name:'Bird Wisdom Check', desc:'Answer a bird knowledge question correctly', type:'bird_quiz_correct', target:1, reward:45, coins:20, icon:'\u{1F9E0}', go:'quests',
     measure:() => Number(gameState.knowledgeQuiz && gameState.knowledgeQuiz.correct) || 0 },
-  { id:'pq_liberate',       name:'Liberate a town', desc:'Free a real town from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
+  { id:'pq_liberate',       name:'Liberate a village', desc:'Free a real village from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
   { id:'pq_craft_gear',     name:'Commission the smith', desc:'Forge a piece of gear at the Fletcher’s Forge', type:'gear_crafted', target:1, reward:70, coins:40, icon:'\u{2692}\u{FE0F}', go:'forge' },
   { id:'pq_build_crowbar',  name:'Build The Crowbar', desc:'Raise the Academy bird bar to grow Charm', type:'build_crowbar', target:1, reward:60, coins:30, icon:'\u{1F37B}', go:'academy',
@@ -29741,7 +29776,7 @@ const PLAYER_QUESTS = [
     measure:() => discoveredSpeciesSet().size },
   { id:'pq_build_workshop', name:'Build the Nest Workshop', desc:'Raise the Nest Workshop to toughen your flock', type:'build_workshop', target:1, reward:70, coins:35, icon:'\u{1F6E0}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('workshop') ? 1 : 0 },
-  { id:'pq_liberate_3',     name:'Kingdom of the free', desc:'Liberate 3 real towns from the evil Burbz', type:'town_liberated', target:3, reward:150, coins:100, branches:40, icon:'\u{1F451}', go:'map',
+  { id:'pq_liberate_3',     name:'Kingdom of the free', desc:'Liberate 3 real villages from the evil Burbz', type:'town_liberated', target:3, reward:150, coins:100, branches:40, icon:'\u{1F451}', go:'map',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
 ];
 
@@ -30129,7 +30164,7 @@ function renderDiary() {
     '<div class="diary-rule">❦</div>' +
     '<p class="diary-intro">' + escapeHtml(core.diaryStorySoFar(entries, totals)) + '</p>' +
     '<div class="diary-stats">' + stats + '</div>' +
-    (chapters || '<div class="diary-blank">The pages beyond lie blank. Go out into the world, chosen one — every bird you discover, every trail you walk and every town you free will be written here.</div>') +
+    (chapters || '<div class="diary-blank">The pages beyond lie blank. Go out into the world, chosen one — every bird you discover, every trail you walk and every village you free will be written here.</div>') +
     '</div>';
 }
 
@@ -30294,7 +30329,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'ordered-quest-markers-v224-20260804';
+const BURBZ_BUILD = 'unique-place-names-v225-20260804';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -30386,10 +30421,10 @@ const MERLIN_TUTORIAL_STEPS = [
   // — War on the evil Burbz: taught the first time the Battle screen opens.
   { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz \u2014 never free birds. Choose four birds; wing classes counter each other, as the wheel below shows.' },
   { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Or Parley: a bird with high Charm can win a foe over without a blow.' },
-  { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a town on the Map to face its garrison in a Liberation Battle. Win to free the town and build its sanctuary birdhouse.' },
+  { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.
-  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world under darkness. Every town you free lifts the shadow from its province.' },
+  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', target:'#empireWorldMap', text:'The Empire map shows the world under darkness. Every village you free lifts the shadow from its lands.' },
   { chapterId:'village', chapter:'Realm', title:'Provinces pay taxes', screen:'village', target:'#empirePanel', text:'Tap a freed province to visit its village. Provinces pay coins and branches every eight hours \u2014 happy villagers pay more.' },
 
   // — Diary: taught the first time the Adventurer's Diary opens.

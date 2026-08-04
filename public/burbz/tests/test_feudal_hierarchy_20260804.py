@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "ordered-quest-markers-v224-20260804"
+CURRENT_BUILD = "unique-place-names-v225-20260804"
 
 
 def trio(seed, name, lat, lon, day):
@@ -90,25 +90,25 @@ def test_a_county_with_many_villages_is_still_just_a_county():
     assert len(realm["regions"]) == 1
     county = realm["regions"][0]
     assert county["tier"] == "county"
-    assert county["name"] == "County of V0"
+    assert county["name"] == run_core("core.placeLabel('county', 100)")
     assert county["villageCount"] == 9
     assert realm["duchies"] == [] and realm["kingdoms"] == [] and realm["empire"] is None
-    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(blob)}).regions)") == "Count of V0"
+    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(blob)}).regions)") == "Count of " + run_core("core.placeName('county', 100)")
 
 
 def test_two_neighbouring_counties_unite_into_a_duchy():
     realm = realm_of(CHESHIRE + LOTHIAN)
-    assert [r["name"] for r in realm["regions"]] == ["County of Delamere", "County of Currie"]
+    assert [r["name"] for r in realm["regions"]] == [run_core("core.placeLabel('county', 1)"), run_core("core.placeLabel('county', 20)")]
     assert len(realm["duchies"]) == 1
     duchy = realm["duchies"][0]
-    # The duchy keeps the seat of its earliest-founded county, like every
-    # other title in the game keeps its heart's name.
-    assert duchy["name"] == "Duchy of Delamere"
+    # The earliest county still anchors the stable ID, but the duchy receives
+    # an independent proper name.
+    assert duchy["name"] == run_core("core.placeLabel('duchy', 1)")
     assert duchy["countyCount"] == 2 and duchy["villageCount"] == 6
     assert duchy["id"] == "duchy-1"
     # Both counties are annotated with their liege.
     assert all(r["duchyId"] == "duchy-1" and r["liegeTier"] == "duchy" for r in realm["regions"])
-    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(CHESHIRE + LOTHIAN)}).regions)") == "Duke of Delamere"
+    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(CHESHIRE + LOTHIAN)}).regions)") == "Duke of " + run_core("core.placeName('duchy', 1)")
 
 
 def test_far_apart_counties_do_not_make_a_duchy():
@@ -121,16 +121,16 @@ def test_far_apart_counties_do_not_make_a_duchy():
 
 def test_two_duchies_proclaim_a_kingdom_and_two_kingdoms_the_empire():
     eu = realm_of(EU_KINGDOM)
-    assert [d["name"] for d in eu["duchies"]] == ["Duchy of Delamere", "Duchy of Gordes"]
+    assert [d["name"] for d in eu["duchies"]] == [run_core("core.placeLabel('duchy', 1)"), run_core("core.placeLabel('duchy', 9)")]
     assert len(eu["kingdoms"]) == 1
     kingdom = eu["kingdoms"][0]
-    assert kingdom["name"] == "Kingdom of Delamere"
+    assert kingdom["name"] == run_core("core.placeLabel('kingdom', 1)")
     assert kingdom["duchyCount"] == 2 and kingdom["countyCount"] == 4 and kingdom["villageCount"] == 12
     assert eu["empire"] is None
-    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(EU_KINGDOM)}).regions)") == "Monarch of Delamere"
+    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(EU_KINGDOM)}).regions)") == "Monarch of " + run_core("core.placeName('kingdom', 1)")
     # A second kingdom across the ocean proclaims the Empire.
     both = realm_of(EU_KINGDOM + NA_KINGDOM)
-    assert [k["name"] for k in both["kingdoms"]] == ["Kingdom of Delamere", "Kingdom of Stowe"]
+    assert [k["name"] for k in both["kingdoms"]] == [run_core("core.placeLabel('kingdom', 1)"), run_core("core.placeLabel('kingdom', 40)")]
     assert both["empire"] is not None
     assert both["empire"]["name"] == "Empire of the Liberated Skies"
     assert both["empire"]["kingdomCount"] == 2
@@ -252,7 +252,7 @@ def test_release_is_versioned_and_the_realm_core_cache_buster_moved():
     assert OWN_RELEASE_PIN in cache_line
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    # empire_realm_core.js still ships this release's maths, so its own
-    # cache-buster stays put until the core itself changes again.
-    assert f'src="empire_realm_core.js?v={OWN_RELEASE_PIN}"' in html
-    assert f"'./empire_realm_core.js?v={OWN_RELEASE_PIN}'" in sw
+    # The naming release changed empire_realm_core.js, so its cache-buster must
+    # move on while this release's own marker remains in the SW lineage.
+    assert f'src="empire_realm_core.js?v={CURRENT_BUILD}"' in html
+    assert f"'./empire_realm_core.js?v={CURRENT_BUILD}'" in sw

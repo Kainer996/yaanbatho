@@ -57,6 +57,208 @@
   // capital seed. Ids must exist in loot_crafting_core MATERIALS.
   const TRADE_GOODS = ['oak_twig', 'river_reed', 'iron_grit', 'down_tuft', 'storm_glass', 'moon_dust'];
 
+  // ---- Globally unique place names -----------------------------------------
+  // Seven fixed two-letter syllables are an injective base-26 encoding of the
+  // complete uint32 seed space (26^7 > 2^32). Each rank first XORs a different
+  // salt (a reversible permutation) and has its own ending, so a capital
+  // village, its town and its county sound unrelated and can never collide.
+  // Do not replace this with a hash or finite random pool: uniqueness here is a
+  // save-format invariant, not a probability.
+  const PLACE_NAME_VERSION = 2;
+  const VILLAGE_CELL_DEG = 0.02;
+  // The live map asks for at most four cells beyond the legal latitude/
+  // longitude edges.  These compact ranges cover that whole supported world.
+  // Ordinary cells occupy the low half of uint32; guaranteed waysteads occupy
+  // the high half, so the two kinds can never alias each other.
+  const CELL_I_MIN = -4504, CELL_I_MAX = 4504;
+  const CELL_J_MIN = -9004, CELL_J_MAX = 9004;
+  const CELL_J_COUNT = CELL_J_MAX - CELL_J_MIN + 1;
+  const BLOCK_I_MIN = Math.floor(CELL_I_MIN / 3), BLOCK_I_MAX = Math.floor(CELL_I_MAX / 3);
+  const BLOCK_J_MIN = Math.floor(CELL_J_MIN / 3), BLOCK_J_MAX = Math.floor(CELL_J_MAX / 3);
+  const BLOCK_J_COUNT = BLOCK_J_MAX - BLOCK_J_MIN + 1;
+  const PLACE_NAME_SYLLABLES = Object.freeze([
+    'ba','be','bi','bo','bu','ca','ce','ci','co','cu','da','de','di',
+    'do','du','fa','fe','fi','fo','fu','ga','ge','gi','go','gu','ha'
+  ]);
+  const PLACE_NAME_RANKS = Object.freeze({
+    village: { salt: 0x15a4e35b, ending: 'stead' },
+    town:    { salt: 0x4c11db7d, ending: 'haven' },
+    city:    { salt: 0x7f4a7c15, ending: 'spire' },
+    county:  { salt: 0x9e3779b9, ending: 'shire' },
+    duchy:   { salt: 0xb5297a4d, ending: 'reach' },
+    kingdom: { salt: 0xd1b54a35, ending: 'crown' }
+  });
+
+  function placeName(kind, seed) {
+    const rank = String(kind || '').toLowerCase();
+    const config = PLACE_NAME_RANKS[rank];
+    if (!config) throw new TypeError('Unknown place rank: ' + kind);
+    let value = ((Number(seed) >>> 0) ^ config.salt) >>> 0;
+    const syllables = Array(7);
+    for (let i = syllables.length - 1; i >= 0; i--) {
+      syllables[i] = PLACE_NAME_SYLLABLES[value % 26];
+      value = Math.floor(value / 26);
+    }
+    const stem = syllables.join('');
+    return stem.charAt(0).toUpperCase() + stem.slice(1) + config.ending;
+  }
+
+  function placeLabel(kind, seed) {
+    const rank = String(kind || '').toLowerCase();
+    const proper = placeName(rank, seed);
+    if (rank === 'village') return proper + ' Village';
+    return rank.charAt(0).toUpperCase() + rank.slice(1) + ' of ' + proper;
+  }
+
+  function integerInRange(value, min, max) {
+    const n = Number(value);
+    return Number.isInteger(n) && n >= min && n <= max ? n : null;
+  }
+
+  function villageCellSeed(i, j) {
+    const row = integerInRange(i, CELL_I_MIN, CELL_I_MAX);
+    const col = integerInRange(j, CELL_J_MIN, CELL_J_MAX);
+    if (row === null || col === null) return null;
+    return (1 + (row - CELL_I_MIN) * CELL_J_COUNT + (col - CELL_J_MIN)) >>> 0;
+  }
+
+  function waysteadBlockSeed(bi, bj) {
+    const row = integerInRange(bi, BLOCK_I_MIN, BLOCK_I_MAX);
+    const col = integerInRange(bj, BLOCK_J_MIN, BLOCK_J_MAX);
+    if (row === null || col === null) return null;
+    return (0x80000000 + 1 + (row - BLOCK_I_MIN) * BLOCK_J_COUNT + (col - BLOCK_J_MIN)) >>> 0;
+  }
+
+  // Kept only to recognise v223-and-earlier saves. New village identity never
+  // uses this lossy 32-bit hash.
+  function legacyHash32(text) {
+    let h = 2166136261;
+    const value = String(text || '');
+    for (let i = 0; i < value.length; i++) {
+      h ^= value.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function uint32Value(value) {
+    const n = Number(value);
+    return Number.isInteger(n) && n >= 0 && n <= 0xffffffff ? n : null;
+  }
+
+  function canonicalSeedForLegacyRecord(record, fallbackSeed) {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+    let oldSeed = uint32Value(record.seed);
+    if (oldSeed === null) oldSeed = uint32Value(fallbackSeed);
+    if (oldSeed === null) return null;
+    const lat = Number(record.lat), lon = Number(record.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return oldSeed;
+    const i = Math.floor(lat / VILLAGE_CELL_DEG), j = Math.floor(lon / VILLAGE_CELL_DEG);
+    const legacyCell = legacyHash32('burbz-village:' + i + ':' + j);
+    if (legacyCell === oldSeed && legacyCell % 100 < 34) return villageCellSeed(i, j) ?? oldSeed;
+    const bi = Math.floor(i / 3), bj = Math.floor(j / 3);
+    const legacyWaystead = legacyHash32('burbz-waystead:' + bi + ':' + bj);
+    if (legacyWaystead === oldSeed) return waysteadBlockSeed(bi, bj) ?? oldSeed;
+    return oldSeed;
+  }
+
+  // Heal a reference and return its old/new identity pair. Invalid rows are
+  // ignored rather than folded onto seed zero.
+  function migrateVillageReference(record, fallbackSeed, seedMap, migrateIdentity) {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return;
+    let seed = uint32Value(record.seed);
+    if (seed === null) seed = uint32Value(fallbackSeed);
+    if (seed === null) return;
+    const oldSeed = seed;
+    // A legacy hash collision can leave an owned village and last/pending
+    // village with the same old seed but different coordinates. Coordinate
+    // evidence must win for each reference; the first owned mapping remains
+    // the fallback for key-only records such as victories, roles and routes.
+    const coordinateSeed = migrateIdentity ? canonicalSeedForLegacyRecord(record, fallbackSeed) : oldSeed;
+    if (coordinateSeed !== null && coordinateSeed !== oldSeed) seed = coordinateSeed;
+    else if (seedMap.has(oldSeed)) seed = seedMap.get(oldSeed);
+    if (seed === null) return;
+    if (!seedMap.has(oldSeed)) seedMap.set(oldSeed, seed);
+    record.seed = seed;
+    record.name = placeName('village', seed);
+    return { oldSeed, seed };
+  }
+
+  function migrateVillageCollection(collection, seedMap, migrateIdentity) {
+    if (!collection || typeof collection !== 'object') return;
+    if (Array.isArray(collection)) {
+      collection.forEach(record => migrateVillageReference(record, null, seedMap, migrateIdentity));
+      return;
+    }
+    const next = {};
+    Object.entries(collection).forEach(([key, record]) => {
+      const migrated = migrateVillageReference(record, key, seedMap, migrateIdentity);
+      const targetKey = migrated ? String(migrated.seed) : key;
+      if (!Object.prototype.hasOwnProperty.call(next, targetKey)) next[targetKey] = record;
+    });
+    Object.keys(collection).forEach(key => { delete collection[key]; });
+    Object.assign(collection, next);
+  }
+
+  function rekeyAssignments(table, seedMap) {
+    if (!table || typeof table !== 'object' || Array.isArray(table)) return;
+    const next = {};
+    Object.entries(table).forEach(([key, value]) => {
+      const oldSeed = uint32Value(key);
+      const newSeed = oldSeed === null ? null : seedMap.get(oldSeed);
+      const targetKey = newSeed === undefined || newSeed === null ? key : String(newSeed);
+      if (!Object.prototype.hasOwnProperty.call(next, targetKey)) next[targetKey] = value;
+    });
+    Object.keys(table).forEach(key => { delete table[key]; });
+    Object.assign(table, next);
+  }
+
+  function migrateTradeRoutes(routes, seedMap) {
+    if (!routes || typeof routes !== 'object' || Array.isArray(routes)) return;
+    const next = {};
+    Object.entries(routes).forEach(([key, route]) => {
+      if (!route || typeof route !== 'object' || Array.isArray(route)) { next[key] = route; return; }
+      const oldA = uint32Value(route.a), oldB = uint32Value(route.b);
+      if (oldA === null || oldB === null) { next[key] = route; return; }
+      route.a = seedMap.get(oldA) ?? oldA;
+      route.b = seedMap.get(oldB) ?? oldB;
+      const newKey = tradeRouteKey(route.a, route.b);
+      if (!Object.prototype.hasOwnProperty.call(next, newKey)) next[newKey] = route;
+    });
+    Object.keys(routes).forEach(key => { delete routes[key]; });
+    Object.assign(routes, next);
+  }
+
+  /* In-place save migration. v2 replaces the old lossy coordinate hash with an
+     injective world-cell identity and rekeys every known seed/region reference.
+     Coordinates, timestamps, economies, routes, resources and progression
+     contents are retained. Re-running it is byte-for-byte idempotent. */
+  function migratePlaceNames(state) {
+    if (!state || typeof state !== 'object' || Array.isArray(state)) return state;
+    const migrateIdentity = (Number(state.placeNameVersion) || 0) < 2;
+    const seedMap = new Map();
+    const empire = state.empire;
+    if (empire && typeof empire === 'object' && !Array.isArray(empire)) {
+      migrateVillageCollection(empire.villages, seedMap, migrateIdentity);
+      migrateVillageReference(empire.pendingLiberation, null, seedMap, migrateIdentity);
+    }
+    migrateVillageReference(state.lastVillage, null, seedMap, migrateIdentity);
+    if (empire && typeof empire === 'object' && !Array.isArray(empire)) {
+      migrateVillageCollection(empire.liberationVictories, seedMap, migrateIdentity);
+      migrateTradeRoutes(empire.tradeRoutes, seedMap);
+    }
+    if (state.birdRoles && typeof state.birdRoles === 'object' && !Array.isArray(state.birdRoles)) {
+      rekeyAssignments(state.birdRoles.villages, seedMap);
+      rekeyAssignments(state.birdRoles.regions, seedMap);
+    }
+    if (state.knowledgeQuiz && typeof state.knowledgeQuiz === 'object') {
+      const oldQuizSeed = uint32Value(state.knowledgeQuiz.lastVillageKey);
+      if (oldQuizSeed !== null && seedMap.has(oldQuizSeed)) state.knowledgeQuiz.lastVillageKey = String(seedMap.get(oldQuizSeed));
+    }
+    state.placeNameVersion = PLACE_NAME_VERSION;
+    return state;
+  }
+
   // ---- Settlement tiers: village → town → city ------------------------------
   // The street-level layer BELOW regions. Liberate 3 neighbouring villages
   // (chained within SETTLEMENT_TOWN_RADIUS_KM of each other) and they grow
@@ -85,6 +287,10 @@
     return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
   }
 
+  function validVillageIdentity(v) {
+    return validVillage(v) && uint32Value(v.seed) !== null;
+  }
+
   function haversineKm(lat1, lon1, lat2, lon2) {
     const dLat = toRad(lat2) - toRad(lat1);
     const dLon = toRad(lon2) - toRad(lon1);
@@ -101,7 +307,7 @@
      within radiusKm join the same cluster, and chains extend it — a string of
      towns up a valley is one region even if its ends are far apart. */
   function clusterVillages(villages, radiusKm) {
-    const claims = (Array.isArray(villages) ? villages : []).filter(validVillage);
+    const claims = (Array.isArray(villages) ? villages : []).filter(validVillageIdentity);
     const radius = Math.max(1, Number(radiusKm) || REGION_RADIUS_KM);
     const parent = claims.map((_, i) => i);
     function find(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
@@ -178,11 +384,14 @@
     clusters.forEach(cluster => {
       if (cluster.length < minVillages) { unassigned.push(...cluster); return; }
       const capital = cluster[0];
+      const capitalSeed = Number(capital.seed) >>> 0;
+      const properName = placeName('county', capitalSeed);
       regions.push({
-        id: String(Number(capital.seed) >>> 0),
-        capitalSeed: Number(capital.seed) >>> 0,
+        id: String(capitalSeed),
+        capitalSeed,
         capitalName: String(capital.name || 'Sanctuary'),
-        name: COUNTY_TIER.label + ' of ' + String(capital.name || 'the Free Marches'),
+        properName,
+        name: placeLabel('county', capitalSeed),
         tier: COUNTY_TIER.rank,
         tierLabel: COUNTY_TIER.label,
         tierIcon: COUNTY_TIER.icon,
@@ -203,11 +412,11 @@
   /* Nest the counties into the full feudal pyramid — the simplified Crusader
      Kings ladder where every title CONTAINS the tier below it. Reuses the
      same union-find chaining as counties, but over county capitals (for
-     duchies) and duchy seats (for kingdoms). Seats keep the naming rule the
-     whole game uses: the earliest-founded member anchors the title, so a
-     Duchy of Delamere stays the Duchy of Delamere as it grows. The counties
-     passed in are annotated in place (duchyId / kingdomId / liegeTier) so
-     the economy and UI can read the liege chain straight off the region. */
+     duchies) and duchy seats (for kingdoms). The earliest-founded member still
+     anchors each title's stable seed and seat, while each rank receives its own
+     generated proper name. The counties passed in are annotated in place
+     (duchyId / kingdomId / liegeTier) so the economy and UI can read the liege
+     chain straight off the region. */
   function realmFromRegions(regions) {
     const counties = Array.isArray(regions) ? regions.filter(Boolean) : [];
     counties.forEach(c => { c.duchyId = null; c.kingdomId = null; c.liegeTier = 'county'; });
@@ -227,7 +436,8 @@
       const duchy = {
         id: 'duchy-' + (Number(seat.capitalSeed) >>> 0),
         tier: 'duchy', tierLabel: 'Duchy', tierIcon: '🏰',
-        name: 'Duchy of ' + seat.capitalName,
+        properName: placeName('duchy', seat.capitalSeed),
+        name: placeLabel('duchy', seat.capitalSeed),
         seatName: seat.capitalName,
         seatSeed: Number(seat.capitalSeed) >>> 0,
         countyCount: members.length,
@@ -256,7 +466,8 @@
       const kingdom = {
         id: 'kingdom-' + seat.seatSeed,
         tier: 'kingdom', tierLabel: 'Kingdom', tierIcon: '👑',
-        name: 'Kingdom of ' + seat.seatName,
+        properName: placeName('kingdom', seat.seatSeed),
+        name: placeLabel('kingdom', seat.seatSeed),
         seatName: seat.seatName,
         seatSeed: seat.seatSeed,
         duchyCount: members.length,
@@ -304,9 +515,10 @@
   }
 
   /* Settlement growth: liberated villages → towns → cities.
-     A town keeps the name of its HEART — the earliest-liberated village of the
-     cluster — and a city keeps the name of its earliest-founded town, so names
-     and ids survive new liberations exactly like region capitals do. Towns
+     A town and city receive rank-specific names derived from the seed of their
+     HEART — the earliest-liberated village — so names and ids survive new
+     liberations exactly like region capitals do. The heartName field keeps the
+     actual capital village's name for UI that needs to identify it. Towns
      that join a city keep existing (they are its boroughs); tierBySeed maps
      every liberated village straight to the top settlement it belongs to. */
   function deriveSettlements(villages, options) {
@@ -321,12 +533,16 @@
     clusters.forEach(cluster => {
       if (cluster.length < minVillages) { largestVillageCluster = Math.max(largestVillageCluster, cluster.length); return; }
       const heart = cluster[0];
+      const heartSeed = Number(heart.seed) >>> 0;
+      const properName = placeName('town', heartSeed);
       towns.push({
-        id: 'town-' + (Number(heart.seed) >>> 0),
+        id: 'town-' + heartSeed,
         tier: 'town',
-        heartSeed: Number(heart.seed) >>> 0,
-        name: String(heart.name || 'Freehold'),
-        label: 'Town of ' + String(heart.name || 'Freehold'),
+        heartSeed,
+        heartName: String(heart.name || 'Freehold'),
+        properName,
+        name: properName,
+        label: placeLabel('town', heartSeed),
         icon: SETTLEMENT_TIERS.town.icon,
         villageCount: cluster.length,
         villages: cluster,
@@ -347,12 +563,15 @@
       if (members.length < minTowns) return;
       const heartTown = members[0];
       const cityVillages = members.reduce((all, t) => all.concat(t.villages), []).sort((a, b) => claimTime(a) - claimTime(b));
+      const properName = placeName('city', heartTown.heartSeed);
       const city = {
         id: 'city-' + heartTown.heartSeed,
         tier: 'city',
         heartSeed: heartTown.heartSeed,
-        name: heartTown.name,
-        label: 'City of ' + heartTown.name,
+        heartName: heartTown.heartName,
+        properName,
+        name: properName,
+        label: placeLabel('city', heartTown.heartSeed),
         icon: SETTLEMENT_TIERS.city.icon,
         townCount: members.length,
         towns: members,
@@ -391,10 +610,10 @@
     if (!list.length) return null;
     const pyramid = realmFromRegions(list);
     if (pyramid.empire) return 'Emperor of the Liberated Skies';
-    if (pyramid.kingdoms.length) return 'Monarch of ' + pyramid.kingdoms[0].seatName;
-    if (pyramid.duchies.length) return 'Duke of ' + pyramid.duchies[0].seatName;
+    if (pyramid.kingdoms.length) return 'Monarch of ' + pyramid.kingdoms[0].properName;
+    if (pyramid.duchies.length) return 'Duke of ' + pyramid.duchies[0].properName;
     const best = list.slice().sort((a, b) => (b.villageCount || 0) - (a.villageCount || 0) || claimTime(a.villages && a.villages[0]) - claimTime(b.villages && b.villages[0]))[0];
-    return 'Count of ' + best.capitalName;
+    return 'Count of ' + (best.properName || placeName('county', best.capitalSeed));
   }
 
   function tradeRouteKey(idA, idB) {
@@ -504,6 +723,12 @@
   }
 
   return {
+    PLACE_NAME_VERSION,
+    placeName,
+    placeLabel,
+    villageCellSeed,
+    waysteadBlockSeed,
+    migratePlaceNames,
     EARTH_RADIUS_KM,
     REGION_RADIUS_KM,
     REGION_MIN_VILLAGES,
@@ -526,6 +751,7 @@
     settlementTierInfo,
     deriveSettlements,
     validVillage,
+    validVillageIdentity,
     haversineKm,
     clusterVillages,
     regionTier,

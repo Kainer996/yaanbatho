@@ -56,11 +56,11 @@ def test_empty_provinces_pay_no_taxes_and_say_why():
     assert "build homes" in logic
 
 
-def test_liberation_toast_explains_the_town_starts_empty():
+def test_liberation_toast_explains_the_village_starts_empty():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     claim_start = logic.index("function claimCurrentVillage(")
     claim_end = logic.index("\nfunction renderVillageClaimBar", claim_start)
     claim = logic[claim_start:claim_end]
-    assert "The town stands empty" in claim
+    assert "The village stands empty" in claim
     assert "residents will move in" in claim

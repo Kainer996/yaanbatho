@@ -19,8 +19,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "ordered-quest-markers-v224-20260804"
+REALM_CORE_PIN = "unique-place-names-v225-20260804"
+CURRENT_BUILD = "unique-place-names-v225-20260804"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -65,15 +65,18 @@ def test_three_neighbouring_liberated_villages_merge_into_one_town():
     result = run_core(f"core.deriveSettlements({json.dumps(TRIO)})")
     assert result["townCount"] == 1 and result["cityCount"] == 0
     town = result["towns"][0]
-    # The town keeps the name of its heart — the earliest-liberated village.
-    assert town["name"] == "Wrenford"
-    assert town["label"] == "Town of Wrenford"
+    # The earliest village still anchors the stable ID, but the town has its
+    # own proper name instead of stealing the village's identity.
+    expected_name = run_core("core.placeName('town', 1)")
+    expected_label = run_core("core.placeLabel('town', 1)")
+    assert town["name"] == expected_name
+    assert town["label"] == expected_label
     assert town["villageCount"] == 3
     assert town["id"] == "town-1"
     # Every district knows what it merged into; the heart knows it leads.
     assert result["tierBySeed"]["1"] == {
         "tier": "town", "role": "heart", "id": "town-1",
-        "name": "Wrenford", "label": "Town of Wrenford", "icon": "🏘️",
+        "name": expected_name, "label": expected_label, "icon": "🏘️",
     }
     assert result["tierBySeed"]["2"]["role"] == "district"
 
@@ -99,15 +102,17 @@ def test_three_neighbouring_towns_merge_into_one_city():
     result = run_core(f"core.deriveSettlements({json.dumps(TRI_CITY)})")
     assert result["townCount"] == 3 and result["cityCount"] == 1
     city = result["cities"][0]
-    # The city keeps the name of its earliest-founded town.
-    assert city["label"] == "City of Alph0"
+    # The earliest town still anchors the stable ID, but the city gets a
+    # separate rank-specific proper name.
+    expected_label = run_core("core.placeLabel('city', 10)")
+    assert city["label"] == expected_label
     assert city["townCount"] == 3
     assert city["villageCount"] == 9
     # Member towns keep existing as its boroughs, and every village maps
     # straight to the city tier now.
     assert all(t["cityId"] == city["id"] for t in result["towns"])
     assert result["tierBySeed"]["21"]["tier"] == "city"
-    assert result["tierBySeed"]["21"]["label"] == "City of Alph0"
+    assert result["tierBySeed"]["21"]["label"] == expected_label
 
 
 def test_two_towns_are_not_yet_a_city_but_progress_is_reported():
@@ -328,10 +333,12 @@ def test_royal_ledger_gains_a_towns_and_cities_section():
 def test_governor_desk_and_village_screen_name_the_settlement():
     html = HTML.read_text(encoding="utf-8")
     assert 'class="province-settlement' in html
-    assert "District of the " in html and "Heart of the " in html
+    assert "Village district of " in html and "Village centre of " in html
     assert "part of the " in html  # the claim-bar banner
-    # The village title carries the settlement standard.
-    assert "settleTitle.icon + ' ' + settleTitle.label.toUpperCase()" in html
+    # The village identity stays in the title; its larger settlement is a
+    # separate plain-language line beneath it.
+    assert "v.name.toUpperCase() + ' · VILLAGE'" in html
+    assert "This village is the " in html and "settleTitle.label" in html
 
 
 # ---------------------------------------------------------------------------
@@ -405,7 +412,7 @@ def test_release_is_pinned_and_realm_core_cache_buster_moved():
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert OWN_RELEASE_PIN in cache_line
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    # deriveSettlements ships in empire_realm_core.js — its cache-buster must
-    # move with this release so installed players actually receive it.
+    # deriveSettlements ships in empire_realm_core.js — its cache-buster moves
+    # whenever that shared core changes so installed players receive the names.
     assert f'src="empire_realm_core.js?v={REALM_CORE_PIN}"' in html
     assert f"'./empire_realm_core.js?v={REALM_CORE_PIN}'" in sw

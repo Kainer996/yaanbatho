@@ -52,7 +52,7 @@ def village_generation_source(html: str) -> str:
     """The pure, DOM-free seeded-village pipeline, extracted for Node."""
     start = html.index("// ---- Seeded randomness")
     end = html.index("function nearestVillageTo")
-    return html[start:end]
+    return f"globalThis.BurbzEmpireRealmCore=require({json.dumps(str(CORE))});\n" + html[start:end]
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ def test_waysteads_are_deterministic_and_only_fill_truly_empty_blocks():
     result = run_node(
         "eval(" + json.dumps(village_generation_source(HTML.read_text(encoding='utf-8'))) + ");"
         "let found = null;"
-        "for (let bi = 1000; bi < 9000 && !found; bi++) {"
+        "for (let bi = -1502; bi <= 1501 && !found; bi++) {"
         "  const w = waysteadInBlock(bi, 77);"
         "  if (w) found = { first: w, second: waysteadInBlock(bi, 77), bi };"
         "}"
@@ -114,9 +114,9 @@ def test_waysteads_are_deterministic_and_only_fill_truly_empty_blocks():
     assert result["occupied"] == []  # never a waystead where a village already rolled
 
 
-def test_procedural_villages_keep_their_original_seeds_and_coordinates():
-    # Existing liberated claims must keep pointing at the same towns: the
-    # refactor to villageInCell must reproduce the legacy per-cell formula.
+def test_procedural_villages_keep_coordinates_but_replace_colliding_legacy_seeds():
+    # Existing locations stay fixed while identity moves from lossy FNV-32 to
+    # the injective cell encoding; the save migration preserves their progress.
     # The comparison runs inside the same eval scope as the extracted source,
     # since its const declarations are scoped to that eval.
     compare = (
@@ -127,15 +127,17 @@ def test_procedural_villages_keep_their_original_seeds_and_coordinates():
         "  const r = villageRngFrom(h);"
         "  return { seed: h, name: villageNameFromSeed(h), lat: (i + 0.18 + r() * 0.64) * cs, lon: (j + 0.18 + r() * 0.64) * cs };"
         "}"
-        "let same = true;"
+        "let sameCoordinates = true, changedSeed = false;"
         "for (let i = -300; i < 300; i += 7) for (let j = -300; j < 300; j += 11) {"
-        "  if (JSON.stringify(villageInCell(i, j)) !== JSON.stringify(legacy(i, j))) same = false;"
+        "  const now=villageInCell(i,j), before=legacy(i,j);"
+        "  if (!!now !== !!before) sameCoordinates=false;"
+        "  if (now && before) { if (now.lat !== before.lat || now.lon !== before.lon) sameCoordinates=false; if (now.seed !== before.seed) changedSeed=true; }"
         "}"
-        "console.log(JSON.stringify(same));"
+        "console.log(JSON.stringify({sameCoordinates,changedSeed}));"
     )
     src = village_generation_source(HTML.read_text(encoding="utf-8")) + compare
     ok = run_node("eval(" + json.dumps(src) + ");")
-    assert ok is True
+    assert ok == {"sameCoordinates": True, "changedSeed": True}
 
 
 def test_waystead_guarantee_is_wired_into_the_live_map_grid():
@@ -186,7 +188,7 @@ def test_nearest_unclaimed_settlements_fly_dark_frontier_banners():
     # The status line points at the nearest target, before and after the
     # first liberation.
     assert "awaits liberation where you stand" in html
-    assert "tap its dark banner to free your first town" in html
+    assert "Village waits right where you are; tap its dark banner to free it" in html
     # Tapping a frontier banner travels into the village where the claim bar
     # leads straight into its Liberation Battle.
     assert "enterVillage(village)" in logic
@@ -296,8 +298,8 @@ def test_release_is_versioned_for_the_service_worker():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     # empire_realm_core.js ships new maths per release; its cache-buster moves
-    # with whichever release last touched it (settlement tiers, 2026-08-02).
-    core_pin = "feudal-hierarchy-v222-20260804"
+    # with whichever release last touched it.
+    core_pin = "unique-place-names-v225-20260804"
     assert f"empire_realm_core.js?v={core_pin}" in html
     assert f"./empire_realm_core.js?v={core_pin}" in sw
     # This release's own segment stays in the cache lineage forever.

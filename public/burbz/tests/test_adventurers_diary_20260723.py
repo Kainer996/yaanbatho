@@ -54,12 +54,11 @@ def test_diary_state_is_declared_and_healed():
 def test_diary_core_is_included_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    # Restored under the v200 pin: the original commit never reached main (no PR
-    # was ever opened for claude/burbz-diary-mechanic-8u87l0), so the diary's own
-    # v114 cache segment does not exist in main's cache-name lineage.
-    assert 'src="diary_core.js?v=restored-lost-features-v200-20260802"' in html
-    assert sw.count("./diary_core.js?v=restored-lost-features-v200-20260802") == 2  # assets + core shell
-    assert "restored-lost-features-v200-20260802" in sw  # cache version bumped
+    # The original v200 lineage remains in BURBZ_CACHE, while the script and
+    # both offline entries move when its player-facing place copy changes.
+    assert 'src="diary_core.js?v=unique-place-names-v225-20260804"' in html
+    assert sw.count("./diary_core.js?v=unique-place-names-v225-20260804") == 2  # assets + core shell
+    assert "restored-lost-features-v200-20260802" in sw  # historical cache lineage
 
 
 def test_merlin_teaches_the_diary_chapter():

@@ -19,8 +19,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
-CURRENT_BUILD = "ordered-quest-markers-v224-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
+CURRENT_BUILD = "unique-place-names-v225-20260804"
 
 
 def empire_logic(html: str) -> str:
@@ -127,8 +127,8 @@ def test_the_app_shell_is_reinstalled_past_the_browser_http_cache():
 def test_release_is_versioned_so_a_refresh_actually_lands_the_new_layout():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert OWN_RELEASE_PIN in cache_line  # this feature's release stays in the lineage
-    assert PREVIOUS_RELEASE_PIN in cache_line
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
+    cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
+    assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
+    assert OWN_RELEASE_PIN in cache_line
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)

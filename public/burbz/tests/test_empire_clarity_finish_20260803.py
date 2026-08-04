@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "ordered-quest-markers-v224-20260804"
+CURRENT_BUILD = "unique-place-names-v225-20260804"
 
 
 def html_text() -> str:
@@ -29,13 +29,13 @@ def test_tap_cards_escape_content_and_both_village_hit_targets_share_them():
     assert html.count("showEmpireVillageMapCard(village);") == 2
 
 
-def test_town_or_city_locator_frames_the_whole_settlement():
+def test_home_village_and_town_or_city_locator_are_separate_targets():
     html = html_text()
     render = function_slice(html, "renderEmpirePanel", "openEmpireRegion")
-    assert "data-settlement=" in render
-    assert "const settlementId = ev.currentTarget.dataset.settlement" in render
-    assert "if (settlementId) frameEmpireSettlement(settlementId)" in render
-    assert "else focusEmpireVillage(ev.currentTarget.dataset.seed)" in render
+    assert 'data-action="locator-home"' in render
+    assert 'data-action="locator-settlement"' in render
+    assert "frameEmpireSettlement(ev.currentTarget.dataset.settlement)" in render
+    assert "focusEmpireVillage(ev.currentTarget.dataset.seed)" in render
 
 
 def test_cycle_countdown_handles_past_boundaries_and_future_device_clocks():

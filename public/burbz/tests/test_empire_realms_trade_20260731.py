@@ -49,9 +49,10 @@ def test_three_nearby_liberated_villages_found_a_region():
     result = run_core(f"core.deriveRegions({json.dumps(CHESHIRE)})")
     assert len(result["regions"]) == 1
     region = result["regions"][0]
-    # The capital is the earliest-liberated sanctuary, and names are feudal.
+    # The capital remains the earliest-liberated sanctuary, while the county
+    # has its own globally unique proper name.
     assert region["capitalName"] == "Delamere"
-    assert region["name"] == "County of Delamere"
+    assert region["name"] == run_core("core.placeLabel('county', 1)")
     assert region["tier"] == "county"
     assert region["villageCount"] == 3
     assert region["id"] == "1"
@@ -68,7 +69,11 @@ def test_distant_clusters_form_separate_regions_delamere_and_south_of_france():
     villages = CHESHIRE + PROVENCE
     result = run_core(f"core.deriveRegions({json.dumps(villages)})")
     names = sorted(r["name"] for r in result["regions"])
-    assert names == ["County of Delamere", "County of Gordes"]
+    expected = sorted([
+        run_core("core.placeLabel('county', 1)"),
+        run_core("core.placeLabel('county', 9)"),
+    ])
+    assert names == expected
 
 
 def test_counties_never_relabel_themselves_and_crowns_come_from_nesting():
@@ -82,8 +87,9 @@ def test_counties_never_relabel_themselves_and_crowns_come_from_nesting():
     # unite into a duchy (600 km), so the crown stays a Count's.
     both = CHESHIRE + PROVENCE
     crown = run_core(f"core.crownTitle(core.deriveRegions({json.dumps(both)}).regions)")
-    assert crown == "Count of Delamere"
-    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(CHESHIRE)}).regions)") == "Count of Delamere"
+    expected_crown = "Count of " + run_core("core.placeName('county', 1)")
+    assert crown == expected_crown
+    assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(CHESHIRE)}).regions)") == expected_crown
 
 
 # ---------------------------------------------------------------------------
