@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "midgame-progression-v226-20260805"
+CURRENT_BUILD = "midgame-progression-v227-20260805"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -154,8 +154,10 @@ global.FOODS = {};
 const now = Date.now();
 const care = hunger => ({ hunger, happiness:40, lastFed:new Date(now - 60 * 1000).toISOString(),
   lastHungerAt: now, hungerTransactions:[], hungerTransactionLog:[] });
+// Waxwings live on berries, so hedgerow berries are a PRIMARY meal that fills
+// each one to full — the bulk serving the Head Chef is here to demonstrate.
 const thrush = (id, hunger) => ({
-  id, species:'Mistle Thrush', commonName:'Mistle Thrush', scientificName:'Turdus viscivorus',
+  id, species:'Waxwing', commonName:'Waxwing', scientificName:'Bombycilla garrulus',
   level:1, xp:0, maxHp:100, hp:100,
   academy:{ room:'outdoors', dietKnown:true }, training:{ feedCount:0, hpBonus:0 },
   care: care(hunger)
@@ -225,7 +227,7 @@ def test_one_tap_feeds_every_hungry_bird_of_the_species_until_the_stores_run_dry
     # The stores ran dry before thrushD — it stays hungry and the toast says so.
     assert out["dHunger"] > 0
     chef_toast = next(t for t in out["toasts"] if "Head Chef" in t)
-    assert "Raven" in chef_toast and "1 more Mistle Thrush fed" in chef_toast
+    assert "Raven" in chef_toast and "1 more Waxwing fed" in chef_toast
     assert "still waiting" in chef_toast
     # The full bird and the different species are untouched.
     assert out["fullHunger"] == 0
@@ -272,7 +274,7 @@ def test_the_feed_surfaces_tell_the_player_about_table_service():
     sheet = function_source(html, "renderFeedSheet")
     assert "feedSheetChefNoticeHTML" in sheet and "chefNotice" in sheet
     # And the Kitchen's own how-it-works fold mentions the perk.
-    assert "Appoint a Head Chef above and one serving feeds every bird of the same species at once." in html
+    assert "Appoint a Head Chef above and the kitchen reorganises by food: one serving feeds every bird of the same species" in html
 
 
 # ---------------------------------------------------------------------------

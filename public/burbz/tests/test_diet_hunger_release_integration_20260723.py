@@ -20,15 +20,22 @@ CACHE_NAME = CACHE_MATCH.group(1)
 PINNED_RUNTIME_ASSETS = {
     # The quest board moved on with the categorised errands + one quest per
     # crafting material, so the Academy core carries its own pin now.
-    "academy_treehouse_core.js": "midgame-progression-v226-20260805",
+    "academy_treehouse_core.js": "midgame-progression-v227-20260805",
     "kitchen_pantry_core.js": RELEASE_PIN,
-    "data/bird-diet-records.js": "real-walk-nearby-quests-v215-20260803",
-    "bird_diet_hunger_core.js": "real-walk-nearby-quests-v215-20260803",
+    "data/bird-diet-records.js": "accurate-diets-full-catalogue-v226-20260805",
+    "bird_diet_hunger_core.js": "accurate-diets-full-catalogue-v226-20260805",
     "diet_hunger_core.js": RELEASE_PIN,
     "merlin_companion_core.js": "reconciled-release-v170-20260729",
 }
 BUILD_ONLY_ASSETS = ["data/bird-diet-records.json"]
-MAX_RUNTIME_DIET_JS_BYTES = 1_000_000
+# The runtime diet payload now carries a real source-backed record for EVERY
+# playable bird (the 951 profiles plus ~400 catalogue birds from the UK/AU
+# expansions and the BOU alias overlay), so nothing falls through to the generic
+# unmatched menu. Catalogue records are trimmed to the fields the game actually
+# uses, so full coverage costs the browser ~1 MB (well under 200 KB gzipped on
+# the wire). The build-only JSON keeps the fuller records for review.
+MAX_RUNTIME_DIET_JS_BYTES = 1_150_000
+MAX_BUILD_DIET_JSON_BYTES = 6_000_000
 
 
 def test_index_and_service_worker_share_final_diet_hunger_release_pins():
@@ -47,7 +54,7 @@ def test_index_and_service_worker_share_final_diet_hunger_release_pins():
         assert asset not in html, f"build-only data must not be eagerly loaded: {asset}"
         assert f"./{asset}?v={RELEASE_PIN}" not in sw, f"build-only data must not be precached: {asset}"
     build_json = ROOT / BUILD_ONLY_ASSETS[0]
-    assert build_json.stat().st_size <= 4_000_000
+    assert build_json.stat().st_size <= MAX_BUILD_DIET_JSON_BYTES
     assert "sourceRecords" not in json.loads(build_json.read_text(encoding="utf-8"))
 
     stale_pins = [

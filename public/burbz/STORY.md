@@ -25,6 +25,23 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
+## What the birds eat, and the Head Chef who feeds them
+
+Every bird eats what it really eats in the wild — the diets are drawn from a real
+scientific dataset, not invented. A Yellow-legged Gull takes fish, crabs and
+scraps; a Kingfisher lives on fish and nothing else; a Goldfinch cracks seed and
+turns its beak up at a minnow. **Omnivores are true generalists**: a crow or a
+gull has several main foods, so they are the easiest of all to keep fed, while a
+specialist wants its own exact menu. Offer a bird a food it does not eat and it
+is simply turned down — nothing is wasted, and the refusal is the lesson.
+
+A flock needs a cook. Appoint one bird as the **Head Chef** of the Kitchen &
+Pantry and feeding becomes easy: the kitchen reorganises itself **by food**, each
+course listing the birds that eat it, with the hungry ones lit up. One tap serves
+a whole food to every hungry bird that eats it — across the whole flock, one
+portion each, until the stores run dry. The cleverer the chef, the more good each
+plate does.
+
 ## Villages grow into towns, towns into cities
 
 Freedom is contagious between neighbours. Liberate **three neighbouring villages** — sanctuaries whose lands touch, chained within a short walk of each other — and their free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. Raise **three neighbouring towns** and they grow together again into **one city**, also uniquely named and gold-crowned on the liberation map.

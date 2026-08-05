@@ -74,7 +74,7 @@ global.kitchenCore = () => global.BurbzKitchenCore;
 global.kitchenDietCore = () => global.BurbzDietHungerCore;
 global.dietHungerCore = () => global.BurbzDietHungerCore;
 global.hungerStatusForBird = b => global.BurbzDietHungerCore.hungerStatusForCare(b && b.care, Date.now());
-global.inferBirdDiet = () => ({ pref:['fruit_berries'], ok:[], avoid:[], fact:'Mistle Thrushes defend a berry tree all winter.' });
+global.inferBirdDiet = () => ({ pref:['fruit_berries'], ok:[], avoid:[], fact:'Waxwings strip a rowan of its berries in a winter afternoon.' });
 global.academyBirdById = id => gameState.flock.find(b => b.id === id) || null;
 global.ensureBirdAcademy = b => {
   b.academy = b.academy || { room:'outdoors' };
@@ -104,7 +104,7 @@ global.FOODS = { berries:{label:'Berries',emoji:'🫐',desc:''}, seeds:{label:'S
 global.gameState = {
   player: { coins:0, xp:0, mealsServed:0 },
   flock: [{
-    id:'thrush', species:'Mistle Thrush', commonName:'Mistle Thrush', scientificName:'Turdus viscivorus',
+    id:'thrush', species:'Waxwing', commonName:'Waxwing', scientificName:'Bombycilla garrulus',
     level:1, xp:0, maxHp:100, hp:100,
     academy:{ room:'outdoors', dietKnown:true }, training:{ feedCount:0, hpBonus:0 },
     // Starving, and fed only a minute ago — the exact state that used to be
@@ -307,8 +307,9 @@ def test_only_merlin_is_allowed_to_fly_hungry():
 SIDE_SNACK_HARNESS = FEED_HARNESS.replace(
     "out.fullBirdIsFull = F.birdIsFull(thrush()) === true;",
     """out.fullBirdIsFull = F.birdIsFull(thrush()) === true;
-// A Woodpigeon eats leafy plants; seeds are a real but secondary food for it.
-gameState.flock.push({ id:'pigeon', species:'Woodpigeon', commonName:'Woodpigeon', scientificName:'Columba palumbus',
+// A Blackbird lives on worms, fruit and insects; seed is a real but secondary
+// food for it, so a serving of seed counts as a half-value side snack.
+gameState.flock.push({ id:'pigeon', species:'Blackbird', commonName:'Blackbird', scientificName:'Turdus merula',
   level:1, xp:0, maxHp:100, hp:100, academy:{ room:'outdoors', dietKnown:true }, training:{ feedCount:0, hpBonus:0 },
   care:{ hunger:80, happiness:50, hungerTransactions:[], hungerTransactionLog:[] } });
 gameState.inventory.larder.sunflower_seeds = 4;
@@ -348,7 +349,7 @@ def test_the_player_is_told_why_a_side_food_only_counted_half():
     assert "side" in note["title"].lower()
     body = note["body"].lower()
     assert "adds 50 percentage points" in body and "half the xp" in body
-    assert "woodpigeon" in body
+    assert "blackbird" in body
     # The burst says it too, at a glance.
     assert "SIDE SNACK" in out["sideSnackBurst"]["badge"]
 

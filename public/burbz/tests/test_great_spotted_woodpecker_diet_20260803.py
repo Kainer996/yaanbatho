@@ -45,7 +45,7 @@ console.log(JSON.stringify(core.dietDisclosureForSpecies({name:'Great Spotted Wo
 def test_release_cache_pins_the_corrected_diet_assets():
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    release = "real-walk-nearby-quests-v215-20260803"
+    release = "accurate-diets-full-catalogue-v226-20260805"
     assert f'data/bird-diet-records.js?v={release}' in html
     assert f'bird_diet_hunger_core.js?v={release}' in html
     assert release in html

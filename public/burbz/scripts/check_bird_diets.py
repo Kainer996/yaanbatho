@@ -39,6 +39,11 @@ TMP_SOURCE = Path("/tmp/BirdFuncDat.txt")
 # fall back to the committed cache so a fresh clone still verifies offline.
 DEFAULT_SOURCE = TMP_SOURCE if TMP_SOURCE.exists() else CACHED_SOURCE
 PROFILES_PATH = ROOT / "data" / "national-bird-completion" / "profiles.json"
+# Every PLAYABLE bird outside the 951 national profiles — the UK/AU expansion
+# catalogues and the BOU alias overlay — enumerated by
+# scripts/build_catalogue_species.js. Read here so each one gets a real
+# source-backed diet record instead of the generic unmatched fallback.
+CATALOGUE_PATH = ROOT / "data" / "catalogue-species.json"
 INDEX_PATH = ROOT / "index.html"
 JSON_OUT = ROOT / "data" / "bird-diet-records.json"
 JS_OUT = ROOT / "data" / "bird-diet-records.js"
@@ -46,7 +51,18 @@ SUMMARY_OUT = ROOT / "data" / "bird-diet-provenance-summary.json"
 
 EXPECTED_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
 EXPECTED_PROFILE_COUNT = 951
-DIET_VERSION = "diet-generalists-20260729"
+DIET_VERSION = "diet-full-catalogue-20260805"
+
+# Omnivore ease: a food family counts as a PRIMARY (a full meal, full XP) when
+# its mapped score is at least this fraction of the bird's top family. A
+# specialist (kingfisher ~100% fish) still has exactly one primary; a genuine
+# generalist (a gull eating fish, invertebrates and molluscs in similar measure)
+# gets several full-meal foods, so omnivores are broad AND easy to feed instead
+# of living on half-value side snacks. The bar is high enough (0.7) that a bird
+# with one clearly dominant food and a lesser second (a Great Spotted Woodpecker
+# at ~50% invertebrates, ~30% seed) keeps its single primary — its seed stays a
+# side food, matching BTO field guidance.
+OMNIVORE_PRIMARY_FRACTION = 0.7
 
 # Species-level refinements for well-documented opportunistic generalists.
 # These are deliberately narrow: an omnivorous label does not make every
@@ -76,6 +92,28 @@ SPECIES_DIET_REFINEMENTS = {
     "Larus argentatus": {"secondary": ["worms"]},
     "Larus fuscus": {"secondary": ["worms"]},
     "Larus canus": {"secondary": ["worms", "fruit_berries"]},
+}
+
+# Modern catalogue taxonomy runs ahead of EltonTraits' 2014 names: recent splits
+# and genus moves (Coloeus, Astur, Curruca, Linaria, Spatula, Mareca, Gulosus …)
+# leave a common bird with a scientific name BirdFuncDat files under an older one.
+# Map each catalogue scientific to the BirdFuncDat scientific that carries the
+# same bird's real diet, so a Jackdaw or a Shoveler is not stranded on the
+# conservative unmatched menu. Verified against the committed oracle.
+CATALOGUE_SCIENTIFIC_ALIASES = {
+    "Acanthis hornemanni": "Carduelis hornemanni",   # Arctic/Hoary Redpoll
+    "Astur gentilis": "Accipiter gentilis",          # Northern Goshawk
+    "Cinnyris frenatus": "Nectarinia jugularis",     # Sahul/Olive-backed Sunbird
+    "Coloeus monedula": "Corvus monedula",           # Eurasian Jackdaw
+    "Curruca communis": "Sylvia communis",           # Common Whitethroat
+    "Gulosus aristotelis": "Phalacrocorax aristotelis",  # European Shag
+    "Linaria cannabina": "Carduelis cannabina",      # Eurasian Linnet
+    "Mareca penelope": "Anas penelope",              # Eurasian Wigeon
+    "Spatula clypeata": "Anas clypeata",             # Northern Shoveler
+    "Spinus spinus": "Carduelis spinus",             # Eurasian Siskin
+    "Thalasseus acuflavida": "Sterna sandvicensis",  # Cabot's/Sandwich Tern
+    "Thalasseus bergii": "Sterna bergii",            # Greater Crested Tern
+    "Tribonyx mortierii": "Gallinula mortierii",     # Tasmanian Native-hen
 }
 
 SOURCE_METADATA = {
@@ -158,6 +196,18 @@ MATCH_METHODS = [
     "common-name",
     "family-fallback",
     "override",
+    "unmatched",
+]
+
+# The catalogue pipeline can also fall back one taxonomic rung above the species
+# — to the genus — before giving up. Profiles keep the stricter ladder above so
+# their pinned match counts never move.
+CATALOGUE_MATCH_METHODS = [
+    "exact",
+    "scientific-alias",
+    "common-name",
+    "genus-fallback",
+    "family-fallback",
     "unmatched",
 ]
 
@@ -407,10 +457,15 @@ def primary_secondary(scores: dict[str, int | float]) -> tuple[list[str], list[s
     if not scores:
         return [], ["invertebrates", "seeds", "fruit_berries"]
     max_score = max(float(value) for value in scores.values())
+    # A generalist has several strong families, so every family within reach of
+    # the top one is a real meal (not a half-value snack). A specialist has a
+    # single dominant family and keeps exactly one primary. See
+    # OMNIVORE_PRIMARY_FRACTION for the rationale.
+    threshold = max_score * OMNIVORE_PRIMARY_FRACTION
     primary = sorted(
         family
         for family, value in scores.items()
-        if float(value) == max_score and float(value) > 0
+        if float(value) > 0 and float(value) >= threshold
     )
     secondary = sorted(
         family
@@ -470,6 +525,12 @@ def education_text(
             f"No species-level prey claim is made; use primary pattern {primary_text} "
             f"and secondary pattern {secondary_text}."
         )
+    if method == "genus-fallback":
+        return (
+            f"Genus-level match for {common}: {fallback_reason}. "
+            f"Averaged across its genus in BirdFuncDat; primary {primary_text}, "
+            f"secondary {secondary_text}."
+        )
     if method == "unmatched":
         return (
             f"Conservative unmatched fallback for {common}. No BirdFuncDat species or "
@@ -520,11 +581,16 @@ def record_from_parts(
         scientific, score_values, primary, secondary
     )
     refused = sorted(family for family in FOOD_FAMILIES if family not in set(primary + secondary))
-    certainty = (row or {}).get("Diet-Certainty") or ("F" if method == "family-fallback" else "U")
+    certainty = (row or {}).get("Diet-Certainty") or ("F" if method in ("family-fallback", "genus-fallback") else "U")
     aliases = list(dict.fromkeys([str(a) for a in ((profile or {}).get("aliases") or []) if a]))
     name = (profile or {}).get("name") or (row or {}).get("English") or ctx["common"]
     family = (profile or {}).get("family") or (row or {}).get("BLFamilyLatin") or ctx["family"]
-    return {
+    # Carry the curated field-guide refinement label onto the full record so a
+    # refined species (e.g. Great Spotted Woodpecker) discloses "BirdFuncDat +
+    # BTO + Woodland Trust refinement" whether it resolves as a profile or as a
+    # catalogue record. Source records already carry this via `x`.
+    refinement_source = SPECIES_DIET_REFINEMENTS.get(scientific, {}).get("source")
+    record = {
         "id": record_id,
         "name": name,
         "commonName": (profile or {}).get("commonName") or name,
@@ -534,7 +600,7 @@ def record_from_parts(
         "aliases": aliases,
         "matchMethod": method,
         "certainty": certainty,
-        "source": "EltonTraits 1.0 BirdFuncDat" if row or method == "family-fallback" else "conservative unmatched fallback",
+        "source": "EltonTraits 1.0 BirdFuncDat" if row or method in ("family-fallback", "genus-fallback") else "conservative unmatched fallback",
         "sourceScientificName": (row or {}).get("Scientific"),
         "sourceCommonName": (row or {}).get("English"),
         "sourceRow": source_ref(row),
@@ -564,26 +630,40 @@ def record_from_parts(
             "sourceDoi": SOURCE_METADATA["doi"],
         },
     }
+    if refinement_source:
+        record["refinementSource"] = refinement_source
+    return record
+
+
+def genus_token(scientific: str | None) -> str:
+    parts = norm(scientific).split(" ")
+    return parts[0] if parts and parts[0] else ""
 
 
 def build_indices(rows: list[dict[str, str]]) -> dict[str, Any]:
     by_scientific: dict[str, dict[str, str]] = {}
     by_common: dict[str, dict[str, str]] = {}
     by_family: dict[str, list[dict[str, str]]] = defaultdict(list)
+    by_genus: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in rows:
         by_scientific[norm(row.get("Scientific"))] = row
         by_common[norm(row.get("English"))] = row
         by_family[norm(row.get("BLFamilyLatin"))].append(row)
+        genus = genus_token(row.get("Scientific"))
+        if genus:
+            by_genus[genus].append(row)
     return {
         "by_scientific": by_scientific,
         "by_common": by_common,
         "by_family": by_family,
+        "by_genus": by_genus,
     }
 
 
 def match_profile(
     profile: dict[str, Any],
     indices: dict[str, Any],
+    allow_genus: bool = False,
 ) -> tuple[str, dict[str, str] | None, str | None, int | None, dict[str, int | float] | None]:
     scientific = norm(profile.get("scientificName") or profile.get("scientific"))
     if scientific in indices["by_scientific"]:
@@ -605,6 +685,18 @@ def match_profile(
             row = indices["by_common"][norm(candidate)]
             return "common-name", row, f"profile common-name token {candidate}", 1, diet_percentages(row)
 
+    # Genus fallback (catalogue pipeline only): a bird BirdFuncDat lists under a
+    # sibling species, not this exact one, still eats broadly like its genus.
+    # This is how near-misses land on a real relative instead of the generic
+    # unmatched menu. Profiles keep the stricter ladder so their counts hold.
+    if allow_genus:
+        genus = genus_token(scientific)
+        genus_rows = indices["by_genus"].get(genus) if genus else None
+        if genus_rows:
+            percentages = aggregate_percentages(genus_rows)
+            reason = f"matched {len(genus_rows)} BirdFuncDat rows for genus {genus.title()}"
+            return "genus-fallback", None, reason, len(genus_rows), percentages
+
     family_key = norm(profile.get("family"))
     family_rows = indices["by_family"].get(family_key) or []
     if family_rows:
@@ -612,7 +704,7 @@ def match_profile(
         reason = f"matched {len(family_rows)} BirdFuncDat rows for family {profile.get('family')}"
         return "family-fallback", None, reason, len(family_rows), percentages
 
-    return "unmatched", None, "no species, alias, common-name, or BirdFuncDat family match", 0, None
+    return "unmatched", None, "no species, alias, common-name, genus, or BirdFuncDat family match", 0, None
 
 
 def source_record(row: dict[str, str]) -> dict[str, Any]:
@@ -639,6 +731,95 @@ def source_record(row: dict[str, str]) -> dict[str, Any]:
         "e": refinement_education,
         "x": refinement.get("source"),
     }
+
+
+def read_catalogue_species() -> list[dict[str, str]]:
+    if not CATALOGUE_PATH.exists():
+        return []
+    data = json.loads(CATALOGUE_PATH.read_text(encoding="utf-8"))
+    return list(data.get("species") or [])
+
+
+def catalogue_species_count() -> int:
+    return len(read_catalogue_species())
+
+
+def _covered_keys(records: list[dict[str, Any]]) -> set[str]:
+    """Every name/scientific/alias already resolvable by the profile records."""
+    covered: set[str] = set()
+    for record in records:
+        for key in ("scientificName", "scientific", "name", "commonName"):
+            value = record.get(key)
+            if value:
+                covered.add(norm(value))
+                covered.add(compact(value))
+        for alias in record.get("aliases") or []:
+            if alias:
+                covered.add(norm(alias))
+                covered.add(compact(alias))
+    return covered
+
+
+def build_catalogue_records(
+    indices: dict[str, Any],
+    profile_records: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], Counter, list[dict[str, str]]]:
+    """Mint a source-backed diet record for every catalogue bird not already
+    covered by a profile record. Returns (records, method counts, unresolved)."""
+    covered = _covered_keys(profile_records)
+    catalogue_records: list[dict[str, Any]] = []
+    counts: Counter = Counter({method: 0 for method in CATALOGUE_MATCH_METHODS})
+    unresolved: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    for species in read_catalogue_species():
+        name = str(species.get("name") or "").strip()
+        scientific = str(species.get("scientific") or "").strip()
+        if not name or not scientific:
+            continue
+        if norm(scientific) in covered or norm(name) in covered:
+            continue  # the profile pipeline already speaks for this bird
+        key = compact(scientific)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+
+        aliases = [scientific]
+        oracle_alias = CATALOGUE_SCIENTIFIC_ALIASES.get(scientific)
+        if oracle_alias:
+            aliases.append(oracle_alias)
+        pseudo = {
+            "id": "catalogue_" + profile_id_for_scientific(scientific),
+            "name": name,
+            "commonName": name,
+            "scientificName": scientific,
+            "scientific": scientific,
+            "family": "",
+            "aliases": aliases,
+        }
+        method, row, reason, source_rows, percentages = match_profile(pseudo, indices, allow_genus=True)
+        counts[method] += 1
+        record = record_from_parts(
+            record_id=pseudo["id"],
+            profile=pseudo,
+            row=row,
+            method=method,
+            source_percentages=percentages,
+            fallback_reason=reason,
+            source_rows=source_rows,
+        )
+        record["catalogueSources"] = list(species.get("sources") or [])
+        catalogue_records.append(record)
+        if method == "unmatched":
+            unresolved.append({
+                "name": name,
+                "scientificName": scientific,
+                "reason": reason or "",
+            })
+
+    catalogue_records.sort(key=lambda record: (record["scientificName"] or "", record["name"] or ""))
+    unresolved.sort(key=lambda row: (row["scientificName"], row["name"]))
+    return catalogue_records, counts, unresolved
 
 
 def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -713,10 +894,20 @@ def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     records.append(merlin_record)
     counts["override"] += 1
 
+    # ---- Full-catalogue diet records ---------------------------------------
+    # Every playable bird outside the 951 profiles (the UK/AU expansion
+    # catalogues and the BOU alias overlay) gets its own source-backed record,
+    # so nothing the player can meet falls through to the generic unmatched
+    # menu. The profile pipeline above is untouched; these are additive.
+    catalogue_records, catalogue_counts, catalogue_unresolved = build_catalogue_records(
+        indices, records
+    )
+
     source_records = [source_record(row) for row in rows]
     source_records.sort(key=lambda record: (record["s"] or "", record["n"] or ""))
 
     match_counts = {method: int(counts[method]) for method in MATCH_METHODS}
+    catalogue_match_counts = {method: int(catalogue_counts[method]) for method in CATALOGUE_MATCH_METHODS}
     metadata = {
         "version": DIET_VERSION,
         "generatedBy": "public/burbz/scripts/check_bird_diets.py",
@@ -741,13 +932,22 @@ def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             "catalogueProfileCount": len(profiles),
             "permanentMerlinCount": 1,
             "totalGeneratedRecords": len(records),
+            "catalogueBirdRecords": len(catalogue_records),
             "sourceLookupRecords": len(source_records),
+        },
+        "catalogue": {
+            "path": CATALOGUE_PATH.relative_to(ROOT).as_posix(),
+            "speciesConsidered": catalogue_species_count(),
+            "recordsGenerated": len(catalogue_records),
+            "matchCounts": catalogue_match_counts,
+            "unresolvedCount": len(catalogue_unresolved),
         },
         "matchCounts": match_counts,
         "foodFamilies": FOOD_FAMILIES,
         "mappingRules": {
-            "primary": "highest nonzero mapped game-family percentage",
+            "primary": "mapped game-family percentages within OMNIVORE_PRIMARY_FRACTION of the top family",
             "secondary": "all other nonzero mapped game-family percentages",
+            "genusFallback": "mean BirdFuncDat diet percentages for the matched genus (catalogue birds only)",
             "familyFallback": "mean BirdFuncDat diet percentages for the matched BLFamilyLatin",
             "unmatched": "low-certainty conservative gameplay fallback with no species-level claim",
         },
@@ -756,10 +956,12 @@ def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     payload = {
         "metadata": metadata,
         "records": records,
+        "catalogueRecords": catalogue_records,
         "sourceRecords": source_records,
         "fallbacks": {
             "family": fallback_list,
             "unmatched": unmatched_list,
+            "catalogueUnresolved": catalogue_unresolved,
         },
     }
     summary = {
@@ -795,6 +997,7 @@ RUNTIME_RECORD_FIELDS = (
     "prepByFamily",
     "education",
     "sourceRowsUsed",
+    "refinementSource",
 )
 
 
@@ -847,15 +1050,48 @@ def runtime_source_records(payload: dict[str, Any], runtime_records: list[dict[s
     return supplements
 
 
+# The shipped catalogue records only need what the runtime uses to (a) find the
+# bird by any of its names and (b) score food. Everything else (duplicate name
+# fields, provenance prose, source-row bookkeeping) is dropped so full-catalogue
+# coverage costs the browser as little as possible; the disclosure card
+# regenerates a diet sentence from primary/secondary when education is absent.
+CATALOGUE_RUNTIME_FIELDS = (
+    "id",
+    "name",
+    "scientificName",
+    "aliases",
+    "family",
+    "matchMethod",
+    "certainty",
+    "primaryCompatibleFamilies",
+    "secondaryCompatibleFamilies",
+    "prepByFamily",
+    "refinementSource",
+)
+
+
 def runtime_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Return compact browser data; the full global source table stays build-only."""
     records = [
         {key: record[key] for key in RUNTIME_RECORD_FIELDS if key in record}
         for record in payload["records"]
     ]
+    def trim_catalogue(record: dict[str, Any]) -> dict[str, Any]:
+        trimmed = {key: record[key] for key in CATALOGUE_RUNTIME_FIELDS if key in record}
+        # A curated field-guide refinement (Carrion Crow, Great Spotted
+        # Woodpecker, …) carries prose the disclosure card cannot regenerate, so
+        # keep its education. Everything else lets the card synthesise a diet
+        # sentence from primary/secondary, saving the biggest field.
+        refinement = SPECIES_DIET_REFINEMENTS.get(record.get("scientificName") or "", {})
+        if refinement.get("education") and record.get("education"):
+            trimmed["education"] = record["education"]
+        return trimmed
+
+    catalogue_records = [trim_catalogue(record) for record in payload.get("catalogueRecords", [])]
     return {
         "metadata": payload["metadata"],
         "records": records,
+        "catalogueRecords": catalogue_records,
         "sourceRecords": runtime_source_records(payload, records),
     }
 
@@ -898,6 +1134,13 @@ def print_report(payload: dict[str, Any], check: bool) -> None:
         print(f"  {method}: {meta['matchCounts'][method]}")
     print(f"Family fallback list count: {len(payload['fallbacks']['family'])}")
     print(f"Unmatched fallback list count: {len(payload['fallbacks']['unmatched'])}")
+    cat = meta.get("catalogue", {})
+    print(f"Catalogue species considered: {cat.get('speciesConsidered', 0)}")
+    print(f"Catalogue diet records: {meta['records'].get('catalogueBirdRecords', 0)}")
+    print("Catalogue match counts:")
+    for method in CATALOGUE_MATCH_METHODS:
+        print(f"  {method}: {cat.get('matchCounts', {}).get(method, 0)}")
+    print(f"Catalogue unresolved count: {cat.get('unresolvedCount', 0)}")
     print("Merlin record:")
     print(
         "  Falco columbarius "

@@ -1,5 +1,6 @@
 {
   "fallbacks": {
+    "catalogueUnresolved": [],
     "family": [
       {
         "family": "Sturnidae",
@@ -476,91 +477,91 @@
         "family": "Acrocephalidae",
         "id": "acrocephalus_orientalis",
         "name": "Oriental Reed-Warbler",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Acrocephalus orientalis"
       },
       {
         "family": "unknown",
         "id": "anarhynchus_atrifrons",
         "name": "Tibetan Sand Plover",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Anarhynchus atrifrons"
       },
       {
         "family": "unknown",
         "id": "anarhynchus_mongolus",
         "name": "Siberian Sand Plover",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Anarhynchus mongolus"
       },
       {
         "family": "Psittaculidae",
         "id": "cyclopsitta_coxeni",
         "name": "Coxen's Fig-Parrot",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Cyclopsitta coxeni"
       },
       {
         "family": "Oceanitidae",
         "id": "fregetta_lineata",
         "name": "New Caledonian Storm-Petrel",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Fregetta lineata"
       },
       {
         "family": "unknown",
         "id": "larus_smithsonianus",
         "name": "American Herring Gull",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Larus smithsonianus"
       },
       {
         "family": "Strigopidae",
         "id": "nestor_productus",
         "name": "Norfolk Island Kaka",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Nestor productus"
       },
       {
         "family": "unknown",
         "id": "numenius_hudsonicus",
         "name": "Hudsonian Whimbrel",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Numenius hudsonicus"
       },
       {
         "family": "Phylloscopidae",
         "id": "phylloscopus_examinandus",
         "name": "Kamchatka Leaf-warbler",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Phylloscopus examinandus"
       },
       {
         "family": "Phylloscopidae",
         "id": "phylloscopus_plumbeitarsus",
         "name": "Two-barred Greenish Warbler",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Phylloscopus plumbeitarsus"
       },
       {
         "family": "unknown",
         "id": "pinguinus_impennis",
         "name": "Great Auk",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Pinguinus impennis"
       },
       {
         "family": "Psittaculidae",
         "id": "psephotellus_pulcherrimus",
         "name": "Paradise Parrot",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Psephotellus pulcherrimus"
       },
       {
         "family": "Psittaculidae",
         "id": "trichoglossus_rubritorquis",
         "name": "Red-collared Lorikeet",
-        "reason": "no species, alias, common-name, or BirdFuncDat family match",
+        "reason": "no species, alias, common-name, genus, or BirdFuncDat family match",
         "scientificName": "Trichoglossus rubritorquis"
       }
     ]
@@ -688,6 +689,20 @@
     "sourceScientificName": "Falco columbarius"
   },
   "metadata": {
+    "catalogue": {
+      "matchCounts": {
+        "common-name": 43,
+        "exact": 332,
+        "family-fallback": 0,
+        "genus-fallback": 10,
+        "scientific-alias": 13,
+        "unmatched": 0
+      },
+      "path": "data/catalogue-species.json",
+      "recordsGenerated": 398,
+      "speciesConsidered": 758,
+      "unresolvedCount": 0
+    },
     "foodFamilies": {
       "aquatic_plants": {
         "defaultPrep": "floating",
@@ -779,7 +794,8 @@
     "generatedBy": "public/burbz/scripts/check_bird_diets.py",
     "mappingRules": {
       "familyFallback": "mean BirdFuncDat diet percentages for the matched BLFamilyLatin",
-      "primary": "highest nonzero mapped game-family percentage",
+      "genusFallback": "mean BirdFuncDat diet percentages for the matched genus (catalogue birds only)",
+      "primary": "mapped game-family percentages within OMNIVORE_PRIMARY_FRACTION of the top family",
       "secondary": "all other nonzero mapped game-family percentages",
       "unmatched": "low-certainty conservative gameplay fallback with no species-level claim"
     },
@@ -798,6 +814,7 @@
       "uniqueScientificNames": 951
     },
     "records": {
+      "catalogueBirdRecords": 398,
       "catalogueProfileCount": 951,
       "permanentMerlinCount": 1,
       "sourceLookupRecords": 9993,
@@ -815,6 +832,6 @@
       "sourceUrl": "https://ndownloader.figshare.com/files/5631081",
       "usableScientificRowCount": 9993
     },
-    "version": "diet-generalists-20260729"
+    "version": "diet-full-catalogue-20260805"
   }
 }
