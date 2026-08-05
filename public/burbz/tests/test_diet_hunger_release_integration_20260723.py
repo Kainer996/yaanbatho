@@ -20,7 +20,7 @@ CACHE_NAME = CACHE_MATCH.group(1)
 PINNED_RUNTIME_ASSETS = {
     # The quest board moved on with the categorised errands + one quest per
     # crafting material, so the Academy core carries its own pin now.
-    "academy_treehouse_core.js": "quest-duration-tiers-v211-20260803",
+    "academy_treehouse_core.js": "midgame-progression-v227-20260805",
     "kitchen_pantry_core.js": RELEASE_PIN,
     "data/bird-diet-records.js": "accurate-diets-full-catalogue-v226-20260805",
     "bird_diet_hunger_core.js": "accurate-diets-full-catalogue-v226-20260805",
