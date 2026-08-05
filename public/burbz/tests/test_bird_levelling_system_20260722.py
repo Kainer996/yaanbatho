@@ -23,7 +23,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 QUEST_CORE_PATH = ROOT / "quest_core.js"
 QUEST_CORE_PIN = "ordered-quest-markers-v224-20260804"
-ACADEMY_CORE_PIN = "midgame-progression-v227-20260805"
+ACADEMY_CORE_PIN = "eight-hour-quests-v228-20260805"
 
 
 def function_source(html: str, name: str) -> str:

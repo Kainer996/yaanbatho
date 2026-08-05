@@ -47,11 +47,12 @@
   ];
   const QUEST_CATEGORY_INDEX = Object.fromEntries(QUEST_CATEGORIES.map(c => [c.id, c]));
 
-  // Every normal Kingdom errand offers the same six timer choices. The reward
-  // curve rises sub-linearly: longer flights pay much larger totals for players
-  // who are away, while repeating quick flights remains the best reward per
-  // minute for attentive play (the familiar mobile-simulation trade-off).
-  const QUEST_DURATION_MINUTES = Object.freeze([5, 10, 30, 60, 120, 1440]);
+  // Every normal Kingdom errand offers the same seven timer choices, including
+  // an eight-hour bedtime option. The reward curve rises sub-linearly: longer
+  // flights pay much larger totals for players who are away, while repeating
+  // quick flights remains the best reward per minute for attentive play (the
+  // familiar mobile-simulation trade-off).
+  const QUEST_DURATION_MINUTES = Object.freeze([5, 10, 30, 60, 120, 480, 1440]);
   function questDurationMultiplier(minutes) {
     return Math.pow(Math.max(5, Number(minutes) || 5) / 5, 0.9);
   }
