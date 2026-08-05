@@ -10,7 +10,7 @@ HTML_PATH = ROOT / "index.html"
 CORE_PATH = ROOT / "academy_treehouse_core.js"
 ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
-ACADEMY_CORE_PIN = "midgame-progression-v227-20260805"
+ACADEMY_CORE_PIN = "nocturnal-night-bonus-v228-20260805"
 
 
 def _node_json(source: str):
@@ -154,6 +154,8 @@ let academySelectedRoom = 'outdoors';
 // No Recruiting Officer is posted in the Barracks here, so recruiting runs
 // at its unstaffed baseline price.
 function academyRoleMultiplier(){ return 1; }
+// Daytime dispatch: no Night Hunter pack applies in this harness.
+function nocturnalNightBonusFor(){ return null; }
 function applyQuartermasterPlanning(quest){ return quest; }
 function applyExpeditionCarryLimit(quest){ return quest; }
 let gameState = {player:{level:1,coins:220,branches:18,totalCaptures:0},academyBuildings:{outdoors:{built:true}},discoveredSpecies:{},flock:[],birdExpeditions:[],pantry:{},inventory:{items:{}},activePetId:null};

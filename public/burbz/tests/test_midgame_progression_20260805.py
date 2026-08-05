@@ -17,7 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "midgame-progression-v227-20260805"
+RELEASE_PIN = "nocturnal-night-bonus-v228-20260805"
+OWN_RELEASE_PIN = "midgame-progression-v227-20260805"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
@@ -157,4 +158,5 @@ def test_release_is_query_busted_everywhere():
     assert f"./academy_treehouse_core.js?v={RELEASE_PIN}" in sw
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
+    assert OWN_RELEASE_PIN in cache_line  # lineage kept
     assert cache_line.rstrip("';").endswith(RELEASE_PIN)

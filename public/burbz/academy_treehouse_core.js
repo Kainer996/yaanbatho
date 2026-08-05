@@ -196,10 +196,24 @@
   function getTrainingTemplates() { return Object.values(TRAINING_TEMPLATES).map(t => ({...t, beats:[...t.beats]})); }
   function getMerlinClues() { return Object.values(MERLIN_CLUES).map(c => ({...c})); }
 
-  function createTrainingSession(bird, templateId='wing_sprints', nowMs=Date.now()) {
+  // options.nightBonus is the Night Hunter pack (bird_sleep_core's
+  // NOCTURNAL_NIGHT_BONUS): the caller decides whether it applies — it knows
+  // the bird and the local clock — and this core only does the maths, so the
+  // reward pipeline stays deterministic and Node-testable.
+  function nightBonusPack(options) {
+    const pack = options && options.nightBonus;
+    return pack && typeof pack === 'object' ? pack : null;
+  }
+  function nightMultiplier(pack, key) {
+    return pack ? Math.max(1, Number(pack[key]) || 1) : 1;
+  }
+
+  function createTrainingSession(bird, templateId='wing_sprints', nowMs=Date.now(), options={}) {
     const template = TRAINING_TEMPLATES[templateId] || TRAINING_TEMPLATES.wing_sprints;
     const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
     const durationMs = template.minutes * 60 * 1000;
+    const night = nightBonusPack(options);
+    const xp = Math.round(template.xp * nightMultiplier(night, 'xp'));
     return {
       id: `train_${nowMs}_${String(bird.id || birdName).replace(/[^a-z0-9]+/gi,'_')}`,
       birdId: bird.id || null,
@@ -214,7 +228,8 @@
       startMs: nowMs,
       endMs: nowMs + durationMs,
       status: 'active',
-      rewards: { xp: template.xp, stat: template.stat, statLabel: template.statLabel, bonus: template.bonus, hunger: template.hunger, happiness: template.happiness, school: template.school || null },
+      nightBonus: !!night,
+      rewards: { xp, stat: template.stat, statLabel: template.statLabel, bonus: template.bonus, hunger: template.hunger, happiness: template.happiness, school: template.school || null },
       seed: hashString(`${bird.id || birdName}|${template.id}|${nowMs}`)
     };
   }
@@ -240,6 +255,7 @@
   // options.slowFactor stretches the timer without touching the payout. It is
   // how a hungry Merlin still flies: the Kingdom cannot deadlock on an empty
   // larder, so he works on regardless — it just takes him twice as long.
+  // options.nightBonus (the Night Hunter pack) multiplies the payout instead.
   function createBirdExpedition(bird, templateId='short_forage', nowMs=Date.now(), options={}) {
     const template = QUEST_TEMPLATES[templateId] || QUEST_TEMPLATES.short_forage;
     const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
@@ -283,6 +299,15 @@
       rewardItems[bonusItem] = (rewardItems[bonusItem] || 0) + 1;
       itemRolls += 1;
     }
+    // Night Hunters see what daytime birds miss: guaranteed extra finds on top
+    // of whatever the ordinary rolls turned up.
+    const night = nightBonusPack(options);
+    const nightFinds = night ? Math.max(0, Math.round(Number(night.itemRolls) || 0)) : 0;
+    for (let i = 0; i < nightFinds; i++) {
+      const nightItem = template.items[(seed + itemRolls + i) % template.items.length];
+      rewardItems[nightItem] = (rewardItems[nightItem] || 0) + 1;
+    }
+    itemRolls += nightFinds;
     // Story clues remain proper discoveries rather than five-minute spam: the
     // selected flight must be at least as substantial as the authored quest.
     const clue = template.clueId && durationMinutes >= template.minutes ? MERLIN_CLUES[template.clueId] : null;
@@ -299,7 +324,15 @@
       status: 'active',
       slowFactor,
       hungryFlight: slowFactor > 1,
-      rewards: { coins: baseCoins + powerBonus + charmBonus, charmBonus, branches: baseBranches + branchBonus, xp: economy.xp, items: rewardItems, itemRolls },
+      nightBonus: night ? { coins: nightMultiplier(night, 'coins'), branches: nightMultiplier(night, 'branches'), xp: nightMultiplier(night, 'xp'), itemRolls: nightFinds } : null,
+      rewards: {
+        coins: Math.round((baseCoins + powerBonus + charmBonus) * nightMultiplier(night, 'coins')),
+        charmBonus,
+        branches: Math.round((baseBranches + branchBonus) * nightMultiplier(night, 'branches')),
+        xp: Math.round(economy.xp * nightMultiplier(night, 'xp')),
+        items: rewardItems,
+        itemRolls
+      },
       story: clue ? { clueId: clue.id, title: clue.title, copy: clue.copy, unlocksTrial: clue.unlocksTrial } : null,
       seed
     };

@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-05 (mid-game progression v226: Academy rooms now unlock across trainer levels 1–12 instead of all by level 8, village growth halls gate on levels 5–10, and every level-up pays a construction grant and names what it unlocked — see "Review log" at the bottom).
+Last curated: 2026-08-05 (Night Hunter bonus v228: any bird can be worked at night, and a nocturnal bird used after dark earns massive payout multipliers in any capacity — see "Review log" at the bottom).
 
 ---
 
@@ -227,6 +227,42 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-05 — the Night Hunter bonus (Claude).** Yaan's original idea —
+  only nocturnal birds playable in the evening — broke the bedtime loop: a
+  player with no owl could not send anything out on the long overnight
+  expedition. Release `nocturnal-night-bonus-v228-20260805` flips the rule:
+  ANY bird can be worked at night (diurnal birds were already never
+  scheduled-asleep after dark — a test now pins that on purpose), and a
+  nocturnal bird (owl, nightjar, frogmouth, kiwi…) used at night in any
+  capacity earns the **Night Hunter bonus**.
+  - **Rules** (`bird_sleep_core.js`, which already owns `isNocturnalBird`):
+    night is 18:00–06:00 local (`NIGHT_START_HOUR`/`NIGHT_END_HOUR`,
+    `isNightHour` — `isScheduledSleepTime` now derives from the same window).
+    `nocturnalNightBonus(bird, localHour)` returns the
+    `NOCTURNAL_NIGHT_BONUS` pack (coins ×2, branches ×1.5, xp ×2, +1
+    guaranteed item roll) or null.
+  - **Maths** (`academy_treehouse_core.js`): `createBirdExpedition` and
+    `createTrainingSession` accept `options.nightBonus` and apply whatever
+    pack they are handed — the caller decides IF it applies, the core stays
+    pure and Node-testable. The bonus multiplies the payout, never the timer,
+    and the quest/session records `nightBonus` so the UI can explain the
+    swollen haul.
+  - **Wiring** (`index.html`): `nocturnalNightBonusFor(bird)` +
+    `isNightRightNow()` next to the sleep helpers; passed at dispatch in
+    `startBirdExpedition` and `startBirdTrainingSession` (both toast the
+    bonus, dispatch hoots via `SFX.owl`). The send sheet shows a night hint
+    and a `🌙 Night Hunter 2×` chip note on nocturnal birds, the adventure
+    log gets a night-hunter beat, the claim celebration badges
+    `🌙 NIGHT HUNTER RETURNS!`, and the Roost card copy advertises the perk.
+  - Tests: `tests/test_nocturnal_night_bonus_20260805.py` (core window/pack
+    maths, day-vs-night reward doubling on the same seed, the
+    diurnal-birds-never-forced-asleep-at-night contract, HTML wiring,
+    release pins). `test_roost_barracks_first_quest` harness gained the
+    conventional one-line stub (`nocturnalNightBonusFor → null`). Release
+    pins repointed per convention; SW cache + `BURBZ_BUILD` bumped and both
+    touched cores' `?v=` cache-busters moved to
+    `nocturnal-night-bonus-v228-20260805`.
 
 - **2026-08-05 — mid-game progression: buildings unlock across the levels
   (Claude).** Yaan reported that progression collapsed early: every Academy
