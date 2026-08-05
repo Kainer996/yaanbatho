@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-05 (Night Hunter bonus v228: any bird can be worked at night, and a nocturnal bird used after dark earns massive payout multipliers in any capacity — see "Review log" at the bottom).
+Last curated: 2026-08-05 (Night Hunter bonus v229: any bird can be worked at night, and a nocturnal bird used after dark earns massive payout multipliers in any capacity — see "Review log" at the bottom).
 
 ---
 
@@ -231,7 +231,9 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 - **2026-08-05 — the Night Hunter bonus (Claude).** Yaan's original idea —
   only nocturnal birds playable in the evening — broke the bedtime loop: a
   player with no owl could not send anything out on the long overnight
-  expedition. Release `nocturnal-night-bonus-v228-20260805` flips the rule:
+  expedition. Release `nocturnal-night-bonus-v229-20260805` (renumbered over
+  the same-day eight-hour-quests release, which took v228 on main first —
+  same convention as the v202/v203 and v221/v222 pairs) flips the rule:
   ANY bird can be worked at night (diurnal birds were already never
   scheduled-asleep after dark — a test now pins that on purpose), and a
   nocturnal bird (owl, nightjar, frogmouth, kiwi…) used at night in any
@@ -262,7 +264,7 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     conventional one-line stub (`nocturnalNightBonusFor → null`). Release
     pins repointed per convention; SW cache + `BURBZ_BUILD` bumped and both
     touched cores' `?v=` cache-busters moved to
-    `nocturnal-night-bonus-v228-20260805`.
+    `nocturnal-night-bonus-v229-20260805`.
 
 - **2026-08-05 — mid-game progression: buildings unlock across the levels
   (Claude).** Yaan reported that progression collapsed early: every Academy

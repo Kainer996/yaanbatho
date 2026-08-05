@@ -1,4 +1,4 @@
-"""Six selectable duration tiers for every normal Kingdom errand."""
+"""Seven selectable duration tiers, including bedtime-length quests, for every normal Kingdom errand."""
 import json
 import subprocess
 from pathlib import Path
@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "academy_treehouse_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "nocturnal-night-bonus-v228-20260805"
+RELEASE = "nocturnal-night-bonus-v229-20260805"
 
 
 def node_json(source: str):
@@ -31,7 +31,7 @@ def function_source(html: str, name: str) -> str:
     raise AssertionError(name)
 
 
-def test_normal_quests_offer_the_six_requested_duration_tiers():
+def test_normal_quests_offer_the_seven_requested_duration_tiers_including_eight_hours():
     data = node_json("""
       const A = require('./academy_treehouse_core.js');
       const templates = A.getQuestTemplates().filter(t => !t.tutorial);
@@ -40,7 +40,7 @@ def test_normal_quests_offer_the_six_requested_duration_tiers():
         options: templates.map(t => ({id:t.id, ds:A.getQuestDurationOptions(t.id).map(x => x.minutes)}))
       }));
     """)
-    assert data["durations"] == [5, 10, 30, 60, 120, 1440]
+    assert data["durations"] == [5, 10, 30, 60, 120, 480, 1440]
     assert data["options"]
     assert all(row["ds"] == data["durations"] for row in data["options"])
 
@@ -101,6 +101,7 @@ def test_send_sheet_has_mobile_duration_choices_and_dispatches_selected_tier():
     sheet = function_source(html, "renderQuestSendSheet")
     assert "getQuestDurationOptions" in sheet
     assert "Quick quests pay best per hour" in sheet
+    assert "7 durations" in html
     assert ".quest-duration-grid" in html
     assert "grid-template-columns:repeat(2,minmax(0,1fr))" in html.replace(" ", "")
 

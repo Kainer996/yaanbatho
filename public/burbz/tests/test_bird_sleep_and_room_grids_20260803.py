@@ -106,5 +106,5 @@ def test_tiredness_metre_is_distinct_from_hp_and_fullness():
 
 def test_sleep_release_is_cached():
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert "bird_sleep_core.js?v=nocturnal-night-bonus-v228-20260805" in sw
+    assert "bird_sleep_core.js?v=nocturnal-night-bonus-v229-20260805" in sw
     assert "roost-sleep-v208-20260803" in sw

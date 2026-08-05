@@ -4040,13 +4040,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=nocturnal-night-bonus-v228-20260805"></script>
+<script src="academy_treehouse_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
 <script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="bird_diet_hunger_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
-<script src="bird_sleep_core.js?v=nocturnal-night-bonus-v228-20260805"></script>
+<script src="bird_sleep_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
@@ -12681,7 +12681,7 @@ function renderBirdExpeditions() {
       if (mats.length) matHint = ' · ' + mats.slice(0, 3).map(m => m.icon + ' ' + m.label).join(', ');
     } catch (e) {}
     const rewardHint = durationOptions.length
-      ? '6 durations · choose balanced loot & XP · quick runs pay best per hour' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
+      ? '7 durations · includes an 8h bedtime quest · quick runs pay best per hour' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
       : '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
@@ -30618,7 +30618,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'nocturnal-night-bonus-v228-20260805';
+const BURBZ_BUILD = 'nocturnal-night-bonus-v229-20260805';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

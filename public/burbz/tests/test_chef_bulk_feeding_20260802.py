@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "nocturnal-night-bonus-v228-20260805"
+CURRENT_BUILD = "nocturnal-night-bonus-v229-20260805"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

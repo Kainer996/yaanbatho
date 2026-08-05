@@ -20,7 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "nocturnal-night-bonus-v228-20260805"
+RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
 
 
 def run_node(script: str) -> dict:
