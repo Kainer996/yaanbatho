@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-04 (feudal hierarchy v222: the empire's feudal ladder now nests like Crusader Kings' — counties → duchies → kingdoms → empire — see "Review log" at the bottom).
+Last curated: 2026-08-05 (mid-game progression v226: Academy rooms now unlock across trainer levels 1–12 instead of all by level 8, village growth halls gate on levels 5–10, and every level-up pays a construction grant and names what it unlocked — see "Review log" at the bottom).
 
 ---
 
@@ -191,6 +191,42 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-05 — mid-game progression: buildings unlock across the levels
+  (Claude).** Yaan reported that progression collapsed early: every Academy
+  building was open by trainer level 8 (three at level 1, the rest packed into
+  2–8), and nothing else in the game ever gated on player level, so levels
+  stopped meaning anything. Release `midgame-progression-v226-20260805`
+  stretches the curve and makes each level a concrete gate.
+  - **Academy curve** (`academy_treehouse_core.js` `TREEHOUSE_ROOMS`): the
+    tutorial trio (Gardens/Roost/Barracks) stays at level 1; the teaching rooms
+    arrive one per level (Training 2, Quest Roost 3, Kitchen 4, Hospital 5,
+    Crowbar 6); the four specialist rooms are true mid-game milestones
+    (Workshop 8, Library 9, Nursery 11, Observatory 12). Late-room costs rose
+    with their gates (Workshop 240/55 up to Observatory 450/100) so each unlock
+    is also a savings goal. The story chain's `pq_build_*` links stay in
+    ascending gate order — a test now pins that, because re-ordering either
+    side can stall the strictly-ordered chain.
+  - **Village halls** (`index.html` `EMPIRE_BUILDINGS`): growth/prestige
+    structures now carry `unlockLevel` (Cottage Row 5, Alehouse 6, Chapel 8,
+    Market Hall 10). Survival + resource basics (Farm, Well, Lumber Camp,
+    Quarry) are deliberately ungated — Stone only comes from the Quarry, so
+    gating it would deadlock a fresh province. `empireBuildStructure` blocks
+    only NEW structures (`level === 0`), so old saves keep upgrade rights; the
+    province desk shows 🔒 UNLOCKS AT TRAINER LV n instead of a dead buy button.
+  - **Levels feel like rewards** (`index.html` PLAYER LEVEL section): each
+    level pays a construction grant (`playerLevelUpGrant`: 20+5·lv 🪙,
+    4+2·lv 🪵) inside `applyPlayerXpState`, so batch XP paths award it too. A
+    shared `announcePlayerLevelUps()` (used by `addPlayerXp` AND the expedition
+    claim) shows the grant, names newly unlocked buildings, or points at the
+    next locked one. New badges: Rank 15, Rank 20, Master Builder (full
+    Academy). Stale Barracks fallback `unlockLevel: 2` copy fixed to 1.
+  - Tests: `tests/test_midgame_progression_20260805.py` pins the full curve,
+    grant maths, chain ordering and the empire gate; release pins repointed per
+    convention (the feudal-hierarchy test grew a separate `REALM_CORE_PIN`
+    since `empire_realm_core.js` is untouched); the concurrent-town-builds
+    harness now plays a level-6 trainer. SW cache + `BURBZ_BUILD` bumped
+    (`midgame-progression-v226-20260805`).
 
 - **2026-08-04 — walking quests enforce ordered waymarkers (Ava).** A live
   Footpath Ring could mark a later checkpoint merely because a loop or nearby

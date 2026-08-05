@@ -28,7 +28,10 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "unique-place-names-v225-20260804"
+CURRENT_BUILD = "midgame-progression-v226-20260805"
+# empire_realm_core.js was last touched by the naming release, so its
+# cache-buster stays pinned there while BURBZ_BUILD moves on.
+REALM_CORE_PIN = "unique-place-names-v225-20260804"
 
 
 def trio(seed, name, lat, lon, day):
@@ -254,5 +257,5 @@ def test_release_is_versioned_and_the_realm_core_cache_buster_moved():
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     # The naming release changed empire_realm_core.js, so its cache-buster must
     # move on while this release's own marker remains in the SW lineage.
-    assert f'src="empire_realm_core.js?v={CURRENT_BUILD}"' in html
-    assert f"'./empire_realm_core.js?v={CURRENT_BUILD}'" in sw
+    assert f'src="empire_realm_core.js?v={REALM_CORE_PIN}"' in html
+    assert f"'./empire_realm_core.js?v={REALM_CORE_PIN}'" in sw

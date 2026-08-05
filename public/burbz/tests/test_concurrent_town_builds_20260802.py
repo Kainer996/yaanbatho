@@ -40,7 +40,9 @@ def build_harness() -> str:
     stubs = """
 global.window = global;
 const toasts = [];
-const gameState = { player: { coins: 5000, branches: 5000, stone: 5000 } };
+// Level 6 trainer: past the Cottage Row gate (unlockLevel 5), so this test
+// stays about the per-village construction lock, not the mid-game level gate.
+const gameState = { player: { level: 6, coins: 5000, branches: 5000, stone: 5000 } };
 const empire = { villages: {} };
 const ensureEmpireState = () => empire;
 const empireVillages = () => Object.values(empire.villages);

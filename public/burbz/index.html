@@ -4021,7 +4021,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=quest-duration-tiers-v211-20260803"></script>
+<script src="academy_treehouse_core.js?v=midgame-progression-v226-20260805"></script>
 <script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
@@ -12461,7 +12461,7 @@ function claimBirdExpedition(expeditionId) {
   const diaryTemplate = getExpeditionTemplate(q.templateId);
   if (typeof logDiary === 'function') logDiary('expedition', { quest: (diaryTemplate && diaryTemplate.label) || 'an expedition', bird: (diaryBird && (diaryBird.commonName || diaryBird.species)) || 'A companion', coins, xp: questXp });
   if (foundNewClue && typeof logDiary === 'function') logDiary('clue', { title: advanced.story.title });
-  if ((Number(gameState.player.level) || 1) > previousPlayerLevel) { SFX.levelUp(); showToast('LEVEL UP! Now Level ' + gameState.player.level); }
+  announcePlayerLevelUps(previousPlayerLevel);
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
   playQuestClaimCelebration({ badge: 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
@@ -13249,8 +13249,8 @@ function gotoTavernRecruit() {
     setTimeout(openBarracksRecruitOverlay, 80);
   } else {
     const cfg = ACADEMY_BUILDINGS.tavern;
-    showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 2)
-      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — keep playing to open it'
+    showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 1)
+      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 1) + ' — keep playing to open it'
       : '🪶 Build the Barracks in the Academy to recruit discovered birds');
     switchScreen('academy');
     renderAcademy();
@@ -15350,24 +15350,78 @@ window.__burbzAcademyDebug = {
 // ============================================================================
 // PLAYER LEVEL
 // ============================================================================
+// A trainer level is the key that opens Academy rooms (unlockLevel in
+// academy_treehouse_core.js, spread to level 12) and the later village halls
+// (unlockLevel in EMPIRE_BUILDINGS, spread to level 10). Every level also pays
+// a small construction grant, so "LEVEL UP!" always funds a start on whatever
+// it just unlocked.
+function playerLevelUpGrant(level) {
+  return { coins: 20 + level * 5, branches: 4 + level * 2 };
+}
+
+function academyUnlocksAtLevel(level) {
+  return Object.values(ACADEMY_BUILDINGS).filter(b => b.id !== 'outdoors' && Number(b.unlockLevel) === level);
+}
+
+function empireUnlocksAtLevel(level) {
+  if (typeof EMPIRE_BUILDINGS === 'undefined') return [];
+  return EMPIRE_BUILDINGS.filter(b => (Number(b.unlockLevel) || 1) === level);
+}
+
+// The next locked building above the current level — the standing mid-game
+// goal shown when a level-up opens nothing at that exact level.
+function nextAcademyUnlock(level) {
+  return Object.values(ACADEMY_BUILDINGS)
+    .filter(b => b.id !== 'outdoors' && Number(b.unlockLevel) > level)
+    .sort((a, b) => a.unlockLevel - b.unlockLevel)[0] || null;
+}
+
 function applyPlayerXpState(amount) {
   gameState.player.xp += amount;
   let leveledUp = false;
   while (gameState.player.xp >= XP_PER_LEVEL(gameState.player.level)) {
     gameState.player.xp -= XP_PER_LEVEL(gameState.player.level);
     gameState.player.level++;
+    // The grant is part of the same durable mutation as the level itself, so
+    // batch flows (expedition claims, meal services) award it too.
+    const grant = playerLevelUpGrant(gameState.player.level);
+    gameState.player.coins = (Number(gameState.player.coins) || 0) + grant.coins;
+    gameState.player.branches = (Number(gameState.player.branches) || 0) + grant.branches;
     leveledUp = true;
   }
   return leveledUp;
 }
 
-function addPlayerXp(amount) {
-  const leveledUp = applyPlayerXpState(amount);
-  if (leveledUp) {
-    SFX.levelUp();
-    showToast('LEVEL UP! Now Level ' + gameState.player.level);
-    if (typeof logDiary === 'function') logDiary('level_up', { level: gameState.player.level, title: getPlayerTitle() });
+// One celebration for every XP path: the level fanfare, the construction
+// grant, and — the point of levelling — what the new level just unlocked.
+function announcePlayerLevelUps(previousLevel) {
+  const level = Number(gameState.player.level) || 1;
+  const from = Number(previousLevel) || 1;
+  if (level <= from) return;
+  SFX.levelUp();
+  let grantCoins = 0, grantBranches = 0;
+  const unlocked = [];
+  for (let lv = from + 1; lv <= level; lv++) {
+    const grant = playerLevelUpGrant(lv);
+    grantCoins += grant.coins;
+    grantBranches += grant.branches;
+    academyUnlocksAtLevel(lv).forEach(b => unlocked.push(b.icon + ' ' + b.label));
+    empireUnlocksAtLevel(lv).forEach(b => unlocked.push(b.icon + ' ' + b.name));
   }
+  showToast('LEVEL UP! Now Level ' + level + ' · +' + grantCoins + ' 🪙 +' + grantBranches + ' 🪵');
+  if (typeof logDiary === 'function') logDiary('level_up', { level, title: getPlayerTitle() });
+  if (unlocked.length) {
+    setTimeout(() => showToast('🔓 NEW BUILDING' + (unlocked.length > 1 ? 'S' : '') + ' UNLOCKED: ' + unlocked.join(', ')), 1600);
+  } else {
+    const next = nextAcademyUnlock(level);
+    if (next) setTimeout(() => showToast('🧭 Next unlock: ' + next.icon + ' ' + next.label + ' at trainer level ' + next.unlockLevel), 1600);
+  }
+}
+
+function addPlayerXp(amount) {
+  const previousLevel = Number(gameState.player.level) || 1;
+  const leveledUp = applyPlayerXpState(amount);
+  if (leveledUp) announcePlayerLevelUps(previousLevel);
   updateHeader();
   saveState();
 }
@@ -20210,15 +20264,19 @@ const EMPIRE_NEEDS = [
 // in the Kitchen stores. A province with no residents produces nothing — an
 // empty quarry is just a hole in a hill.
 const QUARRY_FIRST_CUT_STONE = 10;
+// unlockLevel mirrors the Academy's mid-game curve: the survival and resource
+// basics (food, water, timber, stone) carry no gate so a fresh province can
+// always bootstrap, while the growth and prestige halls arrive with trainer
+// levels 5–10 — a liberated village grows richer as its liberator does.
 const EMPIRE_BUILDINGS = [
   { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level.' },
   { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8,  stone: 6 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
-  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 8,  need: 'shelter', perLevel: 12, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 6,  need: 'joy',     perLevel: 12, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 8,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 6,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level.' }
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -20526,6 +20584,11 @@ function empireBuildStructure(seed, buildingId) {
   }
   const level = eco.buildings[building.id] || 0;
   if (level >= building.maxLevel) { showToast(building.icon + ' ' + building.name + ' is already at its highest level.'); return; }
+  // The gate applies to raising a NEW structure; anything an older save
+  // already built keeps its right to upgrade.
+  const trainerLevel = Number(gameState.player.level) || 1;
+  const unlockLevel = Number(building.unlockLevel) || 1;
+  if (level === 0 && trainerLevel < unlockLevel) { showToast('🔒 The ' + building.name + ' unlocks at trainer level ' + unlockLevel + ' — quest, scan and battle to level up.'); return; }
   const cost = villageBuildingCost(building, level);
   if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to raise the ' + building.name + ' — collect taxes and win battles.'); return; }
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the ' + building.name + ' — send birds on Branch Run or Timber Haul quests.'); return; }
@@ -20862,6 +20925,7 @@ function renderVillageManagePanel() {
   const buildingsHtml = EMPIRE_BUILDINGS.map(b => {
     const level = villageBuildingLevel(rec, b.id);
     const maxed = level >= b.maxLevel;
+    const locked = level === 0 && (Number(gameState.player.level) || 1) < (Number(b.unlockLevel) || 1);
     const cost = maxed ? null : villageBuildingCost(b, level);
     const shortages = [];
     if (cost && wallet < cost.coins) shortages.push((cost.coins - wallet) + ' 🪙');
@@ -20874,12 +20938,13 @@ function renderVillageManagePanel() {
     let btn;
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
+    else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
       (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
       '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
       '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn +
-      (shortages.length && !construction ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
+      (shortages.length && !locked && !construction ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
   }).join('');
   // The settlement this province has merged into, if any: shown on the desk,
   // so a governor always knows they are running a district of something bigger.
@@ -25132,8 +25197,8 @@ function recruitDiscoveredBird(key) {
   // Recruitment is handled only through the Academy Barracks register.
   if (!isAcademyRoomBuilt('tavern')) {
     const cfg = ACADEMY_BUILDINGS.tavern;
-    showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 2)
-      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 2) + ' — birds are recruited there'
+    showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 1)
+      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 1) + ' — birds are recruited there'
       : '🪶 Build the Barracks in your Academy to recruit birds');
     return false;
   }
@@ -30110,6 +30175,9 @@ const BADGES = [
   { id: 'has_legendary', name: 'Legend', icon: '\u{1F451}', condition: () => gameState.flock.some(b=>b.rarity==='legendary') },
   { id: 'level_5', name: 'Rank 5', icon: '\u{2B50}', condition: () => gameState.player.level >= 5 },
   { id: 'level_10', name: 'Rank 10', icon: '\u{1F31F}', condition: () => gameState.player.level >= 10 },
+  { id: 'level_15', name: 'Rank 15', icon: '\u{1F4AB}', condition: () => gameState.player.level >= 15 },
+  { id: 'level_20', name: 'Rank 20', icon: '\u{1F320}', condition: () => gameState.player.level >= 20 },
+  { id: 'academy_complete', name: 'Master Builder', icon: '\u{1F3D7}\u{FE0F}', condition: () => ACADEMY_BUILDING_ORDER.every(id => isAcademyBuildingBuilt(id)) },
   { id: 'ten_wins', name: 'Champion', icon: '\u{1F396}\u{FE0F}', condition: () => gameState.player.wins >= 10 },
   { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 },
   // Shown as ??? until earned — the game never explains how to get this one.
@@ -30329,7 +30397,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'unique-place-names-v225-20260804';
+const BURBZ_BUILD = 'midgame-progression-v226-20260805';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

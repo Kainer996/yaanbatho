@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "unique-place-names-v225-20260804"
-CURRENT_BUILD = "unique-place-names-v225-20260804"
+CURRENT_BUILD = "midgame-progression-v226-20260805"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
