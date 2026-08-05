@@ -361,6 +361,14 @@
       indices.records.push(record);
       indexRecord(indices, record);
     });
+    // Full-catalogue records: every playable bird outside the 951 national
+    // profiles (the UK/AU expansions and the BOU alias overlay) carries its own
+    // source-backed diet here, so a Yellow-legged Gull resolves to its real
+    // fish-eating menu instead of the conservative unmatched fallback.
+    (payload.catalogueRecords || []).forEach(record => {
+      indices.records.push(record);
+      indexRecord(indices, record);
+    });
     (payload.sourceRecords || []).forEach(raw => {
       const record = expandSourceRecord(raw);
       if (!record) return;
@@ -543,6 +551,7 @@
     if (method === 'exact' || method === 'source-row') return 'BirdFuncDat exact match';
     if (method === 'scientific-alias') return 'BirdFuncDat scientific-alias match';
     if (method === 'common-name') return 'BirdFuncDat common-name match';
+    if (method === 'genus-fallback') return 'BirdFuncDat genus fallback';
     if (method === 'family-fallback') return 'BirdFuncDat family fallback';
     if (method === 'unmatched') return 'Conservative unmatched fallback';
     return 'BirdFuncDat ' + method.replace(/-/g, ' ');
@@ -551,6 +560,7 @@
   function dietFallbackType(record) {
     const method = String(record && record.matchMethod || 'unmatched');
     if (method === 'family-fallback') return 'family-fallback';
+    if (method === 'genus-fallback') return 'genus-fallback';
     if (method === 'unmatched') return 'unmatched-conservative';
     if (method === 'override') return 'merlin-override';
     if (method === 'common-name') return 'common-name-match';
@@ -594,7 +604,7 @@
       sourceRowsUsed: Number(record.sourceRowsUsed || (record.sourceRow ? 1 : 0)) || 0,
       sourceScientificName: record.sourceScientificName || (record.sourceRow && record.sourceRow.scientificName) || null,
       sourceCommonName: record.sourceCommonName || (record.sourceRow && record.sourceRow.commonName) || null,
-      noSpeciesClaim: method === 'family-fallback' || method === 'unmatched'
+      noSpeciesClaim: method === 'family-fallback' || method === 'genus-fallback' || method === 'unmatched'
     };
   }
 

@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "unique-place-names-v225-20260804"
+CURRENT_BUILD = "accurate-diets-full-catalogue-v226-20260805"
 
 
 def trio(seed, name, lat, lon, day):

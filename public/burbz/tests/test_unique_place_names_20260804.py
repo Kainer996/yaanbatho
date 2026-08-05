@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "empire_realm_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "unique-place-names-v225-20260804"
+CURRENT_BUILD = "accurate-diets-full-catalogue-v226-20260805"
 KINDS = ["village", "town", "city", "county", "duchy", "kingdom"]
 
 

@@ -100,10 +100,46 @@ CC BY 4.0). The pipeline is deterministic and drift-guarded.
   - `python3 scripts/check_bird_diets.py` — regenerate the artifacts.
   - `python3 scripts/check_bird_diets.py --check` — fail if anything drifted.
 - **Inputs:** `data/national-bird-completion/profiles.json` (951 species) +
+  `data/catalogue-species.json` (every OTHER playable bird — see below) +
   the oracle.
 - **Outputs (generated — do not hand-edit):**
-  `data/bird-diet-records.json`, `data/bird-diet-records.js`,
+  `data/bird-diet-records.json` (has both `records` = the 951 profiles + Merlin,
+  and `catalogueRecords` = every catalogue bird), `data/bird-diet-records.js`,
   `data/bird-diet-provenance-summary.json`.
+
+### Full-catalogue coverage (why the gull now eats fish)
+The 951 profiles are NOT every bird the game can show. The UK/AU expansion
+catalogues (`*_bird_expansion*.js`) and the BOU alias overlay add hundreds more,
+and those used to have NO diet record — so at runtime they fell to the generic
+"unmatched" fallback that refuses fish and claims invertebrates/seeds/fruit.
+That is why a Yellow-legged Gull (`Larus michahellis`, a 40%-fish larid that IS
+in BirdFuncDat) refused fish.
+
+- `scripts/build_catalogue_species.js` loads those catalogue modules and writes
+  every playable non-profile bird's `(name, scientific)` to
+  `data/catalogue-species.json` (generated — re-run `node
+  scripts/build_catalogue_species.js` after changing a catalogue file; `--check`
+  fails on drift).
+- `check_bird_diets.py` then mints a `catalogueRecords` entry for each one using
+  the same matcher plus a **genus fallback** (exact scientific → scientific
+  alias → common name → **genus** → family → unmatched). `CATALOGUE_SCIENTIFIC_ALIASES`
+  maps modern splits/renames (Coloeus, Astur, Curruca, Spatula, Mareca, …) to the
+  BirdFuncDat name that carries the same bird's diet. Target: **zero** unmatched
+  catalogue birds (the report prints `Catalogue unresolved count: 0`).
+- The runtime core (`bird_diet_hunger_core.js`) indexes `catalogueRecords`
+  alongside `records`. The shipped browser records are trimmed
+  (`CATALOGUE_RUNTIME_FIELDS`) so full coverage costs ~1 MB; the disclosure card
+  regenerates a diet sentence when `education` is absent (curated refinements
+  keep theirs).
+- **Omnivores:** `OMNIVORE_PRIMARY_FRACTION` (0.7) promotes every family within
+  reach of the top one to PRIMARY, so a generalist has several full-meal foods
+  and a specialist keeps one. Don't lower it past ~0.65 or the Great Spotted
+  Woodpecker's seed (a curated *secondary*) becomes a co-primary.
+- **Head Chef service board:** with a chef appointed, the kitchen renders
+  `kitchenHeadChefBoardHTML()` — foods listed with the birds that eat each — and
+  `chefServeFoodToEveryEater()` plates one food to every hungry eater across
+  species. Both are in `index.html`; tests in
+  `tests/test_full_catalogue_diets_and_chef_board_20260805.py`.
 
 ### The oracle resolution order (why it no longer breaks)
 The script and the diet tests resolve `BirdFuncDat.txt` as:
@@ -191,6 +227,44 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-05 — accurate diets for every bird + the Head Chef service board
+  (Claude).** Yaan reported that feeding a Yellow-legged Gull fish was refused
+  even though the gull eats fish, and asked for a real overhaul: accurate,
+  easy-to-read diets, omnivores that eat all sorts, and a Head Chef who makes
+  feeding easy. Release `accurate-diets-full-catalogue-v226-20260805`.
+  - **Root cause.** The gull (`Larus michahellis`) was not one of the 951
+    national profiles, so the diet generator never made a record for it, and at
+    runtime it fell to the conservative *unmatched* fallback — which refuses fish
+    and claims a generic invertebrates/seeds/fruit menu. This hit **every**
+    playable bird outside the 951 profiles: 323 of 683 expansion/alias birds had
+    no real diet.
+  - **Fix — full catalogue coverage.** New `scripts/build_catalogue_species.js`
+    enumerates every playable non-profile bird into `data/catalogue-species.json`;
+    `check_bird_diets.py` mints a source-backed `catalogueRecords` entry for each
+    (398 of them) using a new **genus fallback** and a small
+    `CATALOGUE_SCIENTIFIC_ALIASES` map for modern renames. Zero unmatched. The
+    gull now resolves *exact* to its real 40%-fish diet. `bird_diet_hunger_core.js`
+    indexes `catalogueRecords`; shipped records are trimmed to stay ~1 MB.
+  - **Fix — omnivores.** `OMNIVORE_PRIMARY_FRACTION` (0.7) makes every food
+    within reach of a bird's top family a PRIMARY (full meal), so a gull's fish,
+    invertebrates and molluscs are all main meals while a kingfisher keeps its
+    single fish primary. Merlin stays `[small_birds]`, the woodpecker stays
+    `[invertebrates]`.
+  - **Feature — Head Chef service board.** With a chef appointed, the kitchen is
+    laid out by FOOD (`kitchenHeadChefBoardHTML`), each course listing the birds
+    that eat it with the hungry ones lit up, and one tap
+    (`chefServeFoodToEveryEater`) serves a food to every hungry bird that eats it
+    across species, one ingredient each, until the stores run dry.
+  - Tests: `tests/test_full_catalogue_diets_and_chef_board_20260805.py`. Existing
+    diet/kitchen tests updated for the new (more accurate) verdicts — three
+    harnesses that fed a bird a food that is now correctly a *secondary* were
+    repointed to species where the food is a genuine primary (Waxwing/berries)
+    or secondary (Blackbird/seeds). Release pins repointed per convention: the
+    diet files and the two current-build-tracked cores (`empire_realm_core.js`,
+    `diary_core.js`) moved to the new tag; `BURBZ_CACHE`/`BURBZ_BUILD` bumped.
+    The only remaining local failures are the documented git-lfs pointer-file
+    art tests (no `git lfs` in the container).
 
 - **2026-08-04 — walking quests enforce ordered waymarkers (Ava).** A live
   Footpath Ring could mark a later checkpoint merely because a loop or nearby
