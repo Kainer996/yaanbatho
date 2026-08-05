@@ -378,6 +378,25 @@ svg.academy-room-bg { display:block; filter:none; }
 @keyframes kitchenChefBob { 0%,100% { transform:translateX(-50%) translateY(0); } 50% { transform:translateX(-50%) translateY(-5px); } }
 /* Feed sheet — the chef's table-service notice: this tap feeds the whole species. */
 .feed-sheet-chef { margin-top:6px; padding:7px 9px; border-radius:9px; border:1px solid rgba(214,168,79,.30); background:rgba(214,168,79,.10); font-size:11px; line-height:1.45; color:var(--accent2); font-weight:700; }
+/* Head Chef service board — with a chef on duty the kitchen is laid out by
+   FOOD, each course listing the birds that eat it, so one tap can serve every
+   hungry companion that eats a given food. This is the chef making feeding
+   easy: the player reads down the menu instead of hunting bird by bird. */
+.chef-board { margin-top:10px; padding:11px 12px; border-radius:13px; border:1px solid rgba(214,168,79,.34); background:linear-gradient(180deg,rgba(214,168,79,.12),rgba(214,168,79,.05)); }
+.chef-board-title { font-family:'Russo One',sans-serif; font-size:13px; color:var(--accent2); }
+.chef-board-lead { font-size:11px; color:var(--text2); margin-top:3px; line-height:1.45; }
+.chef-board-list { display:flex; flex-direction:column; gap:8px; margin-top:9px; }
+.chef-board-food { padding:9px 10px; border-radius:11px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); }
+.chef-board-food-head { display:flex; align-items:center; gap:8px; }
+.chef-board-food-emoji { font-size:22px; flex:0 0 auto; line-height:1; }
+.chef-board-food-name { flex:1; min-width:0; font-family:'Russo One',sans-serif; font-size:12px; color:var(--text1); }
+.chef-board-food-count { font-size:11px; color:var(--text3); font-weight:700; }
+.chef-board-serve { flex:0 0 auto; min-height:34px; padding:0 11px; border-radius:11px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Russo One',sans-serif; font-size:11px; }
+.chef-board-serve:disabled { opacity:.45; }
+.chef-board-eaters { font-size:11px; color:var(--text2); margin-top:6px; line-height:1.5; }
+.chef-board-eater { display:inline-block; padding:1px 7px; margin:2px 4px 0 0; border-radius:8px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); color:var(--text3); }
+.chef-board-eater.hungry { border-color:rgba(214,168,79,.45); background:rgba(214,168,79,.12); color:var(--accent2); font-weight:700; }
+.chef-board-empty { font-size:11px; color:var(--text3); line-height:1.45; }
 .birdex-diet-badge { position:absolute; top:6px; left:6px; z-index:2; font-size:11px; padding:3px 7px; border-radius:9px; background:rgba(214,168,79,.85); color:#241809; font-family:'Rajdhani',sans-serif; font-weight:900; }
 .room-bird-list { display:flex; flex-direction:column; gap:8px; }
 .room-bird-option { display:grid; grid-template-columns:48px 1fr auto; align-items:center; gap:9px; padding:8px; border-radius:12px; border:1px solid rgba(255,255,255,.09); background:rgba(0,0,0,.24); }
@@ -4025,8 +4044,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
-<script src="data/bird-diet-records.js?v=real-walk-nearby-quests-v215-20260803"></script>
-<script src="bird_diet_hunger_core.js?v=real-walk-nearby-quests-v215-20260803"></script>
+<script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
+<script src="bird_diet_hunger_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="bird_sleep_core.js?v=roost-sleep-v208-20260803"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
@@ -4035,7 +4054,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
 <script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=unique-place-names-v225-20260804"></script>
+<script src="empire_realm_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -4053,7 +4072,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
-<script src="diary_core.js?v=unique-place-names-v225-20260804"></script>
+<script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -13773,11 +13792,13 @@ function renderKitchenRosterHTML() {
       '<div class="room-add-title">🍽️ Companion feeding table</div>' +
       '<div class="inventory-empty" data-kitchen-all-fed="1">No companions are at the table yet.</div></div>';
   }
+  const chefBoard = typeof kitchenHeadChefBoardHTML === 'function' ? kitchenHeadChefBoardHTML() : '';
   return '<div class="room-add-panel kitchen-roster" data-kitchen-roster-root="academy-kitchen">' +
     '<div class="room-add-title">🍽️ Companion feeding table</div>' +
     '<details class="kitchen-fold"><summary>How feeding works</summary><div class="kitchen-fold-body">' +
-      '<div class="kitchen-help">Every bird eats something different. Open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Birds of prey cannot eat seed: voles, mice, rabbits, frogs, lizards, bird-prey rations, fish and carrion all come from the hunting quests on the Quests board, from prey you find while walking, and from the village butcher counter. Appoint a Head Chef above and one serving feeds every bird of the same species at once.</div>' +
+      '<div class="kitchen-help">Every bird eats something different. Open a tray and assign each one the food it really eats. A bird with nothing suitable in the kitchen goes hungry — and a hungry bird turns less active until quests and training lock. Birds of prey cannot eat seed: voles, mice, rabbits, frogs, lizards, bird-prey rations, fish and carrion all come from the hunting quests on the Quests board, from prey you find while walking, and from the village butcher counter. Appoint a Head Chef above and the kitchen reorganises by food: one serving feeds every bird of the same species, and the chef’s service board can plate a whole food to every hungry bird that eats it in one tap.</div>' +
     '</div></details>' +
+    chefBoard +
     '<div class="kitchen-roster-list">' + entries.map(kitchenRosterRowHTML).join('') + '</div></div>';
 }
 
@@ -14094,6 +14115,179 @@ function kitchenChefSpriteHTML(room) {
   return '<div class="kitchen-chef-actor" data-kitchen-chef="' + escapeHtml(post.bird.id) + '">' +
     birdOnlyImgHTML(post.bird, 'kitchen-chef-sprite') +
     '<div class="kitchen-chef-nameplate">🥣 ' + escapeHtml(birdDisplayName(post.bird)) + ' · Head Chef</div></div>';
+}
+
+// ============================================================================
+// HEAD CHEF SERVICE BOARD — the kitchen laid out by food, not by bird
+// ============================================================================
+// The player asked for the Head Chef to make feeding EASY and to put everything
+// "in order of a type of food and the type of bird that eats it". With a chef on
+// duty the kitchen shows a service board: every food in stock, and under each
+// the companions that eat it, with the hungry ones lit up. One tap on "Serve"
+// plates that food for every hungry companion that eats it — across species,
+// one ingredient each, until the stores run dry. Omnivores, which now have
+// several primary foods, therefore show up under several courses and are the
+// easiest of all to keep fed.
+
+// Every food currently in the kitchen (Academy pantry families + Stores larder
+// ingredients), each as one servable line. Grit is a Prep-Counter garnish, not
+// a meal, so it never appears.
+function kitchenAllInStockFoods() {
+  const core = kitchenDietCore();
+  refillPantry();
+  const foods = [];
+  Object.keys(FOODS).forEach(key => {
+    const count = Math.max(0, Math.floor(Number((gameState.pantry || {})[key]) || 0));
+    if (count > 0) foods.push({ kind:'pantry', id:key, label:FOODS[key].label, emoji:FOODS[key].emoji, count });
+  });
+  const larder = ensureLarder();
+  Object.keys(larder).forEach(id => {
+    const ing = core && typeof core.ingredientById === 'function' ? core.ingredientById(id) : null;
+    const count = Math.max(0, Math.floor(Number(larder[id]) || 0));
+    if (!ing || count <= 0 || ing.family === 'grit') return;
+    const uiIng = kitchenIngredientById(id);
+    foods.push({ kind:'larder', id, label:ing.label, emoji:(uiIng && uiIng.icon) || '🍽️', count });
+  });
+  return foods;
+}
+
+// A companion is a live feeding target for the board when it is at the table
+// (not away on a quest). Merlin and every recruited bird qualify.
+function kitchenBoardEaterRows() {
+  return kitchenRosterEntries().filter(entry => !(entry.bird && birdHasActiveExpedition(entry.bird.id)));
+}
+
+// A bird counts as hungry-enough for the chef's one-tap service only above a
+// small floor: a just-fed bird reads a fraction of a percent from clock drift,
+// and we must not waste a scarce ingredient topping it up. Hand-feeding from the
+// tray can still top up any bird at any fullness.
+const CHEF_BOARD_HUNGRY_MIN = 1;
+function kitchenBoardIsHungry(entry) {
+  return kitchenRosterHungerStatus(entry).hunger >= CHEF_BOARD_HUNGRY_MIN;
+}
+
+// The board itself: only rendered with a Head Chef on duty. Foods with at least
+// one hungry eater float to the top, so the most useful serving is always the
+// first thing the player sees.
+function kitchenHeadChefBoardHTML() {
+  const post = rolePostState('academy', 'kitchen');
+  if (!post.staffed || !post.bird) return '';
+  const core = kitchenDietCore();
+  if (!core || typeof core.scoreFoodCompatibility !== 'function') return '';
+  const entries = kitchenBoardEaterRows();
+  const perEntry = entries.map(entry => ({
+    entry,
+    hungry: kitchenBoardIsHungry(entry),
+    options: kitchenRosterFoodOptions(entry)
+  }));
+  const foods = kitchenAllInStockFoods().map(food => {
+    const eaters = perEntry.filter(pe => pe.options.some(o => o.kind === food.kind && o.id === food.id && o.accepted));
+    const hungryCount = eaters.filter(pe => pe.hungry).length;
+    return { ...food, eaters, hungryCount };
+  }).filter(food => food.eaters.length);
+  // Hungriest-first, then by how many birds it feeds, then alphabetically.
+  foods.sort((a, b) => (b.hungryCount - a.hungryCount) || (b.eaters.length - a.eaters.length) || a.label.localeCompare(b.label));
+
+  const header = '<div class="chef-board-title">🥣 Head Chef ' + escapeHtml(birdDisplayName(post.bird)) + '’s service board</div>' +
+    '<div class="chef-board-lead">Your kitchen, laid out by food — each course lists the birds that eat it. Tap <b>Serve</b> to feed every hungry bird that eats that food in one go (one ingredient each). Omnivores eat all sorts, so they turn up under several courses.</div>';
+  if (!foods.length) {
+    return '<div class="chef-board" data-chef-board="academy-kitchen">' + header +
+      '<div class="chef-board-empty">The kitchen is bare. Send a bird out on a food quest, pick prey up on a walk, or buy food at a village market — then the chef will lay it out here.</div></div>';
+  }
+  const rows = foods.map(food => {
+    const eaterChips = food.eaters.map(pe =>
+      '<span class="chef-board-eater' + (pe.hungry ? ' hungry' : '') + '">' +
+      (pe.entry.merlin ? '🧙 ' : '') + escapeHtml(pe.entry.name) + (pe.hungry ? '' : ' ✓') + '</span>'
+    ).join('');
+    const serveLabel = food.hungryCount ? 'Serve ' + food.hungryCount : 'All fed';
+    const serveBtn = '<button type="button" class="chef-board-serve" data-action="chef-board-serve"' +
+      (food.hungryCount ? '' : ' disabled') +
+      ' onclick="event.preventDefault();event.stopPropagation();chefServeFoodToEveryEater(\'' + food.kind + '\',\'' + escapeHtml(food.id) + '\')">' + serveLabel + '</button>';
+    return '<div class="chef-board-food" data-chef-board-food="' + escapeHtml(food.kind + ':' + food.id) + '">' +
+      '<div class="chef-board-food-head"><span class="chef-board-food-emoji">' + food.emoji + '</span>' +
+      '<span class="chef-board-food-name">' + escapeHtml(food.label) + '</span>' +
+      '<span class="chef-board-food-count">×' + food.count + '</span>' + serveBtn + '</div>' +
+      '<div class="chef-board-eaters">' + (eaterChips || 'No companion at the table eats this yet.') + '</div></div>';
+  }).join('');
+  return '<div class="chef-board" data-chef-board="academy-kitchen">' + header +
+    '<div class="chef-board-list">' + rows + '</div></div>';
+}
+
+// One tap, one food, every hungry bird that eats it. Each accepted eater is
+// plated through the SAME feeding transaction as a hand-fed meal — full
+// per-bird rewards, one ingredient each, in roster order — stopping the moment
+// the stores run dry. No chef, no board, so nothing here fires without one.
+function chefServeFoodToEveryEater(kind, foodId) {
+  const core = kitchenDietCore();
+  if (!core || typeof core.applyFeedingTransaction !== 'function') { showToast('The kitchen scales are still loading — try again in a moment.'); return; }
+  const post = rolePostState('academy', 'kitchen');
+  if (!post.staffed) { showToast('Appoint a Head Chef to run the service board.'); return; }
+  const food = kitchenAllInStockFoods().find(f => f.kind === kind && f.id === foodId);
+  if (!food) { showToast('That food is no longer in the stores.'); refreshFeedSurfaces(); return; }
+  const now = Date.now();
+  const ing = kind === 'larder' && typeof core.ingredientById === 'function' ? core.ingredientById(foodId) : null;
+  // Build the whole queue of hungry birds that eat this food FIRST, scored
+  // independently of stock, so "still waiting" is honest even when the stores
+  // run dry partway through. Then serve down the queue in roster order.
+  const queue = kitchenBoardEaterRows().filter(entry => {
+    if (!kitchenBoardIsHungry(entry)) return false;
+    const prep = kind === 'larder' ? kitchenRosterWantedPrep(entry.target, ing) : null;
+    const spec = kind === 'pantry' ? { pantryKey:foodId, source:'pantry' } : { ingredientId:foodId, prep };
+    const compat = core.scoreFoodCompatibility(entry.target, typeof core.normalizeFeedingSpec === 'function' ? core.normalizeFeedingSpec(spec) : spec);
+    return ((core.ACCEPTED_FEED_VERDICTS || ['primary', 'secondary', 'insufficient']).indexOf(compat.verdict) >= 0);
+  });
+  let served = 0;
+  const hungryEaters = queue.length;
+  queue.forEach(entry => {
+    const stock = kind === 'pantry'
+      ? Math.max(0, Math.floor(Number((gameState.pantry || {})[foodId]) || 0))
+      : Math.max(0, Math.floor(Number(ensureLarder()[foodId]) || 0));
+    if (stock < 1) return; // stores ran dry — leave the rest waiting
+    const prep = kind === 'larder' ? kitchenRosterWantedPrep(entry.target, ing) : null;
+    const spec = kind === 'pantry' ? { pantryKey:foodId, source:'pantry' } : { ingredientId:foodId, prep };
+    const tx = core.applyFeedingTransaction(gameState, entry.target, spec, { transactionId:'chef-board:' + entry.key + ':' + kind + ':' + foodId + ':' + now, now });
+    gameState = tx.state;
+    if (!tx.ok || tx.duplicate) return;
+    const verdict = tx.compatibility && tx.compatibility.verdict;
+    const reward = feedRewardsForVerdict(verdict);
+    if (entry.merlin) {
+      if (window.BurbzMerlinCompanionCore) {
+        gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, lastCareAt: now }, now), reward.bondXp, now);
+      }
+    } else {
+      const bird = academyBirdById(entry.key);
+      if (bird) {
+        ensureBirdAcademy(bird);
+        bird.care.lastFed = new Date(now).toISOString();
+        bird.training.feedCount = (bird.training.feedCount || 0) + 1;
+        levelUpBird(bird, reward.birdXp);
+        if (verdict === 'primary') {
+          bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 1, 0, 50);
+          bird.maxHp = clamp(bird.maxHp + 1, 50, 999);
+          bird.hp = bird.maxHp;
+          recalcBirdPower(bird);
+          bird.academy.dietKnown = true;
+          updateQuestProgress('proper_meal_fed', 1);
+        }
+        updateQuestProgress('feed_correct', 1);
+      }
+    }
+    applyPlayerXpState(reward.trainerXp);
+    gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
+    updateQuestProgress('meal_served', 1);
+    served += 1;
+  });
+  saveState();
+  if (served > 0) {
+    SFX.capture();
+    const shortBy = Math.max(0, hungryEaters - served);
+    showToast('🥣 Head Chef ' + birdDisplayName(post.bird) + ' serves ' + food.label.toLowerCase() + ' to ' + served + ' bird' + (served === 1 ? '' : 's') + '.'
+      + (shortBy > 0 ? ' The stores ran dry — ' + shortBy + ' still waiting.' : ''));
+  } else {
+    SFX.tap();
+    showToast('Every bird that eats ' + food.label.toLowerCase() + ' is already full.');
+  }
+  refreshFeedSurfaces();
 }
 
 // One serving, the whole species. After a companion is successfully fed, every
@@ -15301,6 +15495,7 @@ Object.assign(window, {
   kitchenRosterFeed,
   burbzFeedFood,
   burbzFeedTap,
+  chefServeFoodToEveryEater,
   openFeedSheet,
   closeFeedSheet,
   startBirdTrainingSession,
@@ -30329,7 +30524,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'unique-place-names-v225-20260804';
+const BURBZ_BUILD = 'accurate-diets-full-catalogue-v226-20260805';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
