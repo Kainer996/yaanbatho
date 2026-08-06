@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
+RELEASE_PIN = "real-walk-go-map-v230-20260806"
 # This release's own marker stays on the cache lineage even after later
 # releases move BURBZ_BUILD on.
 OWN_RELEASE_PIN = "merlin-bond-meter-v197-20260802"

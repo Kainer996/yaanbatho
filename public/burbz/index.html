@@ -30047,7 +30047,7 @@ const PLAYER_QUESTS = [
     measure:() => (gameState.flock || []).some(b => b && b.academy && b.academy.room === 'hospital') ? 1 : 0 },
   { id:'pq_win_3',          name:'Arena regular', desc:'Win 3 battles against the evil Burbz', type:'win', target:3, reward:80, coins:50, icon:'\u{1F3C6}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
-  { id:'pq_walk_adventure', name:'Take a real walk', desc:'Complete a walking adventure on the live map', type:'walk_completed', target:1, reward:70, coins:40, icon:'\u{1F97E}', go:'quests',
+  { id:'pq_walk_adventure', name:'Take a real walk', desc:'Complete a walking adventure on the live map', type:'walk_completed', target:1, reward:70, coins:40, icon:'\u{1F97E}', go:'map',
     measure:() => ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length },
   { id:'pq_quiz',           name:'Bird Wisdom Check', desc:'Answer a bird knowledge question correctly', type:'bird_quiz_correct', target:1, reward:45, coins:20, icon:'\u{1F9E0}', go:'quests',
     measure:() => Number(gameState.knowledgeQuiz && gameState.knowledgeQuiz.correct) || 0 },
@@ -30086,8 +30086,11 @@ function syncActivePlayerQuest() {
 function playerQuestGo(q) {
   academyQuestGuidanceRoom = q.focusRoom || null;
   if (q.id === 'pq_walk_adventure') {
-    if (currentScreen !== 'quests') switchScreen('quests');
-    openQuestBoard();
+    // Go straight to the real world: the live map with every local walking
+    // quest drawn on it, not a flat list of footpaths in a sheet.
+    closeWalkQuestSheet();
+    if (activeWalkingQuest()) { switchScreen('map'); openActiveWalkQuestSheet(); return; }
+    showAllLocalQuests();
     return;
   }
   if (q.go && q.go !== currentScreen) switchScreen(q.go);
@@ -30618,7 +30621,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'nocturnal-night-bonus-v229-20260805';
+const BURBZ_BUILD = 'real-walk-go-map-v230-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
