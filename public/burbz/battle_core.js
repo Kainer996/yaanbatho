@@ -608,6 +608,38 @@
     return healed;
   }
 
+  // Potions are carried into Skyclash and drunk by the player as a bonus action
+  // on that bird's turn. Buff durations gain one here because resolveAction
+  // immediately spends the current turn; a three-turn brew therefore powers the
+  // move made after drinking plus the next two turns. Turn-meter brews retain a
+  // slice of readiness after that move instead of being wasted at CR 100.
+  function canUsePotionEffect(fighter, effect) {
+    if (!fighter || fighter.fainted || !effect) return false;
+    if (effect.healPct && fighter.hp < fighter.maxHp) return true;
+    if (effect.barrierPct && (fighter.barrier || 0) < Math.round(fighter.maxHp * effect.barrierPct)) return true;
+    if ((effect.mods || []).length) return true;
+    if (effect.crStart) return true;
+    return false;
+  }
+
+  function applyPotionEffect(fighter, effect) {
+    if (!canUsePotionEffect(fighter, effect)) return { used:false, healed:0, barrier:0, mods:[], crCarry:0 };
+    const healed = effect.healPct ? applyHeal(fighter, fighter.maxHp * effect.healPct) : 0;
+    let barrier = 0;
+    if (effect.barrierPct) {
+      const before = fighter.barrier || 0;
+      fighter.barrier = Math.max(before, Math.round(fighter.maxHp * effect.barrierPct));
+      barrier = fighter.barrier - before;
+    }
+    const mods = (effect.mods || []).map(m => ({ ...m, turns: Math.max(1, n(m.turns, 1)) + 1 }));
+    fighter.mods = fighter.mods || [];
+    fighter.mods.push(...mods);
+    const crCarry = clamp(n(effect.crStart, 0) * 100, 0, 99.5);
+    fighter.potionCrCarry = Math.max(n(fighter.potionCrCarry, 0), crCarry);
+    fighter.fainted = fighter.hp <= 0;
+    return { used:true, healed, barrier, mods, crCarry };
+  }
+
   function pushCr(fighter, pct) {
     if (!fighter.fainted) fighter.cr = clamp(fighter.cr + pct * 100, 0, 99.5);
   }
@@ -762,7 +794,8 @@
 
     // End of the acting bird's turn: tick its effect durations, reset meter.
     attacker.mods = (attacker.mods || []).map(m => ({ ...m, turns: m.turns - 1 })).filter(m => m.turns > 0);
-    attacker.cr = 0;
+    attacker.cr = clamp(n(attacker.potionCrCarry, 0), 0, 99.5);
+    delete attacker.potionCrCarry;
     battle.acting = null;
     battle.phase = 'tick';
 
@@ -873,7 +906,7 @@
     deriveMagic, deriveResist,
     disciplineTier, trainedMoves, buildFighter, buildOpponentFighter,
     createBattle, tickToNextTurn, forecastTurnOrder, availableActions, resolveAction, aiChooseAction,
-    actingFighter, livingFighters, teamAlive, effStat, skillUsable,
+    actingFighter, livingFighters, teamAlive, effStat, skillUsable, canUsePotionEffect, applyPotionEffect,
     LEAGUE_TIERS, battleRewards, DAILY_FULL_REWARD_WINS,
     hashString, seededRandom
   };

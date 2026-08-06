@@ -1,8 +1,8 @@
 """Tap a companion bird -> classic RPG equipment screen.
 
 Players equip weapons, armour, enhancements (trinkets), spells and potions on
-a bird. Spells grant an extra battle skill; potions fire automatically as the
-battle opens and restock from the bag.
+a bird. Spells grant an extra battle skill; potions are bonus actions on that
+bird's player turn and restock from the bag for the next battle.
 """
 import json
 import subprocess
@@ -144,16 +144,16 @@ def test_equip_actions_share_one_bag_aware_code_path():
 
 
 # ---------------------------------------------------------------------------
-# Battle wiring: spells join the skill bar, potions fire at battle start
+# Battle wiring: spells join the skill bar; potions wait for a player turn
 # ---------------------------------------------------------------------------
 
-def test_battle_start_applies_spells_and_potions():
+def test_battle_start_prepares_spells_and_player_turn_potions():
     assert "function applyEquippedSpell(fighter, bird)" in HTML
-    assert "function applyEquippedPotion(fighter, bird)" in HTML
+    assert "function prepareEquippedPotion(fighter, bird)" in HTML
     assert "function consumeEquippedPotion(bird)" in HTML
     assert "applyEquippedSpell(f, b);" in HTML
-    assert "const item = applyEquippedPotion(playerFighters[i], b);" in HTML
-    assert "potionSips.forEach(t => addBattleLog('system-msg', '🧪 ' + t));" in HTML
+    assert "prepareEquippedPotion(f, b);" in HTML
+    assert "function battleUsePotion()" in HTML
 
 
 def test_drunk_potions_restock_from_the_bag():
@@ -168,7 +168,7 @@ def test_drunk_potions_restock_from_the_bag():
 # ---------------------------------------------------------------------------
 
 def test_loot_core_version_is_bumped_and_consistent():
-    pin = 'loot_crafting_core.js?v=forge-satchels-v220-20260804'
+    pin = 'loot_crafting_core.js?v=turn-potions-v232-20260806'
     assert pin in HTML
     assert f"'./{pin}'" in SW
     assert "fletchers-forge-20260719" not in HTML

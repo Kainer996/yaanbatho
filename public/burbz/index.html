@@ -1956,6 +1956,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .move-btn.surge-btn { border-color:rgba(240,180,41,0.45); text-align:center; }
 .move-btn.surge-btn .mv-name { color:#f0b429; }
 .move-btn.surge-btn.armed { background:linear-gradient(180deg, rgba(240,180,41,0.22), var(--bg2)); box-shadow:0 0 12px rgba(240,180,41,0.4); }
+.move-btn.potion-btn { grid-column:1/-1; border-color:rgba(67,198,168,0.5); background:linear-gradient(180deg,rgba(67,198,168,.14),var(--bg2)); }
+.move-btn.potion-btn .mv-name { color:#7fdcc6; }
+.move-btn.potion-btn.used { border-color:rgba(255,255,255,.12); background:var(--bg2); }
 .battle-forge-btn { display:block; width:100%; margin-top:8px; padding:11px; border-radius:10px; background:var(--bg2); border:1.5px solid rgba(143,208,255,0.35); color:#8fd0ff; font-family:'Russo One', sans-serif; font-size:11px; letter-spacing:1px; }
 .battle-forge-btn:active { transform:scale(0.98); }
 /* ---- Fletcher's Forge ---- */
@@ -3623,7 +3626,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- FLETCHER'S FORGE — equip weapons & armour, craft gear from found loot -->
     <div class="screen" id="screen-forge">
       <div class="screen-title">FLETCHER'S FORGE</div>
-      <div class="forge-intro">Loot found on your walks becomes weapons, armour, satchels and trinkets here. Equip each bird at the Forge; satchels let it carry more home from quests.</div>
+      <div class="forge-intro">Loot found on your walks becomes weapons, armour, satchels, trinkets, spells and battle potions here. Equip each bird at the Forge; its potion can be drunk on that bird’s turn, and satchels let it carry more home from quests.</div>
       <div class="forge-tabs">
         <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
         <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
@@ -4056,8 +4059,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
-<script src="battle_core.js?v=bird-size-roles-v201-20260802"></script>
-<script src="loot_crafting_core.js?v=forge-satchels-v220-20260804"></script>
+<script src="battle_core.js?v=turn-potions-v232-20260806"></script>
+<script src="loot_crafting_core.js?v=turn-potions-v232-20260806"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
@@ -18256,9 +18259,9 @@ function applyEquippedSpell(fighter, bird) {
   fighter.skills.splice(Math.max(1, fighter.skills.length - 1), 0, { ...skill, cdLeft: 0 });
 }
 
-// An equipped potion is drunk automatically as the battle opens: heal, barrier,
-// stat brews and turn-meter head starts all land before the first move.
-function applyEquippedPotion(fighter, bird) {
+// An equipped potion is carried by its bird until the player chooses to drink it
+// on that bird's turn. The item remains isolated on the fighter for this battle.
+function prepareEquippedPotion(fighter, bird) {
   let item = null, effect = null;
   try {
     const L = lootCore();
@@ -18266,11 +18269,7 @@ function applyEquippedPotion(fighter, bird) {
     effect = L.potionEffectFor(item);
   } catch (e) {}
   if (!item || !effect) return null;
-  if (effect.healPct) fighter.hp = Math.min(fighter.maxHp, fighter.hp + Math.round(fighter.maxHp * effect.healPct));
-  if (effect.barrierPct) fighter.barrier = Math.max(fighter.barrier || 0, Math.round(fighter.maxHp * effect.barrierPct));
-  (effect.mods || []).forEach(m => fighter.mods.push({ ...m }));
-  if (effect.crStart) fighter.cr = clamp((fighter.cr || 0) + effect.crStart * 100, 0, 100);
-  fighter.fainted = fighter.hp <= 0;
+  fighter.potion = { id:item.id, label:item.label, icon:item.icon, effect, used:false };
   return item;
 }
 
@@ -18964,8 +18963,13 @@ const VILLAGE_SHOPS = {
     ]
   },
   potion: {
-    name: 'The Gilded Beak', icon: '🧪', desc: 'Potion shop. Brews care for Merlin; scrolls go to any recruited bird you choose.',
+    name: 'The Gilded Beak', icon: '🧪', desc: 'Potion shop. Buy battle brews for your flock, care tonics for Merlin and wisdom scrolls.',
     stock: [
+      { id: 'tonic_of_vigour', label: 'Tonic of Vigour', detail: 'Battle potion: restore 30% HP on that bird’s turn', price: 30, grantGear: 'tonic_of_vigour' },
+      { id: 'nettle_brew', label: 'Nettle War-Brew', detail: 'Battle potion: +15% attack and magic for 3 turns', price: 55, grantGear: 'nettle_brew' },
+      { id: 'barrier_draught', label: 'Barrier Draught', detail: 'Battle potion: raise a shield worth 22% max HP', price: 90, grantGear: 'barrier_draught' },
+      { id: 'stormwing_philtre', label: 'Stormwing Philtre', detail: 'Battle potion: speed up and keep 35% turn readiness', price: 145, grantGear: 'stormwing_philtre' },
+      { id: 'phoenix_elixir', label: 'Phoenix Elixir', detail: 'Battle potion: heal, shield and power up together', price: 240, grantGear: 'phoenix_elixir' },
       { id: 'heal_potion', label: 'Wizard tonic',   detail: '+30 Merlin energy',                   price: 25, effect: 'merlin_energy' },
       { id: 'happy_tonic', label: 'Cheer tonic',    detail: '+30 Merlin happiness',                price: 18, effect: 'merlin_happy' },
       { id: 'xp_scroll',   label: 'Wisdom scroll',  detail: 'Stores item: +40 XP to any bird you choose', price: 30, grantItem: 'xp_scroll_minor' },
@@ -25201,6 +25205,19 @@ function villageBuy(shopKey, itemId) {
     return;
   }
 
+  // Battle potions: bought into the Stores gear bag, then equipped on a bird at
+  // the Forge. One equipped bottle can be drunk on that bird's turn per battle.
+  if (item.grantGear) {
+    const gear = lootCore().gearById(item.grantGear);
+    if (!gear || gear.slot !== 'potion') return;
+    addCoins(-item.price);
+    gameState.inventory.gear[item.grantGear] = (gameState.inventory.gear[item.grantGear] || 0) + 1;
+    saveState(); updateHeader();
+    showToast(gear.icon + ' ' + gear.label + ' added to your Stores — equip it on a bird at the Forge!');
+    villageOpenShop(shopKey);
+    return;
+  }
+
   addCoins(-item.price);
   let msg = '';
   if (['merlin_energy','merlin_happy','merlin_feast','merlin_play','merlin_rest'].includes(item.effect)) {
@@ -29256,22 +29273,17 @@ function startPerchBattle() {
   if (warningStates.length) showToast(warningStates.some(r => r.sleep && r.sleep.warning) ? '🥱 One or more selected birds are getting tired — let them rest after this battle.' : '🍽️ One or more selected birds are hungry — feed them after this battle.');
   const liberation = pendingEmpireLiberation();
   const rival = leagueRivalOpponents();
-  // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter.
+  // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter;
+  // spells join the skill bar and potions wait for their bird's player turn.
   const playerFighters = team.map(b => {
     const f = core.buildFighter(b, { gear: birdGearBonuses(b) });
     applyEquippedSpell(f, b);
+    prepareEquippedPotion(f, b);
     return f;
   });
   // Merlin's blessing on the story's first liberation: the flock enters at full
   // strength, so the opening battle can't be lost to a tired or hurt bird.
   if (liberation && isFirstLiberationBattle()) playerFighters.forEach(f => { f.hp = f.maxHp; f.fainted = false; });
-  // Equipped potions are drunk as the squad takes wing, then restocked from the bag.
-  const potionSips = [];
-  team.forEach((b, i) => {
-    const item = applyEquippedPotion(playerFighters[i], b);
-    if (item && consumeEquippedPotion(b)) potionSips.push(playerFighters[i].name + ' drinks ' + item.icon + ' ' + item.label + '!');
-  });
-  if (potionSips.length) saveState();
   const opponentFighters = rival.opponents.map((b, i) => core.buildOpponentFighter(b, league.tier, rival.key + '_' + i));
   const family = birdFamilyCore();
   const playerSynergies = family ? family.applyTeamSynergies(playerFighters) : [];
@@ -29291,7 +29303,6 @@ function startPerchBattle() {
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
   (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
   addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
-  potionSips.forEach(t => addBattleLog('system-msg', '🧪 ' + t));
   SFX.tap();
   battleAdvance();
 }
@@ -29385,6 +29396,15 @@ function renderArena() {
   const me = core.actingFighter(b);
   const acts = core.availableActions(b);
   const canSurge = b.focus.player >= core.SURGE_COST;
+  const potion = me.potion || null;
+  const potionReady = !!(potion && !potion.used && core.canUsePotionEffect(me, potion.effect));
+  const potionName = potion ? potion.icon + ' ' + escapeHtml(potion.label) : '🧪 POTION';
+  const potionMeta = !potion ? 'No potion equipped · equip one at the Forge'
+    : potion.used ? 'Potion already used this battle'
+    : potionReady ? 'Drink as a bonus action · then choose a move'
+    : 'No healing needed yet';
+  const potionButton = '<button class="move-btn potion-btn' + (potion && potion.used ? ' used' : '') + '"' + (!potionReady ? ' disabled' : '') + ' onclick="battleUsePotion()">' +
+    '<div class="mv-name">' + potionName + '</div><div class="mv-meta">' + potionMeta + '</div></button>';
   actions.innerHTML =
     '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' + (choosingTarget ? ' — tap an evil Burb to strike' : '') + '</div>' +
     acts.map((a, i) => {
@@ -29400,8 +29420,33 @@ function renderArena() {
         '<div class="mv-meta">' + metaLine + '</div>' +
         (a.usable ? (m.focusGain ? '<div class="mv-cost">+' + m.focusGain + ' Focus</div>' : (m.cd ? '<div class="mv-cost">CD ' + m.cd + '</div>' : '')) : '<div class="mv-cost cd">🕐 ' + m.cdLeft + '</div>') +
         '</button>';
-    }).join('') +
+    }).join('') + potionButton +
     '<button class="move-btn surge-btn' + (battleState.surgeArmed ? ' armed' : '') + '" style="grid-column:1/-1;"' + (!canSurge ? ' disabled' : '') + ' onclick="battleToggleSurge()"><div class="mv-name">🔥 SURGE' + (battleState.surgeArmed ? ' ARMED — next skill +40%' : ' · spend ' + core.SURGE_COST + ' Focus to empower the next skill') + '</div></button>';
+}
+
+function battleUsePotion() {
+  if (!battleState || battleState.busy) return;
+  const core = battleCore();
+  const b = battleState.battle;
+  if (!b.acting || b.acting.side !== 'player') return;
+  const me = core.actingFighter(b);
+  if (!me || !me.potion || me.potion.used) return;
+  if (!core.canUsePotionEffect(me, me.potion.effect)) {
+    showToast('That potion would have no effect yet.');
+    return;
+  }
+  const result = core.applyPotionEffect(me, me.potion.effect);
+  if (!result.used) return;
+  me.potion.used = true;
+  const bird = gameState.flock.find(x => x.id === me.birdId);
+  if (bird) consumeEquippedPotion(bird);
+  saveState();
+  addBattleLog('player-action', '🧪 ' + me.name + ' drinks ' + me.potion.icon + ' ' + me.potion.label + ' — then stays ready to move!');
+  if (result.healed) spawnDamageFloat('player', b.acting.index, '+' + result.healed, 'heal');
+  else if (result.barrier) spawnDamageFloat('player', b.acting.index, '🛡️ +' + result.barrier, 'heal');
+  else spawnDamageFloat('player', b.acting.index, 'POWER UP', 'heal');
+  if (SFX.specialHit) SFX.specialHit({ volume:0.55, playbackRate:1.18 });
+  renderArena();
 }
 
 function battleSelectSkill(skillIndex) {
@@ -30645,7 +30690,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'side-quests-walk-goal-v231-20260806';
+const BURBZ_BUILD = 'turn-potions-v232-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

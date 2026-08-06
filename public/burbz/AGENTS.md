@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (Side Quests map access v231: a compact button below Show Quests opens free exploration directly, and completed Side Quests satisfy Go for a walk — see "Review log" at the bottom).
+Last curated: 2026-08-06 (player-turn battle potions v232: equipped brews are once-per-battle bonus actions; all five remain craftable and are sold at The Gilded Beak — see "Review log" at the bottom).
 
 ---
 
@@ -227,6 +227,22 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-06 — player-turn battle potions (Ava).** Release
+  `turn-potions-v232-20260806` changes the five existing equipped potion items
+  from automatic battle-open effects into explicit once-per-battle **bonus
+  actions** shown only while their bird has the player turn. Drinking does not
+  replace the bird's move: Tonic of Vigour heals, Nettle War-Brew boosts ATK and
+  MAG, Barrier Draught shields, Stormwing Philtre boosts speed and preserves 35%
+  readiness after the move, and Phoenix Elixir combines healing, shielding and
+  power. Consumption still removes the equipped bottle and quietly restocks the
+  same loadout from a matching spare in the Stores for the next battle. All five
+  recipes remain in the Fletcher's Forge, and The Gilded Beak now sells each
+  battle potion directly into the Stores gear bag. Pure effect/readiness logic is
+  in `battle_core.js`; inventory and UI wiring remain in `index.html`. Tests:
+  `tests/test_turn_potions_20260806.py` plus the equipment and Skyclash suites;
+  SW cache + `BURBZ_BUILD`, `battle_core.js`, and `loot_crafting_core.js` pins
+  bumped.
 
 - **2026-08-06 — Side Quests on the live map (Ava).** Release
   `side-quests-walk-goal-v231-20260806` restores the existing free-exploration
