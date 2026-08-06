@@ -26448,7 +26448,7 @@ const FORGE_SLOT_META = {
   armour:  { label: 'Armour',      empty: '🛡️', hint: 'DEF, HP and magic resist' },
   trinket: { label: 'Enhancement', empty: '🎒', hint: 'Satchels carry more · charms boost battle' },
   spell:   { label: 'Spell',       empty: '📜', hint: 'Grants an extra battle skill' },
-  potion:  { label: 'Potion',      empty: '🧪', hint: 'Drunk automatically as battle begins' }
+  potion:  { label: 'Potion',      empty: '🧪', hint: 'Drink on this bird’s turn · does not replace its move' }
 };
 
 function forgeSetTab(tab) {
@@ -26482,7 +26482,7 @@ function forgeGearStatLine(item) {
   }
   if (item.battle) {
     const b = item.battle;
-    if (b.healPct) parts.push('🧪 +' + Math.round(b.healPct * 100) + '% HP at start');
+    if (b.healPct) parts.push('🧪 +' + Math.round(b.healPct * 100) + '% HP when drunk');
     if (b.barrierPct) parts.push('🧪 ' + Math.round(b.barrierPct * 100) + '% barrier');
     (b.mods || []).forEach(m => parts.push('🧪 +' + Math.round(m.pct * 100) + '% ' + m.stat.toUpperCase()));
     if (b.crStart) parts.push('🧪 head start on the turn meter');
@@ -29435,12 +29435,25 @@ function battleUsePotion() {
     showToast('That potion would have no effect yet.');
     return;
   }
+  const bird = gameState.flock.find(x => x.id === me.birdId);
+  if (!bird) return;
+  // Potion effects live in the transient battle object while the bottle lives
+  // in persistent inventory. Snapshot both so a full localStorage device cannot
+  // grant a free effect or duplicate the bottle after reload.
+  const stateSnapshot = snapshotGameState();
+  const fighterSnapshot = JSON.parse(JSON.stringify(me));
   const result = core.applyPotionEffect(me, me.potion.effect);
   if (!result.used) return;
   me.potion.used = true;
-  const bird = gameState.flock.find(x => x.id === me.birdId);
-  if (bird) consumeEquippedPotion(bird);
-  saveState();
+  consumeEquippedPotion(bird);
+  const saved = saveState();
+  if (!saved.ok) {
+    restoreGameStateSnapshot(stateSnapshot);
+    restoreStateTree(me, fighterSnapshot);
+    showToast('Potion stayed corked — this device could not save the drink. Free a little storage and try again.');
+    renderArena();
+    return;
+  }
   addBattleLog('player-action', '🧪 ' + me.name + ' drinks ' + me.potion.icon + ' ' + me.potion.label + ' — then stays ready to move!');
   if (result.healed) spawnDamageFloat('player', b.acting.index, '+' + result.healed, 'heal');
   else if (result.barrier) spawnDamageFloat('player', b.acting.index, '🛡️ +' + result.barrier, 'heal');
@@ -29695,7 +29708,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -30690,7 +30703,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'turn-potions-v232-20260806';
+const BURBZ_BUILD = 'turn-potions-hotfix-v233-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

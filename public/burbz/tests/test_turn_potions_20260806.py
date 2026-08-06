@@ -76,6 +76,30 @@ def test_potion_button_explains_empty_used_and_ready_states():
     assert "Drink as a bonus action · then choose a move" in HTML
 
 
+def test_inline_potion_handler_is_exported_for_the_button():
+    start = HTML.index("Object.assign(window, { academyBuildBuilding")
+    exports = HTML[start:HTML.index("});", start)]
+    assert "battleUsePotion" in exports
+
+
+def test_potion_drink_rolls_back_when_durable_save_fails():
+    start = HTML.index("function battleUsePotion()")
+    fn = HTML[start:HTML.index("\nfunction ", start + 1)]
+    assert "const stateSnapshot = snapshotGameState();" in fn
+    assert "const fighterSnapshot = JSON.parse(JSON.stringify(me));" in fn
+    assert "const saved = saveState();" in fn
+    assert "if (!saved.ok)" in fn
+    assert "restoreGameStateSnapshot(stateSnapshot);" in fn
+    assert "restoreStateTree(me, fighterSnapshot);" in fn
+
+
+def test_forge_describes_player_turn_potions_not_removed_opening_effects():
+    assert "Drink on this bird’s turn · does not replace its move" in HTML
+    assert "% HP when drunk" in HTML
+    assert "Drunk automatically as battle begins" not in HTML
+    assert "% HP at start" not in HTML
+
+
 def test_all_battle_potions_remain_craftable_and_can_be_bought():
     out = _node(r"""
 const L = require('./loot_crafting_core.js');
@@ -97,9 +121,11 @@ console.log(JSON.stringify({
 
 
 def test_release_marker_and_potion_core_pin_are_advanced():
-    marker = "turn-potions-v232-20260806"
+    marker = "turn-potions-hotfix-v233-20260806"
     assert marker in HTML
     assert marker in SW
-    pin = f"battle_core.js?v={marker}"
-    assert pin in HTML
-    assert f"'./{pin}'" in SW
+    core_pin = "turn-potions-v232-20260806"
+    for asset in ("battle_core.js", "loot_crafting_core.js"):
+        pin = f"{asset}?v={core_pin}"
+        assert pin in HTML
+        assert f"'./{pin}'" in SW
