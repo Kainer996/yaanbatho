@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-CURRENT_BUILD = "eight-hour-quests-v228-20260805"
+CURRENT_BUILD = "nocturnal-night-bonus-v229-20260805"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.

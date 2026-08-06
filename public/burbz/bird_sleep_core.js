@@ -12,6 +12,19 @@
   const WORK_BLOCK_AT = 90;
   const WAKE_AT = 15;
   const MAX_ELAPSED_MS = 48 * HOUR_MS;
+  // Night runs 18:00–06:00 local — the same window nocturnal companions are
+  // awake for. Any bird may be worked at night (the player's own bedtime quest
+  // must never be locked behind owning an owl); a nocturnal bird worked at
+  // night is simply in its element, and the Night Hunter bonus multiplies its
+  // whole payout, in any capacity.
+  const NIGHT_START_HOUR = 18;
+  const NIGHT_END_HOUR = 6;
+  const NOCTURNAL_NIGHT_BONUS = Object.freeze({
+    coins: 2,      // expedition coin payouts double
+    branches: 1.5, // timber hauls half again
+    xp: 2,         // expedition AND training XP double
+    itemRolls: 1   // one guaranteed extra find per expedition
+  });
 
   function clamp(value, min, max) {
     const n = Number(value);
@@ -45,12 +58,27 @@
     return /\b(nocturnal|night hunter|night-active|owl|owlet|boobook|morepork|nightjar|frogmouth|potoo|oilbird|kiwi|kakapo)\b/i.test(words);
   }
 
+  function normalizeHour(localHour) {
+    return ((Number(localHour) || 0) % 24 + 24) % 24;
+  }
+
+  function isNightHour(localHour) {
+    const hour = normalizeHour(localHour);
+    return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR;
+  }
+
   // Nocturnal companions sleep from 06:00 until 18:00 local time, then wake in
   // the early evening so their natural rhythm still leaves a long play window.
   function isScheduledSleepTime(bird, localHour) {
     if (!isNocturnalBird(bird)) return false;
-    const hour = ((Number(localHour) || 0) % 24 + 24) % 24;
-    return hour >= 6 && hour < 18;
+    return !isNightHour(localHour);
+  }
+
+  // The Night Hunter bonus: the reward pack for using a nocturnal bird at
+  // night. Returns the multiplier set, or null when it does not apply — the
+  // reward cores stay pure and just apply whatever pack they are handed.
+  function nocturnalNightBonus(bird, localHour) {
+    return isNocturnalBird(bird) && isNightHour(localHour) ? { ...NOCTURNAL_NIGHT_BONUS } : null;
   }
 
   function advanceTiredness(rawCare, now = Date.now(), sleepingOverride) {
@@ -104,9 +132,14 @@
     AUTO_SLEEP_AT,
     WORK_BLOCK_AT,
     WAKE_AT,
+    NIGHT_START_HOUR,
+    NIGHT_END_HOUR,
+    NOCTURNAL_NIGHT_BONUS,
     sanitizeSleepCare,
     isNocturnalBird,
+    isNightHour,
     isScheduledSleepTime,
+    nocturnalNightBonus,
     advanceTiredness,
     sleepPlan,
     sleepReadiness

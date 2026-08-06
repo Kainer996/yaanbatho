@@ -4040,13 +4040,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=eight-hour-quests-v228-20260805"></script>
+<script src="academy_treehouse_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
 <script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="bird_diet_hunger_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
-<script src="bird_sleep_core.js?v=roost-sleep-v208-20260803"></script>
+<script src="bird_sleep_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
@@ -5136,6 +5136,19 @@ function sleepReadinessForBird(bird, now = Date.now()) {
   if (!core || typeof core.sleepReadiness !== 'function') return { ok:true, warning:false, sleeping:false, tiredness:0, message:'' };
   return core.sleepReadiness(bird.care, bird, { now, localHour:new Date(now).getHours(), roostBuilt:isAcademyRoomBuilt('dorm'), busy:birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id) });
 }
+// The player's bedtime quest is sacred: ANY bird may be sent out at night — no
+// activity is ever locked behind owning an owl. A nocturnal bird worked at
+// night is simply in its element, and the Night Hunter bonus multiplies its
+// payout in any capacity (expeditions and training alike).
+function nocturnalNightBonusFor(bird, now = Date.now()) {
+  const core = birdSleepCore();
+  if (!core || typeof core.nocturnalNightBonus !== 'function') return null;
+  return core.nocturnalNightBonus(bird, new Date(now).getHours());
+}
+function isNightRightNow(now = Date.now()) {
+  const core = birdSleepCore();
+  return !!(core && typeof core.isNightHour === 'function' && core.isNightHour(new Date(now).getHours()));
+}
 function academySleepStatusHTML(bird, now = Date.now()) {
   const core = birdSleepCore();
   const care = normalizeBirdCare(bird, now) || {};
@@ -5144,7 +5157,7 @@ function academySleepStatusHTML(bird, now = Date.now()) {
   const sleeping = !!care.sleeping;
   const copy = sleeping
     ? (nocturnal && core.isScheduledSleepTime(bird, new Date(now).getHours()) ? '💤 Sleeping through the day · wakes from 18:00' : '💤 Sleeping in The Roost until rested')
-    : nocturnal ? '🌙 Nocturnal · awake from 18:00 through the night'
+    : nocturnal ? '🌙 Nocturnal · awake from 18:00 — night work earns the Night Hunter bonus'
     : tiredness >= 70 ? '🥱 Getting tired · will go to The Roost automatically' : '☀️ Awake and rested';
   return '<div class="academy-hunger-status" data-sleeping="' + (sleeping ? 'true' : 'false') + '">' + copy + '</div>';
 }
@@ -12384,7 +12397,8 @@ function startBirdExpedition(birdId, templateId, loadout) {
   if (slowFactor > 1) showToast('🍽️ Merlin is flying hungry — this errand will take him twice as long.');
   const quest = window.BurbzAcademyCore.createBirdExpedition(bird, templateId, Date.now(), {
     slowFactor,
-    durationMinutes: loadout && loadout.durationMinutes
+    durationMinutes: loadout && loadout.durationMinutes,
+    nightBonus: nocturnalNightBonusFor(bird)
   });
   // The Quest Roost's Quartermaster plans the trip; the bird's own back decides
   // how much of it comes home.
@@ -12395,10 +12409,12 @@ function startBirdExpedition(birdId, templateId, loadout) {
   gameState.birdExpeditions.unshift(quest);
   updateQuestProgress('expedition_sent', 1);
   saveState();
-  if (templateId === 'moon_scout' && SFX && typeof SFX.owl === 'function') SFX.owl();
+  if ((templateId === 'moon_scout' || quest.nightBonus) && SFX && typeof SFX.owl === 'function') SFX.owl();
   else if (SFX && typeof SFX.page === 'function') SFX.page();
   else if (SFX && typeof SFX.tap === 'function') SFX.tap();
-  showToast('🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
+  showToast(quest.nightBonus
+    ? '🌙 ' + (bird.commonName || bird.species) + ' hunts by night — Night Hunter bonus: 2× coins & XP, extra finds! ' + quest.label
+    : '🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderPetCompanion();
   renderBirdExpeditions();
   if (typeof burbzTutorialAction === 'function') burbzTutorialAction('expedition-sent');
@@ -12483,7 +12499,7 @@ function claimBirdExpedition(expeditionId) {
   announcePlayerLevelUps(previousPlayerLevel);
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
   closeQuestOverlay();
-  playQuestClaimCelebration({ badge: 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   // Say it plainly when a load was left in the field: it is the size rule doing
   // its job, not a bug.
   if (q.carry && q.carry.leftBehind > 0) {
@@ -12823,7 +12839,9 @@ function renderQuestSendSheet() {
     // the chip so the choice is made with the load in mind, not after it.
     const carry = birdSizeSummary(b);
     const carryNote = carry ? ' · ' + carry.icon + ' carries ' + carry.capacity : '';
-    const baseNote = assignedPost ? assignedPost.role.title : away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
+    // The Night Hunter bonus rides on the chip too: at night, the owl IS the pick.
+    const nightNote = nocturnalNightBonusFor(b) ? ' · 🌙 Night Hunter 2×' : '';
+    const baseNote = assignedPost ? assignedPost.role.title : away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + nightNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
@@ -12840,7 +12858,8 @@ function renderQuestSendSheet() {
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
       '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
-    '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') + '</div>' +
+    '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') +
+      (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: double coins and XP, extra timber and a guaranteed extra find.</span>' : '') + '</div>' +
     (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-economy-note">Quick quests pay best per hour; longer quests bring home much bigger totals while you are away.</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
@@ -12913,6 +12932,11 @@ function buildQuestTimeline(q) {
     while (usedFlavour.has(idx)) idx = (idx + 1) % QUEST_LOG_FLAVOUR.length;
     usedFlavour.add(idx);
     events.push({ pct: 6 + Math.floor(rng() * 88), text: q.birdName + ' ' + QUEST_LOG_FLAVOUR[idx] + '.', loot: null });
+  }
+  // A Night Hunter announces itself early in the log so the doubled haul below
+  // reads as earned, not as a bug.
+  if (q.nightBonus) {
+    events.push({ pct: 4 + Math.floor(rng() * 12), text: q.birdName + ' slips into the dark on silent wings — the night belongs to this bird, and the whole haul swells (Night Hunter bonus).', loot: '🌙' });
   }
   // Split the coin reward across a few "found coins" moments
   const totalCoins = (q.rewards && q.rewards.coins) || 0;
@@ -15301,13 +15325,15 @@ function startBirdTrainingSession(birdId, templateId) {
   // stationed in the Kitchen — it is a feeding table, not a roost.
   bird.academy.room = tplRoom === 'kitchen' ? 'outdoors' : tplRoom;
   bird.academy.lastMovedAt = new Date().toISOString();
-  const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now());
+  const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now(), { nightBonus: nocturnalNightBonusFor(bird) });
   ensureBirdTrainingSessions().unshift(session);
   academySelectedRoom = tplRoom;
   academyInteriorRoom = tplRoom;
   saveState();
   SFX.tap();
-  showToast('🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
+  showToast(session.nightBonus
+    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 2× XP! ' + session.label
+    : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
   renderAcademyRoomInterior();
   renderAcademy();
 }
@@ -30592,7 +30618,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'eight-hour-quests-v228-20260805';
+const BURBZ_BUILD = 'nocturnal-night-bonus-v229-20260805';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
