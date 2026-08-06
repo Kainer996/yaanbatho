@@ -24,7 +24,7 @@
 
   var ANCHORS = {
     kitchen: [
-      { fx: 0.585, fy: 0.125, type: 'smoke', power: 1.0 },
+      { fx: 0.585, fy: 0.125, type: 'smoke', power: 1.25 },
       { fx: 0.44, fy: 0.30, type: 'glow', glow: 'window', r: 24 },
       { fx: 0.70, fy: 0.46, type: 'glow', glow: 'window', r: 22 },
       { fx: 0.46, fy: 0.60, type: 'glow', glow: 'hearth', r: 30 }
@@ -35,6 +35,8 @@
       { fx: 0.245, fy: 0.62, type: 'glow', glow: 'lantern', r: 20 }
     ],
     crowbar: [
+      // The crooked stovepipe at the roof's apex vents the pub hearth.
+      { fx: 0.44, fy: 0.075, type: 'smoke', power: 0.6 },
       { fx: 0.22, fy: 0.47, type: 'glow', glow: 'lantern', r: 20 },
       { fx: 0.69, fy: 0.50, type: 'glow', glow: 'lantern', r: 20 },
       { fx: 0.50, fy: 0.47, type: 'glow', glow: 'hearth', r: 34 },
@@ -42,6 +44,9 @@
       { fx: 0.50, fy: 0.38, type: 'notes' }
     ],
     hospital: [
+      // The ward keeps a stove going for its patients — a thin thread of
+      // smoke off the little roof crown.
+      { fx: 0.47, fy: 0.09, type: 'smoke', power: 0.4 },
       { fx: 0.43, fy: 0.28, type: 'glow', glow: 'pulse', r: 26 },
       { fx: 0.44, fy: 0.48, type: 'glow', glow: 'window', r: 24 },
       { fx: 0.63, fy: 0.45, type: 'glow', glow: 'window', r: 22 },
@@ -94,12 +99,15 @@
   // Warm interiors read as candlelight, the Observatory keeps wizard-blue
   // moonlight, the Hospital cross breathes a soft healing green.
   var GLOW_STYLES = {
-    window:      { color: '255,190,107', day: 0.34, night: 1.00, flick: 0.16, offChance: 0.010 },
-    lantern:     { color: '255,202,122', day: 0.44, night: 1.00, flick: 0.30, offChance: 0.006 },
-    hearth:      { color: '255,154,61',  day: 0.30, night: 0.92, flick: 0.42, offChance: 0.004 },
+    // offChance was roughly trebled on 2026-08-06 (the living-tree release):
+    // someone visibly moves between rooms every ~15-30s now, so the Academy
+    // reads as inhabited rather than merely lit.
+    window:      { color: '255,190,107', day: 0.34, night: 1.00, flick: 0.16, offChance: 0.026 },
+    lantern:     { color: '255,202,122', day: 0.44, night: 1.00, flick: 0.30, offChance: 0.016 },
+    hearth:      { color: '255,154,61',  day: 0.30, night: 0.92, flick: 0.42, offChance: 0.009 },
     sign:        { color: '255,210,122', day: 0.26, night: 0.78, flick: 0.10, offChance: 0.0 },
-    cool:        { color: '159,199,255', day: 0.30, night: 0.95, flick: 0.14, offChance: 0.008 },
-    coollantern: { color: '190,214,255', day: 0.34, night: 0.95, flick: 0.26, offChance: 0.006 },
+    cool:        { color: '159,199,255', day: 0.30, night: 0.95, flick: 0.14, offChance: 0.020 },
+    coollantern: { color: '190,214,255', day: 0.34, night: 0.95, flick: 0.26, offChance: 0.016 },
     moon:        { color: '214,228,255', day: 0.14, night: 0.85, flick: 0.06, offChance: 0.0 },
     pulse:       { color: '184,255,212', day: 0.34, night: 0.80, flick: 0.0,  offChance: 0.0 },
     breath:      { color: '255,217,160', day: 0.44, night: 0.95, flick: 0.06, offChance: 0.0 }
@@ -159,7 +167,9 @@
       night: false
     };
 
-    var MAX_PARTICLES = 150;
+    // Three chimneys smoke now (Kitchen, Crowbar, Hospital), so the ceiling
+    // rose with them; still a bounded, phone-safe particle budget.
+    var MAX_PARTICLES = 170;
 
     function reducedMotion() {
       try { return !!(adapter.reducedMotion && adapter.reducedMotion()); } catch (e) { return false; }
@@ -276,14 +286,17 @@
           var ay = entry.rect.top - contRect.top + a.fy * box;
           if (a.type === 'glow') {
             var style = GLOW_STYLES[a.glow] || GLOW_STYLES.window;
-            var d = a.r * 2;
+            // Radii were read off the 112px paintings; the sprites shrank to
+            // nestle into the tree, so the glows shrink with them.
+            var r = a.r * (box / SPRITE_BOX);
+            var d = r * 2;
             var g = document.createElement('div');
             g.className = 'th-alive-glow';
             g.setAttribute('aria-hidden', 'true');
             g.style.width = d + 'px';
             g.style.height = d + 'px';
-            g.style.left = (a.fx * box - a.r) + 'px';
-            g.style.top = (a.fy * box - a.r) + 'px';
+            g.style.left = (a.fx * box - r) + 'px';
+            g.style.top = (a.fy * box - r) + 'px';
             g.style.background = 'radial-gradient(circle, rgba(' + style.color + ',.85) 0%, rgba(' + style.color + ',.28) 42%, rgba(' + style.color + ',0) 70%)';
             entry.node.appendChild(g);
             var prior = priorGlow[key];
@@ -402,7 +415,7 @@
         if (st.clock < em.nextAt || st.particles.length >= MAX_PARTICLES) return;
         if (em.type === 'smoke') {
           spawnSmoke(em.x, em.y, em.power);
-          em.nextAt = st.clock + (em.power >= 1 ? 300 : 1150) + Math.random() * (em.power >= 1 ? 260 : 900);
+          em.nextAt = st.clock + (em.power >= 1 ? 260 : 900) + Math.random() * (em.power >= 1 ? 220 : 750);
         } else if (em.type === 'notes') {
           spawnNote(em.x, em.y, false);
           em.nextAt = st.clock + 2600 + Math.random() * 3800;
