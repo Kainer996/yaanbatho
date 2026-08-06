@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
+CURRENT_BUILD = "real-walk-go-map-v230-20260806"
 
 
 def run_node(script: str) -> dict:
@@ -148,6 +149,6 @@ def test_release_is_query_busted_everywhere():
     for pin in (f"academy_treehouse_core.js?v={RELEASE_PIN}", f"bird_sleep_core.js?v={RELEASE_PIN}"):
         assert pin in html
         assert f"./{pin}" in sw
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert cache_line.rstrip("';").endswith(RELEASE_PIN)
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)

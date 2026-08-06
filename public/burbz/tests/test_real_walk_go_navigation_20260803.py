@@ -14,11 +14,19 @@ def player_quest_go_body(source: str) -> str:
     return source[start:end]
 
 
-def test_real_walk_go_opens_quests_and_nearby_quest_board():
+def test_real_walk_go_opens_the_live_map_not_the_quest_board():
     body = player_quest_go_body(html())
     assert "q.id === 'pq_walk_adventure'" in body
-    assert "switchScreen('quests')" in body
-    assert "openQuestBoard()" in body
+    assert "showAllLocalQuests()" in body
+    assert "switchScreen('quests')" not in body
+    assert "openQuestBoard()" not in body
+
+
+def test_real_walk_go_reopens_an_active_walk_sheet():
+    body = player_quest_go_body(html())
+    assert "activeWalkingQuest()" in body
+    assert "switchScreen('map')" in body
+    assert "openActiveWalkQuestSheet()" in body
 
 
 def test_real_walk_go_does_not_use_the_same_screen_scroll_fallback():
@@ -29,6 +37,6 @@ def test_real_walk_go_does_not_use_the_same_screen_scroll_fallback():
 
 
 def test_release_marker_is_pinned_for_mobile_pwa_refresh():
-    marker = "accurate-diets-full-catalogue-v226-20260805"
+    marker = "real-walk-go-map-v230-20260806"
     assert marker in html()
     assert marker in (ROOT / "sw.js").read_text(encoding="utf-8")
