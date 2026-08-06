@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (player-turn battle potions v232: equipped brews are once-per-battle bonus actions; all five remain craftable and are sold at The Gilded Beak — see "Review log" at the bottom).
+Last curated: 2026-08-06 (player-turn potion hotfix v233: inline handler exported, failed saves roll back, and Forge copy matches turn use — see "Review log" at the bottom).
 
 ---
 
@@ -227,6 +227,15 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-06 — player-turn potion hotfix (Ava).** Release
+  `turn-potions-hotfix-v233-20260806` fixes the inline battle button by exporting
+  `battleUsePotion` from the app IIFE, makes consumption transactional across
+  both persistent inventory and transient fighter effects when localStorage is
+  full, and replaces two stale Forge descriptions that still promised automatic
+  battle-open use. Tests now pin the window export, rollback plumbing and exact
+  player-turn copy; global build/cache advanced while unchanged battle/loot core
+  asset pins remain on v232.
 
 - **2026-08-06 — player-turn battle potions (Ava).** Release
   `turn-potions-v232-20260806` changes the five existing equipped potion items

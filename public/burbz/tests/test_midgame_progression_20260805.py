@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "nocturnal-night-bonus-v229-20260805"
-CURRENT_BUILD = "turn-potions-v232-20260806"
+CURRENT_BUILD = "turn-potions-hotfix-v233-20260806"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
