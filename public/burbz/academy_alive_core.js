@@ -635,13 +635,12 @@
     function buildFoliage() {
       foliage = [];
       if (!st.w || typeof document === 'undefined') return;
-      // Small corner fringes only — the painted tree carries the scene; these
-      // just give its nearest branch-tips visible movement.
-      var k = Math.min(1, st.w / 430);
-      var defs = [
-        { ax: -8, ay: st.h * 0.015, rot: 0.5, scale: 0.62 * k, phase: 0 },
-        { ax: st.w + 8, ay: st.h * 0.04, rot: Math.PI - 0.5, scale: 0.72 * k, phase: 2.1 }
-      ];
+      // Retired 2026-08-06 (living-canopy release): the painted branch layers
+      // in index.html (.academy-branches, real cut-out boughs swaying on CSS
+      // pivots) took over from these procedural corner tufts — two art styles
+      // of foliage on one screen read as clutter. The machinery stays so the
+      // tufts can come back with one defs entry if the layers ever go.
+      var defs = [];
       defs.forEach(function(d, i) {
         var W = 190, H = 120;
         var c = document.createElement('canvas');

@@ -2727,11 +2727,45 @@ svg.academy-room-bg { display:block; filter:none; }
 .th-alive-glow { position:absolute; pointer-events:none; mix-blend-mode:screen; opacity:0; }
 /* The tree painting itself breathes: the background image lives on this div
    (not the container) so a slow wind-sway can rock the whole canopy. */
-.academy-tree-swaybg { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(7,16,24,.22),rgba(7,16,24,.92)), url('assets/academy-tree-manga-20260629.png') center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
-/* Rocking about the roots with a touch of vertical give, the way Merlin's
-   bough carries weight — slow enough that you feel it rather than see it. */
-@keyframes treeSway { from { transform:rotate(-.4deg) translate(-3px,1.2px); } to { transform:rotate(.4deg) translate(3px,-1.2px); } }
-@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } .academy-tree-sway { animation:none; } .treehouse-building-sprite { animation:none; } .crowbar-crow,.cb-crow-body,.cb-crow-head,.cb-crow-tail { animation:none; } }
+.academy-tree-swaybg { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(7,16,24,.08),rgba(7,16,24,.42)), url('assets/academy-tree-manga-20260806.webp') center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
+/* A breath, not a lean: with the painted branch layers carrying the visible
+   movement, the trunk itself only drifts a hair — enough to feel alive,
+   never enough to read as the photograph warping. */
+@keyframes treeSway { from { transform:rotate(-.15deg) translate(-1.4px,.6px); } to { transform:rotate(.15deg) translate(1.4px,-.6px); } }
+
+/* ---- Painted canopy layers: branches that genuinely move ----------------- */
+/* Yaan's generated boughs (assets/academy-branches/, cut to transparency):
+   the back set sprouts from the trunk behind the treehouses, the front set
+   hangs between the buildings and the camera. Each bough pivots about the
+   point where its bark meets the trunk, with its own tempo and phase. The
+   colour grade pulls the vivid sprite palette down to the muted tree. */
+.academy-branches { position:absolute; inset:0; pointer-events:none; }
+.academy-branches-back { z-index:2; }
+.academy-branches-front { z-index:8; }
+.academy-branch { position:absolute; will-change:transform; filter:saturate(.66) brightness(.76) drop-shadow(0 10px 12px rgba(4,8,5,.45)); transition:filter 2.5s ease; }
+.academy-branch > img { display:block; width:100%; height:auto; }
+.academy-branch.ab-flip > img { transform:scaleX(-1); }
+/* Front boughs sit near the camera: darker and softly out of focus. */
+.academy-branches-front .academy-branch { filter:saturate(.56) brightness(.55) blur(1.1px) drop-shadow(0 14px 16px rgba(3,6,4,.55)); }
+/* Night: the canopy dims with the rest of the scene. */
+.academy-treehouse.alive-night .academy-branch { filter:saturate(.46) brightness(.42) drop-shadow(0 10px 12px rgba(2,4,8,.55)); }
+.academy-treehouse.alive-night .academy-branches-front .academy-branch { filter:saturate(.4) brightness(.34) blur(1.1px) drop-shadow(0 14px 16px rgba(2,4,8,.6)); }
+/* Back boughs, sprouting left and right of the trunk. Origins sit on the
+   bark end of each sprite (flipped sprites carry their bark on the right). */
+.ab-1 { left:44%; top:9%; width:47%; transform-origin:6% 62%; animation:abSwayA 9.5s ease-in-out -1.2s infinite; }
+.ab-2 { left:9%; top:22%; width:45%; transform-origin:94% 40%; animation:abSwayB 11s ease-in-out -4s infinite; }
+.ab-3 { left:47%; top:40%; width:43%; transform-origin:5% 55%; animation:abSwayC 10.2s ease-in-out -6.5s infinite; }
+.ab-4 { left:2%; top:52%; width:40%; transform-origin:90% 12%; animation:abSwayB 12.5s ease-in-out -2s infinite; }
+/* Front boughs: one low across the roots, one overhanging the crown. */
+.ab-5 { left:-6%; bottom:-4%; width:60%; transform-origin:4% 50%; animation:abSwayA 8.5s ease-in-out -3.4s infinite; }
+.ab-6 { right:-8%; top:-3%; width:56%; transform-origin:95% 45%; animation:abSwayB 7.8s ease-in-out -1.1s infinite; }
+/* Three sway characters so no two boughs keep time: a full lean-and-return,
+   a two-gust dip, and a lighter flutter. All pivot with a touch of vertical
+   spring — the Merlin's-Perch weight, on every branch. */
+@keyframes abSwayA { 0%,100% { transform:rotate(-1.4deg) translateY(-2px); } 55% { transform:rotate(1.7deg) translateY(1.6px); } }
+@keyframes abSwayB { 0%,100% { transform:rotate(-1.1deg) translateY(-1.2px); } 30% { transform:rotate(.6deg) translateY(.8px); } 62% { transform:rotate(1.6deg) translateY(2px); } 82% { transform:rotate(.2deg) translateY(.3px); } }
+@keyframes abSwayC { 0%,100% { transform:rotate(-.9deg); } 40% { transform:rotate(1.3deg) translateY(1.4px); } 70% { transform:rotate(.3deg) translateY(.4px); } }
+@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } .academy-tree-sway { animation:none; } .treehouse-building-sprite { animation:none; } .crowbar-crow,.cb-crow-body,.cb-crow-head,.cb-crow-tail { animation:none; } .academy-branch { animation:none; } }
 
 /* ---- The 3D Academy: the same tree, modelled ---------------------------- */
 .academy-stage-wrap { position:relative; }
@@ -3551,13 +3585,31 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="academy-stage-wrap" id="academyStageWrap">
         <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
           <div class="academy-tree-swaybg" aria-hidden="true"></div>
+          <!-- Painted branch layers, cut to transparency from Yaan's generated
+               boughs: the back set sprouts from the trunk BEHIND the
+               treehouses, the front set overhangs them. Each bough rotates
+               about the point where its bark meets the trunk on its own
+               tempo — the canopy visibly moves while the trunk stands still,
+               instead of the whole photograph warping. -->
+          <div class="academy-branches academy-branches-back" aria-hidden="true">
+            <div class="academy-branch ab-1"><img src="assets/academy-branches/branch-c.webp" alt="" loading="lazy"></div>
+            <div class="academy-branch ab-2 ab-flip"><img src="assets/academy-branches/branch-b.webp" alt="" loading="lazy"></div>
+            <div class="academy-branch ab-3"><img src="assets/academy-branches/branch-d.webp" alt="" loading="lazy"></div>
+            <div class="academy-branch ab-4 ab-flip"><img src="assets/academy-branches/branch-a.webp" alt="" loading="lazy"></div>
+          </div>
           <!-- The buildings ride the same treeSway animation as the painting
                behind them, so the whole tree — bark, boughs and treehouses —
-               leans together in the one wind (the Merlin's-Perch treatment). -->
+               leans together in the one wind (the Merlin's-Perch treatment,
+               now dialled down to a breath: the branch layers carry the
+               visible movement). -->
           <div class="academy-tree-sway" id="academyTreeSway">
             <div id="treehouseBranchLayer"></div>
             <div id="treehouseRoomLayer"></div>
             <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
+          </div>
+          <div class="academy-branches academy-branches-front" aria-hidden="true">
+            <div class="academy-branch ab-5"><img src="assets/academy-branches/branch-b.webp" alt="" loading="lazy"></div>
+            <div class="academy-branch ab-6 ab-flip"><img src="assets/academy-branches/branch-c.webp" alt="" loading="lazy"></div>
           </div>
 
         </div>
@@ -4128,8 +4180,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
-<script src="academy_alive_core.js?v=academy-living-tree-v234-20260806"></script>
+<script src="academy_treehouse_core.js?v=living-canopy-v235-20260806"></script>
+<script src="academy_alive_core.js?v=living-canopy-v235-20260806"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
@@ -30804,7 +30856,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-living-tree-v234-20260806';
+const BURBZ_BUILD = 'living-canopy-v235-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

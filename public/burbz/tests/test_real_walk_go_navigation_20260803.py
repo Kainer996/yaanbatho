@@ -37,6 +37,6 @@ def test_real_walk_go_does_not_use_the_same_screen_scroll_fallback():
 
 
 def test_release_marker_is_pinned_for_mobile_pwa_refresh():
-    marker = "academy-living-tree-v234-20260806"
+    marker = "living-canopy-v235-20260806"
     assert marker in html()
     assert marker in (ROOT / "sw.js").read_text(encoding="utf-8")

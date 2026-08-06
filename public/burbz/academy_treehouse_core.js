@@ -14,19 +14,22 @@
   // trainer level 12. Costs climb with the gates, so a newly unlocked room is
   // also a savings goal — there should always be a next building on the
   // horizon instead of the whole tree opening at once.
+  // Default x/y sit each room on a painted bough of the 2026-08-06 tree
+  // (assets/academy-tree-manga-20260806.webp). Player placements override
+  // these, so retuning here only moves fresh or never-moved buildings.
   const TREEHOUSE_ROOMS = [
     { id:'outdoors', label:'Aviary Gardens', icon:'🌱', cost:0, branches:0, unlockLevel:1, floor:0, branch:'trunk', x:50, y:92, role:'roam', effect:'Starter gardens: free roaming, foraging and happiness recovery.' },
-    { id:'dorm', label:'The Roost', icon:'🏠', cost:50, branches:10, unlockLevel:1, floor:1, branch:'left', x:24, y:78, role:'housing', effect:'Bird housing: rest, feed, groom and assign companions.' },
-    { id:'tavern', label:'Barracks', icon:'🪶', cost:60, branches:8, unlockLevel:1, floor:1, branch:'right', x:76, y:80, role:'recruitment', effect:'The Academy recruitment office: review discovered and befriended birds, inspect their full cards, and invite them into the flock.' },
-    { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:70, y:65, role:'training', trainStat:'atk', effect:'Permanent stat drills, passive XP, and slow ATK growth for birds stationed here.' },
-    { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:5, floor:3, branch:'left', x:26, y:53, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
-    { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:190, branches:40, unlockLevel:6, floor:4, branch:'right', x:72, y:42, role:'social', trainStat:'cha', effect:'The bird bar and the home of Kingdom diplomacy: companions perched here grow Charm (CHA) and morale — charm sways battle Parleys and pays out on diplomacy quests.' },
-    { id:'kitchen', label:'Kitchen & Pantry', icon:'🥣', cost:130, branches:25, unlockLevel:4, floor:3, branch:'trunk', x:50, y:52, role:'food', trainStat:'stamina', effect:'The feeding table: serve each companion the food it really eats, and run the Pantry Gauntlet to grow Stamina.' },
-    { id:'workshop', label:'Nest Workshop', icon:'🛠️', cost:240, branches:55, unlockLevel:8, floor:5, branch:'left', x:25, y:31, role:'craft', trainStat:'def', effect:'Nest engineering: birds stationed here toughen up and grow DEF.' },
-    { id:'library', label:'The Library', icon:'📚', cost:300, branches:70, unlockLevel:9, floor:5, branch:'right', x:75, y:29, role:'study', trainStat:'int', effect:'The Academy reading room: shelves of field guides and story scrolls. Birds stationed here sharpen their minds and grow INT.' },
-    { id:'nursery', label:'Hatchery Nursery', icon:'🥚', cost:380, branches:85, unlockLevel:11, floor:6, branch:'left', x:36, y:18, role:'bond', effect:'Baby-bird care and bonding progression.' },
-    { id:'observatory', label:'Moon Observatory', icon:'🔭', cost:450, branches:100, unlockLevel:12, floor:6, branch:'right', x:64, y:14, role:'forecast', trainStat:'int', effect:'Stargazing study: birds stationed here grow INT while charting spawns and migrations.' },
-    { id:'quest_roost', label:'Quest Roost', icon:'🧭', cost:110, branches:15, unlockLevel:3, floor:2, branch:'trunk', x:50, y:66, role:'quests', effect:'Send birds out on real-time expeditions for coins, branches and items.' }
+    { id:'dorm', label:'The Roost', icon:'🏠', cost:50, branches:10, unlockLevel:1, floor:1, branch:'left', x:22, y:68, role:'housing', effect:'Bird housing: rest, feed, groom and assign companions.' },
+    { id:'tavern', label:'Barracks', icon:'🪶', cost:60, branches:8, unlockLevel:1, floor:1, branch:'right', x:80, y:71, role:'recruitment', effect:'The Academy recruitment office: review discovered and befriended birds, inspect their full cards, and invite them into the flock.' },
+    { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:75, y:58, role:'training', trainStat:'atk', effect:'Permanent stat drills, passive XP, and slow ATK growth for birds stationed here.' },
+    { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:5, floor:3, branch:'left', x:25, y:52, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
+    { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:190, branches:40, unlockLevel:6, floor:4, branch:'right', x:75, y:41, role:'social', trainStat:'cha', effect:'The bird bar and the home of Kingdom diplomacy: companions perched here grow Charm (CHA) and morale — charm sways battle Parleys and pays out on diplomacy quests.' },
+    { id:'kitchen', label:'Kitchen & Pantry', icon:'🥣', cost:130, branches:25, unlockLevel:4, floor:3, branch:'trunk', x:50, y:55, role:'food', trainStat:'stamina', effect:'The feeding table: serve each companion the food it really eats, and run the Pantry Gauntlet to grow Stamina.' },
+    { id:'workshop', label:'Nest Workshop', icon:'🛠️', cost:240, branches:55, unlockLevel:8, floor:5, branch:'left', x:29, y:30, role:'craft', trainStat:'def', effect:'Nest engineering: birds stationed here toughen up and grow DEF.' },
+    { id:'library', label:'The Library', icon:'📚', cost:300, branches:70, unlockLevel:9, floor:5, branch:'right', x:74, y:26, role:'study', trainStat:'int', effect:'The Academy reading room: shelves of field guides and story scrolls. Birds stationed here sharpen their minds and grow INT.' },
+    { id:'nursery', label:'Hatchery Nursery', icon:'🥚', cost:380, branches:85, unlockLevel:11, floor:6, branch:'left', x:35, y:16, role:'bond', effect:'Baby-bird care and bonding progression.' },
+    { id:'observatory', label:'Moon Observatory', icon:'🔭', cost:450, branches:100, unlockLevel:12, floor:6, branch:'right', x:66, y:12, role:'forecast', trainStat:'int', effect:'Stargazing study: birds stationed here grow INT while charting spawns and migrations.' },
+    { id:'quest_roost', label:'Quest Roost', icon:'🧭', cost:110, branches:15, unlockLevel:3, floor:2, branch:'trunk', x:49, y:71, role:'quests', effect:'Send birds out on real-time expeditions for coins, branches and items.' }
   ];
 
   // Quest economy: short starter errands teach the loop with small, frequent
