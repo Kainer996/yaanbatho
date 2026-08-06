@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-05 (Night Hunter bonus v229: any bird can be worked at night, and a nocturnal bird used after dark earns massive payout multipliers in any capacity — see "Review log" at the bottom).
+Last curated: 2026-08-06 (Side Quests map access v231: a compact button below Show Quests opens free exploration directly, and completed Side Quests satisfy Go for a walk — see "Review log" at the bottom).
 
 ---
 
@@ -227,6 +227,17 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-06 — Side Quests on the live map (Ava).** Release
+  `side-quests-walk-goal-v231-20260806` restores the existing free-exploration
+  system to the real-life Questing page as its own compact **Side Quests**
+  button directly beneath **Show Quests**. The button opens the intro directly,
+  changes to **View Side Quest** while a wander is active, and reopens its live
+  trail log. The Player Quest is now named **Go for a walk** and counts either a
+  completed mapped walking adventure or a completed free-roaming Side Quest;
+  historical Side Quests count through the measure function, and new endings
+  emit `walk_completed` immediately. Tests:
+  `tests/test_side_quest_20260720.py`; SW cache + `BURBZ_BUILD` bumped.
 
 - **2026-08-05 — the Night Hunter bonus (Claude).** Yaan's original idea —
   only nocturnal birds playable in the evening — broke the bedtime loop: a
