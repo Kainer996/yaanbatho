@@ -3053,6 +3053,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-quest-btn-label { display:block; color:#fff2c6; font:900 14px/1 'Russo One',sans-serif; letter-spacing:.025em; white-space:nowrap; }
 .map-quest-btn-arrow { position:relative; z-index:1; margin-left:auto; color:#f0c767; font-size:18px; }
 .map-quest-btn.on-quest,.map-quest-btn.active { border-color:rgba(126,217,131,.72); box-shadow:0 12px 28px rgba(0,0,0,.5),0 0 22px rgba(126,217,131,.2); }
+.map-side-quest-btn { top:132px; min-width:136px; height:42px; padding:4px 10px 4px 5px; border-radius:14px; gap:7px; }
+.map-side-quest-btn .map-quest-btn-art { width:31px; height:31px; border-radius:9px; }
+.map-side-quest-btn .map-quest-btn-label { font-size:11px; }
+.map-side-quest-btn.active .map-quest-btn-label { color:#8ce3c2; }
 .map-quest-btn:focus-visible,.map-area-birds-toggle:focus-visible,.map-quest-focus-card button:focus-visible,.walk-quest-offer:focus-visible,.wq-offer-pin:focus-visible { outline:3px solid #fff7dc; outline-offset:3px; }
 /* Starts right of the Area Birds column so the two never overlap. */
 .map-quest-hud { position:absolute; left:calc(15px + min(124px, 32vw)); right:12px; top:184px; z-index:43; display:none; align-items:center; gap:10px; padding:8px 12px; border-radius:14px; background:linear-gradient(180deg,rgba(27,24,16,.92),rgba(13,12,8,.92)); border:1px solid rgba(214,168,79,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
@@ -3267,6 +3271,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="map-quest-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/burbz-icon-set/quests.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label">Show Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
+        <button class="map-quest-btn map-side-quest-btn" id="mapSideQuestBtn" type="button" aria-label="Start a free-roaming Side Quest" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label" id="mapSideQuestBtnLabel">Side Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
@@ -16703,6 +16708,7 @@ function updateWalkQuestHud() {
   const hud = $('mapQuestHud');
   const quest = activeWalkingQuest();
   const side = quest ? null : sideQuestActive();
+  updateMapSideQuestButton();
   if (quest || side) acquireQuestWakeLock(); else releaseQuestWakeLock();
   if (!hud) return;
   if (side) {
@@ -17336,6 +17342,7 @@ async function endSideQuest() {
   sq.history.unshift(summary);
   if (sq.history.length > 40) sq.history.length = 40;
   sq.active = null;
+  updateQuestProgress('walk_completed', 1);
   saveState();
   stopSideQuestPocketMode();
   clearSideQuestFromMap();
@@ -17787,6 +17794,22 @@ function showAllLocalQuests() {
 }
 function toggleQuestOverview() { SFX.tap(); setQuestOverview(!questOverview.on); }
 
+function openMapSideQuest() {
+  if (questOverview.on) setQuestOverview(false);
+  if (sideQuestActive()) openSideQuestLogSheet();
+  else openSideQuestIntroSheet();
+}
+function updateMapSideQuestButton() {
+  const sideBtn = $('mapSideQuestBtn');
+  const label = $('mapSideQuestBtnLabel');
+  if (!sideBtn || !label) return;
+  const active = !!sideQuestActive();
+  sideBtn.classList.toggle('active', active);
+  sideBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  sideBtn.setAttribute('aria-label', active ? 'View active Side Quest' : 'Start a free-roaming Side Quest');
+  label.textContent = active ? 'View Side Quest' : 'Side Quests';
+}
+
 function fitSelectedQuestRoute(offer) {
   const displayPoints = questOfferDisplayPoints(offer);
   if (!liveMap || !offer || !displayPoints.length || !window.maplibregl) return;
@@ -17953,6 +17976,7 @@ function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn 
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); }
   const showBtn = $('mapQuestShowBtn'); if (showBtn && !showBtn.dataset.wired) { showBtn.dataset.wired = '1'; showBtn.addEventListener('click', showAllLocalQuests); updateShowQuestsButton(); }
+  const sideBtn = $('mapSideQuestBtn'); if (sideBtn && !sideBtn.dataset.wired) { sideBtn.dataset.wired = '1'; sideBtn.addEventListener('click', openMapSideQuest); updateMapSideQuestButton(); }
   const questHud = $('mapQuestHud'); if (questHud && !questHud.dataset.wired) { questHud.dataset.wired = '1'; questHud.addEventListener('click', () => { SFX.tap(); openActiveWalkQuestSheet(); }); }
   const areaBirdsToggle = $('mapAreaBirdsToggle'); if (areaBirdsToggle && !areaBirdsToggle.dataset.wired) { areaBirdsToggle.dataset.wired = '1'; setAreaBirdsOpen(areaBirdsOpenPreference(), false); areaBirdsToggle.addEventListener('click', () => { SFX.tap(); setAreaBirdsOpen(!areaBirdsToggle.getAttribute('aria-expanded').includes('true')); }); }
   const focusClose = $('mapQuestFocusClose'); if (focusClose && !focusClose.dataset.wired) { focusClose.dataset.wired = '1'; focusClose.addEventListener('click', () => setQuestOverview(false)); }
@@ -30047,8 +30071,8 @@ const PLAYER_QUESTS = [
     measure:() => (gameState.flock || []).some(b => b && b.academy && b.academy.room === 'hospital') ? 1 : 0 },
   { id:'pq_win_3',          name:'Arena regular', desc:'Win 3 battles against the evil Burbz', type:'win', target:3, reward:80, coins:50, icon:'\u{1F3C6}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
-  { id:'pq_walk_adventure', name:'Take a real walk', desc:'Complete a walking adventure on the live map', type:'walk_completed', target:1, reward:70, coins:40, icon:'\u{1F97E}', go:'map',
-    measure:() => ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length },
+  { id:'pq_walk_adventure', name:'Go for a walk', desc:'Complete a walking adventure or Side Quest on the live map', type:'walk_completed', target:1, reward:70, coins:40, icon:'\u{1F97E}', go:'map',
+    measure:() => ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length + ((gameState.sideQuest && gameState.sideQuest.history) || []).length },
   { id:'pq_quiz',           name:'Bird Wisdom Check', desc:'Answer a bird knowledge question correctly', type:'bird_quiz_correct', target:1, reward:45, coins:20, icon:'\u{1F9E0}', go:'quests',
     measure:() => Number(gameState.knowledgeQuiz && gameState.knowledgeQuiz.correct) || 0 },
   { id:'pq_liberate',       name:'Liberate a village', desc:'Free a real village from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
@@ -30621,7 +30645,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'real-walk-go-map-v230-20260806';
+const BURBZ_BUILD = 'side-quests-walk-goal-v231-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

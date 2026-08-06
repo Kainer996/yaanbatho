@@ -23,6 +23,39 @@ def test_quest_board_offers_a_side_quest_instead():
     assert "openSideQuestIntroSheet" in HTML
 
 
+def test_live_map_has_a_dedicated_small_side_quests_button_below_quests():
+    show_pos = HTML.index('id="mapQuestShowBtn"')
+    side_pos = HTML.index('id="mapSideQuestBtn"')
+    assert show_pos < side_pos
+    assert 'class="map-quest-btn map-side-quest-btn"' in HTML
+    assert '<span class="map-quest-btn-label" id="mapSideQuestBtnLabel">Side Quests</span>' in HTML
+    assert ".map-side-quest-btn {" in HTML
+    assert "top:132px" in HTML
+    assert "height:42px" in HTML
+    assert "sideBtn.addEventListener('click', openMapSideQuest)" in HTML
+
+
+def test_map_side_quests_button_opens_intro_or_active_walk_log_directly():
+    start = HTML.index("function openMapSideQuest()")
+    body = HTML[start:HTML.index("\nfunction updateMapSideQuestButton", start)]
+    assert "sideQuestActive()" in body
+    assert "openSideQuestLogSheet()" in body
+    assert "openSideQuestIntroSheet()" in body
+
+
+def test_side_quest_completion_counts_for_go_for_a_walk_player_goal():
+    quest_line = next(line for line in HTML.splitlines() if "id:'pq_walk_adventure'" in line)
+    assert "name:'Go for a walk'" in quest_line
+    assert "walking adventure or Side Quest" in quest_line
+    measure_start = HTML.index("id:'pq_walk_adventure'")
+    measure = HTML[measure_start:HTML.index("{ id:'pq_quiz'", measure_start)]
+    assert "gameState.walkingQuests" in measure
+    assert "gameState.sideQuest" in measure
+    end_start = HTML.index("async function endSideQuest()")
+    end_body = HTML[end_start:HTML.index("\nfunction shareSideQuestDraft", end_start)]
+    assert "updateQuestProgress('walk_completed', 1)" in end_body
+
+
 def test_intro_promises_pocket_mode_discoveries_and_future_sharing():
     start = HTML.index("function openSideQuestIntroSheet()")
     intro = HTML[start:HTML.index("\nfunction startSideQuest", start)]

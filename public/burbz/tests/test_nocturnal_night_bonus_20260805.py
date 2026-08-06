@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
-CURRENT_BUILD = "real-walk-go-map-v230-20260806"
+CURRENT_BUILD = "side-quests-walk-goal-v231-20260806"
 
 
 def run_node(script: str) -> dict:
