@@ -44,66 +44,77 @@
   var STYLES = {
     dorm: {
       label: 'The Roost', roof: 'steep', w: 1.7, d: 1.5, h: 1.5,
+      body: 'birdhouse', signature: 'round-perch-door', details: ['dormer', 'perch-brace'],
       wall: 0xa06f42, wallDark: 0x755030, roofCol: 0x5b442b, trim: 0x8a6a3a,
       windows: [{ x: 0, y: 0.34, z: 0.78, r: 0.30, round: true }],
       extras: ['lantern-left', 'hole-door', 'rope-belt']
     },
     tavern: {
       label: 'Barracks', roof: 'pagoda', w: 2.0, d: 1.7, h: 1.25,
+      body: 'pavilion', signature: 'shielded-open-dojo', details: ['shields', 'pennants'],
       wall: 0xb78048, wallDark: 0x6f5030, roofCol: 0x435261, trim: 0xb08a44,
       windows: [{ x: 0, y: 0.26, z: 0.86, r: 0.34, wide: true }],
       extras: ['target', 'open-front', 'training-posts']
     },
     training: {
       label: 'Training Hall', roof: 'pagoda', w: 2.1, d: 1.8, h: 1.2,
+      body: 'longhall', signature: 'target-gallery', details: ['banners', 'sparring-rack'],
       wall: 0xcf9850, wallDark: 0x876333, roofCol: 0x4d5c6c, trim: 0xc09a4c,
       windows: [{ x: 0, y: 0.24, z: 0.90, r: 0.32, wide: true }],
       extras: ['target', 'open-front', 'training-posts']
     },
     hospital: {
       label: 'Bird Hospital', roof: 'gable', w: 2.0, d: 1.7, h: 1.45,
+      body: 'cross-gable', signature: 'healing-greenhouse', details: ['greenhouse', 'herb-box'],
       wall: 0xa67445, wallDark: 0x725030, roofCol: 0x694e30, trim: 0x8f6c3c,
       windows: [{ x: -0.42, y: 0.34, z: 0.86, r: 0.26 }, { x: 0.42, y: 0.30, z: 0.86, r: 0.24 }],
       extras: ['cross', 'lantern-left', 'lantern-right']
     },
     crowbar: {
       label: 'The Crowbar', roof: 'layered', w: 2.1, d: 1.8, h: 1.35,
+      body: 'round', signature: 'circular-social-house', details: ['balcony-table', 'bottle-rack'],
       wall: 0xb78148, wallDark: 0x7a5633, roofCol: 0x805f36, trim: 0xc79a4e,
       windows: [{ x: 0, y: 0.34, z: 0.90, r: 0.48, wide: true, warm: true }],
       extras: ['sign', 'lantern-left', 'lantern-right', 'barrel', 'stools', 'open-front']
     },
     kitchen: {
       label: 'Kitchen & Pantry', roof: 'gable', w: 2.0, d: 1.7, h: 1.5,
+      body: 'cottage', signature: 'smoking-herb-kitchen', details: ['herb-box', 'copper-pans'],
       wall: 0xa47040, wallDark: 0x6f4c2d, roofCol: 0x5b4429, trim: 0x8d6a38,
       windows: [{ x: -0.02, y: 0.66, z: 0.80, r: 0.22, round: true }, { x: 0, y: 0.14, z: 0.88, r: 0.52, wide: true, warm: true }],
       extras: ['chimney', 'awning', 'sacks']
     },
     workshop: {
       label: 'Nest Workshop', roof: 'shingle', w: 1.9, d: 1.7, h: 1.4,
+      body: 'hexagonal', signature: 'pulley-nest-workshop', details: ['pulley', 'tool-wheel'],
       wall: 0xae7b46, wallDark: 0x765430, roofCol: 0x976f3e, trim: 0x9a7440,
       windows: [{ x: 0, y: 0.24, z: 0.86, r: 0.44, wide: true }],
       extras: ['roof-nest', 'hanging-nest', 'open-front']
     },
     nursery: {
       label: 'Hatchery Nursery', roof: 'egg', w: 1.6, d: 1.5, h: 1.9,
+      body: 'egg', signature: 'woven-cradle-egg', details: ['woven-ribs', 'cradle-mobile'],
       wall: 0xbc8a4c, wallDark: 0x7e5730, roofCol: 0x986d3c, trim: 0xb08c4c,
       windows: [{ x: 0, y: 0.34, z: 0.70, r: 0.40, wide: true, warm: true }],
       extras: ['hanging-cradle', 'crossed-poles']
     },
     observatory: {
       label: 'Moon Observatory', roof: 'dome', w: 1.8, d: 1.8, h: 1.0,
+      body: 'round', signature: 'star-studded-dome', details: ['star-band', 'lens-rings'],
       wall: 0x425081, wallDark: 0x2c3660, roofCol: 0x323d69, trim: 0xc6a44c,
       windows: [{ x: 0, y: 0.30, z: 0.80, r: 0.34, cool: true }],
       extras: ['crescent', 'telescope', 'lantern-left']
     },
     library: {
       label: 'The Library', roof: 'gable', w: 1.9, d: 1.7, h: 1.55,
+      body: 'tower', signature: 'book-balcony-tower', details: ['book-balcony', 'reading-lamp'],
       wall: 0x9a6c40, wallDark: 0x684a2b, roofCol: 0x554260, trim: 0xc6a44c,
       windows: [{ x: -0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0, y: 0.10, z: 0.90, r: 0.46, wide: true, warm: true }],
       extras: ['open-front', 'lantern-left', 'rope-belt']
     },
     quest_roost: {
       label: 'Quest Roost', roof: 'gable', w: 1.9, d: 1.7, h: 1.35,
+      body: 'faceted', signature: 'map-and-banner-roost', details: ['map-board', 'quest-banners'],
       wall: 0xb27e46, wallDark: 0x7a5630, roofCol: 0x634a2c, trim: 0xa9803f,
       windows: [{ x: 0, y: 0.28, z: 0.88, r: 0.44, wide: true }],
       extras: ['weathervane', 'lantern-left', 'lantern-right', 'open-front']
@@ -129,6 +140,32 @@
     if (h >= 17.5 && h < 21) return (h - 17.5) / 3.5;
     if (h >= 5 && h < 7) return 1 - (h - 5) / 2;
     return 0;
+  }
+
+  function treeLightsActiveFor(hour, requested) {
+    return !!requested && isNightHour(Number(hour));
+  }
+
+  // A phone should look rich, not cook itself. The expensive pieces are capped
+  // by the short/long viewport sides and coarse hardware hints; geometry detail remains
+  // because buildings are merged down to one static draw call each.
+  function qualityProfileFor(viewWidth, dpr, cores, memoryGb, viewHeight, mobileHint) {
+    viewWidth = Number(viewWidth) || 390;
+    viewHeight = Number(viewHeight) || viewWidth;
+    dpr = Math.max(1, Number(dpr) || 1);
+    cores = Math.max(1, Number(cores) || 4);
+    memoryGb = Math.max(1, Number(memoryGb) || 4);
+    var shortSide = Math.min(viewWidth, viewHeight);
+    var longSide = Math.max(viewWidth, viewHeight);
+    var phone = mobileHint === true || viewWidth <= 700 || (shortSide <= 700 && longSide <= 1000);
+    var low = phone && (cores <= 4 || memoryGb <= 2);
+    return {
+      pixelRatio: Math.min(dpr, low ? 1.25 : (phone ? 1.5 : 2)),
+      frameMs: low ? 32 : (phone ? 22 : 14),
+      shadowSize: low ? 512 : 1024,
+      lightCount: low ? 2 : 3,
+      canopyHalos: low ? 10 : (phone ? 16 : 24)
+    };
   }
 
   function anchorPosition(id) {
@@ -672,7 +709,7 @@
 
     // ---- body ----
     var bodyY = 0.05 + H / 2;
-    if (st.roof === 'egg') {
+    if (st.body === 'egg') {
       var egg = new T.Mesh(new T.SphereGeometry(W * 0.56, 18, 16), wallMat);
       egg.scale.set(1, H / (W * 1.02), 0.94);
       egg.position.y = 0.05 + H * 0.52;
@@ -684,6 +721,65 @@
         hoop.rotation.x = Math.PI / 2;
         hoop.position.y = 0.05 + H * (0.16 + eb * 0.18);
         g.add(hoop);
+      }
+    } else if (st.body === 'round' || st.body === 'hexagonal' || st.body === 'faceted') {
+      var sides = st.body === 'round' ? 16 : (st.body === 'hexagonal' ? 6 : 8);
+      var roundBody = new T.Mesh(new T.CylinderGeometry(W * 0.53, W * 0.56, H, sides), wallMat);
+      roundBody.scale.z = D / W;
+      roundBody.position.y = bodyY;
+      roundBody.castShadow = true; roundBody.receiveShadow = true;
+      g.add(roundBody);
+      // Hoops and upright ribs make these read as crafted timber buildings,
+      // not differently coloured cylinders.
+      [0.22, 0.62].forEach(function(level) {
+        var hoopBody = new T.Mesh(new T.TorusGeometry(W * 0.545, 0.035, 5, sides * 2), trimMat);
+        hoopBody.rotation.x = Math.PI / 2;
+        hoopBody.scale.z = D / W;
+        hoopBody.position.y = 0.05 + H * level;
+        g.add(hoopBody);
+      });
+      for (var rib = 0; rib < sides; rib++) {
+        var ribA = rib / sides * Math.PI * 2;
+        g.add(box(0.045, H * 0.92, 0.045, darkMat,
+          Math.sin(ribA) * W * 0.535, bodyY, Math.cos(ribA) * D * 0.535));
+      }
+    } else if (st.body === 'birdhouse') {
+      g.add(box(W * 0.88, H, D * 0.84, wallMat, 0, bodyY, -D * 0.04));
+      var birdFront = new T.Mesh(new T.CylinderGeometry(W * 0.29, W * 0.34, H * 0.72, 12), wallMat);
+      birdFront.rotation.x = Math.PI / 2;
+      birdFront.position.set(0, bodyY, D * 0.47);
+      birdFront.scale.y = 0.52;
+      birdFront.castShadow = true; birdFront.receiveShadow = true;
+      g.add(birdFront);
+      var birdRing = new T.Mesh(new T.TorusGeometry(W * 0.29, 0.045, 5, 16), trimMat);
+      birdRing.position.set(0, bodyY, D * 0.61);
+      g.add(birdRing);
+    } else if (st.body === 'pavilion') {
+      g.add(box(W, H * 0.48, D, wallMat, 0, 0.05 + H * 0.24, 0));
+      g.add(box(W, H * 0.20, D * 0.72, wallMat, 0, 0.05 + H * 0.90, -D * 0.10));
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(c) {
+        g.add(box(0.12, H * 0.48, 0.12, trimMat, c[0] * W * 0.43, 0.05 + H * 0.66, c[1] * D * 0.42));
+      });
+    } else if (st.body === 'longhall') {
+      g.add(box(W, H * 0.72, D, wallMat, 0, 0.05 + H * 0.36, 0));
+      g.add(box(W * 0.48, H * 0.38, D * 0.74, wallMat, 0, 0.05 + H * 0.81, 0));
+      [-1, 1].forEach(function(side) {
+        g.add(box(W * 0.22, H * 0.44, D * 0.78, darkMat, side * W * 0.48, 0.05 + H * 0.22, 0));
+      });
+    } else if (st.body === 'cross-gable') {
+      g.add(box(W * 0.72, H, D, wallMat, 0, bodyY, 0));
+      g.add(box(W, H * 0.70, D * 0.48, wallMat, 0, 0.05 + H * 0.35, D * 0.08));
+      g.add(box(W + 0.08, 0.09, D * 0.56, trimMat, 0, 0.05 + H * 0.70, D * 0.08));
+    } else if (st.body === 'cottage') {
+      g.add(box(W * 0.78, H, D, wallMat, -W * 0.08, bodyY, 0));
+      g.add(box(W * 0.34, H * 0.58, D * 0.78, darkMat, W * 0.43, 0.05 + H * 0.29, -D * 0.03));
+      g.add(box(W * 0.40, 0.09, D * 0.88, trimMat, W * 0.43, 0.05 + H * 0.61, -D * 0.03));
+    } else if (st.body === 'tower') {
+      g.add(box(W * 0.78, H * 0.62, D * 0.82, wallMat, 0, 0.05 + H * 0.31, 0));
+      g.add(box(W * 0.60, H * 0.48, D * 0.66, wallMat, 0, 0.05 + H * 0.79, 0));
+      g.add(box(W * 0.70, 0.10, D * 0.76, trimMat, 0, 0.05 + H * 0.60, 0));
+      for (var towerPost = -1; towerPost <= 1; towerPost += 2) {
+        g.add(box(0.10, H * 0.44, 0.10, trimMat, towerPost * W * 0.27, 0.05 + H * 0.79, D * 0.27));
       }
     } else {
       g.add(box(W, H, D, wallMat, 0, bodyY, 0));
@@ -1122,6 +1218,168 @@
       g.add(box(W * 0.90, 0.07, 0.10, trimMat, 0, 0.05 + H * 0.12, D / 2 + 0.02));
       [-1, 1].forEach(function(ox) { g.add(box(0.08, H * 0.54, 0.10, trimMat, ox * W * 0.45, 0.05 + H * 0.38, D / 2 + 0.02)); });
     }
+    // Signature facade details: each room gets a recognisable silhouette at
+    // phone scale, not merely a new paint colour. Opaque pieces merge into the
+    // house shell, so these flourishes do not multiply draw calls.
+    var detail = st.details || [];
+    function hasDetail(name) { return detail.indexOf(name) >= 0; }
+    if (hasDetail('dormer')) {
+      g.add(box(W * 0.42, H * 0.34, 0.24, wallMat, W * 0.18, roofBase + 0.22, D / 2 + 0.06));
+      var dormerRoof = new T.Mesh(new T.ConeGeometry(W * 0.30, 0.30, 4), roofMat);
+      dormerRoof.rotation.y = Math.PI / 4;
+      dormerRoof.position.set(W * 0.18, roofBase + 0.47, D / 2 + 0.06);
+      g.add(dormerRoof);
+    }
+    if (hasDetail('perch-brace')) {
+      var perch = cyl(0.035, 0.045, W * 0.72, 6, trimMat, 0, 0.05 + H * 0.24, D / 2 + 0.30);
+      perch.rotation.z = Math.PI / 2;
+      g.add(perch);
+    }
+    if (hasDetail('shields')) {
+      [-1, 1].forEach(function(sd2) {
+        var shield = new T.Mesh(new T.CylinderGeometry(0.18, 0.18, 0.045, 12), new T.MeshLambertMaterial({ color: sd2 < 0 ? 0x8e3f32 : 0x385b7a }));
+        shield.rotation.x = Math.PI / 2;
+        shield.position.set(sd2 * W * 0.28, 0.05 + H * 0.67, D / 2 + 0.09);
+        g.add(shield);
+        g.add(new T.Mesh(new T.TorusGeometry(0.18, 0.025, 4, 12), trimMat).translateX(sd2 * W * 0.28).translateY(0.05 + H * 0.67).translateZ(D / 2 + 0.12));
+      });
+    }
+    if (hasDetail('pennants') || hasDetail('banners') || hasDetail('quest-banners')) {
+      [-1, 1].forEach(function(bn) {
+        g.add(cyl(0.018, 0.022, 0.72, 5, trimMat, bn * W * 0.42, 0.05 + H * 0.92, D / 2 + 0.12));
+        var cloth = new T.Mesh(new T.PlaneGeometry(0.25, 0.42), new T.MeshLambertMaterial({ color: bn < 0 ? 0xb94f3c : 0xd6a84f, side: T.DoubleSide }));
+        cloth.position.set(bn * W * 0.42 + bn * 0.13, 0.05 + H * 1.02, D / 2 + 0.13);
+        cloth.rotation.z = bn * -0.14;
+        g.add(cloth);
+      });
+    }
+    if (hasDetail('greenhouse')) {
+      var glass = new T.MeshLambertMaterial({ color: 0x9ed8b7, transparent: true, opacity: 0.38, side: T.DoubleSide });
+      var glassRoof = box(W * 0.52, 0.035, D * 0.52, glass, W * 0.48, 0.05 + H * 0.50, 0);
+      glassRoof.rotation.z = -0.34;
+      glassRoof.castShadow = false;
+      g.add(glassRoof);
+      for (var gr = -1; gr <= 1; gr++) g.add(cyl(0.022, 0.025, H * 0.48, 5, trimMat, W * 0.56, 0.05 + H * 0.26, gr * D * 0.22));
+    }
+    if (hasDetail('herb-box')) {
+      g.add(box(W * 0.42, 0.12, 0.18, darkMat, W * 0.24, 0.05 + H * 0.20, D / 2 + 0.12));
+      for (var herb = 0; herb < 5; herb++) {
+        var herbLeaf = new T.Mesh(new T.ConeGeometry(0.045, 0.18, 5), new T.MeshLambertMaterial({ color: herb % 2 ? 0x4f7a3a : 0x6d8e45 }));
+        herbLeaf.position.set(W * 0.08 + herb * W * 0.08, 0.05 + H * 0.31, D / 2 + 0.13);
+        herbLeaf.rotation.z = (herb - 2) * 0.08;
+        g.add(herbLeaf);
+      }
+    }
+    if (hasDetail('copper-pans') || hasDetail('tool-wheel') || hasDetail('lens-rings')) {
+      for (var pan = 0; pan < 3; pan++) {
+        var metalCol = hasDetail('copper-pans') ? 0xc57b42 : (hasDetail('lens-rings') ? 0xd1b55a : 0x6f7880);
+        var wheel = new T.Mesh(new T.TorusGeometry(0.11 + pan * 0.025, 0.018, 4, 12), new T.MeshLambertMaterial({ color: metalCol }));
+        wheel.position.set(-W * 0.28 + pan * W * 0.28, 0.05 + H * 0.73, D / 2 + 0.10);
+        g.add(wheel);
+      }
+    }
+    if (hasDetail('pulley')) {
+      var pulley = new T.Mesh(new T.TorusGeometry(0.17, 0.035, 5, 14), ironMat);
+      pulley.position.set(W * 0.48, 0.05 + H * 0.86, D * 0.18);
+      pulley.rotation.y = Math.PI / 2;
+      g.add(pulley);
+      g.add(cyl(0.012, 0.012, 0.82, 4, ropeMat, W * 0.48, 0.05 + H * 0.43, D * 0.18));
+      g.add(new T.Mesh(new T.TorusGeometry(0.07, 0.018, 4, 10, Math.PI * 1.6), ironMat).translateX(W * 0.48).translateY(0.05).translateZ(D * 0.18));
+    }
+    if (hasDetail('book-balcony') || hasDetail('map-board')) {
+      g.add(box(W * 0.72, H * 0.34, 0.08, darkMat, 0, 0.05 + H * 0.46, D / 2 + 0.08));
+      g.add(box(W * 0.78, 0.07, 0.22, trimMat, 0, 0.05 + H * 0.28, D / 2 + 0.15));
+      if (hasDetail('book-balcony')) {
+        for (var bk = 0; bk < 7; bk++) g.add(box(0.08, 0.22 + (bk % 3) * 0.04, 0.06,
+          new T.MeshLambertMaterial({ color: [0x7f3f32, 0x385b7a, 0x76613a][bk % 3] }),
+          -W * 0.27 + bk * W * 0.09, 0.05 + H * 0.43, D / 2 + 0.14));
+      } else {
+        var scroll = new T.Mesh(new T.PlaneGeometry(W * 0.54, H * 0.22), new T.MeshLambertMaterial({ color: 0xd7c79a, side: T.DoubleSide }));
+        scroll.position.set(0, 0.05 + H * 0.47, D / 2 + 0.14);
+        g.add(scroll);
+      }
+    }
+    if (hasDetail('reading-lamp')) lantern(W * 0.35, 0.05 + H * 0.74, D / 2 + 0.20, false);
+    if (hasDetail('targets')) {
+      [-1, 0, 1].forEach(function(tg) {
+        var targetDisc = new T.Mesh(new T.CylinderGeometry(0.13, 0.13, 0.035, 12),
+          new T.MeshLambertMaterial({ color: tg ? 0xd1b45d : 0xa94a38 }));
+        targetDisc.rotation.x = Math.PI / 2;
+        targetDisc.position.set(tg * W * 0.28, 0.05 + H * 0.47, D / 2 + 0.10);
+        g.add(targetDisc);
+      });
+    }
+    if (hasDetail('sparring-rack')) {
+      [-1, 1].forEach(function(sr) {
+        var spar = cyl(0.025, 0.03, H * 0.58, 6, trimMat, sr * W * 0.34, 0.05 + H * 0.36, D / 2 + 0.14);
+        spar.rotation.z = sr * 0.78;
+        g.add(spar);
+      });
+      g.add(box(W * 0.78, 0.07, 0.10, darkMat, 0, 0.05 + H * 0.18, D / 2 + 0.13));
+    }
+    if (hasDetail('balcony-table')) {
+      var tableTop = new T.Mesh(new T.CylinderGeometry(W * 0.20, W * 0.20, 0.08, 12), trimMat);
+      tableTop.position.set(0, 0.05 + H * 0.30, D / 2 + 0.24);
+      g.add(tableTop);
+      g.add(cyl(0.055, 0.07, H * 0.28, 7, darkMat, 0, 0.05 + H * 0.15, D / 2 + 0.24));
+    }
+    if (hasDetail('bottle-rack')) {
+      g.add(box(W * 0.56, H * 0.30, 0.07, darkMat, -W * 0.12, 0.05 + H * 0.62, D / 2 + 0.11));
+      for (var bt = 0; bt < 5; bt++) {
+        var bottle = cyl(0.025, 0.04, 0.18 + (bt % 2) * 0.05, 7,
+          new T.MeshLambertMaterial({ color: bt % 2 ? 0x5f7f63 : 0x87633f }),
+          -W * 0.33 + bt * W * 0.105, 0.05 + H * 0.58, D / 2 + 0.16);
+        g.add(bottle);
+      }
+    }
+    if (hasDetail('ward-lantern')) lantern(-W * 0.38, 0.05 + H * 0.66, D / 2 + 0.20, false);
+    if (hasDetail('pub-sign')) {
+      g.add(box(0.06, H * 0.55, 0.06, trimMat, W * 0.48, 0.05 + H * 0.56, D / 2 + 0.08));
+      var pubBoard = box(W * 0.42, H * 0.24, 0.07, darkMat, W * 0.33, 0.05 + H * 0.72, D / 2 + 0.10);
+      pubBoard.rotation.z = -0.08;
+      g.add(pubBoard);
+    }
+    if (hasDetail('barrels')) {
+      [-1, 1].forEach(function(br) {
+        var barrel = new T.Mesh(new T.CylinderGeometry(0.16, 0.18, 0.35, 10), darkMat);
+        barrel.position.set(br * W * 0.34, 0.05 + 0.18, D / 2 + 0.16);
+        g.add(barrel);
+        [-1, 1].forEach(function(band) {
+          var barrelBand = new T.Mesh(new T.TorusGeometry(0.17, 0.018, 4, 10), ironMat);
+          barrelBand.rotation.x = Math.PI / 2;
+          barrelBand.position.set(br * W * 0.34, 0.05 + 0.18 + band * 0.10, D / 2 + 0.16);
+          g.add(barrelBand);
+        });
+      });
+    }
+    if (hasDetail('cradle-mobile')) {
+      g.add(cyl(0.018, 0.022, H * 0.42, 5, trimMat, 0, 0.05 + H * 0.78, D / 2 + 0.18));
+      var mobileBar = box(W * 0.40, 0.035, 0.035, trimMat, 0, 0.05 + H * 0.62, D / 2 + 0.18);
+      g.add(mobileBar);
+      [-1, 0, 1].forEach(function(mb) {
+        g.add(cyl(0.010, 0.010, 0.18 + Math.abs(mb) * 0.05, 4, ropeMat,
+          mb * W * 0.16, 0.05 + H * 0.51, D / 2 + 0.18));
+        var charm = new T.Mesh(new T.ConeGeometry(0.055, 0.11, 5), new T.MeshLambertMaterial({ color: mb ? 0xd6a84f : 0x7ca58d }));
+        charm.position.set(mb * W * 0.16, 0.05 + H * 0.40, D / 2 + 0.18);
+        g.add(charm);
+      });
+    }
+    if (hasDetail('woven-ribs')) {
+      [-0.30, -0.10, 0.10, 0.30].forEach(function(rx) {
+        var wovenRib = new T.Mesh(new T.TorusGeometry(W * 0.42, 0.018, 4, 14, Math.PI), trimMat);
+        wovenRib.rotation.y = Math.PI / 2;
+        wovenRib.position.set(rx * W, 0.05 + H * 0.56, D / 2 + 0.03);
+        g.add(wovenRib);
+      });
+    }
+    if (hasDetail('star-band')) {
+      for (var sb = 0; sb < 5; sb++) {
+        var star = new T.Mesh(new T.OctahedronGeometry(0.055 + (sb % 2) * 0.015),
+          new T.MeshLambertMaterial({ color: sb % 2 ? 0xd9c678 : 0x8fb3c7 }));
+        star.position.set(-W * 0.34 + sb * W * 0.17, 0.05 + H * (0.42 + (sb % 2) * 0.10), D / 2 + 0.11);
+        g.add(star);
+      }
+    }
     // Every house gets a window box of flowers and a coil of rope — the small
     // signs of somebody living there.
     if (ex.indexOf('open-front') < 0 && id !== 'observatory') {
@@ -1169,7 +1427,10 @@
       pointers: new Map(), orbitStart: null, pinchLast: null, dragged: false,
       houses: [], glows: [], smokes: [], fireflies: null, leafFall: [],
       labels: [], sun: null, moon: null, hemi: null, sky: null,
-      builtKey: '', shadowTick: 0, disposed: false
+      builtKey: '', shadowTick: 0, disposed: false,
+      quality: qualityProfileFor(390, 1, 4, 4),
+      treeLightRequested: false, treeLightActive: false,
+      treeLights: [], treeLightHalos: [], treeLightMaterials: [], treeLeafMaterials: []
     };
     var rng = mulberry32(20260730);
 
@@ -1188,6 +1449,114 @@
     }
     function reduced() {
       try { return !!(adapter.reducedMotion && adapter.reducedMotion()); } catch (e) { return false; }
+    }
+
+    function qualityForSize(w, h) {
+      var nav = typeof navigator !== 'undefined' ? navigator : {};
+      var dpr = (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1;
+      var coarse = false;
+      try { coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches; } catch (e) {}
+      var mobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(String(nav.userAgent || ''));
+      return qualityProfileFor(w, dpr, nav.hardwareConcurrency, nav.deviceMemory, h, coarse || mobileUa);
+    }
+
+    function requestedTreeLights() {
+      try { return !!(adapter.treeLightsEnabled && adapter.treeLightsEnabled()); } catch (e) { return false; }
+    }
+
+    function applyTreeLights(active) {
+      active = !!active;
+      st.treeLightActive = active;
+      st.treeLights.forEach(function(light, idx) {
+        light.intensity = active ? (idx === st.treeLights.length - 1 ? 2.55 : 1.85) : 0;
+      });
+      st.treeLightMaterials.forEach(function(mat, idx) {
+        mat.opacity = active ? (idx === 0 ? 0.36 : 0.22) : 0;
+      });
+      st.treeLightHalos.forEach(function(mat, idx) {
+        mat.opacity = active ? (0.14 + (idx % 4) * 0.025) : 0;
+      });
+      st.treeLeafMaterials.forEach(function(mat, idx) {
+        if (!mat || !mat.emissive) return;
+        mat.emissive.setHex(active ? (idx === 1 ? 0x48330e : 0x28320d) : 0x000000);
+        mat.emissiveIntensity = active ? (idx === 1 ? 0.72 : 0.46) : 0;
+      });
+    }
+
+    function applyStaticRoomGlows(active) {
+      var boost = lightBoostFor(hourNow());
+      st.glows.forEach(function(g) {
+        if (g.lit === undefined) g.lit = true;
+        var day = g.always ? 0.85 : 0.42;
+        var target = g.lit ? day + (g.base - day) * boost : 0.04;
+        if (!active && boost > 0.5 && !g.always) target *= 0.68;
+        if (active) target = Math.max(target, Math.min(1, g.base * (g.lantern ? 1.02 : 1.12)));
+        g.mat.opacity = target;
+        var haloAmt = target * (0.08 + boost * 0.40 + (active ? 0.20 : 0));
+        if (g.halo) g.halo.opacity = haloAmt;
+        if (g.halos) for (var hh = 0; hh < g.halos.length; hh++) g.halos[hh].opacity = haloAmt;
+      });
+    }
+
+    function setTreeLights(on) {
+      st.treeLightRequested = !!on;
+      applyTreeLights(treeLightsActiveFor(hourNow(), st.treeLightRequested));
+      applyStaticRoomGlows(st.treeLightActive);
+      // Reduced-motion mode has no animation loop to repaint the button's
+      // choice, so draw its one still frame immediately.
+      if (!st.running && st.renderer && st.scene && st.camera) st.renderer.render(st.scene, st.camera);
+      return st.treeLightActive;
+    }
+
+    // Three real, shadow-free point lights provide leaf/bark response; a single
+    // merged inner-vein mesh and bounded additive halos imitate warm bounced
+    // light through the branches. This gives a ray-traced feeling without the
+    // battery and frame-rate cost of actual path tracing on a phone.
+    function buildTreeLightRig(scene, tree) {
+      st.treeLights = []; st.treeLightHalos = []; st.treeLightMaterials = [];
+      for (var li = 0; li < st.quality.lightCount; li++) {
+        var ly = 3.4 + li * (8.1 / Math.max(1, st.quality.lightCount - 1));
+        var light = new T.PointLight(li === st.quality.lightCount - 1 ? 0xffd58a : 0xffa94f, 0, li === st.quality.lightCount - 1 ? 15 : 11, 2);
+        light.position.set(Math.sin(li * 2.3) * 0.7, ly, Math.cos(li * 2.3) * 0.7);
+        light.castShadow = false;
+        scene.add(light);
+        st.treeLights.push(light);
+      }
+
+      var buildGlowMat = new T.MeshBasicMaterial({ color: 0xffb04f });
+      var veinGroup = new T.Group();
+      var luminousTips = tree.tips.filter(function(tip) { return tip.p.y > 8.5; });
+      luminousTips.slice(0, 12).forEach(function(tip, idx) {
+        var from = new T.Vector3(tip.p.x * 0.10, Math.max(5.4, tip.p.y - 3.4), tip.p.z * 0.10);
+        var to = tip.p.clone().multiplyScalar(0.88);
+        veinGroup.add(limb(from, to, idx % 3 === 0 ? 0.075 : 0.05, 0.018, buildGlowMat, 0.45));
+      });
+      scene.add(veinGroup);
+      var veinMesh = mergeStatic(veinGroup, { name: 'tree-light-veins' });
+      if (veinMesh) {
+        var veinMat = new T.MeshBasicMaterial({ color: 0xffb04f, transparent: true, opacity: 0,
+          depthWrite: false, blending: T.AdditiveBlending, vertexColors: true });
+        veinMesh.material = veinMat;
+        veinMesh.castShadow = false; veinMesh.receiveShadow = false;
+        st.treeLightMaterials.push(veinMat);
+      }
+
+      var haloCount = Math.min(st.quality.canopyHalos, Math.max(1, luminousTips.length));
+      for (var gh = 0; gh < haloCount; gh++) {
+        var tip = luminousTips[(gh * 7) % luminousTips.length];
+        if (!tip) break;
+        var haloMat = new T.SpriteMaterial({ map: sharedSoft('255,255,255'),
+          color: gh % 3 ? 0xffa94f : 0xffdc91, transparent: true, opacity: 0,
+          depthWrite: false, depthTest: false, fog: false, blending: T.AdditiveBlending });
+        var halo = new T.Sprite(haloMat);
+        halo.position.copy(tip.p).add(new T.Vector3(Math.sin(gh * 2.1) * 0.7, 0.35 + (gh % 3) * 0.22, Math.cos(gh * 1.7) * 0.7));
+        var haloScale = 1.8 + (gh % 4) * 0.32;
+        halo.scale.set(haloScale, haloScale, 1);
+        scene.add(halo);
+        st.treeLightHalos.push(haloMat);
+      }
+      st.treeLightRequested = requestedTreeLights();
+      applyTreeLights(treeLightsActiveFor(hourNow(), st.treeLightRequested));
     }
 
     // ---- build ----
@@ -1212,6 +1581,7 @@
       scene.fog = new T.Fog(0x1d2a24, 44, 118);
       var mats = makeMaterials();
       st.mats = mats;
+      st.treeLeafMaterials = [mats.leaf, mats.leafCard];
 
       // Sky dome with a painted gradient that shifts from day to night.
       var skyMat = new T.ShaderMaterial({
@@ -1337,6 +1707,7 @@
       var tree = buildTree(mats, rng);
       scene.add(tree.group);
       st.leaves = tree.leaves;
+      buildTreeLightRig(scene, tree);
 
       // Lights
       var hemi = new T.HemisphereLight(0xcfe4f5, 0x54633c, 1.25);
@@ -1348,7 +1719,7 @@
       var sun = new T.DirectionalLight(0xfff0d2, 1.45);
       sun.position.set(9, 16, 7);
       sun.castShadow = true;
-      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.mapSize.set(st.quality.shadowSize, st.quality.shadowSize);
       sun.shadow.camera.near = 1;
       sun.shadow.camera.far = 70;
       sun.shadow.camera.left = -22; sun.shadow.camera.right = 22;
@@ -1511,8 +1882,9 @@
       if (!cont) return false;
       st.cont = cont;
       if (!st.renderer) {
+        st.quality = qualityForSize(cont.clientWidth || 390, cont.clientHeight || 700);
         st.renderer = new T.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
-        st.renderer.setPixelRatio(Math.min(2, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1));
+        st.renderer.setPixelRatio(st.quality.pixelRatio);
         st.renderer.shadowMap.enabled = true;
         st.renderer.shadowMap.type = T.PCFSoftShadowMap;
         st.renderer.shadowMap.autoUpdate = false;
@@ -1537,6 +1909,14 @@
       if (!st.cont || !st.renderer) return;
       var w = st.cont.clientWidth, h = st.cont.clientHeight;
       if (!w || !h) return;
+      var nextQuality = qualityForSize(w, h);
+      if (nextQuality.pixelRatio !== st.quality.pixelRatio) st.renderer.setPixelRatio(nextQuality.pixelRatio);
+      if (st.sun && nextQuality.shadowSize !== st.quality.shadowSize) {
+        st.sun.shadow.mapSize.set(nextQuality.shadowSize, nextQuality.shadowSize);
+        if (st.sun.shadow.map) { st.sun.shadow.map.dispose(); st.sun.shadow.map = null; }
+        st.renderer.shadowMap.needsUpdate = true;
+      }
+      st.quality = nextQuality;
       st.w = w; st.h = h;
       st.renderer.setSize(w, h, false);
       st.camera.aspect = w / h;
@@ -1615,7 +1995,7 @@
       if (typeof document !== 'undefined' && document.hidden) { st.lastT = 0; schedule(); return; }
       try { if (adapter.isScreenActive && !adapter.isScreenActive()) { st.lastT = 0; schedule(); return; } } catch (e) {}
       if (!st.cont || !st.cont.isConnected) { pause(); return; }
-      if (st.lastT && now - st.lastT < 14) { schedule(); return; } // 60fps cap
+      if (st.lastT && now - st.lastT < st.quality.frameMs) { schedule(); return; }
       var dt = st.lastT ? Math.min(60, now - st.lastT) : 16;
       st.lastT = now;
       st.clock += dt;
@@ -1633,6 +2013,8 @@
         applyDaylight(boost);
         st.shadowTick = 0; // re-render shadows for the new sun angle
       }
+      var treeLightActive = treeLightsActiveFor(h, st.treeLightRequested);
+      if (treeLightActive !== st.treeLightActive) applyTreeLights(treeLightActive);
 
       // Idle drift, but never while the player is steering.
       if (Date.now() - st.cam.lastInput > 7000) st.cam.az += s * 0.045;
@@ -1657,8 +2039,9 @@
         if (g.pulse) flick = 0.62 + 0.38 * Math.sin(t * 1.7 + g.phase);
         var day = g.always ? 0.85 : 0.42;
         var target = g.lit ? (day + (g.base - day) * boost) * flick : 0.04;
+        if (st.treeLightActive) target = Math.max(target, g.base * (g.lantern ? 0.98 : 0.88) * flick);
         g.mat.opacity = g.mat.opacity + (target - g.mat.opacity) * Math.min(1, s * 5);
-        var haloAmt = g.mat.opacity * (0.08 + boost * 0.40);
+        var haloAmt = g.mat.opacity * (0.08 + boost * 0.40 + (st.treeLightActive ? 0.20 : 0));
         if (g.halo) g.halo.opacity = haloAmt;
         if (g.halos) for (var hh = 0; hh < g.halos.length; hh++) g.halos[hh].opacity = haloAmt;
       }
@@ -1755,7 +2138,7 @@
         st.night = isNightHour(hourNow());
         st.boost = lightBoostFor(hourNow());
         applyDaylight(st.boost);
-        st.glows.forEach(function(g) { g.mat.opacity = g.base; });
+        applyStaticRoomGlows(st.treeLightActive);
         st.renderer.shadowMap.needsUpdate = true;
         var rc = st.cam;
         st.camera.position.set(Math.sin(rc.az) * Math.sin(rc.polar) * rc.dist, Math.cos(rc.polar) * rc.dist + 3.6, Math.cos(rc.az) * Math.sin(rc.polar) * rc.dist);
@@ -1799,9 +2182,19 @@
           m.dispose();
         });
       });
+      // These textures are deliberately skipped during traversal because many
+      // meshes share them; release each one exactly once before a rebuild.
+      [st.smokeTex, st.ffTex, st.groundTex,
+        st.mats && st.mats.leafTex, st.mats && st.mats.barkTex].forEach(function(tex, idx, all) {
+        if (tex && tex.dispose && all.indexOf(tex) === idx) tex.dispose();
+      });
+      st.smokeTex = null; st.ffTex = null; st.groundTex = null;
+      if (st.mats) { st.mats.leafTex = null; st.mats.barkTex = null; }
+      st.mats = null;
       st.scene = null;
       st.houses = []; st.glows = []; st.smokes = []; st.labels = []; st.leafFall = [];
       st.fireflies = null; st.moon = null; st.moonDisc = null;
+      st.treeLights = []; st.treeLightHalos = []; st.treeLightMaterials = []; st.treeLeafMaterials = []; st.treeLightActive = false;
     }
 
     function stop() {
@@ -1829,6 +2222,7 @@
       stop: stop,
       refresh: refresh,
       resize: resize,
+      setTreeLights: setTreeLights,
       isRunning: function() { return st.running; },
       _state: st
     };
@@ -1839,6 +2233,8 @@
     STYLES: STYLES,
     isNightHour: isNightHour,
     lightBoostFor: lightBoostFor,
+    treeLightsActiveFor: treeLightsActiveFor,
+    qualityProfileFor: qualityProfileFor,
     anchorPosition: anchorPosition,
     mulberry32: mulberry32,
     createAcademy3D: createAcademy3D
