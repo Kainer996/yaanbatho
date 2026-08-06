@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (player-turn potion hotfix v233: inline handler exported, failed saves roll back, and Forge copy matches turn use — see "Review log" at the bottom).
+Last curated: 2026-08-06 (living Academy tree v234: the treehouses ride the tree's sway, rock on their own boughs at 92px, three chimneys smoke, windows go dark more often, and The Crowbar's crow patrols the pub deck — see "Review log" at the bottom).
 
 ---
 
@@ -227,6 +227,60 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-06 — the living Academy tree (Claude).** Yaan asked for the 2D
+  Academy to read as a genuinely living, breathing place: the tree moving
+  slowly "the same way you've done Merlin's Perch", the buildings smaller and
+  truly integrated into the tree (moving WITH it), different life per building
+  (lights going on and off, more smoke), and The Crowbar's little crow moving
+  backwards and forwards. Release `academy-living-tree-v234-20260806`.
+  - **The whole tree sways together** (`index.html`): a new
+    `.academy-tree-sway` wrapper (`#academyTreeSway`) now carries the branch,
+    room and bird layers, and runs the IDENTICAL `treeSway 13s ease-in-out
+    infinite alternate` shorthand as `.academy-tree-swaybg` — both elements
+    exist from first parse, so the two animations share a document-timeline
+    start and the treehouses stay glued to their boughs. `treeSway` gained a
+    touch of vertical give (Merlin's-bough weight). The wrapper is
+    `pointer-events:none` (placement taps fall through to the tree, pinned by
+    test) and `.treehouse-room-node` re-enables `pointer-events:auto`.
+    NB: the wrapper's transform makes it the containing block for the room
+    nodes' `left/top` percentages — it must stay `inset:0`.
+  - **Smaller, nestled buildings**: node + sprite shrank 112→92px, with a
+    tighter double drop-shadow and a stronger elliptical contact shadow so
+    each treehouse sits INTO the bark. Every placeable room carries its own
+    `--th-tilt` (resting lean) and `--th-rock-dur/-delay`, feeding a shared
+    `thBranchRock` keyframe (rock about `50% 88%` with a weight-down /
+    spring-up beat) — eleven boughs, not one sheet of buildings.
+    `academy_alive_core.js` scales glow radii by `box / SPRITE_BOX` so the
+    window glows shrank with the paintings (anchor FRACTIONS were already
+    scale-invariant).
+  - **Different life per building** (`academy_alive_core.js`): GLOW_STYLES
+    `offChance` roughly trebled (window .026, lantern .016, hearth .009,
+    cool .020, coollantern .016) so somebody visibly moves between rooms
+    every ~15-30s; the Kitchen chimney works harder (power 1.25); the
+    Crowbar's crooked stovepipe (0.44, 0.075) and the Hospital ward stove
+    (0.47, 0.09) now smoke too; smoke cadence quickened and MAX_PARTICLES
+    rose 150→170 to cover the two new chimneys.
+  - **The Crowbar crow** (`index.html`): `crowbarCrowHTML()` renders a small
+    hand-drawn SVG puppet (body/head/tail groups — the Library-art precedent)
+    into the Crowbar node only. `crowbarCrowPatrol` (17s) hops him along the
+    pub deck, turns him (`scaleX` flip — he never moonwalks), lingers him by
+    the stools and hops him home; `crowbarCrowBob`/`Peck`/`TailFlick` keep
+    him alive between trips. **The no-birds rule
+    (test_no_birds_anywhere_on_the_academy_tree) still binds the ambience
+    ENGINE** — the crow is deliberate, player-requested markup with his own
+    class names; `class="treehouse-bird"` stays absent and the engine stays
+    birdless. Don't "fix" him away.
+  - Reduced motion switches off the wrapper sway, the branch rock and every
+    crow animation (the pinned `.academy-tree-swaybg { animation:none; }`
+    fragment survives inside the same media block).
+  - Tests: `tests/test_academy_living_tree_20260806.py`. Release pins
+    repointed per convention; SW cache + `BURBZ_BUILD` bumped and
+    `academy_alive_core.js` `?v=` moved to the new tag in both loaders.
+    Browser-checked in Chromium (390×844): wrapper and painting both compute
+    `treeSway/13s`, sprites 92px on `thBranchRock`, exactly one crow who
+    visibly patrols and turns on the deck, 20 glows anchored, chimney smoke
+    and night fireflies on screen.
 
 - **2026-08-06 — player-turn potion hotfix (Ava).** Release
   `turn-potions-hotfix-v233-20260806` fixes the inline battle button by exporting

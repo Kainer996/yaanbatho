@@ -2618,15 +2618,37 @@ svg.academy-room-bg { display:block; filter:none; }
 .treehouse-branch { display:none; }
 /* Built rooms sit frameless on the tree so the paintings read as one scene;
    the box chrome only returns while placing (dashed target) or when active. */
-.treehouse-room-node { position:absolute; z-index:7; width:112px; min-height:112px; transform:translate(-50%,-50%); border-radius:18px; border:1px solid transparent; background:radial-gradient(circle at 50% 72%,rgba(0,0,0,.20),transparent 58%); padding:0; text-align:center; transition:transform .18s ease, filter .18s ease; }
+.treehouse-room-node { position:absolute; z-index:7; width:92px; min-height:92px; transform:translate(-50%,-50%); border-radius:18px; border:1px solid transparent; background:radial-gradient(ellipse 62% 34% at 50% 78%,rgba(8,6,3,.42),transparent 72%); padding:0; text-align:center; transition:transform .18s ease, filter .18s ease; pointer-events:auto; }
 .treehouse-room-node.built { border-color:transparent; }
 .treehouse-room-node.active { transform:translate(-50%,-50%) scale(1.06); filter:drop-shadow(0 0 14px rgba(214,168,79,.8)); }
 .treehouse-room-node.quest-guided { z-index:12; border:3px solid #ffd76a; box-shadow:0 0 0 7px rgba(255,215,106,.18),0 0 34px rgba(255,215,106,.92),0 16px 28px rgba(0,0,0,.42); animation:academyQuestGuidePulse 1.15s ease-in-out infinite; }
 .treehouse-quest-guide { position:absolute; z-index:14; left:50%; top:-46px; transform:translateX(-50%); min-height:34px; display:flex; align-items:center; padding:7px 12px; border-radius:999px; border:2px solid #161006; background:#ffd76a; color:#161006; box-shadow:0 8px 20px rgba(0,0,0,.55); font:900 11px/1 'Rajdhani',sans-serif; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; pointer-events:none; }
 @keyframes academyQuestGuidePulse { 0%,100%{box-shadow:0 0 0 7px rgba(255,215,106,.18),0 0 24px rgba(255,215,106,.62),0 16px 28px rgba(0,0,0,.42)} 50%{box-shadow:0 0 0 10px rgba(255,215,106,.24),0 0 42px rgba(255,215,106,1),0 16px 28px rgba(0,0,0,.42)} }
 @media (prefers-reduced-motion:reduce) { .treehouse-room-node.quest-guided { animation:none; } }
-.treehouse-building-sprite { width:112px; height:112px; object-fit:contain; display:block; filter:drop-shadow(0 14px 18px rgba(0,0,0,.62)); pointer-events:none; }
-.treehouse-room-name { position:absolute; left:50%; bottom:-10px; transform:translateX(-50%); max-width:116px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Smaller than the old 112px box, sunk into the bark with a tight contact
+   shadow, and each one rides its own branch: a slow rock about the point
+   where the treehouse meets the bough, tilted and timed differently per
+   room so the tree reads as many boughs, not one sheet of buildings. */
+.treehouse-building-sprite { width:92px; height:92px; object-fit:contain; display:block; filter:drop-shadow(0 9px 11px rgba(0,0,0,.66)) drop-shadow(0 2px 3px rgba(16,10,4,.55)); pointer-events:none; transform-origin:50% 88%; animation:thBranchRock var(--th-rock-dur,7s) ease-in-out var(--th-rock-delay,0s) infinite; }
+/* The bough carries the treehouse's weight down and springs it back up while
+   it rocks — the same motion grammar as Merlin's perch branch. --th-tilt is
+   the room's resting lean, so each one sits on its bough at its own angle. */
+@keyframes thBranchRock {
+  0%,100% { transform:rotate(calc(var(--th-tilt,0deg) - .7deg)) translateY(-1px); }
+  55% { transform:rotate(calc(var(--th-tilt,0deg) + .8deg)) translateY(1.3px); }
+}
+.treehouse-room-node[data-room="tavern"] { --th-tilt:-1.7deg; --th-rock-dur:7.9s; }
+.treehouse-room-node[data-room="dorm"] { --th-tilt:1.2deg; --th-rock-dur:6.4s; --th-rock-delay:-2.1s; }
+.treehouse-room-node[data-room="quest_roost"] { --th-tilt:1.9deg; --th-rock-dur:8.6s; --th-rock-delay:-4.4s; }
+.treehouse-room-node[data-room="crowbar"] { --th-tilt:-1.1deg; --th-rock-dur:7.1s; --th-rock-delay:-3.2s; }
+.treehouse-room-node[data-room="training"] { --th-tilt:-2.1deg; --th-rock-dur:6.8s; --th-rock-delay:-1.4s; }
+.treehouse-room-node[data-room="kitchen"] { --th-tilt:1.4deg; --th-rock-dur:7.5s; --th-rock-delay:-5.3s; }
+.treehouse-room-node[data-room="hospital"] { --th-tilt:.9deg; --th-rock-dur:8.2s; --th-rock-delay:-2.8s; }
+.treehouse-room-node[data-room="nursery"] { --th-tilt:-1.4deg; --th-rock-dur:9.1s; --th-rock-delay:-6.1s; }
+.treehouse-room-node[data-room="workshop"] { --th-tilt:2.2deg; --th-rock-dur:6.6s; --th-rock-delay:-.9s; }
+.treehouse-room-node[data-room="library"] { --th-tilt:-.8deg; --th-rock-dur:8.9s; --th-rock-delay:-3.7s; }
+.treehouse-room-node[data-room="observatory"] { --th-tilt:1.6deg; --th-rock-dur:9.4s; --th-rock-delay:-5.7s; }
+.treehouse-room-name { position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); max-width:98px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .treehouse-room-meta { display:none; }
 .treehouse-room-count { position:absolute; right:-7px; top:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--legendary); color:#11100d; font-weight:900; font-size:11px; border:2px solid #11100d; }
 .treehouse-placement-hint { position:absolute; left:50%; top:18px; transform:translateX(-50%); z-index:9; max-width:86%; padding:9px 12px; border-radius:999px; background:rgba(214,168,79,.95); color:#11100d; font-weight:900; font-family:'Rajdhani',sans-serif; letter-spacing:.06em; text-transform:uppercase; box-shadow:0 10px 24px rgba(0,0,0,.4); pointer-events:none; }
@@ -2639,6 +2661,57 @@ svg.academy-room-bg { display:block; filter:none; }
 .treehouse-bird:nth-child(3n) { animation-duration:2.9s; }
 .treehouse-bird:nth-child(4n) { animation-duration:2.1s; }
 @keyframes treeBirdHop { 0%,100%{ translate:0 0; } 30%{ translate:0 -8px; } 48%{ translate:0 -1px; } 62%{ translate:0 -5px; } 76%{ translate:0 0; } }
+
+/* ---- The Crowbar's crow ------------------------------------------------- */
+/* The little crow from the bar paces the front deck: hops along it, turns,
+   lingers for a peck at the boards, and hops back — the one deliberate bird
+   on the Academy tree, because the pub's regular IS the Crowbar. He is a
+   hand-drawn puppet (same precedent as the Library art): the head and tail
+   are their own groups so he pecks and flicks while he walks. */
+.crowbar-crow { position:absolute; left:12px; top:49px; width:14px; height:13px; z-index:3; pointer-events:none; filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.6)); animation:crowbarCrowPatrol 17s ease-in-out infinite; }
+.cb-crow-body { display:block; width:100%; height:100%; overflow:visible; transform-origin:50% 92%; animation:crowbarCrowBob 2.1s ease-in-out infinite; }
+.cb-crow-head { transform-box:fill-box; transform-origin:30% 85%; animation:crowbarCrowPeck 6.7s ease-in-out infinite; }
+.cb-crow-tail { transform-box:fill-box; transform-origin:88% 45%; animation:crowbarCrowTailFlick 5.3s ease-in-out infinite; }
+/* One full patrol: stand by the left post, hop along the deck, turn, linger
+   by the stools (the head-peck cycle lands here often enough), hop home,
+   turn back to face the bar. scaleX carries the facing, translateY the hops. */
+@keyframes crowbarCrowPatrol {
+  0%,7% { transform:translate(0,0) scaleX(1); }
+  10% { transform:translate(6px,-2px) scaleX(1); }
+  13% { transform:translate(11px,0) scaleX(1); }
+  16% { transform:translate(17px,-2px) scaleX(1); }
+  19% { transform:translate(22px,0) scaleX(1); }
+  22% { transform:translate(27px,-2px) scaleX(1); }
+  26%,31% { transform:translate(31px,0) scaleX(1); }
+  34%,52% { transform:translate(31px,0) scaleX(-1); }
+  55% { transform:translate(26px,-2px) scaleX(-1); }
+  58% { transform:translate(21px,0) scaleX(-1); }
+  61% { transform:translate(16px,-2px) scaleX(-1); }
+  64% { transform:translate(11px,0) scaleX(-1); }
+  67% { transform:translate(6px,-2px) scaleX(-1); }
+  70%,73% { transform:translate(0,0) scaleX(-1); }
+  77%,100% { transform:translate(0,0) scaleX(1); }
+}
+/* Crows are never still: a perky little bob even when he's standing. */
+@keyframes crowbarCrowBob { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(1.06) translateY(-.4px); } }
+/* Two quick pecks at the boards, a glance up, then long spells of watching. */
+@keyframes crowbarCrowPeck {
+  0%,52%,100% { transform:rotate(0deg); }
+  55% { transform:rotate(26deg); }
+  58% { transform:rotate(5deg); }
+  61% { transform:rotate(29deg); }
+  65% { transform:rotate(0deg); }
+  78% { transform:rotate(-9deg); }
+  84% { transform:rotate(0deg); }
+}
+@keyframes crowbarCrowTailFlick { 0%,62%,100% { transform:rotate(0deg); } 66% { transform:rotate(-16deg); } 70% { transform:rotate(0deg); } 74% { transform:rotate(-10deg); } 78% { transform:rotate(0deg); } }
+
+/* ---- The whole tree sways together -------------------------------------- */
+/* The buildings, their birds and the placement hint ride this wrapper, which
+   runs the SAME treeSway animation as the painted tree behind them — both
+   elements exist from first parse, so the two animations share a start time
+   and the treehouses stay glued to their boughs while the canopy leans. */
+.academy-tree-sway { position:absolute; inset:0; z-index:7; pointer-events:none; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
 
 /* ---- Academy Alive: ambient life layered over the treehouse ------------- */
 /* Two canvases sandwich the buildings: sky (z4) carries distant flocks
@@ -2655,8 +2728,10 @@ svg.academy-room-bg { display:block; filter:none; }
 /* The tree painting itself breathes: the background image lives on this div
    (not the container) so a slow wind-sway can rock the whole canopy. */
 .academy-tree-swaybg { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(7,16,24,.22),rgba(7,16,24,.92)), url('assets/academy-tree-manga-20260629.png') center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
-@keyframes treeSway { from { transform:rotate(-.4deg) translateX(-3px); } to { transform:rotate(.4deg) translateX(3px); } }
-@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } }
+/* Rocking about the roots with a touch of vertical give, the way Merlin's
+   bough carries weight — slow enough that you feel it rather than see it. */
+@keyframes treeSway { from { transform:rotate(-.4deg) translate(-3px,1.2px); } to { transform:rotate(.4deg) translate(3px,-1.2px); } }
+@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } .academy-tree-sway { animation:none; } .treehouse-building-sprite { animation:none; } .crowbar-crow,.cb-crow-body,.cb-crow-head,.cb-crow-tail { animation:none; } }
 
 /* ---- The 3D Academy: the same tree, modelled ---------------------------- */
 .academy-stage-wrap { position:relative; }
@@ -3476,9 +3551,14 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="academy-stage-wrap" id="academyStageWrap">
         <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
           <div class="academy-tree-swaybg" aria-hidden="true"></div>
-          <div id="treehouseBranchLayer"></div>
-          <div id="treehouseRoomLayer"></div>
-          <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
+          <!-- The buildings ride the same treeSway animation as the painting
+               behind them, so the whole tree — bark, boughs and treehouses —
+               leans together in the one wind (the Merlin's-Perch treatment). -->
+          <div class="academy-tree-sway" id="academyTreeSway">
+            <div id="treehouseBranchLayer"></div>
+            <div id="treehouseRoomLayer"></div>
+            <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
+          </div>
 
         </div>
         <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — drag to look around, tap a building to go inside" hidden></div>
@@ -4049,7 +4129,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
-<script src="academy_alive_core.js?v=restored-lost-features-v200-20260802"></script>
+<script src="academy_alive_core.js?v=academy-living-tree-v234-20260806"></script>
 <script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
@@ -12272,6 +12352,26 @@ function academyViewPause() {
   if (ACADEMY_3D) { try { ACADEMY_3D.pause(); } catch (e) {} }
 }
 
+// The Crowbar's painted regular steps out onto the deck: a small hand-drawn
+// crow puppet (body / head / tail groups, animated in CSS — same precedent as
+// the Library's SVG art) who patrols the pub's front boards, turns, pecks and
+// flicks his tail. Markup-only: the ambience engine still owns no birds.
+function crowbarCrowHTML() {
+  return '<span class="crowbar-crow" aria-hidden="true">' +
+    '<svg class="cb-crow-body" viewBox="0 0 22 20">' +
+    '<g class="cb-crow-tail"><path d="M6.8,10.3 L0.7,7.4 L1.6,10.1 L0.9,12.7 L6.4,12.9 Z" fill="#101116" stroke="#07070a" stroke-width="0.6"/></g>' +
+    '<path d="M9.4,14.8 L8.8,18.4 M8,18.4 L9.8,18.4" stroke="#6b5233" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
+    '<path d="M12.2,14.9 L12.9,18.5 M12.1,18.5 L13.9,18.5" stroke="#6b5233" stroke-width="0.9" fill="none" stroke-linecap="round"/>' +
+    '<ellipse cx="10.6" cy="11.4" rx="5.7" ry="4.3" fill="#191a21" stroke="#0b0b0e" stroke-width="0.7"/>' +
+    '<path d="M6.4,10.2 Q10.2,8.2 14.6,10.4 Q13.4,14.6 8.4,14.2 Q6.2,12.6 6.4,10.2 Z" fill="#242633" opacity="0.55"/>' +
+    '<g class="cb-crow-head">' +
+    '<circle cx="15.4" cy="7.4" r="3.5" fill="#1b1c23" stroke="#0b0b0e" stroke-width="0.7"/>' +
+    '<path d="M18.5,6.9 L21.8,8.1 L18.4,9.3 Z" fill="#4a4e59" stroke="#0b0b0e" stroke-width="0.5"/>' +
+    '<circle cx="16.3" cy="6.7" r="0.75" fill="#05050a"/>' +
+    '<circle cx="16.55" cy="6.45" r="0.25" fill="#e8e4d8"/>' +
+    '</g></svg></span>';
+}
+
 function renderAcademyTreehouse(byRoom) {
   const tree = $('academyTreehouse');
   const layer = $('treehouseRoomLayer');
@@ -12290,8 +12390,9 @@ function renderAcademyTreehouse(byRoom) {
     const guided = academyQuestGuidanceRoom === r.id;
     const nodeClass = guided ? 'treehouse-room-node quest-guided' : 'treehouse-room-node';
     const guide = guided ? '<span class="treehouse-quest-guide" aria-hidden="true">Tap Kitchen & Pantry ↓</span>' : '';
+    const crow = r.id === 'crowbar' ? crowbarCrowHTML() : '';
     return '<button class="' + nodeClass + ' built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' + guide +
-      '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building"><div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
+      '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building">' + crow + '<div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
   }).join('');
   // Companion sprites no longer perch on the tree — the Academy reads as a
   // place, not a bird cage. Each room's badge still shows how many live there.
@@ -30703,7 +30804,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'turn-potions-hotfix-v233-20260806';
+const BURBZ_BUILD = 'academy-living-tree-v234-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

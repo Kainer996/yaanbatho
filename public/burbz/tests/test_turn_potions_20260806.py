@@ -121,7 +121,7 @@ console.log(JSON.stringify({
 
 
 def test_release_marker_and_potion_core_pin_are_advanced():
-    marker = "turn-potions-hotfix-v233-20260806"
+    marker = "academy-living-tree-v234-20260806"
     assert marker in HTML
     assert marker in SW
     core_pin = "turn-potions-v232-20260806"
