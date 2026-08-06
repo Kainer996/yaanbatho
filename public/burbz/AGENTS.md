@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (living Academy tree v234: the treehouses ride the tree's sway, rock on their own boughs at 92px, three chimneys smoke, windows go dark more often, and The Crowbar's crow patrols the pub deck — see "Review log" at the bottom).
+Last curated: 2026-08-06 (living 2D Academy v234 plus 3D Academy tree-glow v235: swaying treehouses, richer unique 3D buildings, player-controlled night illumination, and adaptive phone rendering — see "Review log" at the bottom).
 
 ---
 
@@ -281,6 +281,17 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     `treeSway/13s`, sprites 92px on `thBranchRock`, exactly one crow who
     visibly patrols and turns on the deck, 20 glows anchored, chimney smoke
     and night fireflies on screen.
+
+- **2026-08-06 — 3D Academy tree glow (Ava).** Expanded the existing Three.js
+  Academy rather than replacing it. Its eleven rooms now carry distinct body,
+  roof, facade and signature-prop treatments. At local night the 3D view exposes
+  an accessible **Light the tree** toggle that powers bounded shadow-free interior
+  PointLights, merged additive branch veins, leaf-top halos and every room window;
+  daytime forcibly disables and hides it. Device-aware quality caps DPR, lights,
+  halos, shadow size and frame cadence on phones in portrait and landscape while
+  retaining merged static detail. Reduced-motion still frames visibly respond to
+  the toggle, and room-unlock rebuilds release their shared GPU textures exactly
+  once. Release/core pin: `academy-3d-tree-glow-v235-20260806`.
 
 - **2026-08-06 — player-turn potion hotfix (Ava).** Release
   `turn-potions-hotfix-v233-20260806` fixes the inline battle button by exporting

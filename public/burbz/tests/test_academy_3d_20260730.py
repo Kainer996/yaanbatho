@@ -108,7 +108,7 @@ def test_engine_idles_when_it_is_not_on_screen():
     assert "document.hidden" in CORE3D
     assert "adapter.isScreenActive" in CORE3D
     assert "isScreenActive: () => currentScreen === 'academy'" in HTML
-    assert "now - st.lastT < 14" in CORE3D, "the loop is capped at 60fps"
+    assert "now - st.lastT < st.quality.frameMs" in CORE3D, "the loop uses a device-aware frame cap"
 
 
 def test_reduced_motion_gets_a_still_scene():

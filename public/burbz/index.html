@@ -2739,6 +2739,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .academy-stage-3d canvas { display:block; width:100%; height:100%; }
 .academy-view-toggle { position:absolute; right:20px; top:12px; z-index:20; min-height:36px; padding:0 12px; border-radius:12px; background:rgba(8,7,5,.72); border:1px solid rgba(214,168,79,.42); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; backdrop-filter:blur(8px); }
 .academy-view-toggle:active { transform:scale(.96); }
+.academy-tree-light-toggle { position:absolute; left:20px; top:12px; z-index:20; min-height:36px; max-width:calc(100% - 122px); padding:0 12px; border-radius:12px; background:linear-gradient(135deg,rgba(34,19,8,.90),rgba(11,8,6,.82)); border:1px solid rgba(255,188,88,.52); color:#ffe1a1; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.07em; text-transform:uppercase; backdrop-filter:blur(8px); box-shadow:0 4px 18px rgba(0,0,0,.30), inset 0 0 16px rgba(255,167,63,.08); transition:transform .16s ease,box-shadow .3s ease,background .3s ease; }
+.academy-tree-light-toggle[aria-pressed="true"] { background:linear-gradient(135deg,rgba(117,58,13,.95),rgba(41,21,8,.92)); border-color:rgba(255,214,131,.90); color:#fff4ca; box-shadow:0 0 22px rgba(255,174,69,.38),inset 0 0 18px rgba(255,201,103,.20); }
+.academy-tree-light-toggle:active { transform:scale(.96); }
 .academy-3d-hint { position:absolute; left:50%; bottom:26px; transform:translateX(-50%); z-index:19; padding:6px 12px; border-radius:999px; background:rgba(8,7,5,.62); border:1px solid rgba(255,255,255,.10); color:var(--text2); font-size:10px; letter-spacing:.04em; pointer-events:none; backdrop-filter:blur(6px); opacity:1; transition:opacity .6s ease; }
 .academy-3d-hint.faded { opacity:0; }
 
@@ -3562,6 +3565,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
         </div>
         <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — drag to look around, tap a building to go inside" hidden></div>
+        <button class="academy-tree-light-toggle" id="academyTreeLightBtn" type="button" aria-pressed="false" onclick="toggleAcademyTreeLights()" hidden>✨ Light the tree</button>
         <button class="academy-view-toggle" id="academyViewToggle" type="button" onclick="toggleAcademyView()">🌳 3D</button>
         <div class="academy-3d-hint" id="academy3dHint" hidden>Drag to look around · pinch to zoom · tap a building</div>
       </div>
@@ -4130,7 +4134,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
 <script src="academy_alive_core.js?v=academy-living-tree-v234-20260806"></script>
-<script src="academy_3d_core.js?v=restored-lost-features-v200-20260802"></script>
+<script src="academy_3d_core.js?v=academy-3d-tree-glow-v235-20260806"></script>
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="bird_diet_hunger_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
@@ -12258,6 +12262,57 @@ function academyAlivePause() {
 let ACADEMY_3D = null;
 let academy3dBroken = false;
 const ACADEMY_VIEW_KEY = 'burbzAcademyView';
+const ACADEMY_TREE_LIGHT_KEY = 'burbzAcademyTreeLights';
+let academyTreeLightTimer = 0;
+let academy3dResizeRaf = 0;
+
+function scheduleAcademy3DResize() {
+  cancelAnimationFrame(academy3dResizeRaf);
+  academy3dResizeRaf = requestAnimationFrame(() => {
+    academy3dResizeRaf = 0;
+    if (ACADEMY_3D && ACADEMY_3D.resize) ACADEMY_3D.resize();
+  });
+}
+window.addEventListener('resize', scheduleAcademy3DResize, { passive: true });
+
+function academyLocalHour() {
+  if (Number.isFinite(window.__academyAliveForceHour)) return Number(window.__academyAliveForceHour);
+  const d = new Date();
+  return d.getHours() + d.getMinutes() / 60;
+}
+
+function academyTreeLightsAvailable() {
+  return !!(window.BurbzAcademy3D && window.BurbzAcademy3D.isNightHour(academyLocalHour()));
+}
+
+function academyTreeLightsOn() {
+  try { return localStorage.getItem(ACADEMY_TREE_LIGHT_KEY) === 'on'; } catch (e) { return false; }
+}
+
+function refreshAcademyTreeLightControl() {
+  const btn = $('academyTreeLightBtn');
+  if (!btn) return;
+  const available = academyViewMode() === '3d' && academyTreeLightsAvailable();
+  const on = available && academyTreeLightsOn();
+  btn.hidden = !available;
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.textContent = on ? '🌟 Tree glow on' : '✨ Light the tree';
+  if (ACADEMY_3D && ACADEMY_3D.setTreeLights) ACADEMY_3D.setTreeLights(on);
+}
+
+function watchAcademyTreeLightControl() {
+  clearInterval(academyTreeLightTimer);
+  academyTreeLightTimer = setInterval(refreshAcademyTreeLightControl, 30000);
+}
+
+function toggleAcademyTreeLights() {
+  if (!academyTreeLightsAvailable() || academyViewMode() !== '3d') return;
+  const next = !academyTreeLightsOn();
+  try { localStorage.setItem(ACADEMY_TREE_LIGHT_KEY, next ? 'on' : 'off'); } catch (e) {}
+  SFX.tap();
+  refreshAcademyTreeLightControl();
+  showToast(next ? '🌟 The Academy glows from root to crown.' : '🌙 The tree settles back into moonlight.');
+}
 
 function academyViewMode() {
   if (academy3dBroken) return '2d';
@@ -12289,6 +12344,7 @@ function academy3dEnsure() {
     // Shared with the 2D engine so evidence scripts can photograph either
     // Academy at night; players get their real local dusk and dawn.
     hourOfDay: () => { if (Number.isFinite(window.__academyAliveForceHour)) return Number(window.__academyAliveForceHour); const d = new Date(); return d.getHours() + d.getMinutes() / 60; },
+    treeLightsEnabled: academyTreeLightsOn,
     isScreenActive: () => currentScreen === 'academy'
   });
   return ACADEMY_3D;
@@ -12311,6 +12367,8 @@ function applyAcademyView() {
       academyAlivePause();
       if (!eng.start()) throw new Error('3D start failed');
       eng.refresh();
+      refreshAcademyTreeLightControl();
+      watchAcademyTreeLightControl();
       if (toggle) toggle.textContent = '🖼️ 2D';
       if (hint) {
         hint.hidden = false;
@@ -12331,6 +12389,8 @@ function applyAcademyView() {
   wrap2d.hidden = false;
   if (hint) hint.hidden = true;
   if (ACADEMY_3D) { try { ACADEMY_3D.pause(); } catch (e) {} }
+  refreshAcademyTreeLightControl();
+  clearInterval(academyTreeLightTimer);
   if (toggle) {
     toggle.textContent = academy3dBroken ? '🖼️ 2D' : '🌳 3D';
     toggle.hidden = academy3dBroken;
@@ -12350,6 +12410,9 @@ function toggleAcademyView() {
 function academyViewPause() {
   academyAlivePause();
   if (ACADEMY_3D) { try { ACADEMY_3D.pause(); } catch (e) {} }
+  clearInterval(academyTreeLightTimer);
+  const treeLightBtn = $('academyTreeLightBtn');
+  if (treeLightBtn) treeLightBtn.hidden = true;
 }
 
 // The Crowbar's painted regular steps out onto the deck: a small hand-drawn
@@ -18048,7 +18111,7 @@ Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
   // Academy Alive ambience: exported for QA harnesses and evidence scripts.
-  toggleAcademyView, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, engine3d: () => ACADEMY_3D, view: () => academyViewMode() },
+  toggleAcademyView, toggleAcademyTreeLights, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, engine3d: () => ACADEMY_3D, view: () => academyViewMode() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   __burbzQuestDebug: {
     getState: () => gameState,
@@ -30804,7 +30867,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-living-tree-v234-20260806';
+const BURBZ_BUILD = 'academy-3d-tree-glow-v235-20260806';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

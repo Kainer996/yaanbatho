@@ -31,6 +31,7 @@ CORE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 RELEASE_PIN = "academy-living-tree-v234-20260806"
+CURRENT_BUILD = "academy-3d-tree-glow-v235-20260806"
 
 PLACEABLE_ROOMS = (
     "tavern", "dorm", "quest_roost", "crowbar", "training", "kitchen",
@@ -193,7 +194,8 @@ def test_reduced_motion_switches_all_of_it_off():
 # ---- release pins ------------------------------------------------------------
 
 def test_release_is_pinned_and_shipped():
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
-    assert RELEASE_PIN in SW, "BURBZ_CACHE must advance so the release ships"
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
+    assert RELEASE_PIN in SW, "the living-tree release must remain in cache lineage"
+    assert CURRENT_BUILD in SW, "BURBZ_CACHE must advance so the later release ships"
     assert f'academy_alive_core.js?v={RELEASE_PIN}' in HTML
     assert f"./academy_alive_core.js?v={RELEASE_PIN}" in SW
