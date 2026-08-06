@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "side-quests-walk-goal-v231-20260806"
+CURRENT_BUILD = "turn-potions-v232-20260806"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

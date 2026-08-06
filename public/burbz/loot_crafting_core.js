@@ -81,11 +81,11 @@
     frost_sigil:    { id:'frost_sigil',    slot:'spell', kind:'spell', rarity:'rare',      label:'Frost Sigil',      icon:'❄️', stats:{}, spell:{ power:68, cd:2, kind:'attack', rider:{ kind:'debuff', stat:'spd', pct:0.2, turns:2 } }, copy:'Rime creeps along the foe\'s wings.' },
     tempest_scroll: { id:'tempest_scroll', slot:'spell', kind:'spell', rarity:'epic',      label:'Tempest Scroll',   icon:'⛈️', stats:{}, spell:{ power:62, cd:3, kind:'attack', aoe:true }, copy:'Unrolls into a storm that strikes every foe.' },
     phoenix_chorus: { id:'phoenix_chorus', slot:'spell', kind:'spell', rarity:'legendary', label:'Phoenix Chorus',   icon:'🎶', stats:{}, spell:{ power:0, cd:4, kind:'heal', healPct:0.32, cleanse:true, teamWide:true }, copy:'The firebird\'s song mends the whole squad.' },
-    // --- Potions — equipped brews that fire automatically as battle begins ---
-    tonic_of_vigour:{ id:'tonic_of_vigour',slot:'potion', kind:'potion', rarity:'common',    label:'Tonic of Vigour',  icon:'🧪', stats:{}, battle:{ healPct:0.3 }, copy:'A bracing berry tonic — restores HP as the fight opens.' },
+    // --- Potions — equipped brews used as bonus actions on their bird's turn ---
+    tonic_of_vigour:{ id:'tonic_of_vigour',slot:'potion', kind:'potion', rarity:'common',    label:'Tonic of Vigour',  icon:'🧪', stats:{}, battle:{ healPct:0.3 }, copy:'A bracing berry tonic — restore HP on this bird’s turn, then still make a move.' },
     nettle_brew:    { id:'nettle_brew',    slot:'potion', kind:'potion', rarity:'uncommon',  label:'Nettle War-Brew',  icon:'🍵', stats:{}, battle:{ mods:[{ stat:'atk', pct:0.15, turns:3 }, { stat:'mag', pct:0.15, turns:3 }] }, copy:'Stings going down, then the fury takes hold.' },
     barrier_draught:{ id:'barrier_draught',slot:'potion', kind:'potion', rarity:'rare',      label:'Barrier Draught',  icon:'🫧', stats:{}, battle:{ barrierPct:0.22 }, copy:'Bottled shieldwater wraps the drinker in a shimmering shell.' },
-    stormwing_philtre:{ id:'stormwing_philtre', slot:'potion', kind:'potion', rarity:'epic', label:'Stormwing Philtre',icon:'🌪️', stats:{}, battle:{ mods:[{ stat:'spd', pct:0.2, turns:3 }], crStart:0.35 }, copy:'Drink the gale — start the battle already moving.' },
+    stormwing_philtre:{ id:'stormwing_philtre', slot:'potion', kind:'potion', rarity:'epic', label:'Stormwing Philtre',icon:'🌪️', stats:{}, battle:{ mods:[{ stat:'spd', pct:0.2, turns:3 }], crStart:0.35 }, copy:'Drink the gale — move faster and keep 35% readiness after this turn.' },
     phoenix_elixir: { id:'phoenix_elixir', slot:'potion', kind:'potion', rarity:'legendary', label:'Phoenix Elixir',   icon:'🔆', stats:{}, battle:{ healPct:0.5, barrierPct:0.2, mods:[{ stat:'atk', pct:0.15, turns:3 }, { stat:'mag', pct:0.15, turns:3 }] }, copy:'A drop of ember-light: mends, shields and emboldens.' }
   };
 
@@ -132,7 +132,7 @@
     };
   }
 
-  // The start-of-battle effect of an equipped potion:
+  // The player-turn effect of an equipped potion:
   // { healPct, barrierPct, mods:[{stat,pct,turns}], crStart }
   function potionEffectFor(gearIdOrItem) {
     const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
