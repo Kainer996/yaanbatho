@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (living canopy v235: the Academy is rebuilt in layers — a new tree painting whose trunk barely breathes, real cut-out boughs swaying behind and in front of the treehouses, and defaults retuned onto the painted shelves — see "Review log" at the bottom).
+Last curated: 2026-08-06 (living canopy v236: the 2D Academy rebuilt in layers — new tree painting, real cut-out boughs swaying behind and in front of the treehouses — merged over the 3D tree-glow v235 release, which took the v235 number on main first).
 
 ---
 
@@ -233,7 +233,7 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
   it's just warping." Tilting one flat painting can never read as branches
   moving. He generated a new master tree and six branch paintings on request
   (prompts supplied by Claude), and this release rebuilds the scene in layers.
-  Release `living-canopy-v235-20260806`.
+  Release `living-canopy-v236-20260806` (renumbered from v235: the same-day 3D tree-glow release took v235 on main first — same convention as the v202/v203, v221/v222 and v228/v229 pairs).
   - **Art pipeline** (offline, in-container): the branch generations came with
     painted backdrops, so backgrounds were removed with `rembg` (u2net),
     cropped to content, resized to 680px and shipped as WebP-with-alpha in
@@ -328,6 +328,17 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     `treeSway/13s`, sprites 92px on `thBranchRock`, exactly one crow who
     visibly patrols and turns on the deck, 20 glows anchored, chimney smoke
     and night fireflies on screen.
+
+- **2026-08-06 — 3D Academy tree glow (Ava).** Expanded the existing Three.js
+  Academy rather than replacing it. Its eleven rooms now carry distinct body,
+  roof, facade and signature-prop treatments. At local night the 3D view exposes
+  an accessible **Light the tree** toggle that powers bounded shadow-free interior
+  PointLights, merged additive branch veins, leaf-top halos and every room window;
+  daytime forcibly disables and hides it. Device-aware quality caps DPR, lights,
+  halos, shadow size and frame cadence on phones in portrait and landscape while
+  retaining merged static detail. Reduced-motion still frames visibly respond to
+  the toggle, and room-unlock rebuilds release their shared GPU textures exactly
+  once. Release/core pin: `academy-3d-tree-glow-v235-20260806`.
 
 - **2026-08-06 — player-turn potion hotfix (Ava).** Release
   `turn-potions-hotfix-v233-20260806` fixes the inline battle button by exporting

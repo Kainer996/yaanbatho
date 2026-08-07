@@ -28,7 +28,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 ALIVE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "living-canopy-v235-20260806"
+RELEASE_PIN = "living-canopy-v236-20260806"
 
 BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
 

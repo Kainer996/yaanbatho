@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "academy_treehouse_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "living-canopy-v235-20260806"
+RELEASE = "living-canopy-v236-20260806"
 
 
 def node_json(source: str):

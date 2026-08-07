@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-ACADEMY_CORE_PIN = "living-canopy-v235-20260806"
-CURRENT_BUILD = "living-canopy-v235-20260806"
+ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
+CURRENT_BUILD = "living-canopy-v236-20260806"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
