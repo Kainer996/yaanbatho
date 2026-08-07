@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (living 2D Academy v234 plus 3D Academy tree-glow v235: swaying treehouses, richer unique 3D buildings, player-controlled night illumination, and adaptive phone rendering — see "Review log" at the bottom).
+Last curated: 2026-08-06 (living canopy v236: the 2D Academy rebuilt in layers — new tree painting, real cut-out boughs swaying behind and in front of the treehouses — merged over the 3D tree-glow v235 release, which took the v235 number on main first).
 
 ---
 
@@ -227,6 +227,53 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-06 — the living canopy: layered painted branches (Claude).** Yaan's
+  verdict on v234's tree sway was exact: "it's the same picture of the tree …
+  it's just warping." Tilting one flat painting can never read as branches
+  moving. He generated a new master tree and six branch paintings on request
+  (prompts supplied by Claude), and this release rebuilds the scene in layers.
+  Release `living-canopy-v236-20260806` (renumbered from v235: the same-day 3D tree-glow release took v235 on main first — same convention as the v202/v203, v221/v222 and v228/v229 pairs).
+  - **Art pipeline** (offline, in-container): the branch generations came with
+    painted backdrops, so backgrounds were removed with `rembg` (u2net),
+    cropped to content, resized to 680px and shipped as WebP-with-alpha in
+    `assets/academy-branches/branch-{a..d}.webp` (~460 KB total). The tree is
+    `assets/academy-tree-manga-20260806.webp` (327 KB; the old
+    `academy-tree-manga-20260629.png` stays on disk for rollback but left the
+    SW precache and the live updater's file list, both of which now carry the
+    five new assets).
+  - **Layered scene** (`index.html`): `.academy-branches-back` (z2) holds four
+    bough instances sprouting from the trunk BEHIND the treehouses;
+    `.academy-branches-front` (z8) holds two near-camera boughs (darker,
+    1px blur) over them. Each `.ab-N` instance pivots about the point where
+    its bark meets the trunk (`transform-origin` on the bark end; flipped
+    instances put the origin on the right and mirror via an inner `img`
+    scaleX so the pivot maths stays sane) on one of three sway characters
+    (`abSwayA/B/C`, ±~1.5° with vertical spring) at its own duration and
+    phase. A CSS grade (`saturate/brightness`) pulls the vivid sprites down
+    to the muted tree; `.alive-night` rules dim the canopy after dark.
+    `treeSway` itself is now a hair of drift (±.15°) — the warp is gone, the
+    movement lives in the boughs. Layers are `pointer-events:none`; reduced
+    motion stills `.academy-branch`.
+  - **Engine** (`academy_alive_core.js`): the procedural corner tufts'
+    `defs` list is now empty — two art styles of foliage clashed — but
+    `buildFoliage`/`drawFoliage` stay (they're pinned by the academy-alive
+    suite, and one defs entry brings the tufts back if ever needed).
+  - **Rooms** (`academy_treehouse_core.js`): default x/y retuned so fresh
+    buildings land on the new painting's shelves (dorm 22,68 · tavern 80,71 ·
+    training 75,58 · hospital 25,52 · crowbar 75,41 · kitchen 50,55 ·
+    workshop 29,30 · library 74,26 · nursery 35,16 · observatory 66,12 ·
+    quest_roost 49,71). Player placements override defaults, so existing
+    saves keep their layouts (and can re-place via build/move).
+  - Tests: `tests/test_living_canopy_20260806.py` (including a ≤0.2° cap on
+    treeSway rotation so the warp can't creep back). Release pins repointed
+    per convention — note `test_nocturnal_night_bonus` now splits its core
+    pins: `academy_treehouse_core.js` moved to v235 (`ACADEMY_CORE_PIN`)
+    while `bird_sleep_core.js` stays on v229, since only the former changed.
+    SW cache + `BURBZ_BUILD` bumped; both academy cores' `?v=` moved.
+    Browser-checked in Chromium: ~40% of the treehouse frame's pixels change
+    across a 3.2s interval (the canopy genuinely moves), buildings sit on
+    their painted shelves day and night, and the crow still walks his deck.
 
 - **2026-08-06 — the living Academy tree (Claude).** Yaan asked for the 2D
   Academy to read as a genuinely living, breathing place: the tree moving

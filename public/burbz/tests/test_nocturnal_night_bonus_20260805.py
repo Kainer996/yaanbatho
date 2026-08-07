@@ -21,7 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
-CURRENT_BUILD = "academy-3d-tree-glow-v235-20260806"
+# academy_treehouse_core.js has moved on with later releases; bird_sleep_core.js has not.
+ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
+CURRENT_BUILD = "living-canopy-v236-20260806"
 
 
 def run_node(script: str) -> dict:
@@ -146,7 +148,7 @@ def test_app_wires_the_bonus_into_every_capacity():
 def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    for pin in (f"academy_treehouse_core.js?v={RELEASE_PIN}", f"bird_sleep_core.js?v={RELEASE_PIN}"):
+    for pin in (f"academy_treehouse_core.js?v={ACADEMY_CORE_PIN}", f"bird_sleep_core.js?v={RELEASE_PIN}"):
         assert pin in html
         assert f"./{pin}" in sw
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html

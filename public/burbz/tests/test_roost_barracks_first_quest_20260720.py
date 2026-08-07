@@ -10,7 +10,7 @@ HTML_PATH = ROOT / "index.html"
 CORE_PATH = ROOT / "academy_treehouse_core.js"
 ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
-ACADEMY_CORE_PIN = "nocturnal-night-bonus-v229-20260805"
+ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
 
 
 def _node_json(source: str):
