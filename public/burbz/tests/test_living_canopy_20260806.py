@@ -29,6 +29,7 @@ ALIVE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 RELEASE_PIN = "living-canopy-v236-20260806"
+CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
 
 BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
 
@@ -158,7 +159,7 @@ def test_default_room_positions_sit_on_the_new_boughs():
 # ---- release pins ------------------------------------------------------------
 
 def test_release_is_pinned_and_shipped():
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     assert RELEASE_PIN in SW, "BURBZ_CACHE must advance so the release ships"
     for core in ("academy_alive_core.js", "academy_treehouse_core.js"):
         assert f"{core}?v={RELEASE_PIN}" in HTML, core

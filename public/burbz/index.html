@@ -385,6 +385,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .chef-board { margin-top:10px; padding:11px 12px; border-radius:13px; border:1px solid rgba(214,168,79,.34); background:linear-gradient(180deg,rgba(214,168,79,.12),rgba(214,168,79,.05)); }
 .chef-board-title { font-family:'Russo One',sans-serif; font-size:13px; color:var(--accent2); }
 .chef-board-lead { font-size:11px; color:var(--text2); margin-top:3px; line-height:1.45; }
+.chef-board-mastery { margin-top:9px; padding:8px 9px; border-radius:10px; border:1px solid rgba(214,168,79,.28); background:rgba(0,0,0,.22); }
+.chef-board-level { display:flex; justify-content:space-between; gap:8px; color:var(--accent2); font-size:11px; font-weight:900; }
+.chef-board-progress { height:6px; margin-top:6px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.10); }
+.chef-board-progress-fill { height:100%; border-radius:inherit; background:linear-gradient(90deg,#d6a84f,#ffe29a); }
+.chef-feed-all { width:100%; min-height:42px; margin-top:9px; border-radius:11px; border:1px solid rgba(214,168,79,.62); background:linear-gradient(135deg,#d6a84f,#8b5c20); color:#160f05; font-family:'Russo One',sans-serif; font-size:12px; }
+.chef-feed-all:disabled { opacity:.48; filter:grayscale(.45); }
 .chef-board-list { display:flex; flex-direction:column; gap:8px; margin-top:9px; }
 .chef-board-food { padding:9px 10px; border-radius:11px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); }
 .chef-board-food-head { display:flex; align-items:center; gap:8px; }
@@ -4194,7 +4200,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
-<script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
+<script src="bird_roles_core.js?v=chef-mastery-feed-all-v237-20260807"></script>
 <script src="battle_core.js?v=turn-potions-v232-20260806"></script>
 <script src="loot_crafting_core.js?v=turn-potions-v232-20260806"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
@@ -5423,7 +5429,8 @@ const DEFAULT_STATE = {
   sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
   tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
   diary: { entries: [] }, // Adventurer's Diary — Merlin's chronicle of everything the player has done
-  birdRoles: { academy: {}, villages: {}, regions: {} } // Who runs what: Librarian, Head Chef, village Stewards, region Wardens
+  birdRoles: { academy: {}, villages: {}, regions: {} }, // Who runs what: Librarian, Head Chef, village Stewards, region Wardens
+  chefCareers: {} // Persisted real time served as Head Chef, keyed by bird id
 };
 
 let gameState;
@@ -10632,8 +10639,42 @@ function ensureRolesState() {
   const core = birdRolesCore();
   if (!core || !gameState) return { academy:{}, villages:{}, regions:{} };
   const liveIds = (gameState.flock || []).map(b => b && b.id).filter(Boolean);
+  const staleChefId = core.assignedBirdId(gameState.birdRoles, 'academy', 'kitchen');
+  if (staleChefId && !liveIds.some(id => String(id) === String(staleChefId))) pauseHeadChefCareer(staleChefId);
   gameState.birdRoles = core.pruneRoleState(gameState.birdRoles, liveIds);
   return gameState.birdRoles;
+}
+
+function ensureChefCareers() {
+  if (!gameState.chefCareers || typeof gameState.chefCareers !== 'object' || Array.isArray(gameState.chefCareers)) gameState.chefCareers = {};
+  return gameState.chefCareers;
+}
+
+function startHeadChefCareer(birdId, now = Date.now()) {
+  const core = birdRolesCore();
+  const id = String(birdId || '');
+  if (!core || !id || typeof core.startChefCareer !== 'function') return;
+  const careers = ensureChefCareers();
+  careers[id] = core.startChefCareer(careers[id], now);
+}
+
+function pauseHeadChefCareer(birdId, now = Date.now()) {
+  const core = birdRolesCore();
+  const id = String(birdId || '');
+  if (!core || !id || typeof core.pauseChefCareer !== 'function') return;
+  const careers = ensureChefCareers();
+  careers[id] = core.pauseChefCareer(careers[id], now);
+}
+
+function headChefCareerProgress(now = Date.now()) {
+  const core = birdRolesCore();
+  const post = rolePostState('academy', 'kitchen');
+  if (!core || !post.staffed || !post.bird || typeof core.chefCareerProgress !== 'function') {
+    return { level:0, totalMs:0, intoLevelMs:0, nextLevelMs:1, feedAllUnlocked:false, rewardMultiplier:1 };
+  }
+  const careers = ensureChefCareers();
+  if (!careers[post.bird.id] || careers[post.bird.id].activeSince == null) startHeadChefCareer(post.bird.id, now);
+  return core.chefCareerProgress(careers[post.bird.id], now);
 }
 
 // The role definition for a post, whatever its scope.
@@ -10711,7 +10752,10 @@ function assignBirdRole(scope, key, birdId) {
   if (birdHasActiveTraining(bird.id)) { showToast(birdDisplayName(bird) + ' is training — finish the session first.'); return; }
   normalizeBirdCare(bird);
   if (bird.care.sleeping) { showToast(birdDisplayName(bird) + ' is sleeping in The Roost — wait until they wake.'); return; }
+  const previousHolder = scope === 'academy' && key === 'kitchen' ? rolePostState('academy', 'kitchen').bird : null;
+  if (previousHolder && String(previousHolder.id) !== String(bird.id)) pauseHeadChefCareer(previousHolder.id);
   gameState.birdRoles = core.assignRole(ensureRolesState(), scope, key, bird.id);
+  if (scope === 'academy' && key === 'kitchen') startHeadChefCareer(bird.id);
   // An Academy post means the bird lives in that room — except the Kitchen and
   // the Barracks, which are a feeding table and a front desk: nobody is ever
   // stationed in either, so their heads keep their own perch.
@@ -10730,6 +10774,7 @@ function clearBirdRole(scope, key) {
   const core = birdRolesCore();
   if (!core) return;
   const before = rolePostState(scope, key);
+  if (scope === 'academy' && key === 'kitchen' && before.bird) pauseHeadChefCareer(before.bird.id);
   gameState.birdRoles = core.unassignRole(ensureRolesState(), scope, key);
   saveState();
   SFX.tap();
@@ -14086,12 +14131,16 @@ const FEED_MEAL_REWARDS = Object.freeze({
 // halfway and pays half the rewards. Derived from
 // the main-meal table rather than typed out, so "half" cannot drift.
 function feedRewardsForVerdict(verdict) {
-  if (verdict === 'insufficient') return FEED_MEAL_REWARDS.insufficient;
-  // The Head Chef of the Kitchen improves every plate that leaves it. A clever
-  // chef knows what each species really eats and how to prepare it, so the same
-  // ingredient does more good.
-  const chef = academyRoleMultiplier('kitchen');
+  // The Head Chef of the Kitchen improves every plate that leaves it. Natural
+  // aptitude and persisted Chef Level both matter: every day on duty adds a
+  // small mastery bonus, up to +18% at level 10.
+  const chefCareer = typeof headChefCareerProgress === 'function' ? headChefCareerProgress() : { rewardMultiplier:1 };
+  const chef = academyRoleMultiplier('kitchen') * chefCareer.rewardMultiplier;
   const cooked = value => Math.max(1, Math.round(Number(value) * chef));
+  if (verdict === 'insufficient') {
+    const ration = FEED_MEAL_REWARDS.insufficient;
+    return { birdXp:cooked(ration.birdXp), trainerXp:cooked(ration.trainerXp), coins:cooked(ration.coins), happiness:cooked(ration.happiness), bondXp:cooked(ration.bondXp) };
+  }
   if (verdict !== 'secondary') {
     const main = FEED_MEAL_REWARDS.primary;
     return { birdXp:cooked(main.birdXp), trainerXp:cooked(main.trainerXp), coins:cooked(main.coins), happiness:cooked(main.happiness), bondXp:cooked(main.bondXp) };
@@ -14436,8 +14485,18 @@ function kitchenHeadChefBoardHTML() {
   // Hungriest-first, then by how many birds it feeds, then alphabetically.
   foods.sort((a, b) => (b.hungryCount - a.hungryCount) || (b.eaters.length - a.eaters.length) || a.label.localeCompare(b.label));
 
+  const career = typeof headChefCareerProgress === 'function'
+    ? headChefCareerProgress()
+    : { level:1, intoLevelMs:0, nextLevelMs:1, feedAllUnlocked:false, rewardMultiplier:1 };
+  const levelProgress = career.feedAllUnlocked ? 100 : Math.round(100 * career.intoLevelMs / Math.max(1, career.nextLevelMs));
+  const mastery = '<div class="chef-board-mastery" data-chef-level="' + career.level + '">' +
+    '<div class="chef-board-level"><span>Chef Level ' + career.level + ' / 10</span><span>Meal rewards +' + Math.round((career.rewardMultiplier - 1) * 100) + '%</span></div>' +
+    '<div class="chef-board-progress" aria-label="Chef mastery ' + levelProgress + '%"><div class="chef-board-progress-fill" style="width:' + levelProgress + '%"></div></div>' +
+    '<button type="button" class="chef-feed-all" data-action="chef-feed-all"' + (career.feedAllUnlocked ? '' : ' disabled') +
+    ' onclick="event.preventDefault();event.stopPropagation();chefFeedAllBirds()">' +
+    (career.feedAllUnlocked ? '🥣 Feed all birds' : '🔒 Feed all birds · unlocks at Chef Level 10') + '</button></div>';
   const header = '<div class="chef-board-title">🥣 Head Chef ' + escapeHtml(birdDisplayName(post.bird)) + '’s service board</div>' +
-    '<div class="chef-board-lead">Your kitchen, laid out by food — each course lists the birds that eat it. Tap <b>Serve</b> to feed every hungry bird that eats that food in one go (one ingredient each). Omnivores eat all sorts, so they turn up under several courses.</div>';
+    '<div class="chef-board-lead">Your kitchen, laid out by food — each course lists the birds that eat it. Tap <b>Serve</b> to feed every hungry bird that eats that food in one go (one ingredient each). Omnivores eat all sorts, so they turn up under several courses.</div>' + mastery;
   if (!foods.length) {
     return '<div class="chef-board" data-chef-board="academy-kitchen">' + header +
       '<div class="chef-board-empty">The kitchen is bare. Send a bird out on a food quest, pick prey up on a walk, or buy food at a village market — then the chef will lay it out here.</div></div>';
@@ -14459,6 +14518,96 @@ function kitchenHeadChefBoardHTML() {
   }).join('');
   return '<div class="chef-board" data-chef-board="academy-kitchen">' + header +
     '<div class="chef-board-list">' + rows + '</div></div>';
+}
+
+// Chef Level 10 service: match every hungry bird to the best compatible meal
+// that is actually in stock, serve the whole table, then name every bird that
+// could not be fed. Proper meals are chosen before side snacks.
+function chefFeedAllBirds() {
+  const roles = birdRolesCore();
+  const core = kitchenDietCore();
+  const post = rolePostState('academy', 'kitchen');
+  const career = headChefCareerProgress();
+  if (!post.staffed || !post.bird) { showToast('Appoint a Head Chef first.'); return; }
+  if (!career.feedAllUnlocked) { showToast('Feed all birds unlocks at Chef Level 10.'); return; }
+  if (!roles || typeof roles.chefFeedAllPlan !== 'function' || !core || typeof core.applyFeedingTransaction !== 'function') {
+    showToast('The kitchen scales are still loading — try again in a moment.'); return;
+  }
+  const entries = kitchenBoardEaterRows().filter(kitchenBoardIsHungry);
+  if (!entries.length) { showToast('Every bird at the table is already full.'); return; }
+  const foods = kitchenAllInStockFoods();
+  const stock = Object.fromEntries(foods.map(food => [food.kind + ':' + food.id, food.count]));
+  const rows = entries.map(entry => ({
+    key:entry.key,
+    name:entry.name,
+    options:kitchenRosterFoodOptions(entry).filter(option => option.accepted).map(option => ({
+      foodKey:option.kind + ':' + option.id,
+      verdict:option.verdict
+    }))
+  }));
+  const plan = roles.chefFeedAllPlan(rows, stock);
+  const entryByKey = Object.fromEntries(entries.map(entry => [entry.key, entry]));
+  const unfed = plan.unfed.map(key => entryByKey[key]).filter(Boolean);
+  const fedNames = [];
+  const now = Date.now();
+  plan.assignments.forEach((assignment, index) => {
+    const entry = entryByKey[assignment.key];
+    if (!entry) return;
+    const split = assignment.foodKey.indexOf(':');
+    const kind = assignment.foodKey.slice(0, split);
+    const foodId = assignment.foodKey.slice(split + 1);
+    const option = kitchenRosterFoodOptions(entry).find(row => row.kind === kind && row.id === foodId && row.accepted);
+    if (!option) { unfed.push(entry); return; }
+    const spec = kind === 'pantry'
+      ? { pantryKey:foodId, source:'pantry' }
+      : { ingredientId:foodId, prep:option.prep };
+    const tx = core.applyFeedingTransaction(gameState, entry.target, spec, {
+      transactionId:'chef-feed-all:' + entry.key + ':' + kind + ':' + foodId + ':' + now + ':' + index,
+      now
+    });
+    gameState = tx.state;
+    if (!tx.ok || tx.duplicate) { unfed.push(entry); return; }
+    const verdict = tx.compatibility && tx.compatibility.verdict;
+    const reward = feedRewardsForVerdict(verdict);
+    if (entry.merlin) {
+      if (window.BurbzMerlinCompanionCore) {
+        gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(MERLIN_CORE.sanitizeMerlinCare({ ...gameState.merlinCare, lastCareAt:now }, now), reward.bondXp, now);
+      }
+    } else {
+      const bird = academyBirdById(entry.key);
+      if (bird) {
+        ensureBirdAcademy(bird);
+        bird.care.lastFed = new Date(now).toISOString();
+        bird.training.feedCount = (bird.training.feedCount || 0) + 1;
+        levelUpBird(bird, reward.birdXp);
+        if (verdict === 'primary') {
+          bird.training.hpBonus = clamp((bird.training.hpBonus || 0) + 1, 0, 50);
+          bird.maxHp = clamp(bird.maxHp + 1, 50, 999);
+          bird.hp = bird.maxHp;
+          recalcBirdPower(bird);
+          bird.academy.dietKnown = true;
+          updateQuestProgress('proper_meal_fed', 1);
+        }
+        updateQuestProgress('feed_correct', 1);
+      }
+    }
+    applyPlayerXpState(reward.trainerXp);
+    gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
+    updateQuestProgress('meal_served', 1);
+    fedNames.push(entry.name);
+  });
+  saveState();
+  if (fedNames.length) { SFX.capture(); showToast('🥣 Head Chef ' + birdDisplayName(post.bird) + ' fed ' + fedNames.length + ' bird' + (fedNames.length === 1 ? '' : 's') + '.'); }
+  else { SFX.tap(); showToast('There was no suitable food to serve.'); }
+  const uniqueUnfed = [...new Map(unfed.map(entry => [entry.key, entry])).values()];
+  if (uniqueUnfed.length) {
+    showFeedNotePopup(
+      '⚠️ ' + uniqueUnfed.length + ' bird' + (uniqueUnfed.length === 1 ? ' wasn’t' : 's weren’t') + ' fed',
+      'These birds weren’t fed: <b>' + uniqueUnfed.map(entry => escapeHtml(entry.name)).join(', ') + '</b><br>There is no suitable food left for them in the pantry or larder.',
+      'chef-feed-all-unfed'
+    );
+  }
+  refreshFeedSurfaces();
 }
 
 // One tap, one food, every hungry bird that eats it. Each accepted eater is
@@ -15746,6 +15895,7 @@ Object.assign(window, {
   burbzFeedFood,
   burbzFeedTap,
   chefServeFoodToEveryEater,
+  chefFeedAllBirds,
   openFeedSheet,
   closeFeedSheet,
   startBirdTrainingSession,
@@ -30919,7 +31069,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-canopy-v236-20260806';
+const BURBZ_BUILD = 'chef-mastery-feed-all-v237-20260807';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

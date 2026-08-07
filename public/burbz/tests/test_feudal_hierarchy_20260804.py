@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "living-canopy-v236-20260806"
+CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
 # empire_realm_core.js was last touched by the accurate-diets release, so
 # its cache-buster stays pinned there while BURBZ_BUILD moves on.
 REALM_CORE_PIN = "accurate-diets-full-catalogue-v226-20260805"

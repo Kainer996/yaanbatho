@@ -32,6 +32,14 @@
   // How much better than an unstaffed building the very best appointee makes it.
   const MAX_ROLE_BONUS = 0.75;
 
+  // Head Chef mastery is earned by real time on duty, not by the companion's
+  // ordinary combat level. One day advances one Chef Level; level 10 unlocks
+  // the whole-kitchen "Feed all birds" service. Earned time is retained if the
+  // chef stands down and resumes later.
+  const CHEF_MAX_LEVEL = 10;
+  const CHEF_MS_PER_LEVEL = 24 * 60 * 60 * 1000;
+  const CHEF_REWARD_BONUS_PER_LEVEL = 0.02;
+
   const ROLE_RANKS = [
     { id:'novice',      label:'Novice',      icon:'🌱', min:0 },
     { id:'apprentice',  label:'Apprentice',  icon:'📗', min:20 },
@@ -302,6 +310,99 @@
     };
   }
 
+  function sanitizeChefCareer(raw) {
+    const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const workedMs = Math.max(0, Math.floor(n(src.workedMs, 0)));
+    const activeSinceValue = src.activeSince == null ? NaN : Number(src.activeSince);
+    const activeSince = Number.isFinite(activeSinceValue) && activeSinceValue >= 0 ? activeSinceValue : null;
+    return { workedMs, activeSince };
+  }
+
+  function startChefCareer(raw, now) {
+    const career = sanitizeChefCareer(raw);
+    if (career.activeSince == null) career.activeSince = Math.max(0, n(now, Date.now()));
+    return career;
+  }
+
+  function pauseChefCareer(raw, now) {
+    const career = sanitizeChefCareer(raw);
+    if (career.activeSince != null) {
+      career.workedMs += Math.max(0, n(now, Date.now()) - career.activeSince);
+      career.activeSince = null;
+    }
+    return career;
+  }
+
+  function chefCareerProgress(raw, now) {
+    const career = sanitizeChefCareer(raw);
+    const at = Math.max(0, n(now, Date.now()));
+    const totalMs = career.workedMs + (career.activeSince == null ? 0 : Math.max(0, at - career.activeSince));
+    const level = clamp(1 + Math.floor(totalMs / CHEF_MS_PER_LEVEL), 1, CHEF_MAX_LEVEL);
+    const intoLevelMs = level >= CHEF_MAX_LEVEL ? CHEF_MS_PER_LEVEL : totalMs % CHEF_MS_PER_LEVEL;
+    return {
+      level,
+      totalMs,
+      intoLevelMs,
+      nextLevelMs: CHEF_MS_PER_LEVEL,
+      feedAllUnlocked: level >= CHEF_MAX_LEVEL,
+      rewardMultiplier: Math.round((1 + (level - 1) * CHEF_REWARD_BONUS_PER_LEVEL) * 1000) / 1000
+    };
+  }
+
+  // Pure whole-kitchen planner. It first maximises how many birds can eat, so
+  // an omnivore cannot take the only meal a specialist accepts while another
+  // suitable food sits unused. Within that maximum matching, proper meals are
+  // tried before side snacks and input order decides ties.
+  function chefFeedAllPlan(rows, stockByFood) {
+    const stock = {};
+    Object.entries(stockByFood && typeof stockByFood === 'object' ? stockByFood : {}).forEach(([key, value]) => {
+      stock[String(key)] = Math.max(0, Math.floor(Number(value) || 0));
+    });
+    const verdictRank = { primary:0, secondary:1, insufficient:2 };
+    const list = (Array.isArray(rows) ? rows : []).filter(row => row && row.key != null).map((row, index) => ({
+      key:String(row.key),
+      index,
+      options:(Array.isArray(row.options) ? row.options : [])
+        .filter(option => option && option.foodKey && stock[String(option.foodKey)] > 0 && verdictRank[option.verdict] != null)
+        .map(option => ({ foodKey:String(option.foodKey), verdict:String(option.verdict) }))
+        .sort((a, b) => verdictRank[a.verdict] - verdictRank[b.verdict])
+    }));
+    const units = [];
+    Object.entries(stock).forEach(([foodKey, count]) => {
+      for (let i = 0; i < Math.min(count, list.length); i += 1) units.push({ id:foodKey + '#' + i, foodKey });
+    });
+    const unitOwner = new Map();
+    const rowUnit = new Map();
+    const rowByKey = new Map(list.map(row => [row.key, row]));
+    function trySeat(row, seenUnits, seenRows) {
+      if (!row || seenRows.has(row.key)) return false;
+      seenRows.add(row.key);
+      for (const option of row.options) {
+        for (const unit of units) {
+          if (unit.foodKey !== option.foodKey || seenUnits.has(unit.id)) continue;
+          seenUnits.add(unit.id);
+          const ownerKey = unitOwner.get(unit.id);
+          if (!ownerKey || trySeat(rowByKey.get(ownerKey), seenUnits, seenRows)) {
+            unitOwner.set(unit.id, row.key);
+            rowUnit.set(row.key, { unitId:unit.id, foodKey:option.foodKey, verdict:option.verdict });
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    list.forEach(row => trySeat(row, new Set(), new Set()));
+    const assignments = [];
+    const unfed = [];
+    list.sort((a, b) => a.index - b.index).forEach(row => {
+      const match = rowUnit.get(row.key);
+      if (!match) { unfed.push(row.key); return; }
+      assignments.push({ key:row.key, foodKey:match.foodKey, verdict:match.verdict });
+      stock[match.foodKey] -= 1;
+    });
+    return { assignments, unfed, remainingStock:stock };
+  }
+
   // Drop posts held by birds that have left the flock (released, or a save
   // healed across builds), so a vacancy is never invisible.
   function pruneRoleState(state, liveBirdIds) {
@@ -321,6 +422,9 @@
     ROLE_RANKS,
     STAT_MASTERY,
     MAX_ROLE_BONUS,
+    CHEF_MAX_LEVEL,
+    CHEF_MS_PER_LEVEL,
+    CHEF_REWARD_BONUS_PER_LEVEL,
     roleById,
     academyRoleForRoom,
     villageRole,
@@ -336,6 +440,11 @@
     assignRole,
     unassignRole,
     chefServicePlan,
+    sanitizeChefCareer,
+    startChefCareer,
+    pauseChefCareer,
+    chefCareerProgress,
+    chefFeedAllPlan,
     pruneRoleState
   };
 });

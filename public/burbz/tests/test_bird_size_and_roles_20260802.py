@@ -21,9 +21,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-ROLE_CORE_PIN = "empire-clarity-v205-20260803"
+ROLE_CORE_PIN = "chef-mastery-feed-all-v237-20260807"
 SIZE_CORE_PIN = "forge-satchels-v220-20260804"
-CURRENT_BUILD = "living-canopy-v236-20260806"
+CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
 
 
 def run_node(source: str) -> dict:
@@ -281,7 +281,7 @@ def test_posts_are_wired_into_the_things_they_claim_to_improve():
     assert "0.10 * roomBoost" in html          # Head Healer
     assert "0.04 * roomBoost" in html          # Roost Warden
     # The Kitchen: the Head Chef improves every plate that leaves it.
-    assert "const chef = academyRoleMultiplier('kitchen');" in html
+    assert "const chef = academyRoleMultiplier('kitchen') * chefCareer.rewardMultiplier;" in html
     # The Barracks: the Recruiting Officer talks the price down.
     assert "const officer = academyRoleMultiplier('tavern');" in html
     # The Quest Roost: the Quartermaster plans a heavier trip, and the bird's

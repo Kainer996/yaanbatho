@@ -23,7 +23,7 @@ SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
 # academy_treehouse_core.js has moved on with later releases; bird_sleep_core.js has not.
 ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
-CURRENT_BUILD = "living-canopy-v236-20260806"
+CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
 
 
 def run_node(script: str) -> dict:
