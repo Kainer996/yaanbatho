@@ -359,14 +359,22 @@
       stock[String(key)] = Math.max(0, Math.floor(Number(value) || 0));
     });
     const verdictRank = { primary:0, secondary:1, insufficient:2 };
-    const list = (Array.isArray(rows) ? rows : []).filter(row => row && row.key != null).map((row, index) => ({
-      key:String(row.key),
-      index,
-      options:(Array.isArray(row.options) ? row.options : [])
-        .filter(option => option && option.foodKey && stock[String(option.foodKey)] > 0 && verdictRank[option.verdict] != null)
-        .map(option => ({ foodKey:String(option.foodKey), verdict:String(option.verdict) }))
-        .sort((a, b) => verdictRank[a.verdict] - verdictRank[b.verdict])
-    }));
+    const seenKeys = new Set();
+    const list = [];
+    (Array.isArray(rows) ? rows : []).forEach((row, index) => {
+      if (!row || row.key == null) return;
+      const key = String(row.key);
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      list.push({
+        key,
+        index,
+        options:(Array.isArray(row.options) ? row.options : [])
+          .filter(option => option && option.foodKey && stock[String(option.foodKey)] > 0 && verdictRank[option.verdict] != null)
+          .map(option => ({ foodKey:String(option.foodKey), verdict:String(option.verdict) }))
+          .sort((a, b) => verdictRank[a.verdict] - verdictRank[b.verdict])
+      });
+    });
     const units = [];
     Object.entries(stock).forEach(([foodKey, count]) => {
       for (let i = 0; i < Math.min(count, list.length); i += 1) units.push({ id:foodKey + '#' + i, foodKey });

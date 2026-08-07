@@ -111,6 +111,20 @@ def test_feed_all_plan_maximises_birds_fed_instead_of_wasting_specialist_food():
     assert next(row for row in out["assignments"] if row["key"] == "omnivore")["foodKey"] == "pantry:seeds"
 
 
+def test_feed_all_plan_deduplicates_corrupt_duplicate_bird_ids():
+    out = run_node(
+        """
+        const roles = require('./bird_roles_core.js');
+        console.log(JSON.stringify(roles.chefFeedAllPlan([
+          { key:'same-bird', options:[{ foodKey:'pantry:seeds', verdict:'primary' }] },
+          { key:'same-bird', options:[{ foodKey:'pantry:seeds', verdict:'primary' }] }
+        ], { 'pantry:seeds':2 })));
+        """
+    )
+    assert out["assignments"] == [{"key": "same-bird", "foodKey": "pantry:seeds", "verdict": "primary"}]
+    assert out["remainingStock"]["pantry:seeds"] == 1
+
+
 def test_feed_all_runtime_consumes_real_stock_rewards_fed_birds_and_names_unfed_birds():
     html = HTML.read_text(encoding="utf-8")
     feed_all = function_source(html, "chefFeedAllBirds")
@@ -129,6 +143,7 @@ def test_feed_all_runtime_consumes_real_stock_rewards_fed_birds_and_names_unfed_
           {{ key:'gull', name:'Gull', hungry:true, target:{{ birdId:'gull' }}, options:[] }}
         ];
         const notices = [], toasts = [], quests = [];
+        let saveFails = false;
         const window = {{}};
         const MERLIN_CORE = null;
         const SFX = {{ capture(){{}}, tap(){{}} }};
@@ -156,7 +171,9 @@ def test_feed_all_runtime_consumes_real_stock_rewards_fed_birds_and_names_unfed_
         function recalcBirdPower() {{}}
         function updateQuestProgress(key, value) {{ quests.push([key, value]); }}
         function applyPlayerXpState(xp) {{ gameState.player.xp = (gameState.player.xp || 0) + xp; }}
-        function saveState() {{ gameState.saved = true; }}
+        function snapshotGameState() {{ return JSON.parse(JSON.stringify(gameState)); }}
+        function restoreGameStateSnapshot(snapshot) {{ gameState = snapshot; return gameState; }}
+        function saveState() {{ if (saveFails) return {{ ok:false }}; gameState.saved = true; return {{ ok:true }}; }}
         function showToast(message) {{ toasts.push(message); }}
         function showFeedNotePopup(title, body) {{ notices.push({{ title, body }}); }}
         function refreshFeedSurfaces() {{ gameState.refreshed = true; }}
@@ -164,22 +181,41 @@ def test_feed_all_runtime_consumes_real_stock_rewards_fed_birds_and_names_unfed_
         function escapeHtml(value) {{ return String(value); }}
         {feed_all}
         chefFeedAllBirds();
-        console.log(JSON.stringify({{ gameState, notices, toasts, quests }}));
+        const success = {{ gameState:JSON.parse(JSON.stringify(gameState)), notices:[...notices], toasts:[...toasts], quests:[...quests] }};
+        saveFails = true;
+        gameState = {{
+          pantry:{{ seeds:1, fish:0 }}, player:{{ mealsServed:0 }},
+          flock:[
+            {{ id:'robin', commonName:'Robin', care:{{}}, training:{{}}, academy:{{}}, maxHp:50, hp:40 }},
+            {{ id:'gull', commonName:'Gull', care:{{}}, training:{{}}, academy:{{}}, maxHp:50, hp:40 }}
+          ]
+        }};
+        notices.length = 0; toasts.length = 0; quests.length = 0;
+        chefFeedAllBirds();
+        console.log(JSON.stringify({{ success, failed:{{ gameState, notices, toasts, quests }} }}));
         """
     )
-    assert out["gameState"]["pantry"]["seeds"] == 0
-    assert out["gameState"]["flock"][0]["care"]["lastFed"]
-    assert out["gameState"]["flock"][0]["xp"] == 4
-    assert "lastFed" not in out["gameState"]["flock"][1]["care"]
-    assert out["gameState"]["player"]["mealsServed"] == 1
-    assert out["gameState"]["saved"] is True and out["gameState"]["refreshed"] is True
-    assert "fed 1 bird" in out["toasts"][0]
-    assert len(out["notices"]) == 1 and "Gull" in out["notices"][0]["body"]
+    success = out["success"]
+    assert success["gameState"]["pantry"]["seeds"] == 0
+    assert success["gameState"]["flock"][0]["care"]["lastFed"]
+    assert success["gameState"]["flock"][0]["xp"] == 4
+    assert "lastFed" not in success["gameState"]["flock"][1]["care"]
+    assert success["gameState"]["player"]["mealsServed"] == 1
+    assert success["gameState"]["saved"] is True and success["gameState"]["refreshed"] is True
+    assert "fed 1 bird" in success["toasts"][0]
+    assert len(success["notices"]) == 1 and "Gull" in success["notices"][0]["body"]
+    failed = out["failed"]
+    assert failed["gameState"]["pantry"]["seeds"] == 1
+    assert "lastFed" not in failed["gameState"]["flock"][0]["care"]
+    assert failed["gameState"]["player"]["mealsServed"] == 0
+    assert any("couldn’t save" in toast for toast in failed["toasts"])
 
 
 def test_kitchen_wires_persisted_career_progress_level_10_button_and_unfed_notification():
     html = HTML.read_text(encoding="utf-8")
     assert "chefCareers: {}" in html
+    load_state = function_source(html, "loadState")
+    assert "resumeAssignedHeadChefCareer" in load_state
     ensure_roles = function_source(html, "ensureRolesState")
     assert "staleChefId" in ensure_roles and "pauseHeadChefCareer(staleChefId)" in ensure_roles
     assign = function_source(html, "assignBirdRole")

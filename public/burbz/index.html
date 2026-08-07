@@ -5640,6 +5640,7 @@ function loadState() {
     syncBirdArtUrl(b);
     return b;
   });
+  resumeAssignedHeadChefCareer(Date.now());
   migrateAllHungerState(Date.now());
 
   sfxEnabled = gameState.settings.sfx;
@@ -10666,6 +10667,17 @@ function pauseHeadChefCareer(birdId, now = Date.now()) {
   careers[id] = core.pauseChefCareer(careers[id], now);
 }
 
+// Saves upgraded/returning games with the already-appointed chef actively on
+// duty, even if the player never opens the Kitchen during this session.
+function resumeAssignedHeadChefCareer(now = Date.now()) {
+  const core = birdRolesCore();
+  if (!core || !gameState || typeof core.assignedBirdId !== 'function') return;
+  const birdId = core.assignedBirdId(gameState.birdRoles, 'academy', 'kitchen');
+  if (!birdId) return;
+  const stillInFlock = (gameState.flock || []).some(bird => bird && String(bird.id) === String(birdId));
+  if (stillInFlock) startHeadChefCareer(birdId, now);
+}
+
 function headChefCareerProgress(now = Date.now()) {
   const core = birdRolesCore();
   const post = rolePostState('academy', 'kitchen');
@@ -14549,6 +14561,7 @@ function chefFeedAllBirds() {
   const entryByKey = Object.fromEntries(entries.map(entry => [entry.key, entry]));
   const unfed = plan.unfed.map(key => entryByKey[key]).filter(Boolean);
   const fedNames = [];
+  const beforeService = snapshotGameState();
   const now = Date.now();
   plan.assignments.forEach((assignment, index) => {
     const entry = entryByKey[assignment.key];
@@ -14596,7 +14609,14 @@ function chefFeedAllBirds() {
     updateQuestProgress('meal_served', 1);
     fedNames.push(entry.name);
   });
-  saveState();
+  const saveResult = saveState();
+  if (!saveResult || saveResult.ok !== true) {
+    restoreGameStateSnapshot(beforeService);
+    SFX.tap();
+    showToast('The kitchen couldn’t save that service, so no food was used. Please try again.');
+    refreshFeedSurfaces();
+    return;
+  }
   if (fedNames.length) { SFX.capture(); showToast('🥣 Head Chef ' + birdDisplayName(post.bird) + ' fed ' + fedNames.length + ' bird' + (fedNames.length === 1 ? '' : 's') + '.'); }
   else { SFX.tap(); showToast('There was no suitable food to serve.'); }
   const uniqueUnfed = [...new Map(unfed.map(entry => [entry.key, entry])).values()];
