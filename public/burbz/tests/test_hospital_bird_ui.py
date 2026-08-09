@@ -77,12 +77,14 @@ def test_room_birds_are_calm_grid_portraits_not_walking_actors():
     assert "room-bird-actor" not in render
 
 
-def test_room_grid_keeps_room_context_and_tiredness_visible():
+def test_room_grid_keeps_room_context_without_retired_sleep_ui():
+    # Sleep was retired on 2026-08-09 (sleep-retired-v237): birds never tire
+    # or sleep, so the grid shows no tiredness bar and no Sleeping state.
     html = HTML_PATH.read_text(encoding="utf-8")
     grid = function_source(html, "roomBirdGridHTML")
     assert "rolePostState('academy', room)" in grid
-    assert "Tiredness " in grid
-    assert "Sleeping" in grid
+    assert "Tiredness " not in grid
+    assert "Sleeping" not in grid
     assert ".room-bird-grid { position:absolute;" in html
 
 

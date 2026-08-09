@@ -247,12 +247,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .room-bird-grid { position:absolute; top:68px; right:12px; z-index:4; width:min(46%,220px); display:grid; grid-template-columns:repeat(auto-fit,minmax(58px,1fr)); gap:6px; padding:7px; border-radius:14px; border:1px solid rgba(214,168,79,.34); background:rgba(5,7,6,.72); box-shadow:0 8px 22px rgba(0,0,0,.38); backdrop-filter:blur(9px); pointer-events:auto; }
 .room-bird-grid:empty { display:none; }
 .room-bird-grid-item { position:relative; min-width:0; padding:5px 4px 6px; border-radius:10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09); text-align:center; overflow:hidden; }
-.room-bird-grid-item.sleeping { border-color:rgba(130,166,255,.55); background:rgba(74,91,145,.22); }
 .room-bird-grid-art { width:42px; height:42px; display:block; margin:0 auto 2px; object-fit:contain; filter:drop-shadow(0 5px 5px rgba(0,0,0,.45)); }
 .room-bird-grid-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; line-height:1.2; font-weight:900; color:#fff; }
 .room-bird-grid-status { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; font-size:8px; line-height:1.2; color:var(--accent2); }
-.room-bird-grid-tired { height:3px; margin-top:4px; overflow:hidden; border-radius:3px; background:rgba(255,255,255,.12); }
-.room-bird-grid-tired > i { display:block; height:100%; background:linear-gradient(90deg,#7edc8a,#f0c767,#e96b68); }
 .room-bird-grid-hp { display:block; margin-top:3px; font-size:8px; line-height:1.1; color:#86dc91; font-weight:800; }
 @media(max-width:420px){.room-bird-grid{top:64px;right:8px;width:min(48%,180px);grid-template-columns:repeat(2,minmax(50px,1fr));}.room-bird-grid-art{width:36px;height:36px;}}
 .academy-room-topbar { position:absolute; left:12px; right:12px; top:12px; z-index:3; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
@@ -4190,7 +4187,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
 <script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script src="bird_diet_hunger_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
-<script src="bird_sleep_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
+<script src="bird_sleep_core.js?v=sleep-retired-v237-20260809"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
@@ -5177,7 +5174,7 @@ const FIRST_RECRUIT_MAX_COST = 110;
 function dietHungerCore() { return window.BurbzDietHungerCore || null; }
 function birdSleepCore() { return window.BurbzBirdSleepCore || null; }
 function defaultBirdCare(now = Date.now()) {
-  const care = { hunger: 20, happiness: 80, tiredness: 20, sleeping: false, sleepingSince: null, sleepReturnRoom: null, sleepReason: null, lastCare: null, lastFed: null, lastTrained: null, lastHungerAt: now, lastTirednessAt: now, hungerTransactions: [], hungerTransactionLog: [] };
+  const care = { hunger: 20, happiness: 80, tiredness: 0, sleeping: false, sleepingSince: null, sleepReturnRoom: null, sleepReason: null, lastCare: null, lastFed: null, lastTrained: null, lastHungerAt: now, lastTirednessAt: now, hungerTransactions: [], hungerTransactionLog: [] };
   const hungerCore = dietHungerCore();
   const fedCare = hungerCore && typeof hungerCore.sanitizeCare === 'function' ? hungerCore.sanitizeCare(care, now) : care;
   const sleepCore = birdSleepCore();
@@ -5227,42 +5224,28 @@ function birdIsFull(bird, now = Date.now()) {
   if (core && typeof core.primaryMealActiveForCare === 'function' && core.primaryMealActiveForCare(bird && bird.care, now)) return true;
   return Math.round(status.hunger) <= 0;
 }
-// Sleep is a separate care system: HP, Fullness and Tiredness never substitute
-// for one another. Nocturnal birds sleep 06:00–18:00 local time and wake for
-// the early evening; any companion automatically uses The Roost at 85% tired.
+// Sleep is RETIRED (2026-08-09): birds never tire, never fall asleep and are
+// never blocked from battle or work. This reconcile pass is now a one-way
+// save migration — any companion an old save left asleep in The Roost wakes
+// immediately and walks back to the room it was pulled from.
 function reconcileBirdSleep(bird, now = Date.now()) {
   if (!bird) return { changed:false, sleeping:false };
-  const core = birdSleepCore();
-  if (!core || typeof core.sleepPlan !== 'function') return { changed:false, sleeping:false };
   if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room:'outdoors', lastGroom:null, lastRest:null, lastForage:null };
-  const beforeTick = Number(bird.care && bird.care.lastTirednessAt) || now;
-  bird.care = core.advanceTiredness(normalizeBirdCare(bird, now), now);
-  const busy = birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id);
-  const roostBuilt = isAcademyRoomBuilt('dorm');
-  const plan = core.sleepPlan(bird.care, bird, { now, localHour:new Date(now).getHours(), roostBuilt, busy });
+  const wasSleeping = !!(bird.care && bird.care.sleeping);
+  const requested = (bird.care && bird.care.sleepReturnRoom) || null;
+  const core = birdSleepCore();
+  bird.care = core && typeof core.advanceTiredness === 'function' ? core.advanceTiredness(normalizeBirdCare(bird, now), now) : normalizeBirdCare(bird, now);
   let changed = false;
-  if (plan.shouldSleep) {
-    if (bird.academy.room !== 'dorm') bird.care.sleepReturnRoom = bird.academy.room || 'outdoors';
-    bird.care.sleeping = true;
-    bird.care.sleepingSince = now;
-    bird.care.sleepReason = plan.reason || 'tired';
-    bird.care.lastTirednessAt = now;
-    bird.academy.room = 'dorm';
-    bird.academy.lastMovedAt = new Date(now).toISOString();
-    changed = true;
-  } else if (plan.shouldWake) {
-    const requested = bird.care.sleepReturnRoom;
-    const returnRoom = requested && ACADEMY_ROOMS[requested] && requested !== 'tavern' && requested !== 'kitchen' && isAcademyRoomBuilt(requested) ? requested : 'outdoors';
-    bird.care.sleeping = false;
-    bird.care.sleepingSince = null;
-    bird.care.sleepReason = null;
+  if (wasSleeping || requested) {
+    if (bird.academy.room === 'dorm' && requested && requested !== 'dorm') {
+      const returnRoom = ACADEMY_ROOMS[requested] && requested !== 'tavern' && requested !== 'kitchen' && isAcademyRoomBuilt(requested) ? requested : 'outdoors';
+      bird.academy.room = returnRoom;
+      bird.academy.lastMovedAt = new Date(now).toISOString();
+    }
     bird.care.sleepReturnRoom = null;
-    bird.care.lastTirednessAt = now;
-    bird.academy.room = returnRoom;
-    bird.academy.lastMovedAt = new Date(now).toISOString();
     changed = true;
   }
-  return { changed, persistDue:now - beforeTick >= 5*60*1000, sleeping:!!bird.care.sleeping, plan };
+  return { changed, persistDue:changed, sleeping:false };
 }
 function reconcileAllBirdSleep(now = Date.now()) {
   let shouldSave = false;
@@ -5294,16 +5277,12 @@ function isNightRightNow(now = Date.now()) {
   return !!(core && typeof core.isNightHour === 'function' && core.isNightHour(new Date(now).getHours()));
 }
 function academySleepStatusHTML(bird, now = Date.now()) {
+  // Sleep retired: every companion is always awake and battle-ready; the line
+  // survives to advertise the Night Hunter perk on nocturnal companions.
   const core = birdSleepCore();
-  const care = normalizeBirdCare(bird, now) || {};
-  const tiredness = clamp(Math.round(Number(care.tiredness) || 0), 0, 100);
   const nocturnal = !!(core && core.isNocturnalBird && core.isNocturnalBird(bird));
-  const sleeping = !!care.sleeping;
-  const copy = sleeping
-    ? (nocturnal && core.isScheduledSleepTime(bird, new Date(now).getHours()) ? '💤 Sleeping through the day · wakes from 18:00' : '💤 Sleeping in The Roost until rested')
-    : nocturnal ? '🌙 Nocturnal · awake from 18:00 — night work earns the Night Hunter bonus'
-    : tiredness >= 70 ? '🥱 Getting tired · will go to The Roost automatically' : '☀️ Awake and rested';
-  return '<div class="academy-hunger-status" data-sleeping="' + (sleeping ? 'true' : 'false') + '">' + copy + '</div>';
+  const copy = nocturnal ? '🌙 Nocturnal · night work earns the Night Hunter bonus' : '☀️ Awake and ready';
+  return '<div class="academy-hunger-status" data-sleeping="false">' + copy + '</div>';
 }
 
 // Merlin is the one bird the Kingdom cannot afford to ground. With an empty
@@ -11916,11 +11895,11 @@ const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
-  dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'The Academy sleep room. Assign any companion here, and tired birds come automatically; nocturnal birds sleep through the day and wake from 18:00.', perk:'Sleep: restores Tiredness and HP', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
+  dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'The Academy rest room. Companions lodged here recover HP between adventures — and stay awake, ready for battle at any moment.', perk:'Rest: restores HP · birds stay battle-ready', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
   tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
-  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for tired or hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
+  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
   crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds sway battle Parleys, win over foes and earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
@@ -13292,7 +13271,6 @@ function renderAcademyRoomPanel(birds) {
     const hpPct = clamp(Math.round((b.hp / (b.maxHp || 1)) * 100), 0, 100);
     const hungerPct = clamp(Math.round(b.care.hunger || 0), 0, 100);
     const happyPct = clamp(Math.round(b.care.happiness || 0), 0, 100);
-    const tirednessPct = clamp(Math.round(b.care.tiredness || 0), 0, 100);
 
     let actions = '';
     let tray = '';
@@ -13332,7 +13310,6 @@ function renderAcademyRoomPanel(birds) {
         academyMeter('HUNGER', hungerPct, 'hunger') +
         academyHungerStatusHTML(b) +
         academyMeter('HAPPY', happyPct, 'happy') +
-        academyMeter('TIREDNESS', tirednessPct, 'tiredness') +
         academySleepStatusHTML(b) +
         academyDietLine(b) +
       '</div>' +
@@ -13598,31 +13575,16 @@ function academyMoveBird(birdId, room) {
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
-  if (bird.care && bird.care.sleeping && room !== 'dorm') { showToast((bird.commonName || bird.species) + ' is sleeping in The Roost — they will wake when rested.'); return; }
   if (!isAcademyRoomBuilt(room)) {
     const building = ACADEMY_BUILDINGS[ACADEMY_ROOMS[room].buildingId || room];
     showToast('Build ' + building.label + ' before sending birds there.');
     renderAcademyBuildPanel();
     return;
   }
-  const previousRoom = bird.academy.room || 'outdoors';
   bird.academy.room = room;
-  if (room === 'dorm') {
-    // Manual Roost assignment means sleep now; automatic tired/scheduled sleep
-    // uses the same fields, so both paths recover at the same fair rate.
-    if (!bird.care || typeof bird.care !== 'object') bird.care = { tiredness:20 };
-    bird.care.sleepReturnRoom = previousRoom === 'dorm' ? (bird.care.sleepReturnRoom || 'outdoors') : previousRoom;
-    bird.care.sleeping = true;
-    bird.care.sleepingSince = Date.now();
-    bird.care.sleepReason = 'manual';
-    bird.care.lastTirednessAt = Date.now();
-  } else if (bird.care && bird.care.sleeping) {
-    bird.care.sleeping = false;
-    bird.care.sleepingSince = null;
-    bird.care.sleepReason = null;
-    bird.care.sleepReturnRoom = null;
-    bird.care.lastTirednessAt = Date.now();
-  }
+  // Sleep retired: the Roost is an ordinary room now. Birds lodged there heal
+  // faster but never fall asleep, so a move is only ever a move.
+  if (bird.care && typeof bird.care === 'object') bird.care.sleepReturnRoom = null;
   bird.academy.lastMovedAt = new Date().toISOString();
   academySelectedRoom = room;
   updateQuestProgress('station_' + room, 1);
@@ -15514,18 +15476,15 @@ function roomBirdGridHTML(birds, room) {
   const items = entries.map(entry => {
     const bird = entry.bird;
     normalizeBirdCare(bird);
-    const tiredness = clamp(Math.round(Number(bird.care.tiredness) || 0), 0, 100);
-    const sleeping = !!bird.care.sleeping;
-    const status = sleeping ? 'Sleeping' : entry.role ? entry.role : 'In this room';
+    const status = entry.role ? entry.role : 'In this room';
     const maxHp = Math.max(1, Math.round(Number(bird.maxHp) || Number(bird.hp) || 1));
     const hp = clamp(Math.round(Number.isFinite(Number(bird.hp)) ? Number(bird.hp) : maxHp), 0, maxHp);
     const hospitalHealth = room === 'hospital' ? '<span class="room-bird-grid-hp" role="progressbar" aria-label="Health ' + hp + ' of ' + maxHp + '" aria-valuemin="0" aria-valuemax="' + maxHp + '" aria-valuenow="' + hp + '">♥ ' + hp + '/' + maxHp + '</span>' : '';
-    return '<div class="room-bird-grid-item' + (sleeping ? ' sleeping' : '') + '" data-room-bird-id="' + escapeHtml(bird.id) + '" title="' + escapeHtml(birdDisplayName(bird) + ' · ' + status) + '">' +
+    return '<div class="room-bird-grid-item" data-room-bird-id="' + escapeHtml(bird.id) + '" title="' + escapeHtml(birdDisplayName(bird) + ' · ' + status) + '">' +
       birdOnlyImgHTML(bird, 'room-bird-grid-art') +
       '<span class="room-bird-grid-name">' + escapeHtml(birdDisplayName(bird)) + '</span>' +
-      '<span class="room-bird-grid-status">' + (sleeping ? '💤 ' : '') + escapeHtml(status) + '</span>' +
+      '<span class="room-bird-grid-status">' + escapeHtml(status) + '</span>' +
       hospitalHealth +
-      '<span class="room-bird-grid-tired" role="progressbar" aria-label="Tiredness ' + tiredness + ' percent" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + tiredness + '"><i style="width:' + tiredness + '%"></i></span>' +
     '</div>';
   }).join('');
   return '<div class="room-bird-grid" aria-label="Birds assigned to ' + escapeHtml((ACADEMY_ROOMS[room] && ACADEMY_ROOMS[room].label) || room) + '">' + items + '</div>';
@@ -15678,13 +15637,11 @@ function renderAcademyRoomInterior() {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       const away = birdHasActiveExpedition(b.id);
       const training = birdHasActiveTraining(b.id);
-      const sleeping = !!(b.care && b.care.sleeping);
       const meta = away ? '🧭 Away on a quest — rejoins the Academy when it finishes'
         : training ? '🏋️ Mid-training in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'the Training Hall')
-        : sleeping ? '💤 Sleeping in The Roost — wakes when rested'
         : 'Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy');
-      const action = (away || training || sleeping)
-        ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : training ? 'Training' : 'Sleeping') + '</button>'
+      const action = (away || training)
+        ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : 'Training') + '</button>'
         : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
       return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
@@ -27497,10 +27454,6 @@ function resolveBirdCardLocation(bird, context = {}) {
     return { kind:complete ? 'training-complete' : 'training-active', icon:complete ? '✅' : '🏋️', label:complete ? 'Training finished' : 'Training', detail:training.label || (rooms[room] && rooms[room].label) || 'Training Hall', screen:'academy-room', room };
   }
 
-  if (bird && bird.care && bird.care.sleeping) {
-    return { kind:'sleeping', icon:'💤', label:(rooms.dorm && rooms.dorm.label) || 'THE ROOST', detail:'Sleeping', screen:'academy-room', room:'dorm' };
-  }
-
   const post = owns('post') ? context.post : birdPostLabel(bird);
   if (post) {
     const label = [post.title, post.where].filter(Boolean).join(' · ');
@@ -30919,7 +30872,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-canopy-v236-20260806';
+const BURBZ_BUILD = 'sleep-retired-v237-20260809';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
