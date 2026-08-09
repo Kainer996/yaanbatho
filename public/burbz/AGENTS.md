@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (living canopy v236: the 2D Academy rebuilt in layers — new tree painting, real cut-out boughs swaying behind and in front of the treehouses — merged over the 3D tree-glow v235 release, which took the v235 number on main first).
+Last curated: 2026-08-09 (mallard true diet v237: `reptiles_amphibians` split out of `small_mammals` in the diet pipeline — the Mallard's frogs no longer imply voles — plus a clearer Head Chef service board).
 
 ---
 
@@ -135,6 +135,15 @@ in BirdFuncDat) refused fish.
   reach of the top one to PRIMARY, so a generalist has several full-meal foods
   and a specialist keeps one. Don't lower it past ~0.65 or the Great Spotted
   Woodpecker's seed (a curated *secondary*) becomes a co-primary.
+- **Vertebrate prey is split (v237):** `small_mammals` means warm-blooded prey
+  only (Diet-Vend / Diet-Vunk); cold-blooded prey (Diet-Vect: frogs, lizards)
+  is its own `reptiles_amphibians` family, where the Common Frog and Common
+  Lizard ingredients now live. The split is asymmetric on purpose: every
+  mammal-hunter also scores `reptiles_amphibians` at its Diet-Vend level
+  (a Kestrel's lizards, an owl's frogs — EltonTraits often records no
+  Diet-Vect for them), but Diet-Vect alone never grants mammals. That is the
+  fix for the reported "Mallards eat voles" bug (Mallard: Vend 0, Vect 10) —
+  see `tests/test_mallard_vertebrate_prey_split_20260809.py`.
 - **Head Chef service board:** with a chef appointed, the kitchen renders
   `kitchenHeadChefBoardHTML()` — foods listed with the birds that eat each — and
   `chefServeFoodToEveryEater()` plates one food to every hungry eater across
