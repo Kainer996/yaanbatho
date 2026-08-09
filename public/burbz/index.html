@@ -385,17 +385,21 @@ svg.academy-room-bg { display:block; filter:none; }
 .chef-board { margin-top:10px; padding:11px 12px; border-radius:13px; border:1px solid rgba(214,168,79,.34); background:linear-gradient(180deg,rgba(214,168,79,.12),rgba(214,168,79,.05)); }
 .chef-board-title { font-family:'Russo One',sans-serif; font-size:13px; color:var(--accent2); }
 .chef-board-lead { font-size:11px; color:var(--text2); margin-top:3px; line-height:1.45; }
+.chef-board-legend { font-size:10px; color:var(--text3); margin-top:6px; line-height:1.6; }
 .chef-board-list { display:flex; flex-direction:column; gap:8px; margin-top:9px; }
 .chef-board-food { padding:9px 10px; border-radius:11px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); }
 .chef-board-food-head { display:flex; align-items:center; gap:8px; }
 .chef-board-food-emoji { font-size:22px; flex:0 0 auto; line-height:1; }
-.chef-board-food-name { flex:1; min-width:0; font-family:'Russo One',sans-serif; font-size:12px; color:var(--text1); }
-.chef-board-food-count { font-size:11px; color:var(--text3); font-weight:700; }
+.chef-board-food-title { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.chef-board-food-name { font-family:'Russo One',sans-serif; font-size:12px; color:var(--text1); }
+.chef-board-food-sub { font-size:10px; color:var(--text3); }
 .chef-board-serve { flex:0 0 auto; min-height:34px; padding:0 11px; border-radius:11px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Russo One',sans-serif; font-size:11px; }
 .chef-board-serve:disabled { opacity:.45; }
-.chef-board-eaters { font-size:11px; color:var(--text2); margin-top:6px; line-height:1.5; }
-.chef-board-eater { display:inline-block; padding:1px 7px; margin:2px 4px 0 0; border-radius:8px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); color:var(--text3); }
-.chef-board-eater.hungry { border-color:rgba(214,168,79,.45); background:rgba(214,168,79,.12); color:var(--accent2); font-weight:700; }
+.chef-board-eaters { font-size:11px; color:var(--text2); margin-top:7px; line-height:1.5; }
+.chef-board-eaters-label { display:inline-block; margin:2px 6px 0 0; font-size:9px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--text3); }
+.chef-board-eaters-none { color:var(--text3); }
+.chef-board-eater { display:inline-block; padding:1px 7px; margin:2px 4px 0 0; border-radius:8px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); color:var(--text3); opacity:.72; }
+.chef-board-eater.hungry { border-color:rgba(214,168,79,.65); background:rgba(214,168,79,.20); color:var(--accent2); font-weight:700; opacity:1; box-shadow:0 0 0 1px rgba(214,168,79,.18); }
 .chef-board-empty { font-size:11px; color:var(--text3); line-height:1.45; }
 .birdex-diet-badge { position:absolute; top:6px; left:6px; z-index:2; font-size:11px; padding:3px 7px; border-radius:9px; background:rgba(214,168,79,.85); color:#241809; font-family:'Rajdhani',sans-serif; font-weight:900; }
 .room-bird-list { display:flex; flex-direction:column; gap:8px; }
@@ -4187,9 +4191,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_treehouse_core.js?v=living-canopy-v236-20260806"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
 <script src="academy_3d_core.js?v=academy-3d-tree-glow-v235-20260806"></script>
-<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>
-<script src="data/bird-diet-records.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
-<script src="bird_diet_hunger_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
+<script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
+<script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
+<script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_sleep_core.js?v=nocturnal-night-bonus-v229-20260805"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
@@ -13981,7 +13985,8 @@ function kitchenRosterRowHTML(entry) {
   // useless "find it somewhere". Every quest named here is a starter quest.
   const questHint = (() => {
     const questHints = {
-      small_mammals: 'Vole Meadow Hunt, Warren Watch or Marsh & Ditch Hunt',
+      small_mammals: 'Vole Meadow Hunt or Warren Watch',
+      reptiles_amphibians: 'Marsh & Ditch Hunt',
       small_birds: 'Falconry Ration Run',
       carrion: 'Carrion Round',
       fish: 'Fishing Trip or Sand Eel Run',
@@ -14437,7 +14442,8 @@ function kitchenHeadChefBoardHTML() {
   foods.sort((a, b) => (b.hungryCount - a.hungryCount) || (b.eaters.length - a.eaters.length) || a.label.localeCompare(b.label));
 
   const header = '<div class="chef-board-title">🥣 Head Chef ' + escapeHtml(birdDisplayName(post.bird)) + '’s service board</div>' +
-    '<div class="chef-board-lead">Your kitchen, laid out by food — each course lists the birds that eat it. Tap <b>Serve</b> to feed every hungry bird that eats that food in one go (one ingredient each). Omnivores eat all sorts, so they turn up under several courses.</div>';
+    '<div class="chef-board-lead">Every food in stock, with the birds that eat it listed underneath. Tap <b>Serve</b> to give one portion to each hungry eater in one go — omnivores eat all sorts, so they appear under several foods.</div>' +
+    '<div class="chef-board-legend"><span class="chef-board-eater hungry">Goldcrest</span> hungry now &nbsp;·&nbsp; <span class="chef-board-eater">Goldcrest ✓</span> already full</div>';
   if (!foods.length) {
     return '<div class="chef-board" data-chef-board="academy-kitchen">' + header +
       '<div class="chef-board-empty">The kitchen is bare. Send a bird out on a food quest, pick prey up on a walk, or buy food at a village market — then the chef will lay it out here.</div></div>';
@@ -14450,12 +14456,17 @@ function kitchenHeadChefBoardHTML() {
     const serveLabel = food.hungryCount ? 'Serve ' + food.hungryCount : 'All fed';
     const serveBtn = '<button type="button" class="chef-board-serve" data-action="chef-board-serve"' +
       (food.hungryCount ? '' : ' disabled') +
+      ' title="Feed every hungry bird that eats this — one portion each"' +
       ' onclick="event.preventDefault();event.stopPropagation();chefServeFoodToEveryEater(\'' + food.kind + '\',\'' + escapeHtml(food.id) + '\')">' + serveLabel + '</button>';
+    const hungryLine = food.hungryCount
+      ? food.hungryCount + ' of ' + food.eaters.length + ' eater' + (food.eaters.length === 1 ? '' : 's') + ' hungry'
+      : 'all ' + food.eaters.length + ' eater' + (food.eaters.length === 1 ? '' : 's') + ' full';
     return '<div class="chef-board-food" data-chef-board-food="' + escapeHtml(food.kind + ':' + food.id) + '">' +
       '<div class="chef-board-food-head"><span class="chef-board-food-emoji">' + food.emoji + '</span>' +
-      '<span class="chef-board-food-name">' + escapeHtml(food.label) + '</span>' +
-      '<span class="chef-board-food-count">×' + food.count + '</span>' + serveBtn + '</div>' +
-      '<div class="chef-board-eaters">' + (eaterChips || 'No companion at the table eats this yet.') + '</div></div>';
+      '<span class="chef-board-food-title"><span class="chef-board-food-name">' + escapeHtml(food.label) + '</span>' +
+      '<span class="chef-board-food-sub">×' + food.count + ' in stock · ' + hungryLine + '</span></span>' +
+      serveBtn + '</div>' +
+      '<div class="chef-board-eaters"><span class="chef-board-eaters-label">🍴 Eaten by</span>' + (eaterChips || '<span class="chef-board-eaters-none">No companion at the table eats this yet.</span>') + '</div></div>';
   }).join('');
   return '<div class="chef-board" data-chef-board="academy-kitchen">' + header +
     '<div class="chef-board-list">' + rows + '</div></div>';
@@ -30919,7 +30930,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-canopy-v236-20260806';
+const BURBZ_BUILD = 'mallard-true-diet-v237-20260809';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

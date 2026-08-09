@@ -323,7 +323,7 @@ def test_map_forage_and_shop_stock_feed_the_larder():
 def test_companion_feeding_table_is_wired_into_the_kitchen_room():
     html = HTML.read_text(encoding="utf-8")
     for marker in (
-        '<script src="kitchen_pantry_core.js?v=diet-hunger-release-20260723"></script>',
+        '<script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>',
         "room === 'kitchen' ? renderKitchenPanelHTML()",
         "function renderKitchenPanelHTML(",
         "function renderKitchenRosterHTML(",
@@ -373,4 +373,4 @@ def test_saves_migrate_larder_badges_and_notes_and_birdex_shows_diet_badges():
 def test_service_worker_caches_the_kitchen_core():
     sw = SW.read_text(encoding="utf-8")
     assert "const BURBZ_CACHE = 'burbz-" in sw
-    assert sw.count("./kitchen_pantry_core.js?v=diet-hunger-release-20260723") == 2
+    assert sw.count("./kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809") == 2

@@ -21,9 +21,11 @@ PINNED_RUNTIME_ASSETS = {
     # The quest board moved on with the categorised errands + one quest per
     # crafting material, so the Academy core carries its own pin now.
     "academy_treehouse_core.js": "living-canopy-v236-20260806",
-    "kitchen_pantry_core.js": RELEASE_PIN,
-    "data/bird-diet-records.js": "accurate-diets-full-catalogue-v226-20260805",
-    "bird_diet_hunger_core.js": "accurate-diets-full-catalogue-v226-20260805",
+    # The vertebrate-prey split (Mallards eat frogs, not voles) re-pinned the
+    # kitchen core and both diet assets together.
+    "kitchen_pantry_core.js": "mallard-true-diet-v237-20260809",
+    "data/bird-diet-records.js": "mallard-true-diet-v237-20260809",
+    "bird_diet_hunger_core.js": "mallard-true-diet-v237-20260809",
     "diet_hunger_core.js": RELEASE_PIN,
     "merlin_companion_core.js": "reconciled-release-v170-20260729",
 }

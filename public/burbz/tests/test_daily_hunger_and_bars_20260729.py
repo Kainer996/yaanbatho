@@ -130,7 +130,7 @@ def test_current_diet_and_hunger_release_is_query_busted_and_precached():
     html = INDEX.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     versions = {
-        "bird_diet_hunger_core.js": "accurate-diets-full-catalogue-v226-20260805",
+        "bird_diet_hunger_core.js": "mallard-true-diet-v237-20260809",
         "merlin_companion_core.js": "reconciled-release-v170-20260729",
     }
     assert "two-side-snacks-v205-20260803" in sw

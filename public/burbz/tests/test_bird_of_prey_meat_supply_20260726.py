@@ -33,8 +33,8 @@ NEW_PREY = {
     "wood_mouse": "small_mammals",
     "common_shrew": "small_mammals",
     "young_rabbit": "small_mammals",
-    "common_frog": "small_mammals",
-    "common_lizard": "small_mammals",
+    "common_frog": "reptiles_amphibians",
+    "common_lizard": "reptiles_amphibians",
     "starling_prey_ration": "small_birds",
     "pigeon_prey_ration": "small_birds",
     "sand_eel": "fish",
@@ -80,6 +80,10 @@ def test_both_ingredient_catalogues_carry_the_same_prey_in_the_same_families():
     for family in ("small_mammals", "small_birds", "fish", "carrion"):
         count = sum(1 for f in out["diet"].values() if f == family)
         assert count >= 3, f"{family} only has {count} ingredient(s)"
+    # Cold-blooded prey is its own family (so a Mallard's frogs never imply
+    # voles), and it still holds both marsh animals.
+    herptiles = sum(1 for f in out["diet"].values() if f == "reptiles_amphibians")
+    assert herptiles >= 2, f"reptiles_amphibians only has {herptiles} ingredient(s)"
 
 
 def test_prey_still_scores_against_the_source_backed_diet_records():

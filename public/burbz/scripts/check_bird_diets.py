@@ -51,7 +51,7 @@ SUMMARY_OUT = ROOT / "data" / "bird-diet-provenance-summary.json"
 
 EXPECTED_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
 EXPECTED_PROFILE_COUNT = 951
-DIET_VERSION = "diet-full-catalogue-20260805"
+DIET_VERSION = "diet-vertebrate-prey-split-20260809"
 
 # Omnivore ease: a food family counts as a PRIMARY (a full meal, full XP) when
 # its mapped score is at least this fraction of the bird's top family. A
@@ -71,9 +71,10 @@ SPECIES_DIET_REFINEMENTS = {
     "Dendrocopos major": {
         # BirdFuncDat's broad Diet-Vend bucket means warm-blooded vertebrate prey;
         # for this species BTO and Woodland Trust identify eggs and young birds,
-        # not small mammals. Carrion is omitted from the playable menu because
-        # neither British field guide treats it as a meaningful feeding category.
-        "remove": ["small_mammals", "carrion"],
+        # not small mammals or herptiles. Carrion is omitted from the playable
+        # menu because neither British field guide treats it as a meaningful
+        # feeding category.
+        "remove": ["small_mammals", "reptiles_amphibians", "carrion"],
         "secondary": ["small_birds"],
         "scores": {"small_birds": 10},
         "source": "BTO + Woodland Trust",
@@ -219,7 +220,12 @@ FOOD_FAMILIES = {
     },
     "small_mammals": {
         "label": "Small mammals",
-        "sourceColumns": ["Diet-Vend", "Diet-Vect", "Diet-Vunk"],
+        "sourceColumns": ["Diet-Vend", "Diet-Vunk"],
+        "defaultPrep": "live",
+    },
+    "reptiles_amphibians": {
+        "label": "Reptiles and amphibians",
+        "sourceColumns": ["Diet-Vect", "Diet-Vunk", "Diet-Vend"],
         "defaultPrep": "live",
     },
     "fish": {
@@ -438,12 +444,26 @@ def game_family_scores(
         add_score(scores, family, score)
 
     vend = float(source_percentages.get("Diet-Vend") or 0)
-    for family in endotherm_families(ctx, vend):
+    endo_families = endotherm_families(ctx, vend)
+    for family in endo_families:
         add_score(scores, family, vend)
 
     ect = float(source_percentages.get("Diet-Vect") or 0)
     vunk = float(source_percentages.get("Diet-Vunk") or 0)
-    add_score(scores, "small_mammals", max(ect, vunk))
+    # small_mammals means warm-blooded prey only. It is carried by Diet-Vend
+    # (via endotherm_families above) plus the unknown-vertebrate column; the
+    # cold-blooded Diet-Vect column must NOT put voles and shrews on the menu
+    # of a bird — like the Mallard — whose vertebrate prey is all frogs,
+    # tadpoles and newts.
+    add_score(scores, "small_mammals", vunk)
+    # reptiles_amphibians inherits the full vertebrate-prey score the old
+    # merged family had: Diet-Vect directly, and the Diet-Vend score for any
+    # bird whose endotherm prey includes mammals — every vole-hunter (Kestrel,
+    # the owls, herons) also takes herptiles opportunistically, even where
+    # EltonTraits records no Diet-Vect for it. Voles imply frogs; the reverse
+    # is not true.
+    herptile = max(ect, vunk, vend if "small_mammals" in endo_families else 0.0)
+    add_score(scores, "reptiles_amphibians", herptile)
     add_score(scores, "fish", float(source_percentages.get("Diet-Vfish") or 0))
     add_score(scores, "carrion", float(source_percentages.get("Diet-Scav") or 0))
     add_score(scores, "fruit_berries", float(source_percentages.get("Diet-Fruit") or 0))
