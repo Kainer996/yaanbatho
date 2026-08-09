@@ -23,7 +23,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 ROLE_CORE_PIN = "empire-clarity-v205-20260803"
 SIZE_CORE_PIN = "forge-satchels-v220-20260804"
-CURRENT_BUILD = "mallard-true-diet-v237-20260809"
+CURRENT_BUILD = "sleep-retired-v238-20260809"
 
 
 def run_node(source: str) -> dict:

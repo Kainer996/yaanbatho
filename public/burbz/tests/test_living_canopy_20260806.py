@@ -29,8 +29,9 @@ ALIVE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 RELEASE_PIN = "living-canopy-v236-20260806"
-# Later releases advance BURBZ_BUILD past this one; the canopy asset pins stay.
-CURRENT_BUILD = "mallard-true-diet-v237-20260809"
+# The build has moved on (sleep-retired-v238) but the canopy cores have not,
+# so they keep their own pin while the build tracks the current tag.
+CURRENT_BUILD = "sleep-retired-v238-20260809"
 
 BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
 
@@ -161,7 +162,7 @@ def test_default_room_positions_sit_on_the_new_boughs():
 
 def test_release_is_pinned_and_shipped():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
-    assert RELEASE_PIN in SW, "BURBZ_CACHE must keep this release's lineage"
+    assert RELEASE_PIN in SW, "the release lineage stays in BURBZ_CACHE"
     for core in ("academy_alive_core.js", "academy_treehouse_core.js"):
         assert f"{core}?v={RELEASE_PIN}" in HTML, core
         assert f"./{core}?v={RELEASE_PIN}" in SW, core

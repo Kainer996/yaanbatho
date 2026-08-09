@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-09 (mallard true diet v237: `reptiles_amphibians` split out of `small_mammals` in the diet pipeline — the Mallard's frogs no longer imply voles — plus a clearer Head Chef service board).
+Last curated: 2026-08-09 (sleep retired v238: the Roost sleep/tiredness mechanic is removed — birds never sleep and are never blocked from battle or work; `bird_sleep_core.js` survives as the home of nocturnal detection and the Night Hunter bonus. Renumbered from v237: the same-day mallard-true-diet release took the v237 number on main first — same convention as the v202/v203, v221/v222, v228/v229 and v235/v236 pairs.)
 
 ---
 
@@ -236,6 +236,46 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-09 — sleep retired: birds never sleep, never blocked (Claude).**
+  Yaan opened The Roost to find all 8 of his companions asleep at 21:00 and
+  nothing available for battle — the roost-sleep-v208 loop could idle the
+  entire flock at once. His call: "the gameplay mechanics aren't right there —
+  just remove the sleep part of it, for now." Release
+  `sleep-retired-v238-20260809` (renumbered from v237: the same-day
+  mallard-true-diet release took the v237 number on main first) removes the
+  mechanic while keeping every API shape and pinned call site, so a future
+  revert is one release, not a rebuild.
+  - **Core** (`bird_sleep_core.js`): `sanitizeSleepCare` now heals any care
+    record to awake-and-rested (tiredness 0, sleeping false; only
+    `sleepReturnRoom` survives, for migration); `advanceTiredness` never
+    accrues; `isScheduledSleepTime` is always false (owls have no bedtime
+    either); `sleepPlan` never sleeps and flags `shouldWake` for stale
+    sleepers; `sleepReadiness` is always `ok`. The nocturnal detection,
+    night window and **Night Hunter bonus all stay** — they are rewards,
+    not blockers (their v229 test suite still passes minus the retired
+    scheduled-sleep pins).
+  - **App** (`index.html`): `reconcileBirdSleep` is now a one-way save
+    migration — a bird an old save left asleep in The Roost wakes on first
+    look and walks back to the room in `sleepReturnRoom`. Manual Roost
+    assignment is an ordinary move (no more sleep-on-assign), the TIREDNESS
+    metre and the room grid's tiredness bar / Sleeping states are gone, the
+    add-a-bird sheet no longer disables sleepers, and the Roost copy sells
+    "Rest: restores HP · birds stay battle-ready". The pinned availability
+    filters (battle/quests/training/posts) still call
+    `sleepReadinessForBird` — it just always answers awake — so the
+    reservation-guard and size/roles string contracts are untouched, and the
+    whole sleep gate can be re-enabled from the core alone.
+  - Tests: `tests/test_bird_sleep_and_room_grids_20260803.py` rewritten to
+    pin the retirement (never tires / never sleeps / stale sleepers wake /
+    no dead sleep UI); `test_hospital_bird_ui` and
+    `test_bird_card_locations` repointed off the removed Sleeping states;
+    release pins repointed per convention (the two canopy suites split a
+    `CURRENT_BUILD` off their unchanged core pins, same pattern as the
+    nocturnal suite's v235 split). SW cache + `BURBZ_BUILD` bumped;
+    `bird_sleep_core.js` `?v=` moved in both loaders. Local run:
+    1047 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container).
 
 - **2026-08-06 — the living canopy: layered painted branches (Claude).** Yaan's
   verdict on v234's tree sway was exact: "it's the same picture of the tree …
