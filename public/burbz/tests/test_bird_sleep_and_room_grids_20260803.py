@@ -118,6 +118,6 @@ def test_room_interior_uses_static_top_right_grid_not_roaming_birds():
 
 def test_sleep_retirement_release_is_cached():
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert "bird_sleep_core.js?v=sleep-retired-v237-20260809" in sw
+    assert "bird_sleep_core.js?v=sleep-retired-v238-20260809" in sw
     assert "roost-sleep-v208-20260803" in sw
-    assert "sleep-retired-v237-20260809" in sw
+    assert "sleep-retired-v238-20260809" in sw

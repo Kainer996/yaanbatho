@@ -20,11 +20,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "sleep-retired-v237-20260809"
+RELEASE_PIN = "sleep-retired-v238-20260809"
 # academy_treehouse_core.js last moved with the living-canopy release;
 # bird_sleep_core.js moved again when sleep was retired (v237).
 ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
-CURRENT_BUILD = "sleep-retired-v237-20260809"
+CURRENT_BUILD = "sleep-retired-v238-20260809"
 
 
 def run_node(script: str) -> dict:

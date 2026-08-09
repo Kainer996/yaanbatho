@@ -78,7 +78,7 @@ def test_room_birds_are_calm_grid_portraits_not_walking_actors():
 
 
 def test_room_grid_keeps_room_context_without_retired_sleep_ui():
-    # Sleep was retired on 2026-08-09 (sleep-retired-v237): birds never tire
+    # Sleep was retired on 2026-08-09 (sleep-retired-v238): birds never tire
     # or sleep, so the grid shows no tiredness bar and no Sleeping state.
     html = HTML_PATH.read_text(encoding="utf-8")
     grid = function_source(html, "roomBirdGridHTML")

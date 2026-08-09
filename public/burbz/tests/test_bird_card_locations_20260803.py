@@ -60,7 +60,7 @@ def test_effective_location_prioritises_finished_and_active_work_then_real_room(
     assert rows["hospital"]["label"] == "BIRD HOSPITAL"
     assert rows["hospital"]["room"] == "hospital"
     assert rows["hospital"]["screen"] == "academy-room"
-    # Sleep retired (sleep-retired-v237-20260809): a stale sleeping flag from
+    # Sleep retired (sleep-retired-v238-20260809): a stale sleeping flag from
     # an old save no longer pins the card to The Roost — the real room wins.
     assert rows["staleSleeper"]["label"] == "AVIARY GARDENS"
     assert rows["trainingDone"]["label"] == "Training finished"
