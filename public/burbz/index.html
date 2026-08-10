@@ -4280,6 +4280,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="loot_crafting_core.js?v=turn-potions-v232-20260806"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
+<script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -22016,7 +22017,7 @@ function renderTownScreen() {
   if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
   try {
     ensureTownRenderer(stage);
-    if (townBuiltKey !== townSceneKey(settle)) buildTownScene(settle);
+    if (townBuiltKey !== townSceneKey(settle) || townBuiltPhase !== burbzDaylightPhaseNow()) buildTownScene(settle);
     const loading = $('townLoading');
     if (loading) loading.remove();
     if (!townRunning) { townRunning = true; requestAnimationFrame(townAnimate); }
@@ -22314,6 +22315,22 @@ function drawCountyMap(region) {
 }
 window.addEventListener('resize', () => { if (currentScreen === 'county') renderCountyMapScreen(); });
 
+// ---- The real sky -----------------------------------------------------------
+// The 3D scenes light themselves from the player's local clock (maths in
+// daylight_core.js). The fallback grade IS the game's original moonlit night,
+// so a missing core changes nothing.
+function burbzDaylightGradeNow() {
+  const core = window.BurbzDaylightCore;
+  if (!core) return { phase: 'night', sun: 0, warm: 0, stars: 1, moon: true, torch: 1, hemi: 2.0, keyIntensity: 1.95, keyColor: 0xbfd2ff, exposure: 1.25 };
+  const now = new Date();
+  return core.daylightGradeForHour(now.getHours() + now.getMinutes() / 60);
+}
+function burbzDaylightPhaseNow() { return burbzDaylightGradeNow().phase; }
+function burbzDaylightPalette(pal, daylight) {
+  const core = window.BurbzDaylightCore;
+  return core ? core.gradePalette(pal, daylight) : pal;
+}
+
 // ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
@@ -22327,6 +22344,7 @@ let villageCam = { azimuth: 0.0, polar: 1.02, dist: 20, tx: 0, tz: 0, lastInputA
 let villageShadowTick = 0;
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
+let villageBuiltPhase = null; // the daylight phase the scene was lit for
 let villageActive = null;
 
 function renderVillage() {
@@ -22369,7 +22387,7 @@ function renderVillage() {
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {
     ensureVillageRenderer(stage);
-    if (villageBuiltSeed !== v.seed) buildVillageScene(v);
+    if (villageBuiltSeed !== v.seed || villageBuiltPhase !== burbzDaylightPhaseNow()) buildVillageScene(v);
     const loading = $('villageLoading');
     if (loading) loading.remove();
     if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
@@ -24735,7 +24753,11 @@ function disposeVillageScene() {
 function buildVillageScene(v) {
   disposeVillageScene();
   const r = villageRngFrom(v.seed);
-  const pal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  // The real sky: the scene is lit for the player's local time of day. Each
+  // village keeps its seeded night palette; daylight blends it toward the sun.
+  const daylight = burbzDaylightGradeNow();
+  const basePal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  const pal = burbzDaylightPalette(basePal, daylight);
   // Settlement size drives how many cottages/landmarks appear, so villages range
   // from a tiny hamlet (just the shops) to a sprawling market town.
   const sizeRoll = r();
@@ -25064,10 +25086,10 @@ function buildVillageScene(v) {
     path.rotation.z = Math.atan2(px, pz);
     villageScene.add(path);
 
-    // A warm torch by each doorway
-    const torch = new THREE.PointLight(0xffb45e, 2.5, 12, 2);
+    // A warm torch by each doorway — lit at night, banked down by day
+    const torch = new THREE.PointLight(0xffb45e, 2.5 * daylight.torch, 12, 2);
     torch.position.set(px * 0.82, 1.7, pz * 0.82);
-    torch.userData.base = 2.2 + r() * 0.5;
+    torch.userData.base = (2.2 + r() * 0.5) * daylight.torch;
     villageScene.add(torch);
     villageTorches.push(torch);
   });
@@ -25391,8 +25413,11 @@ function buildVillageScene(v) {
     }
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xd6dfff, size: tierCfg.size, sizeAttenuation: true, transparent: true, opacity: tierCfg.op, fog: false }));
-    if (tierCfg.twinkle) { stars.userData.twinkle = tierCfg.op; villageTwinkleStars = stars; }
+    // Stars are always laid out (the rng draws keep the scene stable) but
+    // fade with the real sky — invisible at midday, back out at dusk.
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xd6dfff, size: tierCfg.size, sizeAttenuation: true, transparent: true, opacity: tierCfg.op * daylight.stars, fog: false }));
+    stars.visible = daylight.stars > 0.05;
+    if (tierCfg.twinkle) { stars.userData.twinkle = tierCfg.op * daylight.stars; villageTwinkleStars = stars; }
     villageScene.add(stars);
   }
   // The moon hangs low over the treeline dead ahead of the opening camera, so
@@ -25401,14 +25426,27 @@ function buildVillageScene(v) {
   const skyDirAt = (ang, y) => new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).setY(y).normalize();
   const moonDir = skyDirAt(skyAim, 0.17);
   const moonLightDir = skyDirAt(skyAim + 0.55, 0.6); // its light falls steeper and off-axis
-  const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('205,220,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.62 }));
-  moonHalo.scale.set(32, 32, 1);
-  moonHalo.position.copy(moonDir).multiplyScalar(64);
-  villageScene.add(moonHalo);
-  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
-  moonSprite.scale.set(9.5, 9.5, 1);
-  moonSprite.position.copy(moonDir).multiplyScalar(62);
-  villageScene.add(moonSprite);
+  if (daylight.moon) {
+    const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('205,220,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.62 }));
+    moonHalo.scale.set(32, 32, 1);
+    moonHalo.position.copy(moonDir).multiplyScalar(64);
+    villageScene.add(moonHalo);
+    const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
+    moonSprite.scale.set(9.5, 9.5, 1);
+    moonSprite.position.copy(moonDir).multiplyScalar(62);
+    villageScene.add(moonSprite);
+  } else {
+    // Daytime: the sun stands where the moon would, a broad warm halo around
+    // a bright core, lower and redder through the golden hours.
+    const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,238,190'), transparent: true, depthWrite: false, fog: false, opacity: 0.45 + 0.25 * daylight.sun }));
+    sunHalo.scale.set(40, 40, 1);
+    sunHalo.position.copy(moonDir).multiplyScalar(64);
+    villageScene.add(sunHalo);
+    const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(daylight.warm > 0.5 ? '255,214,160' : '255,248,224'), transparent: true, depthWrite: false, fog: false, opacity: 0.95 }));
+    sunDisc.scale.set(11, 11, 1);
+    sunDisc.position.copy(moonDir).multiplyScalar(62);
+    villageScene.add(sunDisc);
+  }
   // Ground mist: broad soft sheets drifting low through the meadow
   const mistTex = villageSmokeTexture();
   for (let i = 0; i < (pal.weather === 'rain' ? 6 : 4); i++) {
@@ -25436,6 +25474,7 @@ function buildVillageScene(v) {
     x0: -34 + r() * 24, y0: 24 + r() * 6, z0: -26 + r() * 30,
     vx: 16 + r() * 8, vy: -(3 + r() * 3), vz: (r() - 0.5) * 6
   };
+  villageShootingStar.visible = daylight.stars > 0.4; // no shooting stars at noon
   villageScene.add(villageShootingStar);
 
   // Weather — fireflies on mild nights, else snow, drifting leaves or rain
@@ -25453,6 +25492,7 @@ function buildVillageScene(v) {
     flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
     villageFireflies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xd8ff9a, map: villageGlowTexture('216,255,154'), size: 0.42, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
     villageFireflies.userData.base = flyBase;
+    villageFireflies.visible = daylight.stars > 0.4; // fireflies sleep through the day
     villageScene.add(villageFireflies);
   } else {
     const cfg = pal.weather === 'snow' ? { n: 110, size: 0.16, color: 0xe8ecf8, h: 14, speed: 1.1, sway: 0.7, op: 0.9 }
@@ -25607,10 +25647,11 @@ function buildVillageScene(v) {
     });
   }
 
-  // Lighting: soft sky bounce, shadow-casting moonlight aligned with the moon
-  // in the sky, and a faint cool fill so shaded faces never fall to black
-  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 2.0));
-  const moon = new THREE.DirectionalLight(0xbfd2ff, 1.95);
+  // Lighting: soft sky bounce and a shadow-casting key light aligned with the
+  // body in the sky — cool moonlight at night, warm sunlight by day, with a
+  // faint cool fill so shaded faces never fall to black
+  villageScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, daylight.hemi));
+  const moon = new THREE.DirectionalLight(daylight.keyColor, daylight.keyIntensity);
   moon.position.copy(moonLightDir).multiplyScalar(42);
   moon.castShadow = true;
   moon.shadow.mapSize.set(2048, 2048);
@@ -25641,6 +25682,8 @@ function buildVillageScene(v) {
   });
 
   villageBuiltSeed = v.seed;
+  villageBuiltPhase = daylight.phase;
+  if (villageRenderer) villageRenderer.toneMappingExposure = daylight.exposure;
   // Open on the gap between the first two buildings so nothing blocks the view
   // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
   villageCam.azimuth = camAz;
@@ -25768,8 +25811,15 @@ function villageAnimateFrame(t) {
     }
     pos.needsUpdate = true;
   }
-  // The moon never moves — refreshing the shadow map at a third of the frame
-  // rate keeps walkers' and sails' shadows live at a fraction of the GPU cost
+  // Dawn breaks over an open screen too: every ~10s, if the real sky has
+  // moved to a new phase, the scene rebuilds itself in the new light.
+  if (villageShadowTick % 600 === 599 && villageBuiltPhase && villageBuiltPhase !== burbzDaylightPhaseNow()) {
+    villageBuiltSeed = null;
+    renderVillage();
+    return;
+  }
+  // The key light never moves — refreshing the shadow map at a third of the
+  // frame rate keeps walkers' and sails' shadows live at a fraction of the GPU cost
   if (villageShadowTick++ % 3 === 0) villageRenderer.shadowMap.needsUpdate = true;
   villageRenderer.render(villageScene, villageCamera);
 }
@@ -25806,6 +25856,7 @@ let townCam = { azimuth: 0, polar: 1.0, dist: 36, tx: 0, tz: 0, lastInputAt: 0 }
 let townShadowTick = 0;
 let townFallbackMode = false;
 let townBuiltKey = null;
+let townBuiltPhase = null; // the daylight phase the scene was lit for
 
 function ensureTownRenderer(stage) {
   if (townRenderer) {
@@ -25982,7 +26033,10 @@ function buildTownScene(settle) {
   disposeTownScene();
   const isCity = settle.tier === 'city';
   const r = villageRngFrom((Number(settle.heartSeed) ^ 0x517cc1b7) >>> 0);
-  const pal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  // The real sky: lit for the player's local time of day, like the village.
+  const daylight = burbzDaylightGradeNow();
+  const basePal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  const pal = burbzDaylightPalette(basePal, daylight);
   const groundR = isCity ? 52 : 46;
   const flatR = groundR - 10;
   // Mark the shared registries so district builders' walkers, birds, cloths
@@ -26067,9 +26121,9 @@ function buildTownScene(settle) {
     const lamp = villageMakeLampPost(r, pal);
     lamp.position.set(Math.cos(a) * (plazaR + 0.7), 0, Math.sin(a) * (plazaR + 0.7));
     townScene.add(lamp);
-    const glow = new THREE.PointLight(0xffb45e, 1.8, 11, 2);
+    const glow = new THREE.PointLight(0xffb45e, 1.8 * daylight.torch, 11, 2);
     glow.position.set(lamp.position.x, 2.4, lamp.position.z);
-    glow.userData.base = 1.8;
+    glow.userData.base = 1.8 * daylight.torch;
     townScene.add(glow);
     townTorches.push(glow);
   }
@@ -26136,10 +26190,10 @@ function buildTownScene(settle) {
     sign.userData.baseY = 4.7;
     district.add(sign);
     townSigns.push(sign);
-    if (i < 8) { // a torch on each near district; the farthest keep the moon
-      const torch = new THREE.PointLight(0xffb45e, 1.6, 12, 2);
+    if (i < 8) { // a torch on each near district; the farthest keep the sky light
+      const torch = new THREE.PointLight(0xffb45e, 1.6 * daylight.torch, 12, 2);
       torch.position.set(0, 2.6, 0);
-      torch.userData.base = 1.6;
+      torch.userData.base = 1.6 * daylight.torch;
       district.add(torch);
       townTorches.push(torch);
     }
@@ -26199,17 +26253,31 @@ function buildTownScene(settle) {
     starPos.push(Math.cos(a) * Math.cos(e) * rad, Math.sin(e) * rad, Math.sin(a) * Math.cos(e) * rad);
   }
   starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xdfe8ff, size: 0.5, sizeAttenuation: true, transparent: true, opacity: 0.85, fog: false }));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xdfe8ff, size: 0.5, sizeAttenuation: true, transparent: true, opacity: 0.85 * daylight.stars, fog: false }));
+  stars.visible = daylight.stars > 0.05;
   stars.userData.sky = true;
   townScene.add(stars);
   const camAz = r() * Math.PI * 2;
   const skyAim = -(camAz + Math.PI / 2);
   const skyDirAt = (ang, y) => new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).setY(y).normalize();
-  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
-  moonSprite.scale.set(9, 9, 1);
-  moonSprite.position.copy(skyDirAt(skyAim, 0.2)).multiplyScalar(80);
-  moonSprite.userData.sky = true;
-  townScene.add(moonSprite);
+  if (daylight.moon) {
+    const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
+    moonSprite.scale.set(9, 9, 1);
+    moonSprite.position.copy(skyDirAt(skyAim, 0.2)).multiplyScalar(80);
+    moonSprite.userData.sky = true;
+    townScene.add(moonSprite);
+  } else {
+    const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,238,190'), transparent: true, depthWrite: false, fog: false, opacity: 0.45 + 0.25 * daylight.sun }));
+    sunHalo.scale.set(42, 42, 1);
+    sunHalo.position.copy(skyDirAt(skyAim, 0.2)).multiplyScalar(82);
+    sunHalo.userData.sky = true;
+    townScene.add(sunHalo);
+    const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(daylight.warm > 0.5 ? '255,214,160' : '255,248,224'), transparent: true, depthWrite: false, fog: false, opacity: 0.95 }));
+    sunDisc.scale.set(11, 11, 1);
+    sunDisc.position.copy(skyDirAt(skyAim, 0.2)).multiplyScalar(80);
+    sunDisc.userData.sky = true;
+    townScene.add(sunDisc);
+  }
   for (let i = 0; i < 4; i++) {
     const cloud = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageSmokeTexture(), transparent: true, depthWrite: false, opacity: 0.16, fog: false }));
     cloud.scale.set(26 + r() * 16, 8 + r() * 4, 1);
@@ -26219,9 +26287,9 @@ function buildTownScene(settle) {
     townClouds.push(cloud);
   }
 
-  // ---- Moonlight --------------------------------------------------------------
-  townScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 2.0));
-  const moon = new THREE.DirectionalLight(0xbfd2ff, 1.9);
+  // ---- The key light: moonlight by night, sunlight by day ---------------------
+  townScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, daylight.hemi));
+  const moon = new THREE.DirectionalLight(daylight.keyColor, daylight.keyIntensity);
   moon.position.copy(skyDirAt(skyAim + 0.55, 0.6)).multiplyScalar(52);
   moon.castShadow = true;
   moon.shadow.mapSize.set(2048, 2048);
@@ -26257,6 +26325,8 @@ function buildTownScene(settle) {
   townWindmills = townWindmills.concat(villageWindmills.splice(windmillMark));
 
   townBuiltKey = townSceneKey(settle);
+  townBuiltPhase = daylight.phase;
+  if (townRenderer) townRenderer.toneMappingExposure = daylight.exposure;
   townCam.azimuth = camAz;
   townCam.polar = 1.04;
   townCam.dist = isCity ? 42 : 37;
@@ -26311,6 +26381,13 @@ function townAnimateFrame(t) {
     const range = cl.userData.range || 60;
     cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + range) % (range * 2)) - range;
   });
+  // Dawn breaks over an open screen too: every ~10s, if the real sky has
+  // moved to a new phase, the scene rebuilds itself in the new light.
+  if (townShadowTick % 600 === 599 && townBuiltPhase && townBuiltPhase !== burbzDaylightPhaseNow()) {
+    townBuiltKey = null;
+    renderTownScreen();
+    return;
+  }
   if (townShadowTick++ % 3 === 0) townRenderer.shadowMap.needsUpdate = true;
   townRenderer.render(townScene, townCamera);
 }
@@ -32001,7 +32078,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'town-county-screens-v242-20260810';
+const BURBZ_BUILD = 'real-sky-daylight-v243-20260810';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

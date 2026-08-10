@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-10 (town & county screens v242: a merged settlement now has its own 3D **Town Square** screen (`screen-town`) with every district village standing at its real position; each county has a painted, Crusader-Kings-style **County Map** screen (`screen-county`); and once counties swear to a duchy or kingdom the royal atlas paints their lands in the liege's colour (`realmTerritoryFeatureCollection` in `empire_realm_core.js`, `empire-realm` source in the map)).
+Last curated: 2026-08-10 (real-sky daylight v243: the 3D village and town scenes now light themselves from the player's local clock — night is the original moonlit look bit-for-bit, midday brings a full sun, dawn/dusk pass through a golden transition. Pure maths in `daylight_core.js`; scenes rebuild when the real sky changes phase).
 
 ---
 
@@ -236,6 +236,43 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-10 — the real sky: village and town lighting follows the
+  player's clock (Claude).** Yaan's follow-up to the town square: "I want the
+  lighting to reflect the time of day in the player's real-life world."
+  Release `real-sky-daylight-v243-20260810`.
+  - **Core** (`daylight_core.js`, new, pure, Node-testable): fixed local-hour
+    windows (dawn 5-7, day 7-17, dusk 17-19, night otherwise — no location
+    permission needed just to light a scene). `sunFactorForHour` (smooth
+    ramps), `warmFactorForHour` (golden-hour blush, `4·s·(1−s)`),
+    `phaseForHour`, integer-RGB `mixHex`, and `daylightGradeForHour` — the
+    whole lighting balance sheet (sun/warm/stars/moon flag/torch/hemi/
+    keyIntensity/keyColor/exposure). **The night row reproduces the game's
+    original moonlit values exactly** (hemi 2.0, key 1.95 × 0xbfd2ff,
+    exposure 1.25, torches full) — a player at midnight sees the village the
+    game has always drawn, pinned by test. `gradePalette` blends a village
+    palette's sky/ground/hemisphere toward daytime targets; materials keep
+    their authored colours — brightness comes from the lights.
+  - **Wiring** (`index.html`): `burbzDaylightGradeNow()` reads the local
+    clock once per scene build (typeof-guarded — a missing core falls back
+    to the original night). In `buildVillageScene` and `buildTownScene`: the
+    pinned `VILLAGE_PALETTES[...]` roll survives as `basePal` and is graded;
+    stars keep their rng draws (layout stability) but fade via opacity +
+    `visible`; the moon/halo yields to a sun-halo/disc pair when
+    `daylight.moon` is false; fireflies and the shooting star sleep through
+    the day; doorway torches and lamp glows scale by `daylight.torch`; the
+    hemisphere and the shadow-casting key light take grade colour/intensity;
+    `toneMappingExposure` follows the grade. Scenes rebuild on phase change
+    two ways: the `render*` entry compares `*BuiltPhase` against
+    `burbzDaylightPhaseNow()`, and the animate loops check every ~600 frames
+    so dawn breaks over an open screen too.
+  - Tests: `tests/test_real_sky_daylight_20260810.py` (core curves, the
+    night-equals-original contract, palette grading, HTML wiring, release
+    pins). Release pins repointed per convention; SW cache + `BURBZ_BUILD`
+    bumped; `daylight_core.js` precached with its own `?v=`. Browser-checked
+    in Chromium with a frozen clock at 13:00 / 18:00 / 23:00: bright green
+    midday, warm half-lit dusk, and the untouched moonlit night; zero page
+    errors.
 
 - **2026-08-10 — the town square, the county map and the painted realm
   (Claude).** Yaan's three-layer ask: capture three villages and the town they
