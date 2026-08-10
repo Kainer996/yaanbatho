@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "real-sky-daylight-v243-20260810"
+CURRENT_BUILD = "live-reconcile-v245-20260810"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -291,7 +291,7 @@ def test_the_appointed_chef_is_drawn_in_the_kitchen_assignment_grid():
     assert "birdOnlyImgHTML(bird, 'room-bird-grid-art')" in grid
     assert "entry.role" in grid
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdGridHTML(stageBirds, room)" in render
     assert "kitchenChefSpriteHTML(room)" not in render
     assert ".room-bird-grid { position:absolute;" in html
     assert ".room-bird-grid-art" in html and "object-fit:contain" in html

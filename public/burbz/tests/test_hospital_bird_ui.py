@@ -72,7 +72,7 @@ def test_room_birds_are_calm_grid_portraits_not_walking_actors():
     assert "@keyframes roomBirdFacing" not in html
     assert "@keyframes roomBirdBounce" not in html
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdGridHTML(stageBirds, room)" in render
     assert "roomBirdSpriteHTML" not in render
     assert "room-bird-actor" not in render
 

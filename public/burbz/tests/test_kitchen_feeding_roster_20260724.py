@@ -58,7 +58,7 @@ def test_no_birds_are_stationed_or_walking_in_the_kitchen():
     assert "const roomAddPanel = room === 'kitchen' ? ''" in render
     # Every room now uses the calm assignment grid; the Kitchen can show its
     # appointed Head Chef without treating that bird as a lodger.
-    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdGridHTML(stageBirds, room)" in render
     assert "roomBirdSpriteHTML" not in render
 
 
