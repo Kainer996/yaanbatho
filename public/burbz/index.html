@@ -11903,7 +11903,7 @@ const ACADEMY_ROOMS = {
   tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
-  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than in the Roost.', perk:'Passive: fast HP recovery', perches:[[26,53],[22,57],[30,57]] },
+  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than in the Roost, and each patient is discharged back to their old room the moment they are fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
   crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds sway battle Parleys, win over foes and earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
@@ -13585,10 +13585,14 @@ function academyMoveBird(birdId, room) {
     renderAcademyBuildPanel();
     return;
   }
+  const previousRoom = bird.academy.room || 'outdoors';
   bird.academy.room = room;
   // Sleep retired: the Roost is an ordinary room now. Birds lodged there heal
   // faster but never fall asleep, so a move is only ever a move.
   if (bird.care && typeof bird.care === 'object') bird.care.sleepReturnRoom = null;
+  // The ward keeps an admission slip: a patient discharged at full HP walks
+  // back to the room they were admitted from.
+  bird.academy.hospitalReturnRoom = room === 'hospital' && previousRoom !== 'hospital' ? previousRoom : null;
   bird.academy.lastMovedAt = new Date().toISOString();
   academySelectedRoom = room;
   updateQuestProgress('station_' + room, 1);
@@ -15022,12 +15026,32 @@ const ACADEMY_ROOM_STAT_EFFECTS = {
 const ACADEMY_STAT_MINUTES = 30;   // minutes stationed per +1 stat point
 const ACADEMY_ROOM_STAT_CAP = 400; // passive growth stops here; drills go further
 
+// The Bird Hospital is a ward, not a home: the moment a patient is back to
+// full HP they are discharged — to the room they were admitted from if it
+// still stands (never the Kitchen or Barracks, which take no lodgers),
+// otherwise the Aviary Gardens. The Head Healer keeps their post, and a bird
+// away questing or mid-training moves rooms on its own clock, not the ward's.
+function dischargeBirdFromHospital(bird, now = Date.now()) {
+  if (!bird || !bird.academy || bird.academy.room !== 'hospital') return false;
+  if ((bird.hp || 0) < (bird.maxHp || 100)) return false;
+  if (birdAssignedPost(bird.id)) return false;
+  if (birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id)) return false;
+  const slip = bird.academy.hospitalReturnRoom;
+  const returnRoom = slip && slip !== 'hospital' && slip !== 'tavern' && slip !== 'kitchen' && ACADEMY_ROOMS[slip] && isAcademyRoomBuilt(slip) ? slip : 'outdoors';
+  bird.academy.room = returnRoom;
+  bird.academy.hospitalReturnRoom = null;
+  bird.academy.lastMovedAt = new Date(now).toISOString();
+  showToast('🏥 ' + birdDisplayName(bird) + ' is fully healed — discharged to ' + ACADEMY_ROOMS[returnRoom].label + '.');
+  return true;
+}
+
 function tickAcademy() {
   if (!gameState || !Array.isArray(gameState.flock) || gameState.flock.length === 0) return;
   const now = Date.now();
   // Rooms keep working while the app is closed, capped so a week away is not a jackpot.
   const elapsedMin = clamp(Math.round((now - (gameState.academyLastTickMs || now)) / 60000) || 1, 1, 240);
   gameState.academyLastTickMs = now;
+  let dischargedAny = false;
   gameState.flock.forEach(b => {
     ensureBirdAcademy(b);
     const room = isAcademyRoomBuilt(b.academy.room) ? b.academy.room : 'outdoors';
@@ -15057,6 +15081,9 @@ function tickAcademy() {
     } else if (room === 'hospital') {
       b.hp = clamp((b.hp || b.maxHp) + Math.max(2, Math.round((b.maxHp || 100) * 0.10 * roomBoost)), 1, b.maxHp || 100);
       adjustBirdHungerUntracked(b, 1, now);
+      // Full HP means discharged — the sweep also releases patients healed to
+      // full by other means (a meal, a level-up) since the ward's last round.
+      if (dischargeBirdFromHospital(b, now)) dischargedAny = true;
     } else if (room === 'training') {
       b.xp = (b.xp || 0) + Math.max(1, Math.round(roomBoost));
       adjustBirdHungerUntracked(b, 4, now);
@@ -15077,6 +15104,9 @@ function tickAcademy() {
   });
   saveState();
   if (currentScreen === 'academy') renderAcademy();
+  // A discharge visibly empties a bed: refresh an open ward (or any room
+  // interior the walked-home patient just rejoined).
+  if (dischargedAny && currentScreen === 'academy-room') { try { renderAcademyRoomInterior(); } catch (e) {} }
 }
 
 function academyGraduationOverlay(bird) {
@@ -30883,7 +30913,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'sleep-retired-v238-20260809';
+const BURBZ_BUILD = 'hospital-auto-discharge-v239-20260809';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

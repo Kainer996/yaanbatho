@@ -31,9 +31,9 @@ CORE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 RELEASE_PIN = "living-canopy-v236-20260806"
-# The build has moved on (sleep-retired-v238) but academy_alive_core.js has
-# not, so the core keeps its own pin while the build tracks the current tag.
-CURRENT_BUILD = "sleep-retired-v238-20260809"
+# Later releases advance BURBZ_BUILD but academy_alive_core.js has not moved,
+# so the core keeps its own pin while the build tracks the current tag.
+CURRENT_BUILD = "hospital-auto-discharge-v239-20260809"
 
 PLACEABLE_ROOMS = (
     "tavern", "dorm", "quest_roost", "crowbar", "training", "kitchen",
