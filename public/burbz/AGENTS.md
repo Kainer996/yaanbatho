@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-10 (early-game easy battles v240: until the first county is founded, every evil Burbz squad is a ragged scouting party — capped at three birds, never more than the player's flock, all stats at 45% (`easeEarlyOpponents` in `index.html`) — so new players almost always win. Difficulty returns in full the moment the realm begins).
+Last curated: 2026-08-10 (battle-faint auto-hospital v241: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. Over early-game easy battles v240: until the first county is founded, every evil Burbz squad is a ragged scouting party — capped at three birds, never more than the player's flock, all stats at 45% (`easeEarlyOpponents` in `index.html`) — so new players almost always win).
 
 ---
 
