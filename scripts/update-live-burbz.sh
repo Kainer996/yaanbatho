@@ -39,6 +39,7 @@ FILES=(
   "quest_core.js"
   "empire_map_core.js"
   "empire_realm_core.js"
+  "daylight_core.js"
   "academy_treehouse_core.js"
   "academy_alive_core.js"
   "academy_3d_core.js"

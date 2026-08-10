@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-10 (early-game easy battles v240: until the first county is founded, every evil Burbz squad is a ragged scouting party — capped at three birds, never more than the player's flock, all stats at 45% (`easeEarlyOpponents` in `index.html`) — so new players almost always win. Difficulty returns in full the moment the realm begins).
+Last curated: 2026-08-10 (real-sky daylight v243: the 3D village and town scenes now light themselves from the player's local clock — night is the original moonlit look bit-for-bit, midday brings a full sun, dawn/dusk pass through a golden transition. Pure maths in `daylight_core.js`; scenes rebuild when the real sky changes phase).
 
 ---
 
@@ -236,6 +236,109 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-10 — the real sky: village and town lighting follows the
+  player's clock (Claude).** Yaan's follow-up to the town square: "I want the
+  lighting to reflect the time of day in the player's real-life world."
+  Release `real-sky-daylight-v243-20260810`.
+  - **Core** (`daylight_core.js`, new, pure, Node-testable): fixed local-hour
+    windows (dawn 5-7, day 7-17, dusk 17-19, night otherwise — no location
+    permission needed just to light a scene). `sunFactorForHour` (smooth
+    ramps), `warmFactorForHour` (golden-hour blush, `4·s·(1−s)`),
+    `phaseForHour`, integer-RGB `mixHex`, and `daylightGradeForHour` — the
+    whole lighting balance sheet (sun/warm/stars/moon flag/torch/hemi/
+    keyIntensity/keyColor/exposure). **The night row reproduces the game's
+    original moonlit values exactly** (hemi 2.0, key 1.95 × 0xbfd2ff,
+    exposure 1.25, torches full) — a player at midnight sees the village the
+    game has always drawn, pinned by test. `gradePalette` blends a village
+    palette's sky/ground/hemisphere toward daytime targets; materials keep
+    their authored colours — brightness comes from the lights.
+  - **Wiring** (`index.html`): `burbzDaylightGradeNow()` reads the local
+    clock once per scene build (typeof-guarded — a missing core falls back
+    to the original night). In `buildVillageScene` and `buildTownScene`: the
+    pinned `VILLAGE_PALETTES[...]` roll survives as `basePal` and is graded;
+    stars keep their rng draws (layout stability) but fade via opacity +
+    `visible`; the moon/halo yields to a sun-halo/disc pair when
+    `daylight.moon` is false; fireflies and the shooting star sleep through
+    the day; doorway torches and lamp glows scale by `daylight.torch`; the
+    hemisphere and the shadow-casting key light take grade colour/intensity;
+    `toneMappingExposure` follows the grade. Scenes rebuild on phase change
+    two ways: the `render*` entry compares `*BuiltPhase` against
+    `burbzDaylightPhaseNow()`, and the animate loops check every ~600 frames
+    so dawn breaks over an open screen too.
+  - Tests: `tests/test_real_sky_daylight_20260810.py` (core curves, the
+    night-equals-original contract, palette grading, HTML wiring, release
+    pins). Release pins repointed per convention; SW cache + `BURBZ_BUILD`
+    bumped; `daylight_core.js` precached with its own `?v=`. Browser-checked
+    in Chromium with a frozen clock at 13:00 / 18:00 / 23:00: bright green
+    midday, warm half-lit dusk, and the untouched moonlit night; zero page
+    errors.
+
+- **2026-08-10 — the town square, the county map and the painted realm
+  (Claude).** Yaan's three-layer ask: capture three villages and the town they
+  make gets its own 3D screen "in sort of the same way that you've done the
+  village", with the villages visible within it; a county gets a separate
+  zoomed-out screen "more like Crusader Kings"; and once the player holds
+  several counties, the main map itself is coloured like a Crusader Kings
+  map. Release `town-county-screens-v242-20260810`.
+  - **Town Square** (`screen-town`, `index.html`): `renderTownScreen` /
+    `buildTownScene` run their OWN three.js renderer and animation registries
+    (`town*` globals) but reuse the whole `villageMake*` catalogue, textures
+    and gesture code. `townDistrictLayout` projects each member village's real
+    lat/lon offset from the settlement centroid onto the meadow (normalised,
+    then relaxed apart) — the town on screen is the town on the map. Each
+    district gets a cobbled yard, cottages, a seeded landmark
+    (church/windmill/manor/dovecote), hearth smoke and a floating name sign;
+    lanes run back to the shared market square, where the charter stone
+    (`villageMakeSettlementStandard`) flies one pennant per district. Tap a
+    district (raycast on `userData.districtSeed`) → `openEmpireVillage`.
+    Builders that push into the village animation registries
+    (walkers/roof-birds/cloths/hens/windmill sails) are length-marked before
+    the build and `splice`d into the town's own lists after — the two scenes
+    never fight over one list. Scene rebuild keys on `townSceneKey`
+    (settlement id + sorted member seeds), so a town that gains a district
+    rebuilds on the next visit. Reached from the Royal Ledger settlement rows
+    (`openEmpireTown`), the atlas settlement tap card (WALK ITS SQUARE — the
+    pinned `frameEmpireSettlement(settlement.id)` action survives), the
+    county-map hotspots, and a `#villageTownLink` banner on any district
+    village's screen. No-WebGL fallback: a district button list.
+  - **County Map** (`screen-county`): `drawCountyMap` paints a parchment
+    chart onto a 2D canvas, fully offline and seeded off the capital —
+    the county border as a smoothed convex hull in its realm's colour,
+    neighbouring counties dash-bordered at the map's edge, lanes running
+    capital-outward, village crests (district villages drop their labels —
+    the settlement banner names the group), town/city standards, cartouche,
+    compass and scale bar. DOM hotspot buttons over the canvas travel to
+    villages (`openEmpireVillage`) and squares (`openEmpireTown`). Opened
+    from the County Hall's 📜 COUNTY MAP button and the atlas county card.
+  - **Painted realm** (`empire_realm_core.js` + atlas): new pure helpers
+    `realmSeatTint` (golden-angle HSL per liege seat), `territoryHullRing`
+    (convex hull over padded village points, dateline-safe) and
+    `realmTerritoryFeatureCollection` (one polygon per county sworn to a
+    duchy or better, coloured by its TOP liege — kingdom over duchy; lone
+    counties stay unpainted on purpose: colour is the reward for uniting the
+    realm). The atlas adds an `empire-realm` geojson source with
+    data-driven `['get','color']` fill + border line layers, inserted BEFORE
+    `empire-territory` so village green stays on top; `refreshEmpireMap`
+    feeds it from the cached `empireRegionsInfo()` pyramid. Tapping painted
+    land opens an explain-first card (`showEmpirePaintedCountyCard`) via the
+    single map click handler (per the no-second-listener comment), and the
+    map key teaches the colours.
+  - Tests: `tests/test_town_county_screens_20260810.py` (Node-driven tint/
+    hull/painting maths — including the kingdom-overrides-duchy colour rule
+    and a dateline county — plus HTML wiring and release pins). Release pins
+    repointed per convention (11 `CURRENT_BUILD`s, 5 head-tracking
+    `RELEASE_PIN`s, and the realm-core `?v=` pins in the feudal/settlement/
+    location suites). SW cache + `BURBZ_BUILD` bumped;
+    `empire_realm_core.js` `?v=` moved in both loaders. Local run:
+    1077 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container). Browser-checked in Chromium
+    (390×844, SwiftShader): the Town Square renders both seeded towns with
+    3 district rows and travels into a district on tap; the County Map
+    paints hull, hotspots, cartouche and the duchy colour; zero page errors.
+  - NB: `screen-town` and `screen-county`, like `screen-region`, have no
+    bottom-nav item — they are reached programmatically only, so
+    `switchScreen`'s trail/back handling covers them automatically.
 
 - **2026-08-09 — the Bird Hospital discharges healed patients (Claude).**
   Yaan's follow-up to the sleep retirement: birds parked in the Bird Hospital

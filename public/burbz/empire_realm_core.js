@@ -704,6 +704,105 @@
     return coords;
   }
 
+  // ---- Painted realm territory: Crusader-Kings colours on the atlas --------
+  // Once counties swear to a duchy or better, the atlas paints each county's
+  // lands in its realm's own colour — one hue per liege, like a Crusader
+  // Kings map. Everything here is pure maths so it can run under Node.
+
+  /* One deterministic heraldic colour per liege seat. Golden-angle hues keep
+     neighbouring realms visually distinct without a stored palette. */
+  function realmSeatTint(seed) {
+    const s = Number(seed) >>> 0;
+    const hue = Math.round((s * 137.508) % 360);
+    return {
+      hue,
+      fill: 'hsl(' + hue + ', 58%, 52%)',
+      border: 'hsl(' + hue + ', 62%, 30%)'
+    };
+  }
+
+  /* An organic border around a county's villages: sample a ring of points
+     paddingKm out from every village, then wrap a convex hull around the lot.
+     Works in a local planar frame about the centroid (longitudes unwrapped),
+     so a county straddling the dateline still gets one sane shape. Returns a
+     closed [lon, lat] ring, or null when there is nothing to wrap. */
+  function territoryHullRing(villages, paddingKm, samplesPerVillage) {
+    const claims = (Array.isArray(villages) ? villages : []).filter(validVillage);
+    if (!claims.length) return null;
+    const pad = Math.max(0.5, Number(paddingKm) || 2);
+    const samples = Math.max(6, Math.min(24, Math.round(Number(samplesPerVillage) || 12)));
+    const centre = centroidOf(claims);
+    const kmPerLat = Math.PI * EARTH_RADIUS_KM / 180;
+    const kmPerLon = kmPerLat * Math.max(0.05, Math.cos(toRad(centre.lat)));
+    const points = [];
+    claims.forEach(v => {
+      let lon = Number(v.lon);
+      lon += 360 * Math.round((centre.lon - lon) / 360); // same 360° branch as the centre
+      const x = (lon - centre.lon) * kmPerLon;
+      const y = (Number(v.lat) - centre.lat) * kmPerLat;
+      for (let i = 0; i < samples; i++) {
+        const a = (i / samples) * Math.PI * 2;
+        points.push([x + Math.cos(a) * pad, y + Math.sin(a) * pad]);
+      }
+    });
+    // Andrew's monotone-chain convex hull.
+    points.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lower = [];
+    points.forEach(p => {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+      lower.push(p);
+    });
+    const upper = [];
+    for (let i = points.length - 1; i >= 0; i--) {
+      const p = points[i];
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    const hull = lower.slice(0, -1).concat(upper.slice(0, -1));
+    if (hull.length < 3) return null;
+    const ring = hull.map(([x, y]) => [centre.lon + x / kmPerLon, centre.lat + y / kmPerLat]);
+    ring.push(ring[0].slice());
+    return ring;
+  }
+
+  /* GeoJSON for the painted realm: one polygon per county that answers to a
+     duchy or better, coloured by its TOP liege's seat — every county of one
+     kingdom wears the kingdom's colour, a lone duchy wears its own. Counties
+     still standing alone stay unpainted: the colours are the reward for
+     uniting several counties into a realm. */
+  function realmTerritoryFeatureCollection(realm, options) {
+    const opts = options || {};
+    const counties = realm && Array.isArray(realm.regions) ? realm.regions : [];
+    const duchies = realm && Array.isArray(realm.duchies) ? realm.duchies : [];
+    const kingdoms = realm && Array.isArray(realm.kingdoms) ? realm.kingdoms : [];
+    const features = [];
+    counties.forEach(county => {
+      if (!county || !county.duchyId) return;
+      const kingdom = county.kingdomId ? kingdoms.find(k => k.id === county.kingdomId) : null;
+      const duchy = duchies.find(d => d.id === county.duchyId) || null;
+      const liege = kingdom || duchy;
+      if (!liege) return;
+      const ring = territoryHullRing(county.villages, opts.paddingKm || 2, opts.samplesPerVillage);
+      if (!ring) return;
+      const tint = realmSeatTint(liege.seatSeed);
+      features.push({
+        type: 'Feature',
+        properties: {
+          id: String(county.id),
+          name: String(county.name || ''),
+          liegeId: String(liege.id),
+          liegeName: String(liege.name || ''),
+          liegeTier: String(liege.tier || ''),
+          color: tint.fill,
+          border: tint.border
+        },
+        geometry: { type: 'Polygon', coordinates: [ring] }
+      });
+    });
+    return { type: 'FeatureCollection', features };
+  }
+
   function tradeRouteFeatureCollection(routes, steps) {
     const features = (Array.isArray(routes) ? routes : []).map(route => {
       if (!route || !validVillage(route.from) || !validVillage(route.to)) return null;
@@ -768,6 +867,9 @@
     tradeRouteIncome,
     tradeRouteGoods,
     greatCircleArc,
-    tradeRouteFeatureCollection
+    tradeRouteFeatureCollection,
+    realmSeatTint,
+    territoryHullRing,
+    realmTerritoryFeatureCollection
   };
 });
