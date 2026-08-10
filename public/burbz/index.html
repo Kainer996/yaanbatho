@@ -716,9 +716,10 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-village-hub { margin:14px 12px; padding:12px; border-radius:14px; border:2px solid #7a5a28; background:rgba(12,9,4,.72); box-shadow:0 0 0 1px rgba(240,199,103,.4), inset 0 0 26px rgba(240,199,103,.05); }
 .empire-village-hub-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 
-.liberation-battle-banner { margin:0 0 12px; padding:13px 14px; border-radius:14px; border:1px solid rgba(126,217,131,.44); background:linear-gradient(135deg,rgba(25,79,45,.88),rgba(9,29,18,.92)); color:#d8f7dc; font-size:12px; line-height:1.45; }
-.liberation-battle-banner strong { color:#9fe8a4; font-family:'Russo One',sans-serif; font-size:14px; }
-.liberation-cancel-btn { display:block; width:100%; margin-top:10px; min-height:40px; border-radius:10px; border:1px solid rgba(216,247,220,.45); background:rgba(5,20,12,.76); color:#d8f7dc; font-family:'Rajdhani',sans-serif; font-weight:900; letter-spacing:.05em; }
+.liberation-head { display:flex; align-items:center; gap:10px; margin:0 0 12px; padding:12px 14px; border-radius:14px; border:1px solid rgba(214,168,79,.35); background:linear-gradient(135deg,rgba(46,36,16,.92),rgba(20,15,8,.94)); }
+.liberation-head-title { font-family:'Russo One',sans-serif; font-size:15px; color:var(--accent2); text-shadow:0 2px 10px rgba(214,168,79,.25); }
+.liberation-head-sub { font-size:10.5px; color:var(--text3); margin-top:2px; }
+.liberation-cancel-btn { flex-shrink:0; min-height:34px; padding:0 12px; border-radius:10px; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.35); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.05em; text-transform:uppercase; }
 .liberation-cancel-btn:focus-visible { outline:3px solid #fff; outline-offset:3px; }
 .empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
@@ -1793,8 +1794,41 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-select { display: block; }
 .battle-arena { display: none; }
 .battle-result-screen { display: none; }
-.battle-select-title { font-family: 'Russo One', sans-serif; font-size: 16px; margin-bottom: 8px; color: var(--accent); }
-.battle-select-copy { color: var(--text3); font-size: 12.5px; line-height: 1.45; margin-bottom: 12px; }
+/* Squad board — four slots the player fills from the roster below. */
+.sq-board { padding:12px; background:linear-gradient(180deg, var(--bg2), rgba(20,17,12,.9)); border:1px solid rgba(214,168,79,.22); border-radius:16px; margin-bottom:4px; }
+.sq-board-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.sq-board-title { font-family:'Russo One',sans-serif; font-size:14px; color:var(--accent); letter-spacing:.03em; }
+.sq-forge-btn { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 12px; border-radius:20px; border:1px solid rgba(143,208,255,.35); background:rgba(143,208,255,.08); color:#8fd0ff; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+.sq-forge-btn:active { transform:scale(.96); }
+.sq-slots { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
+.sq-slot { position:relative; min-height:96px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:8px 4px 7px; }
+.sq-slot.empty { border:1.5px dashed rgba(214,168,79,.30); background:rgba(214,168,79,.04); color:rgba(214,168,79,.55); }
+.sq-slot.empty .sq-slot-plus { font-size:22px; line-height:1; }
+.sq-slot.empty .sq-slot-hint { font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.sq-slot.filled { border:1.5px solid var(--accent); background:linear-gradient(180deg, rgba(214,168,79,.16), rgba(20,17,12,.6)); animation:sqSlotPop .22s ease; }
+@keyframes sqSlotPop { 0% { transform:scale(.85); opacity:.4; } 100% { transform:scale(1); opacity:1; } }
+.sq-slot .ss-art { width:44px; height:44px; border-radius:10px; object-fit:cover; background:var(--bg4); display:block; }
+.sq-slot .ss-emoji { font-size:28px; line-height:44px; text-align:center; }
+.sq-slot-name { max-width:100%; font-size:9px; font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sq-slot-num { position:absolute; top:4px; left:5px; width:16px; height:16px; border-radius:50%; background:var(--accent); color:#000; font-size:10px; font-weight:800; line-height:16px; text-align:center; }
+.sq-slot-x { position:absolute; top:4px; right:5px; font-size:10px; color:var(--text3); }
+/* Roster — every bird the player owns, grouped by what it is doing. */
+.roster-title { display:flex; align-items:center; gap:8px; margin:14px 0 8px; font-family:'Russo One',sans-serif; font-size:12px; color:var(--text2); text-transform:uppercase; letter-spacing:.08em; }
+.roster-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg, rgba(255,255,255,.14), transparent); }
+.roster-title .roster-count { color:var(--accent2); }
+.roster-empty { padding:18px 12px; border-radius:12px; border:1px dashed rgba(255,255,255,.14); background:var(--bg2); color:var(--text3); font-size:12px; text-align:center; }
+.bench-list { display:grid; gap:6px; }
+.bench-row { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:12px; background:var(--bg2); border:1px solid rgba(255,255,255,.05); opacity:.82; }
+.bench-row .br-art { width:36px; height:36px; border-radius:9px; object-fit:cover; background:var(--bg4); flex-shrink:0; }
+.bench-row .br-emoji { font-size:22px; line-height:36px; width:36px; text-align:center; flex-shrink:0; }
+.bench-info { flex:1; min-width:0; }
+.bench-name { font-size:11.5px; font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bench-meta { font-size:9.5px; color:var(--text3); margin-top:1px; }
+.bench-status { flex-shrink:0; font-size:9px; font-weight:900; padding:3px 8px; border-radius:20px; border:1px solid rgba(255,255,255,.14); color:var(--text2); background:rgba(255,255,255,.04); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+.bench-status.hungry { border-color:rgba(255,140,90,.5); color:#ffab7d; background:rgba(255,120,60,.08); }
+.rival-counter-line { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:8px; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; font-weight:800; }
+.rival-counter-line .type-chip { margin-top:0; }
+.pk-counter-chip { display:inline-flex; align-items:center; gap:2px; font-size:8px; font-weight:900; padding:2px 6px; border-radius:20px; border:1px solid rgba(126,217,131,.55); color:#8fe996; background:rgba(126,217,131,.10); margin-top:3px; text-transform:uppercase; letter-spacing:.05em; }
 .battle-formation-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
 .formation-btn { min-height: 48px; border-radius: 10px; border: 1px solid rgba(214,168,79,0.22); background: rgba(214,168,79,0.08); color: var(--text2); font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: .04em; padding: 7px 8px; }
 .formation-btn.active { background: linear-gradient(135deg, rgba(214,168,79,0.32), rgba(151,117,250,0.18)); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 16px rgba(214,168,79,0.18); }
@@ -1815,14 +1849,20 @@ svg.academy-room-bg { display:block; filter:none; }
 .squad-emoji { font-size: 27px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
 .squad-name { max-width: 82px; font-size: 8.5px; font-weight: 800; text-align: center; color: #fff; text-shadow: 0 2px 4px #000; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
 .squad-role { font-size: 7.5px; color: var(--accent2); background: rgba(0,0,0,.62); border-radius: 8px; padding: 1px 5px; text-transform: uppercase; }
-.battle-team-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
 .battle-team-card { padding: 6px; min-height: 76px; background: var(--bg2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .battle-team-card .btc-emoji { width: 34px; height: 34px; border-radius: 50%; object-fit: contain; background: rgba(0,0,0,.35); }
 .battle-team-card .btc-name { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 10px; text-align: center; line-height: 1; }
 .battle-team-card .btc-power { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 9px; color: var(--accent2); }
-.battle-start-btn { display: block; width: 100%; padding: 15px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent3)); font-family: 'Russo One', sans-serif; font-size: 15px; color: #fff; text-align: center; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 4px 20px rgba(214,168,79,0.30); min-height: 52px; margin-top:12px; }
+/* The start button rides above the nav while the roster scrolls beneath it.
+   The screen's own padding-bottom already clears the nav, and sticky insets
+   resolve against the scrollport minus that padding — so bottom:0 is right. */
+.battle-start-dock { position:sticky; bottom:0; z-index:30; margin-top:12px; filter:drop-shadow(0 -8px 14px rgba(5,4,3,.55)); }
+.battle-start-btn { display: block; width: 100%; padding: 15px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), var(--accent3)); font-family: 'Russo One', sans-serif; font-size: 15px; color: #fff; text-align: center; text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 6px 24px rgba(0,0,0,0.45), 0 4px 20px rgba(214,168,79,0.30); min-height: 52px; position:relative; overflow:hidden; }
+.battle-start-btn::after { content:''; position:absolute; inset:0; background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%); transform:translateX(-120%); }
+.battle-start-btn:not(:disabled)::after { animation:startShimmer 2.6s ease-in-out infinite; }
+@keyframes startShimmer { 0%, 55% { transform:translateX(-120%); } 85%, 100% { transform:translateX(120%); } }
 .battle-start-btn:active { transform: scale(0.97); }
-.battle-start-btn:disabled { opacity: 0.4; pointer-events: none; }
+.battle-start-btn:disabled { background: linear-gradient(135deg, #4d3f20, #3a3019); color: rgba(255,255,255,.62); box-shadow: 0 6px 24px rgba(0,0,0,.45); pointer-events: none; }
 .battle-match-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 8px; color: var(--text2); font-size: 12px; }
 .battle-scoreboard { display:flex; gap:8px; align-items:center; justify-content:center; font-family:'Russo One',sans-serif; font-size: 22px; color: var(--accent); }
 .battle-log { margin-top: 12px; padding: 12px; background: var(--bg2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); max-height: 150px; overflow-y: auto; }
@@ -1874,10 +1914,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .pick-card .pk-meter-track { height:3px; border-radius:2px; background:var(--bg4); overflow:hidden; }
 .pick-card .pk-meter-fill { height:100%; border-radius:2px; }
 .pick-card .pk-meter-fill.hp { background:var(--hp-green); }
-.type-wheel { margin-top:16px; padding:12px; background:var(--bg2); border-radius:12px; border:1px solid rgba(255,255,255,0.05); }
-.type-wheel-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
-.type-wheel-row { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text2); padding:4px 0; border-bottom:1px dashed rgba(255,255,255,0.05); }
-.type-wheel-row:last-child { border-bottom:none; }
 /* Arena */
 .arena-fighter { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); margin-bottom:10px; position:relative; overflow:visible; }
 .arena-fighter.player { border-color:rgba(214,168,79,0.35); }
@@ -3543,18 +3579,21 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
     <!-- BATTLE SCREEN — town liberation and optional league battles -->
     <div class="screen" id="screen-battle">
-      <!-- League home: ladder status, rival preview, team select -->
+      <!-- League home: rival preview, squad board, roster -->
       <div class="battle-select" id="battleSelect">
         <div id="liberationBattleBanner"></div>
         <div class="league-header" id="leagueHeader"></div>
         <div class="league-rival" id="leagueRival"></div>
-        <div class="battle-select-title">Pick your four-bird squad</div>
-        <div class="battle-select-copy" id="battleSelectCopy">Choose 4 birds · matchup wheel below</div>
-        <div class="battle-team-grid" id="battleTeamGrid"></div>
-        <div class="battle-synergy-preview" id="battleSynergyPreview">Pick three birds of one type to unlock a MEGA BONUS.</div>
-        <button class="battle-start-btn" id="battleStartBtn" disabled>START BATTLE</button>
-        <button class="battle-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">GEAR UP AT THE FLETCHER'S FORGE</button>
-        <div class="type-wheel" id="typeWheel"></div>
+        <div class="sq-board">
+          <div class="sq-board-head">
+            <span class="sq-board-title">Your squad</span>
+            <button class="sq-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">Gear up</button>
+          </div>
+          <div class="sq-slots" id="battleSquadSlots"></div>
+          <div class="battle-synergy-preview" id="battleSynergyPreview">✨ Three birds from one family add a +25% squad bonus.</div>
+        </div>
+        <div class="battle-roster" id="battleTeamGrid"></div>
+        <div class="battle-start-dock"><button class="battle-start-btn" id="battleStartBtn" disabled>START BATTLE</button></div>
       </div>
 
       <!-- Skyclash squad arena: whole squads on the field, Combat Readiness
@@ -29384,19 +29423,17 @@ function renderBattleSelect() {
   const core = battleCore();
   const league = ensureLeagueState();
   const tier = core.LEAGUE_TIERS[league.tier];
-  const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
+  const roster = getBattleFlock();
+  const flock = roster.filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
+  const pickable = flock.filter(b => birdWorkReadiness(b, 'battle').ok);
   const liberation = pendingEmpireLiberation();
   const leagueHeader = $('leagueHeader');
   if (leagueHeader) leagueHeader.hidden = !!liberation;
   const liberationBanner = $('liberationBattleBanner');
   if (liberationBanner) liberationBanner.innerHTML = liberation
-    ? '<div class="liberation-battle-banner"><strong>🕊️ LIBERATE ' + escapeHtml(liberation.name.toUpperCase()) + ' VILLAGE</strong><br>A garrison of evil Burbz — the dark force\'s shadow-bound occupying flock — holds this village. Scatter them to break the usurper\'s hold, then return to build its sanctuary birdhouse.<button type="button" class="liberation-cancel-btn" id="liberationCancelBtn">LEAVE VILLAGE BATTLE</button></div>'
+    ? '<div class="liberation-head"><button type="button" class="liberation-cancel-btn" id="liberationCancelBtn" aria-label="Leave this village battle">‹ Leave</button><div><div class="liberation-head-title">🕊️ Free ' + escapeHtml(liberation.name) + '</div><div class="liberation-head-sub">Beat the garrison to liberate the village.</div></div></div>'
     : '';
   $('liberationCancelBtn')?.addEventListener('click', cancelEmpireLiberation, { once:true });
-  const selectCopy = $('battleSelectCopy');
-  if (selectCopy) selectCopy.textContent = liberation
-    ? 'Choose the four birds who will free this village. The whole squad fights at once — counter the evil Burbz garrison\'s wing classes and gear up at the Forge before you begin.'
-    : 'Tap birds to add them. The whole squad fights at once, ordered by the Speed meter. Counter the evil Burbz squad\'s wing classes — the wheel below shows who beats whom.';
 
   // Header: current tier, record, promotion pips.
   const pips = tier.promoteWins > 0
@@ -29409,26 +29446,54 @@ function renderBattleSelect() {
     '<div class="league-progress">' + league.wins + 'W · ' + league.losses + 'L' +
     (tier.promoteWins > 0 ? '<br>' + league.winsInTier + '/' + tier.promoteWins + ' to promote' : '<br>Summit league') + pips + '</div>';
 
-  // Evil Burbz squad preview — this is where counter-picking happens.
+  // Evil Burbz squad preview — plus the wing classes that beat theirs.
   const rival = leagueRivalOpponents();
+  const enemyTypes = [...new Set(rival.opponents.map(b => core.classifySpecies(b.species)))];
+  const counterTypes = Object.keys(core.BIRD_TYPES).filter(t => enemyTypes.some(e => ((core.TYPE_CHART[t] || {})[e] || 1) > 1));
+  const rivalTitle = liberation
+    ? (isFirstLiberationBattle() ? '🌅 A weary token garrison — this one is yours' : (isEarlyGameBattles() ? '🐣 A ragged scouting party holds the village' : '😈 The occupying evil Burbz'))
+    : (isEarlyGameBattles() ? '🐣 A ragged evil Burbz scouting party' : '😈 An evil Burbz squad prowls this perch');
   $('leagueRival').innerHTML =
-    '<div class="league-rival-title">' + (liberation ? (isFirstLiberationBattle() ? '🌅 Only a weary token garrison holds your first town — victory is all but assured!' : (isEarlyGameBattles() ? '🐣 A ragged scouting party holds this village — your flock has the edge!' : '😈 The occupying evil Burbz — counter their classes!')) : (isEarlyGameBattles() ? '🐣 A ragged evil Burbz scouting party prowls this perch — your flock has the edge!' : '😈 An evil Burbz squad prowls this perch — counter their classes!')) + '</div>' +
+    '<div class="league-rival-title">' + rivalTitle + '</div>' +
     '<div class="league-rival-row">' + rival.opponents.map(b =>
       '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
       '<div class="rc-lv">Lv ' + b.level + '</div>' +
-      typeChipHTML(core.classifySpecies(b.species)) + familyChipHTML(b) + '</div>').join('') + '</div>';
+      typeChipHTML(core.classifySpecies(b.species)) + '</div>').join('') + '</div>' +
+    (counterTypes.length ? '<div class="rival-counter-line"><span>Beat them with</span>' + counterTypes.map(t => typeChipHTML(t)).join('') + '</div>' : '');
 
-  // Team select grid.
-  const grid = $('battleTeamGrid');
-  battleSelectedIds = (league.teamIds || []).filter(id => flock.some(b => b.id === id)).slice(0, 4);
-  if (!battleSelectedIds.length && flock.length) {
-    battleSelectedIds = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 4).map(b => b.id);
+  // Squad slots — the four picked birds, in fighting order. Tap one to bench it.
+  battleSelectedIds = (league.teamIds || []).filter(id => pickable.some(b => b.id === id)).slice(0, 4);
+  if (!battleSelectedIds.length && pickable.length) {
+    battleSelectedIds = pickable.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 4).map(b => b.id);
   }
-  if (!flock.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px 0; color:var(--text3);">📡 Scan a bird, befriend it, then return to choose your squad.</div>';
+  const slotBirds = battleSelectedIds.map(id => pickable.find(b => b.id === id)).filter(Boolean);
+  const slotsHost = $('battleSquadSlots');
+  if (slotsHost) slotsHost.innerHTML = Array.from({ length: 4 }, (_, i) => {
+    const b = slotBirds[i];
+    if (!b) return '<div class="sq-slot empty"><span class="sq-slot-plus">+</span><span class="sq-slot-hint">Bird ' + (i + 1) + '</span></div>';
+    return '<button type="button" class="sq-slot filled" onclick="battlePickToggle(\'' + b.id + '\')" aria-label="Bench ' + escapeHtml(birdDisplayName(b)) + '">' +
+      '<span class="sq-slot-num">' + (i + 1) + '</span><span class="sq-slot-x">✕</span>' +
+      fighterArtHTML(b, 'ss') +
+      '<span class="sq-slot-name">' + escapeHtml(birdDisplayName(b)) + '</span></button>';
+  }).join('');
+
+  // The roster: birds ready to fight up top, everyone else listed with the
+  // thing that keeps them away — a job, training, a quest, sleep or hunger.
+  const grid = $('battleTeamGrid');
+  const benchStatus = b => {
+    const post = birdAssignedPost(b.id);
+    if (post) return { label:'Working · ' + post.role.title, cls:'', meta:'' };
+    if (birdHasActiveTraining(b.id)) return { label:'Training', cls:'', meta:'' };
+    if (birdHasActiveExpedition(b.id)) return { label:'On a quest', cls:'', meta:'' };
+    if (sleepReadinessForBird(b, Date.now()).sleeping) return { label:'Asleep', cls:'', meta:'' };
+    return { label:'Too hungry', cls:' hungry', meta:'Feed them in the Kitchen' };
+  };
+  const bench = roster.filter(b => !pickable.some(p => p.id === b.id));
+  if (!roster.length) {
+    grid.innerHTML = '<div style="text-align:center; padding:28px 0; color:var(--text3);">📡 Scan a bird, befriend it, then return to choose your squad.</div>';
   } else {
-    grid.innerHTML = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).map(b => {
+    const readyCards = pickable.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).map(b => {
       const order = battleSelectedIds.indexOf(b.id);
       const hpPct = Math.round(clamp((b.hp || b.maxHp) / (b.maxHp || 1), 0, 1) * 100);
       const moves = core.trainedMoves(b.academy && b.academy.disciplines).length;
@@ -29436,7 +29501,8 @@ function renderBattleSelect() {
       const fullnessPct = Math.round(clamp(100 - readiness.status.hunger, 0, 100));
       const fullnessColor = 'hsl(' + Math.round(fullnessPct * 1.2) + ' 72% 44%)';
       const hungerMeta = ' · ' + readiness.status.label;
-      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (!readiness.ok ? ' hungry-blocked' : readiness.warning ? ' hungry-warn' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
+      const counters = counterTypes.includes(core.classifySpecies(b.species));
+      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (readiness.warning ? ' hungry-warn' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
         '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
         fighterArtHTML(b, 'pk') +
@@ -29444,44 +29510,55 @@ function renderBattleSelect() {
         '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + escapeHtml(hungerMeta) + '</div>' +
         typeChipHTML(core.classifySpecies(b.species)) +
         familyChipHTML(b) +
+        (counters ? '<span class="pk-counter-chip">✓ Counter</span>' : '') +
         '<div class="pk-meters" data-fullness="' + fullnessPct + '">' +
           '<div class="pk-meter-row"><span>HP</span><div class="pk-meter-track"><div class="pk-meter-fill hp" style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div><span>' + hpPct + '%</span></div>' +
           '<div class="pk-meter-row"><span>Full</span><div class="pk-meter-track"><div class="pk-meter-fill" style="width:' + fullnessPct + '%;background:' + fullnessColor + '"></div></div><span>' + fullnessPct + '%</span></div>' +
         '</div>' +
         '</button>';
     }).join('');
+    const benchRows = bench.map(b => {
+      const s = benchStatus(b);
+      return '<div class="bench-row">' + fighterArtHTML(b, 'br') +
+        '<div class="bench-info"><div class="bench-name">' + escapeHtml(birdDisplayName(b)) + '</div>' +
+        '<div class="bench-meta">Lv ' + (b.level || 1) + (s.meta ? ' · ' + s.meta : '') + '</div></div>' +
+        '<span class="bench-status' + s.cls + '">' + escapeHtml(s.label) + '</span></div>';
+    }).join('');
+    grid.innerHTML =
+      '<div class="roster-title">Ready to fly <span class="roster-count">' + pickable.length + '</span></div>' +
+      (pickable.length
+        ? '<div class="battle-team-grid">' + readyCards + '</div>'
+        : '<div class="roster-empty">Every bird is busy or hungry right now. Free one up, then come back.</div>') +
+      (bench.length ? '<div class="roster-title">Out and about <span class="roster-count">' + bench.length + '</span></div><div class="bench-list">' + benchRows + '</div>' : '');
   }
-  const need = Math.min(4, flock.length);
-  const selectedBattleBirds = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
+  const need = Math.min(4, pickable.length);
+  const selectedBattleBirds = battleSelectedIds.map(id => pickable.find(b => b.id === id)).filter(Boolean);
   const previewSynergies = birdFamilyCore() ? birdFamilyCore().detectTeamSynergies(selectedBattleBirds) : [];
   const synergyPreview = $('battleSynergyPreview');
   if (synergyPreview) {
     synergyPreview.classList.toggle('mega', previewSynergies.length > 0);
     synergyPreview.innerHTML = previewSynergies.length
       ? previewSynergies.map(s => '<strong>' + s.icon + ' ' + escapeHtml(s.title) + '</strong>' + escapeHtml(s.copy)).join('<br>')
-      : '<strong>BUILD A TYPE TRIO</strong>Pick any three birds from the same family — or three mixed Birds of Prey — to unlock a +25% mega team bonus.';
+      : '✨ Three birds from one family — or three Birds of Prey — add a +25% squad bonus.';
   }
   const hungerBlocked = selectedBattleBirds.some(b => !birdWorkReadiness(b, 'battle').ok);
-  $('battleStartBtn').disabled = !flock.length || battleSelectedIds.length < need || hungerBlocked;
-  $('battleStartBtn').textContent = flock.length ? (battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '') : hungerBlocked ? 'FEED URGENT BIRD' : liberation ? 'LIBERATE ' + liberation.name.toUpperCase() : 'START BATTLE') : 'SCAN A BIRD FIRST';
-
-  // The teaching wheel — real facts, always visible.
-  $('typeWheel').innerHTML = '<div class="type-wheel-title">Wing-class matchups</div>' +
-    Object.keys(core.BIRD_TYPES).map(t => {
-      const meta = core.BIRD_TYPES[t];
-      const beats = Object.keys(core.TYPE_CHART[t]).filter(u => core.TYPE_CHART[t][u] > 1);
-      const weak = Object.keys(core.TYPE_CHART[t]).filter(u => core.TYPE_CHART[t][u] < 1);
-      const chips = ids => ids.map(u => core.BIRD_TYPES[u].icon).join(' ');
-      return '<div class="type-wheel-row"><span style="min-width:96px; color:' + meta.color + '; font-weight:700;">' + meta.icon + ' ' + meta.label + '</span><span>beats ' + chips(beats) + ' · weak to ' + chips(weak) + '</span></div>';
-    }).join('');
+  $('battleStartBtn').disabled = !pickable.length || battleSelectedIds.length < need || hungerBlocked;
+  $('battleStartBtn').textContent = !roster.length ? 'SCAN A BIRD FIRST'
+    : !pickable.length ? 'EVERY BIRD IS BUSY'
+    : battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '')
+    : hungerBlocked ? 'FEED URGENT BIRD'
+    : liberation ? 'LIBERATE ' + liberation.name.toUpperCase()
+    : 'START BATTLE';
 }
 
 function battlePickToggle(birdId) {
   const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
-  if (!flock.some(b => b.id === birdId)) return;
+  const bird = flock.find(b => b.id === birdId);
+  if (!bird) return;
   const idx = battleSelectedIds.indexOf(birdId);
   if (idx >= 0) battleSelectedIds.splice(idx, 1);
   else {
+    if (!birdWorkReadiness(bird, 'battle').ok) { showToast('🍽️ ' + birdDisplayName(bird) + ' needs food before battle.'); return; }
     if (battleSelectedIds.length >= 4) battleSelectedIds.shift();
     battleSelectedIds.push(birdId);
   }
@@ -29536,7 +29613,7 @@ function startPerchBattle() {
   $('battleArena').style.display = 'block';
   $('battleLog').innerHTML = '';
   const tier = core.LEAGUE_TIERS[league.tier];
-  addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison and free the sanctuary!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
+  addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison, the dark force\'s shadow-bound occupying flock, and break the usurper\'s hold!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
@@ -30942,7 +31019,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'early-game-easy-battles-v240-20260810';
+const BURBZ_BUILD = 'battle-squad-board-v241-20260810';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -31032,7 +31109,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'birdex', chapter:'Collection', title:'Merlin, your companion', screen:'birdex', target:'#petCompanion', text:'That is me, top right! Tap me any time to feed me, play with me, or let me rest.' },
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
-  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz \u2014 never free birds. Choose four birds; wing classes counter each other, as the wheel below shows.' },
+  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz \u2014 never free birds. Wing classes counter each other; a green Counter tag marks the birds that beat this squad.' },
   { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Or Parley: a bird with high Charm can win a foe over without a blow.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 
