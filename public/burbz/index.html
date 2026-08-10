@@ -121,6 +121,21 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   font-size:17px; color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
 .header-profile-btn img, .header-settings img { width: 29px; height: 29px; object-fit: contain; display: block; }
+.header-diary-btn {
+  width:36px; height:36px; flex:0 0 36px; display:grid; place-items:center;
+  border-radius:10px; border:1px solid rgba(214,168,79,.24);
+  background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
+  color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
+}
+.header-diary-btn svg { width:23px; height:23px; display:block; }
+.header-diary-btn.active { color:var(--accent); border-color:rgba(240,199,103,.55); box-shadow:0 0 16px rgba(214,168,79,.24); }
+@media(max-width:480px){
+  .header.distributed-hud-header{padding-inline:7px;gap:6px;}
+  .header.distributed-hud-header .header-logo{width:min(20vw,78px);}
+  .header.distributed-hud-header .header-diary-btn,
+  .header.distributed-hud-header .header-profile-btn,
+  .header.distributed-hud-header .header-settings{width:34px;height:34px;flex-basis:34px;}
+}
 .ui-inline-icon { width: 22px; height: 22px; object-fit: contain; display: inline-block; vertical-align: middle; margin-right: 5px; }
 .scan-mode-btn .ui-inline-icon { width: 25px; height: 25px; margin-right: 6px; }
 
@@ -252,6 +267,24 @@ svg.academy-room-bg { display:block; filter:none; }
 .room-bird-grid-status { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; font-size:8px; line-height:1.2; color:var(--accent2); }
 .room-bird-grid-hp { display:block; margin-top:3px; font-size:8px; line-height:1.1; color:#86dc91; font-weight:800; }
 @media(max-width:420px){.room-bird-grid{top:64px;right:8px;width:min(48%,180px);grid-template-columns:repeat(2,minmax(50px,1fr));}.room-bird-grid-art{width:36px;height:36px;}}
+/* The Drill Master is part of the Training Hall scene, not another little
+   roster card. The transparent bird cutout stands still at floor level; the
+   only control on the actor is the compact change-post button above its head. */
+.training-master-actor { position:absolute; left:5%; bottom:4%; z-index:5; display:flex; flex-direction:column; align-items:center; pointer-events:auto; }
+.training-master-change { width:38px; height:38px; margin-bottom:-4px; z-index:2; display:grid; place-items:center; border-radius:50%; border:1px solid rgba(240,199,103,.72); background:rgba(12,9,4,.88); color:var(--accent2); font-size:22px; line-height:1; box-shadow:0 5px 16px rgba(0,0,0,.48); }
+.training-master-sprite { width:clamp(118px,35vw,168px); height:clamp(128px,38vw,180px); display:block; object-fit:contain; font-size:92px; line-height:150px; text-align:center; filter:drop-shadow(0 9px 8px rgba(0,0,0,.58)); }
+.training-master-nameplate { max-width:170px; margin-top:-8px; padding:4px 11px 5px; border-radius:11px; border:1px solid rgba(214,168,79,.48); background:rgba(15,10,4,.82); color:#fff; font-size:12px; line-height:1.15; font-weight:900; text-align:center; box-shadow:0 5px 14px rgba(0,0,0,.4); }
+.training-master-role { display:block; margin-top:2px; color:var(--accent2); font-size:9px; letter-spacing:.08em; text-transform:uppercase; }
+.training-master-vacant { position:absolute; left:5%; bottom:7%; z-index:5; display:flex; align-items:center; gap:7px; padding:8px 11px; border-radius:12px; border:1px solid rgba(214,168,79,.48); background:rgba(15,10,4,.84); color:var(--accent2); font-size:11px; font-weight:900; pointer-events:auto; box-shadow:0 6px 18px rgba(0,0,0,.45); }
+.training-master-vacant-symbol { font-size:20px; line-height:1; }
+.training-master-picker { position:fixed; inset:0; z-index:10050; display:none; align-items:flex-end; justify-content:center; padding:18px 12px calc(84px + env(safe-area-inset-bottom)); }
+.training-master-picker.is-open { display:flex; }
+.training-master-picker-backdrop { position:absolute; inset:0; border:0; background:rgba(0,0,0,.76); }
+.training-master-picker-sheet { position:relative; z-index:1; width:min(100%,560px); max-height:min(72vh,680px); overflow:auto; padding:12px; border-radius:18px; border:1px solid rgba(214,168,79,.42); background:#100c06; box-shadow:0 18px 55px rgba(0,0,0,.7); }
+.training-master-picker-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:2px 4px 7px; font-family:'Russo One',sans-serif; color:var(--accent2); font-size:14px; }
+.training-master-picker-close { width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:#fff; font-size:20px; }
+.training-master-picker .role-post-card { margin:0; }
+@media(max-width:420px){.training-master-actor{left:3%;bottom:3%;}.training-master-sprite{width:clamp(112px,34vw,148px);height:clamp(122px,38vw,158px);}.training-master-nameplate{max-width:150px;font-size:11px;}}
 .academy-room-topbar { position:absolute; left:12px; right:12px; top:12px; z-index:3; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .academy-room-title-card { padding:10px 12px; border-radius:15px; background:rgba(0,0,0,.58); border:1px solid rgba(214,168,79,.26); backdrop-filter:blur(10px); }
 .academy-room-title { font-family:'Russo One',sans-serif; font-size:18px; color:var(--accent2); }
@@ -526,6 +559,17 @@ svg.academy-room-bg { display:block; filter:none; }
   min-width: 16px; height: 16px; border-radius: 8px; display: flex;
   align-items: center; justify-content: center; padding: 0 4px;
 }
+
+/* Secondary destinations live on the playfield like a strategy game's quick
+   controls instead of squeezing every system into one crowded bottom strip. */
+.game-side-actions { position:absolute; z-index:190; top:50%; right:8px; transform:translateY(-50%); display:flex; flex-direction:column; gap:9px; pointer-events:none; }
+.game-side-action { width:54px; min-height:54px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:5px 3px 4px; border-radius:16px; border:1px solid rgba(214,168,79,.40); background:linear-gradient(145deg,rgba(31,23,11,.94),rgba(6,5,3,.93)); color:var(--text2); box-shadow:0 8px 20px rgba(0,0,0,.50),inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(8px); pointer-events:auto; }
+.game-side-action:active { transform:scale(.94); }
+.game-side-action.active { color:var(--accent); border-color:rgba(240,199,103,.72); box-shadow:0 8px 20px rgba(0,0,0,.50),0 0 18px rgba(214,168,79,.28); }
+.game-side-action-art { width:34px; height:34px; display:block; object-fit:contain; border-radius:9px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
+.game-side-action-label { max-width:48px; overflow:hidden; text-overflow:ellipsis; font-family:'Rajdhani',sans-serif; font-size:8px; line-height:1; font-weight:900; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
+.game-side-action.tutorial-alert::after { content:'!'; position:absolute; right:-3px; top:-3px; width:17px; height:17px; display:grid; place-items:center; border-radius:50%; background:#d13a2f; color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); }
+@media(max-width:380px){.game-side-actions{right:5px;gap:7px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
 
 /* ========== DIAGONAL DECORATIONS ========== */
 .diag-line {
@@ -3058,6 +3102,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
    tapped, plus a red attention dot on the tab itself. */
 .tutorial-nav-pointer { position:fixed; z-index:1200; bottom:calc(var(--nav-height) + 10px + var(--safe-bottom)); left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:2px; pointer-events:none; }
 .tutorial-nav-pointer.show { display:flex; }
+.tutorial-nav-pointer.side-target { bottom:auto; transform:translate(-100%,-50%); flex-direction:row; gap:5px; }
+.tutorial-nav-pointer.side-target .tnp-arrow { transform:rotate(-90deg); animation:none; }
 .tutorial-nav-pointer .tnp-text { background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:10px; padding:3px 9px; font:800 11px/1.3 'Rajdhani',sans-serif; letter-spacing:.4px; box-shadow:0 6px 18px rgba(0,0,0,.5); white-space:nowrap; }
 .tutorial-nav-pointer .tnp-arrow { font-size:24px; line-height:1; color:var(--accent); text-shadow:0 0 10px rgba(240,199,103,.85); animation:tutorialArrowBob 1s ease-in-out infinite; }
 @keyframes tutorialArrowBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(7px); } }
@@ -3399,7 +3445,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <div class="speed-lines"></div>
 
   <!-- Header -->
-  <header class="header">
+  <header class="header distributed-hud-header">
     <div class="header-logo"><img src="assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></div>
     <div class="header-hud">
       <div class="hud-top">
@@ -3420,6 +3466,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <span class="merlin-listening-pulse" aria-hidden="true"></span>
       <span class="sr-only" id="merlinDockStatus" aria-live="polite">Listening across Burbz</span>
     </button>
+    <button class="header-diary-btn" id="headerDiaryBtn" data-game-route data-screen="diary" aria-label="Diary" title="Diary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.8 4.2c-4.6.5-8.2 2.5-10.4 6.1-1 1.7-1.6 3.6-1.8 5.7 2.1-.2 4-.8 5.7-1.8 3.6-2.2 5.6-5.8 6.1-10.4Z"/><path d="M4 20c2.8-2.8 5.6-5.6 9-9"/></svg></button>
     <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile"><img src="assets/ui/burbz-icon-set/profile.webp" alt=""></button>
     <button class="header-settings" id="settingsBtn" aria-label="Settings"><img src="assets/ui/burbz-icon-set/settings.webp" alt=""></button>
   </header>
@@ -3427,6 +3474,21 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <img class="global-money-hud-icon" src="assets/ui/burbz-icon-set/coin.webp" alt="">
     <span class="global-money-copy"><span class="global-money-label">Coins</span><span class="hud-chip-value" id="globalMoneyValue">0</span></span>
   </div>
+
+  <aside class="game-side-actions" id="gameSideActions" aria-label="Quick destinations">
+    <button class="game-side-action" type="button" data-quick-destination="kitchen" aria-label="Kitchen & Pantry">
+      <img class="game-side-action-art" src="assets/academy-buildings-manga/kitchen.png" alt="">
+      <span class="game-side-action-label">Kitchen</span>
+    </button>
+    <button class="game-side-action" type="button" data-game-route data-screen="quests" aria-label="Quests">
+      <img class="game-side-action-art" src="assets/ui/burbz-icon-set/quests.webp" alt="">
+      <span class="game-side-action-label">Quests</span>
+    </button>
+    <button class="game-side-action" type="button" data-game-route data-screen="inventory" aria-label="Royal Stores">
+      <img class="game-side-action-art" src="assets/ui/burbz-icon-set/inventory.webp" alt="">
+      <span class="game-side-action-label">Stores</span>
+    </button>
+  </aside>
 
   <!-- Screens -->
   <div class="screens">
@@ -3868,43 +3930,31 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" data-screen="map" aria-label="Map">
+    <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3.6 5.8a1 1 0 0 0-.6.9v12.4l6-2 6 2 5.4-1.8a1 1 0 0 0 .6-.9V3.9l-6 2-6-1.9Z"/><path d="M9 4v13.1M15 5.9V19"/></svg></div>
       <div class="nav-label">Map</div>
     </button>
-    <button class="nav-item" data-screen="village" aria-label="Empire">
+    <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-9.5L7 8V5h2.2v1.6h1.7V5h2.2v1.6h1.7V5H17v3l2 2.5V20"/><path d="M10 20v-3.2a2 2 0 0 1 4 0V20M3 20h18"/></svg></div>
       <div class="nav-label">Empire</div>
     </button>
-    <button class="nav-item" data-screen="birdex" aria-label="Burbz codex">
+    <button class="nav-item" data-game-route data-screen="birdex" aria-label="Burbz codex">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.2C10 4.8 7.4 4.2 4.5 4.2V18c2.9 0 5.5.6 7.5 2 2-1.4 4.6-2 7.5-2V4.2c-2.9 0-5.5.6-7.5 2Z"/><path d="M12 6.2V20"/></svg></div>
       <div class="nav-label">Burbz</div>
     </button>
-    <button class="nav-item" data-screen="battle" aria-label="Battle">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 11.5 11.5M19 4 7.5 15.5M14.5 15.5 18 19M9.5 15.5 6 19M4.2 16.2l3.6 3.6M19.8 16.2l-3.6 3.6"/></svg></div>
-      <div class="nav-label">Battle</div>
-    </button>
-    <button class="nav-item nav-scan" data-screen="scan" aria-label="Scan a bird">
+    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.2V6a2 2 0 0 1 2-2h2.2M15.8 4H18a2 2 0 0 1 2 2v2.2M20 15.8V18a2 2 0 0 1-2 2h-2.2M8.2 20H6a2 2 0 0 1-2-2v-2.2"/><circle cx="12" cy="12" r="3.4"/></svg></div>
       <div class="nav-label">Scan</div>
     </button>
-    <button class="nav-item inventory-nav" data-screen="inventory" aria-label="Stores">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 7.5V6a3.5 3.5 0 0 1 7 0v1.5"/><path d="M6 9.5A3.5 3.5 0 0 1 9.5 6h5A3.5 3.5 0 0 1 18 9.5V20H6V9.5Z"/><path d="M9 14h6v6H9z"/></svg></div>
-      <div class="nav-label">Stores</div>
+    <button class="nav-item" data-game-route data-screen="battle" aria-label="Battle">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 11.5 11.5M19 4 7.5 15.5M14.5 15.5 18 19M9.5 15.5 6 19M4.2 16.2l3.6 3.6M19.8 16.2l-3.6 3.6"/></svg></div>
+      <div class="nav-label">Battle</div>
     </button>
-    <button class="nav-item" data-screen="academy" aria-label="Academy">
+    <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 8.8 12 13.6l9.5-4.8L12 4Z"/><path d="M6.5 11.2v4.6c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.6M21.5 9v5"/></svg></div>
       <div class="nav-label">Academy</div>
     </button>
-    <button class="nav-item" data-screen="quests" aria-label="Quests">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7"/><path d="M7 4a2 2 0 0 0-2 2v1.5h4V6a2 2 0 0 0-2-2ZM7 20a2 2 0 0 1-2-2v-1h4v1a2 2 0 0 1-2 2ZM10.5 9.5H16M10.5 13h5.5"/></svg></div>
-      <div class="nav-label">Quests</div>
-    </button>
-    <button class="nav-item" data-screen="diary" aria-label="Diary">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.8 4.2c-4.6.5-8.2 2.5-10.4 6.1-1 1.7-1.6 3.6-1.8 5.7 2.1-.2 4-.8 5.7-1.8 3.6-2.2 5.6-5.8 6.1-10.4Z"/><path d="M4 20c2.8-2.8 5.6-5.6 9-9"/></svg></div>
-      <div class="nav-label">Diary</div>
-    </button>
-    <button class="nav-item" data-screen="leaderboards" aria-label="Ranks">
+    <button class="nav-item" data-game-route data-screen="leaderboards" aria-label="Ranks">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4Z"/><path d="M8 5.5H5a3 3 0 0 0 3 3.8M16 5.5h3a3 3 0 0 1-3 3.8M12 13.5v2.5M9.5 19c0-1.7 1.1-3 2.5-3s2.5 1.3 2.5 3M7.5 20h9"/></svg></div>
       <div class="nav-label">Ranks</div>
     </button>
@@ -3917,7 +3967,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <div class="capture-overlay" id="captureOverlay">
     <div class="capture-flash"></div>
     <div class="capture-particles" id="captureParticles"></div>
-    <div class="capture-title">NEW SPECIES DISCOVERED!</div>
+    <div class="capture-title">NEW COMPANION UNLOCKED!</div>
     <div class="capture-card-wrapper" id="captureCardWrapper"></div>
     <button class="capture-dismiss capture-name-btn" id="captureNameBtn" style="display:none">✏️ NAME YOUR BIRD</button>
     <button class="capture-dismiss" id="captureDismiss">TAP TO CONTINUE</button>
@@ -4296,7 +4346,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
-<script src="action_badge_core.js?v=nav-action-badges-v1-20260721"></script>
+<script src="action_badge_core.js?v=distributed-game-hud-v244-20260810"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script>
@@ -13567,6 +13617,17 @@ function barracksRecruitBird(key) {
   return true;
 }
 
+function birdexRecruitBird(key) {
+  if (!isAcademyRoomBuilt('tavern')) {
+    gotoTavernRecruit();
+    return false;
+  }
+  const ok = barracksRecruitBird(key);
+  if (!ok) return false;
+  renderBirdex();
+  return true;
+}
+
 function academyRecruitBird(key) { return barracksRecruitBird(key); }
 
 // Jump from Birdex cards / discovery overlays to the Barracks register.
@@ -15591,7 +15652,7 @@ function roomBirdGridHTML(birds, room) {
   const seen = new Set();
   (birds || []).forEach(bird => { if (bird && !seen.has(bird.id)) { seen.add(bird.id); entries.push({ bird, role:null }); } });
   const post = rolePostState('academy', room);
-  if (post && post.staffed && post.bird) {
+  if (room !== 'training' && post && post.staffed && post.bird) {
     const existing = entries.find(entry => entry.bird.id === post.bird.id);
     if (existing) existing.role = post.role && post.role.title;
     else { seen.add(post.bird.id); entries.push({ bird:post.bird, role:post.role && post.role.title }); }
@@ -15737,6 +15798,41 @@ function renderTrainingHallPanel(birds, others) {
   return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
+function trainingMasterActorHTML() {
+  const post = rolePostState('academy', 'training');
+  if (!post || !post.role) return '';
+  if (!post.staffed || !post.bird) {
+    return '<button type="button" class="training-master-vacant" data-action="training-master-change" aria-label="Appoint Drill Master"><span class="training-master-vacant-symbol">↻</span><span>Appoint Drill Master</span></button>';
+  }
+  return '<div class="training-master-actor">' +
+    '<button type="button" class="training-master-change" data-action="training-master-change" aria-label="Change Drill Master" title="Change Drill Master">↻</button>' +
+    birdOnlyImgHTML(post.bird, 'training-master-sprite') +
+    '<div class="training-master-nameplate">' + escapeHtml(birdDisplayName(post.bird)) + '<span class="training-master-role">' + escapeHtml(post.role.title) + '</span></div>' +
+  '</div>';
+}
+
+// The appointed Drill Master already has a large place in the room art, so do
+// not duplicate the same bird in the compact room roster at the top-right.
+function academyRoomStageBirds(birds, room) {
+  if (room !== 'training') return birds;
+  const post = rolePostState('academy', 'training');
+  if (!post || !post.staffed || !post.bird) return birds;
+  return birds.filter(bird => bird && bird.id !== post.bird.id);
+}
+
+// Candidate choices are temporary UI now: they appear only after the player
+// taps the change symbol above the Drill Master, never permanently below the
+// Training Hall art.
+function trainingMasterPickerOverlayHTML() {
+  return '<div class="training-master-picker" id="trainingMasterPicker" aria-hidden="true">' +
+    '<button type="button" class="training-master-picker-backdrop" data-action="training-master-picker-close" aria-label="Close Drill Master picker"></button>' +
+    '<div class="training-master-picker-sheet" role="dialog" aria-modal="true" aria-label="Choose Drill Master">' +
+      '<div class="training-master-picker-head"><span>Choose Drill Master</span><button type="button" class="training-master-picker-close" data-action="training-master-picker-close" aria-label="Close">×</button></div>' +
+      rolePostCardHTML('academy', 'training') +
+    '</div>' +
+  '</div>';
+}
+
 function renderAcademyRoomInterior() {
   const root = $('academyRoomInterior');
   if (!root) return;
@@ -15772,7 +15868,7 @@ function renderAcademyRoomInterior() {
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
     // Every room can be run by a bird. Which bird decides how well the room
     // works — the Library by its Librarian, the Kitchen by its Head Chef.
-    const rolePanel = rolePostCardHTML('academy', room);
+    const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);
     // The Kitchen is a feeding table: birds never lodge or wander there (the
     // migration + move guards keep its stationed list empty), and there is no
     // "add a bird to this room" panel — the feeding roster replaces it.
@@ -15781,7 +15877,10 @@ function renderAcademyRoomInterior() {
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
     const roomAddPanel = room === 'kitchen' ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(birds, room) + '</div></div>' + rolePanel + trainingPanel + kitchenPanel + roomAddPanel;
+    const stageBirds = academyRoomStageBirds(birds, room);
+    const trainingMaster = room === 'training' ? trainingMasterActorHTML() : '';
+    const trainingMasterPicker = room === 'training' ? trainingMasterPickerOverlayHTML() : '';
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + rolePanel + trainingMasterPicker + trainingPanel + kitchenPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -15792,6 +15891,17 @@ function renderAcademyRoomInterior() {
   }
   $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
   root.querySelectorAll('[data-action="room-add-bird"]').forEach(btn => btn.addEventListener('click', () => { academyMoveBird(btn.dataset.birdId, room); renderAcademyRoomInterior(); }));
+  const masterPicker = root.querySelector('#trainingMasterPicker');
+  root.querySelectorAll('[data-action="training-master-change"]').forEach(btn => btn.addEventListener('click', () => {
+    if (!masterPicker) return;
+    masterPicker.classList.add('is-open');
+    masterPicker.setAttribute('aria-hidden', 'false');
+  }));
+  root.querySelectorAll('[data-action="training-master-picker-close"]').forEach(btn => btn.addEventListener('click', () => {
+    if (!masterPicker) return;
+    masterPicker.classList.remove('is-open');
+    masterPicker.setAttribute('aria-hidden', 'true');
+  }));
 }
 
 function wireAcademyZones() {
@@ -18977,13 +19087,12 @@ function switchScreen(name) {
   recordScreenTrail(currentScreen);
 
   $$('.screen').forEach(s => s.classList.remove('active'));
-  $$('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('[data-game-route],[data-quick-destination]').forEach(n => n.classList.remove('active'));
 
   const screen = $('screen-' + name);
   if (screen) screen.classList.add('active');
 
-  const navItem = document.querySelector(`.nav-item[data-screen="${name}"]`);
-  if (navItem) navItem.classList.add('active');
+  document.querySelectorAll(`[data-game-route][data-screen="${name}"]`).forEach(item => item.classList.add('active'));
 
   currentScreen = name;
   syncBurbzMusicForMapZoom();
@@ -19011,6 +19120,26 @@ function switchScreen(name) {
   // Gradual tutorial: Merlin teaches each system the first time its screen opens.
   if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
+}
+
+function activateGameHudDestination(destination) {
+  if (!destination) return;
+  switchScreen(destination);
+  if (typeof burbzTutorialAction === 'function') burbzTutorialAction('tab:' + destination);
+}
+
+function openKitchenHudShortcut() {
+  if (!isAcademyRoomBuilt('kitchen')) {
+    academySelectedRoom = 'kitchen';
+    academyQuestGuidanceRoom = 'kitchen';
+    activateGameHudDestination('academy');
+    renderAcademy();
+    showToast('Build the Kitchen & Pantry first — it is highlighted in your Academy.');
+    return;
+  }
+  openAcademyRoom('kitchen');
+  document.querySelectorAll('[data-game-route],[data-quick-destination]').forEach(n => n.classList.remove('active'));
+  document.querySelector('[data-quick-destination="kitchen"]')?.classList.add('active');
 }
 
 // ============================================================================
@@ -26768,7 +26897,8 @@ function createBirdFromDiscovery(record) {
 }
 
 function recruitDiscoveredBird(key) {
-  // Recruitment is handled only through the Academy Barracks register.
+  // Recruitment uses the Barracks transaction, reached directly from a Birdex card
+  // once the Barracks has been built (the Barracks roster remains available too).
   if (!isAcademyRoomBuilt('tavern')) {
     const cfg = ACADEMY_BUILDINGS.tavern;
     showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 1)
@@ -28492,6 +28622,13 @@ function renderBirdex() {
   // Attach card actions. Locked codex cards do not reveal species.
   grid.querySelectorAll('.bird-card:not(.undiscovered):not(.locked-card)').forEach(card => {
     card.addEventListener('click', (e) => {
+      const directRecruitBtn = e.target.closest('[data-action="recruit-birdex"]');
+      if (directRecruitBtn) {
+        e.stopPropagation();
+        birdexRecruitBird(directRecruitBtn.dataset.discoveryKey);
+        return;
+      }
+
       const recruitBtn = e.target.closest('[data-action="goto-tavern"]');
       if (recruitBtn) {
         e.stopPropagation();
@@ -28738,6 +28875,13 @@ function createKnownSpeciesCardHTML(bird, idx) {
   const cost = recruitCostForBird(bird);
   const alreadyCompanion = !!companionForSpecies(bird.species || bird.commonName);
   const tavernBuilt = isAcademyRoomBuilt('tavern');
+  const canAfford = (gameState.player.coins || 0) >= cost;
+  const recruitAction = tavernBuilt ? 'recruit-birdex' : 'goto-tavern';
+  const recruitLabel = alreadyCompanion ? 'Companion'
+    : !tavernBuilt ? '🪶 Unlock the Barracks to recruit'
+    : canAfford ? `🪶 Recruit · ${cost} coins`
+    : `Need ${cost} coins`;
+  const recruitDisabled = alreadyCompanion || (tavernBuilt && !canAfford);
   const knownDietBadge = (gameState.dietBadges || {})[speciesKey(canonicalSpeciesName(bird.species || bird.commonName))]
     ? '<div class="birdex-diet-badge" title="Diet mastered at the Kitchen & Pantry">🍽️ DIET</div>' : '';
   return `
@@ -28762,7 +28906,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
             </div>
-            <button class="recruit-btn" data-action="goto-tavern" data-discovery-key="${key}" ${alreadyCompanion ? 'disabled' : ''}>${alreadyCompanion ? 'Companion' : tavernBuilt ? '🪶 Inspect at the Barracks' : '🪶 Unlock the Barracks to recruit'}</button>
+            <button type="button" class="recruit-btn" data-action="${recruitAction}" data-discovery-key="${key}" ${recruitDisabled ? 'disabled' : ''}>${recruitLabel}</button>
             <div class="card-info-hint">Tap card to learn about the real bird</div>
           </div>
         </div>
@@ -30191,6 +30335,8 @@ function showCaptureOverlay(bird) {
   const overlay = $('captureOverlay');
   const wrapper = $('captureCardWrapper');
   const particles = $('captureParticles');
+  const title = overlay.querySelector('.capture-title');
+  title.textContent = 'NEW COMPANION UNLOCKED!';
 
   // Build dopamine-hit Top Trumps style unlock card
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
@@ -30249,8 +30395,8 @@ function showCaptureOverlay(bird) {
   overlay.classList.add('show');
 
   // Rarity title color
-  overlay.querySelector('.capture-title').style.color = rarityColor;
-  overlay.querySelector('.capture-title').style.textShadow = `0 0 20px ${rarityColor}80`;
+  title.style.color = rarityColor;
+  title.style.textShadow = `0 0 20px ${rarityColor}80`;
 }
 
 $('captureNameBtn').addEventListener('click', (e) => {
@@ -31513,8 +31659,6 @@ const PLAYER_QUESTS = [
   { id:'pq_craft_gear',     name:'Commission the smith', desc:'Forge a piece of gear at the Fletcher’s Forge', type:'gear_crafted', target:1, reward:70, coins:40, icon:'\u{2692}\u{FE0F}', go:'forge' },
   { id:'pq_build_crowbar',  name:'Build The Crowbar', desc:'Raise the Academy bird bar to grow Charm', type:'build_crowbar', target:1, reward:60, coins:30, icon:'\u{1F37B}', go:'academy',
     measure:() => isAcademyBuildingBuilt('crowbar') ? 1 : 0 },
-  { id:'pq_merlin_clue',    name:'Merlin’s first clue', desc:'Uncover one of Merlin’s Clues on an expedition', type:'merlin_clue', target:1, reward:60, coins:30, icon:'\u{1F4DC}', go:'quests',
-    measure:() => (gameState.merlinCluesFound || []).length },
   { id:'pq_species_10',     name:'Budding ornithologist', desc:'Discover 10 different bird species', type:'discover', target:10, reward:90, coins:60, icon:'\u{1F989}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
   { id:'pq_build_workshop', name:'Build the Nest Workshop', desc:'Raise the Nest Workshop to toughen your flock', type:'build_workshop', target:1, reward:70, coins:35, icon:'\u{1F6E0}\u{FE0F}', go:'academy',
@@ -32078,7 +32222,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'real-sky-daylight-v243-20260810';
+const BURBZ_BUILD = 'live-reconcile-v245-20260810';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -32123,7 +32267,7 @@ const MERLIN_TUTORIAL_STEPS = [
     action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed' } },
   { chapterId:'story', progressGroup:'story-feed', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Wonderful! Every bird\u2019s diet must be accurate to get the best from it \u2014 unlock the Kitchen later for the rest of the feeding mechanics.' },
   { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Discover real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Now the real magic: find real birds out in your world. Discover them by camera or by sound, and every one lands in your Birdex.' },
-  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too \u2014 you\u2019ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
+  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.game-side-action[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too — you’ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
     action:{ event:'tab:quests', hint:'Tap the Quests tab' } },
 
   // — Quests: two beats, then the player actually sends Merlin flying.
@@ -32549,13 +32693,21 @@ function updateMerlinFlowPointer() {
   const el = $('tutorialNavPointer');
   if (!el) return;
   const target = merlinFlowPointerTarget();
-  document.querySelectorAll('.nav-item.tutorial-alert').forEach(item => item.classList.remove('tutorial-alert'));
+  document.querySelectorAll('[data-game-route].tutorial-alert').forEach(item => item.classList.remove('tutorial-alert'));
   if (!target) { el.classList.remove('show'); return; }
-  const navItem = document.querySelector('.nav-item[data-screen="' + target + '"]');
+  const navItem = document.querySelector('[data-game-route][data-screen="' + target + '"]');
   if (!navItem) { el.classList.remove('show'); return; }
   navItem.classList.add('tutorial-alert');
   const rect = navItem.getBoundingClientRect();
-  el.style.left = (rect.left + rect.width / 2) + 'px';
+  const sideTarget = navItem.classList.contains('game-side-action');
+  el.classList.toggle('side-target', sideTarget);
+  if (sideTarget) {
+    el.style.left = (rect.left - 5) + 'px';
+    el.style.top = (rect.top + rect.height / 2) + 'px';
+  } else {
+    el.style.left = (rect.left + rect.width / 2) + 'px';
+    el.style.top = '';
+  }
   const label = $('tutorialNavPointerText');
   if (label) label.textContent = target === 'quests' ? 'A quest awaits!' : 'To the Academy!';
   el.classList.add('show');
@@ -33071,15 +33223,11 @@ document.addEventListener('pointerdown', event => {
 // ============================================================================
 // NAVIGATION EVENT LISTENERS
 // ============================================================================
-$('bottomNav').addEventListener('click', (e) => {
-  const item = e.target.closest('.nav-item');
-  if (item) {
-    switchScreen(item.dataset.screen);
-    // A tab the PLAYER tapped — the tutorial's own screen changes must never
-    // count as the player doing the thing Merlin asked for.
-    if (typeof burbzTutorialAction === 'function') burbzTutorialAction('tab:' + item.dataset.screen);
-  }
+document.querySelectorAll('[data-game-route]').forEach(control => {
+  control.addEventListener('click', () => activateGameHudDestination(control.dataset.screen));
 });
+
+document.querySelector('[data-quick-destination="kitchen"]')?.addEventListener('click', openKitchenHudShortcut);
 
 // ============================================================================
 // DEMO DATA (for testing — adds sample birds if flock is empty)

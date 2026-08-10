@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-10 (real-sky daylight v243: the 3D village and town scenes now light themselves from the player's local clock — night is the original moonlit look bit-for-bit, midday brings a full sun, dawn/dusk pass through a golden transition. Pure maths in `daylight_core.js`; scenes rebuild when the real sky changes phase).
+Last curated: 2026-08-10 (live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
 
 ---
 
@@ -236,6 +236,47 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-10 — live reconcile: the drifted v240-v244 line comes home
+  (Claude).** Yaan reported that none of the day's updates were reaching the
+  game. Root cause: the production VPS (yaanbatho.com/burbz) had been
+  advanced DIRECTLY through five releases that never reached GitHub —
+  `birdex-direct-recruit-v240` (Birdex cards recruit directly once the
+  Barracks stands), `companion-unlock-copy-v241` ("NEW COMPANION
+  UNLOCKED!"), `remove-merlin-first-clue-v242` (retires `pq_merlin_clue`,
+  27-link chain), `training-master-room-actor-v243` (the Drill Master
+  stands in the Training Hall scene; its role card lives in a picker
+  sheet), `distributed-game-hud-v244` (header Diary button, right-side
+  quick-action rail with Kitchen/Quests/Stores, `data-game-route` routing
+  through `activateGameHudDestination`) — while GitHub main advanced through
+  four OTHERS (`early-game-easy-battles-v240` … `real-sky-daylight-v243`).
+  The burbz-sync drift guard then did exactly its job: live managed files no
+  longer matched its last-deploy manifest, so every sync aborted fail-closed
+  and NOTHING deployed. Release `live-reconcile-v245-20260810`.
+  - **Recovery**: `.burbz-deployed-sha` on the server still read the v239
+    base commit (7ba86f6). Exactly three managed files had drifted
+    (`index.html`, `sw.js`, `action_badge_core.js`); all three were
+    recovered byte-exact over HTTPS from the live web root and committed on
+    a branch cut from that base, then three-way merged with main — only the
+    `BURBZ_BUILD`/`BURBZ_CACHE` lines conflicted. Both lineages' markers
+    survive in the cache history, per the v217 precedent.
+  - **Tests**: the live line's test updates never reached GitHub and the
+    server does not serve `tests/`, so eleven pinned contracts were
+    repointed here at the recovered behaviour (nav-label pins → header
+    diary button / side-rail label, `roomBirdGridHTML(stageBirds, room)`,
+    the training-room rolePanel conditional, `recruitAction` fallback,
+    tutorial tab hook now `'tab:' + destination` fired from
+    `activateGameHudDestination` — with switchScreen still clean — and the
+    27-quest chain). New `tests/test_live_reconcile_v245_20260810.py` pins
+    the five recovered releases so they can never silently vanish again.
+  - **Ops**: the server's stale `.burbz-managed-hashes.sha256` must be
+    cleared once (then `systemctl start burbz-sync.service`) so the guard
+    re-baselines on this promoted build — after that the 5-minute timer
+    deploys main normally again.
+  - Local run: 1095 passed, 10 skipped, only the 7 documented git-lfs
+    pointer-file art failures. Browser-checked in Chromium: the merged game
+    boots with the distributed HUD and the town/county/daylight features
+    together, zero page errors.
 
 - **2026-08-10 — the real sky: village and town lighting follows the
   player's clock (Claude).** Yaan's follow-up to the town square: "I want the
