@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-10 (early-game easy battles v240: until the first county is founded, every evil Burbz squad is a ragged scouting party — capped at three birds, never more than the player's flock, all stats at 45% (`easeEarlyOpponents` in `index.html`) — so new players almost always win. Difficulty returns in full the moment the realm begins).
+Last curated: 2026-08-10 (town & county screens v242: a merged settlement now has its own 3D **Town Square** screen (`screen-town`) with every district village standing at its real position; each county has a painted, Crusader-Kings-style **County Map** screen (`screen-county`); and once counties swear to a duchy or kingdom the royal atlas paints their lands in the liege's colour (`realmTerritoryFeatureCollection` in `empire_realm_core.js`, `empire-realm` source in the map)).
 
 ---
 
@@ -236,6 +236,72 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-10 — the town square, the county map and the painted realm
+  (Claude).** Yaan's three-layer ask: capture three villages and the town they
+  make gets its own 3D screen "in sort of the same way that you've done the
+  village", with the villages visible within it; a county gets a separate
+  zoomed-out screen "more like Crusader Kings"; and once the player holds
+  several counties, the main map itself is coloured like a Crusader Kings
+  map. Release `town-county-screens-v242-20260810`.
+  - **Town Square** (`screen-town`, `index.html`): `renderTownScreen` /
+    `buildTownScene` run their OWN three.js renderer and animation registries
+    (`town*` globals) but reuse the whole `villageMake*` catalogue, textures
+    and gesture code. `townDistrictLayout` projects each member village's real
+    lat/lon offset from the settlement centroid onto the meadow (normalised,
+    then relaxed apart) — the town on screen is the town on the map. Each
+    district gets a cobbled yard, cottages, a seeded landmark
+    (church/windmill/manor/dovecote), hearth smoke and a floating name sign;
+    lanes run back to the shared market square, where the charter stone
+    (`villageMakeSettlementStandard`) flies one pennant per district. Tap a
+    district (raycast on `userData.districtSeed`) → `openEmpireVillage`.
+    Builders that push into the village animation registries
+    (walkers/roof-birds/cloths/hens/windmill sails) are length-marked before
+    the build and `splice`d into the town's own lists after — the two scenes
+    never fight over one list. Scene rebuild keys on `townSceneKey`
+    (settlement id + sorted member seeds), so a town that gains a district
+    rebuilds on the next visit. Reached from the Royal Ledger settlement rows
+    (`openEmpireTown`), the atlas settlement tap card (WALK ITS SQUARE — the
+    pinned `frameEmpireSettlement(settlement.id)` action survives), the
+    county-map hotspots, and a `#villageTownLink` banner on any district
+    village's screen. No-WebGL fallback: a district button list.
+  - **County Map** (`screen-county`): `drawCountyMap` paints a parchment
+    chart onto a 2D canvas, fully offline and seeded off the capital —
+    the county border as a smoothed convex hull in its realm's colour,
+    neighbouring counties dash-bordered at the map's edge, lanes running
+    capital-outward, village crests (district villages drop their labels —
+    the settlement banner names the group), town/city standards, cartouche,
+    compass and scale bar. DOM hotspot buttons over the canvas travel to
+    villages (`openEmpireVillage`) and squares (`openEmpireTown`). Opened
+    from the County Hall's 📜 COUNTY MAP button and the atlas county card.
+  - **Painted realm** (`empire_realm_core.js` + atlas): new pure helpers
+    `realmSeatTint` (golden-angle HSL per liege seat), `territoryHullRing`
+    (convex hull over padded village points, dateline-safe) and
+    `realmTerritoryFeatureCollection` (one polygon per county sworn to a
+    duchy or better, coloured by its TOP liege — kingdom over duchy; lone
+    counties stay unpainted on purpose: colour is the reward for uniting the
+    realm). The atlas adds an `empire-realm` geojson source with
+    data-driven `['get','color']` fill + border line layers, inserted BEFORE
+    `empire-territory` so village green stays on top; `refreshEmpireMap`
+    feeds it from the cached `empireRegionsInfo()` pyramid. Tapping painted
+    land opens an explain-first card (`showEmpirePaintedCountyCard`) via the
+    single map click handler (per the no-second-listener comment), and the
+    map key teaches the colours.
+  - Tests: `tests/test_town_county_screens_20260810.py` (Node-driven tint/
+    hull/painting maths — including the kingdom-overrides-duchy colour rule
+    and a dateline county — plus HTML wiring and release pins). Release pins
+    repointed per convention (11 `CURRENT_BUILD`s, 5 head-tracking
+    `RELEASE_PIN`s, and the realm-core `?v=` pins in the feudal/settlement/
+    location suites). SW cache + `BURBZ_BUILD` bumped;
+    `empire_realm_core.js` `?v=` moved in both loaders. Local run:
+    1077 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container). Browser-checked in Chromium
+    (390×844, SwiftShader): the Town Square renders both seeded towns with
+    3 district rows and travels into a district on tap; the County Map
+    paints hull, hotspots, cartouche and the duchy colour; zero page errors.
+  - NB: `screen-town` and `screen-county`, like `screen-region`, have no
+    bottom-nav item — they are reached programmatically only, so
+    `switchScreen`'s trail/back handling covers them automatically.
 
 - **2026-08-09 — the Bird Hospital discharges healed patients (Claude).**
   Yaan's follow-up to the sleep retirement: birds parked in the Bird Hospital

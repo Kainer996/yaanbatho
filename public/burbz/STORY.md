@@ -50,6 +50,7 @@ Freedom is contagious between neighbours. Liberate **three neighbouring villages
 - On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.
 - In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
 - Nothing is conquered and nothing is renamed away: every village keeps its own unique name, its own management desk and its own story — it is simply *part of something bigger now*. Every town, city, county, duchy and kingdom has a different proper name, so the map never asks one name to mean several places.
+- A merged settlement has a place of its own to walk: the **Town Square** screen shows the whole town in one 3D view — every district village standing where it really is, lanes running back to the shared market, the charter stone flying its pennants. Tap a district and you step into that village.
 
 Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer above them, and the two grow independently.
 
@@ -63,6 +64,8 @@ The game stays deliberately simple — walk, listen, befriend, liberate — unti
 - The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed villages.
 - Once the realm holds **two or more counties** — say the free woods around Delamere and a liberated corner of the south of France — their capitals can open **trade routes**. Sky-caravans of free birds carry each county's signature goods along great-circle roads drawn in gold on the liberation map; the farther the road, the rarer the cargo it returns.
 - Trade routes glow even across lands the usurper's shadow still holds: a caravan road is a ribbon of light through the darkness, proof that the free realms reach each other in defiance of the evil Burbz.
+- Every county keeps a **County Map** — a painted, Crusader-Kings-style chart of its lands: the border inked in the realm's colour, every settlement drawn in its place, lanes leading back to the capital, and the wild woods sketched beyond the frontier.
+- Once counties swear to a duchy or kingdom, the royal atlas paints their lands in the liege's own colour — one hue per realm, exactly as a Crusader Kings map reads. Free counties standing alone stay unpainted: the colours are the reward for uniting the realm.
 
 This is the long game: liberate villages until they make a county, unite counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
 

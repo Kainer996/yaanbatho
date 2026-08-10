@@ -912,6 +912,23 @@ svg.academy-room-bg { display:block; filter:none; }
 .region-hall-ladder-hint { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; color:#cdb98a; }
 .region-hall-liege { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12.5px; color:#ffe9a8; letter-spacing:.04em; line-height:1.6; }
 .region-hall-liege .rhl-arrow { color:#cdb98a; padding:0 2px; }
+/* ---- Town Square — the 3D screen of a merged settlement -------------------- */
+#screen-town .village-sub { margin:2px 14px 10px; }
+#townPanel { padding:0 12px 14px; }
+.town-district-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.08em; color:#9fd8a4; margin:12px 2px 6px; }
+#villageTownLink:empty { display:none; }
+.village-town-link { display:flex; align-items:center; gap:10px; width:calc(100% - 24px); margin:0 12px 10px; padding:10px 12px; border-radius:12px; border:1px solid rgba(142,227,154,.5); background:linear-gradient(160deg,rgba(24,40,22,.72),rgba(10,16,8,.85)); color:#bfe8c2; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12.5px; text-align:left; cursor:pointer; }
+.village-town-link:active { transform:scale(.985); }
+.village-town-link .vtl-icon { font-size:22px; }
+.village-town-link .vtl-name { color:#dfffe2; font-weight:900; letter-spacing:.03em; }
+/* ---- County Map — the painted Crusader-Kings chart of one county ----------- */
+.county-map-card { position:relative; margin:0 12px 12px; border-radius:14px; overflow:hidden; border:2px solid #7a5a28; background:#e7d7ac; box-shadow:0 0 0 1px rgba(240,199,103,.4), inset 0 0 26px rgba(90,60,20,.25); }
+#countyMapCanvas { display:block; width:100%; }
+#countyMapHotspots { position:absolute; inset:0; }
+.county-map-hotspot { position:absolute; transform:translate(-50%,-50%); width:34px; height:34px; border-radius:50%; border:0; background:transparent; cursor:pointer; padding:0; }
+.county-map-hotspot:focus-visible { outline:2px solid #f0c767; outline-offset:2px; border-radius:50%; }
+#countyMapPanel { padding:0 12px 14px; }
+.county-map-hint { margin:0 2px 10px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; color:var(--text3); line-height:1.5; }
 /* ---- Province management: population, needs, construction ------------------ */
 #villageManagePanel { margin:10px 2px 4px; }
 #villageManagePanel:empty { display:none; }
@@ -3689,6 +3706,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="empire-map-key-row"><span class="empire-map-key-swatch region">🛡️</span>County banner — 3+ freed villages united (Counties unite into Duchies, then Kingdoms, then your Empire)</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch frontier">⚔️</span>A dark village near you, waiting to be freed</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your counties</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch realm">🎨</span>Painted lands — counties sworn to one duchy or kingdom share its colour</div>
           <div class="empire-map-key-foot">Daylight on the map = lands you have freed. Darkness = lands still waiting.</div>
         </div>
         <div class="empire-map-tapcard" id="empireMapTapCard" role="dialog" aria-live="polite"></div>
@@ -3700,6 +3718,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="empire-village-hub" id="empireVillageHub">
         <div class="empire-village-hub-title" id="villageTitle">BURB VILLAGE</div>
         <div class="village-sub" id="villageSub"></div>
+        <div id="villageTownLink"></div>
         <div id="villageClaimBar"></div>
         <div class="village-stage" id="villageStage"><div class="village-loading" id="villageLoading">Raising the timber frames…</div></div>
         <div id="villageManagePanel"></div>
@@ -3713,6 +3732,28 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <div class="screen" id="screen-region">
       <div class="screen-title" id="regionScreenTitle">COUNTY HALL</div>
       <div id="regionHallPanel"></div>
+    </div>
+
+    <!-- TOWN SQUARE — three neighbouring villages grow into one town (three
+         towns into one city). This 3D screen walks the merged settlement:
+         every district village stands around the shared market square. -->
+    <div class="screen" id="screen-town">
+      <div class="screen-title" id="townScreenTitle">TOWN SQUARE</div>
+      <div class="village-sub" id="townSub"></div>
+      <div class="village-stage" id="townStage"><div class="village-loading" id="townLoading">Raising the market square…</div></div>
+      <div id="townPanel"></div>
+    </div>
+
+    <!-- COUNTY MAP — a painted, Crusader-Kings-style chart of one county:
+         its borders, its settlements and the lands between them. -->
+    <div class="screen" id="screen-county">
+      <div class="screen-title" id="countyMapTitle">COUNTY MAP</div>
+      <div class="county-map-card" id="countyMapCard">
+        <canvas id="countyMapCanvas" aria-label="Painted map of your county"></canvas>
+        <div id="countyMapHotspots"></div>
+        <div class="empire-map-corner tl"></div><div class="empire-map-corner tr"></div><div class="empire-map-corner bl"></div><div class="empire-map-corner br"></div>
+      </div>
+      <div id="countyMapPanel"></div>
     </div>
 
     <div class="screen" id="screen-quests">
@@ -4238,7 +4279,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=turn-potions-v232-20260806"></script>
 <script src="loot_crafting_core.js?v=turn-potions-v232-20260806"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
+<script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -10765,6 +10806,7 @@ function refreshRoleSurfaces() {
   try { if (currentScreen === 'academy') renderAcademy(); } catch (e) {}
   try { if (currentScreen === 'village') { renderVillageManagePanel(); renderEmpirePanel(); } } catch (e) {}
   try { if (currentScreen === 'region') renderRegionScreen(); } catch (e) {}
+  try { if (currentScreen === 'town') renderTownScreen(); } catch (e) {}
 }
 
 // Birds free to take a post: in the flock, home, and not already posted here.
@@ -18955,6 +18997,8 @@ function switchScreen(name) {
   if (name === 'academy-room') renderAcademyRoomInterior();
   if (name === 'village') { renderVillage(); setTimeout(onVillageResize, 60); }
   if (name === 'region') renderRegionScreen();
+  if (name === 'town') { renderTownScreen(); setTimeout(onTownResize, 60); }
+  if (name === 'county') renderCountyMapScreen();
   if (name === 'inventory') renderInventory();
   if (name === 'forge') renderForge();
   if (name === 'quests') renderQuests();
@@ -19819,6 +19863,38 @@ function empireTerritoryVillageAtPoint(map, event) {
   return null;
 }
 
+// A tap on the painted realm — land coloured by its duchy or kingdom — names
+// the county that owns it, in the same explain-first style as village taps.
+function empireRealmCountyAtPoint(map, event) {
+  try {
+    if (!event || !event.point || !map.getLayer('empire-realm-fill')) return null;
+    const features = map.queryRenderedFeatures(event.point, { layers:['empire-realm-fill'] });
+    for (const feature of features) {
+      const region = empireRegionById(feature && feature.properties && feature.properties.id);
+      if (region) return region;
+    }
+  } catch (e) {}
+  return null;
+}
+function showEmpirePaintedCountyCard(region) {
+  const rc = realmCore();
+  const liege = region.kingdomId ? empireLiegeById(region.kingdomId) : (region.duchyId ? empireLiegeById(region.duchyId) : null);
+  showEmpireMapCard({
+    crest: liege ? liege.tierIcon : region.tierIcon,
+    name: region.name,
+    kind: liege ? 'Painted in the colour of the ' + liege.name : region.tierLabel + ' of your realm',
+    facts: [
+      '🏡 ' + region.villageCount + ' villages',
+      '👑 capital ' + region.capitalName,
+      '+' + Math.round(((rc && rc.regionUnityBonus ? rc.regionUnityBonus(region) : 0.15) || 0.15) * 100) + '% unity taxes'
+    ],
+    actions: [
+      { label: '🛡️ OPEN COUNTY HALL', run: () => openEmpireRegion(region.id) },
+      { label: '📜 COUNTY MAP', run: () => openEmpireCountyMap(region.id) }
+    ]
+  });
+}
+
 function wrappedLongitudeNear(lon, referenceLon) {
   const longitude = Number(lon);
   const reference = Number(referenceLon);
@@ -20170,6 +20246,8 @@ function refreshEmpireMap(options = {}) {
       features: villages.map(v => core.territoryCircle(v, empireVillageTerritoryRadiusM(v.seed))).filter(Boolean)
     });
     if (rc) empireMap.getSource('empire-trade')?.setData(rc.tradeRouteFeatureCollection(openRoutes, 48));
+    // The painted realm: one colour per liege across every county it holds.
+    if (rc && rc.realmTerritoryFeatureCollection) empireMap.getSource('empire-realm')?.setData(rc.realmTerritoryFeatureCollection(empireRegionsInfo()));
   } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
   clearEmpireMapMarkers();
   hideEmpireMapCard();
@@ -20210,7 +20288,10 @@ function refreshEmpireMap(options = {}) {
           '👥 ' + pop,
           tierInfo ? '+' + Math.round(tierInfo.taxBonus * 100) + '% taxes' : ''
         ],
-        actions: [{ label: '🗺️ SHOW ITS LANDS', run: () => frameEmpireSettlement(settlement.id) }]
+        actions: [
+          { label: settlement.icon + ' WALK ITS SQUARE', run: () => openEmpireTown(settlement.id) },
+          { label: '🗺️ SHOW ITS LANDS', run: () => frameEmpireSettlement(settlement.id) }
+        ]
       });
     });
     empireRegionMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(settlement.centroid.lon), Number(settlement.centroid.lat)]).addTo(empireMap));
@@ -20239,6 +20320,7 @@ function refreshEmpireMap(options = {}) {
         ],
         actions: [
           { label: '🛡️ OPEN COUNTY HALL', run: () => openEmpireRegion(region.id) },
+          { label: '📜 COUNTY MAP', run: () => openEmpireCountyMap(region.id) },
           { label: '🗺️ SHOW ON MAP', run: () => frameEmpireRegion(region.id) }
         ]
       });
@@ -20333,6 +20415,8 @@ function initialiseEmpireMap() {
       // listener whose ordering would vary across MapLibre releases.
       const village = empireTerritoryVillageAtPoint(map, event);
       if (village) { SFX.tap(); showEmpireVillageMapCard(village); return; }
+      const paintedCounty = empireRealmCountyAtPoint(map, event);
+      if (paintedCounty) { SFX.tap(); showEmpirePaintedCountyCard(paintedCounty); return; }
       hideEmpireMapCard();
       hideEmpireMapKey();
     });
@@ -20358,6 +20442,12 @@ function initialiseEmpireMap() {
         // Realm territory: each liberated province paints its lands in the
         // realm's green, Crusader-map style. The fill is tappable and opens
         // the same explain-first card as its village banner.
+        // The painted realm, Crusader-Kings style: once counties unite
+        // beneath a duchy or kingdom, every county wears its liege's colour.
+        // Added before the territory layer so village green stays on top.
+        map.addSource('empire-realm', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+        map.addLayer({ id:'empire-realm-fill', type:'fill', source:'empire-realm', paint:{ 'fill-color':['get','color'], 'fill-opacity':.26 } });
+        map.addLayer({ id:'empire-realm-border', type:'line', source:'empire-realm', layout:{ 'line-join':'round' }, paint:{ 'line-color':['get','border'], 'line-width':['interpolate',['linear'],['zoom'],2,1,9,2.6], 'line-opacity':.85 } });
         map.addSource('empire-territory', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
         map.addLayer({ id:'empire-territory-fill', type:'fill', source:'empire-territory', paint:{ 'fill-color':'#7ed983', 'fill-opacity':.18 } });
         map.on('mouseenter', 'empire-territory-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -21708,7 +21798,7 @@ function renderEmpirePanel() {
   panel.querySelectorAll('[data-action="open-trade"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireOpenTradeRoute(btn.dataset.route); }));
   panel.querySelectorAll('[data-action="empire-region"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); openEmpireRegion(btn.dataset.region); }));
   panel.querySelectorAll('[data-action="empire-liege"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' }); frameEmpireLiege(btn.dataset.liege); }));
-  panel.querySelectorAll('[data-action="empire-settlement"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); frameEmpireSettlement(btn.dataset.settlement); }));
+  panel.querySelectorAll('[data-action="empire-settlement"]').forEach(btn => btn.addEventListener('click', () => { openEmpireTown(btn.dataset.settlement); }));
   // Locator taps point at the map: scroll it into view, then frame the target.
   const scrollMapIntoView = () => $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' });
   panel.querySelector('[data-action="locator-me"]')?.addEventListener('click', () => { SFX.tap(); scrollMapIntoView(); empireMapUserAdjusted = true; frameEmpirePlayer(); });
@@ -21850,7 +21940,7 @@ function renderRegionScreen() {
       wardenCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
   }
   panel.innerHTML =
-    '<div class="region-hall-nav"><button type="button" class="region-hall-back" data-action="region-back">← ROYAL LEDGER</button><button type="button" class="region-hall-atlas" data-action="region-atlas">🗺️ VIEW ON ROYAL ATLAS</button></div>' +
+    '<div class="region-hall-nav"><button type="button" class="region-hall-back" data-action="region-back">← ROYAL LEDGER</button><button type="button" class="region-hall-atlas" data-action="region-map">📜 COUNTY MAP</button><button type="button" class="region-hall-atlas" data-action="region-atlas">🗺️ VIEW ON ROYAL ATLAS</button></div>' +
     '<div class="region-hall-head"><div class="region-hall-crest">' + region.tierIcon + '</div><div class="region-hall-titles"><div class="region-hall-name">' + escapeHtml(region.name) + '</div>' +
     '<div class="region-hall-sub">' + escapeHtml(region.tierLabel) + ' of your empire · capital ' + escapeHtml(region.capitalName) + ' · you are ' + escapeHtml(empireCrownTitle()) + '</div></div></div>' +
     '<div class="empire-stats-row">' +
@@ -21870,11 +21960,359 @@ function renderRegionScreen() {
   panel.querySelectorAll('[data-action="region-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelector('[data-action="region-collect"]')?.addEventListener('click', () => collectRegionTribute(region.id));
   panel.querySelector('[data-action="region-back"]')?.addEventListener('click', () => { SFX.tap(); switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
+  panel.querySelector('[data-action="region-map"]')?.addEventListener('click', () => { openEmpireCountyMap(region.id); });
   panel.querySelector('[data-action="region-atlas"]')?.addEventListener('click', () => { SFX.tap(); showRegionOnAtlas(region.id); });
   panel.querySelectorAll('details[data-empire-drawer]').forEach(drawer => {
     drawer.addEventListener('toggle', () => { empireDrawerOpenState[drawer.dataset.empireDrawer] = drawer.open; });
   });
 }
+
+// ============================================================================
+// TOWN SQUARE — the 3D home of a merged settlement. Three neighbouring
+// villages grow into one town (three towns into one city); this screen walks
+// the merged place itself: every district village stands in the scene around
+// the shared market square, linked by lanes, with the charter stone flying
+// one pennant per district. Tap a district to travel into its village.
+// ============================================================================
+let townActiveId = null;
+function openEmpireTown(settlementId) {
+  const settlement = empireSettlementById(settlementId);
+  if (!settlement) { frameEmpireSettlement(settlementId); return; }
+  townActiveId = String(settlement.id);
+  SFX.tap();
+  if (currentScreen !== 'town') switchScreen('town');
+  else renderTownScreen();
+}
+// Settlements can merge or reshape between visits — fall back to the first
+// city or town on the books, and to the Empire desk if none stand any more.
+function currentTownSettlement() {
+  const info = empireSettlementsInfo();
+  return empireSettlementById(townActiveId) || info.cities[0] || info.towns[0] || null;
+}
+// The scene is rebuilt when the settlement's membership changes, not just its
+// id — a town that gains a district gets its new quarter on the next visit.
+function townSceneKey(settle) {
+  return settle.id + ':' + settle.villages.map(v => String(v.seed >>> 0)).sort().join(',');
+}
+function renderTownScreen() {
+  const stage = $('townStage');
+  if (!stage) return;
+  empireCompleteConstructions();
+  simulateAllVillageEconomies();
+  const settle = currentTownSettlement();
+  if (!settle) { switchScreen('village'); return; }
+  townActiveId = String(settle.id);
+  const isCity = settle.tier === 'city';
+  const title = $('townScreenTitle');
+  if (title) title.textContent = settle.icon + ' ' + settle.name.toUpperCase() + ' · ' + (isCity ? 'CITY' : 'TOWN');
+  const sub = $('townSub');
+  if (sub) {
+    sub.textContent = (isCity
+      ? 'Your city — ' + settle.villageCount + ' villages grown into one. '
+      : 'Your town — ' + settle.villageCount + ' neighbouring villages grown into one. ') +
+      'Each district keeps its own name and its own life. Drag to look around, pinch to zoom, two-finger drag to wander — tap a district to walk its streets.';
+  }
+  renderTownPanel(settle);
+  if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
+  try {
+    ensureTownRenderer(stage);
+    if (townBuiltKey !== townSceneKey(settle)) buildTownScene(settle);
+    const loading = $('townLoading');
+    if (loading) loading.remove();
+    if (!townRunning) { townRunning = true; requestAnimationFrame(townAnimate); }
+    onTownResize();
+  } catch (err) {
+    console.warn('BURBZ town: 3D init failed, using the district list', err);
+    townFallbackMode = true;
+    renderTownFallback(settle);
+  }
+}
+function renderTownFallback(settle) {
+  const stage = $('townStage');
+  if (!stage) return;
+  stage.innerHTML = '<div class="village-fallback">' + settle.villages.map(v => {
+    const isHeart = (Number(v.seed) >>> 0) === settle.heartSeed;
+    return '<button class="village-fallback-building" data-town-district="' + (v.seed >>> 0) + '">' +
+      '<span class="vfb-icon">' + empireVillageCrest(v.seed) + '</span><span class="vfb-name">' + escapeHtml(v.name) + (isHeart ? ' 👑' : '') + '</span>' +
+      '<span class="vfb-desc">' + (isHeart ? 'the heart of ' + escapeHtml(settle.name) : 'district — tap to govern') + '</span></button>';
+  }).join('') + '</div>';
+  stage.querySelectorAll('[data-town-district]').forEach(btn => btn.addEventListener('click', () => openEmpireVillage(btn.dataset.townDistrict)));
+}
+function renderTownPanel(settle) {
+  const panel = $('townPanel');
+  if (!panel) return;
+  const rc = realmCore();
+  const isCity = settle.tier === 'city';
+  const tierInfo = rc && rc.settlementTierInfo ? rc.settlementTierInfo(settle.tier) : null;
+  const county = empireRegionOfSeed(settle.heartSeed);
+  let pop = 0, taxes = 0, branches = 0;
+  const rows = settle.villages.map(v => {
+    const snap = villageEconomySnapshot(v);
+    pop += snap.pop; taxes += snap.taxes; branches += snap.branches;
+    const isHeart = (Number(v.seed) >>> 0) === settle.heartSeed;
+    return '<button type="button" class="empire-village-row" data-action="town-district" data-seed="' + (v.seed >>> 0) + '">' +
+      '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
+      '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + (isHeart ? ' 👑' : '') + '</span><br>' +
+      '<span class="empire-village-meta">' + (isHeart ? 'heart of ' + escapeHtml(settle.name) + ' · ' : 'district · ') + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ build homes') + (villageConstructionFor(v) ? ' · 🏗️ building' : '') + '</span></span>' +
+      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵</span></button>';
+  }).join('');
+  panel.innerHTML =
+    '<div class="region-hall-nav"><button type="button" class="region-hall-back" data-action="town-back">← ROYAL LEDGER</button><button type="button" class="region-hall-atlas" data-action="town-atlas">🗺️ VIEW ON ROYAL ATLAS</button></div>' +
+    '<div class="region-hall-head"><div class="region-hall-crest">' + settle.icon + '</div><div class="region-hall-titles"><div class="region-hall-name">' + escapeHtml(settle.label) + '</div>' +
+    '<div class="region-hall-sub">' + (isCity ? 'City' : 'Town') + ' of your empire · heart ' + escapeHtml(settle.heartName) + (county ? ' · in the ' + escapeHtml(county.name) : '') + '</div></div></div>' +
+    '<div class="empire-stats-row">' +
+    '<div class="empire-stat-chip"><div class="empire-stat-value">' + settle.villageCount + '</div><div class="empire-stat-label">Districts</div></div>' +
+    '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + pop + '</div><div class="empire-stat-label">Subjects</div></div>' +
+    '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxes + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
+    '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branches + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
+    '</div>' +
+    (tierInfo ? '<div class="region-hall-unity">🤝 Merged ' + (isCity ? 'city' : 'town') + ': every district pays +' + Math.round(tierInfo.taxBonus * 100) + '% taxes and its guilds build ' + Math.round((1 - tierInfo.buildTimeFactor) * 100) + '% faster for standing together.</div>' : '') +
+    '<div class="town-district-title">🏡 DISTRICTS OF ' + escapeHtml(settle.name.toUpperCase()) + ' · tap one to govern it</div>' +
+    '<div class="empire-village-list">' + rows + '</div>' +
+    (county ? '<div class="region-hall-nav"><button type="button" class="region-hall-atlas" data-action="town-county">🛡️ ' + escapeHtml(county.properName.toUpperCase()) + ' — COUNTY HALL</button></div>' : '');
+  panel.querySelectorAll('[data-action="town-district"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
+  panel.querySelector('[data-action="town-back"]')?.addEventListener('click', () => { SFX.tap(); switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
+  panel.querySelector('[data-action="town-atlas"]')?.addEventListener('click', () => { SFX.tap(); switchScreen('village'); setTimeout(() => frameEmpireSettlement(settle.id), 420); });
+  panel.querySelector('[data-action="town-county"]')?.addEventListener('click', () => { SFX.tap(); openEmpireRegion(county.id); });
+}
+
+// ============================================================================
+// COUNTY MAP — a painted chart of one county, Crusader-Kings style: the
+// county's border in its realm's colour, every settlement drawn in its place,
+// lanes between them, and the wild lands sketched around the edge. All of it
+// is drawn offline onto a canvas from the same claims the atlas reads.
+// ============================================================================
+let countyMapActiveId = null;
+let countyMapHotspotData = [];
+function openEmpireCountyMap(regionId) {
+  const region = empireRegionById(regionId);
+  if (!region) { openEmpireRegion(regionId); return; }
+  countyMapActiveId = String(region.id);
+  SFX.tap();
+  if (currentScreen !== 'county') switchScreen('county');
+  else renderCountyMapScreen();
+}
+function renderCountyMapScreen() {
+  const canvas = $('countyMapCanvas');
+  if (!canvas) return;
+  const region = empireRegionById(countyMapActiveId) || empireRegionsInfo().regions[0] || null;
+  if (!region) { switchScreen('village'); return; }
+  countyMapActiveId = String(region.id);
+  const title = $('countyMapTitle');
+  if (title) title.textContent = '🛡️ ' + region.properName.toUpperCase() + ' · COUNTY MAP';
+  drawCountyMap(region);
+  renderCountyMapPanel(region);
+}
+function renderCountyMapPanel(region) {
+  const panel = $('countyMapPanel');
+  if (!panel) return;
+  const realmInfo = empireRegionsInfo();
+  const liege = region.kingdomId ? (realmInfo.kingdoms || []).find(k => k.id === region.kingdomId) : (region.duchyId ? (realmInfo.duchies || []).find(d => d.id === region.duchyId) : null);
+  panel.innerHTML =
+    '<div class="county-map-hint">📜 The painted chart of the ' + escapeHtml(region.name) + (liege ? ', sworn to the ' + escapeHtml(liege.name) + ' — its lands wear the realm’s colour' : ' — a free county standing alone') + '. Tap any settlement on the map to visit it.</div>' +
+    '<div class="region-hall-nav"><button type="button" class="region-hall-back" data-action="county-hall">🛡️ COUNTY HALL</button><button type="button" class="region-hall-atlas" data-action="county-atlas">🗺️ VIEW ON ROYAL ATLAS</button></div>';
+  panel.querySelector('[data-action="county-hall"]')?.addEventListener('click', () => { SFX.tap(); openEmpireRegion(region.id); });
+  panel.querySelector('[data-action="county-atlas"]')?.addEventListener('click', () => { SFX.tap(); showRegionOnAtlas(region.id); });
+}
+// The painter. Everything is seeded off the county's capital, so the same
+// county always paints the same chart — hills, woods and all.
+function drawCountyMap(region) {
+  const canvas = $('countyMapCanvas');
+  const card = $('countyMapCard');
+  if (!canvas || !card) return;
+  const rc = realmCore();
+  const cssW = Math.max(280, card.clientWidth || 320);
+  const cssH = Math.max(300, Math.min(520, Math.round(cssW * 0.82)));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.height = cssH + 'px';
+  const x = canvas.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const centre = region.centroid;
+  // Fit: the county's farthest village plus breathing room of countryside.
+  const reachKm = Math.max(6, rc && rc.regionCoverageRadiusKm ? rc.regionCoverageRadiusKm(region, 6) : 20);
+  const kmPerLat = 111.195;
+  const kmPerLon = kmPerLat * Math.max(0.05, Math.cos(centre.lat * Math.PI / 180));
+  const pxPerKm = (Math.min(cssW, cssH) / 2) * 0.8 / reachKm;
+  const project = (lat, lon) => {
+    let ln = Number(lon);
+    ln += 360 * Math.round((centre.lon - ln) / 360);
+    return {
+      px: cssW / 2 + (ln - centre.lon) * kmPerLon * pxPerKm,
+      py: cssH / 2 - (Number(lat) - centre.lat) * kmPerLat * pxPerKm
+    };
+  };
+  const r = villageRngFrom((region.capitalSeed ^ 0x5bd1e995) >>> 0);
+  // ---- Parchment ground -----------------------------------------------------
+  const bg = x.createRadialGradient(cssW / 2, cssH / 2, 40, cssW / 2, cssH / 2, Math.max(cssW, cssH) * 0.72);
+  bg.addColorStop(0, '#f1e3bc'); bg.addColorStop(0.75, '#e7d7ac'); bg.addColorStop(1, '#d3ba86');
+  x.fillStyle = bg; x.fillRect(0, 0, cssW, cssH);
+  x.globalAlpha = 0.07;
+  for (let i = 0; i < 260; i++) {
+    x.fillStyle = r() < 0.5 ? '#8a6a34' : '#fff6da';
+    x.fillRect(r() * cssW, r() * cssH, 1.4, 1.4);
+  }
+  x.globalAlpha = 1;
+  // ---- The wild countryside: seeded woods and hills beyond the border -------
+  const doodads = [];
+  for (let i = 0; i < 46; i++) {
+    doodads.push({ px: r() * cssW, py: r() * cssH, kind: r() < 0.62 ? 'tree' : 'hill', s: 0.8 + r() * 0.8 });
+  }
+  // ---- Neighbouring counties: painted at the map's edge where they reach ----
+  const realmInfo = empireRegionsInfo();
+  const liegeOf = county => county.kingdomId ? (realmInfo.kingdoms || []).find(k => k.id === county.kingdomId) : (county.duchyId ? (realmInfo.duchies || []).find(d => d.id === county.duchyId) : null);
+  const paintCounty = (county, isHome) => {
+    const ring = rc && rc.territoryHullRing ? rc.territoryHullRing(county.villages, 2.5) : null;
+    if (!ring) return null;
+    const pts = ring.map(([ln, lt]) => project(lt, ln));
+    const liege = liegeOf(county);
+    const tint = liege && rc && rc.realmSeatTint ? rc.realmSeatTint(liege.seatSeed) : null;
+    x.beginPath();
+    // Rounded borders: curve through the midpoints so the hull reads as a
+    // hand-inked frontier, not a surveyor's polygon.
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[(i + 1) % (pts.length - 1)];
+      const mx = (a.px + b.px) / 2, my = (a.py + b.py) / 2;
+      if (i === 0) x.moveTo(mx, my); else x.quadraticCurveTo(a.px, a.py, mx, my);
+    }
+    const a0 = pts[0], b0 = pts[1];
+    x.quadraticCurveTo(a0.px, a0.py, (a0.px + b0.px) / 2, (a0.py + b0.py) / 2);
+    x.closePath();
+    x.save();
+    x.globalAlpha = isHome ? 0.30 : 0.16;
+    x.fillStyle = tint ? tint.fill : '#8ee39a';
+    x.fill();
+    x.restore();
+    x.lineWidth = isHome ? 3 : 1.6;
+    x.strokeStyle = tint ? tint.border : '#4a7a44';
+    x.setLineDash(isHome ? [] : [6, 5]);
+    x.stroke();
+    x.setLineDash([]);
+    return pts;
+  };
+  (realmInfo.regions || []).forEach(county => {
+    if (county.id === region.id) return;
+    const c = project(county.centroid.lat, county.centroid.lon);
+    if (c.px < -cssW * 0.4 || c.px > cssW * 1.4 || c.py < -cssH * 0.4 || c.py > cssH * 1.4) return;
+    paintCounty(county, false);
+    x.font = '700 11px Georgia, serif'; x.textAlign = 'center';
+    x.fillStyle = 'rgba(65,48,26,.75)';
+    x.fillText(county.properName.toUpperCase(), c.px, c.py);
+  });
+  const homePts = paintCounty(region, true);
+  // Countryside doodads paint only OUTSIDE the county border.
+  const inHome = (px, py) => {
+    if (!homePts) return false;
+    let inside = false;
+    for (let i = 0, j = homePts.length - 2; i < homePts.length - 1; j = i++) {
+      const a = homePts[i], b = homePts[j];
+      if ((a.py > py) !== (b.py > py) && px < (b.px - a.px) * (py - a.py) / (b.py - a.py) + a.px) inside = !inside;
+    }
+    return inside;
+  };
+  doodads.forEach(d => {
+    if (inHome(d.px, d.py)) return;
+    if (d.kind === 'tree') {
+      x.fillStyle = 'rgba(90,110,58,.55)';
+      x.beginPath(); x.moveTo(d.px, d.py - 7 * d.s); x.lineTo(d.px - 4 * d.s, d.py); x.lineTo(d.px + 4 * d.s, d.py); x.closePath(); x.fill();
+      x.strokeStyle = 'rgba(90,70,34,.6)'; x.lineWidth = 1;
+      x.beginPath(); x.moveTo(d.px, d.py); x.lineTo(d.px, d.py + 3 * d.s); x.stroke();
+    } else {
+      x.strokeStyle = 'rgba(122,94,50,.5)'; x.lineWidth = 1.4;
+      x.beginPath(); x.arc(d.px, d.py, 6 * d.s, Math.PI * 1.15, Math.PI * 1.85); x.stroke();
+    }
+  });
+  // ---- Lanes: every village road leads back toward the capital --------------
+  const villagesPx = region.villages.map(v => ({ v, ...project(v.lat, v.lon) }));
+  const capital = villagesPx.find(({ v }) => (Number(v.seed) >>> 0) === region.capitalSeed) || villagesPx[0];
+  x.strokeStyle = 'rgba(122,90,40,.7)'; x.lineWidth = 1.6; x.setLineDash([5, 4]);
+  const connected = [capital];
+  villagesPx.filter(p => p !== capital).forEach(p => {
+    let best = connected[0], bestD = Infinity;
+    connected.forEach(c => { const d = Math.hypot(c.px - p.px, c.py - p.py); if (d < bestD) { bestD = d; best = c; } });
+    const bow = (r() - 0.5) * bestD * 0.3;
+    const mx = (best.px + p.px) / 2 - (p.py - best.py) / bestD * bow;
+    const my = (best.py + p.py) / 2 + (p.px - best.px) / bestD * bow;
+    x.beginPath(); x.moveTo(best.px, best.py); x.quadraticCurveTo(mx, my, p.px, p.py); x.stroke();
+    connected.push(p);
+  });
+  x.setLineDash([]);
+  // ---- Settlements: villages, their towns and cities, and the capital -------
+  countyMapHotspotData = [];
+  const settlements = empireSettlementsInfo();
+  const drawnSettles = new Set();
+  villagesPx.forEach(({ v, px, py }) => {
+    const isCapital = (Number(v.seed) >>> 0) === region.capitalSeed;
+    const settle = empireSettlementOfSeed(v.seed);
+    x.font = (isCapital ? '20px' : '15px') + ' serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(empireVillageCrest(v.seed), px, py);
+    if (isCapital) x.fillText('👑', px, py - 15);
+    // Districts of a merged town sit too close for one label each — the
+    // settlement's own banner names the group, so only free villages (and
+    // the county capital) carry their name on the chart.
+    if (!settle || isCapital) {
+      x.font = '700 10px Georgia, serif'; x.textBaseline = 'alphabetic';
+      x.strokeStyle = 'rgba(236,220,178,.9)'; x.lineWidth = 3; x.lineJoin = 'round';
+      const label = v.name.toUpperCase();
+      x.strokeText(label, px, py + 16); x.fillStyle = '#41301a'; x.fillText(label, px, py + 16);
+    }
+    countyMapHotspotData.push({ px, py, kind: 'village', id: String(v.seed >>> 0), label: 'Visit ' + v.name + ' Village' });
+    if (settle && !drawnSettles.has(settle.id)) drawnSettles.add(settle.id);
+  });
+  // Town / city standards fly at each merged settlement's centroid.
+  drawnSettles.forEach(id => {
+    const settle = empireSettlementById(id);
+    if (!settle) return;
+    const c = project(settle.centroid.lat, settle.centroid.lon);
+    x.font = '22px serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(settle.icon, c.px, c.py - 24);
+    x.font = '900 11px Georgia, serif'; x.textBaseline = 'alphabetic';
+    x.strokeStyle = 'rgba(236,220,178,.9)'; x.lineWidth = 3;
+    const label = (settle.tier === 'city' ? 'CITY OF ' : 'TOWN OF ') + settle.name.toUpperCase();
+    x.strokeText(label, c.px, c.py - 40);
+    x.fillStyle = settle.tier === 'city' ? '#7a5a10' : '#2c5a34'; x.fillText(label, c.px, c.py - 40);
+    countyMapHotspotData.push({ px: c.px, py: c.py - 24, kind: 'settlement', id: settle.id, label: 'Walk the ' + settle.label });
+  });
+  // ---- Cartouche, compass and scale -----------------------------------------
+  x.fillStyle = 'rgba(236,220,178,.88)'; x.strokeStyle = '#8a6134'; x.lineWidth = 1.6;
+  const cartW = Math.min(cssW - 24, 250);
+  x.beginPath(); x.roundRect(12, 12, cartW, 46, 8); x.fill(); x.stroke();
+  x.fillStyle = '#41301a'; x.font = '900 14px Georgia, serif'; x.textAlign = 'left';
+  x.fillText('🛡️ ' + region.name, 22, 31);
+  x.font = '700 10px Georgia, serif'; x.fillStyle = '#6a5230';
+  x.fillText(region.villageCount + ' villages · capital ' + region.capitalName, 22, 48);
+  x.textAlign = 'center'; x.font = '900 12px Georgia, serif'; x.fillStyle = '#41301a';
+  x.fillText('N', cssW - 26, 30);
+  x.strokeStyle = '#41301a'; x.lineWidth = 1.4;
+  x.beginPath(); x.moveTo(cssW - 26, 52); x.lineTo(cssW - 26, 36); x.stroke();
+  x.beginPath(); x.moveTo(cssW - 30, 42); x.lineTo(cssW - 26, 34); x.lineTo(cssW - 22, 42); x.closePath();
+  x.fillStyle = '#41301a'; x.fill();
+  const scaleKm = reachKm > 40 ? 20 : reachKm > 16 ? 10 : reachKm > 8 ? 5 : 2;
+  const scalePx = scaleKm * pxPerKm;
+  x.strokeStyle = '#41301a'; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(16, cssH - 18); x.lineTo(16 + scalePx, cssH - 18); x.stroke();
+  x.font = '700 10px Georgia, serif'; x.textAlign = 'left'; x.fillStyle = '#41301a';
+  x.fillText(scaleKm + ' km', 16, cssH - 24);
+  // ---- Tap targets over the painted chart -----------------------------------
+  const hotspots = $('countyMapHotspots');
+  if (hotspots) {
+    hotspots.innerHTML = '';
+    countyMapHotspotData.forEach(spot => {
+      if (spot.px < 0 || spot.px > cssW || spot.py < 0 || spot.py > cssH) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'county-map-hotspot';
+      btn.style.left = spot.px + 'px'; btn.style.top = spot.py + 'px';
+      btn.setAttribute('aria-label', spot.label);
+      btn.addEventListener('click', () => {
+        if (spot.kind === 'settlement') openEmpireTown(spot.id);
+        else openEmpireVillage(spot.id);
+      });
+      hotspots.appendChild(btn);
+    });
+  }
+}
+window.addEventListener('resize', () => { if (currentScreen === 'county') renderCountyMapScreen(); });
 
 // ---- Scene state ------------------------------------------------------------
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
@@ -21911,6 +22349,18 @@ function renderVillage() {
     if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
     else if (dev <= 0) sub.textContent = 'Your village, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
     else sub.textContent = 'Your village. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.' + settleNote;
+  }
+  // A village inside a merged town or city links straight to its square.
+  const townLink = $('villageTownLink');
+  if (townLink) {
+    if (settleTitle) {
+      townLink.innerHTML = '<button type="button" class="village-town-link" data-action="visit-town">' +
+        '<span class="vtl-icon">' + settleTitle.icon + '</span>' +
+        '<span>Walk the shared square of <span class="vtl-name">' + escapeHtml(settleTitle.label) + '</span> — every district village in one 3D view.</span></button>';
+      townLink.querySelector('[data-action="visit-town"]')?.addEventListener('click', () => openEmpireTown(settleTitle.id));
+    } else {
+      townLink.innerHTML = '';
+    }
   }
   renderVillageClaimBar();
   renderVillageManagePanel();
@@ -25341,6 +25791,538 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
     },
     state: () => ({ scene: villageScene, camera: villageCamera, renderer: villageRenderer, cam: villageCam, buildings: villageBuildings, walkers: villageWalkers, roofBirds: villageRoofBirds, ducks: villageDucks, cloths: villageCloths, clouds: villageClouds, waterMats: villageWaterMats, weatherFx: villageWeatherFx, shootingStar: villageShootingStar, npcs: villageNpcs, chickens: villageChickens })
   };
+}
+
+// ---- Town scene state --------------------------------------------------------
+// The Town Square runs its own renderer and animation registries so the
+// village scene and the town scene never fight over the same lists. The
+// village helper builders push walkers/birds/cloths/chickens into the village
+// registries; buildTownScene marks their lengths and moves the new entries
+// into the town's own lists when the build completes.
+let townScene = null, townRenderer = null, townCamera = null, townRunning = false;
+let townDistrictGroups = [], townSigns = [], townTorches = [], townSmokes = [], townWindmills = [];
+let townWalkers = [], townRoofBirds = [], townCloths = [], townNpcs = [], townChickens = [], townClouds = [];
+let townCam = { azimuth: 0, polar: 1.0, dist: 36, tx: 0, tz: 0, lastInputAt: 0 };
+let townShadowTick = 0;
+let townFallbackMode = false;
+let townBuiltKey = null;
+
+function ensureTownRenderer(stage) {
+  if (townRenderer) {
+    if (!townRenderer.domElement.isConnected) stage.appendChild(townRenderer.domElement);
+    return;
+  }
+  townCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 200); // far covers the sky dome from the widest orbit
+  townRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  townRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  townRenderer.shadowMap.enabled = true;
+  townRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  townRenderer.shadowMap.autoUpdate = false; // static moon: refreshed every 3rd frame like the village
+  townRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  townRenderer.toneMappingExposure = 1.25;
+  stage.appendChild(townRenderer.domElement);
+
+  const el = townRenderer.domElement;
+  // The same free-roam controls as the village, opened out for town scale:
+  // one finger orbits, two fingers pinch to zoom and stroll, desktop gets the
+  // wheel plus shift- or right-button drag. Double-tap returns to the square.
+  const TOWN_CAM_MIN_DIST = 9, TOWN_CAM_MAX_DIST = 54, TOWN_CAM_PAN_REACH = 30;
+  const camPointers = new Map();
+  let orbitStart = null, pinchLast = null, dragged = false;
+  function townCamZoom(dist) { townCam.dist = Math.min(TOWN_CAM_MAX_DIST, Math.max(TOWN_CAM_MIN_DIST, dist)); }
+  function townCamPan(dx, dy) {
+    const s = Math.sin(townCam.azimuth), c = Math.cos(townCam.azimuth);
+    const k = townCam.dist * 0.0016;
+    townCam.tx += (-c * dx - s * dy) * k;
+    townCam.tz += (s * dx - c * dy) * k;
+    const reach = Math.hypot(townCam.tx, townCam.tz);
+    if (reach > TOWN_CAM_PAN_REACH) { townCam.tx *= TOWN_CAM_PAN_REACH / reach; townCam.tz *= TOWN_CAM_PAN_REACH / reach; }
+  }
+  function pinchState() {
+    const pts = [...camPointers.values()];
+    return { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx: (pts[0].x + pts[1].x) / 2, my: (pts[0].y + pts[1].y) / 2 };
+  }
+  el.addEventListener('pointerdown', e => {
+    camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    townCam.lastInputAt = Date.now();
+    if (camPointers.size === 1) {
+      orbitStart = { x: e.clientX, y: e.clientY, az: townCam.azimuth, po: townCam.polar, pan: e.shiftKey || e.button === 2 };
+      dragged = false;
+    } else if (camPointers.size === 2) {
+      orbitStart = null;
+      pinchLast = pinchState();
+      dragged = true; // a pinch is never a tap
+    }
+  });
+  el.addEventListener('pointermove', e => {
+    const p = camPointers.get(e.pointerId);
+    if (!p) return;
+    const prevX = p.x, prevY = p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    townCam.lastInputAt = Date.now();
+    if (camPointers.size === 2 && pinchLast) {
+      const now = pinchState();
+      townCamZoom(townCam.dist * (pinchLast.d / Math.max(1, now.d)));
+      townCamPan(now.mx - pinchLast.mx, now.my - pinchLast.my);
+      pinchLast = now;
+      return;
+    }
+    if (!orbitStart) return;
+    const dx = e.clientX - orbitStart.x, dy = e.clientY - orbitStart.y;
+    if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    if (orbitStart.pan) { townCamPan(p.x - prevX, p.y - prevY); return; }
+    townCam.azimuth = orbitStart.az - dx * 0.006;
+    townCam.polar = Math.min(1.36, Math.max(0.5, orbitStart.po - dy * 0.004));
+  });
+  function releasePointer(e) {
+    camPointers.delete(e.pointerId);
+    if (camPointers.size < 2) pinchLast = null;
+    if (camPointers.size === 1) {
+      const pt = [...camPointers.values()][0];
+      orbitStart = { x: pt.x, y: pt.y, az: townCam.azimuth, po: townCam.polar, pan: false };
+    } else if (camPointers.size === 0) orbitStart = null;
+  }
+  el.addEventListener('pointercancel', releasePointer);
+  el.addEventListener('pointerup', e => {
+    releasePointer(e);
+    const wasDrag = dragged;
+    if (camPointers.size > 0) return;
+    if (wasDrag) return;
+    const rect = el.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, townCamera);
+    const hits = ray.intersectObjects(townDistrictGroups.concat(townNpcs), true);
+    if (hits.length > 0) {
+      let obj = hits[0].object;
+      while (obj && obj.userData.districtSeed === undefined && !obj.userData.npc) obj = obj.parent;
+      if (obj && obj.userData.districtSeed !== undefined) openEmpireVillage(obj.userData.districtSeed);
+      else if (obj && obj.userData.npc) villageGreetNpc(obj);
+    }
+  });
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    townCam.lastInputAt = Date.now();
+    townCamZoom(townCam.dist + e.deltaY * 0.02);
+  }, { passive: false });
+  el.addEventListener('dblclick', () => { townCam.tx = 0; townCam.tz = 0; townCamZoom(38); }); // walk back to the market square
+  el.addEventListener('contextmenu', e => e.preventDefault());
+
+  window.addEventListener('resize', onTownResize);
+}
+
+function disposeTownScene() {
+  if (!townScene) return;
+  townScene.traverse(o => {
+    if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
+    if (o.isLight) {
+      if (o.shadow && o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
+      if (typeof o.dispose === 'function') o.dispose();
+    }
+    if (o.geometry) o.geometry.dispose();
+    const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+    mats.forEach(m => {
+      ['map', 'normalMap', 'emissiveMap'].forEach(slot => {
+        const tx = m[slot];
+        if (tx && tx.dispose && !(tx.userData && tx.userData.shared)) tx.dispose();
+      });
+      m.dispose();
+    });
+  });
+  townScene = null;
+  townDistrictGroups = []; townSigns = []; townTorches = []; townSmokes = []; townWindmills = [];
+  townWalkers = []; townRoofBirds = []; townCloths = []; townNpcs = []; townChickens = []; townClouds = [];
+}
+
+// Lay the districts out from their REAL geography: each village's offset from
+// the settlement centroid is projected onto the meadow, normalised to fit,
+// then gently pushed apart so no two districts overlap. The town on screen is
+// the town on the map, the same shape you walked.
+function townDistrictLayout(settle, spreadR, minGap) {
+  const centre = settle.centroid;
+  const kmPerLat = 111.195;
+  const kmPerLon = kmPerLat * Math.max(0.05, Math.cos(centre.lat * Math.PI / 180));
+  const spots = settle.villages.map(v => {
+    let lon = Number(v.lon);
+    lon += 360 * Math.round((centre.lon - lon) / 360);
+    return { v, x: (lon - centre.lon) * kmPerLon, z: -(Number(v.lat) - centre.lat) * kmPerLat };
+  });
+  let maxD = 0.001;
+  spots.forEach(s => { maxD = Math.max(maxD, Math.hypot(s.x, s.z)); });
+  const scale = spreadR / maxD;
+  spots.forEach(s => { s.x *= scale; s.z *= scale; });
+  // Relaxation: overlapping districts slide apart, and everything keeps a
+  // courtyard's distance from the market square at the origin.
+  for (let iter = 0; iter < 60; iter++) {
+    for (let i = 0; i < spots.length; i++) {
+      const si = spots[i];
+      const dc = Math.hypot(si.x, si.z);
+      if (dc < 12) { const push = dc < 0.001 ? { x: 1, z: 0 } : { x: si.x / dc, z: si.z / dc }; si.x = push.x * 12; si.z = push.z * 12; }
+      for (let j = i + 1; j < spots.length; j++) {
+        const sj = spots[j];
+        const dx = sj.x - si.x, dz = sj.z - si.z;
+        const d = Math.hypot(dx, dz);
+        if (d >= minGap) continue;
+        const ux = d < 0.001 ? 1 : dx / d, uz = d < 0.001 ? 0 : dz / d;
+        const shove = (minGap - d) / 2;
+        si.x -= ux * shove; si.z -= uz * shove;
+        sj.x += ux * shove; sj.z += uz * shove;
+      }
+    }
+  }
+  spots.forEach(s => {
+    const d = Math.hypot(s.x, s.z);
+    if (d > spreadR) { s.x *= spreadR / d; s.z *= spreadR / d; }
+  });
+  return spots;
+}
+
+function buildTownScene(settle) {
+  disposeTownScene();
+  const isCity = settle.tier === 'city';
+  const r = villageRngFrom((Number(settle.heartSeed) ^ 0x517cc1b7) >>> 0);
+  const pal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  const groundR = isCity ? 52 : 46;
+  const flatR = groundR - 10;
+  // Mark the shared registries so district builders' walkers, birds, cloths
+  // and hens can be moved into the town's own animation lists afterwards.
+  const npcMark = villageNpcs.length, chickenMark = villageChickens.length;
+  const birdMark = villageRoofBirds.length, clothMark = villageCloths.length;
+  const windmillMark = villageWindmills.length;
+
+  townScene = new THREE.Scene();
+  townScene.background = new THREE.Color(pal.sky);
+  const skyCols = villageSkyColors(pal);
+  townScene.fog = new THREE.Fog(skyCols.hor.clone(), 48, 118);
+  townScene.add(villageSkyDome(skyCols));
+
+  // Rolling hills at the rim, level ground for the districts.
+  const hillPh1 = r() * Math.PI * 2, hillPh2 = r() * Math.PI * 2, hillAmp = 1.8 + r() * 1.4;
+  const heightAt = (x, z) => {
+    const d = Math.hypot(x, z);
+    if (d <= flatR) return 0;
+    let k = Math.min(1, (d - flatR) / (groundR - flatR));
+    k = k * k * (3 - 2 * k);
+    const a = Math.atan2(z, x);
+    return hillAmp * k * (0.75 + 0.3 * Math.sin(a * 3 + hillPh1) + 0.18 * Math.sin(a * 7 + hillPh2));
+  };
+  const grassTile = 4.6;
+  const groundGeo = (() => {
+    const rings = 34, segs = 80;
+    const pos = [0, 0, 0], uv = [0, 0], idx = [];
+    for (let ri = 1; ri <= rings; ri++) {
+      const rr = groundR * Math.pow(ri / rings, 0.85);
+      for (let si = 0; si < segs; si++) {
+        const a = (si / segs) * Math.PI * 2;
+        const gx = Math.cos(a) * rr, gz = Math.sin(a) * rr;
+        pos.push(gx, heightAt(gx, gz), gz);
+        uv.push(gx / grassTile, gz / grassTile);
+      }
+    }
+    const at = (ri, si) => ri === 0 ? 0 : 1 + (ri - 1) * segs + (si % segs);
+    for (let si = 0; si < segs; si++) idx.push(0, at(1, si + 1), at(1, si));
+    for (let ri = 1; ri < rings; ri++) {
+      for (let si = 0; si < segs; si++) {
+        const a0 = at(ri, si), a1 = at(ri, si + 1), b0 = at(ri + 1, si), b1 = at(ri + 1, si + 1);
+        idx.push(a0, a1, b0, a1, b1, b0);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    return geo;
+  })();
+  const grassMaps = villageGrassMaps();
+  const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({
+    map: grassMaps.map, normalMap: grassMaps.normalMap, normalScale: new THREE.Vector2(1.0, 1.0),
+    color: new THREE.Color(pal.ground).multiplyScalar(1.85), roughness: 1, metalness: 0
+  }));
+  ground.receiveShadow = true;
+  townScene.add(ground);
+
+  // ---- The shared market square at the settlement's heart -------------------
+  const cobbleMat = villageCobbleMaterial(pal);
+  const cobbleTile = 2.6;
+  const plazaR = isCity ? 8 : 6.6;
+  const plaza = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(plazaR, 30), (plazaR * 2) / cobbleTile, (plazaR * 2) / cobbleTile), cobbleMat);
+  plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; townScene.add(plaza);
+  // The charter stone: one pennant per district, gold for a city.
+  const standard = villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount });
+  standard.position.set(0, 0, 0);
+  townScene.add(standard);
+  const centrepiece = isCity ? villageMakeCentrepiece(r, pal) : villageMakeMaypole(r, pal);
+  centrepiece.position.set(plazaR * 0.45, 0, -plazaR * 0.45);
+  townScene.add(centrepiece);
+  for (let i = 0; i < (isCity ? 4 : 3); i++) {
+    const stall = villageMakeStall(r, pal);
+    const a = (i / (isCity ? 4 : 3)) * Math.PI * 2 + 0.6;
+    stall.position.set(Math.cos(a) * (plazaR - 1.6), 0, Math.sin(a) * (plazaR - 1.6));
+    stall.rotation.y = -a + Math.PI / 2;
+    townScene.add(stall);
+  }
+  for (const a of [0.3, Math.PI * 0.8, Math.PI * 1.45]) {
+    const lamp = villageMakeLampPost(r, pal);
+    lamp.position.set(Math.cos(a) * (plazaR + 0.7), 0, Math.sin(a) * (plazaR + 0.7));
+    townScene.add(lamp);
+    const glow = new THREE.PointLight(0xffb45e, 1.8, 11, 2);
+    glow.position.set(lamp.position.x, 2.4, lamp.position.z);
+    glow.userData.base = 1.8;
+    townScene.add(glow);
+    townTorches.push(glow);
+  }
+  // Market-day life: townsfolk on their circuits of the square, hens between.
+  for (let i = 0; i < (isCity ? 5 : 3); i++) {
+    const walker = villageMakeVillager(r, pal, i === 0 ? 'elder' : i === 1 ? 'child' : 'commoner');
+    walker.userData.route = { phase: r() * Math.PI * 2, speed: (0.05 + r() * 0.05) * (r() < 0.5 ? 1 : -1), rad: 3.2 + r() * (plazaR - 4) };
+    townScene.add(walker);
+    townWalkers.push(walker);
+  }
+  for (let i = 0; i < 2; i++) {
+    const hen = villageMakeChicken(r, pal);
+    hen.position.set((r() - 0.5) * plazaR, 0, (r() - 0.5) * plazaR);
+    townScene.add(hen);
+  }
+
+  // ---- Districts: every member village, in its real position ----------------
+  const spreadR = flatR - 8;
+  const spots = townDistrictLayout(settle, spreadR, 13);
+  const laneMatGeo = [];
+  spots.forEach((spot, i) => {
+    const v = spot.v;
+    const seed = Number(v.seed) >>> 0;
+    const isHeart = seed === settle.heartSeed;
+    const dr = villageRngFrom((seed ^ 0x2545f491) >>> 0);
+    const district = new THREE.Group();
+    district.userData.districtSeed = seed;
+    // District green: a small cobbled yard, cottages ringed around it, one
+    // signature landmark so every quarter of the town looks like itself.
+    const padR = isHeart ? 4.6 : 3.8;
+    const pad = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(padR, 22), (padR * 2) / cobbleTile, (padR * 2) / cobbleTile), cobbleMat);
+    pad.rotation.x = -Math.PI / 2; pad.position.y = 0.018; district.add(pad);
+    const landmarkRoll = dr();
+    const landmark = landmarkRoll < 0.3 ? villageMakeChurch(dr, pal)
+      : landmarkRoll < 0.55 ? villageMakeWindmill(dr, pal)
+      : landmarkRoll < 0.8 ? villageMakeManor(dr, pal)
+      : villageMakeDovecote(dr, pal);
+    const la = dr() * Math.PI * 2;
+    landmark.position.set(Math.cos(la) * (padR + 1.6), 0, Math.sin(la) * (padR + 1.6));
+    landmark.lookAt(0, 0, 0); landmark.rotation.x = 0; landmark.rotation.z = 0;
+    district.add(landmark);
+    const cottages = isHeart ? 4 : 2 + Math.floor(dr() * 2);
+    for (let c = 0; c < cottages; c++) {
+      const cot = villageMakeCottage(dr, pal);
+      const ca = la + ((c + 1) / (cottages + 1)) * Math.PI * 2;
+      cot.position.set(Math.cos(ca) * (padR + 1.3 + dr() * 0.8), 0, Math.sin(ca) * (padR + 1.3 + dr() * 0.8));
+      cot.lookAt(0, 0, 0); cot.rotation.x = 0; cot.rotation.z = 0;
+      district.add(cot);
+      if (dr() < 0.6) { // hearth smoke over a lived-in district
+        const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageSmokeTexture(), transparent: true, depthWrite: false, opacity: 0.4 }));
+        puff.userData = { baseY: 3.1, speed: 0.5 + dr() * 0.3, phase: dr() * 1.6 };
+        puff.position.set(cot.position.x, 3.1, cot.position.z);
+        district.add(puff);
+        townSmokes.push(puff);
+      }
+    }
+    const tree = villageMakeTree(dr, pal);
+    tree.position.set(Math.cos(la + 2.2) * (padR + 2.6), 0, Math.sin(la + 2.2) * (padR + 2.6));
+    district.add(tree);
+    if (dr() < 0.5) { const hay = villageMakeHay(dr, pal); hay.position.set(Math.cos(la - 1.6) * (padR + 1.8), 0, Math.sin(la - 1.6) * (padR + 1.8)); district.add(hay); }
+    // The district's name floats over its green — the town names its quarters.
+    const sign = villageMakeSign(v.name + (isHeart ? ' 👑' : ''));
+    sign.position.set(0, 4.7, 0);
+    sign.userData.baseY = 4.7;
+    district.add(sign);
+    townSigns.push(sign);
+    if (i < 8) { // a torch on each near district; the farthest keep the moon
+      const torch = new THREE.PointLight(0xffb45e, 1.6, 12, 2);
+      torch.position.set(0, 2.6, 0);
+      torch.userData.base = 1.6;
+      district.add(torch);
+      townTorches.push(torch);
+    }
+    district.position.set(spot.x, 0, spot.z);
+    townScene.add(district);
+    townDistrictGroups.push(district);
+    // A lane from the market square out to this district's yard.
+    laneMatGeo.push(spot);
+  });
+  // ---- Lanes: cobbled ribbons joining every district to the square ----------
+  laneMatGeo.forEach(spot => {
+    const dist = Math.hypot(spot.x, spot.z);
+    const ux = spot.x / dist, uz = spot.z / dist;
+    const from = plazaR - 0.4, to = dist - 3.2;
+    const segs = Math.max(2, Math.ceil((to - from) / 5));
+    const bow = (r() - 0.5) * 3;
+    let prev = null;
+    for (let s = 0; s <= segs; s++) {
+      const along = from + (s / segs) * (to - from);
+      const off = Math.sin(((along - from) / (to - from)) * Math.PI) * bow;
+      const pt = { x: ux * along - uz * off, z: uz * along + ux * off };
+      if (prev) {
+        const dx = pt.x - prev.x, dz = pt.z - prev.z;
+        const len = Math.hypot(dx, dz) + 0.5;
+        // The proven road pattern: a group carries the bearing, the plane
+        // inside only lies flat — no compound Euler headaches.
+        const seg = new THREE.Group();
+        const lane = new THREE.Mesh(villageScaleUV(new THREE.PlaneGeometry(len, 1.9), len / cobbleTile, 1.9 / cobbleTile), cobbleMat);
+        lane.rotation.x = -Math.PI / 2;
+        lane.receiveShadow = true;
+        seg.add(lane);
+        seg.rotation.y = -Math.atan2(dz, dx);
+        seg.position.set((prev.x + pt.x) / 2, 0.012, (prev.z + pt.z) / 2);
+        townScene.add(seg);
+      }
+      prev = pt;
+    }
+  });
+  // Loose trees in the meadow between districts.
+  for (let i = 0; i < 10; i++) {
+    const a = r() * Math.PI * 2, d = plazaR + 4 + r() * (spreadR - plazaR - 4);
+    const tx = Math.cos(a) * d, tz = Math.sin(a) * d;
+    if (spots.some(s => Math.hypot(s.x - tx, s.z - tz) < 8)) continue;
+    const tree = villageMakeTree(r, pal);
+    tree.position.set(tx, heightAt(tx, tz), tz);
+    townScene.add(tree);
+  }
+  // The dark forest belt on the surrounding hills.
+  const belt = villageMakeForestBelt(r, pal, groundR, () => true, 2, heightAt);
+  townScene.add(belt);
+
+  // ---- Sky: stars, moon and drifting cloud -----------------------------------
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = [];
+  for (let i = 0; i < 160; i++) {
+    const a = r() * Math.PI * 2, e = 0.12 + r() * 1.2, rad = 92;
+    starPos.push(Math.cos(a) * Math.cos(e) * rad, Math.sin(e) * rad, Math.sin(a) * Math.cos(e) * rad);
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xdfe8ff, size: 0.5, sizeAttenuation: true, transparent: true, opacity: 0.85, fog: false }));
+  stars.userData.sky = true;
+  townScene.add(stars);
+  const camAz = r() * Math.PI * 2;
+  const skyAim = -(camAz + Math.PI / 2);
+  const skyDirAt = (ang, y) => new THREE.Vector3(Math.cos(ang), 0, Math.sin(ang)).setY(y).normalize();
+  const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
+  moonSprite.scale.set(9, 9, 1);
+  moonSprite.position.copy(skyDirAt(skyAim, 0.2)).multiplyScalar(80);
+  moonSprite.userData.sky = true;
+  townScene.add(moonSprite);
+  for (let i = 0; i < 4; i++) {
+    const cloud = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageSmokeTexture(), transparent: true, depthWrite: false, opacity: 0.16, fog: false }));
+    cloud.scale.set(26 + r() * 16, 8 + r() * 4, 1);
+    cloud.position.set((r() - 0.5) * 90, 26 + r() * 14, (r() - 0.5) * 90);
+    cloud.userData = { baseX: cloud.position.x, speed: 0.5 + r() * 0.5, range: 60, sky: true };
+    townScene.add(cloud);
+    townClouds.push(cloud);
+  }
+
+  // ---- Moonlight --------------------------------------------------------------
+  townScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, 2.0));
+  const moon = new THREE.DirectionalLight(0xbfd2ff, 1.9);
+  moon.position.copy(skyDirAt(skyAim + 0.55, 0.6)).multiplyScalar(52);
+  moon.castShadow = true;
+  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.camera.left = -(groundR + 4); moon.shadow.camera.right = groundR + 4;
+  moon.shadow.camera.top = groundR + 4; moon.shadow.camera.bottom = -(groundR + 4);
+  moon.shadow.camera.near = 1; moon.shadow.camera.far = 140;
+  moon.shadow.bias = -0.0005; moon.shadow.normalBias = 0.18;
+  townScene.add(moon);
+  const fill = new THREE.DirectionalLight(0x39456e, 0.8);
+  fill.position.copy(skyDirAt(skyAim + Math.PI - 0.4, 0.45)).multiplyScalar(36);
+  townScene.add(fill);
+
+  // Shadow flags: same rules as the village — decals receive only, glow
+  // sprites and blob shadows stay out of the pass entirely.
+  townScene.traverse(o => {
+    if (!o.isMesh || (o.userData && o.userData.sky)) return;
+    const mat = Array.isArray(o.material) ? o.material[0] : o.material;
+    if (!mat || mat.wireframe) return;
+    if (mat.userData && mat.userData.blob) return;
+    if (mat.isMeshBasicMaterial) return;
+    const flatDecal = (o.geometry && (o.geometry.type === 'PlaneGeometry' || o.geometry.type === 'CircleGeometry' || o.geometry.type === 'RingGeometry')) &&
+      Math.abs(o.rotation.x + Math.PI / 2) < 0.05;
+    if (flatDecal) { o.receiveShadow = true; return; }
+    o.castShadow = true;
+    o.receiveShadow = true;
+  });
+
+  // Adopt the walkers, birds, cloths and hens the shared builders registered.
+  townNpcs = townNpcs.concat(villageNpcs.splice(npcMark));
+  townChickens = townChickens.concat(villageChickens.splice(chickenMark));
+  townRoofBirds = townRoofBirds.concat(villageRoofBirds.splice(birdMark));
+  townCloths = townCloths.concat(villageCloths.splice(clothMark));
+  townWindmills = townWindmills.concat(villageWindmills.splice(windmillMark));
+
+  townBuiltKey = townSceneKey(settle);
+  townCam.azimuth = camAz;
+  townCam.polar = 1.04;
+  townCam.dist = isCity ? 42 : 37;
+  townCam.tx = 0; townCam.tz = 0;
+}
+
+function townAnimate(ts) {
+  if (currentScreen !== 'town') { townRunning = false; return; }
+  requestAnimationFrame(townAnimate);
+  if (!townRenderer || !townScene) return;
+  townAnimateFrame((ts || 0) / 1000);
+}
+function townAnimateFrame(t) {
+  if (Date.now() - (townCam.lastInputAt || 0) > 8000) townCam.azimuth += 0.0005;
+  const { azimuth, polar, dist, tx, tz } = townCam;
+  townCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 3, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
+  townCamera.lookAt(tx, 1.6, tz);
+  townSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
+  townTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
+  townWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });
+  townSmokes.forEach(p => {
+    const cycle = ((t * p.userData.speed + p.userData.phase) % 1.6);
+    p.position.y = p.userData.baseY + cycle * 1.6;
+    p.material.opacity = 0.4 * (1 - cycle / 1.6);
+    const sc = 0.55 + cycle * 0.6;
+    p.scale.set(sc, sc, 1);
+  });
+  townWalkers.forEach(wk => {
+    const rt = wk.userData.route;
+    if (!rt) return;
+    const ph = rt.phase + t * rt.speed;
+    const wx = Math.cos(ph) * rt.rad, wz = Math.sin(ph) * rt.rad;
+    wk.position.set(wx, Math.abs(Math.sin(t * 6 + rt.phase)) * 0.03, wz);
+    const vx = -Math.sin(ph) * Math.sign(rt.speed), vz = Math.cos(ph) * Math.sign(rt.speed);
+    wk.rotation.y = Math.atan2(-vz, vx);
+  });
+  townRoofBirds.forEach((b, i) => {
+    if (b.userData.baseY0 === undefined) { b.userData.baseY0 = b.position.y; b.userData.baseRotY = b.rotation.y; }
+    const hop = Math.max(0, Math.sin(t * (1.3 + (i % 4) * 0.23) + b.userData.phase) - 0.94) * 1.4;
+    b.position.y = b.userData.baseY0 + hop;
+    b.rotation.y = b.userData.baseRotY + Math.sin(t * 0.7 + b.userData.phase) * 0.55;
+  });
+  townCloths.forEach(c => { c.rotation.x = Math.sin(t * 1.3 + c.userData.phase) * 0.22; });
+  townChickens.forEach((ch, i) => {
+    const u = ch.userData;
+    if (!u.neck) return;
+    const peck = Math.max(0, Math.sin(t * (2.1 + (i % 3) * 0.5) + u.phase) - 0.55);
+    u.neck.rotation.x = peck * 1.5;
+    ch.rotation.y = u.baseRot + Math.sin(t * 0.35 + u.phase) * 0.9;
+  });
+  townClouds.forEach(cl => {
+    const range = cl.userData.range || 60;
+    cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + range) % (range * 2)) - range;
+  });
+  if (townShadowTick++ % 3 === 0) townRenderer.shadowMap.needsUpdate = true;
+  townRenderer.render(townScene, townCamera);
+}
+function onTownResize() {
+  if (!townRenderer || !townCamera) return;
+  const stage = $('townStage');
+  if (!stage) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (!w || !h) return;
+  townRenderer.setSize(w, h, false);
+  townCamera.aspect = w / h;
+  townCamera.updateProjectionMatrix();
 }
 
 // ---- Shop overlay + purchases ----
@@ -30024,7 +31006,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -31019,7 +32001,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'battle-squad-board-v241-20260810';
+const BURBZ_BUILD = 'town-county-screens-v242-20260810';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
