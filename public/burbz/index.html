@@ -1794,10 +1794,11 @@ svg.academy-room-bg { display:block; filter:none; }
 .battle-select { display: block; }
 .battle-arena { display: none; }
 .battle-result-screen { display: none; }
-/* Squad board — four slots the player fills from the roster below. */
+/* Squad board — slots grow with the squad; the player fills them from the roster below. */
 .sq-board { padding:12px; background:linear-gradient(180deg, var(--bg2), rgba(20,17,12,.9)); border:1px solid rgba(214,168,79,.22); border-radius:16px; margin-bottom:4px; }
 .sq-board-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
 .sq-board-title { font-family:'Russo One',sans-serif; font-size:14px; color:var(--accent); letter-spacing:.03em; }
+.sq-board-sub { font-size:10.5px; color:var(--text3); line-height:1.4; margin:-4px 0 10px; }
 .sq-forge-btn { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 12px; border-radius:20px; border:1px solid rgba(143,208,255,.35); background:rgba(143,208,255,.08); color:#8fd0ff; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
 .sq-forge-btn:active { transform:scale(.96); }
 .sq-slots { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:8px; }
@@ -3589,6 +3590,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
             <span class="sq-board-title">Your squad</span>
             <button class="sq-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">Gear up</button>
           </div>
+          <div class="sq-board-sub">Bring as many birds as you like. Battle wears them out — they rest and heal before empire work.</div>
           <div class="sq-slots" id="battleSquadSlots"></div>
           <div class="battle-synergy-preview" id="battleSynergyPreview">✨ Three birds from one family add a +25% squad bonus.</div>
         </div>
@@ -4235,7 +4237,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
-<script src="battle_core.js?v=turn-potions-v232-20260806"></script>
+<script src="battle_core.js?v=any-size-squad-v242-20260810"></script>
 <script src="loot_crafting_core.js?v=turn-potions-v232-20260806"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
@@ -29462,21 +29464,25 @@ function renderBattleSelect() {
       typeChipHTML(core.classifySpecies(b.species)) + '</div>').join('') + '</div>' +
     (counterTypes.length ? '<div class="rival-counter-line"><span>Beat them with</span>' + counterTypes.map(t => typeChipHTML(t)).join('') + '</div>' : '');
 
-  // Squad slots — the four picked birds, in fighting order. Tap one to bench it.
-  battleSelectedIds = (league.teamIds || []).filter(id => pickable.some(b => b.id === id)).slice(0, 4);
+  // Squad slots — every picked bird, in fighting order. Tap one to bench it.
+  // No squad cap: the player may send the whole flock, and the empire pays
+  // for it while those birds recover.
+  battleSelectedIds = (league.teamIds || []).filter(id => pickable.some(b => b.id === id));
   if (!battleSelectedIds.length && pickable.length) {
     battleSelectedIds = pickable.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 4).map(b => b.id);
   }
   const slotBirds = battleSelectedIds.map(id => pickable.find(b => b.id === id)).filter(Boolean);
+  const boardTitle = document.querySelector('.sq-board-title');
+  if (boardTitle) boardTitle.textContent = slotBirds.length ? 'Your squad · ' + slotBirds.length : 'Your squad';
   const slotsHost = $('battleSquadSlots');
-  if (slotsHost) slotsHost.innerHTML = Array.from({ length: 4 }, (_, i) => {
-    const b = slotBirds[i];
-    if (!b) return '<div class="sq-slot empty"><span class="sq-slot-plus">+</span><span class="sq-slot-hint">Bird ' + (i + 1) + '</span></div>';
-    return '<button type="button" class="sq-slot filled" onclick="battlePickToggle(\'' + b.id + '\')" aria-label="Bench ' + escapeHtml(birdDisplayName(b)) + '">' +
+  if (slotsHost) slotsHost.innerHTML = slotBirds.map((b, i) =>
+    '<button type="button" class="sq-slot filled" onclick="battlePickToggle(\'' + b.id + '\')" aria-label="Bench ' + escapeHtml(birdDisplayName(b)) + '">' +
       '<span class="sq-slot-num">' + (i + 1) + '</span><span class="sq-slot-x">✕</span>' +
       fighterArtHTML(b, 'ss') +
-      '<span class="sq-slot-name">' + escapeHtml(birdDisplayName(b)) + '</span></button>';
-  }).join('');
+      '<span class="sq-slot-name">' + escapeHtml(birdDisplayName(b)) + '</span></button>'
+  ).join('') + (slotBirds.length < pickable.length
+    ? '<div class="sq-slot empty"><span class="sq-slot-plus">+</span><span class="sq-slot-hint">Add a bird</span></div>'
+    : '');
 
   // The roster: birds ready to fight up top, everyone else listed with the
   // thing that keeps them away — a job, training, a quest, sleep or hunger.
@@ -29531,8 +29537,7 @@ function renderBattleSelect() {
         : '<div class="roster-empty">Every bird is busy or hungry right now. Free one up, then come back.</div>') +
       (bench.length ? '<div class="roster-title">Out and about <span class="roster-count">' + bench.length + '</span></div><div class="bench-list">' + benchRows + '</div>' : '');
   }
-  const need = Math.min(4, pickable.length);
-  const selectedBattleBirds = battleSelectedIds.map(id => pickable.find(b => b.id === id)).filter(Boolean);
+  const selectedBattleBirds = slotBirds;
   const previewSynergies = birdFamilyCore() ? birdFamilyCore().detectTeamSynergies(selectedBattleBirds) : [];
   const synergyPreview = $('battleSynergyPreview');
   if (synergyPreview) {
@@ -29542,10 +29547,10 @@ function renderBattleSelect() {
       : '✨ Three birds from one family — or three Birds of Prey — add a +25% squad bonus.';
   }
   const hungerBlocked = selectedBattleBirds.some(b => !birdWorkReadiness(b, 'battle').ok);
-  $('battleStartBtn').disabled = !pickable.length || battleSelectedIds.length < need || hungerBlocked;
+  $('battleStartBtn').disabled = !pickable.length || !battleSelectedIds.length || hungerBlocked;
   $('battleStartBtn').textContent = !roster.length ? 'SCAN A BIRD FIRST'
     : !pickable.length ? 'EVERY BIRD IS BUSY'
-    : battleSelectedIds.length < need ? 'PICK ' + (need - battleSelectedIds.length) + ' MORE BIRD' + (need - battleSelectedIds.length > 1 ? 'S' : '')
+    : !battleSelectedIds.length ? 'PICK YOUR SQUAD'
     : hungerBlocked ? 'FEED URGENT BIRD'
     : liberation ? 'LIBERATE ' + liberation.name.toUpperCase()
     : 'START BATTLE';
@@ -29559,7 +29564,6 @@ function battlePickToggle(birdId) {
   if (idx >= 0) battleSelectedIds.splice(idx, 1);
   else {
     if (!birdWorkReadiness(bird, 'battle').ok) { showToast('🍽️ ' + birdDisplayName(bird) + ' needs food before battle.'); return; }
-    if (battleSelectedIds.length >= 4) battleSelectedIds.shift();
     battleSelectedIds.push(birdId);
   }
   ensureLeagueState().teamIds = battleSelectedIds.slice();
@@ -31019,7 +31023,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'battle-squad-board-v241-20260810';
+const BURBZ_BUILD = 'any-size-squad-v242-20260810';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

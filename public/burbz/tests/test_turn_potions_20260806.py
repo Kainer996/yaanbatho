@@ -124,8 +124,12 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     marker = "living-canopy-v236-20260806"
     assert marker in HTML
     assert marker in SW
-    core_pin = "turn-potions-v232-20260806"
-    for asset in ("battle_core.js", "loot_crafting_core.js"):
+    # battle_core moved on with the any-size-squad release; loot stays put.
+    pins = {
+        "battle_core.js": "any-size-squad-v242-20260810",
+        "loot_crafting_core.js": "turn-potions-v232-20260806",
+    }
+    for asset, core_pin in pins.items():
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML
         assert f"'./{pin}'" in SW

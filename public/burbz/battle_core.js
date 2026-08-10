@@ -462,7 +462,10 @@
   const SURGE_COST = 4;   // burn Focus to Surge a skill: +40% output, +15% crit
 
   function createBattle(config) {
-    const player = (config.playerFighters || []).filter(Boolean).slice(0, 4);
+    // The player may field every bird they own. The real cost lands after the
+    // fight: worn birds must heal and eat before empire work. Enemy garrisons
+    // stay at four.
+    const player = (config.playerFighters || []).filter(Boolean);
     const opponent = (config.opponentFighters || []).filter(Boolean).slice(0, 4);
     if (!player.length || !opponent.length) throw new Error('Both sides need at least one fighter');
     // Everyone opens partway up the meter so first turns come quickly and
