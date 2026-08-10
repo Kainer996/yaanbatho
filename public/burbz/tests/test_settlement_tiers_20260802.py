@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "accurate-diets-full-catalogue-v226-20260805"
-CURRENT_BUILD = "hospital-auto-discharge-v239-20260809"
+CURRENT_BUILD = "early-game-easy-battles-v240-20260810"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

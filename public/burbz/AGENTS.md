@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-09 (hospital auto-discharge v239: the Bird Hospital releases each patient back to the room they were admitted from the moment they reach full HP, over the sleep-retired v238 release — birds never sleep and are never blocked from battle or work).
+Last curated: 2026-08-10 (early-game easy battles v240: until the first county is founded, every evil Burbz squad is a ragged scouting party — capped at three birds, never more than the player's flock, all stats at 45% (`easeEarlyOpponents` in `index.html`) — so new players almost always win. Difficulty returns in full the moment the realm begins).
 
 ---
 
