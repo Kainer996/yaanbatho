@@ -15,7 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "hospital-auto-discharge-v239-20260809"
+RELEASE_PIN = "early-game-easy-battles-v240-20260810"
+# This release's own cache marker stays in the lineage; later releases move
+# BURBZ_BUILD on.
+OWN_RELEASE_PIN = "hospital-auto-discharge-v239-20260809"
 
 
 def function_source(html: str, name: str) -> str:
@@ -134,4 +137,5 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert "sleep-retired-v238-20260809" in cache_line  # lineage kept
+    assert OWN_RELEASE_PIN in cache_line  # lineage kept
     assert cache_line.rstrip("';").endswith(RELEASE_PIN)
