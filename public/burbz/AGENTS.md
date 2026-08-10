@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-09 (sleep retired v238: the Roost sleep/tiredness mechanic is removed — birds never sleep and are never blocked from battle or work; `bird_sleep_core.js` survives as the home of nocturnal detection and the Night Hunter bonus. Renumbered from v237: the same-day mallard-true-diet release took the v237 number on main first — same convention as the v202/v203, v221/v222, v228/v229 and v235/v236 pairs.)
+Last curated: 2026-08-09 (hospital auto-discharge v239: the Bird Hospital releases each patient back to the room they were admitted from the moment they reach full HP, over the sleep-retired v238 release — birds never sleep and are never blocked from battle or work).
 
 ---
 
@@ -236,6 +236,29 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-09 — the Bird Hospital discharges healed patients (Claude).**
+  Yaan's follow-up to the sleep retirement: birds parked in the Bird Hospital
+  stayed there until manually moved. Release
+  `hospital-auto-discharge-v239-20260809` makes the ward a ward, not a home.
+  - **Rules** (`index.html`): `academyMoveBird` writes an admission slip —
+    `academy.hospitalReturnRoom` records the room a patient was admitted
+    from, and moving anywhere else clears it. `dischargeBirdFromHospital`
+    releases a full-HP patient to the slip's room (falling back to the
+    Aviary Gardens when the room is unbuilt, or is the Kitchen/Barracks,
+    which take no lodgers) with a toast; it never touches the Head Healer
+    (the post is the point of being there), birds away on expeditions, or
+    birds mid-training. `tickAcademy`'s hospital branch heals then sweeps —
+    so patients healed to full by a meal or a level-up between rounds are
+    also released, and an open room interior re-renders when a bed empties.
+  - **Why the sweep is safe for the story chain**: `pq_hospital_rest`
+    ("Prescribe some rest") completes via the `station_hospital` event the
+    moment the player stations a bird, before any discharge can undo it.
+  - Tests: `tests/test_hospital_auto_discharge_20260809.py` (stub-driven
+    discharge matrix — healed/hurt/no-slip/demolished-room/Kitchen-slip/
+    Head-Healer/away cases — plus HTML wiring and release pins). Release
+    pins repointed per convention; SW cache + `BURBZ_BUILD` bumped. No core
+    module moved, so every `?v=` stays put.
 
 - **2026-08-09 — sleep retired: birds never sleep, never blocked (Claude).**
   Yaan opened The Roost to find all 8 of his companions asleep at 21:00 and
