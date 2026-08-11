@@ -13475,15 +13475,6 @@ function renderAcademyRoomPanel(birds) {
       actions = academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
     }
 
-    const moves = Object.keys(ACADEMY_ROOMS).filter(r => r !== academySelectedRoom && r !== 'tavern').map(r => {
-      const target = ACADEMY_ROOMS[r];
-      const built = isAcademyRoomBuilt(r);
-      const building = ACADEMY_BUILDINGS[target.buildingId || r];
-      const onclick = built ? 'academyMoveBird(\'' + b.id + '\',\'' + r + '\')' : 'academyBuildAndMoveBird(\'' + b.id + '\',\'' + r + '\')';
-      const label = built ? ('→ ' + target.icon + ' ' + target.label) : ('Build ' + building.icon + ' ' + building.label);
-      return '<button class="academy-move-btn' + (built ? '' : ' locked') + '" onclick="' + onclick + '">' + label + '</button>';
-    }).join('');
-
     return '<div class="academy-bird-row">' + artHtml +
       '<div class="academy-bird-main">' +
         '<div class="academy-bird-name">' + (b.academy.honor === 'star_pupil' ? '⭐ ' : '') + escapeHtml(birdDisplayName(b)) + '</div>' +
@@ -13497,7 +13488,6 @@ function renderAcademyRoomPanel(birds) {
       '</div>' +
       '<div class="academy-actions">' + actions + '</div>' +
       tray +
-      '<div class="academy-move">' + moves + '</div>' +
     '</div>';
   }).join('');
 
