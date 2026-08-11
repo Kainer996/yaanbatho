@@ -69,6 +69,40 @@ The game stays deliberately simple — walk, listen, befriend, liberate — unti
 
 This is the long game: liberate villages until they make a county, unite counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
 
+## The Twenty Roads — the shared walking campaign
+
+Every real walk the player takes carries a tale. **The Twenty Roads** is a fixed
+campaign of twenty walking quests — the same twenty tales, in the same order,
+for every player anywhere on Earth. The footpaths under your boots are local;
+the story you walk is shared.
+
+- Each tale is **sized to the walk**: short strolls, middling rambles and proper
+  treks each carry their own thread of the campaign, so the next tale always
+  fits the road in front of you.
+- Each tale is **told by a named NPC** of the free realm — Elder Bramblewing of
+  the cradle village, Quartermaster Reedwhistle the supply-wren, Scribe Inkwing
+  of the Academy Library, Warden Thistledown of the old roads, Brother Alderdown
+  the chapel dove, Captain Gorsefoot of the free muster, Marla Nettlewick the
+  hedge-robin herbalist, Sage Oakfeather of the Moon Observatory, and Old Tam
+  Cinderquill, fletcher, retired. They greet you at the trailhead, speak again
+  mid-route, and meet you at the banner with a real reward: forged gear,
+  crafting materials, bird-study scrolls.
+- The campaign's spine is the realm's own truth: **walked roads wake the land**.
+  The usurper carved it into his own warding stones — where they walk, the land
+  wakes. Walking is not beside the war. Walking IS the war.
+- The twentieth road is walked for the walker, with the whole cast at the
+  banner and a letter from Merlin himself at the end of it.
+
+### The Feathered Folio
+
+Every tale hides one **lore scroll** along its road, in the manner of the books
+of the old world's great libraries. Together they are the Feathered Folio —
+twenty documents of the Kingdom of Burbz: the cradle charter, the Academy's
+founding, the last muster's orders, the sky-caravan waybills, the ward sister's
+receipts, the border-stone compact, a natural history of the evil Burbz, and at
+the last, Merlin's letter to the walker. Collected scrolls are kept and can be
+re-read any time; each one ties the roads back to the Academy and the Empire.
+
 ## The evil Burbz — the enemies the birds fight
 
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.
