@@ -77,6 +77,13 @@ This is the long game: liberate villages until they make a county, unite countie
 - Their purpose is to occupy, intimidate and hold places under the shadow spell until the player's living flock breaks it.
 - When an evil Burb is beaten it is **dispelled**: its dark magic unravels and the black form scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death.
 
+## The usurper fights back — the world level
+
+- The dark force is not passive. Every village freed, every county founded and every crown claimed makes the usurper pour more shadow into the garrisons that remain. This is the **world level**: the free realm's own progress, mirrored in the strength of what still opposes it.
+- Garrisons defend at the level their land is stamped with. Near the **cradle** — the first village the player ever freed — they match the world level. Out past the marches and the borderlands the shadow runs deeper, and the far frontier always fights hardest.
+- The Royal Atlas is honest about the odds: every dark village banner carries a recommended level, coloured green to red against the player's own flock. A skull means come back stronger — nothing on the map is ever locked, only guarded.
+- The free realm answers in kind at the **Fletcher's Forge**. The forge itself can be rebuilt — Field Anvil, Stone Hearth, Guild Forge, Royal Forge, Sunfire Forge — and each new hearth opens deeper crafting and hones every piece the flock carries to the forge's level. Conquest raises the stakes; the forge keeps the flock in the fight.
+
 
 ### Canonical visual direction
 

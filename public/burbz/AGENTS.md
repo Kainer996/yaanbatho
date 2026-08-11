@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-11 (battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
+Last curated: 2026-08-11 (conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
 
 ---
 
@@ -236,6 +236,66 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-11 — conquest raises the world level, and the world fights back
+  (Claude).** Yaan asked for a fully fleshed-out classic-RPG XP system where
+  the more the player conquers, the harder the game gets — higher-level
+  battle opponents, crafting that keeps pace through an upgradeable forge,
+  and Assassin's-Creed-style recommended levels on the empire map. Release
+  `conquest-world-levels-v248-20260811`.
+  - **Core** (`world_level_core.js`, new, pure, Node-testable): `worldLevel`
+    weighs the whole realm pyramid (village 1 · county 2 · duchy 4 ·
+    kingdom 6 · empire 8, capped at 50 — the bird level cap);
+    `siteRecommendedLevel` adds a distance band from the CRADLE (the first
+    village ever freed): heartland +0 through far frontier +8, so riding out
+    always means harder garrisons. `dangerRating` calls the odds in plain
+    words (stroll/fair/hard/deadly with icon + colour) against
+    `flockBattleLevel` (average of the four strongest birds — a Skyclash
+    squad).
+  - **Battles** (`index.html` `leagueRivalOpponents`): a Liberation garrison
+    now fights at `empireSiteRecommendedLevel(liberationSite)`; a roaming
+    league squad at `max(flock average, world level)` plus the tier boost.
+    The rival cache key carries `_wl<level>` and the liberation seed so a
+    changed world re-rolls the squad. The battle-select header shows the
+    honest odds line (`rival-danger-line`: garrison level, world level,
+    flock level, danger call). **Early game is untouched** — no county means
+    the same ragged eased squads, pinned by
+    `test_early_game_easy_battles_20260810.py`, and the first-liberation
+    token garrison still can't lose.
+  - **Rewards** (`battle_core.js` `battleRewards`): additive
+    `opts.opponentLevel` scales coins/branches/birdXp/playerXp by +4% per
+    level above 1. No option (or level 1) pays the exact classic numbers, so
+    every pre-existing rewards pin stays true; defeat stays a flat
+    consolation. `endPerchBattle` passes the beaten squad's average level.
+  - **Forge** (`loot_crafting_core.js` + `index.html`): the Fletcher's Forge
+    has five hearths (Field Anvil → Stone Hearth → Guild Forge → Royal
+    Forge → Sunfire Forge). Rarity gates: rare needs Lv 2, epic Lv 3,
+    legendary Lv 4 (`minForgeLevelForRarity`; locked recipes show
+    `🔒 FORGE LV n`, and `craftGear` re-checks). Upgrades cost coins,
+    branches and real materials (`FORGE_UPGRADE_COSTS`, up to a phoenix
+    ember for the summit) via the craft tab's upgrade desk
+    (`renderForgeUpgradePanel` / `upgradeForge`; `gameState.forgeLevel`,
+    clamped by `normalizeForgeLevel`). Tempering: every equipped piece is
+    honed to the forge's level — `equipmentBonuses(loadout, {gearLevel})`
+    applies `temperedStats` (+12% combat stats and +1% crit per level above
+    1; carry bonuses never scale — a bag is a bag). `birdGearBonuses` and
+    `forgeGearStatLine` feed the forge level through, so stat lines show
+    what gear really does today. Default calls stay byte-identical.
+  - **Atlas** (`refreshEmpireMap`): every dark frontier banner is stamped
+    `<danger icon> LV n · name` with a `danger-<id>` tint class, its tap
+    card leads with `Recommended Lv n — <danger> (flock Lv m)`, the map key
+    teaches the colours, and the owned-lands status line opens with
+    `🌍 World Lv n`.
+  - Tests: `tests/test_conquest_world_levels_20260811.py` (Node-driven core
+    maths incl. the default-identity contracts, forge gating/tempering,
+    reward scaling, HTML wiring, release pins). Release pins repointed per
+    convention (19 head-tracking files sed'd v247→v248; the v247 test grew
+    the OWN_RELEASE_PIN/CURRENT_BUILD split; the three
+    `turn-potions-v232` core `?v=` pins moved since both cores changed).
+    SW cache + `BURBZ_BUILD` bumped; `world_level_core.js` precached in
+    both SW lists and added to the live updater's FILES. STORY.md gains
+    "The usurper fights back — the world level". Local run: 1111 passed,
+    10 skipped, only the 7 documented git-lfs pointer-file art failures.
 
 - **2026-08-10 — live reconcile: the drifted v240-v244 line comes home
   (Claude).** Yaan reported that none of the day's updates were reaching the

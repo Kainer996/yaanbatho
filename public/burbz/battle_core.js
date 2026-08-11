@@ -882,8 +882,13 @@
     if (winner !== 'player') {
       return { coins: 4, branches: 0, birdXp: 8, playerXp: 10, firstWinBonus: false, reduced: false, swayed: 0, charmCoins: 0 };
     }
-    let coins = tier.winCoins;
-    let branches = tier.winBranches;
+    // Conquest scaling: a garrison fighting at a high world level pays for the
+    // risk — +4% per opponent level above the first. Callers that pass no
+    // opponentLevel get the exact classic payouts.
+    const opponentLevel = Math.round(n(o.opponentLevel, 0));
+    const levelScale = opponentLevel > 1 ? 1 + (Math.min(opponentLevel, 50) - 1) * 0.04 : 1;
+    let coins = Math.round(tier.winCoins * levelScale);
+    let branches = Math.round(tier.winBranches * levelScale);
     let reduced = false;
     if (n(o.winsToday, 0) >= DAILY_FULL_REWARD_WINS) {
       coins = Math.max(2, Math.round(coins * REDUCED_REWARD_PCT));
@@ -896,7 +901,7 @@
     // gifts instead of a grudge. Never reduced — kindness doesn't grind.
     const swayed = Math.max(0, Math.round(n(o.swayed, 0)));
     const charmCoins = swayed * (6 + ti * 3);
-    return { coins, branches, birdXp: 22 + ti * 7, playerXp: 30 + ti * 10, firstWinBonus, reduced, swayed, charmCoins };
+    return { coins, branches, birdXp: Math.round((22 + ti * 7) * levelScale), playerXp: Math.round((30 + ti * 10) * levelScale), firstWinBonus, reduced, swayed, charmCoins };
   }
 
   return {
