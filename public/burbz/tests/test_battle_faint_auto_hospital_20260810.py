@@ -10,9 +10,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
+OWN_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
 # This release's own cache marker; later releases move BURBZ_BUILD on.
 PREVIOUS_RELEASE_PIN = "early-game-easy-battles-v240-20260810"
+CURRENT_BUILD = "conquest-world-levels-v248-20260811"
 
 
 def function_source(html: str, name: str) -> str:
@@ -52,7 +53,8 @@ def test_battle_end_admits_every_fainted_fighter_automatically():
 def test_release_is_versioned_for_service_worker_self_update():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(RELEASE_PIN)
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)

@@ -55,6 +55,7 @@ FILES=(
   "sound_listener_core.js"
   "battle_core.js"
   "loot_crafting_core.js"
+  "world_level_core.js"
   "diary_core.js"
   "audio_core.js"
   "assets/academy-tree-manga-20260806.webp"

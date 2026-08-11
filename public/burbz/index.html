@@ -862,6 +862,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-marker.is-frontier .empire-map-marker-icon { border-color:#b9a08a; background:linear-gradient(160deg,#4a3a3a 0%,#2b2020 58%,#170f0f 100%); box-shadow:inset 0 1px 0 rgba(255,230,210,.2), inset 0 0 8px rgba(0,0,0,.5), 0 0 12px rgba(200,120,90,.35); }
 .empire-map-marker.is-frontier .empire-map-marker-banner { border-top-color:#b9a08a; }
 .empire-map-marker.is-frontier .empire-map-marker-label { border-color:rgba(185,160,138,.6); color:#e8cdb4; }
+/* Recommended-level tint on dark banners — green suits the flock, red bites. */
+.empire-map-marker.is-frontier.danger-stroll .empire-map-marker-label { color:#a9e8b2; border-color:rgba(95,211,138,.55); }
+.empire-map-marker.is-frontier.danger-fair .empire-map-marker-label { color:#a8d4f0; border-color:rgba(74,168,224,.55); }
+.empire-map-marker.is-frontier.danger-hard .empire-map-marker-label { color:#f0c090; border-color:rgba(224,138,58,.6); }
+.empire-map-marker.is-frontier.danger-deadly .empire-map-marker-label { color:#f0a9a0; border-color:rgba(224,89,74,.65); }
+.empire-map-marker.is-frontier.danger-deadly .empire-map-marker-icon { box-shadow:inset 0 1px 0 rgba(255,230,210,.2), inset 0 0 8px rgba(0,0,0,.5), 0 0 14px rgba(224,89,74,.55); }
 /* ---- Empire clarity kit — locator, map key, tap cards, ledger drawers ------ */
 /* The sovereign's beacon outranks every banner: an expanding ground ring. */
 .empire-map-marker.is-player .empire-map-marker-icon { position:relative; }
@@ -885,6 +891,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-map-key-swatch.region { border-color:#ffe08a; box-shadow:0 0 8px rgba(240,199,103,.5); }
 .empire-map-key-swatch.frontier { border-color:#b9a08a; }
 .empire-map-key-swatch.trade { border-color:#f0c767; color:#f0c767; font-size:11px; }
+.empire-map-key-swatch.danger { border-color:#e0594a; box-shadow:0 0 8px rgba(224,89,74,.4); }
 .empire-map-key-foot { margin-top:7px; padding-top:7px; border-top:1px dashed rgba(240,199,103,.3); font-size:10.5px; line-height:1.45; color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:700; }
 /* Tap card: touching a banner explains it first — travel is a chosen action. */
 .empire-map-tapcard { position:absolute; z-index:9; left:10px; right:10px; bottom:66px; display:none; padding:11px 12px; border-radius:13px; border:1px solid rgba(240,199,103,.6); background:linear-gradient(180deg,rgba(42,29,11,.97),rgba(14,9,3,.97)); box-shadow:0 14px 30px rgba(0,0,0,.65); backdrop-filter:blur(8px); }
@@ -1953,6 +1960,9 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .league-pip.won { background:var(--accent); box-shadow:0 0 6px rgba(214,168,79,0.6); }
 .league-rival { padding:10px 12px; background:var(--bg2); border:1px solid rgba(255,255,255,0.06); border-radius:12px; margin-bottom:12px; }
 .league-rival-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
+/* Honest odds: the garrison's level against the flock's, before the fight. */
+.rival-danger-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:-2px 0 9px; font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.05em; }
+.rival-danger-line .rdl-world { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; color:var(--text3); letter-spacing:.03em; }
 .league-rival-row { display:flex; gap:8px; }
 .rival-card { flex:1; text-align:center; padding:8px 4px; background:var(--bg3); border-radius:10px; border:1px solid rgba(255,255,255,0.05); }
 .rival-card .rc-art { width:52px; height:52px; border-radius:10px; object-fit:cover; margin:0 auto 4px; display:block; background:var(--bg4); }
@@ -2126,6 +2136,16 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-picker { background:var(--bg3); border:1px solid rgba(143,208,255,.3); border-radius:13px; padding:10px; margin-bottom:12px; }
 .pk-equip { position:absolute; top:5px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); border:1px solid rgba(214,168,79,.5); font-size:12px; line-height:20px; text-align:center; z-index:2; }
 .forge-recipe-group { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent2); font-family:'Russo One', sans-serif; margin:14px 0 8px; }
+/* The forge upgrade desk — the hearth's level and the price of the next one. */
+.forge-upgrade-card { padding:11px 12px; border-radius:14px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(150deg,rgba(240,199,103,.1),rgba(0,0,0,.32)); margin-bottom:12px; }
+.forge-upgrade-head { display:flex; align-items:flex-start; gap:10px; }
+.forge-upgrade-head .fu-icon { flex:none; width:40px; height:40px; display:grid; place-items:center; font-size:22px; border-radius:12px; background:radial-gradient(circle at 34% 28%, rgba(255,180,90,.4), rgba(0,0,0,.5)); border:1px solid rgba(240,199,103,.4); }
+.forge-upgrade-head .fu-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; color:var(--legendary); }
+.forge-upgrade-head .fu-copy { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px; line-height:1.4; color:var(--text2); margin-top:2px; }
+.forge-upgrade-cost { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; line-height:1.45; color:var(--text2); margin-top:8px; }
+.forge-upgrade-btn { display:block; width:100%; margin-top:8px; padding:10px 12px; border-radius:11px; background:linear-gradient(135deg, var(--accent), var(--accent3)); color:#fff; font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:1px; }
+.forge-upgrade-btn[disabled] { opacity:.55; }
+.forge-upgrade-btn:active:not([disabled]) { transform:scale(.985); }
 .forge-recipe { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:10px; margin-bottom:8px; }
 .forge-recipe .fr-icon { font-size:26px; }
 .forge-recipe .fr-main { flex:1; min-width:0; }
@@ -3774,6 +3794,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="empire-map-key-row"><span class="empire-map-key-swatch settlement">🏘️</span>Town / City — neighbouring villages grown together</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch region">🛡️</span>County banner — 3+ freed villages united (Counties unite into Duchies, then Kingdoms, then your Empire)</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch frontier">⚔️</span>A dark village near you, waiting to be freed</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch danger">💀</span>LV on a dark banner — the garrison's recommended level. Green suits your flock; red means come back stronger. Every liberation raises the world level, and the far frontier always fights hardest</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your counties</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch realm">🎨</span>Painted lands — counties sworn to one duchy or kingdom share its colour</div>
           <div class="empire-map-key-foot">Daylight on the map = lands you have freed. Darkness = lands still waiting.</div>
@@ -4333,10 +4354,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
 <script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
-<script src="battle_core.js?v=turn-potions-v232-20260806"></script>
-<script src="loot_crafting_core.js?v=turn-potions-v232-20260806"></script>
+<script src="battle_core.js?v=conquest-world-levels-v248-20260811"></script>
+<script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
+<script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -18696,8 +18718,17 @@ function birdLoadout(birdId) {
   if (!eq[birdId] || typeof eq[birdId] !== 'object') eq[birdId] = {};
   return eq[birdId];
 }
+// The Fletcher's Forge itself has a level now. It lives on the save as a
+// plain number; the loot core clamps it into range.
+function burbzForgeLevel() {
+  const raw = gameState && gameState.forgeLevel;
+  try { return lootCore().normalizeForgeLevel(raw); }
+  catch (e) { return Math.max(1, Math.min(5, Math.round(Number(raw)) || 1)); }
+}
+
 function birdGearBonuses(bird) {
-  try { return lootCore().equipmentBonuses(birdLoadout(bird && bird.id)); }
+  // Gear fights at the forge's level: upgrade the forge, level up the armoury.
+  try { return lootCore().equipmentBonuses(birdLoadout(bird && bird.id), { gearLevel: burbzForgeLevel() }); }
   catch (e) { return {}; }
 }
 
@@ -19737,6 +19768,67 @@ function empireOwnsVillage(seed) { const e = ensureEmpireState(); return !!(e &&
 function empireHasLiberationVictory(seed) { const e = ensureEmpireState(); return !!(e && e.liberationVictories[String(seed >>> 0)]); }
 function pendingEmpireLiberation() { const e = ensureEmpireState(); return e && e.pendingLiberation ? e.pendingLiberation : null; }
 
+// ============================================================================
+// WORLD LEVEL — the usurper fights back. Every village, county, duchy and
+// kingdom the player liberates raises the world level, and garrisons across
+// the still-shadowed world fight at the level their land is stamped with:
+// close to the cradle they match the world, out on the far frontier they run
+// well above it. All the maths lives in world_level_core.js.
+// ============================================================================
+function worldLevelCore() { return window.BurbzWorldLevelCore || null; }
+
+function burbzConquestProgress() {
+  const info = empireRegionsInfo();
+  return {
+    villages: empireVillages().length,
+    counties: (info.regions || []).length,
+    duchies: (info.duchies || []).length,
+    kingdoms: (info.kingdoms || []).length,
+    empires: info.empire ? 1 : 0
+  };
+}
+
+function burbzWorldLevel() {
+  const core = worldLevelCore();
+  return core ? core.worldLevel(burbzConquestProgress()) : 1;
+}
+
+// The cradle: the first village the player ever freed. Distance from here
+// decides a shadowed village's band — ride further out, meet harder garrisons.
+function empireCradleVillage() {
+  const villages = empireVillages().filter(v => window.BurbzEmpireMapCore && window.BurbzEmpireMapCore.validClaim(v));
+  if (!villages.length) return null;
+  return villages.slice().sort((a, b) => String(a.claimedAt || '').localeCompare(String(b.claimedAt || '')))[0];
+}
+
+// The level stamped on a map site {lat, lon}: world level plus its distance
+// band from the cradle. Before the first liberation everything is level 1.
+function empireSiteRecommendedLevel(site) {
+  const core = worldLevelCore();
+  if (!core) return 1;
+  const cradle = empireCradleVillage();
+  if (!cradle || !site) return core.siteRecommendedLevel(burbzWorldLevel(), 0);
+  const km = mapDistanceMeters({ lat: Number(cradle.lat), lon: Number(cradle.lon) }, { lat: Number(site.lat), lon: Number(site.lon) }) / 1000;
+  return core.siteRecommendedLevel(burbzWorldLevel(), km);
+}
+
+// The flock's battle level — the average of its four strongest fighters.
+function playerFlockBattleLevel() {
+  const core = worldLevelCore();
+  const flock = Array.isArray(gameState.flock) ? gameState.flock : [];
+  const levels = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).map(b => b.level || 1);
+  return core ? core.flockBattleLevel(levels) : Math.max(1, Math.round(levels.slice(0, 4).reduce((s, v) => s + v, 0) / Math.max(1, Math.min(4, levels.length))) || 1);
+}
+
+// Honest odds for a site: "⚔️ Lv 6 · A fair fight" — or the skull.
+function empireSiteDangerChip(site) {
+  const core = worldLevelCore();
+  if (!core) return '';
+  const rec = empireSiteRecommendedLevel(site);
+  const danger = core.dangerRating(rec, playerFlockBattleLevel());
+  return danger.icon + ' Lv ' + rec + ' · ' + danger.label;
+}
+
 function beginVillageLiberation(village) {
   const empire = ensureEmpireState();
   if (!empire || !village) return;
@@ -20514,21 +20606,32 @@ function refreshEmpireMap(options = {}) {
       .map(v => ({ ...v, dist: mapDistanceMeters({ lat: v.lat, lon: v.lon }, here) }))
       .sort((a, b) => a.dist - b.dist)
       .slice(0, VILLAGE_VISITABLE_COUNT);
+    const flockLv = playerFlockBattleLevel();
     empireFrontierVillages.forEach(village => {
+      // Every shadowed village is stamped with a recommended level, the way
+      // the newer Assassin's Creed maps do it — and coloured by how the fight
+      // measures up against the player's own flock.
+      const rec = empireSiteRecommendedLevel(village);
+      const danger = worldLevelCore() ? worldLevelCore().dangerRating(rec, flockLv) : null;
       const el = document.createElement('button');
       el.type = 'button';
-      el.className = 'empire-map-marker is-frontier is-visible show-label';
-      el.setAttribute('aria-label', 'Liberate the nearby village ' + village.name);
-      el.innerHTML = '<span class="empire-map-marker-icon"><span>⚔️</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">VILLAGE · ' + escapeHtml(village.name) + '</span>';
+      el.className = 'empire-map-marker is-frontier is-visible show-label' + (danger ? ' danger-' + danger.id : '');
+      el.setAttribute('aria-label', 'Liberate the nearby village ' + village.name + ' — recommended level ' + rec);
+      el.innerHTML = '<span class="empire-map-marker-icon"><span>⚔️</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + (danger ? danger.icon + ' LV ' + rec + ' · ' : 'VILLAGE · ') + escapeHtml(village.name) + '</span>';
       el.addEventListener('click', ev => {
         ev.stopPropagation();
         SFX.tap();
         const distText = village.dist >= 1000 ? (village.dist / 1000).toFixed(1) + ' km away' : Math.round(village.dist) + ' m away';
         showEmpireMapCard({
-          crest: '⚔️',
+          crest: danger ? danger.icon : '⚔️',
           name: village.name,
           kind: 'Still in darkness — ready to be freed',
-          facts: ['📍 ' + distText, '⚔️ win its Liberation Battle', '🏡 then raise a birdhouse'],
+          facts: [
+            danger ? danger.icon + ' Recommended Lv ' + rec + ' — ' + danger.label + ' (flock Lv ' + flockLv + ')' : '',
+            '📍 ' + distText,
+            '⚔️ win its Liberation Battle',
+            '🏡 then raise a birdhouse'
+          ],
           actions: [{ label: '🕊️ GO & FREE IT', run: () => openEmpireFrontier(village.seed) }]
         });
       });
@@ -20556,7 +20659,7 @@ function refreshEmpireMap(options = {}) {
     } else if (nextTarget) {
       status.textContent = '⚔️ ' + nextTarget.name + ' awaits liberation where you stand — tap its dark sword banner';
     } else {
-      status.textContent = 'Daylight over ' + villages.length + ' free village' + (villages.length === 1 ? '' : 's') +
+      status.textContent = '🌍 World Lv ' + burbzWorldLevel() + ' · Daylight over ' + villages.length + ' free village' + (villages.length === 1 ? '' : 's') +
         (settlementsOnMap.townCount ? ' · 🏘️ ' + settlementsOnMap.townCount + ' town' + (settlementsOnMap.townCount === 1 ? '' : 's') + ' grown from merged villages' : '') +
         (settlementsOnMap.cityCount ? ' · 🏙️ ' + settlementsOnMap.cityCount + ' cit' + (settlementsOnMap.cityCount === 1 ? 'y' : 'ies') + ' crowned' : '') +
         (regions.length ? ' · 🛡️ ' + regions.length + ' count' + (regions.length === 1 ? 'y' : 'ies') + ' united' : '') +
@@ -27950,8 +28053,13 @@ function forgeSetTab(tab) {
 }
 
 function forgeGearStatLine(item) {
-  const s = item.stats || {};
+  // Every piece is honed to the forge's own level: the stat line shows what
+  // the gear actually does in battle today, not what a cold anvil once made.
+  const forgeLv = burbzForgeLevel();
+  let s = item.stats || {};
+  try { if (forgeLv > 1) s = lootCore().temperedStats(item, forgeLv); } catch (e) {}
   const parts = [];
+  if (forgeLv > 1 && Object.keys(item.stats || {}).length) parts.push('Lv ' + forgeLv);
   if (s.atk) parts.push('+' + s.atk + ' ATK');
   if (s.mag) parts.push('+' + s.mag + ' MAG');
   if (s.def) parts.push('+' + s.def + ' DEF');
@@ -28215,11 +28323,64 @@ function renderForgeQueue() {
   return '<div class="forge-recipe-group">🔨 On the anvil — ' + jobs.length + '/' + L.FORGE_MAX_JOBS + '</div><div class="forge-job-list">' + slots.join('') + '</div>';
 }
 
+// The forge upgrade desk: the hearth's level, what it hones, and the price of
+// the next rebuild. Higher hearths open deeper rarities to craft.
+function renderForgeUpgradePanel() {
+  const L = lootCore();
+  const lv = burbzForgeLevel();
+  const info = L.forgeLevelInfo(lv);
+  const cost = L.forgeUpgradeCost(lv);
+  const temperPct = Math.round((L.temperMultiplier(lv) - 1) * 100);
+  const stock = gameState.inventory.items || {};
+  let costLine = '';
+  let button = '';
+  if (cost) {
+    const next = L.forgeLevelInfo(lv + 1);
+    const check = L.canUpgradeForge(lv, stock, gameState.player.coins || 0, gameState.player.branches || 0);
+    const bits = [cost.coins + ' 🪙', cost.branches + ' 🪵'];
+    Object.keys(cost.materials).forEach(matId => {
+      const m = L.materialById(matId);
+      bits.push((m ? m.icon : '📦') + cost.materials[matId] + ' ' + (m ? m.label : matId));
+    });
+    costLine = '<div class="forge-upgrade-cost">Next: <b>' + escapeHtml(next.label) + '</b> — opens ' + escapeHtml(next.rarityCap) + ' recipes, hones all gear to Lv ' + (lv + 1) + ' · ' + bits.join(' · ') + '</div>';
+    button = '<button class="forge-upgrade-btn"' + (check.ok ? '' : ' disabled') + ' onclick="upgradeForge()">' + (check.ok ? '⬆️ UPGRADE THE FORGE' : '🔒 Needs ' + escapeHtml(check.missing[0])) + '</button>';
+  } else {
+    costLine = '<div class="forge-upgrade-cost">The forge is at its summit — every recipe in the Kingdom is open.</div>';
+  }
+  return '<div class="forge-upgrade-card">' +
+    '<div class="forge-upgrade-head"><span class="fu-icon">⚒️</span><div><div class="fu-title">' + escapeHtml(info.label) + ' · Forge Lv ' + lv + '/' + L.FORGE_MAX_LEVEL + '</div>' +
+    '<div class="fu-copy">' + escapeHtml(info.copy) + (temperPct ? ' Every equipped piece is honed to Lv ' + lv + ' (+' + temperPct + '% stats).' : '') + '</div></div></div>' +
+    costLine + button + '</div>';
+}
+
+function upgradeForge() {
+  const L = lootCore();
+  const lv = burbzForgeLevel();
+  const cost = L.forgeUpgradeCost(lv);
+  if (!cost) return;
+  const stock = gameState.inventory.items;
+  const check = L.canUpgradeForge(lv, stock, gameState.player.coins || 0, gameState.player.branches || 0);
+  if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
+  addCoins(-cost.coins);
+  addBranches(-cost.branches);
+  Object.keys(cost.materials).forEach(matId => { stock[matId] -= cost.materials[matId]; if (stock[matId] <= 0) delete stock[matId]; });
+  gameState.forgeLevel = lv + 1;
+  const info = L.forgeLevelInfo(lv + 1);
+  saveState();
+  updateHeader();
+  SFX.victory();
+  vibrate(40);
+  showToast('⚒️ The forge is reborn as the ' + info.label + '! All your gear is honed to Lv ' + (lv + 1) + '.');
+  renderForge();
+  renderInventory();
+}
+
 function renderForgeCraft(body) {
   const L = lootCore();
   const stock = gameState.inventory.items || {};
   const coins = gameState.player.coins || 0;
   const queueFull = forgeQueueIsFull();
+  const forgeLv = burbzForgeLevel();
   const groups = [
     { label:'🗡️ Weapons — talons & wands', items:L.gearBySlot('weapon') },
     { label:'🛡️ Armour', items:L.gearBySlot('armour') },
@@ -28228,12 +28389,13 @@ function renderForgeCraft(body) {
     { label:'📜 Spells — scrolls & sigils', items:L.gearBySlot('spell') },
     { label:'🧪 Potions — battle brews', items:L.gearBySlot('potion') }
   ];
-  let html = renderForgeQueue();
+  let html = renderForgeUpgradePanel() + renderForgeQueue();
   groups.forEach(group => {
     html += '<div class="forge-recipe-group">' + group.label + '</div>';
     html += group.items.sort((a, b) => L.rarityIndex(a.rarity) - L.rarityIndex(b.rarity)).map(item => {
       const recipe = L.recipeFor(item.id);
       const check = L.canCraft(recipe, stock, coins);
+      const locked = !L.canForgeAtLevel(item, forgeLv);
       const color = L.RARITY_META[item.rarity].color;
       const costBits = [ (coins >= recipe.coins ? '' : '<span class="short">') + recipe.coins + ' 🪙' + (coins >= recipe.coins ? '' : '</span>') ];
       Object.keys(recipe.materials).forEach(matId => {
@@ -28248,7 +28410,7 @@ function renderForgeCraft(body) {
         '<div class="fr-main"><div class="fr-name" style="color:' + color + ';">' + escapeHtml(item.label) + ' <span class="fr-time">⏳ ' + formatForgeDuration(craftMs) + '</span></div>' +
         '<div class="fr-stats">' + forgeGearStatLine(item) + '</div>' +
         '<div class="fr-cost">' + costBits.join(' · ') + '</div></div>' +
-        '<button class="forge-craft-btn"' + (check.ok && !queueFull ? '' : ' disabled') + ' onclick="craftGear(\'' + item.id + '\')">' + (queueFull ? 'ANVIL FULL' : 'FORGE') + '</button>' +
+        '<button class="forge-craft-btn"' + (check.ok && !queueFull && !locked ? '' : ' disabled') + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? '🔒 FORGE LV ' + L.minForgeLevelForRarity(item.rarity) : queueFull ? 'ANVIL FULL' : 'FORGE') + '</button>' +
         '</div>';
     }).join('');
   });
@@ -28269,6 +28431,7 @@ function craftGear(gearId) {
   const recipe = L.recipeFor(gearId);
   const item = L.gearById(gearId);
   if (!recipe || !item) return;
+  if (!L.canForgeAtLevel(item, burbzForgeLevel())) { showToast('⚒️ ' + item.label + ' needs Forge Lv ' + L.minForgeLevelForRarity(item.rarity) + ' — upgrade the forge first.'); return; }
   const stock = gameState.inventory.items;
   const check = L.canCraft(recipe, stock, gameState.player.coins || 0);
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
@@ -30647,9 +30810,11 @@ function leagueRivalOpponents() {
   const core = battleCore();
   const league = ensureLeagueState();
   const tier = core.LEAGUE_TIERS[league.tier];
-  const firstLiberation = !!pendingEmpireLiberation() && isFirstLiberationBattle();
+  const liberationSite = pendingEmpireLiberation();
+  const firstLiberation = !!liberationSite && isFirstLiberationBattle();
   const earlyGame = isEarlyGameBattles();
-  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '') + (earlyGame ? '_early_game' : '');
+  const worldLv = burbzWorldLevel();
+  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '') + (earlyGame ? '_early_game' : '') + '_wl' + worldLv + (liberationSite ? '_lib' + (liberationSite.seed >>> 0) : '');
   if (leagueRivalCache && leagueRivalCache.key === key) return leagueRivalCache;
   const rng = core.seededRandom('evil_burbz_' + key);
   let pool = EVIL_BURBZ_ROSTER.filter(e => tier.rarities.includes(e.rarity));
@@ -30671,11 +30836,18 @@ function leagueRivalOpponents() {
   const flock = getBattleFlock();
   const top = flock.slice().sort((a, b) => (b.power || 0) - (a.power || 0)).slice(0, 4);
   const avgLevel = top.length ? top.reduce((s, b) => s + (b.level || 1), 0) / top.length : 1;
+  // Conquest difficulty: a Liberation garrison fights at the level its land
+  // is stamped with (world level + distance band from the cradle), and a
+  // roaming league squad keeps pace with the world the flock has already
+  // freed. The more the player conquers, the harder every fight gets.
+  const garrisonBase = liberationSite
+    ? empireSiteRecommendedLevel(liberationSite)
+    : Math.max(Math.round(avgLevel), worldLv);
   const opponents = picks.map((e, i) => {
     // Early game: no tier boost, and the squad sits a level below the flock.
     const level = earlyGame
       ? Math.max(1, Math.round(avgLevel) - 1)
-      : Math.max(1, Math.round(avgLevel) + tier.levelBoost + (i === 3 ? 1 : 0) - (i === 0 ? 1 : 0));
+      : Math.max(1, garrisonBase + tier.levelBoost + (i === 3 ? 1 : 0) - (i === 0 ? 1 : 0));
     const stats = generateBirdStats(e.base, null, e.rarity);
     const lv = 1 + level * 0.04;
     const bird = {
@@ -30742,8 +30914,19 @@ function renderBattleSelect() {
   const rivalTitle = liberation
     ? (isFirstLiberationBattle() ? '🌅 A weary token garrison — this one is yours' : (isEarlyGameBattles() ? '🐣 A ragged scouting party holds the village' : '😈 The occupying evil Burbz'))
     : (isEarlyGameBattles() ? '🐣 A ragged evil Burbz scouting party' : '😈 An evil Burbz squad prowls this perch');
+  // Honest odds up front, Assassin's-Creed style: the garrison's level, the
+  // flock's level, and a plain-words danger call between them.
+  let dangerLine = '';
+  const wlCore = worldLevelCore();
+  if (wlCore && rival.opponents.length && !isFirstLiberationBattle()) {
+    const garrisonLv = Math.round(rival.opponents.reduce((s, b) => s + (b.level || 1), 0) / rival.opponents.length);
+    const flockLv = playerFlockBattleLevel();
+    const danger = wlCore.dangerRating(garrisonLv, flockLv);
+    dangerLine = '<div class="rival-danger-line" style="color:' + danger.color + ';">' + danger.icon + ' Garrison Lv ' + garrisonLv + ' · ' + danger.label +
+      '<span class="rdl-world">🌍 World Lv ' + burbzWorldLevel() + ' · your flock Lv ' + flockLv + '</span></div>';
+  }
   $('leagueRival').innerHTML =
-    '<div class="league-rival-title">' + rivalTitle + '</div>' +
+    '<div class="league-rival-title">' + rivalTitle + '</div>' + dangerLine +
     '<div class="league-rival-row">' + rival.opponents.map(b =>
       '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
@@ -31195,7 +31378,10 @@ function endPerchBattle() {
   const liberation = battleState.liberation || pendingEmpireLiberation();
   const liberatedTown = won && liberation ? completeEmpireLiberationVictory() : null;
   const swayedCount = b.teams.opponent.filter(f => f.swayed).length;
-  const rewards = core.battleRewards(tierIndex, b.winner, { winsToday: league.daily.wins, firstWinOfDay: won && league.daily.wins === 0, swayed: swayedCount });
+  // High-level garrisons pay for the risk: the reward maths scales with the
+  // beaten squad's average level.
+  const opponentLevel = b.teams.opponent.length ? Math.round(b.teams.opponent.reduce((s, f) => s + (f.level || 1), 0) / b.teams.opponent.length) : 1;
+  const rewards = core.battleRewards(tierIndex, b.winner, { winsToday: league.daily.wins, firstWinOfDay: won && league.daily.wins === 0, swayed: swayedCount, opponentLevel });
 
   let promoted = false;
   if (won) {
@@ -31319,7 +31505,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -32312,7 +32498,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'battle-faint-auto-hospital-v247-20260811';
+const BURBZ_BUILD = 'conquest-world-levels-v248-20260811';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
