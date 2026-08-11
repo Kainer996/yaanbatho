@@ -24,7 +24,7 @@ RELEASE_PIN = "sleep-retired-v238-20260809"
 # academy_treehouse_core.js last moved with the living-canopy release;
 # bird_sleep_core.js moved again when sleep was retired (v237).
 ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
-CURRENT_BUILD = "walking-story-quests-v249-20260811"
+CURRENT_BUILD = "academy-2d-default-v250-20260811"
 
 
 def run_node(script: str) -> dict:
