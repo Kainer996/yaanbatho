@@ -12524,7 +12524,9 @@ function toggleAcademyTreeLights() {
 
 function academyViewMode() {
   if (academy3dBroken) return '2d';
-  try { return localStorage.getItem(ACADEMY_VIEW_KEY) === '2d' ? '2d' : '3d'; } catch (e) { return '3d'; }
+  // The painting is the default; 3D is opt-in via the toggle. The tutorial's
+  // tap-the-tree step needs the 2D layout, and 3D taps misfire on some phones.
+  try { return localStorage.getItem(ACADEMY_VIEW_KEY) === '3d' ? '3d' : '2d'; } catch (e) { return '2d'; }
 }
 
 function academySupports3D() {
@@ -32659,7 +32661,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'walking-story-quests-v249-20260811';
+const BURBZ_BUILD = 'academy-2d-default-v250-20260811';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

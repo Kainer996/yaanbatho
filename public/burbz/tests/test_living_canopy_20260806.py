@@ -31,7 +31,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # The build has moved on (sleep-retired-v238) but the canopy cores have not,
 # so they keep their own pin while the build tracks the current tag.
-CURRENT_BUILD = "walking-story-quests-v249-20260811"
+CURRENT_BUILD = "academy-2d-default-v250-20260811"
 
 BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
 

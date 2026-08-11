@@ -18,6 +18,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
+CURRENT_BUILD = "academy-2d-default-v250-20260811"
 
 
 def run_node(script: str):
@@ -194,10 +195,11 @@ def test_html_wires_the_campaign_into_the_walking_quest_lifecycle():
 def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert sw.count(f"'./walking_story_core.js?v={OWN_RELEASE_PIN}'") == 2
     updater = UPDATER_PATH.read_text(encoding="utf-8")
     assert '"walking_story_core.js"' in updater
