@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "live-reconcile-v245-20260810"
+CURRENT_BUILD = "battle-faint-auto-hospital-v247-20260811"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
@@ -38,7 +38,9 @@ def test_both_divergent_lineages_survive_in_the_cache_history():
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     for marker in LIVE_MARKERS + GITHUB_MARKERS:
         assert marker in cache_line, marker
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    # Own marker stays in the lineage; later releases move the newest tag on.
+    assert OWN_RELEASE_PIN in cache_line
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     html = HTML.read_text(encoding="utf-8")
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
 

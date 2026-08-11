@@ -15209,6 +15209,28 @@ function dischargeBirdFromHospital(bird, now = Date.now()) {
   return true;
 }
 
+// The other half of the ward's promise: a bird knocked out in battle is
+// carried straight to the Bird Hospital — no paperwork, no player taps. The
+// admission slip remembers their old room, so discharge sends them home.
+// Needs a built Hospital; a working, questing or mid-drill bird keeps its
+// own schedule and recovers where it stands.
+function admitFaintedBirdToHospital(bird) {
+  if (!bird || !isAcademyRoomBuilt('hospital')) return false;
+  // A level-up on the way home can heal a bird to full — nothing to treat.
+  if ((bird.hp || 0) >= (bird.maxHp || 100)) return false;
+  ensureBirdAcademy(bird);
+  if (bird.academy.room === 'hospital') return false;
+  if (birdAssignedPost(bird.id)) return false;
+  if (birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id)) return false;
+  const previousRoom = bird.academy.room || 'outdoors';
+  bird.academy.room = 'hospital';
+  if (bird.care && typeof bird.care === 'object') bird.care.sleepReturnRoom = null;
+  bird.academy.hospitalReturnRoom = previousRoom;
+  bird.academy.lastMovedAt = new Date().toISOString();
+  updateQuestProgress('station_hospital', 1);
+  return true;
+}
+
 function tickAcademy() {
   if (!gameState || !Array.isArray(gameState.flock) || gameState.flock.length === 0) return;
   const now = Date.now();
@@ -31215,6 +31237,7 @@ function endPerchBattle() {
   // Battle fatigue closes the care loop: damage persists, birds get hungry,
   // and the Hospital / Kitchen / Roost become the places to recover.
   const battleActivityId = b.activityId || b.seed || ('battle_' + tierIndex + '_' + b.turn);
+  const hospitalAdmissions = [];
   b.teams.player.forEach(f => {
     const bird = gameState.flock.find(x => x.id === f.birdId);
     if (!bird) return;
@@ -31224,6 +31247,10 @@ function endPerchBattle() {
     applyBirdHungerTransaction(bird.id, 'battle', battleActivityId, delta, Date.now());
     bird.care.happiness = clamp((bird.care.happiness || 80) + (won ? 4 : -3), 0, 100);
     levelUpBird(bird, rewards.birdXp);
+    // Knocked out on the field? The flock carries them straight to the ward.
+    if ((f.fainted || f.hp <= 0) && admitFaintedBirdToHospital(bird)) {
+      hospitalAdmissions.push(bird.customName || bird.commonName || bird.species);
+    }
   });
   if (typeof logDiary === 'function') logDiary('battle', { won, tier: tier.label, liberated: liberatedTown ? (liberatedTown.name || null) : null, promoted });
   leagueRivalCache = null; // next rival rolls fresh
@@ -31254,6 +31281,7 @@ function endPerchBattle() {
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
   if (!won) rows.push('<div class="rw-note">Tip: counter the evil Burbz\' wing classes, and train new moves in the Academy.</div>');
+  if (hospitalAdmissions.length) rows.push('<div class="rw-note">🏥 ' + escapeHtml(hospitalAdmissions.join(', ')) + (hospitalAdmissions.length > 1 ? ' were' : ' was') + ' carried to the Bird Hospital. Each flies home the moment they are healed.</div>');
   rows.push('<div class="rw-note">Your birds are tired and a little hungry — the Kitchen, Hospital and Roost will fix them up.</div>');
   $('battleResultRewards').innerHTML = rows.join('');
   $('battleAgainBtn').textContent = liberatedTown ? 'RETURN TO ' + liberatedTown.name.toUpperCase() : liberation ? 'TRY LIBERATION AGAIN' : 'BACK TO THE LEAGUE';
@@ -32284,7 +32312,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'live-reconcile-v245-20260810';
+const BURBZ_BUILD = 'battle-faint-auto-hospital-v247-20260811';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
