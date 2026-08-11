@@ -4361,6 +4361,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
+<script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -16600,6 +16601,107 @@ function ensureWalkingQuestState() {
 }
 function activeWalkingQuest() { return gameState ? ensureWalkingQuestState().active : null; }
 
+// ---- The Twenty Roads: the shared walking-story campaign ----
+// The tales, their NPCs and their scrolls live in walking_story_core.js and
+// are the same for every player on Earth. This state only remembers which
+// tales this walker has finished and which Feathered Folio scrolls they hold.
+function walkingStoryCore() { return window.BurbzWalkingStoryCore || null; }
+function ensureWalkingStoryState() {
+  if (!gameState.walkingStories || typeof gameState.walkingStories !== 'object' || Array.isArray(gameState.walkingStories)) gameState.walkingStories = { completed: [], scrolls: [] };
+  if (!Array.isArray(gameState.walkingStories.completed)) gameState.walkingStories.completed = [];
+  if (!Array.isArray(gameState.walkingStories.scrolls)) gameState.walkingStories.scrolls = [];
+  return gameState.walkingStories;
+}
+// The tale a walk of this length would tell right now — used at activation
+// and to preview the tale on a quest offer's focus card.
+function nextWalkingStoryForLength(lengthM) {
+  const core = walkingStoryCore();
+  return core ? core.nextWalkingStory(lengthM, ensureWalkingStoryState().completed) : null;
+}
+function attachStoryToNewWalkingQuest(quest) {
+  const core = walkingStoryCore();
+  if (!core || !quest) return null;
+  const story = core.nextWalkingStory(quest.lengthM, ensureWalkingStoryState().completed);
+  return story ? core.attachWalkingStory(quest, story) : null;
+}
+// Pocket a tale's Feathered Folio scroll exactly once per story.
+function collectWalkingStoryScroll(quest, opts = {}) {
+  const story = quest && quest.story;
+  if (!story || story.scrollCollected || !story.scroll) return false;
+  const st = ensureWalkingStoryState();
+  story.scrollCollected = true;
+  if (!st.scrolls.some(s => s && s.id === story.scroll.id)) {
+    st.scrolls.push({ id: story.scroll.id, title: story.scroll.title, text: story.scroll.text, storyId: story.id, storyTitle: story.title, foundAt: Date.now() });
+  }
+  addPlayerXp(25);
+  SFX.capture();
+  vibrate(QUEST_BUZZ.chest);
+  if (!opts.quiet) {
+    showToast('📜 Scroll found: ' + story.scroll.title + ' (+25 XP)');
+    showQuestNpcDialog('📜 ' + story.scroll.title, story.scroll.text);
+  }
+  saveState();
+  return true;
+}
+// Story beats ride the ordered waymarkers: the milestone speaks mid-route,
+// the scroll waits at the last plain flag before the home stretch.
+function handleWalkingStoryWaymarker(quest, index) {
+  const story = quest && quest.story;
+  if (!story) return;
+  if (index === story.milestoneAtIndex && story.milestone) {
+    setTimeout(() => showQuestNpcDialog(story.npcName, story.milestone), 450);
+  }
+  if (index === story.scrollAtIndex) collectWalkingStoryScroll(quest);
+}
+function walkingStoryRewardLines(reward) {
+  if (!reward) return [];
+  const L = window.BurbzLootCore;
+  const lines = [];
+  if (reward.coins) lines.push('+' + reward.coins + ' 🪙');
+  if (reward.xp) lines.push('+' + reward.xp + ' XP');
+  Object.entries(reward.gear || {}).forEach(([id, qty]) => {
+    const g = L && L.gearById(id);
+    lines.push('+' + qty + ' ' + (g ? g.icon + ' ' + g.label : id));
+  });
+  Object.entries(reward.materials || {}).forEach(([id, qty]) => {
+    const m = L && L.materialById(id);
+    lines.push('+' + qty + ' ' + (m ? m.icon + ' ' + m.label : id));
+  });
+  Object.entries(reward.items || {}).forEach(([id, qty]) => {
+    const it = birdXpItem(id);
+    lines.push('+' + qty + ' ' + (it ? it.icon + ' ' + it.label : id));
+  });
+  return lines;
+}
+// Pay a finished tale: mark it told, hand over the scroll if it was somehow
+// still sealed, and bank the reward. Returns the summary block for history.
+function applyWalkingStoryCompletion(quest) {
+  const story = quest && quest.story;
+  if (!story) return null;
+  const st = ensureWalkingStoryState();
+  const firstTelling = !st.completed.includes(story.id);
+  if (firstTelling) st.completed.push(story.id);
+  if (!story.scrollCollected) collectWalkingStoryScroll(quest, { quiet: true });
+  const reward = firstTelling ? story.reward : null;
+  if (reward) {
+    if (reward.coins) addCoins(reward.coins);
+    if (reward.xp) applyPlayerXpState(reward.xp);
+    Object.entries(reward.gear || {}).forEach(([id, qty]) => { gameState.inventory.gear[id] = (gameState.inventory.gear[id] || 0) + qty; });
+    Object.entries(reward.materials || {}).forEach(([id, qty]) => { gameState.inventory.items[id] = (gameState.inventory.items[id] || 0) + qty; });
+    Object.entries(reward.items || {}).forEach(([id, qty]) => addBirdXpItemToBag(id, qty));
+  }
+  return {
+    id: story.id,
+    order: story.order,
+    total: story.total || 20,
+    title: story.title,
+    npcName: story.npcName,
+    outro: story.outro,
+    scrollTitle: story.scroll ? story.scroll.title : null,
+    rewardLines: reward ? walkingStoryRewardLines(reward) : []
+  };
+}
+
 function walkQuestSheetEl() {
   let el = $('walkQuestSheet');
   if (!el) {
@@ -16730,6 +16832,9 @@ async function activateWalkingQuestFromOffer(offer, retry) {
     : offer;
   const quest = window.BurbzQuestCore.buildQuestFromOffer(questOffer);
   quest.likelyBirds = Array.isArray(offer.likelyBirds) ? offer.likelyBirds.slice(0, 8) : [];
+  // Every walk carries the next untold tale of The Twenty Roads — the same
+  // campaign, in the same order, for every player anywhere on Earth.
+  attachStoryToNewWalkingQuest(quest);
   // Activation is authoritative only after the complete route and every marker
   // certify against eligible transportation geometry in currently loaded tiles.
   const initialWays = visibleWalkablePathWays();
@@ -16785,7 +16890,9 @@ async function activateWalkingQuestFromOffer(offer, retry) {
   const start = quest.checkpoints[0];
   const atStart = current && start && mapDistanceMeters(current, start) <= window.BurbzQuestCore.REACH_RADIUS_M;
   const startEvents = atStart ? questOnPositionFix(liveMapLastPosition.lat, liveMapLastPosition.lon, Number.isFinite(current.accuracy) ? current.accuracy : 10) : [];
-  if (!startEvents.some(ev => ev.type === 'npc')) showQuestNpcDialog(quest.npcName, 'A quest, adventurer! Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
+  if (!startEvents.some(ev => ev.type === 'npc')) showQuestNpcDialog(quest.npcName, quest.story ?
+    '📖 Tale ' + quest.story.order + ' of ' + quest.story.total + ' — "' + quest.story.title + '". ' + quest.story.intro + ' Follow the golden path, and keep your scanner ready — a lore scroll waits on this road.' :
+    'A quest, adventurer! Follow the golden path of "' + quest.name + '". Reach every waymarker, crack open the treasure chests, and keep your scanner ready — every bird you capture on the way earns bonus XP. I await you at the first marker!');
 }
 
 function walkQuestRouteGeoJSON(quest) {
@@ -17341,7 +17448,9 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       addPlayerXp(10);
       SFX.levelUp();
       vibrate(QUEST_BUZZ.npc);
-      showQuestNpcDialog(quest.npcName, 'Well met, adventurer! The path of "' + quest.name + '" lies before you. May your wings stay swift and your scanner sharp. (+10 XP)');
+      showQuestNpcDialog(quest.npcName, quest.story ?
+        quest.story.intro + ' (+10 XP)' :
+        'Well met, adventurer! The path of "' + quest.name + '" lies before you. May your wings stay swift and your scanner sharp. (+10 XP)');
     } else if (ev.type === 'chest') {
       chestClaimHandled = true;
       const claimKey = 'walking:' + quest.id + ':checkpoint:' + ev.index;
@@ -17398,6 +17507,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
       SFX.tap();
       vibrate(QUEST_BUZZ.flag);
       showToast('🚩 ' + (ev.checkpoint.label || 'Waymarker') + ' reached!');
+      handleWalkingStoryWaymarker(quest, ev.index);
     } else if (ev.type === 'trail-npc') {
       addPlayerXp(15);
       SFX.capture();
@@ -17447,6 +17557,9 @@ function completeWalkingQuest() {
   const quest = wq.active;
   if (!quest) return;
   const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
+  // A finished tale of The Twenty Roads pays its reward before the headline
+  // sums, so the celebration and the history entry both tell the whole story.
+  summary.story = applyWalkingStoryCompletion(quest);
   addPlayerXp(summary.xp);
   // Merlin is the permanent walking companion; adventures deepen his bond.
   summary.merlinBondXp = Math.max(10, Math.round(summary.xp * 0.25));
@@ -17461,7 +17574,12 @@ function completeWalkingQuest() {
   saveState();
   clearWalkingQuestFromMap();
   vibrate(QUEST_BUZZ.complete);
-  playQuestClaimCelebration({ badge: 'QUEST COMPLETE!', coins: bonusCoins, xp: summary.xp, items: {} });
+  playQuestClaimCelebration({ badge: summary.story ? 'TALE ' + summary.story.order + ' OF ' + summary.story.total + ' COMPLETE!' : 'QUEST COMPLETE!', coins: bonusCoins, xp: summary.xp, items: {} });
+  if (summary.story) {
+    updateHeader();
+    renderInventory();
+    showQuestNpcDialog(summary.story.npcName, summary.story.outro + (summary.story.rewardLines.length ? ' (' + summary.story.rewardLines.join(' · ') + ')' : ''));
+  }
   setTimeout(() => showWalkQuestSummarySheet(summary, true), 1400);
 }
 
@@ -17876,6 +17994,7 @@ function openActiveWalkQuestSheet() {
     '<div class="wq-summary-stat"><div class="num">' + quest.birdsCaptured.length + '</div><div class="lbl">birds captured</div></div>' +
     '<div class="wq-summary-stat"><div class="num">' + quest.chestsOpened + '</div><div class="lbl">chests opened</div></div>' +
     '</div>' +
+    (quest.story ? '<div class="quest-desc" style="margin:4px 0 2px">📖 Tale ' + quest.story.order + ' of ' + quest.story.total + ': <b>' + escapeHtml(quest.story.title) + '</b> · ' + escapeHtml(quest.story.npcRole) + (quest.story.scrollCollected ? ' · 📜 scroll found' : ' · 📜 a scroll waits on this road') + '</div>' : '') +
     (quest.likelyBirds && quest.likelyBirds.length ? (() => {
       const tb = window.BurbzQuestCore.questTrailBirdBonus(quest);
       const got = new Set(tb.matched.map(m => m.species));
@@ -17887,6 +18006,29 @@ function openActiveWalkQuestSheet() {
     '<button class="wq-npc-ok" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">View on map</button> ' +
     '<button class="wq-npc-ok" style="border-color:rgba(255,120,120,.5); color:#ff9d9d; background:rgba(255,120,120,.1)" onclick="abandonWalkingQuest()">Abandon</button>' +
     '</div>';
+  el.classList.add('open');
+}
+
+// The Feathered Folio: every lore scroll collected on The Twenty Roads, kept
+// to re-read. Each scroll ties the walked roads back to the Academy and the
+// Empire — the realm's history, one road at a time.
+function openFeatheredFolioSheet() {
+  SFX.tap();
+  const st = ensureWalkingStoryState();
+  const el = walkQuestSheetEl();
+  const scrolls = st.scrolls.slice();
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
+    '<div class="quest-overlay-head"><div class="quest-overlay-icon">📜</div><div><div class="quest-name">The Feathered Folio</div><div class="quest-desc">' + scrolls.length + ' of 20 lore scrolls collected on The Twenty Roads</div></div></div>' +
+    (scrolls.length ?
+      scrolls.map((s, i) => '<button class="wq-npc-ok" style="display:block;width:100%;text-align:left;margin:4px 0" data-folio-scroll="' + i + '">📜 ' + escapeHtml(s.title) + '</button>').join('') :
+      '<div class="quest-desc">No scrolls yet. Every walking tale hides one along its road — walk, and the realm\'s history finds you.</div>') +
+    '</div>';
+  el.querySelectorAll('[data-folio-scroll]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const s = scrolls[Number(btn.dataset.folioScroll)];
+      if (s) showQuestNpcDialog('📜 ' + s.title, s.text);
+    });
+  });
   el.classList.add('open');
 }
 
@@ -17921,6 +18063,9 @@ function showWalkQuestSummarySheet(summary, celebrate) {
       (summary.trailBirds.xp ? ' — bonus +' + summary.trailBirds.xp + ' XP, +' + summary.trailBirds.coins + ' 🪙' : ' — no bonus this time') +
       (summary.trailBirds.fullSet ? '<div style="color:#f0c767;font-weight:800;margin-top:4px">🏅 MASTER BIRDWATCHER — full set captured!</div>' : '') + '</div>'
       : '') +
+    (summary.story ? '<div class="quest-desc" style="margin:6px 0">📖 <b>' + escapeHtml(summary.story.title) + '</b> — Tale ' + summary.story.order + ' of ' + summary.story.total + ' of The Twenty Roads, told by ' + escapeHtml(summary.story.npcName) + '.' +
+      (summary.story.scrollTitle ? '<br>📜 Folio scroll: ' + escapeHtml(summary.story.scrollTitle) : '') +
+      (summary.story.rewardLines && summary.story.rewardLines.length ? '<br>🎁 ' + summary.story.rewardLines.map(escapeHtml).join(' · ') : '') + '</div>' : '') +
     (summary.tavern && summary.tavern.boon ? '<div class="quest-desc" style="margin:6px 0">🍻 Tavern toast: ' + escapeHtml(summary.tavern.boon) + '</div>' : '') +
     (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — now registered at the 🪶 Barracks in your Academy!</div>' : '') +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
@@ -17948,6 +18093,19 @@ function renderWalkingQuestSection() {
       '<div class="quest-progress-text">' + hit + '/' + q.checkpoints.length + ' markers</div></div>' +
       '<button class="quest-claim-btn" onclick="switchScreen(\'map\')">MAP</button></div>';
   }
+  // The Twenty Roads: shared campaign progress and the Feathered Folio.
+  const storyCore = walkingStoryCore();
+  if (storyCore) {
+    const st = ensureWalkingStoryState();
+    const progress = storyCore.walkingStoryProgress(st.completed);
+    html += '<div class="quest-section-title">📖 The Twenty Roads</div>' +
+      '<div class="quest-card" data-walk-folio="1"><div class="quest-icon">📖</div><div class="quest-info">' +
+      '<div class="quest-name">' + (progress.complete ? 'All twenty tales told!' : 'Tales told: ' + progress.done + '/' + progress.total) + '</div>' +
+      '<div class="quest-desc">' + (progress.complete ? 'The Walker of the Twenty Roads. Every road you walk now is your own legend.' : 'Every real walk tells the next tale — the same twenty for every walker on Earth. Short strolls, long rambles and proper treks each carry their own.') + '</div>' +
+      '<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + Math.round(100 * progress.done / progress.total) + '%"></div></div>' +
+      '<div class="quest-progress-text">📜 Feathered Folio: ' + st.scrolls.length + ' scroll' + (st.scrolls.length === 1 ? '' : 's') + ' collected' + (st.scrolls.length ? ' — tap to read' : '') + '</div>' +
+      '</div></div>';
+  }
   // Footpath offers live on the map's Explore Quests board only — listing them
   // here raced the map's location fix and flickered in and out of the tab.
   html += '<div class="quest-section-title">🏆 Completed Adventures</div>';
@@ -17969,6 +18127,8 @@ function renderWalkingQuestSection() {
       if (s) showWalkQuestSummarySheet(s, false);
     });
   });
+  const folioCard = container.querySelector('[data-walk-folio]');
+  if (folioCard) folioCard.addEventListener('click', openFeatheredFolioSheet);
   const activeCard = container.querySelector('[data-walk-active]');
   if (activeCard) activeCard.addEventListener('click', ev => { if (!ev.target.classList.contains('quest-claim-btn')) openActiveWalkQuestSheet(); });
 }
@@ -18315,7 +18475,8 @@ function renderQuestMapFocusCard(moveFocus = false) {
   $('mapQuestFocusDistance').textContent = questStartDistanceText(offer);
   $('mapQuestFocusName').textContent = offer.name;
   $('mapQuestFocusBrief').textContent = 'Travel to the highlighted trailhead, then follow ' + walk.km.toFixed(1) + ' km of real mapped paths through the Kingdom of Burbz.' + (next ? ' This trail finishes beside the start of “' + next.name + '”, so your adventure can continue.' : ' Your route, waymarkers and trail rewards are shown clearly on the map.');
-  $('mapQuestFocusMeta').innerHTML = '<span class="map-quest-focus-chip">' + escapeHtml(meta.label) + '</span><span class="map-quest-focus-chip">' + (walk.loop === 'loop' ? '↺ loop route' : '↔ routed return') + '</span>' + (next ? '<span class="map-quest-focus-chip quest-chain-link">⌁ links to next quest</span>' : '');
+  const tale = nextWalkingStoryForLength(walk.km * 1000);
+  $('mapQuestFocusMeta').innerHTML = '<span class="map-quest-focus-chip">' + escapeHtml(meta.label) + '</span><span class="map-quest-focus-chip">' + (walk.loop === 'loop' ? '↺ loop route' : '↔ routed return') + '</span>' + (tale ? '<span class="map-quest-focus-chip">📖 Tale ' + tale.order + ': ' + escapeHtml(tale.title) + '</span>' : '') + (next ? '<span class="map-quest-focus-chip quest-chain-link">⌁ links to next quest</span>' : '');
   const begin = $('mapQuestFocusBegin');
   if (begin) {
     begin.textContent = activeWalkingQuest() ? 'VIEW CURRENT QUEST' : 'BEGIN THIS QUEST';
@@ -32498,7 +32659,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'conquest-world-levels-v248-20260811';
+const BURBZ_BUILD = 'walking-story-quests-v249-20260811';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

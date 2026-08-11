@@ -37,6 +37,7 @@ FILES=(
   "sw.js"
   "manifest.json"
   "quest_core.js"
+  "walking_story_core.js"
   "empire_map_core.js"
   "empire_realm_core.js"
   "daylight_core.js"

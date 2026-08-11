@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-11 (conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
+Last curated: 2026-08-11 (walking-story-quests v249: The Twenty Roads land — `walking_story_core.js` carries a fixed campaign of 20 real-world walking quests, identical for every player on Earth: tiered to walk size (stroll/ramble/trek), each told by a named NPC with intro/milestone/outro dialogue riding the ordered waymarkers, each hiding a Feathered Folio lore scroll tying the roads to the Academy and Empire canon, and each paying real catalogue gear/materials/xp-scrolls on first completion. `index.html` attaches the next untold tale at quest activation and keeps completion/scroll state in `gameState.walkingStories`. Previously conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
 
 ---
 
@@ -236,6 +236,61 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-11 — The Twenty Roads: twenty shared walking tales (Claude).**
+  Yaan asked for 20 real-life walking quests that are the same for every
+  player anywhere in the world — proper RPG quests with NPCs, sized to the
+  walk, with really good rewards and lore scrolls tying back to the empire
+  and Academy the way Bethesda games hide books. Release
+  `walking-story-quests-v249-20260811`.
+  - **Core** (`walking_story_core.js`, new, pure, Node-testable): the
+    campaign catalogue `WALKING_STORIES` — 20 tales in fixed order, tiered by
+    the quest's full walking distance (`storyTierForLength`: stroll <1500 m,
+    ramble <3200 m, trek beyond; 8/7/5 tales per tier). Each tale has a named
+    NPC (a recurring cast of nine), intro/milestone/outro dialogue, one
+    Feathered Folio lore scroll (canon-checked: charters, the Academy's
+    founding, sky-caravan waybills, the usurper's Ember Script, Merlin's
+    letter), and a reward of real catalogue ids only — gear + materials from
+    `loot_crafting_core`, bird-study scrolls from the bag
+    (`validateWalkingStories` resolves every id; a test runs it).
+    `nextWalkingStory(lengthM, completedIds)` is deterministic: first untold
+    tale of the walk's tier, falling through to any untold tale once a tier
+    is exhausted so the campaign always completes. `attachWalkingStory`
+    stamps the full text onto the quest itself (saves stay self-contained)
+    and plans story beats onto EXISTING plain-flag waymarkers
+    (`walkingStoryCheckpointPlan`: milestone mid-list, scroll at the last
+    plain flag) — no new checkpoint kinds, so ordered-marker progression
+    (v224) is untouched.
+  - **Wiring** (`index.html`): `attachStoryToNewWalkingQuest` runs right
+    after `buildQuestFromOffer` (indexes survive route repair — checkpoint
+    identity is preserved). Story intro replaces the generic trailhead/NPC
+    dialogue; `handleWalkingStoryWaymarker` fires the milestone beat and
+    `collectWalkingStoryScroll` (+25 XP, scroll dialog, stored in
+    `gameState.walkingStories.scrolls`). `applyWalkingStoryCompletion` in
+    `completeWalkingQuest` marks the tale told, grants the missed scroll
+    quietly, pays the reward ONCE (first telling only — replays after a
+    catalogue reset can't farm epics), and returns the summary block that
+    rides `wq.history`. UI: outro NPC dialog at the banner, tale line on the
+    active-quest sheet, tale chip on the map focus card (previews which tale
+    a walk of that length would tell), a 📖 Twenty Roads progress card and
+    tap-to-read 📜 Feathered Folio sheet on the quests screen.
+  - Tests: `tests/test_walking_story_quests_20260811.py` (catalogue
+    validation incl. every-reward-id-resolves, tier maths, deterministic
+    selection + fallback, attach/checkpoint-plan behaviour on a real built
+    quest, one-time reward rule, HTML wiring, release pins). Release pins
+    repointed per convention (21 head-tracking files v248→v249; the v248
+    test grew the OWN_RELEASE_PIN/CURRENT_BUILD split — its
+    `world_level_core.js` `?v=` pins stay on v248 since that core is
+    untouched, as do the battle/loot core pins). SW cache + `BURBZ_BUILD`
+    bumped; `walking_story_core.js` precached in both SW lists and added to
+    the live updater's FILES. STORY.md gains "The Twenty Roads" and "The
+    Feathered Folio". The alignment-authority harness gained the conventional
+    one-line stub (`attachStoryToNewWalkingQuest → null`). Local run:
+    1117 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container). Browser-checked in headless
+    Chromium (390×844): the game boots with the story core live, a 2 km walk
+    resolves the correct ramble tale with beats on plain flags, zero page
+    errors.
 
 - **2026-08-11 — conquest raises the world level, and the world fights back
   (Claude).** Yaan asked for a fully fleshed-out classic-RPG XP system where
