@@ -64,8 +64,9 @@ def diet_rules_source() -> str:
 
 def test_bag_is_renamed_stores_everywhere_the_player_reads_it():
     html = HTML.read_text(encoding="utf-8")
-    assert 'aria-label="Stores"' in html
-    assert '<div class="nav-label">Stores</div>' in html
+    # distributed-game-hud-v244: Stores rides the side action rail now.
+    assert 'aria-label="Royal Stores"' in html
+    assert '<span class="game-side-action-label">Stores</span>' in html
     assert "title:'Your Stores'" in html
     assert 'Stores empty ·' in html
     assert 'aria-label="Bag"' not in html

@@ -41,7 +41,8 @@ def test_early_squads_are_small_and_weak():
     # No tier boost while the realm sleeps: the squad sits below the flock.
     assert "Math.max(1, Math.round(avgLevel) - 1)" in gen
     # The rival preview is honest about the odds.
-    assert "ragged evil Burbz scouting party prowls this perch" in html
+    assert "A ragged evil Burbz scouting party" in html
+    assert "A ragged scouting party holds the village" in html
 
 
 def test_fresh_flocks_beat_eased_squads_every_time():

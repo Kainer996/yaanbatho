@@ -108,7 +108,7 @@
     var srOnlyClass = typeof options.screenReaderClass === 'string' && options.screenReaderClass
       ? options.screenReaderClass
       : 'sr-only';
-    var items = root.querySelectorAll('.nav-item[data-screen]');
+    var items = root.querySelectorAll('[data-game-route][data-screen]');
     var updated = 0;
 
     Array.prototype.forEach.call(items, function (item) {

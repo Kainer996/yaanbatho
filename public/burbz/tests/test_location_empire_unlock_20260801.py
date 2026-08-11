@@ -299,7 +299,7 @@ def test_release_is_versioned_for_the_service_worker():
     sw = SW.read_text(encoding="utf-8")
     # empire_realm_core.js ships new maths per release; its cache-buster moves
     # with whichever release last touched it.
-    core_pin = "accurate-diets-full-catalogue-v226-20260805"
+    core_pin = "town-county-screens-v242-20260810"
     assert f"empire_realm_core.js?v={core_pin}" in html
     assert f"./empire_realm_core.js?v={core_pin}" in sw
     # This release's own segment stays in the cache lineage forever.

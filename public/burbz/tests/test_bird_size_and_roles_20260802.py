@@ -23,7 +23,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 ROLE_CORE_PIN = "empire-clarity-v205-20260803"
 SIZE_CORE_PIN = "forge-satchels-v220-20260804"
-CURRENT_BUILD = "battle-faint-auto-hospital-v241-20260810"
+CURRENT_BUILD = "battle-faint-auto-hospital-v247-20260811"
 
 
 def run_node(source: str) -> dict:
@@ -298,7 +298,11 @@ def test_the_appointment_card_is_reachable_from_every_surface():
     html = HTML.read_text(encoding="utf-8")
     assert "function rolePostCardHTML(scope, key" in html
     # Academy room interiors (including the Barracks, which renders early).
-    assert "const rolePanel = rolePostCardHTML('academy', room);" in html
+    # training-master-room-actor-v243 (live line): the Training Hall's card
+    # moved into the Drill Master picker sheet; every other room keeps the
+    # inline panel.
+    assert "const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);" in html
+    assert "rolePostCardHTML('academy', 'training')" in html
     assert "rolePostCardHTML('academy', 'tavern')" in html
     # A village's own hall, and a region's.
     assert "rolePostCardHTML('village', String(rec.seed >>> 0)" in html
