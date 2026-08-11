@@ -1887,6 +1887,13 @@ svg.academy-room-bg { display:block; filter:none; }
 .bench-meta { font-size:9.5px; color:var(--text3); margin-top:1px; }
 .bench-status { flex-shrink:0; font-size:9px; font-weight:900; padding:3px 8px; border-radius:20px; border:1px solid rgba(255,255,255,.14); color:var(--text2); background:rgba(255,255,255,.04); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
 .bench-status.hungry { border-color:rgba(255,140,90,.5); color:#ffab7d; background:rgba(255,120,60,.08); }
+/* Tap a companion anywhere to fly to it — these mark the tappable spots. */
+[data-bird-goto], [data-bird-info] { cursor:pointer; }
+button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cursor:pointer; }
+.bench-row:active { opacity:1; transform:scale(.985); }
+.bench-go { flex-shrink:0; color:var(--text3); font-size:15px; font-weight:900; padding-left:2px; }
+.bird-spotlight { animation:birdSpotlight 1.1s ease-in-out 2; }
+@keyframes birdSpotlight { 0%,100% { box-shadow:0 0 0 0 rgba(214,168,79,0); } 50% { box-shadow:0 0 0 3px var(--accent), 0 0 16px rgba(214,168,79,.6); } }
 .rival-counter-line { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:8px; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; font-weight:800; }
 .rival-counter-line .type-chip { margin-top:0; }
 .pk-counter-chip { display:inline-flex; align-items:center; gap:2px; font-size:8px; font-weight:900; padding:2px 6px; border-radius:20px; border:1px solid rgba(126,217,131,.55); color:#8fe996; background:rgba(126,217,131,.10); margin-top:3px; text-transform:uppercase; letter-spacing:.05em; }
@@ -10560,7 +10567,8 @@ function openBirdInfo(birdId) {
         <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
         <div class="bird-info-rarity" style="color:${rarityColor}">${escapeHTML(bird.rarity || 'common')} · Power ${bird.power || 0}</div>
         ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>
-        <button class="card-pet-btn" style="margin-top:8px" onclick="closeBirdInfo(); openBirdEquip('${escapeHTML(bird.id)}')">⚔️ Equipment</button>`}
+        <button class="card-pet-btn" style="margin-top:8px" onclick="closeBirdInfo(); openBirdEquip('${escapeHTML(bird.id)}')">⚔️ Equipment</button>
+        <button class="card-pet-btn" style="margin-top:8px" onclick="closeBirdInfo(); gotoBirdCardLocation('${escapeHTML(bird.id)}', { openCard:false })">📍 Find them</button>`}
       </div>
     </div>
     <div class="bird-info-summary">${escapeHTML(summary)}</div>
@@ -10890,7 +10898,7 @@ function rolePostCardHTML(scope, key, options = {}) {
         '</button>').join('')
     : '<div class="role-empty">No companion is free for this post right now — recruit a bird, or wait for one to fly home.</div>';
   const held = post.staffed
-    ? '<div class="role-holder">' + birdOnlyImgHTML(post.bird, 'role-holder-art') +
+    ? '<div class="role-holder" data-bird-info="' + escapeHtml(post.bird.id) + '">' + birdOnlyImgHTML(post.bird, 'role-holder-art') +
         '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
         '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(role.title) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
         '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
@@ -11753,6 +11761,13 @@ function birdCutoutUrlFor(art) {
 // data-fallback-art  → retry once with the full painting
 // data-fallback-emoji → replace the image with a clean emoji glyph
 function wireBirdArtFallbacks() {
+  // The stand-in glyph must stay tappable: carry the bird tap wiring across.
+  const keepTapWiring = (img, span) => {
+    ['data-bird-info', 'data-bird-goto', 'onclick'].forEach(attr => {
+      const value = img.getAttribute(attr);
+      if (value != null) span.setAttribute(attr, value);
+    });
+  };
   document.addEventListener('error', e => {
     const img = e.target;
     if (!(img instanceof HTMLImageElement)) return;
@@ -11765,6 +11780,7 @@ function wireBirdArtFallbacks() {
       const span = document.createElement('span');
       span.className = (img.className ? img.className + ' ' : '') + 'treehouse-bird-svg-fallback';
       span.innerHTML = miniBirdSVG(img.dataset.fallbackMiniBird);
+      keepTapWiring(img, span);
       img.replaceWith(span);
       return;
     }
@@ -11772,6 +11788,7 @@ function wireBirdArtFallbacks() {
       const span = document.createElement('span');
       span.className = (img.className ? img.className + ' ' : '') + 'bird-emoji-glyph';
       span.textContent = img.dataset.fallbackEmoji;
+      keepTapWiring(img, span);
       img.replaceWith(span);
     }
   }, true);
@@ -11779,16 +11796,17 @@ function wireBirdArtFallbacks() {
 
 // Bird image for compact/moving contexts (map list, walking pet, room sprite):
 // transparent cutout when available, otherwise the real manga painting.
-function birdOnlyImgHTML(bird, className) {
+function birdOnlyImgHTML(bird, className, extraAttrs) {
   const art = getBirdArtUrl(bird);
   const species = String((bird && (bird.commonName || bird.name || bird.species)) || '');
   const emoji = getBirdMarkerEmoji(species) || '🐦';
   const known = MAP_BIRD_CUTOUT_ART[canonicalSpeciesName(species.split('(')[0].trim())];
+  const extra = extraAttrs ? ' ' + extraAttrs : '';
   // Compact moving birds must be transparent sprites: never let a full square
   // card painting run around a room, perch or map.
   const cutout = known || birdCutoutUrlFor(art);
-  if (!cutout) return '<span class="' + escapeHtml(className) + ' bird-emoji-glyph">' + emoji + '</span>';
-  return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '">';
+  if (!cutout) return '<span class="' + escapeHtml(className) + ' bird-emoji-glyph"' + extra + '>' + emoji + '</span>';
+  return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '"' + extra + '>';
 }
 
 // Bird image for FRAMED contexts (Birdex cards, thumbnails): cutout first,
@@ -12987,7 +13005,10 @@ function renderBirdExpeditions() {
   const activeHtml = rows.length ? '<div class="quest-section-title">Birds on Quests</div>' + rows.map(q => {
     const done = q.status === 'complete';
     const bird = expeditionBirdById(q.birdId);
-    const art = bird ? birdOnlyImgHTML(bird, 'quest-away-art') : '<div class="quest-away-art">' + q.icon + '</div>';
+    // Tapping the bird itself opens its card; the rest of the row opens the log.
+    const companion = (gameState.flock || []).some(f => f && f.id === q.birdId);
+    const artTap = companion ? 'onclick="event.stopPropagation();openBirdInfo(\'' + escapeHtml(q.birdId) + '\')"' : '';
+    const art = bird ? birdOnlyImgHTML(bird, 'quest-away-art', artTap) : '<div class="quest-away-art">' + q.icon + '</div>';
     return '<div class="quest-away-card' + (done ? ' ready' : '') + '" onclick="openQuestLog(\'' + q.id + '\')">' +
       art +
       '<div class="quest-info">' +
@@ -13403,7 +13424,7 @@ function renderAcademyRoomPanel(birds) {
   }
 
   html += birds.map(b => {
-    const artHtml = birdOnlyImgHTML(b, 'academy-bird-art');
+    const artHtml = birdOnlyImgHTML(b, 'academy-bird-art', 'data-bird-info="' + escapeHtml(b.id) + '"');
     const hpPct = clamp(Math.round((b.hp / (b.maxHp || 1)) * 100), 0, 100);
     const hungerPct = clamp(Math.round(b.care.hunger || 0), 0, 100);
     const happyPct = clamp(Math.round(b.care.happiness || 0), 0, 100);
@@ -15643,7 +15664,9 @@ function openAcademyRoom(room) {
     return;
   }
   academyInteriorRoom = room;
-  switchScreen('academy-room');
+  // Already standing in a room? Redraw in place — switchScreen would no-op.
+  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+  else switchScreen('academy-room');
 }
 
 
@@ -15664,7 +15687,7 @@ function roomBirdGridHTML(birds, room) {
     const maxHp = Math.max(1, Math.round(Number(bird.maxHp) || Number(bird.hp) || 1));
     const hp = clamp(Math.round(Number.isFinite(Number(bird.hp)) ? Number(bird.hp) : maxHp), 0, maxHp);
     const hospitalHealth = room === 'hospital' ? '<span class="room-bird-grid-hp" role="progressbar" aria-label="Health ' + hp + ' of ' + maxHp + '" aria-valuemin="0" aria-valuemax="' + maxHp + '" aria-valuenow="' + hp + '">♥ ' + hp + '/' + maxHp + '</span>' : '';
-    return '<div class="room-bird-grid-item" data-room-bird-id="' + escapeHtml(bird.id) + '" title="' + escapeHtml(birdDisplayName(bird) + ' · ' + status) + '">' +
+    return '<div class="room-bird-grid-item" data-room-bird-id="' + escapeHtml(bird.id) + '" data-bird-info="' + escapeHtml(bird.id) + '" title="' + escapeHtml(birdDisplayName(bird) + ' · ' + status) + '">' +
       birdOnlyImgHTML(bird, 'room-bird-grid-art') +
       '<span class="room-bird-grid-name">' + escapeHtml(birdDisplayName(bird)) + '</span>' +
       '<span class="room-bird-grid-status">' + escapeHtml(status) + '</span>' +
@@ -15776,7 +15799,7 @@ function renderTrainingHallPanel(birds, others) {
   const sessionHtml = active.length ? active.map(t => {
     const done = t.status === 'complete';
     const bird = academyBirdById(t.birdId) || { commonName:t.birdName };
-    const artHtml = birdOnlyImgHTML(bird, 'academy-bird-art');
+    const artHtml = birdOnlyImgHTML(bird, 'academy-bird-art', bird.id ? 'data-bird-info="' + escapeHtml(bird.id) + '"' : '');
     const rewards = t.rewards || {};
     const progressPct = Number.isFinite(t.progressPct) ? t.progressPct : 0;
     const events = Array.isArray(t.events) ? t.events : [];
@@ -15862,7 +15885,7 @@ function renderAcademyRoomInterior() {
       const action = (away || training)
         ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : 'Training') + '</button>'
         : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
-      return '<div class="room-bird-option">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
+      return '<div class="room-bird-option" data-bird-goto="' + escapeHtml(b.id) + '">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
@@ -28749,22 +28772,61 @@ function birdCardLocationButtonHTML(bird) {
   return `<button type="button" class="card-location-btn ${escapeHtml(location.kind)}" data-action="bird-location" data-bird-id="${escapeHtml(bird.id)}" aria-label="Find ${escapeHtml(birdDisplayName(bird))}: ${escapeHtml(location.label)}"><span class="card-location-icon" aria-hidden="true">${location.icon}</span><span class="card-location-label">${escapeHtml(location.label)}</span><span class="card-location-arrow" aria-hidden="true">›</span></button>`;
 }
 
-function gotoBirdCardLocation(birdId) {
+function gotoBirdCardLocation(birdId, opts = {}) {
   const bird = (gameState.flock || []).find(row => row && String(row.id) === String(birdId));
   if (!bird) return;
   const location = resolveBirdCardLocation(bird);
   SFX.tap();
-  if (location.screen === 'quests') { switchScreen('quests'); return; }
-  if (location.screen === 'academy-room') {
+  if (location.screen === 'quests') switchScreen('quests');
+  else if (location.screen === 'academy-room') {
     const roomScreen = $('screen-academy-room');
     if (currentScreen === 'academy-room' && roomScreen && !roomScreen.classList.contains('active')) currentScreen = '';
     openAcademyRoom(location.room);
-    return;
   }
-  if (location.screen === 'village') { openEmpireVillage(location.key); return; }
-  if (location.screen === 'region') { openEmpireRegion(location.key); return; }
-  switchScreen('birdex');
+  else if (location.screen === 'village') openEmpireVillage(location.key);
+  else if (location.screen === 'region') openEmpireRegion(location.key);
+  else switchScreen('birdex');
+  // Land beside the bird: give it a glow, then open its card so the player
+  // sees everything about the companion they came to find.
+  setTimeout(() => {
+    spotlightBirdInPlace(bird.id);
+    if (opts.openCard !== false) openBirdInfo(bird.id);
+  }, 260);
 }
+
+// A short golden pulse on the bird where it stands, so the eye finds it.
+function spotlightBirdInPlace(birdId) {
+  const screen = document.querySelector('.screen.active');
+  if (!screen) return;
+  const id = String(birdId);
+  const target = Array.from(screen.querySelectorAll('[data-room-bird-id],[data-bird-goto],[data-bird-info],[data-bird-id]'))
+    .find(el => [el.dataset.roomBirdId, el.dataset.birdGoto, el.dataset.birdInfo, el.dataset.birdId].includes(id));
+  if (!target) return;
+  target.classList.remove('bird-spotlight');
+  void target.offsetWidth;
+  target.classList.add('bird-spotlight');
+  try { target.scrollIntoView({ behavior:'smooth', block:'center' }); } catch (e) {}
+  setTimeout(() => target.classList.remove('bird-spotlight'), 2400);
+}
+
+// One delegated listener for every companion tap target in the game:
+// data-bird-goto flies to wherever the bird is; data-bird-info opens its card.
+document.addEventListener('click', event => {
+  const origin = event.target;
+  if (!origin || !origin.closest) return;
+  const hit = origin.closest('[data-bird-goto],[data-bird-info]');
+  if (!hit) return;
+  // Inner controls (Add, Feed, Stand down…) keep their own job.
+  const control = origin.closest('button,a,[data-action],[onclick]');
+  if (control && control !== hit && hit.contains(control)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (hit.dataset.birdGoto) gotoBirdCardLocation(hit.dataset.birdGoto);
+  else { SFX.tap(); openBirdInfo(hit.dataset.birdInfo); }
+});
+
+// Inline onclick handlers run in the global scope; the game lives in an IIFE.
+Object.assign(window, { openBirdInfo, closeBirdInfo, gotoBirdCardLocation });
 
 function createBirdCardHTML(bird, idx) {
   ensureBirdAcademy(bird);
@@ -30724,10 +30786,10 @@ function renderBattleSelect() {
     }).join('');
     const benchRows = bench.map(b => {
       const s = benchStatus(b);
-      return '<div class="bench-row">' + fighterArtHTML(b, 'br') +
+      return '<button type="button" class="bench-row" data-bird-goto="' + escapeHtml(b.id) + '" aria-label="Visit ' + escapeHtml(birdDisplayName(b)) + ' · ' + escapeHtml(s.label) + '">' + fighterArtHTML(b, 'br') +
         '<div class="bench-info"><div class="bench-name">' + escapeHtml(birdDisplayName(b)) + '</div>' +
         '<div class="bench-meta">Lv ' + (b.level || 1) + (s.meta ? ' · ' + s.meta : '') + '</div></div>' +
-        '<span class="bench-status' + s.cls + '">' + escapeHtml(s.label) + '</span></div>';
+        '<span class="bench-status' + s.cls + '">' + escapeHtml(s.label) + '</span><span class="bench-go" aria-hidden="true">›</span></button>';
     }).join('');
     grid.innerHTML =
       '<div class="roster-title">Ready to fly <span class="roster-count">' + pickable.length + '</span></div>' +
