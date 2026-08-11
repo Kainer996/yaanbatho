@@ -16235,7 +16235,7 @@ function applyBurbzCameraPadding() {
     liveMap.setPadding({ top: Math.round(h * 0.44), bottom: 0, left: 0, right: 0 });
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
   if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
   if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
@@ -17319,14 +17319,15 @@ function questPhotoRefFor(item) {
   if (!item) return '';
   const ref = String(item.ref || '').trim();
   if (/^[a-z][a-z-]{0,23}\/[A-Za-z0-9+.,\-]{1,80}$/.test(ref)) return ref;
-  const start = Array.isArray(item.routeStart) ? item.routeStart : (Array.isArray(item.route) && item.route[0] ? item.route[0] : null);
+  const start = Array.isArray(item.routeStart) ? item.routeStart : (Array.isArray(item.route) && item.route[0] ? item.route[0] : (Array.isArray(item.path) && item.path[0] ? item.path[0] : null));
   if (Array.isArray(start) && isFinite(start[0]) && isFinite(start[1])) return 'loc/' + Number(start[0]).toFixed(3) + ',' + Number(start[1]).toFixed(3);
   if (item.checkpoints && item.checkpoints[0] && isFinite(item.checkpoints[0].lat) && isFinite(item.checkpoints[0].lon)) return 'loc/' + Number(item.checkpoints[0].lat).toFixed(3) + ',' + Number(item.checkpoints[0].lon).toFixed(3);
   return '';
 }
 function questPhotoItem(which) {
   if (which === 'summary') return lastWalkQuestSummaryView;
-  return activeWalkingQuest();
+  // A Side Quest counts too: its charted path anchors the photos.
+  return activeWalkingQuest() || sideQuestActive();
 }
 async function fetchQuestPhotos(ref) {
   const res = await fetch('api/quests/photos?ref=' + encodeURIComponent(ref), { cache:'no-store' });
@@ -17615,6 +17616,8 @@ function ensureSideQuestState() {
   if (!gameState.sideQuest || typeof gameState.sideQuest !== 'object' || Array.isArray(gameState.sideQuest)) gameState.sideQuest = { active: null, history: [] };
   if (!Array.isArray(gameState.sideQuest.history)) gameState.sideQuest.history = [];
   if (gameState.sideQuest.active && typeof gameState.sideQuest.active !== 'object') gameState.sideQuest.active = null;
+  if (gameState.sideQuest.active && !gameState.sideQuest.active.name) gameState.sideQuest.active.name = 'Side Quest'; // older saves
+  if (!Array.isArray(gameState.sideQuest.npcLandmarks)) gameState.sideQuest.npcLandmarks = [];
   return gameState.sideQuest;
 }
 function sideQuestActive() { return ensureSideQuestState().active; }
@@ -17696,6 +17699,7 @@ function startSideQuest() {
   const { lat, lon } = liveMapLastPosition;
   sq.active = {
     id: 'sq_' + Date.now().toString(36),
+    name: 'Side Quest',
     startedAt: new Date().toISOString(),
     path: [[lat, lon, Date.now()]],
     distanceM: 0,
@@ -17789,9 +17793,12 @@ function drawSideQuestTrail() {
   if (!liveMap) return;
   try {
     if (!liveMap.getSource('burbz-side-quest-trail')) {
+      // Same dotted gold trail as the walking quest route, so every charted
+      // path in Burbz reads the same way.
       liveMap.addSource('burbz-side-quest-trail', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-      liveMap.addLayer({ id: 'burbz-side-quest-trail-glow', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#69ebc2', 'line-width': 8, 'line-opacity': .16, 'line-blur': 3 } });
-      liveMap.addLayer({ id: 'burbz-side-quest-trail-line', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#69ebc2', 'line-width': 3, 'line-opacity': .9 } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-glow', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#f0c767', 'line-width': 18, 'line-opacity': .32, 'line-blur': 4 } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-casing', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#07100c', 'line-width': 9.5, 'line-opacity': .85, 'line-dasharray': [.135, 1.482] } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-line', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#f0c767', 'line-width': 6.4, 'line-opacity': 1, 'line-dasharray': [.2, 2.2] } });
     }
     liveMap.getSource('burbz-side-quest-trail').setData(sideQuestTrailGeoJSON(sideQuestActive()));
   } catch (e) {}
@@ -17821,6 +17828,41 @@ function clearSideQuestFromMap() {
   sideQuestMapMarkers = [];
   drawSideQuestTrail();
   updateWalkQuestHud();
+}
+
+// --- NPC landmarks -----------------------------------------------------------
+// A quest giver met on a Side Quest stays where you found them. Their perch
+// is saved and pinned on the live map for good, even after the quest ends.
+const SIDE_QUEST_NPC_LANDMARK_CAP = 30;
+let sideQuestNpcMarkers = [];
+function rememberSideQuestNpc(active, d) {
+  const sq = ensureSideQuestState();
+  if (sq.npcLandmarks.some(n => n.id === d.id)) return;
+  sq.npcLandmarks.push({ id: d.id, species: d.species, rarity: d.rarity || 'common', lat: d.lat, lon: d.lon, foundAt: d.foundAt || new Date().toISOString(), questId: active ? active.id : null });
+  if (sq.npcLandmarks.length > SIDE_QUEST_NPC_LANDMARK_CAP) sq.npcLandmarks.splice(0, sq.npcLandmarks.length - SIDE_QUEST_NPC_LANDMARK_CAP);
+  drawSideQuestNpcLandmarks();
+}
+function drawSideQuestNpcLandmarks() {
+  sideQuestNpcMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+  sideQuestNpcMarkers = [];
+  if (!liveMap || !window.maplibregl) return;
+  ensureSideQuestState().npcLandmarks.forEach(n => {
+    if (!isFinite(n.lat) || !isFinite(n.lon)) return;
+    const el = document.createElement('div');
+    el.className = 'quest-marker-pin';
+    const face = document.createElement('div');
+    face.className = 'quest-marker qm-npc';
+    face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
+    el.appendChild(face);
+    el.addEventListener('click', ev => { ev.stopPropagation(); showSideQuestNpcLandmark(n.id); });
+    sideQuestNpcMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([n.lon, n.lat]).addTo(liveMap));
+  });
+}
+function showSideQuestNpcLandmark(id) {
+  const n = ensureSideQuestState().npcLandmarks.find(x => x.id === id);
+  if (!n) return;
+  const when = n.foundAt ? new Date(n.foundAt).toLocaleDateString() : 'your wander';
+  showQuestNpcDialog('Wandering quest giver', 'Good to see you again, explorer! We met right here on your Side Quest (' + when + '). My friend the ' + n.species + ' still sings about that walk. I am staying at this spot — visit any time.');
 }
 
 // Discoveries were physically reached the moment they spawned under the
@@ -17882,6 +17924,7 @@ async function sideQuestClaimDiscovery(id, opts) {
     showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
   } else {
     d.claimed = true;
+    rememberSideQuestNpc(active, d); // the quest giver keeps this perch on the map
     const added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
     addPlayerXp(15);
     SFX.levelUp();
@@ -17910,6 +17953,7 @@ function openSideQuestLogSheet() {
     (active.distanceM / 1000).toFixed(2) + ' km wandered · ' + found + ' discover' + (found === 1 ? 'y' : 'ies') + (unclaimed ? ' · ' + unclaimed + ' waiting on the map!' : '') + '</div></div></div>' +
     '<div class="quest-desc" style="line-height:1.5;">Keep the phone in your pocket and keep exploring — it will buzz and chirp when you stumble across something. Ending the quest keeps everything you found, and you can turn the wander into a real quest for others.</div>' +
     '<button class="wq-detail-start" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">🗺️ VIEW MY TRAIL</button>' +
+    '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'active\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" style="background:linear-gradient(135deg,#a78335,#74541d);" onclick="endSideQuest()">🏁 END SIDE QUEST</button></div>';
   el.classList.add('open');
 }
@@ -17935,6 +17979,7 @@ async function endSideQuest() {
     sharedDraft: false
   };
   if (typeof logDiary === 'function') logDiary('side_quest', { km: +(summary.distanceM / 1000).toFixed(2), discoveries: summary.discoveries, xp });
+  lastWalkQuestSummaryView = summary; // lets the finish sheet open the trail photo book
   sq.history.unshift(summary);
   if (sq.history.length > 40) sq.history.length = 40;
   sq.active = null;
@@ -17949,6 +17994,7 @@ async function endSideQuest() {
     '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🏁</div><div><div class="quest-board-title">Side Quest complete!</div><div class="quest-board-intro">' +
     (summary.distanceM / 1000).toFixed(2) + ' km wandered · ' + summary.discoveries + ' discover' + (summary.discoveries === 1 ? 'y' : 'ies') + ' · +' + xp + ' XP</div></div></div>' +
     '<div class="quest-desc" style="line-height:1.5;">Your whole wander is charted and saved. Turn it into a real quest so other players can walk your trail in the future?</div>' +
+    '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'summary\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" onclick="shareSideQuestDraft(\'' + summary.id + '\')">🤝 TURN INTO A QUEST FOR OTHERS</button>' +
     '<button class="wq-detail-start" style="background:rgba(255,255,255,.08);" onclick="closeWalkQuestSheet()">DONE</button></div>';
   el.classList.add('open');
