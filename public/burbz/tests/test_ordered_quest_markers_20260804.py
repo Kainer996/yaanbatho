@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "ordered-quest-markers-v224-20260804"
-CURRENT_BUILD = "academy-2d-default-v250-20260811"
+CURRENT_BUILD = "hold-to-steer-v251-20260811"
 
 
 def run_core(expression: str):

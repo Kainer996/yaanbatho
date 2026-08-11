@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "academy-2d-default-v250-20260811"
+CURRENT_BUILD = "hold-to-steer-v251-20260811"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

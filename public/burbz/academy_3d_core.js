@@ -1899,7 +1899,7 @@
       st.renderer.domElement.style.width = '100%';
       st.renderer.domElement.style.height = '100%';
       st.renderer.domElement.style.display = 'block';
-      st.renderer.domElement.style.touchAction = 'none';
+      st.renderer.domElement.style.touchAction = 'pan-y'; // swipes scroll the page; a held finger steers
       resize();
       st.mounted = true;
       return true;
@@ -1923,24 +1923,39 @@
       st.camera.updateProjectionMatrix();
     }
 
-    // Drag to orbit, pinch to zoom, tap a building to step inside.
+    // Hold, then drag to orbit; pinch to zoom; tap a building to step inside.
+    // The gate (touch_steer_core.js) lets the page scroll over the canvas: a
+    // swipe scrolls, only a finger held still for a beat grabs the camera.
     function wireInput(el) {
       var MIN_D = 11, MAX_D = 52;
       function zoom(d) { st.cam.dist = Math.min(MAX_D, Math.max(MIN_D, d)); }
+      var g = typeof globalThis !== 'undefined' ? globalThis : this;
+      var steer = (g && g.BurbzTouchSteer) ? g.BurbzTouchSteer.createHoldGate({
+        onEngage: function(at) {
+          st.dragged = true; // grabbing the camera is never a tap
+          if (st.cont && st.cont.classList) st.cont.classList.add('steering');
+          if (st.orbitStart) { st.orbitStart.x = at.x; st.orbitStart.y = at.y; st.orbitStart.az = st.cam.az; st.orbitStart.polar = st.cam.polar; }
+          try { if (g.navigator && g.navigator.vibrate) g.navigator.vibrate(8); } catch (err) {}
+        }
+      }) : { down: function() { return true; }, move: function() { return true; }, up: function() {}, cancel: function() {}, engaged: true };
+      el.addEventListener('touchmove', function(e) { if (steer.engaged && e.cancelable) e.preventDefault(); }, { passive: false });
       el.addEventListener('pointerdown', function(e) {
         el.setPointerCapture && el.setPointerCapture(e.pointerId);
         st.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         st.cam.lastInput = Date.now();
         st.dragged = false;
+        steer.down({ pointerType: e.pointerType, x: e.clientX, y: e.clientY });
         if (st.pointers.size === 1) st.orbitStart = { x: e.clientX, y: e.clientY, az: st.cam.az, polar: st.cam.polar };
       });
       el.addEventListener('pointermove', function(e) {
         if (!st.pointers.has(e.pointerId)) return;
         st.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         st.cam.lastInput = Date.now();
+        var maySteer = steer.move({ x: e.clientX, y: e.clientY });
         if (st.pointers.size === 1 && st.orbitStart) {
           var dx = e.clientX - st.orbitStart.x, dy = e.clientY - st.orbitStart.y;
           if (Math.abs(dx) + Math.abs(dy) > 6) st.dragged = true;
+          if (!maySteer) return; // the page owns this swipe — the camera stays put
           st.cam.az = st.orbitStart.az - dx * 0.008;
           st.cam.polar = Math.min(1.62, Math.max(0.30, st.orbitStart.polar - dy * 0.006));
         } else if (st.pointers.size === 2) {
@@ -1952,7 +1967,8 @@
         }
       });
       function release(e) {
-        st.pointers.delete(e.pointerId);
+        if (st.pointers.delete(e.pointerId)) steer.up(); // pointerleave fires for a hovering mouse too
+        if (!steer.engaged && st.cont && st.cont.classList) st.cont.classList.remove('steering');
         if (st.pointers.size < 2) st.pinchLast = null;
         if (st.pointers.size === 0) st.orbitStart = null;
       }

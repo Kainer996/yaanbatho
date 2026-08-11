@@ -44,6 +44,7 @@ FILES=(
   "academy_treehouse_core.js"
   "academy_alive_core.js"
   "academy_3d_core.js"
+  "touch_steer_core.js"
   "kitchen_pantry_core.js"
   "data/bird-diet-records.js"
   "bird_diet_hunger_core.js"
