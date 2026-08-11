@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-11 (walking-story-quests v249: The Twenty Roads land — `walking_story_core.js` carries a fixed campaign of 20 real-world walking quests, identical for every player on Earth: tiered to walk size (stroll/ramble/trek), each told by a named NPC with intro/milestone/outro dialogue riding the ordered waymarkers, each hiding a Feathered Folio lore scroll tying the roads to the Academy and Empire canon, and each paying real catalogue gear/materials/xp-scrolls on first completion. `index.html` attaches the next untold tale at quest activation and keeps completion/scroll state in `gameState.walkingStories`. Previously conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
+Last curated: 2026-08-11 (village-variation v250: no two villages alike — `village_variation_core.js` rolls every settlement seed a DNA card (wall build: timber/stone/brick/painted · roof craft: thatch/slate/tile/shingle · colour washes, trim + door paints, window glow, banner cloth) and re-keys the base `VILLAGE_PALETTES` entry through pure HSL/golden-angle maths, No-Man's-Sky style; `buildVillageScene`'s pinned palette roll survives and is varied per seed, the building/cottage makers read `pal.dna` for their styling, and two new landmarks (wayside shrine, stone watchtower) join the pool. The Town Square's districts now replay each member village's own opening dice (`villagePlan` — bit-identical mulberry32) plus its DNA, so every district wears its real village's palette, tier, plan, landmark family and one of its true trades — the town you see IS the villages you visit. `__burbzTownDebug` joins the localhost-only debug hooks. Previously walking-story-quests v249: The Twenty Roads land — `walking_story_core.js` carries a fixed campaign of 20 real-world walking quests, identical for every player on Earth: tiered to walk size (stroll/ramble/trek), each told by a named NPC with intro/milestone/outro dialogue riding the ordered waymarkers, each hiding a Feathered Folio lore scroll tying the roads to the Academy and Empire canon, and each paying real catalogue gear/materials/xp-scrolls on first completion. `index.html` attaches the next untold tale at quest activation and keeps completion/scroll state in `gameState.walkingStories`. Previously conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
 
 ---
 
@@ -236,6 +236,66 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-11 — no two villages alike: village DNA + true town districts
+  (Claude).** Yaan's two-part ask: villages need "much much more variation"
+  the way No Man's Sky varies through maths — more colours, more details,
+  more kinds of buildings — and the Town Square's three districts must BE
+  the three real villages you zoom into, not generic stand-ins. Release
+  `village-variation-v250-20260811`.
+  - **Core** (`village_variation_core.js`, new, pure, Node-testable):
+    `villageRng` is the game's mulberry32 bit for bit (a test pins the
+    constants in `villageRngFrom` against it). `villageDNA(seed)` rolls the
+    identity card: wall build (timber 38% / stone 22% / brick 16% /
+    painted 24%), roof craft (thatch/slate/tile/shingle), a plaster wash
+    (painted villages commit to real colour — pink, sage, cornflower),
+    a six-colour roof run walked by GOLDEN_ANGLE steps inside the craft's
+    hue band (`ROOF_BANDS`, `roofColorRun`), trim + door accents a golden
+    angle apart, a window-glow colour (14% cool lamps), two banner-cloth
+    dyes, and crookedness/prosperity dials. `varyPalette(pal, dna)` re-keys
+    sky/ground/leaf/plaster/timber/stone/hemi and replaces `roofs` while
+    keeping `weather`/`speck` (the snowman still rolls) — and never mutates
+    the base palette. `villagePlan(seed, count)` replays buildVillageScene's
+    exact opening dice (palette index, tier, layout — thresholds pinned).
+  - **Village scene** (`index.html`): the pinned
+    `VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)]` roll
+    survives, wrapped by `villageVariedPalette(…, v.seed)`; a missing core
+    returns the palette untouched (classic look, no DNA). Builders read
+    `pal.dna`: `villageMakeBuilding` grows real wall styles (quoined stone,
+    mortar-coursed brick, painted timbers), craft-shaped roofs (thatch =
+    deep gable + straw ridge-roll + brushed eaves, no dormers), trim-painted
+    shutters, village-coloured doors and window glow, prosperity-scaled
+    window boxes; `villageMakeCottage` follows suit and can grow a lean-to
+    wood store. New landmarks `villageMakeShrine` and `villageMakeWatchtower`
+    join the pool (10 skylines now). Maypole ribbons and garland bunting dye
+    themselves in `dna.banners`/trim/door.
+  - **Town Square** (`buildTownScene`): each district now derives from ITS
+    village — `villagePlan(seed, VILLAGE_PALETTES.length)` +
+    `villageVariedPalette` give the district the village's true palette
+    (daylight-graded), its tier sizes the yard and cottage count, its layout
+    shapes the arrangement (lane = a cottage row, hamlet = scatter, else the
+    ring), the landmark draws from the village screen's full pool, and one
+    of the village's REAL trades (`villageShopKeysFor`) keeps a 0.82-scale
+    shopfront on the yard. The shared-builder adoption grew `smokeMark`/
+    `signMark` splices (this also fixes a quiet leak: town cottage smokes
+    used to strand in `villageSmokes`, unanimated). Pinned contracts kept:
+    settlement standard call, `townDistrictLayout`, `districtSeed` tagging,
+    `villageMakeSign(v.name…)`. `__burbzTownDebug` (localhost-only) mirrors
+    the village hook so the town generator runs headless.
+  - Tests: `tests/test_village_variation_20260811.py` (DNA determinism/
+    distinctness/coverage, golden-angle band maths, palette contract incl.
+    no-mutation, rng parity + threshold pins, HTML wiring for village +
+    town, release pins). Release pins repointed per convention (20
+    head-tracking files sed'd v249→v250; the v249 walking-story test grew
+    the OWN_RELEASE_PIN/CURRENT_BUILD split — its `walking_story_core.js`
+    `?v=` stays on v249). SW cache + `BURBZ_BUILD` bumped;
+    `village_variation_core.js` precached in both SW lists and added to the
+    live updater's FILES. Local run: 1133 passed, 10 skipped, only the 7
+    documented git-lfs pointer-file art failures. Browser-checked in
+    headless Chromium (390×844, SwiftShader): six seeds build six villages
+    with six distinct colour fingerprints (56–74 unique material colours
+    each); a mock three-village town builds three districts with their own
+    palettes and shopfronts, 30 animation frames clean; zero page errors.
 
 - **2026-08-11 — The Twenty Roads: twenty shared walking tales (Claude).**
   Yaan asked for 20 real-life walking quests that are the same for every
