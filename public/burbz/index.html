@@ -25360,6 +25360,14 @@ function disposeVillageScene() {
   villageWeatherFx = null; villageShootingStar = null; villageTwinkleStars = null;
 }
 
+// The one landmark pool both scenes share. Order matters: the landmark
+// ledger (village_variation_core.landmarkPlan) speaks in indices into THIS
+// array, so the village screen and the Town Square's districts resolve the
+// same pick to the same maker. Append new landmarks at the end only.
+const VILLAGE_LANDMARK_MAKERS = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower,
+  villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower,
+  villageMakeShrine, villageMakeWatchtower];
+
 function buildVillageScene(v) {
   disposeVillageScene();
   const r = villageRngFrom(v.seed);
@@ -25785,15 +25793,20 @@ function buildVillageScene(v) {
   // Landmarks — churches, windmills, manors, ruins, and rarer wonders: the
   // Great Perch, a standing-stone circle, a royal aviary, a dusk bell tower,
   // a wayside shrine, a stone watchtower. No two settlements share a skyline.
-  const landmarkMakers = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower,
-    villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower,
-    villageMakeShrine, villageMakeWatchtower];
-  const landmarkCount = ruinStage < 2 ? 0 : tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
-  const landmarkPool = landmarkMakers.slice();
+  // WHICH landmarks rise comes from the seed-keyed landmark ledger, so the
+  // Town Square can show every district its village's true signature. A
+  // missing core rolls the classic way from the scene stream instead.
+  const vvCore = villageVariationCore();
+  const lmPlan = vvCore && vvCore.landmarkPlan ? vvCore.landmarkPlan(v.seed, tier, VILLAGE_LANDMARK_MAKERS.length) : null;
+  const landmarkCount = ruinStage < 2 ? 0
+    : lmPlan ? lmPlan.count
+    : tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
+  const landmarkPool = VILLAGE_LANDMARK_MAKERS.slice();
   for (let i = 0; i < landmarkCount; i++) {
     const spot = scatterSpot(11.5, 16, 3.4, dryArc.c, dryArc.s);
     if (!spot) break;
-    const maker = landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0];
+    const maker = lmPlan ? VILLAGE_LANDMARK_MAKERS[lmPlan.picks[i]]
+      : landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0];
     const landmark = maker(r, pal);
     landmark.position.set(spot.x, 0, spot.z);
     landmark.rotation.y = -spot.a + (r() - 0.5);
@@ -26782,16 +26795,28 @@ function buildTownScene(settle) {
     const padR = (isHeart ? 4.6 : 3.8) + dTier * 0.35;
     const pad = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(padR, 22), (padR * 2) / cobbleTile, (padR * 2) / cobbleTile), cobbleMat);
     pad.rotation.x = -Math.PI / 2; pad.position.y = 0.018; district.add(pad);
-    // The landmark draws from the village screen's full pool — a district can
-    // raise a shrine, a watchtower, a bell tower or the Great Perch itself.
-    const districtLandmarks = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeDovecote,
-      villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower,
-      villageMakeShrine, villageMakeWatchtower];
-    const landmark = districtLandmarks[Math.floor(dr() * districtLandmarks.length)](dr, dpal);
+    // The district's landmark IS the village's: the seed-keyed landmark
+    // ledger names the first landmark the village raises, and the district
+    // builds exactly that one. A village too small to keep a landmark shows
+    // an honest bare green — an extra tree and a cart where a spire isn't.
+    const lmPlan = vcore && vcore.landmarkPlan ? vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length) : null;
     const la = dr() * Math.PI * 2;
-    landmark.position.set(Math.cos(la) * (padR + 1.6), 0, Math.sin(la) * (padR + 1.6));
-    landmark.lookAt(0, 0, 0); landmark.rotation.x = 0; landmark.rotation.z = 0;
-    district.add(landmark);
+    if (!lmPlan || lmPlan.signature !== null) {
+      const landmarkMaker = lmPlan ? VILLAGE_LANDMARK_MAKERS[lmPlan.signature]
+        : VILLAGE_LANDMARK_MAKERS[Math.floor(dr() * VILLAGE_LANDMARK_MAKERS.length)];
+      const landmark = landmarkMaker(dr, dpal);
+      landmark.position.set(Math.cos(la) * (padR + 1.6), 0, Math.sin(la) * (padR + 1.6));
+      landmark.lookAt(0, 0, 0); landmark.rotation.x = 0; landmark.rotation.z = 0;
+      district.add(landmark);
+    } else {
+      const spareTree = villageMakeTree(dr, dpal);
+      spareTree.position.set(Math.cos(la) * (padR + 1.8), 0, Math.sin(la) * (padR + 1.8));
+      district.add(spareTree);
+      const cart = villageMakeCart(dr, dpal);
+      cart.rotation.y = dr() * Math.PI * 2;
+      cart.position.set(Math.cos(la + 0.7) * (padR + 1.4), 0, Math.sin(la + 0.7) * (padR + 1.4));
+      district.add(cart);
+    }
     // One of the village's REAL trades keeps a shopfront on the yard — the
     // same shop you can walk into down in the village itself.
     const trades = villageShopKeysFor(seed);

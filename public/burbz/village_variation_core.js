@@ -215,9 +215,31 @@
     return { plan, dna, palette: varyPalette(bank[plan.paletteIndex % bank.length], dna) };
   }
 
+  // The landmark ledger. Which landmarks a village raises used to ride the
+  // scene builder's long shared dice stream, so nothing else could know them.
+  // This rolls them on their OWN seed-keyed stream (the ruins and governor
+  // builds set the precedent) — the village scene places exactly these, and
+  // the Town Square shows a district the same first landmark its village
+  // raises: picks[0] is the settlement's signature.
+  function landmarkPlan(seed, tier, poolSize) {
+    const r = villageRng(((seed >>> 0) ^ 0x5FCA9B3D) >>> 0);
+    const size = Math.max(1, Math.floor(poolSize) || 1);
+    const countRoll = r();
+    const count = tier === 0 ? (countRoll < 0.35 ? 1 : 0)
+      : tier === 1 ? 1 + (countRoll < 0.35 ? 1 : 0)
+      : 2 + (countRoll < 0.5 ? 1 : 0);
+    const pool = [];
+    for (let i = 0; i < size; i++) pool.push(i);
+    const picks = [];
+    const maxPicks = Math.min(size, 3); // a tier-2 town raises at most three
+    for (let i = 0; i < maxPicks; i++) picks.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+    return { count, picks, signature: count > 0 ? picks[0] : null };
+  }
+
   return {
     GOLDEN_ANGLE, WALL_STYLES, ROOF_STYLES, ROOF_BANDS,
     villageRng, hexToHsl, hslToHex, shiftHex, mixHex, hexToRgbString,
-    roofColorRun, villageDNA, varyPalette, villagePlan, districtIdentity
+    roofColorRun, villageDNA, varyPalette, villagePlan, districtIdentity,
+    landmarkPlan
   };
 });

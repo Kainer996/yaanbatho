@@ -139,6 +139,28 @@ def test_village_plan_replays_the_scene_builders_exact_dice():
     assert "layoutRoll < 0.22 ? 'green' : layoutRoll < 0.42 ? 'crossroads' : layoutRoll < 0.62 ? 'riverside' : layoutRoll < 0.82 ? 'lane' : 'hamlet'" in scene
 
 
+def test_landmark_ledger_is_deterministic_and_true_to_tier():
+    a = run_core("core.landmarkPlan(123, 2, 10)")
+    b = run_core("core.landmarkPlan(123, 2, 10)")
+    assert a == b                                  # same seed, same skyline
+    assert a["count"] in (2, 3)                    # a market town raises 2-3
+    assert len(a["picks"]) == 3 and len(set(a["picks"])) == 3
+    assert all(0 <= p < 10 for p in a["picks"])
+    assert a["signature"] == a["picks"][0]
+    # A hamlet may raise none — and then it has no signature to fake.
+    hamlets = run_core(
+        "(() => { const out = [];"
+        "for (let s = 0; s < 60; s++) { const p = core.landmarkPlan(s, 0, 10);"
+        "out.push([p.count, p.signature]); } return out; })()"
+    )
+    assert any(c == 0 and sig is None for c, sig in hamlets)
+    assert any(c == 1 and sig is not None for c, sig in hamlets)
+    # The ledger rides its own stream: tier only gates the count, never the picks.
+    t0 = run_core("core.landmarkPlan(55, 0, 10)")
+    t2 = run_core("core.landmarkPlan(55, 2, 10)")
+    assert t0["picks"] == t2["picks"]
+
+
 def test_district_identity_bundles_plan_dna_and_palette():
     result = run_core(
         "(() => { const bank = [{ plaster: 0xd9cbb0, timber: 0x3a2812, stone: 0x6b675e, sky: 1, ground: 2,"
@@ -180,12 +202,19 @@ def test_buildings_read_the_dna_card():
         assert fragment in cottage, fragment
 
 
-def test_new_landmarks_join_the_skyline_pool():
+def test_new_landmarks_join_the_shared_skyline_pool():
     html = HTML.read_text(encoding="utf-8")
     assert "function villageMakeShrine(" in html
     assert "function villageMakeWatchtower(" in html
+    # ONE pool, shared by both scenes, indexed by the landmark ledger.
+    assert "const VILLAGE_LANDMARK_MAKERS = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower," in html
+    assert "villageMakeShrine, villageMakeWatchtower];" in html
     scene = function_source(html, "buildVillageScene")
-    assert "villageMakeShrine, villageMakeWatchtower]" in scene
+    # The village places exactly the ledger's picks; no core = classic rolls.
+    assert "vvCore.landmarkPlan(v.seed, tier, VILLAGE_LANDMARK_MAKERS.length)" in scene
+    assert "lmPlan ? lmPlan.count" in scene
+    assert "VILLAGE_LANDMARK_MAKERS[lmPlan.picks[i]]" in scene
+    assert "landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0]" in scene
 
 
 def test_festival_cloth_is_dyed_in_the_villages_banners():
@@ -214,8 +243,11 @@ def test_town_districts_replay_their_villages_own_dice():
     # One of the village's real trades keeps a shopfront on the yard.
     assert "villageShopKeysFor(seed)" in scene
     assert "villageMakeBuilding(tradeKey" in scene
-    # The landmark pool matches the village screen's full range.
-    assert "villageMakeShrine, villageMakeWatchtower]" in scene
+    # The district's landmark IS the village's signature from the ledger —
+    # and a village with no landmark gets an honest bare green, not a fake.
+    assert "vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length)" in scene
+    assert "VILLAGE_LANDMARK_MAKERS[lmPlan.signature]" in scene
+    assert "lmPlan.signature !== null" in scene
     # The pinned contracts survive: real geography, tap targets, name signs.
     assert "townDistrictLayout(settle" in scene
     assert "district.userData.districtSeed = seed" in scene
