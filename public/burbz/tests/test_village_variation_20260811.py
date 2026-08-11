@@ -255,6 +255,35 @@ def test_town_districts_replay_their_villages_own_dice():
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
 
 
+def test_town_districts_mirror_their_villages_ruin_state():
+    html = HTML.read_text(encoding="utf-8")
+    # One ledger, the village scene's exact thresholds.
+    state_fn = function_source(html, "villageDistrictState")
+    assert "dev <= 0 ? 0 : dev < 5 ? 1 : 2" in state_fn
+    assert ".filter(ru => !ru.cleared)" in state_fn
+    assert "villageConstructionFor(rec)" in state_fn
+    village_scene = function_source(html, "buildVillageScene")
+    assert "devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2" in village_scene  # same rule
+    scene = function_source(html, "buildTownScene")
+    assert "const dState = villageDistrictState(seed);" in scene
+    # Wrecked and rebuilding districts show wreckage, not landmarks.
+    assert "if (dRuin < 2) {" in scene
+    assert "villageMakeWreckedBuilding(dr, dpal, dState.firstWreckKind || 'house')" in scene
+    assert "villageMakeRubblePile(dr, dpal)" in scene
+    # Trades reopen at stage 1; homes and landmarks return at stage 2.
+    assert "if (dRuin >= 1) {" in scene
+    assert "if (dRuin === 2) {" in scene
+    # A build rising in the village rises in its district.
+    assert "villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction))" in scene
+    # A wrecked district keeps no lamplit yard.
+    assert "if (i < 8 && dRuin >= 1) {" in scene
+    # Recovery keys the scene, so development rebuilds the square.
+    key_fn = function_source(html, "townSceneKey")
+    assert "villageDistrictState(v.seed)" in key_fn
+    assert "st.ruinStage" in key_fn and "st.ruinsLeft" in key_fn
+    assert "st.construction ? '+b' : ''" in key_fn
+
+
 def test_town_adopts_the_shared_builders_smokes_and_signs():
     html = HTML.read_text(encoding="utf-8")
     scene = function_source(html, "buildTownScene")

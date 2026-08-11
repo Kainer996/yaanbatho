@@ -22446,8 +22446,29 @@ function currentTownSettlement() {
 }
 // The scene is rebuilt when the settlement's membership changes, not just its
 // id — a town that gains a district gets its new quarter on the next visit.
+// The war-and-recovery ledger the Town Square mirrors for one member
+// village: its ruin stage (0 wrecked · 1 rebuilding · 2 flourishing — the
+// exact thresholds the village scene uses), how many wrecks still lie
+// uncleared, the first wreck's kind, and any build rising right now.
+function villageDistrictState(seed) {
+  const rec = empireOwnsVillage(seed) ? ensureEmpireState().villages[String(Number(seed) >>> 0)] : null;
+  const dev = rec ? villageTotalDevelopment(rec) : 0;
+  const ruinStage = dev <= 0 ? 0 : dev < 5 ? 1 : 2;
+  const wrecks = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared) : [];
+  return {
+    ruinStage,
+    ruinsLeft: wrecks.length,
+    firstWreckKind: wrecks.length ? wrecks[0].kind : null,
+    construction: rec ? villageConstructionFor(rec) : null
+  };
+}
 function townSceneKey(settle) {
-  return settle.id + ':' + settle.villages.map(v => String(v.seed >>> 0)).sort().join(',');
+  // Membership AND recovery state key the scene: a district village that
+  // clears a wreck, starts a build or flourishes rebuilds the square.
+  return settle.id + ':' + settle.villages.map(v => {
+    const st = villageDistrictState(v.seed);
+    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '');
+  }).sort().join(',');
 }
 function renderTownScreen() {
   const stage = $('townStage');
@@ -26790,6 +26811,10 @@ function buildTownScene(settle) {
       : pal;
     const dTier = plan ? plan.tier : 1;
     const dLayout = plan ? plan.layout : 'green';
+    // ...and the district mirrors its village's RECOVERY too: still wrecked,
+    // rebuilding, or flourishing — with the same gates the village scene uses.
+    const dState = villageDistrictState(seed);
+    const dRuin = dState.ruinStage;
     // District green: a cobbled yard sized to the village's true standing,
     // its own landmark, one of its real trades, and homes laid to its plan.
     const padR = (isHeart ? 4.6 : 3.8) + dTier * 0.35;
@@ -26801,7 +26826,24 @@ function buildTownScene(settle) {
     // an honest bare green — an extra tree and a cart where a spire isn't.
     const lmPlan = vcore && vcore.landmarkPlan ? vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length) : null;
     const la = dr() * Math.PI * 2;
-    if (!lmPlan || lmPlan.signature !== null) {
+    if (dRuin < 2) {
+      // The war is still visible from the square: until the governor
+      // rebuilds it, the district shows its village's real wreckage —
+      // landmarks wait for the province to flourish, as they do down there.
+      if (dState.ruinsLeft > 0) {
+        const wreck = villageMakeWreckedBuilding(dr, dpal, dState.firstWreckKind || 'house');
+        wreck.position.set(Math.cos(la) * (padR + 1.7), 0, Math.sin(la) * (padR + 1.7));
+        wreck.rotation.y = dr() * Math.PI * 2;
+        district.add(wreck);
+      }
+      const piles = dRuin === 0 ? 2 : (dState.ruinsLeft ? 1 : 0);
+      for (let p = 0; p < piles; p++) {
+        const pile = villageMakeRubblePile(dr, dpal);
+        pile.position.set(Math.cos(la + 1.1 + p * 1.3) * (padR + 1.2), 0, Math.sin(la + 1.1 + p * 1.3) * (padR + 1.2));
+        pile.rotation.y = dr() * Math.PI * 2;
+        district.add(pile);
+      }
+    } else if (!lmPlan || lmPlan.signature !== null) {
       const landmarkMaker = lmPlan ? VILLAGE_LANDMARK_MAKERS[lmPlan.signature]
         : VILLAGE_LANDMARK_MAKERS[Math.floor(dr() * VILLAGE_LANDMARK_MAKERS.length)];
       const landmark = landmarkMaker(dr, dpal);
@@ -26818,42 +26860,57 @@ function buildTownScene(settle) {
       district.add(cart);
     }
     // One of the village's REAL trades keeps a shopfront on the yard — the
-    // same shop you can walk into down in the village itself.
-    const trades = villageShopKeysFor(seed);
-    const tradeKey = trades[Math.floor(dr() * trades.length)];
-    const shopfront = villageMakeBuilding(tradeKey, {
-      icon: VILLAGE_SHOPS[tradeKey].icon, name: VILLAGE_SHOPS[tradeKey].name,
-      roofColor: dpal.roofs[Math.floor(dr() * dpal.roofs.length)]
-    }, dr, dpal);
-    shopfront.scale.set(0.82, 0.82, 0.82);
-    const sa = la + Math.PI + (dr() - 0.5) * 0.8; // across the yard from the landmark
-    shopfront.position.set(Math.cos(sa) * (padR + 1.5), 0, Math.sin(sa) * (padR + 1.5));
-    shopfront.lookAt(0, 0, 0); shopfront.rotation.x = 0; shopfront.rotation.z = 0;
-    district.add(shopfront);
+    // same shop you can walk into down in the village itself. A wrecked
+    // village's trades haven't reopened, exactly as its own screen draws it.
+    if (dRuin >= 1) {
+      const trades = villageShopKeysFor(seed);
+      const tradeKey = trades[Math.floor(dr() * trades.length)];
+      const shopfront = villageMakeBuilding(tradeKey, {
+        icon: VILLAGE_SHOPS[tradeKey].icon, name: VILLAGE_SHOPS[tradeKey].name,
+        roofColor: dpal.roofs[Math.floor(dr() * dpal.roofs.length)]
+      }, dr, dpal);
+      shopfront.scale.set(0.82, 0.82, 0.82);
+      const sa = la + Math.PI + (dr() - 0.5) * 0.8; // across the yard from the landmark
+      shopfront.position.set(Math.cos(sa) * (padR + 1.5), 0, Math.sin(sa) * (padR + 1.5));
+      shopfront.lookAt(0, 0, 0); shopfront.rotation.x = 0; shopfront.rotation.z = 0;
+      district.add(shopfront);
+    }
+    // A build rising in the village rises in its district too, scaffold,
+    // half-raised walls, busy builder and all.
+    if (dState.construction) {
+      const site = villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction));
+      const ba = la + 2.4;
+      site.position.set(Math.cos(ba) * (padR + 1.9), 0, Math.sin(ba) * (padR + 1.9));
+      site.rotation.y = dr() * Math.PI * 2;
+      district.add(site);
+    }
     // Homes laid out to the village's own plan: a lane village strings its
-    // cottages along a street, a hamlet scatters them, the rest ring the yard.
-    const cottages = (isHeart ? 1 : 0) + (dTier === 0 ? 2 : dTier === 1 ? 3 : 4) + Math.floor(dr() * 2);
-    const laneA = dr() * Math.PI * 2;
-    for (let c = 0; c < cottages; c++) {
-      const cot = villageMakeCottage(dr, dpal);
-      let cx, cz;
-      if (dLayout === 'lane') {
-        const along = (c % 2 === 0 ? 1 : -1) * (padR + 0.8 + Math.floor(c / 2) * 2.4);
-        const side = (c % 2 === 0 ? 1 : -1) * (1.3 + dr() * 0.6);
-        cx = Math.cos(laneA) * along - Math.sin(laneA) * side;
-        cz = Math.sin(laneA) * along + Math.cos(laneA) * side;
-      } else if (dLayout === 'hamlet') {
-        const ha = dr() * Math.PI * 2, hd = padR + 0.9 + dr() * 2.6;
-        cx = Math.cos(ha) * hd; cz = Math.sin(ha) * hd;
-      } else {
-        const ca = la + ((c + 1) / (cottages + 1)) * Math.PI * 2;
-        const cd = padR + 1.3 + dr() * 0.8;
-        cx = Math.cos(ca) * cd; cz = Math.sin(ca) * cd;
+    // cottages along a street, a hamlet scatters them, the rest ring the
+    // yard. Homes return once the province flourishes — the village's rule.
+    if (dRuin === 2) {
+      const cottages = (isHeart ? 1 : 0) + (dTier === 0 ? 2 : dTier === 1 ? 3 : 4) + Math.floor(dr() * 2);
+      const laneA = dr() * Math.PI * 2;
+      for (let c = 0; c < cottages; c++) {
+        const cot = villageMakeCottage(dr, dpal);
+        let cx, cz;
+        if (dLayout === 'lane') {
+          const along = (c % 2 === 0 ? 1 : -1) * (padR + 0.8 + Math.floor(c / 2) * 2.4);
+          const side = (c % 2 === 0 ? 1 : -1) * (1.3 + dr() * 0.6);
+          cx = Math.cos(laneA) * along - Math.sin(laneA) * side;
+          cz = Math.sin(laneA) * along + Math.cos(laneA) * side;
+        } else if (dLayout === 'hamlet') {
+          const ha = dr() * Math.PI * 2, hd = padR + 0.9 + dr() * 2.6;
+          cx = Math.cos(ha) * hd; cz = Math.sin(ha) * hd;
+        } else {
+          const ca = la + ((c + 1) / (cottages + 1)) * Math.PI * 2;
+          const cd = padR + 1.3 + dr() * 0.8;
+          cx = Math.cos(ca) * cd; cz = Math.sin(ca) * cd;
+        }
+        cot.position.set(cx, 0, cz);
+        cot.lookAt(0, 0, 0); cot.rotation.x = 0; cot.rotation.z = 0;
+        cot.rotation.y += (dr() - 0.5) * 0.4;
+        district.add(cot);
       }
-      cot.position.set(cx, 0, cz);
-      cot.lookAt(0, 0, 0); cot.rotation.x = 0; cot.rotation.z = 0;
-      cot.rotation.y += (dr() - 0.5) * 0.4;
-      district.add(cot);
     }
     const tree = villageMakeTree(dr, dpal);
     tree.position.set(Math.cos(la + 2.2) * (padR + 2.6), 0, Math.sin(la + 2.2) * (padR + 2.6));
@@ -26865,7 +26922,9 @@ function buildTownScene(settle) {
     sign.userData.baseY = 4.7;
     district.add(sign);
     townSigns.push(sign);
-    if (i < 8) { // a torch on each near district; the farthest keep the sky light
+    // A torch on each near district (the farthest keep the sky light) — but
+    // a wrecked district stays dark, like its village's unlit lamp posts.
+    if (i < 8 && dRuin >= 1) {
       const torch = new THREE.PointLight(0xffb45e, 1.6 * daylight.torch, 12, 2);
       torch.position.set(0, 2.6, 0);
       torch.userData.base = 1.6 * daylight.torch;
