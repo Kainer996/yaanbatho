@@ -52,7 +52,9 @@ def test_empty_provinces_pay_no_taxes_and_say_why():
     assert "pop <= 0 ? 0" in snap
     assert snap.count("pop <= 0 ? 0") == 2  # both taxes and branches gate on residents
     assert "no residents yet" in logic
-    assert "Cottage Row</b> and residents will move in" in logic
+    # Since citizen-workers-timber-homes-v253-20260812 the first home is the
+    # stone-free Timber Cabin, so the empty-village hint points there.
+    assert "Timber Cabin</b> (just coins and timber) and residents will move in" in logic
     assert "build homes" in logic
 
 

@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-11 (hold-to-steer v251: every 3D stage — Academy tree, villages, town squares — now lets the page scroll over it; only a finger held still for ~300 ms grabs the camera (`touch_steer_core.js`, a pure Node-testable gate wired into all three engines), a mouse or pen steers at once and a pinch always steers. The same release moves the Kitchen/Quests/Stores quick icons from mid-right (they covered claim buttons) to the top left under the header, and flips the tutorial's side pointer to match. Previously academy-2d-default v250: the Academy opens in the painted 2D tree — the tutorial's tap-the-tree building step misfired on the 3D canvas on some phones, so `academyViewMode()` now defaults to `'2d'` and only a saved `'3d'` choice opens the 3D tree, which stays one tap away on the same toggle. Previously walking-story-quests v249: The Twenty Roads land — `walking_story_core.js` carries a fixed campaign of 20 real-world walking quests, identical for every player on Earth: tiered to walk size (stroll/ramble/trek), each told by a named NPC with intro/milestone/outro dialogue riding the ordered waymarkers, each hiding a Feathered Folio lore scroll tying the roads to the Academy and Empire canon, and each paying real catalogue gear/materials/xp-scrolls on first completion. `index.html` attaches the next untold tale at quest activation and keeps completion/scroll state in `gameState.walkingStories`. Previously conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
+Last curated: 2026-08-12 (citizen-workers-timber-homes v253: the villages become a real city-builder loop. Every producing yard — Grain Farm, Lumber Camp, Quarry, Market Hall, Chapel — now carries `workers: 1` and stands idle until a villager runs it; `villageWorkforce()` deals scarce hands out by `workPriority` (food → timber → stone → trade → chapel) and production, flat coins/timber and the market tax boost all gate on the crew. The stone-free 🛖 Timber Cabin (new `cabin` building, first in `EMPIRE_BUILDINGS`) is the intended first build — coins and timber only — and rebuilds at level 2 into the 🏠 Stone Cottage via the new `tiers`/`costLevels` fields (`villageBuildingTier`, stepped `villageBuildingCost`). The quarry's founding crew is gone (an empty town's quarry cuts nothing; the first-cut 10-stone grant survives), superseding the v221 empty-town pin in `test_quarry_stone_economy_20260804.py`. STORY.md canonises the **village folk**: a separate human-like species, simpler than the birds — residents and workers, never protagonists; birds keep every named part. Previously academy-training-dock v252: the Kitchen/Quests/Stores quick icons moved again, to the bottom dock flanking the Scan orb. Previously hold-to-steer v251: every 3D stage — Academy tree, villages, town squares — now lets the page scroll over it; only a finger held still for ~300 ms grabs the camera (`touch_steer_core.js`, a pure Node-testable gate wired into all three engines), a mouse or pen steers at once and a pinch always steers. The same release moves the Kitchen/Quests/Stores quick icons from mid-right (they covered claim buttons) to the top left under the header, and flips the tutorial's side pointer to match. Previously academy-2d-default v250: the Academy opens in the painted 2D tree — the tutorial's tap-the-tree building step misfired on the 3D canvas on some phones, so `academyViewMode()` now defaults to `'2d'` and only a saved `'3d'` choice opens the 3D tree, which stays one tap away on the same toggle. Previously walking-story-quests v249: The Twenty Roads land — `walking_story_core.js` carries a fixed campaign of 20 real-world walking quests, identical for every player on Earth: tiered to walk size (stroll/ramble/trek), each told by a named NPC with intro/milestone/outro dialogue riding the ordered waymarkers, each hiding a Feathered Folio lore scroll tying the roads to the Academy and Empire canon, and each paying real catalogue gear/materials/xp-scrolls on first completion. `index.html` attaches the next untold tale at quest activation and keeps completion/scroll state in `gameState.walkingStories`. Previously conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
 
 ---
 
@@ -236,6 +236,42 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-12 — citizens work the yards, homes start in timber (Claude).**
+  Yaan's ask: every yard (quarry, lumber camp and the like) needs one citizen
+  working it, and a basic wooden house — upgradeable to stone — so the Quarry
+  no longer has to be a village's first building. Release
+  `citizen-workers-timber-homes-v253-20260812`.
+  - **Workers** (`index.html`): producing buildings carry `workers: 1`
+    (Farm, Lumber Camp, Quarry, Market Hall, Chapel). New `villageWorkforce()`
+    deals villagers out by `workPriority` — food, timber, stone, trade,
+    chapel — so a short-handed town staffs its farm before its chapel.
+    `villageProductionSnapshot`, `villageEconomySnapshot` (flat coins/timber,
+    tax boost) and the Stores ledger all skip unstaffed yards. The quarry's
+    v221 "founding crew" is gone — an empty town's quarry cuts nothing — but
+    the first-quarry 10-stone opening cut and the stone-free first-quarry
+    build both survive.
+  - **Homes** (`index.html`): new `cabin` building, first in
+    `EMPIRE_BUILDINGS`, ungated, `need: shelter`. Level 1 is the 🛖 Timber
+    Cabin (25 🪙 + 14 🪵, no stone — so homes precede the Quarry); level 2
+    rebuilds it as the 🏠 Stone Cottage (stone cost) and doubles its housing.
+    Two new catalogue fields: `tiers` (per-level name/icon/desc, read via
+    `villageBuildingTier`) and `costLevels` (stepped prices replacing the
+    flat ×(level+1) — `villageBuildingCost` checks it first). The governor's
+    desk shows 👷 crew lines per yard and a "👷 x/y yards crewed" headline;
+    the 3D village raises `villageMakeSettlerHome` (logs at level 1, stone at
+    level 2). Empty-village copy now points at the Timber Cabin everywhere.
+  - **Lore** (`STORY.md`): the **village folk** are canon — a human-like
+    species of the Kingdom of Burbz, a separate people and much simpler than
+    the birds. They work and endure; birds get every named speaking part.
+    Keep it that way in future quest text.
+  - Tests: `tests/test_citizen_workers_timber_homes_20260812.py` pins the
+    cabin costs/tiers, the crew gating, the priority order and the copy.
+    Superseded pins moved on with comments (`test_quarry_stone_economy`'s
+    empty-town stone, `test_empty_liberated_towns`' Cottage Row hint);
+    harnesses that extract `villageEconomySnapshot`/`empireBuildStructure`
+    grew `villageWorkforce`/`villageBuildingTier`. Release pins repointed;
+    SW cache + `BURBZ_BUILD` bumped.
 
 - **2026-08-11 — Hold to steer, scroll to pass; quick icons go top-left
   (Claude).** Yaan asked for two things: the Kitchen/Quests/Stores icons out
@@ -795,9 +831,9 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     side can stall the strictly-ordered chain.
   - **Village halls** (`index.html` `EMPIRE_BUILDINGS`): growth/prestige
     structures now carry `unlockLevel` (Cottage Row 5, Alehouse 6, Chapel 8,
-    Market Hall 10). Survival + resource basics (Farm, Well, Lumber Camp,
-    Quarry) are deliberately ungated — Stone only comes from the Quarry, so
-    gating it would deadlock a fresh province. `empireBuildStructure` blocks
+    Market Hall 10). Survival + resource basics (Timber Cabin since v253,
+    Farm, Well, Lumber Camp, Quarry) are deliberately ungated — Stone only
+    comes from the Quarry, so gating it would deadlock a fresh province. `empireBuildStructure` blocks
     only NEW structures (`level === 0`), so old saves keep upgrade rights; the
     province desk shows 🔒 UNLOCKS AT TRAINER LV n instead of a dead buy button.
   - **Levels feel like rewards** (`index.html` PLAYER LEVEL section): each

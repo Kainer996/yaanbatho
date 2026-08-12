@@ -25,6 +25,15 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
+## The village folk — who lives in the freed towns
+
+The birds are the heroes of this story. But the villages they free are not empty. The **village folk** live there: a small, sturdy, human-like people of the Kingdom of Burbz. They look a little like the humans of our universe, but they are a different species altogether — and they are nowhere near as clever as the birds. They cannot work magic. They cannot fight the evil Burbz. They never lead. They farm, they fell, they dig, they trade, and they are content.
+
+- Village folk are **residents and workers, never protagonists**. Named speaking parts belong to birds. The folk are the quiet life of a settlement: figures crossing the square, a crew at the quarry, smoke over a cabin roof.
+- Under the usurper the folk did not resist — they endured. The birds and the player liberate their homes *for* them. Gratitude, not command, is why they move back in, work the yards and pay their taxes.
+- Every producing yard — farm, lumber camp, quarry, market, chapel — needs **one villager to run it**. A yard with no crew stands idle. Homes come first: no homes, no folk; no folk, no stone.
+- The folk build the way the folk are: **timber first, stone later**. A freed village's first roof is a log Timber Cabin; prosperity rebuilds it as a Stone Cottage.
+
 ## What the birds eat, and the Head Chef who feeds them
 
 Every bird eats what it really eats in the wild — the diets are drawn from a real
@@ -146,6 +155,7 @@ Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental s
 
 - Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species.
 - Use **evil Burbz** for the dark force's shadow soldiers; the player's own birds are simply **birds** or **companions**.
+- Use **village folk** (or **villagers**) for the human-like people of the liberated settlements — a separate, simpler species than the birds, who are the realm's true minds and heroes.
 - Use **liberate**, **liberated**, **sanctuary**, **restore**, **awaken** and **free** for world progress.
 - The real world and the Kingdom of Burbz are magically linked through Merlin's spell-tablet.
 - Avoid domination language for the player's actions; the player is freeing the world from the usurper's hold.
