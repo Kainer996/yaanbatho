@@ -1044,6 +1044,9 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .province-pip { width:7px; height:7px; border-radius:2px; transform:rotate(45deg); background:rgba(255,255,255,.12); border:1px solid rgba(240,199,103,.3); }
 .province-pip.on { background:#f0c767; box-shadow:0 0 6px rgba(240,199,103,.7); }
 .province-building-desc { font-size:9.5px; line-height:1.4; color:var(--text3); min-height:26px; }
+.province-crew { font-size:9px; line-height:1.3; color:var(--text3); }
+.province-crew.on { color:#bfe8c4; }
+.province-crew.off { color:#ffc4a0; }
 .province-build-btn { min-height:44px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
 .province-build-btn:active { transform:scale(.97); }
 .province-build-btn[disabled] { opacity:.45; }
@@ -21515,22 +21518,30 @@ const EMPIRE_NEEDS = [
 
 // `produces` is what the building actually ships home each tax cycle, on top
 // of coins and timber: `materials` land in the Fletcher's Forge stock, `larder`
-// in the Kitchen stores. A province with no residents produces nothing — an
-// empty quarry is just a hole in a hill.
+// in the Kitchen stores. Yards need hands: a building with `workers` stands
+// idle — no stone, no goods, no extra coins — until a villager lives here to
+// run it. An empty quarry is just a hole in a hill.
 const QUARRY_FIRST_CUT_STONE = 10;
 // unlockLevel mirrors the Academy's mid-game curve: the survival and resource
-// basics (food, water, timber, stone) carry no gate so a fresh province can
-// always bootstrap, while the growth and prestige halls arrive with trainer
-// levels 5–10 — a liberated village grows richer as its liberator does.
+// basics (shelter, food, water, timber, stone) carry no gate so a fresh
+// province can always bootstrap, while the growth and prestige halls arrive
+// with trainer levels 5–10 — a liberated village grows richer as its liberator
+// does. The Timber Cabin is the deliberate first build: it costs no stone at
+// all, so homes — and the villagers who work every yard — come before the
+// Quarry. `tiers` renames a building as it climbs (timber first, stone later);
+// `costLevels` prices each step on its own instead of the flat ×(level+1).
+// `workPriority` orders who gets scarce hands first: food, then timber and
+// stone, then trade, then the chapel.
 const EMPIRE_BUILDINGS = [
-  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level.' },
+  { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 2, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 10, stone: 10 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The cabin rebuilt in quarried stone — houses 12 villagers and shrugs off any storm.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
   { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8,  stone: 6 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
   { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 8,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
   { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 6,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
-  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level.' },
-  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level.' }
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -21611,9 +21622,9 @@ function empireCompleteConstructions(now) {
     delete eco.construction;
     completed = true;
     levelledUp = applyPlayerXpState(12) || levelledUp;
-    // The first quarry must bootstrap the stone economy: its opening cut is
-    // enough for the first Cottage Row, while its founding crew keeps digging
-    // Stone even before permanent residents arrive.
+    // The first quarry still bootstraps the stone economy: its opening cut is
+    // enough for the first Cottage Row. After that it digs only while a
+    // villager works it — homes and residents come first.
     let firstCutStone = 0;
     if (isFirstRealmQuarry && level === 1) {
       firstCutStone = QUARRY_FIRST_CUT_STONE;
@@ -21628,7 +21639,8 @@ function empireCompleteConstructions(now) {
       movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
       eco.population += movedIn;
     }
-    notices.push({ seed: rec.seed >>> 0, text: '🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
+    const doneTier = villageBuildingTier(building, level);
+    notices.push({ seed: rec.seed >>> 0, text: '🏗️ ' + doneTier.icon + ' ' + doneTier.name + (level <= 1 ? ' finished' : (building.tiers ? ' rebuilt' : ' raised to level ' + level)) + ' in ' + rec.name + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
   });
   if (!completed) return false;
   try {
@@ -21709,15 +21721,41 @@ function villageBuildingLevel(rec, id) {
   const eco = ensureVillageEconomy(rec);
   return eco ? (eco.buildings[id] || 0) : 0;
 }
+// A building can change its face as it climbs: the Timber Cabin is rebuilt as
+// a Stone Cottage at level 2. Returns the display name/icon/desc for a level.
+function villageBuildingTier(b, level) {
+  if (!b) return null;
+  const base = { name: b.name, icon: b.icon, desc: b.desc };
+  if (!Array.isArray(b.tiers) || !b.tiers.length) return base;
+  const i = Math.max(0, Math.min(b.tiers.length - 1, (Number(level) || 1) - 1));
+  return Object.assign(base, b.tiers[i]);
+}
 function villageNeedCapacity(rec, needId) {
   let cap = VILLAGE_BASE_NEED_CAPACITY[needId] || 0;
   EMPIRE_BUILDINGS.forEach(b => { if (b.need === needId) cap += (b.perLevel || 0) * villageBuildingLevel(rec, b.id); });
   return cap;
 }
+// Who is actually working the yards. Every built structure with a `workers`
+// count wants that many villagers before it runs; hands are dealt out in
+// `workPriority` order (food first, prestige last), so a small town staffs
+// its farm before its chapel. Returns which buildings found their crew.
+function villageWorkforce(rec) {
+  const eco = ensureVillageEconomy(rec);
+  const out = { available: eco ? eco.population : 0, required: 0, working: 0, staffed: {} };
+  if (!eco) return out;
+  let free = out.available;
+  EMPIRE_BUILDINGS
+    .filter(b => b.workers && villageBuildingLevel(rec, b.id) > 0)
+    .sort((a, b) => (a.workPriority || 99) - (b.workPriority || 99))
+    .forEach(b => {
+      out.required += b.workers;
+      if (free >= b.workers) { out.staffed[b.id] = true; out.working += b.workers; free -= b.workers; }
+    });
+  return out;
+}
 // What a province's yards, fields and mines ship home each tax cycle, on top
-// of coins and timber. A completed Quarry keeps a small founding crew, so its
-// Stone output can rescue an empty first settlement; every other yard needs
-// residents before it produces anything.
+// of coins and timber. Every yard needs its crew: a quarry or camp with no
+// villager assigned produces nothing at all — homes come first.
 function villageProductionSnapshot(rec) {
   const eco = ensureVillageEconomy(rec);
   const out = { stone: 0, materials: {}, larder: {} };
@@ -21725,9 +21763,11 @@ function villageProductionSnapshot(rec) {
   // A Steward makes the same fields and quarries yield more: better rotas,
   // better records, less waste.
   const steward = villageRoleMultiplier(rec && rec.seed);
+  const crew = villageWorkforce(rec);
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
+    if (b.workers && !crew.staffed[b.id]) return; // nobody to work it — yard stands idle
     out.stone += Math.round((b.stonePerLevel || 0) * level * steward);
     if (eco.population <= 0 || !b.produces) return;
     Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + Math.round(per * level * steward); });
@@ -21751,10 +21791,13 @@ function villageEconomySnapshot(rec) {
     return { id: n.id, icon: n.icon, label: n.label, cap, sat: Math.min(1, cap / Math.max(1, pop)) };
   });
   const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
+  // Flat income and market boosts too only flow from yards that found a crew.
+  const crew = villageWorkforce(rec);
   let flatCoins = 0, flatBranches = 0, taxBoost = 0;
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
+    if (b.workers && !crew.staffed[b.id]) return;
     flatCoins += (b.coinsPerLevel || 0) * level;
     flatBranches += (b.branchesPerLevel || 0) * level;
     taxBoost += (b.taxBoost || 0) * level;
@@ -21782,7 +21825,7 @@ function villageEconomySnapshot(rec) {
   const governance = steward * warden;
   const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * merged * unity * governance) + flatCoins);
   const branches = pop <= 0 ? 0 : Math.round((2 + flatBranches) * governance);
-  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
+  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, workforce: crew, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
 // housing cap, hungry or joyless ones empty out (never below a stubborn few —
@@ -21814,6 +21857,11 @@ function empireHasQuarryInvestment() {
   });
 }
 function villageBuildingCost(building, level) {
+  // A building can price each step on its own (`costLevels`): the Timber
+  // Cabin is bought with coins and timber alone, and only its stone rebuild
+  // asks for quarried stone.
+  const stepped = Array.isArray(building.costLevels) && building.costLevels[Math.min(level, building.costLevels.length - 1)];
+  if (stepped) return { coins: stepped.coins || 0, branches: stepped.branches || 0, stone: stepped.stone || 0 };
   // The realm's first Quarry is the source of Stone, so charging Stone for
   // that one build would deadlock a fresh kingdom. Once one is built or under
   // construction, later quarries and every upgrade pay normally.
@@ -21868,7 +21916,8 @@ function empireBuildStructure(seed, buildingId) {
   }
   SFX.questComplete();
   vibrate(35);
-  showToast('🏗️ ' + building.icon + ' ' + building.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
+  const targetTier = villageBuildingTier(building, level + 1);
+  showToast('🏗️ ' + targetTier.icon + ' ' + targetTier.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
   // Rebuild the 3D scene so the scaffolded site appears in the village itself
   if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   updateHeader();
@@ -22052,7 +22101,7 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The village armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🛖 Timber Cabin and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
   // Did this liberation merge villages into a TOWN — or towns into a CITY?
   // Three neighbouring liberated villages grow together into one town; three
   // neighbouring towns rise as one city. Announced only when it happens.
@@ -22169,15 +22218,18 @@ function renderVillageManagePanel() {
   let constructionHtml = '';
   if (construction) {
     const cb = EMPIRE_BUILDING_INDEX[construction.id];
+    const cbTier = cb ? villageBuildingTier(cb, construction.toLevel) : null;
     const pct = Math.round(constructionProgress(construction, now) * 100);
     constructionHtml = '<div class="province-construction">' +
-      '<div class="province-construction-head"><span>🏗️ ' + (cb ? cb.icon + ' ' + escapeHtml(cb.name) : 'Construction') + (construction.toLevel > 1 ? ' → level ' + construction.toLevel : '') + '</span>' +
+      '<div class="province-construction-head"><span>🏗️ ' + (cbTier ? cbTier.icon + ' ' + escapeHtml(cbTier.name) : 'Construction') + (construction.toLevel > 1 && !(cb && cb.tiers) ? ' → level ' + construction.toLevel : '') + '</span>' +
       '<span class="province-construction-eta" data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></div>' +
       '<div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + construction.startMs + '" data-build-end="' + construction.endMs + '" style="width:' + pct + '%"></div></div>' +
       '</div>';
   }
+  const crew = snap.workforce || villageWorkforce(rec);
   const buildingsHtml = EMPIRE_BUILDINGS.map(b => {
     const level = villageBuildingLevel(rec, b.id);
+    const tier = villageBuildingTier(b, Math.max(1, level));
     const maxed = level >= b.maxLevel;
     const locked = level === 0 && (Number(gameState.player.level) || 1) < (Number(b.unlockLevel) || 1);
     const cost = maxed ? null : villageBuildingCost(b, level);
@@ -22189,15 +22241,26 @@ function renderVillageManagePanel() {
     const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
     const inProgress = construction && construction.id === b.id;
     const busyElsewhere = construction && construction.id !== b.id;
+    // Upgrades that change the building's face say where they lead ("REBUILD
+    // IN STONE"), plain level upgrades keep the familiar label.
+    const nextTier = !maxed && b.tiers ? villageBuildingTier(b, level + 1) : null;
+    const upgradeLabel = level === 0 ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
     let btn;
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
     else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
-      (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
+      upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
+    // The crew line: a yard says plainly whether a villager is working it.
+    let crewHtml = '';
+    if (b.workers) {
+      if (level > 0 && crew.staffed[b.id]) crewHtml = '<div class="province-crew on">👷 ' + b.workers + ' villager works here</div>';
+      else if (level > 0) crewHtml = '<div class="province-crew off">👷 idle — needs ' + b.workers + ' villager · build homes so folk move in</div>';
+      else crewHtml = '<div class="province-crew">👷 needs ' + b.workers + ' villager to run</div>';
+    }
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
-      '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
-      '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn +
+      '<div class="province-building-head"><span class="province-building-icon">' + tier.icon + '</span><span class="province-building-name">' + escapeHtml(tier.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
+      '<div class="province-building-desc">' + escapeHtml(tier.desc) + '</div>' + crewHtml + btn +
       (shortages.length && !locked && !construction ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
   }).join('');
   // The settlement this province has merged into, if any: shown on the desk,
@@ -22220,12 +22283,12 @@ function renderVillageManagePanel() {
   }
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
-    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
+    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (crew.required ? ' · 👷 ' + crew.working + '/' + crew.required + ' yards crewed' : '') + '</div></div>' +
     settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
-      : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + '</div>'
+      : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other villages can still build' : '') + '</div>' +
@@ -22430,7 +22493,9 @@ function renderEmpirePanel() {
   // ---- 📜 A plain-words guide to the whole ladder, folded away until asked.
   const helpHtml = count ? empireDrawerHTML('help', false, '📜', 'HOW YOUR EMPIRE WORKS', 'The whole ladder, in plain words', null,
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Rebuild them.</b> Start with a Quarry: its first cut gives enough stone for Cottage Row, then its founding crew cuts more every 8 hours even before residents arrive. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🛖</span><span><b>Rebuild them.</b> Start with a Timber Cabin — it costs only coins and timber — and the first families move in. Later, rebuild it in stone to house twice as many.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> The first Quarry costs no stone and its first cut gives enough stone for Cottage Row. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages grow into a town</b> (+10% taxes) — and <b>3 neighbouring towns rise into a city</b> (+25%). This happens by itself as you free villages close together.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 villages within 150 km unite into a County</b> — run from its own County Hall, with +15% unity taxes for every village in it.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
@@ -23701,6 +23766,48 @@ function villageMakeCottage(r, pal) {
     }
   }
   g.add(villageBlobShadow(Math.max(w, d) * 0.72));
+  return g;
+}
+
+// The settler's home the player raises first: stacked-log walls under a plank
+// roof — and the same footprint rebuilt in quarried stone once it's upgraded.
+function villageMakeSettlerHome(r, pal, stone) {
+  const g = new THREE.Group();
+  const w = 1.9 + r() * 0.7, d = 1.7 + r() * 0.6, h = 1.1 + r() * 0.3;
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  if (stone) {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.08) }));
+    body.position.y = h / 2; g.add(body);
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.1, d + 0.08), beamMat);
+    lintel.position.y = h; g.add(lintel);
+  } else {
+    // Horizontal logs, one on the next — a cabin you can read at a glance.
+    const logMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0.04, -0.04) });
+    const logR = 0.13, rows = Math.max(4, Math.round(h / (logR * 2)));
+    for (let i = 0; i < rows; i++) {
+      const y = logR + i * logR * 2;
+      const front = new THREE.Mesh(new THREE.CylinderGeometry(logR, logR, w + 0.2, 7), logMat);
+      front.rotation.z = Math.PI / 2; front.position.set(0, y, d / 2); g.add(front);
+      const back = front.clone(); back.position.z = -d / 2; g.add(back);
+      const left = new THREE.Mesh(new THREE.CylinderGeometry(logR, logR, d + 0.2, 7), logMat);
+      left.rotation.x = Math.PI / 2; left.position.set(-w / 2, y, 0); g.add(left);
+      const right = left.clone(); right.position.x = w / 2; g.add(right);
+    }
+    const fill = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, h, d - 0.1), logMat);
+    fill.position.y = h / 2; g.add(fill);
+  }
+  const roofH = 0.7 + r() * 0.35, W = w / 2 + 0.3;
+  const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
+  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: d + 0.45, bevelEnabled: false }), roofMat);
+  roof.position.set(0, h, -(d + 0.45) / 2); g.add(roof);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.1), beamMat);
+  door.position.set(0, 0.4, d / 2 + 0.06); g.add(door);
+  if (stone && r() < 0.7) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.06), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+    win.position.set((r() - 0.5) * w * 0.5, h * 0.62, d / 2 + 0.04); g.add(win);
+  }
+  g.add(villageBlobShadow(Math.max(w, d) * 0.7));
   return g;
 }
 
@@ -26229,7 +26336,17 @@ function buildVillageScene(v) {
         }
         if (!level) return; // nothing finished yet — only the site shows
       }
-      if (b.id === 'farm') {
+      if (b.id === 'cabin') {
+        // The first home: a log cabin at level 1, rebuilt in stone at level 2.
+        const spot = econScatter(10.5, 15, 2.4);
+        if (!spot) return;
+        const home = villageMakeSettlerHome(er, pal, level >= 2);
+        home.position.set(spot.x, 0, spot.z);
+        home.lookAt(0, 0, 0); home.rotation.x = 0; home.rotation.z = 0;
+        home.rotation.y += (er() - 0.5) * 0.4;
+        econLabel(home, level >= 2 ? '🏠 Stone Cottage' : '🛖 Timber Cabin', 2.3);
+        villageScene.add(home);
+      } else if (b.id === 'farm') {
         const spot = econScatter(11, 15.5, 2.8);
         if (!spot) return;
         const field = villageMakeGrainField(er, pal);
@@ -28263,6 +28380,7 @@ function renderStoresLedger() {
       empireVillages().forEach(v => {
         const level = villageBuildingLevel(v, b.id);
         if (!level) return;
+        if (b.workers && !villageWorkforce(v).staffed[b.id]) return; // no crew — the yard ships nothing
         const steward = villageRoleMultiplier(v.seed);
         stoneCycle += Math.round((b.stonePerLevel || 0) * level * steward);
         const eco = ensureVillageEconomy(v);
@@ -28281,7 +28399,7 @@ function renderStoresLedger() {
       '<div class="stores-ledger-row header"><span class="slr-icon">👑</span>' +
       '<span class="slr-main"><span class="slr-name">Taxes &amp; timber</span><span class="slr-meta">' + ledger.provinces + ' province' + (ledger.provinces === 1 ? '' : 's') + ' · 👥 ' + ledger.population + ' subjects</span></span>' +
       '<span class="slr-yield">+' + ledger.coins + ' 🪙 +' + ledger.branches + ' 🪵</span></div>' +
-      (yardRows || '<div class="stores-hint">No working yards yet — build 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your provinces and they will start shipping goods here.</div>') +
+      (yardRows || '<div class="stores-hint">No working yards yet — build 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your provinces. Each needs a villager living there to run it, then it starts shipping goods here.</div>') +
       (idleYards.length ? '<div class="stores-hint">Not yet built anywhere: ' + idleYards.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>' : '') +
       '<button class="stores-collect-btn"' + (hasTribute ? '' : ' disabled') + ' onclick="collectEmpireTribute()">' +
       (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ THE PROVINCES ARE STILL WORKING — CHECK BACK LATER') + '</button>' +
@@ -32913,7 +33031,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-training-dock-v252-20260812';
+const BURBZ_BUILD = 'citizen-workers-timber-homes-v253-20260812';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
