@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "hold-to-steer-v251-20260811"
+CURRENT_BUILD = "academy-training-dock-v252-20260812"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

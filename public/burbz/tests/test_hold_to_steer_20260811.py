@@ -20,6 +20,7 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
+CURRENT_BUILD = "academy-training-dock-v252-20260812"
 
 
 def run_node(script: str):
@@ -108,20 +109,19 @@ def test_the_copy_teaches_the_hold():
         assert hint in HTML, hint
 
 
-def test_quick_icons_sit_top_left_under_the_header():
+def test_quick_icons_moved_again_to_the_bottom_dock():
+    # Superseded by academy-training-dock-v252-20260812: the quick icons now
+    # flank the Scan orb above the bottom nav. The pointer follows them there.
     dock = HTML.split(".game-side-actions {")[1].split("}")[0]
-    assert "left:8px" in dock and "right:" not in dock
-    assert "top:calc(max(8px, env(safe-area-inset-top)) + 68px)" in dock
-    # The tutorial's pointer now sits to the right of the dock and points left.
-    assert "el.style.left = (rect.right + 5) + 'px';" in HTML
-    assert "flex-direction:row-reverse" in HTML.split(".tutorial-nav-pointer.side-target {")[1].split("}")[0]
+    assert "bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px)" in dock
+    assert "el.style.bottom = dockTarget ? (window.innerHeight - rect.top + 4) + 'px' : '';" in HTML
 
 
 def test_release_is_versioned_and_the_new_core_is_precached():
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert f'<script src="touch_steer_core.js?v={OWN_RELEASE_PIN}"></script>' in HTML
     assert f"'./touch_steer_core.js?v={OWN_RELEASE_PIN}'" in SW
     assert f'<script src="academy_3d_core.js?v={OWN_RELEASE_PIN}"></script>' in HTML
