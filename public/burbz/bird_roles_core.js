@@ -7,9 +7,16 @@
 // shelves stay dusty.
 //
 // The rule for the intellectual posts is deliberately blunt: INT is the whole
-// job. Librarian, Star Charter, Head Chef and Steward all read INT first,
-// because the player asked for exactly that — the more intelligent the bird,
-// the better the work.
+// job. Librarian, Star Charter and Head Chef all read INT first, because the
+// player asked for exactly that — the more intelligent the bird, the better
+// the work.
+//
+// The CIVIC posts — Steward of a village, Warden of a region — carry a second
+// law (raven-weight-and-wit-v255): weight and wit pull opposite ways. The big
+// birds win the battles and haul the timber, but a heavyweight behind a
+// governor's desk is heavy going; the small charmers — the robin above all —
+// run a town best. Size feeds the battle rule in bird_size_core.js; here it
+// counts AGAINST the ledger.
 // Pure module: no DOM, no game state of its own, UMD export.
 (function (root, factory) {
   const api = factory();
@@ -122,17 +129,19 @@
       copy:'Knowing which beds to let run wild and which to keep cropped is how the Gardens feed themselves.'
     },
     // ---- The realm --------------------------------------------------------
+    // Civic posts: weight counts against the ledger. A village trusts a
+    // charmer at the door, not a shadow over the market square.
     {
       id:'steward', title:'Steward', icon:'🏛️', scope:'village', key:null,
-      stats:{ int:0.7, cha:0.3 },
+      stats:{ int:0.5, cha:0.5 }, civic:true,
       effect:{ id:'village_yield', label:'Governance', copy:'This village pays more taxes and timber, and its yards produce more.' },
-      copy:'One bird holds the ledger of a whole town. The cleverer the steward, the more the town gets out of every field, well and market stall.'
+      copy:'One bird holds the ledger of a whole town, and towns pick favourites: wit and charm run a village, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it.'
     },
     {
       id:'region_warden', title:'Warden of the Region', icon:'👑', scope:'region', key:null,
-      stats:{ int:0.6, cha:0.4 },
+      stats:{ int:0.5, cha:0.5 }, civic:true,
       effect:{ id:'region_yield', label:'Regional rule', copy:'Caravan roads touching this region earn more, and its sanctuaries pay a little extra.' },
-      copy:'A region is too big for one town hall. The Warden rides between sanctuaries, keeps the roads open and the tribute honest.'
+      copy:'A region is too big for one town hall. The Warden rides between sanctuaries, keeps the roads open and the tribute honest — charm-and-wit work, and heavy going for a heavyweight.'
     }
   ];
 
@@ -145,11 +154,36 @@
   function regionRole() { return ROLE_INDEX.region_warden; }
 
   // ---------------------------------------------------------------------------
+  // Weight and wit — the civic size rule
+  // ---------------------------------------------------------------------------
+  // How well a bird of this weight sits behind a governor's desk, as a
+  // multiplier on its civic aptitude. Up to jackdaw weight (score 40) size is
+  // no handicap, and the true lightweights — the robin's bracket, score 20 and
+  // under — win a small charm bonus on top. Past 40 the desk shrinks: a crow
+  // gives up a sixth of its aptitude, a raven a quarter, an eagle almost half.
+  // Battle strength runs the other way (bird_size_core.js), so the trade is
+  // real: the bird that wins your battles is not the bird that runs your towns.
+  const CIVIC_FULL_WIT_MAX_SCORE = 40;
+  const CIVIC_SMALL_CHARM_BONUS = 0.15;
+  const CIVIC_GIANT_WIT_PENALTY = 0.45;
+  function governanceWitFactor(sizeScore) {
+    const s = Number(sizeScore);
+    if (!Number.isFinite(s)) return 1;   // no known size: no opinion
+    const score = clamp(s, 0, 100);
+    if (score <= 20) return 1 + CIVIC_SMALL_CHARM_BONUS;
+    if (score <= CIVIC_FULL_WIT_MAX_SCORE) {
+      return 1 + CIVIC_SMALL_CHARM_BONUS * (CIVIC_FULL_WIT_MAX_SCORE - score) / (CIVIC_FULL_WIT_MAX_SCORE - 20);
+    }
+    return 1 - CIVIC_GIANT_WIT_PENALTY * (score - CIVIC_FULL_WIT_MAX_SCORE) / (100 - CIVIC_FULL_WIT_MAX_SCORE);
+  }
+
+  // ---------------------------------------------------------------------------
   // How good is this bird at this job?
   // ---------------------------------------------------------------------------
   // 0-100. Every point of it is earned from the stats the job names — which is
   // why training a bird's INT in the Library and then making it the Librarian
-  // is a real, compounding strategy.
+  // is a real, compounding strategy. Civic posts then weigh the bird itself:
+  // the same stats govern better on a robin than on a raven.
   function roleAptitude(bird, role) {
     const def = typeof role === 'string' ? roleById(role) : role;
     if (!def || !bird) return 0;
@@ -163,7 +197,9 @@
       weightSum += w;
     });
     if (weightSum <= 0) return 0;
-    return Math.round(total / weightSum);
+    const base = total / weightSum;
+    const witted = def.civic ? base * governanceWitFactor(bird.sizeScore) : base;
+    return Math.round(clamp(witted, 0, 100));
   }
 
   function rankForAptitude(aptitude) {
@@ -321,6 +357,10 @@
     ROLE_RANKS,
     STAT_MASTERY,
     MAX_ROLE_BONUS,
+    CIVIC_FULL_WIT_MAX_SCORE,
+    CIVIC_SMALL_CHARM_BONUS,
+    CIVIC_GIANT_WIT_PENALTY,
+    governanceWitFactor,
     roleById,
     academyRoleForRoom,
     villageRole,

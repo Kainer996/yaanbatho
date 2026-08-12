@@ -156,7 +156,7 @@ console.log(JSON.stringify({ first, upgradeCost: villageBuildingCost(EMPIRE_BUIL
 
 
 def test_quarry_production_scales_with_level_and_needs_a_villager_to_dig():
-    # Superseded by citizen-workers-timber-homes-v253-20260812: the founding
+    # Superseded by raven-weight-and-wit-v255-20260812: the founding
     # crew is gone. A quarry digs only while a villager works it — an empty
     # town's yards stand idle, and the stone-free Timber Cabin is the way back.
     out = run_harness("""
