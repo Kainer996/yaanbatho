@@ -2142,6 +2142,27 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-slot .beq-item { font-size:11px; font-weight:800; color:var(--text); margin-top:1px; }
 .bird-equip-slot .beq-meta { font-size:9px; color:var(--text3); margin-top:1px; }
 .bird-equip-picker { background:var(--bg3); border:1px solid rgba(143,208,255,.3); border-radius:13px; padding:10px; margin-bottom:12px; }
+/* ---- Bird bond — favourites, hearts and the preen ritual ---- */
+.bird-equip-fav { position:absolute; top:8px; right:8px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,.45); border:1.5px solid rgba(255,255,255,.16); font-size:16px; line-height:30px; text-align:center; transition:transform .1s, border-color .15s; }
+.bird-equip-fav.on { border-color:rgba(240,110,140,.65); box-shadow:0 0 10px rgba(240,110,140,.35); }
+.bird-equip-fav:active { transform:scale(.9); }
+.bird-equip-bond { position:relative; background:linear-gradient(150deg, rgba(240,110,140,.09), rgba(0,0,0,.35)); border:1.5px solid rgba(240,110,140,.3); border-radius:14px; padding:11px 12px; margin-bottom:12px; }
+.bond-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.bond-hearts { font-size:14px; letter-spacing:2px; }
+.bond-title { font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:#f2a0b6; }
+.bond-meter { height:7px; border-radius:4px; background:rgba(0,0,0,.45); overflow:hidden; margin-top:8px; }
+.bond-meter-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#e0708c,#f2a0b6); box-shadow:0 0 8px rgba(240,110,140,.4); transition:width .4s ease; }
+.bond-meter-note { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:10px; color:var(--text3); margin-top:4px; }
+.bond-preen-btn { display:block; width:100%; margin-top:9px; padding:10px 12px; border-radius:11px; background:var(--bg3); border:1.5px solid rgba(240,110,140,.3); color:var(--text2); font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:1px; }
+.bond-preen-btn.ready { background:linear-gradient(135deg,#c95a78,#e88aa4); border-color:transparent; color:#fff; }
+.bond-preen-btn:active:not([disabled]) { transform:scale(.985); }
+.bond-preen-btn[disabled] { opacity:.6; }
+.bond-hint { font-size:9px; color:var(--text3); margin-top:7px; }
+.bond-heart-float { position:absolute; bottom:20%; font-size:18px; pointer-events:none; opacity:0; animation:bondHeartFloat 1.7s ease-out forwards; }
+@keyframes bondHeartFloat { 0%{ opacity:0; transform:translateY(6px) scale(.6); } 18%{ opacity:1; } 100%{ opacity:0; transform:translateY(-58px) scale(1.15); } }
+.card-fav-heart { position:absolute; top:27px; right:7px; z-index:3; font-size:15px; filter:drop-shadow(0 1px 3px rgba(0,0,0,.6)); animation:favHeartPop .3s ease; }
+@keyframes favHeartPop { 0%{ transform:scale(.4); } 70%{ transform:scale(1.2); } 100%{ transform:scale(1); } }
+.card-bond-hearts { font-size:9px; letter-spacing:1px; line-height:1; margin:1px 0 2px; }
 .pk-equip { position:absolute; top:5px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); border:1px solid rgba(214,168,79,.5); font-size:12px; line-height:20px; text-align:center; z-index:2; }
 .forge-recipe-group { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent2); font-family:'Russo One', sans-serif; margin:14px 0 8px; }
 /* The forge upgrade desk — the hearth's level and the price of the next one. */
@@ -4410,6 +4431,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=raven-weight-and-wit-v255-20260812"></script>
+<script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
@@ -5769,6 +5791,7 @@ function loadState() {
   }
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
+  gameState.flock.forEach(ensureBirdBond); // Bond migration: every bird starts its friendship at New Friend
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
   // Merlin permanently replaces the old selectable walking-pet slot. Preserve
   // old care values as his starting mood, then discard the obsolete selection.
@@ -13947,6 +13970,7 @@ function academyFeedFood(birdId, foodKey) {
       const firstTime = !bird.academy.dietKnown;
       bird.academy.dietKnown = true;
       academyFeedTrayBirdId = null;
+      grantBirdBondXp(bird, (birdBondCore() || {}).FEED_BOND_XP || 6); // a good meal deepens the bond
       updateQuestProgress('feed_correct', 1);
       if (tx.compatibility && tx.compatibility.verdict === 'primary') updateQuestProgress('proper_meal_fed', 1);
       saveState();
@@ -13979,6 +14003,7 @@ function academyFeedFood(birdId, foodKey) {
     const firstTime = !bird.academy.dietKnown;
     bird.academy.dietKnown = true;
     academyFeedTrayBirdId = null;
+    grantBirdBondXp(bird, (birdBondCore() || {}).FEED_BOND_XP || 6); // a good meal deepens the bond
     updateQuestProgress('feed_correct', 1);
     updateQuestProgress('proper_meal_fed', 1);
     saveState();
@@ -14749,6 +14774,7 @@ function chefServeFoodToEveryEater(kind, foodId) {
           bird.academy.dietKnown = true;
           updateQuestProgress('proper_meal_fed', 1);
         }
+        grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
         updateQuestProgress('feed_correct', 1);
       }
     }
@@ -14817,6 +14843,7 @@ function chefBulkFeedSameSpecies(entry, kind, foodId, option, now) {
         bird.academy.dietKnown = true;
         updateQuestProgress('proper_meal_fed', 1);
       }
+      grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
       updateQuestProgress('feed_correct', 1);
     }
     applyPlayerXpState(reward.trainerXp);
@@ -14873,6 +14900,8 @@ function burbzFeedFood(targetKey, kind, foodId) {
           updateQuestProgress('proper_meal_fed', 1);
           if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 1200);
         }
+        grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
+        rewardBits.push('+' + reward.bondXp + ' bond');
         updateQuestProgress('feed_correct', 1);
       }
     }
@@ -19669,6 +19698,64 @@ function renameCompanionBird(birdId) {
   // Refresh the field-guide sheet in place if it is showing this bird.
   if ($('birdInfoModal')?.classList.contains('show') && $('birdInfoContent')?.dataset.currentBirdId === String(bird.id)) openBirdInfo(bird.id);
   showToast(clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
+}
+// bird-bond-love-v256-20260812: every bird can be loved for itself. Each
+// companion carries a bond — a favourite flag, a bond level with a warm
+// title, and a preen ritual. Bond is affection only; it never touches stats.
+function birdBondCore() { return window.BurbzBirdBondCore || null; }
+function ensureBirdBond(bird) {
+  if (!bird) return null;
+  const core = birdBondCore();
+  bird.bond = core ? core.sanitizeBond(bird.bond) : (bird.bond && typeof bird.bond === 'object' ? bird.bond : { level: 1, xp: 0, favourite: false, lastPreenAt: null, preens: 0 });
+  return bird.bond;
+}
+function birdIsFavourite(bird) { return !!(bird && bird.bond && bird.bond.favourite === true); }
+function toggleFavouriteBird(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!bird) return;
+  const bond = ensureBirdBond(bird);
+  bond.favourite = !bond.favourite;
+  saveState();
+  SFX.tap();
+  vibrate(10);
+  showToast(bond.favourite ? '❤️ ' + birdDisplayName(bird) + ' is a favourite now. It leads your flock.' : '🤍 ' + birdDisplayName(bird) + ' steps back into the flock.');
+  renderBirdex();
+  if ($('birdEquipOverlay')?.classList.contains('show') && birdEquipState.birdId === birdId) renderBirdEquip();
+}
+// Quiet bond growth from everyday care. Only a bond-up speaks.
+function grantBirdBondXp(bird, amount) {
+  const core = birdBondCore();
+  if (!core || !bird) return;
+  const before = ensureBirdBond(bird).level;
+  bird.bond = core.grantBondXp(bird.bond, amount);
+  if (bird.bond.level > before) showToast('💞 Bond up! You and ' + birdDisplayName(bird) + ' are now ' + core.bondTitle(bird.bond.level) + '.');
+}
+// A quiet hearts row on the flock card — the bond at a glance.
+function cardBondHeartsHTML(bird) {
+  const core = birdBondCore();
+  if (!core || !bird || !bird.id) return '';
+  const bp = core.bondProgress(ensureBirdBond(bird));
+  return '<div class="card-bond-hearts" title="Bond: ' + bp.title + '">' + '❤️'.repeat(bp.level) + '🤍'.repeat(core.MAX_BOND_LEVEL - bp.level) + '</div>';
+}
+function preenBird(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  const core = birdBondCore();
+  if (!bird || !core) return null;
+  ensureBirdBond(bird);
+  const result = core.preen(bird.bond, Date.now());
+  if (!result.ok) {
+    showToast('🪶 ' + birdDisplayName(bird) + ' is still glowing from the last preen. Come back in ' + core.describeWait(result.remainingMs) + '.');
+    return result;
+  }
+  bird.bond = result.bond;
+  if (bird.care) bird.care.happiness = clamp((bird.care.happiness || 80) + core.PREEN_HAPPINESS, 0, 100);
+  saveState();
+  SFX.tap();
+  vibrate(15);
+  if (result.leveled) showToast('💞 Bond up! You and ' + birdDisplayName(bird) + ' are now ' + core.bondTitle(bird.bond.level) + '.');
+  else if (bird.bond.level >= core.MAX_BOND_LEVEL) showToast('🪶 You preen ' + birdDisplayName(bird) + '. It leans into your hand.');
+  else showToast('🪶 You preen ' + birdDisplayName(bird) + '. It leans into your hand. +' + core.PREEN_BOND_XP + ' bond');
+  return result;
 }
 function discoveredSpeciesRecords() { return Object.values(gameState.discoveredSpecies || {}).filter(Boolean); }
 function recruitCostForBird(bird) {
@@ -29062,6 +29149,32 @@ function birdEquipClear(slot) {
   renderBirdEquip();
 }
 
+function birdEquipToggleFavourite() {
+  if (birdEquipState.birdId) toggleFavouriteBird(birdEquipState.birdId);
+}
+
+function birdEquipPreen() {
+  const result = preenBird(birdEquipState.birdId);
+  renderBirdEquip();
+  // Hearts go on after the re-render so the fresh hero keeps them.
+  if (result && result.ok) spawnBondHearts();
+}
+
+// A little shower of hearts over the bird's portrait when a preen lands.
+function spawnBondHearts() {
+  const hero = document.querySelector('#birdEquipBody .bird-equip-hero');
+  if (!hero) return;
+  for (let i = 0; i < 5; i++) {
+    const heart = document.createElement('span');
+    heart.className = 'bond-heart-float';
+    heart.textContent = ['❤️', '💛', '🧡', '💕', '💖'][i % 5];
+    heart.style.left = (14 + Math.round(i * 18 + (i % 2) * 6)) + '%';
+    heart.style.animationDelay = (i * 0.12) + 's';
+    hero.appendChild(heart);
+    setTimeout(() => heart.remove(), 1900 + i * 120);
+  }
+}
+
 function renderBirdEquip() {
   const body = $('birdEquipBody');
   if (!body) return;
@@ -29076,7 +29189,10 @@ function renderBirdEquip() {
     ? '<img class="bird-equip-art" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
     : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
 
+  const favourite = birdIsFavourite(bird);
+  const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
   const hero = '<div class="bird-equip-hero" style="border-color:' + rarityColor + '55;">' + art +
+    favBtn +
     '<div><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
     '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div>' +
@@ -29092,6 +29208,27 @@ function renderBirdEquip() {
     stat('🪽 SPD', bird.spd || 0, 'spd') +
     '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
     '</div>';
+
+  // The bond panel — this bird's friendship, grown by preening and feeding.
+  const bondCore = birdBondCore();
+  let bondPanel = '';
+  if (bondCore) {
+    ensureBirdBond(bird);
+    const bp = bondCore.bondProgress(bird.bond);
+    const gate = bondCore.canPreen(bird.bond, Date.now());
+    const hearts = '❤️'.repeat(bp.level) + '🤍'.repeat(bondCore.MAX_BOND_LEVEL - bp.level);
+    const meter = bp.max
+      ? '<div class="bond-meter-note">The bond is complete. ' + escapeHtml(birdDisplayName(bird)) + ' is yours for life.</div>'
+      : '<div class="bond-meter"><div class="bond-meter-fill" style="width:' + bp.pct + '%"></div></div><div class="bond-meter-note">' + bp.xp + '/' + bp.next + ' to the next bond level</div>';
+    const preenBtn = gate.ok
+      ? '<button class="bond-preen-btn ready" onclick="birdEquipPreen()">🪶 PREEN ' + escapeHtml(birdDisplayName(bird)).toUpperCase() + '</button>'
+      : '<button class="bond-preen-btn" disabled>🪶 Preened · come back in ' + bondCore.describeWait(gate.remainingMs) + '</button>';
+    bondPanel = '<div class="bird-equip-section-label">Bond</div><div class="bird-equip-bond">' +
+      '<div class="bond-head"><span class="bond-hearts" aria-label="Bond level ' + bp.level + ' of ' + bondCore.MAX_BOND_LEVEL + '">' + hearts + '</span><span class="bond-title">' + escapeHtml(bp.title) + '</span></div>' +
+      meter + preenBtn +
+      '<div class="bond-hint">Preening and good meals deepen the bond. It never fades.</div>' +
+      '</div>';
+  }
 
   const slots = '<div class="bird-equip-section-label">Loadout</div><div class="bird-equip-slots">' + EQUIP_SLOT_ORDER.map(slot => {
     const meta = FORGE_SLOT_META[slot];
@@ -29130,7 +29267,7 @@ function renderBirdEquip() {
 
   const forgeLink = '<button class="battle-forge-btn" onclick="closeBirdEquip(); switchScreen(\'forge\');">⚒️ CRAFT MORE AT THE FLETCHER\'S FORGE</button>';
 
-  body.innerHTML = hero + stats + slots + picker + notes + forgeLink;
+  body.innerHTML = hero + stats + bondPanel + slots + picker + notes + forgeLink;
 }
 
 // ============================================================================
@@ -29315,7 +29452,8 @@ function renderBirdex() {
     let companions = flock.slice();
     if (currentFilter !== 'all') companions = companions.filter(b => b.rarity === currentFilter);
     companions = companions.filter(birdMatchesFamilyFilter);
-    companions.sort((a, b) => (b.power || 0) - (a.power || 0));
+    // Favourites lead the flock; power settles the rest.
+    companions.sort((a, b) => (birdIsFavourite(b) ? 1 : 0) - (birdIsFavourite(a) ? 1 : 0) || (b.power || 0) - (a.power || 0));
     if (!companions.length) {
       grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Discover a bird, then recruit it at the Academy Barracks.</div></div>';
       return;
@@ -29398,6 +29536,12 @@ function renderBirdex() {
       if (renameBtn) {
         e.stopPropagation();
         renameCompanionBird(renameBtn.dataset.birdId);
+        return;
+      }
+      const favouriteBtn = e.target.closest('[data-action="toggle-favourite"]');
+      if (favouriteBtn) {
+        e.stopPropagation();
+        toggleFavouriteBird(favouriteBtn.dataset.birdId);
         return;
       }
       const locationBtn = e.target.closest('[data-action="bird-location"]');
@@ -29591,6 +29735,7 @@ function createBirdCardHTML(bird, idx) {
       <div class="bird-card-inner">
         <div class="card-front">
           ${cardDietBadge}
+          ${birdIsFavourite(bird) ? '<div class="card-fav-heart" title="One of your favourites">❤️</div>' : ''}
           <div class="card-art" data-action="open-equip" data-bird-id="${bird.id}" title="Tap your bird to open its equipment">
             <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>
             ${artBg}
@@ -29603,6 +29748,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-info">
             <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div>
             <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
+            ${cardBondHeartsHTML(bird)}
             <div class="card-species">${escapeHtml(bird.scientificName || bird.species)}</div>
             ${birdCardLocationButtonHTML(bird)}
             ${hungerBarHTML(hungerStatus, 'companion-card')}
@@ -29640,6 +29786,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-utilities">
 
             ${backFeedButton}
+            <button class="card-pet-btn" data-action="toggle-favourite" data-bird-id="${bird.id}">${birdIsFavourite(bird) ? '❤️ Favourite' : '🤍 Favourite'}</button>
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
             <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
@@ -32048,7 +32195,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -33041,7 +33188,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'raven-weight-and-wit-v255-20260812';
+const BURBZ_BUILD = 'bird-bond-love-v256-20260812';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

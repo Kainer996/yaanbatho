@@ -22,7 +22,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 RELEASE = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = RELEASE
+CURRENT_BUILD = "bird-bond-love-v256-20260812"  # newest release; RELEASE still pins this release's core ?v= tags
 
 
 def run_node(source: str) -> dict:
@@ -183,7 +183,8 @@ def test_release_is_versioned_for_service_worker_self_update():
     sw = SW.read_text(encoding="utf-8")
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert cache_line.rstrip("';").endswith(RELEASE)
+    assert RELEASE in cache_line  # lineage kept
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"'./bird_size_core.js?v={RELEASE}'" in sw
     assert f"'./bird_roles_core.js?v={RELEASE}'" in sw
     assert f'src="bird_size_core.js?v={RELEASE}"' in html

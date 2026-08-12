@@ -53,6 +53,7 @@ FILES=(
   "bird_family_core.js"
   "bird_size_core.js"
   "bird_roles_core.js"
+  "bird_bond_core.js"
   "scan_economy_core.js"
   "sound_listener_core.js"
   "battle_core.js"
