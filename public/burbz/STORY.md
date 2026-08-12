@@ -147,6 +147,18 @@ Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental s
 - **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there sway parleys and diplomacy quests.
 - **Diplomacy quests** (marked 🕊️, like the Diplomacy Envoy) pay out on charm: charming birds talk squirrel markets, border flocks and passers-by into better deals, bonus coins and gifts.
 
+## The Raven, and the law of weight and wit
+
+On the twelfth of August a real raven crossed the sky over the player's own head — the first in months of looking — and the Kingdom marked the day. The Raven stands in Burbz exactly as it stands in the field: a carrion crow grown into something twice the weight and twice the shadow. Rare, huge, and the sharpest mind on black wings.
+
+The raven gives the Kingdom its plainest law, the **law of weight and wit**:
+
+- **Weight wins fights and carries loads — in true proportion.** A bird's body mass is real field-guide weight now, and its load goes with it: one load for every hundred grams of bird. A raven hauls twice what a carrion crow hauls, because it IS twice the carrion crow. A buzzard shoulders eight loads to a robin's one. Gulls, built to carry, haul with the best of them.
+- **Weight loses ledgers.** Villages, towns and counties are run on charm and wit, and the folk take easiest to the light-boned charmers. A robin melts a market square; a raven empties it. The heavier the bird, the poorer the steward or warden it makes — however clever it is.
+- **The trade is the point.** The bird that wins your battles is not the bird that runs your towns. A wise player sends the raven to the front and sits the robin at the desk.
+
+The birds of the crow family carry this law visibly: jackdaw, rook, carrion crow, raven — each step up in weight is a step up in battle and burden, and a step down at the governor's desk.
+
 ## Tone and moral frame
 
 **No town is destroyed.** Liberation Battles are non-gory magical contests between the player's living flock and the usurper's shadow squads. Defeated evil Burbz are dispelled rather than killed or conquered. Real birds remain the heroes, discoveries and companions; the player restores communities, knowledge, wildlife and safe paths. The empire is an expanding network of free sanctuaries, and its visual language should feel hopeful, alive and green.
