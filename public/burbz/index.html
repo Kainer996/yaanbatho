@@ -562,14 +562,19 @@ svg.academy-room-bg { display:block; filter:none; }
 
 /* Secondary destinations live on the playfield like a strategy game's quick
    controls instead of squeezing every system into one crowded bottom strip. */
-.game-side-actions { position:absolute; z-index:190; top:calc(max(8px, env(safe-area-inset-top)) + 68px); left:8px; display:flex; flex-direction:column; gap:9px; pointer-events:none; }
+/* Quick-action dock: a row above the bottom nav, two buttons each side of the
+   raised Scan orb. The centre spacer keeps the orb's launch path clear. */
+.game-side-actions { position:absolute; z-index:190; bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px); left:0; right:0; display:flex; flex-direction:row; align-items:flex-end; justify-content:center; gap:9px; pointer-events:none; }
+.game-side-actions-gap { flex:0 0 auto; width:68px; }
+body[data-active-screen="battle"] .game-side-actions { display:none; }
 .game-side-action { width:54px; min-height:54px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:5px 3px 4px; border-radius:16px; border:1px solid rgba(214,168,79,.40); background:linear-gradient(145deg,rgba(31,23,11,.94),rgba(6,5,3,.93)); color:var(--text2); box-shadow:0 8px 20px rgba(0,0,0,.50),inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(8px); pointer-events:auto; }
 .game-side-action:active { transform:scale(.94); }
 .game-side-action.active { color:var(--accent); border-color:rgba(240,199,103,.72); box-shadow:0 8px 20px rgba(0,0,0,.50),0 0 18px rgba(214,168,79,.28); }
 .game-side-action-art { width:34px; height:34px; display:block; object-fit:contain; border-radius:9px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
 .game-side-action-label { max-width:48px; overflow:hidden; text-overflow:ellipsis; font-family:'Rajdhani',sans-serif; font-size:8px; line-height:1; font-weight:900; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
 .game-side-action.tutorial-alert::after { content:'!'; position:absolute; right:-3px; top:-3px; width:17px; height:17px; display:grid; place-items:center; border-radius:50%; background:#d13a2f; color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); }
-@media(max-width:380px){.game-side-actions{left:5px;gap:7px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
+@media(max-width:380px){.game-side-actions{gap:7px}.game-side-actions-gap{width:62px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
+.game-side-action-badge { position:absolute; right:-3px; top:-3px; min-width:17px; height:17px; padding:0 4px; display:grid; place-items:center; border-radius:999px; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); pointer-events:none; }
 
 /* ========== DIAGONAL DECORATIONS ========== */
 .diag-line {
@@ -2597,6 +2602,34 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   margin: 0 auto 16px;
 }
 .modal-title { font-family: 'Russo One', sans-serif; font-size: 18px; margin-bottom: 16px; }
+/* Training Hub sheet: every training room at a glance */
+.training-hub-sheet { max-height: 78vh; }
+.training-hub-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.training-hub-head .modal-title { margin-bottom: 10px; }
+.training-hub-close { padding:6px 14px; border-radius:10px; border:1px solid rgba(214,168,79,.4); background:rgba(31,23,11,.9); color:var(--text2); font:700 12px 'Rajdhani',sans-serif; text-transform:uppercase; }
+.training-hub-intro { font-size:12px; color:var(--text3); margin-bottom:12px; line-height:1.45; }
+.training-hub-room { width:100%; text-align:left; color:inherit; font:inherit; display:block; border:1px solid rgba(214,168,79,.26); border-radius:14px; background:linear-gradient(145deg,rgba(31,23,11,.85),rgba(10,8,5,.9)); padding:10px 12px; margin-bottom:10px; }
+.training-hub-room:active { transform:scale(.985); }
+.training-hub-room.locked { opacity:.62; }
+.training-hub-room-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+.training-hub-room-name { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.03em; }
+.training-hub-room-state { font:700 10px 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.05em; padding:3px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.14); color:var(--text3); white-space:nowrap; }
+.training-hub-room-state.busy { color:#f0c767; border-color:rgba(240,199,103,.5); }
+.training-hub-room-state.ready { color:#7ee0a3; border-color:rgba(126,224,163,.5); }
+.training-hub-room-state.empty { color:var(--text3); }
+.training-hub-room-state.locked { color:#ff9a8d; border-color:rgba(255,154,141,.4); }
+.training-hub-bird { display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; }
+.training-hub-bird-name { flex:0 0 auto; max-width:38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+.training-hub-bird-bar { flex:1; height:6px; border-radius:3px; background:rgba(255,255,255,.09); overflow:hidden; }
+.training-hub-bird-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#c2913a,#f0c767); }
+.training-hub-bird-pct { flex:0 0 auto; font:700 11px 'Rajdhani',sans-serif; color:var(--text3); min-width:32px; text-align:right; }
+.training-hub-bird-pct.done { color:#7ee0a3; }
+.training-hub-perch-note { margin-top:6px; font-size:11px; color:var(--text3); }
+.training-hub-empty-note { margin-top:4px; font-size:11px; color:var(--text3); font-style:italic; }
+.training-hub-section-title { font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.04em; margin:14px 0 6px; color:var(--text2); }
+.training-hub-idle { display:flex; flex-wrap:wrap; gap:6px; }
+.training-hub-idle-chip { font:700 11px 'Rajdhani',sans-serif; padding:4px 9px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text2); }
+.training-hub-cta { display:block; width:100%; margin-top:12px; padding:12px; border-radius:12px; border:none; background:linear-gradient(150deg,#f4d485,#c2913a 58%,#96691f); color:#241a08; font:900 13px 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.05em; }
 .settings-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -3129,8 +3162,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
    tapped, plus a red attention dot on the tab itself. */
 .tutorial-nav-pointer { position:fixed; z-index:1200; bottom:calc(var(--nav-height) + 10px + var(--safe-bottom)); left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:2px; pointer-events:none; }
 .tutorial-nav-pointer.show { display:flex; }
-.tutorial-nav-pointer.side-target { bottom:auto; transform:translate(0,-50%); flex-direction:row-reverse; gap:5px; }
-.tutorial-nav-pointer.side-target .tnp-arrow { transform:rotate(90deg); animation:none; }
+/* Quick-dock targets sit above the nav now, so the pointer keeps its
+   arrow-down column shape and simply floats higher (inline bottom). */
 .tutorial-nav-pointer .tnp-text { background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:10px; padding:3px 9px; font:800 11px/1.3 'Rajdhani',sans-serif; letter-spacing:.4px; box-shadow:0 6px 18px rgba(0,0,0,.5); white-space:nowrap; }
 .tutorial-nav-pointer .tnp-arrow { font-size:24px; line-height:1; color:var(--accent); text-shadow:0 0 10px rgba(240,199,103,.85); animation:tutorialArrowBob 1s ease-in-out infinite; }
 @keyframes tutorialArrowBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(7px); } }
@@ -3513,9 +3546,14 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <img class="game-side-action-art" src="assets/ui/burbz-icon-set/quests.webp" alt="">
       <span class="game-side-action-label">Quests</span>
     </button>
+    <span class="game-side-actions-gap" aria-hidden="true"></span>
     <button class="game-side-action" type="button" data-game-route data-screen="inventory" aria-label="Royal Stores">
       <img class="game-side-action-art" src="assets/ui/burbz-icon-set/inventory.webp" alt="">
       <span class="game-side-action-label">Stores</span>
+    </button>
+    <button class="game-side-action" type="button" data-quick-destination="training" aria-label="Training overview">
+      <img class="game-side-action-art" src="assets/academy-buildings-manga/training-hall.png" alt="">
+      <span class="game-side-action-label">Training</span>
     </button>
   </aside>
 
@@ -3729,7 +3767,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- QUESTS SCREEN -->
     <!-- ACADEMY SCREEN -->
     <div class="screen" id="screen-academy">
-      <div class="screen-title">BURB ACADEMY</div>
+      <div class="screen-title">ACADEMY</div>
       <!-- Two Academies, one screen: the painted 2D tree and the modelled 3D
            one. The toggle switches between them and the choice is remembered;
            if 3D cannot start on this device we fall back to 2D by itself. -->
@@ -4055,6 +4093,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
   </div>
 
+
+  <!-- Training Hub: pop-up overview of every room that trains birds -->
+  <div class="modal-overlay" id="trainingHubModal" role="dialog" aria-modal="true" aria-label="Training overview">
+    <div class="modal-sheet training-hub-sheet">
+      <div class="modal-handle"></div>
+      <div class="training-hub-head">
+        <div class="modal-title">🏋️ Training</div>
+        <button class="training-hub-close" id="trainingHubClose">Close</button>
+      </div>
+      <div id="trainingHubBody"></div>
+    </div>
+  </div>
 
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
@@ -15331,7 +15381,7 @@ function academyGraduationOverlay(bird) {
   div.className = 'academy-grad-overlay';
   const artHtml = birdOnlyImgHTML(bird, 'academy-grad-emoji');
   div.innerHTML = '<div class="academy-grad-panel">' +
-    '<div class="academy-grad-kicker">⭐ BURB ACADEMY ⭐</div>' +
+    '<div class="academy-grad-kicker">⭐ ACADEMY ⭐</div>' +
     '<div class="academy-grad-title">STAR PUPIL</div>' +
     '<div class="academy-grad-art">' + artHtml + '</div>' +
     '<div class="academy-grad-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
@@ -19353,6 +19403,27 @@ function updateActionBadges() {
   if (!document || !document.querySelectorAll) return;
   const counts = core.computeActionBadgeCounts(normalizeActionBadgeState(Date.now()));
   core.applyActionBadges(document, counts);
+  updateTrainingDockBadge();
+}
+
+// The Training dock button opens a pop-up, not a screen, so the shared badge
+// walker never reaches it. Count finished, unclaimed drills by hand.
+function updateTrainingDockBadge() {
+  const btn = document.querySelector('[data-quick-destination="training"]');
+  if (!btn) return;
+  let ready = 0;
+  try {
+    ready = trainingHubSessions().filter(s => s.status === 'complete').length;
+  } catch (e) {}
+  let badge = btn.querySelector('.game-side-action-badge');
+  if (!ready) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'game-side-action-badge';
+    badge.setAttribute('aria-hidden', 'true');
+    btn.appendChild(badge);
+  }
+  badge.textContent = String(ready);
 }
 
 let actionBadgeUpdateQueued = false;
@@ -19383,6 +19454,7 @@ function switchScreen(name) {
   document.querySelectorAll(`[data-game-route][data-screen="${name}"]`).forEach(item => item.classList.add('active'));
 
   currentScreen = name;
+  document.body.setAttribute('data-active-screen', name);
   syncBurbzMusicForMapZoom();
   updateMerlinListeningUI();
 
@@ -19429,6 +19501,106 @@ function openKitchenHudShortcut() {
   document.querySelectorAll('[data-game-route],[data-quick-destination]').forEach(n => n.classList.remove('active'));
   document.querySelector('[data-quick-destination="kitchen"]')?.classList.add('active');
 }
+
+// ============================================================================
+// TRAINING HUB — the quick-dock pop-up. One small sheet shows every room that
+// trains birds: who is mid-drill, who is done, which perches sit empty and
+// which birds are free to send. Tap a room card to fly straight to it.
+// ============================================================================
+const TRAINING_HUB_ROOMS = ['training', 'crowbar', 'workshop', 'observatory', 'library', 'kitchen'];
+const TRAINING_HUB_ROOM_TITLES = { training:'Training Hall', crowbar:'The Crowbar', workshop:'Nest Workshop', observatory:'Moon Observatory', library:'The Library', kitchen:'Kitchen & Pantry' };
+
+function trainingHubSessions() {
+  const core = window.BurbzAcademyCore;
+  const now = Date.now();
+  return ensureBirdTrainingSessions()
+    .map(s => (core && typeof core.advanceTrainingSession === 'function') ? core.advanceTrainingSession(s, now) : s)
+    .filter(s => !['claimed', 'cancelled', 'failed'].includes(s.status));
+}
+
+function renderTrainingHub() {
+  const body = document.getElementById('trainingHubBody');
+  if (!body) return;
+  const now = Date.now();
+  const sessions = trainingHubSessions();
+  const flock = Array.isArray(gameState.flock) ? gameState.flock : [];
+  const sessionBirdIds = new Set(sessions.map(s => s.birdId));
+  const roomsHtml = TRAINING_HUB_ROOMS.map(roomId => {
+    const cfg = ACADEMY_ROOMS[roomId];
+    if (!cfg) return '';
+    const title = TRAINING_HUB_ROOM_TITLES[roomId] || cfg.label;
+    const built = isAcademyBuildingBuilt(roomId);
+    const roomSessions = sessions.filter(s => (s.room || 'training') === roomId);
+    const stationed = roomId === 'kitchen' ? [] : flock.filter(b => b && b.academy && b.academy.room === roomId && !sessionBirdIds.has(b.id));
+    const readyCount = roomSessions.filter(s => s.status === 'complete').length;
+    let stateChip;
+    if (!built) stateChip = '<span class="training-hub-room-state locked">🔒 Not built</span>';
+    else if (readyCount) stateChip = '<span class="training-hub-room-state ready">✅ ' + readyCount + ' to claim</span>';
+    else if (roomSessions.length) stateChip = '<span class="training-hub-room-state busy">🏋️ ' + roomSessions.length + ' training</span>';
+    else if (stationed.length) stateChip = '<span class="training-hub-room-state busy">' + stationed.length + ' stationed</span>';
+    else stateChip = '<span class="training-hub-room-state empty">Empty</span>';
+    const sessionRows = roomSessions.map(s => {
+      const done = s.status === 'complete';
+      const pct = Number.isFinite(s.progressPct) ? s.progressPct : 0;
+      const claim = done ? '<button class="academy-btn primary" onclick="event.stopPropagation(); trainingHubClaim(\'' + s.id + '\')">CLAIM</button>'
+        : '<span class="training-hub-bird-pct">' + pct + '%</span>';
+      return '<div class="training-hub-bird"><span class="training-hub-bird-name">' + escapeHtml(s.birdName || 'Bird') + '</span><span class="training-hub-bird-bar"><span class="training-hub-bird-fill" style="width:' + pct + '%"></span></span>' + claim + '</div>';
+    }).join('');
+    const stationedRow = stationed.length
+      ? '<div class="training-hub-perch-note">On the perch: ' + stationed.map(b => escapeHtml(birdDisplayName(b))).join(', ') + ' · ' + escapeHtml(cfg.perk || '') + '</div>'
+      : '';
+    let emptyNote = '';
+    if (!built) emptyNote = '<div class="training-hub-empty-note">Tap to open the Academy and build it.</div>';
+    else if (!roomSessions.length && !stationed.length) emptyNote = '<div class="training-hub-empty-note">' + (roomId === 'kitchen' ? 'No Pantry Gauntlet running — birds train from the Gardens.' : 'No birds here — this room is free.') + '</div>';
+    return '<div class="training-hub-room' + (built ? '' : ' locked') + '" role="button" tabindex="0" onclick="trainingHubOpenRoom(\'' + roomId + '\')">' +
+      '<div class="training-hub-room-head"><span class="training-hub-room-name">' + (cfg.icon || '🏋️') + ' ' + escapeHtml(title) + '</span>' + stateChip + '</div>' +
+      sessionRows + stationedRow + emptyNote + '</div>';
+  }).join('');
+  const idleBirds = flock.filter(b => b && b.id && !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, now).sleeping);
+  const idleShown = idleBirds.slice(0, 16);
+  const idleHtml = idleBirds.length
+    ? '<div class="training-hub-section-title">Needs training — free right now</div><div class="training-hub-idle">' +
+      idleShown.map(b => '<span class="training-hub-idle-chip">' + escapeHtml(birdDisplayName(b)) + '</span>').join('') +
+      (idleBirds.length > idleShown.length ? '<span class="training-hub-idle-chip">+' + (idleBirds.length - idleShown.length) + ' more</span>' : '') + '</div>'
+    : '<div class="training-hub-section-title">Needs training</div><div class="training-hub-empty-note">Every bird is busy — training, questing or on a post.</div>';
+  body.innerHTML = '<div class="training-hub-intro">Rooms across the Academy that grow your birds. Tap a room to visit it, or open the notice board to start a drill.</div>' +
+    roomsHtml + idleHtml +
+    '<button class="training-hub-cta" onclick="trainingHubOpenRoom(\'training\')">📋 OPEN THE NOTICE BOARD</button>';
+}
+
+function openTrainingHub() {
+  renderTrainingHub();
+  const modal = document.getElementById('trainingHubModal');
+  if (modal) modal.classList.add('show');
+  SFX.tap();
+}
+
+function closeTrainingHub() {
+  document.getElementById('trainingHubModal')?.classList.remove('show');
+}
+
+function trainingHubOpenRoom(roomId) {
+  closeTrainingHub();
+  if (!isAcademyBuildingBuilt(roomId)) {
+    academySelectedRoom = roomId;
+    academyQuestGuidanceRoom = roomId;
+    activateGameHudDestination('academy');
+    renderAcademy();
+    showToast('Build the ' + (TRAINING_HUB_ROOM_TITLES[roomId] || 'room') + ' first — it is highlighted in your Academy.');
+    return;
+  }
+  openAcademyRoom(roomId);
+}
+
+function trainingHubClaim(sessionId) {
+  claimBirdTrainingSession(sessionId);
+  renderTrainingHub();
+  queueActionBadgeUpdate();
+}
+
+// The game code lives inside one big closure, so the hub's inline onclick
+// handlers need their functions placed on window by hand.
+Object.assign(window, { openTrainingHub, closeTrainingHub, trainingHubOpenRoom, trainingHubClaim });
 
 // ============================================================================
 // RPG ECONOMY — discoveries are not the same as recruited companions
@@ -32741,7 +32913,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'hold-to-steer-v251-20260811';
+const BURBZ_BUILD = 'academy-training-dock-v252-20260812';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -33218,15 +33390,13 @@ function updateMerlinFlowPointer() {
   if (!navItem) { el.classList.remove('show'); return; }
   navItem.classList.add('tutorial-alert');
   const rect = navItem.getBoundingClientRect();
-  const sideTarget = navItem.classList.contains('game-side-action');
-  el.classList.toggle('side-target', sideTarget);
-  if (sideTarget) {
-    el.style.left = (rect.right + 5) + 'px';
-    el.style.top = (rect.top + rect.height / 2) + 'px';
-  } else {
-    el.style.left = (rect.left + rect.width / 2) + 'px';
-    el.style.top = '';
-  }
+  const dockTarget = navItem.classList.contains('game-side-action');
+  el.classList.remove('side-target');
+  el.style.left = (rect.left + rect.width / 2) + 'px';
+  el.style.top = '';
+  // Dock buttons float above the nav bar, so lift the pointer to sit just
+  // over the button it names; nav tabs keep the stylesheet's resting height.
+  el.style.bottom = dockTarget ? (window.innerHeight - rect.top + 4) + 'px' : '';
   const label = $('tutorialNavPointerText');
   if (label) label.textContent = target === 'quests' ? 'A quest awaits!' : 'To the Academy!';
   el.classList.add('show');
@@ -33747,6 +33917,9 @@ document.querySelectorAll('[data-game-route]').forEach(control => {
 });
 
 document.querySelector('[data-quick-destination="kitchen"]')?.addEventListener('click', openKitchenHudShortcut);
+document.querySelector('[data-quick-destination="training"]')?.addEventListener('click', openTrainingHub);
+document.getElementById('trainingHubClose')?.addEventListener('click', closeTrainingHub);
+document.getElementById('trainingHubModal')?.addEventListener('click', (e) => { if (e.target === e.currentTarget) closeTrainingHub(); });
 
 // ============================================================================
 // DEMO DATA (for testing — adds sample birds if flock is empty)
