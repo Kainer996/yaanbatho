@@ -121,8 +121,10 @@ def test_reduced_motion_gets_a_still_scene():
 def test_the_3d_stage_never_steals_2d_taps():
     # Both stages live in one wrapper; only the visible one may take input.
     assert 'id="academyStage3D"' in HTML and "hidden>" in HTML
+    # Since hold-to-steer-v251 the stage lets vertical swipes scroll the page;
+    # the hold gate (touch_steer_core.js) guards the camera instead.
     rule = re.search(r"\.academy-stage-3d[^{]*\{([^}]*)\}", HTML)
-    assert rule and "touch-action:none" in rule.group(1).replace(" ", "")
+    assert rule and "touch-action:pan-y" in rule.group(1).replace(" ", "")
 
 
 # ---- the world itself --------------------------------------------------------

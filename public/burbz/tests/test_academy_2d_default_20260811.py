@@ -12,6 +12,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-2d-default-v250-20260811"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
+CURRENT_BUILD = "hold-to-steer-v251-20260811"
 
 
 def test_the_academy_defaults_to_the_painted_2d_tree():
@@ -29,7 +30,8 @@ def test_3d_is_still_one_tap_away():
 
 
 def test_release_is_versioned():
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
