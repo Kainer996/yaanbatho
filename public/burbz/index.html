@@ -2646,6 +2646,20 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .settings-feedback:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
 .settings-feedback .settings-label { color: var(--accent2); font-size: 15px; }
 .settings-feedback-copy { color: var(--text3); font-size: 12px; margin-top: 2px; }
+.settings-inbox { border-color: rgba(214,168,79,.34); background: linear-gradient(135deg, rgba(214,168,79,.12), rgba(79,209,197,.06)); }
+.settings-inbox .settings-label { color: var(--accent); }
+.inbox-bar { display:flex; align-items:center; gap:10px; margin:8px 0 10px; font-size:12px; color:var(--text3); }
+.inbox-bar label { display:flex; align-items:center; gap:5px; cursor:pointer; }
+.inbox-bar button { min-height:32px; padding:5px 11px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.07); color:inherit; font:700 12px 'Rajdhani',sans-serif; }
+.inbox-bar button:last-child { margin-left:auto; }
+.inbox-card { border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.05); padding:11px 12px; margin-bottom:9px; text-align:left; }
+.inbox-card.done { opacity:.55; }
+.inbox-msg { font-size:14px; white-space:pre-wrap; word-break:break-word; }
+.inbox-meta { margin-top:6px; font-size:12px; color:var(--text3); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.inbox-chip { padding:2px 8px; border-radius:999px; border:1px solid rgba(214,168,79,.4); background:rgba(214,168,79,.14); color:var(--accent); font:700 11px 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.03em; }
+.inbox-actions { display:flex; gap:8px; margin-top:9px; }
+.inbox-actions button { min-height:32px; padding:5px 11px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.07); color:inherit; font:700 12px 'Rajdhani',sans-serif; }
+.inbox-actions button.danger { color:#f97583; border-color:rgba(249,117,131,.35); background:rgba(249,117,131,.08); }
 .settings-toggle {
   width: 44px; height: 24px; border-radius: 12px; background: var(--bg4);
   position: relative; cursor: pointer; transition: background 0.2s ease;
@@ -4120,6 +4134,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="settings-feedback-copy">Report a bug, bird issue, or share an idea</div>
         </div>
         <span style="color: var(--accent2); font-size: 22px;">&#8250;</span>
+      </button>
+      <button type="button" class="settings-row settings-feedback settings-inbox" id="feedbackInboxBtn" aria-label="Open the feedback inbox and read what players sent">
+        <div>
+          <div class="settings-label">📥 Feedback Inbox</div>
+          <div class="settings-feedback-copy">Read what players have sent</div>
+        </div>
+        <span style="color: var(--accent); font-size: 22px;">&#8250;</span>
       </button>
       <div class="settings-row">
         <div class="settings-label">Sound Effects</div>
@@ -28145,6 +28166,143 @@ async function sendBurbzFeedback(message, contact, category, website, screenshot
   }
 }
 
+// ---- Feedback inbox (admin) — read what players sent, without leaving the game
+const FEEDBACK_INBOX_TOKEN_KEY = 'burbz_admin_token'; // shared with inbox.html, so one unlock covers both
+
+function feedbackInboxEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function feedbackInboxTime(sec) {
+  if (!sec) return '';
+  try { return new Date(sec * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+}
+
+function openFeedbackInbox() {
+  const opener = document.activeElement;
+  const prev = document.getElementById('feedbackInboxOverlay');
+  if (prev) prev.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'recruit-overlay';
+  overlay.id = 'feedbackInboxOverlay';
+  overlay.style.zIndex = '3600';
+  overlay.innerHTML =
+    '<div class="recruit-sheet" role="dialog" aria-modal="true" aria-labelledby="feedbackInboxTitle">' +
+      '<div class="modal-handle"></div>' +
+      '<div class="recruit-title" id="feedbackInboxTitle">📥 Feedback Inbox</div>' +
+      '<div id="feedbackInboxBody"></div>' +
+      '<button class="recruit-close" id="feedbackInboxClose" style="margin-top:12px;opacity:.7">Close</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  const body = document.getElementById('feedbackInboxBody');
+  let reports = [];
+  let showDone = false;
+  let closing = false;
+  const close = () => {
+    if (closing) return;
+    closing = true;
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.remove();
+      try { if (opener && typeof opener.focus === 'function') opener.focus(); } catch (e) {}
+    }, 250);
+  };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.id === 'feedbackInboxClose') close(); });
+  overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
+
+  const token = () => { try { return localStorage.getItem(FEEDBACK_INBOX_TOKEN_KEY) || ''; } catch (e) { return ''; } };
+  const forgetToken = () => { try { localStorage.removeItem(FEEDBACK_INBOX_TOKEN_KEY); } catch (e) {} };
+
+  const renderGate = (msg) => {
+    body.innerHTML =
+      '<div class="recruit-copy">This is the private inbox. Enter the admin key once and this device stays unlocked.</div>' +
+      '<input id="feedbackInboxKey" type="password" autocomplete="off" placeholder="Admin key" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;margin-top:10px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit">' +
+      '<div id="feedbackInboxGateMsg" aria-live="polite" style="min-height:18px;margin-top:6px;color:#f97583;font-size:13px">' + feedbackInboxEsc(msg || '') + '</div>' +
+      '<button class="recruit-close" id="feedbackInboxUnlock" style="margin-top:8px">Unlock</button>';
+    const unlock = () => {
+      const val = (document.getElementById('feedbackInboxKey').value || '').trim();
+      if (!val) { document.getElementById('feedbackInboxGateMsg').textContent = 'Enter the key first.'; return; }
+      try { localStorage.setItem(FEEDBACK_INBOX_TOKEN_KEY, val); } catch (e) {}
+      load();
+    };
+    document.getElementById('feedbackInboxUnlock').addEventListener('click', unlock);
+    document.getElementById('feedbackInboxKey').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+    setTimeout(() => { try { document.getElementById('feedbackInboxKey').focus(); } catch (e) {} }, 120);
+  };
+
+  const act = async (id, action) => {
+    if (action === 'delete' && !confirm('Delete this message for good?')) return;
+    try {
+      const res = await fetch('api/admin/reports/' + encodeURIComponent(id), {
+        method: 'POST',
+        headers: { 'X-Burbz-Admin': token(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      if (!res.ok) throw new Error('http ' + res.status);
+      load();
+    } catch (e) { showToast('That did not work — try again.'); }
+  };
+
+  const renderList = () => {
+    const rows = reports
+      .filter(r => r.type === 'feedback')
+      .filter(r => showDone || r.status !== 'resolved')
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const birdCount = reports.filter(r => r.type === 'new_bird' && r.status !== 'resolved').length;
+    let html =
+      '<div class="inbox-bar">' +
+        '<button type="button" id="feedbackInboxRefresh">↻ Refresh</button>' +
+        '<label><input type="checkbox" id="feedbackInboxShowDone"' + (showDone ? ' checked' : '') + '> Show done</label>' +
+        '<button type="button" id="feedbackInboxLock">Lock</button>' +
+      '</div>';
+    if (!rows.length) {
+      html += '<div class="recruit-copy" style="text-align:center;padding:24px 8px">' +
+        (showDone ? '💬 No feedback yet. When a player sends some, it lands here.' : '💬 Nothing new — all caught up.') + '</div>';
+    } else {
+      html += rows.map(r => {
+        const who = (r.reporter && (r.reporter.name || r.reporter.email)) || r.contact || 'Anonymous';
+        const cat = r.category ? '<span class="inbox-chip">' + feedbackInboxEsc(r.category) + '</span>' : '';
+        const done = r.status === 'resolved';
+        return '<div class="inbox-card' + (done ? ' done' : '') + '">' +
+          '<div class="inbox-msg">' + feedbackInboxEsc(r.message || '') + '</div>' +
+          '<div class="inbox-meta">' + cat + '<span>' + feedbackInboxEsc(who) + ' · ' + feedbackInboxTime(r.createdAt) + (done ? ' · ✓ done' : '') + '</span></div>' +
+          '<div class="inbox-actions">' +
+            '<button type="button" data-inbox-act="' + (done ? 'reopen' : 'resolve') + '" data-inbox-id="' + feedbackInboxEsc(r.id) + '">' + (done ? 'Reopen' : '✓ Done') + '</button>' +
+            '<button type="button" class="danger" data-inbox-act="delete" data-inbox-id="' + feedbackInboxEsc(r.id) + '">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    if (birdCount) {
+      html += '<div class="recruit-copy" style="margin-top:10px">🐦 ' + birdCount + ' new-bird report' + (birdCount === 1 ? '' : 's') + ' waiting — <a href="inbox.html" target="_blank" rel="noopener" style="color:var(--accent2)">open the full inbox</a>.</div>';
+    }
+    body.innerHTML = html;
+    document.getElementById('feedbackInboxRefresh').addEventListener('click', load);
+    document.getElementById('feedbackInboxShowDone').addEventListener('change', (e) => { showDone = !!e.target.checked; renderList(); });
+    document.getElementById('feedbackInboxLock').addEventListener('click', () => { forgetToken(); renderGate('Locked. This device has forgotten the key.'); });
+    body.querySelectorAll('[data-inbox-act]').forEach(btn => btn.addEventListener('click', () => act(btn.dataset.inboxId, btn.dataset.inboxAct)));
+  };
+
+  const load = async () => {
+    if (!token()) { renderGate(''); return; }
+    body.innerHTML = '<div class="recruit-copy" style="text-align:center;padding:24px 8px">Fetching the inbox…</div>';
+    try {
+      const res = await fetch('api/admin/reports', { headers: { 'X-Burbz-Admin': token() } });
+      if (res.status === 401) { forgetToken(); renderGate('That key was rejected. Try again.'); return; }
+      if (!res.ok) throw new Error('http ' + res.status);
+      const data = await res.json();
+      reports = (data && data.reports) || [];
+      renderList();
+    } catch (e) {
+      body.innerHTML =
+        '<div class="recruit-copy" style="text-align:center;padding:24px 8px">Could not reach the inbox. Check your connection and try again.</div>' +
+        '<button class="recruit-close" id="feedbackInboxRetry" style="margin-top:8px">Try again</button>';
+      document.getElementById('feedbackInboxRetry').addEventListener('click', load);
+    }
+  };
+
+  load();
+  requestAnimationFrame(() => overlay.classList.add('show'));
+}
+
 // ============================================================================
 // INVENTORY
 // ============================================================================
@@ -33031,7 +33189,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'citizen-workers-timber-homes-v253-20260812';
+const BURBZ_BUILD = 'feedback-inbox-v254-20260812';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -33814,6 +33972,7 @@ $('replayTutorialBtn')?.addEventListener('keydown', event => {
   startMerlinTutorial({ full:true, resume:false });
 });
 $('sendFeedbackBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackPrompt(); });
+$('feedbackInboxBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackInbox(); });
 
 $('settingsBtn').addEventListener('click', () => {
   $('settingsModal').classList.add('show');

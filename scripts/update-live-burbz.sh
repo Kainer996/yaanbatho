@@ -108,6 +108,7 @@ FILES=(
   "assets/audio/ATTRIBUTION.md"
   "audio-credits.html"
   "privacy.html"
+  "inbox.html"
   "action_badge_core.js"
   "merlin_companion_core.js"
   "uk_bird_expansion_50.js"
