@@ -1,6 +1,6 @@
 """The game follows the real night sky, and a night open lands on a dark ear.
 
-night-owl-dark-mode-v255-20260813: night_sky_core.js computes true sunrise and
+night-owl-dark-mode-v257-20260813: night_sky_core.js computes true sunrise and
 sunset from the calendar date and the player's last known position. While the
 sun is down, the whole game dims under the night veil and the Sound scan turns
 owl-dark. Opening the game at night lands straight on that dark Sound scan —
@@ -16,8 +16,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "night_sky_core.js"
 
-CURRENT_BUILD = "night-owl-dark-mode-v255-20260813"
-PREVIOUS_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
+CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
+PREVIOUS_RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
 
 
 def run_core(driver: str):
@@ -103,7 +103,7 @@ console.log(JSON.stringify({
 def test_the_game_wires_the_night_watch_and_the_owl_dark_open():
     html = HTML.read_text(encoding="utf-8")
     # The core loads with the release's own version marker.
-    assert 'src="night_sky_core.js?v=night-owl-dark-mode-v255-20260813"' in html
+    assert 'src="night_sky_core.js?v=night-owl-dark-mode-v257-20260813"' in html
     # The player's saved home fix feeds the decision, live position second.
     lat_lon = html[html.index("function burbzNightLatLon"):html.index("function burbzNightDecisionNow")]
     assert "gameState.lastKnownHome" in lat_lon
@@ -142,4 +142,4 @@ def test_release_is_versioned_and_cache_lineage_kept():
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert CURRENT_BUILD in cache_line  # this release's own segment
-    assert "./night_sky_core.js?v=night-owl-dark-mode-v255-20260813" in sw  # precached
+    assert "./night_sky_core.js?v=night-owl-dark-mode-v257-20260813" in sw  # precached

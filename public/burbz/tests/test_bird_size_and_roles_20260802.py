@@ -21,9 +21,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-ROLE_CORE_PIN = "empire-clarity-v205-20260803"
-SIZE_CORE_PIN = "forge-satchels-v220-20260804"
-CURRENT_BUILD = "night-owl-dark-mode-v255-20260813"
+ROLE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
+SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
+CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
 
 
 def run_node(source: str) -> dict:
@@ -170,7 +170,7 @@ def test_generated_stats_make_the_eagle_beat_the_goldcrest_on_every_physical_axi
     for key in ("score", "hp", "atk", "def", "power", "carry"):
         values = [bird[key] for bird in order]
         assert values == sorted(values), f"{key} must rise with size: {values}"
-    assert [b["size"] for b in order] == ["tiny", "small", "medium", "giant"]
+    assert [b["size"] for b in order] == ["tiny", "small", "large", "giant"]
     # Magic remains the small bird's edge — but only an edge: it is scaled by
     # size too, so weight still wins a straight fight.
     assert crest["mag"] > eagle["mag"]
@@ -182,7 +182,7 @@ def test_generated_stats_make_the_eagle_beat_the_goldcrest_on_every_physical_axi
 
 def test_every_companion_is_re_derived_so_old_saves_get_the_size_rule():
     html = HTML.read_text(encoding="utf-8")
-    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v3-size-20260802';" in html
+    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';" in html
     # Size belongs to the species, so migration re-reads it from the profile
     # rather than trusting whatever an older save wrote.
     assert "bird.sizeScore = base.sizeScore;" in html

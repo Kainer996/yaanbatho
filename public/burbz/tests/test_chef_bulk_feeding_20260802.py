@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "night-owl-dark-mode-v255-20260813"
+RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
+CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

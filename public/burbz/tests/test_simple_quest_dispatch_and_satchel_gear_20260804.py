@@ -136,7 +136,7 @@ def test_host_applies_and_displays_equipped_satchel_capacity():
 
 
 def test_satchel_release_assets_are_versioned_for_installed_pwa():
-    size_version = "forge-satchels-v220-20260804"
+    size_version = "raven-weight-and-wit-v255-20260812"
     loot_version = "conquest-world-levels-v248-20260811"
     assert f"bird_size_core.js?v={size_version}" in HTML
     assert f"loot_crafting_core.js?v={loot_version}" in HTML

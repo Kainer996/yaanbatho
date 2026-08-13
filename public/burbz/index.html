@@ -4442,15 +4442,15 @@ body.burbz-night #screen-scan:not(.camera-mode) .owl-night-note { display:block;
 <script src="bird_sleep_core.js?v=sleep-retired-v238-20260809"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
-<script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
+<script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
+<script src="bird_roles_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="battle_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
-<script src="night_sky_core.js?v=night-owl-dark-mode-v255-20260813"></script>
+<script src="night_sky_core.js?v=night-owl-dark-mode-v257-20260813"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -10731,9 +10731,17 @@ function closeBirdInfo() {
 function renderBirdSizePanel(bird) {
   const size = birdSizeSummary(bird);
   if (!size) return '';
-  const massLine = bird && Number(bird.massG) > 0
-    ? 'about ' + (Number(bird.massG) >= 1000 ? (Number(bird.massG) / 1000).toFixed(1) + ' kg' : Math.round(Number(bird.massG)) + ' g') + ' (measured, AVONET)'
+  const grams = Number(bird && bird.massG);
+  const gramsLabel = grams >= 1000 ? (grams / 1000).toFixed(1) + ' kg' : Math.round(grams) + ' g';
+  const massLine = grams > 0
+    ? 'about ' + gramsLabel + (bird.sizeSource === 'mass' ? ' (measured, AVONET)' : ' (field guide weight)')
     : 'weight class read from its field biology';
+  // Weight and wit: the same size that wins battles costs at the governor's desk.
+  const rolesCore = birdRolesCore();
+  const wit = rolesCore && typeof rolesCore.governanceWitFactor === 'function' ? rolesCore.governanceWitFactor(bird && bird.sizeScore) : 1;
+  const witPct = Math.round((wit - 1) * 100);
+  const witChip = witPct === 0 ? '' :
+    `<span class="bird-size-chip${witPct < 0 ? ' is-weak' : ''}">🏛️ ${witPct > 0 ? '+' : ''}${witPct}% governing</span>`;
   return `
     <div class="bird-info-section bird-size-panel">
       <div class="bird-info-section-title">${size.icon} Size &amp; carrying</div>
@@ -10741,8 +10749,9 @@ function renderBirdSizePanel(bird) {
         <span class="bird-size-chip">${escapeHTML(size.label)}</span>
         <span class="bird-size-chip">🧺 carries ${size.capacity} load${size.capacity === 1 ? '' : 's'}</span>
         <span class="bird-size-chip${size.battlePct < 0 ? ' is-weak' : ''}">⚔️ ${escapeHTML(size.battleLabel)}</span>
+        ${witChip}
       </div>
-      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home from expeditions and hit harder in battle; smaller birds carry less and fight weaker — ${escapeHTML(massLine)}.</div>
+      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home and hit harder in battle; the small charmers make the better stewards and wardens — ${escapeHTML(massLine)}.</div>
     </div>`;
 }
 
@@ -11215,9 +11224,10 @@ function generateBirdStats(speciesName, basePower, rarity) {
   }
 }
 
-// v3 re-derives every companion so the size rule (bigger = stronger, smaller =
-// weaker) reaches birds recruited before it existed.
-const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v3-size-20260802';
+// v4 re-derives every companion so the field-guide weights land (a Raven is
+// twice a Carrion Crow, and its size score, class, mass and carrying all say
+// so now) — reaching birds recruited under the old stat-guessed sizes.
+const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';
 
 function migrateBirdToBiologyStats(bird) {
   if (!bird || bird.biologyStatsVersion === BIRD_BIOLOGY_STATS_VERSION) return bird;
@@ -33066,7 +33076,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'night-owl-dark-mode-v255-20260813';
+const BURBZ_BUILD = 'night-owl-dark-mode-v257-20260813';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "night-owl-dark-mode-v255-20260813"
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
+CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -186,5 +186,4 @@ def test_release_is_versioned_and_cache_lineage_kept():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert OWN_RELEASE_PIN in cache_line  # this feature's own marker survives
-    assert CURRENT_BUILD in cache_line  # this release's own segment
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
