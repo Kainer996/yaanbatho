@@ -1,6 +1,6 @@
 """The settings menu reads the Burbz inbox.
 
-feedback-inbox-v258-20260813 (renumbered from v254: raven v255 and night
+feedback-menu-v259-20260813 (renumbered from v254: raven v255 and night
 mode v257 landed on main first): Send Feedback gains a sibling — a Feedback
 Inbox row in Settings. It opens an in-game reader that unlocks with the
 admin key (the same key and localStorage slot inbox.html uses), lists every
@@ -15,8 +15,8 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 INBOX = (ROOT / "inbox.html").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-OWN_RELEASE_PIN = "feedback-inbox-v258-20260813"
-CURRENT_BUILD = "feedback-inbox-v258-20260813"
+OWN_RELEASE_PIN = "feedback-menu-v259-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 
 def test_settings_has_the_inbox_row_next_to_send_feedback():
