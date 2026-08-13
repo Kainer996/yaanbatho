@@ -32,6 +32,7 @@ def build_harness() -> str:
             "villageConstructionFor",
             "ensureVillageEconomy",
             "villageBuildingLevel",
+            "villageBuildingTier",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "empireBuildStructure",

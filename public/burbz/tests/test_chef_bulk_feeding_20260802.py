@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "village-variation-v250-20260811"
+RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -139,6 +139,8 @@ global.birdHasActiveTraining = () => false;
 global.academyRoleMultiplier = () => 1;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
+global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond
+global.birdBondCore = () => null;
 global.applyPlayerXpState = n => { gameState.player.xp += n; };
 global.levelUpBird = (b, xp) => { b.xp = (b.xp || 0) + xp; };
 global.recalcBirdPower = () => {};

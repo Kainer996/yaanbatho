@@ -25,8 +25,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
-OWN_RELEASE_PIN = "village-variation-v250-20260811"
+OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 
 def run_core(expression: str):
@@ -305,10 +306,11 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     assert f'<script src="village_variation_core.js?v={OWN_RELEASE_PIN}"></script>' in html
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert sw.count(f"'./village_variation_core.js?v={OWN_RELEASE_PIN}'") == 2
     updater = UPDATER.read_text(encoding="utf-8")
     assert '"village_variation_core.js"' in updater

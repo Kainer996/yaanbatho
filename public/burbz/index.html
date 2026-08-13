@@ -562,14 +562,19 @@ svg.academy-room-bg { display:block; filter:none; }
 
 /* Secondary destinations live on the playfield like a strategy game's quick
    controls instead of squeezing every system into one crowded bottom strip. */
-.game-side-actions { position:absolute; z-index:190; top:50%; right:8px; transform:translateY(-50%); display:flex; flex-direction:column; gap:9px; pointer-events:none; }
+/* Quick-action dock: a row above the bottom nav, two buttons each side of the
+   raised Scan orb. The centre spacer keeps the orb's launch path clear. */
+.game-side-actions { position:absolute; z-index:190; bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px); left:0; right:0; display:flex; flex-direction:row; align-items:flex-end; justify-content:center; gap:9px; pointer-events:none; }
+.game-side-actions-gap { flex:0 0 auto; width:68px; }
+body[data-active-screen="battle"] .game-side-actions { display:none; }
 .game-side-action { width:54px; min-height:54px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:5px 3px 4px; border-radius:16px; border:1px solid rgba(214,168,79,.40); background:linear-gradient(145deg,rgba(31,23,11,.94),rgba(6,5,3,.93)); color:var(--text2); box-shadow:0 8px 20px rgba(0,0,0,.50),inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(8px); pointer-events:auto; }
 .game-side-action:active { transform:scale(.94); }
 .game-side-action.active { color:var(--accent); border-color:rgba(240,199,103,.72); box-shadow:0 8px 20px rgba(0,0,0,.50),0 0 18px rgba(214,168,79,.28); }
 .game-side-action-art { width:34px; height:34px; display:block; object-fit:contain; border-radius:9px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
 .game-side-action-label { max-width:48px; overflow:hidden; text-overflow:ellipsis; font-family:'Rajdhani',sans-serif; font-size:8px; line-height:1; font-weight:900; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
 .game-side-action.tutorial-alert::after { content:'!'; position:absolute; right:-3px; top:-3px; width:17px; height:17px; display:grid; place-items:center; border-radius:50%; background:#d13a2f; color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); }
-@media(max-width:380px){.game-side-actions{right:5px;gap:7px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
+@media(max-width:380px){.game-side-actions{gap:7px}.game-side-actions-gap{width:62px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
+.game-side-action-badge { position:absolute; right:-3px; top:-3px; min-width:17px; height:17px; padding:0 4px; display:grid; place-items:center; border-radius:999px; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); pointer-events:none; }
 
 /* ========== DIAGONAL DECORATIONS ========== */
 .diag-line {
@@ -1039,6 +1044,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-pip { width:7px; height:7px; border-radius:2px; transform:rotate(45deg); background:rgba(255,255,255,.12); border:1px solid rgba(240,199,103,.3); }
 .province-pip.on { background:#f0c767; box-shadow:0 0 6px rgba(240,199,103,.7); }
 .province-building-desc { font-size:9.5px; line-height:1.4; color:var(--text3); min-height:26px; }
+.province-crew { font-size:9px; line-height:1.3; color:var(--text3); }
+.province-crew.on { color:#bfe8c4; }
+.province-crew.off { color:#ffc4a0; }
 .province-build-btn { min-height:44px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
 .province-build-btn:active { transform:scale(.97); }
 .province-build-btn[disabled] { opacity:.45; }
@@ -1963,6 +1971,22 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 /* Honest odds: the garrison's level against the flock's, before the fight. */
 .rival-danger-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:-2px 0 9px; font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.05em; }
 .rival-danger-line .rdl-world { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; color:var(--text3); letter-spacing:.03em; }
+
+/* Night Hunter — the moonlit aura on a nocturnal bird while its bonus is
+   live. Rides on pick cards, quest chips, training buttons, status lines and
+   arena units alike: wherever the owl appears after dark, it glows. */
+.night-hunter-aura { position:relative; border-color:#8f8fff77 !important; box-shadow:0 0 10px #6b6bff4d, inset 0 0 14px #6b6bff26; animation:nightHunterPulse 2.6s ease-in-out infinite; }
+@keyframes nightHunterPulse {
+  0%, 100% { box-shadow:0 0 8px #6b6bff40, inset 0 0 12px #6b6bff20; }
+  50% { box-shadow:0 0 20px #9d9dff73, inset 0 0 18px #8f8fff33; }
+}
+.pk-night-chip { display:inline-block; margin-top:3px; padding:2px 8px; border-radius:999px; font-family:'Russo One',sans-serif; font-size:9px; letter-spacing:.06em; color:#d6d9ff; background:linear-gradient(135deg,#2b2b66,#171738); border:1px solid #8f8fff55; text-shadow:0 0 6px #8f8fff88; }
+.battle-night-hint { margin:8px 0 10px; padding:9px 12px; border-radius:11px; font-size:12px; line-height:1.45; color:#d6d9ff; background:linear-gradient(135deg,#23234d,#131330); border:1px solid #7d7dff44; }
+.au-night-moon { position:absolute; top:-8px; right:-5px; font-size:14px; filter:drop-shadow(0 0 6px #9d9dff); animation:nightMoonBob 3s ease-in-out infinite; z-index:3; pointer-events:none; }
+@keyframes nightMoonBob { 0%, 100% { transform:translateY(0) rotate(-8deg); } 50% { transform:translateY(-3px) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .night-hunter-aura, .au-night-moon { animation:none; }
+}
 .league-rival-row { display:flex; gap:8px; }
 .rival-card { flex:1; text-align:center; padding:8px 4px; background:var(--bg3); border-radius:10px; border:1px solid rgba(255,255,255,0.05); }
 .rival-card .rc-art { width:52px; height:52px; border-radius:10px; object-fit:cover; margin:0 auto 4px; display:block; background:var(--bg4); }
@@ -2134,6 +2158,27 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-slot .beq-item { font-size:11px; font-weight:800; color:var(--text); margin-top:1px; }
 .bird-equip-slot .beq-meta { font-size:9px; color:var(--text3); margin-top:1px; }
 .bird-equip-picker { background:var(--bg3); border:1px solid rgba(143,208,255,.3); border-radius:13px; padding:10px; margin-bottom:12px; }
+/* ---- Bird bond — favourites, hearts and the preen ritual ---- */
+.bird-equip-fav { position:absolute; top:8px; right:8px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,.45); border:1.5px solid rgba(255,255,255,.16); font-size:16px; line-height:30px; text-align:center; transition:transform .1s, border-color .15s; }
+.bird-equip-fav.on { border-color:rgba(240,110,140,.65); box-shadow:0 0 10px rgba(240,110,140,.35); }
+.bird-equip-fav:active { transform:scale(.9); }
+.bird-equip-bond { position:relative; background:linear-gradient(150deg, rgba(240,110,140,.09), rgba(0,0,0,.35)); border:1.5px solid rgba(240,110,140,.3); border-radius:14px; padding:11px 12px; margin-bottom:12px; }
+.bond-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.bond-hearts { font-size:14px; letter-spacing:2px; }
+.bond-title { font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:#f2a0b6; }
+.bond-meter { height:7px; border-radius:4px; background:rgba(0,0,0,.45); overflow:hidden; margin-top:8px; }
+.bond-meter-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#e0708c,#f2a0b6); box-shadow:0 0 8px rgba(240,110,140,.4); transition:width .4s ease; }
+.bond-meter-note { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:10px; color:var(--text3); margin-top:4px; }
+.bond-preen-btn { display:block; width:100%; margin-top:9px; padding:10px 12px; border-radius:11px; background:var(--bg3); border:1.5px solid rgba(240,110,140,.3); color:var(--text2); font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:1px; }
+.bond-preen-btn.ready { background:linear-gradient(135deg,#c95a78,#e88aa4); border-color:transparent; color:#fff; }
+.bond-preen-btn:active:not([disabled]) { transform:scale(.985); }
+.bond-preen-btn[disabled] { opacity:.6; }
+.bond-hint { font-size:9px; color:var(--text3); margin-top:7px; }
+.bond-heart-float { position:absolute; bottom:20%; font-size:18px; pointer-events:none; opacity:0; animation:bondHeartFloat 1.7s ease-out forwards; }
+@keyframes bondHeartFloat { 0%{ opacity:0; transform:translateY(6px) scale(.6); } 18%{ opacity:1; } 100%{ opacity:0; transform:translateY(-58px) scale(1.15); } }
+.card-fav-heart { position:absolute; top:27px; right:7px; z-index:3; font-size:15px; filter:drop-shadow(0 1px 3px rgba(0,0,0,.6)); animation:favHeartPop .3s ease; }
+@keyframes favHeartPop { 0%{ transform:scale(.4); } 70%{ transform:scale(1.2); } 100%{ transform:scale(1); } }
+.card-bond-hearts { font-size:9px; letter-spacing:1px; line-height:1; margin:1px 0 2px; }
 .pk-equip { position:absolute; top:5px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); border:1px solid rgba(214,168,79,.5); font-size:12px; line-height:20px; text-align:center; z-index:2; }
 .forge-recipe-group { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--accent2); font-family:'Russo One', sans-serif; margin:14px 0 8px; }
 /* The forge upgrade desk — the hearth's level and the price of the next one. */
@@ -2597,6 +2642,34 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   margin: 0 auto 16px;
 }
 .modal-title { font-family: 'Russo One', sans-serif; font-size: 18px; margin-bottom: 16px; }
+/* Training Hub sheet: every training room at a glance */
+.training-hub-sheet { max-height: 78vh; }
+.training-hub-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.training-hub-head .modal-title { margin-bottom: 10px; }
+.training-hub-close { padding:6px 14px; border-radius:10px; border:1px solid rgba(214,168,79,.4); background:rgba(31,23,11,.9); color:var(--text2); font:700 12px 'Rajdhani',sans-serif; text-transform:uppercase; }
+.training-hub-intro { font-size:12px; color:var(--text3); margin-bottom:12px; line-height:1.45; }
+.training-hub-room { width:100%; text-align:left; color:inherit; font:inherit; display:block; border:1px solid rgba(214,168,79,.26); border-radius:14px; background:linear-gradient(145deg,rgba(31,23,11,.85),rgba(10,8,5,.9)); padding:10px 12px; margin-bottom:10px; }
+.training-hub-room:active { transform:scale(.985); }
+.training-hub-room.locked { opacity:.62; }
+.training-hub-room-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+.training-hub-room-name { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.03em; }
+.training-hub-room-state { font:700 10px 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.05em; padding:3px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.14); color:var(--text3); white-space:nowrap; }
+.training-hub-room-state.busy { color:#f0c767; border-color:rgba(240,199,103,.5); }
+.training-hub-room-state.ready { color:#7ee0a3; border-color:rgba(126,224,163,.5); }
+.training-hub-room-state.empty { color:var(--text3); }
+.training-hub-room-state.locked { color:#ff9a8d; border-color:rgba(255,154,141,.4); }
+.training-hub-bird { display:flex; align-items:center; gap:8px; margin-top:6px; font-size:12px; }
+.training-hub-bird-name { flex:0 0 auto; max-width:38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+.training-hub-bird-bar { flex:1; height:6px; border-radius:3px; background:rgba(255,255,255,.09); overflow:hidden; }
+.training-hub-bird-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#c2913a,#f0c767); }
+.training-hub-bird-pct { flex:0 0 auto; font:700 11px 'Rajdhani',sans-serif; color:var(--text3); min-width:32px; text-align:right; }
+.training-hub-bird-pct.done { color:#7ee0a3; }
+.training-hub-perch-note { margin-top:6px; font-size:11px; color:var(--text3); }
+.training-hub-empty-note { margin-top:4px; font-size:11px; color:var(--text3); font-style:italic; }
+.training-hub-section-title { font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.04em; margin:14px 0 6px; color:var(--text2); }
+.training-hub-idle { display:flex; flex-wrap:wrap; gap:6px; }
+.training-hub-idle-chip { font:700 11px 'Rajdhani',sans-serif; padding:4px 9px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:var(--text2); }
+.training-hub-cta { display:block; width:100%; margin-top:12px; padding:12px; border-radius:12px; border:none; background:linear-gradient(150deg,#f4d485,#c2913a 58%,#96691f); color:#241a08; font:900 13px 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.05em; }
 .settings-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -2610,6 +2683,20 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .settings-feedback:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
 .settings-feedback .settings-label { color: var(--accent2); font-size: 15px; }
 .settings-feedback-copy { color: var(--text3); font-size: 12px; margin-top: 2px; }
+.settings-inbox { border-color: rgba(214,168,79,.34); background: linear-gradient(135deg, rgba(214,168,79,.12), rgba(79,209,197,.06)); }
+.settings-inbox .settings-label { color: var(--accent); }
+.inbox-bar { display:flex; align-items:center; gap:10px; margin:8px 0 10px; font-size:12px; color:var(--text3); }
+.inbox-bar label { display:flex; align-items:center; gap:5px; cursor:pointer; }
+.inbox-bar button { min-height:32px; padding:5px 11px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.07); color:inherit; font:700 12px 'Rajdhani',sans-serif; }
+.inbox-bar button:last-child { margin-left:auto; }
+.inbox-card { border:1px solid rgba(255,255,255,.12); border-radius:12px; background:rgba(255,255,255,.05); padding:11px 12px; margin-bottom:9px; text-align:left; }
+.inbox-card.done { opacity:.55; }
+.inbox-msg { font-size:14px; white-space:pre-wrap; word-break:break-word; }
+.inbox-meta { margin-top:6px; font-size:12px; color:var(--text3); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.inbox-chip { padding:2px 8px; border-radius:999px; border:1px solid rgba(214,168,79,.4); background:rgba(214,168,79,.14); color:var(--accent); font:700 11px 'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:.03em; }
+.inbox-actions { display:flex; gap:8px; margin-top:9px; }
+.inbox-actions button { min-height:32px; padding:5px 11px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.07); color:inherit; font:700 12px 'Rajdhani',sans-serif; }
+.inbox-actions button.danger { color:#f97583; border-color:rgba(249,117,131,.35); background:rgba(249,117,131,.08); }
 .settings-toggle {
   width: 44px; height: 24px; border-radius: 12px; background: var(--bg4);
   position: relative; cursor: pointer; transition: background 0.2s ease;
@@ -2894,7 +2981,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 
 /* ---- The 3D Academy: the same tree, modelled ---------------------------- */
 .academy-stage-wrap { position:relative; }
-.academy-stage-3d { position:relative; margin:0 10px 14px; height:clamp(420px, 72vh, 680px); border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:#0a0f1c; box-shadow:inset 0 -90px 120px rgba(0,0,0,.35), 0 18px 44px rgba(0,0,0,.42); touch-action:none; }
+.academy-stage-3d { position:relative; margin:0 10px 14px; height:clamp(420px, 72vh, 680px); border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:#0a0f1c; box-shadow:inset 0 -90px 120px rgba(0,0,0,.35), 0 18px 44px rgba(0,0,0,.42); touch-action:pan-y; }
 .academy-stage-3d canvas { display:block; width:100%; height:100%; }
 .academy-view-toggle { position:absolute; right:20px; top:12px; z-index:20; min-height:36px; padding:0 12px; border-radius:12px; background:rgba(8,7,5,.72); border:1px solid rgba(214,168,79,.42); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; backdrop-filter:blur(8px); }
 .academy-view-toggle:active { transform:scale(.96); }
@@ -3129,8 +3216,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
    tapped, plus a red attention dot on the tab itself. */
 .tutorial-nav-pointer { position:fixed; z-index:1200; bottom:calc(var(--nav-height) + 10px + var(--safe-bottom)); left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:2px; pointer-events:none; }
 .tutorial-nav-pointer.show { display:flex; }
-.tutorial-nav-pointer.side-target { bottom:auto; transform:translate(-100%,-50%); flex-direction:row; gap:5px; }
-.tutorial-nav-pointer.side-target .tnp-arrow { transform:rotate(-90deg); animation:none; }
+/* Quick-dock targets sit above the nav now, so the pointer keeps its
+   arrow-down column shape and simply floats higher (inline bottom). */
 .tutorial-nav-pointer .tnp-text { background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:10px; padding:3px 9px; font:800 11px/1.3 'Rajdhani',sans-serif; letter-spacing:.4px; box-shadow:0 6px 18px rgba(0,0,0,.5); white-space:nowrap; }
 .tutorial-nav-pointer .tnp-arrow { font-size:24px; line-height:1; color:var(--accent); text-shadow:0 0 10px rgba(240,199,103,.85); animation:tutorialArrowBob 1s ease-in-out infinite; }
 @keyframes tutorialArrowBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(7px); } }
@@ -3198,7 +3285,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .bird-info-fact { font-size: 12px; color: var(--accent); margin-top: 8px; padding: 8px 10px; background: rgba(214,168,79,0.07); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0; line-height: 1.5; }
 /* ========== VILLAGE (medieval 3D hub) ========== */
 .village-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 10px; line-height: 1.5; }
-.village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: none; }
+.village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: pan-y; }
+/* A held finger has grabbed the camera — show the golden grip. */
+.village-stage.steering, .academy-stage-3d.steering { outline: 2px solid rgba(240,199,103,.55); outline-offset: -2px; }
 .village-stage canvas { display: block; width: 100%; height: 100%; }
 .village-stage:has(canvas)::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(5,3,12,0.38) 100%); }
 .village-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text3); font-size: 12.5px; letter-spacing: 0.06em; }
@@ -3462,6 +3551,36 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .bat-secret-close:active { background:rgba(147,112,255,.3); }
 .profile-badge.secret.locked .profile-badge-icon { filter:grayscale(1); }
 .profile-badge.earned[data-badge="nightwing_secret"] { cursor:pointer; border-color:#9370ff; box-shadow:0 0 12px rgba(147,112,255,.4); }
+
+/* NIGHT MODE — when the sun is truly down where the player stands, the whole
+   game dims under a veil, and the Sound scan turns owl-dark: near-black, dim
+   amber text, no bright art. Built for a player standing under real owls. */
+#nightVeil { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:2147483000; transition:opacity 1.4s ease; }
+body.burbz-night #nightVeil { opacity:.45; }
+body.burbz-night { background:#000; }
+body.burbz-night .particles, body.burbz-night .speed-lines { display:none; }
+/* The game's own chrome banks its fires too: header and nav drop to embers. */
+body.burbz-night .header { filter:brightness(.5) saturate(.7); }
+body.burbz-night .bottom-nav, body.burbz-night .game-side-actions { filter:brightness(.45) saturate(.6); }
+/* The owl-dark listening screen: Sound mode is #screen-scan without .camera-mode. */
+body.burbz-night #screen-scan:not(.camera-mode) { background:#020204; }
+body.burbz-night #screen-scan:not(.camera-mode) .screen-title { color:#6b5325; text-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-mode-toggle { opacity:.4; }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-stage { background:transparent; border-color:rgba(122,96,48,.25); box-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-art { opacity:.14; filter:grayscale(.5) brightness(.55); }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-wand-tip { opacity:.25; }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-kicker,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-status,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-activity,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-privacy { color:#8a6a35; text-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-waveform { opacity:.35; }
+body.burbz-night #screen-scan:not(.camera-mode) .sound-session-shelf,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-data-note,
+body.burbz-night #screen-scan:not(.camera-mode) .scan-result { background:rgba(8,7,4,.9); border-color:rgba(122,96,48,.22); color:#8a6a35; box-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-btn { background:#0c0a05; border:1px solid rgba(138,106,53,.5); color:#a8843f; box-shadow:none; text-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-btn.recording { background:#120d05; color:#c49a4a; }
+.owl-night-note { display:none; margin:8px auto 0; max-width:340px; padding:9px 12px; border-radius:12px; border:1px solid rgba(138,106,53,.35); background:rgba(10,8,4,.85); color:#a8843f; font-size:12px; line-height:1.5; text-align:center; }
+body.burbz-night #screen-scan:not(.camera-mode) .owl-night-note { display:block; }
 </style>
 </head>
 <body>
@@ -3511,9 +3630,14 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <img class="game-side-action-art" src="assets/ui/burbz-icon-set/quests.webp" alt="">
       <span class="game-side-action-label">Quests</span>
     </button>
+    <span class="game-side-actions-gap" aria-hidden="true"></span>
     <button class="game-side-action" type="button" data-game-route data-screen="inventory" aria-label="Royal Stores">
       <img class="game-side-action-art" src="assets/ui/burbz-icon-set/inventory.webp" alt="">
       <span class="game-side-action-label">Stores</span>
+    </button>
+    <button class="game-side-action" type="button" data-quick-destination="training" aria-label="Training overview">
+      <img class="game-side-action-art" src="assets/academy-buildings-manga/training-hall.png" alt="">
+      <span class="game-side-action-label">Training</span>
     </button>
   </aside>
 
@@ -3617,6 +3741,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="sound-session-shelf-empty" id="soundSessionShelfEmpty">No birds yet — start Merlin&rsquo;s wand and every bird you discover will perch here.</div>
         </div>
         <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
+        <div class="owl-night-note" id="owlNightNote">🌙 Night listening. The screen stays dark so you never startle an owl. Tap the button and Merlin listens by sound alone.</div>
         <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
           <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
@@ -3727,7 +3852,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- QUESTS SCREEN -->
     <!-- ACADEMY SCREEN -->
     <div class="screen" id="screen-academy">
-      <div class="screen-title">BURB ACADEMY</div>
+      <div class="screen-title">ACADEMY</div>
       <!-- Two Academies, one screen: the painted 2D tree and the modelled 3D
            one. The toggle switches between them and the choice is remembered;
            if 3D cannot start on this device we fall back to 2D by itself. -->
@@ -3762,10 +3887,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           </div>
 
         </div>
-        <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — drag to look around, tap a building to go inside" hidden></div>
+        <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — hold, then drag to look around, tap a building to go inside" hidden></div>
         <button class="academy-tree-light-toggle" id="academyTreeLightBtn" type="button" aria-pressed="false" onclick="toggleAcademyTreeLights()" hidden>✨ Light the tree</button>
         <button class="academy-view-toggle" id="academyViewToggle" type="button" onclick="toggleAcademyView()">🌳 3D</button>
-        <div class="academy-3d-hint" id="academy3dHint" hidden>Drag to look around · pinch to zoom · tap a building</div>
+        <div class="academy-3d-hint" id="academy3dHint" hidden>Hold, then drag to look around · pinch to zoom · tap a building</div>
       </div>
 
       <div id="academyBuildPanel"></div>
@@ -4054,6 +4179,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
 
+  <!-- Training Hub: pop-up overview of every room that trains birds -->
+  <div class="modal-overlay" id="trainingHubModal" role="dialog" aria-modal="true" aria-label="Training overview">
+    <div class="modal-sheet training-hub-sheet">
+      <div class="modal-handle"></div>
+      <div class="training-hub-head">
+        <div class="modal-title">🏋️ Training</div>
+        <button class="training-hub-close" id="trainingHubClose">Close</button>
+      </div>
+      <div id="trainingHubBody"></div>
+    </div>
+  </div>
+
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-sheet">
@@ -4065,6 +4202,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="settings-feedback-copy">Report a bug, bird issue, or share an idea</div>
         </div>
         <span style="color: var(--accent2); font-size: 22px;">&#8250;</span>
+      </button>
+      <button type="button" class="settings-row settings-feedback settings-inbox" id="feedbackInboxBtn" aria-label="Open the feedback inbox and read what players sent">
+        <div>
+          <div class="settings-label">📥 Feedback Inbox</div>
+          <div class="settings-feedback-copy">Read what players have sent</div>
+        </div>
+        <span style="color: var(--accent); font-size: 22px;">&#8250;</span>
       </button>
       <div class="settings-row">
         <div class="settings-label">Sound Effects</div>
@@ -4339,30 +4483,36 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <div class="scan-encounter-stack" id="scanEncounterStack" aria-live="polite" aria-label="Birds heard while listening"></div>
 
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Night veil: dims the whole game while the sun is down outside -->
+  <div id="nightVeil" aria-hidden="true"></div>
 </div>
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=living-canopy-v236-20260806"></script>
+<script src="academy_treehouse_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
-<script src="academy_3d_core.js?v=academy-3d-tree-glow-v235-20260806"></script>
+<script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
+<script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
-<script src="bird_sleep_core.js?v=sleep-retired-v238-20260809"></script>
+<script src="bird_sleep_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="bird_size_core.js?v=forge-satchels-v220-20260804"></script>
-<script src="bird_roles_core.js?v=empire-clarity-v205-20260803"></script>
-<script src="battle_core.js?v=conquest-world-levels-v248-20260811"></script>
+<script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
+<script src="bird_roles_core.js?v=raven-weight-and-wit-v255-20260812"></script>
+<script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
+<script src="battle_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
+<script src="night_sky_core.js?v=night-owl-dark-mode-v257-20260813"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
-<script src="village_variation_core.js?v=village-variation-v250-20260811"></script>
+<script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -5438,17 +5588,31 @@ function nocturnalNightBonusFor(bird, now = Date.now()) {
   if (!core || typeof core.nocturnalNightBonus !== 'function') return null;
   return core.nocturnalNightBonus(bird, new Date(now).getHours());
 }
+// Night Wings: the battle half of the law. A nocturnal bird fighting at night
+// gets the whole NOCTURNAL_NIGHT_BATTLE stat pack; every other bird, and every
+// daylight hour, gets null and classic stats.
+function nocturnalNightBattleBoostFor(bird, now = Date.now()) {
+  const core = birdSleepCore();
+  if (!core || typeof core.nocturnalNightBattleBoost !== 'function') return null;
+  return core.nocturnalNightBattleBoost(bird, new Date(now).getHours());
+}
 function isNightRightNow(now = Date.now()) {
   const core = birdSleepCore();
   return !!(core && typeof core.isNightHour === 'function' && core.isNightHour(new Date(now).getHours()));
 }
 function academySleepStatusHTML(bird, now = Date.now()) {
   // Sleep retired: every companion is always awake and battle-ready; the line
-  // survives to advertise the Night Hunter perk on nocturnal companions.
+  // survives to advertise the Night Hunter perk on nocturnal companions —
+  // and to burn bright while the perk is actually live.
   const core = birdSleepCore();
   const nocturnal = !!(core && core.isNocturnalBird && core.isNocturnalBird(bird));
-  const copy = nocturnal ? '🌙 Nocturnal · night work earns the Night Hunter bonus' : '☀️ Awake and ready';
-  return '<div class="academy-hunger-status" data-sleeping="false">' + copy + '</div>';
+  const huntingNow = nocturnal && isNightRightNow(now);
+  const copy = huntingNow
+    ? '🌙 NIGHT HUNTER — in its element right now: 3× coins & XP, 2× timber, extra finds, 2× training gains and Night Wings in battle'
+    : nocturnal
+      ? '🌙 Nocturnal · night work earns the Night Hunter bonus — from 18:00 it pays 3× coins & XP, 2× training gains, Night Wings in battle'
+      : '☀️ Awake and ready';
+  return '<div class="academy-hunger-status' + (huntingNow ? ' night-hunter-aura' : '') + '" data-sleeping="false" data-night-hunter="' + (huntingNow ? 'active' : nocturnal ? 'waiting' : 'no') + '">' + copy + '</div>';
 }
 
 // Merlin is the one bird the Kingdom cannot afford to ground. With an empty
@@ -5714,6 +5878,7 @@ function loadState() {
   }
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
+  gameState.flock.forEach(ensureBirdBond); // Bond migration: every bird starts its friendship at New Friend
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
   // Merlin permanently replaces the old selectable walking-pet slot. Preserve
   // old care values as his starting mood, then discard the obsolete selection.
@@ -10641,9 +10806,17 @@ function closeBirdInfo() {
 function renderBirdSizePanel(bird) {
   const size = birdSizeSummary(bird);
   if (!size) return '';
-  const massLine = bird && Number(bird.massG) > 0
-    ? 'about ' + (Number(bird.massG) >= 1000 ? (Number(bird.massG) / 1000).toFixed(1) + ' kg' : Math.round(Number(bird.massG)) + ' g') + ' (measured, AVONET)'
+  const grams = Number(bird && bird.massG);
+  const gramsLabel = grams >= 1000 ? (grams / 1000).toFixed(1) + ' kg' : Math.round(grams) + ' g';
+  const massLine = grams > 0
+    ? 'about ' + gramsLabel + (bird.sizeSource === 'mass' ? ' (measured, AVONET)' : ' (field guide weight)')
     : 'weight class read from its field biology';
+  // Weight and wit: the same size that wins battles costs at the governor's desk.
+  const rolesCore = birdRolesCore();
+  const wit = rolesCore && typeof rolesCore.governanceWitFactor === 'function' ? rolesCore.governanceWitFactor(bird && bird.sizeScore) : 1;
+  const witPct = Math.round((wit - 1) * 100);
+  const witChip = witPct === 0 ? '' :
+    `<span class="bird-size-chip${witPct < 0 ? ' is-weak' : ''}">🏛️ ${witPct > 0 ? '+' : ''}${witPct}% governing</span>`;
   return `
     <div class="bird-info-section bird-size-panel">
       <div class="bird-info-section-title">${size.icon} Size &amp; carrying</div>
@@ -10651,8 +10824,9 @@ function renderBirdSizePanel(bird) {
         <span class="bird-size-chip">${escapeHTML(size.label)}</span>
         <span class="bird-size-chip">🧺 carries ${size.capacity} load${size.capacity === 1 ? '' : 's'}</span>
         <span class="bird-size-chip${size.battlePct < 0 ? ' is-weak' : ''}">⚔️ ${escapeHTML(size.battleLabel)}</span>
+        ${witChip}
       </div>
-      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home from expeditions and hit harder in battle; smaller birds carry less and fight weaker — ${escapeHTML(massLine)}.</div>
+      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home and hit harder in battle; the small charmers make the better stewards and wardens — ${escapeHTML(massLine)}.</div>
     </div>`;
 }
 
@@ -11125,9 +11299,10 @@ function generateBirdStats(speciesName, basePower, rarity) {
   }
 }
 
-// v3 re-derives every companion so the size rule (bigger = stronger, smaller =
-// weaker) reaches birds recruited before it existed.
-const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v3-size-20260802';
+// v4 re-derives every companion so the field-guide weights land (a Raven is
+// twice a Carrion Crow, and its size score, class, mass and carrying all say
+// so now) — reaching birds recruited under the old stat-guessed sizes.
+const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';
 
 function migrateBirdToBiologyStats(bird) {
   if (!bird || bird.biologyStatsVersion === BIRD_BIOLOGY_STATS_VERSION) return bird;
@@ -12525,7 +12700,9 @@ function toggleAcademyTreeLights() {
 
 function academyViewMode() {
   if (academy3dBroken) return '2d';
-  try { return localStorage.getItem(ACADEMY_VIEW_KEY) === '2d' ? '2d' : '3d'; } catch (e) { return '3d'; }
+  // The painting is the default; 3D is opt-in via the toggle. The tutorial's
+  // tap-the-tree step needs the 2D layout, and 3D taps misfire on some phones.
+  try { return localStorage.getItem(ACADEMY_VIEW_KEY) === '3d' ? '3d' : '2d'; } catch (e) { return '2d'; }
 }
 
 function academySupports3D() {
@@ -12613,7 +12790,7 @@ function toggleAcademyView() {
   try { localStorage.setItem(ACADEMY_VIEW_KEY, next); } catch (e) {}
   SFX.tap();
   applyAcademyView();
-  showToast(next === '3d' ? '🌳 The Academy in 3D — drag to look around.' : '🖼️ Back to the painted Academy.');
+  showToast(next === '3d' ? '🌳 The Academy in 3D — hold, then drag to look around.' : '🖼️ Back to the painted Academy.');
 }
 
 function academyViewPause() {
@@ -12794,7 +12971,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   else if (SFX && typeof SFX.page === 'function') SFX.page();
   else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast(quest.nightBonus
-    ? '🌙 ' + (bird.commonName || bird.species) + ' hunts by night — Night Hunter bonus: 2× coins & XP, extra finds! ' + quest.label
+    ? '🌙 ' + (bird.commonName || bird.species) + ' hunts by night — Night Hunter bonus: 3× coins & XP, 2× timber, two extra finds! ' + quest.label
     : '🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderPetCompanion();
   renderBirdExpeditions();
@@ -13224,12 +13401,13 @@ function renderQuestSendSheet() {
     const carry = birdSizeSummary(b);
     const carryNote = carry ? ' · ' + carry.icon + ' carries ' + carry.capacity : '';
     // The Night Hunter bonus rides on the chip too: at night, the owl IS the pick.
-    const nightNote = nocturnalNightBonusFor(b) ? ' · 🌙 Night Hunter 2×' : '';
+    const nightHunting = !!nocturnalNightBonusFor(b);
+    const nightNote = nightHunting ? ' · 🌙 Night Hunter 3×' : '';
     const baseNote = assignedPost ? assignedPost.role.title : away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + nightNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
-    return '<button type="button" class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
+    return '<button type="button" class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + (nightHunting && !disabled ? ' night-hunter-aura' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
       '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
@@ -13243,7 +13421,7 @@ function renderQuestSendSheet() {
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
       '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') +
-      (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: double coins and XP, extra timber and a guaranteed extra find.</span>' : '') + '</div>' +
+      (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: TRIPLE coins and XP, double timber and two guaranteed extra finds.</span>' : '') + '</div>' +
     (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-economy-note">Quick quests pay best per hour; longer quests bring home much bigger totals while you are away.</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
@@ -13320,7 +13498,7 @@ function buildQuestTimeline(q) {
   // A Night Hunter announces itself early in the log so the doubled haul below
   // reads as earned, not as a bug.
   if (q.nightBonus) {
-    events.push({ pct: 4 + Math.floor(rng() * 12), text: q.birdName + ' slips into the dark on silent wings — the night belongs to this bird, and the whole haul swells (Night Hunter bonus).', loot: '🌙' });
+    events.push({ pct: 4 + Math.floor(rng() * 12), text: q.birdName + ' slips into the dark on silent wings — the night belongs to this bird, and the whole haul swells threefold (Night Hunter bonus).', loot: '🌙' });
   }
   // Split the coin reward across a few "found coins" moments
   const totalCoins = (q.rewards && q.rewards.coins) || 0;
@@ -13880,6 +14058,7 @@ function academyFeedFood(birdId, foodKey) {
       const firstTime = !bird.academy.dietKnown;
       bird.academy.dietKnown = true;
       academyFeedTrayBirdId = null;
+      grantBirdBondXp(bird, (birdBondCore() || {}).FEED_BOND_XP || 6); // a good meal deepens the bond
       updateQuestProgress('feed_correct', 1);
       if (tx.compatibility && tx.compatibility.verdict === 'primary') updateQuestProgress('proper_meal_fed', 1);
       saveState();
@@ -13912,6 +14091,7 @@ function academyFeedFood(birdId, foodKey) {
     const firstTime = !bird.academy.dietKnown;
     bird.academy.dietKnown = true;
     academyFeedTrayBirdId = null;
+    grantBirdBondXp(bird, (birdBondCore() || {}).FEED_BOND_XP || 6); // a good meal deepens the bond
     updateQuestProgress('feed_correct', 1);
     updateQuestProgress('proper_meal_fed', 1);
     saveState();
@@ -14682,6 +14862,7 @@ function chefServeFoodToEveryEater(kind, foodId) {
           bird.academy.dietKnown = true;
           updateQuestProgress('proper_meal_fed', 1);
         }
+        grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
         updateQuestProgress('feed_correct', 1);
       }
     }
@@ -14750,6 +14931,7 @@ function chefBulkFeedSameSpecies(entry, kind, foodId, option, now) {
         bird.academy.dietKnown = true;
         updateQuestProgress('proper_meal_fed', 1);
       }
+      grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
       updateQuestProgress('feed_correct', 1);
     }
     applyPlayerXpState(reward.trainerXp);
@@ -14806,6 +14988,8 @@ function burbzFeedFood(targetKey, kind, foodId) {
           updateQuestProgress('proper_meal_fed', 1);
           if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 1200);
         }
+        grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
+        rewardBits.push('+' + reward.bondXp + ' bond');
         updateQuestProgress('feed_correct', 1);
       }
     }
@@ -15327,7 +15511,7 @@ function academyGraduationOverlay(bird) {
   div.className = 'academy-grad-overlay';
   const artHtml = birdOnlyImgHTML(bird, 'academy-grad-emoji');
   div.innerHTML = '<div class="academy-grad-panel">' +
-    '<div class="academy-grad-kicker">⭐ BURB ACADEMY ⭐</div>' +
+    '<div class="academy-grad-kicker">⭐ ACADEMY ⭐</div>' +
     '<div class="academy-grad-title">STAR PUPIL</div>' +
     '<div class="academy-grad-art">' + artHtml + '</div>' +
     '<div class="academy-grad-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
@@ -15768,7 +15952,7 @@ function startBirdTrainingSession(birdId, templateId) {
   saveState();
   SFX.tap();
   showToast(session.nightBonus
-    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 2× XP! ' + session.label
+    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 3× XP and double stat gains! ' + session.label
     : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
   renderAcademyRoomInterior();
   renderAcademy();
@@ -15859,12 +16043,17 @@ function renderTrainingHallPanel(birds, others) {
       : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => {
         const readiness = birdWorkReadiness(b, 'training');
         const hungerLabel = readiness.status && readiness.status.label ? readiness.status.label.toLowerCase() : 'fed';
-        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + hungerLabel;
-        return '<button class="training-bird-btn" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
+        // A Night Hunter's button says so: at night, the owl learns triple.
+        const nightHunting = readiness.ok && !!nocturnalNightBonusFor(b);
+        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + (nightHunting ? '🌙 Night Hunter 3×' : hungerLabel);
+        return '<button class="training-bird-btn' + (nightHunting ? ' night-hunter-aura' : '') + '" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
       }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
     return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  const nightHallHint = isNightRightNow()
+    ? '<div class="battle-night-hint">🌙 Night school is open — a nocturnal bird training now earns TRIPLE XP and DOUBLE stat gains from every drill. The owls learn while the Kingdom sleeps.</div>'
+    : '';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function trainingMasterActorHTML() {
@@ -16234,7 +16423,7 @@ function applyBurbzCameraPadding() {
     liveMap.setPadding({ top: Math.round(h * 0.44), bottom: 0, left: 0, right: 0 });
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
   if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
   if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
@@ -16277,7 +16466,7 @@ function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; t
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
-  if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':9, 'line-opacity':.18, 'line-blur':3 } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':3.2, 'line-opacity':.92, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
+  if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':18, 'line-opacity':.32, 'line-blur':4 } }); liveMap.addLayer({ id:'burbz-quest-route-casing', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':9.5, 'line-opacity':.85, 'line-dasharray':[.135, 1.482] } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':6.4, 'line-opacity':1, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: normal play stays pinned to
 // real GPS and a one-finger swipe rotates the view. A selected quest temporarily
@@ -17318,14 +17507,15 @@ function questPhotoRefFor(item) {
   if (!item) return '';
   const ref = String(item.ref || '').trim();
   if (/^[a-z][a-z-]{0,23}\/[A-Za-z0-9+.,\-]{1,80}$/.test(ref)) return ref;
-  const start = Array.isArray(item.routeStart) ? item.routeStart : (Array.isArray(item.route) && item.route[0] ? item.route[0] : null);
+  const start = Array.isArray(item.routeStart) ? item.routeStart : (Array.isArray(item.route) && item.route[0] ? item.route[0] : (Array.isArray(item.path) && item.path[0] ? item.path[0] : null));
   if (Array.isArray(start) && isFinite(start[0]) && isFinite(start[1])) return 'loc/' + Number(start[0]).toFixed(3) + ',' + Number(start[1]).toFixed(3);
   if (item.checkpoints && item.checkpoints[0] && isFinite(item.checkpoints[0].lat) && isFinite(item.checkpoints[0].lon)) return 'loc/' + Number(item.checkpoints[0].lat).toFixed(3) + ',' + Number(item.checkpoints[0].lon).toFixed(3);
   return '';
 }
 function questPhotoItem(which) {
   if (which === 'summary') return lastWalkQuestSummaryView;
-  return activeWalkingQuest();
+  // A Side Quest counts too: its charted path anchors the photos.
+  return activeWalkingQuest() || sideQuestActive();
 }
 async function fetchQuestPhotos(ref) {
   const res = await fetch('api/quests/photos?ref=' + encodeURIComponent(ref), { cache:'no-store' });
@@ -17614,6 +17804,8 @@ function ensureSideQuestState() {
   if (!gameState.sideQuest || typeof gameState.sideQuest !== 'object' || Array.isArray(gameState.sideQuest)) gameState.sideQuest = { active: null, history: [] };
   if (!Array.isArray(gameState.sideQuest.history)) gameState.sideQuest.history = [];
   if (gameState.sideQuest.active && typeof gameState.sideQuest.active !== 'object') gameState.sideQuest.active = null;
+  if (gameState.sideQuest.active && !gameState.sideQuest.active.name) gameState.sideQuest.active.name = 'Side Quest'; // older saves
+  if (!Array.isArray(gameState.sideQuest.npcLandmarks)) gameState.sideQuest.npcLandmarks = [];
   return gameState.sideQuest;
 }
 function sideQuestActive() { return ensureSideQuestState().active; }
@@ -17695,6 +17887,7 @@ function startSideQuest() {
   const { lat, lon } = liveMapLastPosition;
   sq.active = {
     id: 'sq_' + Date.now().toString(36),
+    name: 'Side Quest',
     startedAt: new Date().toISOString(),
     path: [[lat, lon, Date.now()]],
     distanceM: 0,
@@ -17788,9 +17981,12 @@ function drawSideQuestTrail() {
   if (!liveMap) return;
   try {
     if (!liveMap.getSource('burbz-side-quest-trail')) {
+      // Same dotted gold trail as the walking quest route, so every charted
+      // path in Burbz reads the same way.
       liveMap.addSource('burbz-side-quest-trail', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-      liveMap.addLayer({ id: 'burbz-side-quest-trail-glow', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#69ebc2', 'line-width': 8, 'line-opacity': .16, 'line-blur': 3 } });
-      liveMap.addLayer({ id: 'burbz-side-quest-trail-line', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#69ebc2', 'line-width': 3, 'line-opacity': .9 } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-glow', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#f0c767', 'line-width': 18, 'line-opacity': .32, 'line-blur': 4 } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-casing', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#07100c', 'line-width': 9.5, 'line-opacity': .85, 'line-dasharray': [.135, 1.482] } });
+      liveMap.addLayer({ id: 'burbz-side-quest-trail-line', type: 'line', source: 'burbz-side-quest-trail', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#f0c767', 'line-width': 6.4, 'line-opacity': 1, 'line-dasharray': [.2, 2.2] } });
     }
     liveMap.getSource('burbz-side-quest-trail').setData(sideQuestTrailGeoJSON(sideQuestActive()));
   } catch (e) {}
@@ -17820,6 +18016,41 @@ function clearSideQuestFromMap() {
   sideQuestMapMarkers = [];
   drawSideQuestTrail();
   updateWalkQuestHud();
+}
+
+// --- NPC landmarks -----------------------------------------------------------
+// A quest giver met on a Side Quest stays where you found them. Their perch
+// is saved and pinned on the live map for good, even after the quest ends.
+const SIDE_QUEST_NPC_LANDMARK_CAP = 30;
+let sideQuestNpcMarkers = [];
+function rememberSideQuestNpc(active, d) {
+  const sq = ensureSideQuestState();
+  if (sq.npcLandmarks.some(n => n.id === d.id)) return;
+  sq.npcLandmarks.push({ id: d.id, species: d.species, rarity: d.rarity || 'common', lat: d.lat, lon: d.lon, foundAt: d.foundAt || new Date().toISOString(), questId: active ? active.id : null });
+  if (sq.npcLandmarks.length > SIDE_QUEST_NPC_LANDMARK_CAP) sq.npcLandmarks.splice(0, sq.npcLandmarks.length - SIDE_QUEST_NPC_LANDMARK_CAP);
+  drawSideQuestNpcLandmarks();
+}
+function drawSideQuestNpcLandmarks() {
+  sideQuestNpcMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
+  sideQuestNpcMarkers = [];
+  if (!liveMap || !window.maplibregl) return;
+  ensureSideQuestState().npcLandmarks.forEach(n => {
+    if (!isFinite(n.lat) || !isFinite(n.lon)) return;
+    const el = document.createElement('div');
+    el.className = 'quest-marker-pin';
+    const face = document.createElement('div');
+    face.className = 'quest-marker qm-npc';
+    face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
+    el.appendChild(face);
+    el.addEventListener('click', ev => { ev.stopPropagation(); showSideQuestNpcLandmark(n.id); });
+    sideQuestNpcMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([n.lon, n.lat]).addTo(liveMap));
+  });
+}
+function showSideQuestNpcLandmark(id) {
+  const n = ensureSideQuestState().npcLandmarks.find(x => x.id === id);
+  if (!n) return;
+  const when = n.foundAt ? new Date(n.foundAt).toLocaleDateString() : 'your wander';
+  showQuestNpcDialog('Wandering quest giver', 'Good to see you again, explorer! We met right here on your Side Quest (' + when + '). My friend the ' + n.species + ' still sings about that walk. I am staying at this spot — visit any time.');
 }
 
 // Discoveries were physically reached the moment they spawned under the
@@ -17881,6 +18112,7 @@ async function sideQuestClaimDiscovery(id, opts) {
     showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
   } else {
     d.claimed = true;
+    rememberSideQuestNpc(active, d); // the quest giver keeps this perch on the map
     const added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
     addPlayerXp(15);
     SFX.levelUp();
@@ -17909,6 +18141,7 @@ function openSideQuestLogSheet() {
     (active.distanceM / 1000).toFixed(2) + ' km wandered · ' + found + ' discover' + (found === 1 ? 'y' : 'ies') + (unclaimed ? ' · ' + unclaimed + ' waiting on the map!' : '') + '</div></div></div>' +
     '<div class="quest-desc" style="line-height:1.5;">Keep the phone in your pocket and keep exploring — it will buzz and chirp when you stumble across something. Ending the quest keeps everything you found, and you can turn the wander into a real quest for others.</div>' +
     '<button class="wq-detail-start" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">🗺️ VIEW MY TRAIL</button>' +
+    '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'active\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" style="background:linear-gradient(135deg,#a78335,#74541d);" onclick="endSideQuest()">🏁 END SIDE QUEST</button></div>';
   el.classList.add('open');
 }
@@ -17934,6 +18167,7 @@ async function endSideQuest() {
     sharedDraft: false
   };
   if (typeof logDiary === 'function') logDiary('side_quest', { km: +(summary.distanceM / 1000).toFixed(2), discoveries: summary.discoveries, xp });
+  lastWalkQuestSummaryView = summary; // lets the finish sheet open the trail photo book
   sq.history.unshift(summary);
   if (sq.history.length > 40) sq.history.length = 40;
   sq.active = null;
@@ -17948,6 +18182,7 @@ async function endSideQuest() {
     '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🏁</div><div><div class="quest-board-title">Side Quest complete!</div><div class="quest-board-intro">' +
     (summary.distanceM / 1000).toFixed(2) + ' km wandered · ' + summary.discoveries + ' discover' + (summary.discoveries === 1 ? 'y' : 'ies') + ' · +' + xp + ' XP</div></div></div>' +
     '<div class="quest-desc" style="line-height:1.5;">Your whole wander is charted and saved. Turn it into a real quest so other players can walk your trail in the future?</div>' +
+    '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'summary\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" onclick="shareSideQuestDraft(\'' + summary.id + '\')">🤝 TURN INTO A QUEST FOR OTHERS</button>' +
     '<button class="wq-detail-start" style="background:rgba(255,255,255,.08);" onclick="closeWalkQuestSheet()">DONE</button></div>';
   el.classList.add('open');
@@ -19303,6 +19538,27 @@ function updateActionBadges() {
   if (!document || !document.querySelectorAll) return;
   const counts = core.computeActionBadgeCounts(normalizeActionBadgeState(Date.now()));
   core.applyActionBadges(document, counts);
+  updateTrainingDockBadge();
+}
+
+// The Training dock button opens a pop-up, not a screen, so the shared badge
+// walker never reaches it. Count finished, unclaimed drills by hand.
+function updateTrainingDockBadge() {
+  const btn = document.querySelector('[data-quick-destination="training"]');
+  if (!btn) return;
+  let ready = 0;
+  try {
+    ready = trainingHubSessions().filter(s => s.status === 'complete').length;
+  } catch (e) {}
+  let badge = btn.querySelector('.game-side-action-badge');
+  if (!ready) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'game-side-action-badge';
+    badge.setAttribute('aria-hidden', 'true');
+    btn.appendChild(badge);
+  }
+  badge.textContent = String(ready);
 }
 
 let actionBadgeUpdateQueued = false;
@@ -19333,6 +19589,7 @@ function switchScreen(name) {
   document.querySelectorAll(`[data-game-route][data-screen="${name}"]`).forEach(item => item.classList.add('active'));
 
   currentScreen = name;
+  document.body.setAttribute('data-active-screen', name);
   syncBurbzMusicForMapZoom();
   updateMerlinListeningUI();
 
@@ -19379,6 +19636,106 @@ function openKitchenHudShortcut() {
   document.querySelectorAll('[data-game-route],[data-quick-destination]').forEach(n => n.classList.remove('active'));
   document.querySelector('[data-quick-destination="kitchen"]')?.classList.add('active');
 }
+
+// ============================================================================
+// TRAINING HUB — the quick-dock pop-up. One small sheet shows every room that
+// trains birds: who is mid-drill, who is done, which perches sit empty and
+// which birds are free to send. Tap a room card to fly straight to it.
+// ============================================================================
+const TRAINING_HUB_ROOMS = ['training', 'crowbar', 'workshop', 'observatory', 'library', 'kitchen'];
+const TRAINING_HUB_ROOM_TITLES = { training:'Training Hall', crowbar:'The Crowbar', workshop:'Nest Workshop', observatory:'Moon Observatory', library:'The Library', kitchen:'Kitchen & Pantry' };
+
+function trainingHubSessions() {
+  const core = window.BurbzAcademyCore;
+  const now = Date.now();
+  return ensureBirdTrainingSessions()
+    .map(s => (core && typeof core.advanceTrainingSession === 'function') ? core.advanceTrainingSession(s, now) : s)
+    .filter(s => !['claimed', 'cancelled', 'failed'].includes(s.status));
+}
+
+function renderTrainingHub() {
+  const body = document.getElementById('trainingHubBody');
+  if (!body) return;
+  const now = Date.now();
+  const sessions = trainingHubSessions();
+  const flock = Array.isArray(gameState.flock) ? gameState.flock : [];
+  const sessionBirdIds = new Set(sessions.map(s => s.birdId));
+  const roomsHtml = TRAINING_HUB_ROOMS.map(roomId => {
+    const cfg = ACADEMY_ROOMS[roomId];
+    if (!cfg) return '';
+    const title = TRAINING_HUB_ROOM_TITLES[roomId] || cfg.label;
+    const built = isAcademyBuildingBuilt(roomId);
+    const roomSessions = sessions.filter(s => (s.room || 'training') === roomId);
+    const stationed = roomId === 'kitchen' ? [] : flock.filter(b => b && b.academy && b.academy.room === roomId && !sessionBirdIds.has(b.id));
+    const readyCount = roomSessions.filter(s => s.status === 'complete').length;
+    let stateChip;
+    if (!built) stateChip = '<span class="training-hub-room-state locked">🔒 Not built</span>';
+    else if (readyCount) stateChip = '<span class="training-hub-room-state ready">✅ ' + readyCount + ' to claim</span>';
+    else if (roomSessions.length) stateChip = '<span class="training-hub-room-state busy">🏋️ ' + roomSessions.length + ' training</span>';
+    else if (stationed.length) stateChip = '<span class="training-hub-room-state busy">' + stationed.length + ' stationed</span>';
+    else stateChip = '<span class="training-hub-room-state empty">Empty</span>';
+    const sessionRows = roomSessions.map(s => {
+      const done = s.status === 'complete';
+      const pct = Number.isFinite(s.progressPct) ? s.progressPct : 0;
+      const claim = done ? '<button class="academy-btn primary" onclick="event.stopPropagation(); trainingHubClaim(\'' + s.id + '\')">CLAIM</button>'
+        : '<span class="training-hub-bird-pct">' + pct + '%</span>';
+      return '<div class="training-hub-bird"><span class="training-hub-bird-name">' + escapeHtml(s.birdName || 'Bird') + '</span><span class="training-hub-bird-bar"><span class="training-hub-bird-fill" style="width:' + pct + '%"></span></span>' + claim + '</div>';
+    }).join('');
+    const stationedRow = stationed.length
+      ? '<div class="training-hub-perch-note">On the perch: ' + stationed.map(b => escapeHtml(birdDisplayName(b))).join(', ') + ' · ' + escapeHtml(cfg.perk || '') + '</div>'
+      : '';
+    let emptyNote = '';
+    if (!built) emptyNote = '<div class="training-hub-empty-note">Tap to open the Academy and build it.</div>';
+    else if (!roomSessions.length && !stationed.length) emptyNote = '<div class="training-hub-empty-note">' + (roomId === 'kitchen' ? 'No Pantry Gauntlet running — birds train from the Gardens.' : 'No birds here — this room is free.') + '</div>';
+    return '<div class="training-hub-room' + (built ? '' : ' locked') + '" role="button" tabindex="0" onclick="trainingHubOpenRoom(\'' + roomId + '\')">' +
+      '<div class="training-hub-room-head"><span class="training-hub-room-name">' + (cfg.icon || '🏋️') + ' ' + escapeHtml(title) + '</span>' + stateChip + '</div>' +
+      sessionRows + stationedRow + emptyNote + '</div>';
+  }).join('');
+  const idleBirds = flock.filter(b => b && b.id && !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, now).sleeping);
+  const idleShown = idleBirds.slice(0, 16);
+  const idleHtml = idleBirds.length
+    ? '<div class="training-hub-section-title">Needs training — free right now</div><div class="training-hub-idle">' +
+      idleShown.map(b => '<span class="training-hub-idle-chip">' + escapeHtml(birdDisplayName(b)) + '</span>').join('') +
+      (idleBirds.length > idleShown.length ? '<span class="training-hub-idle-chip">+' + (idleBirds.length - idleShown.length) + ' more</span>' : '') + '</div>'
+    : '<div class="training-hub-section-title">Needs training</div><div class="training-hub-empty-note">Every bird is busy — training, questing or on a post.</div>';
+  body.innerHTML = '<div class="training-hub-intro">Rooms across the Academy that grow your birds. Tap a room to visit it, or open the notice board to start a drill.</div>' +
+    roomsHtml + idleHtml +
+    '<button class="training-hub-cta" onclick="trainingHubOpenRoom(\'training\')">📋 OPEN THE NOTICE BOARD</button>';
+}
+
+function openTrainingHub() {
+  renderTrainingHub();
+  const modal = document.getElementById('trainingHubModal');
+  if (modal) modal.classList.add('show');
+  SFX.tap();
+}
+
+function closeTrainingHub() {
+  document.getElementById('trainingHubModal')?.classList.remove('show');
+}
+
+function trainingHubOpenRoom(roomId) {
+  closeTrainingHub();
+  if (!isAcademyBuildingBuilt(roomId)) {
+    academySelectedRoom = roomId;
+    academyQuestGuidanceRoom = roomId;
+    activateGameHudDestination('academy');
+    renderAcademy();
+    showToast('Build the ' + (TRAINING_HUB_ROOM_TITLES[roomId] || 'room') + ' first — it is highlighted in your Academy.');
+    return;
+  }
+  openAcademyRoom(roomId);
+}
+
+function trainingHubClaim(sessionId) {
+  claimBirdTrainingSession(sessionId);
+  renderTrainingHub();
+  queueActionBadgeUpdate();
+}
+
+// The game code lives inside one big closure, so the hub's inline onclick
+// handlers need their functions placed on window by hand.
+Object.assign(window, { openTrainingHub, closeTrainingHub, trainingHubOpenRoom, trainingHubClaim });
 
 // ============================================================================
 // RPG ECONOMY — discoveries are not the same as recruited companions
@@ -19434,6 +19791,64 @@ function renameCompanionBird(birdId) {
   // Refresh the field-guide sheet in place if it is showing this bird.
   if ($('birdInfoModal')?.classList.contains('show') && $('birdInfoContent')?.dataset.currentBirdId === String(bird.id)) openBirdInfo(bird.id);
   showToast(clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
+}
+// bird-bond-love-v256-20260812: every bird can be loved for itself. Each
+// companion carries a bond — a favourite flag, a bond level with a warm
+// title, and a preen ritual. Bond is affection only; it never touches stats.
+function birdBondCore() { return window.BurbzBirdBondCore || null; }
+function ensureBirdBond(bird) {
+  if (!bird) return null;
+  const core = birdBondCore();
+  bird.bond = core ? core.sanitizeBond(bird.bond) : (bird.bond && typeof bird.bond === 'object' ? bird.bond : { level: 1, xp: 0, favourite: false, lastPreenAt: null, preens: 0 });
+  return bird.bond;
+}
+function birdIsFavourite(bird) { return !!(bird && bird.bond && bird.bond.favourite === true); }
+function toggleFavouriteBird(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!bird) return;
+  const bond = ensureBirdBond(bird);
+  bond.favourite = !bond.favourite;
+  saveState();
+  SFX.tap();
+  vibrate(10);
+  showToast(bond.favourite ? '❤️ ' + birdDisplayName(bird) + ' is a favourite now. It leads your flock.' : '🤍 ' + birdDisplayName(bird) + ' steps back into the flock.');
+  renderBirdex();
+  if ($('birdEquipOverlay')?.classList.contains('show') && birdEquipState.birdId === birdId) renderBirdEquip();
+}
+// Quiet bond growth from everyday care. Only a bond-up speaks.
+function grantBirdBondXp(bird, amount) {
+  const core = birdBondCore();
+  if (!core || !bird) return;
+  const before = ensureBirdBond(bird).level;
+  bird.bond = core.grantBondXp(bird.bond, amount);
+  if (bird.bond.level > before) showToast('💞 Bond up! You and ' + birdDisplayName(bird) + ' are now ' + core.bondTitle(bird.bond.level) + '.');
+}
+// A quiet hearts row on the flock card — the bond at a glance.
+function cardBondHeartsHTML(bird) {
+  const core = birdBondCore();
+  if (!core || !bird || !bird.id) return '';
+  const bp = core.bondProgress(ensureBirdBond(bird));
+  return '<div class="card-bond-hearts" title="Bond: ' + bp.title + '">' + '❤️'.repeat(bp.level) + '🤍'.repeat(core.MAX_BOND_LEVEL - bp.level) + '</div>';
+}
+function preenBird(birdId) {
+  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  const core = birdBondCore();
+  if (!bird || !core) return null;
+  ensureBirdBond(bird);
+  const result = core.preen(bird.bond, Date.now());
+  if (!result.ok) {
+    showToast('🪶 ' + birdDisplayName(bird) + ' is still glowing from the last preen. Come back in ' + core.describeWait(result.remainingMs) + '.');
+    return result;
+  }
+  bird.bond = result.bond;
+  if (bird.care) bird.care.happiness = clamp((bird.care.happiness || 80) + core.PREEN_HAPPINESS, 0, 100);
+  saveState();
+  SFX.tap();
+  vibrate(15);
+  if (result.leveled) showToast('💞 Bond up! You and ' + birdDisplayName(bird) + ' are now ' + core.bondTitle(bird.bond.level) + '.');
+  else if (bird.bond.level >= core.MAX_BOND_LEVEL) showToast('🪶 You preen ' + birdDisplayName(bird) + '. It leans into your hand.');
+  else showToast('🪶 You preen ' + birdDisplayName(bird) + '. It leans into your hand. +' + core.PREEN_BOND_XP + ' bond');
+  return result;
 }
 function discoveredSpeciesRecords() { return Object.values(gameState.discoveredSpecies || {}).filter(Boolean); }
 function recruitCostForBird(bird) {
@@ -21308,22 +21723,30 @@ const EMPIRE_NEEDS = [
 
 // `produces` is what the building actually ships home each tax cycle, on top
 // of coins and timber: `materials` land in the Fletcher's Forge stock, `larder`
-// in the Kitchen stores. A province with no residents produces nothing — an
-// empty quarry is just a hole in a hill.
+// in the Kitchen stores. Yards need hands: a building with `workers` stands
+// idle — no stone, no goods, no extra coins — until a villager lives here to
+// run it. An empty quarry is just a hole in a hill.
 const QUARRY_FIRST_CUT_STONE = 10;
 // unlockLevel mirrors the Academy's mid-game curve: the survival and resource
-// basics (food, water, timber, stone) carry no gate so a fresh province can
-// always bootstrap, while the growth and prestige halls arrive with trainer
-// levels 5–10 — a liberated village grows richer as its liberator does.
+// basics (shelter, food, water, timber, stone) carry no gate so a fresh
+// province can always bootstrap, while the growth and prestige halls arrive
+// with trainer levels 5–10 — a liberated village grows richer as its liberator
+// does. The Timber Cabin is the deliberate first build: it costs no stone at
+// all, so homes — and the villagers who work every yard — come before the
+// Quarry. `tiers` renames a building as it climbs (timber first, stone later);
+// `costLevels` prices each step on its own instead of the flat ×(level+1).
+// `workPriority` orders who gets scarce hands first: food, then timber and
+// stone, then trade, then the chapel.
 const EMPIRE_BUILDINGS = [
-  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level.' },
+  { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 2, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 10, stone: 10 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The cabin rebuilt in quarried stone — houses 12 villagers and shrugs off any storm.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
   { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8,  stone: 6 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
   { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 8,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
   { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 6,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level.' },
-  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level.' },
-  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level.' }
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -21404,9 +21827,9 @@ function empireCompleteConstructions(now) {
     delete eco.construction;
     completed = true;
     levelledUp = applyPlayerXpState(12) || levelledUp;
-    // The first quarry must bootstrap the stone economy: its opening cut is
-    // enough for the first Cottage Row, while its founding crew keeps digging
-    // Stone even before permanent residents arrive.
+    // The first quarry still bootstraps the stone economy: its opening cut is
+    // enough for the first Cottage Row. After that it digs only while a
+    // villager works it — homes and residents come first.
     let firstCutStone = 0;
     if (isFirstRealmQuarry && level === 1) {
       firstCutStone = QUARRY_FIRST_CUT_STONE;
@@ -21421,7 +21844,8 @@ function empireCompleteConstructions(now) {
       movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
       eco.population += movedIn;
     }
-    notices.push({ seed: rec.seed >>> 0, text: '🏗️ ' + building.icon + ' ' + building.name + (level <= 1 ? ' finished' : ' raised to level ' + level) + ' in ' + rec.name + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
+    const doneTier = villageBuildingTier(building, level);
+    notices.push({ seed: rec.seed >>> 0, text: '🏗️ ' + doneTier.icon + ' ' + doneTier.name + (level <= 1 ? ' finished' : (building.tiers ? ' rebuilt' : ' raised to level ' + level)) + ' in ' + rec.name + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
   });
   if (!completed) return false;
   try {
@@ -21502,15 +21926,41 @@ function villageBuildingLevel(rec, id) {
   const eco = ensureVillageEconomy(rec);
   return eco ? (eco.buildings[id] || 0) : 0;
 }
+// A building can change its face as it climbs: the Timber Cabin is rebuilt as
+// a Stone Cottage at level 2. Returns the display name/icon/desc for a level.
+function villageBuildingTier(b, level) {
+  if (!b) return null;
+  const base = { name: b.name, icon: b.icon, desc: b.desc };
+  if (!Array.isArray(b.tiers) || !b.tiers.length) return base;
+  const i = Math.max(0, Math.min(b.tiers.length - 1, (Number(level) || 1) - 1));
+  return Object.assign(base, b.tiers[i]);
+}
 function villageNeedCapacity(rec, needId) {
   let cap = VILLAGE_BASE_NEED_CAPACITY[needId] || 0;
   EMPIRE_BUILDINGS.forEach(b => { if (b.need === needId) cap += (b.perLevel || 0) * villageBuildingLevel(rec, b.id); });
   return cap;
 }
+// Who is actually working the yards. Every built structure with a `workers`
+// count wants that many villagers before it runs; hands are dealt out in
+// `workPriority` order (food first, prestige last), so a small town staffs
+// its farm before its chapel. Returns which buildings found their crew.
+function villageWorkforce(rec) {
+  const eco = ensureVillageEconomy(rec);
+  const out = { available: eco ? eco.population : 0, required: 0, working: 0, staffed: {} };
+  if (!eco) return out;
+  let free = out.available;
+  EMPIRE_BUILDINGS
+    .filter(b => b.workers && villageBuildingLevel(rec, b.id) > 0)
+    .sort((a, b) => (a.workPriority || 99) - (b.workPriority || 99))
+    .forEach(b => {
+      out.required += b.workers;
+      if (free >= b.workers) { out.staffed[b.id] = true; out.working += b.workers; free -= b.workers; }
+    });
+  return out;
+}
 // What a province's yards, fields and mines ship home each tax cycle, on top
-// of coins and timber. A completed Quarry keeps a small founding crew, so its
-// Stone output can rescue an empty first settlement; every other yard needs
-// residents before it produces anything.
+// of coins and timber. Every yard needs its crew: a quarry or camp with no
+// villager assigned produces nothing at all — homes come first.
 function villageProductionSnapshot(rec) {
   const eco = ensureVillageEconomy(rec);
   const out = { stone: 0, materials: {}, larder: {} };
@@ -21518,9 +21968,11 @@ function villageProductionSnapshot(rec) {
   // A Steward makes the same fields and quarries yield more: better rotas,
   // better records, less waste.
   const steward = villageRoleMultiplier(rec && rec.seed);
+  const crew = villageWorkforce(rec);
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
+    if (b.workers && !crew.staffed[b.id]) return; // nobody to work it — yard stands idle
     out.stone += Math.round((b.stonePerLevel || 0) * level * steward);
     if (eco.population <= 0 || !b.produces) return;
     Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + Math.round(per * level * steward); });
@@ -21544,10 +21996,13 @@ function villageEconomySnapshot(rec) {
     return { id: n.id, icon: n.icon, label: n.label, cap, sat: Math.min(1, cap / Math.max(1, pop)) };
   });
   const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
+  // Flat income and market boosts too only flow from yards that found a crew.
+  const crew = villageWorkforce(rec);
   let flatCoins = 0, flatBranches = 0, taxBoost = 0;
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
+    if (b.workers && !crew.staffed[b.id]) return;
     flatCoins += (b.coinsPerLevel || 0) * level;
     flatBranches += (b.branchesPerLevel || 0) * level;
     taxBoost += (b.taxBoost || 0) * level;
@@ -21575,7 +22030,7 @@ function villageEconomySnapshot(rec) {
   const governance = steward * warden;
   const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * merged * unity * governance) + flatCoins);
   const branches = pop <= 0 ? 0 : Math.round((2 + flatBranches) * governance);
-  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
+  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, workforce: crew, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
 // housing cap, hungry or joyless ones empty out (never below a stubborn few —
@@ -21607,6 +22062,11 @@ function empireHasQuarryInvestment() {
   });
 }
 function villageBuildingCost(building, level) {
+  // A building can price each step on its own (`costLevels`): the Timber
+  // Cabin is bought with coins and timber alone, and only its stone rebuild
+  // asks for quarried stone.
+  const stepped = Array.isArray(building.costLevels) && building.costLevels[Math.min(level, building.costLevels.length - 1)];
+  if (stepped) return { coins: stepped.coins || 0, branches: stepped.branches || 0, stone: stepped.stone || 0 };
   // The realm's first Quarry is the source of Stone, so charging Stone for
   // that one build would deadlock a fresh kingdom. Once one is built or under
   // construction, later quarries and every upgrade pay normally.
@@ -21661,7 +22121,8 @@ function empireBuildStructure(seed, buildingId) {
   }
   SFX.questComplete();
   vibrate(35);
-  showToast('🏗️ ' + building.icon + ' ' + building.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
+  const targetTier = villageBuildingTier(building, level + 1);
+  showToast('🏗️ ' + targetTier.icon + ' ' + targetTier.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + rec.name + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
   // Rebuild the 3D scene so the scaffolded site appears in the village itself
   if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   updateHeader();
@@ -21845,7 +22306,7 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The village armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🏘️ Cottage Row and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🛖 Timber Cabin and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
   // Did this liberation merge villages into a TOWN — or towns into a CITY?
   // Three neighbouring liberated villages grow together into one town; three
   // neighbouring towns rise as one city. Announced only when it happens.
@@ -21962,15 +22423,18 @@ function renderVillageManagePanel() {
   let constructionHtml = '';
   if (construction) {
     const cb = EMPIRE_BUILDING_INDEX[construction.id];
+    const cbTier = cb ? villageBuildingTier(cb, construction.toLevel) : null;
     const pct = Math.round(constructionProgress(construction, now) * 100);
     constructionHtml = '<div class="province-construction">' +
-      '<div class="province-construction-head"><span>🏗️ ' + (cb ? cb.icon + ' ' + escapeHtml(cb.name) : 'Construction') + (construction.toLevel > 1 ? ' → level ' + construction.toLevel : '') + '</span>' +
+      '<div class="province-construction-head"><span>🏗️ ' + (cbTier ? cbTier.icon + ' ' + escapeHtml(cbTier.name) : 'Construction') + (construction.toLevel > 1 && !(cb && cb.tiers) ? ' → level ' + construction.toLevel : '') + '</span>' +
       '<span class="province-construction-eta" data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></div>' +
       '<div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + construction.startMs + '" data-build-end="' + construction.endMs + '" style="width:' + pct + '%"></div></div>' +
       '</div>';
   }
+  const crew = snap.workforce || villageWorkforce(rec);
   const buildingsHtml = EMPIRE_BUILDINGS.map(b => {
     const level = villageBuildingLevel(rec, b.id);
+    const tier = villageBuildingTier(b, Math.max(1, level));
     const maxed = level >= b.maxLevel;
     const locked = level === 0 && (Number(gameState.player.level) || 1) < (Number(b.unlockLevel) || 1);
     const cost = maxed ? null : villageBuildingCost(b, level);
@@ -21982,15 +22446,26 @@ function renderVillageManagePanel() {
     const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
     const inProgress = construction && construction.id === b.id;
     const busyElsewhere = construction && construction.id !== b.id;
+    // Upgrades that change the building's face say where they lead ("REBUILD
+    // IN STONE"), plain level upgrades keep the familiar label.
+    const nextTier = !maxed && b.tiers ? villageBuildingTier(b, level + 1) : null;
+    const upgradeLabel = level === 0 ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
     let btn;
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
     else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
-      (level === 0 ? '🔨 BUILD' : '⬆️ UPGRADE') + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
+      upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
+    // The crew line: a yard says plainly whether a villager is working it.
+    let crewHtml = '';
+    if (b.workers) {
+      if (level > 0 && crew.staffed[b.id]) crewHtml = '<div class="province-crew on">👷 ' + b.workers + ' villager works here</div>';
+      else if (level > 0) crewHtml = '<div class="province-crew off">👷 idle — needs ' + b.workers + ' villager · build homes so folk move in</div>';
+      else crewHtml = '<div class="province-crew">👷 needs ' + b.workers + ' villager to run</div>';
+    }
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
-      '<div class="province-building-head"><span class="province-building-icon">' + b.icon + '</span><span class="province-building-name">' + escapeHtml(b.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
-      '<div class="province-building-desc">' + escapeHtml(b.desc) + '</div>' + btn +
+      '<div class="province-building-head"><span class="province-building-icon">' + tier.icon + '</span><span class="province-building-name">' + escapeHtml(tier.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
+      '<div class="province-building-desc">' + escapeHtml(tier.desc) + '</div>' + crewHtml + btn +
       (shortages.length && !locked && !construction ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
   }).join('');
   // The settlement this province has merged into, if any: shown on the desk,
@@ -22013,12 +22488,12 @@ function renderVillageManagePanel() {
   }
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
-    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + '</div></div>' +
+    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (crew.required ? ' · 👷 ' + crew.working + '/' + crew.required + ' yards crewed' : '') + '</div></div>' +
     settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more</div>'
-      : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🏘️ <b>Cottage Row</b> and residents will move in</div>') +
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + '</div>'
+      : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other villages can still build' : '') + '</div>' +
@@ -22223,7 +22698,9 @@ function renderEmpirePanel() {
   // ---- 📜 A plain-words guide to the whole ladder, folded away until asked.
   const helpHtml = count ? empireDrawerHTML('help', false, '📜', 'HOW YOUR EMPIRE WORKS', 'The whole ladder, in plain words', null,
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Rebuild them.</b> Start with a Quarry: its first cut gives enough stone for Cottage Row, then its founding crew cuts more every 8 hours even before residents arrive. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🛖</span><span><b>Rebuild them.</b> Start with a Timber Cabin — it costs only coins and timber — and the first families move in. Later, rebuild it in stone to house twice as many.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> The first Quarry costs no stone and its first cut gives enough stone for Cottage Row. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages grow into a town</b> (+10% taxes) — and <b>3 neighbouring towns rise into a city</b> (+25%). This happens by itself as you free villages close together.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 villages within 150 km unite into a County</b> — run from its own County Hall, with +15% unity taxes for every village in it.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
@@ -22486,7 +22963,7 @@ function renderTownScreen() {
     sub.textContent = (isCity
       ? 'Your city — ' + settle.villageCount + ' villages grown into one. '
       : 'Your town — ' + settle.villageCount + ' neighbouring villages grown into one. ') +
-      'Each district is one of your real villages, drawn in its own colours — its true size, its own trades, its own landmark. Drag to look around, pinch to zoom, two-finger drag to wander — tap a district to walk its streets.';
+      'Each district is one of your real villages, drawn in its own colours — its true size, its own trades, its own landmark. Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a district to walk its streets.';
   }
   renderTownPanel(settle);
   if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
@@ -22839,9 +23316,9 @@ function renderVillage() {
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
     const settleNote = settleTitle ? ' ' + settleTitle.icon + ' This village is the ' + (settleTitle.role === 'heart' ? 'centre of ' : 'district of ') + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
-    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Drag to look around, pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
+    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Hold, then drag to look around; pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
     else if (dev <= 0) sub.textContent = 'Your village, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
-    else sub.textContent = 'Your village. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Drag to look around, pinch to zoom, two-finger drag to wander — tap a building to step inside.' + settleNote;
+    else sub.textContent = 'Your village. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a building to step inside.' + settleNote;
   }
   // A village inside a merged town or city links straight to its square.
   const townLink = $('villageTownLink');
@@ -23592,6 +24069,48 @@ function villageMakeCottage(r, pal) {
     }
   }
   g.add(villageBlobShadow(Math.max(w, d) * 0.72));
+  return g;
+}
+
+// The settler's home the player raises first: stacked-log walls under a plank
+// roof — and the same footprint rebuilt in quarried stone once it's upgraded.
+function villageMakeSettlerHome(r, pal, stone) {
+  const g = new THREE.Group();
+  const w = 1.9 + r() * 0.7, d = 1.7 + r() * 0.6, h = 1.1 + r() * 0.3;
+  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  if (stone) {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.08) }));
+    body.position.y = h / 2; g.add(body);
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.1, d + 0.08), beamMat);
+    lintel.position.y = h; g.add(lintel);
+  } else {
+    // Horizontal logs, one on the next — a cabin you can read at a glance.
+    const logMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0.04, -0.04) });
+    const logR = 0.13, rows = Math.max(4, Math.round(h / (logR * 2)));
+    for (let i = 0; i < rows; i++) {
+      const y = logR + i * logR * 2;
+      const front = new THREE.Mesh(new THREE.CylinderGeometry(logR, logR, w + 0.2, 7), logMat);
+      front.rotation.z = Math.PI / 2; front.position.set(0, y, d / 2); g.add(front);
+      const back = front.clone(); back.position.z = -d / 2; g.add(back);
+      const left = new THREE.Mesh(new THREE.CylinderGeometry(logR, logR, d + 0.2, 7), logMat);
+      left.rotation.x = Math.PI / 2; left.position.set(-w / 2, y, 0); g.add(left);
+      const right = left.clone(); right.position.x = w / 2; g.add(right);
+    }
+    const fill = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, h, d - 0.1), logMat);
+    fill.position.y = h / 2; g.add(fill);
+  }
+  const roofH = 0.7 + r() * 0.35, W = w / 2 + 0.3;
+  const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
+  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: d + 0.45, bevelEnabled: false }), roofMat);
+  roof.position.set(0, h, -(d + 0.45) / 2); g.add(roof);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.1), beamMat);
+  door.position.set(0, 0.4, d / 2 + 0.06); g.add(door);
+  if (stone && r() < 0.7) {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.06), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+    win.position.set((r() - 0.5) * w * 0.5, h * 0.62, d / 2 + 0.04); g.add(win);
+  }
+  g.add(villageBlobShadow(Math.max(w, d) * 0.7));
   return g;
 }
 
@@ -25284,10 +25803,23 @@ function ensureVillageRenderer(stage) {
     const pts = [...camPointers.values()];
     return { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx: (pts[0].x + pts[1].x) / 2, my: (pts[0].y + pts[1].y) / 2 };
   }
+  // Hold-to-steer: the page keeps scrolling over the canvas; a finger held
+  // still for a beat grabs the camera (see touch_steer_core.js). The grab
+  // re-anchors the drag so the camera never jumps, and a grab is never a tap.
+  const steer = window.BurbzTouchSteer ? window.BurbzTouchSteer.createHoldGate({
+    onEngage: at => {
+      dragged = true;
+      stage.classList.add('steering');
+      if (orbitStart) { orbitStart.x = at.x; orbitStart.y = at.y; orbitStart.az = villageCam.azimuth; orbitStart.po = villageCam.polar; }
+      try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
+    }
+  }) : { down: () => true, move: () => true, up: () => {}, cancel: () => {}, engaged: true };
+  el.addEventListener('touchmove', e => { if (steer.engaged && e.cancelable) e.preventDefault(); }, { passive: false });
   el.addEventListener('pointerdown', e => {
     camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { el.setPointerCapture(e.pointerId); } catch (err) {} // release always reaches us, even off-canvas
     villageCam.lastInputAt = Date.now();
+    steer.down({ pointerType: e.pointerType, x: e.clientX, y: e.clientY });
     if (camPointers.size === 1) {
       orbitStart = { x: e.clientX, y: e.clientY, az: villageCam.azimuth, po: villageCam.polar, pan: e.shiftKey || e.button === 2 };
       dragged = false;
@@ -25303,6 +25835,7 @@ function ensureVillageRenderer(stage) {
     const prevX = p.x, prevY = p.y;
     p.x = e.clientX; p.y = e.clientY;
     villageCam.lastInputAt = Date.now();
+    const maySteer = steer.move({ x: e.clientX, y: e.clientY });
     if (camPointers.size === 2 && pinchLast) {
       const now = pinchState();
       villageCamZoom(villageCam.dist * (pinchLast.d / Math.max(1, now.d))); // fingers apart = closer in
@@ -25313,12 +25846,14 @@ function ensureVillageRenderer(stage) {
     if (!orbitStart) return;
     const dx = e.clientX - orbitStart.x, dy = e.clientY - orbitStart.y;
     if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    if (!maySteer) return; // the page owns this swipe — the camera stays put
     if (orbitStart.pan) { villageCamPan(p.x - prevX, p.y - prevY); return; }
     villageCam.azimuth = orbitStart.az - dx * 0.006;
     villageCam.polar = Math.min(1.36, Math.max(0.55, orbitStart.po - dy * 0.004)); // 1.36: the raised rim forest stays below the lens
   });
   function releasePointer(e) {
-    camPointers.delete(e.pointerId);
+    if (camPointers.delete(e.pointerId)) steer.up();
+    if (!steer.engaged) stage.classList.remove('steering');
     if (camPointers.size < 2) pinchLast = null;
     if (camPointers.size === 1) {
       // Lifting one finger of a pinch: the survivor orbits from where it is
@@ -26199,7 +26734,17 @@ function buildVillageScene(v) {
         }
         if (!level) return; // nothing finished yet — only the site shows
       }
-      if (b.id === 'farm') {
+      if (b.id === 'cabin') {
+        // The first home: a log cabin at level 1, rebuilt in stone at level 2.
+        const spot = econScatter(10.5, 15, 2.4);
+        if (!spot) return;
+        const home = villageMakeSettlerHome(er, pal, level >= 2);
+        home.position.set(spot.x, 0, spot.z);
+        home.lookAt(0, 0, 0); home.rotation.x = 0; home.rotation.z = 0;
+        home.rotation.y += (er() - 0.5) * 0.4;
+        econLabel(home, level >= 2 ? '🏠 Stone Cottage' : '🛖 Timber Cabin', 2.3);
+        villageScene.add(home);
+      } else if (b.id === 'farm') {
         const spot = econScatter(11, 15.5, 2.8);
         if (!spot) return;
         const field = villageMakeGrainField(er, pal);
@@ -26540,10 +27085,22 @@ function ensureTownRenderer(stage) {
     const pts = [...camPointers.values()];
     return { d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx: (pts[0].x + pts[1].x) / 2, my: (pts[0].y + pts[1].y) / 2 };
   }
+  // Hold-to-steer, exactly as in the village: the page scrolls over the
+  // canvas until a held finger grabs the camera (see touch_steer_core.js).
+  const steer = window.BurbzTouchSteer ? window.BurbzTouchSteer.createHoldGate({
+    onEngage: at => {
+      dragged = true;
+      stage.classList.add('steering');
+      if (orbitStart) { orbitStart.x = at.x; orbitStart.y = at.y; orbitStart.az = townCam.azimuth; orbitStart.po = townCam.polar; }
+      try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {}
+    }
+  }) : { down: () => true, move: () => true, up: () => {}, cancel: () => {}, engaged: true };
+  el.addEventListener('touchmove', e => { if (steer.engaged && e.cancelable) e.preventDefault(); }, { passive: false });
   el.addEventListener('pointerdown', e => {
     camPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { el.setPointerCapture(e.pointerId); } catch (err) {}
     townCam.lastInputAt = Date.now();
+    steer.down({ pointerType: e.pointerType, x: e.clientX, y: e.clientY });
     if (camPointers.size === 1) {
       orbitStart = { x: e.clientX, y: e.clientY, az: townCam.azimuth, po: townCam.polar, pan: e.shiftKey || e.button === 2 };
       dragged = false;
@@ -26559,6 +27116,7 @@ function ensureTownRenderer(stage) {
     const prevX = p.x, prevY = p.y;
     p.x = e.clientX; p.y = e.clientY;
     townCam.lastInputAt = Date.now();
+    const maySteer = steer.move({ x: e.clientX, y: e.clientY });
     if (camPointers.size === 2 && pinchLast) {
       const now = pinchState();
       townCamZoom(townCam.dist * (pinchLast.d / Math.max(1, now.d)));
@@ -26569,12 +27127,14 @@ function ensureTownRenderer(stage) {
     if (!orbitStart) return;
     const dx = e.clientX - orbitStart.x, dy = e.clientY - orbitStart.y;
     if (Math.abs(dx) + Math.abs(dy) > 6) dragged = true;
+    if (!maySteer) return; // the page owns this swipe — the camera stays put
     if (orbitStart.pan) { townCamPan(p.x - prevX, p.y - prevY); return; }
     townCam.azimuth = orbitStart.az - dx * 0.006;
     townCam.polar = Math.min(1.36, Math.max(0.5, orbitStart.po - dy * 0.004));
   });
   function releasePointer(e) {
-    camPointers.delete(e.pointerId);
+    if (camPointers.delete(e.pointerId)) steer.up();
+    if (!steer.engaged) stage.classList.remove('steering');
     if (camPointers.size < 2) pinchLast = null;
     if (camPointers.size === 1) {
       const pt = [...camPointers.values()][0];
@@ -28085,6 +28645,143 @@ async function sendBurbzFeedback(message, contact, category, website, screenshot
   }
 }
 
+// ---- Feedback inbox (admin) — read what players sent, without leaving the game
+const FEEDBACK_INBOX_TOKEN_KEY = 'burbz_admin_token'; // shared with inbox.html, so one unlock covers both
+
+function feedbackInboxEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function feedbackInboxTime(sec) {
+  if (!sec) return '';
+  try { return new Date(sec * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+}
+
+function openFeedbackInbox() {
+  const opener = document.activeElement;
+  const prev = document.getElementById('feedbackInboxOverlay');
+  if (prev) prev.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'recruit-overlay';
+  overlay.id = 'feedbackInboxOverlay';
+  overlay.style.zIndex = '3600';
+  overlay.innerHTML =
+    '<div class="recruit-sheet" role="dialog" aria-modal="true" aria-labelledby="feedbackInboxTitle">' +
+      '<div class="modal-handle"></div>' +
+      '<div class="recruit-title" id="feedbackInboxTitle">📥 Feedback Inbox</div>' +
+      '<div id="feedbackInboxBody"></div>' +
+      '<button class="recruit-close" id="feedbackInboxClose" style="margin-top:12px;opacity:.7">Close</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  const body = document.getElementById('feedbackInboxBody');
+  let reports = [];
+  let showDone = false;
+  let closing = false;
+  const close = () => {
+    if (closing) return;
+    closing = true;
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.remove();
+      try { if (opener && typeof opener.focus === 'function') opener.focus(); } catch (e) {}
+    }, 250);
+  };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.id === 'feedbackInboxClose') close(); });
+  overlay.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
+
+  const token = () => { try { return localStorage.getItem(FEEDBACK_INBOX_TOKEN_KEY) || ''; } catch (e) { return ''; } };
+  const forgetToken = () => { try { localStorage.removeItem(FEEDBACK_INBOX_TOKEN_KEY); } catch (e) {} };
+
+  const renderGate = (msg) => {
+    body.innerHTML =
+      '<div class="recruit-copy">This is the private inbox. Enter the admin key once and this device stays unlocked.</div>' +
+      '<input id="feedbackInboxKey" type="password" autocomplete="off" placeholder="Admin key" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;margin-top:10px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit">' +
+      '<div id="feedbackInboxGateMsg" aria-live="polite" style="min-height:18px;margin-top:6px;color:#f97583;font-size:13px">' + feedbackInboxEsc(msg || '') + '</div>' +
+      '<button class="recruit-close" id="feedbackInboxUnlock" style="margin-top:8px">Unlock</button>';
+    const unlock = () => {
+      const val = (document.getElementById('feedbackInboxKey').value || '').trim();
+      if (!val) { document.getElementById('feedbackInboxGateMsg').textContent = 'Enter the key first.'; return; }
+      try { localStorage.setItem(FEEDBACK_INBOX_TOKEN_KEY, val); } catch (e) {}
+      load();
+    };
+    document.getElementById('feedbackInboxUnlock').addEventListener('click', unlock);
+    document.getElementById('feedbackInboxKey').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+    setTimeout(() => { try { document.getElementById('feedbackInboxKey').focus(); } catch (e) {} }, 120);
+  };
+
+  const act = async (id, action) => {
+    if (action === 'delete' && !confirm('Delete this message for good?')) return;
+    try {
+      const res = await fetch('api/admin/reports/' + encodeURIComponent(id), {
+        method: 'POST',
+        headers: { 'X-Burbz-Admin': token(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      if (!res.ok) throw new Error('http ' + res.status);
+      load();
+    } catch (e) { showToast('That did not work — try again.'); }
+  };
+
+  const renderList = () => {
+    const rows = reports
+      .filter(r => r.type === 'feedback')
+      .filter(r => showDone || r.status !== 'resolved')
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const birdCount = reports.filter(r => r.type === 'new_bird' && r.status !== 'resolved').length;
+    let html =
+      '<div class="inbox-bar">' +
+        '<button type="button" id="feedbackInboxRefresh">↻ Refresh</button>' +
+        '<label><input type="checkbox" id="feedbackInboxShowDone"' + (showDone ? ' checked' : '') + '> Show done</label>' +
+        '<button type="button" id="feedbackInboxLock">Lock</button>' +
+      '</div>';
+    if (!rows.length) {
+      html += '<div class="recruit-copy" style="text-align:center;padding:24px 8px">' +
+        (showDone ? '💬 No feedback yet. When a player sends some, it lands here.' : '💬 Nothing new — all caught up.') + '</div>';
+    } else {
+      html += rows.map(r => {
+        const who = (r.reporter && (r.reporter.name || r.reporter.email)) || r.contact || 'Anonymous';
+        const cat = r.category ? '<span class="inbox-chip">' + feedbackInboxEsc(r.category) + '</span>' : '';
+        const done = r.status === 'resolved';
+        return '<div class="inbox-card' + (done ? ' done' : '') + '">' +
+          '<div class="inbox-msg">' + feedbackInboxEsc(r.message || '') + '</div>' +
+          '<div class="inbox-meta">' + cat + '<span>' + feedbackInboxEsc(who) + ' · ' + feedbackInboxTime(r.createdAt) + (done ? ' · ✓ done' : '') + '</span></div>' +
+          '<div class="inbox-actions">' +
+            '<button type="button" data-inbox-act="' + (done ? 'reopen' : 'resolve') + '" data-inbox-id="' + feedbackInboxEsc(r.id) + '">' + (done ? 'Reopen' : '✓ Done') + '</button>' +
+            '<button type="button" class="danger" data-inbox-act="delete" data-inbox-id="' + feedbackInboxEsc(r.id) + '">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    if (birdCount) {
+      html += '<div class="recruit-copy" style="margin-top:10px">🐦 ' + birdCount + ' new-bird report' + (birdCount === 1 ? '' : 's') + ' waiting — <a href="inbox.html" target="_blank" rel="noopener" style="color:var(--accent2)">open the full inbox</a>.</div>';
+    }
+    body.innerHTML = html;
+    document.getElementById('feedbackInboxRefresh').addEventListener('click', load);
+    document.getElementById('feedbackInboxShowDone').addEventListener('change', (e) => { showDone = !!e.target.checked; renderList(); });
+    document.getElementById('feedbackInboxLock').addEventListener('click', () => { forgetToken(); renderGate('Locked. This device has forgotten the key.'); });
+    body.querySelectorAll('[data-inbox-act]').forEach(btn => btn.addEventListener('click', () => act(btn.dataset.inboxId, btn.dataset.inboxAct)));
+  };
+
+  const load = async () => {
+    if (!token()) { renderGate(''); return; }
+    body.innerHTML = '<div class="recruit-copy" style="text-align:center;padding:24px 8px">Fetching the inbox…</div>';
+    try {
+      const res = await fetch('api/admin/reports', { headers: { 'X-Burbz-Admin': token() } });
+      if (res.status === 401) { forgetToken(); renderGate('That key was rejected. Try again.'); return; }
+      if (!res.ok) throw new Error('http ' + res.status);
+      const data = await res.json();
+      reports = (data && data.reports) || [];
+      renderList();
+    } catch (e) {
+      body.innerHTML =
+        '<div class="recruit-copy" style="text-align:center;padding:24px 8px">Could not reach the inbox. Check your connection and try again.</div>' +
+        '<button class="recruit-close" id="feedbackInboxRetry" style="margin-top:8px">Try again</button>';
+      document.getElementById('feedbackInboxRetry').addEventListener('click', load);
+    }
+  };
+
+  load();
+  requestAnimationFrame(() => overlay.classList.add('show'));
+}
+
 // ============================================================================
 // INVENTORY
 // ============================================================================
@@ -28320,6 +29017,7 @@ function renderStoresLedger() {
       empireVillages().forEach(v => {
         const level = villageBuildingLevel(v, b.id);
         if (!level) return;
+        if (b.workers && !villageWorkforce(v).staffed[b.id]) return; // no crew — the yard ships nothing
         const steward = villageRoleMultiplier(v.seed);
         stoneCycle += Math.round((b.stonePerLevel || 0) * level * steward);
         const eco = ensureVillageEconomy(v);
@@ -28338,7 +29036,7 @@ function renderStoresLedger() {
       '<div class="stores-ledger-row header"><span class="slr-icon">👑</span>' +
       '<span class="slr-main"><span class="slr-name">Taxes &amp; timber</span><span class="slr-meta">' + ledger.provinces + ' province' + (ledger.provinces === 1 ? '' : 's') + ' · 👥 ' + ledger.population + ' subjects</span></span>' +
       '<span class="slr-yield">+' + ledger.coins + ' 🪙 +' + ledger.branches + ' 🪵</span></div>' +
-      (yardRows || '<div class="stores-hint">No working yards yet — build 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your provinces and they will start shipping goods here.</div>') +
+      (yardRows || '<div class="stores-hint">No working yards yet — build 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your provinces. Each needs a villager living there to run it, then it starts shipping goods here.</div>') +
       (idleYards.length ? '<div class="stores-hint">Not yet built anywhere: ' + idleYards.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>' : '') +
       '<button class="stores-collect-btn"' + (hasTribute ? '' : ' disabled') + ' onclick="collectEmpireTribute()">' +
       (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ THE PROVINCES ARE STILL WORKING — CHECK BACK LATER') + '</button>' +
@@ -28991,6 +29689,32 @@ function birdEquipClear(slot) {
   renderBirdEquip();
 }
 
+function birdEquipToggleFavourite() {
+  if (birdEquipState.birdId) toggleFavouriteBird(birdEquipState.birdId);
+}
+
+function birdEquipPreen() {
+  const result = preenBird(birdEquipState.birdId);
+  renderBirdEquip();
+  // Hearts go on after the re-render so the fresh hero keeps them.
+  if (result && result.ok) spawnBondHearts();
+}
+
+// A little shower of hearts over the bird's portrait when a preen lands.
+function spawnBondHearts() {
+  const hero = document.querySelector('#birdEquipBody .bird-equip-hero');
+  if (!hero) return;
+  for (let i = 0; i < 5; i++) {
+    const heart = document.createElement('span');
+    heart.className = 'bond-heart-float';
+    heart.textContent = ['❤️', '💛', '🧡', '💕', '💖'][i % 5];
+    heart.style.left = (14 + Math.round(i * 18 + (i % 2) * 6)) + '%';
+    heart.style.animationDelay = (i * 0.12) + 's';
+    hero.appendChild(heart);
+    setTimeout(() => heart.remove(), 1900 + i * 120);
+  }
+}
+
 function renderBirdEquip() {
   const body = $('birdEquipBody');
   if (!body) return;
@@ -29005,7 +29729,10 @@ function renderBirdEquip() {
     ? '<img class="bird-equip-art" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
     : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
 
+  const favourite = birdIsFavourite(bird);
+  const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
   const hero = '<div class="bird-equip-hero" style="border-color:' + rarityColor + '55;">' + art +
+    favBtn +
     '<div><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
     '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div>' +
@@ -29021,6 +29748,27 @@ function renderBirdEquip() {
     stat('🪽 SPD', bird.spd || 0, 'spd') +
     '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
     '</div>';
+
+  // The bond panel — this bird's friendship, grown by preening and feeding.
+  const bondCore = birdBondCore();
+  let bondPanel = '';
+  if (bondCore) {
+    ensureBirdBond(bird);
+    const bp = bondCore.bondProgress(bird.bond);
+    const gate = bondCore.canPreen(bird.bond, Date.now());
+    const hearts = '❤️'.repeat(bp.level) + '🤍'.repeat(bondCore.MAX_BOND_LEVEL - bp.level);
+    const meter = bp.max
+      ? '<div class="bond-meter-note">The bond is complete. ' + escapeHtml(birdDisplayName(bird)) + ' is yours for life.</div>'
+      : '<div class="bond-meter"><div class="bond-meter-fill" style="width:' + bp.pct + '%"></div></div><div class="bond-meter-note">' + bp.xp + '/' + bp.next + ' to the next bond level</div>';
+    const preenBtn = gate.ok
+      ? '<button class="bond-preen-btn ready" onclick="birdEquipPreen()">🪶 PREEN ' + escapeHtml(birdDisplayName(bird)).toUpperCase() + '</button>'
+      : '<button class="bond-preen-btn" disabled>🪶 Preened · come back in ' + bondCore.describeWait(gate.remainingMs) + '</button>';
+    bondPanel = '<div class="bird-equip-section-label">Bond</div><div class="bird-equip-bond">' +
+      '<div class="bond-head"><span class="bond-hearts" aria-label="Bond level ' + bp.level + ' of ' + bondCore.MAX_BOND_LEVEL + '">' + hearts + '</span><span class="bond-title">' + escapeHtml(bp.title) + '</span></div>' +
+      meter + preenBtn +
+      '<div class="bond-hint">Preening and good meals deepen the bond. It never fades.</div>' +
+      '</div>';
+  }
 
   const slots = '<div class="bird-equip-section-label">Loadout</div><div class="bird-equip-slots">' + EQUIP_SLOT_ORDER.map(slot => {
     const meta = FORGE_SLOT_META[slot];
@@ -29059,7 +29807,7 @@ function renderBirdEquip() {
 
   const forgeLink = '<button class="battle-forge-btn" onclick="closeBirdEquip(); switchScreen(\'forge\');">⚒️ CRAFT MORE AT THE FLETCHER\'S FORGE</button>';
 
-  body.innerHTML = hero + stats + slots + picker + notes + forgeLink;
+  body.innerHTML = hero + stats + bondPanel + slots + picker + notes + forgeLink;
 }
 
 // ============================================================================
@@ -29244,7 +29992,8 @@ function renderBirdex() {
     let companions = flock.slice();
     if (currentFilter !== 'all') companions = companions.filter(b => b.rarity === currentFilter);
     companions = companions.filter(birdMatchesFamilyFilter);
-    companions.sort((a, b) => (b.power || 0) - (a.power || 0));
+    // Favourites lead the flock; power settles the rest.
+    companions.sort((a, b) => (birdIsFavourite(b) ? 1 : 0) - (birdIsFavourite(a) ? 1 : 0) || (b.power || 0) - (a.power || 0));
     if (!companions.length) {
       grid.innerHTML = '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Discover a bird, then recruit it at the Academy Barracks.</div></div>';
       return;
@@ -29327,6 +30076,12 @@ function renderBirdex() {
       if (renameBtn) {
         e.stopPropagation();
         renameCompanionBird(renameBtn.dataset.birdId);
+        return;
+      }
+      const favouriteBtn = e.target.closest('[data-action="toggle-favourite"]');
+      if (favouriteBtn) {
+        e.stopPropagation();
+        toggleFavouriteBird(favouriteBtn.dataset.birdId);
         return;
       }
       const locationBtn = e.target.closest('[data-action="bird-location"]');
@@ -29520,6 +30275,7 @@ function createBirdCardHTML(bird, idx) {
       <div class="bird-card-inner">
         <div class="card-front">
           ${cardDietBadge}
+          ${birdIsFavourite(bird) ? '<div class="card-fav-heart" title="One of your favourites">❤️</div>' : ''}
           <div class="card-art" data-action="open-equip" data-bird-id="${bird.id}" title="Tap your bird to open its equipment">
             <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>
             ${artBg}
@@ -29532,6 +30288,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-info">
             <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div>
             <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
+            ${cardBondHeartsHTML(bird)}
             <div class="card-species">${escapeHtml(bird.scientificName || bird.species)}</div>
             ${birdCardLocationButtonHTML(bird)}
             ${hungerBarHTML(hungerStatus, 'companion-card')}
@@ -29569,6 +30326,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-back-utilities">
 
             ${backFeedButton}
+            <button class="card-pet-btn" data-action="toggle-favourite" data-bird-id="${bird.id}">${birdIsFavourite(bird) ? '❤️ Favourite' : '🤍 Favourite'}</button>
             <button class="card-pet-btn" data-action="rename-bird" data-bird-id="${bird.id}">Rename</button>
             <button class="card-pet-btn" data-action="open-info" data-bird-id="${bird.id}">Field Guide</button>
             <button class="card-pet-btn" data-action="open-equip" data-bird-id="${bird.id}">⚔️ Equip</button>
@@ -31446,7 +32204,10 @@ function renderBattleSelect() {
       const fullnessColor = 'hsl(' + Math.round(fullnessPct * 1.2) + ' 72% 44%)';
       const hungerMeta = ' · ' + readiness.status.label;
       const counters = counterTypes.includes(core.classifySpecies(b.species));
-      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (readiness.warning ? ' hungry-warn' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
+      // Night Wings on the pick card: after dark, the owl is the strongest
+      // bird on the shelf and the card glows to say so.
+      const nightWings = !!nocturnalNightBattleBoostFor(b);
+      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (readiness.warning ? ' hungry-warn' : '') + (nightWings ? ' night-hunter-aura' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
         '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
         fighterArtHTML(b, 'pk') +
@@ -31455,6 +32216,7 @@ function renderBattleSelect() {
         typeChipHTML(core.classifySpecies(b.species)) +
         familyChipHTML(b) +
         (counters ? '<span class="pk-counter-chip">✓ Counter</span>' : '') +
+        (nightWings ? '<span class="pk-night-chip">🌙 Night Wings</span>' : '') +
         '<div class="pk-meters" data-fullness="' + fullnessPct + '">' +
           '<div class="pk-meter-row"><span>HP</span><div class="pk-meter-track"><div class="pk-meter-fill hp" style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div><span>' + hpPct + '%</span></div>' +
           '<div class="pk-meter-row"><span>Full</span><div class="pk-meter-track"><div class="pk-meter-fill" style="width:' + fullnessPct + '%;background:' + fullnessColor + '"></div></div><span>' + fullnessPct + '%</span></div>' +
@@ -31468,7 +32230,10 @@ function renderBattleSelect() {
         '<div class="bench-meta">Lv ' + (b.level || 1) + (s.meta ? ' · ' + s.meta : '') + '</div></div>' +
         '<span class="bench-status' + s.cls + '">' + escapeHtml(s.label) + '</span><span class="bench-go" aria-hidden="true">›</span></button>';
     }).join('');
-    grid.innerHTML =
+    const nightRosterHint = isNightRightNow()
+      ? '<div class="battle-night-hint">🌙 Night has fallen — nocturnal birds fight with Night Wings: half again the ATK, SPD and magic, tougher, fresher, and critting out of the dark.</div>'
+      : '';
+    grid.innerHTML = nightRosterHint +
       '<div class="roster-title">Ready to fly <span class="roster-count">' + pickable.length + '</span></div>' +
       (pickable.length
         ? '<div class="battle-team-grid">' + readyCards + '</div>'
@@ -31536,7 +32301,10 @@ function startPerchBattle() {
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter;
   // spells join the skill bar and potions wait for their bird's player turn.
   const playerFighters = team.map(b => {
-    const f = core.buildFighter(b, { gear: birdGearBonuses(b) });
+    // Night Wings: a nocturnal bird fighting at night carries the whole
+    // NOCTURNAL_NIGHT_BATTLE pack into the arena. Rival squads never get it —
+    // the advantage belongs to the player who kept an owl.
+    const f = core.buildFighter(b, { gear: birdGearBonuses(b), nightBoost: nocturnalNightBattleBoostFor(b) });
     applyEquippedSpell(f, b);
     prepareEquippedPotion(f, b);
     return f;
@@ -31560,6 +32328,8 @@ function startPerchBattle() {
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison, the dark force\'s shadow-bound occupying flock, and break the usurper\'s hold!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
+  const nightHunters = playerFighters.filter(f => f.nightHunter);
+  if (nightHunters.length) addBattleLog('system-msg', '🌙 NIGHT WINGS! ' + nightHunters.map(f => f.name).join(', ') + (nightHunters.length > 1 ? ' fight' : ' fights') + ' under the moon — half again as fast and as fierce, tougher, and striking true out of the dark.');
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
   (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
   addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
@@ -31599,8 +32369,10 @@ function arenaUnitHTML(f, side, index, opts) {
   if (f.fainted) cls.push('fainted');
   if (o.acting) cls.push('acting');
   if (o.targetable) cls.push('targetable');
+  if (f.nightHunter && !f.fainted) cls.push('night-hunter-aura');
   return '<button class="' + cls.join(' ') + '" id="unit_' + side + '_' + index + '" onclick="battleTargetPick(\'' + side + '\',' + index + ')">' +
     (o.acting ? '<div class="au-turn-flag">TURN</div>' : '') +
+    (f.nightHunter ? '<div class="au-night-moon" title="Night Wings — nocturnal battle boost">🌙</div>' : '') +
     fighterArtHTML(f, 'au') +
     '<div class="au-name">' + escapeHtml(f.name) + '</div>' +
     '<div class="au-hpbar"><div style="width:' + pct + '%; background:' + hpBarColor(pct) + ';"></div></div>' +
@@ -31977,7 +32749,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -32970,7 +33742,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-variation-v250-20260811';
+const BURBZ_BUILD = 'feedback-menu-v259-20260813';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -33447,15 +34219,13 @@ function updateMerlinFlowPointer() {
   if (!navItem) { el.classList.remove('show'); return; }
   navItem.classList.add('tutorial-alert');
   const rect = navItem.getBoundingClientRect();
-  const sideTarget = navItem.classList.contains('game-side-action');
-  el.classList.toggle('side-target', sideTarget);
-  if (sideTarget) {
-    el.style.left = (rect.left - 5) + 'px';
-    el.style.top = (rect.top + rect.height / 2) + 'px';
-  } else {
-    el.style.left = (rect.left + rect.width / 2) + 'px';
-    el.style.top = '';
-  }
+  const dockTarget = navItem.classList.contains('game-side-action');
+  el.classList.remove('side-target');
+  el.style.left = (rect.left + rect.width / 2) + 'px';
+  el.style.top = '';
+  // Dock buttons float above the nav bar, so lift the pointer to sit just
+  // over the button it names; nav tabs keep the stylesheet's resting height.
+  el.style.bottom = dockTarget ? (window.innerHeight - rect.top + 4) + 'px' : '';
   const label = $('tutorialNavPointerText');
   if (label) label.textContent = target === 'quests' ? 'A quest awaits!' : 'To the Academy!';
   el.classList.add('show');
@@ -33755,6 +34525,7 @@ $('replayTutorialBtn')?.addEventListener('keydown', event => {
   startMerlinTutorial({ full:true, resume:false });
 });
 $('sendFeedbackBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackPrompt(); });
+$('feedbackInboxBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackInbox(); });
 
 $('settingsBtn').addEventListener('click', () => {
   $('settingsModal').classList.add('show');
@@ -33976,6 +34747,9 @@ document.querySelectorAll('[data-game-route]').forEach(control => {
 });
 
 document.querySelector('[data-quick-destination="kitchen"]')?.addEventListener('click', openKitchenHudShortcut);
+document.querySelector('[data-quick-destination="training"]')?.addEventListener('click', openTrainingHub);
+document.getElementById('trainingHubClose')?.addEventListener('click', closeTrainingHub);
+document.getElementById('trainingHubModal')?.addEventListener('click', (e) => { if (e.target === e.currentTarget) closeTrainingHub(); });
 
 // ============================================================================
 // DEMO DATA (for testing — adds sample birds if flock is empty)
@@ -34029,6 +34803,64 @@ function addDemoBirds() {
 }
 
 // ============================================================================
+// NIGHT MODE — the game follows the real sky over the player's head.
+// night_sky_core.js computes true sunrise and sunset from today's date and
+// the player's last known position (the same lastKnownHome the atlas uses).
+// While the sun is down, the whole game dims under the night veil and the
+// Sound scan turns owl-dark. With no location fix the local clock decides.
+// ============================================================================
+const BURBZ_NIGHT_CHECK_MS = 60000;
+let burbzNightActive = null;
+
+function burbzNightLatLon() {
+  const home = gameState && gameState.lastKnownHome;
+  if (home && Number.isFinite(Number(home.lat)) && Number.isFinite(Number(home.lon))) return { lat:Number(home.lat), lon:Number(home.lon) };
+  const live = liveMapLastPosition;
+  if (live && Number.isFinite(Number(live.lat)) && Number.isFinite(Number(live.lon))) return { lat:Number(live.lat), lon:Number(live.lon) };
+  return null;
+}
+
+function burbzNightDecisionNow(now = new Date()) {
+  const core = window.BurbzNightSkyCore;
+  if (!core) return { night:isNightRightNow(now.getTime()), source:'clock' };
+  const pos = burbzNightLatLon();
+  return core.nightDecision({ now, lat:pos && pos.lat, lon:pos && pos.lon });
+}
+
+function applyBurbzNightMode() {
+  const night = !!burbzNightDecisionNow().night;
+  if (night === burbzNightActive) return night;
+  burbzNightActive = night;
+  document.body.classList.toggle('burbz-night', night);
+  return night;
+}
+
+// The owl-safe open: when the game wakes at night for a player who has met
+// Merlin already, it lands straight on the dark Sound scan — no bright
+// screens, ready to listen. The microphone still waits for the player's tap.
+function maybeOpenNightListening(night) {
+  const core = window.BurbzNightSkyCore;
+  let introSeen = false;
+  try { introSeen = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1'; } catch (e) {}
+  // Merlin's opening tutorial keeps the floor — it resumes on the map.
+  const tutorialBusy = !merlinChaptersSeen().includes('story');
+  const open = core && typeof core.shouldOpenNightListening === 'function'
+    ? core.shouldOpenNightListening({ night, introSeen, tutorialBusy })
+    : (night && introSeen && !tutorialBusy);
+  if (!open) return false;
+  switchScreen('scan');
+  showSoundScanMode();
+  return true;
+}
+
+function startBurbzNightWatch() {
+  const night = applyBurbzNightMode();
+  setInterval(applyBurbzNightMode, BURBZ_NIGHT_CHECK_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) applyBurbzNightMode(); });
+  return night;
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 function init() {
@@ -34051,6 +34883,7 @@ function init() {
   const buildLine = $('settingsBuildLine');
   if (buildLine) buildLine.textContent = 'Build ' + BURBZ_BUILD;
   maybeShowIntroCutscene();
+  maybeOpenNightListening(startBurbzNightWatch());
   if (typeof updateMerlinFlowPointer === 'function') setTimeout(updateMerlinFlowPointer, 900);
   resumeSideQuestIfAny();
   startPetWander();

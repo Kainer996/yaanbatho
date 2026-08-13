@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "village-variation-v250-20260811"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",

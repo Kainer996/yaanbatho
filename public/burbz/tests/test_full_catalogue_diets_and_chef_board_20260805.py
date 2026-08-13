@@ -186,6 +186,8 @@ global.birdHasActiveTraining = () => false;
 global.academyRoleMultiplier = () => 1;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
+global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond
+global.birdBondCore = () => null;
 global.applyPlayerXpState = n => { gameState.player.xp += n; };
 global.levelUpBird = (b,xp)=>{ b.xp=(b.xp||0)+xp; };
 global.recalcBirdPower = () => {};
