@@ -1,6 +1,6 @@
 """The inbox unlocks from a magic link — no typing a key.
 
-feedback-menu-keyless-v262-20260813: opening burbz/?inboxkey=… stores the
+feedback-menu-keyless-v263-20260813: opening burbz/?inboxkey=… stores the
 admin key on that device and scrubs it from the URL and history. Yaan taps
 a link once (Ava sends it from the VPS, where the key lives) and the
 Feedback Inbox just opens from then on. The server still checks the key on
@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
-OWN_RELEASE_PIN = "feedback-menu-keyless-v262-20260813"
-CURRENT_BUILD = "feedback-menu-keyless-v262-20260813"
+OWN_RELEASE_PIN = "feedback-menu-keyless-v263-20260813"
+CURRENT_BUILD = "feedback-menu-keyless-v263-20260813"
 
 
 def test_link_key_is_adopted_then_scrubbed():
