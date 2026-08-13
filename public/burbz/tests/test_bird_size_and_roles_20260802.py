@@ -21,7 +21,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-ROLE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
+ROLE_CORE_PIN = "chef-mastery-feed-all-v261-20260813"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
 CURRENT_BUILD = "feedback-menu-v259-20260813"
 
@@ -281,7 +281,7 @@ def test_posts_are_wired_into_the_things_they_claim_to_improve():
     assert "0.10 * roomBoost" in html          # Head Healer
     assert "0.04 * roomBoost" in html          # Roost Warden
     # The Kitchen: the Head Chef improves every plate that leaves it.
-    assert "const chef = academyRoleMultiplier('kitchen');" in html
+    assert "const chef = academyRoleMultiplier('kitchen') * chefCareer.rewardMultiplier;" in html
     # The Barracks: the Recruiting Officer talks the price down.
     assert "const officer = academyRoleMultiplier('tavern');" in html
     # The Quest Roost: the Quartermaster plans a heavier trip, and the bird's

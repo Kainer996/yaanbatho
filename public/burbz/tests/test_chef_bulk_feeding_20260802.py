@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
+RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
 CURRENT_BUILD = "feedback-menu-v259-20260813"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
