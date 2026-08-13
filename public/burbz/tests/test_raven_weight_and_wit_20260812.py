@@ -24,7 +24,7 @@ STORY = ROOT / "STORY.md"
 RELEASE = "raven-weight-and-wit-v255-20260812"
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 
 def run_node(source: str) -> dict:

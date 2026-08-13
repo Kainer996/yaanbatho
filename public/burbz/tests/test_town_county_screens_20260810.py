@@ -30,7 +30,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "town-county-screens-v242-20260810"

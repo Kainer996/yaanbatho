@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -187,3 +187,4 @@ def test_release_is_versioned_and_cache_lineage_kept():
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
+    assert CURRENT_BUILD in cache_line  # head build reaches players
