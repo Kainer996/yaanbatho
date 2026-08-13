@@ -12,7 +12,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-2d-default-v250-20260811"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "raven-weight-and-wit-v255-20260812"
+CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
 
 
 def test_the_academy_defaults_to_the_painted_2d_tree():

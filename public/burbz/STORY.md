@@ -159,6 +159,18 @@ The raven gives the Kingdom its plainest law, the **law of weight and wit**:
 
 The birds of the crow family carry this law visibly: jackdaw, rook, carrion crow, raven — each step up in weight is a step up in battle and burden, and a step down at the governor's desk.
 
+## The hour of the owl — the law of the night
+
+When the sun sets on the Kingdom, most birds fold their wings. The nocturnal birds — the owls, the nightjars, the frogmouths, the kiwi — open their eyes. The dark is their element, and in their element they are the finest birds the Kingdom has.
+
+Nothing is ever locked away at night. Any bird can fly any errand after dark; a robin will do its best under the stars. But a nocturnal bird worked at night earns the **Night Hunter** bonus, and it is enormous:
+
+- **On expeditions**, a Night Hunter brings home triple the coins and XP, double the timber, and always finds two extra things the daytime birds walk straight past.
+- **In training**, night school teaches triple the XP and the drills sink twice as deep — every stat gain is doubled. The owls learn while the Kingdom sleeps.
+- **In battle**, a nocturnal bird fights with **Night Wings**: half again as fast and as fierce, tougher, fresher, and striking true out of the dark. The evil Burbz never learn the trick — the night belongs to the free birds who were born to it.
+
+The lesson mirrors the raven's law: keep the right bird for the right hour. A player who befriends an owl holds the night itself, and the wise ones save their biggest plans for after dark.
+
 ## Tone and moral frame
 
 **No town is destroyed.** Liberation Battles are non-gory magical contests between the player's living flock and the usurper's shadow squads. Defeated evil Burbz are dispelled rather than killed or conquered. Real birds remain the heroes, discoveries and companions; the player restores communities, knowledge, wildlife and safe paths. The empire is an expanding network of free sanctuaries, and its visual language should feel hopeful, alive and green.

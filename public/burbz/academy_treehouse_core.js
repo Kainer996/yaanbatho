@@ -218,6 +218,10 @@
     const durationMs = template.minutes * 60 * 1000;
     const night = nightBonusPack(options);
     const xp = Math.round(template.xp * nightMultiplier(night, 'xp'));
+    // Night Hunters learn twice as much from every drill: the pack's statBonus
+    // multiplies the permanent stat gain, not just the XP. Packs without a
+    // statBonus (older saves mid-session) fall back to the plain gain.
+    const statGain = Math.max(1, Math.round(template.bonus * nightMultiplier(night, 'statBonus')));
     return {
       id: `train_${nowMs}_${String(bird.id || birdName).replace(/[^a-z0-9]+/gi,'_')}`,
       birdId: bird.id || null,
@@ -233,7 +237,7 @@
       endMs: nowMs + durationMs,
       status: 'active',
       nightBonus: !!night,
-      rewards: { xp, stat: template.stat, statLabel: template.statLabel, bonus: template.bonus, hunger: template.hunger, happiness: template.happiness, school: template.school || null },
+      rewards: { xp, stat: template.stat, statLabel: template.statLabel, bonus: statGain, hunger: template.hunger, happiness: template.happiness, school: template.school || null },
       seed: hashString(`${bird.id || birdName}|${template.id}|${nowMs}`)
     };
   }
