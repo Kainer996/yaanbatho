@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
+CURRENT_BUILD = "bird-bond-love-v256-20260812"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

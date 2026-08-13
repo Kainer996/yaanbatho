@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
+CURRENT_BUILD = "bird-bond-love-v256-20260812"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -139,6 +139,8 @@ global.birdHasActiveTraining = () => false;
 global.academyRoleMultiplier = () => 1;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
+global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond
+global.birdBondCore = () => null;
 global.applyPlayerXpState = n => { gameState.player.xp += n; };
 global.levelUpBird = (b, xp) => { b.xp = (b.xp || 0) + xp; };
 global.recalcBirdPower = () => {};

@@ -16,7 +16,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "night_sky_core.js"
 
-CURRENT_BUILD = "night-owl-dark-mode-v257-20260813"
+OWN_RELEASE_PIN = "night-owl-dark-mode-v257-20260813"
+CURRENT_BUILD = "bird-bond-love-v256-20260812"
 PREVIOUS_RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
 
 
@@ -141,5 +142,6 @@ def test_release_is_versioned_and_cache_lineage_kept():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert CURRENT_BUILD in cache_line  # this release's own segment
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
+    assert CURRENT_BUILD in cache_line  # head build reaches players
     assert "./night_sky_core.js?v=night-owl-dark-mode-v257-20260813" in sw  # precached
