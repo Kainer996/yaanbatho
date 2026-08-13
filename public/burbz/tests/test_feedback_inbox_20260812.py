@@ -15,8 +15,8 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 INBOX = (ROOT / "inbox.html").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-OWN_RELEASE_PIN = "feedback-menu-v259-20260813"
-CURRENT_BUILD = "feedback-menu-v259-20260813"
+OWN_RELEASE_PIN = "feedback-menu-keyless-v262-20260813"
+CURRENT_BUILD = "feedback-menu-keyless-v262-20260813"
 
 
 def test_settings_has_the_inbox_row_next_to_send_feedback():

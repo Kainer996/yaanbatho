@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "feedback-menu-v259-20260813"
+CURRENT_BUILD = "feedback-menu-keyless-v262-20260813"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
