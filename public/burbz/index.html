@@ -3521,6 +3521,36 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .bat-secret-close:active { background:rgba(147,112,255,.3); }
 .profile-badge.secret.locked .profile-badge-icon { filter:grayscale(1); }
 .profile-badge.earned[data-badge="nightwing_secret"] { cursor:pointer; border-color:#9370ff; box-shadow:0 0 12px rgba(147,112,255,.4); }
+
+/* NIGHT MODE — when the sun is truly down where the player stands, the whole
+   game dims under a veil, and the Sound scan turns owl-dark: near-black, dim
+   amber text, no bright art. Built for a player standing under real owls. */
+#nightVeil { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:2147483000; transition:opacity 1.4s ease; }
+body.burbz-night #nightVeil { opacity:.45; }
+body.burbz-night { background:#000; }
+body.burbz-night .particles, body.burbz-night .speed-lines { display:none; }
+/* The game's own chrome banks its fires too: header and nav drop to embers. */
+body.burbz-night .header { filter:brightness(.5) saturate(.7); }
+body.burbz-night .bottom-nav, body.burbz-night .game-side-actions { filter:brightness(.45) saturate(.6); }
+/* The owl-dark listening screen: Sound mode is #screen-scan without .camera-mode. */
+body.burbz-night #screen-scan:not(.camera-mode) { background:#020204; }
+body.burbz-night #screen-scan:not(.camera-mode) .screen-title { color:#6b5325; text-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-mode-toggle { opacity:.4; }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-stage { background:transparent; border-color:rgba(122,96,48,.25); box-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-art { opacity:.14; filter:grayscale(.5) brightness(.55); }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-wand-tip { opacity:.25; }
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-kicker,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-status,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-activity,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-listener-privacy { color:#8a6a35; text-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-waveform { opacity:.35; }
+body.burbz-night #screen-scan:not(.camera-mode) .sound-session-shelf,
+body.burbz-night #screen-scan:not(.camera-mode) .merlin-data-note,
+body.burbz-night #screen-scan:not(.camera-mode) .scan-result { background:rgba(8,7,4,.9); border-color:rgba(122,96,48,.22); color:#8a6a35; box-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-btn { background:#0c0a05; border:1px solid rgba(138,106,53,.5); color:#a8843f; box-shadow:none; text-shadow:none; }
+body.burbz-night #screen-scan:not(.camera-mode) .scan-btn.recording { background:#120d05; color:#c49a4a; }
+.owl-night-note { display:none; margin:8px auto 0; max-width:340px; padding:9px 12px; border-radius:12px; border:1px solid rgba(138,106,53,.35); background:rgba(10,8,4,.85); color:#a8843f; font-size:12px; line-height:1.5; text-align:center; }
+body.burbz-night #screen-scan:not(.camera-mode) .owl-night-note { display:block; }
 </style>
 </head>
 <body>
@@ -3681,6 +3711,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="sound-session-shelf-empty" id="soundSessionShelfEmpty">No birds yet — start Merlin&rsquo;s wand and every bird you discover will perch here.</div>
         </div>
         <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
+        <div class="owl-night-note" id="owlNightNote">🌙 Night listening. The screen stays dark so you never startle an owl. Tap the button and Merlin listens by sound alone.</div>
         <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
           <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
@@ -4415,6 +4446,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   <div class="scan-encounter-stack" id="scanEncounterStack" aria-live="polite" aria-label="Birds heard while listening"></div>
 
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Night veil: dims the whole game while the sun is down outside -->
+  <div id="nightVeil" aria-hidden="true"></div>
 </div>
 
 <script src="lib/three.min.js?v=0.158.0"></script>
@@ -4438,6 +4472,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
+<script src="night_sky_core.js?v=night-owl-dark-mode-v257-20260813"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -34248,6 +34283,64 @@ function addDemoBirds() {
 }
 
 // ============================================================================
+// NIGHT MODE — the game follows the real sky over the player's head.
+// night_sky_core.js computes true sunrise and sunset from today's date and
+// the player's last known position (the same lastKnownHome the atlas uses).
+// While the sun is down, the whole game dims under the night veil and the
+// Sound scan turns owl-dark. With no location fix the local clock decides.
+// ============================================================================
+const BURBZ_NIGHT_CHECK_MS = 60000;
+let burbzNightActive = null;
+
+function burbzNightLatLon() {
+  const home = gameState && gameState.lastKnownHome;
+  if (home && Number.isFinite(Number(home.lat)) && Number.isFinite(Number(home.lon))) return { lat:Number(home.lat), lon:Number(home.lon) };
+  const live = liveMapLastPosition;
+  if (live && Number.isFinite(Number(live.lat)) && Number.isFinite(Number(live.lon))) return { lat:Number(live.lat), lon:Number(live.lon) };
+  return null;
+}
+
+function burbzNightDecisionNow(now = new Date()) {
+  const core = window.BurbzNightSkyCore;
+  if (!core) return { night:isNightRightNow(now.getTime()), source:'clock' };
+  const pos = burbzNightLatLon();
+  return core.nightDecision({ now, lat:pos && pos.lat, lon:pos && pos.lon });
+}
+
+function applyBurbzNightMode() {
+  const night = !!burbzNightDecisionNow().night;
+  if (night === burbzNightActive) return night;
+  burbzNightActive = night;
+  document.body.classList.toggle('burbz-night', night);
+  return night;
+}
+
+// The owl-safe open: when the game wakes at night for a player who has met
+// Merlin already, it lands straight on the dark Sound scan — no bright
+// screens, ready to listen. The microphone still waits for the player's tap.
+function maybeOpenNightListening(night) {
+  const core = window.BurbzNightSkyCore;
+  let introSeen = false;
+  try { introSeen = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1'; } catch (e) {}
+  // Merlin's opening tutorial keeps the floor — it resumes on the map.
+  const tutorialBusy = !merlinChaptersSeen().includes('story');
+  const open = core && typeof core.shouldOpenNightListening === 'function'
+    ? core.shouldOpenNightListening({ night, introSeen, tutorialBusy })
+    : (night && introSeen && !tutorialBusy);
+  if (!open) return false;
+  switchScreen('scan');
+  showSoundScanMode();
+  return true;
+}
+
+function startBurbzNightWatch() {
+  const night = applyBurbzNightMode();
+  setInterval(applyBurbzNightMode, BURBZ_NIGHT_CHECK_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) applyBurbzNightMode(); });
+  return night;
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 function init() {
@@ -34270,6 +34363,7 @@ function init() {
   const buildLine = $('settingsBuildLine');
   if (buildLine) buildLine.textContent = 'Build ' + BURBZ_BUILD;
   maybeShowIntroCutscene();
+  maybeOpenNightListening(startBurbzNightWatch());
   if (typeof updateMerlinFlowPointer === 'function') setTimeout(updateMerlinFlowPointer, 900);
   resumeSideQuestIfAny();
   startPetWander();
