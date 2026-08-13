@@ -17,7 +17,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "night_sky_core.js"
 
 OWN_RELEASE_PIN = "night-owl-dark-mode-v257-20260813"
-CURRENT_BUILD = "early-game-until-level-12-v262-20260813"
+CURRENT_BUILD = "real-place-names-v263-20260813"
 PREVIOUS_RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
 
 

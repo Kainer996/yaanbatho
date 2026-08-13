@@ -57,13 +57,24 @@
   // capital seed. Ids must exist in loot_crafting_core MATERIALS.
   const TRADE_GOODS = ['oak_twig', 'river_reed', 'iron_grit', 'down_tuft', 'storm_glass', 'moon_dust'];
 
-  // ---- Globally unique place names -----------------------------------------
-  // Seven fixed two-letter syllables are an injective base-26 encoding of the
-  // complete uint32 seed space (26^7 > 2^32). Each rank first XORs a different
-  // salt (a reversible permutation) and has its own ending, so a capital
-  // village, its town and its county sound unrelated and can never collide.
-  // Do not replace this with a hash or finite random pool: uniqueness here is a
-  // save-format invariant, not a probability.
+  // ---- Shared, hand-written place names -------------------------------------
+  // Every settlement on Earth draws its name from PLACE_NAMES: two hundred
+  // invented names, written by hand to read like real villages and towns.
+  // Every player sees the same two hundred, so the world feels authored
+  // rather than generated (the old 14-letter syllable stems read as noise).
+  //
+  // The SEED is the only identity. Save data must never key on a name:
+  // with a finite pool, far-apart places can share a name — exactly like
+  // Earth's many Newtons. Three properties keep the map readable:
+  //   1. Deterministic — placeName(kind, seed) is a pure function, so a
+  //      village is called the same thing on every phone, forever.
+  //   2. Spread — the index strides the pool by 73 (coprime with 200), so
+  //      any 200 consecutive seeds get 200 different names. Neighbouring
+  //      map cells hold consecutive seeds (villageCellSeed is sequential),
+  //      which pushes namesake villages kilometres apart.
+  //   3. Rank offsets — each rank adds its own offset, all six distinct
+  //      mod 200, so a capital village, its town and its county can never
+  //      share a name for the same seed.
   const PLACE_NAME_VERSION = 2;
   const VILLAGE_CELL_DEG = 0.02;
   // The live map asks for at most four cells beyond the legal latitude/
@@ -76,31 +87,70 @@
   const BLOCK_I_MIN = Math.floor(CELL_I_MIN / 3), BLOCK_I_MAX = Math.floor(CELL_I_MAX / 3);
   const BLOCK_J_MIN = Math.floor(CELL_J_MIN / 3), BLOCK_J_MAX = Math.floor(CELL_J_MAX / 3);
   const BLOCK_J_COUNT = BLOCK_J_MAX - BLOCK_J_MIN + 1;
-  const PLACE_NAME_SYLLABLES = Object.freeze([
-    'ba','be','bi','bo','bu','ca','ce','ci','co','cu','da','de','di',
-    'do','du','fa','fe','fi','fo','fu','ga','ge','gi','go','gu','ha'
+  // Two hundred names, alphabetical for easy auditing. Order is API: a name's
+  // position decides which seeds wear it, so append-or-replace in place —
+  // never re-sort, insert or delete once shipped.
+  const PLACE_NAMES = Object.freeze([
+    'Acornshaw', 'Alderbrook', 'Aldergate', 'Amberwick', 'Amblefirth',
+    'Anchorstow', 'Applecote', 'Ashenfell', 'Aspenlow', 'Asterfield',
+    'Badgerbrook', 'Barleymoor', 'Beckthorpe', 'Beechenholt', 'Bellbrook',
+    'Bilberrow', 'Birchhollow', 'Bitterndell', 'Bouldergate', 'Brackenholt',
+    'Bramblewick', 'Briarcombe', 'Brockhollow', 'Buntingfold', 'Burdockley',
+    'Cairnbrook', 'Cedarmoor', 'Chalkden', 'Cherrystow', 'Chestnutley',
+    'Cinderfell', 'Cliffburn', 'Cloverstow', 'Cobbleton', 'Cockleby',
+    'Comfreydell', 'Cootfen', 'Copperfell', 'Cowslipmead', 'Cranmoor',
+    'Cricketfield', 'Crocusbank', 'Cuckooshaw', 'Curlewgate', 'Cygnetford',
+    'Damsonfold', 'Dapplegill', 'Dawnbeck', 'Deephurst', 'Dewhollow',
+    'Dimmerdale', 'Dipperford', 'Doveholt', 'Driftmoor', 'Dunlinshore',
+    'Dunnockley', 'Duskmere', 'Eaglescrag', 'Eiderholm', 'Elderglen',
+    'Elmsworth', 'Elverthorpe', 'Emberley', 'Embertarn', 'Evergill',
+    'Falconleigh', 'Fallowden', 'Farrowby', 'Featherlow', 'Ferncombe',
+    'Fernsham', 'Finchdale', 'Flintlow', 'Foxbourne', 'Foxglovedell',
+    'Frostfold', 'Furzeholt', 'Galesworth', 'Gannetholm', 'Garthby',
+    'Gildenbrook', 'Gloamwick', 'Gorsefen', 'Greywold', 'Gullwick',
+    'Harebellmoor', 'Harrowdell', 'Hartsholt', 'Hawksfell', 'Hawthorndale',
+    'Hazelgarth', 'Heatherby', 'Heronmere', 'Herringwharf', 'Hollowbeck',
+    'Hollybourne', 'Honeycroft', 'Hornbeck', 'Humblestow', 'Inglebeck',
+    'Ironcombe', 'Ivymoor', 'Jackdawley', 'Jaywood', 'Junipermoor',
+    'Kelpcove', 'Kestrelby', 'Kilnfold', 'Kitewood', 'Lanternwick',
+    'Lapwingley', 'Larchfell', 'Larkbourne', 'Lilyfen', 'Lindenshaw',
+    'Linnetstow', 'Loamfield', 'Longmarsh', 'Mallowmarsh', 'Maplecroft',
+    'Marlbourne', 'Martenscroft', 'Meadowbeck', 'Merrowdale', 'Millthwaite',
+    'Minnowbrook', 'Misthollow', 'Mistleford', 'Moorcott', 'Mossbridge',
+    'Nettleby', 'Nuthatchden', 'Oakhollow', 'Oatgarth', 'Orchardholt',
+    'Ospreymere', 'Otterwade', 'Owlcombe', 'Oxenfen', 'Pebbleford',
+    'Pengarth', 'Pinefold', 'Pintailmere', 'Pippincote', 'Ploverstow',
+    'Primrosebank', 'Puffinholm', 'Quailsham', 'Quillbrook', 'Quincefen',
+    'Rainholm', 'Ramsondell', 'Ravenmere', 'Reedholme', 'Ridgefold',
+    'Rimebeck', 'Robinsworth', 'Rooksby', 'Rowanleigh', 'Rushfen',
+    'Saltmere', 'Scarholm', 'Sealfirth', 'Sedgefen', 'Shalefell',
+    'Shrikefell', 'Silverbeck', 'Siskinford', 'Slatefell', 'Sloecombe',
+    'Snipefen', 'Sorrelton', 'Sparrowden', 'Starlingden',
+    'Stonewharf', 'Stormgarth', 'Swanfold', 'Swiftmere', 'Tanglemere',
+    'Tarnlow', 'Tealbrook', 'Teaselcroft', 'Ternby', 'Thistlemere',
+    'Thornrigg', 'Tidewick', 'Timberholt', 'Turnstonecove', 'Umberfell',
+    'Vetchfield', 'Vixenholt', 'Wagtailford', 'Walnutshaw', 'Wheatcroft',
+    'Whistlebrook', 'Willowcombe', 'Winterbeck', 'Wrenfold', 'Yarrowden',
+    'Yewgarth'
   ]);
+  const PLACE_NAME_COUNT = PLACE_NAMES.length;
+  // Coprime with the pool size, so seed → index is a bijection mod 200.
+  const PLACE_NAME_STRIDE = 73;
   const PLACE_NAME_RANKS = Object.freeze({
-    village: { salt: 0x15a4e35b, ending: 'stead' },
-    town:    { salt: 0x4c11db7d, ending: 'haven' },
-    city:    { salt: 0x7f4a7c15, ending: 'spire' },
-    county:  { salt: 0x9e3779b9, ending: 'shire' },
-    duchy:   { salt: 0xb5297a4d, ending: 'reach' },
-    kingdom: { salt: 0xd1b54a35, ending: 'crown' }
+    village: { offset: 0 },
+    town:    { offset: 33 },
+    city:    { offset: 71 },
+    county:  { offset: 107 },
+    duchy:   { offset: 139 },
+    kingdom: { offset: 171 }
   });
 
   function placeName(kind, seed) {
     const rank = String(kind || '').toLowerCase();
     const config = PLACE_NAME_RANKS[rank];
     if (!config) throw new TypeError('Unknown place rank: ' + kind);
-    let value = ((Number(seed) >>> 0) ^ config.salt) >>> 0;
-    const syllables = Array(7);
-    for (let i = syllables.length - 1; i >= 0; i--) {
-      syllables[i] = PLACE_NAME_SYLLABLES[value % 26];
-      value = Math.floor(value / 26);
-    }
-    const stem = syllables.join('');
-    return stem.charAt(0).toUpperCase() + stem.slice(1) + config.ending;
+    const value = (Number(seed) >>> 0) % PLACE_NAME_COUNT;
+    return PLACE_NAMES[(value * PLACE_NAME_STRIDE + config.offset) % PLACE_NAME_COUNT];
   }
 
   function placeLabel(kind, seed) {
@@ -823,6 +873,7 @@
 
   return {
     PLACE_NAME_VERSION,
+    PLACE_NAMES,
     placeName,
     placeLabel,
     villageCellSeed,
