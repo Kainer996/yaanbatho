@@ -4512,6 +4512,7 @@ body.burbz-night #screen-scan:not(.camera-mode) .owl-night-note { display:block;
 <script src="night_sky_core.js?v=night-owl-dark-mode-v257-20260813"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
+<script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -20143,6 +20144,21 @@ const VILLAGE_PALETTES = [
   { sky: 0x141a22, ground: 0x22301e, plaster: 0xccc8b8, timber: 0x2c2214, stone: 0x5c626c, roofs: [0x6e3a44, 0x5a5a2a, 0x2e4a6e, 0x2f5238, 0x34343c], hemiSky: 0x5a6a88, hemiGround: 0x1e2214, speck: [100,140,80], weather: 'rain', leaf: 0x263a1c }
 ];
 
+// ---- Village DNA — No-Man's-Sky-style per-seed identity ---------------------
+// The variation core (village_variation_core.js) rolls each village a DNA
+// card — wall build, roof craft, colour washes, trim and door paints, window
+// glow, banner cloth — and re-keys the base palette in those colours through
+// pure hue maths. The builders read `pal.dna` for their styling; a missing
+// core changes nothing (base palette ships as-is, no DNA, classic look).
+function villageVariationCore() {
+  return (typeof globalThis !== 'undefined' && globalThis.BurbzVillageVariationCore) || null;
+}
+function villageVariedPalette(basePal, seed) {
+  const core = villageVariationCore();
+  if (!core) return basePal;
+  return core.varyPalette(basePal, core.villageDNA(seed));
+}
+
 // Not every settlement has every trade: the general store is guaranteed, the
 // rest come and go per village so exploring different villages actually matters.
 function villageShopKeysFor(seed) {
@@ -22907,8 +22923,29 @@ function currentTownSettlement() {
 }
 // The scene is rebuilt when the settlement's membership changes, not just its
 // id — a town that gains a district gets its new quarter on the next visit.
+// The war-and-recovery ledger the Town Square mirrors for one member
+// village: its ruin stage (0 wrecked · 1 rebuilding · 2 flourishing — the
+// exact thresholds the village scene uses), how many wrecks still lie
+// uncleared, the first wreck's kind, and any build rising right now.
+function villageDistrictState(seed) {
+  const rec = empireOwnsVillage(seed) ? ensureEmpireState().villages[String(Number(seed) >>> 0)] : null;
+  const dev = rec ? villageTotalDevelopment(rec) : 0;
+  const ruinStage = dev <= 0 ? 0 : dev < 5 ? 1 : 2;
+  const wrecks = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared) : [];
+  return {
+    ruinStage,
+    ruinsLeft: wrecks.length,
+    firstWreckKind: wrecks.length ? wrecks[0].kind : null,
+    construction: rec ? villageConstructionFor(rec) : null
+  };
+}
 function townSceneKey(settle) {
-  return settle.id + ':' + settle.villages.map(v => String(v.seed >>> 0)).sort().join(',');
+  // Membership AND recovery state key the scene: a district village that
+  // clears a wreck, starts a build or flourishes rebuilds the square.
+  return settle.id + ':' + settle.villages.map(v => {
+    const st = villageDistrictState(v.seed);
+    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '');
+  }).sort().join(',');
 }
 function renderTownScreen() {
   const stage = $('townStage');
@@ -22926,7 +22963,7 @@ function renderTownScreen() {
     sub.textContent = (isCity
       ? 'Your city — ' + settle.villageCount + ' villages grown into one. '
       : 'Your town — ' + settle.villageCount + ' neighbouring villages grown into one. ') +
-      'Each district keeps its own name and its own life. Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a district to walk its streets.';
+      'Each district is one of your real villages, drawn in its own colours — its true size, its own trades, its own landmark. Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a district to walk its streets.';
   }
   renderTownPanel(settle);
   if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
@@ -23629,50 +23666,86 @@ function villageBlobShadow(radius) {
 function villageMakeBuilding(shopKey, cfg, r, pal) {
   const g = new THREE.Group();
   g.userData.shopKey = shopKey;
+  // The village's DNA card decides how this trade is built: half-timbered,
+  // dressed stone, warm brick, or colour-washed and painted. No DNA (core
+  // missing) falls back to the classic half-timbered look.
+  const dna = pal.dna || null;
+  const wallStyle = dna ? dna.wallStyle : 'timber';
+  const roofCraft = dna ? dna.roofStyle : 'shingle';
+  const lean = dna ? dna.crookedness : 0.5;
 
   const w = 3.5 + r() * 1.2, d = 2.9 + r() * 0.9;
   const baseH = 1.45 + r() * 0.35, upH = 1.5 + r() * 0.45;
-  const jetty = 0.35 + r() * 0.4; // medieval overhang of the upper storey
+  // Medieval overhang of the upper storey — masonry builds barely jetty,
+  // timber ones lean out further the more crooked the village.
+  const masonry = wallStyle === 'stone' || wallStyle === 'brick';
+  const jetty = masonry ? 0.08 : 0.25 + r() * 0.3 + lean * 0.25;
   const uw = w + jetty, ud = d + jetty;
 
   const plaster = new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.08);
-  const bodyMat = new THREE.MeshLambertMaterial({ color: plaster });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const brick = new THREE.Color().setHSL(0.015 + r() * 0.035, 0.36 + r() * 0.14, 0.28 + r() * 0.07);
+  const stoneBody = new THREE.Color(pal.stone).offsetHSL(0, 0.03, 0.05 + (r() - 0.5) * 0.05);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: wallStyle === 'brick' ? brick : wallStyle === 'stone' ? stoneBody : plaster });
+  // Painted villages paint their beams too — trim colour over bare oak.
+  const beamMat = new THREE.MeshLambertMaterial({ color: wallStyle === 'painted' && dna ? dna.trim : pal.timber });
+  const trimMat = dna ? new THREE.MeshLambertMaterial({ color: dna.trim }) : beamMat;
+  const doorMat = dna ? new THREE.MeshLambertMaterial({ color: dna.door }) : beamMat;
   const roofMat = new THREE.MeshLambertMaterial({ color: cfg.roofColor });
   const baseMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.06) });
 
-  // Stone lower storey + jettied plaster upper storey
-  const base = new THREE.Mesh(new THREE.BoxGeometry(w, baseH, d), baseMat);
+  // Stone lower storey + jettied upper storey
+  const base = new THREE.Mesh(new THREE.BoxGeometry(w, baseH, d), masonry ? bodyMat : baseMat);
   base.position.y = baseH / 2; g.add(base);
   const upper = new THREE.Mesh(new THREE.BoxGeometry(uw, upH, ud), bodyMat);
   upper.position.y = baseH + upH / 2; g.add(upper);
 
-  // Timber frame: corner posts, belt beam, studs and diagonal braces
-  const beltH = new THREE.Mesh(new THREE.BoxGeometry(uw + 0.12, 0.18, ud + 0.12), beamMat);
+  const beltH = new THREE.Mesh(new THREE.BoxGeometry(uw + 0.12, 0.18, ud + 0.12), masonry ? baseMat : beamMat);
   beltH.position.y = baseH; g.add(beltH);
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, upH, 0.2), beamMat);
-    post.position.set(sx * (uw / 2 - 0.08), baseH + upH / 2, sz * (ud / 2 - 0.08));
-    g.add(post);
-  }
-  const studCount = Math.max(2, Math.floor(uw / 1.35));
-  for (let i = 0; i < studCount; i++) {
-    const sxp = -uw / 2 + (i + 1) * uw / (studCount + 1);
-    const stud = new THREE.Mesh(new THREE.BoxGeometry(0.14, upH, 0.1), beamMat);
-    stud.position.set(sxp, baseH + upH / 2, ud / 2 + 0.02);
-    g.add(stud);
-    if (r() < 0.6) {
-      const brace = new THREE.Mesh(new THREE.BoxGeometry(0.1, upH * 0.86, 0.08), beamMat);
-      brace.position.set(sxp + (r() < 0.5 ? -0.32 : 0.32), baseH + upH / 2, ud / 2 + 0.03);
-      brace.rotation.z = (r() < 0.5 ? 1 : -1) * 0.5;
-      g.add(brace);
+  if (wallStyle === 'stone') {
+    // Dressed-stone build: pale quoins up the corners instead of oak posts
+    const quoinMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.02, 0.14) });
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      for (let q = 0; q < 3; q++) {
+        const quoin = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.26), quoinMat);
+        quoin.position.set(sx * (uw / 2 - 0.06), baseH + 0.3 + q * (upH - 0.5) / 2, sz * (ud / 2 - 0.06));
+        g.add(quoin);
+      }
+    }
+  } else if (wallStyle === 'brick') {
+    // Brick build: pale mortar string-courses ring the upper storey
+    const mortarMat = new THREE.MeshLambertMaterial({ color: 0xcfc4ae });
+    for (const f of [0.3, 0.68]) {
+      const course = new THREE.Mesh(new THREE.BoxGeometry(uw + 0.06, 0.07, ud + 0.06), mortarMat);
+      course.position.y = baseH + upH * f; g.add(course);
+    }
+  } else {
+    // Timber frame: corner posts, studs and diagonal braces
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, upH, 0.2), beamMat);
+      post.position.set(sx * (uw / 2 - 0.08), baseH + upH / 2, sz * (ud / 2 - 0.08));
+      g.add(post);
+    }
+    const studCount = Math.max(2, Math.floor(uw / 1.35));
+    for (let i = 0; i < studCount; i++) {
+      const sxp = -uw / 2 + (i + 1) * uw / (studCount + 1);
+      const stud = new THREE.Mesh(new THREE.BoxGeometry(0.14, upH, 0.1), beamMat);
+      stud.position.set(sxp, baseH + upH / 2, ud / 2 + 0.02);
+      g.add(stud);
+      if (r() < 0.6) {
+        const brace = new THREE.Mesh(new THREE.BoxGeometry(0.1, upH * 0.86, 0.08), beamMat);
+        brace.position.set(sxp + (r() < 0.5 ? -0.32 : 0.32), baseH + upH / 2, ud / 2 + 0.03);
+        brace.rotation.z = (r() < 0.5 ? 1 : -1) * 0.5;
+        g.add(brace);
+      }
     }
   }
 
   // Glowing (or dark) windows on the upper storey. Each trade keeps its own
-  // hour-glow: violet at the potion shop, forge-orange at the smith.
+  // hour-glow: violet at the potion shop, forge-orange at the smith — and
+  // everyone else burns the village's own lamp oil (its DNA glow colour).
   const winTint = shopKey === 'potion' ? { hex: 0xc9a0ff, rgb: '190,150,255' }
     : shopKey === 'smith' ? { hex: 0xffab52, rgb: '255,150,70' }
+    : dna ? dna.windowGlow
     : { hex: 0xffd98a, rgb: '255,205,120' };
   const litMat = new THREE.MeshBasicMaterial({ color: winTint.hex });
   const darkMat = new THREE.MeshLambertMaterial({ color: 0x1c1812 });
@@ -23688,16 +23761,17 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
       glow.scale.set(1.5, 1.5, 1); glow.position.set(wx, baseH + upH / 2 + 0.05, ud / 2 + 0.3);
       g.add(glow);
     }
-    // shutters
+    // shutters, painted in the village's trim colour
     if (r() < 0.5) {
       for (const sside of [-1, 1]) {
-        const sh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.6, 0.05), roofMat);
+        const sh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.6, 0.05), trimMat);
         sh.position.set(wx + sside * 0.42, baseH + upH / 2 + 0.05, ud / 2 + 0.05);
         g.add(sh);
       }
     }
-    // window box spilling blooms under a lit window
-    if (lit && r() < 0.6) {
+    // window box spilling blooms under a lit window — prosperous villages
+    // keep more of them
+    if (lit && r() < (dna ? 0.3 + dna.prosperity * 0.55 : 0.6)) {
       const box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.12, 0.14), beamMat);
       box.position.set(wx, baseH + upH / 2 - 0.32, ud / 2 + 0.1); g.add(box);
       const bloomCols = [0xd05a72, 0xe8c84a, 0xc8cdec, 0xd07a3a];
@@ -23719,10 +23793,10 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
     g.add(win);
   }
 
-  // Arched door + warm lantern beside it
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.25, 0.12), beamMat);
+  // Arched door — painted in the village's own door colour — + warm lantern
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.25, 0.12), doorMat);
   door.position.set(0, 0.62, d / 2 + 0.03); g.add(door);
-  const arch = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 12, 1, false, 0, Math.PI), beamMat);
+  const arch = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 12, 1, false, 0, Math.PI), doorMat);
   arch.rotation.x = Math.PI / 2; arch.rotation.z = Math.PI / 2;
   arch.position.set(0, 1.25, d / 2 + 0.03); g.add(arch);
   const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.16), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
@@ -23742,37 +23816,56 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
     }
   }
 
-  // Roof: gable, pyramid or hipped — with overhang and a ridge beam
-  const roofH = 1.45 + r() * 0.7;
-  const roofStyle = r();
-  if (roofStyle < 0.5) {
+  // Roof: gable, pyramid or hipped — with overhang and a ridge beam. The
+  // roof craft steers the dice: thatch always raises a deep gable, slate and
+  // tile mostly gable, shingle keeps the classic mix.
+  const roofH = (roofCraft === 'thatch' ? 1.65 : 1.45) + r() * 0.7;
+  const roofShape = roofCraft === 'thatch' ? 0 : roofCraft === 'slate' || roofCraft === 'tile' ? r() * 0.8 : r();
+  if (roofShape < 0.5) {
     const W = uw / 2 + 0.45;
     const shape = new THREE.Shape();
     shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
     const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: ud + 0.9, bevelEnabled: false }), roofMat);
     roof.position.set(0, baseH + upH, -(ud + 0.9) / 2); g.add(roof);
-    const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, ud + 1.05), beamMat);
-    ridge.position.set(0, baseH + upH + roofH, 0); g.add(ridge);
-    // shingle courses so the roof reads as tiles rather than a flat slab
     const slope = Math.atan2(roofH, W);
-    const shingleMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(cfg.roofColor).offsetHSL(0, 0, -0.06) });
-    for (const s of [-1, 1]) {
-      for (const f of [0.3, 0.62]) {
-        const line = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, ud + 0.95), shingleMat);
-        line.position.set(s * W * (1 - f), baseH + upH + roofH * f + 0.05, 0);
-        line.rotation.z = -s * slope;
-        g.add(line);
+    if (roofCraft === 'thatch') {
+      // Thatched: a rounded straw ridge roll and brushed-out eaves in place
+      // of crisp shingle courses
+      const strawMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(cfg.roofColor).offsetHSL(0, 0.03, 0.06) });
+      const ridgeRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, ud + 1.0, 8), strawMat);
+      ridgeRoll.rotation.x = Math.PI / 2;
+      ridgeRoll.position.set(0, baseH + upH + roofH - 0.04, 0); g.add(ridgeRoll);
+      for (const s of [-1, 1]) {
+        const eave = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, ud + 1.0), strawMat);
+        eave.position.set(s * W * 0.94, baseH + upH + 0.06, 0);
+        eave.rotation.z = -s * slope;
+        g.add(eave);
+      }
+    } else {
+      const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, ud + 1.05), beamMat);
+      ridge.position.set(0, baseH + upH + roofH, 0); g.add(ridge);
+      // shingle courses so the roof reads as tiles rather than a flat slab
+      const shingleMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(cfg.roofColor).offsetHSL(0, 0, -0.06) });
+      for (const s of [-1, 1]) {
+        for (const f of [0.3, 0.62]) {
+          const line = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, ud + 0.95), shingleMat);
+          line.position.set(s * W * (1 - f), baseH + upH + roofH * f + 0.05, 0);
+          line.rotation.z = -s * slope;
+          g.add(line);
+        }
       }
     }
     // Dormer windows peeking out of the roof slopes (ridge runs along z,
-    // so the slopes face ±x and each dormer turns to face its own side)
-    const dormers = r() < 0.55 ? 1 + Math.floor(r() * 2) : 0;
+    // so the slopes face ±x and each dormer turns to face its own side).
+    // A brushed thatch roof keeps its sweep unbroken — no dormers.
+    const dormerMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(cfg.roofColor).offsetHSL(0, 0, -0.06) });
+    const dormers = roofCraft !== 'thatch' && r() < 0.55 ? 1 + Math.floor(r() * 2) : 0;
     for (let di = 0; di < dormers; di++) {
       const side = dormers === 1 ? (r() < 0.5 ? -1 : 1) : (di === 0 ? -1 : 1);
       const dorm = new THREE.Group();
       const cube = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.55, 0.6), bodyMat);
       cube.position.y = 0.27; dorm.add(cube);
-      const dRoof = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.42, 4), shingleMat);
+      const dRoof = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.42, 4), dormerMat);
       dRoof.position.y = 0.76; dRoof.rotation.y = Math.PI / 4; dorm.add(dRoof);
       const dWin = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.32, 0.06), r() < 0.7 ? litMat : darkMat);
       dWin.position.set(0, 0.28, 0.32); dorm.add(dWin);
@@ -23780,7 +23873,7 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
       dorm.position.set(side * W * 0.55, baseH + upH + roofH * 0.3, (r() - 0.5) * ud * 0.5);
       g.add(dorm);
     }
-  } else if (roofStyle < 0.8) {
+  } else if (roofShape < 0.8) {
     const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(uw, ud) * 0.72, roofH + 0.3, 4), roofMat);
     roof.position.y = baseH + upH + (roofH + 0.3) / 2; roof.rotation.y = Math.PI / 4; g.add(roof);
   } else {
@@ -23925,23 +24018,44 @@ function villageShopDressing(shopKey, g, w, d, r, pal) {
 // A plain villager cottage (no shop) — fills out bigger settlements.
 function villageMakeCottage(r, pal) {
   const g = new THREE.Group();
+  // Homes follow the village's DNA too: the same wall build, roof craft and
+  // painted doors as the trades, so a whole settlement reads as one place.
+  const dna = pal.dna || null;
+  const wallStyle = dna ? dna.wallStyle : 'timber';
   const w = 2.2 + r() * 1.1, d = 2.0 + r() * 0.9, h = 1.2 + r() * 0.5;
-  const bodyMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.12) });
-  const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const roofMat = new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] });
+  const brick = new THREE.Color().setHSL(0.015 + r() * 0.035, 0.36 + r() * 0.14, 0.28 + r() * 0.07);
+  const stoneBody = new THREE.Color(pal.stone).offsetHSL(0, 0.03, 0.05 + (r() - 0.5) * 0.05);
+  const bodyMat = new THREE.MeshLambertMaterial({ color: wallStyle === 'brick' ? brick : wallStyle === 'stone' ? stoneBody : new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.12) });
+  const beamMat = new THREE.MeshLambertMaterial({ color: wallStyle === 'painted' && dna ? dna.trim : pal.timber });
+  const roofTone = pal.roofs[Math.floor(r() * pal.roofs.length)];
+  const roofMat = new THREE.MeshLambertMaterial({ color: roofTone });
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
   body.position.y = h / 2; g.add(body);
   const belt = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.12, d + 0.06), beamMat);
   belt.position.y = h; g.add(belt);
-  const roofH = 0.9 + r() * 0.6, W = w / 2 + 0.28;
+  const roofH = (dna && dna.roofStyle === 'thatch' ? 1.05 : 0.9) + r() * 0.6, W = w / 2 + 0.28;
   const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
   const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: d + 0.5, bevelEnabled: false }), roofMat);
   roof.position.set(0, h, -(d + 0.5) / 2); g.add(roof);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.85, 0.1), beamMat);
+  if (dna && dna.roofStyle === 'thatch') {
+    const ridgeRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, d + 0.6, 7),
+      new THREE.MeshLambertMaterial({ color: new THREE.Color(roofTone).offsetHSL(0, 0.03, 0.06) }));
+    ridgeRoll.rotation.x = Math.PI / 2; ridgeRoll.position.set(0, h + roofH - 0.03, 0); g.add(ridgeRoll);
+  }
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.85, 0.1), dna ? new THREE.MeshLambertMaterial({ color: dna.door }) : beamMat);
   door.position.set((r() - 0.5) * w * 0.4, 0.43, d / 2 + 0.03); g.add(door);
   if (r() < 0.75) {
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.06), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.06), new THREE.MeshBasicMaterial({ color: dna ? dna.windowGlow.hex : 0xffd98a }));
     win.position.set(-(r() - 0.5) * w * 0.55, h * 0.6, d / 2 + 0.04); g.add(win);
+  }
+  // A lean-to wood store against one gable — the countryside's spare room
+  if (r() < 0.35) {
+    const side = r() < 0.5 ? -1 : 1;
+    const lean = new THREE.Mesh(new THREE.BoxGeometry(0.6, h * 0.55, d * 0.7), bodyMat);
+    lean.position.set(side * (w / 2 + 0.3), h * 0.27, 0); g.add(lean);
+    const leanRoof = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.07, d * 0.78), roofMat);
+    leanRoof.position.set(side * (w / 2 + 0.32), h * 0.6, 0);
+    leanRoof.rotation.z = side * 0.35; g.add(leanRoof);
   }
   if (r() < 0.55) {
     const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), new THREE.MeshLambertMaterial({ color: pal.stone }));
@@ -24498,7 +24612,10 @@ function villageMakeMaypole(r, pal) {
   pole.position.y = 2.1; grp.add(pole);
   const crown = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 6, 12), new THREE.MeshLambertMaterial({ color: 0x3c5a22 }));
   crown.rotation.x = Math.PI / 2; crown.position.y = 4.0; grp.add(crown);
-  const ribbonColors = [0xc0392b, 0xe8c84a, 0x3a6ea8, 0x8a4aa0, 0x3e8a4a, 0xd07a3a];
+  // Ribbons dyed in the village's own festival cloth when it has DNA
+  const ribbonColors = pal.dna
+    ? [pal.dna.banners[0], pal.dna.banners[1], pal.dna.trim, pal.dna.banners[0], pal.dna.door, pal.dna.banners[1]]
+    : [0xc0392b, 0xe8c84a, 0x3a6ea8, 0x8a4aa0, 0x3e8a4a, 0xd07a3a];
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
     const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 3.6),
@@ -24715,6 +24832,8 @@ function villageMakeCentrepiece(r, pal) {
 function villageMakeGarland(r, pal, from, to) {
   const grp = new THREE.Group();
   const flags = 8;
+  // Bunting in the village's own festival colours where it has DNA
+  const cloth = pal.dna ? [pal.dna.banners[0], pal.dna.banners[1], pal.dna.trim, pal.dna.door] : pal.roofs;
   for (let i = 1; i < flags; i++) {
     const t = i / flags;
     const x = from.x + (to.x - from.x) * t;
@@ -24724,7 +24843,7 @@ function villageMakeGarland(r, pal, from, to) {
     const shape = new THREE.Shape();
     shape.moveTo(-0.16, 0); shape.lineTo(0.16, 0); shape.lineTo(0, -0.4); shape.closePath();
     const flag = new THREE.Mesh(new THREE.ShapeGeometry(shape),
-      new THREE.MeshBasicMaterial({ color: pal.roofs[i % pal.roofs.length], side: THREE.DoubleSide }));
+      new THREE.MeshBasicMaterial({ color: cloth[i % cloth.length], side: THREE.DoubleSide }));
     flag.position.set(x, y, z);
     flag.lookAt(0, y, 0);
     grp.add(flag);
@@ -24868,6 +24987,80 @@ function villageMakeBellTower(r, pal) {
 
 // ---- New props ----------------------------------------------------------------
 // A scarecrow the local birds treat as a public perch — the farmer despairs.
+// A wayside shrine — a stone niche, a votive candle, offerings of feathers.
+// Small enough for any village, holy enough for a skyline of its own.
+function villageMakeShrine(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, 0.05) });
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.35, 1.1), stoneMat);
+  plinth.position.y = 0.18; g.add(plinth);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.3, 0.7), stoneMat);
+  body.position.y = 1.0; g.add(body);
+  // the open niche, candle-warm inside
+  const niche = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.6, 0.1), new THREE.MeshLambertMaterial({ color: 0x14100c }));
+  niche.position.set(0, 1.1, 0.31); g.add(niche);
+  const candle = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.16, 0.09), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+  candle.position.set(0, 0.95, 0.33); g.add(candle);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,205,120'), transparent: true, depthWrite: false, opacity: 0.6 }));
+  glow.scale.set(1.4, 1.4, 1); glow.position.set(0, 1.1, 0.5); g.add(glow);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(0.68, 0.55, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[Math.floor(r() * pal.roofs.length)] }));
+  cap.position.y = 1.92; cap.rotation.y = Math.PI / 4; g.add(cap);
+  // feathers left by grateful travellers
+  for (let i = 0; i < 3; i++) {
+    const feather = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.26),
+      new THREE.MeshLambertMaterial({ color: [0xd8d4c8, 0x8a4a3a, 0x4a5a8a][i], side: THREE.DoubleSide }));
+    feather.position.set((r() - 0.5) * 0.5, 0.4, 0.62 + r() * 0.2);
+    feather.rotation.set(-0.4, r() * 3, (r() - 0.5) * 0.8);
+    g.add(feather);
+  }
+  if (r() < 0.6) {
+    const pilgrim = villageMakeRoofBird(r);
+    pilgrim.position.set(0, 2.22, 0); g.add(pilgrim);
+  }
+  g.add(villageBlobShadow(0.9));
+  return g;
+}
+
+// A squat stone watchtower with a night brazier — the frontier never sleeps.
+function villageMakeWatchtower(r, pal) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, (r() - 0.5) * 0.06) });
+  const towerH = 3.6 + r() * 1.2;
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, towerH, 9), stoneMat);
+  tower.position.y = towerH / 2; g.add(tower);
+  // battlement ring
+  const walk = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.24, 9), stoneMat);
+  walk.position.y = towerH + 0.1; g.add(walk);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.34, 0.2), stoneMat);
+    merlon.position.set(Math.cos(a) * 0.98, towerH + 0.37, Math.sin(a) * 0.98);
+    merlon.rotation.y = -a; g.add(merlon);
+  }
+  // arrow slits, lit from within
+  for (let i = 0; i < 2; i++) {
+    const slit = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.5, 0.06), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+    slit.position.set((i === 0 ? -0.3 : 0.35), towerH * (0.4 + i * 0.25), 0.95);
+    g.add(slit);
+  }
+  // the watch brazier burns all night
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 0.22, 8), new THREE.MeshLambertMaterial({ color: 0x2a2a30 }));
+  bowl.position.y = towerH + 0.45; g.add(bowl);
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.45, 6), new THREE.MeshBasicMaterial({ color: 0xffab52 }));
+  flame.position.y = towerH + 0.75; g.add(flame);
+  const fireGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,150,70'), transparent: true, depthWrite: false, opacity: 0.7 }));
+  fireGlow.scale.set(2.6, 2.6, 1); fireGlow.position.y = towerH + 0.8; g.add(fireGlow);
+  const doorMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.9, 0.1), doorMat);
+  door.position.set(0, 0.45, 1.0); g.add(door);
+  if (r() < 0.6) {
+    const watcher = villageMakeRoofBird(r);
+    watcher.position.set(0.4, towerH + 0.55, -0.4); g.add(watcher);
+  }
+  g.add(villageBlobShadow(1.3));
+  return g;
+}
+
 function villageMakeScarecrow(r, pal) {
   const g = new THREE.Group();
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
@@ -25723,13 +25916,23 @@ function disposeVillageScene() {
   villageWeatherFx = null; villageShootingStar = null; villageTwinkleStars = null;
 }
 
+// The one landmark pool both scenes share. Order matters: the landmark
+// ledger (village_variation_core.landmarkPlan) speaks in indices into THIS
+// array, so the village screen and the Town Square's districts resolve the
+// same pick to the same maker. Append new landmarks at the end only.
+const VILLAGE_LANDMARK_MAKERS = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower,
+  villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower,
+  villageMakeShrine, villageMakeWatchtower];
+
 function buildVillageScene(v) {
   disposeVillageScene();
   const r = villageRngFrom(v.seed);
   // The real sky: the scene is lit for the player's local time of day. Each
   // village keeps its seeded night palette; daylight blends it toward the sun.
   const daylight = burbzDaylightGradeNow();
-  const basePal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
+  // The pinned palette roll survives; the village's DNA then re-keys the base
+  // palette into this settlement's own coat of paint before daylight grades it.
+  const basePal = villageVariedPalette(VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)], v.seed);
   const pal = burbzDaylightPalette(basePal, daylight);
   // Settlement size drives how many cottages/landmarks appear, so villages range
   // from a tiny hamlet (just the shops) to a sprawling market town.
@@ -26144,16 +26347,22 @@ function buildVillageScene(v) {
   }
 
   // Landmarks — churches, windmills, manors, ruins, and rarer wonders: the
-  // Great Perch, a standing-stone circle, a royal aviary, a dusk bell tower.
-  // No two settlements share a skyline.
-  const landmarkMakers = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower,
-    villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower];
-  const landmarkCount = ruinStage < 2 ? 0 : tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
-  const landmarkPool = landmarkMakers.slice();
+  // Great Perch, a standing-stone circle, a royal aviary, a dusk bell tower,
+  // a wayside shrine, a stone watchtower. No two settlements share a skyline.
+  // WHICH landmarks rise comes from the seed-keyed landmark ledger, so the
+  // Town Square can show every district its village's true signature. A
+  // missing core rolls the classic way from the scene stream instead.
+  const vvCore = villageVariationCore();
+  const lmPlan = vvCore && vvCore.landmarkPlan ? vvCore.landmarkPlan(v.seed, tier, VILLAGE_LANDMARK_MAKERS.length) : null;
+  const landmarkCount = ruinStage < 2 ? 0
+    : lmPlan ? lmPlan.count
+    : tier === 0 ? (r() < 0.35 ? 1 : 0) : tier === 1 ? 1 + (r() < 0.35 ? 1 : 0) : 2 + (r() < 0.5 ? 1 : 0);
+  const landmarkPool = VILLAGE_LANDMARK_MAKERS.slice();
   for (let i = 0; i < landmarkCount; i++) {
     const spot = scatterSpot(11.5, 16, 3.4, dryArc.c, dryArc.s);
     if (!spot) break;
-    const maker = landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0];
+    const maker = lmPlan ? VILLAGE_LANDMARK_MAKERS[lmPlan.picks[i]]
+      : landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0];
     const landmark = maker(r, pal);
     landmark.position.set(spot.x, 0, spot.z);
     landmark.rotation.y = -spot.a + (r() - 0.5);
@@ -27037,11 +27246,13 @@ function buildTownScene(settle) {
   const pal = burbzDaylightPalette(basePal, daylight);
   const groundR = isCity ? 52 : 46;
   const flatR = groundR - 10;
-  // Mark the shared registries so district builders' walkers, birds, cloths
-  // and hens can be moved into the town's own animation lists afterwards.
+  // Mark the shared registries so district builders' walkers, birds, cloths,
+  // hens, smokes and signs can be moved into the town's own animation lists
+  // afterwards.
   const npcMark = villageNpcs.length, chickenMark = villageChickens.length;
   const birdMark = villageRoofBirds.length, clothMark = villageCloths.length;
   const windmillMark = villageWindmills.length;
+  const smokeMark = villageSmokes.length, signMark = villageSigns.length;
 
   townScene = new THREE.Scene();
   townScene.background = new THREE.Color(pal.sky);
@@ -27149,46 +27360,131 @@ function buildTownScene(settle) {
     const dr = villageRngFrom((seed ^ 0x2545f491) >>> 0);
     const district = new THREE.Group();
     district.userData.districtSeed = seed;
-    // District green: a small cobbled yard, cottages ringed around it, one
-    // signature landmark so every quarter of the town looks like itself.
-    const padR = isHeart ? 4.6 : 3.8;
+    // THE DISTRICT IS ITS VILLAGE. Replay this member village's own opening
+    // dice (palette, size, plan) and its DNA card, so the quarter drawn here
+    // wears the same colours, walls, roofs and trades as the village screen
+    // the tap travels into. No variation core = the shared town palette.
+    const vcore = villageVariationCore();
+    const plan = vcore ? vcore.villagePlan(seed, VILLAGE_PALETTES.length) : null;
+    const dpal = plan
+      ? burbzDaylightPalette(villageVariedPalette(VILLAGE_PALETTES[plan.paletteIndex], seed), daylight)
+      : pal;
+    const dTier = plan ? plan.tier : 1;
+    const dLayout = plan ? plan.layout : 'green';
+    // ...and the district mirrors its village's RECOVERY too: still wrecked,
+    // rebuilding, or flourishing — with the same gates the village scene uses.
+    const dState = villageDistrictState(seed);
+    const dRuin = dState.ruinStage;
+    // District green: a cobbled yard sized to the village's true standing,
+    // its own landmark, one of its real trades, and homes laid to its plan.
+    const padR = (isHeart ? 4.6 : 3.8) + dTier * 0.35;
     const pad = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(padR, 22), (padR * 2) / cobbleTile, (padR * 2) / cobbleTile), cobbleMat);
     pad.rotation.x = -Math.PI / 2; pad.position.y = 0.018; district.add(pad);
-    const landmarkRoll = dr();
-    const landmark = landmarkRoll < 0.3 ? villageMakeChurch(dr, pal)
-      : landmarkRoll < 0.55 ? villageMakeWindmill(dr, pal)
-      : landmarkRoll < 0.8 ? villageMakeManor(dr, pal)
-      : villageMakeDovecote(dr, pal);
+    // The district's landmark IS the village's: the seed-keyed landmark
+    // ledger names the first landmark the village raises, and the district
+    // builds exactly that one. A village too small to keep a landmark shows
+    // an honest bare green — an extra tree and a cart where a spire isn't.
+    const lmPlan = vcore && vcore.landmarkPlan ? vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length) : null;
     const la = dr() * Math.PI * 2;
-    landmark.position.set(Math.cos(la) * (padR + 1.6), 0, Math.sin(la) * (padR + 1.6));
-    landmark.lookAt(0, 0, 0); landmark.rotation.x = 0; landmark.rotation.z = 0;
-    district.add(landmark);
-    const cottages = isHeart ? 4 : 2 + Math.floor(dr() * 2);
-    for (let c = 0; c < cottages; c++) {
-      const cot = villageMakeCottage(dr, pal);
-      const ca = la + ((c + 1) / (cottages + 1)) * Math.PI * 2;
-      cot.position.set(Math.cos(ca) * (padR + 1.3 + dr() * 0.8), 0, Math.sin(ca) * (padR + 1.3 + dr() * 0.8));
-      cot.lookAt(0, 0, 0); cot.rotation.x = 0; cot.rotation.z = 0;
-      district.add(cot);
-      if (dr() < 0.6) { // hearth smoke over a lived-in district
-        const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageSmokeTexture(), transparent: true, depthWrite: false, opacity: 0.4 }));
-        puff.userData = { baseY: 3.1, speed: 0.5 + dr() * 0.3, phase: dr() * 1.6 };
-        puff.position.set(cot.position.x, 3.1, cot.position.z);
-        district.add(puff);
-        townSmokes.push(puff);
+    if (dRuin < 2) {
+      // The war is still visible from the square: until the governor
+      // rebuilds it, the district shows its village's real wreckage —
+      // landmarks wait for the province to flourish, as they do down there.
+      if (dState.ruinsLeft > 0) {
+        const wreck = villageMakeWreckedBuilding(dr, dpal, dState.firstWreckKind || 'house');
+        wreck.position.set(Math.cos(la) * (padR + 1.7), 0, Math.sin(la) * (padR + 1.7));
+        wreck.rotation.y = dr() * Math.PI * 2;
+        district.add(wreck);
+      }
+      const piles = dRuin === 0 ? 2 : (dState.ruinsLeft ? 1 : 0);
+      for (let p = 0; p < piles; p++) {
+        const pile = villageMakeRubblePile(dr, dpal);
+        pile.position.set(Math.cos(la + 1.1 + p * 1.3) * (padR + 1.2), 0, Math.sin(la + 1.1 + p * 1.3) * (padR + 1.2));
+        pile.rotation.y = dr() * Math.PI * 2;
+        district.add(pile);
+      }
+    } else if (!lmPlan || lmPlan.signature !== null) {
+      const landmarkMaker = lmPlan ? VILLAGE_LANDMARK_MAKERS[lmPlan.signature]
+        : VILLAGE_LANDMARK_MAKERS[Math.floor(dr() * VILLAGE_LANDMARK_MAKERS.length)];
+      const landmark = landmarkMaker(dr, dpal);
+      landmark.position.set(Math.cos(la) * (padR + 1.6), 0, Math.sin(la) * (padR + 1.6));
+      landmark.lookAt(0, 0, 0); landmark.rotation.x = 0; landmark.rotation.z = 0;
+      district.add(landmark);
+    } else {
+      const spareTree = villageMakeTree(dr, dpal);
+      spareTree.position.set(Math.cos(la) * (padR + 1.8), 0, Math.sin(la) * (padR + 1.8));
+      district.add(spareTree);
+      const cart = villageMakeCart(dr, dpal);
+      cart.rotation.y = dr() * Math.PI * 2;
+      cart.position.set(Math.cos(la + 0.7) * (padR + 1.4), 0, Math.sin(la + 0.7) * (padR + 1.4));
+      district.add(cart);
+    }
+    // One of the village's REAL trades keeps a shopfront on the yard — the
+    // same shop you can walk into down in the village itself. A wrecked
+    // village's trades haven't reopened, exactly as its own screen draws it.
+    if (dRuin >= 1) {
+      const trades = villageShopKeysFor(seed);
+      const tradeKey = trades[Math.floor(dr() * trades.length)];
+      const shopfront = villageMakeBuilding(tradeKey, {
+        icon: VILLAGE_SHOPS[tradeKey].icon, name: VILLAGE_SHOPS[tradeKey].name,
+        roofColor: dpal.roofs[Math.floor(dr() * dpal.roofs.length)]
+      }, dr, dpal);
+      shopfront.scale.set(0.82, 0.82, 0.82);
+      const sa = la + Math.PI + (dr() - 0.5) * 0.8; // across the yard from the landmark
+      shopfront.position.set(Math.cos(sa) * (padR + 1.5), 0, Math.sin(sa) * (padR + 1.5));
+      shopfront.lookAt(0, 0, 0); shopfront.rotation.x = 0; shopfront.rotation.z = 0;
+      district.add(shopfront);
+    }
+    // A build rising in the village rises in its district too, scaffold,
+    // half-raised walls, busy builder and all.
+    if (dState.construction) {
+      const site = villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction));
+      const ba = la + 2.4;
+      site.position.set(Math.cos(ba) * (padR + 1.9), 0, Math.sin(ba) * (padR + 1.9));
+      site.rotation.y = dr() * Math.PI * 2;
+      district.add(site);
+    }
+    // Homes laid out to the village's own plan: a lane village strings its
+    // cottages along a street, a hamlet scatters them, the rest ring the
+    // yard. Homes return once the province flourishes — the village's rule.
+    if (dRuin === 2) {
+      const cottages = (isHeart ? 1 : 0) + (dTier === 0 ? 2 : dTier === 1 ? 3 : 4) + Math.floor(dr() * 2);
+      const laneA = dr() * Math.PI * 2;
+      for (let c = 0; c < cottages; c++) {
+        const cot = villageMakeCottage(dr, dpal);
+        let cx, cz;
+        if (dLayout === 'lane') {
+          const along = (c % 2 === 0 ? 1 : -1) * (padR + 0.8 + Math.floor(c / 2) * 2.4);
+          const side = (c % 2 === 0 ? 1 : -1) * (1.3 + dr() * 0.6);
+          cx = Math.cos(laneA) * along - Math.sin(laneA) * side;
+          cz = Math.sin(laneA) * along + Math.cos(laneA) * side;
+        } else if (dLayout === 'hamlet') {
+          const ha = dr() * Math.PI * 2, hd = padR + 0.9 + dr() * 2.6;
+          cx = Math.cos(ha) * hd; cz = Math.sin(ha) * hd;
+        } else {
+          const ca = la + ((c + 1) / (cottages + 1)) * Math.PI * 2;
+          const cd = padR + 1.3 + dr() * 0.8;
+          cx = Math.cos(ca) * cd; cz = Math.sin(ca) * cd;
+        }
+        cot.position.set(cx, 0, cz);
+        cot.lookAt(0, 0, 0); cot.rotation.x = 0; cot.rotation.z = 0;
+        cot.rotation.y += (dr() - 0.5) * 0.4;
+        district.add(cot);
       }
     }
-    const tree = villageMakeTree(dr, pal);
+    const tree = villageMakeTree(dr, dpal);
     tree.position.set(Math.cos(la + 2.2) * (padR + 2.6), 0, Math.sin(la + 2.2) * (padR + 2.6));
     district.add(tree);
-    if (dr() < 0.5) { const hay = villageMakeHay(dr, pal); hay.position.set(Math.cos(la - 1.6) * (padR + 1.8), 0, Math.sin(la - 1.6) * (padR + 1.8)); district.add(hay); }
+    if (dr() < 0.5) { const hay = villageMakeHay(dr, dpal); hay.position.set(Math.cos(la - 1.6) * (padR + 1.8), 0, Math.sin(la - 1.6) * (padR + 1.8)); district.add(hay); }
     // The district's name floats over its green — the town names its quarters.
     const sign = villageMakeSign(v.name + (isHeart ? ' 👑' : ''));
     sign.position.set(0, 4.7, 0);
     sign.userData.baseY = 4.7;
     district.add(sign);
     townSigns.push(sign);
-    if (i < 8) { // a torch on each near district; the farthest keep the sky light
+    // A torch on each near district (the farthest keep the sky light) — but
+    // a wrecked district stays dark, like its village's unlit lamp posts.
+    if (i < 8 && dRuin >= 1) {
       const torch = new THREE.PointLight(0xffb45e, 1.6 * daylight.torch, 12, 2);
       torch.position.set(0, 2.6, 0);
       torch.userData.base = 1.6 * daylight.torch;
@@ -27315,12 +27611,15 @@ function buildTownScene(settle) {
     o.receiveShadow = true;
   });
 
-  // Adopt the walkers, birds, cloths and hens the shared builders registered.
+  // Adopt the walkers, birds, cloths, hens, smokes and signs the shared
+  // builders registered — the two scenes never fight over one list.
   townNpcs = townNpcs.concat(villageNpcs.splice(npcMark));
   townChickens = townChickens.concat(villageChickens.splice(chickenMark));
   townRoofBirds = townRoofBirds.concat(villageRoofBirds.splice(birdMark));
   townCloths = townCloths.concat(villageCloths.splice(clothMark));
   townWindmills = townWindmills.concat(villageWindmills.splice(windmillMark));
+  townSmokes = townSmokes.concat(villageSmokes.splice(smokeMark));
+  townSigns = townSigns.concat(villageSigns.splice(signMark));
 
   townBuiltKey = townSceneKey(settle);
   townBuiltPhase = daylight.phase;
@@ -27398,6 +27697,18 @@ function onTownResize() {
   townRenderer.setSize(w, h, false);
   townCamera.aspect = w / h;
   townCamera.updateProjectionMatrix();
+}
+
+// Local-only debug hook so the town generator can be exercised headlessly,
+// the same way __burbzVillageDebug serves the village generator.
+if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+  window.__burbzTownDebug = {
+    build: buildTownScene,
+    dispose: disposeTownScene,
+    ensureRenderer: ensureTownRenderer,
+    frame: townAnimateFrame,
+    state: () => ({ scene: townScene, camera: townCamera, renderer: townRenderer, cam: townCam, districts: townDistrictGroups, signs: townSigns, smokes: townSmokes, walkers: townWalkers, npcs: townNpcs, chickens: townChickens })
+  };
 }
 
 // ---- Shop overlay + purchases ----
