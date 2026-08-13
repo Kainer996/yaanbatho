@@ -1,10 +1,14 @@
 """Early-game battles are a near-certain win.
 
-Until the player founds their first county, every evil Burbz squad is a
-ragged scouting party: capped at three birds, never more than the player's
-flock, every stat at 45%, and no tier level boost. Full difficulty returns
-the moment the realm begins. The functional test drives the real engine
-with its own AI on both sides and expects the player to win every run.
+Until the player reaches level 12, every evil Burbz squad is a ragged
+scouting party. Through player level 8 the squad is capped at three birds,
+never more than the player's flock, with every stat cut to 35%. From level 9
+the cut eases off level by level, so full difficulty arrives at player
+level 12. The gate moved from "no county founded yet" to the player's level
+in early-game-until-level-12-v262 — the county gate stranded low-level
+players in unwinnable fights the moment their realm began. The functional
+test drives the real engine with its own AI on both sides and expects the
+player to win every run at the deepest ease.
 """
 import json
 import subprocess
@@ -22,23 +26,24 @@ def function_source(html: str, name: str) -> str:
     return html[start:end]
 
 
-def test_early_game_means_no_county_founded_yet():
+def test_early_game_means_player_below_level_twelve():
     html = HTML_PATH.read_text(encoding="utf-8")
     src = function_source(html, "isEarlyGameBattles")
-    assert "empireRegionsInfo().regions.length === 0" in src
+    assert "battlePlayerLevel() < EARLY_GAME_ENDS_AT_PLAYER_LEVEL" in src
+    assert "const EARLY_GAME_ENDS_AT_PLAYER_LEVEL = 12;" in html
 
 
 def test_early_squads_are_small_and_weak():
     html = HTML_PATH.read_text(encoding="utf-8")
-    assert "const EARLY_GAME_OPPONENT_EASE = 0.45;" in html
+    assert "const EARLY_GAME_OPPONENT_EASE = 0.35;" in html
     ease = function_source(html, "easeEarlyOpponents")
-    # Never more than three foes, and never more than the player's flock.
-    assert "clamp(Math.round(squadSize || 3), 1, 3)" in ease
+    # Never more than the player's flock; capped at three through level 8.
+    assert "clamp(Math.round(squadSize || 3), 1, maxSquad)" in ease
     for stat in ("atk", "def", "spd", "int", "cha", "mag", "stamina"):
         assert f"b.{stat} * e" in ease, stat
     gen = function_source(html, "leagueRivalOpponents")
     assert "easeEarlyOpponents(opponents, top.length)" in gen
-    # No tier boost while the realm sleeps: the squad sits below the flock.
+    # No tier boost while the kindness holds: the squad sits below the flock.
     assert "Math.max(1, Math.round(avgLevel) - 1)" in gen
     # The rival preview is honest about the odds.
     assert "A ragged evil Burbz scouting party" in html
@@ -46,7 +51,7 @@ def test_early_squads_are_small_and_weak():
 
 
 def test_fresh_flocks_beat_eased_squads_every_time():
-    ease = 0.45
+    ease = 0.35
     script = """
 const core = require('./battle_core.js');
 function commonBird(name, species, i) {

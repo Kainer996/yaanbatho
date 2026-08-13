@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "feedback-menu-v259-20260813"
+CURRENT_BUILD = "early-game-until-level-12-v262-20260813"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "feedback-menu-v259-20260813"
+RELEASE_PIN = "early-game-until-level-12-v262-20260813"
 # This release's own cache marker stays in the lineage; later releases move
 # BURBZ_BUILD on.
 OWN_RELEASE_PIN = "hospital-auto-discharge-v239-20260809"
