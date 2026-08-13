@@ -32,7 +32,9 @@ def test_diary_tab_and_screen_exist():
     html = HTML.read_text(encoding="utf-8")
     assert 'data-screen="diary"' in html
     assert 'aria-label="Diary"' in html
-    assert '<div class="nav-label">Diary</div>' in html
+    # distributed-game-hud-v244: the Diary moved off the bottom nav into
+    # its own header button, next to the profile.
+    assert 'id="headerDiaryBtn"' in html
     assert 'id="screen-diary"' in html
     assert 'id="diaryBook"' in html
     assert "ADVENTURER'S DIARY" in html

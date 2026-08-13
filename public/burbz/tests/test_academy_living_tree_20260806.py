@@ -31,7 +31,9 @@ CORE = (ROOT / "academy_alive_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 RELEASE_PIN = "living-canopy-v236-20260806"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+# Later releases advance BURBZ_BUILD but academy_alive_core.js has not moved,
+# so the core keeps its own pin while the build tracks the current tag.
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 PLACEABLE_ROOMS = (
     "tavern", "dorm", "quest_roost", "crowbar", "training", "kitchen",
@@ -195,6 +197,6 @@ def test_reduced_motion_switches_all_of_it_off():
 
 def test_release_is_pinned_and_shipped():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
-    assert RELEASE_PIN in SW, "BURBZ_CACHE must advance so the release ships"
+    assert RELEASE_PIN in SW, "the release lineage stays in BURBZ_CACHE"
     assert f'academy_alive_core.js?v={RELEASE_PIN}' in HTML
     assert f"./academy_alive_core.js?v={RELEASE_PIN}" in SW

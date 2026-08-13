@@ -310,6 +310,7 @@ const vibrate = () => {};
 const SFX = { levelUp: () => {}, tap: () => {}, capture: () => {} };
 const QUEST_BUZZ = { start: [] };
 const likelyRowsToQuestBirds = rows => rows || [];
+const attachStoryToNewWalkingQuest = () => null;
 const fetchQuestLikelyBirds = () => Promise.resolve([]);
 const ensureOfferLoopBack = () => Promise.resolve(null);
 const mapDistanceMeters = () => 9999;

@@ -151,7 +151,7 @@ def test_button_is_only_shown_in_3d_at_night_and_updates_engine():
 
 
 def test_release_and_academy_core_pin_advance_for_installed_pwa():
-    marker = "academy-3d-tree-glow-v235-20260806"
+    marker = "hold-to-steer-v251-20260811"
     assert marker in HTML and marker in SW
     pin = f"academy_3d_core.js?v={marker}"
     assert pin in HTML

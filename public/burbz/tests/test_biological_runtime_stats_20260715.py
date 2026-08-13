@@ -107,7 +107,7 @@ console.log(JSON.stringify({{migrated, unknown:migrateBirdToBiologyStats(unknown
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     bird = payload["migrated"]
-    assert bird["biologyStatsVersion"] == "bird-biology-runtime-v3-size-20260802"
+    assert bird["biologyStatsVersion"] == "bird-biology-runtime-v4-weight-and-wit-20260812"
     # v3: weight scales the combat stats. This bird is a small one (HP 4,
     # STRENGTH 3 on the 1-10 biology scale => size score 29, x0.91), so its
     # bulk and blows come out below the raw biology numbers — while INT, which

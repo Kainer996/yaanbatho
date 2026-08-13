@@ -55,7 +55,8 @@ def test_chain_mirrors_the_guided_tutorial_flow():
 
 def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
-    assert len(quests) == 28
+    # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue.
+    assert len(quests) == 27
     types = [q["type"] for q in quests]
     for needed in (
         # The original loop…
@@ -66,7 +67,7 @@ def test_chain_covers_the_whole_core_loop():
         "training_claimed", "build_quest_roost", "gear_equipped",
         "build_kitchen", "proper_meal_fed", "build_hospital", "station_hospital",
         "walk_completed", "bird_quiz_correct", "gear_crafted",
-        "build_crowbar", "merlin_clue", "build_workshop",
+        "build_crowbar", "build_workshop",
     ):
         assert needed in types, needed
 

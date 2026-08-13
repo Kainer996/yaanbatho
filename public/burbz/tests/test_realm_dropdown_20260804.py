@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 
 def empire_logic(html: str) -> str:

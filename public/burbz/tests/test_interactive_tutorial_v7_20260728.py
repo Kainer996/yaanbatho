@@ -136,7 +136,7 @@ def test_the_game_reports_the_players_deeds_to_merlin():
     for hook in (
         "burbzTutorialAction('merlin-care-opened')",   # care menu opened
         "burbzTutorialAction('merlin-fed')",           # a real feed landed
-        "burbzTutorialAction('tab:' + item.dataset.screen)",  # a tab the PLAYER tapped
+        "burbzTutorialAction('tab:' + destination)",  # a destination the PLAYER tapped
         "burbzTutorialAction('expedition-sent')",      # errand dispatched
         "burbzTutorialAction('roost-built')",          # building raised
     ):
@@ -149,10 +149,15 @@ def test_screen_changes_the_tutorial_makes_itself_never_count_as_the_player():
     html = HTML.read_text(encoding="utf-8")
     # The tab event is fired from the nav click handler, not from switchScreen,
     # so a step that moves the player to a screen cannot satisfy its own gate.
-    nav = html[html.index("const item = e.target.closest('.nav-item');"):]
-    assert "burbzTutorialAction('tab:' + item.dataset.screen)" in nav[:400]
-    switch = html[html.index("function switchScreen(name)"):]
-    assert "burbzTutorialAction('tab:" not in switch[:2000]
+    # distributed-game-hud-v244: every routed control (nav, side rail, header
+    # diary) reports through one player-gesture helper instead of the old
+    # nav-only click handler.
+    nav = html[html.index("function activateGameHudDestination(destination)"):]
+    assert "burbzTutorialAction('tab:' + destination)" in nav[:400]
+    # switchScreen itself never fires the tab action — only the routed
+    # player-gesture helper right after it does.
+    switch = html[html.index("function switchScreen(name)"):html.index("function activateGameHudDestination(")]
+    assert "burbzTutorialAction('tab:" not in switch
 
 
 def test_interactive_steps_hand_the_app_back_and_shield_the_rest():

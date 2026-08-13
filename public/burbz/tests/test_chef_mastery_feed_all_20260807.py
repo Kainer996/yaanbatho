@@ -12,8 +12,9 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
-ROLES_PIN = "chef-mastery-feed-all-v237-20260807"
+OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
+ROLES_PIN = "chef-mastery-feed-all-v261-20260813"
 
 
 def run_node(script: str) -> dict:
@@ -246,6 +247,7 @@ def test_release_pins_the_changed_page_roles_core_and_service_worker():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     assert f'src="bird_roles_core.js?v={ROLES_PIN}"' in html

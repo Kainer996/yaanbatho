@@ -34,7 +34,7 @@ const cases = {
   questDone: resolveBirdCardLocation(bird, {...base, expeditions:[{birdId:'b1',status:'active',endMs:900,label:'Moonlit Scout'}]}),
   questActive: resolveBirdCardLocation(bird, {...base, expeditions:[{birdId:'b1',status:'active',endMs:2000,label:'Moonlit Scout'}]}),
   hospital: resolveBirdCardLocation({...bird,academy:{room:'hospital'}}, base),
-  sleeping: resolveBirdCardLocation({...bird,care:{sleeping:true},academy:{room:'outdoors'}}, base),
+  staleSleeper: resolveBirdCardLocation({...bird,care:{sleeping:true},academy:{room:'outdoors'}}, base),
   trainingDone: resolveBirdCardLocation(bird, {...base, trainingSessions:[{birdId:'b1',status:'active',endMs:900,label:'Wing drill',room:'training'}]}),
   academyPost: resolveBirdCardLocation(bird, {...base, post:{scope:'academy',key:'kitchen',icon:'🥣',title:'Head Chef',where:'KITCHEN & PANTRY'}}),
   villagePost: resolveBirdCardLocation(bird, {...base, post:{scope:'village',key:'55',icon:'🏘️',title:'Steward',where:'Mossmere'}}),
@@ -60,8 +60,9 @@ def test_effective_location_prioritises_finished_and_active_work_then_real_room(
     assert rows["hospital"]["label"] == "BIRD HOSPITAL"
     assert rows["hospital"]["room"] == "hospital"
     assert rows["hospital"]["screen"] == "academy-room"
-    assert rows["sleeping"]["label"] == "THE ROOST"
-    assert rows["sleeping"]["room"] == "dorm"
+    # Sleep retired (sleep-retired-v238-20260809): a stale sleeping flag from
+    # an old save no longer pins the card to The Roost — the real room wins.
+    assert rows["staleSleeper"]["label"] == "AVIARY GARDENS"
     assert rows["trainingDone"]["label"] == "Training finished"
     assert rows["trainingDone"]["room"] == "training"
     assert rows["idle"]["label"] == "AVIARY GARDENS"

@@ -124,8 +124,10 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     marker = "living-canopy-v236-20260806"
     assert marker in HTML
     assert marker in SW
-    core_pin = "turn-potions-v232-20260806"
-    for asset in ("battle_core.js", "loot_crafting_core.js"):
+    # battle_core moved again with night-hunter-ascendant-v258 (Night Wings);
+    # the loot core still ships under the conquest release.
+    for asset, core_pin in (("battle_core.js", "night-hunter-ascendant-v258-20260813"),
+                            ("loot_crafting_core.js", "conquest-world-levels-v248-20260811")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML
         assert f"'./{pin}'" in SW

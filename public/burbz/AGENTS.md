@@ -6,7 +6,7 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Last curated: 2026-08-06 (living canopy v236: the 2D Academy rebuilt in layers — new tree painting, real cut-out boughs swaying behind and in front of the treehouses — merged over the 3D tree-glow v235 release, which took the v235 number on main first).
+Last curated: 2026-08-13 (feedback-menu v259 — the feedback release, renamed and renumbered while merging the week's sessions (born v254, then v258): the settings menu reads the private inbox. Settings gains a 📥 Feedback Inbox row under Send Feedback; `openFeedbackInbox()` in `index.html` unlocks with the admin key — the same `burbz_admin_token` localStorage slot and `X-Burbz-Admin` header `inbox.html` uses, so one unlock covers both — lists every `type:'feedback'` report newest-first with done/reopen/delete actions against `api/admin/reports/:id`, and points at `inbox.html` when new-bird reports wait. The backend lives on the VPS only, so the reader works at yaanbatho.com/burbz; the send path was proven live end-to-end. `inbox.html` joined the live updater's FILES. Previously village-variation v260 (built 2026-08-11 as v250, merged 2026-08-13): no two villages alike — `village_variation_core.js` rolls every settlement seed a DNA card (wall build: timber/stone/brick/painted · roof craft: thatch/slate/tile/shingle · colour washes, trim + door paints, window glow, banner cloth) and re-keys the base `VILLAGE_PALETTES` entry through pure HSL/golden-angle maths, No-Man's-Sky style; `buildVillageScene`'s pinned palette roll survives and is varied per seed, the building/cottage makers read `pal.dna` for their styling, and two new landmarks (wayside shrine, stone watchtower) join the pool. The Town Square's districts now replay each member village's own opening dice (`villagePlan` — bit-identical mulberry32) plus its DNA, so every district wears its real village's palette, tier, plan and one of its true trades — and the landmark ledger (`landmarkPlan`, its own seed-keyed stream ^0x5FCA9B3D) names WHICH landmarks a village raises, so the village scene places exactly those and each district builds its village's signature (picks[0]) from the shared `VILLAGE_LANDMARK_MAKERS` pool. Districts mirror their village's RECOVERY too (`villageDistrictState`: same ruin-stage thresholds, wreck list and rising construction as the village screen; `townSceneKey` carries per-member stage so development rebuilds the square) — the town you see IS the villages you visit. `__burbzTownDebug` joins the localhost-only debug hooks. Previously night-hunter-ascendant v258: the Night Hunter advantage is now truly massive and reaches every capacity. `bird_sleep_core.js`'s `NOCTURNAL_NIGHT_BONUS` rises to coins ×3 / timber ×2 / XP ×3 / two guaranteed extra finds and gains `statBonus: 2` (training stat gains double — `academy_treehouse_core.js` multiplies `template.bonus` by it); the new `NOCTURNAL_NIGHT_BATTLE` pack + `nocturnalNightBattleBoost()` is the battle half — `battle_core.js`'s `buildFighter` accepts `opts.nightBoost` (ATK/SPD/MAG ×1.5, DEF/HP ×1.25, +0.15 crit, stamps `f.nightHunter`; no pack = byte-identical classic stats, and rival squads never get one). `index.html` wires `nocturnalNightBattleBoostFor` into `startPerchBattle`, glows every nocturnal surface after dark (`.night-hunter-aura` pulse, `.pk-night-chip`, `.battle-night-hint`, `.au-night-moon` arena badge — all reduced-motion aware), and teaches the numbers in the send sheet, Training Hall night-school banner, Roost status and toasts. Timers never move — only payouts and stats. Tests: `tests/test_night_hunter_ascendant_20260813.py` plus the rewritten nocturnal suite; the three moved cores' `?v=` pins split out of their old release loops (living-canopy, turn-potions, conquest, diet-integration suites). STORY.md canonises "The hour of the owl". Previously bird-bond-love v256: every bird can now be loved for itself. Players attach to different birds, so each companion carries a personal bond in `bird.bond` — a favourite flag, a bond level 1–5 with warm titles (New Friend → Soulbound, 100 XP each), and a 4-hour preen ritual — all owned by the new `bird_bond_core.js` (sanitize/grant/preen/cooldown, pure and Node-tested). The equipment screen grew a heart toggle on the hero and a Bond panel (hearts, meter, PREEN button with floating-hearts animation); flock cards wear a ❤️ badge and a small hearts row, favourites sort ahead of raw power in Companions, and the card back gains a Favourite button. Every successful companion feed now grants the same `reward.bondXp` Merlin already earned (the Academy tray path uses `FEED_BOND_XP`), so the four feed-path Node harnesses in tests stub `grantBirdBondXp`. Bond is affection only — it never touches battle stats. Tests: `tests/test_bird_bond_love_20260812.py`; the new core joined both sw.js precache lists and the live updater's FILES list. Previously night-owl-dark-mode v257: night mode lands — the game follows the player's real sky (PR #197; shipped without a handbook summary — its contracts live in `tests/test_night_owl_dark_mode_20260813.py`). Previously raven-weight-and-wit v255: a real raven flew over Yaan and the game now honours true bird weight. `bird_size_core.js` gains `FIELD_GUIDE_MASS_G` — real field-guide masses for the hand-curated UK/AU roster, keyed by profile id with a name-slug fallback (measured AVONET provenance still wins, source `'field'` sits between `'mass'` and `'stats'`) — and carrying is now mass-linear: `carryCapacity` = one load per 100 g (`GRAMS_PER_LOAD_UNIT`), max 20 units, so a 1.2 kg Raven hauls 12 to the 510 g Carrion Crow's 5 and a Buzzard 8 to a Robin's 1. `bird_roles_core.js` gains the civic size rule: `steward`/`region_warden` are flagged `civic:true`, rebalanced to INT 0.5/CHA 0.5, and `roleAptitude` multiplies civic aptitude by `governanceWitFactor(sizeScore)` (≤20 → ×1.15, ≤40 → neutral, 100 → ×0.55) — so a robin out-governs a raven while the Library still belongs to the raven. `BIRD_BIOLOGY_STATS_VERSION` bumped to v4 so saves re-derive sizes; the bird card's size panel shows a 🏛️ governing chip and honest "field guide weight" sourcing. STORY.md canonises "The Raven, and the law of weight and wit". Tests: `tests/test_raven_weight_and_wit_20260812.py`; the size/roles suite's generated-stats class ladder moved to tiny/small/LARGE/giant (the stub Buzzard now weighs its true 780 g). Previously citizen-workers-timber-homes v253: the villages become a real city-builder loop. Every producing yard — Grain Farm, Lumber Camp, Quarry, Market Hall, Chapel — now carries `workers: 1` and stands idle until a villager runs it; `villageWorkforce()` deals scarce hands out by `workPriority` (food → timber → stone → trade → chapel) and production, flat coins/timber and the market tax boost all gate on the crew. The stone-free 🛖 Timber Cabin (new `cabin` building, first in `EMPIRE_BUILDINGS`) is the intended first build — coins and timber only — and rebuilds at level 2 into the 🏠 Stone Cottage via the new `tiers`/`costLevels` fields (`villageBuildingTier`, stepped `villageBuildingCost`). The quarry's founding crew is gone (an empty town's quarry cuts nothing; the first-cut 10-stone grant survives), superseding the v221 empty-town pin in `test_quarry_stone_economy_20260804.py`. STORY.md canonises the **village folk**: a separate human-like species, simpler than the birds — residents and workers, never protagonists; birds keep every named part. Previously academy-training-dock v252: the Kitchen/Quests/Stores quick icons moved again, to the bottom dock flanking the Scan orb. Previously hold-to-steer v251: every 3D stage — Academy tree, villages, town squares — now lets the page scroll over it; only a finger held still for ~300 ms grabs the camera (`touch_steer_core.js`, a pure Node-testable gate wired into all three engines), a mouse or pen steers at once and a pinch always steers. The same release moves the Kitchen/Quests/Stores quick icons from mid-right (they covered claim buttons) to the top left under the header, and flips the tutorial's side pointer to match. Previously academy-2d-default v250: the Academy opens in the painted 2D tree — the tutorial's tap-the-tree building step misfired on the 3D canvas on some phones, so `academyViewMode()` now defaults to `'2d'` and only a saved `'3d'` choice opens the 3D tree, which stays one tap away on the same toggle. Previously walking-story-quests v249: The Twenty Roads land — `walking_story_core.js` carries a fixed campaign of 20 real-world walking quests, identical for every player on Earth: tiered to walk size (stroll/ramble/trek), each told by a named NPC with intro/milestone/outro dialogue riding the ordered waymarkers, each hiding a Feathered Folio lore scroll tying the roads to the Academy and Empire canon, and each paying real catalogue gear/materials/xp-scrolls on first completion. `index.html` attaches the next untold tale at quest activation and keeps completion/scroll state in `gameState.walkingStories`. Previously conquest-world-levels v248: conquest difficulty lands — `world_level_core.js` turns the realm pyramid into a WORLD LEVEL, liberation garrisons fight at their land's stamped level (world level + distance band from the cradle village), the atlas stamps dark villages with AC-style recommended levels and danger colours, the Fletcher's Forge gains five upgradeable hearths that gate rarities and temper all equipped gear (`gameState.forgeLevel`), and `battleRewards` scales with the beaten squad's level. Early-game easy battles are untouched. Previously battle-faint auto-hospital v247: a bird knocked out in battle is carried straight to the Bird Hospital by `admitFaintedBirdToHospital` in `endPerchBattle` — no player taps — and the v239 discharge sweep sends it home at full HP. This release also moves the newest-release test pins on from v245, which find-your-bird-v246 had left behind. Over live reconcile v245: the production server had advanced through five releases that never reached GitHub — birdex-direct-recruit-v240 … distributed-game-hud-v244 — while main advanced through four others, and the auto-deploy's drift guard correctly froze all updates. The live deltas were recovered byte-exact over HTTPS and three-way merged; both lineages survive in `BURBZ_CACHE`. **Lesson repeated from v217: work deployed straight to the VPS without a PR WILL collide — always promote through GitHub.**)
 
 ---
 
@@ -135,6 +135,15 @@ in BirdFuncDat) refused fish.
   reach of the top one to PRIMARY, so a generalist has several full-meal foods
   and a specialist keeps one. Don't lower it past ~0.65 or the Great Spotted
   Woodpecker's seed (a curated *secondary*) becomes a co-primary.
+- **Vertebrate prey is split (v237):** `small_mammals` means warm-blooded prey
+  only (Diet-Vend / Diet-Vunk); cold-blooded prey (Diet-Vect: frogs, lizards)
+  is its own `reptiles_amphibians` family, where the Common Frog and Common
+  Lizard ingredients now live. The split is asymmetric on purpose: every
+  mammal-hunter also scores `reptiles_amphibians` at its Diet-Vend level
+  (a Kestrel's lizards, an owl's frogs — EltonTraits often records no
+  Diet-Vect for them), but Diet-Vect alone never grants mammals. That is the
+  fix for the reported "Mallards eat voles" bug (Mallard: Vend 0, Vect 10) —
+  see `tests/test_mallard_vertebrate_prey_split_20260809.py`.
 - **Head Chef service board:** with a chef appointed, the kitchen renders
   `kitchenHeadChefBoardHTML()` — foods listed with the birds that eat each — and
   `chefServeFoodToEveryEater()` plates one food to every hungry eater across
@@ -227,6 +236,629 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-11 — no two villages alike: village DNA + true town districts
+  (Claude).** Yaan's two-part ask: villages need "much much more variation"
+  the way No Man's Sky varies through maths — more colours, more details,
+  more kinds of buildings — and the Town Square's three districts must BE
+  the three real villages you zoom into, not generic stand-ins. Release
+  `village-variation-v260-20260813`.
+  - **Core** (`village_variation_core.js`, new, pure, Node-testable):
+    `villageRng` is the game's mulberry32 bit for bit (a test pins the
+    constants in `villageRngFrom` against it). `villageDNA(seed)` rolls the
+    identity card: wall build (timber 38% / stone 22% / brick 16% /
+    painted 24%), roof craft (thatch/slate/tile/shingle), a plaster wash
+    (painted villages commit to real colour — pink, sage, cornflower),
+    a six-colour roof run walked by GOLDEN_ANGLE steps inside the craft's
+    hue band (`ROOF_BANDS`, `roofColorRun`), trim + door accents a golden
+    angle apart, a window-glow colour (14% cool lamps), two banner-cloth
+    dyes, and crookedness/prosperity dials. `varyPalette(pal, dna)` re-keys
+    sky/ground/leaf/plaster/timber/stone/hemi and replaces `roofs` while
+    keeping `weather`/`speck` (the snowman still rolls) — and never mutates
+    the base palette. `villagePlan(seed, count)` replays buildVillageScene's
+    exact opening dice (palette index, tier, layout — thresholds pinned).
+  - **Village scene** (`index.html`): the pinned
+    `VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)]` roll
+    survives, wrapped by `villageVariedPalette(…, v.seed)`; a missing core
+    returns the palette untouched (classic look, no DNA). Builders read
+    `pal.dna`: `villageMakeBuilding` grows real wall styles (quoined stone,
+    mortar-coursed brick, painted timbers), craft-shaped roofs (thatch =
+    deep gable + straw ridge-roll + brushed eaves, no dormers), trim-painted
+    shutters, village-coloured doors and window glow, prosperity-scaled
+    window boxes; `villageMakeCottage` follows suit and can grow a lean-to
+    wood store. New landmarks `villageMakeShrine` and `villageMakeWatchtower`
+    join the pool (10 skylines now). Maypole ribbons and garland bunting dye
+    themselves in `dna.banners`/trim/door.
+  - **Town Square** (`buildTownScene`): each district now derives from ITS
+    village — `villagePlan(seed, VILLAGE_PALETTES.length)` +
+    `villageVariedPalette` give the district the village's true palette
+    (daylight-graded), its tier sizes the yard and cottage count, its layout
+    shapes the arrangement (lane = a cottage row, hamlet = scatter, else the
+    ring), and one of the village's REAL trades (`villageShopKeysFor`) keeps
+    a 0.82-scale shopfront on the yard.
+  - **Landmark ledger** (follow-up, same release): which landmarks a village
+    raises used to ride the scene builder's long shared dice stream, so no
+    other screen could know them. `landmarkPlan(seed, tier, poolSize)` rolls
+    count + up-to-3 distinct picks on its OWN stream (`seed ^ 0x5FCA9B3D` —
+    the ruins/governor-build precedent), tier gates only the count, and both
+    scenes index the hoisted `VILLAGE_LANDMARK_MAKERS` pool (order is API —
+    append only). The village scene places exactly `picks[0..count-1]`; a
+    district builds `signature` (= picks[0]), and a village too small to
+    keep a landmark shows an honest bare green (tree + cart), never a fake.
+    No core = both scenes fall back to the classic in-stream rolls.
+  - **Ruin mirror** (follow-up, same release): a district also shows its
+    village's recovery, with the village scene's own gates.
+    `villageDistrictState(seed)` reads the empire record once — ruin stage
+    (identical `<=0 / <5` thresholds), uncleared wreck count + first wreck
+    kind, rising construction. In the district: stage 0 = real wreckage
+    (`villageMakeWreckedBuilding` of the village's first uncleared kind, two
+    rubble piles), no shopfront, no torch; stage 1 = trades reopen, one
+    rubble pile while wrecks remain; stage 2 = cottages + landmark return.
+    A rising build shows its `villageMakeConstructionSite` at live progress.
+    `townSceneKey` now keys on `seed@stage.ruinsLeft(+b)` per member, so
+    clearing a wreck, starting a build or flourishing rebuilds the square on
+    the next visit (renderTownScreen already simulates economies first). The shared-builder adoption grew `smokeMark`/
+    `signMark` splices (this also fixes a quiet leak: town cottage smokes
+    used to strand in `villageSmokes`, unanimated). Pinned contracts kept:
+    settlement standard call, `townDistrictLayout`, `districtSeed` tagging,
+    `villageMakeSign(v.name…)`. `__burbzTownDebug` (localhost-only) mirrors
+    the village hook so the town generator runs headless.
+  - Tests: `tests/test_village_variation_20260811.py` (DNA determinism/
+    distinctness/coverage, golden-angle band maths, palette contract incl.
+    no-mutation, rng parity + threshold pins, HTML wiring for village +
+    town, release pins). Release pins repointed per convention (20
+    head-tracking files sed'd v249→v250; the v249 walking-story test grew
+    the OWN_RELEASE_PIN/CURRENT_BUILD split — its `walking_story_core.js`
+    `?v=` stays on v249). SW cache + `BURBZ_BUILD` bumped;
+    `village_variation_core.js` precached in both SW lists and added to the
+    live updater's FILES. Local run: 1133 passed, 10 skipped, only the 7
+    documented git-lfs pointer-file art failures. Browser-checked in
+    headless Chromium (390×844, SwiftShader): six seeds build six villages
+    with six distinct colour fingerprints (56–74 unique material colours
+    each); a mock three-village town builds three districts with their own
+    palettes and shopfronts, 30 animation frames clean; zero page errors.
+
+- **2026-08-12 — the settings menu reads the feedback inbox (Claude).**
+  Yaan is starting early testing with friends and asked for two things: make
+  sure the settings-menu feedback box works, and let him read all feedback
+  from inside the game via the settings menu. Release
+  `feedback-menu-v259-20260813` (renumbered from v254 in the merge with main: raven v255 and night mode v257 landed first).
+  - **Send path verified live**: a real multipart POST to
+    `yaanbatho.com/burbz/api/feedback` answered `{"ok":true}` (test message
+    id `abeb6a71b7cfc1fe` — safe to delete from the inbox). The backend is
+    VPS-only, so feedback only sends when the game is played at
+    yaanbatho.com/burbz — burbz.app (GitHub Pages) has no `api/`.
+  - **Reader** (`index.html`): new Settings row `#feedbackInboxBtn`
+    (📥 Feedback Inbox, gold-tinted `settings-inbox` variant of the feedback
+    row) under Send Feedback. `openFeedbackInbox()` renders a recruit-sheet
+    overlay: an admin-key gate on first use (stored in the SAME
+    `burbz_admin_token` localStorage slot `inbox.html` reads, so one unlock
+    covers both; a 401 forgets the key and re-gates), then all
+    `type:'feedback'` reports newest-first — message escaped before
+    innerHTML, category chip, sender, time — with ✓ Done / Reopen / Delete
+    actions posting `{action}` to `api/admin/reports/:id`, a Show-done
+    toggle, Refresh, and Lock (forget key). Open new-bird reports surface as
+    a count linking to `inbox.html`.
+  - **Ops**: `inbox.html` added to `update-live-burbz.sh` FILES (it was
+    live-only-by-history before; live and git copies were verified
+    byte-identical first, so the add is safe).
+  - Tests: `tests/test_feedback_inbox_20260812.py` (row placement + wiring,
+    shared token slot/header/endpoints with inbox.html, gate/list/act
+    behaviour, escaping, send path still wired, updater ships inbox.html,
+    release pins). Release pins repointed per convention (the v253 test grew
+    the OWN_RELEASE_PIN/CURRENT_BUILD split). SW cache + `BURBZ_BUILD`
+    bumped; no core module moved, so every `?v=` stays put. Local run:
+    1150 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures. Browser-checked in Chromium (390×844): the row opens the
+    overlay with the key gate, zero page errors.
+
+- **2026-08-13 — the hour of the owl: Night Hunter Ascendant (Claude).**
+  Yaan's ask: an absolutely massive advantage for using a nocturnal bird late
+  at night compared to other birds, implemented deeply — training, UI,
+  graphics, everything. The Night Hunter bonus (v229, kept as pure reward
+  when sleep retired in v238) grows from a 2×-coins perk into the game's
+  biggest situational advantage. Release `night-hunter-ascendant-v258-20260813`.
+  - **Reward pack** (`bird_sleep_core.js`): `NOCTURNAL_NIGHT_BONUS` is now
+    coins 3 / branches 2 / xp 3 / itemRolls 2, plus new `statBonus: 2`.
+    Nothing is ever blocked at night (the bedtime-quest contract survives
+    untouched); timers never move — only payouts swell.
+  - **Training** (`academy_treehouse_core.js`): `createTrainingSession`
+    multiplies the permanent stat gain by the pack's `statBonus` — a +1
+    drill teaches +2 at night, the Focus Roost's +2 teaches +4 — on top of
+    the tripled XP. Packs without `statBonus` fall back to the plain gain.
+  - **Night Wings** (`bird_sleep_core.js` + `battle_core.js`): new
+    `NOCTURNAL_NIGHT_BATTLE` pack (atk/spd/mag ×1.5, def/maxHp ×1.25,
+    +0.15 critBonus) via `nocturnalNightBattleBoost(bird, hour)`.
+    `buildFighter` gains `opts.nightBoost`: gear adds first, the pack then
+    multiplies, `f.nightHunter` is stamped for the UI, and RES rises
+    naturally since it derives from boosted DEF/INT/MAG. **Default calls
+    stay byte-identical** (nb() is 1 without a pack — every existing rewards
+    and fighter pin still passes). Only player fighters in `startPerchBattle`
+    ever receive the pack; `buildOpponentFighter` takes none, so the
+    advantage belongs to the player who kept an owl.
+  - **UI + graphics** (`index.html`): `nocturnalNightBattleBoostFor` helper;
+    battle-select cards glow `.night-hunter-aura` with a `.pk-night-chip`
+    and the roster shows a `.battle-night-hint` after dark; the arena unit
+    wears an animated `.au-night-moon` badge and the log opens with
+    "🌙 NIGHT WINGS!"; the Training Hall banners night school (triple XP,
+    double gains) and marks nocturnal birds' send buttons; the quest send
+    sheet, Roost status line (`data-night-hunter` state) and all toasts
+    teach the true multipliers. The aura/moon animations respect
+    `prefers-reduced-motion`.
+  - Tests: `tests/test_night_hunter_ascendant_20260813.py` (packs, fighter
+    maths + default-identity contract, arena/hall/CSS wiring, release pins);
+    `test_nocturnal_night_bonus_20260805.py` rewritten for the ascendant
+    numbers (including the statBonus doubling). Three cores moved, so their
+    `?v=` pins split out of old release loops with comments: living-canopy
+    (treehouse core), turn-potions + conquest (battle core), diet-integration
+    (treehouse core), bird-sleep grids (sleep core); head-tracking
+    RELEASE_PIN/CURRENT_BUILD swept v255→v256 and the v255 suite grew the
+    conventional OWN/CURRENT split. SW cache + `BURBZ_BUILD` bumped; all
+    three cores' `?v=` moved in both loaders. Local run: 1157 passed,
+    10 skipped, only the 7 documented git-lfs pointer-file art failures (no
+    `git lfs` in the container). Browser-checked in headless Chromium
+    (390×844, clock frozen at 23:00): boots with zero page errors, cores
+    live, aura CSS shipped, a Tawny Owl's ATK 60→90 with `nightHunter` set.
+
+- **2026-08-12 — every bird loved: the bond (Claude).** Yaan wished players
+  could give every single bird a little more love — people attach to
+  different birds. Release `bird-bond-love-v256-20260812`.
+  - **The core** (`bird_bond_core.js`, new): each companion's `bird.bond`
+    holds `{level, xp, favourite, lastPreenAt, preens}`. Five levels, 100 XP
+    each, titles New Friend / Companion / Close Friend / Beloved / Soulbound.
+    `preen()` grants 20 bond XP on a 4-hour cooldown (`canPreen`,
+    `describeWait` for the button copy) and +12 happiness is applied app-side.
+    Bond is affection only — no stat, power or battle hooks, on purpose.
+  - **Equipment screen**: heart toggle on the hero
+    (`birdEquipToggleFavourite`), Bond panel with hearts + meter + PREEN
+    button (`birdEquipPreen`, floating hearts via `spawnBondHearts` — spawn
+    AFTER the re-render or the fresh innerHTML eats them).
+  - **Flock cards**: ❤️ badge (top-right, under the power chip — the top-left
+    corner belongs to LV/diet), a small hearts row under the nickname, a
+    Favourite button on the card back (`data-action="toggle-favourite"`), and
+    favourites sort ahead of power in Companions.
+  - **Feeding bonds**: all five companion feed-success points grant bond XP —
+    the three kitchen paths reuse `reward.bondXp` (Merlin's numbers), the two
+    Academy tray paths use `FEED_BOND_XP`. The four feed-path Node harnesses
+    (`test_one_tap_feeding`, `test_kitchen_feeding_roster`,
+    `test_chef_bulk_feeding`, `test_full_catalogue_diets_and_chef_board`)
+    stub `grantBirdBondXp`/`birdBondCore` — any new call site inside an
+    extracted feed function needs the same stub.
+  - Saves migrate on load (`gameState.flock.forEach(ensureBirdBond)`), pins
+    swept v255→v256 (the v255 core `?v=` pins stay put), new core precached
+    in both sw.js lists and shipped by `scripts/update-live-burbz.sh`.
+    Browser-verified with Playwright: preen, cooldown refusal, favourite
+    ordering, zero page errors.
+
+- **2026-08-12 — the raven's law: weight and wit (Claude).** A real raven flew
+  over Yaan's head — the first after months of looking — and he asked for it to
+  be reflected in the game: bird size must be real (a raven is twice a carrion
+  crow and must carry twice as much; a buzzard dwarfs a robin; gulls are great
+  carriers), size must decide battle strength, and size must count AGAINST
+  running villages, towns and counties — robins charm a town hall, ravens
+  empty it. Release `raven-weight-and-wit-v255-20260812` (v254 was taken by
+  the unmerged feedback-inbox branch).
+  - **True weight** (`bird_size_core.js`): `FIELD_GUIDE_MASS_G` — curated
+    BTO/RSPB-style adult masses for the hand-curated roster (whole UK corvid
+    family, the named yardsticks, gulls, raptors, waterfowl, AU regulars),
+    keyed by profile id with a name-slug fallback. Resolution order:
+    measured AVONET provenance → field guide (`source:'field'`) → stats.
+    `massGramsFromScore` inverts the log scale for birds that only stored a
+    score; `birdMassGrams` prefers the bird's stored true grams.
+  - **True carrying**: capacity is mass-linear — `round(massG / 100)` own
+    units (min 1, max 20), stamina/level trims, satchels always additive on
+    top (the pinned 1→4 stormweave contract survives). Raven 12 / crow 5 /
+    buzzard 8 / robin 1 / herring gull 12.
+  - **Weight loses ledgers** (`bird_roles_core.js`): `civic:true` on
+    Steward/Warden, stats rebalanced INT 0.5 / CHA 0.5, and
+    `governanceWitFactor(sizeScore)` multiplies civic aptitude: ×1.15 in the
+    robin's bracket (≤20), neutral to jackdaw weight (≤40), sliding to ×0.55
+    at score 100. Unknown size is neutral. Non-civic posts ignore size, so
+    the raven (INT 10) keeps the Library.
+  - **Wiring** (`index.html`): `BIRD_BIOLOGY_STATS_VERSION` →
+    `bird-biology-runtime-v4-weight-and-wit-20260812` (saves re-derive
+    size/mass/carry); size panel gains a 🏛️ governing chip and says
+    "field guide weight" for curated masses (AVONET label reserved for
+    measured ones). STORY.md: "The Raven, and the law of weight and wit".
+  - Tests: `tests/test_raven_weight_and_wit_20260812.py`; size/roles suite
+    repointed (both core `?v=` pins move to v255, generated-stats ladder is
+    now tiny/small/large/giant since the stub Buzzard weighs its true 780 g);
+    biology-version pins updated; release pins swept v253→v255 with the v253
+    suite growing the conventional OWN_RELEASE_PIN/CURRENT_BUILD split.
+    SW cache + `BURBZ_BUILD` bumped; both cores' `?v=` moved in both loaders.
+    Local run: 1131 passed, 15 skipped, only the 7 documented container art
+    failures (also failing on main).
+
+- **2026-08-12 — citizens work the yards, homes start in timber (Claude).**
+  Yaan's ask: every yard (quarry, lumber camp and the like) needs one citizen
+  working it, and a basic wooden house — upgradeable to stone — so the Quarry
+  no longer has to be a village's first building. Release
+  `citizen-workers-timber-homes-v253-20260812`.
+  - **Workers** (`index.html`): producing buildings carry `workers: 1`
+    (Farm, Lumber Camp, Quarry, Market Hall, Chapel). New `villageWorkforce()`
+    deals villagers out by `workPriority` — food, timber, stone, trade,
+    chapel — so a short-handed town staffs its farm before its chapel.
+    `villageProductionSnapshot`, `villageEconomySnapshot` (flat coins/timber,
+    tax boost) and the Stores ledger all skip unstaffed yards. The quarry's
+    v221 "founding crew" is gone — an empty town's quarry cuts nothing — but
+    the first-quarry 10-stone opening cut and the stone-free first-quarry
+    build both survive.
+  - **Homes** (`index.html`): new `cabin` building, first in
+    `EMPIRE_BUILDINGS`, ungated, `need: shelter`. Level 1 is the 🛖 Timber
+    Cabin (25 🪙 + 14 🪵, no stone — so homes precede the Quarry); level 2
+    rebuilds it as the 🏠 Stone Cottage (stone cost) and doubles its housing.
+    Two new catalogue fields: `tiers` (per-level name/icon/desc, read via
+    `villageBuildingTier`) and `costLevels` (stepped prices replacing the
+    flat ×(level+1) — `villageBuildingCost` checks it first). The governor's
+    desk shows 👷 crew lines per yard and a "👷 x/y yards crewed" headline;
+    the 3D village raises `villageMakeSettlerHome` (logs at level 1, stone at
+    level 2). Empty-village copy now points at the Timber Cabin everywhere.
+  - **Lore** (`STORY.md`): the **village folk** are canon — a human-like
+    species of the Kingdom of Burbz, a separate people and much simpler than
+    the birds. They work and endure; birds get every named speaking part.
+    Keep it that way in future quest text.
+  - Tests: `tests/test_citizen_workers_timber_homes_20260812.py` pins the
+    cabin costs/tiers, the crew gating, the priority order and the copy.
+    Superseded pins moved on with comments (`test_quarry_stone_economy`'s
+    empty-town stone, `test_empty_liberated_towns`' Cottage Row hint);
+    harnesses that extract `villageEconomySnapshot`/`empireBuildStructure`
+    grew `villageWorkforce`/`villageBuildingTier`. Release pins repointed;
+    SW cache + `BURBZ_BUILD` bumped.
+
+- **2026-08-11 — Hold to steer, scroll to pass; quick icons go top-left
+  (Claude).** Yaan asked for two things: the Kitchen/Quests/Stores icons out
+  of the middle-right (they covered claim buttons), and 3D views that stop
+  hijacking the page scroll — tap-and-hold should be the way in. Release
+  `hold-to-steer-v251-20260811`.
+  - **Core** (`touch_steer_core.js`, new, pure, Node-testable): a hold gate.
+    A touch never steers on contact; moving past 10 px marks the gesture as
+    the page's scroll for good; holding still 300 ms engages steering. Mouse
+    and pen engage at once; a second finger (pinch) always engages. Timers
+    are injectable for tests.
+  - **Wiring**: the village and town engines in `index.html` and
+    `academy_3d_core.js` all consult the gate before moving the camera,
+    switch their stages from `touch-action: none` to `pan-y`, preventDefault
+    touchmove only while engaged, re-anchor the drag on engage (no camera
+    jump), mark a grab as never-a-tap, and show a golden `.steering` outline.
+    Player copy now says "Hold, then drag to look around".
+  - **Quick icons**: `.game-side-actions` moved from right-center to
+    top-left under the header; the tutorial nav pointer flips to sit right
+    of the dock (`rect.right + 5`, row-reverse, arrow pointing left).
+  - Test pins moved on from v250; `academy_3d_core.js` gets a new `?v=` pin
+    tracked by `test_academy_3d_glow_detail_20260806.py`.
+
+- **2026-08-11 — Academy opens in 2D (Claude).** Yaan reported the tutorial
+  landing players on the 3D Academy, where tapping the tree to place a
+  building misfired. Release `academy-2d-default-v250-20260811`.
+  - `academyViewMode()` in `index.html` now defaults to `'2d'`; only a saved
+    `'3d'` choice (or the toggle) opens the 3D tree. The static toggle label
+    `🌳 3D` already matched a 2D default, so no markup changed.
+  - `tests/test_academy_2d_default_20260811.py` pins the default and the
+    toggle; the newest-release test pins moved on from v249, with
+    `test_walking_story_quests_20260811.py` gaining a `CURRENT_BUILD`
+    alongside its own asset pin (same split as the v248 test).
+
+- **2026-08-11 — The Twenty Roads: twenty shared walking tales (Claude).**
+  Yaan asked for 20 real-life walking quests that are the same for every
+  player anywhere in the world — proper RPG quests with NPCs, sized to the
+  walk, with really good rewards and lore scrolls tying back to the empire
+  and Academy the way Bethesda games hide books. Release
+  `walking-story-quests-v249-20260811`.
+  - **Core** (`walking_story_core.js`, new, pure, Node-testable): the
+    campaign catalogue `WALKING_STORIES` — 20 tales in fixed order, tiered by
+    the quest's full walking distance (`storyTierForLength`: stroll <1500 m,
+    ramble <3200 m, trek beyond; 8/7/5 tales per tier). Each tale has a named
+    NPC (a recurring cast of nine), intro/milestone/outro dialogue, one
+    Feathered Folio lore scroll (canon-checked: charters, the Academy's
+    founding, sky-caravan waybills, the usurper's Ember Script, Merlin's
+    letter), and a reward of real catalogue ids only — gear + materials from
+    `loot_crafting_core`, bird-study scrolls from the bag
+    (`validateWalkingStories` resolves every id; a test runs it).
+    `nextWalkingStory(lengthM, completedIds)` is deterministic: first untold
+    tale of the walk's tier, falling through to any untold tale once a tier
+    is exhausted so the campaign always completes. `attachWalkingStory`
+    stamps the full text onto the quest itself (saves stay self-contained)
+    and plans story beats onto EXISTING plain-flag waymarkers
+    (`walkingStoryCheckpointPlan`: milestone mid-list, scroll at the last
+    plain flag) — no new checkpoint kinds, so ordered-marker progression
+    (v224) is untouched.
+  - **Wiring** (`index.html`): `attachStoryToNewWalkingQuest` runs right
+    after `buildQuestFromOffer` (indexes survive route repair — checkpoint
+    identity is preserved). Story intro replaces the generic trailhead/NPC
+    dialogue; `handleWalkingStoryWaymarker` fires the milestone beat and
+    `collectWalkingStoryScroll` (+25 XP, scroll dialog, stored in
+    `gameState.walkingStories.scrolls`). `applyWalkingStoryCompletion` in
+    `completeWalkingQuest` marks the tale told, grants the missed scroll
+    quietly, pays the reward ONCE (first telling only — replays after a
+    catalogue reset can't farm epics), and returns the summary block that
+    rides `wq.history`. UI: outro NPC dialog at the banner, tale line on the
+    active-quest sheet, tale chip on the map focus card (previews which tale
+    a walk of that length would tell), a 📖 Twenty Roads progress card and
+    tap-to-read 📜 Feathered Folio sheet on the quests screen.
+  - Tests: `tests/test_walking_story_quests_20260811.py` (catalogue
+    validation incl. every-reward-id-resolves, tier maths, deterministic
+    selection + fallback, attach/checkpoint-plan behaviour on a real built
+    quest, one-time reward rule, HTML wiring, release pins). Release pins
+    repointed per convention (21 head-tracking files v248→v249; the v248
+    test grew the OWN_RELEASE_PIN/CURRENT_BUILD split — its
+    `world_level_core.js` `?v=` pins stay on v248 since that core is
+    untouched, as do the battle/loot core pins). SW cache + `BURBZ_BUILD`
+    bumped; `walking_story_core.js` precached in both SW lists and added to
+    the live updater's FILES. STORY.md gains "The Twenty Roads" and "The
+    Feathered Folio". The alignment-authority harness gained the conventional
+    one-line stub (`attachStoryToNewWalkingQuest → null`). Local run:
+    1117 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container). Browser-checked in headless
+    Chromium (390×844): the game boots with the story core live, a 2 km walk
+    resolves the correct ramble tale with beats on plain flags, zero page
+    errors.
+
+- **2026-08-11 — conquest raises the world level, and the world fights back
+  (Claude).** Yaan asked for a fully fleshed-out classic-RPG XP system where
+  the more the player conquers, the harder the game gets — higher-level
+  battle opponents, crafting that keeps pace through an upgradeable forge,
+  and Assassin's-Creed-style recommended levels on the empire map. Release
+  `conquest-world-levels-v248-20260811`.
+  - **Core** (`world_level_core.js`, new, pure, Node-testable): `worldLevel`
+    weighs the whole realm pyramid (village 1 · county 2 · duchy 4 ·
+    kingdom 6 · empire 8, capped at 50 — the bird level cap);
+    `siteRecommendedLevel` adds a distance band from the CRADLE (the first
+    village ever freed): heartland +0 through far frontier +8, so riding out
+    always means harder garrisons. `dangerRating` calls the odds in plain
+    words (stroll/fair/hard/deadly with icon + colour) against
+    `flockBattleLevel` (average of the four strongest birds — a Skyclash
+    squad).
+  - **Battles** (`index.html` `leagueRivalOpponents`): a Liberation garrison
+    now fights at `empireSiteRecommendedLevel(liberationSite)`; a roaming
+    league squad at `max(flock average, world level)` plus the tier boost.
+    The rival cache key carries `_wl<level>` and the liberation seed so a
+    changed world re-rolls the squad. The battle-select header shows the
+    honest odds line (`rival-danger-line`: garrison level, world level,
+    flock level, danger call). **Early game is untouched** — no county means
+    the same ragged eased squads, pinned by
+    `test_early_game_easy_battles_20260810.py`, and the first-liberation
+    token garrison still can't lose.
+  - **Rewards** (`battle_core.js` `battleRewards`): additive
+    `opts.opponentLevel` scales coins/branches/birdXp/playerXp by +4% per
+    level above 1. No option (or level 1) pays the exact classic numbers, so
+    every pre-existing rewards pin stays true; defeat stays a flat
+    consolation. `endPerchBattle` passes the beaten squad's average level.
+  - **Forge** (`loot_crafting_core.js` + `index.html`): the Fletcher's Forge
+    has five hearths (Field Anvil → Stone Hearth → Guild Forge → Royal
+    Forge → Sunfire Forge). Rarity gates: rare needs Lv 2, epic Lv 3,
+    legendary Lv 4 (`minForgeLevelForRarity`; locked recipes show
+    `🔒 FORGE LV n`, and `craftGear` re-checks). Upgrades cost coins,
+    branches and real materials (`FORGE_UPGRADE_COSTS`, up to a phoenix
+    ember for the summit) via the craft tab's upgrade desk
+    (`renderForgeUpgradePanel` / `upgradeForge`; `gameState.forgeLevel`,
+    clamped by `normalizeForgeLevel`). Tempering: every equipped piece is
+    honed to the forge's level — `equipmentBonuses(loadout, {gearLevel})`
+    applies `temperedStats` (+12% combat stats and +1% crit per level above
+    1; carry bonuses never scale — a bag is a bag). `birdGearBonuses` and
+    `forgeGearStatLine` feed the forge level through, so stat lines show
+    what gear really does today. Default calls stay byte-identical.
+  - **Atlas** (`refreshEmpireMap`): every dark frontier banner is stamped
+    `<danger icon> LV n · name` with a `danger-<id>` tint class, its tap
+    card leads with `Recommended Lv n — <danger> (flock Lv m)`, the map key
+    teaches the colours, and the owned-lands status line opens with
+    `🌍 World Lv n`.
+  - Tests: `tests/test_conquest_world_levels_20260811.py` (Node-driven core
+    maths incl. the default-identity contracts, forge gating/tempering,
+    reward scaling, HTML wiring, release pins). Release pins repointed per
+    convention (19 head-tracking files sed'd v247→v248; the v247 test grew
+    the OWN_RELEASE_PIN/CURRENT_BUILD split; the three
+    `turn-potions-v232` core `?v=` pins moved since both cores changed).
+    SW cache + `BURBZ_BUILD` bumped; `world_level_core.js` precached in
+    both SW lists and added to the live updater's FILES. STORY.md gains
+    "The usurper fights back — the world level". Local run: 1111 passed,
+    10 skipped, only the 7 documented git-lfs pointer-file art failures.
+
+- **2026-08-10 — live reconcile: the drifted v240-v244 line comes home
+  (Claude).** Yaan reported that none of the day's updates were reaching the
+  game. Root cause: the production VPS (yaanbatho.com/burbz) had been
+  advanced DIRECTLY through five releases that never reached GitHub —
+  `birdex-direct-recruit-v240` (Birdex cards recruit directly once the
+  Barracks stands), `companion-unlock-copy-v241` ("NEW COMPANION
+  UNLOCKED!"), `remove-merlin-first-clue-v242` (retires `pq_merlin_clue`,
+  27-link chain), `training-master-room-actor-v243` (the Drill Master
+  stands in the Training Hall scene; its role card lives in a picker
+  sheet), `distributed-game-hud-v244` (header Diary button, right-side
+  quick-action rail with Kitchen/Quests/Stores, `data-game-route` routing
+  through `activateGameHudDestination`) — while GitHub main advanced through
+  four OTHERS (`early-game-easy-battles-v240` … `real-sky-daylight-v243`).
+  The burbz-sync drift guard then did exactly its job: live managed files no
+  longer matched its last-deploy manifest, so every sync aborted fail-closed
+  and NOTHING deployed. Release `live-reconcile-v245-20260810`.
+  - **Recovery**: `.burbz-deployed-sha` on the server still read the v239
+    base commit (7ba86f6). Exactly three managed files had drifted
+    (`index.html`, `sw.js`, `action_badge_core.js`); all three were
+    recovered byte-exact over HTTPS from the live web root and committed on
+    a branch cut from that base, then three-way merged with main — only the
+    `BURBZ_BUILD`/`BURBZ_CACHE` lines conflicted. Both lineages' markers
+    survive in the cache history, per the v217 precedent.
+  - **Tests**: the live line's test updates never reached GitHub and the
+    server does not serve `tests/`, so eleven pinned contracts were
+    repointed here at the recovered behaviour (nav-label pins → header
+    diary button / side-rail label, `roomBirdGridHTML(stageBirds, room)`,
+    the training-room rolePanel conditional, `recruitAction` fallback,
+    tutorial tab hook now `'tab:' + destination` fired from
+    `activateGameHudDestination` — with switchScreen still clean — and the
+    27-quest chain). New `tests/test_live_reconcile_v245_20260810.py` pins
+    the five recovered releases so they can never silently vanish again.
+  - **Ops**: the server's stale `.burbz-managed-hashes.sha256` must be
+    cleared once (then `systemctl start burbz-sync.service`) so the guard
+    re-baselines on this promoted build — after that the 5-minute timer
+    deploys main normally again.
+  - Local run: 1095 passed, 10 skipped, only the 7 documented git-lfs
+    pointer-file art failures. Browser-checked in Chromium: the merged game
+    boots with the distributed HUD and the town/county/daylight features
+    together, zero page errors.
+
+- **2026-08-10 — the real sky: village and town lighting follows the
+  player's clock (Claude).** Yaan's follow-up to the town square: "I want the
+  lighting to reflect the time of day in the player's real-life world."
+  Release `real-sky-daylight-v243-20260810`.
+  - **Core** (`daylight_core.js`, new, pure, Node-testable): fixed local-hour
+    windows (dawn 5-7, day 7-17, dusk 17-19, night otherwise — no location
+    permission needed just to light a scene). `sunFactorForHour` (smooth
+    ramps), `warmFactorForHour` (golden-hour blush, `4·s·(1−s)`),
+    `phaseForHour`, integer-RGB `mixHex`, and `daylightGradeForHour` — the
+    whole lighting balance sheet (sun/warm/stars/moon flag/torch/hemi/
+    keyIntensity/keyColor/exposure). **The night row reproduces the game's
+    original moonlit values exactly** (hemi 2.0, key 1.95 × 0xbfd2ff,
+    exposure 1.25, torches full) — a player at midnight sees the village the
+    game has always drawn, pinned by test. `gradePalette` blends a village
+    palette's sky/ground/hemisphere toward daytime targets; materials keep
+    their authored colours — brightness comes from the lights.
+  - **Wiring** (`index.html`): `burbzDaylightGradeNow()` reads the local
+    clock once per scene build (typeof-guarded — a missing core falls back
+    to the original night). In `buildVillageScene` and `buildTownScene`: the
+    pinned `VILLAGE_PALETTES[...]` roll survives as `basePal` and is graded;
+    stars keep their rng draws (layout stability) but fade via opacity +
+    `visible`; the moon/halo yields to a sun-halo/disc pair when
+    `daylight.moon` is false; fireflies and the shooting star sleep through
+    the day; doorway torches and lamp glows scale by `daylight.torch`; the
+    hemisphere and the shadow-casting key light take grade colour/intensity;
+    `toneMappingExposure` follows the grade. Scenes rebuild on phase change
+    two ways: the `render*` entry compares `*BuiltPhase` against
+    `burbzDaylightPhaseNow()`, and the animate loops check every ~600 frames
+    so dawn breaks over an open screen too.
+  - Tests: `tests/test_real_sky_daylight_20260810.py` (core curves, the
+    night-equals-original contract, palette grading, HTML wiring, release
+    pins). Release pins repointed per convention; SW cache + `BURBZ_BUILD`
+    bumped; `daylight_core.js` precached with its own `?v=`. Browser-checked
+    in Chromium with a frozen clock at 13:00 / 18:00 / 23:00: bright green
+    midday, warm half-lit dusk, and the untouched moonlit night; zero page
+    errors.
+
+- **2026-08-10 — the town square, the county map and the painted realm
+  (Claude).** Yaan's three-layer ask: capture three villages and the town they
+  make gets its own 3D screen "in sort of the same way that you've done the
+  village", with the villages visible within it; a county gets a separate
+  zoomed-out screen "more like Crusader Kings"; and once the player holds
+  several counties, the main map itself is coloured like a Crusader Kings
+  map. Release `town-county-screens-v242-20260810`.
+  - **Town Square** (`screen-town`, `index.html`): `renderTownScreen` /
+    `buildTownScene` run their OWN three.js renderer and animation registries
+    (`town*` globals) but reuse the whole `villageMake*` catalogue, textures
+    and gesture code. `townDistrictLayout` projects each member village's real
+    lat/lon offset from the settlement centroid onto the meadow (normalised,
+    then relaxed apart) — the town on screen is the town on the map. Each
+    district gets a cobbled yard, cottages, a seeded landmark
+    (church/windmill/manor/dovecote), hearth smoke and a floating name sign;
+    lanes run back to the shared market square, where the charter stone
+    (`villageMakeSettlementStandard`) flies one pennant per district. Tap a
+    district (raycast on `userData.districtSeed`) → `openEmpireVillage`.
+    Builders that push into the village animation registries
+    (walkers/roof-birds/cloths/hens/windmill sails) are length-marked before
+    the build and `splice`d into the town's own lists after — the two scenes
+    never fight over one list. Scene rebuild keys on `townSceneKey`
+    (settlement id + sorted member seeds), so a town that gains a district
+    rebuilds on the next visit. Reached from the Royal Ledger settlement rows
+    (`openEmpireTown`), the atlas settlement tap card (WALK ITS SQUARE — the
+    pinned `frameEmpireSettlement(settlement.id)` action survives), the
+    county-map hotspots, and a `#villageTownLink` banner on any district
+    village's screen. No-WebGL fallback: a district button list.
+  - **County Map** (`screen-county`): `drawCountyMap` paints a parchment
+    chart onto a 2D canvas, fully offline and seeded off the capital —
+    the county border as a smoothed convex hull in its realm's colour,
+    neighbouring counties dash-bordered at the map's edge, lanes running
+    capital-outward, village crests (district villages drop their labels —
+    the settlement banner names the group), town/city standards, cartouche,
+    compass and scale bar. DOM hotspot buttons over the canvas travel to
+    villages (`openEmpireVillage`) and squares (`openEmpireTown`). Opened
+    from the County Hall's 📜 COUNTY MAP button and the atlas county card.
+  - **Painted realm** (`empire_realm_core.js` + atlas): new pure helpers
+    `realmSeatTint` (golden-angle HSL per liege seat), `territoryHullRing`
+    (convex hull over padded village points, dateline-safe) and
+    `realmTerritoryFeatureCollection` (one polygon per county sworn to a
+    duchy or better, coloured by its TOP liege — kingdom over duchy; lone
+    counties stay unpainted on purpose: colour is the reward for uniting the
+    realm). The atlas adds an `empire-realm` geojson source with
+    data-driven `['get','color']` fill + border line layers, inserted BEFORE
+    `empire-territory` so village green stays on top; `refreshEmpireMap`
+    feeds it from the cached `empireRegionsInfo()` pyramid. Tapping painted
+    land opens an explain-first card (`showEmpirePaintedCountyCard`) via the
+    single map click handler (per the no-second-listener comment), and the
+    map key teaches the colours.
+  - Tests: `tests/test_town_county_screens_20260810.py` (Node-driven tint/
+    hull/painting maths — including the kingdom-overrides-duchy colour rule
+    and a dateline county — plus HTML wiring and release pins). Release pins
+    repointed per convention (11 `CURRENT_BUILD`s, 5 head-tracking
+    `RELEASE_PIN`s, and the realm-core `?v=` pins in the feudal/settlement/
+    location suites). SW cache + `BURBZ_BUILD` bumped;
+    `empire_realm_core.js` `?v=` moved in both loaders. Local run:
+    1077 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container). Browser-checked in Chromium
+    (390×844, SwiftShader): the Town Square renders both seeded towns with
+    3 district rows and travels into a district on tap; the County Map
+    paints hull, hotspots, cartouche and the duchy colour; zero page errors.
+  - NB: `screen-town` and `screen-county`, like `screen-region`, have no
+    bottom-nav item — they are reached programmatically only, so
+    `switchScreen`'s trail/back handling covers them automatically.
+
+- **2026-08-09 — the Bird Hospital discharges healed patients (Claude).**
+  Yaan's follow-up to the sleep retirement: birds parked in the Bird Hospital
+  stayed there until manually moved. Release
+  `hospital-auto-discharge-v239-20260809` makes the ward a ward, not a home.
+  - **Rules** (`index.html`): `academyMoveBird` writes an admission slip —
+    `academy.hospitalReturnRoom` records the room a patient was admitted
+    from, and moving anywhere else clears it. `dischargeBirdFromHospital`
+    releases a full-HP patient to the slip's room (falling back to the
+    Aviary Gardens when the room is unbuilt, or is the Kitchen/Barracks,
+    which take no lodgers) with a toast; it never touches the Head Healer
+    (the post is the point of being there), birds away on expeditions, or
+    birds mid-training. `tickAcademy`'s hospital branch heals then sweeps —
+    so patients healed to full by a meal or a level-up between rounds are
+    also released, and an open room interior re-renders when a bed empties.
+  - **Why the sweep is safe for the story chain**: `pq_hospital_rest`
+    ("Prescribe some rest") completes via the `station_hospital` event the
+    moment the player stations a bird, before any discharge can undo it.
+  - Tests: `tests/test_hospital_auto_discharge_20260809.py` (stub-driven
+    discharge matrix — healed/hurt/no-slip/demolished-room/Kitchen-slip/
+    Head-Healer/away cases — plus HTML wiring and release pins). Release
+    pins repointed per convention; SW cache + `BURBZ_BUILD` bumped. No core
+    module moved, so every `?v=` stays put.
+
+- **2026-08-09 — sleep retired: birds never sleep, never blocked (Claude).**
+  Yaan opened The Roost to find all 8 of his companions asleep at 21:00 and
+  nothing available for battle — the roost-sleep-v208 loop could idle the
+  entire flock at once. His call: "the gameplay mechanics aren't right there —
+  just remove the sleep part of it, for now." Release
+  `sleep-retired-v238-20260809` (renumbered from v237: the same-day
+  mallard-true-diet release took the v237 number on main first) removes the
+  mechanic while keeping every API shape and pinned call site, so a future
+  revert is one release, not a rebuild.
+  - **Core** (`bird_sleep_core.js`): `sanitizeSleepCare` now heals any care
+    record to awake-and-rested (tiredness 0, sleeping false; only
+    `sleepReturnRoom` survives, for migration); `advanceTiredness` never
+    accrues; `isScheduledSleepTime` is always false (owls have no bedtime
+    either); `sleepPlan` never sleeps and flags `shouldWake` for stale
+    sleepers; `sleepReadiness` is always `ok`. The nocturnal detection,
+    night window and **Night Hunter bonus all stay** — they are rewards,
+    not blockers (their v229 test suite still passes minus the retired
+    scheduled-sleep pins).
+  - **App** (`index.html`): `reconcileBirdSleep` is now a one-way save
+    migration — a bird an old save left asleep in The Roost wakes on first
+    look and walks back to the room in `sleepReturnRoom`. Manual Roost
+    assignment is an ordinary move (no more sleep-on-assign), the TIREDNESS
+    metre and the room grid's tiredness bar / Sleeping states are gone, the
+    add-a-bird sheet no longer disables sleepers, and the Roost copy sells
+    "Rest: restores HP · birds stay battle-ready". The pinned availability
+    filters (battle/quests/training/posts) still call
+    `sleepReadinessForBird` — it just always answers awake — so the
+    reservation-guard and size/roles string contracts are untouched, and the
+    whole sleep gate can be re-enabled from the core alone.
+  - Tests: `tests/test_bird_sleep_and_room_grids_20260803.py` rewritten to
+    pin the retirement (never tires / never sleeps / stale sleepers wake /
+    no dead sleep UI); `test_hospital_bird_ui` and
+    `test_bird_card_locations` repointed off the removed Sleeping states;
+    release pins repointed per convention (the two canopy suites split a
+    `CURRENT_BUILD` off their unchanged core pins, same pattern as the
+    nocturnal suite's v235 split). SW cache + `BURBZ_BUILD` bumped;
+    `bird_sleep_core.js` `?v=` moved in both loaders. Local run:
+    1047 passed, 10 skipped, only the 7 documented git-lfs pointer-file art
+    failures (no `git lfs` in the container).
 
 - **2026-08-06 — the living canopy: layered painted branches (Claude).** Yaan's
   verdict on v234's tree sway was exact: "it's the same picture of the tree …
@@ -431,9 +1063,9 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     side can stall the strictly-ordered chain.
   - **Village halls** (`index.html` `EMPIRE_BUILDINGS`): growth/prestige
     structures now carry `unlockLevel` (Cottage Row 5, Alehouse 6, Chapel 8,
-    Market Hall 10). Survival + resource basics (Farm, Well, Lumber Camp,
-    Quarry) are deliberately ungated — Stone only comes from the Quarry, so
-    gating it would deadlock a fresh province. `empireBuildStructure` blocks
+    Market Hall 10). Survival + resource basics (Timber Cabin since v253,
+    Farm, Well, Lumber Camp, Quarry) are deliberately ungated — Stone only
+    comes from the Quarry, so gating it would deadlock a fresh province. `empireBuildStructure` blocks
     only NEW structures (`level === 0`), so old saves keep upgrade rights; the
     province desk shows 🔒 UNLOCKS AT TRAINER LV n instead of a dead buy button.
   - **Levels feel like rewards** (`index.html` PLAYER LEVEL section): each

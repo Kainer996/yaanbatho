@@ -97,13 +97,18 @@
 
   // Sum the stat bonuses of an equipped loadout {weapon:id, armour:id, trinket:id}.
   // Returns the `gear` shape battle_core.buildFighter consumes.
-  function equipmentBonuses(loadout) {
+  // options.gearLevel: the Forge's level. The Fletcher keeps every equipped
+  // piece honed to the forge's own temper, so upgrading the forge levels up
+  // the whole armoury at once. Level 1 (or no option) leaves stats untouched.
+  function equipmentBonuses(loadout, options) {
+    const gearLevel = normalizeForgeLevel(options && options.gearLevel);
     const total = { atk:0, mag:0, def:0, res:0, spd:0, maxHp:0, critBonus:0, carryBonus:0 };
     if (!loadout || typeof loadout !== 'object') return total;
     GEAR_SLOTS.forEach(slot => {
       const item = gearById(loadout[slot]);
       if (!item) return;
-      Object.keys(item.stats || {}).forEach(k => { total[k] = (total[k] || 0) + item.stats[k]; });
+      const stats = gearLevel > 1 ? temperedStats(item, gearLevel) : (item.stats || {});
+      Object.keys(stats).forEach(k => { total[k] = (total[k] || 0) + stats[k]; });
       total.carryBonus += Math.max(0, Number(item.carryBonus) || 0);
     });
     return total;
@@ -251,6 +256,85 @@
   }
 
   // ---------------------------------------------------------------------------
+  // Forge levels — the Fletcher's Forge itself can be rebuilt, hearth by hearth
+  // ---------------------------------------------------------------------------
+  // Each forge level opens deeper rarities to craft AND tempers every equipped
+  // piece: gear fights at the forge's level (see equipmentBonuses), so the
+  // armoury keeps pace as the liberated world gets harder.
+  const FORGE_MAX_LEVEL = 5;
+  const FORGE_LEVELS = [
+    { level:1, label:'Field Anvil',   rarityCap:'uncommon',  copy:'A travelling smith\'s kit. Common and uncommon work only.' },
+    { level:2, label:'Stone Hearth',  rarityCap:'rare',      copy:'A proper hearth holds the heat rare work needs.' },
+    { level:3, label:'Guild Forge',   rarityCap:'epic',      copy:'Guild tools and a true quenching trough. Epic work begins.' },
+    { level:4, label:'Royal Forge',   rarityCap:'legendary', copy:'The old royal bellows roar again. Nothing is beyond the smith.' },
+    { level:5, label:'Sunfire Forge', rarityCap:'legendary', copy:'Fed by a phoenix ember that never cools. The summit of the craft.' }
+  ];
+
+  function normalizeForgeLevel(v) {
+    const num = Math.round(Number(v));
+    return Number.isFinite(num) ? Math.max(1, Math.min(FORGE_MAX_LEVEL, num)) : 1;
+  }
+  function forgeLevelInfo(level) { return FORGE_LEVELS[normalizeForgeLevel(level) - 1]; }
+
+  // The forge level a rarity first comes off the anvil at.
+  const FORGE_LEVEL_BY_RARITY = { common:1, uncommon:1, rare:2, epic:3, legendary:4 };
+  function minForgeLevelForRarity(rarity) { return FORGE_LEVEL_BY_RARITY[rarity] || 1; }
+  function canForgeAtLevel(gearIdOrItem, forgeLevel) {
+    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    if (!item) return false;
+    return normalizeForgeLevel(forgeLevel) >= minForgeLevelForRarity(item.rarity);
+  }
+
+  // Rebuilding the forge costs coins, branches and real materials — a proper
+  // savings goal between conquests. Index 0 is the cost of going 1 → 2.
+  const FORGE_UPGRADE_COSTS = [
+    { coins:150,  branches:40,  materials:{ iron_grit:6, oak_twig:6 } },
+    { coins:400,  branches:90,  materials:{ storm_glass:5, gold_thread:3 } },
+    { coins:900,  branches:160, materials:{ sun_amber:4, ancient_rune:2 } },
+    { coins:1800, branches:280, materials:{ ancient_rune:3, phoenix_ember:1 } }
+  ];
+  function forgeUpgradeCost(currentLevel) {
+    const lv = normalizeForgeLevel(currentLevel);
+    return lv >= FORGE_MAX_LEVEL ? null : FORGE_UPGRADE_COSTS[lv - 1];
+  }
+  function canUpgradeForge(currentLevel, stock, coins, branches) {
+    const cost = forgeUpgradeCost(currentLevel);
+    if (!cost) return { ok:false, missing:['the forge is already at its summit'] };
+    const missing = [];
+    if ((Number(coins) || 0) < cost.coins) missing.push(cost.coins + ' coins');
+    if ((Number(branches) || 0) < cost.branches) missing.push(cost.branches + ' branches');
+    Object.keys(cost.materials).forEach(matId => {
+      const have = Number(stock && stock[matId]) || 0;
+      const need = cost.materials[matId];
+      if (have < need) {
+        const m = materialById(matId);
+        missing.push((need - have) + '× ' + (m ? m.label : matId));
+      }
+    });
+    return { ok: missing.length === 0, missing };
+  }
+
+  // Tempering: +12% to every combat stat per forge level above the first,
+  // plus a sliver of crit. Carry bonuses stay put — a bag is a bag.
+  const GEAR_TEMPER_PCT = 0.12;
+  function temperMultiplier(gearLevel) {
+    return 1 + (normalizeForgeLevel(gearLevel) - 1) * GEAR_TEMPER_PCT;
+  }
+  function temperedStats(gearIdOrItem, gearLevel) {
+    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    if (!item) return {};
+    const lv = normalizeForgeLevel(gearLevel);
+    const mult = temperMultiplier(lv);
+    const out = {};
+    Object.keys(item.stats || {}).forEach(k => {
+      const v = item.stats[k];
+      if (k === 'critBonus') out[k] = Math.round((v + (lv - 1) * 0.01) * 100) / 100;
+      else out[k] = Math.round(v * mult);
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------------------
   // Crafting — the Fletcher's Forge
   // ---------------------------------------------------------------------------
   // Every gear item is craftable from materials + coins; costs scale by rarity.
@@ -359,6 +443,10 @@
     equipmentBonuses, gearPowerScore, spellSkillFor, potionEffectFor,
     RARITY_WEIGHTS, PITY_RARE_CAP, pickRarity, rollGear, rollMaterials, rollLoot,
     CRAFT_COST_BY_RARITY, KIND_MATERIALS, recipeFor, allRecipes,
+    FORGE_MAX_LEVEL, FORGE_LEVELS, normalizeForgeLevel, forgeLevelInfo,
+    FORGE_LEVEL_BY_RARITY, minForgeLevelForRarity, canForgeAtLevel,
+    FORGE_UPGRADE_COSTS, forgeUpgradeCost, canUpgradeForge,
+    GEAR_TEMPER_PCT, temperMultiplier, temperedStats,
     CRAFT_TIME_BY_RARITY, CRAFT_POWER_DIVISOR, CRAFT_POWER_MAX_MULTIPLIER, FORGE_MAX_JOBS,
     craftTimeMs, craftTimeCompare,
     TRANSMUTE_RATIO, transmuteTargets, canCraft

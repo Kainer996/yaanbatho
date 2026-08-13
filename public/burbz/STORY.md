@@ -25,6 +25,15 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
+## The village folk — who lives in the freed towns
+
+The birds are the heroes of this story. But the villages they free are not empty. The **village folk** live there: a small, sturdy, human-like people of the Kingdom of Burbz. They look a little like the humans of our universe, but they are a different species altogether — and they are nowhere near as clever as the birds. They cannot work magic. They cannot fight the evil Burbz. They never lead. They farm, they fell, they dig, they trade, and they are content.
+
+- Village folk are **residents and workers, never protagonists**. Named speaking parts belong to birds. The folk are the quiet life of a settlement: figures crossing the square, a crew at the quarry, smoke over a cabin roof.
+- Under the usurper the folk did not resist — they endured. The birds and the player liberate their homes *for* them. Gratitude, not command, is why they move back in, work the yards and pay their taxes.
+- Every producing yard — farm, lumber camp, quarry, market, chapel — needs **one villager to run it**. A yard with no crew stands idle. Homes come first: no homes, no folk; no folk, no stone.
+- The folk build the way the folk are: **timber first, stone later**. A freed village's first roof is a log Timber Cabin; prosperity rebuilds it as a Stone Cottage.
+
 ## What the birds eat, and the Head Chef who feeds them
 
 Every bird eats what it really eats in the wild — the diets are drawn from a real
@@ -50,6 +59,7 @@ Freedom is contagious between neighbours. Liberate **three neighbouring villages
 - On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.
 - In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
 - Nothing is conquered and nothing is renamed away: every village keeps its own unique name, its own management desk and its own story — it is simply *part of something bigger now*. Every town, city, county, duchy and kingdom has a different proper name, so the map never asks one name to mean several places.
+- A merged settlement has a place of its own to walk: the **Town Square** screen shows the whole town in one 3D view — every district village standing where it really is, lanes running back to the shared market, the charter stone flying its pennants. Tap a district and you step into that village.
 
 Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer above them, and the two grow independently.
 
@@ -63,8 +73,44 @@ The game stays deliberately simple — walk, listen, befriend, liberate — unti
 - The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed villages.
 - Once the realm holds **two or more counties** — say the free woods around Delamere and a liberated corner of the south of France — their capitals can open **trade routes**. Sky-caravans of free birds carry each county's signature goods along great-circle roads drawn in gold on the liberation map; the farther the road, the rarer the cargo it returns.
 - Trade routes glow even across lands the usurper's shadow still holds: a caravan road is a ribbon of light through the darkness, proof that the free realms reach each other in defiance of the evil Burbz.
+- Every county keeps a **County Map** — a painted, Crusader-Kings-style chart of its lands: the border inked in the realm's colour, every settlement drawn in its place, lanes leading back to the capital, and the wild woods sketched beyond the frontier.
+- Once counties swear to a duchy or kingdom, the royal atlas paints their lands in the liege's own colour — one hue per realm, exactly as a Crusader Kings map reads. Free counties standing alone stay unpainted: the colours are the reward for uniting the realm.
 
 This is the long game: liberate villages until they make a county, unite counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
+
+## The Twenty Roads — the shared walking campaign
+
+Every real walk the player takes carries a tale. **The Twenty Roads** is a fixed
+campaign of twenty walking quests — the same twenty tales, in the same order,
+for every player anywhere on Earth. The footpaths under your boots are local;
+the story you walk is shared.
+
+- Each tale is **sized to the walk**: short strolls, middling rambles and proper
+  treks each carry their own thread of the campaign, so the next tale always
+  fits the road in front of you.
+- Each tale is **told by a named NPC** of the free realm — Elder Bramblewing of
+  the cradle village, Quartermaster Reedwhistle the supply-wren, Scribe Inkwing
+  of the Academy Library, Warden Thistledown of the old roads, Brother Alderdown
+  the chapel dove, Captain Gorsefoot of the free muster, Marla Nettlewick the
+  hedge-robin herbalist, Sage Oakfeather of the Moon Observatory, and Old Tam
+  Cinderquill, fletcher, retired. They greet you at the trailhead, speak again
+  mid-route, and meet you at the banner with a real reward: forged gear,
+  crafting materials, bird-study scrolls.
+- The campaign's spine is the realm's own truth: **walked roads wake the land**.
+  The usurper carved it into his own warding stones — where they walk, the land
+  wakes. Walking is not beside the war. Walking IS the war.
+- The twentieth road is walked for the walker, with the whole cast at the
+  banner and a letter from Merlin himself at the end of it.
+
+### The Feathered Folio
+
+Every tale hides one **lore scroll** along its road, in the manner of the books
+of the old world's great libraries. Together they are the Feathered Folio —
+twenty documents of the Kingdom of Burbz: the cradle charter, the Academy's
+founding, the last muster's orders, the sky-caravan waybills, the ward sister's
+receipts, the border-stone compact, a natural history of the evil Burbz, and at
+the last, Merlin's letter to the walker. Collected scrolls are kept and can be
+re-read any time; each one ties the roads back to the Academy and the Empire.
 
 ## The evil Burbz — the enemies the birds fight
 
@@ -73,6 +119,13 @@ This is the long game: liberate villages until they make a county, unite countie
 - Their silhouettes echo raptors, corvids, owls and other powerful bird forms — each evil Burb keeps the wing class of the form it was cast around, so real matchup knowledge still wins fights — but they must never be presented as biological versions of those species. They do not belong in Birdex and cannot become companions.
 - Their purpose is to occupy, intimidate and hold places under the shadow spell until the player's living flock breaks it.
 - When an evil Burb is beaten it is **dispelled**: its dark magic unravels and the black form scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death.
+
+## The usurper fights back — the world level
+
+- The dark force is not passive. Every village freed, every county founded and every crown claimed makes the usurper pour more shadow into the garrisons that remain. This is the **world level**: the free realm's own progress, mirrored in the strength of what still opposes it.
+- Garrisons defend at the level their land is stamped with. Near the **cradle** — the first village the player ever freed — they match the world level. Out past the marches and the borderlands the shadow runs deeper, and the far frontier always fights hardest.
+- The Royal Atlas is honest about the odds: every dark village banner carries a recommended level, coloured green to red against the player's own flock. A skull means come back stronger — nothing on the map is ever locked, only guarded.
+- The free realm answers in kind at the **Fletcher's Forge**. The forge itself can be rebuilt — Field Anvil, Stone Hearth, Guild Forge, Royal Forge, Sunfire Forge — and each new hearth opens deeper crafting and hones every piece the flock carries to the forge's level. Conquest raises the stakes; the forge keeps the flock in the fight.
 
 
 ### Canonical visual direction
@@ -94,6 +147,30 @@ Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental s
 - **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there sway parleys and diplomacy quests.
 - **Diplomacy quests** (marked 🕊️, like the Diplomacy Envoy) pay out on charm: charming birds talk squirrel markets, border flocks and passers-by into better deals, bonus coins and gifts.
 
+## The Raven, and the law of weight and wit
+
+On the twelfth of August a real raven crossed the sky over the player's own head — the first in months of looking — and the Kingdom marked the day. The Raven stands in Burbz exactly as it stands in the field: a carrion crow grown into something twice the weight and twice the shadow. Rare, huge, and the sharpest mind on black wings.
+
+The raven gives the Kingdom its plainest law, the **law of weight and wit**:
+
+- **Weight wins fights and carries loads — in true proportion.** A bird's body mass is real field-guide weight now, and its load goes with it: one load for every hundred grams of bird. A raven hauls twice what a carrion crow hauls, because it IS twice the carrion crow. A buzzard shoulders eight loads to a robin's one. Gulls, built to carry, haul with the best of them.
+- **Weight loses ledgers.** Villages, towns and counties are run on charm and wit, and the folk take easiest to the light-boned charmers. A robin melts a market square; a raven empties it. The heavier the bird, the poorer the steward or warden it makes — however clever it is.
+- **The trade is the point.** The bird that wins your battles is not the bird that runs your towns. A wise player sends the raven to the front and sits the robin at the desk.
+
+The birds of the crow family carry this law visibly: jackdaw, rook, carrion crow, raven — each step up in weight is a step up in battle and burden, and a step down at the governor's desk.
+
+## The hour of the owl — the law of the night
+
+When the sun sets on the Kingdom, most birds fold their wings. The nocturnal birds — the owls, the nightjars, the frogmouths, the kiwi — open their eyes. The dark is their element, and in their element they are the finest birds the Kingdom has.
+
+Nothing is ever locked away at night. Any bird can fly any errand after dark; a robin will do its best under the stars. But a nocturnal bird worked at night earns the **Night Hunter** bonus, and it is enormous:
+
+- **On expeditions**, a Night Hunter brings home triple the coins and XP, double the timber, and always finds two extra things the daytime birds walk straight past.
+- **In training**, night school teaches triple the XP and the drills sink twice as deep — every stat gain is doubled. The owls learn while the Kingdom sleeps.
+- **In battle**, a nocturnal bird fights with **Night Wings**: half again as fast and as fierce, tougher, fresher, and striking true out of the dark. The evil Burbz never learn the trick — the night belongs to the free birds who were born to it.
+
+The lesson mirrors the raven's law: keep the right bird for the right hour. A player who befriends an owl holds the night itself, and the wise ones save their biggest plans for after dark.
+
 ## Tone and moral frame
 
 **No town is destroyed.** Liberation Battles are non-gory magical contests between the player's living flock and the usurper's shadow squads. Defeated evil Burbz are dispelled rather than killed or conquered. Real birds remain the heroes, discoveries and companions; the player restores communities, knowledge, wildlife and safe paths. The empire is an expanding network of free sanctuaries, and its visual language should feel hopeful, alive and green.
@@ -102,6 +179,7 @@ Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental s
 
 - Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species.
 - Use **evil Burbz** for the dark force's shadow soldiers; the player's own birds are simply **birds** or **companions**.
+- Use **village folk** (or **villagers**) for the human-like people of the liberated settlements — a separate, simpler species than the birds, who are the realm's true minds and heroes.
 - Use **liberate**, **liberated**, **sanctuary**, **restore**, **awaken** and **free** for world progress.
 - The real world and the Kingdom of Burbz are magically linked through Merlin's spell-tablet.
 - Avoid domination language for the player's actions; the player is freeing the world from the usurper's hold.

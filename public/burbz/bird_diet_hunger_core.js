@@ -8,10 +8,13 @@
 
   const FOOD_FAMILIES = {
     small_birds: { id:'small_birds', label:'Small-bird prey rations', defaultPrep:'whole' },
-    // BirdFuncDat folds mammals, reptiles and amphibians into the same
-    // "other vertebrate prey" columns (Diet-Vend / Diet-Vect / Diet-Vunk), so
-    // voles, frogs and lizards all score against this one family.
-    small_mammals: { id:'small_mammals', label:'Small mammals and other small prey', defaultPrep:'live' },
+    // Warm-blooded prey (BirdFuncDat Diet-Vend / Diet-Vunk): voles, mice,
+    // shrews, rabbits. Cold-blooded prey is its own family below, so a
+    // Mallard that takes frogs is never claimed to eat voles.
+    small_mammals: { id:'small_mammals', label:'Small mammals', defaultPrep:'live' },
+    // Cold-blooded vertebrate prey (BirdFuncDat Diet-Vect): frogs, lizards,
+    // newts. Every mammal-hunter also scores here — voles imply frogs.
+    reptiles_amphibians: { id:'reptiles_amphibians', label:'Reptiles and amphibians', defaultPrep:'live' },
     fish: { id:'fish', label:'Fish', defaultPrep:'live' },
     flying_insects: { id:'flying_insects', label:'Flying insects', defaultPrep:'tossed' },
     invertebrates: { id:'invertebrates', label:'General invertebrates', defaultPrep:'fresh' },
@@ -102,13 +105,13 @@
       desc:'The big prey item. Rabbits carry Buzzards and Golden Eagles through the lean months.'
     },
     common_frog: {
-      id:'common_frog', label:'Common Frog', family:'small_mammals',
+      id:'common_frog', label:'Common Frog', family:'reptiles_amphibians',
       preps:['live','fresh'], nourishment:30,
       takenBy:'Grey Heron, Little Owl, Marsh Harrier, Buzzard',
       desc:'Amphibian prey from ditches and wet meadows — a spring staple for herons and marsh hunters.'
     },
     common_lizard: {
-      id:'common_lizard', label:'Common Lizard', family:'small_mammals',
+      id:'common_lizard', label:'Common Lizard', family:'reptiles_amphibians',
       preps:['live','fresh'], nourishment:28,
       takenBy:'Kestrel, Little Owl, Secretarybird, Pacific Baza',
       desc:'Reptile prey basking on heath and dune. Secretarybirds hunt reptiles on foot.'
@@ -227,7 +230,7 @@
   // The carnivore families. Anything in one of these is prey a bird of prey
   // can actually be fed, and quest/forage/shop tables draw on this list so
   // meat is findable from the first minute of a new game.
-  const PREY_FAMILIES = ['small_birds', 'small_mammals', 'fish', 'carrion'];
+  const PREY_FAMILIES = ['small_birds', 'small_mammals', 'reptiles_amphibians', 'fish', 'carrion'];
 
   // Every verdict a bird will actually swallow.
   const ACCEPTED_FEED_VERDICTS = ['primary', 'secondary', 'insufficient'];

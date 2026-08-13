@@ -19,8 +19,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "accurate-diets-full-catalogue-v226-20260805"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+REALM_CORE_PIN = "town-county-screens-v242-20260810"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -169,7 +169,9 @@ def build_harness(villages_js: str, probe_js: str) -> str:
             "settlementBuildFactorForSeed",
             "ensureVillageEconomy",
             "villageBuildingLevel",
+            "villageBuildingTier",
             "villageNeedCapacity",
+            "villageWorkforce",
             "villageProductionSnapshot",
             "villageEconomySnapshot",
             "villageBuildTimeMs",

@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "ordered-quest-markers-v224-20260804"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 
 def run_core(expression: str):

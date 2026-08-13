@@ -58,7 +58,7 @@ def test_no_birds_are_stationed_or_walking_in_the_kitchen():
     assert "const roomAddPanel = room === 'kitchen' ? ''" in render
     # Every room now uses the calm assignment grid; the Kitchen can show its
     # appointed Head Chef without treating that bird as a lodger.
-    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdGridHTML(stageBirds, room)" in render
     assert "roomBirdSpriteHTML" not in render
 
 
@@ -130,6 +130,8 @@ global.renderAcademy = () => {};
 // unstaffed baseline of 1.0.
 global.academyRoleMultiplier = () => 1;
 global.updateQuestProgress = () => {};
+global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond
+global.birdBondCore = () => null;
 global.escapeHtml = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 global.birdOnlyImgHTML = () => '<span class="kitchen-roster-art">🐦</span>';
 global.birdDisplayName = b => (b && (b.customName || b.commonName || b.species)) || 'Bird';

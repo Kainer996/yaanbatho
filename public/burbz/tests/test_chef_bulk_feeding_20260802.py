@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "chef-mastery-feed-all-v237-20260807"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -139,6 +139,8 @@ global.birdHasActiveTraining = () => false;
 global.academyRoleMultiplier = () => 1;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
+global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond
+global.birdBondCore = () => null;
 global.applyPlayerXpState = n => { gameState.player.xp += n; };
 global.levelUpBird = (b, xp) => { b.xp = (b.xp || 0) + xp; };
 global.recalcBirdPower = () => {};
@@ -291,7 +293,7 @@ def test_the_appointed_chef_is_drawn_in_the_kitchen_assignment_grid():
     assert "birdOnlyImgHTML(bird, 'room-bird-grid-art')" in grid
     assert "entry.role" in grid
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "roomBirdGridHTML(birds, room)" in render
+    assert "roomBirdGridHTML(stageBirds, room)" in render
     assert "kitchenChefSpriteHTML(room)" not in render
     assert ".room-bird-grid { position:absolute;" in html
     assert ".room-bird-grid-art" in html and "object-fit:contain" in html

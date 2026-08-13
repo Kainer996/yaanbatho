@@ -48,8 +48,8 @@
     wood_mouse:       { id:'wood_mouse',       label:'Wood Mouse',       icon:'🐁', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Vole Meadow Hunt quest, map forage.', takenBy:'Tawny Owl, Little Owl, Long-eared Owl, Kestrel', desc:'The commonest woodland mouse, and the staple night-time catch of the Tawny Owl.' },
     common_shrew:     { id:'common_shrew',     label:'Common Shrew',     icon:'🐀', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Vole Meadow Hunt quest.', takenBy:'Barn Owl, Kestrel, Short-eared Owl', desc:'Musky and small — most predators spit shrews out, but owls swallow them whole without complaint.' },
     young_rabbit:     { id:'young_rabbit',     label:'Young Rabbit',     icon:'🐇', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Warren Watch quest, map forage.', takenBy:'Buzzard, Golden Eagle, Goshawk, Eagle Owl', desc:'The big prey item. Rabbits carry Buzzards and Golden Eagles through the lean months.' },
-    common_frog:      { id:'common_frog',      label:'Common Frog',      icon:'🐸', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Marsh & Ditch Hunt quest.', takenBy:'Grey Heron, Little Owl, Marsh Harrier, Buzzard', desc:'Amphibian prey out of ditches and wet meadows — a spring staple for herons and marsh hunters.' },
-    common_lizard:    { id:'common_lizard',    label:'Common Lizard',    icon:'🦎', family:'meat',    dietFamily:'small_mammals',           preps:['live','fresh'],               source:'Marsh & Ditch Hunt quest.', takenBy:'Kestrel, Little Owl, Secretarybird, Pacific Baza', desc:'Reptile prey basking on heath and dune. Secretarybirds hunt reptiles on foot, striding through the grass.' },
+    common_frog:      { id:'common_frog',      label:'Common Frog',      icon:'🐸', family:'meat',    dietFamily:'reptiles_amphibians',     preps:['live','fresh'],               source:'Marsh & Ditch Hunt quest.', takenBy:'Grey Heron, Little Owl, Marsh Harrier, Buzzard', desc:'Amphibian prey out of ditches and wet meadows — a spring staple for herons and marsh hunters.' },
+    common_lizard:    { id:'common_lizard',    label:'Common Lizard',    icon:'🦎', family:'meat',    dietFamily:'reptiles_amphibians',     preps:['live','fresh'],               source:'Marsh & Ditch Hunt quest.', takenBy:'Kestrel, Little Owl, Secretarybird, Pacific Baza', desc:'Reptile prey basking on heath and dune. Secretarybirds hunt reptiles on foot, striding through the grass.' },
     carrion_scraps:   { id:'carrion_scraps',   label:'Carrion Scraps',   icon:'🦴', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Carrion Round quest, map forage.', takenBy:'Carrion Crow, Raven, Red Kite, Buzzard, Magpie', desc:'Scavenged remains — a corvid banquet.' },
     deer_carrion:     { id:'deer_carrion',     label:'Deer Carrion',     icon:'🦌', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Carrion Round quest.', takenBy:'Red Kite, Raven, White-tailed Eagle, Griffon Vulture', desc:'A whole winter-killed carcass. Kites, ravens and eagles queue at one for days.' },
     marrow_bone:      { id:'marrow_bone',      label:'Marrow Bone',      icon:'🍖', family:'carrion', dietFamily:'carrion',                 preps:['fresh'],                      source:'Carrion Round quest.', takenBy:'Bearded Vulture (Lammergeier)', desc:'The Bearded Vulture is the only bird alive on a diet of bone: it drops them onto rock to split out the marrow.' },
@@ -60,7 +60,8 @@
   const GRIT_FAMILIES = ['seeds', 'acorns', 'aquatic', 'aquatic_plants'];
   const DIET_FAMILIES = {
     small_birds:'Small-bird prey rations',
-    small_mammals:'Small mammals and other small prey',
+    small_mammals:'Small mammals',
+    reptiles_amphibians:'Reptiles and amphibians',
     fish:'Fish',
     flying_insects:'Flying insects',
     invertebrates:'General invertebrates',
@@ -79,6 +80,7 @@
     'fish:live':      'It hunts living fish, snatched straight from the water — a still fillet barely tempts it.',
     'small_birds:whole': 'This falcon needs a whole small-bird prey ration as its main meal.',
     'small_mammals:live': 'It is a live-prey hunter: movement is what triggers the strike.',
+    'reptiles_amphibians:live': 'It is a live-prey hunter: movement is what triggers the strike.',
     'meat:live':      'It is a live-prey hunter: movement is what triggers the strike.',
     'aquatic:floating': 'Dabblers sieve food from the surface — float it on the water.',
     'aquatic_plants:floating': 'Dabblers sieve food from the surface — float it on the water.',
@@ -106,7 +108,7 @@
 
   // The carnivore families. Birds of prey can only ever be fed from these, so
   // quest, forage and shop tables use this list to guarantee meat is around.
-  const PREY_DIET_FAMILIES = ['small_birds', 'small_mammals', 'fish', 'carrion'];
+  const PREY_DIET_FAMILIES = ['small_birds', 'small_mammals', 'reptiles_amphibians', 'fish', 'carrion'];
   function listPreyIngredients() {
     return Object.values(INGREDIENTS)
       .filter(i => PREY_DIET_FAMILIES.indexOf(i.dietFamily) >= 0)

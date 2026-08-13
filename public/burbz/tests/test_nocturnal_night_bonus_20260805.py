@@ -5,8 +5,10 @@ bedtime loop: a player with no owl could not send anything out on the long
 overnight expedition. The rule is now the other way round — ANY bird can be
 worked at night (nothing new is ever blocked after dark), and a nocturnal
 bird (owl, nightjar, frogmouth, kiwi…) used at night in any capacity earns
-the Night Hunter bonus: double coins and XP, half-again timber, a guaranteed
-extra expedition find, and double training XP.
+the Night Hunter bonus. Since night-hunter-ascendant-v258 the bonus is truly
+massive: triple coins and XP, double timber, TWO guaranteed extra expedition
+finds, triple training XP with doubled stat gains — and the new Night Wings
+battle pack (pinned in test_night_hunter_ascendant_20260813.py).
 
 The window/multiplier rules live in bird_sleep_core.js (which already owns
 nocturnal detection); academy_treehouse_core.js applies whatever pack it is
@@ -20,10 +22,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "nocturnal-night-bonus-v229-20260805"
-# academy_treehouse_core.js has moved on with later releases; bird_sleep_core.js has not.
-ACADEMY_CORE_PIN = "living-canopy-v236-20260806"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
+# Both cores moved with the ascendant release: bird_sleep_core carries the
+# bigger packs, academy_treehouse_core learned statBonus.
+ACADEMY_CORE_PIN = "night-hunter-ascendant-v258-20260813"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
+
+ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 
 
 def run_node(script: str) -> dict:
@@ -61,10 +66,10 @@ def test_night_window_and_bonus_pack_live_in_the_sleep_core():
     assert out["nightAt22"] and out["nightAt18"] and out["nightAt5"]
     assert out["dayAt6"] and out["dayAtNoon"]
     # The bonus is genuinely massive, and only for nocturnal birds at night.
-    assert out["owlBonusAtNight"] == {"coins": 2, "branches": 1.5, "xp": 2, "itemRolls": 1}
+    assert out["owlBonusAtNight"] == ASCENDANT_PACK
     assert out["owlBonusAtNoon"] is None
     assert out["robinBonusAtNight"] is None
-    assert out["pack"]["coins"] >= 2 and out["pack"]["xp"] >= 2
+    assert out["pack"]["coins"] >= 3 and out["pack"]["xp"] >= 3
 
 
 def test_diurnal_birds_are_never_scheduled_asleep_at_night():
@@ -90,41 +95,47 @@ def test_expedition_payout_multiplies_under_the_night_hunter_pack():
       const count = items => Object.values(items).reduce((a, b) => a + b, 0);
       console.log(JSON.stringify({
         dayFlag: day.nightBonus, nightFlag: night.nightBonus,
-        coinsDoubled: night.rewards.coins === Math.round(day.rewards.coins * 2),
-        branches: [day.rewards.branches, night.rewards.branches],
-        xpDoubled: night.rewards.xp === Math.round(day.rewards.xp * 2),
-        extraFind: count(night.rewards.items) === count(day.rewards.items) + 1,
+        coinsTripled: night.rewards.coins === Math.round(day.rewards.coins * 3),
+        branchesDoubled: night.rewards.branches === day.rewards.branches * 2,
+        xpTripled: night.rewards.xp === Math.round(day.rewards.xp * 3),
+        extraFinds: count(night.rewards.items) === count(day.rewards.items) + 2,
         sameTimer: day.endMs === night.endMs
       }));
     """)
     assert out["dayFlag"] is None
-    assert out["nightFlag"] == {"coins": 2, "branches": 1.5, "xp": 2, "itemRolls": 1}
-    assert out["coinsDoubled"]
-    # JS Math.round half-up, not Python's banker's rounding.
-    assert out["branches"][1] == int(out["branches"][0] * 1.5 + 0.5)
-    assert out["xpDoubled"]
-    assert out["extraFind"]
+    assert out["nightFlag"] == {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2}
+    assert out["coinsTripled"]
+    assert out["branchesDoubled"]
+    assert out["xpTripled"]
+    assert out["extraFinds"]
     # The bonus multiplies the payout, never the timer.
     assert out["sameTimer"]
 
 
-def test_training_xp_doubles_under_the_night_hunter_pack():
+def test_training_triples_xp_and_doubles_stat_gains_under_the_pack():
     out = run_node("""
       const core = require('./academy_treehouse_core.js');
       const sleep = require('./bird_sleep_core.js');
       const owl = { id:'owl1', commonName:'Tawny Owl' };
       const day = core.createTrainingSession(owl, 'wing_sprints', 1000);
       const night = core.createTrainingSession(owl, 'wing_sprints', 1000, { nightBonus: sleep.NOCTURNAL_NIGHT_BONUS });
+      const focusDay = core.createTrainingSession(owl, 'focus_roost', 1000);
+      const focusNight = core.createTrainingSession(owl, 'focus_roost', 1000, { nightBonus: sleep.NOCTURNAL_NIGHT_BONUS });
       console.log(JSON.stringify({
         dayFlag: day.nightBonus, nightFlag: night.nightBonus,
         dayXp: day.rewards.xp, nightXp: night.rewards.xp,
-        sameStat: day.rewards.bonus === night.rewards.bonus,
+        dayStat: day.rewards.bonus, nightStat: night.rewards.bonus,
+        focusStats: [focusDay.rewards.bonus, focusNight.rewards.bonus],
         sameTimer: day.endMs === night.endMs
       }));
     """)
     assert out["dayFlag"] is False and out["nightFlag"] is True
-    assert out["nightXp"] == out["dayXp"] * 2
-    assert out["sameStat"] and out["sameTimer"]
+    assert out["nightXp"] == out["dayXp"] * 3
+    # Stat gains double at night — the drill's +1 becomes +2, the Focus
+    # Roost's +2 becomes +4. The timer never moves.
+    assert out["dayStat"] == 1 and out["nightStat"] == 2
+    assert out["focusStats"] == [2, 4]
+    assert out["sameTimer"]
 
 
 def test_app_wires_the_bonus_into_every_capacity():
@@ -138,6 +149,7 @@ def test_app_wires_the_bonus_into_every_capacity():
     sheet = function_source(html, "renderQuestSendSheet")
     assert "isNightRightNow()" in sheet
     assert "Night Hunter" in sheet
+    assert "Night Hunter 3×" in sheet
     # The claim celebration and the adventure log both say why the haul swelled.
     assert "NIGHT HUNTER RETURNS!" in function_source(html, "claimBirdExpedition")
     assert "q.nightBonus" in function_source(html, "buildQuestTimeline")

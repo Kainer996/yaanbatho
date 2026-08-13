@@ -21,9 +21,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-ROLE_CORE_PIN = "chef-mastery-feed-all-v237-20260807"
-SIZE_CORE_PIN = "forge-satchels-v220-20260804"
-CURRENT_BUILD = "chef-mastery-feed-all-v237-20260807"
+ROLE_CORE_PIN = "chef-mastery-feed-all-v261-20260813"
+SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
+CURRENT_BUILD = "feedback-menu-v259-20260813"
 
 
 def run_node(source: str) -> dict:
@@ -170,7 +170,7 @@ def test_generated_stats_make_the_eagle_beat_the_goldcrest_on_every_physical_axi
     for key in ("score", "hp", "atk", "def", "power", "carry"):
         values = [bird[key] for bird in order]
         assert values == sorted(values), f"{key} must rise with size: {values}"
-    assert [b["size"] for b in order] == ["tiny", "small", "medium", "giant"]
+    assert [b["size"] for b in order] == ["tiny", "small", "large", "giant"]
     # Magic remains the small bird's edge — but only an edge: it is scaled by
     # size too, so weight still wins a straight fight.
     assert crest["mag"] > eagle["mag"]
@@ -182,7 +182,7 @@ def test_generated_stats_make_the_eagle_beat_the_goldcrest_on_every_physical_axi
 
 def test_every_companion_is_re_derived_so_old_saves_get_the_size_rule():
     html = HTML.read_text(encoding="utf-8")
-    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v3-size-20260802';" in html
+    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';" in html
     # Size belongs to the species, so migration re-reads it from the profile
     # rather than trusting whatever an older save wrote.
     assert "bird.sizeScore = base.sizeScore;" in html
@@ -298,7 +298,11 @@ def test_the_appointment_card_is_reachable_from_every_surface():
     html = HTML.read_text(encoding="utf-8")
     assert "function rolePostCardHTML(scope, key" in html
     # Academy room interiors (including the Barracks, which renders early).
-    assert "const rolePanel = rolePostCardHTML('academy', room);" in html
+    # training-master-room-actor-v243 (live line): the Training Hall's card
+    # moved into the Drill Master picker sheet; every other room keeps the
+    # inline panel.
+    assert "const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);" in html
+    assert "rolePostCardHTML('academy', 'training')" in html
     assert "rolePostCardHTML('academy', 'tavern')" in html
     # A village's own hall, and a region's.
     assert "rolePostCardHTML('village', String(rec.seed >>> 0)" in html
