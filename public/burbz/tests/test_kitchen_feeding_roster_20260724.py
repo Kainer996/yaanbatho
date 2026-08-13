@@ -130,6 +130,8 @@ global.renderAcademy = () => {};
 // unstaffed baseline of 1.0.
 global.academyRoleMultiplier = () => 1;
 global.updateQuestProgress = () => {};
+global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond
+global.birdBondCore = () => null;
 global.escapeHtml = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 global.birdOnlyImgHTML = () => '<span class="kitchen-roster-art">🐦</span>';
 global.birdDisplayName = b => (b && (b.customName || b.commonName || b.species)) || 'Bird';
