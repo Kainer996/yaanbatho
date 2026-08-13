@@ -5750,7 +5750,9 @@ function clearBurbzLocalProgress() {
   try {
     // Everything Burbz-owned goes: the save, cloud token, intro/tutorial flags
     // ('burbzIntroSeen:…', 'burbzTutorialChapters:…') and any 'burbz_' scoped key.
-    Object.keys(localStorage).filter(key => /^burbz/i.test(key)).forEach(key => localStorage.removeItem(key));
+    // One exception: 'burbz_admin_token' is Yaan's inbox credential, not game
+    // progress — a new game or a reset must not lock him out of the inbox.
+    Object.keys(localStorage).filter(key => /^burbz/i.test(key) && key !== 'burbz_admin_token').forEach(key => localStorage.removeItem(key));
     Object.keys(sessionStorage || {}).filter(key => /^burbz/i.test(key)).forEach(key => sessionStorage.removeItem(key));
   } catch(e) {
     console.warn('BURBZ: local progress clear hit a storage issue', e);
@@ -28818,6 +28820,22 @@ async function sendBurbzFeedback(message, contact, category, website, screenshot
 // ---- Feedback inbox (admin) — read what players sent, without leaving the game
 const FEEDBACK_INBOX_TOKEN_KEY = 'burbz_admin_token'; // shared with inbox.html, so one unlock covers both
 
+// A one-time magic link unlocks the inbox with no typing: opening
+// burbz/?inboxkey=… stores the key on this device, then scrubs it from the
+// URL (and from what the browser would keep in history). Yaan taps the link
+// once; from then on the Feedback Inbox just opens.
+(function adoptInboxKeyFromLink() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const key = (params.get('inboxkey') || '').trim();
+    if (!key) return;
+    localStorage.setItem(FEEDBACK_INBOX_TOKEN_KEY, key);
+    params.delete('inboxkey');
+    const query = params.toString();
+    history.replaceState(null, '', location.pathname + (query ? '?' + query : '') + location.hash);
+  } catch (e) {}
+})();
+
 function feedbackInboxEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 function feedbackInboxTime(sec) {
@@ -28862,7 +28880,7 @@ function openFeedbackInbox() {
 
   const renderGate = (msg) => {
     body.innerHTML =
-      '<div class="recruit-copy">This is the private inbox. Enter the admin key once and this device stays unlocked.</div>' +
+      '<div class="recruit-copy">This is the private inbox. Open your magic link, or enter the admin key once — either way this device stays unlocked.</div>' +
       '<input id="feedbackInboxKey" type="password" autocomplete="off" placeholder="Admin key" style="width:100%;box-sizing:border-box;border-radius:12px;padding:12px;margin-top:10px;font:inherit;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:inherit">' +
       '<div id="feedbackInboxGateMsg" aria-live="polite" style="min-height:18px;margin-top:6px;color:#f97583;font-size:13px">' + feedbackInboxEsc(msg || '') + '</div>' +
       '<button class="recruit-close" id="feedbackInboxUnlock" style="margin-top:8px">Unlock</button>';
@@ -33928,7 +33946,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'early-game-until-level-12-v262-20260813';
+const BURBZ_BUILD = 'feedback-menu-keyless-v263-20260813';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

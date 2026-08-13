@@ -18,7 +18,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
-CURRENT_BUILD = "early-game-until-level-12-v262-20260813"
+CURRENT_BUILD = "feedback-menu-keyless-v263-20260813"
 
 
 def run_node(script: str):
