@@ -19,8 +19,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "real-place-names-v263-20260813"
-CURRENT_BUILD = "real-place-names-v263-20260813"
+REALM_CORE_PIN = "real-place-names-v264-20260813"
+CURRENT_BUILD = "real-place-names-v264-20260813"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

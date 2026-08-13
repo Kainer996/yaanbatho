@@ -1,7 +1,7 @@
 """Shared hand-written Burbz place names and explicit hierarchy contracts.
 
 Every settlement name comes from PLACE_NAMES: two hundred invented names,
-written by hand to read like real villages and towns (real-place-names-v263
+written by hand to read like real villages and towns (real-place-names-v264
 replaced the old 14-letter syllable stems, which read as noise). Every player
 sees the same two hundred. The SEED stays the only identity — far-apart
 places may share a name like Earth's many Newtons — but the mapping must be
