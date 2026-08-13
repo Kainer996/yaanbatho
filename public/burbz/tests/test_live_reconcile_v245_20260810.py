@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "citizen-workers-timber-homes-v253-20260812"
+CURRENT_BUILD = "night-owl-dark-mode-v255-20260813"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
