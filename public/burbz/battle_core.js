@@ -396,11 +396,16 @@
     const disciplines = opts.disciplines || (bird.academy && bird.academy.disciplines) || {};
     const gear = opts.gear || bird.gear || {};
     const g = k => n(gear[k], 0);
+    // Night Wings (bird_sleep_core.NOCTURNAL_NIGHT_BATTLE): the caller decides
+    // whether the pack applies — it knows the bird and the local clock — and
+    // this core only multiplies. No pack means byte-identical classic stats.
+    const night = opts.nightBoost && typeof opts.nightBoost === 'object' ? opts.nightBoost : null;
+    const nb = k => night ? Math.max(1, Number(night[k]) || 1) : 1;
     const stamina = n(bird.stamina, 50) ;
-    const maxHp = Math.max(40, n(bird.maxHp, 80)) + g('maxHp');
+    const maxHp = Math.round((Math.max(40, n(bird.maxHp, 80)) + g('maxHp')) * nb('maxHp'));
     const hpRatio = clamp(n(bird.hp, n(bird.maxHp, 80)) / Math.max(1, n(bird.maxHp, 80)), 0, 1);
     const hp = Math.round(maxHp * hpRatio);
-    const mag = Math.max(5, deriveMagic(bird) + g('mag'));
+    const mag = Math.max(5, Math.round((deriveMagic(bird) + g('mag')) * nb('mag')));
     const f = {
       id: String(bird.id || (speciesKey(birdName(bird)) + '_' + hashString(birdName(bird)))),
       birdId: bird.id || null,
@@ -417,12 +422,13 @@
       artUrl: bird.artUrl || null,
       emoji: bird.emoji || '🐦',
       maxHp, hp,
-      atk: n(bird.atk, 40) + g('atk'),
-      def: n(bird.def, 40) + g('def'),
-      spd: n(bird.spd, 40) + g('spd'),
+      atk: Math.round((n(bird.atk, 40) + g('atk')) * nb('atk')),
+      def: Math.round((n(bird.def, 40) + g('def')) * nb('def')),
+      spd: Math.round((n(bird.spd, 40) + g('spd')) * nb('spd')),
       int: n(bird.int, 45), cha: n(bird.cha, 45), stamina,
       mag,
-      critBonus: g('critBonus'),
+      critBonus: g('critBonus') + (night ? Math.max(0, Number(night.critBonus) || 0) : 0),
+      nightHunter: !!night,     // Night Wings active — the UI shows the moon
       cr: 0,                    // combat readiness 0..100
       mods: [],                 // [{stat, pct, turns}] — buffs positive, debuffs negative
       barrier: 0,               // flat damage-absorbing shield HP

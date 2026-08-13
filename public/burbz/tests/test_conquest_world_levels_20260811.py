@@ -19,7 +19,7 @@ SW_PATH = ROOT / "sw.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "conquest-world-levels-v248-20260811"
 PREVIOUS_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
-CURRENT_BUILD = "bird-bond-love-v256-20260812"
+CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
 
 
 def run_node(script: str):
@@ -220,8 +220,12 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    for asset in ("world_level_core.js", "battle_core.js", "loot_crafting_core.js"):
-        pin = f"{asset}?v={OWN_RELEASE_PIN}"
+    # battle_core moved again with night-hunter-ascendant-v258 (Night Wings);
+    # the world-level and loot cores still ship under this release.
+    for asset, core_pin in (("world_level_core.js", OWN_RELEASE_PIN),
+                            ("battle_core.js", "night-hunter-ascendant-v258-20260813"),
+                            ("loot_crafting_core.js", OWN_RELEASE_PIN)):
+        pin = f"{asset}?v={core_pin}"
         assert pin in html, pin
         assert f"'./{pin}'" in sw, pin
     # The new core rides both SW lists and the live updater's manifest.

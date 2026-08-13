@@ -18,7 +18,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
-CURRENT_BUILD = "bird-bond-love-v256-20260812"
+CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
 
 
 def run_node(script: str):

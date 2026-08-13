@@ -25,11 +25,28 @@
   // whole payout, in any capacity.
   const NIGHT_START_HOUR = 18;
   const NIGHT_END_HOUR = 6;
+  // Ascendant (v258): the advantage is now truly massive. An owl flown at
+  // night out-earns any daytime bird by a mile — that is the whole point of
+  // keeping one. Timers never change; only the payout swells.
   const NOCTURNAL_NIGHT_BONUS = Object.freeze({
-    coins: 2,      // expedition coin payouts double
-    branches: 1.5, // timber hauls half again
-    xp: 2,         // expedition AND training XP double
-    itemRolls: 1   // one guaranteed extra find per expedition
+    coins: 3,      // expedition coin payouts triple
+    branches: 2,   // timber hauls double
+    xp: 3,         // expedition AND training XP triple
+    itemRolls: 2,  // two guaranteed extra finds per expedition
+    statBonus: 2   // training stat gains double
+  });
+  // Night Wings: the battle half of the Night Hunter law. A nocturnal bird
+  // fighting after dark is a different animal — half again as fast and as
+  // fierce, tougher, and striking true out of the black. buildFighter in
+  // battle_core.js applies whatever pack it is handed; only a nocturnal bird
+  // at night ever gets one.
+  const NOCTURNAL_NIGHT_BATTLE = Object.freeze({
+    atk: 1.5,        // talons half again as sharp
+    spd: 1.5,        // silent wings own the turn meter
+    mag: 1.5,        // moon-magic runs high
+    def: 1.25,       // the dark is armour
+    maxHp: 1.25,     // fresh at an hour that tires everyone else
+    critBonus: 0.15  // strikes from nowhere land true
   });
 
   function clamp(value, min, max) {
@@ -90,6 +107,13 @@
     return isNocturnalBird(bird) && isNightHour(localHour) ? { ...NOCTURNAL_NIGHT_BONUS } : null;
   }
 
+  // Night Wings: the battle-stat pack for a nocturnal bird fighting at night.
+  // Same contract as the reward pack — a pack when the law applies, null when
+  // it does not, and battle_core stays pure by just applying what it is handed.
+  function nocturnalNightBattleBoost(bird, localHour) {
+    return isNocturnalBird(bird) && isNightHour(localHour) ? { ...NOCTURNAL_NIGHT_BATTLE } : null;
+  }
+
   function advanceTiredness(rawCare, now = Date.now()) {
     // Sleep retired: tiredness never accrues, so advancing time just stamps
     // the clock on an already-rested care record.
@@ -129,11 +153,13 @@
     NIGHT_START_HOUR,
     NIGHT_END_HOUR,
     NOCTURNAL_NIGHT_BONUS,
+    NOCTURNAL_NIGHT_BATTLE,
     sanitizeSleepCare,
     isNocturnalBird,
     isNightHour,
     isScheduledSleepTime,
     nocturnalNightBonus,
+    nocturnalNightBattleBoost,
     advanceTiredness,
     sleepPlan,
     sleepReadiness

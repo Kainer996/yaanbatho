@@ -31,7 +31,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # The build has moved on (sleep-retired-v238) but the canopy cores have not,
 # so they keep their own pin while the build tracks the current tag.
-CURRENT_BUILD = "bird-bond-love-v256-20260812"
+CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
 
 BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
 
@@ -163,9 +163,12 @@ def test_default_room_positions_sit_on_the_new_boughs():
 def test_release_is_pinned_and_shipped():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     assert RELEASE_PIN in SW, "the release lineage stays in BURBZ_CACHE"
-    for core in ("academy_alive_core.js", "academy_treehouse_core.js"):
-        assert f"{core}?v={RELEASE_PIN}" in HTML, core
-        assert f"./{core}?v={RELEASE_PIN}" in SW, core
+    # academy_treehouse_core moved again with night-hunter-ascendant-v258
+    # (training statBonus); the alive core still ships under this release.
+    for core, pin in (("academy_alive_core.js", RELEASE_PIN),
+                      ("academy_treehouse_core.js", "night-hunter-ascendant-v258-20260813")):
+        assert f"{core}?v={pin}" in HTML, core
+        assert f"./{core}?v={pin}" in SW, core
     for name in BRANCH_SPRITES:
         assert f"./assets/academy-branches/{name}.webp" in SW, (
             f"{name} must be precached for offline play"

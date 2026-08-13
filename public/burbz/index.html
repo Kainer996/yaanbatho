@@ -1971,6 +1971,22 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 /* Honest odds: the garrison's level against the flock's, before the fight. */
 .rival-danger-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:-2px 0 9px; font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.05em; }
 .rival-danger-line .rdl-world { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; color:var(--text3); letter-spacing:.03em; }
+
+/* Night Hunter — the moonlit aura on a nocturnal bird while its bonus is
+   live. Rides on pick cards, quest chips, training buttons, status lines and
+   arena units alike: wherever the owl appears after dark, it glows. */
+.night-hunter-aura { position:relative; border-color:#8f8fff77 !important; box-shadow:0 0 10px #6b6bff4d, inset 0 0 14px #6b6bff26; animation:nightHunterPulse 2.6s ease-in-out infinite; }
+@keyframes nightHunterPulse {
+  0%, 100% { box-shadow:0 0 8px #6b6bff40, inset 0 0 12px #6b6bff20; }
+  50% { box-shadow:0 0 20px #9d9dff73, inset 0 0 18px #8f8fff33; }
+}
+.pk-night-chip { display:inline-block; margin-top:3px; padding:2px 8px; border-radius:999px; font-family:'Russo One',sans-serif; font-size:9px; letter-spacing:.06em; color:#d6d9ff; background:linear-gradient(135deg,#2b2b66,#171738); border:1px solid #8f8fff55; text-shadow:0 0 6px #8f8fff88; }
+.battle-night-hint { margin:8px 0 10px; padding:9px 12px; border-radius:11px; font-size:12px; line-height:1.45; color:#d6d9ff; background:linear-gradient(135deg,#23234d,#131330); border:1px solid #7d7dff44; }
+.au-night-moon { position:absolute; top:-8px; right:-5px; font-size:14px; filter:drop-shadow(0 0 6px #9d9dff); animation:nightMoonBob 3s ease-in-out infinite; z-index:3; pointer-events:none; }
+@keyframes nightMoonBob { 0%, 100% { transform:translateY(0) rotate(-8deg); } 50% { transform:translateY(-3px) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .night-hunter-aura, .au-night-moon { animation:none; }
+}
 .league-rival-row { display:flex; gap:8px; }
 .rival-card { flex:1; text-align:center; padding:8px 4px; background:var(--bg3); border-radius:10px; border:1px solid rgba(255,255,255,0.05); }
 .rival-card .rc-art { width:52px; height:52px; border-radius:10px; object-fit:cover; margin:0 auto 4px; display:block; background:var(--bg4); }
@@ -4453,20 +4469,20 @@ body.burbz-night #screen-scan:not(.camera-mode) .owl-night-note { display:block;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=living-canopy-v236-20260806"></script>
+<script src="academy_treehouse_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
-<script src="bird_sleep_core.js?v=sleep-retired-v238-20260809"></script>
+<script src="bird_sleep_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=conquest-world-levels-v248-20260811"></script>
+<script src="battle_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=town-county-screens-v242-20260810"></script>
@@ -5550,17 +5566,31 @@ function nocturnalNightBonusFor(bird, now = Date.now()) {
   if (!core || typeof core.nocturnalNightBonus !== 'function') return null;
   return core.nocturnalNightBonus(bird, new Date(now).getHours());
 }
+// Night Wings: the battle half of the law. A nocturnal bird fighting at night
+// gets the whole NOCTURNAL_NIGHT_BATTLE stat pack; every other bird, and every
+// daylight hour, gets null and classic stats.
+function nocturnalNightBattleBoostFor(bird, now = Date.now()) {
+  const core = birdSleepCore();
+  if (!core || typeof core.nocturnalNightBattleBoost !== 'function') return null;
+  return core.nocturnalNightBattleBoost(bird, new Date(now).getHours());
+}
 function isNightRightNow(now = Date.now()) {
   const core = birdSleepCore();
   return !!(core && typeof core.isNightHour === 'function' && core.isNightHour(new Date(now).getHours()));
 }
 function academySleepStatusHTML(bird, now = Date.now()) {
   // Sleep retired: every companion is always awake and battle-ready; the line
-  // survives to advertise the Night Hunter perk on nocturnal companions.
+  // survives to advertise the Night Hunter perk on nocturnal companions —
+  // and to burn bright while the perk is actually live.
   const core = birdSleepCore();
   const nocturnal = !!(core && core.isNocturnalBird && core.isNocturnalBird(bird));
-  const copy = nocturnal ? '🌙 Nocturnal · night work earns the Night Hunter bonus' : '☀️ Awake and ready';
-  return '<div class="academy-hunger-status" data-sleeping="false">' + copy + '</div>';
+  const huntingNow = nocturnal && isNightRightNow(now);
+  const copy = huntingNow
+    ? '🌙 NIGHT HUNTER — in its element right now: 3× coins & XP, 2× timber, extra finds, 2× training gains and Night Wings in battle'
+    : nocturnal
+      ? '🌙 Nocturnal · night work earns the Night Hunter bonus — from 18:00 it pays 3× coins & XP, 2× training gains, Night Wings in battle'
+      : '☀️ Awake and ready';
+  return '<div class="academy-hunger-status' + (huntingNow ? ' night-hunter-aura' : '') + '" data-sleeping="false" data-night-hunter="' + (huntingNow ? 'active' : nocturnal ? 'waiting' : 'no') + '">' + copy + '</div>';
 }
 
 // Merlin is the one bird the Kingdom cannot afford to ground. With an empty
@@ -12919,7 +12949,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   else if (SFX && typeof SFX.page === 'function') SFX.page();
   else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast(quest.nightBonus
-    ? '🌙 ' + (bird.commonName || bird.species) + ' hunts by night — Night Hunter bonus: 2× coins & XP, extra finds! ' + quest.label
+    ? '🌙 ' + (bird.commonName || bird.species) + ' hunts by night — Night Hunter bonus: 3× coins & XP, 2× timber, two extra finds! ' + quest.label
     : '🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderPetCompanion();
   renderBirdExpeditions();
@@ -13349,12 +13379,13 @@ function renderQuestSendSheet() {
     const carry = birdSizeSummary(b);
     const carryNote = carry ? ' · ' + carry.icon + ' carries ' + carry.capacity : '';
     // The Night Hunter bonus rides on the chip too: at night, the owl IS the pick.
-    const nightNote = nocturnalNightBonusFor(b) ? ' · 🌙 Night Hunter 2×' : '';
+    const nightHunting = !!nocturnalNightBonusFor(b);
+    const nightNote = nightHunting ? ' · 🌙 Night Hunter 3×' : '';
     const baseNote = assignedPost ? assignedPost.role.title : away ? 'Away' : training ? 'Training' : tooLow ? 'Lv ' + t.minLevel + '+' : !readiness.ok ? 'Urgent care' : readiness.slowFactor > 1 ? 'Flies hungry · 2× time' : 'Lv ' + (b.level || 1) + carryNote + nightNote + (t.chaWeight ? ' · CHA ' + (b.cha || 0) : '');
     const hungerNote = readiness.status && readiness.status.label ? readiness.status.label : 'Fed';
     const note = baseNote.toLowerCase() === hungerNote.toLowerCase() ? baseNote : baseNote + ' · ' + hungerNote;
     const sel = questSendState.birdId === b.id ? ' selected' : '';
-    return '<button type="button" class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
+    return '<button type="button" class="quest-bird-chip' + sel + (disabled ? ' disabled' : '') + (nightHunting && !disabled ? ' night-hunter-aura' : '') + '" data-quest-bird-id="' + escapeHtml(b.id) + '" data-hunger-state="' + readiness.status.level + '" ' + (disabled ? 'disabled' : 'onclick="selectQuestBird(\'' + b.id + '\')"') + '>' +
       birdOnlyImgHTML(b, 'quest-bird-chip-art') +
       '<span class="quest-bird-chip-name">' + escapeHtml(birdDisplayName(b)) + '</span>' +
       '<span class="quest-bird-chip-note">' + note + '</span>' +
@@ -13368,7 +13399,7 @@ function renderQuestSendSheet() {
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
       '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') +
-      (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: double coins and XP, extra timber and a guaranteed extra find.</span>' : '') + '</div>' +
+      (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: TRIPLE coins and XP, double timber and two guaranteed extra finds.</span>' : '') + '</div>' +
     (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-economy-note">Quick quests pay best per hour; longer quests bring home much bigger totals while you are away.</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
@@ -13445,7 +13476,7 @@ function buildQuestTimeline(q) {
   // A Night Hunter announces itself early in the log so the doubled haul below
   // reads as earned, not as a bug.
   if (q.nightBonus) {
-    events.push({ pct: 4 + Math.floor(rng() * 12), text: q.birdName + ' slips into the dark on silent wings — the night belongs to this bird, and the whole haul swells (Night Hunter bonus).', loot: '🌙' });
+    events.push({ pct: 4 + Math.floor(rng() * 12), text: q.birdName + ' slips into the dark on silent wings — the night belongs to this bird, and the whole haul swells threefold (Night Hunter bonus).', loot: '🌙' });
   }
   // Split the coin reward across a few "found coins" moments
   const totalCoins = (q.rewards && q.rewards.coins) || 0;
@@ -15899,7 +15930,7 @@ function startBirdTrainingSession(birdId, templateId) {
   saveState();
   SFX.tap();
   showToast(session.nightBonus
-    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 2× XP! ' + session.label
+    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 3× XP and double stat gains! ' + session.label
     : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
   renderAcademyRoomInterior();
   renderAcademy();
@@ -15990,12 +16021,17 @@ function renderTrainingHallPanel(birds, others) {
       : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => {
         const readiness = birdWorkReadiness(b, 'training');
         const hungerLabel = readiness.status && readiness.status.label ? readiness.status.label.toLowerCase() : 'fed';
-        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + hungerLabel;
-        return '<button class="training-bird-btn" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
+        // A Night Hunter's button says so: at night, the owl learns triple.
+        const nightHunting = readiness.ok && !!nocturnalNightBonusFor(b);
+        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + (nightHunting ? '🌙 Night Hunter 3×' : hungerLabel);
+        return '<button class="training-bird-btn' + (nightHunting ? ' night-hunter-aura' : '') + '" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
       }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
     return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
   }).join('');
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  const nightHallHint = isNightRightNow()
+    ? '<div class="battle-night-hint">🌙 Night school is open — a nocturnal bird training now earns TRIPLE XP and DOUBLE stat gains from every drill. The owls learn while the Kingdom sleeps.</div>'
+    : '';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function trainingMasterActorHTML() {
@@ -31699,7 +31735,10 @@ function renderBattleSelect() {
       const fullnessColor = 'hsl(' + Math.round(fullnessPct * 1.2) + ' 72% 44%)';
       const hungerMeta = ' · ' + readiness.status.label;
       const counters = counterTypes.includes(core.classifySpecies(b.species));
-      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (readiness.warning ? ' hungry-warn' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
+      // Night Wings on the pick card: after dark, the owl is the strongest
+      // bird on the shelf and the card glows to say so.
+      const nightWings = !!nocturnalNightBattleBoostFor(b);
+      return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (readiness.warning ? ' hungry-warn' : '') + (nightWings ? ' night-hunter-aura' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
         '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
         fighterArtHTML(b, 'pk') +
@@ -31708,6 +31747,7 @@ function renderBattleSelect() {
         typeChipHTML(core.classifySpecies(b.species)) +
         familyChipHTML(b) +
         (counters ? '<span class="pk-counter-chip">✓ Counter</span>' : '') +
+        (nightWings ? '<span class="pk-night-chip">🌙 Night Wings</span>' : '') +
         '<div class="pk-meters" data-fullness="' + fullnessPct + '">' +
           '<div class="pk-meter-row"><span>HP</span><div class="pk-meter-track"><div class="pk-meter-fill hp" style="width:' + hpPct + '%;' + (hpPct < 35 ? 'background:var(--hp-red);' : hpPct < 65 ? 'background:var(--hp-yellow);' : '') + '"></div></div><span>' + hpPct + '%</span></div>' +
           '<div class="pk-meter-row"><span>Full</span><div class="pk-meter-track"><div class="pk-meter-fill" style="width:' + fullnessPct + '%;background:' + fullnessColor + '"></div></div><span>' + fullnessPct + '%</span></div>' +
@@ -31721,7 +31761,10 @@ function renderBattleSelect() {
         '<div class="bench-meta">Lv ' + (b.level || 1) + (s.meta ? ' · ' + s.meta : '') + '</div></div>' +
         '<span class="bench-status' + s.cls + '">' + escapeHtml(s.label) + '</span><span class="bench-go" aria-hidden="true">›</span></button>';
     }).join('');
-    grid.innerHTML =
+    const nightRosterHint = isNightRightNow()
+      ? '<div class="battle-night-hint">🌙 Night has fallen — nocturnal birds fight with Night Wings: half again the ATK, SPD and magic, tougher, fresher, and critting out of the dark.</div>'
+      : '';
+    grid.innerHTML = nightRosterHint +
       '<div class="roster-title">Ready to fly <span class="roster-count">' + pickable.length + '</span></div>' +
       (pickable.length
         ? '<div class="battle-team-grid">' + readyCards + '</div>'
@@ -31789,7 +31832,10 @@ function startPerchBattle() {
   // Gear counts: every equipped weapon, armour piece and trinket feeds the fighter;
   // spells join the skill bar and potions wait for their bird's player turn.
   const playerFighters = team.map(b => {
-    const f = core.buildFighter(b, { gear: birdGearBonuses(b) });
+    // Night Wings: a nocturnal bird fighting at night carries the whole
+    // NOCTURNAL_NIGHT_BATTLE pack into the arena. Rival squads never get it —
+    // the advantage belongs to the player who kept an owl.
+    const f = core.buildFighter(b, { gear: birdGearBonuses(b), nightBoost: nocturnalNightBattleBoostFor(b) });
     applyEquippedSpell(f, b);
     prepareEquippedPotion(f, b);
     return f;
@@ -31813,6 +31859,8 @@ function startPerchBattle() {
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison, the dark force\'s shadow-bound occupying flock, and break the usurper\'s hold!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
   if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
+  const nightHunters = playerFighters.filter(f => f.nightHunter);
+  if (nightHunters.length) addBattleLog('system-msg', '🌙 NIGHT WINGS! ' + nightHunters.map(f => f.name).join(', ') + (nightHunters.length > 1 ? ' fight' : ' fights') + ' under the moon — half again as fast and as fierce, tougher, and striking true out of the dark.');
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
   (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
   addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
@@ -31852,8 +31900,10 @@ function arenaUnitHTML(f, side, index, opts) {
   if (f.fainted) cls.push('fainted');
   if (o.acting) cls.push('acting');
   if (o.targetable) cls.push('targetable');
+  if (f.nightHunter && !f.fainted) cls.push('night-hunter-aura');
   return '<button class="' + cls.join(' ') + '" id="unit_' + side + '_' + index + '" onclick="battleTargetPick(\'' + side + '\',' + index + ')">' +
     (o.acting ? '<div class="au-turn-flag">TURN</div>' : '') +
+    (f.nightHunter ? '<div class="au-night-moon" title="Night Wings — nocturnal battle boost">🌙</div>' : '') +
     fighterArtHTML(f, 'au') +
     '<div class="au-name">' + escapeHtml(f.name) + '</div>' +
     '<div class="au-hpbar"><div style="width:' + pct + '%; background:' + hpBarColor(pct) + ';"></div></div>' +
@@ -33223,7 +33273,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-bond-love-v256-20260812';
+const BURBZ_BUILD = 'night-hunter-ascendant-v258-20260813';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

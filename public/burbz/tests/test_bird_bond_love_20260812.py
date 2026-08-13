@@ -17,7 +17,7 @@ CORE = (ROOT / "bird_bond_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "bird-bond-love-v256-20260812"
 PREVIOUS_RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "bird-bond-love-v256-20260812"
+CURRENT_BUILD = "night-hunter-ascendant-v258-20260813"
 
 
 def _node(source: str):
@@ -160,7 +160,8 @@ def test_the_inline_handlers_are_exported_for_onclick():
 def test_release_pins():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert cache_line.endswith(f"-{OWN_RELEASE_PIN}';")
+    assert OWN_RELEASE_PIN in cache_line  # this release's own segment
+    assert CURRENT_BUILD in cache_line  # head build reaches players
     assert f"./bird_bond_core.js?v={OWN_RELEASE_PIN}" in SW
     assert SW.count("bird_bond_core.js") == 2  # both precache lists
     assert '"bird_bond_core.js"' in UPDATER  # the live updater ships the new core

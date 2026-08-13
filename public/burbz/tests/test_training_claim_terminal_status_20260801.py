@@ -8,7 +8,7 @@ INDEX = ROOT / "index.html"
 SW = ROOT / "sw.js"
 # The treehouse core's CURRENT ?v pin — later releases that touch the core
 # move this on (the cache-lineage assert below keeps this release's own marker).
-RELEASE_PIN = "living-canopy-v236-20260806"
+RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 
 
 def _academy_core_json(script: str):
