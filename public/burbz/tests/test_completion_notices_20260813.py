@@ -103,6 +103,19 @@ def test_claimed_quests_drop_their_notice_on_the_badge_heartbeat():
     assert "renderCompletionNotices()" in badges
 
 
+def test_hospital_add_list_shows_health_bars():
+    # Same release, Yaan's follow-up: the Bird Hospital's "add a bird" list
+    # shows each candidate's health bar and sorts the hurt birds first.
+    src = function_source("renderAcademyRoomInterior")
+    assert "sort((a, b) => birdHpRatio(a) - birdHpRatio(b))" in src
+    assert "room === 'hospital'" in src
+    assert "room-bird-option-hp" in src
+    assert "' + hp + '/' + maxHp + '" in src
+    # Green when whole, yellow when bruised, red at 35% and under.
+    assert ".academy-meter-fill.hp.bruised { background:var(--hp-yellow); }" in HTML
+    assert ".academy-meter-fill.hp.low { background:var(--hp-red); }" in HTML
+
+
 def test_guide_callout_names_the_guided_room():
     # The treehouse quest ring used to always say Kitchen & Pantry; corner
     # cards guide every room, so the callout names the real one.

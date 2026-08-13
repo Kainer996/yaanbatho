@@ -443,6 +443,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .room-bird-option img { width:48px; height:48px; object-fit:contain; border-radius:10px; background:transparent; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45)); }
 .room-bird-option-name { font-weight:800; font-size:13px; }
 .room-bird-option-meta { color:var(--text3); font-size:10px; margin-top:2px; }
+.room-bird-option-body { min-width:0; }
+.room-bird-option-hp { margin-top:4px; }
+.room-bird-option-hp .academy-meter-label { width:18px; }
+.room-bird-option-hp-text { font-size:9.5px; color:var(--text3); white-space:nowrap; }
+.academy-meter-fill.hp.bruised { background:var(--hp-yellow); }
+.academy-meter-fill.hp.low { background:var(--hp-red); }
 .room-bird-add-btn { min-height:34px; border-radius:9px; padding:0 10px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.05em; }
 .room-bird-add-btn:disabled { opacity:.45; filter:grayscale(.7); }
 
@@ -16300,17 +16306,33 @@ function renderAcademyRoomInterior() {
       root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
       return;
     }
-    const addRows = others.length ? others.map(b => {
+    // The Hospital picks patients: hurt birds sort to the top of the add
+    // list and every candidate shows its health bar, so the player sees at
+    // a glance who needs a bed.
+    const birdHpRatio = b => {
+      const maxHp = Math.max(1, Number(b.maxHp || b.hp || 1));
+      return clamp(Number(b.hp == null ? maxHp : b.hp) / maxHp, 0, 1);
+    };
+    const addCandidates = room === 'hospital' ? others.slice().sort((a, b) => birdHpRatio(a) - birdHpRatio(b)) : others;
+    const addRows = addCandidates.length ? addCandidates.map(b => {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       const away = birdHasActiveExpedition(b.id);
       const training = birdHasActiveTraining(b.id);
       const meta = away ? '🧭 Away on a quest — rejoins the Academy when it finishes'
         : training ? '🏋️ Mid-training in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'the Training Hall')
         : 'Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy');
+      let hpBar = '';
+      if (room === 'hospital') {
+        const maxHp = Math.max(1, Number(b.maxHp || b.hp || 1));
+        const hp = clamp(Math.round(Number(b.hp == null ? maxHp : b.hp)), 0, maxHp);
+        const hpPct = clamp(Math.round((hp / maxHp) * 100), 0, 100);
+        const hpTone = hpPct <= 35 ? ' low' : (hpPct < 100 ? ' bruised' : '');
+        hpBar = '<div class="academy-meter room-bird-option-hp"><span class="academy-meter-label">HP</span><div class="academy-meter-bar"><div class="academy-meter-fill hp' + hpTone + '" style="width:' + hpPct + '%"></div></div><span class="room-bird-option-hp-text">' + hp + '/' + maxHp + '</span></div>';
+      }
       const action = (away || training)
         ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : 'Training') + '</button>'
         : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
-      return '<div class="room-bird-option" data-bird-goto="' + escapeHtml(b.id) + '">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
+      return '<div class="room-bird-option" data-bird-goto="' + escapeHtml(b.id) + '">' + img + '<div class="room-bird-option-body"><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div>' + hpBar + '</div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
