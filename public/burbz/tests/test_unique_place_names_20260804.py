@@ -1,8 +1,13 @@
-"""Global Burbz place-name uniqueness and explicit hierarchy contracts.
+"""Shared hand-written Burbz place names and explicit hierarchy contracts.
 
-Every geographic entity must have its own deterministic proper name.  Towns,
-cities and feudal regions may never inherit the name of their heart/capital
-village, and legacy saves must be renamed without losing progress or identity.
+Every settlement name comes from PLACE_NAMES: two hundred invented names,
+written by hand to read like real villages and towns (real-place-names-v264
+replaced the old 14-letter syllable stems, which read as noise). Every player
+sees the same two hundred. The SEED stays the only identity — far-apart
+places may share a name like Earth's many Newtons — but the mapping must be
+deterministic, must spread namesakes far apart on the map, and must never
+give a village, its town and its county the same name. Legacy saves must be
+renamed without losing progress or identity.
 """
 import json
 import subprocess
@@ -23,20 +28,68 @@ def run_core(expression: str):
     return json.loads(result.stdout)
 
 
-def test_names_are_deterministic_and_globally_unique_across_ranks_and_seeds():
-    # 6,000 entities is far beyond one player's visible realm and catches both
-    # same-rank and cross-rank collisions. The generator itself is injective.
+def test_the_pool_is_two_hundred_distinct_hand_written_names():
+    names = run_core("core.PLACE_NAMES")
+    assert len(names) == 200
+    assert len(set(names)) == 200
+    # Hand-written shape: one capitalised word, short enough for a map chip,
+    # and never the old generated look (seven flat two-letter syllables).
+    for name in names:
+        assert 6 <= len(name) <= 14
+        assert name[0].isupper() and name[1:].islower() and name.isalpha()
+
+
+def test_every_rank_draws_deterministically_from_the_shared_pool():
     script = """
-      const core=require(%s); const kinds=%s; const names=[];
-      for (const kind of kinds) for (let seed=0; seed<1000; seed++) names.push(core.placeName(kind, seed));
-      console.log(JSON.stringify({count:names.length, unique:new Set(names).size, stable:core.placeName('village',42)===core.placeName('village',42), names:names.slice(0,6)}));
+      const core=require(%s); const kinds=%s; const pool=new Set(core.PLACE_NAMES);
+      let inPool=true, stable=true;
+      for (const kind of kinds) for (let seed=0; seed<500; seed++) {
+        const name=core.placeName(kind, seed);
+        if (!pool.has(name)) inPool=false;
+        if (name !== core.placeName(kind, seed)) stable=false;
+      }
+      console.log(JSON.stringify({inPool, stable, sample:core.placeName('village', 1206870301)}));
     """ % (json.dumps(str(CORE)), json.dumps(KINDS))
     result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
     out = json.loads(result.stdout)
-    assert out["unique"] == out["count"] == 6000
+    assert out["inPool"] is True
     assert out["stable"] is True
-    assert all(name and len(name) <= 24 for name in out["names"])
+    assert out["sample"]  # the tutorial village has a name
+
+
+def test_namesake_villages_are_pushed_far_apart_on_the_map():
+    # Neighbouring cells hold consecutive seeds and the pool index strides by
+    # a coprime, so any 200 consecutive seeds wear 200 different names — and
+    # the row above (seed step = one cell row) never repeats its neighbour.
+    script = """
+      const core=require(%s);
+      const strip=new Set(); for (let s=5000; s<5200; s++) strip.add(core.placeName('village', s));
+      let rowsDiffer=true;
+      for (let s=0; s<1000; s++) if (core.placeName('village', s) === core.placeName('village', s + 18009)) rowsDiffer=false;
+      console.log(JSON.stringify({strip:strip.size, rowsDiffer}));
+    """ % json.dumps(str(CORE))
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
+    assert result.returncode == 0, result.stderr
+    out = json.loads(result.stdout)
+    assert out["strip"] == 200
+    assert out["rowsDiffer"] is True
+
+
+def test_a_seed_never_shares_its_name_across_ranks():
+    # Rank offsets are all distinct mod 200, so a capital village, its town,
+    # its city and its county always read as four different places.
+    script = """
+      const core=require(%s); const kinds=%s;
+      let distinct=true;
+      for (let seed=0; seed<2000; seed++) {
+        if (new Set(kinds.map(k => core.placeName(k, seed))).size !== kinds.length) distinct=false;
+      }
+      console.log(JSON.stringify({distinct}));
+    """ % (json.dumps(str(CORE)), json.dumps(KINDS))
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["distinct"] is True
 
 
 def test_world_cells_use_injective_identity_even_when_the_legacy_hash_collides():

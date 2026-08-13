@@ -28,10 +28,10 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "feedback-menu-keyless-v263-20260813"
+CURRENT_BUILD = "real-place-names-v264-20260813"
 # empire_realm_core.js was last touched by the accurate-diets release, so
 # its cache-buster stays pinned there while BURBZ_BUILD moves on.
-REALM_CORE_PIN = "town-county-screens-v242-20260810"
+REALM_CORE_PIN = "real-place-names-v264-20260813"
 
 
 def trio(seed, name, lat, lon, day):
