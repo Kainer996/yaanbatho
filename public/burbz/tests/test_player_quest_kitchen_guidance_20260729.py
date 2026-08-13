@@ -31,7 +31,9 @@ def test_quest_guidance_renders_a_clear_kitchen_highlight_and_clears_on_tap():
     assert "let academyQuestGuidanceRoom = null;" in html
     assert "academyQuestGuidanceRoom = q.focusRoom || null;" in html
     assert "treehouse-room-node quest-guided" in html
-    assert "Tap Kitchen & Pantry" in html
+    # v265: the callout names whichever room is guided — the kitchen shortcut
+    # still reads "Tap Kitchen & Pantry ↓" because that is the room's label.
+    assert ">Tap ' + escapeHtml(r.label) + ' ↓</span>" in html
     assert "if (room === academyQuestGuidanceRoom) academyQuestGuidanceRoom = null;" in html
     assert ".treehouse-room-node.quest-guided" in html
     assert "@keyframes academyQuestGuidePulse" in html

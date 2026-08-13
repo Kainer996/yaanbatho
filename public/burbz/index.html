@@ -443,6 +443,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .room-bird-option img { width:48px; height:48px; object-fit:contain; border-radius:10px; background:transparent; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45)); }
 .room-bird-option-name { font-weight:800; font-size:13px; }
 .room-bird-option-meta { color:var(--text3); font-size:10px; margin-top:2px; }
+.room-bird-option-body { min-width:0; }
+.room-bird-option-hp { margin-top:4px; }
+.room-bird-option-hp .academy-meter-label { width:18px; }
+.room-bird-option-hp-text { font-size:9.5px; color:var(--text3); white-space:nowrap; }
+.academy-meter-fill.hp.bruised { background:var(--hp-yellow); }
+.academy-meter-fill.hp.low { background:var(--hp-red); }
 .room-bird-add-btn { min-height:34px; border-radius:9px; padding:0 10px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.05em; }
 .room-bird-add-btn:disabled { opacity:.45; filter:grayscale(.7); }
 
@@ -2828,6 +2834,20 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 }
 @keyframes toastIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
 @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(-10px)} }
+/* ========== COMPLETION NOTICES (city-builder corner cards) ========== */
+.completion-notice-stack { position:fixed; top:calc(max(10px, env(safe-area-inset-top, 0px)) + 58px); right:10px; z-index:890; display:flex; flex-direction:column; align-items:flex-end; gap:8px; width:min(70vw, 248px); pointer-events:none; }
+body[data-active-screen="battle"] .completion-notice-stack { display:none; }
+.completion-notice { pointer-events:auto; display:flex; align-items:center; gap:8px; width:100%; padding:7px 9px; border-radius:12px; border:1px solid rgba(214,168,79,.55); background:linear-gradient(160deg, rgba(46,36,18,.96), rgba(24,19,10,.96)); color:#f3e6c4; font-family:'Rajdhani',sans-serif; font-weight:600; text-align:left; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.45); animation:completionNoticeIn .35s ease; }
+.completion-notice:active { transform:scale(.97); }
+.completion-notice-icon { flex:none; width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:19px; border-radius:50%; background:radial-gradient(circle at 35% 30%, rgba(255,224,150,.32), rgba(0,0,0,.28)); border:1px solid rgba(214,168,79,.8); animation:completionNoticeGlow 2.2s ease-in-out infinite; }
+.completion-notice-text { flex:1; min-width:0; display:flex; flex-direction:column; }
+.completion-notice-title { font-size:12px; line-height:1.15; color:#ffe9b0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.completion-notice-sub { font-size:10px; line-height:1.2; color:#cdb98d; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.completion-notice-close { flex:none; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#cdb98d; font-size:10px; cursor:pointer; }
+.quest-target-card { outline:3px solid var(--legendary); outline-offset:3px; box-shadow:0 0 30px rgba(240,199,103,.42); }
+@keyframes completionNoticeIn { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:none} }
+@keyframes completionNoticeGlow { 0%,100%{box-shadow:0 0 5px rgba(214,168,79,.22)} 50%{box-shadow:0 0 13px rgba(214,168,79,.6)} }
+@media (prefers-reduced-motion: reduce) { .completion-notice, .completion-notice-icon { animation:none; } }
 /* ========== ACADEMY ========== */
 
 .academy-treehouse { position:relative; margin:0 10px 14px; min-height:680px; border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:#0a0f0c; box-shadow:inset 0 -110px 130px rgba(0,0,0,.54), 0 18px 44px rgba(0,0,0,.42); touch-action:manipulation; }
@@ -4490,6 +4510,9 @@ body.burbz-night #screen-scan:not(.camera-mode) .owl-night-note { display:block;
 
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Completion notices: city-builder corner cards for finished buildings and quests -->
+  <div class="completion-notice-stack" id="completionNoticeStack" role="status" aria-live="polite" aria-label="Finished buildings and quests"></div>
+
   <!-- Night veil: dims the whole game while the sun is down outside -->
   <div id="nightVeil" aria-hidden="true"></div>
 </div>
@@ -5738,6 +5761,7 @@ const DEFAULT_STATE = {
   sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
   tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
   diary: { entries: [] }, // Adventurer's Diary — Merlin's chronicle of everything the player has done
+  completionNotices: [], // City-builder corner cards: finished buildings and quests waiting to be visited
   birdRoles: { academy: {}, villages: {}, regions: {} }, // Who runs what: Librarian, Head Chef, village Stewards, region Wardens
   chefCareers: {} // Persisted real time served as Head Chef, keyed by bird id
 };
@@ -12445,6 +12469,7 @@ function academyBuildBuilding(id, opts = {}) {
   if (cfg.room) academySelectedRoom = cfg.room;
   updateQuestProgress('build_academy', 1);
   updateQuestProgress('build_' + id, 1);
+  queueCompletionNotice({ kind: 'academy-building', icon: cfg.icon, title: cfg.label + ' built', sub: 'At the Academy — tap to see it', target: { room: id } });
   saveState();
   updateHeader();
   if (SFX && typeof SFX.build === 'function') SFX.build();
@@ -12897,7 +12922,7 @@ function renderAcademyTreehouse(byRoom) {
     const meta = r.id === 'tavern' ? 'Recruitment' : count + ' birds';
     const guided = academyQuestGuidanceRoom === r.id;
     const nodeClass = guided ? 'treehouse-room-node quest-guided' : 'treehouse-room-node';
-    const guide = guided ? '<span class="treehouse-quest-guide" aria-hidden="true">Tap Kitchen & Pantry ↓</span>' : '';
+    const guide = guided ? '<span class="treehouse-quest-guide" aria-hidden="true">Tap ' + escapeHtml(r.label) + ' ↓</span>' : '';
     const crow = r.id === 'crowbar' ? crowbarCrowHTML() : '';
     return '<button class="' + nodeClass + ' built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' + guide +
       '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building">' + crow + '<div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
@@ -16281,17 +16306,33 @@ function renderAcademyRoomInterior() {
       root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
       return;
     }
-    const addRows = others.length ? others.map(b => {
+    // The Hospital picks patients: hurt birds sort to the top of the add
+    // list and every candidate shows its health bar, so the player sees at
+    // a glance who needs a bed.
+    const birdHpRatio = b => {
+      const maxHp = Math.max(1, Number(b.maxHp || b.hp || 1));
+      return clamp(Number(b.hp == null ? maxHp : b.hp) / maxHp, 0, 1);
+    };
+    const addCandidates = room === 'hospital' ? others.slice().sort((a, b) => birdHpRatio(a) - birdHpRatio(b)) : others;
+    const addRows = addCandidates.length ? addCandidates.map(b => {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       const away = birdHasActiveExpedition(b.id);
       const training = birdHasActiveTraining(b.id);
       const meta = away ? '🧭 Away on a quest — rejoins the Academy when it finishes'
         : training ? '🏋️ Mid-training in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'the Training Hall')
         : 'Currently in ' + escapeHtml(ACADEMY_ROOMS[b.academy.room]?.label || 'Academy');
+      let hpBar = '';
+      if (room === 'hospital') {
+        const maxHp = Math.max(1, Number(b.maxHp || b.hp || 1));
+        const hp = clamp(Math.round(Number(b.hp == null ? maxHp : b.hp)), 0, maxHp);
+        const hpPct = clamp(Math.round((hp / maxHp) * 100), 0, 100);
+        const hpTone = hpPct <= 35 ? ' low' : (hpPct < 100 ? ' bruised' : '');
+        hpBar = '<div class="academy-meter room-bird-option-hp"><span class="academy-meter-label">HP</span><div class="academy-meter-bar"><div class="academy-meter-fill hp' + hpTone + '" style="width:' + hpPct + '%"></div></div><span class="room-bird-option-hp-text">' + hp + '/' + maxHp + '</span></div>';
+      }
       const action = (away || training)
         ? '<button class="room-bird-add-btn" disabled>' + (away ? 'Away' : 'Training') + '</button>'
         : '<button class="room-bird-add-btn" data-action="room-add-bird" data-bird-id="' + b.id + '">Add</button>';
-      return '<div class="room-bird-option" data-bird-goto="' + escapeHtml(b.id) + '">' + img + '<div><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div></div>' + action + '</div>';
+      return '<div class="room-bird-option" data-bird-goto="' + escapeHtml(b.id) + '">' + img + '<div class="room-bird-option-body"><div class="room-bird-option-name">' + escapeHtml(birdDisplayName(b)) + '</div><div class="room-bird-option-meta">' + meta + '</div>' + hpBar + '</div>' + action + '</div>';
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
@@ -16557,6 +16598,123 @@ function showToast(msg) {
   t._toastTimer = setTimeout(() => dismissToast(t), TOAST_VISIBLE_MS);
 }
 
+// ============================================================================
+// COMPLETION NOTICES — classic city-builder "finished!" cards. When a
+// building goes up in the Academy or the Empire, or a quest completes, a
+// small card waits in the top-right corner. Tap it to fly straight there;
+// tap ✕ to wave it away. The queue lives in gameState so cards survive a
+// reload — every caller saves right after queueing, as part of its own commit.
+// ============================================================================
+const COMPLETION_NOTICE_LIMIT = 4;
+let completionNoticeSerial = 0;
+function ensureCompletionNotices() {
+  if (!Array.isArray(gameState.completionNotices)) gameState.completionNotices = [];
+  return gameState.completionNotices;
+}
+function queueCompletionNotice(notice) {
+  if (!notice || !notice.kind) return;
+  const list = ensureCompletionNotices();
+  // One card per subject — a fresh completion replaces its older card.
+  const key = notice.kind + ':' + JSON.stringify(notice.target || null);
+  const kept = list.filter(n => (n.kind + ':' + JSON.stringify(n.target || null)) !== key);
+  kept.push({
+    id: 'cn-' + Date.now().toString(36) + '-' + (++completionNoticeSerial),
+    createdMs: Date.now(),
+    kind: notice.kind,
+    icon: notice.icon || '\u{1F514}',
+    title: notice.title || '',
+    sub: notice.sub || '',
+    target: notice.target || null
+  });
+  while (kept.length > COMPLETION_NOTICE_LIMIT) kept.shift();
+  gameState.completionNotices = kept;
+  renderCompletionNotices();
+}
+function questNoticeClaimed(notice) {
+  const questId = notice && notice.target && notice.target.questId;
+  if (!questId) return false;
+  const state = gameState.quests && gameState.quests[questId];
+  return !!(state && state.claimed);
+}
+function renderCompletionNotices() {
+  if (!gameState || typeof gameState !== 'object') return;
+  const host = $('completionNoticeStack');
+  if (!host) return;
+  const list = ensureCompletionNotices();
+  // A quest claimed straight from the Quests screen needs no reminder.
+  const live = list.filter(n => n && n.id && !(n.kind === 'quest' && questNoticeClaimed(n)));
+  if (live.length !== list.length) gameState.completionNotices = live;
+  if (!live.length) { host.innerHTML = ''; return; }
+  host.innerHTML = live.slice().reverse().map(n => (
+    '<div class="completion-notice" role="button" tabindex="0" data-notice-go="' + n.id + '" aria-label="' + escapeHtml((n.title + '. ' + (n.sub || '')).trim()) + '">' +
+      '<span class="completion-notice-icon" aria-hidden="true">' + n.icon + '</span>' +
+      '<span class="completion-notice-text">' +
+        '<span class="completion-notice-title">' + escapeHtml(n.title) + '</span>' +
+        (n.sub ? '<span class="completion-notice-sub">' + escapeHtml(n.sub) + '</span>' : '') +
+      '</span>' +
+      '<button type="button" class="completion-notice-close" data-notice-dismiss="' + n.id + '" aria-label="Dismiss">✕</button>' +
+    '</div>'
+  )).join('');
+  host.querySelectorAll('[data-notice-go]').forEach(card => {
+    card.addEventListener('click', () => completionNoticeGo(card.dataset.noticeGo));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); completionNoticeGo(card.dataset.noticeGo); } });
+  });
+  host.querySelectorAll('[data-notice-dismiss]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); dismissCompletionNotice(btn.dataset.noticeDismiss); });
+  });
+}
+function takeCompletionNotice(id) {
+  const list = ensureCompletionNotices();
+  const idx = list.findIndex(n => n && n.id === id);
+  if (idx < 0) return null;
+  const notice = list[idx];
+  list.splice(idx, 1);
+  saveState();
+  renderCompletionNotices();
+  return notice;
+}
+function dismissCompletionNotice(id) {
+  if (takeCompletionNotice(id)) SFX.tap();
+}
+function completionNoticeGo(id) {
+  const notice = takeCompletionNotice(id);
+  if (!notice) return;
+  SFX.tap();
+  try {
+    if (notice.kind === 'empire-building' && notice.target) openEmpireVillage(notice.target.seed);
+    else if (notice.kind === 'academy-building' && notice.target) focusAcademyBuilding(notice.target.room);
+    else if (notice.kind === 'quest') focusQuestFromNotice(notice.target || {});
+  } catch (error) {
+    console.warn('Completion notice could not navigate', error);
+  }
+}
+// Fly to the Academy and put the golden quest ring on the finished building.
+function focusAcademyBuilding(room) {
+  if (!room) { switchScreen('academy'); return; }
+  academySelectedRoom = room;
+  academyQuestGuidanceRoom = room;
+  if (currentScreen === 'academy') renderAcademy(); else switchScreen('academy');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const node = document.querySelector('.treehouse-room-node[data-room="' + room + '"]');
+    if (node) node.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  }));
+}
+// Open the Quests screen and glow the finished quest's card.
+function focusQuestFromNotice(target) {
+  switchScreen('quests');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    let el = target && target.questId ? document.querySelector('[data-quest-card="' + target.questId + '"]') : null;
+    if (!el && target && target.anchor) el = $(target.anchor);
+    if (!el) return;
+    el.classList.add('quest-target-card');
+    el.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    setTimeout(() => el.classList.remove('quest-target-card'), 3200);
+  }));
+}
+function queueQuestCompleteNotice(q) {
+  if (!q || !q.id) return;
+  queueCompletionNotice({ kind: 'quest', icon: q.icon || '\u{1F3C5}', title: q.name || 'Quest complete', sub: 'Quest complete — tap to claim', target: { questId: q.id } });
+}
 
 // ============================================================================
 // LIVE REAL-WORLD HABITAT MAP
@@ -17934,6 +18092,7 @@ function completeWalkingQuest() {
   if (wq.history.length > 60) wq.history.length = 60;
   wq.active = null;
   updateQuestProgress('walk_completed', 1);
+  queueCompletionNotice({ kind: 'quest', icon: '\u{1F97E}', title: summary.name || 'Walking adventure', sub: 'Adventure complete — tap for the tale', target: { anchor: 'walkingQuestsList' } });
   saveState();
   clearWalkingQuestFromMap();
   vibrate(QUEST_BUZZ.complete);
@@ -19705,6 +19864,9 @@ function normalizeActionBadgeState(now = Date.now()) {
 }
 
 function updateActionBadges() {
+  // The badge heartbeat runs on every save, screen switch and 30 s tick —
+  // the corner cards ride it so a claimed quest's card leaves on its own.
+  try { renderCompletionNotices(); } catch (e) {}
   const core = window.BurbzActionBadges;
   if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
   if (!document || !document.querySelectorAll) return;
@@ -22018,12 +22180,22 @@ function empireCompleteConstructions(now) {
     }
     const doneTier = villageBuildingTier(building, level);
     notices.push({ seed: rec.seed >>> 0, text: '🏗️ ' + doneTier.icon + ' ' + doneTier.name + (level <= 1 ? ' finished' : (building.tiers ? ' rebuilt' : ' raised to level ' + level)) + ' in ' + rec.name + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
+    // Queued inside the same commit as the build itself, so a failed save
+    // rolls the corner card back along with the finished building.
+    queueCompletionNotice({
+      kind: 'empire-building',
+      icon: doneTier.icon,
+      title: doneTier.name + (level > 1 && !building.tiers ? ' · Lv ' + level : ''),
+      sub: rec.name + ' — tap to visit',
+      target: { seed: rec.seed >>> 0 }
+    });
   });
   if (!completed) return false;
   try {
     durableSaveState({ throwOnFailure:true });
   } catch (error) {
     restoreGameStateSnapshot(snapshot);
+    renderCompletionNotices();
     console.warn('Settlement construction completion rolled back', error);
     showToast('Construction finished, but its result could not be saved. Please try again.');
     return false;
@@ -33529,15 +33701,21 @@ function updateQuestProgress(type, amount) {
   const allQuests = [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS];
   allQuests.forEach(q => {
     if (q.type === type && gameState.quests[q.id] && !gameState.quests[q.id].claimed) {
-      gameState.quests[q.id].progress = Math.min(q.target, (gameState.quests[q.id].progress || 0) + amount);
+      const state = gameState.quests[q.id];
+      const before = state.progress || 0;
+      state.progress = Math.min(q.target, before + amount);
+      if (before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
     }
   });
   // Also update total_species achievements
   if (type === 'capture') {
     const uniqueSpecies = new Set(gameState.flock.map(b => b.species)).size;
     allQuests.filter(q => q.type === 'total_species').forEach(q => {
-      if (gameState.quests[q.id]) {
-        gameState.quests[q.id].progress = Math.min(q.target, uniqueSpecies);
+      const state = gameState.quests[q.id];
+      if (state) {
+        const before = state.progress || 0;
+        state.progress = Math.min(q.target, uniqueSpecies);
+        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
       }
     });
   }
@@ -33545,8 +33723,11 @@ function updateQuestProgress(type, amount) {
   if (type === 'feed_correct') {
     const knownDiets = countDiscoveredDiets();
     allQuests.filter(q => q.type === 'diets_known').forEach(q => {
-      if (gameState.quests[q.id]) {
-        gameState.quests[q.id].progress = Math.min(q.target, knownDiets);
+      const state = gameState.quests[q.id];
+      if (state) {
+        const before = state.progress || 0;
+        state.progress = Math.min(q.target, knownDiets);
+        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
       }
     });
   }
@@ -33560,6 +33741,7 @@ function updateQuestProgress(type, amount) {
     syncActivePlayerQuest();
     if (before < activePq.target && (pqState.progress || 0) >= activePq.target) {
       showToast('\u{1F3C5} Player quest complete: ' + activePq.name + ' — claim it in Quests!');
+      queueQuestCompleteNotice(activePq);
       if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} }
     }
   }
@@ -33946,7 +34128,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'real-place-names-v264-20260813';
+const BURBZ_BUILD = 'completion-notices-v265-20260813';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -35081,6 +35263,7 @@ function init() {
   renderInventory();
   renderBirdExpeditions();
   checkBadges();
+  renderCompletionNotices();
   queueActionBadgeUpdate();
   setInterval(queueActionBadgeUpdate, 30000);
   renderPetCompanion();

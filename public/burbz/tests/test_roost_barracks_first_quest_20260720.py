@@ -185,6 +185,7 @@ function companionForSpecies(x){return gameState.flock.find(b=>b.commonName===x)
 function ensureBirdAcademy(){}
 function addPlayerXp(){}
 function updateQuestProgress(){}
+function queueCompletionNotice(){}
 function activeWalkingQuest(){return null;}
 function removeTavernPatronForSpecies(){}
 function checkBadges(){}
