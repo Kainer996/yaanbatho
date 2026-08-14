@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "player-built-village-v267-20260814"
+CURRENT_BUILD = "empire-zoom-levels-v268-20260814"
 # empire_realm_core.js was last touched by the accurate-diets release, so
 # its cache-buster stays pinned there while BURBZ_BUILD moves on.
 REALM_CORE_PIN = "real-place-names-v264-20260813"

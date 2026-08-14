@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "player-built-village-v267-20260814"
+CURRENT_BUILD = "empire-zoom-levels-v268-20260814"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

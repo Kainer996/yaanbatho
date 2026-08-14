@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "player-built-village-v267-20260814"
+CURRENT_BUILD = "empire-zoom-levels-v268-20260814"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
