@@ -27,7 +27,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "night-veil-removed-v266-20260813"
+CURRENT_BUILD = "player-built-village-v267-20260814"
 
 
 def run_core(expression: str):
@@ -271,8 +271,9 @@ def test_town_districts_mirror_their_villages_ruin_state():
     assert "if (dRuin < 2) {" in scene
     assert "villageMakeWreckedBuilding(dr, dpal, dState.firstWreckKind || 'house')" in scene
     assert "villageMakeRubblePile(dr, dpal)" in scene
-    # Trades reopen at stage 1; homes and landmarks return at stage 2.
-    assert "if (dRuin >= 1) {" in scene
+    # Trades, homes and landmarks all wait for stage 2 — a district shows
+    # nothing pre-built while its village is still rebuilding (v267).
+    assert "if (dRuin >= 2) {" in scene
     assert "if (dRuin === 2) {" in scene
     # A build rising in the village rises in its district.
     assert "villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction))" in scene

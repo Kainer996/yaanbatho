@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "night-veil-removed-v266-20260813"
+CURRENT_BUILD = "player-built-village-v267-20260814"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
