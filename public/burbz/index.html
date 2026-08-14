@@ -850,6 +850,14 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .province-settlement { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.55); color:#bfe9c2; font-size:11px; line-height:1.5; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.03em; }
 .province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
 
+/* Great titles on the royal atlas — the duchy and kingdom banners that stand
+   alone at world zoom, before the counties beneath them unfold */
+.empire-map-marker.is-liege { z-index:7; }
+.empire-map-marker.is-liege .empire-map-marker-icon { width:44px; height:48px; border-color:#ffd76a; background:linear-gradient(160deg,#8f6f1e 0%,#573f0c 58%,#2b1f07 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.45), inset 0 0 10px rgba(0,0,0,.45), 0 0 24px rgba(255,215,106,.6); }
+.empire-map-marker.is-liege .empire-map-marker-icon > span { font-size:23px; }
+.empire-map-marker.is-liege .empire-map-marker-banner { border-top-color:#ffd76a; }
+.empire-map-marker.is-liege .empire-map-marker-label { border-color:rgba(255,215,106,.85); color:#ffe9a8; max-width:184px; }
+.empire-map-marker.is-liege.is-kingdom .empire-map-marker-icon { animation:empire-city-glow 3s ease-in-out infinite; }
 /* County banners on the royal atlas — grander than a village pin */
 .empire-map-marker.is-region { z-index:6; }
 .empire-map-marker.is-region .empire-map-marker-icon { width:38px; height:42px; border-color:#ffe08a; background:linear-gradient(160deg,#7a5f22 0%,#4a380f 58%,#2b1f07 100%); box-shadow:inset 0 1px 0 rgba(255,240,200,.4), inset 0 0 9px rgba(0,0,0,.4), 0 0 18px rgba(240,199,103,.55); }
@@ -890,12 +898,8 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .empire-map-marker.is-player .empire-map-marker-icon { position:relative; }
 .empire-map-marker.is-player .empire-map-marker-icon::after { content:''; position:absolute; inset:-6px; border-radius:inherit; border:2px solid rgba(159,212,255,.75); animation:empire-beacon-ring 2.2s ease-out infinite; pointer-events:none; }
 @keyframes empire-beacon-ring { 0% { transform:scale(.7); opacity:.9; } 70% { transform:scale(1.5); opacity:0; } 100% { transform:scale(1.5); opacity:0; } }
-/* Every banner says what KIND of thing it is, so gold never means two things. */
-.empire-map-marker.is-region .empire-map-marker-label::after { content:' · COUNTY'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
-.empire-map-marker.is-settlement.is-town .empire-map-marker-label::after { content:' · TOWN'; color:#9fd0a6; font-size:8px; letter-spacing:.08em; }
-.empire-map-marker.is-settlement.is-city .empire-map-marker-label::after { content:' · CITY'; color:#d9c893; font-size:8px; letter-spacing:.08em; }
-.empire-map-marker.is-village .empire-map-marker-label::after,
-.empire-map-marker.is-frontier .empire-map-marker-label::after { content:' · VILLAGE'; color:#a8cda9; font-size:8px; letter-spacing:.08em; }
+/* Every banner says what KIND of thing it is — once. The label already leads
+   with the type, so no suffix repeats it and clips the name off the end. */
 .empire-map-btn.is-active { border-color:rgba(255,232,165,.95); background:linear-gradient(180deg,rgba(88,62,22,.96),rgba(40,26,9,.96)); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.3), 0 0 10px rgba(240,199,103,.4); }
 .empire-map-key { position:absolute; z-index:8; top:54px; left:10px; right:10px; max-width:320px; display:none; padding:10px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(38,26,10,.96),rgba(14,9,3,.97)); box-shadow:0 14px 30px rgba(0,0,0,.6); backdrop-filter:blur(8px); }
 .empire-map-key.show { display:block; }
@@ -906,6 +910,8 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .empire-map-key-swatch.village { border-color:#8ee39a; }
 .empire-map-key-swatch.settlement { border-color:#8ee39a; box-shadow:0 0 8px rgba(142,227,154,.4); }
 .empire-map-key-swatch.region { border-color:#ffe08a; box-shadow:0 0 8px rgba(240,199,103,.5); }
+.empire-map-key-swatch.liege { border-color:#ffd76a; box-shadow:0 0 10px rgba(255,215,106,.6); }
+.empire-map-key-swatch.zoom { border-color:#cbb98a; color:#f4e6bb; }
 .empire-map-key-swatch.frontier { border-color:#b9a08a; }
 .empire-map-key-swatch.trade { border-color:#f0c767; color:#f0c767; font-size:11px; }
 .empire-map-key-swatch.danger { border-color:#e0594a; box-shadow:0 0 8px rgba(224,89,74,.4); }
@@ -3910,10 +3916,12 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapMeBtn">📍 ME</button><button class="empire-map-btn" id="empireMapRealmBtn">👑 MY REALM</button><button class="empire-map-btn" id="empireMapWorldBtn">🌍 WORLD</button><button class="empire-map-btn" id="empireMapKeyBtn" aria-expanded="false" aria-controls="empireMapKey">🗺️ KEY</button></div>
         <div class="empire-map-key" id="empireMapKey" role="dialog" aria-label="Map key">
           <div class="empire-map-key-title">READING THE ROYAL ATLAS</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch zoom">🔍</span>One banner per patch of land — the biggest title that holds it. Zoom in and it opens: kingdoms &amp; duchies → counties → towns → villages</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch you">🧭</span>You — your blue beacon, always pulsing</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch village">🕊️</span>A village you freed — tap to visit &amp; govern</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch settlement">🏘️</span>Town / City — neighbouring villages grown together</div>
-          <div class="empire-map-key-row"><span class="empire-map-key-swatch region">🛡️</span>County banner — 3+ freed villages united (Counties unite into Duchies, then Kingdoms, then your Empire)</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch region">🛡️</span>County banner — 3+ freed villages united</div>
+          <div class="empire-map-key-row"><span class="empire-map-key-swatch liege">👑</span>Duchy / Kingdom banner — counties sworn as one. It stands alone until you zoom in on it</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch frontier">⚔️</span>A dark village near you, waiting to be freed</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch danger">💀</span>LV on a dark banner — the garrison's recommended level. Green suits your flock; red means come back stronger. Every liberation raises the world level, and the far frontier always fights hardest</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your counties</div>
@@ -20897,34 +20905,59 @@ function applyEmpireAtlasPalette(map) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// SEMANTIC ZOOM — one banner per patch of land.
+// The atlas used to fly every banner at once: village, town, county, all
+// stacked on the same few streets. Now it reads like a real map. Each place is
+// spoken for by the BIGGEST title that holds it, and zooming in opens that
+// title into the tier below. Far out you see kingdoms and duchies. Closer,
+// counties. Closer still, towns and cities. Right in, the villages themselves.
+// ---------------------------------------------------------------------------
+const EMPIRE_TIER_RANK = { liege:0, county:1, settlement:2, village:3 };
+// Where each band ends. Below 6.4 the atlas speaks in lieges, then counties,
+// then towns, and from 12.2 up it names every village.
+const EMPIRE_BAND_MAX_ZOOM = [6.4, 9.2, 12.2];
+function empireMapBandRank(zoom) {
+  const z = Number(zoom);
+  if (!Number.isFinite(z)) return EMPIRE_TIER_RANK.village;
+  for (let i = 0; i < EMPIRE_BAND_MAX_ZOOM.length; i++) if (z < EMPIRE_BAND_MAX_ZOOM[i]) return i;
+  return EMPIRE_TIER_RANK.village;
+}
+// A banner flies when the band has zoomed past its liege but not yet past it:
+// tierRank is the banner's own rank, nextRank the rank of the next title up
+// that actually exists here (-1 when this banner is the biggest land there is).
+// So a lone village with no town and no county always flies — it IS the
+// biggest thing the player holds on that spot.
+function empireBannerVisible(tierRank, nextRank, bandRank) {
+  return tierRank >= bandRank && nextRank < bandRank;
+}
+// Stamp a banner with its place in the feudal ladder, so the zoom handler can
+// decide what flies without re-deriving the realm on every wheel tick.
+function markEmpireBannerTier(element, tier, nextTier) {
+  element.dataset.tierRank = String(EMPIRE_TIER_RANK[tier]);
+  element.dataset.nextRank = String(nextTier ? EMPIRE_TIER_RANK[nextTier] : -1);
+}
+
 function updateEmpireMarkerDetail() {
   if (!empireMap) return;
   const zoom = empireMap.getZoom();
-  const showVillages = zoom >= 4;
-  const showLabel = zoom >= 8;
+  const band = empireMapBandRank(zoom);
   const worldPin = zoom < 5;
-  empireMapMarkers.forEach(marker => {
+  empireMapMarkers.concat(empireRegionMarkers).forEach(marker => {
     const element = marker.getElement();
-    if (!element) return;
-    element.classList.toggle('is-visible', showVillages);
-    element.classList.toggle('show-label', showLabel);
-    element.classList.toggle('is-world-pin', worldPin);
-    element.setAttribute('aria-hidden', showVillages ? 'false' : 'true');
-    element.tabIndex = showVillages ? 0 : -1;
+    if (!element || element.dataset.tierRank === undefined) return;
+    const tierRank = Number(element.dataset.tierRank);
+    const visible = empireBannerVisible(tierRank, Number(element.dataset.nextRank), band);
+    element.classList.toggle('is-visible', visible);
+    // Big titles always wear their name. A village pin far out is just a dot.
+    element.classList.toggle('show-label', visible && (tierRank < EMPIRE_TIER_RANK.village || zoom >= 8));
+    element.classList.toggle('is-world-pin', worldPin && tierRank === EMPIRE_TIER_RANK.village);
+    element.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    element.tabIndex = visible ? 0 : -1;
   });
-  // Semantic zoom for the standing banners, so the world view never turns to
-  // banner soup: far out only region banners (and the player beacon) fly; town
-  // and city standards raise from country zoom; frontier swords only up close,
-  // where the player could actually walk to them.
-  const showSettlements = zoom >= 4;
-  const showFrontier = zoom >= 6.5;
-  empireRegionMarkers.forEach(marker => {
-    const element = marker.getElement();
-    if (!element || !element.classList.contains('is-settlement')) return;
-    element.classList.toggle('is-visible', showSettlements);
-    element.setAttribute('aria-hidden', showSettlements ? 'false' : 'true');
-    element.tabIndex = showSettlements ? 0 : -1;
-  });
+  // Dark villages waiting to be freed are a walking-distance concern: their
+  // swords only fly from town zoom in, where the player could actually reach them.
+  const showFrontier = band >= EMPIRE_TIER_RANK.settlement;
   empireHereMarkers.forEach(marker => {
     const element = marker.getElement();
     if (!element || !element.classList.contains('is-frontier')) return;
@@ -20934,8 +20967,8 @@ function updateEmpireMarkerDetail() {
   });
   // The focus buttons double as a "which layer am I looking at" indicator.
   const meBtn = $('empireMapMeBtn'), realmBtn = $('empireMapRealmBtn'), worldBtn = $('empireMapWorldBtn');
-  if (meBtn) meBtn.classList.toggle('is-active', zoom >= 9.5);
-  if (realmBtn) realmBtn.classList.toggle('is-active', zoom >= 3.5 && zoom < 9.5);
+  if (meBtn) meBtn.classList.toggle('is-active', band >= EMPIRE_TIER_RANK.settlement);
+  if (realmBtn) realmBtn.classList.toggle('is-active', band < EMPIRE_TIER_RANK.settlement && zoom >= 3.5);
   if (worldBtn) worldBtn.classList.toggle('is-active', zoom < 3.5);
 }
 
@@ -21337,6 +21370,17 @@ function frameEmpireLiege(liegeId) {
   empireMap.fitBounds(bounds, { padding:{ top:122, right:58, bottom:112, left:58 }, maxZoom:9.5, duration:900 });
 }
 
+// Break a great title open. The atlas drops to county zoom over the liege's
+// heart, so its one gold banner unfolds into the counties it is made of.
+function zoomEmpireIntoLiege(liegeId) {
+  const liege = empireLiegeById(liegeId);
+  if (!liege || !liege.centroid || !empireMap) return;
+  hideEmpireMapCard();
+  hideEmpireMapKey();
+  empireMapUserAdjusted = true;
+  empireMap.easeTo({ center:[Number(liege.centroid.lon), Number(liege.centroid.lat)], zoom:EMPIRE_BAND_MAX_ZOOM[0] + 0.4, duration:900 });
+}
+
 // Frame a merged settlement — the atlas glides to hold every district of the
 // town (or every borough of the city), one fused pool of daylight.
 function frameEmpireSettlement(settlementId) {
@@ -21410,10 +21454,21 @@ function refreshEmpireMap(options = {}) {
   } catch (err) { console.warn('BURBZ empire map data refresh failed', err); }
   clearEmpireMapMarkers();
   hideEmpireMapCard();
+  // One pass over the counties, so every banner can name its liege chain
+  // without walking the whole realm again per marker.
+  const regionBySeed = new Map();
+  regions.forEach(region => region.villages.forEach(v => regionBySeed.set(String(Number(v.seed) >>> 0), region)));
+  const countyOfSeed = seed => regionBySeed.get(String(Number(seed) >>> 0)) || null;
+  const liegeAbove = region => (region && (region.kingdomId || region.duchyId)) ? 'liege' : null;
   villages.forEach(village => {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'empire-map-marker is-village';
+    // A village hides inside its town, and a town inside its county — but a
+    // village standing alone flies at every zoom, because it is the biggest
+    // land the player holds there.
+    const homeSettlement = empireSettlementOfSeed(village.seed);
+    markEmpireBannerTier(el, 'village', homeSettlement ? 'settlement' : (countyOfSeed(village.seed) ? 'county' : null));
     el.setAttribute('aria-label', 'Your village ' + village.name);
     el.innerHTML = '<span class="empire-map-marker-icon"><span>' + empireVillageCrest(village.seed) + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">VILLAGE · ' + escapeHtml(village.name) + '</span>';
     el.addEventListener('click', ev => {
@@ -21430,7 +21485,8 @@ function refreshEmpireMap(options = {}) {
   settlementsOnMap.cities.concat(settlementsOnMap.towns.filter(t => !t.cityId)).forEach(settlement => {
     const el = document.createElement('button');
     el.type = 'button';
-    el.className = 'empire-map-marker is-settlement is-' + settlement.tier + ' is-visible show-label';
+    el.className = 'empire-map-marker is-settlement is-' + settlement.tier;
+    markEmpireBannerTier(el, 'settlement', countyOfSeed(settlement.villages[0]?.seed) ? 'county' : null);
     el.setAttribute('aria-label', 'Frame your ' + settlement.label);
     el.innerHTML = '<span class="empire-map-marker-icon"><span>' + settlement.icon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + settlement.tier.toUpperCase() + ' · ' + escapeHtml(settlement.name) + '</span>';
     el.addEventListener('click', ev => {
@@ -21461,7 +21517,8 @@ function refreshEmpireMap(options = {}) {
   regions.forEach(region => {
     const el = document.createElement('button');
     el.type = 'button';
-    el.className = 'empire-map-marker is-region is-visible show-label';
+    el.className = 'empire-map-marker is-region';
+    markEmpireBannerTier(el, 'county', liegeAbove(region));
     el.setAttribute('aria-label', 'Your county ' + region.name);
     el.innerHTML = '<span class="empire-map-marker-icon"><span>' + region.tierIcon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">COUNTY · ' + escapeHtml(region.properName) + '</span>';
     el.addEventListener('click', ev => {
@@ -21486,6 +21543,40 @@ function refreshEmpireMap(options = {}) {
     });
     const marker = new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(region.centroid.lon), Number(region.centroid.lat)]).addTo(empireMap);
     empireRegionMarkers.push(marker);
+  });
+  // Great titles: one banner per kingdom, and one per duchy that answers to no
+  // kingdom. These are the biggest lands the player holds, so they are all the
+  // world view shows — every county beneath them stays folded away until the
+  // player zooms in.
+  const realmInfo = empireRegionsInfo();
+  const topLieges = (realmInfo.kingdoms || []).concat((realmInfo.duchies || []).filter(d => !d.kingdomId));
+  topLieges.forEach(liege => {
+    if (!liege.centroid || !Number.isFinite(Number(liege.centroid.lat))) return;
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'empire-map-marker is-liege is-' + liege.tier;
+    markEmpireBannerTier(el, 'liege', null);
+    el.setAttribute('aria-label', 'Your ' + liege.tierLabel + ' ' + liege.properName);
+    el.innerHTML = '<span class="empire-map-marker-icon"><span>' + liege.tierIcon + '</span></span><span class="empire-map-marker-banner"></span><span class="empire-map-marker-label">' + liege.tierLabel.toUpperCase() + ' · ' + escapeHtml(liege.properName) + '</span>';
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      SFX.tap();
+      showEmpireMapCard({
+        crest: liege.tierIcon,
+        name: liege.name,
+        kind: liege.tierLabel + ' — ' + liege.countyCount + ' counties sworn as one',
+        facts: [
+          '🛡️ ' + liege.countyCount + ' counties',
+          '🏡 ' + liege.villageCount + ' villages',
+          '👑 seat at ' + liege.seatName
+        ],
+        actions: [
+          { label: '🗺️ SHOW ITS LANDS', run: () => frameEmpireLiege(liege.id) },
+          { label: '🔍 ZOOM TO ITS COUNTIES', run: () => zoomEmpireIntoLiege(liege.id) }
+        ]
+      });
+    });
+    empireRegionMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([Number(liege.centroid.lon), Number(liege.centroid.lat)]).addTo(empireMap));
   });
   // The sovereign's banner and the frontier: wherever the player actually is,
   // the atlas shows them standing there — and the nearest still-shadowed
@@ -34103,7 +34194,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'player-built-village-v267-20260814';
+const BURBZ_BUILD = 'empire-zoom-levels-v268-20260814';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

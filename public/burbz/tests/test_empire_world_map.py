@@ -82,7 +82,7 @@ def test_empire_tab_contains_an_interactive_world_map_and_controls():
     assert 'id="empireFogCanvas"' in html
     assert "padding:{ top:122, right:58, bottom:112, left:58 }" in html
     assert "refreshEmpireMap" in html
-    assert "showVillages = zoom >= 4" in html
+    assert "function empireMapBandRank(zoom)" in html
     assert "is-visible" in html
 
 
@@ -133,11 +133,12 @@ def test_semantic_zoom_keeps_world_view_clear_and_hidden_markers_unfocusable():
     detail_start = html.index("function updateEmpireMarkerDetail(")
     detail_end = html.index("\n// Tap cards:", detail_start)
     detail = html[detail_start:detail_end]
-    assert "const showVillages = zoom >= 4" in detail
-    assert "const showSettlements = zoom >= 4" in detail
-    assert "const showFrontier = zoom >= 6.5" in detail
-    assert "element.tabIndex = showVillages ? 0 : -1" in detail
-    assert "element.tabIndex = showSettlements ? 0 : -1" in detail
+    # One banner per patch of land: the biggest title that holds it, opened a
+    # tier at a time as the player zooms in.
+    assert "const band = empireMapBandRank(zoom)" in detail
+    assert "empireBannerVisible(tierRank, Number(element.dataset.nextRank), band)" in detail
+    assert "const showFrontier = band >= EMPIRE_TIER_RANK.settlement" in detail
+    assert "element.tabIndex = visible ? 0 : -1" in detail
     assert "element.tabIndex = showFrontier ? 0 : -1" in detail
     assert "const worldPin = zoom < 5" in html
     assert "is-world-pin" in html
