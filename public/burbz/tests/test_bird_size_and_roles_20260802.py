@@ -23,7 +23,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 ROLE_CORE_PIN = "chef-mastery-feed-all-v261-20260813"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "night-veil-removed-v266-20260813"
+CURRENT_BUILD = "player-built-village-v267-20260814"
 
 
 def run_node(source: str) -> dict:
