@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "stephen-the-gull-v270-20260815"
+CURRENT_BUILD = "steven-the-gull-v270-20260815"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

@@ -1,11 +1,11 @@
-"""Every Herring Gull is called Stephen.
+"""Every Herring Gull is called Steven.
 
 An Easter egg, by request. Any Herring Gull that joins the flock arrives
-already answering to Stephen, and gulls recruited before this release pick
+already answering to Steven, and gulls recruited before this release pick
 the name up on the next load — local save and cloud save alike. A player
 can still rename their gull to anything they like; only the empty default
-belongs to Stephen. Clearing the name hands it straight back, because a
-Herring Gull was always Stephen underneath.
+belongs to Steven. Clearing the name hands it straight back, because a
+Herring Gull was always Steven underneath.
 """
 import json
 import subprocess
@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "stephen-the-gull-v270-20260815"
+CURRENT_BUILD = "steven-the-gull-v270-20260815"
 PREVIOUS_RELEASE_PIN = "location-loot-v269-20260815"
 
 
@@ -73,7 +73,7 @@ def test_release_is_pinned_and_reaches_players():
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)  # this fix reaches players
 
 
-def test_a_new_herring_gull_is_already_called_stephen():
+def test_a_new_herring_gull_is_already_called_steven():
     html = HTML.read_text(encoding="utf-8")
     out = run_node(_harness(html) + """
 const gull = createBirdEntry('Herring Gull', 'Larus argentatus', 0.9);
@@ -85,8 +85,8 @@ console.log(JSON.stringify({
   robin: birdNickname(robin)
 }));
 """)
-    assert out["gull"] == "Stephen"
-    assert out["euro"] == "Stephen"  # any herring gull, whatever the prefix
+    assert out["gull"] == "Steven"
+    assert out["euro"] == "Steven"  # any herring gull, whatever the prefix
     assert out["robin"] == ""        # everyone else stays nameless by default
 
 
@@ -99,11 +99,11 @@ const crow = applyEasterEggBirdName({ commonName: 'Carrion Crow' });
 console.log(JSON.stringify({ dave: dave.customName, blank: blank.customName, crow: crow.customName || null }));
 """)
     assert out["dave"] == "Dave"      # a chosen name always wins
-    assert out["blank"] == "Stephen"  # whitespace is not a name
+    assert out["blank"] == "Steven"  # whitespace is not a name
     assert out["crow"] is None
 
 
-def test_existing_saves_meet_stephen_on_load():
+def test_existing_saves_meet_steven_on_load():
     html = HTML.read_text(encoding="utf-8")
     # Local saves: the loadState flock migration sweep.
     load_start = html.index("function loadState()")
@@ -121,4 +121,4 @@ def test_clearing_a_gulls_name_hands_it_straight_back():
     rename = html[rename_start:html.index("function birdBondCore(", rename_start)]
     assert "const eggName = !clean && easterEggBirdName(bird);" in rename
     assert "if (eggName) bird.customName = eggName;" in rename
-    assert "No use. Every Herring Gull is Stephen." in rename
+    assert "No use. Every Herring Gull is Steven." in rename
