@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "location-loot-v269-20260815"
+CURRENT_BUILD = "stephen-the-gull-v270-20260815"
 PREVIOUS_RELEASE_PIN = "player-built-village-v267-20260814"
 
 LIEGE, COUNTY, SETTLEMENT, VILLAGE = 0, 1, 2, 3

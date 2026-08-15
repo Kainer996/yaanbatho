@@ -5886,6 +5886,7 @@ function loadState() {
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   gameState.flock.forEach(ensureBirdBond); // Bond migration: every bird starts its friendship at New Friend
+  gameState.flock.forEach(applyEasterEggBirdName); // Every unnamed Herring Gull is already called Stephen
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
   // Merlin permanently replaces the old selectable walking-pet slot. Preserve
   // old care values as his starting mood, then discard the obsolete selection.
@@ -6101,6 +6102,7 @@ function mergeCloudState(cloudState) {
   const merged = { ...current, ...(cloudState && typeof cloudState === 'object' ? cloudState : {}) };
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
+  merged.flock.forEach(b => { if (b && typeof b === 'object') applyEasterEggBirdName(b); }); // cloud gulls are Stephen too
   const core = dietHungerCore();
   const hungerMigrated = core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
   return migrateGamePlaceNames(hungerMigrated);
@@ -12180,6 +12182,8 @@ function createBirdEntry(speciesName, scientificName, confidence) {
     species: canonicalName,
     scientificName: canonicalScientificName,
     commonName: canonicalName,
+    // Easter egg: every Herring Gull arrives already answering to Stephen.
+    customName: /herring gull/i.test(canonicalName) ? 'Stephen' : null,
     rarity,
     level: 1,
     xp: 0,
@@ -20140,6 +20144,19 @@ function birdDisplayName(bird) { return (bird && String(bird.customName || '').t
 function birdSpeciesLabel(bird) { return (bird && (bird.commonName || bird.species)) || 'Unknown species'; }
 // nickname-line-v167-20260729: nicknames decorate identity; they never replace taxonomy.
 function birdNickname(bird) { return (bird && String(bird.customName || '').trim()) || ''; }
+// Easter egg: every Herring Gull is called Stephen. Nobody knows why.
+// Least of all Stephen.
+function easterEggBirdName(bird) {
+  const species = String((bird && (bird.commonName || bird.species)) || '');
+  return /herring gull/i.test(species) ? 'Stephen' : null;
+}
+function applyEasterEggBirdName(bird) {
+  if (bird && !String(bird.customName || '').trim()) {
+    const name = easterEggBirdName(bird);
+    if (name) bird.customName = name;
+  }
+  return bird;
+}
 function renameCompanionBird(birdId) {
   const bird = (gameState.flock || []).find(b => b.id === birdId);
   if (!bird) return;
@@ -20148,6 +20165,9 @@ function renameCompanionBird(birdId) {
   if (next === null) return;
   const clean = String(next).trim().replace(/\s+/g, ' ').slice(0, 32);
   bird.customName = clean || null;
+  // Clearing a Herring Gull's name is futile. He was always Stephen.
+  const eggName = !clean && easterEggBirdName(bird);
+  if (eggName) bird.customName = eggName;
   saveState();
   renderBirdex();
   renderAcademy();
@@ -20155,7 +20175,8 @@ function renameCompanionBird(birdId) {
   updateHeader();
   // Refresh the field-guide sheet in place if it is showing this bird.
   if ($('birdInfoModal')?.classList.contains('show') && $('birdInfoContent')?.dataset.currentBirdId === String(bird.id)) openBirdInfo(bird.id);
-  showToast(clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
+  showToast(eggName ? '✏️ No use. Every Herring Gull is Stephen.'
+    : clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
 }
 // bird-bond-love-v256-20260812: every bird can be loved for itself. Each
 // companion carries a bond — a favourite flag, a bond level with a warm
@@ -34251,7 +34272,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'location-loot-v269-20260815';
+const BURBZ_BUILD = 'stephen-the-gull-v270-20260815';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
