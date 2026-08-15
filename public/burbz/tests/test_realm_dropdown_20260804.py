@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "steven-the-gull-v270-20260815"
+CURRENT_BUILD = "fish-in-the-water-v271-20260815"
 
 
 def empire_logic(html: str) -> str:

@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "steven-the-gull-v270-20260815"
+CURRENT_BUILD = "fish-in-the-water-v271-20260815"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.

@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "steven-the-gull-v270-20260815"
-PREVIOUS_RELEASE_PIN = "location-loot-v269-20260815"
+CURRENT_BUILD = "fish-in-the-water-v271-20260815"
+PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 
 def _fn(html: str, name: str) -> str:
@@ -122,3 +122,12 @@ def test_clearing_a_gulls_name_hands_it_straight_back():
     assert "const eggName = !clean && easterEggBirdName(bird);" in rename
     assert "if (eggName) bird.customName = eggName;" in rename
     assert "No use. Every Herring Gull is Steven." in rename
+
+def test_the_birdex_discovered_card_shows_the_name_before_recruiting():
+    html = HTML.read_text(encoding="utf-8")
+    # The DISCOVERED card renders the nickname line, and its bird comes from
+    # createBirdFromDiscovery -> createBirdEntry, which names the gull.
+    card_start = html.index("function createKnownSpeciesCardHTML(")
+    card = html[card_start:html.index("DISCOVERED", card_start) + 2000]
+    assert 'card-nickname">${escapeHtml(birdNickname(bird))}' in card
+    assert "createKnownSpeciesCardHTML(createBirdFromDiscovery(row.discoveredRecord)" in html
