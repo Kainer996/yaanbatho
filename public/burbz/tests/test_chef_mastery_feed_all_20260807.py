@@ -13,7 +13,7 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "empire-zoom-levels-v268-20260814"
+CURRENT_BUILD = "location-loot-v269-20260815"
 ROLES_PIN = "chef-mastery-feed-all-v261-20260813"
 
 
