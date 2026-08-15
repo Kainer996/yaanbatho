@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "ordered-quest-markers-v224-20260804"
-CURRENT_BUILD = "empire-zoom-levels-v268-20260814"
+CURRENT_BUILD = "location-loot-v269-20260815"
 
 
 def run_core(expression: str):
