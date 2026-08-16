@@ -31,7 +31,7 @@ CATALOGUE_JSON = ROOT / "data" / "catalogue-species.json"
 
 def run_node(script: str) -> dict:
     result = subprocess.run(
-        ["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True, timeout=90
+        ["node", "-"], cwd=ROOT, input=script, text=True, encoding="utf-8", capture_output=True, timeout=90
     )
     assert result.returncode == 0, result.stderr + "\nSTDOUT:\n" + result.stdout
     return json.loads(result.stdout)

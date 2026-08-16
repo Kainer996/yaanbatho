@@ -1,11 +1,10 @@
-"""Different towns build at the same time; one project per town.
+"""Different holdings build at the same time; Towns enforce builder slots.
 
-The construction lock lives on each village's own economy record
-(`eco.construction`), so starting a project in one town must never block a
-project starting in another. These tests run the REAL empireBuildStructure /
-ensureVillageEconomy code in Node against two seeded towns, and pin the
-player-facing copy that explains the rule (a bare "one project at a time"
-toast read as a global limit — it is not).
+Ward-compatible construction timers live on each village economy record
+(`eco.construction`), so starting a project in one standalone holding must
+never block another. Unified Towns add a public builder-slot admission rule
+above those timers. These tests run the REAL low-level build flow and pin both
+parts of that contract.
 """
 import json
 import subprocess
@@ -48,6 +47,13 @@ const empire = { villages: {} };
 const ensureEmpireState = () => empire;
 const empireVillages = () => Object.values(empire.villages);
 const empireCompleteConstructions = () => false;
+// The two fixtures are deliberately far-apart standalone villages. Stub the
+// canonical Town adapter and fail loudly if either is accidentally delegated.
+const empireSettlementOfSeed = () => null;
+const empireSettlementById = () => null;
+const canonicalEmpireSettlement = settlement => settlement;
+const townDisplayName = settlement => settlement && settlement.name;
+const townBuildNetwork = () => { throw new Error('standalone build delegated to Town'); };
 const settlementBuildFactorForSeed = () => 1;  // lone-village baseline: no merged-guild speed-up
 const villageRuinDefsFor = () => [];
 const villageRngFrom = () => () => 0.5;
@@ -62,7 +68,7 @@ const addStone = n => { gameState.player.stone += n; };
 const snapshotGameState = () => JSON.parse(JSON.stringify(gameState));
 const restoreGameStateSnapshot = () => {};
 const durableSaveState = () => ({ ok:true });
-const saveState = () => {}; const updateHeader = () => {}; const renderVillage = () => {};
+const saveState = () => {}; const updateHeader = () => {}; const renderVillage = () => {}; const renderTownScreen = () => {};
 const SFX = { questComplete: () => {} }; const vibrate = () => {};
 const showToast = t => toasts.push(t);
 const formatBuildDuration = () => 'soon';
@@ -84,17 +90,23 @@ console.log(JSON.stringify({
 
 
 def run_harness():
-    result = subprocess.run(["node", "-e", build_harness()], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(
+        ["node", "-e", build_harness()],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+    )
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
 
-def test_two_towns_build_concurrently_but_one_town_holds_one_project():
+def test_two_standalone_holdings_build_concurrently_but_one_ward_holds_one_project():
     out = run_harness()
-    # Both towns hold live constructions at the same time...
+    # Both standalone holdings hold live constructions at the same time...
     assert out["townA"] == "farm"
     assert out["townB"] == "cottages"
-    # ...and the refusal was for the SAME-town second project only.
+    # ...and the refusal was for the SAME ward's second project only.
     refusals = [t for t in out["toasts"] if "still raising" in t]
     assert len(refusals) == 1
     assert "Testham A" in refusals[0]
@@ -109,10 +121,16 @@ def test_construction_lock_is_stored_per_village_record():
     assert "eco.construction = { id: building.id" in build
 
 
-def test_player_facing_copy_says_the_limit_is_per_village():
+def test_player_facing_copy_explains_loose_village_independence_and_town_slots():
     html = HTML.read_text(encoding="utf-8")
-    # The refusal toast names the village and says other villages can keep building.
-    assert "one project per village. Your other villages can build meanwhile." in html
-    # The Construction Yard header makes the same promise while builders work.
+    # A still-loose village explains that its private timer does not block a
+    # different loose holding.
     assert "builders busy here — other villages can still build" in html
-    assert "' · builders busy'" not in html
+    # Once villages unite, the Town screen owns admission through explicit Hall
+    # builder slots and tells the player how to unlock simultaneous projects.
+    town_build = function_source(html, "townBuildNetwork")
+    town_screen = function_source(html, "renderTownScreen")
+    assert "townActiveProjectCount(settlement) >= townBuilderSlots(settlement)" in town_build
+    assert "All Town builder crews are busy. Raise the Hall for more simultaneous projects." in town_build
+    assert "BUILDERS ' + activeProjects + '/' + slots" in town_screen
+    assert "Hall investment unlocks policy and builder crews." in town_screen

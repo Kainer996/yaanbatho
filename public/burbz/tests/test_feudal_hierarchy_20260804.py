@@ -5,7 +5,7 @@ formed a "County" that then relabelled itself a Duchy at 5 villages and a
 Kingdom at 8. That is not how a feudal ladder works — in Crusader Kings every
 tier is made OF the tier below. This release fixes the whole system:
 
-    3 villages within 150 km   → found a COUNTY (and it stays a county)
+    3 exact Towns within 150 km → found a COUNTY (and it stays a county)
     2 counties within 600 km   → unite into a DUCHY
     2 duchies within 2000 km   → proclaim a KINGDOM
     2 kingdoms anywhere        → proclaim the EMPIRE of the Liberated Skies
@@ -28,33 +28,45 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "village-provisions-v272-20260816"
-# empire_realm_core.js was last touched by the accurate-diets release, so
-# its cache-buster stays pinned there while BURBZ_BUILD moves on.
-REALM_CORE_PIN = "real-place-names-v264-20260813"
+CURRENT_BUILD = "town-strategy-v273-20260816"
+REALM_CORE_PIN = "town-strategy-v273-20260816"
 
 
-def trio(seed, name, lat, lon, day):
-    """Three villages a couple of kilometres apart — one county's worth."""
+def town(seed, name, lat, lon, day, hour):
+    """Three neighbouring villages permanently forming one exact Town."""
     return [
-        {"seed": seed + i, "name": f"{name}{i or ''}".strip(), "lat": lat + i * 0.02, "lon": lon + i * 0.01,
-         "claimedAt": f"2026-07-{day + i:02d}T00:00:00Z"}
+        {
+            "seed": seed + i,
+            "name": f"{name}{i or ''}".strip(),
+            "lat": lat + i * 0.006,
+            "lon": lon + i * 0.004,
+            "claimedAt": f"2026-07-{day:02d}T{hour + i:02d}:00:00Z",
+        }
         for i in range(3)
     ]
 
 
-# Two counties ~300 km apart (chained counties must sit >150 km from each
-# other, or they merge into one county) — together, the Duchy of Delamere.
-CHESHIRE = trio(1, "Delamere", 53.228, -2.684, 1)
-LOTHIAN = trio(20, "Currie", 55.90, -3.30, 4)
+def county(seed, name, lat, lon, day):
+    """Three nearby Towns (nine villages) founding one County."""
+    return (
+        town(seed, name, lat, lon, day, 0)
+        + town(seed + 1000, name + "North", lat + 0.20, lon, day, 3)
+        + town(seed + 2000, name + "East", lat, lon + 0.25, day, 6)
+    )
+
+
+# Two counties ~300 km apart (their Town clusters must sit >150 km apart or
+# they become one County) — together, the Duchy of Delamere.
+CHESHIRE = county(1, "Delamere", 53.228, -2.684, 1)
+LOTHIAN = county(20, "Currie", 55.90, -3.30, 4)
 # A second duchy ~1200 km away: Provence + the Auvergne (~300 km apart).
-PROVENCE = trio(9, "Gordes", 43.911, 5.200, 7)
-AUVERGNE = trio(30, "Murol", 45.58, 2.94, 10)
+PROVENCE = county(9, "Gordes", 43.911, 5.200, 7)
+AUVERGNE = county(30, "Murol", 45.58, 2.94, 10)
 # A second kingdom across the Atlantic: two US-east duchies.
-STOWE = trio(40, "Stowe", 44.47, -72.68, 13)
-CATSKILLS = trio(50, "Phoenicia", 42.08, -74.31, 16)
-ASHEVILLE = trio(60, "Asheville", 35.60, -82.55, 19)
-ROANOKE = trio(70, "Roanoke", 37.27, -79.94, 22)
+STOWE = county(40, "Stowe", 44.47, -72.68, 13)
+CATSKILLS = county(50, "Phoenicia", 42.08, -74.31, 16)
+ASHEVILLE = county(60, "Asheville", 35.60, -82.55, 19)
+ROANOKE = county(70, "Roanoke", 37.27, -79.94, 22)
 
 EU_KINGDOM = CHESHIRE + LOTHIAN + PROVENCE + AUVERGNE
 NA_KINGDOM = STOWE + CATSKILLS + ASHEVILLE + ROANOKE
@@ -81,20 +93,17 @@ def empire_logic(html: str) -> str:
 # Core maths: every tier is made of the tier below
 # ---------------------------------------------------------------------------
 
-def test_a_county_with_many_villages_is_still_just_a_county():
-    # Nine villages in one blob used to be labelled a "Kingdom". No more:
-    # headcount grows the county, only neighbouring counties grow the realm.
-    blob = [
-        {"seed": 100 + i, "name": f"V{i}", "lat": 53.2 + i * 0.01, "lon": -2.7,
-         "claimedAt": f"2026-07-{i + 1:02d}T00:00:00Z"}
-        for i in range(9)
-    ]
+def test_a_county_with_more_than_three_towns_is_still_just_a_county():
+    # A fourth nearby Town grows the County but never relabels it a Duchy;
+    # structural titles only come from the tier below.
+    blob = county(100, "V", 53.2, -2.7, 1) + town(3100, "Fourth", 53.42, -2.70, 2, 10)
     realm = realm_of(blob)
     assert len(realm["regions"]) == 1
-    county = realm["regions"][0]
-    assert county["tier"] == "county"
-    assert county["name"] == run_core("core.placeLabel('county', 100)")
-    assert county["villageCount"] == 9
+    county_row = realm["regions"][0]
+    assert county_row["tier"] == "county"
+    assert county_row["name"] == run_core("core.placeLabel('county', 100)")
+    assert county_row["townCount"] == 4
+    assert county_row["villageCount"] == 12
     assert realm["duchies"] == [] and realm["kingdoms"] == [] and realm["empire"] is None
     assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(blob)}).regions)") == "Count of " + run_core("core.placeName('county', 100)")
 
@@ -107,7 +116,7 @@ def test_two_neighbouring_counties_unite_into_a_duchy():
     # The earliest county still anchors the stable ID, but the duchy receives
     # an independent proper name.
     assert duchy["name"] == run_core("core.placeLabel('duchy', 1)")
-    assert duchy["countyCount"] == 2 and duchy["villageCount"] == 6
+    assert duchy["countyCount"] == 2 and duchy["villageCount"] == 18
     assert duchy["id"] == "duchy-1"
     # Both counties are annotated with their liege.
     assert all(r["duchyId"] == "duchy-1" and r["liegeTier"] == "duchy" for r in realm["regions"])
@@ -128,7 +137,7 @@ def test_two_duchies_proclaim_a_kingdom_and_two_kingdoms_the_empire():
     assert len(eu["kingdoms"]) == 1
     kingdom = eu["kingdoms"][0]
     assert kingdom["name"] == run_core("core.placeLabel('kingdom', 1)")
-    assert kingdom["duchyCount"] == 2 and kingdom["countyCount"] == 4 and kingdom["villageCount"] == 12
+    assert kingdom["duchyCount"] == 2 and kingdom["countyCount"] == 4 and kingdom["villageCount"] == 36
     assert eu["empire"] is None
     assert run_core(f"core.crownTitle(core.deriveRegions({json.dumps(EU_KINGDOM)}).regions)") == "Monarch of " + run_core("core.placeName('kingdom', 1)")
     # A second kingdom across the ocean proclaims the Empire.
@@ -159,11 +168,10 @@ def test_the_pyramid_is_deterministic_and_ids_survive_growth():
     first = realm_of(CHESHIRE + LOTHIAN)
     again = realm_of(CHESHIRE + LOTHIAN)
     assert first == again
-    grown = realm_of(CHESHIRE + LOTHIAN + [
-        {"seed": 90, "name": "Tarvin", "lat": 53.19, "lon": -2.79, "claimedAt": "2026-07-30T00:00:00Z"}
-    ])
+    grown = realm_of(CHESHIRE + LOTHIAN + town(90, "Tarvin", 53.19, -2.79, 30, 0))
     assert grown["duchies"][0]["id"] == "duchy-1"  # the seat still anchors it
-    assert grown["duchies"][0]["villageCount"] == 7
+    assert grown["regions"][0]["townCount"] == 4
+    assert grown["duchies"][0]["villageCount"] == 21
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +201,7 @@ def test_the_royal_ledger_lists_the_pyramid_above_the_counties():
     assert "function frameEmpireLiege(" in logic
     assert "Your counties — tap one to run it from its County Hall" in logic
     # The plain-words help teaches the nested ladder, not the old size ladder.
-    assert "3 villages within 150 km unite into a County" in logic
+    assert "3 nearby Towns" in logic and "County" in logic
     assert "Titles nest, Crusader-Kings style:" in logic
     assert "Count → Duke → Monarch → Emperor" in logic
     assert "a County, then a Duchy, then a Kingdom as it grows" not in html
@@ -243,6 +251,7 @@ def test_story_canon_teaches_the_nested_ladder():
     assert "## Counties, crowns and the trade of free realms" in story
     assert "County → Duchy → Kingdom → Empire" in story
     assert "every tier is made of the tier below" in story
+    assert "three Towns" in story
     assert "two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies" in story
 
 
@@ -255,7 +264,7 @@ def test_release_is_versioned_and_the_realm_core_cache_buster_moved():
     assert OWN_RELEASE_PIN in cache_line
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    # The naming release changed empire_realm_core.js, so its cache-buster must
-    # move on while this release's own marker remains in the SW lineage.
+    # Exact Town grouping moved empire_realm_core.js again; installed players
+    # must receive the new derivation while the old feudal marker stays.
     assert f'src="empire_realm_core.js?v={REALM_CORE_PIN}"' in html
     assert f"'./empire_realm_core.js?v={REALM_CORE_PIN}'" in sw

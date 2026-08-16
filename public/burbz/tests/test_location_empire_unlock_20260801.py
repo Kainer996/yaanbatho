@@ -9,7 +9,7 @@ empire view doesn't show it"):
 2. THE ATLAS KNOWS WHERE YOU ARE — the Empire map shows the sovereign's own
    banner at their live position, a scout's-lantern half-light in the darkness
    around them, and dark frontier banners on the nearest unclaimed settlements.
-3. REGION HALL — founding a region unlocks that whole region of the map (one
+3. REGION HALL — founding a County from three Towns unlocks that whole region of the map (one
    daylight window over the county, gold-rimmed) and opens a dedicated screen
    where the player runs the region as one realm instead of village by village.
 
@@ -26,14 +26,22 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 CHESHIRE = [
-    {"seed": 1, "name": "Delamere", "lat": 53.228, "lon": -2.684, "claimedAt": "2026-07-01T00:00:00Z"},
-    {"seed": 2, "name": "Kelsall", "lat": 53.207, "lon": -2.712, "claimedAt": "2026-07-02T00:00:00Z"},
-    {"seed": 3, "name": "Tarporley", "lat": 53.156, "lon": -2.667, "claimedAt": "2026-07-03T00:00:00Z"},
+    {"seed": 1, "name": "Delamere North", "lat": 53.228, "lon": -2.684, "claimedAt": "2026-07-01T00:00:00Z"},
+    {"seed": 2, "name": "Delamere Mere", "lat": 53.229, "lon": -2.681, "claimedAt": "2026-07-02T00:00:00Z"},
+    {"seed": 3, "name": "Delamere Oak", "lat": 53.226, "lon": -2.686, "claimedAt": "2026-07-03T00:00:00Z"},
+    {"seed": 4, "name": "Kelsall Hill", "lat": 53.207, "lon": -2.712, "claimedAt": "2026-07-04T00:00:00Z"},
+    {"seed": 5, "name": "Kelsall Green", "lat": 53.209, "lon": -2.709, "claimedAt": "2026-07-05T00:00:00Z"},
+    {"seed": 6, "name": "Kelsall Brook", "lat": 53.205, "lon": -2.714, "claimedAt": "2026-07-06T00:00:00Z"},
+    {"seed": 7, "name": "Tarporley Gate", "lat": 53.156, "lon": -2.667, "claimedAt": "2026-07-07T00:00:00Z"},
+    {"seed": 8, "name": "Tarporley Wood", "lat": 53.158, "lon": -2.664, "claimedAt": "2026-07-08T00:00:00Z"},
+    {"seed": 9, "name": "Tarporley Field", "lat": 53.154, "lon": -2.669, "claimedAt": "2026-07-09T00:00:00Z"},
 ]
 
 
 def run_node(script: str):
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    result = subprocess.run(
+        ["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True
+    )
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
@@ -289,8 +297,12 @@ def test_region_collection_resets_only_that_regions_clocks():
     collect_start = logic.index("function collectRegionTribute(")
     collect_end = logic.index("function renderRegionScreen()", collect_start)
     collect = logic[collect_start:collect_end]
-    assert "region.villages.forEach" in collect
-    assert "v.lastTributeAt = now" in collect
+    # County collection walks only its public holdings. Town holdings expand to
+    # their three economic ward records for the atomic clock reset; loose
+    # villages remain a one-record holding.
+    assert "empireRegionHoldings(region).forEach" in collect
+    assert "holding.kind === 'settlement' ? townMemberRecords(holding.settlement) : [holding.village]" in collect
+    assert "records.forEach(v =>" in collect and "v.lastTributeAt = now" in collect
     assert "empireVillages().forEach" not in collect  # never the whole realm
 
 
@@ -299,7 +311,7 @@ def test_release_is_versioned_for_the_service_worker():
     sw = SW.read_text(encoding="utf-8")
     # empire_realm_core.js ships new maths per release; its cache-buster moves
     # with whichever release last touched it.
-    core_pin = "real-place-names-v264-20260813"
+    core_pin = "town-strategy-v273-20260816"
     assert f"empire_realm_core.js?v={core_pin}" in html
     assert f"./empire_realm_core.js?v={core_pin}" in sw
     # This release's own segment stays in the cache lineage forever.

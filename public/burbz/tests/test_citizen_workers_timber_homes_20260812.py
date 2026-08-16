@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "village-provisions-v272-20260816"
+CURRENT_BUILD = "town-strategy-v273-20260816"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -77,7 +77,13 @@ let villageActive = null, villageBuiltSeed = null;
 
 
 def run_harness(driver: str):
-    proc = subprocess.run(["node", "-e", economy_harness(driver)], cwd=ROOT, text=True, capture_output=True)
+    proc = subprocess.run(
+        ["node", "-e", economy_harness(driver)],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+    )
     assert proc.returncode == 0, proc.stderr
     return json.loads(proc.stdout)
 
@@ -151,8 +157,8 @@ def test_flat_income_and_tax_boosts_also_wait_for_a_crew():
     snap = function_source(html, "villageEconomySnapshot")
     assert "const crew = villageWorkforce(rec);" in snap
     assert "if (b.workers && !crew.staffed[b.id]) return;" in snap
-    ledger = function_source(html, "renderStoresLedger")
-    assert "if (b.workers && !villageWorkforce(v).staffed[b.id]) return;" in ledger
+    ledger_output = function_source(html, "villageBuildingOutputForLedger")
+    assert "building.workers && !villageWorkforce(rec).staffed[building.id]" in ledger_output
 
 
 def test_finished_homes_still_move_families_in_and_tier_names_reach_the_notices():
@@ -167,7 +173,13 @@ def test_finished_homes_still_move_families_in_and_tier_names_reach_the_notices(
 def test_the_copy_teaches_homes_first_and_villager_crews():
     html = HTML.read_text(encoding="utf-8")
     assert "Timber Cabin</b> (just coins and timber) and residents will move in" in html
-    assert "build a 🛖 Timber Cabin and residents will move in" in html  # liberation toast
+    claim = function_source(html, "claimCurrentVillage")
+    # A loose liberation still teaches the survival build order. If the claim
+    # completes a Town, the same toast must send the player to its Hall instead
+    # of advertising the now-retired village screen.
+    assert "build homes and residents will move in" in claim
+    assert "Add a farm and well before supplies run out" in claim
+    assert "Its source villages retire from the map; govern everything from the Hall." in claim
     assert "Villagers work the yards.</b>" in html  # empire help drawer
     assert "yards crewed" in html  # governor's desk headline
     assert "villager works here" in html and "needs ' + b.workers + ' villager" in html

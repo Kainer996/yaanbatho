@@ -54,30 +54,31 @@ plate does.
 
 ## Villages grow into towns, towns into cities
 
-Freedom is contagious between neighbours. Liberate **three neighbouring villages** — sanctuaries whose lands touch, chained within a short walk of each other — and their free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. Raise **three neighbouring towns** and they grow together again into **one city**, also uniquely named and gold-crowned on the liberation map.
+Freedom is contagious between neighbours. Liberate **three neighbouring villages** — sanctuaries whose lands touch, chained within a short walk of each other — and their free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. This is an **exact, permanent trio**: later villages and bridge claims cannot redraw an established Town. Raise **three neighbouring Towns** and they grow together again into **one city**, also uniquely named and gold-crowned on the liberation map.
 
-- A merged settlement is one community: its districts share market squares (**bonus taxes**) and its guilds pool their masons (**faster construction** in every district).
+- A merged settlement is one community: its wards share market squares (**bonus taxes**), stores and building crews. The three old village economies still underpin the simulation, but the player governs them through one Town Hall.
 - On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.
 - In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
-- Nothing is conquered and nothing is renamed away: every village keeps its own unique name, its own management desk and its own story — it is simply *part of something bigger now*. Every town, city, county, duchy and kingdom has a different proper name, so the map never asks one name to mean several places.
-- A merged settlement has a place of its own to walk: the **Town Square** screen shows the whole town in one 3D view — every district village standing where it really is, lanes running back to the shared market, the charter stone flying its pennants. Tap a district and you step into that village.
+- Founding a town retires the three separate village destinations. Their markers, desks and individual Steward posts leave the player's UI; old links and saved destinations lead to the Town Hall instead. The records remain safely underneath so no buildings, residents, provisions, ruins, taxes or paid construction are lost.
+- The **Town Hall** is a real strategy layer: five Hall levels unlock extra builder crews and a council; shared networks strengthen the least-developed ward; restoration clears the old wreckage; one strongbox collects the existing output; and Balanced, Growth, Trade, Industry and Builders policies make honest economic trade-offs rather than minting free resources.
+- A merged settlement keeps its 3D **Town Square** as a living view of one unified place — architectural quarters, lanes, market and charter stone — but those quarters are scenery inside the town, not doors back into retired village screens.
 
-Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer above them, and the two grow independently.
+Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer built from those Towns.
 
 ## Counties, crowns and the trade of free realms
 
 The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes. The feudal ladder is a simplified Crusader Kings: **every tier is made of the tier below it**, never of loose villages — **County → Duchy → Kingdom → Empire**.
 
-- When **three liberated villages** stand close together in the real world (within 150 km of each other), their free folk unite and **found a County** — a rescued piece of the Kingdom of Burbz with the earliest-freed sanctuary as its capital, run from its own County Hall. A county stays a county however many villages join it; the higher titles are built from counties, not from headcounts.
+- When **three Towns** stand close together in the real world (within 150 km of each other), their free folk unite and **found a County** — a rescued piece of the Kingdom of Burbz with the earliest-founded Town as its capital, run from its own County Hall. A county stays a county however many Towns join it; the higher titles are built from counties, not from loose village headcounts.
 - **Two Counties** whose capitals stand within 600 km unite into a **Duchy**; **two Duchies** within 2000 km proclaim a **Kingdom**; and **two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies**. The earliest-founded member remains each title's seat, but the title receives its own unique proper name instead of copying that seat.
-- Villages inside a founded county prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox — and the taxes rise as the county's liege chain climbs (+15% for a lone county, +20% under a duchy, +25% inside a kingdom, +30% beneath the empire).
+- Towns inside a founded county prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox — and the taxes rise as the county's liege chain climbs (+15% for a lone county, +20% under a duchy, +25% inside a kingdom, +30% beneath the empire).
 - The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed villages.
 - Once the realm holds **two or more counties** — say the free woods around Delamere and a liberated corner of the south of France — their capitals can open **trade routes**. Sky-caravans of free birds carry each county's signature goods along great-circle roads drawn in gold on the liberation map; the farther the road, the rarer the cargo it returns.
 - Trade routes glow even across lands the usurper's shadow still holds: a caravan road is a ribbon of light through the darkness, proof that the free realms reach each other in defiance of the evil Burbz.
 - Every county keeps a **County Map** — a painted, Crusader-Kings-style chart of its lands: the border inked in the realm's colour, every settlement drawn in its place, lanes leading back to the capital, and the wild woods sketched beyond the frontier.
 - Once counties swear to a duchy or kingdom, the royal atlas paints their lands in the liege's own colour — one hue per realm, exactly as a Crusader Kings map reads. Free counties standing alone stay unpainted: the colours are the reward for uniting the realm.
 
-This is the long game: liberate villages until they make a county, unite counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
+This is the long game: liberate villages into towns, unite towns into counties, counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
 
 ## The Twenty Roads — the shared walking campaign
 
