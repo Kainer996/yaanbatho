@@ -5886,6 +5886,7 @@ function loadState() {
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   gameState.flock.forEach(ensureBirdBond); // Bond migration: every bird starts its friendship at New Friend
+  gameState.flock.forEach(applyEasterEggBirdName); // Every unnamed Herring Gull is already called Steven
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
   // Merlin permanently replaces the old selectable walking-pet slot. Preserve
   // old care values as his starting mood, then discard the obsolete selection.
@@ -6101,6 +6102,7 @@ function mergeCloudState(cloudState) {
   const merged = { ...current, ...(cloudState && typeof cloudState === 'object' ? cloudState : {}) };
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
+  merged.flock.forEach(b => { if (b && typeof b === 'object') applyEasterEggBirdName(b); }); // cloud gulls are Steven too
   const core = dietHungerCore();
   const hungerMigrated = core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
   return migrateGamePlaceNames(hungerMigrated);
@@ -12180,6 +12182,8 @@ function createBirdEntry(speciesName, scientificName, confidence) {
     species: canonicalName,
     scientificName: canonicalScientificName,
     commonName: canonicalName,
+    // Easter egg: every Herring Gull arrives already answering to Steven.
+    customName: /herring gull/i.test(canonicalName) ? 'Steven' : null,
     rarity,
     level: 1,
     xp: 0,
@@ -19506,11 +19510,11 @@ function lootLinesToText(lines) { return lines.map(l => l.icon + ' ' + l.text).j
 // weight 0 means the item only appears in its listed biomes. With no mapped
 // feature loaded yet, the neutral weights apply.
 const MAP_PICKUP_TYPES = [
-  { id:'coins',    glyph:'🪙', label:'Coin pouch',    weight:30, biomes:{ urban:46, coast:34 }, grant(r) { const n = 3 + Math.floor(r() * 7);  addCoins(n); return '+' + n + ' coins'; } },
-  { id:'purse',    glyph:'💰', label:'Lost purse',    weight:6,  biomes:{ urban:13 }, grant(r) { const n = 15 + Math.floor(r() * 16); addCoins(n); return '+' + n + ' coins'; } },
-  { id:'feather',  glyph:'🪶', label:'Lucky feather', weight:14, biomes:{ coast:18 }, grant() { gameState.inventory.items.lucky_feather = (gameState.inventory.items.lucky_feather || 0) + 1; return '+1 Lucky Feather'; } },
-  { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, biomes:{ woodland:22, park:22, urban:8, coast:8, water:8 }, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
-  { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, biomes:{ farmland:28, grassland:24, urban:9, coast:8, water:8 }, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
+  { id:'coins',    glyph:'🪙', label:'Coin pouch',    weight:30, biomes:{ urban:46, coast:16, water:5, wetland:6 }, grant(r) { const n = 3 + Math.floor(r() * 7);  addCoins(n); return '+' + n + ' coins'; } },
+  { id:'purse',    glyph:'💰', label:'Lost purse',    weight:6,  biomes:{ urban:13, water:1, coast:3 }, grant(r) { const n = 15 + Math.floor(r() * 16); addCoins(n); return '+' + n + ' coins'; } },
+  { id:'feather',  glyph:'🪶', label:'Lucky feather', weight:14, biomes:{ coast:18, water:6 }, grant() { gameState.inventory.items.lucky_feather = (gameState.inventory.items.lucky_feather || 0) + 1; return '+1 Lucky Feather'; } },
+  { id:'berries',  glyph:'🫐', label:'Wild berries',  weight:16, biomes:{ woodland:22, park:22, urban:8, coast:6, water:3 }, grant() { gameState.pantry.berries = clamp((gameState.pantry.berries || 0) + 2, 0, PANTRY_CAP.berries || 10); return '+2 Berries (pantry)'; } },
+  { id:'seeds',    glyph:'🌾', label:'Seed spill',    weight:16, biomes:{ farmland:28, grassland:24, urban:9, coast:6, water:3 }, grant() { gameState.pantry.seeds = clamp((gameState.pantry.seeds || 0) + 2, 0, PANTRY_CAP.seeds || 12); return '+2 Seeds (pantry)'; } },
   // --- Prey on the ground: the meat birds of prey actually need. Owls,
   // kestrels, buzzards, kites and the bird-hunting hawks all starve without
   // these, so real prey turns up on any walk, not just on hunting quests.
@@ -19524,22 +19528,22 @@ const MAP_PICKUP_TYPES = [
   { id:'starlingration', glyph:'🐦', label:'Starling ration', weight:3, biomes:{ urban:6 }, grant() { addLarderIngredient('starling_prey_ration', 1); return '+1 Starling Prey Ration (Stores larder)'; } },
   { id:'carrion',  glyph:'🦴', label:'Carrion scraps', weight:6, biomes:{ hills:10, farmland:8 }, grant() { addLarderIngredient('carrion_scraps', 1); return '+1 Carrion Scraps (Stores larder)'; } },
   { id:'deercarrion', glyph:'🦌', label:'Deer carcass', weight:2, biomes:{ woodland:4, hills:4, urban:0, water:0, coast:0 }, grant() { addLarderIngredient('deer_carrion', 1); return '+1 Deer Carrion (Stores larder)'; } },
-  { id:'sandeel',  glyph:'🐠', label:'Sand eels',    weight:4, biomes:{ coast:20, water:6, urban:1, woodland:1 }, grant() { addLarderIngredient('sand_eel', 1); return '+1 Sand Eel (Stores larder)'; } },
+  { id:'sandeel',  glyph:'🐠', label:'Sand eels',    weight:4, biomes:{ coast:26, water:8, urban:1, woodland:1 }, grant() { addLarderIngredient('sand_eel', 1); return '+1 Sand Eel (Stores larder)'; } },
   { id:'dragonflies', glyph:'🪰', label:'Dragonfly swarm', weight:4, biomes:{ wetland:12, water:10, urban:1 }, grant() { addLarderIngredient('dragonfly_swarm', 1); return '+1 Dragonfly Swarm (Stores larder)'; } },
   { id:'waspcomb', glyph:'🐝', label:'Wasp comb',    weight:3, biomes:{ woodland:6, urban:1, water:1, coast:1 }, grant() { addLarderIngredient('wasp_grub_comb', 1); return '+1 Wasp Grub Comb (Stores larder)'; } },
   { id:'mealworms', glyph:'🐛', label:'Mealworm scoop', weight:4, grant() { addLarderIngredient('mealworm_scoop', 1); return '+1 Mealworm Scoop (Stores larder)'; } },
   // --- Kitchen larder finds: real bird food headed for the Prep Counter ---
-  { id:'wormcast', glyph:'🪱', label:'Worm cast',     weight:10, biomes:{ park:15, grassland:14, farmland:13, urban:6, water:4, coast:4 }, grant() { addLarderIngredient('garden_worms', 1); return '+1 Garden Worms (Stores larder)'; } },
+  { id:'wormcast', glyph:'🪱', label:'Worm cast',     weight:10, biomes:{ park:15, grassland:14, farmland:13, urban:6, water:2, coast:2 }, grant() { addLarderIngredient('garden_worms', 1); return '+1 Garden Worms (Stores larder)'; } },
   { id:'acorns',   glyph:'🌰', label:'Acorn drop',    weight:9,  biomes:{ woodland:24, urban:3, water:2, coast:2 }, grant() { addLarderIngredient('acorn_handful', 1); return '+1 Acorn Handful (Stores larder)'; } },
   { id:'gritbank', glyph:'⚪', label:'Gravel bank',   weight:7,  biomes:{ water:12, coast:12, hills:10 }, grant() { addLarderIngredient('gizzard_grit', 1); return '+1 Gizzard Grit (Stores larder)'; } },
   { id:'midges',   glyph:'🦟', label:'Midge cloud',   weight:6,  biomes:{ wetland:11, water:10, urban:3 }, grant() { addLarderIngredient('aerial_midges', 1); return '+1 Cloud of Midges (Stores larder)'; } },
-  { id:'chest',    glyph:CHEST_SVG, toastGlyph:'🧰', label:'Treasure chest', weight:5,  biomes:{ coast:8 }, grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
-  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  biomes:{ urban:13 }, grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
-  { id:'birdscroll', glyph:'🪶', label:'Study scroll', weight:5,  biomes:{ urban:8 }, grant(r) { const key = randomXpScrollKey(r); addBirdXpItemToBag(key, 1); const it = birdXpItem(key); return '+1 ' + it.label + ' (' + birdXpItemDetail(key) + ') — use it from your Stores'; } },
+  { id:'chest',    glyph:CHEST_SVG, toastGlyph:'🧰', label:'Treasure chest', weight:5,  biomes:{ coast:8, water:6 }, grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
+  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  biomes:{ urban:13, water:2 }, grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
+  { id:'birdscroll', glyph:'🪶', label:'Study scroll', weight:5,  biomes:{ urban:8, water:2 }, grant(r) { const key = randomXpScrollKey(r); addBirdXpItemToBag(key, 1); const it = birdXpItem(key); return '+1 ' + it.label + ' (' + birdXpItemDetail(key) + ') — use it from your Stores'; } },
   // --- Fletcher's Forge materials, lying where the kingdom left them ---
-  { id:'twig',     glyph:'🪵', label:'Oak twig',      weight:12, biomes:{ woodland:30, park:16, urban:5, water:4, coast:3 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'oak_twig', qty:1 }])); } },
+  { id:'twig',     glyph:'🪵', label:'Oak twig',      weight:12, biomes:{ woodland:30, park:16, urban:5, water:2, coast:3 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'oak_twig', qty:1 }])); } },
   { id:'reed',     glyph:'🌿', label:'River reed',    weight:11, biomes:{ water:22, wetland:26, coast:12, urban:4 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'river_reed', qty:1 }])); } },
-  { id:'grit',     glyph:'⚙️', label:'Iron grit',     weight:9,  biomes:{ urban:15, hills:12, water:4, coast:5 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'iron_grit', qty:1 }])); } },
+  { id:'grit',     glyph:'⚙️', label:'Iron grit',     weight:9,  biomes:{ urban:15, hills:12, water:2, coast:5 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'iron_grit', qty:1 }])); } },
   { id:'tuft',     glyph:'🪶', label:'Down tuft',     weight:9,  biomes:{ coast:13 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'down_tuft', qty:1 }])); } },
   { id:'moondust', glyph:'🌙', label:'Moon dust',     weight:4,  grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'moon_dust', qty:1 }])); } },
   { id:'stormglass', glyph:'🌩️', label:'Storm glass', weight:3,  biomes:{ coast:7, hills:6 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'storm_glass', qty:1 }])); } },
@@ -19547,11 +19551,11 @@ const MAP_PICKUP_TYPES = [
   { id:'gearcache', glyph:'🎒', label:'Feathered cache', weight:6, cls:'gear', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_cache', { rng:r, pity:gameState.lootPity, guaranteeGear:true }))); } },
   { id:'relic',    glyph:'✨', label:'Relic chest',   weight:2,  cls:'relic', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_relic', { rng:r, pity:gameState.lootPity }))); } },
   // --- Habitat finds: this loot only lies where it belongs ---
-  { id:'minnow',   glyph:'🐟', label:'Minnow shallows', weight:0, biomes:{ water:16, wetland:8 }, grant() { addLarderIngredient('live_minnow', 1); return '+1 Live Minnow (Stores larder)'; } },
-  { id:'trout',    glyph:'🎣', label:'Rising trout',  weight:0, biomes:{ water:6 }, grant() { addLarderIngredient('river_trout', 1); return '+1 River Trout (Stores larder)'; } },
-  { id:'shoresnails', glyph:'🐚', label:'Shore snails', weight:0, biomes:{ coast:14, wetland:5 }, grant() { addLarderIngredient('shore_snail_mix', 1); return '+1 Shore Snail Mix (Stores larder)'; } },
-  { id:'pondweed', glyph:'🪷', label:'Pondweed tangle', weight:0, biomes:{ water:12, wetland:10 }, grant() { addLarderIngredient('pondweed_tangle', 1); return '+1 Pondweed Tangle (Stores larder)'; } },
-  { id:'driftwood', glyph:'🪵', label:'Driftwood',    weight:0, biomes:{ coast:16, water:6 }, grant() { addBranches(2); return '+2 branches'; } },
+  { id:'minnow',   glyph:'🐟', label:'Minnow shallows', weight:0, biomes:{ water:26, wetland:10 }, grant() { addLarderIngredient('live_minnow', 1); return '+1 Live Minnow (Stores larder)'; } },
+  { id:'trout',    glyph:'🎣', label:'Rising trout',  weight:0, biomes:{ water:10 }, grant() { addLarderIngredient('river_trout', 1); return '+1 River Trout (Stores larder)'; } },
+  { id:'shoresnails', glyph:'🐚', label:'Shore snails', weight:0, biomes:{ coast:18, wetland:6 }, grant() { addLarderIngredient('shore_snail_mix', 1); return '+1 Shore Snail Mix (Stores larder)'; } },
+  { id:'pondweed', glyph:'🪷', label:'Pondweed tangle', weight:0, biomes:{ water:14, wetland:12 }, grant() { addLarderIngredient('pondweed_tangle', 1); return '+1 Pondweed Tangle (Stores larder)'; } },
+  { id:'driftwood', glyph:'🪵', label:'Driftwood',    weight:0, biomes:{ coast:18, water:6 }, grant() { addBranches(2); return '+2 branches'; } },
   { id:'deadfall', glyph:'🪵', label:'Fallen branch', weight:0, biomes:{ woodland:22, park:8, hills:5 }, grant() { addBranches(2); return '+2 branches'; } },
   { id:'pigeonration', glyph:'🕊️', label:'Pigeon ration', weight:0, biomes:{ urban:9 }, grant() { addLarderIngredient('pigeon_prey_ration', 1); return '+1 Pigeon Prey Ration (Stores larder)'; } },
   { id:'windfall', glyph:'🍎', label:'Windfall apple', weight:0, biomes:{ farmland:10, park:8 }, grant() { addLarderIngredient('windfall_apple', 1); return '+1 Windfall Apple (Stores larder)'; } }
@@ -19648,17 +19652,22 @@ function setLootHabitatFeatures(features) {
   liveMapLootFeatures = mapped;
   liveMapLootFeatureStamp++;
 }
-function pickupHabitatAt(lat, lon) {
-  if (!liveMapLootFeatures.length) return null; // no survey yet — neutral loot
+function pickupGroundAt(lat, lon) {
+  if (!liveMapLootFeatures.length) return { habitat: null, anchor: null }; // no survey yet — neutral loot
   let best = null, bestDist = Infinity;
   for (const f of liveMapLootFeatures) {
     const d = mapDistanceMeters(f, { lat, lon });
     if (d < bestDist) { bestDist = d; best = f; }
   }
-  if (bestDist <= PICKUP_HABITAT_RANGE_M) return best.habitat;
-  if (bestDist <= PICKUP_HABITAT_REACH_M && PICKUP_BROAD_HABITATS.has(best.habitat)) return best.habitat;
-  return 'urban';
+  const withinRange = bestDist <= PICKUP_HABITAT_RANGE_M;
+  const withinReach = bestDist <= PICKUP_HABITAT_REACH_M && PICKUP_BROAD_HABITATS.has(best.habitat);
+  if (!withinRange && !withinReach) return { habitat: 'urban', anchor: null };
+  // Watery ground hands back its feature too, so the loot can sit ON the
+  // water — fish rise in the river, not in the car park beside it.
+  const anchor = (best.habitat === 'water' || best.habitat === 'coast' || best.habitat === 'wetland') ? best : null;
+  return { habitat: best.habitat, anchor };
 }
+function pickupHabitatAt(lat, lon) { return pickupGroundAt(lat, lon).habitat; }
 function pickupWeightFor(type, habitat) {
   const override = habitat && type.biomes ? type.biomes[habitat] : undefined;
   return Number.isFinite(override) ? override : type.weight;
@@ -19681,14 +19690,21 @@ function mapPickupsNear(lat, lon) {
       for (let k = 0; k < count; k++) {
         const s = burbzHash32('burbz-pickup:' + day + ':' + i + ':' + j + ':' + k);
         const r = villageRngFrom(s);
-        const pLat = (i + 0.1 + r() * 0.8) * cs;
-        const pLon = (j + 0.1 + r() * 0.8) * cs;
-        const habitat = pickupHabitatAt(pLat, pLon);
+        let pLat = (i + 0.1 + r() * 0.8) * cs;
+        let pLon = (j + 0.1 + r() * 0.8) * cs;
+        const ground = pickupGroundAt(pLat, pLon);
+        if (ground.anchor) {
+          // Watery loot floats on its water: land the pickup on the feature,
+          // scattered 15–75 m around it so a shoal spreads instead of stacking.
+          const spread = 15 + r() * 60, angle = r() * Math.PI * 2;
+          pLat = ground.anchor.lat + (spread * Math.cos(angle)) / 111320;
+          pLon = ground.anchor.lon + (spread * Math.sin(angle)) / (111320 * Math.max(0.2, Math.cos(ground.anchor.lat * Math.PI / 180)));
+        }
         out.push({
           key: i + ':' + j + ':' + k,
           seed: s,
-          habitat,
-          type: pickupTypeForSeed(s, habitat),
+          habitat: ground.habitat,
+          type: pickupTypeForSeed(s, ground.habitat),
           lat: pLat,
           lon: pLon
         });
@@ -20140,6 +20156,19 @@ function birdDisplayName(bird) { return (bird && String(bird.customName || '').t
 function birdSpeciesLabel(bird) { return (bird && (bird.commonName || bird.species)) || 'Unknown species'; }
 // nickname-line-v167-20260729: nicknames decorate identity; they never replace taxonomy.
 function birdNickname(bird) { return (bird && String(bird.customName || '').trim()) || ''; }
+// Easter egg: every Herring Gull is called Steven. Nobody knows why.
+// Least of all Steven.
+function easterEggBirdName(bird) {
+  const species = String((bird && (bird.commonName || bird.species)) || '');
+  return /herring gull/i.test(species) ? 'Steven' : null;
+}
+function applyEasterEggBirdName(bird) {
+  if (bird && !String(bird.customName || '').trim()) {
+    const name = easterEggBirdName(bird);
+    if (name) bird.customName = name;
+  }
+  return bird;
+}
 function renameCompanionBird(birdId) {
   const bird = (gameState.flock || []).find(b => b.id === birdId);
   if (!bird) return;
@@ -20148,6 +20177,9 @@ function renameCompanionBird(birdId) {
   if (next === null) return;
   const clean = String(next).trim().replace(/\s+/g, ' ').slice(0, 32);
   bird.customName = clean || null;
+  // Clearing a Herring Gull's name is futile. He was always Steven.
+  const eggName = !clean && easterEggBirdName(bird);
+  if (eggName) bird.customName = eggName;
   saveState();
   renderBirdex();
   renderAcademy();
@@ -20155,7 +20187,8 @@ function renameCompanionBird(birdId) {
   updateHeader();
   // Refresh the field-guide sheet in place if it is showing this bird.
   if ($('birdInfoModal')?.classList.contains('show') && $('birdInfoContent')?.dataset.currentBirdId === String(bird.id)) openBirdInfo(bird.id);
-  showToast(clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
+  showToast(eggName ? '✏️ No use. Every Herring Gull is Steven.'
+    : clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
 }
 // bird-bond-love-v256-20260812: every bird can be loved for itself. Each
 // companion carries a bond — a favourite flag, a bond level with a warm
@@ -30859,6 +30892,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
           <div class="card-power" style="color:${rarityColor}">&#128176;${cost}</div>
           <div class="card-info">
             <div class="card-name">${bird.commonName || bird.species}</div>
+            <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
             <div class="card-species">Birdex unlocked · ${bird.rarity.toUpperCase()}</div>
             <div class="card-hp-bar"><div class="card-hp-fill" style="width:30%;background:${rarityColor}"></div></div>
             <div class="card-stats-row">
@@ -34251,7 +34285,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'location-loot-v269-20260815';
+const BURBZ_BUILD = 'fish-in-the-water-v271-20260815';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
