@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "fish-in-the-water-v271-20260815"
+CURRENT_BUILD = "village-provisions-v272-20260816"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -58,7 +58,7 @@ const villageRoleMultiplier = () => 1;
 const villageRuinDefsFor = () => [];
 const VILLAGE_RUIN_KINDS = { house: {} };
 const VILLAGE_BASE_POPULATION = 0, VILLAGE_MAX_POPULATION = 200;
-const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 0, joy: 7 };
+const VILLAGE_BASE_NEED_CAPACITY = { food: 0, water: 0, shelter: 0, joy: 0 };
 const playerBranches = () => gameState.player.branches;
 const playerStone = () => gameState.player.stone;
 const addCoins = n => { gameState.player.coins += n; };

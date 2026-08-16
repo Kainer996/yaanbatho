@@ -1017,6 +1017,11 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .province-need-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#7ea653,#b9d36a); transition:width .4s ease; }
 .province-need-fill.low { background:linear-gradient(90deg,#a65340,#d3846a); }
 .province-need-fill.mid { background:linear-gradient(90deg,#a68b3f,#d3b96a); }
+.province-need-sub { margin-top:3px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:10px; letter-spacing:.03em; color:var(--text2); opacity:.8; }
+.province-need-sub.warn { color:#ffb08a; opacity:1; }
+.province-cart-btn { width:100%; margin:0 0 10px; min-height:36px; border-radius:9px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(180deg,rgba(58,42,14,.92),rgba(20,13,4,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.05em; }
+.province-cart-btn:active { transform:scale(.98); }
+.province-cart-btn:disabled { opacity:.5; }
 .province-income-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.22); background:rgba(0,0,0,.3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#e6d9ae; text-align:center; }
 .province-build-title { font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.14em; color:var(--text2); margin:2px 2px 7px; text-transform:uppercase; }
 
@@ -16369,6 +16374,7 @@ Object.assign(window, {
   collectEmpireTribute,
   empireBuildStructure,
   empireClearRuin,
+  empireSendSupplyCart,
   academyBuildBuilding,
   academyBuildAndMoveBird,
   academySelectRoom,
@@ -16660,6 +16666,7 @@ function completionNoticeGo(id) {
   SFX.tap();
   try {
     if (notice.kind === 'empire-building' && notice.target) openEmpireVillage(notice.target.seed);
+    else if (notice.kind === 'village-hunger' && notice.target) openEmpireVillage(notice.target.seed);
     else if (notice.kind === 'academy-building' && notice.target) focusAcademyBuilding(notice.target.room);
     else if (notice.kind === 'quest') focusQuestFromNotice(notice.target || {});
   } catch (error) {
@@ -22189,11 +22196,11 @@ const EMPIRE_SIM_MAX_CYCLES = 21;                      // a week of population c
 const VILLAGE_BASE_POPULATION = 0;
 const VILLAGE_MIN_POPULATION = 4; // once settled, a town never empties below a stubborn few
 const VILLAGE_MAX_POPULATION = 200;
-// What a raw liberated village supports before anything is built: the square,
-// a spring and the old cellar stores keep food, water and a little cheer
-// ticking over — but every home lies in ruins, so shelter (and with it any
-// residents at all) comes only from cottages the player builds.
-const VILLAGE_BASE_NEED_CAPACITY = { food: 9, water: 11, shelter: 0, joy: 7 };
+// A raw liberated village supports nothing by itself. Bread comes from built
+// fields, water from a built well, cheer from a built alehouse — and shelter: 0
+// keeps residents waiting on real homes too. Every bar starts empty and every
+// point on it is earned by a building the governor raised.
+const VILLAGE_BASE_NEED_CAPACITY = { food: 0, water: 0, shelter: 0, joy: 0 };
 
 const EMPIRE_NEEDS = [
   { id: 'food',    icon: '🍞', label: 'Food' },
@@ -22227,9 +22234,24 @@ const EMPIRE_BUILDINGS = [
   { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' }
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
+  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 16, stone: 8 }, buildMinutes: 6, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
+
+// ---- Provisions: the granary and the cistern --------------------------------
+// A village lives off what it grows, city-builder style. Each tax cycle the
+// staffed fields bank their harvest in the granary and the wells refill the
+// cistern; then every villager eats one food and drinks one water. When the
+// stores run dry the village goes hungry: happiness falls, taxes thin out and
+// folk start walking away. The liberation caravan leaves relief supplies so
+// the first settlers can eat while the first field is still being dug.
+const VILLAGE_RELIEF_SUPPLIES = { food: 30, water: 30 };
+const VILLAGE_STORE_BASE_CAP = 40;       // the old cellar under the square
+const VILLAGE_STORE_CAP_PER_SOURCE = 20; // each farm or well level extends its store
+const VILLAGE_FOOD_PER_VILLAGER = 1;     // eaten per villager per tax cycle
+const VILLAGE_WATER_PER_VILLAGER = 1;    // drunk per villager per tax cycle
+const VILLAGE_SUPPLY_CART = { coins: 20, food: 12, water: 12 }; // emergency relief, bought with coins
 
 // ---- Ruins & rubble ---------------------------------------------------------
 // The long darkness left every settlement part-wrecked: a couple of tumbled
@@ -22410,6 +22432,14 @@ function ensureVillageEconomy(rec) {
   }
   if (!Number.isFinite(Number(eco.population)) || Number(eco.population) < 0) eco.population = VILLAGE_BASE_POPULATION;
   eco.population = Math.max(0, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
+  // The granary and the cistern. A village meeting this code for the first
+  // time — fresh liberation or an older save — receives the caravan's relief
+  // supplies, so nobody starves while the first field is still being dug.
+  // (Loose 0..999 clamp only: the true cellar caps depend on buildings, and
+  // computing them here would recurse. Write sites apply the real caps.)
+  if (!eco.stores || typeof eco.stores !== 'object' || Array.isArray(eco.stores)) eco.stores = { food: VILLAGE_RELIEF_SUPPLIES.food, water: VILLAGE_RELIEF_SUPPLIES.water };
+  eco.stores.food = Math.max(0, Math.min(999, Math.floor(Number(eco.stores.food) || 0)));
+  eco.stores.water = Math.max(0, Math.min(999, Math.floor(Number(eco.stores.water) || 0)));
   if (!Number.isFinite(Number(eco.lastSimAt))) eco.lastSimAt = Number(rec.lastTributeAt) || Date.parse(rec.claimedAt) || Date.now();
   return eco;
 }
@@ -22426,10 +22456,45 @@ function villageBuildingTier(b, level) {
   const i = Math.max(0, Math.min(b.tiers.length - 1, (Number(level) || 1) - 1));
   return Object.assign(base, b.tiers[i]);
 }
-function villageNeedCapacity(rec, needId) {
+function villageNeedCapacity(rec, needId, crewOpt) {
   let cap = VILLAGE_BASE_NEED_CAPACITY[needId] || 0;
-  EMPIRE_BUILDINGS.forEach(b => { if (b.need === needId) cap += (b.perLevel || 0) * villageBuildingLevel(rec, b.id); });
+  let crew = crewOpt || null;
+  EMPIRE_BUILDINGS.forEach(b => {
+    if (b.need !== needId) return;
+    const level = villageBuildingLevel(rec, b.id);
+    if (!level) return;
+    // A need served by a worked yard waits for its crew: an unstaffed farm
+    // feeds nobody and an unkept chapel comforts nobody.
+    if (b.workers) {
+      if (!crew) crew = villageWorkforce(rec);
+      if (!crew.staffed[b.id]) return;
+    }
+    cap += (b.perLevel || 0) * level;
+  });
   return cap;
+}
+// How much the cellar under the square can hold. Farms and wells extend their
+// own store a little; the Storehouse digs deep cellars for both.
+function villageStoreCapacity(rec, kind) {
+  const source = kind === 'water' ? 'well' : 'farm';
+  const store = EMPIRE_BUILDING_INDEX.storehouse;
+  return VILLAGE_STORE_BASE_CAP +
+    VILLAGE_STORE_CAP_PER_SOURCE * villageBuildingLevel(rec, source) +
+    ((store && store.storagePerLevel) || 0) * villageBuildingLevel(rec, 'storehouse');
+}
+// What the fields and wells actually deliver per tax cycle. Fields need their
+// farmhand — an unstaffed farm grows nothing — while a well flows on its own.
+function villageProvisionRates(rec, crewOpt) {
+  const crew = crewOpt || villageWorkforce(rec);
+  const rates = { food: 0, water: 0 };
+  EMPIRE_BUILDINGS.forEach(b => {
+    if (b.need !== 'food' && b.need !== 'water') return;
+    const level = villageBuildingLevel(rec, b.id);
+    if (!level) return;
+    if (b.workers && !crew.staffed[b.id]) return;
+    rates[b.need] += (b.perLevel || 0) * level;
+  });
+  return rates;
 }
 // Who is actually working the yards. Every built structure with a `workers`
 // count wants that many villagers before it runs; hands are dealt out in
@@ -22482,13 +22547,26 @@ function villageEconomySnapshot(rec) {
   const eco = ensureVillageEconomy(rec);
   if (!eco) return null;
   const pop = eco.population;
-  const needs = EMPIRE_NEEDS.map(n => {
-    const cap = villageNeedCapacity(rec, n.id);
-    return { id: n.id, icon: n.icon, label: n.label, cap, sat: Math.min(1, cap / Math.max(1, pop)) };
-  });
-  const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
   // Flat income and market boosts too only flow from yards that found a crew.
   const crew = villageWorkforce(rec);
+  // Food and water are real provisions: this cycle's harvest plus whatever the
+  // granary and cistern hold, eaten meal by meal. Shelter and joy are standing
+  // services. Nothing on these bars is served by thin air.
+  const rates = villageProvisionRates(rec, crew);
+  const provisions = {
+    food:  { rate: rates.food,  store: eco.stores.food,  cap: villageStoreCapacity(rec, 'food'),  eats: pop * VILLAGE_FOOD_PER_VILLAGER },
+    water: { rate: rates.water, store: eco.stores.water, cap: villageStoreCapacity(rec, 'water'), eats: pop * VILLAGE_WATER_PER_VILLAGER }
+  };
+  const needs = EMPIRE_NEEDS.map(n => {
+    const flow = provisions[n.id];
+    if (flow) {
+      const onHand = flow.rate + flow.store;
+      return { id: n.id, icon: n.icon, label: n.label, cap: onHand, served: Math.min(pop, onHand), sat: flow.eats > 0 ? Math.min(1, onHand / flow.eats) : 1 };
+    }
+    const cap = villageNeedCapacity(rec, n.id, crew);
+    return { id: n.id, icon: n.icon, label: n.label, cap, served: Math.min(pop, cap), sat: Math.min(1, cap / Math.max(1, pop)) };
+  });
+  const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
   let flatCoins = 0, flatBranches = 0, taxBoost = 0;
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
@@ -22521,11 +22599,15 @@ function villageEconomySnapshot(rec) {
   const governance = steward * warden;
   const taxes = pop <= 0 ? 0 : Math.max(1, Math.round((4 + pop * 0.55) * (0.35 + 0.65 * happiness) * (1 + taxBoost) * merged * unity * governance) + flatCoins);
   const branches = pop <= 0 ? 0 : Math.round((2 + flatBranches) * governance);
-  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, workforce: crew, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter') };
+  return { pop, needs, happiness, taxes, branches, inRegion, settlement, merged, steward, warden, governance, workforce: crew, provisions, production: villageProductionSnapshot(rec), housingCap: villageNeedCapacity(rec, 'shelter', crew) };
 }
 // Population drifts once per tax cycle: thriving provinces grow toward their
 // housing cap, hungry or joyless ones empty out (never below a stubborn few —
 // though the floor never conjures settlers into a town with no homes built).
+// Each cycle runs the full provisions loop first: the fields bank their
+// harvest, the wells refill the cistern, then every villager eats and drinks.
+// Only a fully fed and watered village draws new settlers, and a starving one
+// empties twice as fast as a merely unhappy one.
 function simulateVillageEconomy(rec, now) {
   const eco = ensureVillageEconomy(rec);
   if (!eco) return;
@@ -22533,13 +22615,37 @@ function simulateVillageEconomy(rec, now) {
   const elapsed = Math.floor((t - eco.lastSimAt) / EMPIRE_TRIBUTE_INTERVAL_MS);
   if (elapsed <= 0) return;
   eco.lastSimAt += elapsed * EMPIRE_TRIBUTE_INTERVAL_MS;
+  let wentHungry = false;
   for (let i = 0; i < Math.min(EMPIRE_SIM_MAX_CYCLES, elapsed); i++) {
     const snap = villageEconomySnapshot(rec);
+    const food = snap.provisions.food, water = snap.provisions.water;
+    // The day's harvest is eaten fresh before the rest must fit the cellar.
+    const fed = Math.min(food.eats, food.rate + eco.stores.food);
+    const drank = Math.min(water.eats, water.rate + eco.stores.water);
+    eco.stores.food = Math.min(food.cap, food.rate + eco.stores.food - fed);
+    eco.stores.water = Math.min(water.cap, water.rate + eco.stores.water - drank);
+    const fedFrac = food.eats > 0 ? fed / food.eats : 1;
+    const drankFrac = water.eats > 0 ? drank / water.eats : 1;
+    const provisioned = fedFrac >= 1 && drankFrac >= 1;
+    const starving = fedFrac < 0.5 || drankFrac < 0.5;
+    if (eco.population > 0 && !provisioned) wentHungry = true;
     const floor = Math.min(eco.population, VILLAGE_MIN_POPULATION);
-    if (snap.happiness >= 0.9 && eco.population < snap.housingCap) eco.population += 2;
-    else if (snap.happiness >= 0.65 && eco.population < snap.housingCap) eco.population += 1;
+    if (snap.happiness >= 0.9 && provisioned && eco.population < snap.housingCap) eco.population += 2;
+    else if (snap.happiness >= 0.65 && provisioned && eco.population < snap.housingCap) eco.population += 1;
+    else if (starving) eco.population -= 2;
     else if (snap.happiness < 0.45) eco.population -= 1;
     eco.population = Math.max(floor, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, floor))));
+  }
+  // One corner card per hungry village, newest wins — tapping it opens the
+  // village so the governor can raise a farm or send a supply cart.
+  if (wentHungry && eco.population > 0) {
+    queueCompletionNotice({
+      kind: 'village-hunger',
+      icon: '🥣',
+      title: 'The stores ran short',
+      sub: rec.name + ' — villagers go hungry. Tap to help.',
+      target: { seed: rec.seed >>> 0 }
+    });
   }
 }
 function simulateAllVillageEconomies() {
@@ -22646,6 +22752,30 @@ function villageTapRuin(index) {
   if (!v) return;
   if (!empireOwnsVillage(v.seed)) { showToast('🏚️ Rubble from the long darkness. Free ' + v.name + ' and your villagers will help clear it.'); return; }
   empireClearRuin(v.seed >>> 0, index);
+}
+// The royal answer to an empty granary: a paid cart of provisions, on the
+// road at once. Coins out of the purse, food and water into the stores —
+// capped by cellar space, so nothing bought is ever wasted.
+function empireSendSupplyCart(seed) {
+  const empire = ensureEmpireState();
+  const rec = empire && empire.villages[String(Number(seed) >>> 0)];
+  if (!rec) return;
+  const eco = ensureVillageEconomy(rec);
+  const foodCap = villageStoreCapacity(rec, 'food'), waterCap = villageStoreCapacity(rec, 'water');
+  if (eco.stores.food >= foodCap && eco.stores.water >= waterCap) { showToast('🧺 ' + rec.name + '’s granary and cistern are already full.'); return; }
+  if ((gameState.player.coins || 0) < VILLAGE_SUPPLY_CART.coins) { showToast('Need ' + VILLAGE_SUPPLY_CART.coins + ' 🪙 to send a supply cart — collect taxes and win battles.'); return; }
+  addCoins(-VILLAGE_SUPPLY_CART.coins);
+  const food = Math.min(VILLAGE_SUPPLY_CART.food, foodCap - eco.stores.food);
+  const water = Math.min(VILLAGE_SUPPLY_CART.water, waterCap - eco.stores.water);
+  eco.stores.food += food;
+  eco.stores.water += water;
+  saveState();
+  SFX.questComplete();
+  vibrate(30);
+  showToast('🛒 A supply cart rolls into ' + rec.name + ' — +' + food + ' 🍞 food, +' + water + ' 💧 water.');
+  updateHeader();
+  renderVillageManagePanel();
+  renderEmpirePanel();
 }
 function empireVillageTributePeriods(v, now) {
   const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
@@ -22797,7 +22927,7 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The village armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🛖 Timber Cabin and residents will move in. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty: build a 🛖 Timber Cabin and residents will move in. Your caravan leaves relief supplies — raise a 🌾 farm and ⛲ well before they run out. ' + count + ' village' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
   // Did this liberation merge villages into a TOWN — or towns into a CITY?
   // Three neighbouring liberated villages grow together into one town; three
   // neighbouring towns rise as one city. Announced only when it happens.
@@ -22892,12 +23022,34 @@ function renderVillageManagePanel() {
   const wallet = gameState.player.coins || 0;
   const timber = playerBranches();
   const stone = playerStone();
+  // Four honest bars. Food and water read the real flow — this cycle's
+  // harvest plus the stores — and say under the bar exactly where the next
+  // meal is coming from, or that it isn't.
   const needsHtml = snap.needs.map(n => {
     const pct = Math.round(n.sat * 100);
     const tone = n.sat >= 0.95 ? '' : n.sat >= 0.6 ? ' mid' : ' low';
-    return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, n.cap) + '/' + snap.pop + '</span></div>' +
-      '<div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div></div>';
+    const flow = snap.provisions[n.id];
+    let sub = '';
+    if (flow) {
+      const source = n.id === 'food' ? EMPIRE_BUILDING_INDEX.farm : EMPIRE_BUILDING_INDEX.well;
+      const storeName = n.id === 'food' ? 'granary' : 'cistern';
+      const dry = flow.rate <= 0 && flow.store <= 0;
+      const short = snap.pop > 0 && flow.rate + flow.store < flow.eats;
+      let line;
+      if (dry) line = '⚠️ no ' + source.name.toLowerCase() + ', nothing stored — ' + (n.id === 'food' ? 'villagers go hungry' : 'villagers go thirsty');
+      else if (flow.rate > 0) line = source.icon + ' +' + flow.rate + ' a cycle · ' + storeName + ' ' + flow.store + '/' + flow.cap + (short ? ' · ⚠️ not enough' : '');
+      else line = 'no ' + source.name.toLowerCase() + ' yet · ' + storeName + ' holds ' + flow.store + (snap.pop > 0 ? ' — ' + Math.max(1, Math.floor(flow.store / Math.max(1, flow.eats))) + ' more cycle' + (Math.floor(flow.store / Math.max(1, flow.eats)) === 1 ? '' : 's') : '');
+      sub = '<div class="province-need-sub' + (dry || short ? ' warn' : '') + '">' + line + '</div>';
+    }
+    return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, n.served) + '/' + snap.pop + '</span></div>' +
+      '<div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div>' + sub + '</div>';
   }).join('');
+  // The relief valve: while there is cellar space, coins can put provisions on
+  // the road at once — the classic city-builder answer to a hungry town.
+  const cartUseful = snap.provisions.food.store < snap.provisions.food.cap || snap.provisions.water.store < snap.provisions.water.cap;
+  const cartHtml = cartUseful
+    ? '<button class="province-cart-btn" onclick="empireSendSupplyCart(' + (rec.seed >>> 0) + ')"' + (wallet >= VILLAGE_SUPPLY_CART.coins ? '' : ' disabled') + '>🛒 SEND A SUPPLY CART · +' + VILLAGE_SUPPLY_CART.food + ' 🍞 +' + VILLAGE_SUPPLY_CART.water + ' 💧 · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button>'
+    : '';
   // Uncleared wrecks left by the darkness — quick to clear, each pays timber.
   const pendingRuins = (eco.ruins || []).map((ru, i) => ({ ru, i })).filter(x => !x.ru.cleared);
   const ruinsHtml = pendingRuins.length
@@ -22982,8 +23134,9 @@ function renderVillageManagePanel() {
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (crew.required ? ' · 👷 ' + crew.working + '/' + crew.required + ' yards crewed' : '') + '</div></div>' +
     settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
+    cartHtml +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + '</div>'
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a 🌾 Grain Farm or ⛲ Stone Well, or send a supply cart' : '') + '</div>'
       : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
@@ -23191,6 +23344,7 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛖</span><span><b>Rebuild them.</b> Start with a Timber Cabin — it costs only coins and timber — and the first families move in. Later, rebuild it in stone to house twice as many.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🌾 Grain Farm and ⛲ Stone Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> The first Quarry costs no stone and its first cut gives enough stone for Cottage Row. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages grow into a town</b> (+10% taxes) — and <b>3 neighbouring towns rise into a city</b> (+25%). This happens by itself as you free villages close together.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 villages within 150 km unite into a County</b> — run from its own County Hall, with +15% unity taxes for every village in it.</span></div>' +
@@ -27333,6 +27487,19 @@ function buildVillageScene(v) {
           stall.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
           stall.rotation.y = -a + Math.PI / 2 + (er() - 0.5) * 0.4;
           villageScene.add(stall);
+        }
+      } else if (b.id === 'storehouse') {
+        // Deep cellars for the harvest: a stout shed ringed with crates.
+        const spot = econScatter(9.5, 13.5, 2.6);
+        if (!spot) return;
+        const shed = villageMakeBuilding('storehouse', { icon: '🧺', name: 'Storehouse', roofColor: pal.roofs[2 % pal.roofs.length] }, er, pal);
+        shed.position.set(spot.x, 0, spot.z);
+        shed.lookAt(0, 0, 0); shed.rotation.x = 0; shed.rotation.z = 0;
+        villageScene.add(shed);
+        for (let i = 0; i < level; i++) {
+          const crates = villageMakeCrates(er, pal);
+          crates.position.set(spot.x + Math.cos(i * 2.4) * 2.2, 0, spot.z + Math.sin(i * 2.4) * 2.2);
+          villageScene.add(crates);
         }
       }
     });
@@ -34285,7 +34452,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'fish-in-the-water-v271-20260815';
+const BURBZ_BUILD = 'village-provisions-v272-20260816';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
