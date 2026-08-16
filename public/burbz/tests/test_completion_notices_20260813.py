@@ -17,7 +17,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "completion-notices-v265-20260813"
 PREVIOUS_RELEASE_PIN = "real-place-names-v264-20260813"
-CURRENT_BUILD = "village-provisions-v272-20260816"
+CURRENT_BUILD = "town-strategy-v273-20260816"
 
 
 def function_source(name: str) -> str:
@@ -58,7 +58,12 @@ def test_stack_markup_and_style():
 def test_empire_builds_raise_a_notice_inside_the_commit():
     src = function_source("empireCompleteConstructions")
     assert "kind: 'empire-building'" in src
-    assert "target: { seed: rec.seed >>> 0 }" in src
+    # A finished hidden ward is represented by its canonical Town/City. Loose
+    # villages retain their own seed, so both routes land on a public target.
+    assert "canonicalEmpireSettlement(empireSettlementById(mergedLink.id))" in src
+    assert "const publicSeed = publicSettlement ? publicSettlement.heartSeed : (rec.seed >>> 0)" in src
+    assert "target: { seed: publicSeed }" in src
+    assert "sub: publicName + ' — tap to manage'" in src
     # The notice queues before durableSaveState, so a failed save rolls the
     # card back with the building — and the rollback repaints the stack.
     assert src.index("kind: 'empire-building'") < src.index("durableSaveState")

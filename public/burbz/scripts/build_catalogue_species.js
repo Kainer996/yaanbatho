@@ -115,7 +115,9 @@ function main() {
   const content = render(collect());
   if (check) {
     const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
-    if (current !== content) {
+    // Git may materialise this generated JSON with CRLF on Windows even though
+    // the deterministic builder emits LF. Line endings are not catalogue drift.
+    if (current.replace(/\r\n/g, '\n') !== content) {
       process.stderr.write('DRIFT data/catalogue-species.json is stale — re-run node scripts/build_catalogue_species.js\n');
       process.exit(1);
     }

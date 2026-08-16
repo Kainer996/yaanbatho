@@ -1,11 +1,12 @@
 /* Burbz Empire Realm Core — the Crusader-Kings layer of the liberation war.
  *
  * Pure, deterministic helpers only. Villages the player has liberated from the
- * evil Burbz cluster into COUNTIES by real-world proximity, and the feudal
- * ladder above them NESTS the way Crusader Kings' does — every tier is made
- * of the tier below, never of loose villages:
+ * evil Burbz first form permanent, exact three-village TOWNS. Nearby Towns
+ * then found COUNTIES, and the feudal ladder above them NESTS the way Crusader
+ * Kings' does — every tier is made of the tier below, never of loose villages:
  *
- *   3 villages within REGION_RADIUS_KM      → found a COUNTY
+ *   3 villages within SETTLEMENT_TOWN_RADIUS_KM → found a TOWN
+ *   3 towns within REGION_RADIUS_KM              → found a COUNTY
  *   2 counties within DUCHY_RADIUS_KM       → unite into a DUCHY
  *   2 duchies within KINGDOM_RADIUS_KM      → proclaim a KINGDOM
  *   2 kingdoms anywhere on Earth            → proclaim the EMPIRE
@@ -18,8 +19,8 @@
  * conquers anyone.
  *
  * The game stays deliberately simple before this layer exists: none of these
- * mechanics surface until the player has liberated enough villages to found a
- * county (REGION_MIN_VILLAGES within REGION_RADIUS_KM of each other).
+ * mechanics surface until the player has founded enough nearby towns to found
+ * a county (REGION_MIN_TOWNS within REGION_RADIUS_KM of each other).
  */
 (function (root, factory) {
   const api = factory();
@@ -29,10 +30,13 @@
   'use strict';
 
   const EARTH_RADIUS_KM = 6371.0088;
-  // Villages chained within this range of each other belong to the same region.
+  // Towns chained within this range of each other belong to the same region.
   const REGION_RADIUS_KM = 150;
-  // A cluster founds a region once it holds this many liberated villages.
-  const REGION_MIN_VILLAGES = 3;
+  // A cluster founds a region once it holds this many permanent towns. Keep
+  // the old public name as an alias for browser/tests written before Towns
+  // became the unit of county formation.
+  const REGION_MIN_TOWNS = 3;
+  const REGION_MIN_VILLAGES = REGION_MIN_TOWNS;
   // County unity: sanctuaries inside a founded county pay 15% more taxes.
   const REGION_TAX_BONUS = 0.15;
   // The nested feudal ladder above counties — simplified Crusader Kings.
@@ -311,9 +315,10 @@
 
   // ---- Settlement tiers: village → town → city ------------------------------
   // The street-level layer BELOW regions. Liberate 3 neighbouring villages
-  // (chained within SETTLEMENT_TOWN_RADIUS_KM of each other) and they grow
-  // together into one TOWN; raise 3 neighbouring towns (squares chained within
-  // SETTLEMENT_CITY_RADIUS_KM) and they merge into one CITY. Merged districts
+  // (connected within SETTLEMENT_TOWN_RADIUS_KM) and those exact three grow
+  // together into one TOWN; raise 3 neighbouring towns (squares connected
+  // within SETTLEMENT_CITY_RADIUS_KM) and those exact three merge into one
+  // CITY. Later claims never reshape an already-founded group. Merged districts
   // pay bonus taxes and their shared guilds build faster; on the atlas their
   // daylight pools fuse into one glow. Regions (150 km) sit far above this.
   const SETTLEMENT_TOWN_RADIUS_KM = 5;
@@ -349,8 +354,30 @@
   }
 
   function claimTime(v) {
-    const t = Date.parse(v && v.claimedAt);
+    // `liberatedAt` was the field name in a few early saves. Prefer the modern
+    // claim timestamp, but replay those saves chronologically when possible.
+    const t = Date.parse(v && (v.claimedAt || v.liberatedAt));
     return Number.isFinite(t) ? t : Number.MAX_SAFE_INTEGER;
+  }
+
+  function seedNumber(v) {
+    const seed = Number(v && v.seed);
+    return Number.isFinite(seed) && seed >= 0 ? seed >>> 0 : 0;
+  }
+
+  /* A total order for replaying claims. Claim time is the game chronology;
+     seed/coordinates/name make equal or missing timestamps deterministic even
+     when callers hand us the same records in a different array order. */
+  function chronologicalCompare(a, b) {
+    const timeDiff = claimTime(a) - claimTime(b);
+    if (timeDiff) return timeDiff;
+    const seedDiff = seedNumber(a) - seedNumber(b);
+    if (seedDiff) return seedDiff;
+    const latDiff = Number(a && a.lat) - Number(b && b.lat);
+    if (Number.isFinite(latDiff) && latDiff) return latDiff;
+    const lonDiff = Number(a && a.lon) - Number(b && b.lon);
+    if (Number.isFinite(lonDiff) && lonDiff) return lonDiff;
+    return String(a && a.name || '').localeCompare(String(b && b.name || ''));
   }
 
   /* Chain villages into proximity clusters (union-find): any two villages
@@ -374,9 +401,164 @@
       groups.get(rootIdx).push(v);
     });
     const clusters = Array.from(groups.values());
-    clusters.forEach(c => c.sort((a, b) => claimTime(a) - claimTime(b)));
-    clusters.sort((a, b) => claimTime(a[0]) - claimTime(b[0]));
+    clusters.forEach(c => c.sort(chronologicalCompare));
+    clusters.sort((a, b) => chronologicalCompare(a[0], b[0]));
     return clusters;
+  }
+
+  function uniqueChronologicalVillages(villages) {
+    const ordered = (Array.isArray(villages) ? villages : [])
+      .filter(validVillageIdentity)
+      .slice()
+      .sort(chronologicalCompare);
+    const seen = new Set();
+    return ordered.filter(v => {
+      const key = String(seedNumber(v));
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function groupIsConnected(group, radiusKm) {
+    const rows = Array.isArray(group) ? group : [];
+    if (!rows.length) return false;
+    if (rows.length === 1) return validVillageIdentity(rows[0]);
+    return clusterVillages(rows, radiusKm).length === 1;
+  }
+
+  function groupDistanceKm(group) {
+    let total = 0;
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        total += haversineKm(group[i].lat, group[i].lon, group[j].lat, group[j].lon);
+      }
+    }
+    return total;
+  }
+
+  function compareIndexLists(a, b) {
+    const length = Math.min(a.length, b.length);
+    for (let i = 0; i < length; i++) {
+      if (a[i] !== b[i]) return a[i] - b[i];
+    }
+    return a.length - b.length;
+  }
+
+  /* Choose one exact connected group from the currently-unassigned pool.
+     Chronology wins first (the oldest possible heart keeps its claim), then
+     spatial compactness chooses between rival groups around that heart, and a
+     final member-order comparison removes any remaining ambiguity. */
+  function bestExactGroup(pool, groupSize, radiusKm, requiredIndex) {
+    const size = Math.max(2, Math.floor(Number(groupSize) || 3));
+    if (!Array.isArray(pool) || pool.length < size) return null;
+    let best = null;
+    function considerIndices(indices, knownDistanceKm) {
+      const members = indices.map(index => pool[index]).sort(chronologicalCompare);
+      if (!Number.isFinite(knownDistanceKm) && !groupIsConnected(members, radiusKm)) return;
+      const candidate = {
+        indices: indices.slice(),
+        members,
+        heartIndex: indices[0],
+        distanceKm: Number.isFinite(knownDistanceKm) ? knownDistanceKm : groupDistanceKm(members)
+      };
+      if (!best || candidate.heartIndex < best.heartIndex ||
+          (candidate.heartIndex === best.heartIndex && candidate.distanceKm < best.distanceKm - 1e-9) ||
+          (candidate.heartIndex === best.heartIndex && Math.abs(candidate.distanceKm - best.distanceKm) <= 1e-9 &&
+           compareIndexLists(candidate.indices, best.indices) < 0)) best = candidate;
+    }
+
+    const mustInclude = Number.isInteger(requiredIndex) && requiredIndex >= 0 && requiredIndex < pool.length
+      ? requiredIndex : null;
+    // The game makes trios. Because deriveExactGroups maintains a pool with no
+    // previously eligible trio, every newly eligible trio contains the latest
+    // claim. Search its local graph rather than all world-wide combinations.
+    if (size === 3 && mustInclude !== null) {
+      const radius = Math.max(1, Number(radiusKm) || REGION_RADIUS_KM);
+      const neighbourDistance = new Map();
+      for (let i = 0; i < pool.length; i++) {
+        if (i === mustInclude) continue;
+        const distance = haversineKm(pool[i].lat, pool[i].lon, pool[mustInclude].lat, pool[mustInclude].lon);
+        if (distance <= radius) neighbourDistance.set(i, distance);
+      }
+      const neighbours = Array.from(neighbourDistance.keys());
+      const considered = new Set();
+      function considerPair(i, j) {
+        const indices = [i, j, mustInclude].sort((a, b) => a - b);
+        const key = indices[0] + ':' + indices[1] + ':' + indices[2];
+        if (considered.has(key)) return;
+        considered.add(key);
+        const iRequired = neighbourDistance.get(i);
+        const jRequired = neighbourDistance.get(j);
+        const between = haversineKm(pool[i].lat, pool[i].lon, pool[j].lat, pool[j].lon);
+        // At least one endpoint is a neighbour of the required claim. If only
+        // one is, the other endpoint must join through it.
+        if (iRequired === undefined && (jRequired === undefined || between > radius)) return;
+        if (jRequired === undefined && (iRequired === undefined || between > radius)) return;
+        considerIndices(indices,
+          (iRequired === undefined ? haversineKm(pool[i].lat, pool[i].lon, pool[mustInclude].lat, pool[mustInclude].lon) : iRequired) +
+          (jRequired === undefined ? haversineKm(pool[j].lat, pool[j].lon, pool[mustInclude].lat, pool[mustInclude].lon) : jRequired) +
+          between);
+      }
+      // Any two neighbours are connected through the required claim.
+      for (let a = 0; a < neighbours.length; a++) {
+        for (let b = a + 1; b < neighbours.length; b++) considerPair(neighbours[a], neighbours[b]);
+      }
+      // One neighbour can also connect a non-neighbour through an old edge.
+      neighbours.forEach(i => {
+        for (let j = 0; j < pool.length; j++) {
+          if (j === i || j === mustInclude || neighbourDistance.has(j)) continue;
+          considerPair(i, j);
+        }
+      });
+      return best;
+    }
+
+    const picked = [];
+    function consider(start) {
+      const targetSize = mustInclude === null ? size : size - 1;
+      if (picked.length === targetSize) {
+        const indices = mustInclude === null ? picked.slice() : picked.concat(mustInclude).sort((a, b) => a - b);
+        considerIndices(indices, NaN);
+        return;
+      }
+      for (let i = start; i < pool.length; i++) {
+        if (i === mustInclude) continue;
+        let available = 0;
+        for (let j = i; j < pool.length; j++) if (j !== mustInclude) available++;
+        if (available < targetSize - picked.length) break;
+        picked.push(i);
+        consider(i + 1);
+        picked.pop();
+      }
+    }
+    consider(0);
+    return best;
+  }
+
+  /* Replay claims in chronological order and permanently consume exact groups.
+     A later bridge claim can connect two old components, but trios already
+     removed from the pool cannot be reshuffled. The same history therefore
+     always yields the same stable towns and cities without stored derivation. */
+  function deriveExactGroups(items, radiusKm, groupSize) {
+    const ordered = (Array.isArray(items) ? items : [])
+      .filter(validVillageIdentity)
+      .slice()
+      .sort(chronologicalCompare);
+    const pool = [];
+    const groups = [];
+    ordered.forEach(item => {
+      pool.push(item);
+      const match = bestExactGroup(pool, groupSize, radiusKm, pool.length - 1);
+      if (!match) return;
+      groups.push(match.members);
+      match.indices.slice().sort((a, b) => b - a).forEach(index => pool.splice(index, 1));
+    });
+    return { groups, unassigned: pool.slice().sort(chronologicalCompare) };
+  }
+
+  function largestProximityCluster(items, radiusKm) {
+    return clusterVillages(items, radiusKm).reduce((best, cluster) => Math.max(best, cluster.length), 0);
   }
 
   /* Every region on the ground is a COUNTY, whatever its size — the higher
@@ -420,43 +602,79 @@
     return { lat: Math.atan2(z, hyp) * 180 / Math.PI, lon: Math.atan2(y, x) * 180 / Math.PI };
   }
 
-  /* The heart of the endgame: liberated villages → founded counties.
-     Capital = the earliest-liberated village of the cluster (the sanctuary
-     that anchored the freedom spell first). County id = its capital seed, so
-     ids survive new liberations unless two counties genuinely grow together. */
+  /* The heart of the endgame: founded towns → counties. A county's capital is
+     its earliest-founded town, represented to legacy economy/trade callers by
+     that town's heart village. `villages` stays flattened and `villageCount`
+     stays the underlying sanctuary count; county formation now counts Towns.
+     The id remains the capital heart seed for deterministic existing saves. */
   function deriveRegions(villages, options) {
     const opts = options || {};
     const radiusKm = Number(opts.radiusKm) || REGION_RADIUS_KM;
-    const minVillages = Math.max(2, Math.floor(Number(opts.minVillages) || REGION_MIN_VILLAGES));
-    const clusters = clusterVillages(villages, radiusKm);
+    const legacyMin = opts.minTowns !== undefined ? opts.minTowns : opts.minVillages;
+    const minTowns = Math.max(2, Math.floor(Number(legacyMin) || REGION_MIN_TOWNS));
+    const settlementOptions = Object.assign({}, opts.settlementOptions || {});
+    if (opts.townRadiusKm !== undefined) settlementOptions.townRadiusKm = opts.townRadiusKm;
+    if (opts.cityRadiusKm !== undefined) settlementOptions.cityRadiusKm = opts.cityRadiusKm;
+    const settlements = deriveSettlements(villages, settlementOptions);
+    const townPoints = settlements.towns.map(town => ({
+      seed: town.heartSeed,
+      name: town.name,
+      lat: town.centroid.lat,
+      lon: town.centroid.lon,
+      claimedAt: town.foundedAt,
+      town
+    }));
+    const clusters = clusterVillages(townPoints, radiusKm);
     const regions = [];
-    const unassigned = [];
+    const unassignedTowns = [];
     clusters.forEach(cluster => {
-      if (cluster.length < minVillages) { unassigned.push(...cluster); return; }
-      const capital = cluster[0];
-      const capitalSeed = Number(capital.seed) >>> 0;
+      const towns = cluster.map(point => point.town).filter(Boolean);
+      if (towns.length < minTowns) { unassignedTowns.push(...towns); return; }
+      const capitalTown = towns[0];
+      const capital = capitalTown.villages.find(v => seedNumber(v) === capitalTown.heartSeed) || capitalTown.villages[0];
+      const otherVillages = towns.reduce((all, town) => all.concat(town.villages), [])
+        .filter(v => v !== capital)
+        .sort(chronologicalCompare);
+      // Several old economy, trade and map paths treat villages[0] as capital.
+      const regionVillages = [capital].concat(otherVillages);
+      const capitalSeed = capitalTown.heartSeed;
       const properName = placeName('county', capitalSeed);
       regions.push({
         id: String(capitalSeed),
         capitalSeed,
-        capitalName: String(capital.name || 'Sanctuary'),
+        capitalName: String(capital.name || capitalTown.name || 'Sanctuary'),
         properName,
         name: placeLabel('county', capitalSeed),
         tier: COUNTY_TIER.rank,
         tierLabel: COUNTY_TIER.label,
         tierIcon: COUNTY_TIER.icon,
-        villageCount: cluster.length,
-        villages: cluster,
-        centroid: centroidOf(cluster),
-        foundedAt: cluster[minVillages - 1].claimedAt || cluster[0].claimedAt || '',
+        townCount: towns.length,
+        towns,
+        villageCount: regionVillages.length,
+        villages: regionVillages,
+        centroid: centroidOf(regionVillages),
+        foundedAt: towns[minTowns - 1].foundedAt || capitalTown.foundedAt || '',
         duchyId: null,
         kingdomId: null,
         liegeTier: 'county'
       });
     });
-    // Progress hint for the pre-county game: how close is the best cluster?
+    // Preserve the historical raw-village field: loose villages and every
+    // town not yet inside a county remain unassigned at the realm layer.
+    const assignedSeeds = new Set();
+    regions.forEach(region => region.villages.forEach(v => assignedSeeds.add(String(seedNumber(v)))));
+    const unassigned = uniqueChronologicalVillages(villages)
+      .filter(v => !assignedSeeds.has(String(seedNumber(v))));
+    // Progress hint now reports the best Town cluster toward a County.
     const largestCluster = clusters.reduce((best, c) => Math.max(best, c.length), 0);
-    return { regions, unassigned, largestCluster, clusterCount: clusters.length };
+    return {
+      regions,
+      unassigned,
+      unassignedTowns,
+      largestCluster,
+      clusterCount: clusters.length,
+      settlements
+    };
   }
 
   /* Nest the counties into the full feudal pyramid — the simplified Crusader
@@ -548,44 +766,47 @@
     return { duchies, kingdoms, empire };
   }
 
-  /* One call for the whole realm: counties from villages, then the nested
-     duchy/kingdom/empire pyramid on top, plus the pre-county progress hints. */
+  /* One call for the whole realm: exact Towns from villages, counties from
+     Towns, then the nested duchy/kingdom/empire pyramid on top. Existing realm
+     fields stay in place; settlement and Town progress are additive. */
   function deriveRealm(villages, options) {
     const base = deriveRegions(villages, options);
     const pyramid = realmFromRegions(base.regions);
     return {
       regions: base.regions,
       unassigned: base.unassigned,
+      unassignedTowns: base.unassignedTowns,
       largestCluster: base.largestCluster,
       clusterCount: base.clusterCount,
+      settlements: base.settlements,
       duchies: pyramid.duchies,
       kingdoms: pyramid.kingdoms,
       empire: pyramid.empire
     };
   }
 
-  /* Settlement growth: liberated villages → towns → cities.
-     A town and city receive rank-specific names derived from the seed of their
-     HEART — the earliest-liberated village — so names and ids survive new
-     liberations exactly like region capitals do. The heartName field keeps the
-     actual capital village's name for UI that needs to identify it. Towns
-     that join a city keep existing (they are its boroughs); tierBySeed maps
-     every liberated village straight to the top settlement it belongs to. */
+  /* Settlement growth: liberated villages → exact towns → exact cities.
+     Formation is replayed chronologically. As soon as an eligible trio exists,
+     those members are permanently consumed from the unassigned pool. This is
+     the stability guarantee: a fourth village, or a later bridge between old
+     clusters, cannot redraw an established Town. Rank-specific proper names
+     still come from the earliest member's seed. Towns that join a City remain
+     its boroughs; tierBySeed maps consumed villages to the top settlement. */
   function deriveSettlements(villages, options) {
     const opts = options || {};
     const townRadiusKm = Number(opts.townRadiusKm) || SETTLEMENT_TOWN_RADIUS_KM;
     const cityRadiusKm = Number(opts.cityRadiusKm) || SETTLEMENT_CITY_RADIUS_KM;
-    const minVillages = Math.max(2, Math.floor(Number(opts.minVillages) || SETTLEMENT_TOWN_MIN_VILLAGES));
-    const minTowns = Math.max(2, Math.floor(Number(opts.minTowns) || SETTLEMENT_CITY_MIN_TOWNS));
-    const clusters = clusterVillages(villages, townRadiusKm);
-    const towns = [];
-    let largestVillageCluster = 0;
-    clusters.forEach(cluster => {
-      if (cluster.length < minVillages) { largestVillageCluster = Math.max(largestVillageCluster, cluster.length); return; }
-      const heart = cluster[0];
+    // Historical option names remain supported for pure-core fixtures; in the
+    // live game both constants are exactly three.
+    const villagesPerTown = Math.max(2, Math.floor(Number(opts.minVillages) || SETTLEMENT_TOWN_MIN_VILLAGES));
+    const townsPerCity = Math.max(2, Math.floor(Number(opts.minTowns) || SETTLEMENT_CITY_MIN_TOWNS));
+    const claims = uniqueChronologicalVillages(villages);
+    const townGrouping = deriveExactGroups(claims, townRadiusKm, villagesPerTown);
+    const towns = townGrouping.groups.map(group => {
+      const heart = group[0];
       const heartSeed = Number(heart.seed) >>> 0;
       const properName = placeName('town', heartSeed);
-      towns.push({
+      return {
         id: 'town-' + heartSeed,
         tier: 'town',
         heartSeed,
@@ -594,25 +815,30 @@
         name: properName,
         label: placeLabel('town', heartSeed),
         icon: SETTLEMENT_TIERS.town.icon,
-        villageCount: cluster.length,
-        villages: cluster,
-        centroid: centroidOf(cluster),
-        foundedAt: cluster[minVillages - 1].claimedAt || cluster[0].claimedAt || '',
+        villageCount: group.length,
+        villages: group,
+        centroid: centroidOf(group),
+        foundedAt: group[villagesPerTown - 1].claimedAt || group[villagesPerTown - 1].liberatedAt ||
+          heart.claimedAt || heart.liberatedAt || '',
         cityId: null
-      });
+      };
     });
-    // Towns whose market squares chain within cityRadiusKm merge into cities.
-    const townPoints = towns.map(t => ({ seed: t.heartSeed, name: t.name, lat: t.centroid.lat, lon: t.centroid.lon, claimedAt: t.foundedAt }));
-    const townClusters = clusterVillages(townPoints, cityRadiusKm);
-    const townBySeed = new Map(towns.map(t => [String(t.heartSeed), t]));
-    const cities = [];
-    let largestTownCluster = 0;
-    townClusters.forEach(cluster => {
-      if (cluster.length < minTowns) { largestTownCluster = Math.max(largestTownCluster, cluster.length); return; }
-      const members = cluster.map(p => townBySeed.get(String(Number(p.seed) >>> 0))).filter(Boolean);
-      if (members.length < minTowns) return;
+
+    // Market-square points let the same chronological engine consume exactly
+    // three Towns at a time. A fourth nearby Town remains standalone.
+    const townPoints = towns.map(town => ({
+      seed: town.heartSeed,
+      name: town.name,
+      lat: town.centroid.lat,
+      lon: town.centroid.lon,
+      claimedAt: town.foundedAt,
+      town
+    }));
+    const cityGrouping = deriveExactGroups(townPoints, cityRadiusKm, townsPerCity);
+    const cities = cityGrouping.groups.map(group => {
+      const members = group.map(point => point.town);
       const heartTown = members[0];
-      const cityVillages = members.reduce((all, t) => all.concat(t.villages), []).sort((a, b) => claimTime(a) - claimTime(b));
+      const cityVillages = members.reduce((all, t) => all.concat(t.villages), []).sort(chronologicalCompare);
       const properName = placeName('city', heartTown.heartSeed);
       const city = {
         id: 'city-' + heartTown.heartSeed,
@@ -628,15 +854,16 @@
         villageCount: cityVillages.length,
         villages: cityVillages,
         centroid: centroidOf(cityVillages),
-        foundedAt: cluster[minTowns - 1].claimedAt || heartTown.foundedAt || ''
+        foundedAt: group[townsPerCity - 1].claimedAt || heartTown.foundedAt || ''
       };
       members.forEach(t => { t.cityId = city.id; });
-      cities.push(city);
+      return city;
     });
     // Every liberated village knows what it now belongs to.
     const tierBySeed = {};
+    const cityById = new Map(cities.map(city => [city.id, city]));
     towns.forEach(town => {
-      const s = town.cityId ? cities.find(c => c.id === town.cityId) : town;
+      const s = town.cityId ? cityById.get(town.cityId) : town;
       town.villages.forEach(v => {
         tierBySeed[String(Number(v.seed) >>> 0)] = {
           tier: s.tier,
@@ -648,7 +875,23 @@
         };
       });
     });
-    return { towns, cities, tierBySeed, townCount: towns.length, cityCount: cities.length, largestVillageCluster, largestTownCluster };
+
+    const unassignedVillages = townGrouping.unassigned;
+    const standaloneTowns = towns.filter(town => !town.cityId);
+    return {
+      towns,
+      cities,
+      tierBySeed,
+      townCount: towns.length,
+      cityCount: cities.length,
+      largestVillageCluster: largestProximityCluster(unassignedVillages, townRadiusKm),
+      largestTownCluster: largestProximityCluster(cityGrouping.unassigned, cityRadiusKm),
+      // `unassigned` remains a friendly alias; explicit names distinguish the
+      // two formation stages for newer callers.
+      unassigned: unassignedVillages,
+      unassignedVillages,
+      standaloneTowns
+    };
   }
 
   /* Crown ladder — the player's realm-wide style is the highest title they
@@ -881,6 +1124,7 @@
     migratePlaceNames,
     EARTH_RADIUS_KM,
     REGION_RADIUS_KM,
+    REGION_MIN_TOWNS,
     REGION_MIN_VILLAGES,
     REGION_TAX_BONUS,
     COUNTY_TIER,
@@ -904,6 +1148,8 @@
     validVillageIdentity,
     haversineKm,
     clusterVillages,
+    chronologicalCompare,
+    deriveExactGroups,
     regionTier,
     regionUnityBonus,
     regionCoverageRadiusKm,

@@ -1,4 +1,4 @@
-"""The Crusader-Kings endgame: villages found regions, regions trade.
+"""The Crusader-Kings endgame: Towns found Counties, Counties trade.
 
 Covers empire_realm_core.js (pure maths, driven through Node) and the
 index.html wiring contracts: the realm layer stays invisible until the first
@@ -14,23 +14,44 @@ CORE = ROOT / "empire_realm_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
+REALM_CORE_PIN = "town-strategy-v273-20260816"
 
-# Two real-feeling clusters: Delamere Forest country and the south of France.
-CHESHIRE = [
-    {"seed": 1, "name": "Delamere", "lat": 53.228, "lon": -2.684, "claimedAt": "2026-07-01T00:00:00Z"},
-    {"seed": 2, "name": "Kelsall", "lat": 53.207, "lon": -2.712, "claimedAt": "2026-07-02T00:00:00Z"},
-    {"seed": 3, "name": "Tarporley", "lat": 53.156, "lon": -2.667, "claimedAt": "2026-07-03T00:00:00Z"},
-]
-PROVENCE = [
-    {"seed": 9, "name": "Gordes", "lat": 43.911, "lon": 5.200, "claimedAt": "2026-07-10T00:00:00Z"},
-    {"seed": 10, "name": "Roussillon", "lat": 43.902, "lon": 5.293, "claimedAt": "2026-07-11T00:00:00Z"},
-    {"seed": 11, "name": "Bonnieux", "lat": 43.823, "lon": 5.307, "claimedAt": "2026-07-12T00:00:00Z"},
-]
+
+def town(seed: int, name: str, lat: float, lon: float, day: int, hour: int):
+    """One exact Town: three claims within roughly a kilometre."""
+    return [
+        {
+            "seed": seed + i,
+            "name": name if i == 0 else f"{name} {i + 1}",
+            "lat": lat + i * 0.006,
+            "lon": lon + i * 0.004,
+            "claimedAt": f"2026-07-{day:02d}T{hour + i:02d}:00:00Z",
+        }
+        for i in range(3)
+    ]
+
+
+def county(seed: int, name: str, lat: float, lon: float, day: int):
+    """Three Towns within 150 km, but far enough apart not to become a City."""
+    return (
+        town(seed, name, lat, lon, day, 0)
+        + town(seed + 1000, name + " North", lat + 0.20, lon, day, 3)
+        + town(seed + 2000, name + " East", lat, lon + 0.25, day, 6)
+    )
+
+
+# Two real-feeling Counties: Delamere Forest country and southern France.
+CHESHIRE = county(1, "Delamere", 53.228, -2.684, 1)
+PROVENCE = county(9, "Gordes", 43.911, 5.200, 10)
 
 
 def run_core(expression: str):
     script = f"const core=require({json.dumps(str(CORE))}); console.log(JSON.stringify({expression}));"
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    # Place-name fixtures legitimately contain characters outside the Windows
+    # ANSI code page, so decode Node's JSON with its actual UTF-8 encoding.
+    result = subprocess.run(
+        ["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True
+    )
     assert result.returncode == 0, result.stderr
     return json.loads(result.stdout)
 
@@ -45,7 +66,7 @@ def empire_logic(html: str) -> str:
 # Region formation
 # ---------------------------------------------------------------------------
 
-def test_three_nearby_liberated_villages_found_a_region():
+def test_three_nearby_towns_found_a_county():
     result = run_core(f"core.deriveRegions({json.dumps(CHESHIRE)})")
     assert len(result["regions"]) == 1
     region = result["regions"][0]
@@ -54,14 +75,16 @@ def test_three_nearby_liberated_villages_found_a_region():
     assert region["capitalName"] == "Delamere"
     assert region["name"] == run_core("core.placeLabel('county', 1)")
     assert region["tier"] == "county"
-    assert region["villageCount"] == 3
+    assert region["townCount"] == 3
+    assert region["villageCount"] == 9
     assert region["id"] == "1"
 
 
-def test_two_villages_are_not_yet_a_region_but_progress_is_reported():
-    result = run_core(f"core.deriveRegions({json.dumps(CHESHIRE[:2])})")
+def test_two_towns_are_not_yet_a_county_but_progress_is_reported():
+    result = run_core(f"core.deriveRegions({json.dumps(CHESHIRE[:6])})")
     assert result["regions"] == []
-    assert len(result["unassigned"]) == 2
+    assert len(result["unassigned"]) == 6
+    assert len(result["unassignedTowns"]) == 2
     assert result["largestCluster"] == 2
 
 
@@ -77,8 +100,8 @@ def test_distant_clusters_form_separate_regions_delamere_and_south_of_france():
 
 
 def test_counties_never_relabel_themselves_and_crowns_come_from_nesting():
-    # Simplified Crusader Kings: a county is a county at 3 villages and STILL
-    # a county at 8 — higher tiers are made of the tier below (2 counties →
+    # Simplified Crusader Kings: a county is founded by 3 Towns and always stays
+    # a county — higher tiers are made of the tier below (2 counties →
     # duchy, 2 duchies → kingdom, 2 kingdoms → empire), never of headcounts.
     assert run_core("core.regionTier(3)")["rank"] == "county"
     assert run_core("core.regionTier(5)")["rank"] == "county"
@@ -150,17 +173,17 @@ def test_trade_arcs_are_short_great_circles_even_across_the_dateline():
 def test_realm_core_is_loaded_by_page_and_service_worker():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert "empire_realm_core.js?v=" in html
-    assert "./empire_realm_core.js?v=" in sw
+    assert f'empire_realm_core.js?v={REALM_CORE_PIN}' in html
+    assert f'./empire_realm_core.js?v={REALM_CORE_PIN}' in sw
 
 
 def test_realm_layer_stays_hidden_until_the_first_region_exists():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
-    # The panel only builds realm UI when regions exist; before that, at most
-    # a single progress hint (and only from the second village).
+    # The panel only builds realm UI when Counties exist; before that progress
+    # is measured in founded Towns rather than absorbed village rows.
     assert "if (regions.length && rc) {" in logic
-    assert "} else if (count >= 2 && rc) {" in logic
+    assert "settlements.townCount" in logic
     assert "none of this appears before the first region exists" in logic.lower() or "None of this appears before the first region exists" in logic
 
 
@@ -225,7 +248,7 @@ def test_endgame_balance_regions_discount_new_birdhouses():
     cost_start = logic.index("function birdhouseCostForNextVillage(")
     cost_end = logic.index("\n// ===", cost_start)
     cost = logic[cost_start:cost_end]
-    assert "Math.min(0.3, empireRegionsInfo().regions.length * 0.1)" in cost
+    assert "Math.min(0.3, empireSettlementsInfo().townCount * 0.05 + empireRegionsInfo().regions.length * 0.1)" in cost
     assert "Math.max(30," in cost and "Math.max(8," in cost
 
 
@@ -244,6 +267,7 @@ def test_story_canon_covers_regions_crowns_and_trade():
     story = STORY.read_text(encoding="utf-8")
     for marker in [
         "found a County",
+        "three Towns",
         "County → Duchy → Kingdom → Empire",
         "unity taxes",
         "Emperor of the Liberated Skies",

@@ -41,6 +41,7 @@ FILES=(
   "village_variation_core.js"
   "empire_map_core.js"
   "empire_realm_core.js"
+  "town_strategy_core.js"
   "daylight_core.js"
   "academy_treehouse_core.js"
   "academy_alive_core.js"

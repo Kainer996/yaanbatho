@@ -1,13 +1,11 @@
-"""Villages grow into towns, towns into cities — the settlement merge layer.
+"""Villages retire into exact Towns, and Towns into exact Cities.
 
-Liberate 3 neighbouring villages (chained within 5 km) and they merge into
-one TOWN; raise 3 neighbouring towns (squares within 15 km) and they merge
-into one CITY. Covers empire_realm_core.js deriveSettlements (pure maths,
-driven through Node), an end-to-end harness running the REAL economy and
-construction code (merged districts pay bonus taxes and build faster), and
-the index.html gameplay/graphics contracts: ledger section, founding toasts,
-fused daylight pools on the atlas, tier markers on the walking map and the
-charter-stone standard in the 3D village.
+Liberate 3 neighbouring villages (connected within 5 km) and those exact three
+permanently become one TOWN; raise 3 neighbouring Towns (squares within 15 km)
+and those exact three become one CITY. Later claims never enlarge or redraw an
+existing group. Covers the pure derivation, the real construction economy, and
+the player-facing rule that absorbed villages remain economic wards but cease
+to be UI destinations; their Town owns the Ledger, maps and management screen.
 """
 import json
 import subprocess
@@ -19,8 +17,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "real-place-names-v264-20260813"
-CURRENT_BUILD = "village-provisions-v272-20260816"
+REALM_CORE_PIN = "town-strategy-v273-20260816"
+CURRENT_BUILD = "town-strategy-v273-20260816"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -135,14 +133,17 @@ def test_settlement_tiers_carry_the_gameplay_bonuses():
     assert run_core("core.settlementTierInfo('nonsense')") == village
 
 
-def test_settlements_are_deterministic_and_ids_survive_growth():
+def test_settlements_are_deterministic_and_a_fourth_claim_stays_loose():
     first = run_core(f"core.deriveSettlements({json.dumps(TRIO)})")
     again = run_core(f"core.deriveSettlements({json.dumps(TRIO)})")
     assert first == again
     grown = TRIO + [{"seed": 4, "name": "Owlstead", "lat": 53.191, "lon": -2.688, "claimedAt": "2026-07-09T00:00:00Z"}]
     result = run_core(f"core.deriveSettlements({json.dumps(grown)})")
     assert result["towns"][0]["id"] == "town-1"  # the heart still anchors it
-    assert result["towns"][0]["villageCount"] == 4
+    assert result["towns"][0]["villageCount"] == 3
+    assert [row["seed"] for row in result["towns"][0]["villages"]] == [1, 2, 3]
+    assert [row["seed"] for row in result["unassignedVillages"]] == [4]
+    assert "4" not in result["tierBySeed"]
 
 
 # ---------------------------------------------------------------------------
@@ -196,8 +197,13 @@ const ensureEmpireState = () => empire;
 const empireVillages = () => villages;
 const empireCompleteConstructions = () => false;
 const empireRegionOfSeed = () => null;
+const canonicalEmpireSettlement = settlement => settlement;
 const villageRoleMultiplier = () => 1;
 const regionRoleMultiplier = () => 1;
+// The Town strategy adapter contributes policy/builders timing on top of the
+// settlement tier. This suite isolates the shipped 0.85/0.70 guild factors,
+// so a neutral Town policy is the correct browser-adapter baseline.
+const townBuildFactorForSeed = () => 1;
 const villageRuinDefsFor = () => [];
 const VILLAGE_RUIN_KINDS = {{ house: {{}} }};
 const playerBranches = () => gameState.player.branches;
@@ -208,11 +214,11 @@ const addStone = n => {{ gameState.player.stone += n; }};
 const snapshotGameState = () => JSON.parse(JSON.stringify(gameState));
 const restoreGameStateSnapshot = () => {{}};
 const durableSaveState = () => ({{ ok:true }});
-const saveState = () => {{}}; const updateHeader = () => {{}}; const renderVillage = () => {{}};
+const saveState = () => {{}}; const updateHeader = () => {{}}; const renderVillage = () => {{}}; const renderTownScreen = () => {{}};
 const SFX = {{ questComplete: () => {{}} }}; const vibrate = () => {{}};
 const showToast = t => toasts.push(t);
 const formatBuildDuration = () => 'soon';
-let villageActive = null, villageBuiltSeed = null;
+let villageActive = null, villageBuiltSeed = null, currentScreen = 'town';
 """
     return stubs + consts + "\n" + functions + "\n" + probe_js
 
@@ -231,7 +237,9 @@ villages.forEach(v => {
   eco.population = 20;
 });
 const snapOf = seed => villageEconomySnapshot(empire.villages[String(seed)]);
-empireBuildStructure(PROBE_SEED, 'farm');
+// Town Hall delegates to this ward-compatible primitive with townMode set;
+// direct public calls are redirected to townBuildNetwork instead.
+empireBuildStructure(PROBE_SEED, 'farm', {townMode:true, townName:'Test Town'});
 const built = empire.villages[String(PROBE_SEED)].economy.construction;
 console.log(JSON.stringify({
   probe: { taxes: snapOf(PROBE_SEED).taxes, merged: snapOf(PROBE_SEED).merged,
@@ -303,9 +311,14 @@ def test_merged_tax_bonus_multiplies_into_the_economy_beside_region_unity():
 def test_merged_guilds_shorten_construction_in_the_real_build_flow():
     html = HTML.read_text(encoding="utf-8")
     build = function_source(html, "empireBuildStructure")
+    adapter = function_source(html, "settlementBuildFactorForSeed")
     assert "settlementBuildFactorForSeed(rec.seed)" in build
+    assert "townBuildFactorForSeed(seed)" in adapter
     assert "* guildFactor" in build
-    # The per-town construction lock is untouched by the speed-up.
+    assert "mergedSettlement && !opts.townMode" in build
+    assert "townBuildNetwork(mergedSettlement.id, buildingId)" in build
+    # The Town screen owns builder-slot admission, while the paid timer remains
+    # on its hidden ward so old saves and completion logic stay compatible.
     assert "const eco = ensureVillageEconomy(rec);" in build
     assert "eco.construction = { id: building.id" in build
 
@@ -322,27 +335,31 @@ def test_liberation_announces_town_and_city_foundings_when_they_happen():
     assert "+10% taxes" in claim and "+25% taxes" in claim
 
 
-def test_royal_ledger_gains_a_towns_and_cities_section():
+def test_royal_ledger_lists_unified_towns_instead_of_absorbed_villages():
     html = HTML.read_text(encoding="utf-8")
+    logic = empire_logic(html)
     assert 'class="settlement-section"' in html
     assert "TOWNS &amp; CITIES" in html
-    assert "3 neighbouring villages make a town · 3 neighbouring towns make a city" in html
+    assert "empireStandaloneVillages" in logic
+    assert "empireVisibleSettlements" in logic
     assert 'data-action="empire-settlement"' in html
+    assert "openEmpireTown(" in logic
+    # Framing remains available as a deliberate map action, but the row itself
+    # opens the Town management screen.
     assert "function frameEmpireSettlement(" in html
-    # A nudge appears once two villages (or two towns) stand side by side.
-    assert "liberate a third within" in html
-    assert "raise a third within" in html
 
 
-def test_governor_desk_and_village_screen_name_the_settlement():
+def test_consumed_village_routes_redirect_to_town_before_old_ui_can_open():
     html = HTML.read_text(encoding="utf-8")
-    assert 'class="province-settlement' in html
-    assert "Village district of " in html and "Village centre of " in html
-    assert "part of the " in html  # the claim-bar banner
-    # The village identity stays in the title; its larger settlement is a
-    # separate plain-language line beneath it.
-    assert "v.name.toUpperCase() + ' · VILLAGE'" in html
-    assert "This village is the " in html and "settleTitle.label" in html
+    for name in ("enterVillage", "openEmpireVillage"):
+        route = function_source(html, name)
+        assert "empireSettlementOfSeed" in route
+        assert "openEmpireTown(" in route
+        assert route.index("openEmpireTown(") < route.index("villageActive =")
+    render = function_source(html, "renderVillage")
+    assert "empireSettlementOfSeed" in render
+    assert "openEmpireTown(" in render
+    assert render.index("openEmpireTown(") < render.index("renderVillageManagePanel()")
 
 
 # ---------------------------------------------------------------------------
@@ -353,10 +370,13 @@ def test_atlas_daylight_pools_widen_per_tier_so_merges_fuse_into_one_glow():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     assert "function empireVillageTerritoryRadiusM(" in logic
-    # Both the green territory circles and the darkness-veil windows use the
-    # tier radius, so a merged town reads as one continuous patch of daylight.
+    # The map submits one visible claim per Town while the territory/fog maths
+    # still reads every hidden ward, retaining the full liberated land area.
     refresh = html[html.index("function refreshEmpireMap("):html.index("function initialiseEmpireMap(")]
-    assert "core.territoryCircle(v, empireVillageTerritoryRadiusM(v.seed))" in refresh
+    assert "empireStandaloneVillages" in refresh
+    assert "empireVisibleSettlements" in refresh
+    assert "visibleClaims" in refresh
+    assert "territoryCircle" in refresh and "empireVillageTerritoryRadiusM" in refresh
     fog = html[html.index("function updateEmpireFogMask()"):html.index("// The veil is static")]
     assert "empireVillageTerritoryRadiusM(village.seed)" in fog
 
@@ -365,8 +385,9 @@ def test_atlas_flies_town_and_city_standards_and_counts_them_in_the_status():
     html = HTML.read_text(encoding="utf-8")
     refresh = html[html.index("function refreshEmpireMap("):html.index("function initialiseEmpireMap(")]
     assert "is-settlement is-' + settlement.tier" in refresh
+    assert "openEmpireTown(settlement.id)" in refresh
     assert "frameEmpireSettlement(settlement.id)" in refresh
-    assert "town' + (settlementsOnMap.townCount === 1 ? '' : 's') + ' grown from merged villages'" in refresh
+    assert "town' + (settlementsOnMap.townCount === 1 ? '' : 's')" in refresh
     assert "' crowned'" in refresh
     # Distinct heraldry: green town standards, glowing gold city standards.
     assert ".empire-map-marker.is-settlement.is-town .empire-map-marker-icon" in html
@@ -374,17 +395,18 @@ def test_atlas_flies_town_and_city_standards_and_counts_them_in_the_status():
     assert "empire-city-glow" in html
 
 
-def test_walking_map_markers_wear_the_settlement_tier():
+def test_walking_map_coalesces_absorbed_villages_into_one_town_marker():
     html = HTML.read_text(encoding="utf-8")
     draw = function_source(html, "drawVillageMarkers")
-    assert "settle ? settle.icon : '🏰'" in draw
-    assert "burbz-village-settlement is-' + settle.tier" in draw
-    assert "in-' + settle.tier" in draw
+    assert "renderedSettlements = new Set()" in draw
+    assert "renderedSettlements.has(settlement.id)" in draw
+    assert "openEmpireTown(settlement.id)" in draw
+    assert "TOWN HALL" in draw
     assert ".burbz-village-marker .burbz-village-settlement" in html
-    assert ".burbz-village-marker.in-city .burbz-village-icon" in html
+    assert ".burbz-village-marker.in-town .burbz-village-icon" in html
 
 
-def test_3d_village_raises_the_charter_stone_standard_once_merged():
+def test_3d_town_keeps_its_real_districts_and_camera_without_village_navigation():
     html = HTML.read_text(encoding="utf-8")
     assert "function villageMakeSettlementStandard(" in html
     maker = function_source(html, "villageMakeSettlementStandard")
@@ -393,15 +415,19 @@ def test_3d_village_raises_the_charter_stone_standard_once_merged():
     assert "0xf0c767 : 0x8ee39a" in maker
     assert "TorusGeometry" in maker
     assert "settle.memberCount" in maker
-    scene = html[html.index("function buildVillageScene("):html.index("function onVillageResize(")]
-    assert "villageMakeSettlementStandard(r, pal, { ...settleHere" in scene
-    assert "empireSettlementOfSeed(v.seed)" in scene
+    scene = function_source(html, "buildTownScene")
+    assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
+    assert "townDistrictLayout(settle" in scene
+    assert "district.userData.districtSeed = seed" in scene  # internal visual identity
+    renderer = function_source(html, "ensureTownRenderer")
+    assert "townCamZoom" in renderer and "townCamPan" in renderer
+    assert "openEmpireVillage(" not in renderer
 
 
 def test_story_canon_documents_the_merge_layer():
     story = STORY.read_text(encoding="utf-8")
-    assert "## Villages grow into towns, towns into cities" in story
     assert "three neighbouring villages" in story.lower()
+    assert "exact" in story.lower() and "permanent" in story.lower()
     assert "one city" in story.lower()
 
 

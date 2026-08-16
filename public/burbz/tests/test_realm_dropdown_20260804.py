@@ -7,10 +7,11 @@ player clicks to open. Inside, everything unfolds in the order the ladder runs:
 
     the crown and its counties (THE REALM)
       → 🏘️ TOWNS & CITIES        (nested, folded)
-        → 🏡 YOUR VILLAGES       (nested, folded)
+        → 🏡 STANDALONE VILLAGES (nested only when any remain)
 
-Nothing about the maths changes — this is layout and defaults only, pinned as
-text contracts in the same style as the other index.html tests.
+Villages consumed by a Town never return as rows or visitable destinations;
+the Town is their single management surface. These are pinned as text contracts
+in the same style as the other index.html tests.
 """
 from pathlib import Path
 
@@ -20,7 +21,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "village-provisions-v272-20260816"
+CURRENT_BUILD = "town-strategy-v273-20260816"
 
 
 def empire_logic(html: str) -> str:
@@ -43,16 +44,22 @@ def test_the_ledger_body_is_a_single_closed_your_realm_dropdown():
     body = ledger(HTML.read_text(encoding="utf-8"))
     assert "empireDrawerHTML('realm-root', false, '👑', 'YOUR REALM'" in body
     # Closed by default: the player is met by the prompt, not by a wall of rows.
-    assert "'Click to open your realm — counties, then towns, then villages'" in body
+    assert "'Click to open your realm — counties, then Towns and standalone villages'" in body
 
 
-def test_towns_and_villages_are_nested_inside_the_realm_dropdown():
+def test_towns_and_only_standalone_villages_are_nested_inside_the_realm_dropdown():
     body = ledger(HTML.read_text(encoding="utf-8"))
+    assert "const villages = empireStandaloneVillages(sourceVillages)" in body
     assert "empireSubDrawerHTML('settlements', false, '🏘️', 'TOWNS &amp; CITIES'" in body
-    assert "empireSubDrawerHTML('villages', false, '🏡', 'YOUR VILLAGES'" in body
-    # Both are built into the realm drawer's body, not appended after it.
+    assert "(villages.length ? empireSubDrawerHTML('villages', false, '🏡', 'STANDALONE VILLAGES'" in body
+    assert "'Only villages not yet united into a Town remain visitable'" in body
+    assert "'YOUR VILLAGES'" not in body
+    # Both are built into the realm drawer's body, not appended after it, and
+    # the standalone drawer disappears completely once none remain.
     realm_root = body.index("empireDrawerHTML('realm-root'")
     assert body.index("empireSubDrawerHTML('villages'", realm_root) > realm_root
+    assert "villages.length ? empireSubDrawerHTML" in body
+    assert "</div>') : '')" in body
     assert "realmDropdownHtml" in body
     # ... and the old sibling layout is gone for good.
     assert "settlementHtml +\n    realmHtml +" not in body
@@ -63,7 +70,19 @@ def test_the_order_inside_runs_top_down_realm_then_towns_then_villages():
     start = body.index("const realmDropdownHtml")
     block = body[start:body.index("// ---- 📍 Locator strip", start)]
     assert block.index("realmHtml") < block.index("settlementHtml")
-    assert block.index("settlementHtml") < block.index("'YOUR VILLAGES'")
+    assert block.index("settlementHtml") < block.index("'STANDALONE VILLAGES'")
+
+
+def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():
+    html = HTML.read_text(encoding="utf-8")
+    body = ledger(html)
+    assert "const villages = empireStandaloneVillages(sourceVillages)" in body
+    assert "sourceVillages.map(villageRow)" not in body
+
+    start = html.index("function openEmpireVillage(")
+    opener = html[start:html.index("\nfunction ", start)]
+    assert "const merged = empireSettlementOfSeed(village.seed);" in opener
+    assert "if (merged) { openEmpireTown(merged.id); return; }" in opener
 
 
 def test_a_sub_drawer_helper_marks_the_nesting():
@@ -94,7 +113,8 @@ def test_the_realm_head_still_lists_the_pyramid_counties_and_trade():
 def test_a_lone_village_still_opens_on_something_that_explains_the_ladder():
     logic = empire_logic(HTML.read_text(encoding="utf-8"))
     assert "🕊️ Your realm starts here." in logic
-    assert "unite into counties, duchies and kingdoms" in logic
+    assert "each group of 3 becomes one Town; 3 nearby Towns then unite into a County" in logic
+    assert "followed by Duchies and Kingdoms" in logic
 
 
 def test_onboarding_still_greets_a_player_with_no_villages():
