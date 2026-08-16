@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SW = ROOT / "sw.js"
 
 
-def test_activation_deletes_only_old_burbz_owned_caches():
+def test_activation_keeps_newest_proven_complete_cache_not_newest_partial_cache():
     script = r'''
 const fs=require('fs'), vm=require('vm');
 const listeners={}; const deleted=[];
@@ -25,7 +25,10 @@ const self={
 const caches={
   keys:async()=>['burbz-old-v78','burbz-national-completion-v79-20260715','burbz-buzzard-history-v80-20260716','burbz-village-variety-v81-20260716','burbz-cloud-atlas-v82-20260716','burbz-discovery-flip-cards-v83-20260716','burbz-footpath-ring-v84-20260716','burbz-village-life-v85-20260716','burbz-roost-barracks-v96-20260720','burbz-home-atlas-first-light-v97-20260721','burbz-bird-equip-screen-v98-20260721','burbz-empty-liberated-towns-v99-20260721','burbz-village-explore-v100-20260721','burbz-questing-birds-away-v101-20260722','burbz-quests-tab-footpaths-v102-20260722','burbz-bird-levelling-v103-20260722','good-news-v4','quarry-pro-v2'],
   delete:async key=>{deleted.push(key);return true},
-  open:async()=>({add:async()=>{},put:async()=>{}}), match:async()=>null
+  open:async name=>({
+    add:async()=>{}, put:async()=>{},
+    match:async()=>name==='burbz-quests-tab-footpaths-v102-20260722'?new Response('complete'):null
+  }), match:async()=>null
 };
 const sandbox={self,caches,importScripts:()=>{},console,URL,Response,fetch:async()=>new Response('ok')};
 vm.runInNewContext(fs.readFileSync('sw.js','utf8'),sandbox,{filename:'sw.js'});
@@ -34,7 +37,7 @@ Promise.resolve(work).then(()=>console.log(JSON.stringify(deleted))).catch(e=>{c
 '''
     result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=30)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == ["burbz-old-v78", "burbz-national-completion-v79-20260715", "burbz-buzzard-history-v80-20260716", "burbz-village-variety-v81-20260716", "burbz-cloud-atlas-v82-20260716", "burbz-discovery-flip-cards-v83-20260716", "burbz-footpath-ring-v84-20260716", "burbz-village-life-v85-20260716", "burbz-roost-barracks-v96-20260720", "burbz-home-atlas-first-light-v97-20260721", "burbz-bird-equip-screen-v98-20260721", "burbz-empty-liberated-towns-v99-20260721", "burbz-village-explore-v100-20260721", "burbz-questing-birds-away-v101-20260722", "burbz-quests-tab-footpaths-v102-20260722", "burbz-bird-levelling-v103-20260722"]
+    assert json.loads(result.stdout) == ["burbz-old-v78", "burbz-national-completion-v79-20260715", "burbz-buzzard-history-v80-20260716", "burbz-village-variety-v81-20260716", "burbz-cloud-atlas-v82-20260716", "burbz-discovery-flip-cards-v83-20260716", "burbz-footpath-ring-v84-20260716", "burbz-village-life-v85-20260716", "burbz-roost-barracks-v96-20260720", "burbz-home-atlas-first-light-v97-20260721", "burbz-bird-equip-screen-v98-20260721", "burbz-empty-liberated-towns-v99-20260721", "burbz-village-explore-v100-20260721", "burbz-questing-birds-away-v101-20260722", "burbz-bird-levelling-v103-20260722"]
 
 
 def test_spain_boundary_is_part_of_the_offline_app_shell():

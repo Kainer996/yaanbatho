@@ -35131,7 +35131,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'town-strategy-v273-20260816';
+const BURBZ_BUILD = 'mobile-fresh-update-v274-20260816';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -36274,15 +36274,34 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     swReloadedForUpdate = true;
     window.location.reload();
   });
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
-      const checkForNewBuild = () => { try { reg.update().catch(() => {}); } catch (e) {} };
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForNewBuild(); });
+  let swRegistration = null;
+  let swLastUpdateCheckAt = 0;
+  const checkForNewBuild = () => {
+    if (!swRegistration) return;
+    const now = Date.now();
+    if (now - swLastUpdateCheckAt < 5000) return;
+    swLastUpdateCheckAt = now;
+    try {
+      swRegistration.update().catch(err => console.warn('Burbz update check failed:', err));
+    } catch (err) {
+      console.warn('Burbz update check failed:', err);
+    }
+  };
+  const registerOrCheckForNewBuild = () => {
+    if (swRegistration) { checkForNewBuild(); return; }
+    navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'imports' }).then(reg => {
+      swRegistration = reg;
       checkForNewBuild();
     }).catch(err => {
       console.warn('Burbz service worker registration failed:', err);
     });
-  });
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) registerOrCheckForNewBuild(); });
+  window.addEventListener('pageshow', registerOrCheckForNewBuild);
+  window.addEventListener('focus', registerOrCheckForNewBuild);
+  window.addEventListener('online', registerOrCheckForNewBuild);
+  registerOrCheckForNewBuild();
+  window.setTimeout(registerOrCheckForNewBuild, 15000);
 }
 
 // Run
