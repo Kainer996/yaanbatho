@@ -7,7 +7,7 @@ importScripts('./national_bird_completion_20260715.js?v=national-completion-2026
 importScripts('./uk_bird_expansion_4.js?v=uk-british-list-completion-20260722');
 importScripts('./uk_bird_alias_completion_20260803.js?v=uk-bird-alias-completion-v216-20260803');
 
-const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-quest-alignment-authority-v146-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-bird-families-mega-v1-20260728-photo-locality-v153-20260728-tutorial-copy-cleanup-v154-20260729-camera-result-overlap-v155-20260729-kitchen-quest-guide-v156-20260729-sound-local-consensus-v157-20260729-kitchen-feed-sheet-v158-20260729-simple-locality-v160-20260729-recruit-card-name-v161-20260729-daily-hunger-bars-v162-20260729-birdex-card-names-v163-20260729-birdex-no-feed-v164-20260729-quest-drawers-closed-v165-20260729-generalist-diets-v166-20260729-generated-art-ui-v153-20260729-nickname-line-v167-20260729-intro-two-part-video-v154-20260729-academy-alive-v153-20260729-reconciled-release-v170-20260729-tutorial-chunked-progress-v171-20260729-birdnet-accuracy-v171-20260729-tutorial-merlin-feed-fix-v172-20260730-tutorial-merlin-spotlight-fix-v173-20260730-generated-art-ui-restore-v174-20260730-kitchen-no-duplicate-companions-v175-20260730-companion-feeding-only-v176-20260730-intro-hardening-v177-20260730-companion-always-top-up-v178-20260730-academy-wingbeats-v179-20260730-academy-3d-v180-20260730-empire-silent-v181-20260730-academy-canopy-v182-20260730-battle-flow-v183-20260731-quest-map-pan-v184-20260731-academy-detail-v184-20260731-academy-no-birds-v185-20260731-show-quests-close-v186-20260731-map-music-fade-v187-20260731-begin-quest-loop-authority-v188-20260731-empire-realms-trade-v189-20260731-global-money-hud-v190-20260731-training-claim-terminal-v191-20260801-remove-dead-map-icons-v192-20260801-empire-here-regions-v193-20260801-back-stays-in-game-v194-20260801-back-guard-gesture-v195-20260802-empire-player-start-sound-shelf-v196-20260802-merlin-bond-meter-v197-20260802-academy-library-v198-20260802-liberation-hides-league-v199-20260802-restored-lost-features-v200-20260802-bird-size-roles-v201-20260802-chef-bulk-feeding-v202-20260802-settlement-tiers-v203-20260803-battle-fullness-v204-20260803-two-side-snacks-v205-20260803-role-activity-reservations-v206-20260803-right-meal-quest-v207-20260803-roost-sleep-v208-20260803-quest-duration-tiers-v211-20260803-real-walk-nearby-quests-v215-20260803-uk-bird-alias-completion-v216-20260803-manga-warrior-habitats-v204-20260803-empire-clarity-v205-20260803-empire-live-reconcile-v217-20260803-hide-future-multiplayer-league-v218-20260804-quest-sheet-input-fix-v219-20260804-forge-satchels-v220-20260804-quarry-stone-economy-v221-20260804-feudal-hierarchy-v222-20260804-realm-dropdown-v223-20260804-ordered-quest-markers-v224-20260804-unique-place-names-v225-20260804-accurate-diets-full-catalogue-v226-20260805-midgame-progression-v227-20260805-eight-hour-quests-v228-20260805-nocturnal-night-bonus-v229-20260805-real-walk-go-map-v230-20260806-side-quests-walk-goal-v231-20260806-turn-potions-v232-20260806-turn-potions-hotfix-v233-20260806-academy-living-tree-v234-20260806-academy-3d-tree-glow-v235-20260806-living-canopy-v236-20260806-mallard-true-diet-v237-20260809-sleep-retired-v238-20260809-hospital-auto-discharge-v239-20260809-early-game-easy-battles-v240-20260810-battle-squad-board-v241-20260810-town-county-screens-v242-20260810-real-sky-daylight-v243-20260810-birdex-direct-recruit-v240-20260810-companion-unlock-copy-v241-20260810-remove-merlin-first-clue-v242-20260810-training-master-room-actor-v243-20260810-distributed-game-hud-v244-20260810-live-reconcile-v245-20260810-find-your-bird-v246-20260811-battle-faint-auto-hospital-v247-20260811-conquest-world-levels-v248-20260811-walking-story-quests-v249-20260811-academy-2d-default-v250-20260811-hold-to-steer-v251-20260811-academy-training-dock-v252-20260812-citizen-workers-timber-homes-v253-20260812-raven-weight-and-wit-v255-20260812-night-owl-dark-mode-v257-20260813-bird-bond-love-v256-20260812-night-hunter-ascendant-v258-20260813-village-variation-v260-20260813-chef-mastery-feed-all-v261-20260813-feedback-menu-v259-20260813-early-game-until-level-12-v262-20260813-feedback-menu-keyless-v263-20260813-real-place-names-v264-20260813-completion-notices-v265-20260813-night-veil-removed-v266-20260813-player-built-village-v267-20260814-empire-zoom-levels-v268-20260814-location-loot-v269-20260815-steven-the-gull-v270-20260815-fish-in-the-water-v271-20260815-village-provisions-v272-20260816-town-strategy-v273-20260816';
+const BURBZ_CACHE = 'burbz-side-snacks-hunger-metre-v142-20260726-quest-routes-map-v143-20260726-timed-crafting-stores-v144-20260726-birdnet-v3-v145-20260727-quest-alignment-authority-v146-20260727-player-quest-chain-v146-20260728-merlin-guided-tutorial-v147-20260728-sw-self-update-v148-20260728-merlin-interactive-tutorial-v149-20260728-care-lesson-fix-v150-20260728-tutorial-polish-v151-20260728-discoveries-quiz-pacing-v152-20260728-bird-families-mega-v1-20260728-photo-locality-v153-20260728-tutorial-copy-cleanup-v154-20260729-camera-result-overlap-v155-20260729-kitchen-quest-guide-v156-20260729-sound-local-consensus-v157-20260729-kitchen-feed-sheet-v158-20260729-simple-locality-v160-20260729-recruit-card-name-v161-20260729-daily-hunger-bars-v162-20260729-birdex-card-names-v163-20260729-birdex-no-feed-v164-20260729-quest-drawers-closed-v165-20260729-generalist-diets-v166-20260729-generated-art-ui-v153-20260729-nickname-line-v167-20260729-intro-two-part-video-v154-20260729-academy-alive-v153-20260729-reconciled-release-v170-20260729-tutorial-chunked-progress-v171-20260729-birdnet-accuracy-v171-20260729-tutorial-merlin-feed-fix-v172-20260730-tutorial-merlin-spotlight-fix-v173-20260730-generated-art-ui-restore-v174-20260730-kitchen-no-duplicate-companions-v175-20260730-companion-feeding-only-v176-20260730-intro-hardening-v177-20260730-companion-always-top-up-v178-20260730-academy-wingbeats-v179-20260730-academy-3d-v180-20260730-empire-silent-v181-20260730-academy-canopy-v182-20260730-battle-flow-v183-20260731-quest-map-pan-v184-20260731-academy-detail-v184-20260731-academy-no-birds-v185-20260731-show-quests-close-v186-20260731-map-music-fade-v187-20260731-begin-quest-loop-authority-v188-20260731-empire-realms-trade-v189-20260731-global-money-hud-v190-20260731-training-claim-terminal-v191-20260801-remove-dead-map-icons-v192-20260801-empire-here-regions-v193-20260801-back-stays-in-game-v194-20260801-back-guard-gesture-v195-20260802-empire-player-start-sound-shelf-v196-20260802-merlin-bond-meter-v197-20260802-academy-library-v198-20260802-liberation-hides-league-v199-20260802-restored-lost-features-v200-20260802-bird-size-roles-v201-20260802-chef-bulk-feeding-v202-20260802-settlement-tiers-v203-20260803-battle-fullness-v204-20260803-two-side-snacks-v205-20260803-role-activity-reservations-v206-20260803-right-meal-quest-v207-20260803-roost-sleep-v208-20260803-quest-duration-tiers-v211-20260803-real-walk-nearby-quests-v215-20260803-uk-bird-alias-completion-v216-20260803-manga-warrior-habitats-v204-20260803-empire-clarity-v205-20260803-empire-live-reconcile-v217-20260803-hide-future-multiplayer-league-v218-20260804-quest-sheet-input-fix-v219-20260804-forge-satchels-v220-20260804-quarry-stone-economy-v221-20260804-feudal-hierarchy-v222-20260804-realm-dropdown-v223-20260804-ordered-quest-markers-v224-20260804-unique-place-names-v225-20260804-accurate-diets-full-catalogue-v226-20260805-midgame-progression-v227-20260805-eight-hour-quests-v228-20260805-nocturnal-night-bonus-v229-20260805-real-walk-go-map-v230-20260806-side-quests-walk-goal-v231-20260806-turn-potions-v232-20260806-turn-potions-hotfix-v233-20260806-academy-living-tree-v234-20260806-academy-3d-tree-glow-v235-20260806-living-canopy-v236-20260806-mallard-true-diet-v237-20260809-sleep-retired-v238-20260809-hospital-auto-discharge-v239-20260809-early-game-easy-battles-v240-20260810-battle-squad-board-v241-20260810-town-county-screens-v242-20260810-real-sky-daylight-v243-20260810-birdex-direct-recruit-v240-20260810-companion-unlock-copy-v241-20260810-remove-merlin-first-clue-v242-20260810-training-master-room-actor-v243-20260810-distributed-game-hud-v244-20260810-live-reconcile-v245-20260810-find-your-bird-v246-20260811-battle-faint-auto-hospital-v247-20260811-conquest-world-levels-v248-20260811-walking-story-quests-v249-20260811-academy-2d-default-v250-20260811-hold-to-steer-v251-20260811-academy-training-dock-v252-20260812-citizen-workers-timber-homes-v253-20260812-raven-weight-and-wit-v255-20260812-night-owl-dark-mode-v257-20260813-bird-bond-love-v256-20260812-night-hunter-ascendant-v258-20260813-village-variation-v260-20260813-chef-mastery-feed-all-v261-20260813-feedback-menu-v259-20260813-early-game-until-level-12-v262-20260813-feedback-menu-keyless-v263-20260813-real-place-names-v264-20260813-completion-notices-v265-20260813-night-veil-removed-v266-20260813-player-built-village-v267-20260814-empire-zoom-levels-v268-20260814-location-loot-v269-20260815-steven-the-gull-v270-20260815-fish-in-the-water-v271-20260815-village-provisions-v272-20260816-town-strategy-v273-20260816-mobile-fresh-update-v274-20260816';
 // diet-hunger-release-20260723: source-backed diet, hunger, Pantry, and Merlin runtime core.
 const UK50_SW = self.BURBZ_UK_BIRD_EXPANSION_50;
 const UK26_SW = self.BURBZ_UK_BIRD_EXPANSION_26;
@@ -273,6 +273,23 @@ const BURBZ_CORE = [
   './manifest.json'
 ];
 
+// Keep worker takeover dependable on phones with slow links or tight storage.
+// Only the current document and its changed Town runtimes must succeed before
+// the worker can activate. The rest of the offline shell is still warmed
+// below, but a large audio/data file failing must never strand a player on an
+// older build. Required entries are cached first so optional writes cannot
+// consume the available quota ahead of them.
+const BURBZ_INSTALL_REQUIRED = [
+  './index.html',
+  './empire_realm_core.js?v=town-strategy-v273-20260816',
+  './town_strategy_core.js?v=town-strategy-v273-20260816'
+];
+const BURBZ_FALLBACK_REQUIRED = BURBZ_CORE.filter(asset => !BURBZ_INSTALL_REQUIRED.includes(asset));
+// This is an internal CacheStorage sentinel, not a file the live updater must
+// upload. Keeping it relative without a "./" prefix also prevents dependency
+// scanners from mistaking it for a deployable asset.
+const BURBZ_SHELL_COMPLETE_KEY = '.burbz-shell-complete';
+
 // A refresh must actually LAND the new build. cache.add() goes through the
 // browser's ordinary HTTP cache, so a Pages response still inside its max-age
 // would reinstall the OLD index.html into a brand-new service-worker cache —
@@ -286,17 +303,91 @@ function cacheFreshCopy(cache, asset) {
   });
 }
 
+// Prefer this build's cache before consulting the one retained as an offline
+// fallback. A global caches.match() walks caches in creation order and could
+// otherwise return an older index/core file first, creating a mixed build.
+function matchCurrentThenFallback(request, options) {
+  return caches.open(BURBZ_CACHE)
+    .then(cache => cache.match(request, options))
+    .then(current => {
+      if (current) return current;
+      return caches.keys().then(keys => {
+        const fallbackKeys = keys
+          .filter(key => key.startsWith('burbz-') && key !== BURBZ_CACHE)
+          .reverse();
+        const findFallback = index => {
+          if (index >= fallbackKeys.length) return undefined;
+          return caches.open(fallbackKeys[index])
+            .then(cache => cache.match(request, options))
+            .then(cached => cached || findFallback(index + 1));
+        };
+        return findFallback(0);
+      });
+    });
+}
+
+function markShellComplete(cache) {
+  return cache.put(BURBZ_SHELL_COMPLETE_KEY, new Response(BURBZ_CACHE))
+    .then(() => true)
+    .catch(err => {
+      // The files themselves are already present; a marker write failing does
+      // not make this shell unsafe, and the next release can validate it again.
+      console.warn('BURBZ SW: shell-complete marker skipped', err);
+      return true;
+    });
+}
+
+function cacheHasCompleteFallback(cacheName) {
+  return caches.open(cacheName).then(cache =>
+    cache.match(BURBZ_SHELL_COMPLETE_KEY).then(marker => {
+      // Validate the complete playable shell, including index.html and the
+      // required runtimes. A failed intermediate install can be missing one
+      // of those three even if every optional transfer happened to finish.
+      return Promise.all(BURBZ_CORE.map(asset =>
+        cache.match(asset, { ignoreSearch: true }).catch(() => null)
+      )).then(matches => {
+        if (!matches.every(Boolean)) return false;
+        return marker ? true : markShellComplete(cache);
+      });
+    })
+  ).catch(() => false);
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(BURBZ_CACHE)
-      // Only the compact app shell is eager. Large education/art datasets are
-      // fetched and cached when the player actually opens them.
-      .then(cache => Promise.all(BURBZ_CORE.map(asset =>
-        cacheFreshCopy(cache, asset).catch(err => {
-          if (BURBZ_CORE.includes(asset)) throw err;
-          console.warn('BURBZ SW: optional asset skipped', asset);
-        })
-      )))
+    Promise.all([caches.keys(), caches.open(BURBZ_CACHE)])
+      .then(([keys, cache]) => {
+        const hasPreviousBuild = keys.some(key => key.startsWith('burbz-') && key !== BURBZ_CACHE);
+        return Promise.all(BURBZ_INSTALL_REQUIRED.map(asset =>
+          cacheFreshCopy(cache, asset)
+        )).then(() => {
+          const optionalAssets = BURBZ_FALLBACK_REQUIRED;
+          const cacheOptionalAsset = asset => cacheFreshCopy(cache, asset)
+            .then(() => true)
+            .catch(err => {
+              console.warn('BURBZ SW: optional asset skipped', asset, err);
+              return false;
+            });
+          const optionalWarm = Promise.all(optionalAssets.map(cacheOptionalAsset)).then(results =>
+            results.every(Boolean) ? markShellComplete(cache) : false
+          );
+          if (!hasPreviousBuild) {
+            // A first installation waits for every best-effort shell entry so
+            // its next launch is genuinely offline-capable. Individual misses
+            // are contained and can never reject the worker installation. A
+            // permanent network hang is bounded so first activation still
+            // completes on an unreliable mobile link.
+            return Promise.race([
+              optionalWarm,
+              new Promise(resolve => setTimeout(() => resolve(false), 10000))
+            ]);
+          }
+          // An upgrade already has a complete previous shell to fall back to.
+          // Start warming the new cache, but never make a phone wait for large
+          // audio/catalogue transfers before it may activate the new build.
+          optionalWarm.catch(err => console.warn('BURBZ SW: background shell warm failed', err));
+        });
+      })
       .then(() => self.skipWaiting())
   );
 });
@@ -304,9 +395,47 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key.startsWith('burbz-') && key !== BURBZ_CACHE)
-        .map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
+      .then(keys => {
+        const previousBuilds = keys.filter(key => key.startsWith('burbz-') && key !== BURBZ_CACHE);
+        return Promise.all(previousBuilds.map(key =>
+          cacheHasCompleteFallback(key).then(complete => ({ key, complete }))
+        )).then(checked => {
+          // Failed installs leave sparse caches behind. Retain the newest
+          // demonstrably complete shell, not merely the newest cache name. If
+          // no predecessor can be proven complete, fail safe by deleting none.
+          const completeBuilds = checked.filter(entry => entry.complete).map(entry => entry.key);
+          const previousFallback = completeBuilds.length ? completeBuilds[completeBuilds.length - 1] : null;
+          const cachesToDelete = previousFallback
+            ? previousBuilds.filter(key => key !== previousFallback)
+            : [];
+          return Promise.all(cachesToDelete.map(key => caches.delete(key)))
+          .then(() => self.clients.claim())
+          .then(() => {
+            if (!previousBuilds.length || !self.clients.matchAll) return undefined;
+            // Android may freeze a PWA before its old page receives the
+            // controllerchange event. Navigating every existing game window
+            // from the newly activated worker guarantees that a resumed phone
+            // displays this build. localStorage progress is left untouched.
+            return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+              clients.forEach(client => {
+                const scope = self.registration && self.registration.scope;
+                if (!client || !scope || !client.url || !client.url.startsWith(scope) || client.visibilityState === 'visible' || typeof client.navigate !== 'function') return undefined;
+                // Do not return/await this promise from activate: a navigation
+                // fetch waits for activation to finish, so waiting here would
+                // create a lifecycle deadlock. The call is intentionally
+                // launched after claim and allowed to settle independently.
+                try {
+                  client.navigate(client.url).catch(err => {
+                    console.warn('BURBZ SW: client refresh deferred', err);
+                  });
+                } catch (err) {
+                  console.warn('BURBZ SW: client refresh deferred', err);
+                }
+              });
+            });
+          });
+        });
+      })
   );
 });
 
@@ -329,9 +458,9 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(request, { ignoreSearch: true }).then(cached => {
+      .catch(() => matchCurrentThenFallback(request, { ignoreSearch: true }).then(cached => {
         if (cached) return cached;
-        if (request.mode === 'navigate') return caches.match('./index.html');
+        if (request.mode === 'navigate') return matchCurrentThenFallback('./index.html');
         return Response.error();
       }))
   );

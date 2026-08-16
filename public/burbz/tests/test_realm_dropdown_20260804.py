@@ -21,7 +21,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "town-strategy-v273-20260816"
+CURRENT_BUILD = "mobile-fresh-update-v274-20260816"
 
 
 def empire_logic(html: str) -> str:
@@ -138,8 +138,9 @@ def test_the_app_shell_is_reinstalled_past_the_browser_http_cache():
     sw = SW.read_text(encoding="utf-8")
     assert "function cacheFreshCopy(cache, asset)" in sw
     assert "fetch(asset, { cache: 'reload' })" in sw
-    assert "cacheFreshCopy(cache, asset).catch(err =>" in sw
-    assert "BURBZ_CORE.map(asset" in sw  # shell list still drives the install
+    assert "const cacheOptionalAsset = asset => cacheFreshCopy(cache, asset)" in sw
+    assert "const optionalAssets = BURBZ_FALLBACK_REQUIRED;" in sw  # shell list still drives the warm-up
+    assert "BURBZ_INSTALL_REQUIRED.map(asset" in sw  # only the atomic update shell blocks takeover
     assert "cache.add(asset)" not in sw
     assert "./index.html" in sw.split("const BURBZ_CORE = [", 1)[1].split("];", 1)[0]
 

@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "town-strategy-v273-20260816"
+CURRENT_BUILD = "mobile-fresh-update-v274-20260816"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

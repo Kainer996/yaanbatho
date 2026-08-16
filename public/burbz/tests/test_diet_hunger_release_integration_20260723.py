@@ -156,6 +156,7 @@ const sandbox = {
   console,
   URL,
   Response,
+  setTimeout,
   fetch: async () => new Response('ok')
 };
 vm.runInNewContext(fs.readFileSync('sw.js', 'utf8'), sandbox, { filename: 'sw.js' });
