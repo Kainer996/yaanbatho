@@ -20,7 +20,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "real-place-names-v264-20260813"
-CURRENT_BUILD = "village-provisions-v272-20260816"
+CURRENT_BUILD = "first-catch-once-v273-20260816"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
