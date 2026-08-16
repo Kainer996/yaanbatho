@@ -26,8 +26,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "location-loot-v269-20260815"
-PREVIOUS_RELEASE_PIN = "empire-zoom-levels-v268-20260814"
+CURRENT_BUILD = "village-provisions-v272-20260816"
+PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 KNOWN_HABITATS = {"water", "wetland", "woodland", "heath", "park", "farmland",
                   "grassland", "urban", "coast", "hills"}
@@ -89,7 +89,7 @@ def test_loot_pipeline_is_wired_into_the_live_map():
     # The Overpass fetch for bird spawns also feeds the loot survey.
     assert "setLootHabitatFeatures(features); const spawns = buildBirdSpawns(lat, lon, features);" in html
     # Each pickup rolls with its own ground.
-    assert "type: pickupTypeForSeed(s, habitat)" in html
+    assert "type: pickupTypeForSeed(s, ground.habitat)" in html
     # Fresh survey → markers re-read the land.
     assert "liveMapLootFeatureStamp" in html[html.index("function mapPickupRenderKey("):html.index("function updateMapPickupReachability(")]
 
@@ -153,6 +153,7 @@ def _runtime_harness(html: str) -> str:
         _const(html, r"const PICKUP_BROAD_HABITATS = new Set\([^\n]+\);"),
         "let liveMapLootFeatures = []; let liveMapLootFeatureStamp = 0;",
         _fn(html, "setLootHabitatFeatures"),
+        _fn(html, "pickupGroundAt"),
         _fn(html, "pickupHabitatAt"),
         _fn(html, "pickupWeightFor"),
         _fn(html, "pickupTypeForSeed"),
@@ -289,3 +290,39 @@ console.log(JSON.stringify({ larder, branches: gameState.player.branches }));
     for ingredient in ("live_minnow", "river_trout", "shore_snail_mix", "pondweed_tangle", "pigeon_prey_ration"):
         assert out["larder"].get(ingredient) == 1, ingredient
     assert out["branches"] == 4  # driftwood + deadfall, 2 each
+
+
+def test_water_loot_is_mostly_watery_and_fish_are_common():
+    html = HTML.read_text(encoding="utf-8")
+    script = _runtime_harness(html) + """
+const counts = {};
+for (let seed = 0; seed < 20000; seed++) { const id = pickupTypeForSeed(seed, 'water').id; counts[id] = (counts[id] || 0) + 1; }
+console.log(JSON.stringify(counts));
+"""
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=90)
+    assert result.returncode == 0, result.stderr
+    counts = json.loads(result.stdout)
+    total = sum(counts.values())
+    fish = counts.get("minnow", 0) + counts.get("trout", 0) + counts.get("sandeel", 0)
+    watery = fish + sum(counts.get(k, 0) for k in ("pondweed", "reed", "frog", "dragonflies", "midges", "gritbank", "chest", "driftwood"))
+    # Standing at the river, most drops belong to the water...
+    assert watery / total > 0.55, watery / total
+    # ...actual fish alone outnumber coins several times over.
+    assert fish > counts.get("coins", 0) * 3, (fish, counts.get("coins", 0))
+
+
+def test_watery_pickups_land_on_their_water():
+    html = HTML.read_text(encoding="utf-8")
+    script = _runtime_harness(html) + """
+const at = { lat: 51.5, lon: -0.12 };
+const river = { lat: at.lat + 0.001, lon: at.lon, tags: { waterway: 'river' } };
+setLootHabitatFeatures([river]);
+const pickups = mapPickupsNear(at.lat, at.lon).filter(p => p.habitat === 'water');
+const dists = pickups.map(p => mapDistanceMeters(p, river));
+console.log(JSON.stringify({ count: pickups.length, maxDist: Math.max(...dists) }));
+"""
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=90)
+    assert result.returncode == 0, result.stderr
+    out = json.loads(result.stdout)
+    assert out["count"] > 0
+    assert out["maxDist"] <= 80  # the shoal floats on the river, not the towpath

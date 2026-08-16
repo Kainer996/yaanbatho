@@ -33,6 +33,7 @@ The birds are the heroes of this story. But the villages they free are not empty
 - Under the usurper the folk did not resist — they endured. The birds and the player liberate their homes *for* them. Gratitude, not command, is why they move back in, work the yards and pay their taxes.
 - Every producing yard — farm, lumber camp, quarry, market, chapel — needs **one villager to run it**. A yard with no crew stands idle. Homes come first: no homes, no folk; no folk, no stone.
 - The folk build the way the folk are: **timber first, stone later**. A freed village's first roof is a log Timber Cabin; prosperity rebuilds it as a Stone Cottage.
+- **The folk live off what they grow.** Nothing on a village's table appears by magic: staffed fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. The liberation caravan leaves relief supplies for the first days; after that the stores must be earned. When the granary runs dry the folk go hungry, pay a trickle and drift away — and a governor can answer with a paid supply cart or a deep-cellared Storehouse.
 
 ## What the birds eat, and the Head Chef who feeds them
 

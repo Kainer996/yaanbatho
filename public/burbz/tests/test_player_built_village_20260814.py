@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "location-loot-v269-20260815"
+CURRENT_BUILD = "village-provisions-v272-20260816"
 PREVIOUS_RELEASE_PIN = "night-veil-removed-v266-20260813"
 
 

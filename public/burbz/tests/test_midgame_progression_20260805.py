@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "location-loot-v269-20260815"
+CURRENT_BUILD = "village-provisions-v272-20260816"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
@@ -37,7 +37,7 @@ ACADEMY_UNLOCKS = {
     "nursery": 11,
     "observatory": 12,
 }
-EMPIRE_UNLOCKS = {"cottages": 5, "tavern": 6, "chapel": 8, "market": 10}
+EMPIRE_UNLOCKS = {"storehouse": 4, "cottages": 5, "tavern": 6, "chapel": 8, "market": 10}
 EMPIRE_ALWAYS_OPEN = {"farm", "well", "lumber", "quarry"}
 
 
