@@ -101,7 +101,7 @@ console.log(JSON.stringify({
   vultureCarrion: verdict({ scientificName:'Gypaetus barbatus' }, 'carrion_scraps', 'fresh'),
   familyPrimaryCases: {
     small_birds: verdict({ scientificName:'Accipiter gularis' }, 'small_bird_prey_ration', 'whole'),
-    small_mammals: verdict({ scientificName:'Accipiter gularis' }, 'field_vole', 'live'),
+    small_mammals: verdict({ scientificName:'Tyto alba' }, 'field_vole', 'live'),
     fish: verdict({ scientificName:'Alcedo atthis' }, 'live_minnow', 'live'),
     flying_insects: verdict({ scientificName:'Aerodramus terraereginae' }, 'aerial_midges', 'tossed'),
     invertebrates: verdict({ scientificName:'Acanthiza apicalis' }, 'mealworm_scoop', 'fresh'),

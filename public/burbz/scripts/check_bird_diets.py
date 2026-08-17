@@ -51,7 +51,15 @@ SUMMARY_OUT = ROOT / "data" / "bird-diet-provenance-summary.json"
 
 EXPECTED_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
 EXPECTED_PROFILE_COUNT = 951
-DIET_VERSION = "diet-vertebrate-prey-split-20260809"
+DIET_VERSION = "diet-true-primary-prey-20260817"
+
+# A side prey family: field guides record that the bird takes this food, but
+# the source gives it no measured share of the diet. The nominal score keeps
+# it a genuine secondary food while guaranteeing it can never cross the
+# primary threshold (0.7 × a real source share of at least 10). Without this
+# cap, borrowed shares crowned false primaries: the Peregrine — Diet-Vect 10,
+# Diet-Vend 80 — showed "Reptiles and amphibians" as a main food at 80.
+SIDE_PREY_SCORE = 5
 
 # Omnivore ease: a food family counts as a PRIMARY (a full meal, full XP) when
 # its mapped score is at least this fraction of the bird's top family. A
@@ -225,7 +233,7 @@ FOOD_FAMILIES = {
     },
     "reptiles_amphibians": {
         "label": "Reptiles and amphibians",
-        "sourceColumns": ["Diet-Vect", "Diet-Vunk", "Diet-Vend"],
+        "sourceColumns": ["Diet-Vect", "Diet-Vunk"],
         "defaultPrep": "live",
     },
     "fish": {
@@ -310,10 +318,9 @@ FAMILY_HINTS = {
         "Falconidae",
         "Accipitridae",
     },
-    "raptor_mammal": {
+    "owl": {
         "Strigidae",
         "Tytonidae",
-        "Accipitridae",
     },
 }
 
@@ -415,16 +422,52 @@ def invertebrate_families(ctx: dict[str, str], inv: float) -> list[str]:
     return ["invertebrates"]
 
 
-def endotherm_families(ctx: dict[str, str], vend: float) -> list[str]:
+def endotherm_families(ctx: dict[str, str], vend: float) -> tuple[list[str], list[str]]:
+    """Split Diet-Vend (warm-blooded vertebrate prey) into the families the
+    bird truly hunts (full source share) and its known side prey (nominal
+    SIDE_PREY_SCORE only). EltonTraits lumps birds and mammals into one
+    column, so the split leans on well-documented hunting styles: a Peregrine
+    or Sparrowhawk's 80–100% endotherm prey is almost all birds, a Kestrel or
+    Barn Owl's is almost all voles and mice — neither should display the
+    other as a main food."""
     sci = ctx["scientific"].lower()
+    genus = genus_token(ctx["scientific"])
     if sci == "falco columbarius":
-        return ["small_birds"]
-    family = ctx["family"]
-    if family in FAMILY_HINTS["raptor_bird"] or has_name_hint(ctx, r"\b(falcon|hawk|goshawk|sparrowhawk|kite|harrier|eagle|merlin)\b"):
-        return ["small_birds", "small_mammals"]
-    if family in FAMILY_HINTS["raptor_mammal"] or has_name_hint(ctx, r"\b(owl)\b"):
-        return ["small_mammals", "small_birds"]
-    return ["small_mammals"]
+        return ["small_birds"], []
+    # Bird-chasing specialists: the accipiters, and falcons that take prey on
+    # the wing. Mammals are occasional catches, not the hunt.
+    if genus == "accipiter" or has_name_hint(ctx, r"\b(sparrowhawk|goshawk|peregrine|hobby)\b"):
+        return ["small_birds"], ["small_mammals"]
+    # Rodent-hunting specialists: kestrels hover and Buteo hawks soar for
+    # voles the world over; birds are a side catch.
+    if genus in ("buteo", "elanus") or has_name_hint(ctx, r"\b(kestrel|buzzard)\b"):
+        return ["small_mammals"], ["small_birds"]
+    if ctx["family"] in FAMILY_HINTS["owl"] or has_name_hint(ctx, r"\b(owl)\b"):
+        return ["small_mammals"], ["small_birds"]
+    # Remaining raptors and the shrikes genuinely hunt both.
+    if ctx["family"] in FAMILY_HINTS["raptor_bird"] or has_name_hint(ctx, r"\b(falcon|hawk|kite|harrier|eagle|shrike)\b"):
+        return ["small_birds", "small_mammals"], []
+    # Nest predators: corvids, big gulls and skuas take eggs and chicks as a
+    # steady side line beside their mammal prey.
+    if has_name_hint(ctx, r"\b(crow|raven|magpie|jackdaw|gull|skua)\b"):
+        return ["small_mammals"], ["small_birds"]
+    return ["small_mammals"], []
+
+
+SEABIRD_SCAVENGER_FAMILIES = {"Procellariidae", "Chionididae", "Stercorariidae"}
+
+
+def unknown_vertebrate_families(ctx: dict[str, str]) -> list[str]:
+    """Diet-Vunk records vertebrate prey of unknown type. For polar and
+    pelagic scavenger-hunters — giant-petrels, sheathbills, skuas — that
+    share is seabird chicks, eggs and carcasses, so it must not read as
+    reptiles or voles on islands that have neither. Everywhere else the
+    safest reading stays small ground prey: mammals and herptiles."""
+    if ctx["family"] in SEABIRD_SCAVENGER_FAMILIES or has_name_hint(
+        ctx, r"\b(petrel|sheathbill|skua|shearwater|fulmar|albatross|prion)\b"
+    ):
+        return ["small_birds", "carrion"]
+    return ["small_mammals", "reptiles_amphibians"]
 
 
 def game_family_scores(
@@ -444,26 +487,32 @@ def game_family_scores(
         add_score(scores, family, score)
 
     vend = float(source_percentages.get("Diet-Vend") or 0)
-    endo_families = endotherm_families(ctx, vend)
-    for family in endo_families:
+    endo_main, endo_side = endotherm_families(ctx, vend)
+    for family in endo_main:
         add_score(scores, family, vend)
+    if vend > 0:
+        for family in endo_side:
+            add_score(scores, family, min(vend, SIDE_PREY_SCORE))
 
     ect = float(source_percentages.get("Diet-Vect") or 0)
     vunk = float(source_percentages.get("Diet-Vunk") or 0)
-    # small_mammals means warm-blooded prey only. It is carried by Diet-Vend
-    # (via endotherm_families above) plus the unknown-vertebrate column; the
-    # cold-blooded Diet-Vect column must NOT put voles and shrews on the menu
-    # of a bird — like the Mallard — whose vertebrate prey is all frogs,
-    # tadpoles and newts.
-    add_score(scores, "small_mammals", vunk)
-    # reptiles_amphibians inherits the full vertebrate-prey score the old
-    # merged family had: Diet-Vect directly, and the Diet-Vend score for any
-    # bird whose endotherm prey includes mammals — every vole-hunter (Kestrel,
-    # the owls, herons) also takes herptiles opportunistically, even where
-    # EltonTraits records no Diet-Vect for it. Voles imply frogs; the reverse
-    # is not true.
-    herptile = max(ect, vunk, vend if "small_mammals" in endo_families else 0.0)
-    add_score(scores, "reptiles_amphibians", herptile)
+    # small_mammals means warm-blooded prey only: Diet-Vend (via
+    # endotherm_families above) plus the unknown-vertebrate column where the
+    # ground-prey reading applies. The cold-blooded Diet-Vect column must NOT
+    # put voles and shrews on the menu of a bird — like the Mallard — whose
+    # vertebrate prey is all frogs, tadpoles and newts.
+    for family in unknown_vertebrate_families(ctx):
+        add_score(scores, family, vunk)
+    # reptiles_amphibians carries only its real source evidence: Diet-Vect
+    # (plus Diet-Vunk, handled above). A vole-hunter with no recorded
+    # cold-blooded share still takes a frog opportunistically — voles imply
+    # frogs — but as side prey at the nominal score, never as a main food.
+    # The old rule copied the full Diet-Vend share here, which crowned
+    # reptiles a primary food of birds that barely touch them (the Peregrine
+    # showed 80 where its real share is 10).
+    add_score(scores, "reptiles_amphibians", ect)
+    if "reptiles_amphibians" not in scores and vend > 0 and "small_mammals" in endo_main:
+        add_score(scores, "reptiles_amphibians", min(vend, SIDE_PREY_SCORE))
     add_score(scores, "fish", float(source_percentages.get("Diet-Vfish") or 0))
     add_score(scores, "carrion", float(source_percentages.get("Diet-Scav") or 0))
     add_score(scores, "fruit_berries", float(source_percentages.get("Diet-Fruit") or 0))
@@ -967,6 +1016,7 @@ def build_payload(source_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "mappingRules": {
             "primary": "mapped game-family percentages within OMNIVORE_PRIMARY_FRACTION of the top family",
             "secondary": "all other nonzero mapped game-family percentages",
+            "sidePrey": "documented side prey with no measured source share scores SIDE_PREY_SCORE, so it stays secondary",
             "genusFallback": "mean BirdFuncDat diet percentages for the matched genus (catalogue birds only)",
             "familyFallback": "mean BirdFuncDat diet percentages for the matched BLFamilyLatin",
             "unmatched": "low-certainty conservative gameplay fallback with no species-level claim",

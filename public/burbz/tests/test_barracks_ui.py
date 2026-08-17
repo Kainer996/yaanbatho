@@ -1,5 +1,7 @@
 import json
 import subprocess
+
+from conftest import require_materialised_art
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -136,6 +138,7 @@ def test_every_mapped_bird_has_a_real_transparent_cutout():
     assert expected <= actual
     assert not (actual - expected)
     assert len(actual) == 702
+    require_materialised_art(*cutout_dir.glob("*_cutout.png"))
     for path in cutout_dir.glob("*_cutout.png"):
         with Image.open(path) as image:
             assert image.mode == "RGBA", path.name

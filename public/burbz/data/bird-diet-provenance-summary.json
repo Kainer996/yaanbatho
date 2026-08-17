@@ -766,8 +766,7 @@
         "label": "Reptiles and amphibians",
         "sourceColumns": [
           "Diet-Vect",
-          "Diet-Vunk",
-          "Diet-Vend"
+          "Diet-Vunk"
         ]
       },
       "seeds": {
@@ -806,6 +805,7 @@
       "genusFallback": "mean BirdFuncDat diet percentages for the matched genus (catalogue birds only)",
       "primary": "mapped game-family percentages within OMNIVORE_PRIMARY_FRACTION of the top family",
       "secondary": "all other nonzero mapped game-family percentages",
+      "sidePrey": "documented side prey with no measured source share scores SIDE_PREY_SCORE, so it stays secondary",
       "unmatched": "low-certainty conservative gameplay fallback with no species-level claim"
     },
     "matchCounts": {
@@ -841,6 +841,6 @@
       "sourceUrl": "https://ndownloader.figshare.com/files/5631081",
       "usableScientificRowCount": 9993
     },
-    "version": "diet-vertebrate-prey-split-20260809"
+    "version": "diet-true-primary-prey-20260817"
   }
 }

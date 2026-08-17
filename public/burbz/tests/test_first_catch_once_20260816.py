@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "first-catch-once-v278-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

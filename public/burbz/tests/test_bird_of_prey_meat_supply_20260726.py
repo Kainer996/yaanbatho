@@ -107,9 +107,11 @@ def test_prey_still_scores_against_the_source_backed_diet_records():
     )
     for key in (
         "barnOwlMouse", "barnOwlShrew", "buzzardRabbit", "kiteCarrion", "lammergeierBone",
-        "peregrinePigeon", "sparrowhawkStarling", "kestrelLizard", "puffinSandEel",
+        "peregrinePigeon", "sparrowhawkStarling", "puffinSandEel",
     ):
         assert out[key] == "primary", f"{key} should be a primary meal, got {out[key]}"
+    # A Kestrel hunts voles; a lizard is real side prey, not the mainstay.
+    assert out["kestrelLizard"] == "secondary"
     # Accuracy is not loosened: a seed-eating finch still refuses meat.
     assert out["goldfinchVole"] == "refused"
     assert out["goldfinchRabbit"] == "refused"

@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "town-strategy-v273-20260816"
-CURRENT_BUILD = "first-catch-once-v278-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -419,7 +419,6 @@ def test_3d_town_keeps_its_real_districts_and_camera_without_village_navigation(
     assert "settle.memberCount" in maker
     scene = function_source(html, "buildTownScene")
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
-    assert "townDistrictLayout(settle" in scene
     assert "district.userData.districtSeed = seed" in scene  # internal visual identity
     renderer = function_source(html, "ensureTownRenderer")
     assert "townCamZoom" in renderer and "townCamPan" in renderer

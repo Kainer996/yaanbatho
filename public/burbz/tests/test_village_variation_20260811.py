@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "first-catch-once-v278-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 
 
 def run_core(expression: str):
@@ -234,11 +234,10 @@ def test_town_quarters_replay_their_founders_visual_dice_but_stay_anonymous():
     scene = function_source(html, "buildTownScene")
     assert "vcore.villagePlan(seed, VILLAGE_PALETTES.length)" in scene
     assert "villageVariedPalette(VILLAGE_PALETTES[plan.paletteIndex], seed)" in scene
-    # Each district builds in ITS palette (dpal), to its own tier and plan.
+    # Each ward builds in ITS palette (dpal), to its own tier. (The per-ward
+    # street plans retired with one-town-fixed-view-v277 — one cohesive town.)
     for fragment in ("const dTier = plan ? plan.tier : 1;",
-                     "const dLayout = plan ? plan.layout : 'green';",
-                     "villageMakeCottage(dr, dpal)",
-                     "dLayout === 'lane'", "dLayout === 'hamlet'"):
+                     "villageMakeCottage(dr, dpal)"):
         assert fragment in scene, fragment
     # One of the village's real trades keeps a shopfront on the yard.
     assert "villageShopKeysFor(seed)" in scene
@@ -248,19 +247,19 @@ def test_town_quarters_replay_their_founders_visual_dice_but_stay_anonymous():
     assert "vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length)" in scene
     assert "VILLAGE_LANDMARK_MAKERS[lmPlan.signature]" in scene
     assert "lmPlan.signature !== null" in scene
-    # Geography survives, but source-village names retire at merger. Quarter
-    # signs are deliberately anonymous and cannot become village destinations.
-    assert "townDistrictLayout(settle" in scene
+    # Source-village names retire at merger. One-town-fixed-view-v277 knits
+    # the wards into a single town: no quarter signs, no geographic pads —
+    # and still no route back into a consumed village.
     assert "district.userData.districtSeed = seed" in scene
-    assert "villageMakeSign('Quarter ' + (i + 1)" in scene
+    assert "villageMakeSign('Quarter '" not in scene
     assert "villageMakeSign(v.name" not in scene
     assert "openEmpireVillage(" not in scene
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
 
     controls = function_source(html, "ensureTownRenderer")
-    # A quarter tap now opens the ward's management sheet (v276) — still
-    # never a village destination.
-    assert "openTownWardSheet(obj.userData.districtSeed)" in controls
+    # A tap outside the yards opens the town ledger (v277) — still never a
+    # village destination.
+    assert "openTownLedgerSheet()" in controls
     assert "openEmpireVillage(" not in controls
 
     # Even a stale direct village target is redirected to its united Town.
@@ -311,7 +310,7 @@ def test_town_copy_teaches_tapping_yards_but_quarters_stay_anonymous():
     html = HTML.read_text(encoding="utf-8")
     # v276 reversed the flavour-only doctrine: yards are tappable and runnable.
     assert "Quarter buildings are flavour only" not in html
-    assert "Tap a building to run it, or a quarter for its ledger." in html
+    assert "Tap a building to run it, or anywhere else for the town ledger." in html
     # But quarters still never become village destinations again.
     assert "tap a district to walk its streets" not in html
     assert "Each district is one of your real villages" not in html

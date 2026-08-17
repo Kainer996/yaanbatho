@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "first-catch-once-v278-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "town-strategy-v273-20260816"
@@ -198,12 +198,12 @@ def test_town_screen_exists_and_switchscreen_dispatches_to_it():
 def test_town_scene_is_built_from_the_member_villages():
     html = HTML.read_text(encoding="utf-8")
     scene = function_source(html, "buildTownScene")
-    # The charter stone flies one pennant per district, and the districts are
-    # laid out from their real geography.
+    # The charter stone flies one pennant per founder; the wards' buildings
+    # knit around one square via the shared plot ring (v277 — one town, no
+    # geographic district pads).
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
-    assert "townDistrictLayout(settle" in scene
-    layout = function_source(html, "townDistrictLayout")
-    assert "kmPerLat" in layout and "kmPerLon" in layout
+    assert "const takePlot = (kind, radiusBase, jitter)" in scene
+    assert "GOLDEN_ANGLE" in scene
     # Every ward retains an internal seed so its real palette/recovery state can
     # be rebuilt, but absorbed village names are not exposed in Town UI.
     assert "district.userData.districtSeed = seed" in scene

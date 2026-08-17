@@ -7,6 +7,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from conftest import art_sha256, require_materialised_art
+
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 DATA_PATH = ROOT / "uk_bird_expansion_50.js"
@@ -271,6 +273,8 @@ def test_heath_specialists_use_a_real_heath_pool_instead_of_generic_woodland():
 
 def test_all_50_cards_and_cutouts_are_real_unique_usable_rasters():
     birds = load_expansion()["species"]
+    cards = [ROOT / bird["art"].removeprefix("/burbz/") for bird in birds]
+    require_materialised_art(*cards, *(card.parent / "cutouts" / f"{card.stem}_cutout.png" for card in cards))
     card_hashes, cutout_hashes = set(), set()
     for bird in birds:
         card = ROOT / bird["art"].removeprefix("/burbz/")
@@ -305,7 +309,9 @@ def test_art_provenance_is_complete_and_matches_the_final_cards():
         source = sources[bird["name"]]
         card = ROOT / bird["art"].removeprefix("/burbz/")
         assert source["generatedCard"] == card.name
-        assert source["sha256"] == hashlib.sha256(card.read_bytes()).hexdigest()
+        # art_sha256 reads the LFS pointer oid where the raster is not
+        # materialised, so provenance is verified in every environment.
+        assert source["sha256"] == art_sha256(card)
         for field in ("identitySource", "imageSource", "license", "artist", "credit", "method"):
             assert str(source[field]).strip(), (bird["name"], field)
 
