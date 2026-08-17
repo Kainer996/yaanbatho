@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "one-town-fixed-view-v277-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

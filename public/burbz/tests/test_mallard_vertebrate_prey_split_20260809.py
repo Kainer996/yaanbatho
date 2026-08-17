@@ -14,8 +14,9 @@ This pins the split:
 * `small_mammals` now means warm-blooded prey only, so the Mallard refuses
   every mammal ingredient while keeping frogs as a genuine side food;
 * nothing correct was lost: every mammal-hunter (Kestrel, owls, Buzzard)
-  still takes herptiles, exactly as it did before the split — voles imply
-  frogs, the reverse is not true;
+  still takes herptiles — voles imply frogs, the reverse is not true. Since
+  the true-primary-prey release, borrowed prey ranks as a side food: a
+  lizard is a real meal for a Kestrel, but never its mainstay;
 * the Head Chef service board explains itself: a stock/hunger subtitle per
   food, an "Eaten by" label, and a legend for the hungry/full chip states.
 """
@@ -85,10 +86,14 @@ console.log(JSON.stringify({
 }));
 """
     )
-    assert out["kestrelLizard"] == "primary"
+    # Herptiles stay on every mammal-hunter's menu as genuine side prey. They
+    # are no longer inflated to primary rank: EltonTraits gives the Kestrel no
+    # measured cold-blooded share and the Buzzard only 10%, so a lizard or
+    # frog is a real meal for them, not the mainstay voles are.
+    assert out["kestrelLizard"] == "secondary"
     assert out["kestrelVole"] == "primary"
     assert out["barnOwlVole"] == "primary"
-    assert out["buzzardFrog"] == "primary"
+    assert out["buzzardFrog"] == "secondary"
     assert out["heronFrog"] == "secondary"
     assert out["crowFrog"] == "secondary"
     # Accuracy is not loosened: a seed-eating finch still refuses all prey.

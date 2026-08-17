@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "town-strategy-v273-20260816"
-CURRENT_BUILD = "one-town-fixed-view-v277-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

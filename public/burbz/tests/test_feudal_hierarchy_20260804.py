@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "one-town-fixed-view-v277-20260817"
+CURRENT_BUILD = "true-diet-primaries-v279-20260817"
 REALM_CORE_PIN = "town-strategy-v273-20260816"
 
 
