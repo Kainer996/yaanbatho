@@ -16,10 +16,11 @@ This release (town-square-city-builder-v276-20260817) pins:
   standing, and one BUILD/UPGRADE button that uses the same crews, gates,
   costs and timers as the Hall's network buttons — only the targeting
   differs (the tapped ward, not the least-developed one),
-- tapping a quarter opens the ward ledger; every yard is one tap deeper;
-  tapping the charter stone scrolls to the Hall desk,
+- tapping anywhere else opens the town ledger (one-town-fixed-view-v277
+  replaced the per-quarter ward sheet); tapping the charter stone scrolls
+  to the Hall desk,
 - yard levels key the scene, so a finished upgrade rises on screen,
-- the no-WebGL fallback keeps the feature: quarter rows open the ward sheet.
+- the no-WebGL fallback keeps the feature: it opens the town ledger.
 """
 from pathlib import Path
 
@@ -29,7 +30,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 PREVIOUS_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
-CURRENT_BUILD = "town-square-city-builder-v276-20260817"
+CURRENT_BUILD = "one-town-fixed-view-v277-20260817"
 
 
 def function_source(html: str, name: str) -> str:
@@ -88,14 +89,14 @@ def test_each_wards_real_buildings_stand_in_its_district_as_tagged_yards():
     assert "'cabin'" not in maker and "'cottages'" not in maker
 
 
-def test_taps_route_to_the_sheets_yard_first_then_quarter():
+def test_taps_route_to_the_sheets_yard_first_then_town():
     html = HTML.read_text(encoding="utf-8")
     controls = function_source(html, "ensureTownRenderer")
     assert "townEconBuildings.concat(townDistrictGroups, townNpcs)" in controls
-    # A working yard wins over its district.
+    # A working yard wins over the town ledger.
     yard = controls.index("openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId)")
-    ward = controls.index("openTownWardSheet(obj.userData.districtSeed)")
-    assert yard < ward
+    ledger = controls.index("openTownLedgerSheet()")
+    assert yard < ledger
     assert "townHallSection" in controls  # charter stone → the Hall desk
     assert "openEmpireVillage(" not in controls
     # The scene key rebuilds the square when a yard finishes rising.
@@ -122,11 +123,11 @@ def test_the_building_sheet_shows_stats_crew_and_network_standing():
         assert field in output, field
 
 
-def test_the_ward_sheet_lists_every_yard_built_or_not():
+def test_the_town_ledger_lists_every_yard_built_or_not():
     html = HTML.read_text(encoding="utf-8")
-    sheet = function_source(html, "townWardSheetHTML")
+    sheet = function_source(html, "townLedgerSheetHTML")
     assert "EMPIRE_BUILDINGS.map(building =>" in sheet
-    assert "villageEconomySnapshot(rec)" in sheet
+    assert "townEconomySnapshot(settle)" in sheet
     assert "villageWorkforce(rec)" in sheet
     assert 'data-action="sheet-building"' in sheet
     assert "🔒 Unlocks at trainer level" in sheet
@@ -147,8 +148,8 @@ def test_building_from_the_sheet_uses_the_same_crews_gates_and_timers():
 def test_the_fallback_list_keeps_the_feature_without_webgl():
     html = HTML.read_text(encoding="utf-8")
     fallback = function_source(html, "renderTownFallback")
-    assert 'data-action="fallback-ward"' in fallback
-    assert "openTownWardSheet(button.dataset.seed)" in fallback
+    assert 'data-action="fallback-ledger"' in fallback
+    assert "openTownLedgerSheet()" in fallback
     assert "v.name" not in fallback
 
 
