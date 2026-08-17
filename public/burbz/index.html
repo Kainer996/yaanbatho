@@ -3769,10 +3769,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="birdex-stat-label">Discovered</div>
         </div>
         <div class="birdex-stat">
-          <div class="birdex-stat-num" id="birdexTotal">312</div>
-          <div class="birdex-stat-label">Total Species</div>
-        </div>
-        <div class="birdex-stat">
           <div class="birdex-stat-num" id="birdexPower">0</div>
           <div class="birdex-stat-label">Total Power</div>
         </div>
@@ -31584,7 +31580,6 @@ function renderBirdex() {
   const unlockedCount = uniqueSpecies.size;
 
   $('birdexDiscovered').textContent = unlockedCount;
-  $('birdexTotal').textContent = WILD_BIRDS.length;
   $('birdexPower').textContent = flock.reduce((sum, b) => sum + (b.power || 0), 0);
   const dietsEl = $('birdexDiets'); if (dietsEl) dietsEl.textContent = countDiscoveredDiets();
   renderRpgHud();
@@ -31598,7 +31593,8 @@ function renderBirdex() {
     const discoveredBtn = discoveryRow.querySelector('[data-discovery="discovered"]');
     const undiscoveredBtn = discoveryRow.querySelector('[data-discovery="undiscovered"]');
     if (discoveredBtn) discoveredBtn.textContent = 'Discovered · ' + unlockedCount;
-    if (undiscoveredBtn) undiscoveredBtn.textContent = 'Undiscovered · ' + Math.max(0, WILD_BIRDS.length - unlockedCount);
+    // No undiscovered count — it would give away the total species in the game.
+    if (undiscoveredBtn) undiscoveredBtn.textContent = 'Undiscovered';
   }
 
   const grid = $('birdGrid');

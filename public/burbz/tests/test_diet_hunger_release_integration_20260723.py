@@ -193,7 +193,6 @@ def test_protected_regression_references_remain_in_the_app_shell():
         "camera-only",
         "pair_of_tits",
         "national_bird_completion_20260715.js",
-        "WILD_BIRDS.length",
         "recordSoundSessionDiscovery",
         'data-scan-path="camera-only"',
         "serviceWorker.register('./sw.js'",
