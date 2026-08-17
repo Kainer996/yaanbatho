@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
@@ -576,7 +576,7 @@ svg.academy-room-bg { display:block; filter:none; }
    controls instead of squeezing every system into one crowded bottom strip. */
 /* Quick-action dock: a row above the bottom nav, two buttons each side of the
    raised Scan orb. The centre spacer keeps the orb's launch path clear. */
-.game-side-actions { position:absolute; z-index:190; bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px); left:0; right:0; display:flex; flex-direction:row; align-items:flex-end; justify-content:center; gap:9px; pointer-events:none; }
+.game-side-actions { position:absolute; z-index:190; bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px); left:0; right:0; display:flex; flex-direction:row; align-items:flex-end; justify-content:center; gap:9px; pointer-events:none; transition:opacity .18s ease,transform .18s ease,visibility .18s; }
 .game-side-actions-gap { flex:0 0 auto; width:68px; }
 body[data-active-screen="battle"] .game-side-actions { display:none; }
 .game-side-action { width:54px; min-height:54px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:5px 3px 4px; border-radius:16px; border:1px solid rgba(214,168,79,.40); background:linear-gradient(145deg,rgba(31,23,11,.94),rgba(6,5,3,.93)); color:var(--text2); box-shadow:0 8px 20px rgba(0,0,0,.50),inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(8px); pointer-events:auto; }
@@ -587,6 +587,10 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .game-side-action.tutorial-alert::after { content:'!'; position:absolute; right:-3px; top:-3px; width:17px; height:17px; display:grid; place-items:center; border-radius:50%; background:#d13a2f; color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); }
 @media(max-width:380px){.game-side-actions{gap:7px}.game-side-actions-gap{width:62px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
 .game-side-action-badge { position:absolute; right:-3px; top:-3px; min-width:17px; height:17px; padding:0 4px; display:grid; place-items:center; border-radius:999px; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); pointer-events:none; }
+/* A selected settlement object owns the bottom of its stage. Fade the global
+   quick dock until the inspector action is used so it never covers MANAGE,
+   ENTER or GREET on a phone. */
+body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity:0; visibility:hidden; transform:translateY(10px); pointer-events:none; }
 
 /* ========== DIAGONAL DECORATIONS ========== */
 .diag-line {
@@ -1080,7 +1084,7 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 .town-provision { padding:9px; border-radius:10px; border:1px solid rgba(240,199,103,.24); background:rgba(0,0,0,.24); }
 .town-provision-title { display:flex; justify-content:space-between; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; color:#f4ead0; }
 .town-provision-copy { margin-top:4px; font-size:9.5px; line-height:1.4; color:var(--text3); }
-.town-advice { padding:9px 10px; border-radius:10px; border:1px dashed rgba(240,199,103,.4); background:rgba(0,0,0,.24); font-size:11px; line-height:1.5; color:#d8cda9; }
+.town-advice { padding:10px 11px; border-radius:10px; border:1px dashed rgba(240,199,103,.4); background:rgba(0,0,0,.24); font-size:12px; line-height:1.5; color:#d8cda9; }
 .empire-village-hub[hidden] { display:none !important; }
 @media (max-width:390px) { .town-network-grid,.town-policy-grid,.town-provision-grid { grid-template-columns:1fr; } }
 /* ---- County Map — the painted Crusader-Kings chart of one county ----------- */
@@ -3412,13 +3416,36 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .bird-info-fact { font-size: 12px; color: var(--accent); margin-top: 8px; padding: 8px 10px; background: rgba(214,168,79,0.07); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0; line-height: 1.5; }
 /* ========== VILLAGE (medieval 3D hub) ========== */
 .village-sub { font-size: 12px; color: var(--text3); margin: -6px 14px 10px; line-height: 1.5; }
-.village-stage { position: relative; margin: 0 10px 10px; height: 52vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--bg4); background: #0d0a14; touch-action: pan-y; }
+.village-stage { position:relative; isolation:isolate; margin:0 0 12px; height:clamp(380px,62svh,680px); min-height:340px; border-radius:20px; overflow:hidden; border:1px solid rgba(240,199,103,.32); background:linear-gradient(180deg,rgba(4,8,7,.14),rgba(4,6,5,.74)),url('assets/settlements/settlement-loading-v281.webp') center/cover no-repeat,#0d0a14; box-shadow:0 20px 44px rgba(0,0,0,.36),inset 0 1px rgba(255,255,255,.06); touch-action: pan-y; }
 /* A held finger has grabbed the camera — show the golden grip. */
 .village-stage.steering, .academy-stage-3d.steering { outline: 2px solid rgba(240,199,103,.55); outline-offset: -2px; }
-.village-stage canvas { display: block; width: 100%; height: 100%; }
-.village-stage:has(canvas)::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(5,3,12,0.38) 100%); }
-.village-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text3); font-size: 12.5px; letter-spacing: 0.06em; }
-.village-fallback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; height: 100%; overflow-y: auto; }
+.village-stage canvas { position:absolute; inset:0; z-index:1; display:block; width:100%; height:100%; }
+.village-stage:has(canvas)::after { content:''; position:absolute; z-index:2; inset:0; pointer-events:none; background:linear-gradient(180deg,rgba(4,7,8,.24),transparent 24%,transparent 66%,rgba(4,6,7,.55)),radial-gradient(ellipse at 50% 42%,transparent 55%,rgba(5,3,12,.34) 100%); }
+.village-loading { position:absolute; z-index:4; inset:0; display:grid; place-content:center; gap:12px; color:#fff2ce; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; letter-spacing:.11em; text-transform:uppercase; text-shadow:0 2px 8px #000; background:linear-gradient(180deg,rgba(4,8,7,.22),rgba(4,6,5,.56)); }
+.village-loading::before { content:'◆'; display:block; margin:auto; color:#f0c767; font-size:22px; animation:settlementLoadPulse 1.15s ease-in-out infinite alternate; }
+@keyframes settlementLoadPulse { from { transform:translateY(2px) scale(.78); opacity:.5; } to { transform:translateY(-2px) scale(1); opacity:1; } }
+.settlement-stage-hud { position:absolute; z-index:6; inset:0; pointer-events:none; font-family:'Rajdhani',sans-serif; }
+.settlement-stage-status { position:absolute; top:10px; left:10px; max-width:calc(100% - 116px); padding:8px 10px 7px; border:1px solid rgba(255,233,174,.32); border-radius:12px; background:linear-gradient(150deg,rgba(13,20,16,.86),rgba(9,13,11,.68)); box-shadow:0 7px 20px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.07); backdrop-filter:blur(8px); }
+.settlement-stage-kicker { color:#78d4a4; font-size:9px; line-height:1; font-weight:900; letter-spacing:.15em; text-transform:uppercase; }
+.settlement-stage-title { margin-top:4px; color:#fff0c3; font-family:'Russo One',sans-serif; font-size:13px; line-height:1.1; letter-spacing:.035em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.settlement-stage-meta { margin-top:4px; color:#c8c4ad; font-size:10.5px; line-height:1.2; font-weight:800; }
+.settlement-camera-controls { position:absolute; top:10px; right:10px; display:flex; gap:6px; pointer-events:auto; }
+.settlement-camera-btn { display:grid; place-items:center; width:44px; height:44px; border:1px solid rgba(255,233,174,.34); border-radius:13px; color:#ffeab0; background:rgba(12,18,15,.82); box-shadow:0 7px 20px rgba(0,0,0,.32); backdrop-filter:blur(8px); font-size:19px; }
+.settlement-camera-btn:active { transform:scale(.94); }
+.settlement-camera-btn:focus-visible,.settlement-scene-action:focus-visible,.town-square-summary:focus-visible,.town-action:focus-visible,.village-town-link:focus-visible { outline:3px solid #fff7dc; outline-offset:2px; }
+.settlement-scene-labels { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.settlement-scene-label { position:absolute; translate:-50% -100%; max-width:164px; padding:5px 8px; border:1px solid rgba(255,229,159,.48); border-radius:9px; color:#fff3cf; background:rgba(13,18,15,.84); box-shadow:0 5px 15px rgba(0,0,0,.38); backdrop-filter:blur(6px); font-size:10.5px; line-height:1.1; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:opacity .16s ease,scale .16s ease; }
+.settlement-scene-label.is-selected { border-color:#f0c767; color:#fff8e4; box-shadow:0 7px 19px rgba(0,0,0,.45),0 0 0 2px rgba(240,199,103,.14); scale:1.04; }
+.settlement-scene-inspector { position:absolute; left:10px; right:10px; bottom:48px; display:flex; align-items:center; gap:9px; min-height:60px; padding:8px 9px; border:1px solid rgba(240,199,103,.46); border-radius:15px; color:#f6eed9; background:linear-gradient(145deg,rgba(20,25,21,.94),rgba(10,13,11,.9)); box-shadow:0 12px 28px rgba(0,0,0,.48); backdrop-filter:blur(10px); pointer-events:auto; }
+.settlement-scene-inspector[hidden] { display:none; }
+.settlement-scene-icon { flex:none; display:grid; place-items:center; width:42px; height:42px; border-radius:12px; background:rgba(240,199,103,.12); border:1px solid rgba(240,199,103,.25); font-size:22px; }
+.settlement-scene-copy { flex:1; min-width:0; }
+.settlement-scene-name { display:block; color:#ffe8aa; font-size:13px; line-height:1.05; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.settlement-scene-desc { display:block; margin-top:3px; color:#bfc5b4; font-size:10.5px; line-height:1.2; }
+.settlement-scene-action { flex:none; min-height:44px; padding:0 12px; border-radius:12px; background:linear-gradient(180deg,#e8bd58,#bd8429); color:#171208; font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:900; letter-spacing:.06em; }
+.settlement-stage-hint { position:absolute; left:50%; bottom:9px; translate:-50% 0; max-width:calc(100% - 96px); padding:5px 9px; border-radius:999px; color:rgba(255,244,214,.88); background:rgba(6,10,8,.66); box-shadow:0 3px 12px rgba(0,0,0,.25); backdrop-filter:blur(6px); font-size:9.5px; line-height:1; font-weight:900; letter-spacing:.05em; text-align:center; white-space:nowrap; }
+.settlement-stage.is-paused .settlement-stage-hint::before { content:'❚❚ '; color:#f0c767; }
+.village-fallback { position:relative; z-index:3; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:82px 12px 76px; height:100%; overflow-y:auto; background:linear-gradient(180deg,rgba(7,11,9,.28),rgba(7,10,8,.76)); }
 .village-fallback-building { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--bg4); border-radius: 12px; padding: 12px 8px; color: var(--text); }
 .village-fallback-building:active { border-color: var(--accent); }
 .vfb-icon { font-size: 30px; }
@@ -3481,8 +3508,29 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   .shop-desc { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .village-loading::before { animation:none !important; }
+  .settlement-scene-label { transition:none; }
   .shop-panel, .village-shop-patron, .village-shop-patron img, .village-shop-mote, .village-shop-steam, .village-shop-fire-glow { animation: none !important; }
   .village-shop-mote, .village-shop-steam { display: none; }
+}
+
+@media (min-width:900px) {
+  .empire-village-hub { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(340px,.72fr); column-gap:16px; align-items:start; }
+  .empire-village-hub-title,.empire-village-hub>.village-sub,#villageTownLink,#villageClaimBar { grid-column:1/-1; }
+  #villageStage { grid-column:1; grid-row:5; position:sticky; top:76px; height:min(72vh,720px); }
+  #villageManagePanel { grid-column:2; grid-row:5; min-width:0; }
+  #screen-town { max-width:1180px; margin-inline:auto; }
+  #townStage { height:min(70vh,720px); }
+}
+
+@media (max-width:520px) {
+  .empire-village-hub { margin:10px 0 14px; padding:10px; border-left:0; border-right:0; border-radius:0; }
+  .village-stage { margin-inline:-10px; border-left:0; border-right:0; border-radius:0; height:62svh; min-height:390px; }
+  .settlement-stage-status { max-width:calc(100% - 74px); }
+  .settlement-camera-controls { flex-direction:column; }
+  .settlement-camera-btn { width:42px; height:42px; }
+  .settlement-scene-inspector { bottom:46px; }
+  .settlement-stage-hint { max-width:calc(100% - 28px); font-size:9px; }
 }
 
 .map-village-orb { pointer-events: auto; width: 52px; height: 52px; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: linear-gradient(180deg, #3a2812, #241a0d); color: #f4ead4; box-shadow: 0 8px 20px rgba(0,0,0,0.38), 0 0 0 3px rgba(240,199,103,0.25); margin-left: 8px; }
@@ -4034,7 +4082,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="village-sub" id="villageSub"></div>
         <div id="villageTownLink"></div>
         <div id="villageClaimBar"></div>
-        <div class="village-stage" id="villageStage"><div class="village-loading" id="villageLoading">Raising the timber frames…</div></div>
+        <div class="village-stage settlement-stage" id="villageStage" role="application" tabindex="0" aria-label="Living 3D village. Hold then drag to look around, pinch to zoom, use arrow keys to orbit, and tap a shop or resident to interact.">
+          <div class="settlement-stage-hud" id="villageStageHud">
+            <div class="settlement-stage-status" aria-live="polite">
+              <div class="settlement-stage-kicker" id="villageStageKicker">LIVING VILLAGE</div>
+              <div class="settlement-stage-title" id="villageStageTitle">Raising the village…</div>
+              <div class="settlement-stage-meta" id="villageStageMeta">Reading the settlement ledger</div>
+            </div>
+            <div class="settlement-camera-controls">
+              <button type="button" class="settlement-camera-btn" data-scene-camera="village-reset" aria-label="Return the camera to the village square" title="Return to the village square">⌂</button>
+            </div>
+            <div class="settlement-scene-labels" id="villageSceneLabels" aria-hidden="true"></div>
+            <div class="settlement-scene-inspector" id="villageSceneInspector" aria-live="polite" hidden>
+              <span class="settlement-scene-icon" id="villageSceneIcon">🏠</span>
+              <span class="settlement-scene-copy"><span class="settlement-scene-name" id="villageSceneName"></span><span class="settlement-scene-desc" id="villageSceneDesc"></span></span>
+              <button type="button" class="settlement-scene-action" id="villageSceneAction">ENTER</button>
+            </div>
+            <div class="settlement-stage-hint">Hold + drag to look · pinch to wander · tap to interact</div>
+          </div>
+          <div class="village-loading" id="villageLoading">Raising the timber frames…</div>
+        </div>
         <div id="villageManagePanel"></div>
       </div>
     </div>
@@ -4054,7 +4121,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
          it, tap a quarter for its ledger. The Hall desk sits below. -->
     <div class="screen" id="screen-town">
       <div class="screen-title" id="townScreenTitle">TOWN HALL</div>
-      <div class="village-stage" id="townStage"><div class="village-loading" id="townLoading">Raising the market square…</div></div>
+      <div class="village-stage settlement-stage" id="townStage" role="application" tabindex="0" aria-label="Living 3D town. Hold then drag to look around, pinch to zoom, use arrow keys to orbit, and tap a working yard or the town to manage it.">
+        <div class="settlement-stage-hud" id="townStageHud">
+          <div class="settlement-stage-status" aria-live="polite">
+            <div class="settlement-stage-kicker" id="townStageKicker">LIVING TOWN</div>
+            <div class="settlement-stage-title" id="townStageTitle">Raising the market square…</div>
+            <div class="settlement-stage-meta" id="townStageMeta">Reading the Town ledger</div>
+          </div>
+          <div class="settlement-camera-controls">
+            <button type="button" class="settlement-camera-btn" data-scene-camera="town-reset" aria-label="Return the camera to the whole town" title="Return to the whole town">⌂</button>
+          </div>
+          <div class="settlement-scene-labels" id="townSceneLabels" aria-hidden="true"></div>
+          <div class="settlement-scene-inspector" id="townSceneInspector" aria-live="polite" hidden>
+            <span class="settlement-scene-icon" id="townSceneIcon">🏘️</span>
+            <span class="settlement-scene-copy"><span class="settlement-scene-name" id="townSceneName"></span><span class="settlement-scene-desc" id="townSceneDesc"></span></span>
+            <button type="button" class="settlement-scene-action" id="townSceneAction">MANAGE</button>
+          </div>
+          <div class="settlement-stage-hint">Hold + drag to look · pinch to zoom · tap a yard or the town</div>
+        </div>
+        <div class="village-loading" id="townLoading">Raising the market square…</div>
+      </div>
       <div class="village-sub" id="townSub"></div>
       <div id="townHallPanel"></div>
       <div class="town-sheet-backdrop" id="townSheetBackdrop" aria-hidden="true"></div>
@@ -4615,6 +4701,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
+<script src="settlement_scene_core.js?v=living-settlements-v281-20260817"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -23001,7 +23088,11 @@ function empireBuildStructure(seed, buildingId, options) {
   // Rebuild the 3D scene so the scaffolded site appears in the village itself
   if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   updateHeader();
-  if (mergedSettlement || opts.townMode || (typeof currentScreen !== 'undefined' && currentScreen === 'town')) renderTownScreen(); else renderVillage();
+  const sceneKind = mergedSettlement || opts.townMode || (typeof currentScreen !== 'undefined' && currentScreen === 'town') ? 'town' : 'village';
+  if (sceneKind === 'town') renderTownScreen(); else renderVillage();
+  if (typeof requestAnimationFrame === 'function' && typeof settlementSceneFocusConstruction === 'function') {
+    requestAnimationFrame(() => settlementSceneFocusConstruction(sceneKind, targetTier, eco.construction));
+  }
 }
 // Clearing a wreck is quick, honest work: the rubble goes, and the salvage
 // pays out a little timber toward the first new buildings.
@@ -24185,6 +24276,9 @@ function beginTownHallUpgrade(settlementId) {
   if (!spendTownCostAtomic(next.cost, () => { const now = Date.now(); state.hallConstruction = { id:'hall-' + primary.seat.heartSeed + '-' + next.level, fromLevel:state.hallLevel, toLevel:next.level, startMs:now, endMs:now + buildMs, paidCost:{...next.cost, materials:{...(next.cost.materials || {})}} }; })) return;
   SFX.questComplete(); vibrate(40); showToast('🏛️ ' + townDisplayName(settlement) + ' Hall level ' + next.level + ' begun — ready in ' + formatBuildDuration(buildMs) + '.');
   updateHeader(); renderTownScreen(); ensureProvinceCountdownTicker();
+  if (typeof requestAnimationFrame === 'function' && typeof settlementSceneFocusConstruction === 'function') {
+    requestAnimationFrame(() => settlementSceneFocusConstruction('town', { name:'Hall level ' + next.level }, state.hallConstruction));
+  }
 }
 function townNetworkUpgradeTarget(settlement, buildingId) {
   const building = EMPIRE_BUILDING_INDEX[buildingId]; if (!building) return null;
@@ -24298,10 +24392,11 @@ function villageDistrictState(seed) {
   };
 }
 function townSceneKey(settle) {
-  // Membership AND recovery state key the scene: a district village that
-  // clears a wreck, starts a build or flourishes rebuilds the square. The
-  // ward's yard levels key it too, so a finished upgrade rises on screen.
-  return settle.id + ':' + settle.villages.map(v => {
+  // Membership, civic growth and coarse life-state key the scene. Construction
+  // progress itself animates live; starting or completing a project rebuilds.
+  const hallKey = townSeatStateRows(settle).map(row => (row.state.hallLevel || 1) + (row.state.hallConstruction ? '>' + row.state.hallConstruction.toLevel : '')).join('.');
+  const lifeKey = villageAmbientLifeKey(townEconomySnapshot(settle));
+  return settle.id + '#h' + hallKey + '#l' + lifeKey + ':' + settle.villages.map(v => {
     const st = villageDistrictState(v.seed);
     const rec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(Number(v.seed) >>> 0)] : null;
     const yards = rec ? EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)).join('') : '';
@@ -24402,7 +24497,15 @@ function renderTownScreen() {
 // stands in its quarter, and every one of them can be tapped and run.
 function renderTownSquare(settle) {
   const stage = $('townStage'); if (!stage) return;
-  const sub = $('townSub'); if (sub) sub.textContent = 'Your town, alive — every yard you raise stands here. Hold and drag to look around; pinch to zoom. Tap a building to run it, or anywhere else for the town ledger.';
+  const snap = townEconomySnapshot(settle);
+  const primary = townPrimarySeatRow(settle), state = primary && primary.state;
+  const hallLevel = Math.max(1, Number(state && state.hallLevel) || 1);
+  const projects = townActiveProjectCount(settle), slots = townBuilderSlots(settle);
+  const sub = $('townSub');
+  if (sub) sub.textContent = 'Your town, alive — its levelled Hall, working yards, builders, carts, people and animals all reflect the real settlement. Hold and drag to look around; pinch to zoom. Tap a building to run it, or anywhere else for the town ledger.';
+  const kicker = $('townStageKicker'); if (kicker) kicker.textContent = (settle.tier === 'city' ? 'LIVING CITY' : 'LIVING TOWN') + ' · HALL LEVEL ' + hallLevel;
+  const title = $('townStageTitle'); if (title) title.textContent = townDisplayName(settle);
+  const meta = $('townStageMeta'); if (meta) meta.textContent = '👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + Math.round(snap.happiness * 100) + '% happy · 🏗️ ' + projects + '/' + slots + ' crews';
   if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
   try {
     ensureTownRenderer(stage); if (townBuiltKey !== townSceneKey(settle) || townBuiltPhase !== burbzDaylightPhaseNow()) buildTownScene(settle);
@@ -24412,7 +24515,8 @@ function renderTownSquare(settle) {
 function renderTownFallback(settle) {
   const stage = $('townStage');
   if (!stage) return;
-  stage.innerHTML = '<div class="village-fallback"><button type="button" class="village-fallback-building" data-action="fallback-ledger"><span class="vfb-icon">📜</span><span class="vfb-name">' + escapeHtml(townDisplayName(settle)) + '</span><span class="vfb-desc">Open the town ledger and run its yards</span></button></div>';
+  stage.querySelectorAll('canvas,.village-loading,.village-fallback').forEach(node => node.remove());
+  stage.insertAdjacentHTML('beforeend', '<div class="village-fallback"><button type="button" class="village-fallback-building" data-action="fallback-ledger"><span class="vfb-icon">📜</span><span class="vfb-name">' + escapeHtml(townDisplayName(settle)) + '</span><span class="vfb-desc">Open the Town ledger and run its yards</span></button></div>');
   stage.querySelector('[data-action="fallback-ledger"]')?.addEventListener('click', () => { SFX.tap(); openTownLedgerSheet(); });
 }
 
@@ -24813,6 +24917,9 @@ let villageScene = null, villageRenderer = null, villageCamera = null, villageRu
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
 let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
 let villageNpcs = [], villageChickens = [];
+// Living-settlement actors use their own registries. Town builders temporarily
+// register here too, then buildTownScene adopts only the entries it created.
+let villageTraffic = [], villageLivestock = [], villageFlocks = [], villageConstructionSites = [];
 let villageWeatherFx = null, villageShootingStar = null, villageTwinkleStars = null;
 // Free-roam camera: azimuth/polar/dist orbit around a ground-plane target
 // (tx,tz) the player can pan anywhere in the village; lastInputAt pauses the
@@ -24822,7 +24929,223 @@ let villageShadowTick = 0;
 let villageFallbackMode = false;
 let villageBuiltSeed = null;
 let villageBuiltPhase = null; // the daylight phase the scene was lit for
+let villageBuiltLifeKey = null;
 let villageActive = null;
+let villageSceneQuality = { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
+let villageLastFrameAt = 0;
+
+function settlementSceneReducedMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function settlementSceneQualityProfile(stage) {
+  const core = window.BurbzSettlementSceneCore;
+  if (!core || !core.qualityProfile) return { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
+  const rect = stage && stage.getBoundingClientRect ? stage.getBoundingClientRect() : null;
+  return core.qualityProfile({
+    width: Math.max(1, Number(rect && rect.width) || window.innerWidth || 390),
+    height: Math.max(1, Number(rect && rect.height) || window.innerHeight || 700),
+    dpr: window.devicePixelRatio || 1,
+    hardwareConcurrency: navigator.hardwareConcurrency || 4,
+    reducedMotion: settlementSceneReducedMotion()
+  });
+}
+function settlementSceneStageInViewport(stage) {
+  if (!stage || !stage.getBoundingClientRect) return true;
+  const rect = stage.getBoundingClientRect();
+  return rect.bottom > 0 && rect.right > 0 && rect.top < (window.innerHeight || document.documentElement.clientHeight) && rect.left < (window.innerWidth || document.documentElement.clientWidth);
+}
+function settlementSceneShouldRun(screenActive, detailsOpen, stage) {
+  const core = window.BurbzSettlementSceneCore;
+  const state = { screenActive, detailsOpen, inViewport:settlementSceneStageInViewport(stage), documentHidden:!!document.hidden };
+  return core && core.shouldRunScene ? core.shouldRunScene(state) : !!(state.screenActive && state.detailsOpen && state.inViewport && !state.documentHidden);
+}
+function settlementSceneMotionScale() {
+  const reduced = settlementSceneReducedMotion(), core = window.BurbzSettlementSceneCore;
+  return core && core.motionScale ? core.motionScale(reduced) : (reduced ? 0 : 1);
+}
+
+// The world owns its small physical signs. Screen-space text is reserved for
+// one deliberately selected object, projected from the real mesh and culled
+// when it falls behind the camera, another building or the stage edge.
+const settlementSceneSelection = { village:null, town:null };
+function settlementSceneObjectContains(root, child) {
+  for (let node = child; node; node = node.parent) if (node === root) return true;
+  return false;
+}
+function settlementSceneClearContext(kind) {
+  settlementSceneSelection[kind] = null;
+  const inspector = $(kind + 'SceneInspector'); if (inspector) inspector.hidden = true;
+  const labels = $(kind + 'SceneLabels'); if (labels) labels.replaceChildren();
+}
+function settlementSceneSetContext(kind, object, info) {
+  if (!object || !info) { settlementSceneClearContext(kind); return; }
+  const id = kind + '-' + (object.uuid || Date.now());
+  const labels = $(kind + 'SceneLabels');
+  const label = document.createElement('span');
+  label.className = 'settlement-scene-label is-selected';
+  label.textContent = String(info.name || 'Selected');
+  if (labels) labels.replaceChildren(label);
+  settlementSceneSelection[kind] = { id, object, info, label, occluded:false, lastOcclusionAt:0 };
+  const inspector = $(kind + 'SceneInspector');
+  if (inspector) inspector.hidden = false;
+  const icon = $(kind + 'SceneIcon'); if (icon) icon.textContent = info.icon || '◆';
+  const name = $(kind + 'SceneName'); if (name) name.textContent = info.name || 'Selected';
+  const desc = $(kind + 'SceneDesc'); if (desc) desc.textContent = info.detail || '';
+  const action = $(kind + 'SceneAction');
+  if (action) {
+    action.textContent = info.actionLabel || 'VIEW';
+    action.hidden = typeof info.action !== 'function';
+    action.onclick = typeof info.action === 'function' ? () => info.action() : null;
+  }
+}
+function settlementSceneUpdateContext(kind, camera, scene) {
+  const selected = settlementSceneSelection[kind], stage = $(kind + 'Stage');
+  if (!selected || !selected.object || !selected.object.parent || !selected.label || !stage || !camera || !scene) return;
+  const bounds = new THREE.Box3().setFromObject(selected.object);
+  if (bounds.isEmpty()) { selected.label.hidden = true; return; }
+  const anchor = new THREE.Vector3((bounds.min.x + bounds.max.x) / 2, bounds.max.y + 0.36, (bounds.min.z + bounds.max.z) / 2);
+  const projected = anchor.clone().project(camera);
+  const width = stage.clientWidth, height = stage.clientHeight;
+  const px = (projected.x * 0.5 + 0.5) * width;
+  const py = (-projected.y * 0.5 + 0.5) * height;
+  const labelWidth = Math.min(164, Math.max(84, String(selected.info.name || '').length * 7 + 22));
+  const now = performance.now();
+  const quality = kind === 'town' ? townSceneQuality : villageSceneQuality;
+  const occlusionInterval = quality && quality.tier === 'low' ? 360 : 180;
+  if (now - selected.lastOcclusionAt > occlusionInterval) {
+    const direction = anchor.clone().sub(camera.position), distance = direction.length();
+    const ray = new THREE.Raycaster(camera.position, direction.normalize(), 0.1, Math.max(0.1, distance - 0.16));
+    const first = ray.intersectObjects(scene.children, true).find(hit => hit.object.visible !== false);
+    selected.occluded = !!(first && !settlementSceneObjectContains(selected.object, first.object));
+    selected.lastOcclusionAt = now;
+  }
+  const core = window.BurbzSettlementSceneCore;
+  const candidate = { id:selected.id, x:px - labelWidth / 2, y:py - 34, width:labelWidth, height:30, priority:100, distance:camera.position.distanceTo(anchor), behindCamera:projected.z < -1 || projected.z > 1, hidden:selected.occluded };
+  const picked = core && core.selectSceneLabels
+    ? core.selectSceneLabels([candidate], { width, height, maxLabels:1, padding:8, gap:6, selectedId:selected.id })
+    : (!candidate.behindCamera && !candidate.hidden ? [candidate] : []);
+  selected.label.hidden = picked.length === 0;
+  if (picked.length) { selected.label.style.left = px + 'px'; selected.label.style.top = py + 'px'; }
+}
+function settlementSceneWake(kind) {
+  if (kind === 'village' && currentScreen === 'village' && !villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
+  if (kind === 'town' && currentScreen === 'town' && !townRunning) { townRunning = true; requestAnimationFrame(townAnimate); }
+}
+function settlementSceneResetCamera(kind) {
+  const cam = kind === 'village' ? villageCam : townCam;
+  if (!cam) return;
+  const settle = kind === 'town' && typeof currentTownSettlement === 'function' ? currentTownSettlement() : null;
+  cam.tx = 0;
+  cam.tz = 0;
+  cam.polar = kind === 'village' ? 1.08 : 0.82;
+  cam.dist = kind === 'village' ? 22 : (settle && settle.tier === 'city' ? 30 : 26);
+  cam.lastInputAt = Date.now();
+  settlementSceneWake(kind);
+}
+function settlementSceneBindControls(kind, stage) {
+  if (!stage || stage.dataset.settlementControlsBound) return;
+  stage.dataset.settlementControlsBound = '1';
+  const reset = stage.querySelector('[data-scene-camera="' + kind + '-reset"]');
+  if (reset) reset.addEventListener('click', () => { SFX.tap(); settlementSceneResetCamera(kind); stage.focus({ preventScroll:true }); });
+  stage.addEventListener('keydown', event => {
+    const cam = kind === 'village' ? villageCam : townCam;
+    if (!cam) return;
+    let handled = true;
+    if (event.key === 'ArrowLeft') cam.azimuth -= 0.16;
+    else if (event.key === 'ArrowRight') cam.azimuth += 0.16;
+    else if (event.key === 'ArrowUp') cam.polar = Math.max(0.5, cam.polar - 0.08);
+    else if (event.key === 'ArrowDown') cam.polar = Math.min(1.36, cam.polar + 0.08);
+    else if (event.key === '+' || event.key === '=') cam.dist = Math.max(kind === 'village' ? 6 : 9, cam.dist - 1.6);
+    else if (event.key === '-' || event.key === '_') cam.dist = Math.min(kind === 'village' ? 30 : 54, cam.dist + 1.6);
+    else if (event.key === 'Home' || event.key === '0') settlementSceneResetCamera(kind);
+    else if (event.key === 'Enter' && !$(kind + 'SceneAction')?.hidden) $(kind + 'SceneAction')?.click();
+    else handled = false;
+    if (handled) { event.preventDefault(); cam.lastInputAt = Date.now(); settlementSceneWake(kind); }
+  });
+}
+function settlementSceneScrollTo(id) {
+  const target = $(id); if (!target) return;
+  target.scrollIntoView({ behavior:settlementSceneReducedMotion() ? 'auto' : 'smooth', block:'start' });
+}
+function settlementSceneFocusConstruction(kind, building, construction) {
+  const sites = kind === 'town' ? townConstructionSites : villageConstructionSites;
+  const site = sites.find(candidate => candidate?.userData?.construction === construction)
+    || sites.find(candidate => candidate?.userData?.construction?.id === construction?.id)
+    || sites[sites.length - 1];
+  const cameraState = kind === 'town' ? townCam : villageCam;
+  const stage = $(kind + 'Stage');
+  if (!site || !site.parent || !cameraState || !stage || !window.THREE) return;
+  const focus = site.getWorldPosition(new THREE.Vector3());
+  cameraState.tx = focus.x;
+  cameraState.tz = focus.z;
+  cameraState.dist = kind === 'town' ? 24 : 14;
+  cameraState.lastInputAt = Date.now();
+  const remaining = Math.max(0, Number(construction?.endMs) - Date.now());
+  const percent = Math.round(constructionProgress(construction) * 100);
+  settlementSceneSetContext(kind, site, {
+    icon:'🏗️',
+    name:(building?.name || 'Building') + ' underway',
+    detail:percent + '% raised · ' + formatBuildDuration(remaining) + ' remaining · builders and deliveries are active on site.',
+    actionLabel:'MANAGE',
+    action:() => settlementSceneScrollTo(kind === 'town' ? 'townHallPanel' : 'villageManagePanel')
+  });
+  stage.scrollIntoView({ behavior:settlementSceneReducedMotion() ? 'auto' : 'smooth', block:'center' });
+  stage.focus({ preventScroll:true });
+  settlementSceneWake(kind);
+}
+function villageSceneContextInfo(object) {
+  if (!object || !object.userData) return null;
+  if (object.userData.shopKey) {
+    const key = object.userData.shopKey, shop = VILLAGE_SHOPS[key];
+    return shop ? { icon:shop.icon, name:shop.name, detail:shop.desc, actionLabel:'ENTER', action:() => villageOpenShop(key) } : null;
+  }
+  if (object.userData.ruinIndex !== undefined) {
+    const index = object.userData.ruinIndex;
+    return { icon:'🧹', name:'War-torn wreckage', detail:'Clear this ruin to salvage timber and make room to rebuild.', actionLabel:'CLEAR', action:() => villageTapRuin(index) };
+  }
+  if (object.userData.npc) {
+    const npc = object.userData.npc;
+    return { icon:npc.role === 'child' ? '🧒' : npc.role === 'guard' ? '🛡️' : '👋', name:npc.name || 'Village resident', detail:'A ' + (npc.role || 'resident') + ' going about life in the settlement.', actionLabel:'GREET', action:() => villageGreetNpc(object) };
+  }
+  if (object.userData.sceneLabel) {
+    const label = object.userData.sceneLabel;
+    return { icon:label.icon || '🏠', name:label.name || 'Village building', detail:label.detail || 'Part of the settlement economy.', actionLabel:'MANAGE', action:() => settlementSceneScrollTo('villageManagePanel') };
+  }
+  return null;
+}
+function townSceneContextInfo(object) {
+  if (!object || !object.userData) return null;
+  if (object.userData.townHall) {
+    const hall = object.userData.townHall;
+    return { icon:'🏛️', name:(hall.city ? 'City Hall' : 'Town Hall'), detail:'Level ' + hall.level + ' · builders, upgrades and Council policy.', actionLabel:'MANAGE', action:() => settlementSceneScrollTo('townHallPanel') };
+  }
+  if (object.userData.buildingId !== undefined) {
+    const building = EMPIRE_BUILDING_INDEX[object.userData.buildingId];
+    const settle = currentTownSettlement();
+    const rec = settle ? townSheetWardRecord(settle, object.userData.wardSeed) : null;
+    const level = rec && building ? villageBuildingLevel(rec, building.id) : 0;
+    const tier = building ? villageBuildingTier(building, level) : null;
+    return {
+      icon:tier?.icon || building?.icon || '🏗️',
+      name:tier?.name || building?.name || 'Working yard',
+      detail:'Level ' + level + ' · a real part of the shared Town network.',
+      actionLabel:'RUN',
+      action:() => openTownBuildingSheet(object.userData.wardSeed, object.userData.buildingId)
+    };
+  }
+  if (object.userData.townHallStone) {
+    return { icon:'📜', name:'Town charter', detail:'The civic heart of the united settlement.', actionLabel:'HALL', action:() => settlementSceneScrollTo('townHallSection') };
+  }
+  if (object.userData.districtSeed !== undefined || object.userData.townGround) {
+    const settle = currentTownSettlement();
+    return { icon:settle?.icon || '🏘️', name:settle ? townDisplayName(settle) : 'Town streets', detail:'One living settlement of homes, trade, builders and shared services.', actionLabel:'LEDGER', action:() => openTownLedgerSheet() };
+  }
+  if (object.userData.npc) {
+    const npc = object.userData.npc;
+    return { icon:'👋', name:npc.name || 'Town resident', detail:'A ' + (npc.role || 'resident') + ' crossing the shared square.', actionLabel:'GREET', action:() => villageGreetNpc(object) };
+  }
+  return null;
+}
 
 function renderVillage() {
   const stage = $('villageStage');
@@ -24840,14 +25163,23 @@ function renderVillage() {
   }
   if (hub) hub.hidden = false;
   const owned = empireOwnsVillage(v.seed);
+  const villageRec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
+  const villageSnap = villageRec ? villageEconomySnapshot(villageRec) : null;
   // The page always names the VILLAGE first. Its town/city is a separate line;
   // never replace a village identity with the name of a larger settlement.
   const settleTitle = owned ? empireSettlementOfSeed(v.seed) : null;
   const title = $('villageTitle');
   if (title) title.textContent = (owned ? '👑 ' : '🏡 ') + v.name.toUpperCase() + ' · VILLAGE';
+  const stageKicker = $('villageStageKicker');
+  if (stageKicker) stageKicker.textContent = (owned ? 'LIVING VILLAGE' : 'DARKENED VILLAGE') + ' · ' + burbzDaylightPhaseNow().toUpperCase();
+  const stageTitle = $('villageStageTitle'); if (stageTitle) stageTitle.textContent = v.name;
+  const stageMeta = $('villageStageMeta');
+  if (stageMeta) stageMeta.textContent = villageSnap
+    ? '👥 ' + villageSnap.pop + '/' + villageSnap.housingCap + ' · ' + Math.round(villageSnap.happiness * 100) + '% happy · 👷 ' + villageSnap.workforce.working + '/' + villageSnap.workforce.required + ' working'
+    : '⚔️ Unliberated · rebuild this place from its ruins';
   const sub = $('villageSub');
   if (sub) {
-    const rec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
+    const rec = villageRec;
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
     const settleNote = settleTitle ? ' ' + settleTitle.icon + ' This village is the ' + (settleTitle.role === 'heart' ? 'centre of ' : 'district of ') + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
@@ -24874,7 +25206,9 @@ function renderVillage() {
   if (!window.THREE || villageFallbackMode) { renderVillageFallback(); return; }
   try {
     ensureVillageRenderer(stage);
-    if (villageBuiltSeed !== v.seed || villageBuiltPhase !== burbzDaylightPhaseNow()) buildVillageScene(v);
+    const lifeRec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
+    const lifeKey = villageAmbientLifeKey(lifeRec ? villageEconomySnapshot(lifeRec) : null);
+    if (villageBuiltSeed !== v.seed || villageBuiltPhase !== burbzDaylightPhaseNow() || villageBuiltLifeKey !== lifeKey) buildVillageScene(v);
     const loading = $('villageLoading');
     if (loading) loading.remove();
     if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
@@ -24889,12 +25223,13 @@ function renderVillage() {
 function renderVillageFallback() {
   const stage = $('villageStage');
   if (!stage) return;
-  stage.innerHTML = '<div class="village-fallback">' + villageShopKeysFor(currentVillage().seed).map(k => {
+  stage.querySelectorAll('canvas,.village-loading,.village-fallback').forEach(node => node.remove());
+  stage.insertAdjacentHTML('beforeend', '<div class="village-fallback">' + villageShopKeysFor(currentVillage().seed).map(k => {
     const s = VILLAGE_SHOPS[k];
     return '<button class="village-fallback-building" onclick="villageOpenShop(\'' + k + '\')">' +
       '<span class="vfb-icon">' + s.icon + '</span><span class="vfb-name">' + escapeHtml(s.name) + '</span>' +
       '<span class="vfb-desc">' + escapeHtml(s.desc) + '</span></button>';
-  }).join('') + '</div>';
+  }).join('') + '</div>');
 }
 
 // ---- Canvas textures (grass, cobbles, canopy stripes, glows) ----------------
@@ -25170,19 +25505,95 @@ function villageMakeRoofBird(r, color) {
 }
 
 function villageMakeSign(text) {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const root = new THREE.Group();
+  const hinge = new THREE.Group();
+  root.add(hinge);
+  const boardW = 2.9, boardH = 0.78;
+  const wood = new THREE.MeshLambertMaterial({ color:0x5b3518 });
+  const edge = new THREE.MeshLambertMaterial({ color:0x2f1b0d });
+  const iron = new THREE.MeshLambertMaterial({ color:0x6d675b });
+  const board = new THREE.Mesh(new THREE.BoxGeometry(boardW, boardH, 0.13), wood);
+  board.position.y = -0.48;
+  hinge.add(board);
+  // A real framed board catches light and can disappear behind a roof or tree;
+  // only its lettering is canvas-based.
+  for (const [w, h, px, py] of [
+    [boardW + 0.08, 0.07, 0, -0.48 - boardH / 2],
+    [boardW + 0.08, 0.07, 0, -0.48 + boardH / 2],
+    [0.07, boardH, -boardW / 2, -0.48],
+    [0.07, boardH, boardW / 2, -0.48]
+  ]) {
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.17), edge);
+    frame.position.set(px, py, 0);
+    hinge.add(frame);
+  }
+  for (const sx of [-1, 1]) {
+    const link = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.018, 5, 10), iron);
+    link.position.set(sx * 0.92, -0.055, 0);
+    hinge.add(link);
+    const rivet = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 5), iron);
+    rivet.position.set(sx * (boardW / 2 - 0.14), -0.48, 0.09);
+    hinge.add(rivet);
+  }
+
+  // High-DPI transparent decal: fit every translated/name variant to the board
+  // without painting a second rectangle over the wood grain.
+  const c = document.createElement('canvas'); c.width = 768; c.height = 208;
   const x = c.getContext('2d');
-  x.fillStyle = '#241708'; x.fillRect(0, 0, 256, 96);
-  x.fillStyle = '#2f1e0b'; x.fillRect(6, 6, 244, 84);
-  x.strokeStyle = '#d6a84f'; x.lineWidth = 5; x.strokeRect(8, 8, 240, 80);
-  x.strokeStyle = 'rgba(214,168,79,0.35)'; x.lineWidth = 2; x.strokeRect(16, 16, 224, 64);
-  x.fillStyle = '#f4ead4'; x.font = 'bold 28px Georgia, serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text, 128, 50);
+  x.clearRect(0, 0, c.width, c.height);
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+  let fontSize = 78;
+  do {
+    x.font = '700 ' + fontSize + 'px Georgia, "Segoe UI Emoji", serif';
+    if (x.measureText(String(text)).width <= c.width - 72 || fontSize <= 38) break;
+    fontSize -= 3;
+  } while (fontSize > 35);
+  x.strokeStyle = 'rgba(28,16,7,0.92)'; x.lineWidth = Math.max(7, fontSize * 0.13);
+  x.strokeText(String(text), c.width / 2, c.height / 2 + 2);
+  x.fillStyle = '#f8e8bd';
+  x.fillText(String(text), c.width / 2, c.height / 2 + 2);
   const tex = new THREE.CanvasTexture(c);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, fog: false }));
-  sprite.scale.set(3.4, 1.28, 1);
-  sprite.renderOrder = 999;
-  return sprite;
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  const decal = new THREE.Mesh(
+    new THREE.PlaneGeometry(boardW - 0.18, boardH - 0.16),
+    new THREE.MeshBasicMaterial({ map:tex, transparent:true, depthTest:true, depthWrite:false, alphaTest:0.025, side:THREE.FrontSide })
+  );
+  decal.position.set(0, -0.48, 0.071);
+  hinge.add(decal);
+  root.userData = {
+    signText:String(text), signKind:'hanging', hinge,
+    phase:(burbzHash32('sign-sway-' + text) % 628) / 100,
+    baseRotationZ:0, swing:true
+  };
+  return root;
+}
+
+// Mount the same physical board at walking height. Economy markers use timber
+// posts; Town quarters sit on a squat stone waystone beside their incoming lane.
+function villageMountGroundSign(sign, pal, kind) {
+  const g = new THREE.Group();
+  const waystone = kind === 'waystone';
+  const postMat = new THREE.MeshLambertMaterial({ color:waystone ? pal.stone : pal.timber });
+  const postH = waystone ? 1.05 : 0.92;
+  if (waystone) {
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.22, 0.46), postMat);
+    plinth.position.y = 0.11; g.add(plinth);
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.2, 4), postMat);
+    cap.position.set(0, postH + 0.05, -0.03); cap.rotation.y = Math.PI / 4; g.add(cap);
+  }
+  for (const sx of waystone ? [0] : [-0.56, 0.56]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(waystone ? 0.28 : 0.075, postH, waystone ? 0.25 : 0.075), postMat);
+    post.position.set(sx, postH / 2 + (waystone ? 0.2 : 0), 0); g.add(post);
+  }
+  sign.scale.setScalar(waystone ? 0.68 : 0.62);
+  sign.position.set(0, waystone ? 1.52 : 1.25, 0.08);
+  sign.userData.signKind = waystone ? 'waystone' : 'ground';
+  sign.userData.swing = false;
+  if (sign.userData.hinge) sign.userData.hinge.rotation.z = 0;
+  g.userData.physicalSign = kind || 'ground';
+  g.add(sign);
+  return g;
 }
 
 // Soft dark disc under each prop. Real moonlight shadows do the heavy lifting
@@ -25432,13 +25843,11 @@ function villageMakeBuilding(shopKey, cfg, r, pal) {
     }
   }
 
-  // Hanging shop sign on a bracket
+  // Hanging shop sign on a bracket: the group pivots at its two iron links.
   const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), beamMat);
   bracket.position.set(-w / 2 + 0.5, baseH + upH + 0.55, d / 2 + 0.4); g.add(bracket);
   const sign = villageMakeSign(cfg.icon + ' ' + cfg.name.replace(/^The /, ''));
-  // Keep shop labels above and in front of roof geometry on the mobile camera.
-  sign.position.set(-w / 2 + 0.5, baseH + upH + 0.78, d / 2 + 1.15);
-  sign.userData.baseY = sign.position.y;
+  sign.position.set(-w / 2 + 0.5, baseH + upH + 0.53, d / 2 + 0.84);
   g.add(sign);
   villageSigns.push(sign);
 
@@ -25922,15 +26331,16 @@ function villageMakeWreckedBuilding(r, pal, kind) {
 
 // A construction site: scaffold, half-risen walls and a builder at work. The
 // wall shell's height tracks build progress, so returning players see it rise.
-function villageMakeConstructionSite(r, pal, progress) {
+function villageMakeConstructionSite(r, pal, progress, construction) {
   const g = new THREE.Group();
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
   const plasterMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, -0.04, 0.02) });
   const dirt = new THREE.Mesh(new THREE.CircleGeometry(2.3, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.ground).offsetHSL(0.02, -0.18, 0.08) }));
   dirt.rotation.x = -Math.PI / 2; dirt.position.y = 0.012; g.add(dirt);
   const shellH = 0.35 + Math.max(0, Math.min(1, Number(progress) || 0)) * 1.3;
-  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.9, shellH, 1.5), plasterMat);
-  shell.position.y = shellH / 2; g.add(shell);
+  const shellFullH = 1.65;
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.9, shellFullH, 1.5), plasterMat);
+  shell.scale.y = shellH / shellFullH; shell.position.y = shellH / 2; g.add(shell);
   // scaffold: corner posts, ledgers and a walk-board
   for (const sx of [-1.15, 1.15]) for (const sz of [-0.95, 0.95]) {
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 2.3, 0.09), beamMat);
@@ -25951,6 +26361,26 @@ function villageMakeConstructionSite(r, pal, progress) {
   builder.position.set(-0.4, 0, 1.7);
   builder.lookAt(0, 0, 0); builder.rotation.x = 0; builder.rotation.z = 0;
   g.add(builder);
+  // A visible hammer stroke and a small material sled make progress readable
+  // even when the shell itself has only risen by a few centimetres.
+  const hammer = new THREE.Group();
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.025, 0.56, 5), beamMat);
+  handle.position.y = 0.28; hammer.add(handle);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.11, 0.11), new THREE.MeshLambertMaterial({ color:0x77746c }));
+  head.position.y = 0.57; hammer.add(head);
+  hammer.position.set(-0.12, 0.65, 1.42); hammer.rotation.z = -0.5; g.add(hammer);
+  const materialSled = villageMakeCrates(r, pal);
+  materialSled.scale.setScalar(0.62); materialSled.position.set(-1.6, 0, -1.38); g.add(materialSled);
+  const dust = [];
+  for (let i = 0; i < 3; i++) {
+    const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map:villageSmokeTexture(), color:0xc8a874, transparent:true, depthWrite:false, opacity:0 }));
+    puff.scale.setScalar(0.34 + i * 0.08);
+    puff.position.set((r() - 0.5) * 1.2, 0.2 + r() * 0.55, (r() - 0.5) * 1.0);
+    puff.userData = { base:puff.position.clone(), phase:r() * Math.PI * 2 };
+    dust.push(puff); g.add(puff);
+  }
+  g.userData = { constructionSite:true, construction:construction || null, progress:Math.max(0, Math.min(1, Number(progress) || 0)), shell, shellFullH, hammer, materialSled, dust, phase:r() * Math.PI * 2 };
+  villageConstructionSites.push(g);
   g.add(villageBlobShadow(2.1));
   return g;
 }
@@ -26034,8 +26464,97 @@ function villageMakePond(r, pal) {
   return g;
 }
 
-// A wattle-fenced pen with a few sheep or geese.
-function villageMakePen(r, pal) {
+// Convert the simulation ledger into a deliberately small ambient cast. The
+// arithmetic favours residents when food is secure, carts when workers are
+// staffed, and livestock when farms/larders can support them; every number is
+// capped again by the device quality profile.
+function villageAmbientLifeBudget(snapshot, tier, isTown, quality) {
+  const profile = quality || { maxAmbientActors:18 };
+  const cap = Math.max(0, Number(profile.maxAmbientActors) || 0);
+  if (!cap) return { people:0, traffic:0, livestock:0, birds:0, population:0, provision:0, workforce:0 };
+  const hasLedger = !!(snapshot && Number.isFinite(Number(snapshot.pop)));
+  const population = hasLedger ? Math.max(0, Number(snapshot.pop) || 0) : (isTown ? 30 : 7 + Math.max(0, tier || 0) * 8);
+  const workforce = hasLedger ? Math.max(0, Number(snapshot.workforce && snapshot.workforce.working) || 0) : Math.max(1, Math.round(population * 0.45));
+  const food = snapshot && snapshot.provisions && snapshot.provisions.food;
+  const water = snapshot && snapshot.provisions && snapshot.provisions.water;
+  const serviceRatio = store => !store || !(Number(store.eats) > 0) ? 1 : Math.min(1, (Math.max(0, Number(store.rate) || 0) + Math.max(0, Number(store.store) || 0)) / Number(store.eats));
+  const provision = Math.min(serviceRatio(food), serviceRatio(water));
+  const scale = hasLedger ? 0.45 + provision * 0.55 : 1;
+  let people = Math.min(isTown ? 11 : 8, Math.max(hasLedger && population <= 0 ? 0 : 1, Math.round((1 + Math.sqrt(population) * (isTown ? 1.25 : 0.9)) * scale)));
+  let traffic = workforce <= 0 ? 0 : Math.min(isTown ? 3 : 2, 1 + Math.floor(workforce / (isTown ? 18 : 11)));
+  let livestock = Math.min(isTown ? 5 : 3, Math.max(0, Math.floor((population + Math.max(0, Number(food && food.rate) || 0) * 2) / (isTown ? 18 : 12))));
+  livestock = Math.round(livestock * (0.35 + provision * 0.65));
+  let birds = Math.min(isTown ? 9 : 6, Math.max(2, 2 + Math.floor(population / (isTown ? 18 : 12))));
+  // A flock is made of tiny meshes, but still shares the actor budget on small
+  // phones. Trim spectacle before residents or working traffic.
+  while (people + traffic + livestock + birds > cap && birds > 2) birds--;
+  while (people + traffic + livestock + birds > cap && people > 1) people--;
+  while (people + traffic + livestock + birds > cap && livestock > 0) livestock--;
+  while (people + traffic + livestock + birds > cap && traffic > 0) traffic--;
+  return { people, traffic, livestock, birds, population, provision, workforce };
+}
+function villageAmbientLifeKey(snapshot) {
+  if (!snapshot || !Number.isFinite(Number(snapshot.pop))) return 'wild';
+  const ratio = kind => {
+    const store = snapshot.provisions && snapshot.provisions[kind];
+    if (!store || !(Number(store.eats) > 0)) return 10;
+    return Math.max(0, Math.min(10, Math.round(((Number(store.rate) || 0) + (Number(store.store) || 0)) / Number(store.eats) * 10)));
+  };
+  return [Math.max(0, Math.floor(Number(snapshot.pop) || 0)), Math.max(0, Math.floor(Number(snapshot.workforce && snapshot.workforce.working) || 0)), ratio('food'), ratio('water')].join('.');
+}
+
+// One low-poly farm animal with an animated neck: sheep remain, while cattle,
+// goats and pigs give prosperous pens a much clearer silhouette.
+function villageMakeLivestock(r, pal, kind, register) {
+  kind = kind || ['sheep', 'cattle', 'goat', 'pig'][Math.floor(r() * 4)];
+  const g = new THREE.Group();
+  const colors = { sheep:0xe0d8c7, cattle:0x765039, goat:0xaaa08b, pig:0xc88778, horse:0x704629 };
+  const bodyMat = new THREE.MeshLambertMaterial({ color:colors[kind] || colors.sheep });
+  const darkMat = new THREE.MeshLambertMaterial({ color:kind === 'pig' ? 0x9f6158 : 0x3b2a20 });
+  const size = kind === 'cattle' || kind === 'horse' ? 1.15 : kind === 'pig' ? 0.72 : 0.78;
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 6), bodyMat);
+  body.scale.set((kind === 'pig' ? 1.55 : 1.7) * size, (kind === 'pig' ? 0.9 : 1) * size, 1.02 * size);
+  body.position.y = (kind === 'pig' ? 0.34 : 0.48) * size; g.add(body);
+  if (kind === 'sheep') {
+    for (const px of [-0.22, 0.04, 0.27]) {
+      const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.24 * size, 6, 5), bodyMat);
+      tuft.position.set(px * size, 0.58 * size, 0); g.add(tuft);
+    }
+  }
+  const neck = new THREE.Group();
+  neck.position.set(0.48 * size, (kind === 'pig' ? 0.42 : 0.62) * size, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry((kind === 'pig' ? 0.18 : 0.2) * size, 7, 6), kind === 'sheep' ? darkMat : bodyMat);
+  head.scale.set(1.08, 0.9, 0.9); neck.add(head);
+  const muzzle = new THREE.Mesh(new THREE.BoxGeometry(0.18 * size, 0.12 * size, 0.18 * size), kind === 'pig' ? bodyMat : darkMat);
+  muzzle.position.set(0.18 * size, -0.03 * size, 0); neck.add(muzzle);
+  if (kind === 'pig') {
+    for (const sz of [-1, 1]) {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055 * size, 0.13 * size, 4), bodyMat);
+      ear.position.set(-0.02 * size, 0.19 * size, sz * 0.11 * size); ear.rotation.x = sz * 0.3; neck.add(ear);
+    }
+  } else if (kind === 'cattle' || kind === 'goat') {
+    const hornMat = new THREE.MeshLambertMaterial({ color:0xd6c8a5 });
+    for (const sz of [-1, 1]) {
+      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.035 * size, (kind === 'goat' ? 0.2 : 0.16) * size, 5), hornMat);
+      horn.position.set(-0.02 * size, 0.2 * size, sz * 0.16 * size); horn.rotation.z = -0.35; horn.rotation.x = sz * 0.25; neck.add(horn);
+    }
+  }
+  g.add(neck);
+  const legY = (kind === 'pig' ? 0.16 : 0.24) * size;
+  for (const lx of [-0.25, 0.25]) for (const lz of [-0.18, 0.18]) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * size, 0.045 * size, legY * 2, 5), darkMat);
+    leg.position.set(lx * size, legY, lz * size); g.add(leg);
+  }
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * size, 0.025 * size, 0.25 * size, 4), darkMat);
+  tail.position.set(-0.51 * size, 0.58 * size, 0); tail.rotation.z = 0.9; g.add(tail);
+  g.userData = { livestockKind:kind, neck, phase:r() * Math.PI * 2, baseRotationY:0, body };
+  if (register !== false) villageLivestock.push(g);
+  return g;
+}
+
+// A wattle-fenced pen whose occupants graze and look up instead of sitting as
+// unanimated blobs. `count` comes from the simulation-linked ambient budget.
+function villageMakePen(r, pal, count) {
   const g = new THREE.Group();
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
   const w = 2.6 + r() * 1.2, d = 2.2 + r() * 1.0;
@@ -26048,17 +26567,14 @@ function villageMakePen(r, pal) {
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.72, 0.09), beamMat);
     post.position.set(sx, 0.36, sz); g.add(post);
   }
-  const geese = r() < 0.4;
-  const bodyMat = new THREE.MeshLambertMaterial({ color: geese ? 0xf0eee6 : 0xe4ddcc });
-  const headMat = new THREE.MeshLambertMaterial({ color: geese ? 0xe8a53a : 0x2a241c });
-  for (let i = 0; i < 2 + Math.floor(r() * 3); i++) {
-    const critter = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.SphereGeometry(geese ? 0.16 : 0.26, 7, 5), bodyMat);
-    body.scale.set(1.25, 0.95, 1); body.position.y = geese ? 0.22 : 0.3; critter.add(body);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(geese ? 0.07 : 0.11, 6, 5), headMat);
-    head.position.set(geese ? 0.16 : 0.27, geese ? 0.42 : 0.42, 0); critter.add(head);
+  const animalCount = Math.max(1, Math.min(4, Number(count) || (2 + Math.floor(r() * 3))));
+  const kinds = ['cattle', 'goat', 'pig', 'sheep'];
+  for (let i = 0; i < animalCount; i++) {
+    const critter = villageMakeLivestock(r, pal, kinds[i % kinds.length]);
+    critter.scale.setScalar(i === 0 && animalCount < 3 ? 0.9 : 0.72 + r() * 0.16);
     critter.position.set((r() - 0.5) * (w - 0.7), 0, (r() - 0.5) * (d - 0.7));
     critter.rotation.y = r() * Math.PI * 2;
+    critter.userData.baseRotationY = critter.rotation.y;
     g.add(critter);
   }
   g.add(villageBlobShadow(Math.max(w, d) * 0.62));
@@ -26068,12 +26584,14 @@ function villageMakePen(r, pal) {
 // A hand cart resting by the square.
 function villageMakeCart(r, pal) {
   const g = new THREE.Group();
+  g.userData.wheels = [];
   const woodMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.06) });
   const bed = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.32, 0.9), woodMat);
   bed.position.y = 0.55; bed.rotation.z = -0.16; g.add(bed);
   for (const sz of [-0.5, 0.5]) {
     const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.08, 10), woodMat);
     wheel.rotation.x = Math.PI / 2; wheel.position.set(0.25, 0.34, sz); g.add(wheel);
+    g.userData.wheels.push(wheel);
   }
   for (const sz of [-0.3, 0.3]) {
     const handle = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 0.06), woodMat);
@@ -26088,6 +26606,54 @@ function villageMakeCart(r, pal) {
   }
   g.add(villageBlobShadow(0.9));
   return g;
+}
+
+// Working traffic: alternating horse carts and handcarts make the roads feel
+// productive without path-finding or imported models.
+function villageMakeTrafficCart(r, pal, horseDrawn) {
+  const g = new THREE.Group();
+  const cart = villageMakeCart(r, pal);
+  cart.position.x = horseDrawn ? -0.65 : 0;
+  g.add(cart);
+  let horse = null, pusher = null;
+  if (horseDrawn) {
+    horse = villageMakeLivestock(r, pal, 'horse', false);
+    horse.scale.setScalar(0.88); horse.position.set(1.35, 0, 0); g.add(horse);
+    const shaftMat = new THREE.MeshLambertMaterial({ color:pal.timber });
+    for (const sz of [-0.25, 0.25]) {
+      const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.045, 0.045), shaftMat);
+      shaft.position.set(0.55, 0.42, sz); g.add(shaft);
+    }
+  } else {
+    pusher = villageMakeVillager(r, pal, 'commoner');
+    pusher.scale.setScalar(0.9); pusher.position.set(-1.48, 0, 0); pusher.rotation.y = Math.PI / 2; g.add(pusher);
+  }
+  g.userData = { traffic:true, horseDrawn:!!horseDrawn, cart, wheels:cart.userData.wheels || [], horse, pusher, phase:r() * Math.PI * 2, route:null };
+  villageTraffic.push(g);
+  return g;
+}
+
+// A tiny wheeling flock high enough to read against the sky but low enough to
+// remain inside the settlement fog. Members share one route and flap in phase.
+function villageMakeOverheadFlock(r, pal, count) {
+  const flock = new THREE.Group();
+  const members = [];
+  const bodyMat = new THREE.MeshLambertMaterial({ color:new THREE.Color(pal.timber).offsetHSL(0.58, -0.25, 0.14) });
+  const wingGeo = new THREE.BoxGeometry(0.12, 0.025, 0.28);
+  for (let i = 0; i < Math.max(2, Math.min(9, Number(count) || 3)); i++) {
+    const bird = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.075, 5, 4), bodyMat);
+    body.scale.set(1.65, 0.8, 0.82); bird.add(body);
+    const left = new THREE.Mesh(wingGeo, bodyMat), right = new THREE.Mesh(wingGeo, bodyMat);
+    left.position.z = 0.16; right.position.z = -0.16; bird.add(left, right);
+    bird.position.set(-i * 0.42 + (i % 2) * 0.18, Math.abs(i - 1) * 0.08, (i % 2 ? 1 : -1) * (0.22 + Math.floor(i / 2) * 0.24));
+    bird.scale.setScalar(0.78 + r() * 0.24);
+    bird.userData = { left, right, phase:r() * Math.PI * 2 };
+    members.push(bird); flock.add(bird);
+  }
+  flock.userData = { flock:true, members, phase:r() * Math.PI * 2, speed:(0.055 + r() * 0.025) * (r() < 0.5 ? -1 : 1), radius:12 + r() * 4, height:8.5 + r() * 2.5 };
+  villageFlocks.push(flock);
+  return flock;
 }
 
 // Round hay bales near the fields.
@@ -27301,13 +27867,16 @@ function villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt) {
 
 // ---- Renderer / scene lifecycle ----------------------------------------------
 function ensureVillageRenderer(stage) {
+  villageSceneQuality = settlementSceneQualityProfile(stage);
+  settlementSceneBindControls('village', stage);
   if (villageRenderer) {
+    villageRenderer.setPixelRatio(Math.min(villageSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
     if (!villageRenderer.domElement.isConnected) stage.appendChild(villageRenderer.domElement);
     return;
   }
   villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 140); // far covers the 96-radius sky dome from max orbit
   villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  villageRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  villageRenderer.setPixelRatio(Math.min(villageSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
   villageRenderer.shadowMap.enabled = true; // real moonlight shadows
   villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   villageRenderer.shadowMap.autoUpdate = false; // static moon: the pass re-renders every 3rd frame (see villageAnimateFrame)
@@ -27409,11 +27978,13 @@ function ensureVillageRenderer(stage) {
     const hits = ray.intersectObjects(villageBuildings.concat(villageNpcs), true);
     if (hits.length > 0) {
       let obj = hits[0].object;
-      while (obj && !obj.userData.shopKey && !obj.userData.npc && obj.userData.ruinIndex === undefined) obj = obj.parent;
+      while (obj && !obj.userData.shopKey && !obj.userData.npc && !obj.userData.sceneLabel && obj.userData.ruinIndex === undefined) obj = obj.parent;
+      const info = villageSceneContextInfo(obj);
+      if (info) settlementSceneSetContext('village', obj, info);
       if (obj && obj.userData.shopKey) villageOpenShop(obj.userData.shopKey);
       else if (obj && obj.userData.ruinIndex !== undefined) villageTapRuin(obj.userData.ruinIndex);
       else if (obj && obj.userData.npc) villageGreetNpc(obj);
-    }
+    } else settlementSceneClearContext('village');
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
@@ -27428,6 +27999,7 @@ function ensureVillageRenderer(stage) {
 
 function disposeVillageScene() {
   if (!villageScene) return;
+  settlementSceneClearContext('village');
   villageScene.traverse(o => {
     if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
     if (o.isLight) { // free the shadow render target, or every rebuild leaks 16MB of GPU memory
@@ -27448,6 +28020,7 @@ function disposeVillageScene() {
   villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null; villageWindmills = [];
   villageWalkers = []; villageRoofBirds = []; villageCloths = []; villageDucks = []; villageClouds = []; villageWaterMats = [];
   villageNpcs = []; villageChickens = [];
+  villageTraffic = []; villageLivestock = []; villageFlocks = []; villageConstructionSites = [];
   villageWeatherFx = null; villageShootingStar = null; villageTwinkleStars = null;
 }
 
@@ -27480,6 +28053,8 @@ function buildVillageScene(v) {
   const econRec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
   const devLevel = econRec ? villageTotalDevelopment(econRec) : 0;
   const ruinStage = devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
+  const lifeSnapshot = econRec ? villageEconomySnapshot(econRec) : null;
+  const lifeBudget = villageAmbientLifeBudget(lifeSnapshot, tier, false, villageSceneQuality);
   // Every settlement is also built to one of five plans — and the plans are no
   // longer all rings around a point: a loose village green, a crossroads
   // settlement, a riverside village with a footbridge, a single high street
@@ -27995,7 +28570,7 @@ function buildVillageScene(v) {
   // ring, beehives, washing on the line and a snowman.
   const dressing = [
     { p: 0.55, rad: 3.2, min: 10, max: 15, make: () => villageMakePond(r, pal) },
-    { p: 0.55, rad: 2.4, min: 11, max: 15, make: () => { const pen = villageMakePen(r, pal); pen.rotation.y = r() * Math.PI; return pen; } },
+    { p: lifeBudget.livestock ? Math.min(0.82, 0.3 + lifeBudget.livestock * 0.16) : 0, rad: 2.4, min: 11, max: 15, make: () => { const pen = villageMakePen(r, pal, lifeBudget.livestock); pen.rotation.y = r() * Math.PI; return pen; } },
     { p: 0.6, rad: 1.2, min: 5.5, max: 8.5, make: () => { const cart = villageMakeCart(r, pal); cart.rotation.y = r() * Math.PI * 2; return cart; } },
     { p: tier >= 1 ? 0.5 : 0, rad: 1.6, min: 13, max: 17, make: () => villageMakeHay(r, pal) },
     { p: 0.6, rad: 2.0, min: 10.5, max: 15, make: () => { const veg = villageMakeVegPatch(r, pal); veg.rotation.y = r() * Math.PI; return veg; } },
@@ -28025,7 +28600,8 @@ function buildVillageScene(v) {
   // Villagers out in the evening air: elders, children and townsfolk near the
   // square, walkers on slow circuits, children darting on quicker ones, a dog
   // trotting its rounds and hens pecking at the plaza edge. Tap anyone to chat.
-  const idlers = ruinStage === 0 ? 1 + Math.floor(r() * 2) : 2 + tier * 2 + Math.floor(r() * 3);
+  const visiblePeople = ruinStage === 0 ? Math.min(2, lifeBudget.people) : ruinStage === 1 ? Math.ceil(lifeBudget.people * 0.58) : lifeBudget.people;
+  const idlers = Math.ceil(visiblePeople * 0.56);
   for (let i = 0; i < idlers; i++) {
     const a = r() * Math.PI * 2, rad = 2.4 + r() * 4;
     const roll = r();
@@ -28035,7 +28611,7 @@ function buildVillageScene(v) {
     soul.rotation.y = r() * Math.PI * 2;
     villageScene.add(soul);
   }
-  const walkers = ruinStage === 0 ? 0 : ruinStage === 1 ? 1 : 2 + tier;
+  const walkers = ruinStage === 0 ? 0 : Math.max(0, visiblePeople - idlers);
   for (let i = 0; i < walkers; i++) {
     const young = r() < 0.35;
     const soul = villageMakeVillager(r, pal, young ? 'child' : 'commoner');
@@ -28054,9 +28630,22 @@ function buildVillageScene(v) {
     villageWalkers.push(dog);
     villageScene.add(dog);
   }
+  // Staffed workers move real loads between the yards and square. Route count
+  // comes from the workforce ledger and remains capped on mobile.
+  if (ruinStage >= 1) for (let i = 0; i < lifeBudget.traffic; i++) {
+    const traffic = villageMakeTrafficCart(r, pal, i % 2 === 0);
+    traffic.userData.route = {
+      radiusX:6.8 + i * 1.55, radiusZ:5.1 + i * 1.15,
+      phase:r() * Math.PI * 2,
+      speed:(0.035 + r() * 0.018) * (i % 2 ? -1 : 1)
+    };
+    villageScene.add(traffic);
+  }
   // Hens peck about between the plaza and the first gardens. Like the
   // villagers they're welcome on the square itself, so no spotFree check.
-  const henCount = ruinStage === 0 ? 1 : 2 + Math.floor(r() * 3); // one stubborn hen stays through anything
+  const henCount = villageSceneQuality.maxAmbientActors > 0
+    ? Math.min(4, ruinStage === 0 ? 1 : 1 + Math.ceil(lifeBudget.livestock * 0.7))
+    : 0; // one stubborn hen stays through anything unless reduced motion hides ambient actors
   for (let i = 0; i < henCount; i++) {
     const a = r() * Math.PI * 2, rad = 4.2 + r() * 3.2;
     const hen = villageMakeChicken(r, pal);
@@ -28071,6 +28660,10 @@ function buildVillageScene(v) {
     bard.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
     bard.lookAt(0, 0, 0); bard.rotation.x = 0; bard.rotation.z = 0;
     villageScene.add(bard);
+  }
+  if (lifeBudget.birds > 0) {
+    const flock = villageMakeOverheadFlock(r, pal, lifeBudget.birds);
+    villageScene.add(flock);
   }
 
   // Lantern posts along a couple of the cobbled paths (dark while in ruins)
@@ -28248,13 +28841,17 @@ function buildVillageScene(v) {
       }
       return null;
     };
-    const econLabel = (group, text, height) => {
+    const econLabel = (group, text, _height) => {
       const sign = villageMakeSign(text);
-      sign.scale.set(2.6, 0.98, 1);
-      sign.position.set(0, height, 0);
-      sign.userData.baseY = sign.position.y;
-      group.add(sign);
+      const mount = villageMountGroundSign(sign, pal, 'economy');
+      mount.position.set(1.45, 0, 1.25);
+      mount.rotation.y = -0.32;
+      group.add(mount);
       villageSigns.push(sign);
+      const parts = String(text).trim().split(/\s+/), icon = parts.shift() || '🏠';
+      group.userData.sceneLabel = { icon, name:parts.join(' ') || 'Village building', detail:'Governor-built structure · select Manage to open the building yard' };
+      group.userData.economyBuilding = true;
+      villageBuildings.push(group);
     };
     const pendingCon = villageConstructionFor(econRec);
     EMPIRE_BUILDINGS.forEach(b => {
@@ -28265,7 +28862,7 @@ function buildVillageScene(v) {
         // The building being built: scaffold, half-raised walls, busy builder.
         const spot = econScatter(8.5, 13.5, 2.8);
         if (spot) {
-          const site = villageMakeConstructionSite(er, pal, constructionProgress(pendingCon));
+          const site = villageMakeConstructionSite(er, pal, constructionProgress(pendingCon), pendingCon);
           site.position.set(spot.x, 0, spot.z);
           site.rotation.y = -spot.a + (er() - 0.5) * 0.5;
           econLabel(site, '🏗️ ' + b.icon + ' ' + (level ? b.name + ' upgrade' : b.name), 2.9);
@@ -28402,7 +28999,7 @@ function buildVillageScene(v) {
   const moon = new THREE.DirectionalLight(daylight.keyColor, daylight.keyIntensity);
   moon.position.copy(moonLightDir).multiplyScalar(42);
   moon.castShadow = true;
-  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.mapSize.set(villageSceneQuality.shadowSize || 1024, villageSceneQuality.shadowSize || 1024);
   const shadowSpan = groundR + 4;
   moon.shadow.camera.left = -shadowSpan; moon.shadow.camera.right = shadowSpan;
   moon.shadow.camera.top = shadowSpan; moon.shadow.camera.bottom = -shadowSpan;
@@ -28431,6 +29028,7 @@ function buildVillageScene(v) {
 
   villageBuiltSeed = v.seed;
   villageBuiltPhase = daylight.phase;
+  villageBuiltLifeKey = villageAmbientLifeKey(lifeSnapshot);
   if (villageRenderer) villageRenderer.toneMappingExposure = daylight.exposure;
   // Open on the gap between the first two buildings so nothing blocks the view
   // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
@@ -28450,21 +29048,115 @@ function onVillageResize() {
   villageCamera.updateProjectionMatrix();
 }
 
+function villageAnimatePhysicalSigns(signs, t) {
+  signs.forEach(sign => {
+    const u = sign.userData || {};
+    if (!u.swing || !u.hinge) return;
+    // A few degrees at the hinge, never a floating vertical bob.
+    u.hinge.rotation.z = (u.baseRotationZ || 0) + Math.sin(t * 0.72 + (u.phase || 0)) * 0.024;
+  });
+}
+function villageAnimateTrafficActors(actors, t) {
+  actors.forEach((actor, index) => {
+    const u = actor.userData || {}, route = u.route;
+    if (!route) return;
+    const ph = (route.phase || 0) + t * (route.speed || 0.035);
+    const rx = route.radiusX || route.rad || 7, rz = route.radiusZ || route.rad || 5;
+    const cx = route.centerX || 0, cz = route.centerZ || 0;
+    actor.position.set(cx + Math.cos(ph) * rx, Math.abs(Math.sin(t * 4 + index)) * 0.018, cz + Math.sin(ph) * rz);
+    const direction = Math.sign(route.speed || 1), vx = -Math.sin(ph) * rx * direction, vz = Math.cos(ph) * rz * direction;
+    actor.rotation.y = Math.atan2(-vz, vx);
+    (u.wheels || []).forEach((wheel, wi) => { wheel.rotation.z = ph * 4.2 + wi * Math.PI; });
+    if (u.horse && u.horse.userData && u.horse.userData.neck) u.horse.userData.neck.rotation.z = Math.sin(t * 4.2 + u.phase) * 0.08;
+    if (u.pusher) u.pusher.rotation.z = Math.sin(t * 4 + u.phase) * 0.025;
+  });
+}
+function villageAnimateLivestockActors(animals, t) {
+  animals.forEach((animal, index) => {
+    const u = animal.userData || {};
+    if (!u.neck) return;
+    if (u.baseRotationY === undefined) u.baseRotationY = animal.rotation.y;
+    const graze = Math.max(0, Math.sin(t * (0.42 + (index % 3) * 0.08) + (u.phase || 0)));
+    u.neck.rotation.z = -0.62 * graze;
+    animal.rotation.y = u.baseRotationY + Math.sin(t * 0.18 + (u.phase || 0)) * 0.18;
+    if (u.body) {
+      if (u.body.userData.baseY === undefined) u.body.userData.baseY = u.body.position.y;
+      u.body.position.y = u.body.userData.baseY + Math.sin(t * 1.1 + u.phase) * 0.012;
+    }
+  });
+}
+function villageAnimateFlockActors(flocks, t) {
+  flocks.forEach((flock, flockIndex) => {
+    const u = flock.userData || {};
+    const ph = (u.phase || 0) + t * (u.speed || 0.06), radius = u.radius || 13;
+    flock.position.set(Math.cos(ph) * radius, (u.height || 9) + Math.sin(t * 0.33 + flockIndex) * 0.35, Math.sin(ph) * radius * 0.72);
+    const direction = Math.sign(u.speed || 1), vx = -Math.sin(ph) * direction, vz = Math.cos(ph) * 0.72 * direction;
+    flock.rotation.y = Math.atan2(-vz, vx);
+    (u.members || []).forEach((bird, index) => {
+      const flap = Math.sin(t * (5.4 + (index % 3) * 0.45) + bird.userData.phase) * 0.72;
+      bird.userData.left.rotation.x = flap;
+      bird.userData.right.rotation.x = -flap;
+    });
+  });
+}
+function villageAnimateConstructionActors(sites, t, motion) {
+  const now = Date.now();
+  sites.forEach((site, siteIndex) => {
+    const u = site.userData || {};
+    const progress = u.construction ? constructionProgress(u.construction, now) : (Number(u.progress) || 0);
+    const p = Math.max(0, Math.min(1, progress));
+    if (u.shell) {
+      const fullH = u.shellFullH || 1.65, shellH = 0.35 + p * 1.3;
+      u.shell.scale.y = shellH / fullH;
+      u.shell.position.y = shellH / 2;
+    }
+    const active = p < 0.998 && motion > 0;
+    if (u.hammer) u.hammer.rotation.z = active ? -0.52 + Math.max(0, Math.sin(t * 7.2 + u.phase)) * 0.82 : -0.42;
+    if (u.materialSled) u.materialSled.position.x = -1.6 + (active ? Math.sin(t * 0.55 + u.phase) * 0.18 : 0);
+    (u.dust || []).forEach((puff, index) => {
+      const beat = active ? Math.max(0, Math.sin(t * 3.1 + puff.userData.phase + siteIndex)) : 0;
+      puff.position.y = puff.userData.base.y + beat * (0.22 + index * 0.05);
+      puff.material.opacity = beat * 0.13 * (1 - p * 0.35);
+    });
+  });
+}
+
 function villageAnimate(ts) {
   if (currentScreen !== 'village') { villageRunning = false; return; }
+  const stage = $('villageStage');
+  if (!settlementSceneShouldRun(true, true, stage)) {
+    stage?.classList.add('is-paused');
+    setTimeout(() => {
+      if (!villageRunning) return;
+      if (currentScreen === 'village') requestAnimationFrame(villageAnimate);
+      else villageRunning = false;
+    }, 300);
+    return;
+  }
+  stage?.classList.remove('is-paused');
   requestAnimationFrame(villageAnimate);
+  const interval = Number(villageSceneQuality.frameInterval) || 16;
+  if (ts && villageLastFrameAt && ts - villageLastFrameAt < interval) return;
+  villageLastFrameAt = ts || 0;
   if (!villageRenderer || !villageScene) return;
   villageAnimateFrame((ts || 0) / 1000);
 }
 
 function villageAnimateFrame(t) {
+  const motion = settlementSceneMotionScale();
   // Slow idle drift, but only once the player has left the camera alone for a
   // while — never wrestle the view away from someone exploring the village.
-  if (Date.now() - (villageCam.lastInputAt || 0) > 8000) villageCam.azimuth += 0.0006;
+  if (motion && Date.now() - (villageCam.lastInputAt || 0) > 8000) villageCam.azimuth += 0.0006;
+  t *= motion;
   const { azimuth, polar, dist, tx, tz } = villageCam;
   villageCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
   villageCamera.lookAt(tx, 1.4, tz);
-  villageSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
+  settlementSceneUpdateContext('village', villageCamera, villageScene);
+  villageAnimatePhysicalSigns(villageSigns, t);
+  villageAnimateTrafficActors(villageTraffic, t);
+  villageAnimateLivestockActors(villageLivestock, t);
+  villageAnimateFlockActors(villageFlocks, t);
+  villageAnimateConstructionActors(villageConstructionSites, t, motion);
   villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
   villageWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });
   villageSmokes.forEach(p => {
@@ -28587,8 +29279,104 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
       e.villages[String(seed >>> 0)] = rec;
       villageBuiltSeed = null; // force the next renderVillage to rebuild with the new record
     },
-    state: () => ({ scene: villageScene, camera: villageCamera, renderer: villageRenderer, cam: villageCam, buildings: villageBuildings, walkers: villageWalkers, roofBirds: villageRoofBirds, ducks: villageDucks, cloths: villageCloths, clouds: villageClouds, waterMats: villageWaterMats, weatherFx: villageWeatherFx, shootingStar: villageShootingStar, npcs: villageNpcs, chickens: villageChickens })
+    state: () => ({ scene: villageScene, camera: villageCamera, renderer: villageRenderer, cam: villageCam, quality:villageSceneQuality, buildings: villageBuildings, walkers: villageWalkers, traffic:villageTraffic, livestock:villageLivestock, flocks:villageFlocks, constructionSites:villageConstructionSites, roofBirds: villageRoofBirds, ducks: villageDucks, cloths: villageCloths, clouds: villageClouds, waterMats: villageWaterMats, weatherFx: villageWeatherFx, shootingStar: villageShootingStar, npcs: villageNpcs, chickens: villageChickens })
   };
+}
+
+// The civic heart is no longer implied by a menu. Every paid Hall level grows
+// this same procedural building: wings, upper storeys, council banners, clock
+// tower and finally a crown spire. A City receives paired borough turrets.
+function villageMakeTownHall(r, pal, hallLevel, isCity) {
+  const level = Math.max(1, Math.min(5, Math.floor(Number(hallLevel) || 1)));
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color:new THREE.Color(pal.stone).offsetHSL(0, -0.02, 0.07) });
+  const wallMat = new THREE.MeshLambertMaterial({ color:new THREE.Color(pal.plaster).offsetHSL(0, -0.03, isCity ? 0.06 : 0.025) });
+  const trimMat = new THREE.MeshLambertMaterial({ color:pal.timber });
+  const roofMat = new THREE.MeshLambertMaterial({ color:pal.roofs[(level + (isCity ? 1 : 0)) % pal.roofs.length] });
+  const goldMat = new THREE.MeshLambertMaterial({ color:isCity ? 0xd6ac45 : 0xb88938 });
+  const windowMat = new THREE.MeshBasicMaterial({ color:0xffd58a });
+  const w = (isCity ? 7.2 : 6.1) + level * 0.22, d = (isCity ? 5.2 : 4.5) + level * 0.12;
+  const floors = 1 + Math.floor((level - 1) / 2);
+  const floorH = 1.42, mainH = floors * floorH + 0.5;
+
+  const foundation = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.45, d + 0.6), stoneMat);
+  foundation.position.y = 0.225; g.add(foundation);
+  for (let floor = 0; floor < floors; floor++) {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w - floor * 0.16, floorH, d - floor * 0.1), wallMat);
+    body.position.y = 0.45 + floorH * (floor + 0.5); g.add(body);
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.13, d + 0.12), floor === 0 ? stoneMat : trimMat);
+    belt.position.y = 0.45 + floor * floorH; g.add(belt);
+    const windowCount = Math.min(6, 3 + level);
+    for (let i = 0; i < windowCount; i++) {
+      const wx = -w / 2 + (i + 0.5) * w / windowCount;
+      if (floor === 0 && Math.abs(wx) < 0.72) continue;
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.62, 0.075), windowMat);
+      win.position.set(wx, 0.45 + floor * floorH + floorH * 0.56, d / 2 + 0.045); g.add(win);
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.09, 0.12), trimMat);
+      lintel.position.set(wx, win.position.y + 0.36, d / 2 + 0.04); g.add(lintel);
+    }
+  }
+  const doorMat = new THREE.MeshLambertMaterial({ color:new THREE.Color(pal.timber).offsetHSL(0, 0.08, -0.08) });
+  for (const sx of [-0.38, 0.38]) {
+    const door = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.35, 0.12), doorMat);
+    door.position.set(sx, 1.12, d / 2 + 0.075); g.add(door);
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), goldMat);
+    knob.position.set(sx + (sx < 0 ? 0.22 : -0.22), 1.08, d / 2 + 0.15); g.add(knob);
+  }
+  for (let i = 0; i < 3; i++) {
+    const step = new THREE.Mesh(new THREE.BoxGeometry(2.2 + i * 0.35, 0.12, 0.52), stoneMat);
+    step.position.set(0, 0.06 + i * 0.11, d / 2 + 0.38 + i * 0.19); g.add(step);
+  }
+  if (level >= 2) {
+    for (const sx of [-1, 1]) {
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(1.35 + level * 0.08, 1.65, d - 0.55), wallMat);
+      wing.position.set(sx * (w / 2 + 0.55), 1.28, -0.08); g.add(wing);
+      const wingRoof = new THREE.Mesh(new THREE.ConeGeometry(1.18, 0.86, 4), roofMat);
+      wingRoof.position.set(wing.position.x, 2.52, -0.08); wingRoof.rotation.y = Math.PI / 4; g.add(wingRoof);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.85, 5), trimMat);
+      pole.position.set(sx * (w / 2 - 0.55), mainH - 0.15, d / 2 + 0.18); g.add(pole);
+      const banner = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.92), new THREE.MeshLambertMaterial({ color:isCity ? 0xc89b38 : 0x477451, side:THREE.DoubleSide }));
+      banner.position.set(pole.position.x + sx * 0.3, mainH + 0.28, d / 2 + 0.2); g.add(banner);
+    }
+  }
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.68, 1.35 + level * 0.08, 4), roofMat);
+  roof.position.y = mainH + 0.68; roof.rotation.y = Math.PI / 4; g.add(roof);
+
+  if (level >= 3) {
+    const towerH = 1.8 + (level - 3) * 0.55 + (isCity ? 0.35 : 0);
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(2.0 + (isCity ? 0.25 : 0), towerH, 2.0), stoneMat);
+    tower.position.y = mainH + 0.45 + towerH / 2; g.add(tower);
+    for (const z of [-1, 1]) {
+      const highWin = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.7, 0.08), windowMat);
+      highWin.position.set(0, tower.position.y, z * 1.04); g.add(highWin);
+    }
+    if (level >= 4) {
+      const clockFace = new THREE.Mesh(new THREE.CircleGeometry(0.42, 18), new THREE.MeshBasicMaterial({ color:0xe9dfbf }));
+      clockFace.position.set(0, tower.position.y + 0.1, 1.055); g.add(clockFace);
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.48, 0.025), trimMat);
+      hand.position.set(0, tower.position.y + 0.16, 1.105); hand.rotation.z = 0.45; g.add(hand);
+    }
+    const towerRoof = new THREE.Mesh(new THREE.ConeGeometry(1.62, level >= 5 ? 2.1 : 1.25, 4), roofMat);
+    towerRoof.position.y = mainH + 0.45 + towerH + (level >= 5 ? 1.05 : 0.62); towerRoof.rotation.y = Math.PI / 4; g.add(towerRoof);
+    if (level >= 5) {
+      const spire = new THREE.Mesh(new THREE.ConeGeometry(0.11, 1.25, 6), goldMat);
+      spire.position.y = towerRoof.position.y + 1.55; g.add(spire);
+      const crown = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.055, 5, 12), goldMat);
+      crown.position.y = spire.position.y + 0.48; crown.rotation.x = Math.PI / 2; g.add(crown);
+    }
+  }
+  if (isCity) {
+    for (const sx of [-1, 1]) {
+      const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.82, 2.55 + level * 0.2, 10), stoneMat);
+      turret.position.set(sx * (w / 2 + 0.48), 1.5 + level * 0.1, -d / 2 + 0.38); g.add(turret);
+      const turretRoof = new THREE.Mesh(new THREE.ConeGeometry(1.02, 1.25, 10), roofMat);
+      turretRoof.position.set(turret.position.x, turret.position.y + 1.75 + level * 0.1, turret.position.z); g.add(turretRoof);
+    }
+  }
+  g.add(villageBlobShadow((w + 1.8) * 0.62));
+  g.userData.townHall = { level, city:!!isCity };
+  g.userData.sceneLabel = { icon:'🏛️', name:(isCity ? 'City Hall' : 'Town Hall'), detail:'Level ' + level + ' · builders, policy and civic upgrades' };
+  return g;
 }
 
 // ---- Town scene state --------------------------------------------------------
@@ -28600,20 +29388,27 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
 let townScene = null, townRenderer = null, townCamera = null, townRunning = false;
 let townDistrictGroups = [], townEconBuildings = [], townSigns = [], townTorches = [], townSmokes = [], townWindmills = [];
 let townWalkers = [], townRoofBirds = [], townCloths = [], townNpcs = [], townChickens = [], townClouds = [];
+let townTraffic = [], townLivestock = [], townFlocks = [], townConstructionSites = [];
+let townHallBuilding = null;
 let townCam = { azimuth: 0, polar: 1.0, dist: 36, tx: 0, tz: 0, lastInputAt: 0 };
 let townShadowTick = 0;
 let townFallbackMode = false;
 let townBuiltKey = null;
 let townBuiltPhase = null; // the daylight phase the scene was lit for
+let townSceneQuality = { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
+let townLastFrameAt = 0;
 
 function ensureTownRenderer(stage) {
+  townSceneQuality = settlementSceneQualityProfile(stage);
+  settlementSceneBindControls('town', stage);
   if (townRenderer) {
+    townRenderer.setPixelRatio(Math.min(townSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
     if (!townRenderer.domElement.isConnected) stage.appendChild(townRenderer.domElement);
     return;
   }
   townCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 200); // far covers the sky dome from the widest orbit
   townRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  townRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  townRenderer.setPixelRatio(Math.min(townSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
   townRenderer.shadowMap.enabled = true;
   townRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   townRenderer.shadowMap.autoUpdate = false; // static moon: refreshed every 3rd frame like the village
@@ -28707,17 +29502,29 @@ function ensureTownRenderer(stage) {
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     const ray = new THREE.Raycaster();
     ray.setFromCamera(ndc, townCamera);
-    const hits = ray.intersectObjects(townEconBuildings.concat(townDistrictGroups, townNpcs), true);
+    // The Hall is already registered with the other tappable economy meshes.
+    // Keep each root in the raycast once so a dominant civic model cannot
+    // accidentally win twice over the working yard behind it.
+    const rayTargets = townEconBuildings.concat(townDistrictGroups, townNpcs);
+    const hits = ray.intersectObjects(rayTargets, true);
     if (hits.length > 0) {
       let obj = hits[0].object;
       // Walk up to the nearest tagged thing. A working yard wins over the
       // town, so tapping the farm opens the farm, not the whole ledger.
-      while (obj && obj.userData.buildingId === undefined && !obj.userData.townHallStone && obj.userData.districtSeed === undefined && !obj.userData.npc && !obj.userData.townGround) obj = obj.parent;
+      while (obj && obj.userData.buildingId === undefined && !obj.userData.townHall && !obj.userData.townHallStone && obj.userData.districtSeed === undefined && !obj.userData.npc && !obj.userData.townGround) obj = obj.parent;
+      const info = townSceneContextInfo(obj);
+      if (info) settlementSceneSetContext('town', obj, info);
       if (obj && obj.userData.buildingId !== undefined) openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId);
-      else if (obj && obj.userData.townHallStone) { SFX.tap(); $('townHallSection')?.scrollIntoView({ behavior:'smooth', block:'start' }); }
+      else if (obj && obj.userData.townHall) {
+        const hall = obj.userData.townHall;
+        SFX.tap();
+        showToast('🏛️ ' + (hall.city ? 'City' : 'Town') + ' Hall · Level ' + hall.level + ' — manage builders, upgrades and Council policy below.');
+        settlementSceneScrollTo('townHallSection');
+      }
+      else if (obj && obj.userData.townHallStone) { SFX.tap(); settlementSceneScrollTo('townHallSection'); }
       else if (obj && obj.userData.npc) villageGreetNpc(obj);
       else if (obj && (obj.userData.districtSeed !== undefined || obj.userData.townGround)) openTownLedgerSheet();
-    }
+    } else settlementSceneClearContext('town');
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
@@ -28732,6 +29539,7 @@ function ensureTownRenderer(stage) {
 
 function disposeTownScene() {
   if (!townScene) return;
+  settlementSceneClearContext('town');
   townScene.traverse(o => {
     if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
     if (o.isLight) {
@@ -28751,6 +29559,8 @@ function disposeTownScene() {
   townScene = null;
   townDistrictGroups = []; townEconBuildings = []; townSigns = []; townTorches = []; townSmokes = []; townWindmills = [];
   townWalkers = []; townRoofBirds = []; townCloths = []; townNpcs = []; townChickens = []; townClouds = [];
+  townTraffic = []; townLivestock = []; townFlocks = []; townConstructionSites = [];
+  townHallBuilding = null;
 }
 
 // One ward yard, compact enough for a district quarter: the same shapes the
@@ -28812,6 +29622,11 @@ function buildTownScene(settle) {
   disposeTownScene();
   const isCity = settle.tier === 'city';
   const r = villageRngFrom((Number(settle.heartSeed) ^ 0x517cc1b7) >>> 0);
+  const townLifeSnapshot = townEconomySnapshot(settle);
+  const townLifeBudget = villageAmbientLifeBudget(townLifeSnapshot, isCity ? 2 : 1, true, townSceneQuality);
+  const primaryHallRow = townPrimarySeatRow(settle);
+  const primaryHallState = primaryHallRow && primaryHallRow.state;
+  const hallLevel = Math.max(1, Math.min(5, Number(primaryHallState && primaryHallState.hallLevel) || 1));
   // The real sky: lit for the player's local time of day, like the village.
   const daylight = burbzDaylightGradeNow();
   const basePal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
@@ -28827,6 +29642,8 @@ function buildTownScene(settle) {
   const birdMark = villageRoofBirds.length, clothMark = villageCloths.length;
   const windmillMark = villageWindmills.length;
   const smokeMark = villageSmokes.length, signMark = villageSigns.length;
+  const trafficMark = villageTraffic.length, livestockMark = villageLivestock.length;
+  const flockMark = villageFlocks.length, constructionMark = villageConstructionSites.length;
 
   townScene = new THREE.Scene();
   townScene.background = new THREE.Color(pal.sky);
@@ -28894,6 +29711,21 @@ function buildTownScene(settle) {
   standard.userData.townHallStone = true; // tap the charter stone → the Hall desk below
   townScene.add(standard);
   townEconBuildings.push(standard);
+  const townHallX = -(plazaR + (isCity ? 5.5 : 4.9)), townHallZ = 0.5;
+  townHallBuilding = villageMakeTownHall(r, pal, hallLevel, isCity);
+  townHallBuilding.position.set(townHallX, 0, townHallZ);
+  townHallBuilding.lookAt(0, 1.1, 0); townHallBuilding.rotation.x = 0; townHallBuilding.rotation.z = 0;
+  townScene.add(townHallBuilding);
+  townEconBuildings.push(townHallBuilding);
+  const hallWorksPlot = primaryHallState && primaryHallState.hallConstruction
+    ? { x:townHallX + 4.2, z:townHallZ - 2.8 }
+    : null;
+  if (primaryHallState && primaryHallState.hallConstruction) {
+    const works = villageMakeConstructionSite(r, pal, constructionProgress(primaryHallState.hallConstruction), primaryHallState.hallConstruction);
+    works.scale.setScalar(0.78);
+    works.position.set(hallWorksPlot.x, 0, hallWorksPlot.z);
+    townScene.add(works);
+  }
   const centrepiece = isCity ? villageMakeCentrepiece(r, pal) : villageMakeMaypole(r, pal);
   centrepiece.position.set(plazaR * 0.45, 0, -plazaR * 0.45);
   townScene.add(centrepiece);
@@ -28915,17 +29747,35 @@ function buildTownScene(settle) {
     townTorches.push(glow);
   }
   // Market-day life: townsfolk on their circuits of the square, hens between.
-  for (let i = 0; i < (isCity ? 5 : 3); i++) {
+  for (let i = 0; i < townLifeBudget.people; i++) {
     const walker = villageMakeVillager(r, pal, i === 0 ? 'elder' : i === 1 ? 'child' : 'commoner');
     walker.userData.route = { phase: r() * Math.PI * 2, speed: (0.05 + r() * 0.05) * (r() < 0.5 ? 1 : -1), rad: 3.2 + r() * (plazaR - 4) };
     townScene.add(walker);
     townWalkers.push(walker);
   }
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < Math.min(3, Math.ceil(townLifeBudget.livestock * 0.6)); i++) {
     const hen = villageMakeChicken(r, pal);
     hen.position.set((r() - 0.5) * plazaR, 0, (r() - 0.5) * plazaR);
     townScene.add(hen);
   }
+  // Staffed yards put real traffic on the roads; stocked provisions bring
+  // grazing animals, and prosperity draws a visible flock over the rooftops.
+  for (let i = 0; i < townLifeBudget.traffic; i++) {
+    const traffic = villageMakeTrafficCart(r, pal, i % 2 === 0);
+    traffic.userData.route = {
+      radiusX:plazaR + 3.1 + i * 1.45, radiusZ:plazaR + 1.8 + i * 1.05,
+      phase:r() * Math.PI * 2,
+      speed:(0.028 + r() * 0.014) * (i % 2 ? -1 : 1)
+    };
+    townScene.add(traffic);
+  }
+  if (townLifeBudget.livestock > 0) {
+    const stockYard = villageMakePen(r, pal, townLifeBudget.livestock);
+    stockYard.position.set(plazaR + 4.2, 0, -(plazaR + 2.4));
+    stockYard.rotation.y = -0.45;
+    townScene.add(stockYard);
+  }
+  if (townLifeBudget.birds > 0) townScene.add(villageMakeOverheadFlock(r, pal, townLifeBudget.birds));
 
   // ---- One town, knit from every ward ---------------------------------------
   // Yaan's rule (2026-08-17): no quarter borders, no separate pads — one
@@ -28935,14 +29785,36 @@ function buildTownScene(settle) {
   // angle spacing keeps neighbours apart without a grid. Each ward still
   // builds in its own palette and mirrors its own recovery, so the streets
   // keep the founders' variety without the seams.
-  const planted = [];
+  // Plot roots carry a real footprint. The Hall and its active works reserve
+  // their ground before any ward asks for a home or yard, preventing large
+  // civic geometry from swallowing a cottage or intercepting its tap.
+  const planted = [{ x:townHallX, z:townHallZ, rad:isCity ? 6.2 : 5.4 }];
+  if (hallWorksPlot) planted.push({ ...hallWorksPlot, rad:2.5 });
   const plotCursor = { home: r() * Math.PI * 2, yard: r() * Math.PI * 2, edge: r() * Math.PI * 2 };
   const GOLDEN_ANGLE = 2.399963229728653;
-  const takePlot = (kind, radiusBase, jitter) => {
-    plotCursor[kind] += GOLDEN_ANGLE;
-    const a = plotCursor[kind];
-    const d = radiusBase + (r() - 0.5) * jitter;
-    const plot = { x: Math.cos(a) * d, z: Math.sin(a) * d };
+  const takePlot = (kind, radiusBase, jitter, clearance) => {
+    const footprint = Math.max(0.25, Number(clearance) || (kind === 'home' ? 1.9 : kind === 'yard' ? 2.7 : 2.1));
+    let plot = null;
+    // Advance on the same golden-angle stream until this footprint genuinely
+    // fits. Every eight misses ease the ring outward, retaining an organic
+    // street while guaranteeing dense Cities have somewhere clear to build.
+    for (let attempt = 0; attempt < 48; attempt++) {
+      plotCursor[kind] += GOLDEN_ANGLE;
+      const a = plotCursor[kind];
+      const d = radiusBase + (r() - 0.5) * jitter + Math.floor(attempt / 8) * 0.85;
+      const candidate = { x:Math.cos(a) * d, z:Math.sin(a) * d, rad:footprint };
+      if (planted.every(existing => Math.hypot(existing.x - candidate.x, existing.z - candidate.z) >= existing.rad + candidate.rad)) {
+        plot = candidate;
+        break;
+      }
+    }
+    // Forty-eight deterministic tries already span six widening rings. This
+    // last-resort nudge keeps malformed legacy settlements renderable too.
+    if (!plot) {
+      plotCursor[kind] += GOLDEN_ANGLE;
+      const a = plotCursor[kind], d = radiusBase + 7;
+      plot = { x:Math.cos(a) * d, z:Math.sin(a) * d, rad:footprint };
+    }
     planted.push(plot);
     return plot;
   };
@@ -28954,6 +29826,7 @@ function buildTownScene(settle) {
     const dr = villageRngFrom((seed ^ 0x2545f491) >>> 0);
     const district = new THREE.Group();
     district.userData.districtSeed = seed;
+    district.userData.sceneLabel = { icon:'🏘️', name:'Town streets', detail:'Homes, trade and construction woven into one settlement' };
     // EVERY WARD IS STILL ITS VILLAGE. Replay this member village's own
     // opening dice (palette, size) and its DNA card, so its streets wear the
     // same colours, roofs and trades as the village screen they came from.
@@ -28977,7 +29850,7 @@ function buildTownScene(settle) {
       // landmarks wait for the province to flourish, as they do down there.
       if (dState.ruinsLeft > 0) {
         const wreck = villageMakeWreckedBuilding(dr, dpal, dState.firstWreckKind || 'house');
-        const wp = takePlot('edge', EDGE_RING, 2.6);
+        const wp = takePlot('edge', EDGE_RING, 2.6, 2.5);
         wreck.position.set(wp.x, 0, wp.z);
         wreck.rotation.y = dr() * Math.PI * 2;
         district.add(wreck);
@@ -28985,7 +29858,7 @@ function buildTownScene(settle) {
       const piles = dRuin === 0 ? 2 : (dState.ruinsLeft ? 1 : 0);
       for (let p = 0; p < piles; p++) {
         const pile = villageMakeRubblePile(dr, dpal);
-        const pp = takePlot('edge', EDGE_RING, 2.6);
+        const pp = takePlot('edge', EDGE_RING, 2.6, 1.35);
         pile.position.set(pp.x, 0, pp.z);
         pile.rotation.y = dr() * Math.PI * 2;
         district.add(pile);
@@ -28994,18 +29867,18 @@ function buildTownScene(settle) {
       const landmarkMaker = lmPlan ? VILLAGE_LANDMARK_MAKERS[lmPlan.signature]
         : VILLAGE_LANDMARK_MAKERS[Math.floor(dr() * VILLAGE_LANDMARK_MAKERS.length)];
       const landmark = landmarkMaker(dr, dpal);
-      const lp = takePlot('yard', YARD_RING, 2.6);
+      const lp = takePlot('yard', YARD_RING, 2.6, 3.7);
       landmark.position.set(lp.x, 0, lp.z);
       landmark.lookAt(0, 0, 0); landmark.rotation.x = 0; landmark.rotation.z = 0;
       district.add(landmark);
     } else {
       const spareTree = villageMakeTree(dr, dpal);
-      const tp2 = takePlot('yard', YARD_RING, 2.6);
+      const tp2 = takePlot('yard', YARD_RING, 2.6, 1.5);
       spareTree.position.set(tp2.x, 0, tp2.z);
       district.add(spareTree);
       const cart = villageMakeCart(dr, dpal);
       cart.rotation.y = dr() * Math.PI * 2;
-      const cp2 = takePlot('yard', YARD_RING, 2.6);
+      const cp2 = takePlot('yard', YARD_RING, 2.6, 1.7);
       cart.position.set(cp2.x, 0, cp2.z);
       district.add(cart);
     }
@@ -29020,15 +29893,15 @@ function buildTownScene(settle) {
         roofColor: dpal.roofs[Math.floor(dr() * dpal.roofs.length)]
       }, dr, dpal);
       shopfront.scale.set(0.82, 0.82, 0.82);
-      const sp = takePlot('home', HOME_RING, 1.8);
+      const sp = takePlot('home', HOME_RING, 1.8, 2.4);
       shopfront.position.set(sp.x, 0, sp.z);
       shopfront.lookAt(0, 0, 0); shopfront.rotation.x = 0; shopfront.rotation.z = 0;
       district.add(shopfront);
     }
     // A build rising in the ward rises in the town too, scaffold and all.
     if (dState.construction) {
-      const site = villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction));
-      const cp = takePlot('yard', YARD_RING, 2.6);
+      const site = villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction), dState.construction);
+      const cp = takePlot('yard', YARD_RING, 2.6, 2.8);
       site.position.set(cp.x, 0, cp.z);
       site.rotation.y = dr() * Math.PI * 2;
       district.add(site);
@@ -29039,7 +29912,7 @@ function buildTownScene(settle) {
       const cottages = (seed === (Number(settle.heartSeed) >>> 0) ? 1 : 0) + (dTier === 0 ? 2 : dTier === 1 ? 3 : 4) + Math.floor(dr() * 2);
       for (let c = 0; c < cottages; c++) {
         const cot = villageMakeCottage(dr, dpal);
-        const hp = takePlot('home', HOME_RING + (c % 2) * 2.2, 1.8);
+        const hp = takePlot('home', HOME_RING + (c % 2) * 2.2, 1.8, 2.05);
         cot.position.set(hp.x, 0, hp.z);
         cot.lookAt(0, 0, 0); cot.rotation.x = 0; cot.rotation.z = 0;
         cot.rotation.y += (dr() - 0.5) * 0.4;
@@ -29058,7 +29931,7 @@ function buildTownScene(settle) {
         if (!yardLevel) return;
         const yard = townMakeEconBuilding(b.id, yardLevel, dr, dpal);
         if (!yard) return;
-        const yp = takePlot('yard', YARD_RING, 3.2);
+        const yp = takePlot('yard', YARD_RING, 3.2, 2.75);
         yard.position.set(yp.x, 0, yp.z);
         yard.lookAt(0, 0, 0); yard.rotation.x = 0; yard.rotation.z = 0;
         yard.userData.wardSeed = seed;
@@ -29070,7 +29943,7 @@ function buildTownScene(settle) {
     // Lamplight where the ward's street meets the square; a wrecked ward
     // keeps no lamplit yard.
     if (i < 8 && dRuin >= 1) {
-      const tp = takePlot('home', HOME_RING, 1.4);
+      const tp = takePlot('home', HOME_RING, 1.4, 0.35);
       const torch = new THREE.PointLight(0xffb45e, 1.6 * daylight.torch, 12, 2);
       torch.position.set(tp.x, 2.6, tp.z);
       torch.userData.base = 1.6 * daylight.torch;
@@ -29168,7 +30041,7 @@ function buildTownScene(settle) {
   const moon = new THREE.DirectionalLight(daylight.keyColor, daylight.keyIntensity);
   moon.position.copy(skyDirAt(skyAim + 0.55, 0.6)).multiplyScalar(52);
   moon.castShadow = true;
-  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.mapSize.set(townSceneQuality.shadowSize || 1024, townSceneQuality.shadowSize || 1024);
   moon.shadow.camera.left = -(groundR + 4); moon.shadow.camera.right = groundR + 4;
   moon.shadow.camera.top = groundR + 4; moon.shadow.camera.bottom = -(groundR + 4);
   moon.shadow.camera.near = 1; moon.shadow.camera.far = 140;
@@ -29202,6 +30075,10 @@ function buildTownScene(settle) {
   townWindmills = townWindmills.concat(villageWindmills.splice(windmillMark));
   townSmokes = townSmokes.concat(villageSmokes.splice(smokeMark));
   townSigns = townSigns.concat(villageSigns.splice(signMark));
+  townTraffic = townTraffic.concat(villageTraffic.splice(trafficMark));
+  townLivestock = townLivestock.concat(villageLivestock.splice(livestockMark));
+  townFlocks = townFlocks.concat(villageFlocks.splice(flockMark));
+  townConstructionSites = townConstructionSites.concat(villageConstructionSites.splice(constructionMark));
 
   townBuiltKey = townSceneKey(settle);
   townBuiltPhase = daylight.phase;
@@ -29216,17 +30093,38 @@ function buildTownScene(settle) {
 
 function townAnimate(ts) {
   if (currentScreen !== 'town') { townRunning = false; return; }
+  const stage = $('townStage');
+  if (!settlementSceneShouldRun(true, true, stage)) {
+    stage?.classList.add('is-paused');
+    setTimeout(() => {
+      if (!townRunning) return;
+      if (currentScreen === 'town') requestAnimationFrame(townAnimate);
+      else townRunning = false;
+    }, 300);
+    return;
+  }
+  stage?.classList.remove('is-paused');
   requestAnimationFrame(townAnimate);
+  const interval = Number(townSceneQuality.frameInterval) || 16;
+  if (ts && townLastFrameAt && ts - townLastFrameAt < interval) return;
+  townLastFrameAt = ts || 0;
   if (!townRenderer || !townScene) return;
   townAnimateFrame((ts || 0) / 1000);
 }
 function townAnimateFrame(t) {
   // The view holds still until the player moves it — no idle orbit. Life in
   // the streets (walkers, smoke, birds) supplies the motion instead.
+  const motion = settlementSceneMotionScale();
+  t *= motion;
   const { azimuth, polar, dist, tx, tz } = townCam;
   townCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 3, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
   townCamera.lookAt(tx, 1.6, tz);
-  townSigns.forEach((s, i) => { s.position.y = s.userData.baseY + Math.sin(t * 1.4 + i) * 0.06; });
+  settlementSceneUpdateContext('town', townCamera, townScene);
+  villageAnimatePhysicalSigns(townSigns, t);
+  villageAnimateTrafficActors(townTraffic, t);
+  villageAnimateLivestockActors(townLivestock, t);
+  villageAnimateFlockActors(townFlocks, t);
+  villageAnimateConstructionActors(townConstructionSites, t, motion);
   townTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
   townWindmills.forEach((s, i) => { s.rotation.z = t * 0.5 + i; });
   townSmokes.forEach(p => {
@@ -29292,7 +30190,7 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
     dispose: disposeTownScene,
     ensureRenderer: ensureTownRenderer,
     frame: townAnimateFrame,
-    state: () => ({ scene: townScene, camera: townCamera, renderer: townRenderer, cam: townCam, districts: townDistrictGroups, signs: townSigns, smokes: townSmokes, walkers: townWalkers, npcs: townNpcs, chickens: townChickens })
+    state: () => ({ scene: townScene, camera: townCamera, renderer: townRenderer, cam: townCam, quality:townSceneQuality, hall:townHallBuilding, districts:townDistrictGroups, signs:townSigns, smokes:townSmokes, walkers:townWalkers, traffic:townTraffic, livestock:townLivestock, flocks:townFlocks, constructionSites:townConstructionSites, npcs:townNpcs, chickens:townChickens })
   };
 }
 
@@ -35364,7 +36262,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'original-bird-card-art-v280-20260817';
+const BURBZ_BUILD = 'living-settlements-v281-20260817';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

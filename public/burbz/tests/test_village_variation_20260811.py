@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "original-bird-card-art-v280-20260817"
+CURRENT_BUILD = "living-settlements-v281-20260817"
 
 
 def run_core(expression: str):
@@ -288,7 +288,7 @@ def test_town_districts_mirror_their_villages_ruin_state():
     assert "if (dRuin >= 2) {" in scene
     assert "if (dRuin === 2) {" in scene
     # A build rising in the village rises in its district.
-    assert "villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction))" in scene
+    assert "villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction), dState.construction)" in scene
     # A wrecked district keeps no lamplit yard.
     assert "if (i < 8 && dRuin >= 1) {" in scene
     # Recovery keys the scene, so development rebuilds the square.
