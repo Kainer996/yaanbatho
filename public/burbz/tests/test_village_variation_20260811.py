@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "empire-nav-tabs-v275-20260817"
+CURRENT_BUILD = "town-square-city-builder-v276-20260817"
 
 
 def run_core(expression: str):
@@ -258,7 +258,9 @@ def test_town_quarters_replay_their_founders_visual_dice_but_stay_anonymous():
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
 
     controls = function_source(html, "ensureTownRenderer")
-    assert "This quarter is governed from the Hall above." in controls
+    # A quarter tap now opens the ward's management sheet (v276) — still
+    # never a village destination.
+    assert "openTownWardSheet(obj.userData.districtSeed)" in controls
     assert "openEmpireVillage(" not in controls
 
     # Even a stale direct village target is redirected to its united Town.
@@ -305,9 +307,12 @@ def test_town_adopts_the_shared_builders_smokes_and_signs():
     assert "townSigns = townSigns.concat(villageSigns.splice(signMark));" in scene
 
 
-def test_town_copy_says_quarters_are_flavour_and_governing_stays_in_town_hall():
+def test_town_copy_teaches_tapping_yards_but_quarters_stay_anonymous():
     html = HTML.read_text(encoding="utf-8")
-    assert "Quarter buildings are flavour only — all governing stays in the Hall above." in html
+    # v276 reversed the flavour-only doctrine: yards are tappable and runnable.
+    assert "Quarter buildings are flavour only" not in html
+    assert "Tap a building to run it, or a quarter for its ledger." in html
+    # But quarters still never become village destinations again.
     assert "tap a district to walk its streets" not in html
     assert "Each district is one of your real villages" not in html
 

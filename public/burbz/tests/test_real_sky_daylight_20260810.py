@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "empire-nav-tabs-v275-20260817"
+CURRENT_BUILD = "town-square-city-builder-v276-20260817"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 
@@ -162,7 +162,7 @@ def test_scenes_rebuild_when_the_real_sky_changes_phase():
     html = HTML.read_text(encoding="utf-8")
     render_village = function_source(html, "renderVillage")
     assert "villageBuiltPhase !== burbzDaylightPhaseNow()" in render_village
-    render_town_square = function_source(html, "renderTownSquareFlavour")
+    render_town_square = function_source(html, "renderTownSquare")
     assert "townBuiltPhase !== burbzDaylightPhaseNow()" in render_town_square
     # An open screen notices dawn on its own, without a navigation.
     village_frame = function_source(html, "villageAnimateFrame")

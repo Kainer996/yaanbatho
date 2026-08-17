@@ -13,7 +13,7 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "empire-nav-tabs-v275-20260817"
+CURRENT_BUILD = "town-square-city-builder-v276-20260817"
 ROLES_PIN = "chef-mastery-feed-all-v261-20260813"
 
 
