@@ -995,12 +995,31 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
 #screen-town .village-sub { margin:2px 14px 10px; }
 #townPanel { padding:0 12px 14px; }
 .town-district-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.08em; color:#9fd8a4; margin:12px 2px 6px; }
-.town-square-flavour { margin:10px 2px 14px; border-radius:14px; border:1px solid rgba(142,227,154,.28); background:rgba(7,18,8,.6); overflow:hidden; }
-.town-square-summary { padding:11px 13px; cursor:pointer; list-style:none; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.06em; color:#cce8c6; }
-.town-square-summary::-webkit-details-marker { display:none; }
-.town-square-summary::after { content:'▸'; float:right; color:#f0c767; transition:transform .2s ease; }
-.town-square-flavour[open] .town-square-summary::after { transform:rotate(90deg); }
-.town-square-copy { padding:0 13px 10px; font-size:10.5px; line-height:1.45; color:var(--text3); }
+/* The tap-a-building sheet: one card slides over the Hall desk with the
+   tapped yard's stats and its RUN buttons. Backdrop closes it. */
+.town-sheet-backdrop { position:fixed; inset:0; background:rgba(4,3,8,.55); z-index:58; opacity:0; pointer-events:none; transition:opacity .18s ease; }
+.town-sheet-backdrop.show { opacity:1; pointer-events:auto; }
+.town-sheet { position:fixed; left:8px; right:8px; bottom:calc(74px + env(safe-area-inset-bottom)); max-height:62vh; overflow-y:auto; z-index:59; border-radius:16px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(165deg,rgba(38,28,12,.97),rgba(12,9,4,.98)); box-shadow:0 -12px 34px rgba(0,0,0,.55); padding:12px; transform:translateY(12px); opacity:0; pointer-events:none; transition:transform .18s ease, opacity .18s ease; }
+.town-sheet.show { transform:translateY(0); opacity:1; pointer-events:auto; }
+.town-sheet-head { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+.town-sheet-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:20px; border-radius:11px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.28), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.35); }
+.town-sheet-title { flex:1; min-width:0; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.04em; color:var(--legendary); }
+.town-sheet-kicker { display:block; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
+.town-sheet-close { flex:none; width:30px; height:30px; border-radius:9px; border:1px solid rgba(240,199,103,.4); background:rgba(0,0,0,.35); color:var(--text); font-size:14px; }
+.town-sheet-back { display:inline-block; margin:0 0 8px; padding:5px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.35); background:rgba(0,0,0,.3); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; letter-spacing:.08em; }
+.town-sheet-line { font-size:11px; line-height:1.5; color:var(--text2); margin:0 0 7px; }
+.town-sheet-line b { color:var(--text); }
+.town-sheet-crew { font-size:10.5px; margin:0 0 7px; color:#9fd48e; }
+.town-sheet-crew.off { color:#e0a95e; }
+.town-sheet-rows { display:grid; gap:6px; }
+.town-sheet-row { display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:11px; border:1px solid rgba(214,168,79,.24); background:rgba(0,0,0,.28); color:inherit; text-align:left; }
+.town-sheet-row:active { border-color:rgba(240,199,103,.6); }
+.town-sheet-row .tsr-icon { flex:none; font-size:17px; }
+.town-sheet-row .tsr-main { flex:1; min-width:0; }
+.town-sheet-row .tsr-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; color:var(--text); }
+.town-sheet-row .tsr-meta { display:block; font-size:9.5px; line-height:1.35; color:var(--text3); }
+.town-sheet-row .tsr-level { flex:none; font-family:'Russo One',sans-serif; font-size:10px; color:var(--accent2); }
+.town-sheet-row.is-unbuilt .tsr-name { color:var(--text3); }
 #villageTownLink:empty { display:none; }
 .village-town-link { display:flex; align-items:center; gap:10px; width:calc(100% - 24px); margin:0 12px 10px; padding:10px 12px; border-radius:12px; border:1px solid rgba(142,227,154,.5); background:linear-gradient(160deg,rgba(24,40,22,.72),rgba(10,16,8,.85)); color:#bfe8c2; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12.5px; text-align:left; cursor:pointer; }
 .village-town-link:active { transform:scale(.985); }
@@ -4029,17 +4048,15 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
     <!-- TOWN HALL — three villages become one strategic holding. Their source
          records remain save-compatible wards, but this is their only public
-         destination. The existing 3D square survives as an optional view. -->
+         destination. The 3D town stands at the top: tap a working yard to run
+         it, tap a quarter for its ledger. The Hall desk sits below. -->
     <div class="screen" id="screen-town">
       <div class="screen-title" id="townScreenTitle">TOWN HALL</div>
+      <div class="village-stage" id="townStage"><div class="village-loading" id="townLoading">Raising the market square…</div></div>
+      <div class="village-sub" id="townSub"></div>
       <div id="townHallPanel"></div>
-      <details class="town-square-flavour" id="townSquareDetails">
-        <summary class="town-square-summary">🌳 WALK THE 3D TOWN SQUARE</summary>
-        <div class="town-square-copy">The wards keep their architecture, landmarks and recovery state, but they are now quarters of one Town rather than separate destinations.</div>
-        <div class="village-sub" id="townSub"></div>
-        <div class="village-stage" id="townStage"><div class="village-loading" id="townLoading">Raising the market square…</div></div>
-        <div id="townPanel"></div>
-      </details>
+      <div class="town-sheet-backdrop" id="townSheetBackdrop" aria-hidden="true"></div>
+      <div class="town-sheet" id="townSheet" role="dialog" aria-modal="true" aria-hidden="true"></div>
     </div>
 
     <!-- COUNTY MAP — a painted, Crusader-Kings-style chart of one county:
@@ -24207,11 +24224,15 @@ function townProjectHTML(icon, label, construction, now) {
 }
 
 // ============================================================================
-// TOWN SQUARE — the 3D home of a merged settlement. Three neighbouring
-// villages grow into one town (three towns into one city); this screen walks
-// the merged place itself: every district village stands in the scene around
-// the shared market square, linked by lanes, with the charter stone flying
-// one pennant per district. Quarters are visual flavour, never destinations.
+// TOWN SQUARE — the 3D home of a merged settlement, and the top of the Town
+// Hall screen. Three neighbouring villages grow into one town (three towns
+// into one city); the scene walks the merged place itself: every district
+// village stands around the shared market square, linked by lanes, with the
+// charter stone flying one pennant per district. The districts are also the
+// management surface: every working yard the governor raises stands in its
+// quarter, and tapping one opens its sheet — stats, crew and the one button
+// that runs it. Quarters never become village destinations again; their
+// signs stay anonymous and every route leads back to this Town.
 // ============================================================================
 function openEmpireTown(idOrSeed) {
   let settlement = empireSettlementById(idOrSeed);
@@ -24254,10 +24275,13 @@ function villageDistrictState(seed) {
 }
 function townSceneKey(settle) {
   // Membership AND recovery state key the scene: a district village that
-  // clears a wreck, starts a build or flourishes rebuilds the square.
+  // clears a wreck, starts a build or flourishes rebuilds the square. The
+  // ward's yard levels key it too, so a finished upgrade rises on screen.
   return settle.id + ':' + settle.villages.map(v => {
     const st = villageDistrictState(v.seed);
-    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '');
+    const rec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(Number(v.seed) >>> 0)] : null;
+    const yards = rec ? EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)).join('') : '';
+    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '') + '#' + yards;
   }).sort().join(',');
 }
 function renderTownScreen() {
@@ -24330,7 +24354,7 @@ function renderTownScreen() {
     '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
     '<div class="town-resource-grid"><div class="town-resource"><div class="town-resource-value">👥 ' + snap.pop + '/' + snap.housingCap + '</div><div class="town-resource-label">Residents / homes</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.taxes + ' 🪙</div><div class="town-resource-label">Taxes / 8h</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.branches + ' 🪵 · +' + snap.production.stone + ' stone</div><div class="town-resource-label">Building goods / 8h</div></div><div class="town-resource"><div class="town-resource-value">' + escapeHtml(empireResourceSummary({ materials:snap.production.materials, larder:snap.production.larder }, 4) || '—') + '</div><div class="town-resource-label">Goods / 8h</div></div></div>' +
     '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox</div><div class="town-section-copy">One collection every 8 hours, capped at 24 hours. Town, County and Realm collection all use the same ward clocks.</div><button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
-    '<div class="town-section"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
+    '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
     ruinsHtml +
     '<div class="town-section"><div class="town-section-title">🏗️ Town Networks</div><div class="town-section-copy">Each upgrade automatically strengthens the least-developed eligible ward. Wards never become separate destinations again.</div><div class="town-network-grid">' + networkHtml + '</div></div>' +
     '<div class="town-section"><div class="town-section-title">🥣 Provisions, Workforce & Services</div><div class="town-section-copy">Each fully fed, watered and happy ward can grow up to its own housing limit. ' + snap.workforce.working + '/' + snap.workforce.required + ' required workers staffed from ' + snap.workforce.available + ' residents.</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
@@ -24347,14 +24371,14 @@ function renderTownScreen() {
   panel.querySelectorAll('[data-action="town-policy"]').forEach(button => button.addEventListener('click', () => setTownPolicy(settle.id, button.dataset.policy)));
   if (activeProjects) ensureProvinceCountdownTicker();
 
-  const details = $('townSquareDetails');
-  if (details && !details.dataset.townBound) { details.dataset.townBound = '1'; details.addEventListener('toggle', () => { if (details.open) renderTownScreen(); else townRunning = false; }); }
-  if (details && details.open) renderTownSquareFlavour(settle); else townRunning = false;
+  renderTownSquare(settle);
+  renderTownSheet();
 }
-function renderTownSquareFlavour(settle) {
+// The living town at the top of the screen. Every yard the governor raises
+// stands in its quarter, and every one of them can be tapped and run.
+function renderTownSquare(settle) {
   const stage = $('townStage'); if (!stage) return;
-  const sub = $('townSub'); if (sub) sub.textContent = 'A visual walk through ' + townMemberRecords(settle).length + ' united quarters. Hold and drag to look around; pinch to zoom. Quarter buildings are flavour only — all governing stays in the Hall above.';
-  renderTownPanel(settle);
+  const sub = $('townSub'); if (sub) sub.textContent = 'Your town, alive — every yard you raise stands in its quarter. Hold and drag to look around; pinch to zoom. Tap a building to run it, or a quarter for its ledger.';
   if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
   try {
     ensureTownRenderer(stage); if (townBuiltKey !== townSceneKey(settle) || townBuiltPhase !== burbzDaylightPhaseNow()) buildTownScene(settle);
@@ -24364,13 +24388,156 @@ function renderTownSquareFlavour(settle) {
 function renderTownFallback(settle) {
   const stage = $('townStage');
   if (!stage) return;
-  stage.innerHTML = '<div class="village-fallback">' + townMemberRecords(settle).map((rec, index) => '<div class="village-fallback-building"><span class="vfb-icon">🏘️</span><span class="vfb-name">Town Quarter ' + (index + 1) + '</span><span class="vfb-desc">Managed together from the Hall above</span></div>').join('') + '</div>';
+  stage.innerHTML = '<div class="village-fallback">' + townMemberRecords(settle).map((rec, index) => '<button type="button" class="village-fallback-building" data-action="fallback-ward" data-seed="' + (rec.seed >>> 0) + '"><span class="vfb-icon">🏘️</span><span class="vfb-name">Town Quarter ' + (index + 1) + '</span><span class="vfb-desc">Tap to run this quarter’s yards</span></button>').join('') + '</div>';
+  stage.querySelectorAll('[data-action="fallback-ward"]').forEach(button => button.addEventListener('click', () => { SFX.tap(); openTownWardSheet(button.dataset.seed); }));
 }
-function renderTownPanel(settle) {
-  const panel = $('townPanel');
-  if (!panel) return;
-  const snap = townEconomySnapshot(settle);
-  panel.innerHTML = '<div class="town-advice">🌳 ' + escapeHtml(townDisplayName(settle)) + ' Town Square · ' + townMemberRecords(settle).length + ' united quarters · 👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%. Buildings here mirror the network work managed above.</div>';
+
+// ---- The building sheet -----------------------------------------------------
+// Tap a yard in the 3D town and this card slides up: what the building serves
+// or produces at its level, who works it, and one button to raise it — the
+// same builder crews, costs and timers the Hall desk uses. Tap a quarter and
+// the ward's whole ledger opens instead, every yard one tap deeper.
+let townSheetView = null;
+function townSheetQuarterIndex(settle, seed) {
+  return settle.villages.findIndex(v => (Number(v.seed) >>> 0) === (Number(seed) >>> 0));
+}
+function townSheetWardRecord(settle, seed) {
+  return townMemberRecords(settle).find(rec => (rec.seed >>> 0) === (Number(seed) >>> 0)) || null;
+}
+// What this yard does at a given level, computed from its real definition.
+function townBuildingOutputText(building, level) {
+  const parts = [];
+  const needLabel = { food:'feeds', water:'waters', shelter:'houses', joy:'cheers' };
+  if (building.need && building.perLevel) parts.push(needLabel[building.need] + ' ' + (building.perLevel * level) + ' villagers');
+  if (building.coinsPerLevel) parts.push('+' + (building.coinsPerLevel * level) + ' 🪙');
+  if (building.branchesPerLevel) parts.push('+' + (building.branchesPerLevel * level) + ' 🪵');
+  if (building.stonePerLevel) parts.push('+' + (building.stonePerLevel * level) + ' stone');
+  if (building.taxBoost) parts.push('+' + Math.round(building.taxBoost * level * 100) + '% taxes');
+  if (building.storagePerLevel) parts.push('holds +' + (building.storagePerLevel * level) + ' food & water');
+  if (building.produces) {
+    const iconFor = (id, kind) => {
+      try {
+        if (kind === 'materials') { const m = lootCore().materialById(id); if (m && m.icon) return m.icon; }
+        else { const ing = kitchenIngredientById(id); if (ing && ing.icon) return ing.icon; }
+      } catch (e) {}
+      return '📦';
+    };
+    ['materials', 'larder'].forEach(kind => Object.entries(building.produces[kind] || {}).forEach(([id, qty]) => parts.push(iconFor(id, kind) + '×' + (qty * level))));
+  }
+  return parts.join(' · ');
+}
+function openTownWardSheet(seed) { townSheetView = { kind:'ward', seed:Number(seed) >>> 0 }; SFX.tap(); renderTownSheet(); }
+function openTownBuildingSheet(seed, buildingId) { townSheetView = { kind:'building', seed:Number(seed) >>> 0, buildingId:String(buildingId) }; SFX.tap(); renderTownSheet(); }
+function closeTownSheet() { townSheetView = null; renderTownSheet(); }
+function renderTownSheet() {
+  const sheet = $('townSheet'), backdrop = $('townSheetBackdrop');
+  if (!sheet || !backdrop) return;
+  if (!sheet.dataset.townSheetBound) {
+    sheet.dataset.townSheetBound = '1';
+    backdrop.addEventListener('click', () => { SFX.tap(); closeTownSheet(); });
+    sheet.addEventListener('click', event => {
+      const btn = event.target.closest('[data-action]');
+      if (!btn || btn.disabled) return;
+      if (btn.dataset.action === 'sheet-close') { SFX.tap(); closeTownSheet(); }
+      else if (btn.dataset.action === 'sheet-ward') openTownWardSheet(btn.dataset.seed);
+      else if (btn.dataset.action === 'sheet-building') openTownBuildingSheet(btn.dataset.seed, btn.dataset.building);
+      else if (btn.dataset.action === 'sheet-build') { const settle = currentTownSettlement(); if (settle) townBuildAtWard(settle.id, btn.dataset.seed, btn.dataset.building); }
+    });
+  }
+  const settle = currentTownSettlement();
+  const rec = townSheetView && settle ? townSheetWardRecord(settle, townSheetView.seed) : null;
+  if (!townSheetView || !rec) {
+    townSheetView = null;
+    sheet.classList.remove('show'); backdrop.classList.remove('show');
+    sheet.setAttribute('aria-hidden', 'true'); backdrop.setAttribute('aria-hidden', 'true');
+    sheet.innerHTML = '';
+    return;
+  }
+  const quarter = townSheetQuarterIndex(settle, rec.seed) + 1;
+  const isHeart = (rec.seed >>> 0) === (Number(settle.heartSeed) >>> 0);
+  const quarterName = 'Quarter ' + quarter + (isHeart ? ' 👑' : '');
+  sheet.innerHTML = townSheetView.kind === 'building'
+    ? townBuildingSheetHTML(settle, rec, quarterName, townSheetView.buildingId)
+    : townWardSheetHTML(settle, rec, quarterName);
+  sheet.classList.add('show'); backdrop.classList.add('show');
+  sheet.setAttribute('aria-hidden', 'false'); backdrop.setAttribute('aria-hidden', 'false');
+}
+// The ward ledger: how the quarter is doing, then every yard — built or not —
+// one tap from its own card.
+function townWardSheetHTML(settle, rec, quarterName) {
+  const snap = villageEconomySnapshot(rec), crew = villageWorkforce(rec);
+  const construction = villageConstructionFor(rec);
+  const trainerLevel = Number(gameState.player.level) || 1;
+  const rows = EMPIRE_BUILDINGS.map(building => {
+    const level = villageBuildingLevel(rec, building.id);
+    const tier = villageBuildingTier(building, level);
+    const locked = !level && trainerLevel < (Number(building.unlockLevel) || 1);
+    let meta;
+    if (locked) meta = '🔒 Unlocks at trainer level ' + building.unlockLevel;
+    else if (!level) meta = 'Not built · ' + townCostText(villageBuildingCost(building, 0));
+    else if (building.workers && !crew.staffed[building.id]) meta = '👷 idle — needs ' + building.workers + ' villager';
+    else meta = townBuildingOutputText(building, level) || 'Standing and serving';
+    return '<button type="button" class="town-sheet-row' + (level ? '' : ' is-unbuilt') + '" data-action="sheet-building" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '">' +
+      '<span class="tsr-icon">' + tier.icon + '</span>' +
+      '<span class="tsr-main"><span class="tsr-name">' + escapeHtml(tier.name) + '</span><span class="tsr-meta">' + meta + '</span></span>' +
+      '<span class="tsr-level">' + (level ? 'LV ' + level + '/' + building.maxLevel : '—') + '</span></button>';
+  }).join('');
+  return '<div class="town-sheet-head"><span class="town-sheet-icon">🏘️</span><div class="town-sheet-title"><span class="town-sheet-kicker">' + escapeHtml(townDisplayName(settle)) + '</span>' + quarterName + '</div><button type="button" class="town-sheet-close" data-action="sheet-close" aria-label="Close">✕</button></div>' +
+    '<div class="town-sheet-line">👥 <b>' + snap.pop + '/' + snap.housingCap + '</b> residents · ' + happinessFace(snap.happiness) + ' <b>' + Math.round(snap.happiness * 100) + '%</b> · 👷 <b>' + crew.working + '/' + crew.required + '</b> yards crewed' + (construction ? ' · 🏗️ builders at work' : '') + '</div>' +
+    '<div class="town-sheet-rows">' + rows + '</div>';
+}
+// One yard's card: its stats at this level, its crew, its place in the town
+// network, and the one button that raises it.
+function townBuildingSheetHTML(settle, rec, quarterName, buildingId) {
+  const building = EMPIRE_BUILDING_INDEX[buildingId];
+  if (!building) return '';
+  const level = villageBuildingLevel(rec, building.id);
+  const tier = villageBuildingTier(building, level), crew = villageWorkforce(rec);
+  const construction = villageConstructionFor(rec);
+  const buildingHere = construction && construction.id === building.id;
+  const trainerLevel = Number(gameState.player.level) || 1;
+  const locked = !level && trainerLevel < (Number(building.unlockLevel) || 1);
+  const maxed = level >= building.maxLevel;
+  const networkLevel = townNetworkLevel(settle, building.id), networkMax = townMemberRecords(settle).length * building.maxLevel;
+  const slots = townBuilderSlots(settle), activeProjects = townActiveProjectCount(settle);
+  let crewHtml = '';
+  if (building.workers) {
+    if (level && crew.staffed[building.id]) crewHtml = '<div class="town-sheet-crew">👷 ' + building.workers + ' villager works here</div>';
+    else if (level) crewHtml = '<div class="town-sheet-crew off">👷 idle — needs ' + building.workers + ' villager · build homes so folk move in</div>';
+    else crewHtml = '<div class="town-sheet-crew off">👷 needs ' + building.workers + ' villager to run</div>';
+  }
+  const output = level ? townBuildingOutputText(building, level) : '';
+  let action;
+  if (maxed) action = '<button class="town-action" disabled>★ FULLY BUILT</button>';
+  else if (buildingHere) action = '<button class="town-action" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - Date.now()) + '</span></button>';
+  else if (locked) action = '<button class="town-action" disabled>🔒 UNLOCKS AT TRAINER LV ' + building.unlockLevel + '</button>';
+  else {
+    const cost = villageBuildingCost(building, level);
+    const nextTier = building.tiers ? villageBuildingTier(building, level + 1) : null;
+    const label = !level ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
+    const duration = formatBuildDuration(Math.max(30000, villageBuildTimeMs(building, level) * settlementBuildFactorForSeed(rec.seed)));
+    const crewFree = activeProjects < slots, wardFree = !construction, affordable = townCostAffordable(cost);
+    action = '<button class="town-action is-gold" data-action="sheet-build" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '"' + (crewFree && wardFree && affordable ? '' : ' disabled') + '>' + label + ' · ' + escapeHtml(townCostText(cost)) + ' · ⏱ ' + duration + '</button>' +
+      (!crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !wardFree ? '<div class="town-policy-state">THIS QUARTER’S BUILDERS ARE AT WORK</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>' : '');
+  }
+  return '<div class="town-sheet-head"><span class="town-sheet-icon">' + tier.icon + '</span><div class="town-sheet-title"><span class="town-sheet-kicker">' + escapeHtml(townDisplayName(settle)) + ' · ' + quarterName + '</span>' + escapeHtml(tier.name) + (level ? ' · LV ' + level + '/' + building.maxLevel : '') + '</div><button type="button" class="town-sheet-close" data-action="sheet-close" aria-label="Close">✕</button></div>' +
+    '<button type="button" class="town-sheet-back" data-action="sheet-ward" data-seed="' + (rec.seed >>> 0) + '">← ' + quarterName + '</button>' +
+    '<div class="town-sheet-line">' + escapeHtml(tier.desc) + '</div>' +
+    (output ? '<div class="town-sheet-line">At level ' + level + ': <b>' + output + '</b> every 8 hours.</div>' : '<div class="town-sheet-line">Not built yet — raise it and this quarter puts it to work.</div>') +
+    crewHtml +
+    '<div class="town-sheet-line">🏗️ Town network: <b>' + networkLevel + '/' + networkMax + '</b> levels across the wards · builders <b>' + activeProjects + '/' + slots + '</b> busy</div>' +
+    action;
+}
+// Raise one specific yard in one specific quarter — the tapped building. The
+// same crews, gates, costs and timers as the Hall's network buttons; only the
+// targeting differs.
+function townBuildAtWard(settlementId, seed, buildingId) {
+  townCompleteHallConstructions(); empireCompleteConstructions();
+  const settlement = townSettlementByActiveId(settlementId); if (!settlement) return;
+  const rec = townSheetWardRecord(settlement, seed); if (!rec) return;
+  if (townActiveProjectCount(settlement) >= townBuilderSlots(settlement)) { showToast('🏗️ All Town builder crews are busy. Raise the Hall for more simultaneous projects.'); return; }
+  if (villageConstructionFor(rec)) { showToast('🏗️ This quarter’s builders are already at work.'); return; }
+  empireBuildStructure(rec.seed, buildingId, { townMode:true, townId:settlement.id, townName:townDisplayName(settlement) });
 }
 
 // ============================================================================
@@ -28403,7 +28570,7 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
 // registries; buildTownScene marks their lengths and moves the new entries
 // into the town's own lists when the build completes.
 let townScene = null, townRenderer = null, townCamera = null, townRunning = false;
-let townDistrictGroups = [], townSigns = [], townTorches = [], townSmokes = [], townWindmills = [];
+let townDistrictGroups = [], townEconBuildings = [], townSigns = [], townTorches = [], townSmokes = [], townWindmills = [];
 let townWalkers = [], townRoofBirds = [], townCloths = [], townNpcs = [], townChickens = [], townClouds = [];
 let townCam = { azimuth: 0, polar: 1.0, dist: 36, tx: 0, tz: 0, lastInputAt: 0 };
 let townShadowTick = 0;
@@ -28512,12 +28679,16 @@ function ensureTownRenderer(stage) {
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     const ray = new THREE.Raycaster();
     ray.setFromCamera(ndc, townCamera);
-    const hits = ray.intersectObjects(townDistrictGroups.concat(townNpcs), true);
+    const hits = ray.intersectObjects(townEconBuildings.concat(townDistrictGroups, townNpcs), true);
     if (hits.length > 0) {
       let obj = hits[0].object;
-      while (obj && obj.userData.districtSeed === undefined && !obj.userData.npc) obj = obj.parent;
-      if (obj && obj.userData.districtSeed !== undefined) showToast('🏛️ This quarter is governed from the Hall above.');
+      // Walk up to the nearest tagged thing. A working yard wins over its
+      // district, so tapping the farm opens the farm, not the whole quarter.
+      while (obj && obj.userData.buildingId === undefined && !obj.userData.townHallStone && obj.userData.districtSeed === undefined && !obj.userData.npc) obj = obj.parent;
+      if (obj && obj.userData.buildingId !== undefined) openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId);
+      else if (obj && obj.userData.townHallStone) { SFX.tap(); $('townHallSection')?.scrollIntoView({ behavior:'smooth', block:'start' }); }
       else if (obj && obj.userData.npc) villageGreetNpc(obj);
+      else if (obj && obj.userData.districtSeed !== undefined) openTownWardSheet(obj.userData.districtSeed);
     }
   });
   el.addEventListener('wheel', e => {
@@ -28550,7 +28721,7 @@ function disposeTownScene() {
     });
   });
   townScene = null;
-  townDistrictGroups = []; townSigns = []; townTorches = []; townSmokes = []; townWindmills = [];
+  townDistrictGroups = []; townEconBuildings = []; townSigns = []; townTorches = []; townSmokes = []; townWindmills = [];
   townWalkers = []; townRoofBirds = []; townCloths = []; townNpcs = []; townChickens = []; townClouds = [];
 }
 
@@ -28595,6 +28766,61 @@ function townDistrictLayout(settle, spreadR, minGap) {
     if (d > spreadR) { s.x *= spreadR / d; s.z *= spreadR / d; }
   });
   return spots;
+}
+
+// One ward yard, compact enough for a district quarter: the same shapes the
+// village scene raises for each empire building, scaled for the town view.
+// Homes are not repeated here — the quarter's cottages already show them.
+function townMakeEconBuilding(buildingId, level, dr, pal) {
+  const g = new THREE.Group();
+  if (buildingId === 'farm') {
+    const field = villageMakeGrainField(dr, pal);
+    field.rotation.y = dr() * Math.PI;
+    g.add(field);
+    if (level >= 2) { const hay = villageMakeHay(dr, pal); hay.position.set(2.2, 0, 1.0); g.add(hay); }
+    if (level >= 3) { const sc = villageMakeScarecrow(dr, pal); sc.rotation.y = dr() * Math.PI * 2; sc.position.set(-1.9, 0, -1.2); g.add(sc); }
+  } else if (buildingId === 'well') {
+    const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+    const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), stoneMat);
+    ring.position.y = 0.28; g.add(ring);
+    for (const sx of [-0.55, 0.55]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.25, 0.09), beamMat); post.position.set(sx, 0.85, 0); g.add(post); }
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.55, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+    roof.position.y = 1.68; roof.rotation.y = Math.PI / 4; g.add(roof);
+    g.add(villageBlobShadow(1.1));
+  } else if (buildingId === 'tavern') {
+    g.add(villageMakeBuilding('tavern', { icon: '🍻', name: 'Alehouse', roofColor: pal.roofs[1 % pal.roofs.length] }, dr, pal));
+  } else if (buildingId === 'chapel') {
+    g.add(villageMakeChurch(dr, pal));
+  } else if (buildingId === 'lumber') {
+    for (let i = 0; i <= level; i++) { const pile = villageMakeLogPile(dr, pal); pile.rotation.y = dr() * Math.PI; pile.position.set((dr() - 0.5) * 2.2, 0, (dr() - 0.5) * 2.2); g.add(pile); }
+    const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.4, 8), new THREE.MeshLambertMaterial({ color: pal.timber }));
+    stump.position.set(1.1, 0.2, -0.6); g.add(stump);
+  } else if (buildingId === 'quarry') {
+    const gravel = new THREE.Mesh(new THREE.CircleGeometry(1.8, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.05, -0.06) }));
+    gravel.rotation.x = -Math.PI / 2; gravel.position.y = 0.014; g.add(gravel);
+    const rockMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+    for (let i = 0; i < 3 + level * 2; i++) {
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.26 + dr() * 0.36, 0), rockMat);
+      rock.position.set((dr() - 0.5) * 2.7, 0.2 + dr() * 0.14, (dr() - 0.5) * 2.7);
+      rock.rotation.set(dr() * 3, dr() * 3, dr() * 3);
+      g.add(rock);
+    }
+  } else if (buildingId === 'market') {
+    for (let i = 0; i < Math.min(level, 2); i++) {
+      const stall = villageMakeStall(dr, pal);
+      stall.position.set((i - 0.5) * 2.1, 0, (dr() - 0.5) * 0.8);
+      stall.rotation.y = dr() * Math.PI * 2;
+      g.add(stall);
+    }
+  } else if (buildingId === 'storehouse') {
+    g.add(villageMakeBuilding('storehouse', { icon: '🧺', name: 'Storehouse', roofColor: pal.roofs[2 % pal.roofs.length] }, dr, pal));
+    for (let i = 0; i < level; i++) { const crates = villageMakeCrates(dr, pal); crates.position.set(Math.cos(i * 2.4) * 1.8, 0, Math.sin(i * 2.4) * 1.8); g.add(crates); }
+  } else {
+    return null; // homes (cabin, cottages) are the quarter's own cottages
+  }
+  g.scale.set(0.72, 0.72, 0.72);
+  return g;
 }
 
 function buildTownScene(settle) {
@@ -28676,7 +28902,9 @@ function buildTownScene(settle) {
   // The charter stone: one pennant per district, gold for a city.
   const standard = villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount });
   standard.position.set(0, 0, 0);
+  standard.userData.townHallStone = true; // tap the charter stone → the Hall desk below
   townScene.add(standard);
+  townEconBuildings.push(standard);
   const centrepiece = isCity ? villageMakeCentrepiece(r, pal) : villageMakeMaypole(r, pal);
   centrepiece.position.set(plazaR * 0.45, 0, -plazaR * 0.45);
   townScene.add(centrepiece);
@@ -28838,6 +29066,29 @@ function buildTownScene(settle) {
     tree.position.set(Math.cos(la + 2.2) * (padR + 2.6), 0, Math.sin(la + 2.2) * (padR + 2.6));
     district.add(tree);
     if (dr() < 0.5) { const hay = villageMakeHay(dr, dpal); hay.position.set(Math.cos(la - 1.6) * (padR + 1.8), 0, Math.sin(la - 1.6) * (padR + 1.8)); district.add(hay); }
+    // ---- The ward's REAL working yards — the city-builder layer ------------
+    // Every farm, well, camp and hall the governor raises stands here in its
+    // quarter, and every one is tappable: the sheet names it, shows its stats
+    // and offers the one button that runs it. Yards return with recovery,
+    // like everything else in a healing district. (This block runs after the
+    // flavour props so their dice keep their old positions.)
+    if (dRuin >= 1) {
+      const wardRec = empireOwnsVillage(seed) ? ensureEmpireState().villages[String(seed)] : null;
+      if (wardRec) EMPIRE_BUILDINGS.forEach((b, bi) => {
+        const yardLevel = villageBuildingLevel(wardRec, b.id);
+        if (!yardLevel) return;
+        const yard = townMakeEconBuilding(b.id, yardLevel, dr, dpal);
+        if (!yard) return;
+        const ya = la + 0.85 + bi * ((Math.PI * 2) / (EMPIRE_BUILDINGS.length + 1));
+        const yd = padR + 2.1 + (bi % 2) * 1.3;
+        yard.position.set(Math.cos(ya) * yd, 0, Math.sin(ya) * yd);
+        yard.lookAt(0, 0, 0); yard.rotation.x = 0; yard.rotation.z = 0;
+        yard.userData.wardSeed = seed;
+        yard.userData.buildingId = b.id;
+        district.add(yard);
+        townEconBuildings.push(yard);
+      });
+    }
     // Source-village names retire at merger; the 3D square labels anonymous
     // quarters and never offers a route back into a consumed village.
     const sign = villageMakeSign('Quarter ' + (i + 1) + (isHeart ? ' 👑' : ''));
@@ -28994,7 +29245,7 @@ function buildTownScene(settle) {
 }
 
 function townAnimate(ts) {
-  if (currentScreen !== 'town' || !$('townSquareDetails')?.open) { townRunning = false; return; }
+  if (currentScreen !== 'town') { townRunning = false; return; }
   requestAnimationFrame(townAnimate);
   if (!townRenderer || !townScene) return;
   townAnimateFrame((ts || 0) / 1000);
@@ -35135,7 +35386,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-nav-tabs-v275-20260817';
+const BURBZ_BUILD = 'town-square-city-builder-v276-20260817';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

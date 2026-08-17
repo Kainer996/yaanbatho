@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "empire-nav-tabs-v275-20260817"
+CURRENT_BUILD = "town-square-city-builder-v276-20260817"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "town-strategy-v273-20260816"
@@ -213,12 +213,12 @@ def test_town_scene_is_built_from_the_member_villages():
     assert "v.name" not in scene
     # A rebuilt membership rebuilds the scene.
     assert "function townSceneKey(" in html
-    # The Hall renderer deliberately defers the expensive 3D work until its
-    # collapsible square is open; the flavour renderer owns cache invalidation.
+    # The 3D square now renders on every Hall render — it sits at the top of
+    # the screen (v276) — and the square renderer owns cache invalidation.
     render = function_source(html, "renderTownScreen")
-    flavour = function_source(html, "renderTownSquareFlavour")
-    assert "renderTownSquareFlavour(settle)" in render
-    assert "townBuiltKey !== townSceneKey(settle)" in flavour
+    square = function_source(html, "renderTownSquare")
+    assert "renderTownSquare(settle)" in render
+    assert "townBuiltKey !== townSceneKey(settle)" in square
     assert "townEconomySnapshot(" in render
 
 
