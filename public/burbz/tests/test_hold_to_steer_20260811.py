@@ -21,7 +21,7 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
-CURRENT_BUILD = "town-square-city-builder-v276-20260817"
+CURRENT_BUILD = "one-town-fixed-view-v277-20260817"
 
 
 def run_node(script: str):
@@ -104,17 +104,17 @@ def test_the_copy_teaches_the_hold_and_town_taps_open_management():
     for hint in [
         "Hold, then drag to look around · pinch to zoom · tap a building",
         "Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a building to step inside.",
-        "Hold and drag to look around; pinch to zoom. Tap a building to run it, or a quarter for its ledger.",
+        "Hold and drag to look around; pinch to zoom. Tap a building to run it, or anywhere else for the town ledger.",
         "🌳 The Academy in 3D — hold, then drag to look around.",
     ]:
         assert hint in HTML, hint
 
-    # A quarter tap opens its management sheet (town-square-city-builder-v276),
-    # but the handler still contains no route back to a member village after
-    # it has joined a Town.
+    # A tap outside the yards opens the town ledger (v277), but the handler
+    # still contains no route back to a member village after it has joined
+    # a Town.
     start = HTML.index("function ensureTownRenderer(")
     town_controls = HTML[start:HTML.index("\nfunction disposeTownScene", start)]
-    assert "openTownWardSheet(obj.userData.districtSeed)" in town_controls
+    assert "openTownLedgerSheet()" in town_controls
     assert "openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId)" in town_controls
     assert "openEmpireVillage(" not in town_controls
     assert "focusEmpireVillage(" not in town_controls

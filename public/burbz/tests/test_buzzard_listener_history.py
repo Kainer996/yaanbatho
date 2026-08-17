@@ -4,6 +4,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from conftest import require_materialised_art
+
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 CORE = ROOT / "sound_listener_core.js"
@@ -29,6 +31,7 @@ def test_common_buzzard_is_a_complete_catalogued_burbz_species_with_real_art():
     assert "'Buzzard': '/burbz/bird-art-cache/buzzard_burbz_manga_20260624_v2.png'" in html
     assert "'Common Buzzard': '/burbz/bird-art-cache/buzzard_burbz_manga_20260624_v2.png'" in html
     assert "'Buzzard': '/burbz/bird-art-cache/cutouts/buzzard_burbz_manga_20260624_v2_cutout.png'" in html
+    require_materialised_art(BUZZARD_ART, BUZZARD_CUTOUT)
     for path in (BUZZARD_ART, BUZZARD_CUTOUT):
         assert path.exists() and path.stat().st_size > 20_000
         with Image.open(path) as image:
