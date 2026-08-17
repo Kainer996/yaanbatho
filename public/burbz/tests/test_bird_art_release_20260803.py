@@ -64,7 +64,8 @@ def test_runtime_layers_completion_warriors_cutouts_and_habitats():
     assert 'src="bird_art_release_20260803.js' in index
     assert "BURBZ_GENERATED_ART_COMPLETION_20260726" in index
     assert "applyBurbzMangaWarriorArt20260803(BUILT_IN_BIRD_ART)" in index
-    assert "const cutout = birdCutoutUrlFor(art);" in index
+    assert "const cutout = known || birdCutoutUrlFor(art);" in index
+    assert "const art = getBirdCardArtUrl(bird);" in index
     assert index.count("birdHabitatBackgroundStyle(bird, rarityColor)") >= 4
     assert "herring_gull_burbz_manga_warrior_20260802.png" not in index
     assert "legacySlugAliases" in release

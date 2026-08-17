@@ -1362,6 +1362,7 @@ body[data-active-screen="battle"] .game-side-actions { display:none; }
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
 }
+.card-art img.card-art-painting { object-fit: cover; filter: none; }
 .card-art .bird-emoji { position: relative; z-index: 1; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
 
 /* Emoji fallback glyphs for bird-only art (used when no transparent cutout
@@ -2842,6 +2843,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   border: 1px solid rgba(255,255,255,0.12);
 }
 .bird-info-art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,.48)); }
+.bird-info-art img.card-art-painting { object-fit: cover; filter: none; }
 .bird-info-name { font-family: 'Russo One', sans-serif; font-size: 19px; line-height: 1.15; }
 .bird-info-sci { color: var(--text3); font-style: italic; font-size: 12px; margin-top: 4px; }
 .bird-info-rarity { margin-top: 8px; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -11981,6 +11983,11 @@ for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
 // These recovered built-in ImageGen paintings ship locally with this release,
 // so apply them after the GitHub/LFS routing pass.
 Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
+
+// Cards keep the original complete paintings, including each bird's own
+// habitat scene. The warrior release below is deliberately limited to the
+// icon/sprite route so transparent birds can still move cleanly over the UI.
+const BUILT_IN_BIRD_CARD_ART = Object.freeze({ ...BUILT_IN_BIRD_ART });
 if (window.applyBurbzMangaWarriorArt20260803) {
   window.applyBurbzMangaWarriorArt20260803(BUILT_IN_BIRD_ART);
   for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
@@ -12101,24 +12108,32 @@ function replaceLegacyBirdArtUrl(artUrl) {
   return LEGACY_BIRD_ART_REPLACEMENTS[file] || null;
 }
 
-function resolveBuiltInBirdArt(speciesName, fallbackName) {
+function resolveBirdArtFromMap(artMap, speciesName, fallbackName) {
   const candidates = [speciesName, fallbackName].filter(Boolean);
   for (const candidate of candidates) {
-    const direct = BUILT_IN_BIRD_ART[candidate];
+    const direct = artMap[candidate];
     if (direct) return direct;
     const cleaned = String(candidate).split('(')[0].trim();
-    if (BUILT_IN_BIRD_ART[cleaned]) return BUILT_IN_BIRD_ART[cleaned];
+    if (artMap[cleaned]) return artMap[cleaned];
     const deRegionalised = cleaned.replace(/^(Common|Eurasian|European|Northern|British|Great|Lesser)\s+/i, '').trim();
-    if (deRegionalised && BUILT_IN_BIRD_ART[deRegionalised]) return BUILT_IN_BIRD_ART[deRegionalised];
+    if (deRegionalised && artMap[deRegionalised]) return artMap[deRegionalised];
     const profile = findSpeciesProfile(cleaned);
     if (profile) {
-      if (BUILT_IN_BIRD_ART[profile.name]) return BUILT_IN_BIRD_ART[profile.name];
+      if (artMap[profile.name]) return artMap[profile.name];
       for (const alias of (profile.aliases || [])) {
-        if (BUILT_IN_BIRD_ART[alias]) return BUILT_IN_BIRD_ART[alias];
+        if (artMap[alias]) return artMap[alias];
       }
     }
   }
   return null;
+}
+
+function resolveBuiltInBirdArt(speciesName, fallbackName) {
+  return resolveBirdArtFromMap(BUILT_IN_BIRD_ART, speciesName, fallbackName);
+}
+
+function resolveBuiltInBirdCardArt(speciesName, fallbackName) {
+  return resolveBirdArtFromMap(BUILT_IN_BIRD_CARD_ART, speciesName, fallbackName);
 }
 
 function getBirdArtUrl(bird) {
@@ -12128,6 +12143,13 @@ function getBirdArtUrl(bird) {
   // through crashed birdCutoutUrlFor and took the whole Quests tab down with it.
   const saved = typeof bird.artUrl === 'string' ? bird.artUrl : null;
   return resolveBuiltInBirdArt(name, bird.species || bird.name) || replaceLegacyBirdArtUrl(saved) || saved || null;
+}
+
+function getBirdCardArtUrl(bird) {
+  if (!bird) return null;
+  const name = bird.commonName || bird.name || bird.species;
+  const saved = typeof bird.artUrl === 'string' ? bird.artUrl : null;
+  return resolveBuiltInBirdCardArt(name, bird.species || bird.name) || saved || getBirdArtUrl(bird);
 }
 
 // ---- Bird-only artwork -----------------------------------------------------
@@ -12164,6 +12186,7 @@ function wireBirdArtFallbacks() {
     if (img.dataset.fallbackArt && !img.dataset.fallbackArtUsed) {
       img.dataset.fallbackArtUsed = '1';
       img.src = img.dataset.fallbackArt;
+      img.classList.remove('card-art-painting');
       return;
     }
     if (img.dataset.fallbackMiniBird) {
@@ -12199,20 +12222,21 @@ function birdOnlyImgHTML(bird, className, extraAttrs) {
   return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '"' + extra + '>';
 }
 
-// Bird image for FRAMED contexts (Birdex cards, thumbnails): cutout first,
-// full painting if no cutout exists, emoji if even that fails.
+// Bird image for FRAMED contexts: always the original complete painting.
 // Framed contexts (Birdex codex cards, companion cards, capture reveal) keep
-// the FULL painted artwork with its scenic background — those look great inside
-// a fixed card frame. Only moving contexts (the academy, map, walking pet) use
-// the transparent cutout via birdOnlyImgHTML. Emoji is the only fallback here.
+// the FULL original artwork with its bird-specific scenic background. Only
+// moving/compact contexts (the academy, map, walking pet) use the transparent
+// warrior cutout via birdOnlyImgHTML. If a complete painting cannot load, the
+// card falls back to the icon art over its habitat backdrop, then to an emoji.
 function birdCardImgAttrs(bird) {
-  const art = getBirdArtUrl(bird);
+  const art = getBirdCardArtUrl(bird);
   if (!art) return null;
-  const cutout = birdCutoutUrlFor(art);
+  const fallbackArt = getBirdArtUrl(bird);
   const emoji = getBirdMarkerEmoji(String((bird && (bird.commonName || bird.species)) || '')) || '🐦';
   return {
-    src: cutout || art,
-    extra: (cutout ? ' data-fallback-art="' + escapeHtml(art) + '"' : '') +
+    src: art,
+    extra: ' class="card-art-painting"' +
+      (fallbackArt && fallbackArt !== art ? ' data-fallback-art="' + escapeHtml(fallbackArt) + '"' : '') +
       ' data-fallback-emoji="' + escapeHtml(emoji) + '"'
   };
 }
@@ -35340,7 +35364,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'true-diet-primaries-v279-20260817';
+const BURBZ_BUILD = 'original-bird-card-art-v280-20260817';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
