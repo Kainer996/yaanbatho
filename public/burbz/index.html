@@ -34671,10 +34671,13 @@ function makePetSparkles(count) {
 // ============================================================================
 // QUESTS SYSTEM
 // ============================================================================
+// A quest with `once: true` is a teaching quest, not a daily chore: it stays
+// on the board only until its `done()` reads true from real game state, then
+// the midnight reset retires it for good instead of re-opening it.
 const DAILY_QUESTS = [
   { id: 'daily_capture_3', name: 'Field Work', desc: 'Capture 3 birds today', type: 'capture', target: 3, reward: 50, icon: '\u{1F426}' },
   { id: 'daily_battle_2', name: 'Arena Fighter', desc: 'Win 2 battles', type: 'win', target: 2, reward: 40, icon: '\u{2694}\u{FE0F}' },
-  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}' },
+  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}', once: true, done: () => (gameState.player.totalCaptures || 0) >= 1 },
   { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 60, icon: '\u{1F37D}\u{FE0F}' },
   { id: 'daily_bird_brain', name: 'Bird Brain Bonus', desc: 'Answer 1 bird question correctly', type: 'bird_quiz_correct', target: 1, reward: 35, icon: '\u{1F9E0}' },
   { id: 'daily_loot_2', name: 'Treasure Walker', desc: 'Find 2 pieces of gear out on the map', type: 'gear_found', target: 2, reward: 45, icon: '\u{1F392}' }
@@ -34857,9 +34860,13 @@ function initQuests() {
 
   if (!gameState.quests) gameState.quests = {};
 
-  // Reset daily quests if new day
+  // Reset daily quests if new day. A once-only teaching quest ("First
+  // Catch") never comes back: once its game-state check reads done, the
+  // reset marks it spent instead of opening it again — no fresh card, no
+  // daily claim toast for something the player did weeks ago.
   if (gameState.questsLastReset !== todayKey) {
     DAILY_QUESTS.forEach(q => {
+      if (q.once && q.done && q.done()) { gameState.quests[q.id] = { progress: q.target, claimed: true }; return; }
       gameState.quests[q.id] = { progress: 0, claimed: false };
     });
     // Reset weekly on Monday
