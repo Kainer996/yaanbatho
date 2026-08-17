@@ -3,6 +3,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from conftest import require_materialised_art
+
 
 BURBZ = Path(__file__).resolve().parents[1]
 CACHE = BURBZ / "bird-art-cache"
@@ -24,6 +26,10 @@ def test_warrior_release_has_matching_transparent_main_and_icon_assets():
     assert len(set(slugs)) == len(slugs)
     assert "herring_gull" in slugs
 
+    require_materialised_art(
+        *(CACHE / f"{slug}_burbz_manga_warrior_20260802.png" for slug in slugs),
+        *(CACHE / "cutouts" / f"{slug}_burbz_manga_warrior_20260802_cutout.png" for slug in slugs),
+    )
     for slug in slugs:
         main = CACHE / f"{slug}_burbz_manga_warrior_20260802.png"
         cutout = CACHE / "cutouts" / f"{slug}_burbz_manga_warrior_20260802_cutout.png"
@@ -41,6 +47,7 @@ def test_habitat_background_library_is_complete_and_opaque():
         "woodland", "wetland", "coast", "grassland",
         "garden", "heath", "eucalypt", "mountain",
     }
+    require_materialised_art(*(CACHE / "habitat-backgrounds" / f"{name}_manga_20260803.png" for name in names))
     for name in names:
         path = CACHE / "habitat-backgrounds" / f"{name}_manga_20260803.png"
         assert path.is_file(), path

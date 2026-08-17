@@ -6,6 +6,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from conftest import require_materialised_art
+
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
@@ -148,6 +150,12 @@ def test_all_release_species_have_deep_field_guide_entries():
 
 
 def test_placeholders_are_honest_unique_usable_cards_and_transparent_cutouts():
+    cards = [
+        ROOT / bird["art"].removeprefix("/burbz/")
+        for module in (AU_MODULE, UK_MODULE)
+        for bird in _load(module)["species"]
+    ]
+    require_materialised_art(*cards, *(card.parent / "cutouts" / f"{card.stem}_cutout.png" for card in cards))
     hashes = set()
     for module in (AU_MODULE, UK_MODULE):
         for bird in _load(module)["species"]:
