@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "first-catch-once-v273-20260816"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 
@@ -137,6 +137,8 @@ global.MERLIN_CORE = { grantMerlinBondXp: c => c, sanitizeMerlinCare: c => c };
 global.birdHasActiveExpedition = () => false;
 global.birdHasActiveTraining = () => false;
 global.academyRoleMultiplier = () => 1;
+global.ensureEmpireState = () => ({ dormantRegionWardens:{} });
+global.empireRegionForLegacyId = () => null;
 global.refillPantry = () => {};
 global.updateQuestProgress = () => {};
 global.grantBirdBondXp = () => {}; // bird-bond-love-v256: feeding also deepens the bond

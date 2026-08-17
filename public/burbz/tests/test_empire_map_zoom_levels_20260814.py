@@ -9,8 +9,9 @@ a real map:
 2. Zooming in opens that title into the tier below. Nothing is drawn twice.
 3. A village that stands alone — no town, no county — flies at every zoom,
    because it IS the biggest land the player holds there.
-4. Dark frontier villages only fly from town zoom in, where the player could
-   actually walk to them.
+4. Once three villages become a Town, their individual banners retire. The
+   united Town is the only map destination; only standalone villages keep a
+   village banner that can still be visited.
 """
 import json
 import subprocess
@@ -20,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "first-catch-once-v273-20260816"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
 PREVIOUS_RELEASE_PIN = "player-built-village-v267-20260814"
 
 LIEGE, COUNTY, SETTLEMENT, VILLAGE = 0, 1, 2, 3
@@ -110,7 +111,14 @@ def test_a_place_never_vanishes_when_it_has_no_bigger_title():
 def test_every_banner_is_stamped_with_its_place_in_the_ladder():
     html = html_text()
     refresh = function_source(html, "refreshEmpireMap")
-    assert "markEmpireBannerTier(el, 'village', homeSettlement ? 'settlement' : (countyOfSeed(village.seed) ? 'county' : null))" in refresh
+    # Member villages have already been consumed by their Town, so the atlas
+    # receives only standalone villages plus one claim/banner per Town or City.
+    assert "const standaloneVillages = empireStandaloneVillages(villages);" in refresh
+    assert "const visibleClaims = standaloneVillages.concat(visibleSettlements.map(settlement => ({" in refresh
+    assert "standaloneVillages.forEach(village => {" in refresh
+    assert "markEmpireBannerTier(el, 'village', countyOfSeed(village.seed) ? 'county' : null)" in refresh
+    assert "\n  villages.forEach(village => {" not in refresh
+    assert "visibleSettlements.forEach(settlement => {" in refresh
     assert "markEmpireBannerTier(el, 'settlement', countyOfSeed(settlement.villages[0]?.seed) ? 'county' : null)" in refresh
     assert "markEmpireBannerTier(el, 'county', liegeAbove(region))" in refresh
     assert "markEmpireBannerTier(el, 'liege', null)" in refresh

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "first-catch-once-v273-20260816"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
@@ -273,7 +273,7 @@ def test_the_hunger_notice_navigates_to_its_village():
 def test_the_copy_teaches_the_provisions_loop():
     html = HTML.read_text(encoding="utf-8")
     assert "Villages live off what they grow.</b>" in html  # empire help drawer
-    assert "Your caravan leaves relief supplies" in html    # liberation toast
+    assert "your caravan leaves relief supplies" in html    # liberation toast
     assert "function villageMakeCrates(" in html
     assert "b.id === 'storehouse'" in html                  # the shed rises in 3D
 

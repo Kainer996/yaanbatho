@@ -1,6 +1,6 @@
 """First Catch happens once — teaching quests retire when their lesson is learnt.
 
-first-catch-once-v273-20260816: Yaan's screenshot showed the daily board
+first-catch-once-v278-20260817 (born v273, renumbered merging main): Yaan's screenshot showed the daily board
 offering "First Catch — Capture any bird" at trainer level 10, with a
 "Quest complete — tap to claim" card popping every day. It was in
 DAILY_QUESTS, so the midnight reset re-opened it forever. It now carries
@@ -16,9 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-OWN_RELEASE_PIN = "first-catch-once-v273-20260816"
-CURRENT_BUILD = "first-catch-once-v273-20260816"
-PREVIOUS_RELEASE_PIN = "village-provisions-v272-20260816"
+OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
+PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 
 def function_source(html: str, name: str) -> str:

@@ -8,11 +8,10 @@ Yaan's ask, in two halves:
    craft, colour washes, trim and door paints, window glow, banner cloth) and
    re-keys the base palette through pure hue maths — HSL rotations and
    golden-angle colour runs — so no two settlements wear the same coat.
-2. **The town IS its villages** — the Town Square's districts used to be
-   generic stand-ins in the town's shared palette. Now each district replays
-   its member village's own opening dice (palette, size, plan) and DNA, so
-   the quarter on screen carries the same colours, roofs, trades and landmark
-   family as the village screen its tap travels into.
+2. **The town inherits its villages' look** — the Town Square's quarters replay
+   each founding village's opening dice (palette, size, plan) and DNA, so their
+   history remains visible. After merger they are anonymous decorative wards,
+   however: source-village names and tap navigation retire into Town Hall.
 """
 
 import json
@@ -27,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "first-catch-once-v273-20260816"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
 
 
 def run_core(expression: str):
@@ -227,10 +226,10 @@ def test_festival_cloth_is_dyed_in_the_villages_banners():
 
 
 # ---------------------------------------------------------------------------
-# index.html wiring: the Town Square's districts are the real villages
+# index.html wiring: Town quarters preserve history without village navigation
 # ---------------------------------------------------------------------------
 
-def test_town_districts_replay_their_villages_own_dice():
+def test_town_quarters_replay_their_founders_visual_dice_but_stay_anonymous():
     html = HTML.read_text(encoding="utf-8")
     scene = function_source(html, "buildTownScene")
     assert "vcore.villagePlan(seed, VILLAGE_PALETTES.length)" in scene
@@ -249,11 +248,25 @@ def test_town_districts_replay_their_villages_own_dice():
     assert "vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length)" in scene
     assert "VILLAGE_LANDMARK_MAKERS[lmPlan.signature]" in scene
     assert "lmPlan.signature !== null" in scene
-    # The pinned contracts survive: real geography, tap targets, name signs.
+    # Geography survives, but source-village names retire at merger. Quarter
+    # signs are deliberately anonymous and cannot become village destinations.
     assert "townDistrictLayout(settle" in scene
     assert "district.userData.districtSeed = seed" in scene
-    assert "villageMakeSign(v.name" in scene
+    assert "villageMakeSign('Quarter ' + (i + 1)" in scene
+    assert "villageMakeSign(v.name" not in scene
+    assert "openEmpireVillage(" not in scene
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
+
+    controls = function_source(html, "ensureTownRenderer")
+    # A quarter tap now opens the ward's management sheet (v276) — still
+    # never a village destination.
+    assert "openTownWardSheet(obj.userData.districtSeed)" in controls
+    assert "openEmpireVillage(" not in controls
+
+    # Even a stale direct village target is redirected to its united Town.
+    opener = function_source(html, "openEmpireVillage")
+    assert "const merged = empireSettlementOfSeed(village.seed);" in opener
+    assert "if (merged) { openEmpireTown(merged.id); return; }" in opener
 
 
 def test_town_districts_mirror_their_villages_ruin_state():
@@ -294,9 +307,14 @@ def test_town_adopts_the_shared_builders_smokes_and_signs():
     assert "townSigns = townSigns.concat(villageSigns.splice(signMark));" in scene
 
 
-def test_town_copy_tells_the_player_the_districts_are_real():
+def test_town_copy_teaches_tapping_yards_but_quarters_stay_anonymous():
     html = HTML.read_text(encoding="utf-8")
-    assert "Each district is one of your real villages" in html
+    # v276 reversed the flavour-only doctrine: yards are tappable and runnable.
+    assert "Quarter buildings are flavour only" not in html
+    assert "Tap a building to run it, or a quarter for its ledger." in html
+    # But quarters still never become village destinations again.
+    assert "tap a district to walk its streets" not in html
+    assert "Each district is one of your real villages" not in html
 
 
 # ---------------------------------------------------------------------------

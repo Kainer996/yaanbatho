@@ -48,6 +48,13 @@ const empire = { villages: { '1111': rec } };
 const ensureEmpireState = () => empire;
 const empireVillages = () => Object.values(empire.villages);
 const empireCompleteConstructions = () => false;
+// This fixture is deliberately one loose village. Supply the Town adapters
+// used by the real build function while keeping the tested economy unmerged.
+const empireSettlementOfSeed = () => null;
+const empireSettlementById = () => null;
+const canonicalEmpireSettlement = settlement => settlement;
+const townDisplayName = settlement => settlement && settlement.name;
+const townBuildNetwork = () => { throw new Error('loose village must not delegate to a Town'); };
 const settlementBuildFactorForSeed = () => 1;
 const villageRoleMultiplier = () => 1;
 const villageRuinDefsFor = () => [];
@@ -62,7 +69,7 @@ let failDurableSave = false;
 const snapshotGameState = () => ({ player: JSON.parse(JSON.stringify(gameState.player)), economy: JSON.parse(JSON.stringify(rec.economy || null)) });
 const restoreGameStateSnapshot = snapshot => { gameState.player = snapshot.player; if (snapshot.economy) rec.economy = snapshot.economy; else delete rec.economy; };
 const durableSaveState = () => { if (failDurableSave) throw new Error('storage full'); return { ok:true }; };
-const saveState = () => {}; const updateHeader = () => {}; const renderVillage = () => {};
+const saveState = () => {}; const updateHeader = () => {}; const renderVillage = () => {}; const renderTownScreen = () => {};
 const SFX = { questComplete: () => {} }; const vibrate = () => {};
 const showToast = t => toasts.push(t);
 const formatBuildDuration = () => 'soon';
@@ -72,7 +79,13 @@ let villageActive = null, villageBuiltSeed = null;
 
 
 def run_harness(driver: str):
-    proc = subprocess.run(["node", "-e", economy_harness(driver)], cwd=ROOT, text=True, capture_output=True)
+    proc = subprocess.run(
+        ["node", "-e", economy_harness(driver)],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+    )
     assert proc.returncode == 0, proc.stderr
     return json.loads(proc.stdout)
 
@@ -213,11 +226,19 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     assert "its first cut gives enough stone for Cottage Row" in html
     assert "every village and town construction — including Quarry upgrades — spends stone, coins and timber" in html
     assert "· ' + stone + '" in manage
-    ledger = function_source(html, "renderStoresLedger")
-    assert "stoneCycle += Math.round((b.stonePerLevel || 0) * level * steward)" in ledger
-    assert "stone: stoneCycle" in ledger
+    ledger_output = function_source(html, "villageBuildingOutputForLedger")
+    realm_output = function_source(html, "empireBuildingOutputForLedger")
+    assert "out.stone = Math.round((building.stonePerLevel || 0) * level * steward)" in ledger_output
+    assert "townApplySeatPolicyBundle(seat, raw)" in realm_output
     empire = function_source(html, "renderEmpirePanel")
-    assert "stonePerCycle += snap.production.stone" in empire
+    realm_ledger = function_source(html, "empireLedger")
+    # The public Ledger now has one row per Town, so its totals must come from
+    # the canonical aggregate rather than summing only visible village rows.
+    assert "const ledger = empireLedger()" in empire
+    assert "stonePerCycle = ledger.stone" in empire
+    assert "settlements.forEach(settlement" in realm_ledger
+    assert "ledger.stone += snap.production.stone" in realm_ledger
+    assert "standalone.forEach" in realm_ledger
     assert "Stone / 8h" in empire
     # BURBZ_BUILD tracks the NEWEST release marker; later releases move it
     # on, but this release's own segment stays in the cache lineage forever.

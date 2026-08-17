@@ -2,11 +2,10 @@
 
 Yaan's ask, in three layers:
 
-1. **Town Square** — capture three villages and they make a town; the town gets
-   its own 3D screen in the style of the village, with the member villages
-   visible INSIDE it: every district stands in the scene at its real position,
-   lanes lead back to the shared market square, and tapping a district travels
-   into that village.
+1. **Town Square** — capture three villages and those exact three retire into a
+   Town. Their geometry still supplies distinct 3D wards around the real market
+   square, but their old names and visit routes disappear; strategy lives at
+   Town Hall.
 2. **County Map** — once a county stands, a separate zoomed-out screen shows
    that region of the map Crusader-Kings style: a painted chart with the
    county border, its settlements, and the wild lands sketched around them.
@@ -30,10 +29,10 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "first-catch-once-v273-20260816"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
-REALM_CORE_PIN = "real-place-names-v264-20260813"
+REALM_CORE_PIN = "town-strategy-v273-20260816"
 
 
 def run_core(expression: str):
@@ -43,29 +42,42 @@ def run_core(expression: str):
     return json.loads(result.stdout)
 
 
-def village(seed, lat, lon, hour):
+def village(seed, lat, lon, order):
+    day, hour = 1 + order // 24, order % 24
     return {
         "seed": seed,
         "name": "V" + str(seed),
         "lat": lat,
         "lon": lon,
-        "claimedAt": f"2026-08-01T{hour:02d}:00:00.000Z",
+        "claimedAt": f"2026-08-{day:02d}T{hour:02d}:00:00.000Z",
     }
 
 
-# Two counties whose capitals sit within 600 km — a duchy.
-DUCHY_VILLAGES = [
-    village(1, 53.0, -2.0, 0), village(2, 53.2, -2.1, 1), village(3, 53.1, -1.9, 2),
-    village(4, 51.5, -0.1, 3), village(5, 51.6, -0.2, 4), village(6, 51.4, 0.0, 5),
-]
+def town(seed, lat, lon, order):
+    return [village(seed + i, lat + i * 0.006, lon + i * 0.004, order + i) for i in range(3)]
+
+
+def county(seed, lat, lon, order):
+    return (
+        town(seed, lat, lon, order)
+        + town(seed + 1000, lat + 0.20, lon, order + 3)
+        + town(seed + 2000, lat, lon + 0.25, order + 6)
+    )
+
+
+# Two Counties (three Towns/nine villages each) within 600 km — one Duchy.
+FIRST_COUNTY = county(1, 53.0, -2.0, 0)
+SECOND_COUNTY = county(4, 51.5, -0.1, 9)
+DUCHY_VILLAGES = FIRST_COUNTY + SECOND_COUNTY
 
 # Two duchies whose seats sit within 2000 km — a kingdom of four counties.
 # The Iberian pair is more than 600 km from the English pair (two separate
 # duchies), while Manchester and Madrid are close enough to crown a kingdom.
-KINGDOM_VILLAGES = DUCHY_VILLAGES + [
-    village(7, 40.4, -3.7, 6), village(8, 40.5, -3.8, 7), village(9, 40.3, -3.6, 8),
-    village(10, 38.7, -9.1, 9), village(11, 38.8, -9.2, 10), village(12, 38.6, -9.0, 11),
-]
+KINGDOM_VILLAGES = (
+    DUCHY_VILLAGES
+    + county(7, 40.4, -3.7, 18)
+    + county(10, 38.7, -9.1, 27)
+)
 
 
 def empire_logic(html):
@@ -95,12 +107,12 @@ def test_realm_seat_tint_is_deterministic_and_distinct():
 # ---------------------------------------------------------------------------
 
 def test_territory_hull_ring_wraps_every_village_and_closes():
-    ring = run_core(f"core.territoryHullRing({json.dumps(DUCHY_VILLAGES[:3])}, 2.5)")
+    ring = run_core(f"core.territoryHullRing({json.dumps(FIRST_COUNTY)}, 2.5)")
     assert ring is not None and len(ring) >= 4
     assert ring[0] == ring[-1]  # a closed ring
     lons = [p[0] for p in ring]
     lats = [p[1] for p in ring]
-    for v in DUCHY_VILLAGES[:3]:
+    for v in FIRST_COUNTY:
         assert min(lons) < v["lon"] < max(lons)
         assert min(lats) < v["lat"] < max(lats)
 
@@ -128,7 +140,7 @@ def test_territory_hull_ring_handles_empty_input():
 
 def test_lone_county_stays_unpainted():
     fc = run_core(
-        f"core.realmTerritoryFeatureCollection(core.deriveRealm({json.dumps(DUCHY_VILLAGES[:3])}))"
+        f"core.realmTerritoryFeatureCollection(core.deriveRealm({json.dumps(FIRST_COUNTY)}))"
     )
     assert fc["features"] == []
 
@@ -178,7 +190,9 @@ def test_town_screen_exists_and_switchscreen_dispatches_to_it():
     assert 'id="screen-town"' in html
     assert 'id="townStage"' in html
     assert 'id="townScreenTitle"' in html
-    assert "if (name === 'town') { renderTownScreen(); setTimeout(onTownResize, 60); }" in html
+    assert "if (name === 'town')" in html
+    assert "renderTownScreen()" in html
+    assert "onTownResize" in html
 
 
 def test_town_scene_is_built_from_the_member_villages():
@@ -190,46 +204,58 @@ def test_town_scene_is_built_from_the_member_villages():
     assert "townDistrictLayout(settle" in scene
     layout = function_source(html, "townDistrictLayout")
     assert "kmPerLat" in layout and "kmPerLon" in layout
-    # Every district is tagged with its village seed for the tap raycast, and
-    # named with its own floating sign.
+    # Every ward retains an internal seed so its real palette/recovery state can
+    # be rebuilt, but absorbed village names are not exposed in Town UI.
     assert "district.userData.districtSeed = seed" in scene
-    assert "villageMakeSign(v.name" in scene
+    assert "villagePlan(seed" in scene
+    assert "villageDistrictState(seed)" in scene
+    assert "villageMakeSign(v.name" not in scene
+    assert "v.name" not in scene
     # A rebuilt membership rebuilds the scene.
     assert "function townSceneKey(" in html
+    # The 3D square now renders on every Hall render — it sits at the top of
+    # the screen (v276) — and the square renderer owns cache invalidation.
     render = function_source(html, "renderTownScreen")
-    assert "townBuiltKey !== townSceneKey(settle)" in render
+    square = function_source(html, "renderTownSquare")
+    assert "renderTownSquare(settle)" in render
+    assert "townBuiltKey !== townSceneKey(settle)" in square
+    assert "townEconomySnapshot(" in render
 
 
-def test_tapping_a_district_travels_into_its_village():
+def test_town_3d_and_management_never_reopen_absorbed_villages():
     html = HTML.read_text(encoding="utf-8")
     renderer = function_source(html, "ensureTownRenderer")
-    assert "openEmpireVillage(obj.userData.districtSeed)" in renderer
-    panel = function_source(html, "renderTownPanel")
-    assert 'data-action="town-district"' in panel
-    assert "openEmpireVillage(row.dataset.seed)" in panel
+    assert "townCamZoom" in renderer and "townCamPan" in renderer
+    assert "openEmpireVillage(" not in renderer
+    screen = function_source(html, "renderTownScreen")
+    assert "openEmpireVillage(" not in screen
+    assert 'data-action="town-network"' in screen
+    assert 'data-action="town-policy"' in screen
 
 
-def test_town_screen_is_reachable_from_ledger_map_and_village():
+def test_town_screen_is_reachable_from_ledger_map_and_stale_village_routes():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     # Royal Ledger settlement rows walk into the town.
     assert "openEmpireTown(btn.dataset.settlement)" in logic
-    # The atlas settlement tap card gains a visit action; framing survives.
+    # The atlas settlement card manages the Town; framing survives as a
+    # separate map action.
     refresh = html[html.index("function refreshEmpireMap("):html.index("function initialiseEmpireMap(")]
-    assert "WALK ITS SQUARE" in refresh
     assert "openEmpireTown(settlement.id)" in refresh
     assert "frameEmpireSettlement(settlement.id)" in refresh
-    # A merged village links straight to its shared square.
-    assert 'id="villageTownLink"' in html
-    assert 'data-action="visit-town"' in html
-    assert "openEmpireTown(settleTitle.id)" in html
+    for name in ("enterVillage", "openEmpireVillage"):
+        route = function_source(html, name)
+        assert "empireSettlementOfSeed" in route
+        assert "openEmpireTown(" in route
+        assert route.index("openEmpireTown(") < route.index("villageActive =")
 
 
-def test_town_screen_falls_back_to_a_district_list_without_webgl():
+def test_town_fallback_does_not_restore_retired_village_buttons():
     html = HTML.read_text(encoding="utf-8")
     fallback = function_source(html, "renderTownFallback")
-    assert "data-town-district" in fallback
-    assert "openEmpireVillage(btn.dataset.townDistrict)" in fallback
+    assert "openEmpireVillage(" not in fallback
+    assert "data-town-district" not in fallback
+    assert "v.name" not in fallback
 
 
 # ---------------------------------------------------------------------------
@@ -249,18 +275,22 @@ def test_county_map_paints_the_hull_settlements_and_cartouche():
     draw = function_source(html, "drawCountyMap")
     assert "territoryHullRing(county.villages, 2.5)" in draw
     assert "realmSeatTint(liege.seatSeed)" in draw
-    assert "empireVillageCrest(v.seed)" in draw
+    assert "empireRegionHoldings(region)" in draw
+    assert "empireVillageCrest(v.seed)" not in draw
+    assert "townDisplayName" in draw
+    assert "v.name" not in draw
     assert "county-map-hotspot" in draw
     # Neighbouring counties of the realm show at the map's edge.
     assert "paintCounty(county, false)" in draw
     assert "paintCounty(region, true)" in draw
 
 
-def test_county_map_hotspots_travel_to_villages_and_towns():
+def test_county_map_hotspots_only_open_unified_towns():
     html = HTML.read_text(encoding="utf-8")
     draw = function_source(html, "drawCountyMap")
     assert "openEmpireTown(spot.id)" in draw
-    assert "openEmpireVillage(spot.id)" in draw
+    assert "openEmpireVillage(" not in draw
+    assert "kind: 'village'" not in draw and "kind:'village'" not in draw
 
 
 def test_county_map_opens_from_the_county_hall_and_the_atlas():

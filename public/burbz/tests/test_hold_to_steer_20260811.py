@@ -6,7 +6,8 @@ instead. Now the page scrolls over the canvas as normal; only a finger held
 still for a beat grabs the camera (touch_steer_core.js). A mouse or pen
 steers at once, and a pinch always steers. The same release moves the
 Kitchen / Quests / Stores quick icons from mid-right — where they covered
-claim buttons — to the top left, under the header.
+claim buttons — to the top left, under the header. Town quarters are now
+scenery only: a tap may explain the Hall, but cannot reopen a consumed village.
 """
 import json
 import subprocess
@@ -20,7 +21,7 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
-CURRENT_BUILD = "first-catch-once-v273-20260816"
+CURRENT_BUILD = "first-catch-once-v278-20260817"
 
 
 def run_node(script: str):
@@ -99,14 +100,25 @@ def test_every_3d_stage_is_wired_through_the_gate():
     assert ".village-stage.steering, .academy-stage-3d.steering" in HTML
 
 
-def test_the_copy_teaches_the_hold():
+def test_the_copy_teaches_the_hold_and_town_taps_open_management():
     for hint in [
         "Hold, then drag to look around · pinch to zoom · tap a building",
         "Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a building to step inside.",
-        "Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a district to walk its streets.",
+        "Hold and drag to look around; pinch to zoom. Tap a building to run it, or a quarter for its ledger.",
         "🌳 The Academy in 3D — hold, then drag to look around.",
     ]:
         assert hint in HTML, hint
+
+    # A quarter tap opens its management sheet (town-square-city-builder-v276),
+    # but the handler still contains no route back to a member village after
+    # it has joined a Town.
+    start = HTML.index("function ensureTownRenderer(")
+    town_controls = HTML[start:HTML.index("\nfunction disposeTownScene", start)]
+    assert "openTownWardSheet(obj.userData.districtSeed)" in town_controls
+    assert "openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId)" in town_controls
+    assert "openEmpireVillage(" not in town_controls
+    assert "focusEmpireVillage(" not in town_controls
+    assert "tap a district to walk its streets" not in HTML
 
 
 def test_quick_icons_moved_again_to_the_bottom_dock():
