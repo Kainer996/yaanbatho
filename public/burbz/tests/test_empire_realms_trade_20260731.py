@@ -218,10 +218,9 @@ def test_trade_routes_are_stored_healed_and_collected_with_tribute():
 def test_royal_ledger_renders_realm_and_trade_sections():
     html = HTML.read_text(encoding="utf-8")
     assert 'class="realm-section"' in html
-    # The realm is no longer a drawer of its own: it is the head of the single
-    # YOUR REALM dropdown the ledger opens with (realm-dropdown-v223-20260804).
-    assert "THE REALM" in html
-    assert "'YOUR REALM'" in html
+    # The realm lives in the 🛡️ COUNTIES navigation tab under the Empire map
+    # (empire-nav-tabs-v275-20260817 — before that, the YOUR REALM dropdown).
+    assert "'nav-counties', '🛡️', 'COUNTIES'" in html
     assert "TRADE ROUTES" in html
     assert 'data-action="open-trade"' in html
     assert 'data-action="empire-region"' in html

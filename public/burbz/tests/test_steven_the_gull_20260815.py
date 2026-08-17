@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "mobile-fresh-update-v274-20260816"
+CURRENT_BUILD = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 

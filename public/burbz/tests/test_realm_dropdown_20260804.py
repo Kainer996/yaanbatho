@@ -1,17 +1,15 @@
-"""The Royal Ledger opens as ONE dropdown: "your realm", top-down.
+"""The Royal Ledger's realm layout — and what survived the v275 nav tabs.
 
-Yaan's report: the ledger met the player with a list of villages spilling from
-the top of the screen — the feudal ladder read upside down. This release turns
-the whole ledger body into a single closed drawer, 👑 YOUR REALM, which the
-player clicks to open. Inside, everything unfolds in the order the ladder runs:
+History: realm-dropdown-v223 folded the whole ledger body into a single
+👑 YOUR REALM dropdown. empire-nav-tabs-v275-20260817 replaced that dropdown
+with three navigation tabs directly under the map (COUNTIES · TOWNS ·
+VILLAGES — see test_empire_nav_tabs_20260817.py). What this file still pins
+are the contracts that outlived the dropdown:
 
-    the crown and its counties (THE REALM)
-      → 🏘️ TOWNS & CITIES        (nested, folded)
-        → 🏡 STANDALONE VILLAGES (nested only when any remain)
-
-Villages consumed by a Town never return as rows or visitable destinations;
-the Town is their single management surface. These are pinned as text contracts
-in the same style as the other index.html tests.
+- only STANDALONE villages get rows; villages consumed by a Town never
+  return as rows or visitable destinations,
+- the ladder reads top-down: counties above towns above villages,
+- a player with no villages is met by onboarding, not an empty ledger.
 """
 from pathlib import Path
 
@@ -21,7 +19,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "mobile-fresh-update-v274-20260816"
+CURRENT_BUILD = "empire-nav-tabs-v275-20260817"
 
 
 def empire_logic(html: str) -> str:
@@ -37,40 +35,22 @@ def ledger(html: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# One dropdown, closed, at the top
+# Only standalone villages surface, top-down
 # ---------------------------------------------------------------------------
 
-def test_the_ledger_body_is_a_single_closed_your_realm_dropdown():
-    body = ledger(HTML.read_text(encoding="utf-8"))
-    assert "empireDrawerHTML('realm-root', false, '👑', 'YOUR REALM'" in body
-    # Closed by default: the player is met by the prompt, not by a wall of rows.
-    assert "'Click to open your realm — counties, then Towns and standalone villages'" in body
-
-
-def test_towns_and_only_standalone_villages_are_nested_inside_the_realm_dropdown():
+def test_only_standalone_villages_get_rows():
     body = ledger(HTML.read_text(encoding="utf-8"))
     assert "const villages = empireStandaloneVillages(sourceVillages)" in body
-    assert "empireSubDrawerHTML('settlements', false, '🏘️', 'TOWNS &amp; CITIES'" in body
-    assert "(villages.length ? empireSubDrawerHTML('villages', false, '🏡', 'STANDALONE VILLAGES'" in body
     assert "'Only villages not yet united into a Town remain visitable'" in body
     assert "'YOUR VILLAGES'" not in body
-    # Both are built into the realm drawer's body, not appended after it, and
-    # the standalone drawer disappears completely once none remain.
-    realm_root = body.index("empireDrawerHTML('realm-root'")
-    assert body.index("empireSubDrawerHTML('villages'", realm_root) > realm_root
-    assert "villages.length ? empireSubDrawerHTML" in body
-    assert "</div>') : '')" in body
-    assert "realmDropdownHtml" in body
-    # ... and the old sibling layout is gone for good.
-    assert "settlementHtml +\n    realmHtml +" not in body
 
 
-def test_the_order_inside_runs_top_down_realm_then_towns_then_villages():
+def test_the_order_runs_top_down_counties_then_towns_then_villages():
     body = ledger(HTML.read_text(encoding="utf-8"))
-    start = body.index("const realmDropdownHtml")
-    block = body[start:body.index("// ---- 📍 Locator strip", start)]
-    assert block.index("realmHtml") < block.index("settlementHtml")
-    assert block.index("settlementHtml") < block.index("'STANDALONE VILLAGES'")
+    start = body.index("const navTabsHtml")
+    block = body[start:body.index("// Order on screen", start)]
+    assert block.index("'nav-counties'") < block.index("'nav-towns'")
+    assert block.index("'nav-towns'") < block.index("'nav-villages'")
 
 
 def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():
@@ -85,21 +65,13 @@ def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():
     assert "if (merged) { openEmpireTown(merged.id); return; }" in opener
 
 
-def test_a_sub_drawer_helper_marks_the_nesting():
-    logic = HTML.read_text(encoding="utf-8")
-    assert "function empireSubDrawerHTML(" in logic
-    assert "'class=\"empire-drawer is-sub\"'" in logic
-    assert ".empire-drawer.is-sub" in logic
-
-
 # ---------------------------------------------------------------------------
-# The realm head keeps its content
+# The realm content keeps its shape
 # ---------------------------------------------------------------------------
 
-def test_the_realm_head_still_lists_the_pyramid_counties_and_trade():
+def test_the_counties_body_still_lists_the_pyramid_counties_and_trade():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
-    assert '<div class="realm-sub-title">🏰 THE REALM</div>' in logic
     assert "Your counties — tap one to run it from its County Hall" in logic
     assert 'class="realm-lead"' in logic
     assert ".realm-lead {" in html
@@ -120,7 +92,7 @@ def test_a_lone_village_still_opens_on_something_that_explains_the_ladder():
 def test_onboarding_still_greets_a_player_with_no_villages():
     body = ledger(HTML.read_text(encoding="utf-8"))
     assert "🕊️ FREE YOUR FIRST VILLAGE" in body
-    assert "const realmDropdownHtml = count" in body
+    assert "const navTabsHtml = count" in body
 
 
 # ---------------------------------------------------------------------------
