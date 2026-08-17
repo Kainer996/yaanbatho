@@ -27,7 +27,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "one-town-fixed-view-v277-20260817"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
-CURRENT_BUILD = "original-bird-card-art-v280-20260817"
+CURRENT_BUILD = "living-settlements-v281-20260817"
 
 
 def function_source(html: str, name: str) -> str:
@@ -45,7 +45,8 @@ def test_the_quarters_are_gone_and_one_plot_ring_knits_the_town():
     html = HTML.read_text(encoding="utf-8")
     scene = function_source(html, "buildTownScene")
     # The shared planner: homes near the square, yards behind, wrecks at the edge.
-    assert "const takePlot = (kind, radiusBase, jitter)" in scene
+    assert "const takePlot = (kind, radiusBase, jitter, clearance)" in scene
+    assert "planted.every(existing =>" in scene
     assert "GOLDEN_ANGLE" in scene
     assert "const HOME_RING" in scene and "const YARD_RING" in scene and "const EDGE_RING" in scene
     # No quarter furniture: no pads, no signs, no geographic spread.

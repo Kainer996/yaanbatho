@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "original-bird-card-art-v280-20260817"
+CURRENT_BUILD = "living-settlements-v281-20260817"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "town-strategy-v273-20260816"
@@ -202,7 +202,8 @@ def test_town_scene_is_built_from_the_member_villages():
     # knit around one square via the shared plot ring (v277 — one town, no
     # geographic district pads).
     assert "villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount })" in scene
-    assert "const takePlot = (kind, radiusBase, jitter)" in scene
+    assert "const takePlot = (kind, radiusBase, jitter, clearance)" in scene
+    assert "clearance" in scene
     assert "GOLDEN_ANGLE" in scene
     # Every ward retains an internal seed so its real palette/recovery state can
     # be rebuilt, but absorbed village names are not exposed in Town UI.

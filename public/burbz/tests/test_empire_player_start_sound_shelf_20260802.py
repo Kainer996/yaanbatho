@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "original-bird-card-art-v280-20260817"
+RELEASE_PIN = "living-settlements-v281-20260817"
 # This release's own marker stays on the cache lineage even after later
 # releases move BURBZ_BUILD on.
 OWN_RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
