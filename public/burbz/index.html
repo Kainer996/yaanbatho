@@ -16968,7 +16968,7 @@ function syncBurbzMusicForMapZoom() {
   MUSIC.setVolume(volume);
   return volume;
 }
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get questZoomLock() { return questZoomLock; }, questZoomCeiling() { return liveMapZoomCeiling(); }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -17087,6 +17087,7 @@ function wireMapMoveTracking() {
     clearTimeout(moveEndTimer);
     moveEndTimer = setTimeout(() => {
       tuneCameraForZoom();
+      tellQuestZoomLockIfHeld();
       scheduleVillageMarkerRefresh();
       scheduleZoomCollectibleRefresh();
       scheduleWalkQuestRealign();
@@ -17659,6 +17660,7 @@ function clearWalkingQuestFromMap() {
   questMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
   questMapMarkers = [];
   clearTrailExtraMarkers();
+  releaseQuestZoomLock();
   drawWalkingQuestRoute();
   updateWalkQuestHud();
 }
@@ -17964,6 +17966,7 @@ function drawWalkingQuestOnMap() {
   questMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
   questMapMarkers = [];
   drawWalkingQuestRoute();
+  applyQuestZoomLock();
   if (!quest || !liveMap || !window.maplibregl) return;
   if (!quest.routeCertification || quest.routeCertification.status !== 'certified') {
     setWalkQuestAlignmentStatus(walkQuestAlignmentMessage(quest.routeCertification));
@@ -18000,6 +18003,94 @@ function drawWalkingQuestOnMap() {
   });
   drawTrailExtrasOnMap(quest);
   updateWalkQuestHud();
+}
+
+// ---- Quest zoom lock: on a live quest the trail stays on screen ----
+// Zoomed right in, a phone's GPS wobble throws the player marker clear of the
+// drawn footpath and the golden line runs off the edge, so a walk that is going
+// fine starts to look wrong. While a walking quest is live the camera holds a
+// ceiling: close enough to read the path underfoot, wide enough to keep the
+// next waymarker in the same frame. The player still zooms — just not past the
+// trail.
+const QUEST_WALK_ZOOM_FLOOR = 16.8;      // tightest lock — always a little zoom-in room above the resting camera
+const QUEST_WALK_ZOOM_CEILING = 18.2;    // hard limit while a quest is live (the free map goes to 19.1)
+const QUEST_WALK_FRAME_MIN_M = 110;      // the smallest stretch of ground the camera ever frames
+let questZoomLock = { on:false, ceiling:null, told:false };
+
+// Web Mercator on MapLibre's 512 px tiles: one pixel covers
+// 78271.517 * cos(lat) / 2^zoom metres. Invert that for the tightest zoom that
+// still frames the next waymarker around the player, then hold it inside the
+// walking band.
+function questWalkZoomCeiling(targetDistM, lat, viewportPx) {
+  const dist = Number(targetDistM);
+  if (!Number.isFinite(dist) || dist <= 0) return QUEST_WALK_ZOOM_CEILING;
+  const span = Math.max(QUEST_WALK_FRAME_MIN_M, dist * 2.2); // marker and player, with air around both
+  const px = Math.max(240, Number(viewportPx) || 0);
+  const cos = Math.max(0.02, Math.cos((Number(lat) || 0) * Math.PI / 180));
+  const fit = Math.log2(px * 78271.517 * cos / span);
+  return Math.max(QUEST_WALK_ZOOM_FLOOR, Math.min(QUEST_WALK_ZOOM_CEILING, fit));
+}
+// The quest HUD, the area-bird list and the pitch all eat the edges of the
+// canvas, so only the smaller side counts as room the player can really read.
+function questZoomLockViewportPx() {
+  const canvas = liveMap && liveMap.getCanvas ? liveMap.getCanvas() : null;
+  const w = (canvas && canvas.clientWidth) || window.innerWidth || 360;
+  const h = (canvas && canvas.clientHeight) || window.innerHeight || 640;
+  return Math.min(w, h) * 0.8;
+}
+// Metres to the marker the player is walking to right now.
+function questZoomLockTargetDistance() {
+  const quest = activeWalkingQuest();
+  if (!quest || !liveMapHasPrecisePosition || !liveMapLastPosition) return null;
+  const checkpoints = Array.isArray(quest.checkpoints) ? quest.checkpoints : [];
+  const next = checkpoints[window.BurbzQuestCore.questNextCheckpointIndex(quest)] || checkpoints[checkpoints.length - 1];
+  if (!next || !Number.isFinite(next.lat) || !Number.isFinite(next.lon)) return null;
+  return mapDistanceMeters(liveMapLastPosition, next);
+}
+function setLiveMapMaxZoom(zoom) {
+  if (!liveMap || !Number.isFinite(zoom)) return;
+  try {
+    const current = liveMap.getMaxZoom ? liveMap.getMaxZoom() : null;
+    if (!Number.isFinite(current) || Math.abs(current - zoom) > 0.001) liveMap.setMaxZoom(zoom);
+  } catch (e) {}
+}
+function applyQuestZoomLock() {
+  if (!liveMap) return;
+  if (!activeWalkingQuest()) { releaseQuestZoomLock(); return; }
+  const here = liveMapLastPosition || getFallbackMapCenter();
+  const ceiling = questWalkZoomCeiling(questZoomLockTargetDistance(), here && here.lat, questZoomLockViewportPx());
+  questZoomLock.on = true;
+  questZoomLock.ceiling = ceiling;
+  const current = liveMap.getZoom ? liveMap.getZoom() : ceiling;
+  if (current > ceiling + 0.02) {
+    // setMaxZoom snaps the camera. Ease out of the too-tight view first, then
+    // close the ceiling behind it — when the ease lands, or on a short timer if
+    // the map never reports one, so the lock can never be left open.
+    const closeCeiling = () => { if (questZoomLock.on) setLiveMapMaxZoom(questZoomLock.ceiling); };
+    try { liveMap.easeTo({ zoom:ceiling, pitch:burbzPitchForZoom(ceiling), duration:420 }); } catch (e) {}
+    try { liveMap.once('moveend', closeCeiling); } catch (e) {}
+    setTimeout(closeCeiling, 520);
+    return;
+  }
+  setLiveMapMaxZoom(ceiling);
+}
+function releaseQuestZoomLock() {
+  questZoomLock = { on:false, ceiling:null, told:false };
+  setLiveMapMaxZoom(BURBZ_MAX_ZOOM);
+}
+function liveMapZoomCeiling() {
+  return questZoomLock.on && Number.isFinite(questZoomLock.ceiling) ? questZoomLock.ceiling : BURBZ_MAX_ZOOM;
+}
+// Said once per quest, the first time the camera actually holds the line.
+function tellQuestZoomLockOnce() {
+  if (!questZoomLock.on || questZoomLock.told) return;
+  questZoomLock.told = true;
+  showToast('🔒 Zoom held here so your trail stays on screen');
+}
+function tellQuestZoomLockIfHeld() {
+  if (!questZoomLock.on || !liveMap || !Number.isFinite(questZoomLock.ceiling)) return;
+  const zoom = liveMap.getZoom ? liveMap.getZoom() : 0;
+  if (zoom >= questZoomLock.ceiling - 0.02) tellQuestZoomLockOnce();
 }
 // Pocket-strength haptics: long, distinct patterns so quest events can be felt
 // through fabric without looking at the screen (navigator.vibrate is ignored on
@@ -18300,6 +18391,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const finishJustUnlocked = !finishWasReady && window.BurbzQuestCore.questFinishIsReady(quest);
   if (activeWalkingQuest() === quest && (checkpointProgressed || finishJustUnlocked)) drawWalkingQuestOnMap();
   updateWalkQuestHud();
+  applyQuestZoomLock();
   const now = Date.now();
   if (!chestClaimFailed && !chestClaimHandled && (events.length || now - walkQuestLastSave > 20000)) { walkQuestLastSave = now; saveState(); }
   return events;
@@ -19407,7 +19499,7 @@ Object.assign(window, {
 });
 
 function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
-  function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
+  function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const from = liveMap.getZoom() || BURBZ_START_ZOOM; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(liveMapZoomCeiling(), from + delta)); if (delta > 0 && z <= from + 0.001) { tellQuestZoomLockOnce(); return; } liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); }
@@ -36262,7 +36354,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-settlements-v281-20260817';
+const BURBZ_BUILD = 'quest-zoom-lock-v282-20260818';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "living-settlements-v281-20260817"
+RELEASE_PIN = "quest-zoom-lock-v282-20260818"
 # This release's own cache marker stays in the lineage; later releases move
 # BURBZ_BUILD on.
 OWN_RELEASE_PIN = "hospital-auto-discharge-v239-20260809"

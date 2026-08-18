@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "living-settlements-v281-20260817"
+RELEASE_PIN = "quest-zoom-lock-v282-20260818"
 PREVIOUS_RELEASE_PIN = "back-guard-gesture-v195-20260802"
 
 
