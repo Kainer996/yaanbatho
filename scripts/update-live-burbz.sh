@@ -38,6 +38,7 @@ FILES=(
   "manifest.json"
   "quest_core.js"
   "walking_story_core.js"
+  "side_trail_core.js"
   "village_variation_core.js"
   "settlement_scene_core.js"
   "empire_map_core.js"

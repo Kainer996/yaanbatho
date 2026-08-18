@@ -114,6 +114,21 @@ receipts, the border-stone compact, a natural history of the evil Burbz, and at
 the last, Merlin's letter to the walker. Collected scrolls are kept and can be
 re-read any time; each one ties the roads back to the Academy and the Empire.
 
+### Off the road — side quests and the Wayside Tales
+
+The roads carry the campaign. The land between them carries its own stories.
+Walk 300 metres away from your quest's golden route and a **side quest opens by
+itself** — the hedgerows notice a free walker and name the wander ("The Crooked
+Byway", "The Whispering Meadow"). The main quest keeps every marker and simply
+waits. Off the road the wander is charted like any Side Quest: random chests,
+lost weapons, wandering quest givers — and **Wayside Tales**, hedge-lore found
+nowhere else. The tales are the verge's answer to the Folio: the usurper charts
+every road but is blind to the land between them; the gleaner's right says a
+found chest belongs to whoever walked for it; somewhere off an unmarked path
+the mice keep a chapel around one lost feather of Merlin's. Wander back within
+150 metres of the golden path and the side quest banks itself — every find
+kept, every tale shelved in the Feathered Folio.
+
 ## The evil Burbz — the enemies the birds fight
 
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.

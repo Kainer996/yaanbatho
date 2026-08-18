@@ -9,7 +9,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 INDEX = BURBZ / "index.html"
 CACHE = BURBZ / "bird-art-cache"
 SW = BURBZ / "sw.js"
-BUILD = "living-settlements-v281-20260817"
+BUILD = "offroad-side-quests-v283-20260818"
 
 
 def source_block(source: str, start_marker: str, end_marker: str) -> str:
