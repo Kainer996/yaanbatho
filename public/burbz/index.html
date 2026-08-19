@@ -3155,6 +3155,12 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .training-template-card { padding:10px; border-radius:13px; border:1px solid rgba(214,168,79,.18); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.24)); }
 .training-template-head { display:flex; justify-content:space-between; gap:8px; color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
 .training-template-copy { color:var(--text3); font-size:10.5px; line-height:1.35; margin:4px 0 8px; }
+.training-stat-chip { font-size:10px; color:var(--text3); white-space:nowrap; }
+.training-duration-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.training-duration-chip { min-height:34px; padding:0 12px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.3); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.04em; }
+.training-duration-chip.selected { border-color:var(--accent); background:rgba(214,168,79,.2); color:#ffe9ad; box-shadow:0 0 10px rgba(214,168,79,.25); }
+.training-reward-line { margin:5px 0 8px; color:var(--text2); font-size:11px; }
+.training-reward-line b { color:#ffe9ad; }
 .training-bird-buttons { display:flex; flex-wrap:wrap; gap:6px; }
 .training-bird-btn { min-height:32px; border-radius:999px; padding:0 10px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.13); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; }
 .training-bird-btn[disabled] { opacity:.45; filter:grayscale(.55); }
@@ -4692,7 +4698,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
+<script src="academy_treehouse_core.js?v=training-your-way-v288-20260819"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
@@ -16378,6 +16384,20 @@ function roomBirdGridHTML(birds, room) {
   return '<div class="room-bird-grid" aria-label="Birds assigned to ' + escapeHtml((ACADEMY_ROOMS[room] && ACADEMY_ROOMS[room].label) || room) + '">' + items + '</div>';
 }
 
+// The notice board's one shared dial: how long the next run lasts. Short
+// runs pay the most for the player's minute; the dial starts on 15m so the
+// quick loop is the default.
+let trainingDurationChoice = 15;
+
+function selectTrainingDuration(minutes) {
+  const core = window.BurbzAcademyCore;
+  const ladder = (core && core.TRAINING_DURATION_MINUTES) || [15, 30, 60, 120, 240, 480, 1440];
+  if (!ladder.includes(Number(minutes))) return;
+  trainingDurationChoice = Number(minutes);
+  SFX.tap();
+  renderAcademyRoomInterior();
+}
+
 function startBirdTrainingSession(birdId, templateId) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
@@ -16396,15 +16416,16 @@ function startBirdTrainingSession(birdId, templateId) {
   // stationed in the Kitchen — it is a feeding table, not a roost.
   bird.academy.room = tplRoom === 'kitchen' ? 'outdoors' : tplRoom;
   bird.academy.lastMovedAt = new Date().toISOString();
-  const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now(), { nightBonus: nocturnalNightBonusFor(bird) });
+  const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now(), { nightBonus: nocturnalNightBonusFor(bird), durationMinutes: trainingDurationChoice });
   ensureBirdTrainingSessions().unshift(session);
   academySelectedRoom = tplRoom;
   academyInteriorRoom = tplRoom;
   saveState();
   SFX.tap();
+  const runLength = fmtTrainingTime(session.durationMinutes || Math.round((session.endMs - session.startMs) / 60000));
   showToast(session.nightBonus
-    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 3× XP and double stat gains! ' + session.label
-    : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
+    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — 3× XP, double stat gains! ' + session.label + ' · ' + runLength
+    : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label + ' · ' + runLength);
   renderAcademyRoomInterior();
   renderAcademy();
 }
@@ -16484,27 +16505,36 @@ function renderTrainingHallPanel(birds, others) {
     const rewards = t.rewards || {};
     const progressPct = Number.isFinite(t.progressPct) ? t.progressPct : 0;
     const events = Array.isArray(t.events) ? t.events : [];
-    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
-  }).join('') : '<div class="academy-empty">No birds are training yet. Tap the notice board below to assign a companion to a timed drill.</div>';
+    const runLength = fmtTrainingTime(t.durationMinutes || Math.max(1, Math.round((t.endMs - t.startMs) / 60000)));
+    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · ' + runLength + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
+  }).join('') : '';
+  // One shared dial for every drill: pick the run length once, then send.
+  const ladder = core.TRAINING_DURATION_MINUTES || [15, 30, 60, 120, 240, 480, 1440];
+  if (!ladder.includes(trainingDurationChoice)) trainingDurationChoice = ladder[0];
+  const durationRow = '<div class="training-duration-row" role="group" aria-label="Run length">' + ladder.map(m =>
+    '<button type="button" class="training-duration-chip' + (m === trainingDurationChoice ? ' selected' : '') + '" onclick="selectTrainingDuration(' + m + ')">' + fmtTrainingTime(m) + '</button>').join('') + '</div>';
   const templateHtml = templates.map(t => {
     const roomBuilt = !t.room || t.room === 'training' || isAcademyBuildingBuilt(t.room);
-    const moveLine = t.moveLine ? '<div class="training-session-meta">Move line: ' + escapeHtml(t.moveLine) + '</div>' : '';
+    const option = (core.getTrainingDurationOptions ? core.getTrainingDurationOptions(t.id) : []).find(o => o.minutes === trainingDurationChoice);
+    const rewardLine = option
+      ? '<div class="training-reward-line">' + fmtTrainingTime(option.minutes) + ' → <b>+' + option.bonus + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + '</b> · +' + option.xp + ' XP · 1 move session</div>'
+      : '';
+    const moveLine = t.moveLine ? '<div class="training-session-meta">' + escapeHtml(t.moveLine) + '</div>' : '';
     const buttons = !roomBuilt
-      ? '<div class="academy-empty">🔒 Build the ' + escapeHtml(t.roomLabel || t.room) + ' to unlock this discipline.</div>'
+      ? '<div class="academy-empty">🔒 Build the ' + escapeHtml(t.roomLabel || t.room) + ' to unlock.</div>'
       : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => {
         const readiness = birdWorkReadiness(b, 'training');
-        const hungerLabel = readiness.status && readiness.status.label ? readiness.status.label.toLowerCase() : 'fed';
         // A Night Hunter's button says so: at night, the owl learns triple.
         const nightHunting = readiness.ok && !!nocturnalNightBonusFor(b);
-        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + (nightHunting ? '🌙 Night Hunter 3×' : hungerLabel);
+        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' first' : birdDisplayName(b) + (nightHunting ? ' 🌙3×' : '');
         return '<button class="training-bird-btn' + (nightHunting ? ' night-hunter-aura' : '') + '" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
-      }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
-    return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
+      }).join('') + '</div>' : '<div class="academy-empty">Every bird is busy — free one up, then come back.</div>');
+    return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span class="training-stat-chip">+' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ' · ' + escapeHtml(String(t.school || '').toUpperCase()) + '</span></div>' + moveLine + rewardLine + buttons + '</div>';
   }).join('');
   const nightHallHint = isNightRightNow()
-    ? '<div class="battle-night-hint">🌙 Night school is open — a nocturnal bird training now earns TRIPLE XP and DOUBLE stat gains from every drill. The owls learn while the Kingdom sleeps.</div>'
+    ? '<div class="battle-night-hint">🌙 Night school: a nocturnal bird training now earns 3× XP and double stat gains.</div>'
     : '';
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Pick a run length, then tap a bird under a drill. Short runs pay the most for your time; long runs pay while you\'re away. Every run counts one session toward the drill\'s move line (1 = move I, 3 = II, 6 = III).</div>' + durationRow + '<div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function trainingMasterActorHTML() {
@@ -16667,6 +16697,7 @@ Object.assign(window, {
   closeFeedSheet,
   startBirdTrainingSession,
   claimBirdTrainingSession,
+  selectTrainingDuration,
   academyForage,
   cardSendBirdToRoom,
   openAcademyRoom,
@@ -36879,7 +36910,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'mercy-streak-attack-preview-v287-20260819';
+const BURBZ_BUILD = 'training-your-way-v288-20260819';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

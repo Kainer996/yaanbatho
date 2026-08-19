@@ -14,7 +14,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-training-dock-v252-20260812"
 PREVIOUS_RELEASE_PIN = "hold-to-steer-v251-20260811"
-CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
+CURRENT_BUILD = "training-your-way-v288-20260819"
 
 
 def test_the_academy_title_is_just_academy():

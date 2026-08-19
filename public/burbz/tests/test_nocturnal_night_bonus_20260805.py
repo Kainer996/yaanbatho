@@ -25,8 +25,8 @@ SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
-ACADEMY_CORE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
+ACADEMY_CORE_PIN = "training-your-way-v288-20260819"
+CURRENT_BUILD = "training-your-way-v288-20260819"
 
 ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 
@@ -144,7 +144,7 @@ def test_app_wires_the_bonus_into_every_capacity():
     assert "nocturnalNightBonus" in helper
     # Dispatch and training both hand the pack to the reward core.
     assert "nightBonus: nocturnalNightBonusFor(bird)" in function_source(html, "startBirdExpedition")
-    assert "{ nightBonus: nocturnalNightBonusFor(bird) }" in function_source(html, "startBirdTrainingSession")
+    assert "{ nightBonus: nocturnalNightBonusFor(bird), durationMinutes: trainingDurationChoice }" in function_source(html, "startBirdTrainingSession")
     # The send sheet teaches the rule at night and marks nocturnal chips.
     sheet = function_source(html, "renderQuestSendSheet")
     assert "isNightRightNow()" in sheet
