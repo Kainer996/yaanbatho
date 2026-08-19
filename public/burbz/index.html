@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
@@ -4701,7 +4701,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
-<script src="settlement_scene_core.js?v=living-settlements-v281-20260817"></script>
+<script src="settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -25226,7 +25226,7 @@ let villageBuiltPhase = null; // the daylight phase the scene was lit for
 let villageBuiltLifeKey = null;
 let villageBuiltShopsKey = null; // trades found so far — a new find rebuilds
 let villageActive = null;
-let villageSceneQuality = { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
+let villageSceneQuality = { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
 let villageLastFrameAt = 0;
 
 function settlementSceneReducedMotion() {
@@ -25234,20 +25234,30 @@ function settlementSceneReducedMotion() {
 }
 function settlementSceneQualityProfile(stage) {
   const core = window.BurbzSettlementSceneCore;
-  if (!core || !core.qualityProfile) return { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
+  if (!core || !core.qualityProfile) return { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
   const rect = stage && stage.getBoundingClientRect ? stage.getBoundingClientRect() : null;
   return core.qualityProfile({
     width: Math.max(1, Number(rect && rect.width) || window.innerWidth || 390),
     height: Math.max(1, Number(rect && rect.height) || window.innerHeight || 700),
     dpr: window.devicePixelRatio || 1,
     hardwareConcurrency: navigator.hardwareConcurrency || 4,
+    deviceMemory: navigator.deviceMemory || 0,
     reducedMotion: settlementSceneReducedMotion()
   });
 }
+const settlementSceneViewportCache = new WeakMap();
 function settlementSceneStageInViewport(stage) {
   if (!stage || !stage.getBoundingClientRect) return true;
+  // Reading layout every animation frame forces the browser to reflow this
+  // very large page 60 times a second. A scroll-away only needs to be caught
+  // within a few hundred milliseconds, so one real read per 250ms is plenty.
+  const now = performance.now();
+  const cached = settlementSceneViewportCache.get(stage);
+  if (cached && now - cached.at < 250) return cached.inView;
   const rect = stage.getBoundingClientRect();
-  return rect.bottom > 0 && rect.right > 0 && rect.top < (window.innerHeight || document.documentElement.clientHeight) && rect.left < (window.innerWidth || document.documentElement.clientWidth);
+  const inView = rect.bottom > 0 && rect.right > 0 && rect.top < (window.innerHeight || document.documentElement.clientHeight) && rect.left < (window.innerWidth || document.documentElement.clientWidth);
+  settlementSceneViewportCache.set(stage, { at: now, inView });
+  return inView;
 }
 function settlementSceneShouldRun(screenActive, detailsOpen, stage) {
   const core = window.BurbzSettlementSceneCore;
@@ -25257,6 +25267,48 @@ function settlementSceneShouldRun(screenActive, detailsOpen, stage) {
 function settlementSceneMotionScale() {
   const reduced = settlementSceneReducedMotion(), core = window.BurbzSettlementSceneCore;
   return core && core.motionScale ? core.motionScale(reduced) : (reduced ? 0 : 1);
+}
+
+// Live detail governors: one per scene. Each rendered frame reports its real
+// duration; roughly once a second the core's adaptDetail() judges the stretch
+// and the render resolution steps down on a genuinely struggling device — or
+// back up to full sharpness the moment the device proves it can afford it.
+const settlementSceneGovernors = { village:null, town:null };
+function settlementSceneGovernor(kind) {
+  if (!settlementSceneGovernors[kind]) settlementSceneGovernors[kind] = { dpr:0, frames:0, totalMs:0, lastTs:0 };
+  return settlementSceneGovernors[kind];
+}
+function settlementSceneSampleFrame(kind, ts) {
+  if (!Number.isFinite(ts)) return;
+  const gov = settlementSceneGovernor(kind);
+  if (gov.lastTs) {
+    const delta = ts - gov.lastTs;
+    // Ignore pauses and tab switches — a 300ms gap is not a slow frame.
+    if (delta > 0 && delta < 250) { gov.frames++; gov.totalMs += delta; }
+  }
+  gov.lastTs = ts;
+  if (gov.frames < 48) return;
+  const quality = kind === 'town' ? townSceneQuality : villageSceneQuality;
+  const core = window.BurbzSettlementSceneCore;
+  const sample = { frames: gov.frames, avgFrameMs: gov.totalMs / gov.frames };
+  const current = { dpr: gov.dpr, minDpr: 1.25, maxDpr: Math.min(quality.maxDpr || 2, window.devicePixelRatio || 1) };
+  gov.frames = 0; gov.totalMs = 0;
+  const next = core && core.adaptDetail ? core.adaptDetail(current, sample) : null;
+  if (!next || !next.changed || Math.abs(next.dpr - gov.dpr) < 0.01) return;
+  gov.dpr = next.dpr;
+  const renderer = kind === 'town' ? townRenderer : villageRenderer;
+  if (!renderer) return;
+  renderer.setPixelRatio(gov.dpr);
+  if (kind === 'town') onTownResize(); else onVillageResize();
+}
+function settlementSceneApplyDpr(kind, renderer, quality) {
+  const gov = settlementSceneGovernor(kind);
+  const ceiling = Math.min(quality.maxDpr || 2, window.devicePixelRatio || 1);
+  // Open at full sharpness; the governor only walks down from here if the
+  // measured frames say it must (and climbs back once they recover).
+  if (!gov.dpr || gov.dpr > ceiling) gov.dpr = ceiling;
+  gov.frames = 0; gov.totalMs = 0; gov.lastTs = 0;
+  renderer.setPixelRatio(gov.dpr);
 }
 
 // The world owns its small physical signs. Screen-space text is reserved for
@@ -25280,7 +25332,21 @@ function settlementSceneSetContext(kind, object, info) {
   label.className = 'settlement-scene-label is-selected';
   label.textContent = String(info.name || 'Selected');
   if (labels) labels.replaceChildren(label);
-  settlementSceneSelection[kind] = { id, object, info, label, occluded:false, lastOcclusionAt:0 };
+  const record = { id, object, info, label, occluded:false, lastOcclusionAt:0 };
+  // Measure the object once, here at selection. The per-frame updater then
+  // only re-projects this cached anchor — walking a whole building's mesh
+  // tree with Box3.setFromObject sixty times a second was a real frame cost.
+  if (window.THREE && object.parent) {
+    const bounds = new THREE.Box3().setFromObject(object);
+    if (!bounds.isEmpty()) {
+      object.updateWorldMatrix(true, false);
+      record.anchorLocal = object.worldToLocal(new THREE.Vector3((bounds.min.x + bounds.max.x) / 2, bounds.max.y + 0.36, (bounds.min.z + bounds.max.z) / 2));
+      record.anchorWorld = new THREE.Vector3();
+      record.anchorProjected = new THREE.Vector3();
+      record.occlusionRay = new THREE.Raycaster();
+    }
+  }
+  settlementSceneSelection[kind] = record;
   const inspector = $(kind + 'SceneInspector');
   if (inspector) inspector.hidden = false;
   const icon = $(kind + 'SceneIcon'); if (icon) icon.textContent = info.icon || '◆';
@@ -25296,21 +25362,27 @@ function settlementSceneSetContext(kind, object, info) {
 function settlementSceneUpdateContext(kind, camera, scene) {
   const selected = settlementSceneSelection[kind], stage = $(kind + 'Stage');
   if (!selected || !selected.object || !selected.object.parent || !selected.label || !stage || !camera || !scene) return;
-  const bounds = new THREE.Box3().setFromObject(selected.object);
-  if (bounds.isEmpty()) { selected.label.hidden = true; return; }
-  const anchor = new THREE.Vector3((bounds.min.x + bounds.max.x) / 2, bounds.max.y + 0.36, (bounds.min.z + bounds.max.z) / 2);
-  const projected = anchor.clone().project(camera);
+  // Everything here reuses the vectors cached at selection time — the label
+  // updater allocates nothing and traverses nothing on the frame path.
+  if (!selected.anchorLocal) { selected.label.hidden = true; return; }
+  const anchor = selected.anchorWorld.copy(selected.anchorLocal);
+  selected.object.localToWorld(anchor);
+  const projected = selected.anchorProjected.copy(anchor).project(camera);
   const width = stage.clientWidth, height = stage.clientHeight;
   const px = (projected.x * 0.5 + 0.5) * width;
   const py = (-projected.y * 0.5 + 0.5) * height;
   const labelWidth = Math.min(164, Math.max(84, String(selected.info.name || '').length * 7 + 22));
   const now = performance.now();
-  const quality = kind === 'town' ? townSceneQuality : villageSceneQuality;
-  const occlusionInterval = quality && quality.tier === 'low' ? 360 : 180;
-  if (now - selected.lastOcclusionAt > occlusionInterval) {
+  if (now - selected.lastOcclusionAt > 180) {
+    // Cast only against the tappable buildings, not every mesh in the scene —
+    // a tree hiding a label's corner matters less than the frame rate.
+    const targets = kind === 'town' ? townEconBuildings.concat(townDistrictGroups) : villageBuildings;
+    const ray = selected.occlusionRay;
     const direction = anchor.clone().sub(camera.position), distance = direction.length();
-    const ray = new THREE.Raycaster(camera.position, direction.normalize(), 0.1, Math.max(0.1, distance - 0.16));
-    const first = ray.intersectObjects(scene.children, true).find(hit => hit.object.visible !== false);
+    ray.set(camera.position, direction.normalize());
+    ray.near = 0.1;
+    ray.far = Math.max(0.1, distance - 0.16);
+    const first = ray.intersectObjects(targets, true).find(hit => hit.object.visible !== false);
     selected.occluded = !!(first && !settlementSceneObjectContains(selected.object, first.object));
     selected.lastOcclusionAt = now;
   }
@@ -25320,7 +25392,14 @@ function settlementSceneUpdateContext(kind, camera, scene) {
     ? core.selectSceneLabels([candidate], { width, height, maxLabels:1, padding:8, gap:6, selectedId:selected.id })
     : (!candidate.behindCamera && !candidate.hidden ? [candidate] : []);
   selected.label.hidden = picked.length === 0;
-  if (picked.length) { selected.label.style.left = px + 'px'; selected.label.style.top = py + 'px'; }
+  if (picked.length) {
+    const lx = Math.round(px), ly = Math.round(py);
+    if (selected.labelX !== lx || selected.labelY !== ly) {
+      selected.labelX = lx; selected.labelY = ly;
+      selected.label.style.left = lx + 'px';
+      selected.label.style.top = ly + 'px';
+    }
+  }
 }
 function settlementSceneWake(kind) {
   if (kind === 'village' && currentScreen === 'village' && !villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
@@ -28169,13 +28248,13 @@ function ensureVillageRenderer(stage) {
   villageSceneQuality = settlementSceneQualityProfile(stage);
   settlementSceneBindControls('village', stage);
   if (villageRenderer) {
-    villageRenderer.setPixelRatio(Math.min(villageSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
+    settlementSceneApplyDpr('village', villageRenderer, villageSceneQuality);
     if (!villageRenderer.domElement.isConnected) stage.appendChild(villageRenderer.domElement);
     return;
   }
   villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 140); // far covers the 96-radius sky dome from max orbit
   villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  villageRenderer.setPixelRatio(Math.min(villageSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
+  settlementSceneApplyDpr('village', villageRenderer, villageSceneQuality);
   villageRenderer.shadowMap.enabled = true; // real moonlight shadows
   villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   villageRenderer.shadowMap.autoUpdate = false; // static moon: the pass re-renders every 3rd frame (see villageAnimateFrame)
@@ -29444,10 +29523,13 @@ function villageAnimate(ts) {
   }
   stage?.classList.remove('is-paused');
   requestAnimationFrame(villageAnimate);
-  const interval = Number(villageSceneQuality.frameInterval) || 16;
-  if (ts && villageLastFrameAt && ts - villageLastFrameAt < interval) return;
+  // Run at the display's native rate. Only an explicit cap (reduced motion)
+  // throttles — the v281 skip-frames cap held 60Hz phones at a juddery 30fps.
+  const interval = Number(villageSceneQuality.frameInterval) || 0;
+  if (interval && ts && villageLastFrameAt && ts - villageLastFrameAt < interval) return;
   villageLastFrameAt = ts || 0;
   if (!villageRenderer || !villageScene) return;
+  settlementSceneSampleFrame('village', ts);
   villageAnimateFrame((ts || 0) / 1000);
 }
 
@@ -29704,20 +29786,20 @@ let townShadowTick = 0;
 let townFallbackMode = false;
 let townBuiltKey = null;
 let townBuiltPhase = null; // the daylight phase the scene was lit for
-let townSceneQuality = { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
+let townSceneQuality = { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
 let townLastFrameAt = 0;
 
 function ensureTownRenderer(stage) {
   townSceneQuality = settlementSceneQualityProfile(stage);
   settlementSceneBindControls('town', stage);
   if (townRenderer) {
-    townRenderer.setPixelRatio(Math.min(townSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
+    settlementSceneApplyDpr('town', townRenderer, townSceneQuality);
     if (!townRenderer.domElement.isConnected) stage.appendChild(townRenderer.domElement);
     return;
   }
   townCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 200); // far covers the sky dome from the widest orbit
   townRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  townRenderer.setPixelRatio(Math.min(townSceneQuality.maxDpr || 1.5, window.devicePixelRatio || 1));
+  settlementSceneApplyDpr('town', townRenderer, townSceneQuality);
   townRenderer.shadowMap.enabled = true;
   townRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
   townRenderer.shadowMap.autoUpdate = false; // static moon: refreshed every 3rd frame like the village
@@ -30420,10 +30502,12 @@ function townAnimate(ts) {
   }
   stage?.classList.remove('is-paused');
   requestAnimationFrame(townAnimate);
-  const interval = Number(townSceneQuality.frameInterval) || 16;
-  if (ts && townLastFrameAt && ts - townLastFrameAt < interval) return;
+  // Native rate here too — see villageAnimate.
+  const interval = Number(townSceneQuality.frameInterval) || 0;
+  if (interval && ts && townLastFrameAt && ts - townLastFrameAt < interval) return;
   townLastFrameAt = ts || 0;
   if (!townRenderer || !townScene) return;
+  settlementSceneSampleFrame('town', ts);
   townAnimateFrame((ts || 0) / 1000);
 }
 function townAnimateFrame(t) {
@@ -36584,7 +36668,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'building-discovery-v284-20260819';
+const BURBZ_BUILD = 'settlement-scene-sharp-v285-20260819';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
