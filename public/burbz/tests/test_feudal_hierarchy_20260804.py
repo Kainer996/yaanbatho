@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "settlement-scene-sharp-v285-20260819"
+CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
 REALM_CORE_PIN = "town-strategy-v273-20260816"
 
 

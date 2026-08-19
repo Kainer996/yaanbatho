@@ -25,6 +25,11 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
 
+### The cost of the field, and the honest merge
+
+- A battle frees **one village** — never a town. Towns rise only where three freed villages grow together at the birdhouse build, and the game says so first: the claim bar names the three villages a birdhouse will unite before the charter is sealed.
+- Battle has a cost. A bird lost on the field is **carried straight to the Bird Hospital**, hurt — levels won on the way home mend stats, never wounds. If no ward stands yet, the fallen rest in the Aviary Gardens until food and care mend them.
+
 ## The village folk — who lives in the freed towns
 
 The birds are the heroes of this story. But the villages they free are not empty. The **village folk** live there: a small, sturdy, human-like people of the Kingdom of Burbz. They look a little like the humans of our universe, but they are a different species altogether — and they are nowhere near as clever as the birds. They cannot work magic. They cannot fight the evil Burbz. They never lead. They farm, they fell, they dig, they trade, and they are content.

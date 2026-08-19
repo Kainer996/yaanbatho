@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "settlement-scene-sharp-v285-20260819"
+CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "night-veil-removed-v266-20260813"
 
 
