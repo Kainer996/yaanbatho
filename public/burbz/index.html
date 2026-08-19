@@ -15866,12 +15866,13 @@ function admitFaintedBirdToHospital(bird) {
 
 // No ward standing? A lost bird still leaves its post. It rests in the
 // Aviary Gardens until food or care mends it — it does not report back to
-// the Training Hall looking fine. Same guards as admission: working,
+// the Training Hall looking fine. The Roost ('dorm') heals, so a hurt bird
+// already tucked in there stays put. Same guards as admission: working,
 // questing and mid-drill birds keep their own schedule.
 function restLostBirdOutsideWard(bird) {
   if (!bird) return false;
   ensureBirdAcademy(bird);
-  if (bird.academy.room === 'hospital' || bird.academy.room === 'outdoors') return false;
+  if (bird.academy.room === 'hospital' || bird.academy.room === 'outdoors' || bird.academy.room === 'dorm') return false;
   if (birdAssignedPost(bird.id)) return false;
   if (birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id)) return false;
   bird.academy.room = 'outdoors';
@@ -22722,7 +22723,9 @@ function previewClaimFounding(v) {
   if (!core || !core.deriveSettlements || !v || !empire) return null;
   const key = String(Number(v.seed) >>> 0);
   if (empire.villages[key]) return null;
-  const claims = empireVillages().concat([{ seed: Number(v.seed) >>> 0, name: v.name, lat: Number(v.lat), lon: Number(v.lon), claimedAt: new Date().toISOString() }]);
+  // Same coordinate rules as the real claim, so preview and claim can never
+  // disagree about the trio.
+  const claims = empireVillages().concat([{ seed: Number(v.seed) >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: new Date().toISOString() }]);
   const after = core.deriveSettlements(claims);
   const mine = after.tierBySeed[key];
   if (!mine || mine.tier === 'village') return null;

@@ -88,7 +88,8 @@ def test_battle_end_carries_the_lost_to_the_ward_hurt():
 def test_no_ward_fallback_rests_the_fallen_in_the_gardens():
     html = HTML_PATH.read_text(encoding="utf-8")
     src = function_source(html, "restLostBirdOutsideWard")
-    assert "bird.academy.room === 'hospital' || bird.academy.room === 'outdoors'" in src
+    # The Roost ('dorm') heals — a hurt bird already resting there stays put.
+    assert "bird.academy.room === 'hospital' || bird.academy.room === 'outdoors' || bird.academy.room === 'dorm'" in src
     assert "birdAssignedPost(bird.id)" in src
     assert "birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id)" in src
     assert "bird.academy.room = 'outdoors';" in src
@@ -101,11 +102,17 @@ def test_no_ward_fallback_rests_the_fallen_in_the_gardens():
         "\nconst bird={id:'b1',academy:{room:'training'}};\n"
         "const moved=restLostBirdOutsideWard(bird);\n"
         "const again=restLostBirdOutsideWard(bird);\n"
-        "console.log(JSON.stringify({moved,room:bird.academy.room,again}));"
+        "const roosting={id:'b2',academy:{room:'dorm'}};\n"
+        "const evicted=restLostBirdOutsideWard(roosting);\n"
+        "console.log(JSON.stringify({moved,room:bird.academy.room,again,"
+        "evicted,roostRoom:roosting.academy.room}));"
     )
     assert out["moved"] is True
     assert out["room"] == "outdoors"
     assert out["again"] is False
+    # A hurt bird already healing in the Roost is never evicted.
+    assert out["evicted"] is False
+    assert out["roostRoom"] == "dorm"
 
 
 # ---- 2. A battle frees a village; merges announce themselves ----------------
@@ -163,6 +170,11 @@ def test_preview_founding_is_pure_and_honest():
         "};\n"
         "const ensureEmpireState=()=>({villages});\n"
         "const empireVillages=()=>Object.values(villages);\n"
+        "const normaliseVillageCoordinate=(value,min,max)=>{\n"
+        "  if (value===null||value===undefined||value==='') return null;\n"
+        "  const c=Number(value);\n"
+        "  return Number.isFinite(c)&&c>=min&&c<=max?c:null;\n"
+        "};\n"
         + names + "\n" + preview +
         "\nconst near=previewClaimFounding({seed:103,name:'Alderbrook',lat:51.536,lon:-2.6});\n"
         "const far=previewClaimFounding({seed:104,name:'Shalefell',lat:52.4,lon:-2.6});\n"
