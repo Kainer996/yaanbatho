@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "town-strategy-v273-20260816"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

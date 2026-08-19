@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

@@ -178,8 +178,8 @@ Canonical concept reference: `burbz-shadow-enemies-reference-20260720.png` in th
 Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental stat of diplomacy — and diplomacy is how the small birds fight the war. Buzzards and eagles are the warriors: they carry the branches, the food and the front line of every Liberation Battle. But a robin or a wren carries something the raptors never will — charm — and the Kingdom needs both.
 
 - **Charm is a core bird stat.** Famously confiding, winning species (the robin above all, the wren close behind) rate highest; shy skulkers and wary raptors rate lowest. Charm shows on bird cards beside HP, ATK and MAG.
-- **Parley** is the diplomacy action in battle: any bird can appeal to an evil Burb, and charm saps its will to fight. A weakened evil Burb can be **won over** entirely — the usurper's shadow lifts and the bird bows out in peace, leaving goodwill gifts. This is the gentlest form of dispelling and fits the kingdom's moral frame exactly: no foe is ever harmed by kindness.
-- **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there sway parleys and diplomacy quests.
+- **Diplomacy stays off the battlefield.** Parley — the old in-battle charm move — retired in v287: it confused players and rarely worked. In a fight, every turn is a fighting choice. Charm does its work on quests and at the bar instead.
+- **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there earn more on diplomacy quests.
 - **Diplomacy quests** (marked 🕊️, like the Diplomacy Envoy) pay out on charm: charming birds talk squirrel markets, border flocks and passers-by into better deals, bonus coins and gifts.
 
 ## The Raven, and the law of weight and wit

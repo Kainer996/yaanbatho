@@ -17,8 +17,10 @@ SW_PATH = ROOT / "sw.js"
 STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
+# The core itself moved again with mercy-streak-attack-preview-v287.
+CORE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 
 
 def run_node(script: str):
@@ -162,7 +164,7 @@ console.log(JSON.stringify({
 
 def test_html_wires_the_campaign_into_the_walking_quest_lifecycle():
     html = HTML_PATH.read_text(encoding="utf-8")
-    assert f'<script src="walking_story_core.js?v={OWN_RELEASE_PIN}"></script>' in html
+    assert f'<script src="walking_story_core.js?v={CORE_PIN}"></script>' in html
     # Attach at activation, right after the quest is built.
     activate = function_source(html, "activateWalkingQuestFromOffer")
     assert "attachStoryToNewWalkingQuest(quest)" in activate
@@ -200,7 +202,7 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    assert sw.count(f"'./walking_story_core.js?v={OWN_RELEASE_PIN}'") == 2
+    assert sw.count(f"'./walking_story_core.js?v={CORE_PIN}'") == 2
     updater = UPDATER_PATH.read_text(encoding="utf-8")
     assert '"walking_story_core.js"' in updater
     story = STORY_PATH.read_text(encoding="utf-8")

@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "town-strategy-v273-20260816"

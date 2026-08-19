@@ -79,7 +79,7 @@ def test_new_mechanics_are_taught():
         "kitchen", "hungry", "larder", "diet",  # Kitchen & Pantry + diet hunger
         "level up",                              # bird levelling
         "equipment", "gear",                     # forge equipment
-        "charm", "parley", "crowbar",            # diplomacy
+        "charm", "crowbar",                      # diplomacy (parley retired in v287)
     ):
         assert term in copy, term
 

@@ -25,8 +25,8 @@ SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
-ACADEMY_CORE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+ACADEMY_CORE_PIN = "mercy-streak-attack-preview-v287-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 
 ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 

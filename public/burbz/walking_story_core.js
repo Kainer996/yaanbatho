@@ -286,7 +286,7 @@
       scroll: {
         id: 'folio_18_on_charm',
         title: 'On Charm, and the Small Birds\' War',
-        text: 'The buzzards carry the front line, and honour to them. But mark what the robin carries: CHARM, the fundamental stat of diplomacy, and diplomacy is how the small birds fight. Any bird may parley with an evil Burb; charm saps its will to hold the lie, and a weakened one may be won over whole — shadow lifted, no harm done, goodwill gifts left behind. Where is charm grown? The Crowbar, over elderberry cordial, one shy regular at a time. The Kingdom needs its warriors. It is saved, rather often, by its wrens.'
+        text: 'The buzzards carry the front line, and honour to them. But mark what the robin carries: CHARM, the fundamental stat of diplomacy, and diplomacy is how the small birds fight — not in the arena, but on the road. A charming envoy talks border flocks, squirrel markets and shadow-posts into standing down, and comes home with goodwill gifts no talon ever won. Where is charm grown? The Crowbar, over elderberry cordial, one shy regular at a time. The Kingdom needs its warriors. It is saved, rather often, by its wrens.'
       },
       reward: { coins: 160, xp: 160, gear: { stormwing_philtre: 1 }, materials: { gold_thread: 1 } }
     },

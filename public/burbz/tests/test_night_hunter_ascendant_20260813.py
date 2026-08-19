@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
@@ -158,8 +158,13 @@ def test_night_hunter_graphics_ship_in_the_stylesheet():
 def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    for core in ("bird_sleep_core.js", "academy_treehouse_core.js", "battle_core.js"):
-        pin = f"{core}?v={RELEASE_PIN}"
+    # bird_sleep_core still ships under this release; battle_core and
+    # academy_treehouse_core moved again with mercy-streak-attack-preview-v287.
+    moved_pin = "mercy-streak-attack-preview-v287-20260819"
+    for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
+                            ("academy_treehouse_core.js", moved_pin),
+                            ("battle_core.js", moved_pin)):
+        pin = f"{core}?v={pin_build}"
         assert pin in html, core
         assert sw.count(f"'./{pin}'") == 2, core
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html

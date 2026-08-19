@@ -87,7 +87,8 @@ def test_battle_copy_frames_every_fight_against_the_evil_burbz():
     assert "The occupying evil Burbz" in html
     assert "scatter the evil Burbz garrison" in html
     assert "<span>EVIL BURBZ</span>" in html
-    assert "tap an evil Burb to strike" in html
+    # v287: attacks aim first — the banner walks the player through the flow.
+    assert "tap an evil Burb, check the damage, then press ATTACK" in html
     assert "Today's rival flock" not in html
     core = (ROOT / "battle_core.js").read_text(encoding="utf-8")
     assert "The evil Burbz squad breaks" in core
