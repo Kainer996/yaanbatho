@@ -27,6 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=battle-progression-fixes-v286-20260819"
 
 
@@ -291,10 +292,11 @@ def test_ready_forge_commissions_badge_the_tab():
 def test_release_is_versioned_and_the_badge_core_pin_moved():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line       # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     # The badge core changed this release, so its cache pin moved everywhere.
     assert f'<script src="{VERSIONED_BADGE_CORE}"></script>' in html
     assert sw.count(f"'./{VERSIONED_BADGE_CORE}'") == 2

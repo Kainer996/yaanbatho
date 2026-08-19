@@ -2087,6 +2087,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .league-rival { padding:10px 12px; background:var(--bg2); border:1px solid rgba(255,255,255,0.06); border-radius:12px; margin-bottom:12px; }
 .league-rival-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
 /* Honest odds: the garrison's level against the flock's, before the fight. */
+.rival-streak-line { margin:-2px 0 8px; font-size:11px; font-weight:700; color:var(--text2); }
+.rival-streak-line.hot { color:#f0b429; }
 .rival-danger-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:-2px 0 9px; font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.05em; }
 .rival-danger-line .rdl-world { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; color:var(--text3); letter-spacing:.03em; }
 
@@ -2186,7 +2188,12 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-unit.targetable { border-color:var(--hp-red); box-shadow:0 0 12px rgba(224,89,74,0.5); animation:targetPulse 0.9s ease-in-out infinite; cursor:crosshair; }
 @keyframes targetPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
 .arena-unit.shake { animation:arenaShake .4s ease; }
+.arena-unit.target-locked { border-color:#f0b429; box-shadow:0 0 14px rgba(240,180,41,0.65); animation:none; transform:scale(1.05); }
 .arena-unit .au-turn-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; letter-spacing:1px; padding:1px 7px; border-radius:8px; background:var(--accent); color:#000; z-index:3; }
+.arena-unit .au-target-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; letter-spacing:1px; padding:1px 7px; border-radius:8px; background:#f0b429; color:#000; z-index:4; white-space:nowrap; }
+.arena-unit .au-dmg-preview { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); font-size:9px; font-weight:800; padding:1px 6px; border-radius:8px; background:rgba(10,4,6,0.9); border:1px solid rgba(224,89,74,0.6); color:#ffb3a8; z-index:3; white-space:nowrap; }
+.arena-unit .au-dmg-preview.se { color:#7fdcc6; border-color:rgba(67,198,168,0.7); }
+.arena-unit .au-dmg-preview.nve { color:var(--text3); border-color:rgba(255,255,255,0.18); }
 .arena-unit .au-art { width:100%; aspect-ratio:1; border-radius:9px; object-fit:cover; background:var(--bg4); display:block; }
 .arena-unit .au-emoji { font-size:32px; line-height:52px; height:52px; }
 .arena-unit .au-name { font-size:9px; color:var(--text2); font-weight:700; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -2209,6 +2216,10 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-waiting { grid-column:1/-1; text-align:center; padding:14px 0; color:var(--text3); font-size:12px; }
 .arena-turn-banner { grid-column:1/-1; text-align:center; font-size:11px; font-weight:800; letter-spacing:0.5px; color:var(--accent2); padding:2px 0; }
 .move-btn.pending { border-color:var(--hp-red); box-shadow:0 0 10px rgba(224,89,74,0.4); }
+.move-btn.attack-confirm-btn { border-color:rgba(224,57,43,0.75); background:linear-gradient(180deg, rgba(224,57,43,0.28), var(--bg2)); text-align:center; animation:targetPulse 1.1s ease-in-out infinite; }
+.move-btn.attack-confirm-btn .mv-name { color:#ffb3a8; font-size:12px; }
+.move-btn.attack-confirm-btn.waiting { animation:none; border-color:rgba(255,255,255,0.16); background:var(--bg2); }
+.move-btn.attack-confirm-btn.waiting .mv-name { color:var(--text3); }
 .move-btn .mv-cost.cd { color:var(--text3); }
 .move-btn.surge-btn { border-color:rgba(240,180,41,0.45); text-align:center; }
 .move-btn.surge-btn .mv-name { color:#f0b429; }
@@ -4681,7 +4692,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=night-hunter-ascendant-v258-20260813"></script>
+<script src="academy_treehouse_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
@@ -4694,7 +4705,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=chef-mastery-feed-all-v261-20260813"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=night-hunter-ascendant-v258-20260813"></script>
+<script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=town-strategy-v273-20260816"></script>
@@ -4702,7 +4713,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
-<script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
+<script src="walking_story_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
@@ -5915,7 +5926,7 @@ const DEFAULT_STATE = {
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' }, kitchen: { built: true, builtAt: 'starter-kitchen', x: 50, y: 52 } }, // Campus building ownership
   academyBuilderVersion: 7,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
-  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
+  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, streak: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
   walkingQuests: { active: null, history: [] }, // Real-world walking adventures on the live map
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
@@ -6367,7 +6378,7 @@ const BURBZ_STAT_RUBRIC = {
     def: "Survivability, adaptability, awareness, and environmental resilience.",
     spd: "Real-world flight speed, agility, or pursuit speed.",
     int: "Problem solving, learning, memory, social complexity, adaptability.",
-    cha: "Charm: the heart of Kingdom diplomacy — how winning, confiding and sociable the species is. Charm sways battle Parleys and pays on diplomacy quests. Robins hop up to gardeners and wrens charm the whole hedgerow; dunnocks skulk in the hedge bottom. Intelligence is coveted, but charm is what carries the Crowbar."
+    cha: "Charm: the heart of Kingdom diplomacy — how winning, confiding and sociable the species is. Charm pays on diplomacy quests. Robins hop up to gardeners and wrens charm the whole hedgerow; dunnocks skulk in the hedge bottom. Intelligence is coveted, but charm is what carries the Crowbar."
   },
   bands: {
     1: "Very low", 2: "Low", 3: "Below average", 4: "Slightly below average",
@@ -12564,7 +12575,7 @@ const ACADEMY_ROOMS = {
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than in the Roost, and each patient is discharged back to their old room the moment they are fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
-  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds sway battle Parleys, win over foes and earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
+  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
@@ -34939,13 +34950,14 @@ const EVIL_BURBZ_ROSTER = [
 function battleCore() { if (!window.BurbzBattleCore) throw new Error('BurbzBattleCore not loaded'); return window.BurbzBattleCore; }
 
 function ensureLeagueState() {
-  const def = { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } };
+  const def = { tier: 0, winsInTier: 0, wins: 0, losses: 0, streak: 0, teamIds: [], daily: { date: '', wins: 0 } };
   if (!gameState.league || typeof gameState.league !== 'object' || Array.isArray(gameState.league)) gameState.league = {};
   gameState.league = { ...def, ...gameState.league };
   if (!gameState.league.daily || typeof gameState.league.daily !== 'object') gameState.league.daily = { ...def.daily };
   const maxTier = window.BurbzBattleCore ? window.BurbzBattleCore.LEAGUE_TIERS.length - 1 : 6;
   gameState.league.tier = clamp(Math.round(Number(gameState.league.tier) || 0), 0, maxTier);
   gameState.league.winsInTier = Math.max(0, Math.round(Number(gameState.league.winsInTier) || 0));
+  gameState.league.streak = Math.max(0, Math.round(Number(gameState.league.streak) || 0));
   const today = new Date().toISOString().slice(0, 10);
   if (gameState.league.daily.date !== today) gameState.league.daily = { date: today, wins: 0 };
   if (!Array.isArray(gameState.league.teamIds)) gameState.league.teamIds = [];
@@ -34986,32 +34998,34 @@ function weakenFirstGarrison(opponents) {
     };
   });
 }
-// EARLY GAME — until the player reaches level 12, every evil Burbz squad is
-// a ragged scouting party. The gate is the PLAYER's level, not the realm:
-// founding a county no longer ends the kindness early. Through player level 8
-// the fights are near-free wins — the squad is capped at three birds, never
-// outnumbers the flock, and every stat is cut to a third. From level 9 the
-// cut eases off level by level, so full difficulty — and the real need for
-// counters and forged gear — arrives at player level 12.
-const EARLY_GAME_ENDS_AT_PLAYER_LEVEL = 12;  // full difficulty from here
-const EARLY_GAME_CRUISE_LEVEL = 8;           // deepest ease through here
-const EARLY_GAME_OPPONENT_EASE = 0.35;       // stat fraction up to the cruise level
-const EARLY_GAME_RAMP_TOP_EASE = 0.95;       // where the ramp would land at level 12 (9→0.5, 10→0.65, 11→0.8)
-function battlePlayerLevel() {
-  return Math.max(1, Math.round(Number(gameState.player && gameState.player.level) || 1));
+// MERCY RULE — the evil Burbz only fight at full strength once the player
+// has earned it. Until the flock takes four wins in a row, every squad is a
+// ragged scouting party the player is all but guaranteed to beat: capped at
+// three birds, never outnumbering the flock, sitting a level below it, and
+// every stat cut to under a third. The fourth straight win starts the ramp
+// (0.5 → 0.7 → 0.85 of full strength), and the seventh brings the real
+// fight — counters and forged gear matter from there. One loss resets the
+// streak, so the game turns kind again the moment the player needs it. The
+// gate is the streak, not the player's level: a level-12 flock that keeps
+// losing keeps getting easy fights.
+const MERCY_WIN_STREAK = 4;        // straight wins before difficulty ramps
+const MERCY_OPPONENT_EASE = 0.3;   // stat fraction while the mercy holds
+const MERCY_RAMP_EASE = [0.5, 0.7, 0.85]; // streak 4, 5, 6 — full strength from 7
+function battleWinStreak() {
+  return Math.max(0, Math.round(Number(ensureLeagueState().streak) || 0));
 }
-function isEarlyGameBattles() {
-  return battlePlayerLevel() < EARLY_GAME_ENDS_AT_PLAYER_LEVEL;
+function isMercyBattles() {
+  return battleWinStreak() < MERCY_WIN_STREAK;
 }
-function earlyGameOpponentEase() {
-  const level = battlePlayerLevel();
-  if (level <= EARLY_GAME_CRUISE_LEVEL) return EARLY_GAME_OPPONENT_EASE;
-  const t = (level - EARLY_GAME_CRUISE_LEVEL) / (EARLY_GAME_ENDS_AT_PLAYER_LEVEL - EARLY_GAME_CRUISE_LEVEL);
-  return EARLY_GAME_OPPONENT_EASE + t * (EARLY_GAME_RAMP_TOP_EASE - EARLY_GAME_OPPONENT_EASE);
+function mercyOpponentEase() {
+  const streak = battleWinStreak();
+  if (streak < MERCY_WIN_STREAK) return MERCY_OPPONENT_EASE;
+  const step = streak - MERCY_WIN_STREAK;
+  return step < MERCY_RAMP_EASE.length ? MERCY_RAMP_EASE[step] : 1;
 }
-function easeEarlyOpponents(opponents, squadSize) {
-  const e = earlyGameOpponentEase();
-  const maxSquad = battlePlayerLevel() <= EARLY_GAME_CRUISE_LEVEL ? 3 : 4;
+function easeMercyOpponents(opponents, squadSize) {
+  const e = mercyOpponentEase();
+  const maxSquad = isMercyBattles() ? 3 : 4;
   return opponents.slice(0, clamp(Math.round(squadSize || 3), 1, maxSquad)).map(b => {
     const hp = Math.max(30, Math.round(b.maxHp * e));
     return {
@@ -35032,9 +35046,10 @@ function leagueRivalOpponents() {
   const tier = core.LEAGUE_TIERS[league.tier];
   const liberationSite = pendingEmpireLiberation();
   const firstLiberation = !!liberationSite && isFirstLiberationBattle();
-  const earlyGame = isEarlyGameBattles();
+  const mercyEase = mercyOpponentEase();
+  const eased = mercyEase < 1;
   const worldLv = burbzWorldLevel();
-  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '') + (earlyGame ? '_early_game_pl' + battlePlayerLevel() : '') + '_wl' + worldLv + (liberationSite ? '_lib' + (liberationSite.seed >>> 0) : '');
+  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '') + (eased ? '_mercy_ws' + battleWinStreak() : '') + '_wl' + worldLv + (liberationSite ? '_lib' + (liberationSite.seed >>> 0) : '');
   if (leagueRivalCache && leagueRivalCache.key === key) return leagueRivalCache;
   const rng = core.seededRandom('evil_burbz_' + key);
   let pool = EVIL_BURBZ_ROSTER.filter(e => tier.rarities.includes(e.rarity));
@@ -35064,8 +35079,8 @@ function leagueRivalOpponents() {
     ? empireSiteRecommendedLevel(liberationSite)
     : Math.max(Math.round(avgLevel), worldLv);
   const opponents = picks.map((e, i) => {
-    // Early game: no tier boost, and the squad sits a level below the flock.
-    const level = earlyGame
+    // Under mercy: no tier boost, and the squad sits a level below the flock.
+    const level = eased
       ? Math.max(1, Math.round(avgLevel) - 1)
       : Math.max(1, garrisonBase + tier.levelBoost + (i === 3 ? 1 : 0) - (i === 0 ? 1 : 0));
     const stats = generateBirdStats(e.base, null, e.rarity);
@@ -35086,9 +35101,9 @@ function leagueRivalOpponents() {
     bird.hp = bird.maxHp;
     return bird;
   });
-  // The early squad never outnumbers the player's own flock.
+  // A mercy squad never outnumbers the player's own flock.
   const squad = firstLiberation ? weakenFirstGarrison(opponents)
-    : earlyGame ? easeEarlyOpponents(opponents, top.length)
+    : eased ? easeMercyOpponents(opponents, top.length)
     : opponents;
   leagueRivalCache = { key, opponents: squad };
   return leagueRivalCache;
@@ -35132,8 +35147,8 @@ function renderBattleSelect() {
   const enemyTypes = [...new Set(rival.opponents.map(b => core.classifySpecies(b.species)))];
   const counterTypes = Object.keys(core.BIRD_TYPES).filter(t => enemyTypes.some(e => ((core.TYPE_CHART[t] || {})[e] || 1) > 1));
   const rivalTitle = liberation
-    ? (isFirstLiberationBattle() ? '🌅 A weary token garrison — this one is yours' : (isEarlyGameBattles() ? '🐣 A ragged scouting party holds the village' : '😈 The occupying evil Burbz'))
-    : (isEarlyGameBattles() ? '🐣 A ragged evil Burbz scouting party' : '😈 An evil Burbz squad prowls this perch');
+    ? (isFirstLiberationBattle() ? '🌅 A weary token garrison — this one is yours' : (isMercyBattles() ? '🐣 A ragged scouting party holds the village' : '😈 The occupying evil Burbz'))
+    : (isMercyBattles() ? '🐣 A ragged evil Burbz scouting party' : '😈 An evil Burbz squad prowls this perch');
   // Honest odds up front, Assassin's-Creed style: the garrison's level, the
   // flock's level, and a plain-words danger call between them.
   let dangerLine = '';
@@ -35145,8 +35160,17 @@ function renderBattleSelect() {
     dangerLine = '<div class="rival-danger-line" style="color:' + danger.color + ';">' + danger.icon + ' Garrison Lv ' + garrisonLv + ' · ' + danger.label +
       '<span class="rdl-world">🌍 World Lv ' + burbzWorldLevel() + ' · your flock Lv ' + flockLv + '</span></div>';
   }
+  // The mercy rule says where it stands: how many straight wins the flock
+  // holds, and when the evil Burbz will start fighting back for real.
+  const streak = battleWinStreak();
+  const streakLine = liberation && isFirstLiberationBattle() ? ''
+    : isMercyBattles()
+      ? '<div class="rival-streak-line">🕊️ Win streak ' + streak + '/' + MERCY_WIN_STREAK + ' — the evil Burbz hold back until you take ' + MERCY_WIN_STREAK + ' wins in a row.</div>'
+      : mercyOpponentEase() < 1
+        ? '<div class="rival-streak-line hot">🔥 ' + streak + ' wins in a row — the evil Burbz are fighting harder. A loss calms them down.</div>'
+        : '<div class="rival-streak-line hot">👑 ' + streak + ' wins in a row — the evil Burbz fight at full strength. A loss calms them down.</div>';
   $('leagueRival').innerHTML =
-    '<div class="league-rival-title">' + rivalTitle + '</div>' + dangerLine +
+    '<div class="league-rival-title">' + rivalTitle + '</div>' + streakLine + dangerLine +
     '<div class="league-rival-row">' + rival.opponents.map(b =>
       '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
@@ -35309,7 +35333,7 @@ function startPerchBattle() {
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
   battle.synergies = { player: playerSynergies, opponent: opponentSynergies };
   battle.activityId = 'battle_' + battle.seed;
-  battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
+  battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, pendingTargetIndex: null, surgeArmed: false };
   $('battleSelect').style.display = 'none';
   $('battleResult').style.display = 'none';
   $('battleArena').style.display = 'block';
@@ -35322,7 +35346,7 @@ function startPerchBattle() {
   if (nightHunters.length) addBattleLog('system-msg', '🌙 NIGHT WINGS! ' + nightHunters.map(f => f.name).join(', ') + (nightHunters.length > 1 ? ' fight' : ' fights') + ' under the moon — half again as fast and as fierce, tougher, and striking true out of the dark.');
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
   (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
-  addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
+  addBattleLog('system-msg', '🎯 Pick a move, tap the evil Burb you want to hit, and check the damage on the ATTACK button before you strike.');
   SFX.tap();
   battleAdvance();
 }
@@ -35339,6 +35363,7 @@ function battleAdvance() {
   const turn = core.tickToNextTurn(b);
   if (!turn) { endPerchBattle(); return; }
   battleState.pendingSkillIndex = null;
+  battleState.pendingTargetIndex = null;
   battleState.surgeArmed = false;
   renderArena();
   if (turn.side === 'opponent') {
@@ -35359,9 +35384,20 @@ function arenaUnitHTML(f, side, index, opts) {
   if (f.fainted) cls.push('fainted');
   if (o.acting) cls.push('acting');
   if (o.targetable) cls.push('targetable');
+  if (o.locked) cls.push('target-locked');
   if (f.nightHunter && !f.fainted) cls.push('night-hunter-aura');
+  // Honest odds on the card: while a move is chosen, every living rival
+  // shows the damage that move would land — so the player can compare
+  // targets before pressing ATTACK.
+  const preview = o.preview
+    ? '<div class="au-dmg-preview' + (o.preview.mult > 1 ? ' se' : o.preview.mult < 1 ? ' nve' : '') + '">' +
+      (o.preview.magic ? '✨' : '⚔️') + '−' + o.preview.min + (o.preview.max > o.preview.min ? '–' + o.preview.max : '') +
+      (o.preview.mult > 1 ? ' ▲' : o.preview.mult < 1 ? ' ▽' : '') + '</div>'
+    : '';
   return '<button class="' + cls.join(' ') + '" id="unit_' + side + '_' + index + '" onclick="battleTargetPick(\'' + side + '\',' + index + ')">' +
     (o.acting ? '<div class="au-turn-flag">TURN</div>' : '') +
+    preview +
+    (o.locked ? '<div class="au-target-flag">🎯 TARGET</div>' : '') +
     (f.nightHunter ? '<div class="au-night-moon" title="Night Wings — nocturnal battle boost">🌙</div>' : '') +
     fighterArtHTML(f, 'au') +
     '<div class="au-name">' + escapeHtml(f.name) + '</div>' +
@@ -35377,7 +35413,29 @@ function renderArena() {
   const core = battleCore();
   const b = battleState.battle;
   const acting = b.acting;
-  const choosingTarget = battleState.pendingSkillIndex != null;
+  const playerActing = acting && acting.side === 'player' && !battleState.busy && b.phase === 'act';
+  // The aim-then-strike flow: a chosen move projects its damage onto every
+  // living rival, the tapped rival locks as the target, and the ATTACK
+  // button lands the blow. Surge is priced into the numbers while armed.
+  let pendingAct = null;
+  let previews = null;
+  if (playerActing && battleState.pendingSkillIndex != null) {
+    const acts = core.availableActions(b);
+    const a = acts[battleState.pendingSkillIndex];
+    if (a && a.usable && a.skill.kind === 'attack') {
+      pendingAct = a;
+      const me = core.actingFighter(b);
+      const living = b.teams.opponent.map((f, i) => ({ f, i })).filter(x => !x.f.fainted);
+      previews = {};
+      living.forEach(x => {
+        previews[x.i] = core.previewDamage(me, x.f, a.skill, {
+          surge: battleState.surgeArmed && a.skill.school !== 'basic' && b.focus.player >= core.SURGE_COST,
+          aoeSplit: a.skill.aoe && living.length > 1
+        });
+      });
+    }
+  }
+  const choosingTarget = !!pendingAct && !pendingAct.skill.aoe;
 
   const arenaSynergy = $('arenaSynergyBanner');
   if (arenaSynergy) {
@@ -35398,7 +35456,9 @@ function renderArena() {
     const host = $(side === 'opponent' ? 'arenaOppRow' : 'arenaPlayerRow');
     host.innerHTML = b.teams[side].map((f, i) => arenaUnitHTML(f, side, i, {
       acting: acting && acting.side === side && acting.index === i,
-      targetable: choosingTarget && side === 'opponent' && !f.fainted
+      targetable: choosingTarget && side === 'opponent' && !f.fainted,
+      locked: choosingTarget && side === 'opponent' && battleState.pendingTargetIndex === i && !f.fainted,
+      preview: side === 'opponent' && previews && !f.fainted ? previews[i] : null
     })).join('');
   });
 
@@ -35427,13 +35487,35 @@ function renderArena() {
     : 'No healing needed yet';
   const potionButton = '<button class="move-btn potion-btn' + (potion && potion.used ? ' used' : '') + '"' + (!potionReady ? ' disabled' : '') + ' onclick="battleUsePotion()">' +
     '<div class="mv-name">' + potionName + '</div><div class="mv-meta">' + potionMeta + '</div></button>';
+  // The strike plan reads back before it lands: chosen move, chosen target,
+  // the damage on the button. Nothing happens until the player presses ATTACK.
+  let confirmBar = '';
+  if (pendingAct) {
+    const dmgWord = battleState.liberation ? 'resolve' : 'dmg';
+    if (pendingAct.skill.aoe) {
+      const total = Object.values(previews || {}).reduce((s, p) => s + p.avg, 0);
+      confirmBar = '<button class="move-btn attack-confirm-btn" style="grid-column:1/-1;" onclick="battleConfirmAttack()">' +
+        '<div class="mv-name">⚔️ ATTACK ALL — ~' + total + ' ' + dmgWord + ' across the squad</div></button>';
+    } else {
+      const ti = battleState.pendingTargetIndex;
+      const target = ti != null ? b.teams.opponent[ti] : null;
+      const p = target && previews ? previews[ti] : null;
+      confirmBar = target && p
+        ? '<button class="move-btn attack-confirm-btn" style="grid-column:1/-1;" onclick="battleConfirmAttack()">' +
+          '<div class="mv-name">⚔️ ATTACK ' + escapeHtml(target.name) + ' — ' + p.min + '–' + p.max + ' ' + dmgWord +
+          (p.mult > 1 ? ' · super effective!' : p.mult < 1 ? ' · not very effective' : '') + (p.blocked ? ' · barrier soaks first' : '') + '</div></button>'
+        : '<button class="move-btn attack-confirm-btn waiting" style="grid-column:1/-1;" disabled>' +
+          '<div class="mv-name">🎯 Tap an evil Burb above to aim ' + escapeHtml(pendingAct.skill.label) + '</div></button>';
+    }
+  }
   actions.innerHTML =
-    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' + (choosingTarget ? ' — tap an evil Burb to strike' : '') + '</div>' +
+    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' +
+      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK') : ' — pick a move') + '</div>' +
+    confirmBar +
     acts.map((a, i) => {
       const m = a.skill;
       const metaLine = m.kind === 'attack'
         ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'steal' ? ' · steals Focus' : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
-        : m.kind === 'parley' ? 'CHA ' + me.cha + ' · 🕊️ diplomacy · saps a foe\'s will · can win over a foe below ' + Math.round(core.PARLEY_WINOVER_HP_PCT * 100) + '% HP'
         : m.kind === 'barrier' ? 'Barrier ' + Math.round(m.barrierPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '')
         : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '') + (m.cleanse ? ' · cleanse' : '')
         : 'Squad rally' + (m.healPct ? ' + heal' : '');
@@ -35494,15 +35576,22 @@ function battleSelectSkill(skillIndex) {
   if (!a) return;
   if (!a.usable) { showToast('🕐 ' + a.skill.label + ' is recharging — ' + a.skill.cdLeft + ' more turn' + (a.skill.cdLeft > 1 ? 's' : '') + '.'); return; }
   SFX.tap();
-  const liveTargets = a.targets || [];
-  if (a.needsTarget && liveTargets.length > 1) {
-    // Same skill tapped twice = quick-cast at the first living rival.
-    if (battleState.pendingSkillIndex === skillIndex) { battleResolvePlayer(skillIndex, liveTargets[0]); return; }
-    battleState.pendingSkillIndex = skillIndex;
+  // Attacks aim before they land: choosing the move projects its damage
+  // onto every rival, tapping a rival locks the target, and the ATTACK
+  // button strikes. Support moves (heal, barrier, rally) still cast on tap.
+  if (a.skill.kind !== 'attack') { battleResolvePlayer(skillIndex, (a.targets || [])[0]); return; }
+  if (battleState.pendingSkillIndex === skillIndex) {
+    // Tapping the chosen move again puts it back.
+    battleState.pendingSkillIndex = null;
+    battleState.pendingTargetIndex = null;
     renderArena();
     return;
   }
-  battleResolvePlayer(skillIndex, liveTargets[0]);
+  battleState.pendingSkillIndex = skillIndex;
+  const liveTargets = a.targets || [];
+  // A lone rival aims itself; AoE needs no aim at all.
+  battleState.pendingTargetIndex = !a.skill.aoe && liveTargets.length === 1 ? liveTargets[0] : null;
+  renderArena();
 }
 
 function battleTargetPick(side, index) {
@@ -35510,7 +35599,26 @@ function battleTargetPick(side, index) {
   if (battleState.pendingSkillIndex == null || side !== 'opponent') return;
   const f = battleState.battle.teams.opponent[index];
   if (!f || f.fainted) return;
-  battleResolvePlayer(battleState.pendingSkillIndex, index);
+  SFX.tap();
+  battleState.pendingTargetIndex = index;
+  renderArena();
+}
+
+function battleConfirmAttack() {
+  if (!battleState || battleState.busy) return;
+  const core = battleCore();
+  const b = battleState.battle;
+  if (b.phase !== 'act' || !b.acting || b.acting.side !== 'player') return;
+  const skillIndex = battleState.pendingSkillIndex;
+  if (skillIndex == null) return;
+  const a = core.availableActions(b)[skillIndex];
+  if (!a || !a.usable || a.skill.kind !== 'attack') return;
+  const liveTargets = a.targets || [];
+  const target = a.skill.aoe ? liveTargets[0]
+    : liveTargets.includes(battleState.pendingTargetIndex) ? battleState.pendingTargetIndex : null;
+  if (target == null) { showToast('🎯 Tap an evil Burb to aim first.'); return; }
+  SFX.tap();
+  battleResolvePlayer(skillIndex, target);
 }
 
 function battleResolvePlayer(skillIndex, targetIndex) {
@@ -35518,6 +35626,7 @@ function battleResolvePlayer(skillIndex, targetIndex) {
   const b = battleState.battle;
   const surge = battleState.surgeArmed;
   battleState.pendingSkillIndex = null;
+  battleState.pendingTargetIndex = null;
   battleState.surgeArmed = false;
   try {
     playBattleEvents(core.resolveAction(b, { skillIndex, targetIndex, surge }));
@@ -35622,6 +35731,7 @@ function endPerchBattle() {
   let promoted = false;
   if (won) {
     league.wins += 1;
+    league.streak = (league.streak || 0) + 1;
     league.daily.wins += 1;
     gameState.player.wins++;
     if (tier.promoteWins > 0) {
@@ -35639,6 +35749,7 @@ function endPerchBattle() {
     SFX.victory();
   } else {
     league.losses += 1;
+    league.streak = 0;   // one loss and the mercy rule turns the game kind again
     gameState.player.losses++;
     SFX.defeat();
   }
@@ -35758,7 +35869,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -36768,7 +36879,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'battle-progression-fixes-v286-20260819';
+const BURBZ_BUILD = 'mercy-streak-attack-preview-v287-20260819';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -36839,7 +36950,7 @@ const MERLIN_TUTORIAL_STEPS = [
   //   introduce the rest, one mechanic at a time.
   { chapterId:'academy_tour', chapter:'Academy', title:'The Roost stands!', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'Magnificent \u2014 a home for the flock! And that experience you just earned? Building pays. Birds level up as they work for you, too.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Barracks and Kitchen', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks recruits discovered birds into your flock. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that wins Parleys and diplomacy quests.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that pays on diplomacy quests.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Out to the world', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Your Player Quests will introduce every other building when you need it. One last thing to show you \u2014 tap the Map.',
     action:{ event:'tab:map', hint:'Tap the Map tab' } },
 
@@ -36860,7 +36971,7 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
   { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz \u2014 never free birds. Wing classes counter each other; a green Counter tag marks the birds that beat this squad.' },
-  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Or Parley: a bird with high Charm can win a foe over without a blow.' },
+  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Pick a move, tap your target, and the ATTACK button shows the damage before you strike.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.

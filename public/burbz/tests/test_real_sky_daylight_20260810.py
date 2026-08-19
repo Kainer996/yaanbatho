@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

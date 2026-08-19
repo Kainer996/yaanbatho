@@ -20,8 +20,8 @@ CACHE_NAME = CACHE_MATCH.group(1)
 PINNED_RUNTIME_ASSETS = {
     # The quest board moved on with the categorised errands + one quest per
     # crafting material, so the Academy core carries its own pin now — moved
-    # again by night-hunter-ascendant-v258 (training statBonus).
-    "academy_treehouse_core.js": "night-hunter-ascendant-v258-20260813",
+    # again by night-hunter-v258, then by mercy-streak-attack-preview-v287.
+    "academy_treehouse_core.js": "mercy-streak-attack-preview-v287-20260819",
     # The vertebrate-prey split (Mallards eat frogs, not voles) re-pinned the
     # kitchen core and both diet assets together.
     "kitchen_pantry_core.js": "mallard-true-diet-v237-20260809",
