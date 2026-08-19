@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "offroad-side-quests-v283-20260818"
+CURRENT_BUILD = "tavern-flock-rounds-v284-20260819"
 OWN_RELEASE_PIN = "night-owl-dark-mode-v257-20260813"  # the removed release's cache segment
 PREVIOUS_RELEASE_PIN = "completion-notices-v265-20260813"
 

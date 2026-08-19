@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "offroad-side-quests-v283-20260818"
+CURRENT_BUILD = "tavern-flock-rounds-v284-20260819"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
