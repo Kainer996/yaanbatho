@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "early-game-until-level-12-v262-20260813"
-CURRENT_BUILD = "settlement-scene-sharp-v285-20260819"
+CURRENT_BUILD = "battle-progression-fixes-v286-20260819"
 
 
 def function_source(html: str, name: str) -> str:

@@ -45,12 +45,16 @@ def test_unclaimed_town_requires_a_liberation_battle_before_birdhouse():
     assert "liberationCancelBtn" in html
 
 
-def test_victory_records_liberation_and_returns_to_the_town():
+def test_victory_records_liberation_and_returns_to_the_village():
     html = HTML.read_text(encoding="utf-8")
     battle = battle_logic(html)
     assert "pendingEmpireLiberation" in battle
     assert "completeEmpireLiberationVictory" in battle
-    assert "TOWN LIBERATED!" in battle
+    # The battle frees a VILLAGE — towns only form later, when three liberated
+    # villages grow together at the birdhouse build (fixed in v286).
+    assert "VILLAGE LIBERATED!" in battle
+    assert "TOWN LIBERATED!" not in battle
+    assert "Free the village!" in battle
     assert "RETURN TO" in battle
     assert "returnToLiberatedVillage" in battle
 

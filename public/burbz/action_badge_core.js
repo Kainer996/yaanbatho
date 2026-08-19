@@ -10,7 +10,7 @@
   'use strict';
 
   var SCREENS = [
-    'quests', 'academy', 'birdex', 'battle',
+    'quests', 'academy', 'birdex', 'battle', 'forge',
     'map', 'village', 'inventory', 'leaderboards'
   ];
   var BASE_LABEL_KEY = '__burbzActionBadgeBaseLabel';
