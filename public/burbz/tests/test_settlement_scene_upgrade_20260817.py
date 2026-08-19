@@ -14,7 +14,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 LOADING_ART = ROOT / "assets" / "settlements" / "settlement-loading-v281.webp"
-VERSIONED_CORE = "settlement_scene_core.js?v=living-settlements-v281-20260817"
+VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
 
 
 def run_node(source: str):
@@ -99,7 +99,7 @@ process.stdout.write(JSON.stringify({{
 """
     )
     expected = sorted(
-        ["qualityProfile", "selectSceneLabels", "shouldRunScene", "motionScale"]
+        ["qualityProfile", "adaptDetail", "selectSceneLabels", "shouldRunScene", "motionScale"]
     )
     assert result == {"browser": expected, "common": expected, "sameFunctions": True}
 
@@ -107,25 +107,28 @@ process.stdout.write(JSON.stringify({{
 def test_quality_profiles_are_deterministic_and_device_appropriate():
     profiles = run_core(
         """({
-  low: core.qualityProfile({width:390,height:844,dpr:3,hardwareConcurrency:4,reducedMotion:false}),
+  low: core.qualityProfile({width:390,height:844,dpr:3,hardwareConcurrency:2,reducedMotion:false}),
   medium: core.qualityProfile({width:768,height:600,dpr:2,hardwareConcurrency:6,reducedMotion:false}),
   high: core.qualityProfile({width:1440,height:900,dpr:2,hardwareConcurrency:12,reducedMotion:false}),
   highAgain: core.qualityProfile({width:1440,height:900,dpr:2,hardwareConcurrency:12,reducedMotion:false})
 })"""
     )
+    # v285: only a genuinely weak chip lands in "low" — and even low keeps
+    # near-full sharpness and native-rate frames. A phone-sized screen alone
+    # must never soften the render (that was the v281 regression).
     assert profiles["low"] == {
         "tier": "low",
-        "maxDpr": 1.25,
-        "shadowSize": 512,
-        "frameInterval": 33,
+        "maxDpr": 1.75,
+        "shadowSize": 1024,
+        "frameInterval": 0,
         "maxAmbientActors": 8,
         "maxLabels": 3,
     }
     assert profiles["medium"] == {
         "tier": "medium",
-        "maxDpr": 1.5,
-        "shadowSize": 1024,
-        "frameInterval": 22,
+        "maxDpr": 2,
+        "shadowSize": 2048,
+        "frameInterval": 0,
         "maxAmbientActors": 18,
         "maxLabels": 5,
     }
@@ -133,7 +136,7 @@ def test_quality_profiles_are_deterministic_and_device_appropriate():
         "tier": "high",
         "maxDpr": 2,
         "shadowSize": 2048,
-        "frameInterval": 16,
+        "frameInterval": 0,
         "maxAmbientActors": 32,
         "maxLabels": 8,
     }
@@ -258,7 +261,9 @@ def test_release_loads_and_precaches_the_versioned_scene_core_and_loading_art():
     assert '"assets/settlements/settlement-loading-v281.webp"' in release_files
 
 
-def test_mobile_viewport_does_not_disable_player_zoom():
+def test_mobile_viewport_pins_page_zoom_because_pinch_is_a_game_gesture():
+    # v285 restores the long-standing game viewport: pinch belongs to the 3D
+    # camera and the map, so the page itself must not zoom underneath them.
     html = HTML.read_text(encoding="utf-8")
     viewport = re.search(
         r"<meta\b(?=[^>]*\bname=[\"']viewport[\"'])[^>]*>",
@@ -267,13 +272,8 @@ def test_mobile_viewport_does_not_disable_player_zoom():
     )
     assert viewport, "missing viewport meta tag"
     viewport_source = viewport.group(0)
-    assert not re.search(
+    assert re.search(
         r"user-scalable\s*=\s*(?:no|0)", viewport_source, re.IGNORECASE
-    )
-    assert not re.search(
-        r"maximum-scale\s*=\s*1(?:\.0*)?(?=[,\s\"']|$)",
-        viewport_source,
-        re.IGNORECASE,
     )
 
 

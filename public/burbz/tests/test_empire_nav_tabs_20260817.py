@@ -27,7 +27,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "building-discovery-v284-20260819"
+CURRENT_BUILD = "settlement-scene-sharp-v285-20260819"
 
 
 def ledger(html: str) -> str:

@@ -6,25 +6,28 @@
 (function (root) {
   'use strict';
 
+  // Every tier opens sharp: full-rate frames and the same 2x pixel ceiling the
+  // scenes shipped with before v281. A phone is not a weak device — only a
+  // measured slow device is, and adaptDetail() softens exactly those, live.
   var QUALITY = {
     low: {
-      maxDpr: 1.25,
-      shadowSize: 512,
-      frameInterval: 33,
+      maxDpr: 1.75,
+      shadowSize: 1024,
+      frameInterval: 0,
       maxAmbientActors: 8,
       maxLabels: 3
     },
     medium: {
-      maxDpr: 1.5,
-      shadowSize: 1024,
-      frameInterval: 22,
+      maxDpr: 2,
+      shadowSize: 2048,
+      frameInterval: 0,
       maxAmbientActors: 18,
       maxLabels: 5
     },
     high: {
       maxDpr: 2,
       shadowSize: 2048,
-      frameInterval: 16,
+      frameInterval: 0,
       maxAmbientActors: 32,
       maxLabels: 8
     }
@@ -41,24 +44,27 @@
   }
 
   // Device buckets deliberately use broad thresholds. A profile must not
-  // oscillate when a browser bar changes the viewport by a few pixels.
+  // oscillate when a browser bar changes the viewport by a few pixels — and a
+  // small screen must never be read as a slow chip. The v281 profile bucketed
+  // every phone into "low" by its width alone, which blurred the render to
+  // 1.25x and capped it at 30fps on hardware that runs the scene at 60 easily.
+  // Tier now follows the chip (cores, reported memory); the screen plays no
+  // part. Devices the buckets misjudge are corrected live by adaptDetail().
   function qualityProfile(input) {
     input = input || {};
     var width = positiveNumber(input.width, 390);
     var height = positiveNumber(input.height, 700);
     var dpr = Math.max(1, positiveNumber(input.dpr, 1));
     var cores = Math.max(1, Math.floor(positiveNumber(input.hardwareConcurrency, 4)));
+    var memory = finiteNumber(input.deviceMemory, 0); // GB; 0 = browser keeps it private
     var reduced = !!input.reducedMotion;
     var shortSide = Math.min(width, height);
     var area = width * height;
-    // Cap DPR in the pressure estimate because the returned maxDpr will cap it
-    // in the renderer too. Very dense displays still avoid the high bucket.
-    var pixelPressure = area * Math.pow(Math.min(dpr, 2.5), 2);
 
     var tier = 'medium';
-    if (cores <= 4 || shortSide < 430 || area < 280000 || (cores < 8 && pixelPressure > 2200000)) {
+    if (cores <= 3 || (memory > 0 && memory <= 2)) {
       tier = 'low';
-    } else if (cores >= 8 && shortSide >= 700 && area >= 700000 && pixelPressure <= 6000000) {
+    } else if (cores >= 8 && shortSide >= 700 && area >= 700000) {
       tier = 'high';
     }
 
@@ -175,6 +181,28 @@
     return accepted.map(function (entry) { return entry.candidate; });
   }
 
+  // Live detail governor. The renderer reports how long its frames actually
+  // took; this decides the render resolution. Sharp until the device proves
+  // slow, softened only as far as it must be, and sharpened again the moment
+  // the load lifts. Pure: same sample in, same decision out.
+  var ADAPT_MIN_FRAMES = 24;      // don't judge a stutter, judge a stretch
+  var ADAPT_SLOW_MS = 30;         // under ~33fps sustained → give up pixels
+  var ADAPT_FAST_MS = 19;         // near 60fps sustained → win pixels back
+  var ADAPT_STEP = 0.25;
+  function adaptDetail(state, sample) {
+    state = state || {};
+    sample = sample || {};
+    var minDpr = Math.max(0.75, positiveNumber(state.minDpr, 1));
+    var maxDpr = Math.max(minDpr, positiveNumber(state.maxDpr, 2));
+    var dpr = Math.min(maxDpr, Math.max(minDpr, positiveNumber(state.dpr, maxDpr)));
+    var frames = Math.max(0, Math.floor(finiteNumber(sample.frames, 0)));
+    var avg = finiteNumber(sample.avgFrameMs, NaN);
+    if (frames < ADAPT_MIN_FRAMES || !Number.isFinite(avg)) return { dpr: dpr, changed: false };
+    if (avg > ADAPT_SLOW_MS && dpr > minDpr) return { dpr: Math.max(minDpr, dpr - ADAPT_STEP), changed: true };
+    if (avg < ADAPT_FAST_MS && dpr < maxDpr) return { dpr: Math.min(maxDpr, dpr + ADAPT_STEP), changed: true };
+    return { dpr: dpr, changed: false };
+  }
+
   function shouldRunScene(state) {
     state = state || {};
     return !!state.screenActive && !!state.detailsOpen && !!state.inViewport && !state.documentHidden;
@@ -186,6 +214,7 @@
 
   var api = {
     qualityProfile: qualityProfile,
+    adaptDetail: adaptDetail,
     selectSceneLabels: selectSceneLabels,
     shouldRunScene: shouldRunScene,
     motionScale: motionScale
