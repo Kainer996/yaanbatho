@@ -3819,10 +3819,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="birdex-stat-label">Discovered</div>
         </div>
         <div class="birdex-stat">
-          <div class="birdex-stat-num" id="birdexTotal">312</div>
-          <div class="birdex-stat-label">Total Species</div>
-        </div>
-        <div class="birdex-stat">
           <div class="birdex-stat-num" id="birdexPower">0</div>
           <div class="birdex-stat-label">Total Power</div>
         </div>
@@ -4700,6 +4696,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
+<script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="settlement_scene_core.js?v=living-settlements-v281-20260817"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -16968,7 +16965,7 @@ function syncBurbzMusicForMapZoom() {
   MUSIC.setVolume(volume);
   return volume;
 }
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get questZoomLock() { return questZoomLock; }, questZoomCeiling() { return liveMapZoomCeiling(); }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -17087,6 +17084,7 @@ function wireMapMoveTracking() {
     clearTimeout(moveEndTimer);
     moveEndTimer = setTimeout(() => {
       tuneCameraForZoom();
+      tellQuestZoomLockIfHeld();
       scheduleVillageMarkerRefresh();
       scheduleZoomCollectibleRefresh();
       scheduleWalkQuestRealign();
@@ -17659,6 +17657,7 @@ function clearWalkingQuestFromMap() {
   questMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
   questMapMarkers = [];
   clearTrailExtraMarkers();
+  releaseQuestZoomLock();
   drawWalkingQuestRoute();
   updateWalkQuestHud();
 }
@@ -17964,6 +17963,7 @@ function drawWalkingQuestOnMap() {
   questMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
   questMapMarkers = [];
   drawWalkingQuestRoute();
+  applyQuestZoomLock();
   if (!quest || !liveMap || !window.maplibregl) return;
   if (!quest.routeCertification || quest.routeCertification.status !== 'certified') {
     setWalkQuestAlignmentStatus(walkQuestAlignmentMessage(quest.routeCertification));
@@ -18000,6 +18000,94 @@ function drawWalkingQuestOnMap() {
   });
   drawTrailExtrasOnMap(quest);
   updateWalkQuestHud();
+}
+
+// ---- Quest zoom lock: on a live quest the trail stays on screen ----
+// Zoomed right in, a phone's GPS wobble throws the player marker clear of the
+// drawn footpath and the golden line runs off the edge, so a walk that is going
+// fine starts to look wrong. While a walking quest is live the camera holds a
+// ceiling: close enough to read the path underfoot, wide enough to keep the
+// next waymarker in the same frame. The player still zooms — just not past the
+// trail.
+const QUEST_WALK_ZOOM_FLOOR = 16.8;      // tightest lock — always a little zoom-in room above the resting camera
+const QUEST_WALK_ZOOM_CEILING = 18.2;    // hard limit while a quest is live (the free map goes to 19.1)
+const QUEST_WALK_FRAME_MIN_M = 110;      // the smallest stretch of ground the camera ever frames
+let questZoomLock = { on:false, ceiling:null, told:false };
+
+// Web Mercator on MapLibre's 512 px tiles: one pixel covers
+// 78271.517 * cos(lat) / 2^zoom metres. Invert that for the tightest zoom that
+// still frames the next waymarker around the player, then hold it inside the
+// walking band.
+function questWalkZoomCeiling(targetDistM, lat, viewportPx) {
+  const dist = Number(targetDistM);
+  if (!Number.isFinite(dist) || dist <= 0) return QUEST_WALK_ZOOM_CEILING;
+  const span = Math.max(QUEST_WALK_FRAME_MIN_M, dist * 2.2); // marker and player, with air around both
+  const px = Math.max(240, Number(viewportPx) || 0);
+  const cos = Math.max(0.02, Math.cos((Number(lat) || 0) * Math.PI / 180));
+  const fit = Math.log2(px * 78271.517 * cos / span);
+  return Math.max(QUEST_WALK_ZOOM_FLOOR, Math.min(QUEST_WALK_ZOOM_CEILING, fit));
+}
+// The quest HUD, the area-bird list and the pitch all eat the edges of the
+// canvas, so only the smaller side counts as room the player can really read.
+function questZoomLockViewportPx() {
+  const canvas = liveMap && liveMap.getCanvas ? liveMap.getCanvas() : null;
+  const w = (canvas && canvas.clientWidth) || window.innerWidth || 360;
+  const h = (canvas && canvas.clientHeight) || window.innerHeight || 640;
+  return Math.min(w, h) * 0.8;
+}
+// Metres to the marker the player is walking to right now.
+function questZoomLockTargetDistance() {
+  const quest = activeWalkingQuest();
+  if (!quest || !liveMapHasPrecisePosition || !liveMapLastPosition) return null;
+  const checkpoints = Array.isArray(quest.checkpoints) ? quest.checkpoints : [];
+  const next = checkpoints[window.BurbzQuestCore.questNextCheckpointIndex(quest)] || checkpoints[checkpoints.length - 1];
+  if (!next || !Number.isFinite(next.lat) || !Number.isFinite(next.lon)) return null;
+  return mapDistanceMeters(liveMapLastPosition, next);
+}
+function setLiveMapMaxZoom(zoom) {
+  if (!liveMap || !Number.isFinite(zoom)) return;
+  try {
+    const current = liveMap.getMaxZoom ? liveMap.getMaxZoom() : null;
+    if (!Number.isFinite(current) || Math.abs(current - zoom) > 0.001) liveMap.setMaxZoom(zoom);
+  } catch (e) {}
+}
+function applyQuestZoomLock() {
+  if (!liveMap) return;
+  if (!activeWalkingQuest()) { releaseQuestZoomLock(); return; }
+  const here = liveMapLastPosition || getFallbackMapCenter();
+  const ceiling = questWalkZoomCeiling(questZoomLockTargetDistance(), here && here.lat, questZoomLockViewportPx());
+  questZoomLock.on = true;
+  questZoomLock.ceiling = ceiling;
+  const current = liveMap.getZoom ? liveMap.getZoom() : ceiling;
+  if (current > ceiling + 0.02) {
+    // setMaxZoom snaps the camera. Ease out of the too-tight view first, then
+    // close the ceiling behind it — when the ease lands, or on a short timer if
+    // the map never reports one, so the lock can never be left open.
+    const closeCeiling = () => { if (questZoomLock.on) setLiveMapMaxZoom(questZoomLock.ceiling); };
+    try { liveMap.easeTo({ zoom:ceiling, pitch:burbzPitchForZoom(ceiling), duration:420 }); } catch (e) {}
+    try { liveMap.once('moveend', closeCeiling); } catch (e) {}
+    setTimeout(closeCeiling, 520);
+    return;
+  }
+  setLiveMapMaxZoom(ceiling);
+}
+function releaseQuestZoomLock() {
+  questZoomLock = { on:false, ceiling:null, told:false };
+  setLiveMapMaxZoom(BURBZ_MAX_ZOOM);
+}
+function liveMapZoomCeiling() {
+  return questZoomLock.on && Number.isFinite(questZoomLock.ceiling) ? questZoomLock.ceiling : BURBZ_MAX_ZOOM;
+}
+// Said once per quest, the first time the camera actually holds the line.
+function tellQuestZoomLockOnce() {
+  if (!questZoomLock.on || questZoomLock.told) return;
+  questZoomLock.told = true;
+  showToast('🔒 Zoom held here so your trail stays on screen');
+}
+function tellQuestZoomLockIfHeld() {
+  if (!questZoomLock.on || !liveMap || !Number.isFinite(questZoomLock.ceiling)) return;
+  const zoom = liveMap.getZoom ? liveMap.getZoom() : 0;
+  if (zoom >= questZoomLock.ceiling - 0.02) tellQuestZoomLockOnce();
 }
 // Pocket-strength haptics: long, distinct patterns so quest events can be felt
 // through fabric without looking at the screen (navigator.vibrate is ignored on
@@ -18042,15 +18130,15 @@ document.addEventListener('visibilitychange', () => {
 function updateWalkQuestHud() {
   const hud = $('mapQuestHud');
   const quest = activeWalkingQuest();
-  const side = quest ? null : sideQuestActive();
+  const side = sideQuestActive();
   updateMapSideQuestButton();
   if (quest || side) acquireQuestWakeLock(); else releaseQuestWakeLock();
   if (!hud) return;
-  if (side) {
+  if (side && !quest) {
     hud.classList.add('active');
     const found = side.discoveries.length, waiting = side.discoveries.filter(d => !d.claimed).length;
     const nm = $('mapQuestHudName'), st = $('mapQuestHudStats');
-    if (nm) nm.textContent = '🎒 Side Quest — exploring';
+    if (nm) nm.textContent = side.auto ? '🎒 ' + side.name : '🎒 Side Quest — exploring';
     if (st) st.textContent = (side.distanceM / 1000).toFixed(2) + ' km charted · ' + found + ' ✨ found' + (waiting ? ' · ' + waiting + ' waiting on the map!' : '');
     return;
   }
@@ -18060,7 +18148,8 @@ function updateWalkQuestHud() {
   const hit = quest.checkpoints.filter(c => c.reached).length;
   const nm = $('mapQuestHudName'), st = $('mapQuestHudStats');
   if (nm) nm.textContent = quest.name;
-  if (st) st.textContent = (quest.distanceWalkedM / 1000).toFixed(2) + ' km · ' + hit + '/' + total + ' markers · ' + quest.birdsCaptured.length + ' 🐦 · ' + quest.chestsOpened + ' 🎁';
+  // An off-road side quest running beside the main quest shares the HUD line.
+  if (st) st.textContent = (quest.distanceWalkedM / 1000).toFixed(2) + ' km · ' + hit + '/' + total + ' markers · ' + quest.birdsCaptured.length + ' 🐦 · ' + quest.chestsOpened + ' 🎁' + (side ? ' · 🎒 ' + side.name + ' live' : '');
 }
 
 
@@ -18299,7 +18388,13 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
     (chestClaimHandled && !chestClaimFailed);
   const finishJustUnlocked = !finishWasReady && window.BurbzQuestCore.questFinishIsReady(quest);
   if (activeWalkingQuest() === quest && (checkpointProgressed || finishJustUnlocked)) drawWalkingQuestOnMap();
+  // Straying 300 m off the golden route opens an off-road side quest; walking
+  // back banks it. The main quest never notices either way.
+  if (activeWalkingQuest() === quest) {
+    try { maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy); } catch (err) { console.warn('BURBZ side trail check failed', err); }
+  }
   updateWalkQuestHud();
+  applyQuestZoomLock();
   const now = Date.now();
   if (!chestClaimFailed && !chestClaimHandled && (events.length || now - walkQuestLastSave > 20000)) { walkQuestLastSave = now; saveState(); }
   return events;
@@ -18309,6 +18404,9 @@ function completeWalkingQuest() {
   const wq = ensureWalkingQuestState();
   const quest = wq.active;
   if (!quest) return;
+  // An off-road side quest still running banks itself with the main quest.
+  const side = sideQuestActive();
+  if (side && side.auto) endOffRoadSideQuest('Main quest complete.');
   const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
   // A finished tale of The Twenty Roads pays its reward before the headline
   // sums, so the celebration and the history entry both tell the whole story.
@@ -18341,6 +18439,8 @@ function abandonWalkingQuest() {
   const wq = ensureWalkingQuestState();
   if (!wq.active) return;
   if (!confirm('Abandon "' + wq.active.name + '"? Progress on this quest will be lost (chest loot is yours to keep).')) return;
+  const side = sideQuestActive();
+  if (side && side.auto) endOffRoadSideQuest('Quest abandoned.');
   wq.active = null;
   saveState();
   clearWalkingQuestFromMap();
@@ -18369,6 +18469,7 @@ function ensureSideQuestState() {
   if (gameState.sideQuest.active && typeof gameState.sideQuest.active !== 'object') gameState.sideQuest.active = null;
   if (gameState.sideQuest.active && !gameState.sideQuest.active.name) gameState.sideQuest.active.name = 'Side Quest'; // older saves
   if (!Array.isArray(gameState.sideQuest.npcLandmarks)) gameState.sideQuest.npcLandmarks = [];
+  if (!Array.isArray(gameState.sideQuest.waysideTales)) gameState.sideQuest.waysideTales = [];
   return gameState.sideQuest;
 }
 function sideQuestActive() { return ensureSideQuestState().active; }
@@ -18434,7 +18535,8 @@ function openSideQuestIntroSheet() {
     '<div class="quest-desc" style="line-height:1.55;">' +
     '<p>🗺️ <b>No markers, no route.</b> Start the Side Quest and go wherever you want — every step you take is charted onto your own trail.</p>' +
     '<p>📱 <b>Pocket the phone.</b> The quest keeps working with the screen off. When you stumble across something out there, the phone buzzes and chirps in your pocket.</p>' +
-    '<p>✨ <b>Take the phone out</b> and your discovery is waiting on the map — a treasure chest, a weapon, or a quest-giver bird with a companion to offer.</p>' +
+    '<p>✨ <b>Take the phone out</b> and your discovery is waiting on the map — a treasure chest, a weapon, a wayside tale, or a quest-giver bird with a companion to offer.</p>' +
+    '<p>🧭 <b>Or just drift.</b> Stray 300 m from a walking quest\'s golden path and a side quest opens by itself. Your main quest keeps every marker; wander back and the side quest banks itself, finds kept.</p>' +
     '<p>🤝 <b>At the end</b> you will have the option to turn your wander into a real quest for other players to play in the future.</p>' +
     '</div>' +
     '<button class="wq-detail-start" onclick="startSideQuest()">🎒 START SIDE QUEST</button>' +
@@ -18511,8 +18613,16 @@ function sideQuestChestLoot(stableKey, coins) {
 
 function spawnSideQuestDiscovery(active, lat, lon) {
   const roll = Math.random();
-  const kind = roll < 0.45 ? 'chest' : roll < 0.72 ? 'weapon' : 'questgiver';
+  // side_trail_core adds wayside tales to the classic finds; without it the
+  // old three-way roll still stands.
+  const trailCore = window.BurbzSideTrailCore;
+  const kind = trailCore ? trailCore.sideTrailDiscoveryKind(roll) :
+    (roll < 0.45 ? 'chest' : roll < 0.72 ? 'weapon' : 'questgiver');
   const d = { id: 'sqd_' + active.discoveries.length + '_' + Date.now().toString(36), kind, lat, lon, foundAt: new Date().toISOString(), claimed: false };
+  if (kind === 'lore') {
+    const tale = trailCore.nextWaysideTale(ensureSideQuestState().waysideTales.map(t => t.id), Math.random);
+    d.tale = { id: tale.id, title: tale.title, text: tale.text }; // persisted now; claim never rerolls
+  }
   if (kind === 'chest') {
     d.coins = 20 + Math.floor(Math.random() * 26);
     d.loot = sideQuestChestLoot(d.id, d.coins); // persisted now; claim never rerolls
@@ -18529,7 +18639,7 @@ function spawnSideQuestDiscovery(active, lat, lon) {
   active.nextFindAtM = active.distanceM + SIDE_QUEST_FIND_GAP_M[0] + Math.floor(Math.random() * (SIDE_QUEST_FIND_GAP_M[1] - SIDE_QUEST_FIND_GAP_M[0]));
   saveState();
   sideQuestPocketAlert();
-  const label = kind === 'chest' ? 'a treasure chest' : kind === 'weapon' ? 'a weapon' : 'a quest giver';
+  const label = kind === 'chest' ? 'a treasure chest' : kind === 'weapon' ? 'a weapon' : kind === 'lore' ? 'a wayside tale' : 'a quest giver';
   showToast('✨ You stumbled across ' + label + '! It is marked on your map.');
   drawSideQuestOnMap();
 }
@@ -18568,6 +18678,7 @@ function drawSideQuestOnMap() {
     face.className = 'quest-marker ' + (d.kind === 'questgiver' ? 'qm-npc' : 'qm-chest');
     if (d.kind === 'chest') face.innerHTML = CHEST_SVG;
     else if (d.kind === 'weapon') face.textContent = '🗡️';
+    else if (d.kind === 'lore') face.textContent = '📜';
     else face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
     el.appendChild(face);
     el.addEventListener('click', ev => { ev.stopPropagation(); sideQuestClaimDiscovery(d.id); });
@@ -18666,7 +18777,19 @@ async function sideQuestClaimDiscovery(id, opts) {
     showToast('🎁 TREASURE FOUND! +' + loot.coins + ' coins · +' + loot.xp + ' XP · ' + foodText);
     return true;
   }
-  if (d.kind === 'weapon') {
+  if (d.kind === 'lore') {
+    // A wayside tale: hedge-lore found only off the roads. It joins the
+    // Feathered Folio next to the Twenty Roads scrolls.
+    d.claimed = true;
+    const sq = ensureSideQuestState();
+    if (d.tale && !sq.waysideTales.some(t => t.id === d.tale.id)) {
+      sq.waysideTales.push({ id: d.tale.id, title: d.tale.title, text: d.tale.text, foundAt: d.foundAt || new Date().toISOString() });
+    }
+    addPlayerXp(10);
+    SFX.questComplete();
+    if (d.tale && !quiet) showQuestNpcDialog('📜 ' + d.tale.title, d.tale.text + ' (+10 XP — kept in your Feathered Folio)');
+    else if (d.tale) showToast('📜 Wayside tale found: ' + d.tale.title + ' (+10 XP)');
+  } else if (d.kind === 'weapon') {
     d.claimed = true;
     let lines = [];
     try { lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true })); } catch (e) {}
@@ -18761,6 +18884,89 @@ function shareSideQuestDraft(id) {
   showToast('🤝 Saved as a quest draft! Community quests are coming soon — your trail is kept safe until then.');
 }
 
+// --- Off-road auto side quests -----------------------------------------------
+// Walk 300 m away from the main quest's golden route and a side quest opens by
+// itself: random loot, random strangers, wayside tales. The main quest keeps
+// every marker and waits. Walk back within 150 m and the side quest banks
+// itself — every find kept. side_trail_core.js decides; this wiring only acts.
+let sideTrailStrikes = 0;
+function maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy) {
+  const core = window.BurbzSideTrailCore;
+  if (!core || !quest || !Array.isArray(quest.route) || quest.route.length < 2) return;
+  const side = sideQuestActive();
+  const distM = core.distanceFromRouteM(quest.route, lat, lon);
+  const step = core.sideTrailStep({ strikes: sideTrailStrikes }, {
+    questActive: true,
+    sideActive: !!side,
+    sideAuto: !!(side && side.auto),
+    distM,
+    accuracy
+  });
+  sideTrailStrikes = step.strikes;
+  if (step.action === 'start') startOffRoadSideQuest(quest, lat, lon);
+  else if (step.action === 'end') endOffRoadSideQuest('Back on "' + quest.name + '"!');
+}
+
+function startOffRoadSideQuest(quest, lat, lon) {
+  const core = window.BurbzSideTrailCore;
+  const sq = ensureSideQuestState();
+  if (sq.active) return;
+  const name = core.sideTrailQuestName(Math.random);
+  sq.active = {
+    id: 'sq_' + Date.now().toString(36),
+    name,
+    auto: true,
+    parentQuestId: quest.id,
+    parentQuestName: quest.name,
+    startedAt: new Date().toISOString(),
+    path: [[lat, lon, Date.now()]],
+    distanceM: 0,
+    nextFindAtM: SIDE_QUEST_FIRST_FIND_M,
+    discoveries: []
+  };
+  saveState();
+  startSideQuestPocketMode();
+  drawSideQuestOnMap();
+  updateWalkQuestHud();
+  SFX.levelUp();
+  vibrate(QUEST_BUZZ.start);
+  showQuestNpcDialog('A voice from the hedgerow', 'Off the road already, walker? Good — the best finds hide where no quest points. I name this wander "' + name + '". Your quest keeps its markers; drift back within ' + core.SIDE_TRAIL_RETURN_M + ' m of the golden path whenever you please.');
+  showToast('🎒 Side quest: ' + name + ' — "' + quest.name + '" waits, untouched.');
+  if (currentScreen === 'quests') renderQuests();
+}
+
+// Quiet ending for an auto side quest: bank every find, thank the walker,
+// leave the main quest exactly as it was. The big completion sheet stays
+// reserved for wanders the player chose to start.
+async function endOffRoadSideQuest(reason) {
+  const sq = ensureSideQuestState();
+  const active = sq.active;
+  if (!active || !active.auto) return;
+  for (const d of active.discoveries.filter(x => !x.claimed)) {
+    const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
+    if (!claimed) return; // stays active — nothing found is ever lost
+  }
+  const xp = Math.min(120, 15 + Math.round(active.distanceM / 50));
+  addPlayerXp(xp);
+  if (typeof logDiary === 'function') logDiary('side_quest', { km: +(active.distanceM / 1000).toFixed(2), discoveries: active.discoveries.length, xp });
+  sq.history.unshift({
+    id: active.id, kind: 'side-quest', auto: true, name: active.name,
+    startedAt: active.startedAt, endedAt: new Date().toISOString(),
+    distanceM: active.distanceM, discoveries: active.discoveries.length, xp,
+    path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
+    sharedDraft: false
+  });
+  if (sq.history.length > 40) sq.history.length = 40;
+  sq.active = null;
+  saveState();
+  stopSideQuestPocketMode();
+  clearSideQuestFromMap();
+  SFX.questComplete();
+  vibrate(QUEST_BUZZ.complete);
+  showToast('🎒 ' + (reason || 'Side quest banked.') + ' "' + active.name + '" is done — +' + xp + ' XP, every find kept.');
+  if (currentScreen === 'quests') renderQuests();
+}
+
 // A Side Quest survives app restarts: redraw and keep charting on relaunch.
 let sideQuestResumeArmed = false;
 function resumeSideQuestIfAny() {
@@ -18816,16 +19022,29 @@ function openFeatheredFolioSheet() {
   const st = ensureWalkingStoryState();
   const el = walkQuestSheetEl();
   const scrolls = st.scrolls.slice();
+  // Wayside tales sit on their own shelf: hedge-lore found only off the roads.
+  const tales = ensureSideQuestState().waysideTales.slice();
+  const talesTotal = window.BurbzSideTrailCore ? window.BurbzSideTrailCore.WAYSIDE_TALES.length : tales.length;
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">📜</div><div><div class="quest-name">The Feathered Folio</div><div class="quest-desc">' + scrolls.length + ' of 20 lore scrolls collected on The Twenty Roads</div></div></div>' +
     (scrolls.length ?
       scrolls.map((s, i) => '<button class="wq-npc-ok" style="display:block;width:100%;text-align:left;margin:4px 0" data-folio-scroll="' + i + '">📜 ' + escapeHtml(s.title) + '</button>').join('') :
       '<div class="quest-desc">No scrolls yet. Every walking tale hides one along its road — walk, and the realm\'s history finds you.</div>') +
+    '<div class="quest-section-title" style="margin-top:12px;">🎒 Wayside Tales · ' + tales.length + ' of ' + talesTotal + '</div>' +
+    (tales.length ?
+      tales.map((t, i) => '<button class="wq-npc-ok" style="display:block;width:100%;text-align:left;margin:4px 0" data-wayside-tale="' + i + '">🌿 ' + escapeHtml(t.title) + '</button>').join('') :
+      '<div class="quest-desc">Hedge-lore lives off the roads. Stray from a quest\'s golden path and a side quest will find some for you.</div>') +
     '</div>';
   el.querySelectorAll('[data-folio-scroll]').forEach(btn => {
     btn.addEventListener('click', () => {
       const s = scrolls[Number(btn.dataset.folioScroll)];
       if (s) showQuestNpcDialog('📜 ' + s.title, s.text);
+    });
+  });
+  el.querySelectorAll('[data-wayside-tale]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = tales[Number(btn.dataset.waysideTale)];
+      if (t) showQuestNpcDialog('🌿 ' + t.title, t.text);
     });
   });
   el.classList.add('open');
@@ -19407,7 +19626,7 @@ Object.assign(window, {
 });
 
 function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
-  function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(BURBZ_MAX_ZOOM, (liveMap.getZoom() || BURBZ_START_ZOOM) + delta)); liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
+  function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const from = liveMap.getZoom() || BURBZ_START_ZOOM; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(liveMapZoomCeiling(), from + delta)); if (delta > 0 && z <= from + 0.001) { tellQuestZoomLockOnce(); return; } liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); }
@@ -32453,7 +32672,6 @@ function renderBirdex() {
   const unlockedCount = uniqueSpecies.size;
 
   $('birdexDiscovered').textContent = unlockedCount;
-  $('birdexTotal').textContent = WILD_BIRDS.length;
   $('birdexPower').textContent = flock.reduce((sum, b) => sum + (b.power || 0), 0);
   const dietsEl = $('birdexDiets'); if (dietsEl) dietsEl.textContent = countDiscoveredDiets();
   renderRpgHud();
@@ -32467,7 +32685,8 @@ function renderBirdex() {
     const discoveredBtn = discoveryRow.querySelector('[data-discovery="discovered"]');
     const undiscoveredBtn = discoveryRow.querySelector('[data-discovery="undiscovered"]');
     if (discoveredBtn) discoveredBtn.textContent = 'Discovered · ' + unlockedCount;
-    if (undiscoveredBtn) undiscoveredBtn.textContent = 'Undiscovered · ' + Math.max(0, WILD_BIRDS.length - unlockedCount);
+    // No undiscovered count — it would give away the total species in the game.
+    if (undiscoveredBtn) undiscoveredBtn.textContent = 'Undiscovered';
   }
 
   const grid = $('birdGrid');
@@ -36262,7 +36481,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-settlements-v281-20260817';
+const BURBZ_BUILD = 'offroad-side-quests-v283-20260818';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
