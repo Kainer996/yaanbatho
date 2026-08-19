@@ -1115,6 +1115,7 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 .province-cart-btn:active { transform:scale(.98); }
 .province-cart-btn:disabled { opacity:.5; }
 .province-income-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.22); background:rgba(0,0,0,.3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#e6d9ae; text-align:center; }
+.province-trades-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px dashed rgba(240,199,103,.28); background:rgba(0,0,0,.26); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#d8cba2; text-align:center; }
 .province-build-title { font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.14em; color:var(--text2); margin:2px 2px 7px; text-transform:uppercase; }
 
 /* Posts: the card that appoints a bird to run a room, a village or a region.
@@ -3448,6 +3449,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .village-fallback { position:relative; z-index:3; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:82px 12px 76px; height:100%; overflow-y:auto; background:linear-gradient(180deg,rgba(7,11,9,.28),rgba(7,10,8,.76)); }
 .village-fallback-building { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--bg3), var(--bg2)); border: 1px solid var(--bg4); border-radius: 12px; padding: 12px 8px; color: var(--text); }
 .village-fallback-building:active { border-color: var(--accent); }
+.village-fallback-empty { grid-column:1 / -1; align-self:center; text-align:center; padding:18px 14px; border:1px dashed var(--bg4); border-radius:12px; color:var(--text2); font-size:13px; line-height:1.5; background:rgba(0,0,0,.25); }
 .vfb-icon { font-size: 30px; }
 .vfb-name { font-size: 12.5px; font-weight: 800; letter-spacing: 0.04em; }
 .vfb-desc { font-size: 9.5px; color: var(--text3); text-align: center; line-height: 1.4; }
@@ -4697,6 +4699,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
+<script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="settlement_scene_core.js?v=living-settlements-v281-20260817"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
@@ -18395,6 +18398,11 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   }
   updateWalkQuestHud();
   applyQuestZoomLock();
+  // Every checkpoint reached on a real walk can uncover one of the local
+  // settlement's hidden trades — that's how its shops open at all.
+  if (events.some(ev => ['npc', 'flag', 'chest', 'finish'].includes(ev.type))) {
+    try { maybeDiscoverSettlementShop(lat, lon); } catch (err) { console.warn('BURBZ shop discovery failed', err); }
+  }
   const now = Date.now();
   if (!chestClaimFailed && !chestClaimHandled && (events.length || now - walkQuestLastSave > 20000)) { walkQuestLastSave = now; saveState(); }
   return events;
@@ -21043,6 +21051,61 @@ function villageShopKeysFor(seed) {
   return keys;
 }
 
+// ---- Building discovery — the trades hide until found on a real walk -------
+// A settlement's shops no longer stand open from the first visit. Each one
+// waits until the player uncovers it on a real-life walking quest through
+// that settlement's land. building_discovery_core.js owns the rules; this
+// wiring reads and writes gameState.empire.shopDiscoveries.
+function buildingDiscoveryCore() {
+  return (typeof globalThis !== 'undefined' && globalThis.BurbzBuildingDiscoveryCore) || null;
+}
+let shopDiscoveriesHealed = false;
+function shopDiscoveryState() {
+  const empire = ensureEmpireState();
+  if (!empire) return {};
+  const core = buildingDiscoveryCore();
+  if (core && !shopDiscoveriesHealed) {
+    empire.shopDiscoveries = core.sanitizeShopDiscoveries(empire.shopDiscoveries);
+    shopDiscoveriesHealed = true;
+  }
+  return empire.shopDiscoveries;
+}
+// The trades the player has found here, in the settlement's own fixed order.
+function discoveredVillageShopKeys(seed) {
+  const core = buildingDiscoveryCore();
+  if (!core) return [];
+  return core.discoveredShopKeys(shopDiscoveryState(), seed, villageShopKeysFor(seed));
+}
+function villageShopIsOpenTo(seed, shopKey) {
+  if (discoveredVillageShopKeys(seed).includes(shopKey)) return true;
+  // The player's own Alehouse shares the tavern's door — a build you raised
+  // yourself needs no finding.
+  if (shopKey === 'tavern') {
+    const empire = ensureEmpireState();
+    const rec = empire && empire.villages[String(seed >>> 0)];
+    if (rec && villageBuildingLevel(rec, 'tavern') > 0) return true;
+  }
+  return false;
+}
+// Reaching a quest waymarker inside a settlement's land uncovers one of its
+// trades — the general store leads, the rest follow in the settlement's own
+// order. One find per waymarker, saved on the spot.
+function maybeDiscoverSettlementShop(lat, lon) {
+  const core = buildingDiscoveryCore();
+  if (!core || !isFinite(lat) || !isFinite(lon)) return null;
+  const near = nearestVillageTo(lat, lon);
+  if (!near || mapDistanceMeters({ lat, lon }, near) > core.SHOP_DISCOVERY_RANGE_M) return null;
+  const state = shopDiscoveryState();
+  const next = core.nextShopDiscovery(state, near.seed, villageShopKeysFor(near.seed));
+  if (!next || !core.recordShopDiscovery(state, near.seed, next)) return null;
+  const shop = VILLAGE_SHOPS[next];
+  addPlayerXp(15);
+  SFX.levelUp();
+  showToast(shop.icon + ' You found ' + shop.name + ' in ' + near.name + '! Its doors are open to you now. (+15 XP)');
+  saveState();
+  return { seed: near.seed, key: next, village: near };
+}
+
 // ---- Villages scattered on the live map ------------------------------------
 const VILLAGE_CELL_DEG = 0.02; // ~2.2 km cells; ~1 in 3 hosts a village
 // No settlement deserts: every 3×3 block of cells (~6.6 km square) that rolls
@@ -21253,6 +21316,9 @@ function ensureEmpireState() {
   // Town state only stores Hall, policy and naming decisions. The hidden ward
   // records remain the canonical economy, preserving every existing save.
   if (!gameState.empire.towns || typeof gameState.empire.towns !== 'object' || Array.isArray(gameState.empire.towns)) gameState.empire.towns = {};
+  // Which of each settlement's trades the player has found on real walks.
+  // Seed → trade keys. Shops stay hidden everywhere until they appear here.
+  if (!gameState.empire.shopDiscoveries || typeof gameState.empire.shopDiscoveries !== 'object' || Array.isArray(gameState.empire.shopDiscoveries)) gameState.empire.shopDiscoveries = {};
   gameState.empire.townStrategyVersion = 1;
   const empire = gameState.empire;
   if (empire.pendingLiberation && (Array.isArray(empire.pendingLiberation) || !validPendingLiberation(empire.pendingLiberation))) {
@@ -23771,6 +23837,14 @@ function renderVillageManagePanel() {
   // A town is run by a bird, not by the player alone: appoint a Steward here.
   // The full appointment card folds away behind one line, so the desk stays
   // about the village — the post is a tap away, not a wall in the middle.
+  // The trades of this land hide until found on a real walk. The desk says
+  // plainly what's open and what's still out on the paths.
+  const allTrades = villageShopKeysFor(rec.seed);
+  const foundTrades = discoveredVillageShopKeys(rec.seed);
+  const tradesLine = '<div class="province-trades-line">' + (foundTrades.length
+    ? '🧭 Trades found: ' + foundTrades.map(k => VILLAGE_SHOPS[k].icon + ' ' + escapeHtml(VILLAGE_SHOPS[k].name)).join(' · ') +
+      (foundTrades.length < allTrades.length ? ' · ' + (allTrades.length - foundTrades.length) + ' more wait' + (allTrades.length - foundTrades.length === 1 ? 's' : '') + ' on the paths' : '')
+    : '🧭 No trades found yet — walk a quest in this land and its shops will show themselves') + '</div>';
   const stewardCard = rolePostCardHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' });
   let stewardHtml = '';
   if (stewardCard) {
@@ -23784,6 +23858,7 @@ function renderVillageManagePanel() {
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (crew.required ? ' · 👷 ' + crew.working + '/' + crew.required + ' yards crewed' : '') + '</div></div>' +
     settleLine +
+    tradesLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     cartHtml +
     (snap.pop > 0
@@ -24619,7 +24694,7 @@ function townSceneKey(settle) {
     const st = villageDistrictState(v.seed);
     const rec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(Number(v.seed) >>> 0)] : null;
     const yards = rec ? EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)).join('') : '';
-    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '') + '#' + yards;
+    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '') + '#' + yards + '#s' + discoveredVillageShopKeys(v.seed).join('.');
   }).sort().join(',');
 }
 function renderTownScreen() {
@@ -25149,6 +25224,7 @@ let villageFallbackMode = false;
 let villageBuiltSeed = null;
 let villageBuiltPhase = null; // the daylight phase the scene was lit for
 let villageBuiltLifeKey = null;
+let villageBuiltShopsKey = null; // trades found so far — a new find rebuilds
 let villageActive = null;
 let villageSceneQuality = { tier:'medium', maxDpr:1.5, shadowSize:1024, frameInterval:22, maxAmbientActors:18 };
 let villageLastFrameAt = 0;
@@ -25427,7 +25503,7 @@ function renderVillage() {
     ensureVillageRenderer(stage);
     const lifeRec = owned ? ensureEmpireState().villages[String(v.seed >>> 0)] : null;
     const lifeKey = villageAmbientLifeKey(lifeRec ? villageEconomySnapshot(lifeRec) : null);
-    if (villageBuiltSeed !== v.seed || villageBuiltPhase !== burbzDaylightPhaseNow() || villageBuiltLifeKey !== lifeKey) buildVillageScene(v);
+    if (villageBuiltSeed !== v.seed || villageBuiltPhase !== burbzDaylightPhaseNow() || villageBuiltLifeKey !== lifeKey || villageBuiltShopsKey !== discoveredVillageShopKeys(v.seed).join('.')) buildVillageScene(v);
     const loading = $('villageLoading');
     if (loading) loading.remove();
     if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
@@ -25443,12 +25519,16 @@ function renderVillageFallback() {
   const stage = $('villageStage');
   if (!stage) return;
   stage.querySelectorAll('canvas,.village-loading,.village-fallback').forEach(node => node.remove());
-  stage.insertAdjacentHTML('beforeend', '<div class="village-fallback">' + villageShopKeysFor(currentVillage().seed).map(k => {
-    const s = VILLAGE_SHOPS[k];
-    return '<button class="village-fallback-building" onclick="villageOpenShop(\'' + k + '\')">' +
-      '<span class="vfb-icon">' + s.icon + '</span><span class="vfb-name">' + escapeHtml(s.name) + '</span>' +
-      '<span class="vfb-desc">' + escapeHtml(s.desc) + '</span></button>';
-  }).join('') + '</div>');
+  const foundKeys = discoveredVillageShopKeys(currentVillage().seed);
+  const shopsHtml = foundKeys.length
+    ? foundKeys.map(k => {
+        const s = VILLAGE_SHOPS[k];
+        return '<button class="village-fallback-building" onclick="villageOpenShop(\'' + k + '\')">' +
+          '<span class="vfb-icon">' + s.icon + '</span><span class="vfb-name">' + escapeHtml(s.name) + '</span>' +
+          '<span class="vfb-desc">' + escapeHtml(s.desc) + '</span></button>';
+      }).join('')
+    : '<div class="village-fallback-empty">🧭 No trades found here yet — walk a quest in this land and its shops will show themselves.</div>';
+  stage.insertAdjacentHTML('beforeend', '<div class="village-fallback">' + shopsHtml + '</div>');
 }
 
 // ---- Canvas textures (grass, cobbles, canopy stripes, glows) ----------------
@@ -28523,8 +28603,10 @@ function buildVillageScene(v) {
   }
 
   // Buildings with jittered spacing, radius and colours, arranged to the plan.
-  // Each village only has the trades its seed grants it.
+  // Each village only has the trades its seed grants it — and only the ones
+  // the player has found on a real walk actually stand in the square.
   const shopKeys = villageShopKeysFor(v.seed);
+  const openShopKeys = new Set(discoveredVillageShopKeys(v.seed));
   // Opening camera bearing (also used to hang the moon where it will be seen)
   const camAz = Math.PI / 2 - (startAngle + Math.PI / shopKeys.length);
   const roofPool = pal.roofs.slice();
@@ -28576,13 +28658,18 @@ function buildVillageScene(v) {
     claimSpot(px, pz, 3.2);
     if (roofPool.length === 0) roofPool.push(...pal.roofs);
     const roofColor = roofPool.splice(Math.floor(r() * roofPool.length), 1)[0];
+    // An undiscovered trade still burns every rng draw and keeps its plot,
+    // so a new find pops in without moving a single other building.
+    const discovered = openShopKeys.has(k);
     const b = villageMakeBuilding(k, { icon: VILLAGE_SHOPS[k].icon, name: VILLAGE_SHOPS[k].name, roofColor }, r, pal);
     b.position.set(px, 0, pz);
     b.lookAt(faceX, 0, faceZ);
     b.rotation.x = 0; b.rotation.z = 0;
     b.rotation.y += (r() - 0.5) * 0.22;
-    villageScene.add(b);
-    villageBuildings.push(b);
+    if (discovered) {
+      villageScene.add(b);
+      villageBuildings.push(b);
+    }
 
     // Cobbled path from the plaza to each door
     const len = Math.hypot(px, pz);
@@ -28591,14 +28678,16 @@ function buildVillageScene(v) {
     path.rotation.x = -Math.PI / 2;
     path.position.set(px / 2, 0.015, pz / 2);
     path.rotation.z = Math.atan2(px, pz);
-    villageScene.add(path);
+    if (discovered) villageScene.add(path);
 
     // A warm torch by each doorway — lit at night, banked down by day
     const torch = new THREE.PointLight(0xffb45e, 2.5 * daylight.torch, 12, 2);
     torch.position.set(px * 0.82, 1.7, pz * 0.82);
     torch.userData.base = (2.2 + r() * 0.5) * daylight.torch;
-    villageScene.add(torch);
-    villageTorches.push(torch);
+    if (discovered) {
+      villageScene.add(torch);
+      villageTorches.push(torch);
+    }
   });
 
   // ---- Wrecks & rubble left by the darkness ---------------------------------
@@ -29248,6 +29337,7 @@ function buildVillageScene(v) {
   villageBuiltSeed = v.seed;
   villageBuiltPhase = daylight.phase;
   villageBuiltLifeKey = villageAmbientLifeKey(lifeSnapshot);
+  villageBuiltShopsKey = discoveredVillageShopKeys(v.seed).join('.');
   if (villageRenderer) villageRenderer.toneMappingExposure = daylight.exposure;
   // Open on the gap between the first two buildings so nothing blocks the view
   // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
@@ -30103,19 +30193,25 @@ function buildTownScene(settle) {
     }
     // One of the ward's REAL trades keeps a shopfront on the square — the
     // same shop you could walk into down in the village itself. Trades stay
-    // shut until the ward flourishes, exactly as its own screen draws it.
+    // shut until the ward flourishes, exactly as its own screen draws it —
+    // and only trades the player has found on a real walk show at all.
     if (dRuin >= 2) {
-      const trades = villageShopKeysFor(seed);
-      const tradeKey = trades[Math.floor(dr() * trades.length)];
-      const shopfront = villageMakeBuilding(tradeKey, {
-        icon: VILLAGE_SHOPS[tradeKey].icon, name: VILLAGE_SHOPS[tradeKey].name,
-        roofColor: dpal.roofs[Math.floor(dr() * dpal.roofs.length)]
-      }, dr, dpal);
-      shopfront.scale.set(0.82, 0.82, 0.82);
-      const sp = takePlot('home', HOME_RING, 1.8, 2.4);
-      shopfront.position.set(sp.x, 0, sp.z);
-      shopfront.lookAt(0, 0, 0); shopfront.rotation.x = 0; shopfront.rotation.z = 0;
-      district.add(shopfront);
+      // The trade die burns even while every shop waits to be found, so a
+      // discovery never reshuffles the rest of the square.
+      const tradeRoll = dr();
+      const dCore = buildingDiscoveryCore();
+      const tradeKey = dCore ? dCore.townShopfrontKey(discoveredVillageShopKeys(seed), tradeRoll) : null;
+      if (tradeKey) {
+        const shopfront = villageMakeBuilding(tradeKey, {
+          icon: VILLAGE_SHOPS[tradeKey].icon, name: VILLAGE_SHOPS[tradeKey].name,
+          roofColor: dpal.roofs[Math.floor(dr() * dpal.roofs.length)]
+        }, dr, dpal);
+        shopfront.scale.set(0.82, 0.82, 0.82);
+        const sp = takePlot('home', HOME_RING, 1.8, 2.4);
+        shopfront.position.set(sp.x, 0, sp.z);
+        shopfront.lookAt(0, 0, 0); shopfront.rotation.x = 0; shopfront.rotation.z = 0;
+        district.add(shopfront);
+      }
     }
     // A build rising in the ward rises in the town too, scaffold and all.
     if (dState.construction) {
@@ -30449,6 +30545,13 @@ function villageOpenShop(shopKey) {
   const shop = VILLAGE_SHOPS[shopKey];
   const overlay = $('villageShopOverlay');
   if (!shop || !overlay) return;
+  // A trade's door only opens once the player has found it on a real walk
+  // (the player's own Alehouse counts as its own discovery).
+  const shopVillage = currentVillage();
+  if (shopVillage && !villageShopIsOpenTo(shopVillage.seed, shopKey)) {
+    showToast('🚪 ' + shop.name + ' hasn\'t been found yet — walk a quest in this land to discover it.');
+    return;
+  }
   SFX.tap();
   const coins = gameState.player.coins || 0;
   const rows = shop.stock.map(item => {
@@ -36481,7 +36584,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'offroad-side-quests-v283-20260818';
+const BURBZ_BUILD = 'building-discovery-v284-20260819';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

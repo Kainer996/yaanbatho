@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "offroad-side-quests-v283-20260818"
+CURRENT_BUILD = "building-discovery-v284-20260819"
 
 
 def run_core(expression: str):
@@ -239,8 +239,10 @@ def test_town_quarters_replay_their_founders_visual_dice_but_stay_anonymous():
     for fragment in ("const dTier = plan ? plan.tier : 1;",
                      "villageMakeCottage(dr, dpal)"):
         assert fragment in scene, fragment
-    # One of the village's real trades keeps a shopfront on the yard.
-    assert "villageShopKeysFor(seed)" in scene
+    # One of the village's FOUND trades keeps a shopfront on the yard — since
+    # building-discovery-v284 a trade only shows once walked to in real life.
+    assert "discoveredVillageShopKeys(seed)" in scene
+    assert "townShopfrontKey(discoveredVillageShopKeys(seed), tradeRoll)" in scene
     assert "villageMakeBuilding(tradeKey" in scene
     # The district's landmark IS the village's signature from the ledger —
     # and a village with no landmark gets an honest bare green, not a fake.
