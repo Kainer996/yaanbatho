@@ -14,7 +14,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-training-dock-v252-20260812"
 PREVIOUS_RELEASE_PIN = "hold-to-steer-v251-20260811"
-CURRENT_BUILD = "true-diet-primaries-v279-20260817"
+CURRENT_BUILD = "tavern-flock-rounds-v280-20260817"
 
 
 def test_the_academy_title_is_just_academy():
