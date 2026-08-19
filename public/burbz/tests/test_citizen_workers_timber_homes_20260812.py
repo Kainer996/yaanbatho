@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "tavern-flock-rounds-v284-20260819"
+CURRENT_BUILD = "tavern-flock-rounds-v286-20260819"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

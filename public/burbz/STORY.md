@@ -129,6 +129,19 @@ the mice keep a chapel around one lost feather of Merlin's. Wander back within
 150 metres of the golden path and the side quest banks itself — every find
 kept, every tale shelved in the Feathered Folio.
 
+### The found trades — the trades hide until you walk to them
+
+The usurper's long shadow drove every trade indoors. The Puffin's Rest barred
+its shutters; Talon & Anvil banked its forge; the Seed & Sundry stacked its
+crates and went quiet. The buildings still stand in every village — but a
+walker only learns which doors this land holds by walking its paths. Each
+waymarker reached on a real quest through a settlement's land coaxes one
+trade back into the open: the general store first, the rest in the order the
+village has always kept them. A found door stays found — in the village, and
+on the shared town square its ward belongs to. What the player raises with
+their own hands is different: a built Alehouse never hides, because nothing
+you make yourself needs finding.
+
 ## The evil Burbz — the enemies the birds fight
 
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.

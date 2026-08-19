@@ -31,7 +31,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # The build has moved on (sleep-retired-v238) but the canopy cores have not,
 # so they keep their own pin while the build tracks the current tag.
-CURRENT_BUILD = "tavern-flock-rounds-v284-20260819"
+CURRENT_BUILD = "tavern-flock-rounds-v286-20260819"
 
 BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
 
