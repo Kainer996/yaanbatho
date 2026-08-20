@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "generated-ui-art-v298-20260820"
+CURRENT_BUILD = "empire-declutter-v300-20260820"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
