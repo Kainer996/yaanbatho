@@ -1075,6 +1075,8 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 .town-action.is-gold { border-color:rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(82,59,20,.92),rgba(31,21,7,.95)); color:#ffe9a8; }
 .town-action:active { transform:scale(.98); }
 .town-action[disabled] { opacity:.42; }
+/* Short of coins or timber: dimmed but still tappable — the tap offers a quest. */
+.town-action.short { opacity:.55; }
 .town-policy-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .town-policy { position:relative; padding:9px; border-radius:11px; border:1px solid rgba(255,255,255,.11); background:rgba(0,0,0,.27); color:inherit; text-align:left; }
 .town-policy.active { border-color:rgba(240,199,103,.68); background:linear-gradient(150deg,rgba(77,57,19,.55),rgba(18,13,4,.7)); box-shadow:inset 0 0 16px rgba(240,199,103,.06); }
@@ -1167,6 +1169,8 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 .province-build-btn { min-height:44px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
 .province-build-btn:active { transform:scale(.97); }
 .province-build-btn[disabled] { opacity:.45; }
+/* Short of coins or timber: dimmed but still tappable — the tap offers a quest. */
+.province-build-btn.short { opacity:.55; }
 .province-build-shortage { min-height:14px; font-size:9px; line-height:1.25; color:#ffc4a0; text-align:center; }
 .province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
 .province-build-btn.busy { opacity:.55; filter:grayscale(.35); }
@@ -3192,6 +3196,22 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .quest-category-body { max-height:min(58vh, 460px); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:2px 0 10px; border-top:1px solid rgba(214,168,79,.18); }
 .quest-category-body .quest-board-card { margin:8px 10px 0; }
 @media (prefers-reduced-motion:reduce) { .quest-category-summary .qc-chevron { transition:none; } }
+/* A prompt led the player here: the drawer glows until they have seen it. */
+.quest-category.spotlit { animation:questCategorySpotlight 1.1s ease-in-out 4; }
+@keyframes questCategorySpotlight { 0%,100% { box-shadow:0 0 0 0 rgba(240,199,103,0); } 50% { box-shadow:0 0 0 3px rgba(240,199,103,.8), 0 0 24px rgba(240,199,103,.4); } }
+@media (prefers-reduced-motion:reduce) { .quest-category.spotlit { animation:none; box-shadow:0 0 0 3px rgba(240,199,103,.8); } }
+
+/* Shortfall prompt: a build the purse can't cover offers a quest instead. */
+.resource-quest-overlay { position:fixed; inset:0; z-index:640; display:none; align-items:center; justify-content:center; padding:24px 18px; background:rgba(4,6,5,.72); backdrop-filter:blur(4px); }
+.resource-quest-overlay.open { display:flex; }
+.resource-quest-card { width:100%; max-width:340px; border-radius:18px; padding:18px 16px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); box-shadow:0 14px 44px rgba(0,0,0,.6); text-align:center; animation:qccPop .3s cubic-bezier(.2,1.4,.4,1); }
+@media (prefers-reduced-motion:reduce) { .resource-quest-card { animation:none; } }
+.resource-quest-icon { font-size:36px; margin-bottom:4px; }
+.resource-quest-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:17px; letter-spacing:.05em; text-transform:uppercase; color:#f4ead4; }
+.resource-quest-copy { font-size:12.5px; line-height:1.5; color:var(--text2); margin:8px 0 14px; }
+.resource-quest-go { width:100%; min-height:44px; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; letter-spacing:.06em; text-transform:uppercase; }
+.resource-quest-go:active { transform:scale(.985); }
+.resource-quest-later { width:100%; min-height:36px; margin-top:8px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
 .quest-duration { font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--text3); background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.25); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
 .quest-away-card { display:flex; align-items:center; gap:12px; margin:0 10px 10px; padding:12px; border-radius:16px; border:1px solid rgba(120,200,140,.28); background:linear-gradient(135deg,rgba(60,120,80,.14),rgba(0,0,0,.3)); cursor:pointer; transition:transform .15s ease; }
 .quest-away-card:active { transform:scale(.98); }
@@ -12706,8 +12726,8 @@ function academyBuildBuilding(id, opts = {}) {
   const level = Number(gameState.player.level) || 1;
   const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
-  if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' 🪙 to build ' + cfg.label); return false; }
-  if (playerBranches() < branchCost) { showToast('Need ' + branchCost + ' 🪵 branches for ' + cfg.label + ' — send birds on Branch Run or Timber Haul quests.'); return false; }
+  if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return false; }
+  if (playerBranches() < branchCost) { showResourceQuestPrompt('branches', branchCost, goalWithThe(cfg.label)); return false; }
   addCoins(-cfg.cost);
   addBranches(-branchCost);
   gameState.academyBuildings[id] = { built: true, builtAt: new Date().toISOString(), x: opts.position ? opts.position.x : cfg.x, y: opts.position ? opts.position.y : cfg.y };
@@ -12734,8 +12754,8 @@ function academyStartPlaceBuilding(id) {
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
-    if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' 🪙 to build ' + cfg.label); return; }
-    if (playerBranches() < (Number(cfg.branches) || 0)) { showToast('Need ' + cfg.branches + ' 🪵 branches for ' + cfg.label + ' — send birds on Branch Run or Timber Haul quests.'); return; }
+    if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return; }
+    if (playerBranches() < (Number(cfg.branches) || 0)) { showResourceQuestPrompt('branches', Number(cfg.branches) || 0, goalWithThe(cfg.label)); return; }
   }
   academyPlacementTarget = id;
   SFX.tap();
@@ -13643,6 +13663,78 @@ function questCategoryOpenMap() {
 }
 function questCategoryIsOpen(id) { return !!questCategoryOpenMap()[id]; }
 function setQuestCategoryOpen(id, open) { questCategoryOpenMap()[id] = !!open; }
+
+// ---- Shortfall prompt -------------------------------------------------------
+// A build the player can't pay for is not a dead end. Instead of a toast that
+// names the problem and walks away, a small card offers the fix: send birds
+// out on the errand that earns the missing resource. Taking it opens the
+// quest board with the right drawer open and glowing.
+const RESOURCE_QUEST_ROUTES = {
+  coins:    { icon:'🪙', noun:'coins',  category:'treasure', drawerLabel:'Coin & Treasure' },
+  branches: { icon:'🪵', noun:'timber', category:'timber',   drawerLabel:'Timber & Building' }
+};
+
+function resourceQuestOverlayEl() {
+  let el = document.getElementById('resourceQuestOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'resourceQuestOverlay';
+    el.className = 'resource-quest-overlay';
+    el.addEventListener('click', e => { if (e.target === el) closeResourceQuestPrompt(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function closeResourceQuestPrompt() {
+  const el = document.getElementById('resourceQuestOverlay');
+  if (el) el.classList.remove('open');
+}
+
+// Room labels sometimes carry their own article ("The Roost") — add one only
+// where it is missing, so the prompt never reads "The The Roost".
+function goalWithThe(label) { return /^the\s/i.test(label) ? label : 'The ' + label; }
+
+// kind: 'coins' | 'branches'. need: the full cost. goal: what the player was
+// trying to raise ("The Alehouse", "A birdhouse in Elmbrook").
+function showResourceQuestPrompt(kind, need, goal) {
+  const route = RESOURCE_QUEST_ROUTES[kind];
+  if (!route) return;
+  const have = kind === 'branches' ? playerBranches() : (Number(gameState && gameState.player && gameState.player.coins) || 0);
+  const short = Math.max(1, Math.ceil(need - have));
+  const el = resourceQuestOverlayEl();
+  el.innerHTML = '<div class="resource-quest-card">' +
+    '<div class="resource-quest-icon">' + route.icon + '</div>' +
+    '<div class="resource-quest-title">Not enough ' + route.noun + '</div>' +
+    '<div class="resource-quest-copy">' + escapeHtml(goal) + ' costs ' + need + ' ' + route.icon + ' and you have ' + have + '. Your birds can fetch the missing ' + short + '.</div>' +
+    '<button class="resource-quest-go">🕊️ SEND BIRDS OUT ON A QUEST</button>' +
+    '<button class="resource-quest-later">NOT NOW</button>' +
+  '</div>';
+  el.querySelector('.resource-quest-go').addEventListener('click', () => {
+    SFX.tap();
+    closeResourceQuestPrompt();
+    openQuestBoardCategory(route.category);
+  });
+  el.querySelector('.resource-quest-later').addEventListener('click', () => { SFX.tap(); closeResourceQuestPrompt(); });
+  el.classList.add('open');
+}
+
+// Open the quest board with one category drawer open, scrolled to and glowing.
+function openQuestBoardCategory(categoryId) {
+  setQuestCategoryOpen(categoryId, true);
+  if (currentScreen === 'quests') renderBirdExpeditions();
+  else switchScreen('quests');
+  requestAnimationFrame(() => {
+    const drawer = document.querySelector('[data-quest-category="' + categoryId + '"]');
+    if (!drawer) return;
+    drawer.open = true;
+    drawer.classList.remove('spotlit');
+    void drawer.offsetWidth; // restart the glow if it is already running
+    drawer.classList.add('spotlit');
+    drawer.scrollIntoView({ behavior:'smooth', block:'start' });
+    setTimeout(() => drawer.classList.remove('spotlit'), 5200);
+  });
+}
 
 let questBoardRefreshTimer = null;
 function scheduleQuestBoardRefresh() {
@@ -20447,6 +20539,9 @@ function normalizeActionBadgeState(now = Date.now()) {
   } catch (e) {}
   let forgeReadyCount = 0;
   try { forgeReadyCount = typeof forgeJobsReady === 'function' ? forgeJobsReady(now).length : 0; } catch (e) {}
+  // The Empire tab lights up whenever provinces or caravans have taxes ready.
+  let empireCollectCount = 0;
+  try { empireCollectCount = typeof empireCollectiblesWaiting === 'function' ? empireCollectiblesWaiting(now) : 0; } catch (e) {}
   return {
     questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
     quests: gameState && gameState.quests,
@@ -20455,7 +20550,8 @@ function normalizeActionBadgeState(now = Date.now()) {
     sideQuestDiscoveries,
     recruitableCount,
     careNeedsCount,
-    forge: forgeReadyCount
+    forge: forgeReadyCount,
+    village: empireCollectCount
   };
 }
 
@@ -22894,8 +22990,8 @@ function empireOpenTradeRoute(key) {
   if (!candidate) { showToast('That caravan road is no longer on the charts — the realm has changed shape.'); renderEmpirePanel(); return; }
   if (empire.tradeRoutes[candidate.key] || empireTradeRouteRecords().some(route => route.activeKey === candidate.key)) { showToast('🕊️ That trade route is already open.'); return; }
   const cost = core.tradeRouteCost(empireTradeRouteInvestmentCount());
-  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to fit out the first sky-caravan — collect taxes from your provinces.'); return; }
-  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for waystations along the road — send birds on Branch Run or Timber Haul quests.'); return; }
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'The first sky-caravan'); return; }
+  if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, 'The caravan road'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
   const a = empireRegionById(candidate.a), b = empireRegionById(candidate.b);
@@ -23447,8 +23543,8 @@ function empireBuildStructure(seed, buildingId, options) {
   const unlockLevel = Number(building.unlockLevel) || 1;
   if (level === 0 && trainerLevel < unlockLevel) { showToast('🔒 The ' + building.name + ' unlocks at trainer level ' + unlockLevel + ' — quest, scan and battle to level up.'); return; }
   const cost = villageBuildingCost(building, level);
-  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to raise the ' + building.name + ' — collect taxes and win battles.'); return; }
-  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the ' + building.name + ' — send birds on Branch Run or Timber Haul quests.'); return; }
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, goalWithThe(building.name)); return; }
+  if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, goalWithThe(building.name)); return; }
   if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — build a Quarry and collect its provincial output.'); return; }
   const snapshot = snapshotGameState();
   addCoins(-cost.coins);
@@ -23528,7 +23624,7 @@ function empireSendSupplyCart(seed, options) {
   const eco = ensureVillageEconomy(rec);
   const foodCap = villageStoreCapacity(rec, 'food'), waterCap = villageStoreCapacity(rec, 'water');
   if (eco.stores.food >= foodCap && eco.stores.water >= waterCap) { showToast('The stores at ' + publicName + ' are already full.'); return; }
-  if ((gameState.player.coins || 0) < VILLAGE_SUPPLY_CART.coins) { showToast('Need ' + VILLAGE_SUPPLY_CART.coins + ' 🪙 to send a supply cart — collect taxes and win battles.'); return; }
+  if ((gameState.player.coins || 0) < VILLAGE_SUPPLY_CART.coins) { showResourceQuestPrompt('coins', VILLAGE_SUPPLY_CART.coins, 'A supply cart'); return; }
   addCoins(-VILLAGE_SUPPLY_CART.coins);
   const food = Math.min(VILLAGE_SUPPLY_CART.food, foodCap - eco.stores.food);
   const water = Math.min(VILLAGE_SUPPLY_CART.water, waterCap - eco.stores.water);
@@ -23545,6 +23641,18 @@ function empireSendSupplyCart(seed, options) {
 function empireVillageTributePeriods(v, now) {
   const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
   return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((now - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
+}
+// How many strongboxes wait across the realm: settlements, lone villages and
+// caravan routes with at least one full 8-hour cycle banked. The Empire tab's
+// red badge on the bottom nav reads this — it lights only when a collection
+// would actually pay out, and it clears the moment the taxes are taken.
+function empireCollectiblesWaiting(nowValue) {
+  const now = Number(nowValue) || Date.now();
+  let waiting = 0;
+  empireVisibleSettlements().forEach(settlement => { if (townHasAccruedTribute(settlement, now)) waiting += 1; });
+  empireStandaloneVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) waiting += 1; });
+  empireTradeRouteRecords().forEach(({ rec }) => { if (empireTradeRoutePeriods(rec, now) > 0) waiting += 1; });
+  return waiting;
 }
 function empireTributeReady() {
   simulateAllVillageEconomies();
@@ -23714,8 +23822,8 @@ function claimCurrentVillage() {
   if (empire.villages[key]) { showToast('🕊️ ' + v.name + ' is already liberated.'); return; }
   if (!empireHasLiberationVictory(v.seed)) { beginVillageLiberation(v); return; }
   const cost = birdhouseCostForNextVillage();
-  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 for a birdhouse in ' + v.name + '.'); return; }
-  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'A birdhouse in ' + v.name); return; }
+  if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, 'The birdhouse in ' + v.name); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
   // The realm's shape before this liberation: county ids plus every rung of
@@ -23927,7 +24035,9 @@ function renderVillageManagePanel() {
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
     else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
-    else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
+    // Short on coins or timber? The button stays live: tapping it opens the
+    // shortfall prompt that sends birds out for the missing resource.
+    else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')">' +
       upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
     // The crew line: a yard says plainly whether a villager is working it.
     let crewHtml = '';
@@ -24855,9 +24965,12 @@ function renderTownScreen() {
   const networkHtml = EMPIRE_BUILDINGS.map(building => {
     const level = townNetworkLevel(settle, building.id), max = townMemberRecords(settle).length * building.maxLevel;
     const target = townNetworkUpgradeTarget(settle, building.id), targetLevel = target ? villageBuildingLevel(target, building.id) : building.maxLevel;
-    const cost = target ? villageBuildingCost(building, targetLevel) : null, canBuild = !!target && activeProjects < slots && townCostAffordable(cost);
+    const cost = target ? villageBuildingCost(building, targetLevel) : null, affordable = townCostAffordable(cost);
+    // An unaffordable network stays tappable: the tap opens the shortfall
+    // prompt that sends birds out for the missing coins or timber.
+    const tappable = !!target && activeProjects < slots;
     const duration = target ? formatBuildDuration(Math.max(30000, villageBuildTimeMs(building, targetLevel) * settlementBuildFactorForSeed(target.seed))) : '';
-    return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action" data-action="town-network" data-building="' + building.id + '"' + (canBuild ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? 'RAISE NETWORK · ' + escapeHtml(townCostText(cost)) + ' · ' + duration : 'WARD BUILDERS BUSY') + '</button></div>';
+    return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action' + (tappable && !affordable ? ' short' : '') + '" data-action="town-network" data-building="' + building.id + '"' + (tappable ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? 'RAISE NETWORK · ' + escapeHtml(townCostText(cost)) + ' · ' + duration : 'WARD BUILDERS BUSY') + '</button></div>';
   }).join('');
   const ruins = [];
   townMemberRecords(settle).forEach(rec => (ensureVillageEconomy(rec).ruins || []).forEach(ruin => { if (!ruin.cleared) ruins.push(ruin); }));
@@ -36910,7 +37023,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'training-your-way-v288-20260819';
+const BURBZ_BUILD = 'empire-badge-quest-prompts-v289-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

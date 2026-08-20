@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "training-your-way-v288-20260819"
+CURRENT_BUILD = "empire-badge-quest-prompts-v289-20260820"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
