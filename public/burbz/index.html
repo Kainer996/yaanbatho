@@ -522,21 +522,37 @@ svg.academy-room-bg { display:block; filter:none; }
    Thirteen 44px+ targets cannot honestly fit across a small phone, so the dock
    scrolls and snaps horizontally while keeping Map through Scan visible on
    first paint. */
-.bottom-nav {
+.bottom-dock {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 200;
-  padding: 0 2px var(--safe-bottom);
   background: linear-gradient(180deg, rgba(10,9,7,0.92), #050403 62%);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid rgba(240,199,103,0.14);
-  display: flex; justify-content: flex-start;
   height: calc(var(--nav-height) + var(--safe-bottom));
+  box-shadow: 0 -12px 30px rgba(0,0,0,.24);
+}
+.bottom-nav {
+  padding: 0 2px var(--safe-bottom);
+  display: flex; justify-content: flex-start;
+  height: 100%;
   overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x proximity; scroll-padding-inline: 52px;
   overscroll-behavior-inline: contain; scrollbar-width: none;
   -ms-overflow-style: none; touch-action: pan-x;
-  box-shadow: 0 -12px 30px rgba(0,0,0,.24);
 }
 .bottom-nav::-webkit-scrollbar { display:none; }
+/* Empire · Scan · Academy stand solid at the centre of the dock. The strip
+   scrolls beneath their island, the way a river passes under a bridge. */
+.bottom-dock-anchor {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--safe-bottom) - 1px); z-index: 2;
+  display: flex; align-items: stretch; gap: 2px;
+  padding: 2px 8px 1px;
+  height: calc(var(--nav-height) + 9px);
+  background: linear-gradient(180deg, rgba(24,19,9,0.98), #070503 70%);
+  border: 1px solid rgba(240,199,103,0.34); border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -6px 18px rgba(0,0,0,.55), inset 0 1px 0 rgba(240,199,103,.14);
+}
 .nav-item {
   flex: 0 0 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 1px; padding: 4px 2px 3px; position: relative; transition: color .22s ease, background .22s ease;
@@ -573,6 +589,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .nav-scan.active .nav-icon { transform:translateY(-1px); filter:none; box-shadow:inset 0 0 0 1px rgba(240,199,103,.65),0 0 20px rgba(240,199,103,.38); }
 .nav-scan:active .nav-icon { transform: scale(.93); }
 .nav-scan .nav-label { color: var(--accent); }
+.bottom-dock-anchor .nav-item { scroll-snap-align: none; }
+.bottom-dock-anchor .nav-scan .nav-icon { width: 46px; height: 46px; }
+.bottom-dock-anchor .nav-scan .nav-icon img { width: 44px; height: 44px; }
 .nav-badge {
   position: absolute; top: 4px; right: 50%; transform: translateX(16px);
   background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
@@ -2725,7 +2744,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 /* ---- Interactive steps: the player does the thing, not just reads about it --
    Two modes. SPOTLIGHT keeps the dim and cuts one tappable hole (four shields
    block everything else) for a single, precise tap. FREE drops the dim
-   entirely for multi-tap jobs (build a roost, send a quest) and shrinks Merlin
+   entirely for multi-tap jobs (raise a building, send a quest) and shrinks Merlin
    to a task chip so the player has the whole screen to work in. */
 .merlin-tutorial-overlay.interactive { pointer-events:none; }
 .merlin-tutorial-shield { position:fixed; display:none; background:transparent; pointer-events:auto; }
@@ -3011,7 +3030,6 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
   55% { transform:rotate(calc(var(--th-tilt,0deg) + .8deg)) translateY(1.3px); }
 }
 .treehouse-room-node[data-room="tavern"] { --th-tilt:-1.7deg; --th-rock-dur:7.9s; }
-.treehouse-room-node[data-room="dorm"] { --th-tilt:1.2deg; --th-rock-dur:6.4s; --th-rock-delay:-2.1s; }
 .treehouse-room-node[data-room="quest_roost"] { --th-tilt:1.9deg; --th-rock-dur:8.6s; --th-rock-delay:-4.4s; }
 .treehouse-room-node[data-room="crowbar"] { --th-tilt:-1.1deg; --th-rock-dur:7.1s; --th-rock-delay:-3.2s; }
 .treehouse-room-node[data-room="training"] { --th-tilt:-2.1deg; --th-rock-dur:6.8s; --th-rock-delay:-1.4s; }
@@ -4323,14 +4341,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
   <!-- Bottom Navigation -->
-  <nav class="bottom-nav" id="bottomNav" aria-label="Game destinations">
+  <!-- The Adventure Dock: Empire · Scan · Academy stand solid in the middle;
+       every other destination scrolls past beneath them. -->
+  <div class="bottom-dock" id="bottomDock">
+  <nav class="bottom-nav" id="bottomNav" aria-label="More destinations">
     <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/map.webp" alt="" draggable="false"></div>
       <div class="nav-label">Map</div>
-    </button>
-    <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Empire</div>
     </button>
     <button class="nav-item" data-game-route data-screen="birdex" aria-label="Burbz codex">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/birdex.webp" alt="" draggable="false"></div>
@@ -4343,10 +4360,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <button class="nav-item" data-game-route data-screen="quests" aria-label="Quests">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/quests.webp" alt="" draggable="false"></div>
       <div class="nav-label">Quests</div>
-    </button>
-    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Scan</div>
     </button>
     <button class="nav-item" data-game-route data-screen="inventory" aria-label="Royal Stores">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/inventory.webp" alt="" draggable="false"></div>
@@ -4368,15 +4381,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/forge.webp" alt="" draggable="false"></div>
       <div class="nav-label">Forge</div>
     </button>
-    <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Academy</div>
-    </button>
     <button class="nav-item" data-game-route data-screen="leaderboards" aria-label="Ranks">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/leaderboards.webp" alt="" draggable="false"></div>
       <div class="nav-label">Ranks</div>
     </button>
   </nav>
+  <div class="bottom-dock-anchor" id="bottomDockAnchor" aria-label="Main destinations">
+    <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Empire</div>
+    </button>
+    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Scan</div>
+    </button>
+    <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Academy</div>
+    </button>
+  </div>
+  </div>
 
   <!-- Guided-flow pointer: Merlin's arrow over the next nav tab to tap -->
   <div class="tutorial-nav-pointer" id="tutorialNavPointer" aria-hidden="true"><span class="tnp-text" id="tutorialNavPointerText">A quest awaits!</span><span class="tnp-arrow">▼</span></div>
@@ -4755,7 +4779,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=training-your-way-v288-20260819"></script>
+<script src="academy_treehouse_core.js?v=roost-retired-v302-20260820"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
@@ -4766,7 +4790,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=stores-market-project-manager-v295-20260820"></script>
+<script src="bird_roles_core.js?v=roost-retired-v302-20260820"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=stores-market-project-manager-v295-20260820"></script>
@@ -5332,7 +5356,7 @@ function burbzPitchForZoom(zoom) { return Math.max(44, Math.min(58, 48 + (Number
 
 // ============================================================================
 // BIRD DIETS — what each species actually eats in the wild.
-// Used by the Academy roost to gate feeding behind real knowledge.
+// Used by the Academy feeding table to gate feeding behind real knowledge.
 // ============================================================================
 const FOODS = {
   seeds:    { label: 'Seeds',         emoji: '🌾', desc: 'Sunflower seeds, niger, millet — finches, sparrows, tits.' },
@@ -5739,7 +5763,7 @@ document.addEventListener('visibilitychange', () => {
 // explicit sound in the same click is detected so controls never double-chime.
 document.addEventListener('click', event => {
   const control = event.target && event.target.closest ? event.target.closest('button,a,input,select,[role="button"]') : null;
-  if (!control || control.closest('.bottom-nav') || control.dataset.audio === 'none') return;
+  if (!control || control.closest('.bottom-dock') || control.dataset.audio === 'none') return;
   if (SFX && typeof SFX.playedRecently === 'function' && SFX.playedRecently(80)) return;
   const sound = window.BurbzAudioCore && window.BurbzAudioCore.classifyInteraction
     ? window.BurbzAudioCore.classifyInteraction(control) : 'tap';
@@ -5811,7 +5835,7 @@ function birdIsFull(bird, now = Date.now()) {
 }
 // Sleep is RETIRED (2026-08-09): birds never tire, never fall asleep and are
 // never blocked from battle or work. This reconcile pass is now a one-way
-// save migration — any companion an old save left asleep in The Roost wakes
+// save migration — any companion an old save left asleep wakes
 // immediately and walks back to the room it was pulled from.
 function reconcileBirdSleep(bird, now = Date.now()) {
   if (!bird) return { changed:false, sleeping:false };
@@ -5822,11 +5846,6 @@ function reconcileBirdSleep(bird, now = Date.now()) {
   bird.care = core && typeof core.advanceTiredness === 'function' ? core.advanceTiredness(normalizeBirdCare(bird, now), now) : normalizeBirdCare(bird, now);
   let changed = false;
   if (wasSleeping || requested) {
-    if (bird.academy.room === 'dorm' && requested && requested !== 'dorm') {
-      const returnRoom = ACADEMY_ROOMS[requested] && requested !== 'tavern' && requested !== 'kitchen' && isAcademyRoomBuilt(requested) ? requested : 'outdoors';
-      bird.academy.room = returnRoom;
-      bird.academy.lastMovedAt = new Date(now).toISOString();
-    }
     bird.care.sleepReturnRoom = null;
     changed = true;
   }
@@ -5846,7 +5865,7 @@ function sleepReadinessForBird(bird, now = Date.now()) {
   if (reconciled.changed) saveState();
   const core = birdSleepCore();
   if (!core || typeof core.sleepReadiness !== 'function') return { ok:true, warning:false, sleeping:false, tiredness:0, message:'' };
-  return core.sleepReadiness(bird.care, bird, { now, localHour:new Date(now).getHours(), roostBuilt:isAcademyRoomBuilt('dorm'), busy:birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id) });
+  return core.sleepReadiness(bird.care, bird, { now, localHour:new Date(now).getHours(), busy:birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id) });
 }
 // The player's bedtime quest is sacred: ANY bird may be sent out at night — no
 // activity is ever locked behind owning an owl. A nocturnal bird worked at
@@ -5915,13 +5934,13 @@ function warnOrBlockBirdWork(bird, activityType) {
   const readiness = birdWorkReadiness(bird, activityType, Date.now());
   const name = birdDisplayName ? birdDisplayName(bird) : ((bird && (bird.commonName || bird.species)) || 'This bird');
   if (!readiness.ok) {
-    if (readiness.sleepBlocked) showToast('💤 ' + name + ' is ' + (readiness.sleep && readiness.sleep.sleeping ? 'sleeping in The Roost' : 'too tired and needs The Roost') + '.');
+    if (readiness.sleepBlocked) showToast('💤 ' + name + ' is ' + (readiness.sleep && readiness.sleep.sleeping ? 'fast asleep in the tree' : 'too tired and needs a rest in the tree') + '.');
     else showToast('🍽️ ' + name + ' needs food before ' + String(activityType || 'work').replace(/_/g, ' ') + '.');
     return false;
   }
   // A slow-flight readiness carries its own, more specific line from the caller.
   if (readiness.warning && !(readiness.slowFactor > 1)) {
-    if (readiness.sleep && readiness.sleep.warning) showToast('🥱 ' + name + ' is getting tired — The Roost is ready when they need it.');
+    if (readiness.sleep && readiness.sleep.warning) showToast('🥱 ' + name + ' is getting tired — the tree always has a quiet branch for them.');
     else showToast('🍽️ ' + name + ' is hungry — they can help, but feed them soon.');
   }
   return true;
@@ -5997,9 +6016,9 @@ const DEFAULT_STATE = {
   knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
-  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for The Roost and Barracks
+  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for the Barracks
   sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
-  tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
+  tutorialFlow: { errandClaimed: false, barracksGiftGranted: false, barracksCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Barracks gift, the first-build celebration
   diary: { entries: [] }, // Adventurer's Diary — Merlin's chronicle of everything the player has done
   completionNotices: [], // City-builder corner cards: finished buildings and quests waiting to be visited
   birdRoles: { academy: {}, villages: {}, regions: {} }, // Who runs what: Librarian, Head Chef, village Project Managers, region Wardens
@@ -11399,7 +11418,7 @@ function assignBirdRole(scope, key, birdId) {
   if (birdHasActiveExpedition(bird.id)) { showToast(birdDisplayName(bird) + ' is away on a quest — call them home first.'); return; }
   if (birdHasActiveTraining(bird.id)) { showToast(birdDisplayName(bird) + ' is training — finish the session first.'); return; }
   normalizeBirdCare(bird);
-  if (bird.care.sleeping) { showToast(birdDisplayName(bird) + ' is sleeping in The Roost — wait until they wake.'); return; }
+  if (bird.care.sleeping) { showToast(birdDisplayName(bird) + ' is fast asleep — wait until they wake.'); return; }
   const previousHolder = scope === 'academy' && key === 'kitchen' ? rolePostState('academy', 'kitchen').bird : null;
   if (previousHolder && String(previousHolder.id) !== String(bird.id)) pauseHeadChefCareer(previousHolder.id);
   gameState.birdRoles = core.assignRole(ensureRolesState(), scope, key, bird.id);
@@ -12644,16 +12663,15 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', dorm:'assets/academy-buildings-manga/roost.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', library:'assets/academy-buildings/library.svg' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', library:'assets/academy-buildings/library.svg' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
-  dorm: { label:'THE ROOST', icon:'🏠', buildingId:'dorm', desc:'The Academy rest room. Companions lodged here recover HP between adventures — and stay awake, ready for battle at any moment.', perk:'Rest: restores HP · birds stay battle-ready', perches:[[24,78],[20,82],[29,82],[22,74],[30,75]] },
   tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
-  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than in the Roost, and each patient is discharged back to their old room the moment they are fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
+  hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than out in the tree, and each patient is discharged back to their old room the moment they are fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
   crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
@@ -12714,12 +12732,31 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     }
     delete gameState.academyBuildings.market;
   }
-  // v6: The Roost and Barracks unlock together. Existing early-game saves
-  // receive only the missing construction budget plus the guaranteed first-
-  // companion reserve. Migrated timber is marked collected so it cannot be
-  // claimed a second time from the six map bundles.
+  // The Roost is retired — the tree itself is home. Anyone who built it gets
+  // the 50 coins and 10 timber back, and its lodgers move out to the
+  // Aviary Gardens.
+  if (gameState.academyBuildings.dorm) {
+    if (gameState.academyBuildings.dorm.built) {
+      gameState.player.coins = (Number(gameState.player.coins) || 0) + 50;
+      gameState.player.branches = (Number(gameState.player.branches) || 0) + 10;
+    }
+    delete gameState.academyBuildings.dorm;
+  }
+  (gameState.flock || []).forEach(b => {
+    if (!b || !b.academy) return;
+    if (b.academy.room === 'dorm') b.academy.room = 'outdoors';
+    if (b.academy.hospitalReturnRoom === 'dorm') b.academy.hospitalReturnRoom = 'outdoors';
+    if (b.academy.statRoom === 'dorm') { b.academy.statRoom = null; b.academy.statMinutes = 0; }
+    if (b.care && b.care.sleepReturnRoom === 'dorm') b.care.sleepReturnRoom = null;
+  });
+  if (gameState.birdRoles && gameState.birdRoles.academy && gameState.birdRoles.academy.dorm) delete gameState.birdRoles.academy.dorm;
+  // v6: the opening construction budget. Existing early-game saves receive
+  // only the missing construction budget plus the guaranteed first-companion
+  // reserve. Migrated timber is marked collected so it cannot be claimed a
+  // second time from the six map bundles. (The Roost has since retired, so
+  // the budget covers the Barracks alone.)
   if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 6) {
-    const openingBuildingIds = ['dorm', 'tavern'];
+    const openingBuildingIds = ['tavern'];
     const missingOpeningIds = openingBuildingIds.filter(id => !isAcademyBuildingBuilt(id));
     const constructionCoins = missingOpeningIds.reduce((sum, id) => sum + (ACADEMY_BUILDINGS[id]?.cost || 0), 0);
     const constructionBranches = missingOpeningIds.reduce((sum, id) => sum + (ACADEMY_BUILDINGS[id]?.branches || 0), 0);
@@ -12794,9 +12831,9 @@ function academyBuildBuilding(id, opts = {}) {
   else if (SFX && typeof SFX.levelUp === 'function') SFX.levelUp();
   showToast('Built ' + cfg.icon + ' ' + cfg.label + '!');
   renderAcademy();
-  // Guided flow: the first Roost is the tutorial's build lesson — celebrate
-  // it properly, then let Merlin tour the rest of the Academy.
-  if (id === 'dorm' && typeof onFirstRoostBuilt === 'function') onFirstRoostBuilt();
+  // Guided flow: the first Barracks is the tutorial's build lesson —
+  // celebrate it properly, then let Merlin tour the rest of the Academy.
+  if (id === 'tavern' && typeof onFirstBarracksBuilt === 'function') onFirstBarracksBuilt();
   return true;
 }
 
@@ -13744,8 +13781,8 @@ function closeResourceQuestPrompt() {
   if (el) el.classList.remove('open');
 }
 
-// Room labels sometimes carry their own article ("The Roost") — add one only
-// where it is missing, so the prompt never reads "The The Roost".
+// Room labels sometimes carry their own article ("The Crowbar") — add one only
+// where it is missing, so the prompt never reads "The The Crowbar".
 function goalWithThe(label) { return /^the\s/i.test(label) ? label : 'The ' + label; }
 
 // kind: 'coins' | 'branches'. need: the full cost. goal: what the player was
@@ -14050,7 +14087,7 @@ function renderAcademy() {
   gameState.flock.forEach(b => { if (birdHasActiveExpedition(b.id)) return; const r = (b.academy && byRoom[b.academy.room]) ? b.academy.room : 'outdoors'; byRoom[r].push(b); });
   renderAcademyTreehouse(byRoom);
   renderBirdExpeditions();
-  const countIds = { dorm: 'academyCountDorm', training: 'academyCountTraining', outdoors: 'academyCountOutdoors' };
+  const countIds = { training: 'academyCountTraining', outdoors: 'academyCountOutdoors' };
   Object.keys(byRoom).forEach(room => {
     const el = $(countIds[room]);
     if (el) el.textContent = byRoom[room].length;
@@ -14107,10 +14144,13 @@ function renderAcademyRoomPanel(birds) {
 
     let actions = '';
     let tray = '';
-    if (academySelectedRoom === 'dorm') {
+    if (academySelectedRoom === 'outdoors') {
+      // The tree is home: feeding, grooming, deep rest and foraging all
+      // happen in the Aviary Gardens now the Roost has retired.
       actions = '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>' +
         academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
-        academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false);
+        academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false) +
+        academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
       if (academyFeedTrayBirdId === b.id) tray = academyFeedTrayHTML(b);
     } else if (academySelectedRoom === 'training') {
       const cd = academyCdLeft(b.care.lastTrained, 90*60*1000);
@@ -14427,8 +14467,8 @@ function academyMoveBird(birdId, room) {
   }
   const previousRoom = bird.academy.room || 'outdoors';
   bird.academy.room = room;
-  // Sleep retired: the Roost is an ordinary room now. Birds lodged there heal
-  // faster but never fall asleep, so a move is only ever a move.
+  // Sleep retired: birds never fall asleep in a room, so a move is only
+  // ever a move.
   if (bird.care && typeof bird.care === 'object') bird.care.sleepReturnRoom = null;
   // The ward keeps an admission slip: a patient discharged at full HP walks
   // back to the room they were admitted from.
@@ -16071,10 +16111,7 @@ function tickAcademy() {
         }
       }
     }
-    if (room === 'dorm') {
-      b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04 * roomBoost)), 1, b.maxHp || 100);
-      adjustBirdHungerUntracked(b, 1, now);
-    } else if (room === 'hospital') {
+    if (room === 'hospital') {
       b.hp = clamp((b.hp || b.maxHp) + Math.max(2, Math.round((b.maxHp || 100) * 0.10 * roomBoost)), 1, b.maxHp || 100);
       adjustBirdHungerUntracked(b, 1, now);
       // Full HP means discharged — the sweep also releases patients healed to
@@ -16090,9 +16127,11 @@ function tickAcademy() {
       adjustBirdHungerUntracked(b, 2, now);
     } else if (room === 'nursery' || room === 'outdoors') {
       // The Nest Nanny and the Head Gardener both work on morale — and a well
-      // kept garden means less time spent hungry.
+      // kept garden means less time spent hungry. The tree is home, so birds
+      // roosting in its gardens also mend gently between adventures.
       b.care.happiness = clamp((b.care.happiness || 80) + Math.round(2 * roomBoost), 0, 100);
       adjustBirdHungerUntracked(b, Math.max(1, Math.round(2 / roomBoost)), now);
+      if (room === 'outdoors') b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04 * roomBoost)), 1, b.maxHp || 100);
     } else {
       b.care.happiness = clamp((b.care.happiness || 80) + 2, 0, 100);
       adjustBirdHungerUntracked(b, 2, now);
@@ -16467,7 +16506,6 @@ const ACADEMY_ROOM_SVG_FALLBACKS = (() => {
 
 const ACADEMY_ROOM_INTERIOR_ASSETS = {
   outdoors: 'assets/academy-interiors-manga/aviary-gardens.png',
-  dorm: 'assets/academy-interiors-manga/roost.png',
   tavern: 'assets/academy-interiors-manga/barracks.png',
   training: 'assets/academy-interiors-manga/training-hall.png',
   hospital: 'assets/academy-interiors-manga/hospital.png',
@@ -19650,7 +19688,7 @@ function drawQuestOverviewMarkers() {
 let questFocusResizeObserver = null;
 function syncQuestMapFocusLayout() {
   const card = $('mapQuestFocusCard'), shell = $('liveMapShell');
-  const nav = document.querySelector('.bottom-nav');
+  const nav = document.querySelector('.bottom-dock');
   if (!card || !shell || !nav || !card.classList.contains('show')) return;
   const shellRect = shell.getBoundingClientRect(), navRect = nav.getBoundingClientRect();
   shell.style.setProperty('--quest-focus-max-height', Math.max(180, Math.floor(navRect.top - shellRect.top - 24)) + 'px');
@@ -20359,7 +20397,7 @@ let liveMapPickupMarkers = [];
 let liveMapPickupRenderKey = null;
 
 // ---------------------------------------------------------------------------
-// STARTER TIMBER — every new player finds enough wood to raise The Roost.
+// STARTER TIMBER — every new player finds enough wood to raise the Barracks.
 // Guaranteed 🪵 bundles appear right around the player on the questing map
 // (well inside gathering range) until The Roost and Barracks are built or all
 // bundles are taken. 6 bundles × 3 branches = 18 timber: exactly enough for
@@ -20380,7 +20418,7 @@ function ensureStarterTimberState() {
 
 function starterTimberDone() {
   const state = ensureStarterTimberState();
-  if (isAcademyBuildingBuilt('dorm') && isAcademyBuildingBuilt('tavern')) return true;
+  if (isAcademyBuildingBuilt('tavern')) return true;
   return Object.keys(state.taken).length >= STARTER_TIMBER_BUNDLES;
 }
 
@@ -20901,7 +20939,7 @@ let trainingHubPreviousDockItem = null;
 function openTrainingHub() {
   const modal = document.getElementById('trainingHubModal');
   if (!modal || !modal.classList.contains('show')) {
-    trainingHubPreviousDockItem = document.querySelector('#bottomNav .nav-item.active');
+    trainingHubPreviousDockItem = document.querySelector('#bottomDock .nav-item.active');
   }
   renderTrainingHub();
   if (modal) modal.classList.add('show');
@@ -20911,7 +20949,7 @@ function openTrainingHub() {
 
 function closeTrainingHub(restoreDock = true) {
   document.getElementById('trainingHubModal')?.classList.remove('show');
-  document.querySelectorAll('#bottomNav .nav-item.active').forEach(item => item.classList.remove('active'));
+  document.querySelectorAll('#bottomDock .nav-item.active').forEach(item => item.classList.remove('active'));
   if (restoreDock) {
     const target = trainingHubPreviousDockItem && document.contains(trainingHubPreviousDockItem)
       ? trainingHubPreviousDockItem
@@ -37199,8 +37237,6 @@ const PLAYER_QUESTS = [
     measure:() => (gameState.birdExpeditions || []).length + claimedExpeditionCount() },
   { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
     measure:() => claimedExpeditionCount() },
-  { id:'pq_build_roost',    name:'Build The Roost', desc:'Raise The Roost at the Academy', type:'build_dorm', target:1, reward:40, coins:20, icon:'\u{1F3E0}', go:'academy',
-    measure:() => isAcademyBuildingBuilt('dorm') ? 1 : 0 },
   { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to discover any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
   { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
@@ -37818,7 +37854,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-declutter-v300-20260820';
+const BURBZ_BUILD = 'roost-retired-v302-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -37876,19 +37912,19 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — Merlin returns: one beat, then the player walks to the Academy.
   { chapterId:'errand', chapter:'Merlin Returns', title:'Back with a prize!', screen:'quests', target:null, text:'Phew, what a flight! I brought you something \u2014 keep it safe. It will come in handy later, when you start crafting gear at the Forge.' },
-  { chapterId:'errand', chapter:'Merlin Returns', title:'To the Academy!', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Now, a kingdom needs buildings. Tap the Academy tab \u2014 we have a roost to raise, and I am paying for it.',
+  { chapterId:'errand', chapter:'Merlin Returns', title:'To the Academy!', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Now, a kingdom needs buildings. Tap the Academy tab \u2014 we have a Barracks to raise, and I am paying for it.',
     action:{ event:'tab:academy', hint:'Tap the Academy tab' } },
 
   // — Academy: two beats, then the player raises the building themselves.
   { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'The heart of your kingdom! Every building in this tree unlocks a new way to house, feed, heal and train your flock.' },
-  { chapterId:'academy', chapter:'Academy', title:'A gift for The Roost', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'I have slipped 50 coins and 10 timber into your purse \u2014 exactly what The Roost costs. Buildings need coin and timber; this one is my treat.' },
-  { chapterId:'academy', chapter:'Academy', title:'Build The Roost', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'Tap Place on The Roost, then tap the tree to set it down. It builds instantly this time round \u2014 go on, raise it!',
-    action:{ event:'roost-built', mode:'free', hint:'Tap Place on The Roost, then tap the tree' } },
+  { chapterId:'academy', chapter:'Academy', title:'A gift for the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'I have slipped 60 coins and 8 timber into your purse \u2014 exactly what the Barracks costs. Buildings need coin and timber; this one is my treat.' },
+  { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Place on the Barracks, then tap the tree to set it down. It builds instantly this time round \u2014 go on, raise it!',
+    action:{ event:'barracks-built', mode:'free', hint:'Tap Place on the Barracks, then tap the tree' } },
 
   // — Academy tour: three buildings, then out to the world. The Player Quests
   //   introduce the rest, one mechanic at a time.
-  { chapterId:'academy_tour', chapter:'Academy', title:'The Roost stands!', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'Magnificent \u2014 a home for the flock! And that experience you just earned? Building pays. Birds level up as they work for you, too.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Barracks and Kitchen', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks recruits discovered birds into your flock. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'The Barracks stands!', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Magnificent \u2014 the recruitment office is open, and discovered birds can now join your flock! Building pays XP, and birds level up as they work.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Home and the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'The tree itself is home \u2014 your birds rest in the Aviary Gardens. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that pays on diplomacy quests.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Out to the world', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Your Player Quests will introduce every other building when you need it. One last thing to show you \u2014 tap the Map.',
     action:{ event:'tab:map', hint:'Tap the Map tab' } },
@@ -38027,7 +38063,7 @@ function saveMerlinTutorialState(status, currentStep = merlinTutStep) {
 }
 
 function setMerlinTutorialBackgroundInert(inert) {
-  document.querySelectorAll('.header, .main, .bottom-nav').forEach(element => {
+  document.querySelectorAll('.header, .main, .bottom-dock').forEach(element => {
     element.inert = inert;
     if (inert) element.setAttribute('aria-hidden', 'true');
     else element.removeAttribute('aria-hidden');
@@ -38116,8 +38152,8 @@ function merlinTutActionIsAvailable(action) {
         const feedingCore = dietHungerCore();
         const feedingMinimum = Math.max(1, Number(feedingCore && feedingCore.FEEDING_HUNGER_MIN) || 60);
         return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) >= feedingMinimum;
-      case 'roost-built':
-        return !isAcademyBuildingBuilt('dorm');
+      case 'barracks-built':
+        return !isAcademyBuildingBuilt('tavern');
       case 'expedition-sent':
         return !tutorialFlowState().errandClaimed &&
           !ensureBirdExpeditions().some(q => q.templateId === 'merlin_first_flight' && q.status !== 'claimed');
@@ -38201,7 +38237,7 @@ function startMerlinTutorial(options = {}) {
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
   // The Academy lesson opens with Merlin's housewarming gift: the exact cost
   // of The Roost, so the guided build can never be blocked by an empty purse.
-  if (merlinTutMode === 'academy') maybeGrantMerlinRoostGift();
+  if (merlinTutMode === 'academy') maybeGrantMerlinBarracksGift();
   saveMerlinTutorialState('in_progress', resumeStep);
   merlinTutShowStep(resumeStep);
 }
@@ -38244,30 +38280,30 @@ function maybeGrantTutorialFalconRation() {
   } catch (e) {}
 }
 
-function maybeGrantMerlinRoostGift() {
+function maybeGrantMerlinBarracksGift() {
   try {
     const flow = tutorialFlowState();
-    if (flow.roostGiftGranted || isAcademyBuildingBuilt('dorm')) return;
-    flow.roostGiftGranted = true;
-    const cfg = (typeof ACADEMY_BUILDINGS !== 'undefined' && ACADEMY_BUILDINGS.dorm) || { cost:50, branches:10 };
-    addCoins(cfg.cost || 50);
-    addBranches(cfg.branches || 10);
+    if (flow.barracksGiftGranted || isAcademyBuildingBuilt('tavern')) return;
+    flow.barracksGiftGranted = true;
+    const cfg = (typeof ACADEMY_BUILDINGS !== 'undefined' && ACADEMY_BUILDINGS.tavern) || { cost:60, branches:8 };
+    addCoins(cfg.cost || 60);
+    addBranches(cfg.branches || 8);
     saveState();
     updateHeader();
-    showToast('🎁 Merlin’s gift: +' + (cfg.cost || 50) + ' 🪙 and +' + (cfg.branches || 10) + ' 🪵 for The Roost!');
+    showToast('🎁 Merlin’s gift: +' + (cfg.cost || 60) + ' 🪙 and +' + (cfg.branches || 8) + ' 🪵 for the Barracks!');
   } catch (e) {}
 }
 
-// The first Roost is the tutorial's build lesson: a proper celebration with
-// XP, then Merlin's tour of the rest of the Academy.
-function onFirstRoostBuilt() {
-  if (typeof burbzTutorialAction === 'function') burbzTutorialAction('roost-built');
+// The first Barracks is the tutorial's build lesson: a proper celebration
+// with XP, then Merlin's tour of the rest of the Academy.
+function onFirstBarracksBuilt() {
+  if (typeof burbzTutorialAction === 'function') burbzTutorialAction('barracks-built');
   const flow = tutorialFlowState();
-  if (!flow.roostCelebrated) {
-    flow.roostCelebrated = true;
+  if (!flow.barracksCelebrated) {
+    flow.barracksCelebrated = true;
     addPlayerXp(60);
     saveState();
-    playQuestClaimCelebration({ badge:'THE ROOST IS BUILT!', coins:0, branches:0, xp:60, items:{} });
+    playQuestClaimCelebration({ badge:'THE BARRACKS IS BUILT!', coins:0, branches:0, xp:60, items:{} });
   }
   const seen = merlinChaptersSeen();
   if (seen.includes('academy') && !seen.includes('academy_tour')) {
@@ -38285,7 +38321,7 @@ function merlinFlowPointerTarget() {
     if (!seen.includes('story')) return null;
     const flow = tutorialFlowState();
     if (!flow.errandClaimed) return currentScreen === 'quests' ? null : 'quests';
-    if (!seen.includes('academy_tour') && !isAcademyBuildingBuilt('dorm')) return currentScreen === 'academy' ? null : 'academy';
+    if (!seen.includes('academy_tour') && !isAcademyBuildingBuilt('tavern')) return currentScreen === 'academy' ? null : 'academy';
   } catch (e) {}
   return null;
 }
@@ -38534,9 +38570,9 @@ function maybeStartMerlinChapterForScreen(screenName) {
   let chapterId = chapter && !seen.includes(chapter.id) ? chapter.id : null;
   // Merlin's return speech: fires on the quests screen once his errand is claimed.
   if (screenName === 'quests' && !chapterId && tutorialFlowState().errandClaimed && !seen.includes('errand')) chapterId = 'errand';
-  // A Roost that already stands (veteran save, or a reload mid-flow) skips the
-  // build lesson and goes straight to the Academy tour.
-  if (screenName === 'academy' && isAcademyBuildingBuilt('dorm')) {
+  // A Barracks that already stands (veteran save, or a reload mid-flow) skips
+  // the build lesson and goes straight to the Academy tour.
+  if (screenName === 'academy' && isAcademyBuildingBuilt('tavern')) {
     if (chapterId === 'academy') { markMerlinChaptersSeen(['academy']); chapterId = null; }
     if (!seen.includes('academy_tour')) chapterId = 'academy_tour';
   }

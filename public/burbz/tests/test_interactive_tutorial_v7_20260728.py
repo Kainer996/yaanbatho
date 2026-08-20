@@ -82,7 +82,7 @@ def test_the_guided_flow_is_mostly_doing_not_reading():
         "tab:quests",           # walk to the quest board
         "expedition-sent",      # send him on his first errand
         "tab:academy",          # walk to the Academy
-        "roost-built",          # raise a building
+        "barracks-built",       # raise a building
         "tab:map",              # out to the real world
     ):
         assert needed in events, needed
@@ -138,7 +138,7 @@ def test_the_game_reports_the_players_deeds_to_merlin():
         "burbzTutorialAction('merlin-fed')",           # a real feed landed
         "burbzTutorialAction('tab:' + destination)",  # a destination the PLAYER tapped
         "burbzTutorialAction('expedition-sent')",      # errand dispatched
-        "burbzTutorialAction('roost-built')",          # building raised
+        "burbzTutorialAction('barracks-built')",       # building raised
     ):
         assert hook in html, hook
     # Only a real feed counts — a refused meal must not advance the lesson.
@@ -183,9 +183,9 @@ def test_free_mode_exists_for_multi_tap_jobs():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="merlinTutorialTask"' in html
     assert ".merlin-tutorial-overlay.free .merlin-tutorial-stage" in html
-    # Building a roost and sending a quest both need the whole screen.
+    # Raising the Barracks and sending a quest both need the whole screen.
     modes = {s["action"]["event"]: s["action"].get("mode") for s in tutorial_data()["steps"] if s.get("action")}
-    assert modes["roost-built"] == "free"
+    assert modes["barracks-built"] == "free"
     assert modes["expedition-sent"] == "free"
     # A single precise tap keeps the dim.
     assert modes["merlin-fed"] is None

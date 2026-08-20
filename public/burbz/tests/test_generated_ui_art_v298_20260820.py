@@ -25,23 +25,26 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
-RELEASE = "empire-declutter-v300-20260820"
+RELEASE = "roost-retired-v302-20260820"
 SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
 
+# Since the anchored dock (2026-08-20) the thirteen destinations split:
+# ten scroll on the strip, and Empire · Scan · Academy stand solid in a
+# centred island. nav_markup() returns strip + island in that order.
 EXPECTED_NAV_LABELS = (
     "Map",
-    "Empire",
     "Burbz",
     "Kitchen",
     "Quests",
-    "Scan",
     "Stores",
     "Training",
     "Hospital",
     "Battle",
     "Forge",
-    "Academy",
     "Ranks",
+    "Empire",
+    "Scan",
+    "Academy",
 )
 
 NEW_NAV_ART = (
@@ -62,9 +65,11 @@ INTERIOR_ART = {
 
 
 def nav_markup() -> str:
-    match = re.search(r'<nav\b[^>]*\bid="bottomNav"[^>]*>(.*?)</nav>', HTML, re.DOTALL)
-    assert match, "#bottomNav markup is missing"
-    return match.group(1)
+    nav = re.search(r'<nav\b[^>]*\bid="bottomNav"[^>]*>(.*?)</nav>', HTML, re.DOTALL)
+    assert nav, "#bottomNav markup is missing"
+    anchor = re.search(r'<div class="bottom-dock-anchor"[^>]*>(.*?)</div>\n  </div>', HTML, re.DOTALL)
+    assert anchor, "#bottomDockAnchor markup is missing"
+    return nav.group(1) + anchor.group(1)
 
 
 def css_rule(selector: str) -> str:
@@ -108,7 +113,7 @@ def assert_transparent_webp(path: Path, size=(256, 256)) -> None:
         assert all(alpha.getpixel(point) == 0 for point in ((0, 0), (255, 0), (0, 255), (255, 255))), path
 
 
-def test_bottom_nav_is_one_thirteen_button_image_led_dock_in_product_order():
+def test_dock_is_thirteen_image_led_buttons_strip_then_anchored_island():
     nav = nav_markup()
     buttons = re.findall(r"<button\b.*?</button>", nav, re.DOTALL)
     labels = [

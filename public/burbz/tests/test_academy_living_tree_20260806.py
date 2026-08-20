@@ -33,10 +33,10 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # Later releases advance BURBZ_BUILD but academy_alive_core.js has not moved,
 # so the core keeps its own pin while the build tracks the current tag.
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "roost-retired-v302-20260820"
 
 PLACEABLE_ROOMS = (
-    "tavern", "dorm", "quest_roost", "crowbar", "training", "kitchen",
+    "tavern", "quest_roost", "crowbar", "training", "kitchen",
     "hospital", "nursery", "workshop", "library", "observatory",
 )
 

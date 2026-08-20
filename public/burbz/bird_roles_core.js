@@ -101,12 +101,6 @@
       copy:'Knowing what is wrong, and being gentle about it. Clever hands mend wings sooner.'
     },
     {
-      id:'roost_warden', title:'Roost Warden', icon:'🏠', scope:'academy', key:'dorm',
-      stats:{ cha:0.5, stamina:0.5 },
-      effect:{ id:'rest_rate', label:'Rest quality', copy:'Birds resting in The Roost recover HP faster.' },
-      copy:'Warm bedding, no squabbles, lights out on time. A good warden makes a night off actually count.'
-    },
-    {
       id:'head_chef', title:'Head Chef', icon:'🥣', scope:'academy', key:'kitchen',
       stats:{ int:0.6, stamina:0.4 },
       effect:{ id:'meal_quality', label:'Meal quality', copy:'Every meal served pays more XP, coins and cheer — and one serving feeds every companion of the same species at once.' },

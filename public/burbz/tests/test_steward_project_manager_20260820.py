@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
-RELEASE = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+RELEASE = "roost-retired-v302-20260820"
+CURRENT_BUILD = "roost-retired-v302-20260820"
 
 
 def run_node(source: str) -> dict:

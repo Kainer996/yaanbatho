@@ -18,14 +18,13 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-ACADEMY_CORE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
+CURRENT_BUILD = "roost-retired-v302-20260820"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
 ACADEMY_UNLOCKS = {
     "outdoors": 1,
-    "dorm": 1,
     "tavern": 1,
     "training": 2,
     "quest_roost": 3,
