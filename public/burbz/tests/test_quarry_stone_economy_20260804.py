@@ -36,6 +36,7 @@ def economy_harness(driver: str) -> str:
             "villageProductionSnapshot",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "settlementAllowsBuilding",
             "villageBuildDurationMs",
             "empireBuildStructure",
         )
@@ -49,13 +50,14 @@ const empire = { villages: { '1111': rec } };
 const ensureEmpireState = () => empire;
 const empireVillages = () => Object.values(empire.villages);
 const empireCompleteConstructions = () => false;
-// This fixture is deliberately one loose village. Supply the Town adapters
-// used by the real build function while keeping the tested economy unmerged.
-const empireSettlementOfSeed = () => null;
-const empireSettlementById = () => null;
+// v298: farms and quarries are town works, so this fixture is one ward of a
+// merged Town. townMode goes on every build call so nothing delegates.
+const settlement = { id: 'town-1', tier: 'town', role: 'heart', heartSeed: 1111 };
+const empireSettlementOfSeed = () => settlement;
+const empireSettlementById = () => settlement;
 const canonicalEmpireSettlement = settlement => settlement;
 const townDisplayName = settlement => settlement && settlement.name;
-const townBuildNetwork = () => { throw new Error('loose village must not delegate to a Town'); };
+const townBuildNetwork = () => { throw new Error('townMode builds must not delegate back to the Town'); };
 const settlementBuildFactorForSeed = () => 1;
 const villageRoleMultiplier = () => 1;
 const villageStewardProject = () => ({ staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 }); // vacant post: v294 project management is upside only
@@ -125,10 +127,10 @@ def test_every_settlement_structure_has_a_balanced_stone_cost_and_quarry_produce
 def test_insufficient_stone_refuses_atomically_and_sufficient_stone_spends_exactly():
     out = run_harness("""
 const before = { ...gameState.player };
-empireBuildStructure(1111, 'farm');
+empireBuildStructure(1111, 'farm', {townMode:true});
 const refused = { player: { ...gameState.player }, construction: rec.economy.construction || null, toast: toasts.at(-1) };
 gameState.player.stone = 20;
-empireBuildStructure(1111, 'farm');
+empireBuildStructure(1111, 'farm', {townMode:true});
 console.log(JSON.stringify({ before, refused, accepted: { player: gameState.player, construction: rec.economy.construction } }));
 """)
     assert out["refused"]["player"] == out["before"]
@@ -143,7 +145,7 @@ def test_failed_durable_save_rolls_back_every_construction_cost_and_job():
 gameState.player.stone = 20;
 const before = { ...gameState.player };
 failDurableSave = true;
-empireBuildStructure(1111, 'farm');
+empireBuildStructure(1111, 'farm', {townMode:true});
 console.log(JSON.stringify({ before, after: gameState.player, construction: rec.economy.construction || null, toast: toasts.at(-1) }));
 """)
     assert out["after"] == out["before"]
@@ -154,13 +156,13 @@ console.log(JSON.stringify({ before, after: gameState.player, construction: rec.
 def test_first_quarry_has_a_deliberate_bootstrap_waiver_but_its_upgrade_costs_stone():
     out = run_harness("""
 const firstCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.quarry, 0);
-empireBuildStructure(1111, 'quarry');
+empireBuildStructure(1111, 'quarry', {townMode:true});
 const first = { cost: firstCost, player: { ...gameState.player }, id: rec.economy.construction?.id || null };
 delete rec.economy.construction;
 rec.economy.buildings.quarry = 1;
 gameState.player.stone = 11;
 const beforeUpgrade = { ...gameState.player };
-empireBuildStructure(1111, 'quarry');
+empireBuildStructure(1111, 'quarry', {townMode:true});
 console.log(JSON.stringify({ first, upgradeCost: villageBuildingCost(EMPIRE_BUILDING_INDEX.quarry, 1), beforeUpgrade, afterUpgrade: gameState.player, construction: rec.economy.construction || null }));
 """)
     assert out["first"]["cost"] == {"coins": 70, "branches": 20, "stone": 0}
@@ -194,8 +196,12 @@ def test_finishing_the_first_quarry_grants_enough_first_cut_stone_for_cottages()
     assert "if (isFirstRealmQuarry && level === 1)" in complete
     assert "addStone(QUARRY_FIRST_CUT_STONE)" in complete
     assert "QUARRY_FIRST_CUT_STONE = 10" in html
+    # v298: village basics cost no stone at all — the first cut now bankrolls
+    # the Timber Cabin's stone rebuild (10) instead of the Cottage Row.
     cottages = next(line for line in html.splitlines() if "id: 'cottages'" in line)
-    assert "stone: 8" in cottages
+    assert "stone: 0" in cottages
+    cabin = next(line for line in html.splitlines() if "id: 'cabin'" in line)
+    assert "stone: 10 }]" in cabin
 
 
 def test_stone_flows_through_tribute_collection_ledger_and_summary():

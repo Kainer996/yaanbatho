@@ -1,4 +1,4 @@
-"""Generated UI art release contracts (generated-ui-art-v298-20260820).
+"""Generated UI art release contracts (village-basics-town-industry-v299-20260820).
 
 The release unifies every player destination in one image-led bottom dock,
 adds a Hospital shortcut, replaces visible gear emoji with transparent
@@ -26,6 +26,8 @@ SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 RELEASE = "generated-ui-art-v298-20260820"
+# Later releases move BURBZ_BUILD on; v298's own segment stays in the lineage.
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
 
 EXPECTED_NAV_LABELS = (
@@ -257,8 +259,9 @@ def test_all_new_art_is_offline_cached_and_shipped_by_the_live_updater():
 
 
 def test_v298_build_and_cache_are_current_without_reversioning_the_v285_settlement_core():
-    assert f"const BURBZ_BUILD = '{RELEASE}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert cache_line.rstrip("';").endswith(RELEASE)
+    assert RELEASE in cache_line  # this release's own segment stays in the lineage
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f'<script src="settlement_scene_core.js?v={SETTLEMENT_CORE_RELEASE}"></script>' in HTML
     assert f"'./settlement_scene_core.js?v={SETTLEMENT_CORE_RELEASE}'" in SW

@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "generated-ui-art-v298-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 
 
 def run_node(source: str) -> dict:
@@ -58,6 +58,7 @@ def building_line(html: str, building_id: str) -> str:
 LADDER = {
     "cabin": 4,
     "well": 4,
+    "hut": 15,
     "farm": 30,
     "cottages": 45,
     "tavern": 60,
@@ -83,7 +84,8 @@ def test_the_ladder_starts_at_4_minutes_and_climbs_the_list_to_4_hours():
     # The two 4-minute starters, then a strictly climbing clock ending at 4h.
     ramp = [m for m in minutes if m != 4]
     assert minutes.count(4) == 2  # Timber Cabin and Stone Well
-    assert ramp[0] == 30  # the first non-starter costs half an hour
+    assert ramp[0] == 15  # the Hunter-Gatherer Hut (v298), then farm at 30
+    assert ramp[1] == 30
     assert ramp == sorted(ramp) and len(set(ramp)) == len(ramp)
     assert ramp[-1] == 240  # the last and longest: 4 hours
     assert minutes[-1] == 240  # ...and it sits at the bottom of the list
@@ -178,6 +180,7 @@ def test_the_real_build_flow_charges_less_and_finishes_sooner_with_a_steward():
             "villageBuildingTier",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "settlementAllowsBuilding",
             "villageBuildDurationMs",
             "empireBuildStructure",
         )
@@ -226,28 +229,29 @@ let steward = { staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:
 const villageStewardProject = () => steward;
 """
     probe = """
-const vacantCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.farm, 0, 1111);
-empireBuildStructure(1111, 'farm');
+const vacantCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.hut, 0, 1111);
+empireBuildStructure(1111, 'hut');
 const vacant = { cost: vacantCost, spent: 5000 - gameState.player.coins, construction: { ...rec.economy.construction } };
 delete rec.economy.construction;
 gameState.player.coins = 5000; gameState.player.branches = 5000; gameState.player.stone = 5000;
 steward = { staffed:true, bird:{ name:'Pip the Robin' }, buildFactor:0.70, costFactor:0.85, speedPct:30, discountPct:15 };
-const managedCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.farm, 0, 1111);
-empireBuildStructure(1111, 'farm');
+const managedCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.hut, 0, 1111);
+empireBuildStructure(1111, 'hut');
 const managed = { cost: managedCost, spent: 5000 - gameState.player.coins, construction: { ...rec.economy.construction }, toast: toasts.at(-1) };
 console.log(JSON.stringify({ vacant, managed }));
 """
     out = run_node(buildings + "\n" + functions + "\n" + stubs + probe)
-    # Vacant post: the Grain Farm costs its full 40/10/5 and takes 30 minutes.
-    assert out["vacant"]["cost"] == {"coins": 40, "branches": 10, "stone": 5}
-    assert out["vacant"]["spent"] == 40
+    # Vacant post: the hut (a lone village's food source since v298) costs its
+    # full 30/10/0 and takes 15 minutes.
+    assert out["vacant"]["cost"] == {"coins": 30, "branches": 10, "stone": 0}
+    assert out["vacant"]["spent"] == 30
     vacant_ms = out["vacant"]["construction"]["endMs"] - out["vacant"]["construction"]["startMs"]
-    assert vacant_ms == 30 * 60000
+    assert vacant_ms == 15 * 60000
     # A grandmaster project manager: 15% off the bill, 30% off the clock.
-    assert out["managed"]["cost"] == {"coins": 34, "branches": 9, "stone": 4}
-    assert out["managed"]["spent"] == 34
+    assert out["managed"]["cost"] == {"coins": 26, "branches": 9, "stone": 0}
+    assert out["managed"]["spent"] == 26
     managed_ms = out["managed"]["construction"]["endMs"] - out["managed"]["construction"]["startMs"]
-    assert managed_ms == round(30 * 60000 * 0.70)
+    assert managed_ms == round(15 * 60000 * 0.70)
     assert "Pip the Robin runs the project" in out["managed"]["toast"]
     assert "30% faster, 15% cheaper" in out["managed"]["toast"]
 

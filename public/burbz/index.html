@@ -23429,20 +23429,28 @@ const QUARRY_FIRST_CUT_STONE = 10;
 // stone, then trade, then the chapel.
 // `buildMinutes` follows Yaan's pacing law (2026-08-20): the two survival
 // starters — the Timber Cabin and the Stone Well — rise in 4 minutes, then
-// the clock climbs the list from half an hour to a full 4 hours for the
-// Storehouse. Early shelter and water are instant fun; the late halls are
-// real projects worth appointing a Project Manager for.
+// the clock climbs the list from a quarter-hour hut to a full 4 hours for
+// the Storehouse. Early shelter and water are instant fun; the late halls
+// are real projects worth appointing a Project Manager for.
+// `tier: 'town'` is Yaan's settlement law (village-basics-town-industry-v298):
+// a lone village keeps only the basics — home, hut, well, cottages, alehouse,
+// storehouse — and builds them from coins and timber alone, because the
+// stone economy itself is town work. The industry — Grain Farm, Lumber Camp,
+// Quarry, Chapel, Market Hall — opens when three starred villages merge into
+// a Town. Anything an older save already built is grandfathered: it keeps
+// working and may upgrade; only NEW town-tier builds gate on the merge.
 const EMPIRE_BUILDINGS = [
   { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 2, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 10, stone: 10 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The cabin rebuilt in quarried stone — houses 12 villagers and shrugs off any storm.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
-  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 30,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
-  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8,  stone: 6 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
-  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 45,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 60,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
-  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
-  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
-  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 16, stone: 8 }, buildMinutes: 240, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' }
+  { id: 'hut',     icon: '🏹', name: 'Hunter-Gatherer Hut', maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 }, buildMinutes: 15, need: 'food', perLevel: 8, workers: 1, workPriority: 1, produces: { larder: { hedgerow_berries: 1, acorn_handful: 1 } }, desc: 'Hunters and foragers feed 8 villagers per level and bring home 🫐1 berries + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, tier: 'town', cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 30,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
+  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 22, stone: 0 },  buildMinutes: 45,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 60,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, tier: 'town', cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, tier: 'town', cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, tier: 'town', cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, tier: 'town', cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
+  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 20, stone: 0 }, buildMinutes: 240, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -23892,6 +23900,14 @@ function empireHasQuarryInvestment() {
     return villageBuildingLevel(v, 'quarry') > 0 || !!(eco.construction && eco.construction.id === 'quarry');
   });
 }
+// Yaan's settlement law (v298): a lone village raises only the basics; the
+// industry buildings carry `tier: 'town'` and wait for a merged settlement.
+// Anything an older save already built is grandfathered by the callers —
+// this only says whether a NEW build may start here.
+function settlementAllowsBuilding(rec, building) {
+  if (!building || building.tier !== 'town') return true;
+  return !!empireSettlementOfSeed(rec && rec.seed);
+}
 function villageBuildingCost(building, level, seed) {
   // A building can price each step on its own (`costLevels`): the Timber
   // Cabin is bought with coins and timber alone, and only its stone rebuild
@@ -23941,15 +23957,19 @@ function empireBuildStructure(seed, buildingId, options) {
   }
   const level = eco.buildings[building.id] || 0;
   if (level >= building.maxLevel) { showToast(building.icon + ' ' + building.name + ' is already at its highest level.'); return; }
-  // The gate applies to raising a NEW structure; anything an older save
+  // Both gates apply to raising a NEW structure only; anything an older save
   // already built keeps its right to upgrade.
+  if (level === 0 && !settlementAllowsBuilding(rec, building)) {
+    showToast('🏘️ The ' + building.name + ' is town work — merge three starred villages into a Town, then raise it from the Town Hall.');
+    return;
+  }
   const trainerLevel = Number(gameState.player.level) || 1;
   const unlockLevel = Number(building.unlockLevel) || 1;
   if (level === 0 && trainerLevel < unlockLevel) { showToast('🔒 The ' + building.name + ' unlocks at trainer level ' + unlockLevel + ' — quest, scan and battle to level up.'); return; }
   const cost = villageBuildingCost(building, level, rec.seed);
   if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, goalWithThe(building.name)); return; }
   if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, goalWithThe(building.name)); return; }
-  if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — build a Quarry and collect its provincial output.'); return; }
+  if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — Quarries are town works: raise one in a Town and collect its output.'); return; }
   const snapshot = snapshotGameState();
   addCoins(-cost.coins);
   addBranches(-cost.branches);
@@ -24316,7 +24336,9 @@ function renderVillageManagePanel() {
     const flow = snap.provisions[n.id];
     let sub = '';
     if (flow) {
-      const source = n.id === 'food' ? EMPIRE_BUILDING_INDEX.farm : EMPIRE_BUILDING_INDEX.well;
+      // The food line names the source this settlement can actually build:
+      // the hut in a lone village, the farm once it sits inside a Town.
+      const source = n.id === 'food' ? (snap.settlement ? EMPIRE_BUILDING_INDEX.farm : EMPIRE_BUILDING_INDEX.hut) : EMPIRE_BUILDING_INDEX.well;
       const storeName = n.id === 'food' ? 'granary' : 'cistern';
       const dry = flow.rate <= 0 && flow.store <= 0;
       const short = snap.pop > 0 && flow.rate + flow.store < flow.eats;
@@ -24363,7 +24385,16 @@ function renderVillageManagePanel() {
       '</div>';
   }
   const crew = snap.workforce || villageWorkforce(rec);
-  const buildingsHtml = EMPIRE_BUILDINGS.map(b => {
+  // A lone village's desk offers only the basics (v298). Town-tier industry
+  // stays off the list — except a grandfathered yard an older save already
+  // built, which keeps its card and its right to upgrade. One line under the
+  // list says what the merge will open.
+  const deskBuildings = EMPIRE_BUILDINGS.filter(b => settlementAllowsBuilding(rec, b) || villageBuildingLevel(rec, b.id) > 0);
+  const townWorks = EMPIRE_BUILDINGS.filter(b => !deskBuildings.includes(b));
+  const townWorksHtml = townWorks.length
+    ? '<div class="province-need-sub" style="margin:2px 0 8px;">🏘️ Town works — open when three starred villages merge: ' + townWorks.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>'
+    : '';
+  const buildingsHtml = deskBuildings.map(b => {
     const level = villageBuildingLevel(rec, b.id);
     const tier = villageBuildingTier(b, Math.max(1, level));
     const maxed = level >= b.maxLevel;
@@ -24444,12 +24475,13 @@ function renderVillageManagePanel() {
     '<div class="province-needs">' + needsHtml + '</div>' +
     cartHtml +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a 🌾 Grain Farm or ⛲ Stone Well, or send a supply cart' : '') + '</div>'
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or ⛲ Stone Well, or send a supply cart' : '') + '</div>'
       : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other villages can still build' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
+    townWorksHtml +
     stewardHtml +
     '</div>';
   panel.querySelectorAll('details[data-empire-drawer]').forEach(drawer => {
@@ -24672,7 +24704,7 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛖</span><span><b>Rebuild them.</b> Start with a Timber Cabin — it costs only coins and timber — and the first families move in. Later, rebuild it in stone to house twice as many.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🌾 Grain Farm and ⛲ Stone Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🏹 Hunter-Gatherer Hut and ⛲ Stone Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch. Grain Farms and the other big yards open when villages merge into a Town.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> The first Quarry costs no stone and its first cut gives enough stone for Cottage Row. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">⭐</span><span><b>Earn the merge star.</b> A village wears its ⭐ at 40 folk and 75% happiness. Nothing merges on its own: three starred villages within 5 km show a Merge button — press it, and one Town rises with every building the three built.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">⬆️</span><span><b>Upgrade the whole Town at once.</b> The Town Hall carries one Upgrade order that raises every home and yard across all wards — no ward micromanaging. Old villages stay visitable from the Hall, just to look.</span></div>' +
@@ -25294,6 +25326,9 @@ function wholesaleUpgradePlan(records) {
       if (eco.construction && eco.construction.id === b.id) level = Math.max(level, Number(eco.construction.toLevel) || level);
       if (level >= b.maxLevel) return;
       if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return;
+      // The settlement law holds for wholesale orders too: no new town-tier
+      // industry on a ward that is not part of a merged settlement.
+      if (level === 0 && !settlementAllowsBuilding(rec, b)) return;
       const stepCost = villageBuildingCost(b, level, rec.seed);
       cost.coins += stepCost.coins; cost.branches += stepCost.branches; cost.stone += stepCost.stone;
       // Each ward's own Steward project-manages its part of the order; the
@@ -30106,6 +30141,30 @@ function buildVillageScene(v) {
         home.rotation.y += (er() - 0.5) * 0.4;
         econLabel(home, level >= 2 ? '🏠 Stone Cottage' : '🛖 Timber Cabin', 2.3);
         villageScene.add(home);
+      } else if (b.id === 'hut') {
+        // The hunter-gatherers' camp: a small timber hut, a drying rack of
+        // logs, and a campfire ring — food before fields.
+        const spot = econScatter(10.5, 14.5, 2.4);
+        if (!spot) return;
+        const camp = new THREE.Group();
+        const hutHome = villageMakeSettlerHome(er, pal, false);
+        hutHome.scale.setScalar(0.78);
+        camp.add(hutHome);
+        const rack = villageMakeLogPile(er, pal);
+        rack.scale.setScalar(0.8);
+        rack.position.set(1.5, 0, 0.9);
+        camp.add(rack);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.09, 6, 12), new THREE.MeshLambertMaterial({ color: pal.stone }));
+        ring.rotation.x = -Math.PI / 2; ring.position.set(-1.4, 0.07, 1.1);
+        camp.add(ring);
+        const embers = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.3, 6), new THREE.MeshLambertMaterial({ color: 0xc0763a }));
+        embers.position.set(-1.4, 0.18, 1.1);
+        camp.add(embers);
+        camp.position.set(spot.x, 0, spot.z);
+        camp.lookAt(0, 0, 0); camp.rotation.x = 0; camp.rotation.z = 0;
+        camp.rotation.y += (er() - 0.5) * 0.5;
+        econLabel(camp, '🏹 Hunter-Gatherer Hut', 2.3);
+        villageScene.add(camp);
       } else if (b.id === 'farm') {
         const spot = econScatter(11, 15.5, 2.8);
         if (!spot) return;
@@ -32820,7 +32879,7 @@ function renderStoresLedger() {
       '<div class="stores-ledger-row header"><span class="slr-icon">👑</span>' +
       '<span class="slr-main"><span class="slr-name">Taxes &amp; timber</span><span class="slr-meta">' + ledger.provinces + ' province' + (ledger.provinces === 1 ? '' : 's') + ' · 👥 ' + ledger.population + ' subjects</span></span>' +
       '<span class="slr-yield">+' + ledger.coins + ' 🪙 +' + ledger.branches + ' 🪵</span></div>' +
-      (yardRows || '<div class="stores-hint">No working yards yet — build 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your provinces. Each needs a villager living there to run it, then it starts shipping goods here.</div>') +
+      (yardRows || '<div class="stores-hint">No working yards yet — build 🏹 Hunter-Gatherer Huts in your villages, and 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your Towns. Each needs a villager living there to run it, then it starts shipping goods here.</div>') +
       (idleYards.length ? '<div class="stores-hint">Not yet built anywhere: ' + idleYards.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>' : '') +
       '<button class="stores-collect-btn"' + (hasTribute ? '' : ' disabled') + ' onclick="collectEmpireTribute()">' +
       (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ THE PROVINCES ARE STILL WORKING — CHECK BACK LATER') + '</button>' +
@@ -37778,7 +37837,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-ui-art-v298-20260820';
+const BURBZ_BUILD = 'village-basics-town-industry-v299-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

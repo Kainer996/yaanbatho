@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "generated-ui-art-v298-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

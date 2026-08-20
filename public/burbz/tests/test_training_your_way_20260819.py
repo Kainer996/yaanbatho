@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "training-your-way-v288-20260819"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "generated-ui-art-v298-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 

@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "generated-ui-art-v298-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -180,6 +180,7 @@ def build_harness(villages_js: str, probe_js: str) -> str:
             "villageBuildTimeMs",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "settlementAllowsBuilding",
             "villageBuildDurationMs",
             "empireBuildStructure",
         )
