@@ -1,11 +1,10 @@
-"""Quick dock at the bottom + Training Hub pop-up (academy-training-dock-v252-20260812).
+"""Training Hub behaviour carried forward from academy-training-dock-v252.
 
-The Kitchen / Quests / Stores icons leave the top-left corner and settle in a
-row above the bottom nav, two each side of the raised Scan orb. A fourth
-button — Training — joins them and opens a small sheet that shows every room
-that trains birds: who is mid-drill, who is finished, which rooms sit empty
-and which birds are free to send. The Academy screen title also drops the
-"Burb" and reads plain ACADEMY.
+The original release put Kitchen / Quests / Stores / Training in a separate
+quick dock above the primary navigation. generated-ui-art-v298 folds those
+destinations into the one image-led bottom bar, while preserving the Training
+sheet: who is mid-drill, who is finished, which rooms sit empty and which
+birds are free to send. The Academy screen title remains plain ACADEMY.
 """
 from pathlib import Path
 
@@ -14,7 +13,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-training-dock-v252-20260812"
 PREVIOUS_RELEASE_PIN = "hold-to-steer-v251-20260811"
-CURRENT_BUILD = "equip-card-swipe-v297-20260820"
+CURRENT_BUILD = "generated-ui-art-v298-20260820"
 
 
 def test_the_academy_title_is_just_academy():
@@ -23,28 +22,30 @@ def test_the_academy_title_is_just_academy():
     assert "BURB ACADEMY" not in HTML.split('academy-grad-kicker')[1].split('</div>')[0]
 
 
-def test_the_quick_dock_sits_above_the_bottom_nav():
-    dock = HTML.split(".game-side-actions {")[1].split("}")[0]
-    assert "bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px)" in dock
-    assert "flex-direction:row" in dock
-    assert "top:" not in dock
-    # The centre spacer keeps the raised Scan orb's launch path clear.
-    assert '<span class="game-side-actions-gap" aria-hidden="true"></span>' in HTML
-    assert ".game-side-actions-gap { flex:0 0 auto; width:68px; }" in HTML
+def test_the_quick_dock_is_now_the_single_scrollable_bottom_nav():
+    dock = HTML.split(".bottom-nav {")[1].split("}")[0]
+    assert "overflow-x: auto" in dock
+    assert "scroll-snap-type: x proximity" in dock
+    assert 'id="gameSideActions"' not in HTML
+    assert ".game-side-actions" not in HTML
 
 
-def test_two_buttons_flank_each_side_of_the_scan_orb():
-    aside = HTML.split('id="gameSideActions"')[1].split("</aside>")[0]
-    kitchen = aside.index('data-quick-destination="kitchen"')
-    quests = aside.index('data-screen="quests"')
-    gap = aside.index("game-side-actions-gap")
-    stores = aside.index('data-screen="inventory"')
-    training = aside.index('data-quick-destination="training"')
-    assert kitchen < quests < gap < stores < training
+def test_kitchen_quests_scan_stores_and_training_share_the_nav_in_order():
+    nav = HTML.split('id="bottomNav"')[1].split("</nav>")[0]
+    kitchen = nav.index('data-quick-destination="kitchen"')
+    quests = nav.index('data-screen="quests"')
+    scan = nav.index('data-screen="scan"')
+    stores = nav.index('data-screen="inventory"')
+    training = nav.index('data-quick-destination="training"')
+    assert kitchen < quests < scan < stores < training
 
 
-def test_the_dock_steps_aside_for_the_battle_start_button():
-    assert 'body[data-active-screen="battle"] .game-side-actions { display:none; }' in HTML
+def test_battle_and_forge_are_destinations_in_the_same_bottom_nav():
+    nav = HTML.split('id="bottomNav"')[1].split("</nav>")[0]
+    assert 'data-screen="battle"' in nav
+    assert '<div class="nav-label">Battle</div>' in nav
+    assert 'data-screen="forge"' in nav
+    assert '<div class="nav-label">Forge</div>' in nav
     assert "document.body.setAttribute('data-active-screen', name);" in HTML
 
 
@@ -72,11 +73,16 @@ def test_the_hub_shows_training_finished_empty_and_free_birds():
     assert "Needs training" in HTML
     # The dock button wears its own count of finished, unclaimed drills.
     assert "function updateTrainingDockBadge()" in HTML
+    assert "nav-action-badge training-ready-badge" in HTML
     assert "updateTrainingDockBadge();" in HTML
 
 
-def test_the_tutorial_pointer_follows_the_dock_down():
-    assert "el.style.bottom = dockTarget ? (window.innerHeight - rect.top + 4) + 'px' : '';" in HTML
+def test_the_tutorial_pointer_tracks_the_destination_inside_the_unified_nav():
+    assert "document.querySelector('[data-game-route][data-screen=\"' + target + '\"]')" in HTML
+    assert "navItem.scrollIntoView({ block:'nearest', inline:'center' })" in HTML
+    assert "Math.max(54, Math.min(window.innerWidth - 54" in HTML
+    assert "el.style.left = pointerX + 'px';" in HTML
+    assert "el.style.bottom = '';" in HTML
     assert ".tutorial-nav-pointer.side-target {" not in HTML
 
 

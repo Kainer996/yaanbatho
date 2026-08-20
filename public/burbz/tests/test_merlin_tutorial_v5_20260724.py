@@ -58,8 +58,8 @@ def test_story_leads_to_quests_and_mechanics_arrive_bit_by_bit():
     # The story fires at launch and its final beat points the player at Quests.
     assert chapters[0]["id"] == "story" and chapters[0]["trigger"] == "launch"
     story_steps = [s for s in steps if s["chapterId"] == "story"]
-    # distributed-game-hud-v244: Quests lives on the side action rail.
-    assert story_steps[-1]["target"] == '.game-side-action[data-screen="quests"]'
+    # generated-ui-art-v298: Quests lives in the unified bottom navigation.
+    assert story_steps[-1]["target"] == '.nav-item[data-screen="quests"]'
     assert "never be stuck" in story_steps[-1]["text"].lower()
     # The quest screen is the first taught system after the story.
     assert chapters[1]["id"] == "quests"

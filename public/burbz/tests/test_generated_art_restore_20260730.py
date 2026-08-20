@@ -17,6 +17,14 @@ ICON_NAMES = (
     "inventory",
     "forge",
     "quests",
+    "map",
+    "empire",
+    "birdex",
+    "scan",
+    "battle",
+    "academy",
+    "leaderboards",
+    "hospital",
 )
 
 
@@ -66,6 +74,14 @@ def test_generated_ui_icons_replace_the_visible_emoji_controls_and_are_cached():
         "inventory": 'src="assets/ui/burbz-icon-set/inventory.webp"',
         "forge": 'src="assets/ui/burbz-icon-set/forge.webp"',
         "quests": 'src="assets/ui/burbz-icon-set/quests.webp"',
+        "map": 'src="assets/ui/burbz-icon-set/map.webp"',
+        "empire": 'src="assets/ui/burbz-icon-set/empire.webp"',
+        "birdex": 'src="assets/ui/burbz-icon-set/birdex.webp"',
+        "scan": 'src="assets/ui/burbz-icon-set/scan.webp"',
+        "battle": 'src="assets/ui/burbz-icon-set/battle.webp"',
+        "academy": 'src="assets/ui/burbz-icon-set/academy.webp"',
+        "leaderboards": 'src="assets/ui/burbz-icon-set/leaderboards.webp"',
+        "hospital": 'src="assets/ui/burbz-icon-set/hospital.webp"',
     }
     for name in ICON_NAMES:
         assert expected_html[name] in html, name

@@ -206,7 +206,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .stores-ledger-row { display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05); }
 .stores-ledger-row:last-of-type { border-bottom:none; }
 .stores-ledger-row.header { border-bottom:1px solid rgba(240,199,103,.28); }
-.stores-ledger-row .slr-icon { width:30px; height:30px; flex:none; display:grid; place-items:center; font-size:17px; border-radius:9px; background:rgba(0,0,0,.32); border:1px solid rgba(255,255,255,.06); }
+.stores-ledger-row .slr-icon { width:36px; height:36px; flex:none; display:grid; place-items:center; font-size:17px; border-radius:9px; background:rgba(0,0,0,.32); border:1px solid rgba(255,255,255,.06); }
 .stores-ledger-row .slr-main { flex:1; min-width:0; display:flex; flex-direction:column; }
 .stores-ledger-row .slr-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; color:var(--text); }
 .stores-ledger-row .slr-meta { font-size:9.5px; color:var(--text3); }
@@ -233,7 +233,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .stores-res-card.empty { opacity:.42; }
 .stores-res-card.usable { border-color:rgba(240,199,103,.4); background:linear-gradient(135deg,rgba(240,199,103,.13),rgba(0,0,0,.28)); }
 .stores-res-card.usable:active { transform:scale(.98); }
-.stores-res-card .src-icon { width:34px; height:34px; flex:none; display:grid; place-items:center; font-size:20px; border-radius:10px; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.06); }
+.stores-res-card .src-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:20px; border-radius:10px; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.06); }
 .stores-res-card .src-main { flex:1; min-width:0; }
 .stores-res-card .src-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; line-height:1.25; }
 .stores-res-card .src-copy { font-size:9.5px; color:var(--text3); line-height:1.35; margin-top:1px; }
@@ -517,56 +517,60 @@ svg.academy-room-bg { display:block; filter:none; }
 .diary-entry-time { display: inline-block; margin-left: 7px; font-size: 11px; font-style: italic; color: #8a6a3f; white-space: nowrap; }
 .diary-blank { text-align: center; font-style: italic; color: #7a5a33; padding: 18px 8px 8px; line-height: 1.6; }
 
-/* ========== BOTTOM NAV ==========
-   Monoline SVG icons instead of mixed emoji, one quiet accent colour, and the
-   core Scan action raised in the centre — the layout language of polished
-   mobile games rather than nine competing glyphs. */
+/* ========== UNIFIED ADVENTURE DOCK ==========
+   Every primary and quick destination now lives in one image-led bottom bar.
+   Thirteen 44px+ targets cannot honestly fit across a small phone, so the dock
+   scrolls and snaps horizontally while keeping Map through Scan visible on
+   first paint. */
 .bottom-nav {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 200;
-  padding-bottom: var(--safe-bottom);
+  padding: 0 2px var(--safe-bottom);
   background: linear-gradient(180deg, rgba(10,9,7,0.92), #050403 62%);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid rgba(240,199,103,0.14);
-  display: flex; height: calc(var(--nav-height) + var(--safe-bottom));
-  overflow: visible;
+  display: flex; justify-content: flex-start;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x proximity; scroll-padding-inline: 52px;
+  overscroll-behavior-inline: contain; scrollbar-width: none;
+  -ms-overflow-style: none; touch-action: pan-x;
+  box-shadow: 0 -12px 30px rgba(0,0,0,.24);
 }
+.bottom-nav::-webkit-scrollbar { display:none; }
 .nav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; padding: 6px 0 4px; position: relative; transition: color 0.22s ease;
-  min-height: 44px; min-width: 0; color: var(--text3);
+  flex: 0 0 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; padding: 4px 2px 3px; position: relative; transition: color .22s ease, background .22s ease;
+  min-height: 48px; min-width: 52px; color: var(--text3); scroll-snap-align:center;
 }
 .nav-icon {
-  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
   transition: transform 0.22s ease, filter 0.22s ease; position: relative;
 }
-.nav-icon svg { width: 22px; height: 22px; display: block; }
+.nav-icon img { width:36px; height:36px; display:block; object-fit:contain; pointer-events:none; filter:drop-shadow(0 3px 4px rgba(0,0,0,.48)); }
 .nav-icon::before {
-  content: ''; position: absolute; inset: -5px -9px; border-radius: 999px;
+  content: ''; position: absolute; inset: -2px; border-radius: 13px;
   background: radial-gradient(circle at 50% 45%, rgba(214,168,79,.22), rgba(214,168,79,0) 74%);
   opacity: 0; transition: opacity .22s ease; pointer-events: none;
 }
-.nav-item.active { color: var(--accent); }
+.nav-item.active { color: var(--accent); background:linear-gradient(180deg,rgba(240,199,103,.08),transparent 84%); }
 .nav-item.active .nav-icon::before { opacity: 1; }
 .nav-item.active .nav-icon { transform: translateY(-1px); filter: drop-shadow(0 0 7px rgba(214,168,79,.55)); }
 .nav-item:active .nav-icon { transform: scale(.9); }
 .nav-label {
-  font-family: 'Rajdhani', sans-serif; font-size: 8px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .2px; color: inherit;
+  font-family: 'Rajdhani', sans-serif; font-size: 7.5px; line-height:1; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .1px; color: inherit;
   white-space: nowrap;
   transition: color 0.22s ease;
 }
-/* Raised centre Scan button — the game's primary verb */
-.nav-item.nav-scan { color: var(--text2); flex: .85; }
+/* Scan remains the brightest verb without breaking the one-bar silhouette. */
+.nav-item.nav-scan { color: var(--accent2); }
 .nav-scan .nav-icon {
-  width: 52px; height: 52px; border-radius: 50%;
-  margin-top: -26px; margin-bottom: 1px;
-  background: linear-gradient(150deg, #f4d485, #c2913a 58%, #96691f);
-  color: #241a08;
-  box-shadow: 0 5px 16px rgba(0,0,0,.55), 0 0 0 4px rgba(5,4,3,.95), 0 0 20px rgba(214,168,79,.28);
+  width: 42px; height: 42px; border-radius: 14px;
+  background: radial-gradient(circle at 45% 35%, rgba(244,212,133,.24), rgba(150,105,31,.08) 72%);
+  box-shadow: inset 0 0 0 1px rgba(240,199,103,.28), 0 0 16px rgba(214,168,79,.18);
 }
-.nav-scan .nav-icon svg { width: 25px; height: 25px; }
-.nav-scan .nav-icon::before { display: none; }
-.nav-scan.active .nav-icon { transform: translateY(-1px); filter: none; box-shadow: 0 5px 16px rgba(0,0,0,.55), 0 0 0 4px rgba(5,4,3,.95), 0 0 26px rgba(240,199,103,.6); }
+.nav-scan .nav-icon img { width:40px; height:40px; }
+.nav-scan.active .nav-icon { transform:translateY(-1px); filter:none; box-shadow:inset 0 0 0 1px rgba(240,199,103,.65),0 0 20px rgba(240,199,103,.38); }
 .nav-scan:active .nav-icon { transform: scale(.93); }
 .nav-scan .nav-label { color: var(--accent); }
 .nav-badge {
@@ -576,25 +580,6 @@ svg.academy-room-bg { display:block; filter:none; }
   align-items: center; justify-content: center; padding: 0 4px;
 }
 
-/* Secondary destinations live on the playfield like a strategy game's quick
-   controls instead of squeezing every system into one crowded bottom strip. */
-/* Quick-action dock: a row above the bottom nav, two buttons each side of the
-   raised Scan orb. The centre spacer keeps the orb's launch path clear. */
-.game-side-actions { position:absolute; z-index:190; bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px); left:0; right:0; display:flex; flex-direction:row; align-items:flex-end; justify-content:center; gap:9px; pointer-events:none; transition:opacity .18s ease,transform .18s ease,visibility .18s; }
-.game-side-actions-gap { flex:0 0 auto; width:68px; }
-body[data-active-screen="battle"] .game-side-actions { display:none; }
-.game-side-action { width:54px; min-height:54px; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:5px 3px 4px; border-radius:16px; border:1px solid rgba(214,168,79,.40); background:linear-gradient(145deg,rgba(31,23,11,.94),rgba(6,5,3,.93)); color:var(--text2); box-shadow:0 8px 20px rgba(0,0,0,.50),inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(8px); pointer-events:auto; }
-.game-side-action:active { transform:scale(.94); }
-.game-side-action.active { color:var(--accent); border-color:rgba(240,199,103,.72); box-shadow:0 8px 20px rgba(0,0,0,.50),0 0 18px rgba(214,168,79,.28); }
-.game-side-action-art { width:34px; height:34px; display:block; object-fit:contain; border-radius:9px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
-.game-side-action-label { max-width:48px; overflow:hidden; text-overflow:ellipsis; font-family:'Rajdhani',sans-serif; font-size:8px; line-height:1; font-weight:900; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
-.game-side-action.tutorial-alert::after { content:'!'; position:absolute; right:-3px; top:-3px; width:17px; height:17px; display:grid; place-items:center; border-radius:50%; background:#d13a2f; color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); }
-@media(max-width:380px){.game-side-actions{gap:7px}.game-side-actions-gap{width:62px}.game-side-action{width:50px;min-height:50px;border-radius:14px}.game-side-action-art{width:31px;height:31px}}
-.game-side-action-badge { position:absolute; right:-3px; top:-3px; min-width:17px; height:17px; padding:0 4px; display:grid; place-items:center; border-radius:999px; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; border:2px solid #070503; font:900 10px/1 'Inter',sans-serif; box-shadow:0 0 12px rgba(209,58,47,.65); pointer-events:none; }
-/* A selected settlement object owns the bottom of its stage. Fade the global
-   quick dock until the inspector action is used so it never covers MANAGE,
-   ENTER or GREET on a phone. */
-body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity:0; visibility:hidden; transform:translateY(10px); pointer-events:none; }
 
 /* ========== DIAGONAL DECORATIONS ========== */
 .diag-line {
@@ -2248,6 +2233,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .move-btn.potion-btn { grid-column:1/-1; border-color:rgba(67,198,168,0.5); background:linear-gradient(180deg,rgba(67,198,168,.14),var(--bg2)); }
 .move-btn.potion-btn .mv-name { color:#7fdcc6; }
 .move-btn.potion-btn.used { border-color:rgba(255,255,255,.12); background:var(--bg2); }
+.move-btn .mv-name .gear-icon-stack { display:inline-grid; width:30px; height:30px; margin:-7px 5px -7px 0; vertical-align:middle; }
 .battle-forge-btn { display:block; width:100%; margin-top:8px; padding:11px; border-radius:10px; background:var(--bg2); border:1.5px solid rgba(143,208,255,0.35); color:#8fd0ff; font-family:'Russo One', sans-serif; font-size:11px; letter-spacing:1px; }
 .battle-forge-btn:active { transform:scale(0.98); }
 /* ---- Fletcher's Forge ---- */
@@ -2264,7 +2250,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .forge-loadout { display:grid; grid-template-columns:repeat(3, 1fr); gap:7px; margin-bottom:10px; }
 .forge-slot { text-align:center; padding:10px 6px; background:var(--bg2); border-radius:12px; border:1.5px dashed rgba(255,255,255,0.14); }
 .forge-slot.filled { border-style:solid; }
-.forge-slot .fs-icon { font-size:26px; }
+.forge-slot .fs-icon { width:44px; height:44px; margin:0 auto; display:grid; place-items:center; font-size:26px; }
 .forge-slot .fs-label { font-size:8px; letter-spacing:1px; color:var(--text3); text-transform:uppercase; margin-top:2px; }
 .forge-slot .fs-item { font-size:10px; font-weight:700; margin-top:3px; }
 .forge-slot .fs-stats { font-size:8px; color:var(--text3); margin-top:2px; }
@@ -2275,7 +2261,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .forge-picker-title { font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
 .forge-picker-row { display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:8px; border-radius:10px; background:var(--bg2); border:1.5px solid rgba(255,255,255,0.08); margin-bottom:6px; }
 .forge-picker-row:active { transform:scale(0.98); }
-.forge-picker-row .fp-icon { font-size:22px; }
+.forge-picker-row .fp-icon { width:36px; height:36px; flex:none; display:grid; place-items:center; font-size:22px; }
 .forge-picker-row .fp-name { font-size:11px; font-weight:800; }
 .forge-picker-row .fp-meta { font-size:9px; color:var(--text3); }
 .forge-picker-row .fp-count { margin-left:auto; font-size:10px; color:var(--text3); }
@@ -2306,7 +2292,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-slot:active { transform:scale(.97); }
 .bird-equip-slot.filled { border-style:solid; }
 .bird-equip-slot.open { border-color:var(--accent); box-shadow:0 0 10px rgba(214,168,79,.3); }
-.bird-equip-slot .beq-icon { font-size:24px; width:30px; text-align:center; flex-shrink:0; }
+.bird-equip-slot .beq-icon { width:42px; height:42px; display:grid; place-items:center; font-size:24px; text-align:center; flex-shrink:0; }
 .bird-equip-slot .beq-slot-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--text3); }
 .bird-equip-slot .beq-item { font-size:11px; font-weight:800; color:var(--text); margin-top:1px; }
 .bird-equip-slot .beq-meta { font-size:9px; color:var(--text3); margin-top:1px; }
@@ -2345,7 +2331,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .forge-upgrade-btn[disabled] { opacity:.55; }
 .forge-upgrade-btn:active:not([disabled]) { transform:scale(.985); }
 .forge-recipe { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:10px; margin-bottom:8px; }
-.forge-recipe .fr-icon { font-size:26px; }
+.forge-recipe .fr-icon { width:46px; height:46px; flex:none; display:grid; place-items:center; font-size:26px; }
 .forge-recipe .fr-main { flex:1; min-width:0; }
 .forge-recipe .fr-name { font-size:12px; font-weight:800; }
 .forge-recipe .fr-stats { font-size:9px; color:#7fdcc6; margin-top:1px; }
@@ -2361,6 +2347,11 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .forge-job.ready { background:linear-gradient(135deg,rgba(240,199,103,.20),rgba(0,0,0,.30)); animation:forgeReadyGlow 1.8s ease-in-out infinite; }
 @keyframes forgeReadyGlow { 0%,100%{box-shadow:0 0 0 0 rgba(240,199,103,.34)} 50%{box-shadow:0 0 14px 2px rgba(240,199,103,.28)} }
 .forge-job-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:22px; border-radius:11px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.26), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.24); }
+.gear-icon-stack { position:relative; width:100%; height:100%; display:grid; place-items:center; line-height:1; }
+.gear-icon-stack > .gear-icon-fallback,
+.gear-icon-stack > .gear-art { grid-area:1/1; }
+.gear-icon-stack > .gear-icon-fallback { transition:opacity .12s ease; }
+.gear-icon-stack > .gear-art { width:100%; height:100%; display:block; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,.42)); }
 .forge-job-main { flex:1; min-width:0; }
 .forge-job-name { font-size:12px; font-weight:800; }
 .forge-job-meta { font-size:9px; color:var(--text3); margin-top:1px; }
@@ -2380,6 +2371,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .battle-log-entry.fact-msg { background:rgba(67,198,168,0.08); border-left:2px solid #43c6a8; color:#7fdcc6; font-style:italic; }
 .battle-result-rewards { margin:10px auto 16px; max-width:280px; text-align:left; background:var(--bg2); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:12px 16px; }
 .battle-result-rewards .rw-row { display:flex; justify-content:space-between; font-size:13px; color:var(--text2); padding:4px 0; }
+.battle-result-rewards .rw-row > span { display:flex; align-items:center; gap:5px; }
+.battle-result-rewards .rw-row .gear-icon-stack { width:30px; height:30px; flex:none; }
 .battle-result-rewards .rw-row b { color:var(--accent); }
 .battle-result-rewards .rw-note { font-size:10px; color:var(--text3); margin-top:6px; }
 .battle-result-screen { text-align: center; padding-top: 30px; }
@@ -3406,8 +3399,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
    tapped, plus a red attention dot on the tab itself. */
 .tutorial-nav-pointer { position:fixed; z-index:1200; bottom:calc(var(--nav-height) + 10px + var(--safe-bottom)); left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:2px; pointer-events:none; }
 .tutorial-nav-pointer.show { display:flex; }
-/* Quick-dock targets sit above the nav now, so the pointer keeps its
-   arrow-down column shape and simply floats higher (inline bottom). */
+/* Every destination now lives in the same scrollable adventure dock. */
 .tutorial-nav-pointer .tnp-text { background:linear-gradient(180deg,#fffdf6,#f3ecd9); color:#241d10; border:2px solid rgba(143,111,42,.55); border-radius:10px; padding:3px 9px; font:800 11px/1.3 'Rajdhani',sans-serif; letter-spacing:.4px; box-shadow:0 6px 18px rgba(0,0,0,.5); white-space:nowrap; }
 .tutorial-nav-pointer .tnp-arrow { font-size:24px; line-height:1; color:var(--accent); text-shadow:0 0 10px rgba(240,199,103,.85); animation:tutorialArrowBob 1s ease-in-out infinite; }
 @keyframes tutorialArrowBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(7px); } }
@@ -3746,6 +3738,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .wq-summary-stat { padding:10px; border-radius:12px; background:rgba(214,168,79,.1); border:1px solid rgba(214,168,79,.25); text-align:center; }
 .wq-summary-stat .num { font-size:18px; font-weight:900; color:#f0c767; }
 .wq-summary-stat .lbl { font-size:10px; color:var(--text3); letter-spacing:.4px; text-transform:uppercase; margin-top:2px; }
+.walking-story-rewards { display:inline-flex; flex-wrap:wrap; align-items:center; gap:3px; vertical-align:middle; }
+.walking-reward-gear { display:inline-flex; align-items:center; gap:3px; color:var(--text2); white-space:nowrap; }
+.walking-reward-gear .gear-icon-stack { width:30px; height:30px; flex:none; }
 .wq-history-birds { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
 .wq-history-birds .wq-bird-chip { font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(126,217,131,.12); border:1px solid rgba(126,217,131,.3); color:#9fe8a4; }
 .wq-history-birds .wq-bird-chip.got { background:rgba(240,199,103,.16); border-color:rgba(240,199,103,.5); color:#f0c767; font-weight:800; }
@@ -3829,26 +3824,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <img class="global-money-hud-icon" src="assets/ui/burbz-icon-set/coin.webp" alt="">
     <span class="global-money-copy"><span class="global-money-label">Coins</span><span class="hud-chip-value" id="globalMoneyValue">0</span></span>
   </div>
-
-  <aside class="game-side-actions" id="gameSideActions" aria-label="Quick destinations">
-    <button class="game-side-action" type="button" data-quick-destination="kitchen" aria-label="Kitchen & Pantry">
-      <img class="game-side-action-art" src="assets/academy-buildings-manga/kitchen.png" alt="">
-      <span class="game-side-action-label">Kitchen</span>
-    </button>
-    <button class="game-side-action" type="button" data-game-route data-screen="quests" aria-label="Quests">
-      <img class="game-side-action-art" src="assets/ui/burbz-icon-set/quests.webp" alt="">
-      <span class="game-side-action-label">Quests</span>
-    </button>
-    <span class="game-side-actions-gap" aria-hidden="true"></span>
-    <button class="game-side-action" type="button" data-game-route data-screen="inventory" aria-label="Royal Stores">
-      <img class="game-side-action-art" src="assets/ui/burbz-icon-set/inventory.webp" alt="">
-      <span class="game-side-action-label">Stores</span>
-    </button>
-    <button class="game-side-action" type="button" data-quick-destination="training" aria-label="Training overview">
-      <img class="game-side-action-art" src="assets/academy-buildings-manga/training-hall.png" alt="">
-      <span class="game-side-action-label">Training</span>
-    </button>
-  </aside>
 
   <!-- Screens -->
   <div class="screens">
@@ -4329,37 +4304,57 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
   <!-- Bottom Navigation -->
-  <nav class="bottom-nav" id="bottomNav">
+  <nav class="bottom-nav" id="bottomNav" aria-label="Game destinations">
     <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3.6 5.8a1 1 0 0 0-.6.9v12.4l6-2 6 2 5.4-1.8a1 1 0 0 0 .6-.9V3.9l-6 2-6-1.9Z"/><path d="M9 4v13.1M15 5.9V19"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/map.webp" alt="" draggable="false"></div>
       <div class="nav-label">Map</div>
     </button>
     <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-9.5L7 8V5h2.2v1.6h1.7V5h2.2v1.6h1.7V5H17v3l2 2.5V20"/><path d="M10 20v-3.2a2 2 0 0 1 4 0V20M3 20h18"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
       <div class="nav-label">Empire</div>
     </button>
     <button class="nav-item" data-game-route data-screen="birdex" aria-label="Burbz codex">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.2C10 4.8 7.4 4.2 4.5 4.2V18c2.9 0 5.5.6 7.5 2 2-1.4 4.6-2 7.5-2V4.2c-2.9 0-5.5.6-7.5 2Z"/><path d="M12 6.2V20"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/birdex.webp" alt="" draggable="false"></div>
       <div class="nav-label">Burbz</div>
     </button>
+    <button class="nav-item" type="button" data-quick-destination="kitchen" aria-label="Kitchen & Pantry">
+      <div class="nav-icon"><img src="assets/academy-buildings-manga/kitchen.png" alt="" draggable="false"></div>
+      <div class="nav-label">Kitchen</div>
+    </button>
+    <button class="nav-item" data-game-route data-screen="quests" aria-label="Quests">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/quests.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Quests</div>
+    </button>
     <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.2V6a2 2 0 0 1 2-2h2.2M15.8 4H18a2 2 0 0 1 2 2v2.2M20 15.8V18a2 2 0 0 1-2 2h-2.2M8.2 20H6a2 2 0 0 1-2-2v-2.2"/><circle cx="12" cy="12" r="3.4"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
       <div class="nav-label">Scan</div>
     </button>
+    <button class="nav-item" data-game-route data-screen="inventory" aria-label="Royal Stores">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/inventory.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Stores</div>
+    </button>
+    <button class="nav-item" type="button" data-quick-destination="training" aria-label="Training overview">
+      <div class="nav-icon"><img src="assets/academy-buildings-manga/training-hall.png" alt="" draggable="false"></div>
+      <div class="nav-label">Training</div>
+    </button>
+    <button class="nav-item" type="button" data-quick-destination="hospital" aria-label="Bird Hospital">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/hospital.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Hospital</div>
+    </button>
     <button class="nav-item" data-game-route data-screen="battle" aria-label="Battle">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 11.5 11.5M19 4 7.5 15.5M14.5 15.5 18 19M9.5 15.5 6 19M4.2 16.2l3.6 3.6M19.8 16.2l-3.6 3.6"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/battle.webp" alt="" draggable="false"></div>
       <div class="nav-label">Battle</div>
     </button>
     <button class="nav-item" data-game-route data-screen="forge" aria-label="Blacksmith's forge">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.4 8.4a1.06 1.06 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.9-1.9A2 2 0 0 1 19 8.2V7l-2.3-2.3a6 6 0 0 0-4.2-1.7L9 3l.9.8A6.2 6.2 0 0 1 12 8.4V10l2 2h1.2a2 2 0 0 1 1.4.6l1.9 1.9"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/forge.webp" alt="" draggable="false"></div>
       <div class="nav-label">Forge</div>
     </button>
     <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 8.8 12 13.6l9.5-4.8L12 4Z"/><path d="M6.5 11.2v4.6c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.6M21.5 9v5"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
       <div class="nav-label">Academy</div>
     </button>
     <button class="nav-item" data-game-route data-screen="leaderboards" aria-label="Ranks">
-      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5.5a4 4 0 0 1-8 0V4Z"/><path d="M8 5.5H5a3 3 0 0 0 3 3.8M16 5.5h3a3 3 0 0 1-3 3.8M12 13.5v2.5M9.5 19c0-1.7 1.1-3 2.5-3s2.5 1.3 2.5 3M7.5 20h9"/></svg></div>
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/leaderboards.webp" alt="" draggable="false"></div>
       <div class="nav-label">Ranks</div>
     </button>
   </nav>
@@ -16457,8 +16452,8 @@ const ACADEMY_ROOM_INTERIOR_ASSETS = {
   tavern: 'assets/academy-interiors-manga/barracks.png',
   training: 'assets/academy-interiors-manga/training-hall.png',
   hospital: 'assets/academy-interiors-manga/hospital.png',
-  crowbar: 'assets/academy-interiors-manga/crowbar.png',
-  kitchen: 'assets/academy-interiors-manga/kitchen.png',
+  crowbar: 'assets/academy-interiors-manga/crowbar-v2-animated-20260819.webp',
+  kitchen: 'assets/academy-interiors-manga/kitchen-v2-animated-20260819.webp',
   workshop: 'assets/academy-interiors-manga/workshop.png',
   nursery: 'assets/academy-interiors-manga/nursery.png',
   observatory: 'assets/academy-interiors-manga/observatory.png',
@@ -17678,6 +17673,38 @@ function walkingStoryRewardLines(reward) {
   });
   return lines;
 }
+
+function walkingStoryRewardEntries(reward) {
+  if (!reward) return [];
+  const L = window.BurbzLootCore;
+  const entries = [];
+  if (reward.coins) entries.push({ kind:'coins', text:'+' + reward.coins + ' 🪙' });
+  if (reward.xp) entries.push({ kind:'xp', text:'+' + reward.xp + ' XP' });
+  Object.entries(reward.gear || {}).forEach(([id, qty]) => {
+    const g = L && L.gearById(id);
+    entries.push({ kind:'gear', id, qty, icon:(g && g.icon) || '🛡️', text:'+' + qty + ' ' + ((g && g.label) || id) });
+  });
+  Object.entries(reward.materials || {}).forEach(([id, qty]) => {
+    const m = L && L.materialById(id);
+    entries.push({ kind:'material', text:'+' + qty + ' ' + (m ? m.icon + ' ' + m.label : id) });
+  });
+  Object.entries(reward.items || {}).forEach(([id, qty]) => {
+    const it = birdXpItem(id);
+    entries.push({ kind:'item', text:'+' + qty + ' ' + (it ? it.icon + ' ' + it.label : id) });
+  });
+  return entries;
+}
+
+function walkingStoryRewardHTML(story) {
+  const entries = story && Array.isArray(story.rewardEntries) ? story.rewardEntries : [];
+  if (!entries.length) return (story && story.rewardLines ? story.rewardLines : []).map(escapeHtml).join(' · ');
+  return '<span class="walking-story-rewards">' + entries.map(entry => {
+    if (entry.kind === 'gear' && entry.id) {
+      return '<span class="walking-reward-gear">' + gearIconHTML({ id:entry.id, icon:entry.icon }) + '<span>' + escapeHtml(entry.text) + '</span></span>';
+    }
+    return '<span>' + escapeHtml(entry.text) + '</span>';
+  }).join('<span aria-hidden="true">·</span>') + '</span>';
+}
 // Pay a finished tale: mark it told, hand over the scroll if it was somehow
 // still sealed, and bank the reward. Returns the summary block for history.
 function applyWalkingStoryCompletion(quest) {
@@ -17703,7 +17730,8 @@ function applyWalkingStoryCompletion(quest) {
     npcName: story.npcName,
     outro: story.outro,
     scrollTitle: story.scroll ? story.scroll.title : null,
-    rewardLines: reward ? walkingStoryRewardLines(reward) : []
+    rewardLines: reward ? walkingStoryRewardLines(reward) : [],
+    rewardEntries: reward ? walkingStoryRewardEntries(reward) : []
   };
 }
 
@@ -19343,7 +19371,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
       : '') +
     (summary.story ? '<div class="quest-desc" style="margin:6px 0">📖 <b>' + escapeHtml(summary.story.title) + '</b> — Tale ' + summary.story.order + ' of ' + summary.story.total + ' of The Twenty Roads, told by ' + escapeHtml(summary.story.npcName) + '.' +
       (summary.story.scrollTitle ? '<br>📜 Folio scroll: ' + escapeHtml(summary.story.scrollTitle) : '') +
-      (summary.story.rewardLines && summary.story.rewardLines.length ? '<br>🎁 ' + summary.story.rewardLines.map(escapeHtml).join(' · ') : '') + '</div>' : '') +
+      (summary.story.rewardLines && summary.story.rewardLines.length ? '<br>🎁 ' + walkingStoryRewardHTML(summary.story) : '') + '</div>' : '') +
     (summary.tavern && summary.tavern.boon ? '<div class="quest-desc" style="margin:6px 0">🍻 Tavern toast: ' + escapeHtml(summary.tavern.boon) + '</div>' : '') +
     (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — now registered at the 🪶 Barracks in your Academy!</div>' : '') +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
@@ -20153,6 +20181,15 @@ const CHEST_OPEN_SVG =
 // ---- Loot, gear and materials — shared helpers ------------------------------
 function lootCore() { if (!window.BurbzLootCore) throw new Error('BurbzLootCore not loaded'); return window.BurbzLootCore; }
 
+const GEAR_ART_ROOT = 'assets/gear/';
+function gearIconHTML(item) {
+  const fallback = escapeHtml((item && item.icon) || '🛡️');
+  if (!item || !item.id) return fallback;
+  return '<span class="gear-icon-stack" aria-hidden="true"><span class="gear-icon-fallback">' + fallback + '</span>' +
+    '<img class="gear-art" src="' + GEAR_ART_ROOT + encodeURIComponent(item.id) + '.webp" alt="" loading="lazy" draggable="false" ' +
+    'onload="this.previousElementSibling.style.opacity=0" onerror="this.remove()"></span>';
+}
+
 // Per-bird equipped loadout {weapon, armour, trinket} lives in inventory.equipment.
 function birdLoadout(birdId) {
   if (!gameState || !gameState.inventory) return {};
@@ -20178,9 +20215,10 @@ function birdGearBonuses(bird) {
 // before the signature ultimate.
 function applyEquippedSpell(fighter, bird) {
   let skill = null;
-  try { skill = lootCore().spellSkillFor(birdLoadout(bird.id).spell); } catch (e) {}
+  const gearId = birdLoadout(bird.id).spell;
+  try { skill = lootCore().spellSkillFor(gearId); } catch (e) {}
   if (!skill || !Array.isArray(fighter.skills)) return;
-  fighter.skills.splice(Math.max(1, fighter.skills.length - 1), 0, { ...skill, cdLeft: 0 });
+  fighter.skills.splice(Math.max(1, fighter.skills.length - 1), 0, { ...skill, gearId, cdLeft: 0 });
 }
 
 // An equipped potion is carried by its bird until the player chooses to drink it
@@ -20224,7 +20262,7 @@ function grantLootDrops(drops) {
     } else if (d.kind === 'gear') {
       const g = L.gearById(d.id);
       gameState.inventory.gear[d.id] = (gameState.inventory.gear[d.id] || 0) + d.qty;
-      lines.push({ icon:(g && g.icon) || '🗡️', text:((g && g.label) || d.id) + '!', rarity:(g && g.rarity) || null });
+      lines.push({ icon:(g && g.icon) || '🗡️', gearId:d.id, text:((g && g.label) || d.id) + '!', rarity:(g && g.rarity) || null });
       updateQuestProgress('gear_found', d.qty);
     }
   });
@@ -20674,11 +20712,11 @@ function updateTrainingDockBadge() {
   try {
     ready = trainingHubSessions().filter(s => s.status === 'complete').length;
   } catch (e) {}
-  let badge = btn.querySelector('.game-side-action-badge');
+  let badge = btn.querySelector('.training-ready-badge');
   if (!ready) { if (badge) badge.remove(); return; }
   if (!badge) {
     badge = document.createElement('span');
-    badge.className = 'game-side-action-badge';
+    badge.className = 'nav-action-badge training-ready-badge';
     badge.setAttribute('aria-hidden', 'true');
     btn.appendChild(badge);
   }
@@ -20710,7 +20748,10 @@ function switchScreen(name) {
   const screen = $('screen-' + name);
   if (screen) screen.classList.add('active');
 
-  document.querySelectorAll(`[data-game-route][data-screen="${name}"]`).forEach(item => item.classList.add('active'));
+  document.querySelectorAll(`[data-game-route][data-screen="${name}"]`).forEach(item => {
+    item.classList.add('active');
+    try { item.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); } catch (e) {}
+  });
 
   currentScreen = name;
   document.body.setAttribute('data-active-screen', name);
@@ -20747,19 +20788,29 @@ function activateGameHudDestination(destination) {
   if (typeof burbzTutorialAction === 'function') burbzTutorialAction('tab:' + destination);
 }
 
-function openKitchenHudShortcut() {
-  if (!isAcademyRoomBuilt('kitchen')) {
-    academySelectedRoom = 'kitchen';
-    academyQuestGuidanceRoom = 'kitchen';
+function activateQuickDockItem(destination) {
+  document.querySelectorAll('[data-game-route],[data-quick-destination]').forEach(n => n.classList.remove('active'));
+  const item = document.querySelector('[data-quick-destination="' + destination + '"]');
+  if (!item) return;
+  item.classList.add('active');
+  try { item.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); } catch (e) {}
+}
+
+function openAcademyRoomHudShortcut(room, label) {
+  if (!isAcademyRoomBuilt(room)) {
+    academySelectedRoom = room;
+    academyQuestGuidanceRoom = room;
     activateGameHudDestination('academy');
     renderAcademy();
-    showToast('Build the Kitchen & Pantry first — it is highlighted in your Academy.');
+    showToast('Build the ' + label + ' first — it is highlighted in your Academy.');
     return;
   }
-  openAcademyRoom('kitchen');
-  document.querySelectorAll('[data-game-route],[data-quick-destination]').forEach(n => n.classList.remove('active'));
-  document.querySelector('[data-quick-destination="kitchen"]')?.classList.add('active');
+  openAcademyRoom(room);
+  activateQuickDockItem(room);
 }
+
+function openKitchenHudShortcut() { openAcademyRoomHudShortcut('kitchen', 'Kitchen & Pantry'); }
+function openHospitalHudShortcut() { openAcademyRoomHudShortcut('hospital', 'Bird Hospital'); }
 
 // ============================================================================
 // TRAINING HUB — the quick-dock pop-up. One small sheet shows every room that
@@ -20827,19 +20878,35 @@ function renderTrainingHub() {
     '<button class="training-hub-cta" onclick="trainingHubOpenRoom(\'training\')">📋 OPEN THE NOTICE BOARD</button>';
 }
 
+let trainingHubPreviousDockItem = null;
 function openTrainingHub() {
-  renderTrainingHub();
   const modal = document.getElementById('trainingHubModal');
+  if (!modal || !modal.classList.contains('show')) {
+    trainingHubPreviousDockItem = document.querySelector('#bottomNav .nav-item.active');
+  }
+  renderTrainingHub();
   if (modal) modal.classList.add('show');
+  activateQuickDockItem('training');
   SFX.tap();
 }
 
-function closeTrainingHub() {
+function closeTrainingHub(restoreDock = true) {
   document.getElementById('trainingHubModal')?.classList.remove('show');
+  document.querySelectorAll('#bottomNav .nav-item.active').forEach(item => item.classList.remove('active'));
+  if (restoreDock) {
+    const target = trainingHubPreviousDockItem && document.contains(trainingHubPreviousDockItem)
+      ? trainingHubPreviousDockItem
+      : document.querySelector('[data-game-route][data-screen="' + currentScreen + '"]');
+    if (target) {
+      target.classList.add('active');
+      try { target.scrollIntoView({ block:'nearest', inline:'nearest' }); } catch (e) {}
+    }
+  }
+  trainingHubPreviousDockItem = null;
 }
 
 function trainingHubOpenRoom(roomId) {
-  closeTrainingHub();
+  closeTrainingHub(false);
   if (!isAcademyBuildingBuilt(roomId)) {
     academySelectedRoom = roomId;
     academyQuestGuidanceRoom = roomId;
@@ -32767,7 +32834,7 @@ function renderStoresLedger() {
     html += '<div class="stores-panel"><div class="stores-panel-title">⚒️ On the anvil</div>' + jobs.map(job => {
       const item = lootCore().gearById(job.gearId);
       const done = now >= Number(job.endMs);
-      return '<div class="stores-ledger-row"><span class="slr-icon">' + item.icon + '</span>' +
+      return '<div class="stores-ledger-row"><span class="slr-icon">' + gearIconHTML(item) + '</span>' +
         '<span class="slr-main"><span class="slr-name">' + escapeHtml(item.label) + '</span>' +
         '<span class="slr-meta">' + (done ? '🔔 Ready to collect at the Forge' : '⏳ ' + fmtCd(Number(job.endMs) - now) + ' left') + '</span></span>' +
         '<span class="slr-yield">' + forgeJobProgressPct(job, now) + '%</span></div>';
@@ -32846,7 +32913,7 @@ function renderStoresArmoury() {
       '<div class="stores-res-grid">' + list.map(({ item, count }) => {
         const color = L.RARITY_META[item.rarity].color;
         return '<div class="stores-res-card" style="border-color:' + color + '55;">' +
-          '<div class="src-icon">' + item.icon + '</div>' +
+          '<div class="src-icon">' + gearIconHTML(item) + '</div>' +
           '<div class="src-main"><div class="src-name" style="color:' + color + ';">' + escapeHtml(item.label) + '</div>' +
           '<div class="src-copy">' + forgeGearStatLine(item) + '</div>' + storesSellRowHTML('gear', item.id) + '</div>' +
           '<div class="src-count">' + count + '</div></div>';
@@ -33009,7 +33076,7 @@ function renderForgeEquip(body) {
     const item = L.gearById(loadout[slot]);
     const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
     return '<button class="forge-slot' + (item ? ' filled' : '') + '"' + (item ? ' style="border-color:' + color + '88;"' : '') + ' onclick="forgeOpenSlot(\'' + slot + '\')">' +
-      '<div class="fs-icon">' + (item ? item.icon : meta.empty) + '</div>' +
+      '<div class="fs-icon">' + (item ? gearIconHTML(item) : meta.empty) + '</div>' +
       '<div class="fs-label">' + meta.label + '</div>' +
       (item ? '<div class="fs-item" style="color:' + color + ';">' + escapeHtml(item.label) + '</div><div class="fs-stats">' + forgeGearStatLine(item) + '</div>' : '<div class="fs-stats">' + meta.hint + '</div>') +
       '</button>';
@@ -33026,7 +33093,7 @@ function renderForgeEquip(body) {
       (owned.length ? owned.map(x => {
         const color = L.RARITY_META[x.item.rarity].color;
         return '<button class="forge-picker-row" style="border-color:' + color + '66;" onclick="forgeEquip(\'' + slot + '\',\'' + x.item.id + '\')">' +
-          '<span class="fp-icon">' + x.item.icon + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
+          '<span class="fp-icon">' + gearIconHTML(x.item) + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
       }).join('') : '<div class="inventory-empty">No spare ' + slot + 's in the Stores — find loot on the map or craft one below.</div>') +
       '</div>';
   }
@@ -33192,7 +33259,7 @@ function renderForgeQueue() {
     const done = now >= Number(job.endMs);
     const pct = forgeJobProgressPct(job, now);
     slots.push('<div class="forge-job' + (done ? ' ready' : '') + '" style="border-color:' + color + (done ? 'aa' : '55') + ';">' +
-      '<div class="forge-job-icon">' + item.icon + '</div>' +
+      '<div class="forge-job-icon">' + gearIconHTML(item) + '</div>' +
       '<div class="forge-job-main">' +
         '<div class="forge-job-name" style="color:' + color + ';">' + escapeHtml(item.label) + '</div>' +
         '<div class="forge-job-meta"' + (done ? '' : ' data-forge-end="' + job.endMs + '"') + '>' + (done ? '🔔 Ready to collect' : '⏳ ' + fmtCd(Number(job.endMs) - now)) + '</div>' +
@@ -33293,7 +33360,7 @@ function renderForgeCraft(body) {
       });
       const craftMs = L.craftTimeMs(item);
       return '<div class="forge-recipe" style="border-color:' + color + '44;">' +
-        '<div class="fr-icon">' + item.icon + '</div>' +
+        '<div class="fr-icon">' + gearIconHTML(item) + '</div>' +
         '<div class="fr-main"><div class="fr-name" style="color:' + color + ';">' + escapeHtml(item.label) + ' <span class="fr-time">⏳ ' + formatForgeDuration(craftMs) + '</span></div>' +
         '<div class="fr-stats">' + forgeGearStatLine(item) + '</div>' +
         '<div class="fr-cost">' + costBits.join(' · ') + '</div></div>' +
@@ -33589,7 +33656,7 @@ function renderBirdEquip() {
     const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
     const open = birdEquipState.slotPicker === slot;
     return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
-      '<div class="beq-icon">' + (item ? item.icon : meta.empty) + '</div>' +
+      '<div class="beq-icon">' + (item ? gearIconHTML(item) : meta.empty) + '</div>' +
       '<div><div class="beq-slot-label">' + meta.label + '</div>' +
       (item ? '<div class="beq-item" style="color:' + color + ';">' + escapeHtml(item.label) + '</div><div class="beq-meta">' + forgeGearStatLine(item) + '</div>' : '<div class="beq-meta">' + meta.hint + '</div>') +
       '</div></button>';
@@ -33606,7 +33673,7 @@ function renderBirdEquip() {
       (owned.length ? owned.map(x => {
         const color = L.RARITY_META[x.item.rarity].color;
         return '<button class="forge-picker-row" style="border-color:' + color + '66;" onclick="birdEquipSet(\'' + slot + '\',\'' + x.item.id + '\')">' +
-          '<span class="fp-icon">' + x.item.icon + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
+          '<span class="fp-icon">' + gearIconHTML(x.item) + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
       }).join('') : '<div class="inventory-empty">No spare ' + FORGE_SLOT_META[slot].label.toLowerCase() + 's in the Stores — loot the map, win battles, or craft one at the Fletcher\'s Forge.</div>') +
       '</div>';
   }
@@ -36316,7 +36383,9 @@ function renderArena() {
   const canSurge = b.focus.player >= core.SURGE_COST;
   const potion = me.potion || null;
   const potionReady = !!(potion && !potion.used && core.canUsePotionEffect(me, potion.effect));
-  const potionName = potion ? potion.icon + ' ' + escapeHtml(potion.label) : '🧪 POTION';
+  const potionName = potion
+    ? gearIconHTML(potion) + '<span>' + escapeHtml(potion.label) + '</span>'
+    : '<span>🧪 POTION</span>';
   const potionMeta = !potion ? 'No potion equipped · equip one at the Forge'
     : potion.used ? 'Potion already used this battle'
     : potionReady ? 'Drink as a bonus action · then choose a move'
@@ -36350,13 +36419,14 @@ function renderArena() {
     confirmBar +
     acts.map((a, i) => {
       const m = a.skill;
+      const moveIcon = m.gearId ? gearIconHTML({ id:m.gearId, icon:m.icon }) : escapeHtml(m.icon || '🐤');
       const metaLine = m.kind === 'attack'
         ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'steal' ? ' · steals Focus' : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
         : m.kind === 'barrier' ? 'Barrier ' + Math.round(m.barrierPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '')
         : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '') + (m.cleanse ? ' · cleanse' : '')
         : 'Squad rally' + (m.healPct ? ' + heal' : '');
       return '<button class="move-btn' + (m.ultimate ? ' signature' : '') + (battleState.pendingSkillIndex === i ? ' pending' : '') + '"' + (!a.usable ? ' disabled' : '') + ' onclick="battleSelectSkill(' + i + ')">' +
-        '<div class="mv-name">' + (m.icon || '🐤') + ' ' + escapeHtml(m.label) + (m.tier ? ' ' + ['I','II','III'][m.tier - 1] : '') + '</div>' +
+        '<div class="mv-name">' + moveIcon + ' <span>' + escapeHtml(m.label) + (m.tier ? ' ' + ['I','II','III'][m.tier - 1] : '') + '</span></div>' +
         '<div class="mv-meta">' + metaLine + '</div>' +
         (a.usable ? (m.focusGain ? '<div class="mv-cost">+' + m.focusGain + ' Focus</div>' : (m.cd ? '<div class="mv-cost">CD ' + m.cd + '</div>' : '')) : '<div class="mv-cost cd">🕐 ' + m.cdLeft + '</div>') +
         '</button>';
@@ -36646,7 +36716,8 @@ function endPerchBattle() {
   lootLines.forEach(l => {
     let color = '';
     try { const meta = l.rarity && lootCore().RARITY_META[l.rarity]; if (meta) color = ' style="color:' + meta.color + ';"'; } catch (e) {}
-    rows.push('<div class="rw-row"><span>' + l.icon + ' Loot</span><b' + color + '>' + escapeHtml(l.text) + '</b></div>');
+    const lootIcon = l.gearId ? gearIconHTML({ id:l.gearId, icon:l.icon }) : escapeHtml(l.icon);
+    rows.push('<div class="rw-row"><span>' + lootIcon + '<span>Loot</span></span><b' + color + '>' + escapeHtml(l.text) + '</b></div>');
   });
   if (promoted) {
     const next = core.LEAGUE_TIERS[league.tier];
@@ -37707,7 +37778,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'equip-card-swipe-v297-20260820';
+const BURBZ_BUILD = 'generated-ui-art-v298-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -37753,7 +37824,7 @@ const MERLIN_TUTORIAL_STEPS = [
     action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed' } },
   { chapterId:'story', progressGroup:'story-feed', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Wonderful! Every bird\u2019s diet must be accurate to get the best from it \u2014 unlock the Kitchen later for the rest of the feeding mechanics.' },
   { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Discover real birds', screen:'map', target:'.nav-item[data-screen="scan"]', text:'Now the real magic: find real birds out in your world. Discover them by camera or by sound, and every one lands in your Birdex.' },
-  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.game-side-action[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too — you’ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
+  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'My birds and I can be sent out on errands too — you’ll never be stuck for something to do. See the red mark? Tap Quests and I will show you.',
     action:{ event:'tab:quests', hint:'Tap the Quests tab' } },
 
   // — Quests: two beats, then the player actually sends Merlin flying.
@@ -38188,14 +38259,14 @@ function updateMerlinFlowPointer() {
   const navItem = document.querySelector('[data-game-route][data-screen="' + target + '"]');
   if (!navItem) { el.classList.remove('show'); return; }
   navItem.classList.add('tutorial-alert');
+  // Later destinations can begin outside the phone viewport. Bring Merlin's
+  // target into the unified dock before measuring the fixed pointer.
+  try { navItem.scrollIntoView({ block:'nearest', inline:'center' }); } catch (e) {}
   const rect = navItem.getBoundingClientRect();
-  const dockTarget = navItem.classList.contains('game-side-action');
-  el.classList.remove('side-target');
-  el.style.left = (rect.left + rect.width / 2) + 'px';
+  const pointerX = Math.max(54, Math.min(window.innerWidth - 54, rect.left + rect.width / 2));
+  el.style.left = pointerX + 'px';
   el.style.top = '';
-  // Dock buttons float above the nav bar, so lift the pointer to sit just
-  // over the button it names; nav tabs keep the stylesheet's resting height.
-  el.style.bottom = dockTarget ? (window.innerHeight - rect.top + 4) + 'px' : '';
+  el.style.bottom = '';
   const label = $('tutorialNavPointerText');
   if (label) label.textContent = target === 'quests' ? 'A quest awaits!' : 'To the Academy!';
   el.classList.add('show');
@@ -38615,6 +38686,8 @@ function closeTopBurbzLayer() {
   if (shop && shop.classList.contains('show')) { villageCloseShop(); return true; }
   const sheet = $('walkQuestSheet');
   if (sheet && sheet.classList.contains('open')) { closeWalkQuestSheet(); return true; }
+  const trainingHub = $('trainingHubModal');
+  if (trainingHub && trainingHub.classList.contains('show')) { closeTrainingHub(); return true; }
   const modal = document.querySelector('.modal-overlay.show');
   if (modal) { modal.classList.remove('show'); return true; }
   return false;
@@ -38718,6 +38791,7 @@ document.querySelectorAll('[data-game-route]').forEach(control => {
 
 document.querySelector('[data-quick-destination="kitchen"]')?.addEventListener('click', openKitchenHudShortcut);
 document.querySelector('[data-quick-destination="training"]')?.addEventListener('click', openTrainingHub);
+document.querySelector('[data-quick-destination="hospital"]')?.addEventListener('click', openHospitalHudShortcut);
 document.getElementById('trainingHubClose')?.addEventListener('click', closeTrainingHub);
 document.getElementById('trainingHubModal')?.addEventListener('click', (e) => { if (e.target === e.currentTarget) closeTrainingHub(); });
 

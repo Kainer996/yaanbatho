@@ -4,10 +4,10 @@ Every 3D stage — the Academy tree, the villages, the town squares — used to
 swallow every touch, so a player scrolling the page yanked the camera
 instead. Now the page scrolls over the canvas as normal; only a finger held
 still for a beat grabs the camera (touch_steer_core.js). A mouse or pen
-steers at once, and a pinch always steers. The same release moves the
-Kitchen / Quests / Stores quick icons from mid-right — where they covered
-claim buttons — to the top left, under the header. Town quarters are now
-scenery only: a tap may explain the Hall, but cannot reopen a consumed village.
+steers at once, and a pinch always steers. The old quick icons have since
+joined the unified bottom navigation, where they cannot cover stage controls.
+Town quarters are now scenery only: a tap may explain the Hall, but cannot
+reopen a consumed village.
 """
 import json
 import subprocess
@@ -21,7 +21,7 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
-CURRENT_BUILD = "equip-card-swipe-v297-20260820"
+CURRENT_BUILD = "generated-ui-art-v298-20260820"
 
 
 def run_node(script: str):
@@ -121,12 +121,15 @@ def test_the_copy_teaches_the_hold_and_town_taps_open_management():
     assert "tap a district to walk its streets" not in HTML
 
 
-def test_quick_icons_moved_again_to_the_bottom_dock():
-    # Superseded by academy-training-dock-v252-20260812: the quick icons now
-    # flank the Scan orb above the bottom nav. The pointer follows them there.
-    dock = HTML.split(".game-side-actions {")[1].split("}")[0]
-    assert "bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px)" in dock
-    assert "el.style.bottom = dockTarget ? (window.innerHeight - rect.top + 4) + 'px' : '';" in HTML
+def test_quick_icons_are_part_of_the_unified_bottom_dock():
+    nav = HTML.split('id="bottomNav"')[1].split("</nav>")[0]
+    assert 'data-quick-destination="kitchen"' in nav
+    assert 'data-quick-destination="training"' in nav
+    assert 'data-screen="inventory"' in nav
+    assert '<img src="assets/ui/burbz-icon-set/quests.webp"' in nav
+    assert 'id="gameSideActions"' not in HTML
+    assert "navItem.scrollIntoView({ block:'nearest', inline:'center' })" in HTML
+    assert "el.style.left = pointerX + 'px';" in HTML
 
 
 def test_release_is_versioned_and_the_new_core_is_precached():
