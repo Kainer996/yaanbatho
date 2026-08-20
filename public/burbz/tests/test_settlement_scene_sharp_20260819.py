@@ -27,9 +27,9 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "settlement_scene_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "tavern-flock-rounds-v286-20260819"
+OWN_RELEASE_PIN = "field-guide-menus-v287-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-VERSIONED_CORE = "settlement_scene_core.js?v=tavern-flock-rounds-v286-20260819"
+VERSIONED_CORE = "settlement_scene_core.js?v=field-guide-menus-v287-20260819"
 
 
 def run_node(source: str):

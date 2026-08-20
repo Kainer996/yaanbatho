@@ -51,7 +51,7 @@ SUMMARY_OUT = ROOT / "data" / "bird-diet-provenance-summary.json"
 
 EXPECTED_SHA256 = "97216eb1797da077169ebb1ebea275db293b09fc62f8bb8911f9beb98c50d321"
 EXPECTED_PROFILE_COUNT = 951
-DIET_VERSION = "diet-true-primary-prey-20260817"
+DIET_VERSION = "diet-field-guide-menus-20260819"
 
 # A side prey family: field guides record that the bird takes this food, but
 # the source gives it no measured share of the diet. The nominal score keeps
@@ -60,6 +60,14 @@ DIET_VERSION = "diet-true-primary-prey-20260817"
 # cap, borrowed shares crowned false primaries: the Peregrine — Diet-Vect 10,
 # Diet-Vend 80 — showed "Reptiles and amphibians" as a main food at 80.
 SIDE_PREY_SCORE = 5
+
+# A food family must hold at least this share of the mapped diet to make the
+# menu at all. Real species rows use 10-point granules and deliberate side
+# prey scores exactly SIDE_PREY_SCORE, so both clear the bar — but family and
+# genus fallbacks average whole families, leaving trace dust (a warbler at
+# 0.03% fish) that read as absurd menu lines ("River Trout · eaten by
+# Asian Desert Warbler"). Dust is noise, not diet.
+MIN_FAMILY_SHARE = 5
 
 # Omnivore ease: a food family counts as a PRIMARY (a full meal, full XP) when
 # its mapped score is at least this fraction of the bird's top family. A
@@ -101,6 +109,35 @@ SPECIES_DIET_REFINEMENTS = {
     "Larus argentatus": {"secondary": ["worms"]},
     "Larus fuscus": {"secondary": ["worms"]},
     "Larus canus": {"secondary": ["worms", "fruit_berries"]},
+    "Erithacus rubecula": {
+        # BirdFuncDat carries handbook trivia at 10% each — fish, herptiles,
+        # carrion — that no field guide lists as Robin diet. BTO: insects and
+        # worms are the mainstay, with fruit and seeds in autumn and winter.
+        "remove": ["fish", "reptiles_amphibians", "carrion"],
+        "source": "BTO",
+        "education": (
+            " BTO lists insects and worms as the Robin's main food, joined by"
+            " fruit and seeds through autumn and winter."
+        ),
+    },
+    "Troglodytes troglodytes": {
+        # Same handbook-trivia columns: a Wren's diet is insects and spiders
+        # (BTO); it does not take fish or reptiles.
+        "remove": ["fish", "reptiles_amphibians"],
+        "source": "BTO",
+        "education": " BTO lists insects and spiders as the Wren's food.",
+    },
+    "Tringa nebularia": {
+        # BirdFuncDat's 10% endotherm share put voles and rabbits on the
+        # Greenshank's menu. BWP: invertebrates, small fish and amphibians —
+        # no mammals.
+        "remove": ["small_mammals"],
+        "source": "BWP",
+        "education": (
+            " BWP lists invertebrates, small fish and amphibians as Greenshank"
+            " prey; it takes no mammals."
+        ),
+    },
 }
 
 # Modern catalogue taxonomy runs ahead of EltonTraits' 2014 names: recent splits
@@ -457,16 +494,29 @@ def endotherm_families(ctx: dict[str, str], vend: float) -> tuple[list[str], lis
 SEABIRD_SCAVENGER_FAMILIES = {"Procellariidae", "Chionididae", "Stercorariidae"}
 
 
+MAMMAL_TAKING_PASSERINE_FAMILIES = {"Corvidae", "Laniidae", "Artamidae", "Cracticidae"}
+
+
 def unknown_vertebrate_families(ctx: dict[str, str]) -> list[str]:
     """Diet-Vunk records vertebrate prey of unknown type. For polar and
     pelagic scavenger-hunters — giant-petrels, sheathbills, skuas — that
     share is seabird chicks, eggs and carcasses, so it must not read as
-    reptiles or voles on islands that have neither. Everywhere else the
-    safest reading stays small ground prey: mammals and herptiles."""
+    reptiles or voles on islands that have neither. A songbird's unnamed
+    vertebrate prey is a small lizard, frog or tadpole, never a vole — only
+    the corvids, shrikes and butcherbirds among the passerines truly take
+    mammals — and a duck's is a tadpole or newt, exactly the Mallard rule
+    that split this family in the first place. Everywhere else the safest
+    reading stays small ground prey: mammals and herptiles."""
     if ctx["family"] in SEABIRD_SCAVENGER_FAMILIES or has_name_hint(
         ctx, r"\b(petrel|sheathbill|skua|shearwater|fulmar|albatross|prion)\b"
     ):
         return ["small_birds", "carrion"]
+    if ctx["order"] == "Anseriformes":
+        return ["reptiles_amphibians"]
+    if ctx["order"] == "Passeriformes" and ctx["family"] not in MAMMAL_TAKING_PASSERINE_FAMILIES and not has_name_hint(
+        ctx, r"\b(crow|raven|magpie|jackdaw|shrike|butcherbird|currawong)\b"
+    ):
+        return ["reptiles_amphibians"]
     return ["small_mammals", "reptiles_amphibians"]
 
 
@@ -519,7 +569,7 @@ def game_family_scores(
     add_score(scores, "nectar", float(source_percentages.get("Diet-Nect") or 0))
     add_score(scores, "seeds", float(source_percentages.get("Diet-Seed") or 0))
     add_score(scores, "aquatic_plants", float(source_percentages.get("Diet-PlantO") or 0))
-    return {key: clean_percent(value) for key, value in sorted(scores.items()) if value > 0}
+    return {key: clean_percent(value) for key, value in sorted(scores.items()) if value >= MIN_FAMILY_SHARE}
 
 
 def primary_secondary(scores: dict[str, int | float]) -> tuple[list[str], list[str]]:

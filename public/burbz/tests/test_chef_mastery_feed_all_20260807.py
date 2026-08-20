@@ -13,7 +13,7 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "tavern-flock-rounds-v286-20260819"
+CURRENT_BUILD = "field-guide-menus-v287-20260819"
 ROLES_PIN = "chef-mastery-feed-all-v261-20260813"
 
 

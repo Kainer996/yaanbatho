@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "tavern-flock-rounds-v286-20260819"
+CURRENT_BUILD = "field-guide-menus-v287-20260819"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

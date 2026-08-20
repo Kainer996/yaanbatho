@@ -116,7 +116,7 @@ def test_pelagic_scavengers_read_unknown_vertebrates_as_chicks_and_carrion():
 
 def test_no_record_crowns_a_primary_without_real_source_evidence():
     payload, records = _all_records()
-    assert payload["metadata"]["version"] == "diet-true-primary-prey-20260817"
+    assert payload["metadata"]["version"] == "diet-field-guide-menus-20260819"
     checked = 0
     for record in records:
         percentages = record.get("dietPercentages")
