@@ -561,6 +561,40 @@
     return clusterVillages(items, radiusKm).reduce((best, cluster) => Math.max(best, cluster.length), 0);
   }
 
+  /* Replay signed merge charters over a pool of points (villages, or town
+     market squares). Since merge-when-ready-v290 the player signs every
+     merge; formation replays the charters instead of consuming trios
+     automatically. Charters are history: order preserved, each seed bound at
+     most once, and a charter whose members are not all present simply sleeps
+     until they are. Charters may hold more than `minSize` seeds so pre-v290
+     automatic formations survive as signed history. */
+  function replayCharters(pool, charters, minSize) {
+    const size = Math.max(2, Math.floor(Number(minSize) || 3));
+    const bySeed = new Map(pool.map(p => [String(seedNumber(p)), p]));
+    const consumed = new Set();
+    const groups = [];
+    (Array.isArray(charters) ? charters : []).forEach(row => {
+      if (!row || typeof row !== 'object' || Array.isArray(row)) return;
+      const seeds = [];
+      (Array.isArray(row.seeds) ? row.seeds : []).forEach(value => {
+        const seed = uint32Value(value);
+        if (seed !== null && !seeds.includes(seed)) seeds.push(seed);
+      });
+      if (seeds.length < size) return;
+      const members = [];
+      for (const seed of seeds) {
+        const key = String(seed);
+        if (consumed.has(key) || !bySeed.has(key)) return;
+        members.push(bySeed.get(key));
+      }
+      seeds.forEach(seed => consumed.add(String(seed)));
+      members.sort(chronologicalCompare);
+      groups.push({ members, mergedAt: typeof row.mergedAt === 'string' ? row.mergedAt : '' });
+    });
+    const unassigned = pool.filter(p => !consumed.has(String(seedNumber(p)))).sort(chronologicalCompare);
+    return { groups, unassigned };
+  }
+
   /* Every region on the ground is a COUNTY, whatever its size — the higher
      tiers are made of counties, not of village counts. */
   function regionTier() { return COUNTY_TIER; }
@@ -615,6 +649,8 @@
     const settlementOptions = Object.assign({}, opts.settlementOptions || {});
     if (opts.townRadiusKm !== undefined) settlementOptions.townRadiusKm = opts.townRadiusKm;
     if (opts.cityRadiusKm !== undefined) settlementOptions.cityRadiusKm = opts.cityRadiusKm;
+    if (opts.townCharters !== undefined) settlementOptions.townCharters = opts.townCharters;
+    if (opts.cityCharters !== undefined) settlementOptions.cityCharters = opts.cityCharters;
     const settlements = deriveSettlements(villages, settlementOptions);
     const townPoints = settlements.towns.map(town => ({
       seed: town.heartSeed,
@@ -627,9 +663,20 @@
     const clusters = clusterVillages(townPoints, radiusKm);
     const regions = [];
     const unassignedTowns = [];
-    clusters.forEach(cluster => {
-      const towns = cluster.map(point => point.town).filter(Boolean);
-      if (towns.length < minTowns) { unassignedTowns.push(...towns); return; }
+    // Player-signed region charters replace automatic county formation when
+    // provided, exactly as town charters do in deriveSettlements.
+    const manualRegions = opts.regionCharters !== undefined && opts.regionCharters !== null;
+    let regionGroups;
+    if (manualRegions) {
+      const replay = replayCharters(townPoints, opts.regionCharters, minTowns);
+      regionGroups = replay.groups.map(g => ({ points: g.members, mergedAt: g.mergedAt }));
+      replay.unassigned.forEach(point => { if (point.town) unassignedTowns.push(point.town); });
+    } else {
+      regionGroups = clusters.map(cluster => ({ points: cluster, mergedAt: '' }));
+    }
+    regionGroups.forEach(({ points, mergedAt }) => {
+      const towns = points.map(point => point.town).filter(Boolean);
+      if (towns.length < minTowns) { if (!manualRegions) unassignedTowns.push(...towns); return; }
       const capitalTown = towns[0];
       const capital = capitalTown.villages.find(v => seedNumber(v) === capitalTown.heartSeed) || capitalTown.villages[0];
       const otherVillages = towns.reduce((all, town) => all.concat(town.villages), [])
@@ -653,7 +700,7 @@
         villageCount: regionVillages.length,
         villages: regionVillages,
         centroid: centroidOf(regionVillages),
-        foundedAt: towns[minTowns - 1].foundedAt || capitalTown.foundedAt || '',
+        foundedAt: mergedAt || towns[minTowns - 1].foundedAt || capitalTown.foundedAt || '',
         duchyId: null,
         kingdomId: null,
         liegeTier: 'county'
@@ -801,8 +848,21 @@
     const villagesPerTown = Math.max(2, Math.floor(Number(opts.minVillages) || SETTLEMENT_TOWN_MIN_VILLAGES));
     const townsPerCity = Math.max(2, Math.floor(Number(opts.minTowns) || SETTLEMENT_CITY_MIN_TOWNS));
     const claims = uniqueChronologicalVillages(villages);
-    const townGrouping = deriveExactGroups(claims, townRadiusKm, villagesPerTown);
-    const towns = townGrouping.groups.map(group => {
+    // Player-signed charters replace automatic trio formation when provided.
+    // An empty charter list means "manual merging, nothing signed yet" — no
+    // town forms on its own. Leaving the option out keeps the pre-v290
+    // automatic behaviour for older callers and fixtures.
+    const manualTowns = opts.townCharters !== undefined && opts.townCharters !== null;
+    let townGrouping;
+    let townMergedAts = null;
+    if (manualTowns) {
+      const replay = replayCharters(claims, opts.townCharters, villagesPerTown);
+      townGrouping = { groups: replay.groups.map(g => g.members), unassigned: replay.unassigned };
+      townMergedAts = replay.groups.map(g => g.mergedAt);
+    } else {
+      townGrouping = deriveExactGroups(claims, townRadiusKm, villagesPerTown);
+    }
+    const towns = townGrouping.groups.map((group, index) => {
       const heart = group[0];
       const heartSeed = Number(heart.seed) >>> 0;
       const properName = placeName('town', heartSeed);
@@ -818,7 +878,8 @@
         villageCount: group.length,
         villages: group,
         centroid: centroidOf(group),
-        foundedAt: group[villagesPerTown - 1].claimedAt || group[villagesPerTown - 1].liberatedAt ||
+        foundedAt: (townMergedAts && townMergedAts[index]) ||
+          group[villagesPerTown - 1].claimedAt || group[villagesPerTown - 1].liberatedAt ||
           heart.claimedAt || heart.liberatedAt || '',
         cityId: null
       };
@@ -834,8 +895,17 @@
       claimedAt: town.foundedAt,
       town
     }));
-    const cityGrouping = deriveExactGroups(townPoints, cityRadiusKm, townsPerCity);
-    const cities = cityGrouping.groups.map(group => {
+    const manualCities = opts.cityCharters !== undefined && opts.cityCharters !== null;
+    let cityGrouping;
+    let cityMergedAts = null;
+    if (manualCities) {
+      const replay = replayCharters(townPoints, opts.cityCharters, townsPerCity);
+      cityGrouping = { groups: replay.groups.map(g => g.members), unassigned: replay.unassigned };
+      cityMergedAts = replay.groups.map(g => g.mergedAt);
+    } else {
+      cityGrouping = deriveExactGroups(townPoints, cityRadiusKm, townsPerCity);
+    }
+    const cities = cityGrouping.groups.map((group, index) => {
       const members = group.map(point => point.town);
       const heartTown = members[0];
       const cityVillages = members.reduce((all, t) => all.concat(t.villages), []).sort(chronologicalCompare);
@@ -854,7 +924,8 @@
         villageCount: cityVillages.length,
         villages: cityVillages,
         centroid: centroidOf(cityVillages),
-        foundedAt: group[townsPerCity - 1].claimedAt || heartTown.foundedAt || ''
+        foundedAt: (cityMergedAts && cityMergedAts[index]) ||
+          group[townsPerCity - 1].claimedAt || heartTown.foundedAt || ''
       };
       members.forEach(t => { t.cityId = city.id; });
       return city;
@@ -1150,6 +1221,7 @@
     clusterVillages,
     chronologicalCompare,
     deriveExactGroups,
+    replayCharters,
     regionTier,
     regionUnityBonus,
     regionCoverageRadiusKm,

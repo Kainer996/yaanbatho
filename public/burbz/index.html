@@ -854,6 +854,19 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 /* The governor's desk line naming the settlement a province belongs to */
 .province-settlement { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.55); color:#bfe9c2; font-size:11px; line-height:1.5; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.03em; }
 .province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
+/* MERGE WHEN READY — the ⭐ star and the player's own Merge button. */
+.merge-star { color:#ffd76a; filter:drop-shadow(0 0 5px rgba(255,215,106,.6)); }
+.merge-progress { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px dashed rgba(255,215,106,.4); background:rgba(30,23,7,.55); color:#e8d9a8; font-size:11px; line-height:1.5; }
+.merge-progress.is-ready { border-style:solid; border-color:rgba(255,215,106,.65); color:#ffe9a8; box-shadow:0 0 12px rgba(255,215,106,.12); }
+.merge-banner { margin:8px 0; padding:11px 12px; border-radius:12px; border:1.5px solid rgba(255,215,106,.6); background:linear-gradient(180deg,rgba(52,40,12,.7),rgba(20,14,4,.8)); box-shadow:0 0 18px rgba(255,215,106,.14); display:grid; gap:8px; }
+.merge-banner-title { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:.05em; color:#ffe9a8; }
+.merge-banner-copy { font-size:11px; line-height:1.5; color:#e8d9a8; }
+.merge-banner-btn { width:100%; padding:11px 12px; border:none; border-radius:11px; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.1em; color:#241a05; background:linear-gradient(180deg,#ffd76a,#e0a93f); box-shadow:0 3px 10px rgba(0,0,0,.4); }
+.merge-banner-btn:active { transform:scale(.985); }
+/* Small visit chips: back to the old villages and towns, just to look. */
+.visit-chip-row { display:flex; flex-wrap:wrap; gap:6px; }
+.visit-chip { padding:6px 10px; border-radius:999px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.5); color:#bfe9c2; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px; letter-spacing:.04em; }
+.visit-chip:active { transform:scale(.97); border-color:rgba(142,227,154,.8); }
 
 /* Great titles on the royal atlas — the duchy and kingdom banners that stand
    alone at world zoom, before the counties beneath them unfold */
@@ -4714,7 +4727,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=town-strategy-v273-20260816"></script>
+<script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
+<script src="settlement_merge_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
@@ -21326,6 +21340,7 @@ function normaliseVillageCoordinate(value, min, max) {
 }
 
 function enterVillage(v) {
+  villageVisitingWard = false;
   const merged = v && empireOwnsVillage(v.seed) ? empireSettlementOfSeed(v.seed) : null;
   if (merged) {
     openEmpireTown(merged.id);
@@ -21388,7 +21403,42 @@ function ensureEmpireState() {
   // Seed → trade keys. Shops stay hidden everywhere until they appear here.
   if (!gameState.empire.shopDiscoveries || typeof gameState.empire.shopDiscoveries !== 'object' || Array.isArray(gameState.empire.shopDiscoveries)) gameState.empire.shopDiscoveries = {};
   gameState.empire.townStrategyVersion = 1;
+  // Signed merge charters. Since merge-when-ready-v290 no town or region
+  // forms on its own: villages earn a merge star (40 folk, 75% happiness),
+  // then the player presses Merge, and the signing lands here. Town charters
+  // hold village seeds; region charters hold town heart seeds. City charters
+  // exist only to grandfather pre-v290 automatic cities.
+  if (!Array.isArray(gameState.empire.townCharters)) gameState.empire.townCharters = [];
+  if (!Array.isArray(gameState.empire.cityCharters)) gameState.empire.cityCharters = [];
+  if (!Array.isArray(gameState.empire.regionCharters)) gameState.empire.regionCharters = [];
+  // One-order upgrades: a town or region raising every home and yard at once.
+  // Keyed by settlement/region id → { plan, startMs, endMs, name, target }.
+  if (!gameState.empire.wholesaleWorks || typeof gameState.empire.wholesaleWorks !== 'object' || Array.isArray(gameState.empire.wholesaleWorks)) gameState.empire.wholesaleWorks = {};
   const empire = gameState.empire;
+  // Grandfather migration: a save from the automatic era keeps every town,
+  // city and county it already formed — they are replayed once here as
+  // signed charters, so nothing the player built ever dissolves.
+  if (empire.mergeChartersVersion !== 1) {
+    const rcMigrate = typeof globalThis !== 'undefined' ? globalThis.BurbzEmpireRealmCore : null;
+    if (rcMigrate && rcMigrate.deriveRealm) {
+      const villages = Object.values(empire.villages).filter(Boolean);
+      if (villages.length) {
+        const legacy = rcMigrate.deriveRealm(villages);
+        const signSeeds = seeds => seeds.map(s => Number(s) >>> 0).sort((a, b) => a - b);
+        (legacy.settlements.towns || []).forEach(t => empire.townCharters.push({
+          seeds: signSeeds(t.villages.map(v => v.seed)), mergedAt: t.foundedAt || new Date().toISOString()
+        }));
+        (legacy.settlements.cities || []).forEach(c => empire.cityCharters.push({
+          seeds: signSeeds(c.towns.map(t => t.heartSeed)), mergedAt: c.foundedAt || new Date().toISOString()
+        }));
+        (legacy.regions || []).forEach(r => empire.regionCharters.push({
+          seeds: signSeeds((r.towns || []).map(t => t.heartSeed)), mergedAt: r.foundedAt || new Date().toISOString()
+        }));
+      }
+      empire.mergeChartersVersion = 1;
+      saveState();
+    }
+  }
   if (empire.pendingLiberation && (Array.isArray(empire.pendingLiberation) || !validPendingLiberation(empire.pendingLiberation))) {
     empire.pendingLiberation = null;
     saveState();
@@ -22149,6 +22199,7 @@ function frameEmpireSettlement(settlementId) {
 // a heraldic transition scroll covers the journey while the scene builds.
 let empireTravelTimer = null, empireTravelFadeTimer = null;
 function openEmpireVillage(seed) {
+  villageVisitingWard = false;
   const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
   if (!village) return;
   const merged = empireSettlementOfSeed(village.seed);
@@ -22182,7 +22233,13 @@ function refreshEmpireMap(options = {}) {
   const villages = empireMappableVillages();
   const standaloneVillages = empireStandaloneVillages(villages);
   const visibleSettlements = empireVisibleSettlements();
-  const visibleClaims = standaloneVillages.concat(visibleSettlements.map(settlement => ({
+  // A ready village wears its ⭐ on the atlas, so the player can see from
+  // the map which villages are waiting to merge.
+  const starredVillages = standaloneVillages.map(v => {
+    const ready = villageMergeReady(v);
+    return ready && ready.ready ? { ...v, name: '⭐ ' + v.name } : v;
+  });
+  const visibleClaims = starredVillages.concat(visibleSettlements.map(settlement => ({
     seed:settlement.heartSeed, name:townDisplayName(settlement),
     lat:Number(settlement.centroid.lat), lon:Number(settlement.centroid.lon),
     claimedAt:settlement.foundedAt
@@ -22655,14 +22712,31 @@ function ensureEmpireTributeCountdownTicker() {
 // liberate. All the maths lives in empire_realm_core.js.
 // ============================================================================
 function realmCore() { return window.BurbzEmpireRealmCore; }
+function mergeCore() { return window.BurbzSettlementMergeCore || null; }
+// The player's signed merges, straight from the save. Passed into every
+// settlement/realm derivation so nothing merges without a signature.
+function empireMergeCharters() {
+  const empire = ensureEmpireState();
+  return {
+    townCharters: (empire && empire.townCharters) || [],
+    cityCharters: (empire && empire.cityCharters) || [],
+    regionCharters: (empire && empire.regionCharters) || []
+  };
+}
+function empireCharterSignature(charters) {
+  const sign = list => (Array.isArray(list) ? list : []).map(c => (c && Array.isArray(c.seeds) ? c.seeds.join('.') : '')).join(',');
+  return sign(charters.townCharters) + '|' + sign(charters.cityCharters) + '|' + sign(charters.regionCharters);
+}
 let empireRegionsCache = null, empireRegionsCacheKey = '';
 function empireRegionsInfo() {
   const core = realmCore();
   if (!core) return { regions: [], duchies: [], kingdoms: [], empire: null, unassigned: [], largestCluster: 0, clusterCount: 0 };
   const villages = empireVillages();
-  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',');
+  const charters = empireMergeCharters();
+  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',') +
+    '#' + empireCharterSignature(charters);
   if (!empireRegionsCache || empireRegionsCacheKey !== key) {
-    empireRegionsCache = core.deriveRealm ? core.deriveRealm(villages) : core.deriveRegions(villages);
+    empireRegionsCache = core.deriveRealm ? core.deriveRealm(villages, charters) : core.deriveRegions(villages, charters);
     empireRegionsCacheKey = key;
   }
   return empireRegionsCache;
@@ -22679,17 +22753,6 @@ function empireRegionOfSeed(seed) {
 function empireRegionById(id) {
   return empireRegionsInfo().regions.find(r => r.id === String(id)) || null;
 }
-// How many towns already stand in this settlement's county-forming cluster
-// (chained within 150 km, the same rule deriveRegions uses). Three make a
-// county — the Town Hall shows the road there.
-function townCountyClusterSize(settle) {
-  const core = realmCore();
-  if (!core || !core.clusterVillages || !settle) return 1;
-  const points = empireSettlementsInfo().towns.map(t => ({ seed: t.heartSeed, lat: t.centroid.lat, lon: t.centroid.lon, claimedAt: t.foundedAt }));
-  const cluster = core.clusterVillages(points, core.REGION_RADIUS_KM || 150)
-    .find(c => c.some(p => Number(p.seed) === Number(settle.heartSeed)));
-  return cluster ? cluster.length : 1;
-}
 function empireRegionForLegacyId(id) {
   const direct = empireRegionById(id);
   if (direct) return direct;
@@ -22700,12 +22763,13 @@ function empireRegionPopulation(region) {
   return region ? region.villages.reduce((sum, v) => sum + (villageEconomySnapshot(v)?.pop || 0), 0) : 0;
 }
 // ============================================================================
-// SETTLEMENTS — village → town → city, the street-level merge layer BELOW
-// regions. Each chronological group of 3 neighbouring villages (within 5 km)
-// becomes one permanent TOWN; each group of 3 neighbouring Towns (squares
-// within 15 km) becomes one permanent CITY. Derived deterministically from the
-// same liberation claims as regions — nothing extra is stored, nothing can
-// drift. All the maths lives in empire_realm_core.js (deriveSettlements).
+// SETTLEMENTS — village → town, the street-level merge layer BELOW regions.
+// Since merge-when-ready-v290 the player signs every merge: a village earns
+// its ⭐ merge star at 40 folk and 75% happiness, and three starred villages
+// within 5 km merge into one permanent TOWN when the player presses Merge.
+// The signed charters live in empire.townCharters; deriveSettlements replays
+// them, so the same charters always rebuild the same towns. Pre-v290 Cities
+// survive through grandfathered cityCharters. Maths: empire_realm_core.js.
 // ============================================================================
 let empireSettlementsCache = null, empireSettlementsCacheKey = '';
 function migrateGamePlaceNames(state) {
@@ -22729,9 +22793,11 @@ function empireSettlementsInfo() {
   const core = realmCore();
   if (!core || !core.deriveSettlements) return { towns: [], cities: [], tierBySeed: {}, townCount: 0, cityCount: 0, largestVillageCluster: 0, largestTownCluster: 0 };
   const villages = empireVillages();
-  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',');
+  const charters = empireMergeCharters();
+  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',') +
+    '#' + empireCharterSignature(charters);
   if (!empireSettlementsCache || empireSettlementsCacheKey !== key) {
-    empireSettlementsCache = core.deriveSettlements(villages);
+    empireSettlementsCache = core.deriveSettlements(villages, { townCharters: charters.townCharters, cityCharters: charters.cityCharters });
     empireSettlementsCacheKey = key;
   }
   return empireSettlementsCache;
@@ -22755,17 +22821,19 @@ function settlementWardNames(settlement) {
   return names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
 }
 // What raising the liberation birdhouse here would found: the town or city
-// this claim completes, or null while the village would stand alone. Pure
-// maths on a copy of the claims — no cache touched, nothing stored, so the
-// player can be told about a merge BEFORE it happens instead of after.
+// this claim completes, or null while the village would stand alone. Since
+// merge-when-ready-v290 merging is the player's own act — a fresh claim
+// never completes a merge, so with charters passed this returns null for
+// new liberations. Kept for save compatibility and the pure-core tests.
 function previewClaimFounding(v) {
   const core = realmCore();
   const empire = ensureEmpireState();
   if (!core || !core.deriveSettlements || !v || !empire) return null;
   const key = String(Number(v.seed) >>> 0);
   if (empire.villages[key]) return null;
+  const charters = empireMergeCharters();
   const claims = empireVillages().concat([{ seed: Number(v.seed) >>> 0, name: v.name, lat: Number(v.lat), lon: Number(v.lon), claimedAt: new Date().toISOString() }]);
-  const after = core.deriveSettlements(claims);
+  const after = core.deriveSettlements(claims, { townCharters: charters.townCharters, cityCharters: charters.cityCharters });
   const mine = after.tierBySeed[key];
   if (!mine || mine.tier === 'village') return null;
   return (mine.tier === 'city' ? after.cities : after.towns).find(s => s.id === mine.id) || null;
@@ -22818,6 +22886,152 @@ function settlementBuildFactorForSeed(seed) {
     ? (core.settlementTierInfo(settle.tier).buildTimeFactor || 1)
     : 1;
   return guildFactor * (settle ? townBuildFactorForSeed(seed) : 1);
+}
+// ---- Merge stars & signed merges --------------------------------------------
+// Since merge-when-ready-v290 nothing merges on its own. A village earns its
+// ⭐ merge star at 40 folk and 75% happiness; three starred villages within
+// 5 km can be merged by the player into one Town. Towns earn their star at
+// 120 folk and 75% happiness; three starred towns within 150 km merge into
+// one County — the region desk. All the rules live in settlement_merge_core.
+function villageMergeReady(rec) {
+  const mc = mergeCore();
+  if (!mc || !rec) return null;
+  const snap = villageEconomySnapshot(rec);
+  if (!snap) return null;
+  return mc.villageMergeReadiness({ population: snap.pop, happiness: snap.happiness });
+}
+// A town's readiness comes from its own wards — even a borough inside a
+// grandfathered City is measured on its three villages alone.
+function townMergeReady(town) {
+  const mc = mergeCore();
+  const empire = ensureEmpireState();
+  if (!mc || !town || !empire) return null;
+  let pop = 0, weight = 0, happy = 0;
+  (town.villages || []).forEach(v => {
+    const rec = empire.villages[String(Number(v.seed) >>> 0)];
+    const snap = rec ? villageEconomySnapshot(rec) : null;
+    if (!snap) return;
+    pop += snap.pop;
+    const w = Math.max(1, snap.pop);
+    weight += w;
+    happy += snap.happiness * w;
+  });
+  return mc.townMergeReadiness({ population: pop, happiness: weight ? happy / weight : 0 });
+}
+function empireVillageMergePoints() {
+  return empireStandaloneVillages().map(v => ({
+    seed: v.seed >>> 0, name: v.name, lat: Number(v.lat), lon: Number(v.lon),
+    claimedAt: v.claimedAt, ready: !!(villageMergeReady(v) || {}).ready
+  }));
+}
+function empireTownMergePoints() {
+  return (empireSettlementsInfo().towns || []).map(t => ({
+    seed: t.heartSeed >>> 0, name: townDisplayName(t), lat: Number(t.centroid.lat), lon: Number(t.centroid.lon),
+    claimedAt: t.foundedAt, ready: !!(townMergeReady(t) || {}).ready
+  }));
+}
+// The merges the player could sign right now, one candidate per area.
+function empireTownMergeCandidates() {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return [];
+  return mc.mergeCandidates(empireVillageMergePoints(), rc.SETTLEMENT_TOWN_RADIUS_KM || 5, empire.townCharters);
+}
+function empireRegionMergeCandidates() {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return [];
+  return mc.mergeCandidates(empireTownMergePoints(), rc.REGION_RADIUS_KM || 150, empire.regionCharters);
+}
+// A village crossing the readiness bar announces its star once (and can earn
+// it again if hard times take the star away). Callers persist on their own
+// save cadence — the flag is best-effort, the star itself is always derived.
+function maybeAwardMergeStar(rec) {
+  const eco = ensureVillageEconomy(rec);
+  if (!eco) return false;
+  const ready = villageMergeReady(rec);
+  if (!ready) return false;
+  if (!ready.ready) { if (eco.mergeStarSeen) eco.mergeStarSeen = false; return false; }
+  if (eco.mergeStarSeen) return false;
+  eco.mergeStarSeen = true;
+  if (empireSettlementOfSeed(rec.seed)) return false; // already merged — no star fanfare
+  queueCompletionNotice({
+    kind: 'merge-star',
+    icon: '⭐',
+    title: rec.name + ' earns its merge star',
+    sub: '40 folk, 75% happy — ready to merge into a town. Tap to visit.',
+    target: { seed: rec.seed >>> 0 }
+  });
+  return true;
+}
+// The player presses Merge: three starred villages sign one town charter.
+function empireMergeVillages(seedsCsv) {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return;
+  empireCompleteConstructions();
+  simulateAllVillageEconomies();
+  const chosen = String(seedsCsv || '').split(',').map(s => Number(s.trim()) >>> 0).filter(Boolean);
+  const verdict = mc.validateMerge(empireVillageMergePoints(), rc.SETTLEMENT_TOWN_RADIUS_KM || 5, empire.townCharters, chosen);
+  if (!verdict.ok) { showToast('🏘️ ' + verdict.reason); return; }
+  const names = verdict.seeds.map(seed => (empire.villages[String(seed)] || {}).name || 'a village');
+  const before = snapshotGameState();
+  empire.townCharters.push({ seeds: verdict.seeds, mergedAt: new Date().toISOString() });
+  let town = null;
+  try {
+    const link = empireSettlementOfSeed(verdict.seeds[0]);
+    town = link ? canonicalEmpireSettlement(empireSettlementById(link.id)) : null;
+    if (!town) throw new Error('The merge charter produced no town.');
+    townAdministrativeSeats(town).forEach(ensureTownSeatState);
+    ensureTownSteward(town);
+    addPlayerXp(60);
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(before);
+    console.warn('Village merge rolled back', error);
+    showToast('The merge could not be saved, so nothing changed. Please try again.');
+    return;
+  }
+  if (typeof logDiary === 'function') logDiary('village', { name: townDisplayName(town), count: empireVillages().length });
+  SFX.victory();
+  vibrate(70);
+  showToast('🏘️ ' + mc.nameList(names) + ' merge — ' + townDisplayName(town) + ' stands! One map holds all three villages’ buildings. Govern it from the Town Hall; wards pay +10% taxes and guilds build 15% faster.');
+  liveMapVillageKey = null;
+  scheduleVillageMarkerRefresh();
+  refreshEmpireMap({ frame: true });
+  updateHeader();
+  openEmpireTown(town.id);
+}
+// Three starred towns sign one region charter and a County is founded.
+function empireMergeTowns(seedsCsv) {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return;
+  empireCompleteConstructions();
+  simulateAllVillageEconomies();
+  const chosen = String(seedsCsv || '').split(',').map(s => Number(s.trim()) >>> 0).filter(Boolean);
+  const points = empireTownMergePoints();
+  const verdict = mc.validateMerge(points, rc.REGION_RADIUS_KM || 150, empire.regionCharters, chosen);
+  if (!verdict.ok) { showToast('🛡️ ' + verdict.reason); return; }
+  const names = verdict.seeds.map(seed => (points.find(p => p.seed === seed) || {}).name || 'a town');
+  const before = snapshotGameState();
+  empire.regionCharters.push({ seeds: verdict.seeds, mergedAt: new Date().toISOString() });
+  let region = null;
+  try {
+    region = empireRegionsInfo().regions.find(r => (r.towns || []).some(t => verdict.seeds.includes(Number(t.heartSeed) >>> 0))) || null;
+    if (!region) throw new Error('The merge charter produced no county.');
+    addPlayerXp(120);
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(before);
+    console.warn('Town merge rolled back', error);
+    showToast('The merge could not be saved, so nothing changed. Please try again.');
+    return;
+  }
+  SFX.victory();
+  vibrate(80);
+  showToast('🛡️ ' + mc.nameList(names) + ' unite — the ' + region.name + ' is founded! Run the whole region from its County Hall: one chest, one Warden, one upgrade order for every town.');
+  liveMapVillageKey = null;
+  scheduleVillageMarkerRefresh();
+  refreshEmpireMap({ frame: true });
+  updateHeader();
+  openEmpireRegion(region.id);
 }
 // The player's realm-wide style: feudal crown titles once regions exist,
 // the humble village ladder before then. Simple game, simple title.
@@ -23087,6 +23301,7 @@ function empireCompleteConstructions(now) {
       const housingCap = villageNeedCapacity(rec, 'shelter');
       movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
       eco.population += movedIn;
+      if (movedIn) maybeAwardMergeStar(rec);
     }
     const doneTier = villageBuildingTier(building, level);
     const mergedLink = empireSettlementOfSeed(rec.seed);
@@ -23125,9 +23340,11 @@ function empireCompleteConstructions(now) {
 function tickEmpireConstruction() {
   const hallCompleted = townCompleteHallConstructions();
   const wardCompleted = empireCompleteConstructions();
-  if (!hallCompleted && !wardCompleted) return;
+  const orderCompleted = completeWholesaleWorks();
+  if (!hallCompleted && !wardCompleted && !orderCompleted) return;
   updateHeader();
   if (currentScreen === 'town') renderTownScreen();
+  else if (currentScreen === 'region') renderRegionScreen();
   else if (currentScreen === 'village') renderVillage();
   else renderEmpirePanel();
 }
@@ -23385,6 +23602,8 @@ function simulateVillageEconomy(rec, now) {
     else if (snap.happiness < 0.45) eco.population -= 1;
     eco.population = Math.max(floor, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, floor))));
   }
+  // A village that crossed the readiness bar this cycle announces its ⭐.
+  maybeAwardMergeStar(rec);
   // One corner card per hungry village, newest wins — tapping it opens the
   // village so the governor can raise a farm or send a supply cart.
   if (wentHungry && eco.population > 0) {
@@ -23718,15 +23937,6 @@ function claimCurrentVillage() {
   if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
-  // The realm's shape before this liberation: county ids plus every rung of
-  // the feudal pyramid, so foundings AND proclamations can be announced.
-  const realmBefore = empireRegionsInfo();
-  const regionsBefore = realmBefore.regions.map(r => r.id).join('|');
-  const duchiesBefore = (realmBefore.duchies || []).length;
-  const kingdomsBefore = (realmBefore.kingdoms || []).length;
-  const empireBefore = !!realmBefore.empire;
-  const settlementsBefore = empireSettlementsInfo();
-  const townsBefore = settlementsBefore.townCount, citiesBefore = settlementsBefore.cityCount;
   const liberatedAt = new Date().toISOString();
   empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: liberatedAt, liberatedAt, lastTributeAt: Date.now() };
   if (typeof logDiary === 'function') logDiary('village', { name: v.name, count: empireVillages().length });
@@ -23742,75 +23952,30 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The village armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  // Did this liberation merge villages into a TOWN — or towns into a CITY?
-  // Three neighbouring liberated villages grow together into one town; three
-  // neighbouring towns rise as one city. Announced only when it happens.
-  const settlementsNow = empireSettlementsInfo();
-  const mySettlement = empireSettlementOfSeed(v.seed);
-  const foundedSettlement = mySettlement ? canonicalEmpireSettlement(empireSettlementById(mySettlement.id)) : null;
-  if (foundedSettlement) { townAdministrativeSeats(foundedSettlement).forEach(ensureTownSeatState); ensureTownSteward(foundedSettlement); }
-  showToast(foundedSettlement
-    ? foundedSettlement.icon + ' ' + townDisplayName(foundedSettlement) + ' is now one united ' + (foundedSettlement.tier === 'city' ? 'City' : 'Town') + ' holding. Its wards — ' + settlementWardNames(foundedSettlement) + ' — retire from the map; govern everything from the Hall.' + claimLootText
-    : '🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty; your caravan leaves relief supplies, so build homes and residents will move in. Add a farm and well before supplies run out. ' + count + ' holding' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
-  if (settlementsNow.cityCount > citiesBefore && mySettlement && mySettlement.tier === 'city') {
-    const city = empireSettlementById(mySettlement.id);
-    setTimeout(() => {
-      showToast('🏙️ ' + (city ? city.townCount : 3) + ' neighbouring towns merge into one — the ' + mySettlement.label + ' rises! Its boroughs pay +25% taxes and its united guilds build 30% faster. Watch its daylight fuse into one great glow on the royal atlas.');
-      SFX.victory();
-    }, 1100);
-  } else if (settlementsNow.townCount > townsBefore && mySettlement && mySettlement.tier === 'town') {
-    const town = empireSettlementById(mySettlement.id);
-    setTimeout(() => {
-      showToast('🏘️ ' + settlementWardNames(town) + ' grow together — ' + townDisplayName(town) + ' stands! Its wards pay +10% taxes and its shared guilds build 15% faster. Two more neighbouring towns and a city rises.');
-      SFX.victory();
-    }, 1100);
-  }
-  // Did this liberation found a county — or push the feudal pyramid up a
-  // rung? Simplified Crusader Kings: counties unite into duchies, duchies
-  // into kingdoms, kingdoms into the empire. The realm layer only ever
-  // announces itself here, when a founding or proclamation actually happens.
-  const realmNow = empireRegionsInfo();
-  const regionsNow = realmNow.regions;
-  if (regionsNow.map(r => r.id).join('|') !== regionsBefore) {
-    const grown = regionsNow.find(r => r.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0)));
-    if (grown) setTimeout(() => {
-      showToast('🛡️ The free holdings around ' + empireRegionSeatName(grown) + ' unite: the ' + grown.name + ' is founded! Its lands wake on the royal atlas — open the 🛡️ Counties tab under the Empire map to run it from its County Hall. ' + (regionsNow.length >= 2 ? 'Open trade routes between your counties from the Counties tab.' : 'Found a second county abroad and your counties can trade.'));
-      SFX.victory();
-    }, 1600);
-  }
-  if ((realmNow.duchies || []).length > duchiesBefore) {
-    const duchy = realmNow.duchies.find(d => d.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) || realmNow.duchies[realmNow.duchies.length - 1];
-    setTimeout(() => {
-      showToast('🏰 Two Counties stand together: the ' + duchy.name + ' is proclaimed! You are now ' + empireCrownTitle() + ' — every village under the duchy pays +20% unity taxes.');
-      SFX.victory();
-    }, 2200);
-  }
-  if ((realmNow.kingdoms || []).length > kingdomsBefore) {
-    const kingdom = realmNow.kingdoms.find(k => k.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) || realmNow.kingdoms[realmNow.kingdoms.length - 1];
-    setTimeout(() => {
-      showToast('👑 Two Duchies unite: the ' + kingdom.name + ' is proclaimed! You are now ' + empireCrownTitle() + ' — every village of the kingdom pays +25% unity taxes.');
-      SFX.victory();
-    }, 2800);
-  }
-  if (!empireBefore && realmNow.empire) {
-    setTimeout(() => {
-      showToast('☀️ Two free Kingdoms stand across the Earth: the ' + realmNow.empire.name + ' is proclaimed! You are Emperor of the Liberated Skies — every village of the empire pays +30% unity taxes.');
-      SFX.victory();
-    }, 3400);
-  }
-  setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:(foundedSettlement ? townDisplayName(foundedSettlement) + ' Council' : v.name + ' elder') + ' asks a bird question...', rewardCoins:18 }), 900);
+  // Since merge-when-ready-v290 a liberation never merges anything. Every
+  // freed village starts its own road to the ⭐ merge star (40 folk, 75%
+  // happiness); merging is the player's own act on the Empire screen.
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty; your caravan leaves relief supplies, so build homes and residents will move in. Add a farm and well before supplies run out. Grow it to 40 folk at 75% happiness and it earns its ⭐ merge star. ' + count + ' holding' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
   refreshEmpireMap({ frame:true });
   updateHeader();
-  if (foundedSettlement) openEmpireTown(foundedSettlement.id); else renderVillage();
+  renderVillage();
 }
+
 function renderVillageClaimBar() {
   const bar = $('villageClaimBar');
   if (!bar) return;
   const v = currentVillage();
   if (!v) { bar.innerHTML = ''; return; }
-  if (empireSettlementOfSeed(v.seed)) { bar.innerHTML = ''; return; }
+  const mergedHere = empireSettlementOfSeed(v.seed);
+  if (mergedHere) {
+    // A visited ward: the old village as it was, with the road back home.
+    bar.innerHTML = '<div class="village-owned-banner">' + mergedHere.icon + ' ' + escapeHtml(v.name) + ' lives on inside ' + escapeHtml(mergedHere.label) + ' — you are just visiting</div>' +
+      '<button class="village-claim-btn" onclick="openEmpireTown(\'' + escapeHtml(mergedHere.id) + '\')">🏛️ BACK TO THE HALL</button>';
+    return;
+  }
   if (empireOwnsVillage(v.seed)) {
     const rec = ensureEmpireState().villages[String(v.seed >>> 0)];
     const when = rec && rec.claimedAt ? new Date(rec.claimedAt).toLocaleDateString() : '';
@@ -23820,15 +23985,7 @@ function renderVillageClaimBar() {
   }
   const cost = birdhouseCostForNextVillage();
   if (empireHasLiberationVictory(v.seed)) {
-    // Say up front when this birdhouse will complete a merge: a town must
-    // never appear without the player seeing the three villages that made it.
-    let unionNote = '';
-    try {
-      const founding = previewClaimFounding(v);
-      if (founding && founding.tier === 'town') unionNote = '<div class="village-claim-note">🏘️ Raising it unites ' + escapeHtml(settlementWardNames(founding)) + ' into one town.</div>';
-      else if (founding && founding.tier === 'city') unionNote = '<div class="village-claim-note">🏙️ Raising it unites your neighbouring towns into one city.</div>';
-    } catch (e) {}
-    bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>' + unionNote;
+    bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>';
     return;
   }
   bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🕊️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
@@ -23947,6 +24104,14 @@ function renderVillageManagePanel() {
   const settleLine = settleHere
     ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Village centre of ' : 'Village district of ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
     : '';
+  // The road to the ⭐ merge star: 40 folk, 75% happiness. Once earned, the
+  // Merge button lives on the Empire screen — this desk just shows the way.
+  const mergeReady = settleHere ? null : villageMergeReady(rec);
+  const mergeLine = mergeReady
+    ? (mergeReady.ready
+      ? '<div class="merge-progress is-ready">⭐ ' + escapeHtml(rec.name) + ' wears its merge star — ' + mergeReady.popGoal + ' folk and ' + Math.round(mergeReady.happyGoal * 100) + '% happiness reached. Star two more villages within 5 km, then press Merge on the Empire screen.</div>'
+      : '<div class="merge-progress">⭐ Merge star: 👥 ' + mergeReady.population + '/' + mergeReady.popGoal + ' folk · ' + happinessFace(mergeReady.happiness) + ' ' + Math.round(mergeReady.happiness * 100) + '% of ' + Math.round(mergeReady.happyGoal * 100) + '% happiness. Earn the star and three starred villages can merge into a town.</div>')
+    : '';
   // A town is run by a bird, not by the player alone: appoint a Steward here.
   // The full appointment card folds away behind one line, so the desk stays
   // about the village — the post is a tap away, not a wall in the middle.
@@ -23971,6 +24136,7 @@ function renderVillageManagePanel() {
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (crew.required ? ' · 👷 ' + crew.working + '/' + crew.required + ' yards crewed' : '') + '</div></div>' +
     settleLine +
+    mergeLine +
     tradesLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     cartHtml +
@@ -23993,6 +24159,7 @@ function renderEmpirePanel() {
   const panel = $('empirePanel');
   if (!panel) return;
   empireCompleteConstructions();
+  completeWholesaleWorks();
   simulateAllVillageEconomies();
   const sourceVillages = empireVillages();
   const villages = empireStandaloneVillages(sourceVillages).slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0));
@@ -24012,13 +24179,30 @@ function renderEmpirePanel() {
   // the row answers only "how is it doing" and "what does it pay".
   const ledger = empireLedger();
   let totalPop = ledger.population, taxesPerCycle = ledger.coins, branchesPerCycle = ledger.branches, stonePerCycle = ledger.stone;
+  // The merges the player could sign right now — one gold banner per area.
+  const mc = mergeCore();
+  const townCandidates = mc ? empireTownMergeCandidates() : [];
+  const regionCandidates = mc ? empireRegionMergeCandidates() : [];
+  const mergeBannerHtml = (candidate, action, title, copy, button) =>
+    '<div class="merge-banner"><div class="merge-banner-title">' + title + '</div>' +
+    '<div class="merge-banner-copy">' + copy + '</div>' +
+    '<button type="button" class="merge-banner-btn" data-action="' + action + '" data-seeds="' + candidate.seeds.join(',') + '">' + button + '</button></div>';
+  const townMergeBanners = townCandidates.map(c => mergeBannerHtml(c, 'merge-villages', '⭐ READY TO MERGE',
+    escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 40 folk each, 75% happy. Merge them and one Town rises, holding every building the three villages built.',
+    '🏘️ MERGE INTO ONE TOWN')).join('');
+  const regionMergeBanners = regionCandidates.map(c => mergeBannerHtml(c, 'merge-towns', '⭐ READY TO UNITE',
+    escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 120 folk each, 75% happy. Merge them and a County rises: one desk for the whole region.',
+    '🛡️ MERGE INTO ONE COUNTY')).join('');
   const villageRow = v => {
     const snap = villageEconomySnapshot(v);
-    const badges = villageConstructionFor(v) ? '<span class="evr-badge" title="Building">🏗️</span>' : '';
+    const ready = villageMergeReady(v);
+    const badges = (ready && ready.ready ? '<span class="evr-badge merge-star" title="Ready to merge">⭐</span>' : '') +
+      (villageConstructionFor(v) ? '<span class="evr-badge" title="Building">🏗️</span>' : '');
+    const starMeta = ready && ready.ready ? ' · <span class="merge-star">⭐ ready to merge</span>' : '';
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + (badges ? ' <span class="evr-badges">' + badges + '</span>' : '') + '</span><br>' +
-      '<span class="empire-village-meta">' + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ empty · build homes') + '</span></span>' +
+      '<span class="empire-village-meta">' + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' + starMeta : '🏚️ empty · build homes') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵' + (snap.production.stone ? '<br>+' + snap.production.stone + ' stone' : '') + '</span></button>';
   };
   let rows;
@@ -24035,8 +24219,8 @@ function renderEmpirePanel() {
   } else {
     rows = villages.map(villageRow).join('');
   }
-  // ---- 🏘️ TOWNS tab — the street-level merge layer. Liberate 3 neighbouring
-  // villages and they make one town; 3 neighbouring towns make one city.
+  // ---- 🏘️ TOWNS tab — the street-level merge layer. Grow villages to their
+  // ⭐ merge star, then press Merge: three starred villages make one town.
   // The tab always stands, so the ladder is visible from the first village;
   // until a town exists its body simply explains how one forms.
   let townsBody;
@@ -24052,20 +24236,18 @@ function renderEmpirePanel() {
     }).join('');
     const townRows = settlements.towns.filter(t => !t.cityId).map(t => {
       const snap = townEconomySnapshot(t);
+      const ready = townMergeReady(t);
+      const starMeta = ready && ready.ready ? ' · <span class="merge-star">⭐ ready for a county</span>' : '';
       return '<button type="button" class="settlement-row is-town" data-action="empire-settlement" data-settlement="' + escapeHtml(t.id) + '">' +
         '<span class="settlement-icon">' + t.icon + '</span>' +
-        '<span class="settlement-main"><span class="settlement-name">' + escapeHtml(townDisplayName(t)) + '</span><br>' +
-        '<span class="settlement-meta">🏘️ ' + t.villageCount + ' united wards · 👥 ' + snap.pop + ' · +' + Math.round(townTier.taxBonus * 100) + '% taxes</span></span>' +
+        '<span class="settlement-main"><span class="settlement-name">' + (ready && ready.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(townDisplayName(t)) + '</span><br>' +
+        '<span class="settlement-meta">🏘️ ' + t.villageCount + ' united wards · 👥 ' + snap.pop + ' · +' + Math.round(townTier.taxBonus * 100) + '% taxes' + starMeta + '</span></span>' +
         '<span class="settlement-tier">TOWN</span></button>';
     }).join('');
-    const cityNudge = !settlements.cities.length && settlements.largestTownCluster >= 2
-      ? '<div class="realm-hint">🏙️ Two of your towns stand near each other — raise a third within ' + rcTiers.SETTLEMENT_CITY_RADIUS_KM + ' km and the three merge into a city.</div>'
-      : '';
-    townsBody = '<div class="settlement-section">' + cityRows + townRows + cityNudge + '</div>';
-  } else if (sourceCount >= 2 && rcTiers && settlements.largestVillageCluster >= 2) {
-    townsBody = '<div class="realm-hint">🏘️ Two of your villages stand side by side — liberate a third within ' + rcTiers.SETTLEMENT_TOWN_RADIUS_KM + ' km and the three grow together into a town: +10% taxes, guilds that build 15% faster, one great pool of daylight on the atlas.</div>';
+    const regionNudge = '<div class="realm-hint">⭐ A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.</div>';
+    townsBody = '<div class="settlement-section">' + cityRows + townRows + regionNudge + '</div>';
   } else {
-    townsBody = '<div class="realm-hint">🏘️ No towns yet. Free 3 neighbouring villages and they grow together into one Town, run from a single Town Hall.</div>';
+    townsBody = '<div class="realm-hint">🏘️ No towns yet. Grow a village to 40 folk at 75% happiness and it earns its ⭐ merge star. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge on the Villages tab; nothing merges on its own.</div>';
   }
   // ---- 🛡️ COUNTIES tab — counties, the feudal pyramid above them, and trade.
   // Until the player's liberations actually form a county the tab body just
@@ -24122,7 +24304,7 @@ function renderEmpirePanel() {
       }).join('');
       tradeHtml = '<div class="realm-sub-title">🕊️ TRADE ROUTES · sky-caravans between free counties</div>' + openRows + candidateRows;
     } else {
-      tradeHtml = '<div class="realm-hint">🧭 Establish 3 nearby Towns to found another County, and your counties can open trade routes between their seats.</div>';
+      tradeHtml = '<div class="realm-hint">🧭 Merge three starred towns into another County, and your counties can open trade routes between their seats.</div>';
     }
     // A one-line nudge toward the next rung of the pyramid, once it applies.
     let ladderNudge = '';
@@ -24134,29 +24316,33 @@ function renderEmpirePanel() {
     // The pyramid header already captions the county rows, so the lead line
     // only speaks up when there is no pyramid above them yet.
     countiesBody = (pyramidHtml ? '' : '<div class="realm-lead">Your counties — tap one to run it from its County Hall</div>') +
-      '<div class="realm-section">' + pyramidHtml + regionRows + ladderNudge + tradeHtml + '</div>';
+      '<div class="realm-section">' + regionMergeBanners + pyramidHtml + regionRows + ladderNudge + tradeHtml + '</div>';
   } else if (count >= 2 && rc) {
-    countiesBody = settlements.townCount
-      ? '<div class="realm-hint">🛡️ County progress: ' + Math.min(3, realm.largestCluster || 0) + '/3 nearby Towns (' + settlements.townCount + ' total). Establish 3 nearby Towns and their holdings unite beneath one County Hall. Counties pay unity taxes, unlock trade and unite into Duchies, Kingdoms and your Empire.</div>'
-      : '<div class="realm-hint">🛡️ First form Towns: every 3 nearby villages retire into one managed Town. Establish 3 nearby Towns to found a County.</div>';
+    const readyTowns = settlements.towns.filter(t => { const r = townMergeReady(t); return r && r.ready; }).length;
+    countiesBody = regionMergeBanners || (settlements.townCount
+      ? '<div class="realm-hint">🛡️ County progress: ' + readyTowns + ' of your ' + settlements.townCount + ' town' + (settlements.townCount === 1 ? '' : 's') + ' wear' + (readyTowns === 1 ? 's' : '') + ' the ⭐ merge star (120 folk, 75% happiness). Merge three starred towns within 150 km and their holdings unite beneath one County Hall — unity taxes, trade, and the road to Duchies, Kingdoms and your Empire.</div>'
+      : '<div class="realm-hint">🛡️ First merge Towns: grow villages to their ⭐ merge star and unite them three at a time. Then raise three towns to their own stars and merge them into a County.</div>');
   } else if (count) {
     // One village and no ladder yet — the counties tab still opens on
     // something that explains where the crown is heading.
-    countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages: each group of 3 becomes one Town; 3 nearby Towns then unite into a County, followed by Duchies and Kingdoms.</div>';
+    countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages and grow each to its ⭐ merge star; merge three stars into a Town, three starred Towns into a County, and on to Duchies and Kingdoms.</div>';
   }
   // ---- The nav tabs, directly under the map. Yaan's ask (2026-08-17): nice
   // and clean — 🛡️ COUNTIES on top, 🏘️ TOWNS beneath it, 🏡 VILLAGES under
   // that, so the player walks the whole empire by pressing the tab buttons.
   // All closed by default; opening one folds the others. The ledger and its
   // stats moved below the tabs — navigation first, fluff after.
+  const starHint = villages.length && !townCandidates.length
+    ? '<div class="realm-hint">⭐ A village earns its merge star at 40 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
+    : '';
   const villagesBody = villages.length
-    ? '<div class="empire-village-list">' + rows + '</div>'
-    : '<div class="realm-hint">🏡 Every free village has united into a Town — run them from the Towns tab.</div>';
+    ? townMergeBanners + starHint + '<div class="empire-village-list">' + rows + '</div>'
+    : '<div class="realm-hint">🏡 Every free village has merged into a Town — run them from the Towns tab, or visit the old villages from each Town Hall.</div>';
   const navTabsHtml = count
     ? '<div class="empire-nav-tabs">' +
-      empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', '3 nearby Towns unite into a County — titles and trade live here', regions.length, countiesBody) +
-      empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', '3 neighbouring villages make a Town · 3 Towns make a City', settlements.cityCount + settlements.towns.filter(t => !t.cityId).length, townsBody) +
-      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Only villages not yet united into a Town remain visitable', villages.length, villagesBody) +
+      empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) +
+      empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', settlements.cityCount + settlements.towns.filter(t => !t.cityId).length, townsBody) +
+      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 40 folk, 75% happy', villages.length, villagesBody) +
       '</div>'
     : '';
   // ---- 📍 Locator strip — always answers "where am I, where is my town,
@@ -24185,8 +24371,9 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🌾 Grain Farm and ⛲ Stone Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> The first Quarry costs no stone and its first cut gives enough stone for Cottage Row. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages become one Town</b> (+10% taxes). Their old markers, names and village screens retire; all wards are managed from Town Hall. <b>3 neighbouring Towns rise into one City</b> (+25%).</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 nearby Towns unite into a County</b> — run from its County Hall, with unity taxes for all its holdings.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">⭐</span><span><b>Earn the merge star.</b> A village wears its ⭐ at 40 folk and 75% happiness. Nothing merges on its own: three starred villages within 5 km show a Merge button — press it, and one Town rises with every building the three built.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">⬆️</span><span><b>Upgrade the whole Town at once.</b> The Town Hall carries one Upgrade order that raises every home and yard across all wards — no ward micromanaging. Old villages stay visitable from the Hall, just to look.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>Merge 3 starred Towns into a County.</b> A town earns its ⭐ at 120 folk and 75% happiness. The County Hall runs the whole region: one chest, one Warden, one region-wide Upgrade order — and every town stays visitable.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🕊️</span><span><b>Two counties can trade.</b> Sky-caravans fly between their capitals and pay into every tax day. The farther apart, the richer the cargo.</span></div>') : '';
   const tributeNow = Date.now();
@@ -24214,6 +24401,8 @@ function renderEmpirePanel() {
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— NEXT IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
     helpHtml;
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
+  panel.querySelectorAll('[data-action="merge-villages"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeVillages(btn.dataset.seeds); }));
+  panel.querySelectorAll('[data-action="merge-towns"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeTowns(btn.dataset.seeds); }));
   panel.querySelectorAll('[data-action="open-trade"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireOpenTradeRoute(btn.dataset.route); }));
   panel.querySelectorAll('[data-action="empire-region"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); openEmpireRegion(btn.dataset.region); }));
   panel.querySelectorAll('[data-action="empire-liege"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' }); frameEmpireLiege(btn.dataset.liege); }));
@@ -24317,6 +24506,7 @@ function renderRegionScreen() {
   const panel = $('regionHallPanel');
   if (!panel) return;
   empireCompleteConstructions();
+  completeWholesaleWorks();
   simulateAllVillageEconomies();
   const rc = realmCore();
   // Regions can merge or reshape between visits — fall back to the realm's
@@ -24355,6 +24545,23 @@ function renderRegionScreen() {
     '<div class="region-hall-ladder-hint">' + ladderHint + '</div></div>';
   const due = regionTributeReady(region);
   const hasDue = tributeHasAnything(due);
+  // ⬆️ One order for the whole region: every home and yard in every town
+  // rises together, so the player runs the region, not three separate towns.
+  const regionNow = Date.now();
+  const regionWorks = wholesaleWorksFor(region.id);
+  const regionPlan = regionWorks ? null : wholesaleUpgradePlan(regionMemberRecords(region));
+  let regionUpgradeBody;
+  if (regionWorks) {
+    regionUpgradeBody = townProjectHTML('⬆️', 'Region-wide upgrade · ' + regionWorks.plan.length + ' buildings rising', regionWorks, regionNow);
+  } else if (regionPlan.steps.length) {
+    const affordable = (gameState.player.coins || 0) >= regionPlan.cost.coins && playerBranches() >= regionPlan.cost.branches && playerStone() >= regionPlan.cost.stone;
+    regionUpgradeBody = '<div class="town-section-copy">One order upgrades every home and yard across the whole region — ' + regionPlan.steps.length + ' buildings rise together, no town micromanaging.</div>' +
+      '<button class="town-action is-gold" data-action="region-upgrade-all"' + (affordable ? '' : ' disabled') + '>⬆️ UPGRADE · ' + regionPlan.cost.coins + ' 🪙 + ' + regionPlan.cost.branches + ' 🪵 + ' + regionPlan.cost.stone + ' stone · ⏱ ' + formatBuildDuration(Math.max(60000, regionPlan.durationMs)) + '</button>' +
+      (affordable ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
+  } else {
+    regionUpgradeBody = '<div class="town-section-copy">👑 Every home and yard across the region stands at its highest level.</div>';
+  }
+  const regionUpgradeSection = '<div class="town-section is-gold" id="regionUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Region</div>' + regionUpgradeBody + '</div>';
   // Caravan roads that touch this county, run from this desk too.
   const touchingRoutes = empireTradeRouteRecords().filter(({ a, b }) => a.id === region.id || b.id === region.id);
   const routesHtml = touchingRoutes.length
@@ -24390,13 +24597,16 @@ function renderRegionScreen() {
     ladderHtml +
     '<button class="empire-tribute-btn" data-action="region-collect"' + (hasDue ? '' : ' disabled') + '>' +
     (hasDue ? '💰 COLLECT THIS COUNTY’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ COUNTY TAXES GROWING — CHECK BACK LATER') + '</button>' +
-    '<div class="realm-sub-title">🏘️ HOLDINGS OF THIS COUNTY · manage each Town as one place</div>' +
+    regionUpgradeSection +
+    '<div class="realm-sub-title">🏘️ HOLDINGS OF THIS COUNTY · tap a town to visit and manage it</div>' +
     '<div class="empire-village-list">' + rows + '</div>' +
     wardenHtml +
     routesHtml;
   panel.querySelectorAll('[data-action="region-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="region-town"]').forEach(row => row.addEventListener('click', () => openEmpireTown(row.dataset.settlement)));
   panel.querySelector('[data-action="region-collect"]')?.addEventListener('click', () => collectRegionTribute(region.id));
+  panel.querySelector('[data-action="region-upgrade-all"]')?.addEventListener('click', () => beginWholesaleUpgrade(region.id, 'region'));
+  if (regionWorks) ensureProvinceCountdownTicker();
   panel.querySelector('[data-action="region-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="region-map"]')?.addEventListener('click', () => { openEmpireCountyMap(region.id); });
   panel.querySelector('[data-action="region-atlas"]')?.addEventListener('click', () => { SFX.tap(); showRegionOnAtlas(region.id); });
@@ -24631,6 +24841,7 @@ function ensureTownSteward(settlement) {
 }
 
 let empireLedgerOnlyMode = false;
+let villageVisitingWard = false;  // a deliberate look at a merged ward's old village
 let townActiveId = null;
 function townSettlementByActiveId(id) { return canonicalEmpireSettlement(empireSettlementById(id || townActiveId)); }
 function showTownOnAtlas(settlementId) { empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => frameEmpireSettlement(settlementId), 420); }
@@ -24749,9 +24960,161 @@ function townProjectHTML(icon, label, construction, now) {
 }
 
 // ============================================================================
+// WHOLESALE UPGRADES — Yaan's "Upgrade tab": one order raises every home and
+// yard across a whole Town (or a whole Region), so the player levels the
+// place, not building by building. One combined cost, one timer; crews work
+// every ward at once, so the clock is the LONGEST single build, not the sum.
+// ============================================================================
+function regionMemberRecords(region) {
+  const empire = ensureEmpireState();
+  if (!empire || !region) return [];
+  return (region.villages || []).map(v => empire.villages[String(Number(v.seed) >>> 0)]).filter(Boolean);
+}
+function wholesaleWorksFor(id) {
+  const empire = ensureEmpireState();
+  const works = empire && empire.wholesaleWorks ? empire.wholesaleWorks[String(id)] : null;
+  return works && Array.isArray(works.plan) && Number.isFinite(Number(works.endMs)) ? works : null;
+}
+// Everything one order would raise: each built structure one level higher,
+// plus a first level of any unlocked structure not yet begun.
+function wholesaleUpgradePlan(records) {
+  const trainerLevel = Number(gameState.player.level) || 1;
+  const steps = [];
+  const cost = { coins: 0, branches: 0, stone: 0 };
+  let longestMs = 0;
+  (records || []).forEach(rec => {
+    const eco = ensureVillageEconomy(rec);
+    if (!eco) return;
+    EMPIRE_BUILDINGS.forEach(b => {
+      let level = villageBuildingLevel(rec, b.id);
+      // An in-flight ward build counts as done, so the order never pays twice.
+      if (eco.construction && eco.construction.id === b.id) level = Math.max(level, Number(eco.construction.toLevel) || level);
+      if (level >= b.maxLevel) return;
+      if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return;
+      const stepCost = villageBuildingCost(b, level);
+      cost.coins += stepCost.coins; cost.branches += stepCost.branches; cost.stone += stepCost.stone;
+      longestMs = Math.max(longestMs, villageBuildTimeMs(b, level));
+      steps.push({ seed: rec.seed >>> 0, buildingId: b.id, toLevel: level + 1 });
+    });
+  });
+  return { steps, cost, durationMs: longestMs };
+}
+function beginWholesaleUpgrade(id, scope) {
+  completeWholesaleWorks(); empireCompleteConstructions();
+  const empire = ensureEmpireState();
+  if (!empire) return;
+  const isRegion = scope === 'region';
+  const target = isRegion ? empireRegionById(id) : townSettlementByActiveId(id);
+  if (!target) return;
+  const key = String(isRegion ? target.id : target.id);
+  if (wholesaleWorksFor(key)) { showToast('⬆️ One order is already rising here — let the crews finish first.'); return; }
+  const records = isRegion ? regionMemberRecords(target) : townMemberRecords(target);
+  const displayName = isRegion ? target.name : townDisplayName(target);
+  const plan = wholesaleUpgradePlan(records);
+  if (!plan.steps.length) { showToast('👑 Every home and yard in ' + displayName + ' already stands at its highest level.'); return; }
+  const wallet = gameState.player.coins || 0, timber = playerBranches(), stone = playerStone();
+  const shortages = [];
+  if (wallet < plan.cost.coins) shortages.push((plan.cost.coins - wallet) + ' 🪙');
+  if (timber < plan.cost.branches) shortages.push((plan.cost.branches - timber) + ' 🪵');
+  if (stone < plan.cost.stone) shortages.push((plan.cost.stone - stone) + ' stone');
+  if (shortages.length) { showToast('The upgrade order needs ' + shortages.join(' + ') + ' more.'); return; }
+  const factor = isRegion ? 1 : settlementBuildFactorForSeed(target.heartSeed);
+  const buildMs = Math.max(60000, Math.round(plan.durationMs * factor));
+  const snapshot = snapshotGameState();
+  addCoins(-plan.cost.coins);
+  addBranches(-plan.cost.branches);
+  addStone(-plan.cost.stone);
+  const now = Date.now();
+  empire.wholesaleWorks[key] = {
+    plan: plan.steps,
+    startMs: now,
+    endMs: now + buildMs,
+    scope: isRegion ? 'region' : 'town',
+    name: displayName,
+    target: { seed: (isRegion ? target.capitalSeed : target.heartSeed) >>> 0 }
+  };
+  try {
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    console.warn('Wholesale upgrade rolled back', error);
+    showToast('The order could not be saved, so nothing was spent. Please try again.');
+    return;
+  }
+  SFX.questComplete();
+  vibrate(40);
+  showToast('⬆️ One order given: ' + plan.steps.length + ' buildings rise across ' + displayName + ' — ready in ' + formatBuildDuration(buildMs) + '.');
+  updateHeader();
+  if (isRegion) renderRegionScreen(); else renderTownScreen();
+  ensureProvinceCountdownTicker();
+}
+function completeWholesaleWorks(now) {
+  const empire = ensureEmpireState();
+  if (!empire || !empire.wholesaleWorks) return false;
+  const t = Number(now) || Date.now();
+  const due = Object.entries(empire.wholesaleWorks).filter(([, works]) =>
+    works && Array.isArray(works.plan) && Number.isFinite(Number(works.endMs)) && t >= Number(works.endMs));
+  if (!due.length) return false;
+  const snapshot = snapshotGameState();
+  const finished = [];
+  try {
+    due.forEach(([key, works]) => {
+      works.plan.forEach(step => {
+        const rec = empire.villages[String(Number(step.seed) >>> 0)];
+        const building = EMPIRE_BUILDING_INDEX[step.buildingId];
+        if (!rec || !building) return;
+        const eco = ensureVillageEconomy(rec);
+        eco.buildings[building.id] = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(step.toLevel) || 1));
+        // New homes draw new residents, exactly like a single shelter build.
+        if (building.need === 'shelter') {
+          const cap = villageNeedCapacity(rec, 'shelter');
+          eco.population = Math.max(eco.population, Math.min(cap, eco.population + Math.ceil((building.perLevel || 0) / 2)));
+        }
+        maybeAwardMergeStar(rec);
+      });
+      delete empire.wholesaleWorks[key];
+      addPlayerXp(30);
+      finished.push(works);
+      queueCompletionNotice({
+        kind: 'wholesale-upgrade',
+        icon: '⬆️',
+        title: (works.name || 'Your settlement') + ' rises together',
+        sub: works.plan.length + ' buildings finished in one order — tap to see.',
+        target: works.target || null
+      });
+    });
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    renderCompletionNotices();
+    console.warn('Wholesale completion rolled back', error);
+    showToast('The upgrade order finished, but its result could not be saved. Please try again.');
+    return false;
+  }
+  finished.forEach(works => showToast('⬆️ ' + (works.name || 'Your settlement') + ': ' + works.plan.length + ' buildings stand taller — the whole place levelled up together.'));
+  if (villageActive) villageBuiltSeed = null;
+  SFX.questComplete();
+  vibrate(45);
+  return true;
+}
+// Step back into a merged ward, just to see the old village as it was.
+function visitEmpireWard(seed) {
+  const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
+  if (!village) return;
+  empireLedgerOnlyMode = false;
+  villageVisitingWard = true;
+  villageActive = { seed: village.seed >>> 0, name: village.name, lat: village.lat, lon: village.lon };
+  SFX.tap();
+  if (currentScreen !== 'village') switchScreen('village');
+  renderVillage();
+  setTimeout(() => $('villageStage')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 260);
+  showToast('👣 Visiting ' + village.name + ' — the old village, kept as it was.');
+}
+
+// ============================================================================
 // TOWN SQUARE — the 3D home of a merged settlement, and the top of the Town
-// Hall screen. Three neighbouring villages grow into one town (three towns
-// into one city); the scene shows ONE cohesive place: every ward's homes,
+// Hall screen. Three starred villages merge into one town at the player's
+// own order; the scene shows ONE cohesive place: every ward's homes,
 // trades and working yards knit around the single market square, with the
 // charter stone flying one pennant per founder. The town is also the
 // management surface: tap any working yard for its sheet — stats, crew and
@@ -24760,6 +25123,7 @@ function townProjectHTML(icon, label, construction, now) {
 // moves it. Absorbed villages never become destinations again.
 // ============================================================================
 function openEmpireTown(idOrSeed) {
+  villageVisitingWard = false;
   let settlement = empireSettlementById(idOrSeed);
   if (!settlement && Number.isFinite(Number(idOrSeed))) {
     const link = empireSettlementOfSeed(Number(idOrSeed));
@@ -24813,7 +25177,7 @@ function townSceneKey(settle) {
 function renderTownScreen() {
   const panel = $('townHallPanel');
   if (!panel) return;
-  townCompleteHallConstructions(); empireCompleteConstructions(); simulateAllVillageEconomies();
+  townCompleteHallConstructions(); empireCompleteConstructions(); completeWholesaleWorks(); simulateAllVillageEconomies();
   const settle = currentTownSettlement(), core = townStrategyCore();
   if (!settle || !core) { empireLedgerOnlyMode = true; switchScreen('village'); return; }
   townActiveId = String(settle.id); ensureTownSteward(settle);
@@ -24875,37 +25239,75 @@ function renderTownScreen() {
     copy:'Appoint a clever companion to run the whole Town.',
     effectCopy:'This Town pays more taxes and timber, and its networks produce more stone and goods.'
   });
-  // The county is the rung above the Hall: three towns close together unite
-  // into one on their own. Show the door in once it stands, and the road
-  // there while it doesn't — so the ladder village → town → county is always
-  // visible from town management.
+  // The county is the rung above the Hall. Since merge-when-ready-v290 towns
+  // never unite on their own: this section shows the town's own merge star,
+  // the Merge button when three starred towns stand ready, and the door into
+  // the County Hall once the county is founded.
   const county = empireRegionOfSeed(settle.heartSeed);
-  const countyHtml = county
-    ? '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">🛡️ ' + escapeHtml(county.name) + '</div><div class="town-section-copy">This ' + (settle.tier === 'city' ? 'city' : 'town') + ' is one of ' + county.townCount + ' towns united in the county. Collect county taxes, appoint a Warden and open trade from its Hall.</div><button class="town-action is-gold" data-action="town-county">🛡️ OPEN COUNTY HALL</button></div>'
-    : '<div class="town-section" id="townCountySection"><div class="town-section-title">🛡️ Toward a County</div><div class="town-section-copy">Three neighbouring towns unite into a county — ' + townCountyClusterSize(settle) + ' of 3 stand here so far. Every three liberated villages grow into a new town, so keep freeing villages nearby.</div></div>';
+  const townReadiness = townMergeReady(settle);
+  const mcTown = mergeCore();
+  const regionCandidate = county ? null : empireRegionMergeCandidates().find(c =>
+    townAdministrativeSeats(settle).some(seat => c.seeds.includes(Number(seat.heartSeed) >>> 0)));
+  let countyHtml;
+  if (county) {
+    countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">🛡️ ' + escapeHtml(county.name) + '</div><div class="town-section-copy">This ' + (settle.tier === 'city' ? 'city' : 'town') + ' is one of ' + county.townCount + ' towns united in the county. Collect county taxes, appoint a Warden, upgrade the whole region and open trade from its Hall.</div><button class="town-action is-gold" data-action="town-county">🛡️ OPEN COUNTY HALL</button></div>';
+  } else if (regionCandidate && mcTown) {
+    countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">⭐ Ready to Unite</div><div class="town-section-copy">' + escapeHtml(mcTown.nameList(regionCandidate.names)) + ' all wear the merge star. Merge them and a County rises — one desk for the whole region.</div><button class="town-action is-gold" data-action="town-merge-region" data-seeds="' + regionCandidate.seeds.join(',') + '">🛡️ MERGE INTO ONE COUNTY</button></div>';
+  } else {
+    countyHtml = '<div class="town-section" id="townCountySection"><div class="town-section-title">🛡️ Toward a County</div><div class="town-section-copy">' +
+      (townReadiness && townReadiness.ready
+        ? '⭐ This town wears its merge star — 120 folk at 75% happiness. Grow two more towns to their stars within 150 km, then press Merge: the three unite into a county, run as one region.'
+        : '⭐ A town earns its merge star at 120 folk and 75% happiness' + (townReadiness ? ' — this one holds 👥 ' + townReadiness.population + '/120 at ' + Math.round(townReadiness.happiness * 100) + '%' : '') + '. Merge three starred towns within 150 km and a county rises — one desk for the whole region.') +
+      '</div></div>';
+  }
+  // ⬆️ Yaan's Upgrade tab: one order, every home and yard, no micromanaging.
+  const townWorks = wholesaleWorksFor(settle.id);
+  const townPlan = townWorks ? null : wholesaleUpgradePlan(townMemberRecords(settle));
+  const planCostText = plan => plan.cost.coins + ' 🪙 + ' + plan.cost.branches + ' 🪵 + ' + plan.cost.stone + ' stone';
+  const planAffordable = plan => (gameState.player.coins || 0) >= plan.cost.coins && playerBranches() >= plan.cost.branches && playerStone() >= plan.cost.stone;
+  let upgradeHtml;
+  if (townWorks) {
+    upgradeHtml = townProjectHTML('⬆️', 'Town-wide upgrade · ' + townWorks.plan.length + ' buildings rising', townWorks, now);
+  } else if (townPlan.steps.length) {
+    upgradeHtml = '<div class="town-section-copy">One order upgrades every home and yard across all ' + townMemberRecords(settle).length + ' wards — ' + townPlan.steps.length + ' buildings rise together, no ward micromanaging.</div>' +
+      '<button class="town-action is-gold" data-action="town-upgrade-all"' + (planAffordable(townPlan) ? '' : ' disabled') + '>⬆️ UPGRADE · ' + planCostText(townPlan) + ' · ⏱ ' + formatBuildDuration(Math.max(60000, Math.round(townPlan.durationMs * settlementBuildFactorForSeed(settle.heartSeed)))) + '</button>' +
+      (planAffordable(townPlan) ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
+  } else {
+    upgradeHtml = '<div class="town-section-copy">👑 Every home and yard across the town stands at its highest level.</div>';
+  }
+  const upgradeSection = '<div class="town-section is-gold" id="townUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Town</div>' + upgradeHtml + '</div>';
+  // 👣 Small doors back into the old villages — just to look.
+  const visitSection = '<div class="town-section" id="townVisitSection"><div class="town-section-title">👣 Visit the Old Villages</div><div class="town-section-copy">Step back into any ward and see the village as it was. Just a look — governing stays here.</div><div class="visit-chip-row">' +
+    townMemberRecords(settle).map(rec => '<button type="button" class="visit-chip" data-action="town-visit" data-seed="' + (rec.seed >>> 0) + '">' + empireVillageCrest(rec.seed) + ' ' + escapeHtml(rec.name) + '</button>').join('') +
+    '</div></div>';
   panel.innerHTML =
     '<div class="town-nav"><button data-action="town-back">← ROYAL LEDGER</button><button data-action="town-atlas">🗺️ VIEW ON ATLAS</button></div>' +
-    '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
+    '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + (townReadiness && townReadiness.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
     '<div class="town-resource-grid"><div class="town-resource"><div class="town-resource-value">👥 ' + snap.pop + '/' + snap.housingCap + '</div><div class="town-resource-label">Residents / homes</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.taxes + ' 🪙</div><div class="town-resource-label">Taxes / 8h</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.branches + ' 🪵 · +' + snap.production.stone + ' stone</div><div class="town-resource-label">Building goods / 8h</div></div><div class="town-resource"><div class="town-resource-value">' + escapeHtml(empireResourceSummary({ materials:snap.production.materials, larder:snap.production.larder }, 4) || '—') + '</div><div class="town-resource-label">Goods / 8h</div></div></div>' +
     '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox</div><div class="town-section-copy">One collection every 8 hours, capped at 24 hours. Town, County and Realm collection all use the same ward clocks.</div><button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
+    upgradeSection +
     '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
     ruinsHtml +
     '<div class="town-section"><div class="town-section-title">🏗️ Town Networks</div><div class="town-section-copy">Each upgrade automatically strengthens the least-developed eligible ward. Wards never become separate destinations again.</div><div class="town-network-grid">' + networkHtml + '</div></div>' +
     '<div class="town-section"><div class="town-section-title">🥣 Provisions, Workforce & Services</div><div class="town-section-copy">Each fully fed, watered and happy ward can grow up to its own housing limit. ' + snap.workforce.working + '/' + snap.workforce.required + ' required workers staffed from ' + snap.workforce.available + ' residents.</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
     '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy</div><div class="town-section-copy">' + escapeHtml(policyNote) + '</div><div class="town-policy-grid">' + policies + '</div></div>' +
     countyHtml +
+    visitSection +
     '<div class="town-section"><div class="town-section-title">🪧 Town Steward</div><div class="town-section-copy">One bird administers the whole merged settlement; absorbed ward posts are retired.</div>' + steward + '</div>';
   panel.querySelector('[data-action="town-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="town-atlas"]')?.addEventListener('click', () => { SFX.tap(); showTownOnAtlas(settle.id); });
   panel.querySelector('[data-action="town-rename"]')?.addEventListener('click', () => renameTown(settle.id));
   if (county) panel.querySelector('[data-action="town-county"]')?.addEventListener('click', () => { SFX.tap(); openEmpireRegion(county.id); });
+  panel.querySelector('[data-action="town-merge-region"]')?.addEventListener('click', ev => { SFX.tap(); empireMergeTowns(ev.currentTarget.dataset.seeds); });
+  panel.querySelector('[data-action="town-upgrade-all"]')?.addEventListener('click', () => beginWholesaleUpgrade(settle.id, 'town'));
+  panel.querySelectorAll('[data-action="town-visit"]').forEach(chip => chip.addEventListener('click', () => visitEmpireWard(chip.dataset.seed)));
   panel.querySelector('[data-action="town-collect"]')?.addEventListener('click', () => collectTownTribute(settle.id));
   panel.querySelector('[data-action="town-hall-upgrade"]')?.addEventListener('click', () => beginTownHallUpgrade(settle.id));
   panel.querySelector('[data-action="town-ruin"]')?.addEventListener('click', () => townClearNextRuin(settle.id));
   panel.querySelector('[data-action="town-supply"]')?.addEventListener('click', () => townSendSupplyCart(settle.id));
   panel.querySelectorAll('[data-action="town-network"]').forEach(button => button.addEventListener('click', () => townBuildNetwork(settle.id, button.dataset.building)));
   panel.querySelectorAll('[data-action="town-policy"]').forEach(button => button.addEventListener('click', () => setTownPolicy(settle.id, button.dataset.policy)));
-  if (activeProjects) ensureProvinceCountdownTicker();
+  if (activeProjects || townWorks) ensureProvinceCountdownTicker();
 
   renderTownSquare(settle);
   renderTownSheet();
@@ -25651,7 +26053,9 @@ function renderVillage() {
   const v = currentVillage();
   const mergedDestination = v && empireOwnsVillage(v.seed) ? canonicalEmpireSettlement(empireSettlementById(empireSettlementOfSeed(v.seed)?.id)) : null;
   const hub = $('empireVillageHub');
-  if (mergedDestination) {
+  // A deliberate visit walks the old village as it was — no redirect, no
+  // governing. Every other road into a merged ward still leads to its Hall.
+  if (mergedDestination && !villageVisitingWard) {
     villageRunning = false;
     if (hub) hub.hidden = true;
     ['villageTownLink','villageClaimBar','villageManagePanel'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
@@ -35848,15 +36252,7 @@ function endPerchBattle() {
     rows.push('<div class="rw-row"><span>PROMOTED! ' + tier.icon + '→' + next.icon + '</span><b>+' + tier.promoCoins + ' 🪙 +' + tier.promoBranches + ' 🪵</b></div>');
   }
   if (liberatedVillage) {
-    // Tell the player about a coming merge BEFORE the birdhouse triggers it,
-    // so a new town never lands as a surprise.
-    let unionNote = '';
-    try {
-      const founding = previewClaimFounding(liberatedVillage);
-      if (founding && founding.tier === 'town') unionNote = ' Raising it unites ' + escapeHtml(settlementWardNames(founding)) + ' into one town.';
-      else if (founding && founding.tier === 'city') unionNote = ' Raising it unites your neighbouring towns into one city.';
-    } catch (e) {}
-    rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedVillage.name) + ' is broken — the village is free. Return to build its sanctuary birdhouse and bring daylight back to this land.' + unionNote + '</div>');
+    rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedVillage.name) + ' is broken — the village is free. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
   }
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
@@ -36910,7 +37306,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'training-your-way-v288-20260819';
+const BURBZ_BUILD = 'merge-when-ready-v290-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -37010,7 +37406,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'village', chapter:'Realm', title:'Holdings pay tribute', screen:'village', target:'#empirePanel', text:'Standalone villages and united Towns pay coins, timber, stone and goods every eight hours. Happy, provisioned residents pay more.' },
 
   // — Town strategy: taught when the third nearby liberation forms a Town.
-  { chapterId:'town', chapter:'Town Hall', title:'Three become one', screen:'town', target:'#townHallPanel', text:'Those three villages are now wards of one Town. Their destinations have retired: population, stores, workers and tribute are managed together here.' },
+  { chapterId:'town', chapter:'Town Hall', title:'Three become one', screen:'town', target:'#townHallPanel', text:'You merged three starred villages into one Town. Everything is managed here — and one Upgrade order raises the whole town at once.' },
   { chapterId:'town', chapter:'Town Hall', title:'Build a real economy', screen:'town', target:'#townHallPanel', text:'Keep food and water supplied for growth, staff productive networks, clear ruins and upgrade the Hall to unlock builder crews and Council policy.' },
 
   // — Diary: taught the first time the Adventurer's Diary opens.

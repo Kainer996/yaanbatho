@@ -595,10 +595,11 @@ def test_stale_saved_village_and_third_claim_cannot_leave_player_in_retired_ui()
     assert "empireSettlementOfSeed" in render
     assert "openEmpireTown(" in render
     assert render.index("openEmpireTown(") < render.index("renderVillageManagePanel()")
-    # The third claim forms the town synchronously and must navigate there
-    # instead of redrawing the just-retired village screen.
-    assert "openEmpireTown(foundedSettlement.id)" in claim
-    assert claim.index("openEmpireTown(foundedSettlement.id)") < claim.rindex("renderVillage()")
+    # v290: a claim never forms a town — the player's own Merge does, and
+    # that action navigates straight into the new Town Hall.
+    assert "foundedSettlement" not in claim
+    merge = function_source(html, "empireMergeVillages")
+    assert "openEmpireTown(town.id)" in merge
 
 
 def test_all_player_facing_lists_use_standalone_villages_and_visible_towns():

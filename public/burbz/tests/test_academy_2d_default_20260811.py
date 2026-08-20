@@ -12,7 +12,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-2d-default-v250-20260811"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "training-your-way-v288-20260819"
+CURRENT_BUILD = "merge-when-ready-v290-20260820"
 
 
 def test_the_academy_defaults_to_the_painted_2d_tree():

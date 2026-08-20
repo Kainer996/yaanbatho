@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "training-your-way-v288-20260819"
+CURRENT_BUILD = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -179,9 +179,9 @@ def test_the_copy_teaches_homes_first_and_villager_crews():
     # of advertising the now-retired village screen.
     assert "build homes and residents will move in" in claim
     assert "Add a farm and well before supplies run out" in claim
-    # Since v286 the retiring wards are named, so the merge never surprises.
-    assert "retire from the map; govern everything from the Hall." in claim
-    assert "settlementWardNames(foundedSettlement)" in claim
+    # Since v290 a claim never merges anything — it teaches the merge star.
+    assert "merge star" in claim
+    assert "settlementWardNames" not in claim  # merging is the player's act now
     assert "Villagers work the yards.</b>" in html  # empire help drawer
     assert "yards crewed" in html  # governor's desk headline
     assert "villager works here" in html and "needs ' + b.workers + ' villager" in html

@@ -27,7 +27,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "training-your-way-v288-20260819"
+CURRENT_BUILD = "merge-when-ready-v290-20260820"
 
 
 def ledger(html: str) -> str:
@@ -84,13 +84,13 @@ def test_each_tier_has_a_body_even_when_empty():
     body = ledger(HTML.read_text(encoding="utf-8"))
     # Towns tab: rows when settlements exist, a forming hint otherwise.
     assert "let townsBody;" in body
-    assert "🏘️ No towns yet. Free 3 neighbouring villages" in body
+    assert "🏘️ No towns yet. Grow a village to 40 folk" in body  # v290: merge-when-ready
     # Counties tab: the realm desk, or the next-rung explainer.
     assert "let countiesBody = '';" in body
     assert "🕊️ Your realm starts here." in body
     # Villages tab: the standalone list, or where they all went.
     assert "const villagesBody = villages.length" in body
-    assert "Every free village has united into a Town" in body
+    assert "Every free village has merged into a Town" in body
 
 
 def test_the_old_realm_dropdown_is_gone_for_good():
@@ -103,7 +103,7 @@ def test_the_old_realm_dropdown_is_gone_for_good():
 
 def test_copy_now_points_at_the_counties_tab_not_the_royal_ledger():
     html = HTML.read_text(encoding="utf-8")
-    assert "open the 🛡️ Counties tab under the Empire map" in html
+    assert "Merge three starred towns within 150 km" in html  # v290: the Counties tab teaches the merge road
     assert "open trade routes from the Counties tab once a second county stands" in html
     assert "tap it in the Royal Ledger" not in html
 

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "training-your-way-v288-20260819"
+CURRENT_BUILD = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
@@ -66,6 +66,7 @@ const regionRoleMultiplier = () => 1;
 const villageRuinDefsFor = () => [];
 const VILLAGE_RUIN_KINDS = { house: {} };
 const queueCompletionNotice = n => notices.push(n);
+const maybeAwardMergeStar = () => false;  // v290 star fanfare, not under test here
 const addCoins = n => { gameState.player.coins += n; };
 const saveState = () => {}; const updateHeader = () => {};
 const renderVillageManagePanel = () => {}; const renderEmpirePanel = () => {};

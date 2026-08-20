@@ -19,6 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "training-your-way-v288-20260819"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
+CURRENT_BUILD = "merge-when-ready-v290-20260820"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 
@@ -157,10 +158,11 @@ def test_dispatch_sends_the_chosen_duration():
 def test_release_is_versioned_and_the_academy_core_shipped():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line       # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     pin = f"academy_treehouse_core.js?v={OWN_RELEASE_PIN}"
     assert f'<script src="{pin}"></script>' in html
     assert sw.count(f"'./{pin}'") == 2
