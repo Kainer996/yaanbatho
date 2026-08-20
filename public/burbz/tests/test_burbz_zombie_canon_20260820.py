@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "generated-ui-art-v298-20260820"
+OWN_RELEASE_PIN = "empire-declutter-v299-20260820"
 
 
 def test_release_is_wired():

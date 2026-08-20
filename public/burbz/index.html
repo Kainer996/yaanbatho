@@ -3702,6 +3702,21 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 /* The Wandering Perch — pop-up trail tavern */
 .quest-marker.qm-tavern { width:54px; height:54px; border-radius:14px; border:2.5px solid #f0c767; background:linear-gradient(180deg,#3a2c12,#1c150a); font-size:30px; box-shadow:0 0 18px rgba(240,199,103,.65); animation:questBounce 1.8s ease-in-out infinite; }
 .quest-marker.qm-tavern.visited { animation:none; opacity:.9; }
+/* Empire declutter (2026-08-20): tiny ledger pill + quiet footer pop-downs */
+.empire-title-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.empire-title-row .screen-title { margin:0; }
+.empire-ledger-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(58,44,18,.92),rgba(28,21,10,.92)); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.08em; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+.empire-ledger-btn:active { transform:scale(.96); }
+.empire-ledger-btn.is-open { background:linear-gradient(180deg,rgba(240,199,103,.28),rgba(58,44,18,.95)); box-shadow:0 0 12px rgba(240,199,103,.35); }
+.empire-ledger-pop { margin:8px 0 10px; padding:12px; border-radius:14px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(38,30,14,.97),rgba(20,15,8,.97)); box-shadow:0 10px 26px rgba(0,0,0,.55), inset 0 1px 0 rgba(240,199,103,.16); animation:ledgerPopIn .18s ease-out; }
+@keyframes ledgerPopIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.empire-ledger-pop .empire-rank { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
+.empire-footer { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.empire-drawer.is-footer { border:1px solid rgba(240,199,103,.28); border-radius:12px; background:linear-gradient(180deg,rgba(34,27,13,.7),rgba(18,14,7,.7)); }
+.empire-drawer.is-footer > .empire-drawer-summary { padding:9px 12px; }
+.empire-drawer.is-footer .ed-label { font-size:12.5px; letter-spacing:.06em; }
+.empire-drawer.is-footer .ed-copy { font-size:11px; }
+.empire-drawer.is-footer[open] { border-color:rgba(240,199,103,.5); box-shadow:0 0 14px rgba(240,199,103,.14); }
 /* Tavern sheet */
 .tavern-lines { margin:8px 0 4px; }
 .tavern-line { margin:4px 0; }
@@ -4084,7 +4099,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
     <!-- EMPIRE SCREEN — interactive territory map + medieval village hub -->
     <div class="screen" id="screen-village">
-      <div class="screen-title">YOUR EMPIRE</div>
+      <div class="empire-title-row">
+        <div class="screen-title">YOUR EMPIRE</div>
+        <button type="button" class="empire-ledger-btn" id="empireLedgerBtn" aria-expanded="false" aria-controls="empireLedgerPop">👑 LEDGER</button>
+      </div>
+      <div class="empire-ledger-pop" id="empireLedgerPop" role="dialog" aria-label="Royal Ledger" hidden></div>
       <div class="empire-map-card" id="empireMapCard">
         <div id="empireWorldMap" role="application" aria-label="Interactive map of your liberated territories"></div>
         <div class="empire-map-vignette"></div>
@@ -22812,6 +22831,16 @@ function renderEmpireWorldMap() {
   if (realmBtn) realmBtn.onclick = frameEmpireTerritory;
   if (worldBtn) worldBtn.onclick = showEmpireWorld;
   if (keyBtn) keyBtn.onclick = () => { SFX.tap(); toggleEmpireMapKey(); };
+  const ledgerBtn = $('empireLedgerBtn');
+  if (ledgerBtn) ledgerBtn.onclick = () => {
+    SFX.tap();
+    const pop = $('empireLedgerPop');
+    if (!pop) return;
+    const opening = pop.hidden;
+    pop.hidden = !opening;
+    ledgerBtn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+    ledgerBtn.classList.toggle('is-open', opening);
+  };
   requestEmpireHomeFix();
   initialiseEmpireMap().then(map => {
     if (!map) return;
@@ -24650,13 +24679,13 @@ function renderEmpirePanel() {
     : '';
   // ---- 📍 Locator strip — always answers "where am I, where is my town,
   // where is my region" with one glance and one tap each.
-  let locatorHtml = '';
+  let locatorChipsHtml = '';
   if (count) {
     const home = empireHomeVillageRec();
     const homeLink = home ? empireSettlementOfSeed(home.seed) : null;
     const homeSettle = homeLink ? canonicalEmpireSettlement(empireSettlementById(homeLink.id)) : null;
     const homeRegion = home ? empireRegionOfSeed(home.seed) : null;
-    locatorHtml = '<div class="empire-locator">' +
+    locatorChipsHtml = '<div class="empire-locator">' +
       '<button type="button" class="empire-locator-chip is-you" data-action="locator-me"><span class="empire-locator-label">📍 YOU</span><span class="empire-locator-value">Show on map</span></button>' +
       (home && !homeSettle ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"><span class="empire-locator-label">🏡 HOME VILLAGE</span><span class="empire-locator-value">' + escapeHtml(home.name) + '</span></button>' : '') +
       (homeSettle
@@ -24682,8 +24711,28 @@ function renderEmpirePanel() {
   const tributeNow = Date.now();
   const nextMs = hasTribute ? null : empireNextTributeCountdownMs(tributeNow);
   const nextTributeAt = nextMs !== null ? tributeNow + nextMs : null;
-  // Order on screen: the tabs sit directly under the map; the locator, the
-  // Royal Ledger stats and the tax chest follow at the bottom.
+  // The Royal Ledger lives in a tiny 👑 button beside the screen title now —
+  // Yaan's ask (2026-08-20): the stats are reference, not the main event.
+  const ledgerPop = $('empireLedgerPop');
+  if (ledgerPop) ledgerPop.innerHTML =
+    '<div class="empire-rank"><span class="empire-rank-label">YOUR TITLE</span><span>' + escapeHtml(empireCrownTitle()) + '</span></div>' +
+    (count ? '<div class="empire-stats-row">' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Holdings</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + totalPop + '</div><div class="empire-stat-label">Subjects</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxesPerCycle + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Timber / 8h</div></div>' +
+      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + stonePerCycle + ' stone</div><div class="empire-stat-label">Stone / 8h</div></div>' +
+      '</div>' : '<div class="realm-hint">Free your first village and the ledger fills with holdings, subjects and taxes.</div>');
+  // Order on screen: the tabs sit directly under the map, the tax chest under
+  // them, and the reference bits — where am I, how it all works — wait at the
+  // very bottom as two quiet pop-downs.
+  const footerHtml = count
+    ? '<div class="empire-footer">' +
+      empireDrawerHTML('locator', false, '📍', 'FIND YOURSELF', 'You, your town, your county — one tap each', null, locatorChipsHtml)
+        .replace('class="empire-drawer"', 'class="empire-drawer is-footer" name="empire-footer"') +
+      (helpHtml ? helpHtml.replace('class="empire-drawer"', 'class="empire-drawer is-footer" name="empire-footer"') : '') +
+      '</div>'
+    : '';
   panel.innerHTML = navTabsHtml +
     (count
       ? ''
@@ -24692,17 +24741,8 @@ function renderEmpirePanel() {
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">2</span><span><b>Win its Liberation Battle</b> to scatter the darkness.</span></div>' +
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">3</span><span><b>Raise a birdhouse</b> and the village joins your empire — its daylight returns, and its taxes flow every 8 hours.</span></div>' +
         '<div class="empire-empty">Your whole empire will appear here: villages, towns, regions and trade.</div></div>') +
-    locatorHtml +
-    '<div class="empire-head"><div class="empire-title">👑 ROYAL LEDGER</div><div class="empire-rank"><span class="empire-rank-label">YOUR TITLE</span><span>' + escapeHtml(empireCrownTitle()) + '</span></div></div>' +
-    (count ? '<div class="empire-stats-row">' +
-      '<div class="empire-stat-chip"><div class="empire-stat-value">' + count + '</div><div class="empire-stat-label">Holdings</div></div>' +
-      '<div class="empire-stat-chip"><div class="empire-stat-value">👥 ' + totalPop + '</div><div class="empire-stat-label">Subjects</div></div>' +
-      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxesPerCycle + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
-      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Timber / 8h</div></div>' +
-      '<div class="empire-stat-chip"><div class="empire-stat-value">+' + stonePerCycle + ' stone</div><div class="empire-stat-label">Stone / 8h</div></div>' +
-      '</div>' : '') +
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— NEXT IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
-    helpHtml;
+    footerHtml;
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="merge-villages"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeVillages(btn.dataset.seeds); }));
   panel.querySelectorAll('[data-action="merge-towns"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeTowns(btn.dataset.seeds); }));
@@ -26398,7 +26438,7 @@ function renderVillage() {
     const settleNote = settleTitle ? ' ' + settleTitle.icon + ' This village is the ' + (settleTitle.role === 'heart' ? 'centre of ' : 'district of ') + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
     if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Hold, then drag to look around; pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
     else if (dev <= 0) sub.textContent = 'Your village, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
-    else sub.textContent = 'Your village. Govern it below — raise buildings to feed, house and cheer your subjects. ' + (ruinsLeft ? 'Old wrecks still await clearing. ' : '') + 'Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a building to step inside.' + settleNote;
+    else sub.textContent = 'Tap a building to step inside.' + (ruinsLeft ? ' Old wrecks still await clearing.' : '') + settleNote;
   }
   // A village inside a merged town or city links straight to its square.
   const townLink = $('villageTownLink');
@@ -37778,7 +37818,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-ui-art-v298-20260820';
+const BURBZ_BUILD = 'empire-declutter-v299-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
