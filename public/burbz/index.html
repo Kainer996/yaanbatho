@@ -23704,14 +23704,28 @@ function villageEconomySnapshot(rec) {
     food:  { rate: rates.food,  store: eco.stores.food,  cap: villageStoreCapacity(rec, 'food'),  eats: pop * VILLAGE_FOOD_PER_VILLAGER },
     water: { rate: rates.water, store: eco.stores.water, cap: villageStoreCapacity(rec, 'water'), eats: pop * VILLAGE_WATER_PER_VILLAGER }
   };
+  // Two truths per need, kept apart on purpose (honest-need-gauges-v296).
+  // `sat` is the meal truth — this cycle's harvest PLUS the stores — and it
+  // drives happiness, growth and starvation exactly as before: relief
+  // supplies really do feed the first settlers. `supplySat` is the gauge
+  // truth Yaan asked for: only what the BUILT, staffed farms and wells
+  // deliver each cycle. No well means an empty water bar, however full the
+  // cistern still is — the sublabel tells the stores story.
   const needs = EMPIRE_NEEDS.map(n => {
     const flow = provisions[n.id];
     if (flow) {
       const onHand = flow.rate + flow.store;
-      return { id: n.id, icon: n.icon, label: n.label, cap: onHand, served: Math.min(pop, onHand), sat: flow.eats > 0 ? Math.min(1, onHand / flow.eats) : 1 };
+      return {
+        id: n.id, icon: n.icon, label: n.label, cap: onHand,
+        served: Math.min(pop, onHand), sat: flow.eats > 0 ? Math.min(1, onHand / flow.eats) : 1,
+        supplyServed: Math.min(pop, flow.rate),
+        supplySat: flow.eats > 0 ? Math.min(1, flow.rate / flow.eats) : (flow.rate > 0 ? 1 : 0)
+      };
     }
+    // Shelter and joy are standing services: built capacity IS the supply.
     const cap = villageNeedCapacity(rec, n.id, crew);
-    return { id: n.id, icon: n.icon, label: n.label, cap, served: Math.min(pop, cap), sat: Math.min(1, cap / Math.max(1, pop)) };
+    const served = Math.min(pop, cap), sat = Math.min(1, cap / Math.max(1, pop));
+    return { id: n.id, icon: n.icon, label: n.label, cap, served, sat, supplyServed: served, supplySat: sat };
   });
   const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
   let flatCoins = 0, flatBranches = 0, taxBoost = 0;
@@ -24220,12 +24234,15 @@ function renderVillageManagePanel() {
   const wallet = gameState.player.coins || 0;
   const timber = playerBranches();
   const stone = playerStone();
-  // Four honest bars. Food and water read the real flow — this cycle's
-  // harvest plus the stores — and say under the bar exactly where the next
-  // meal is coming from, or that it isn't.
+  // Four honest bars (honest-need-gauges-v296). The gauge reads what the
+  // village's own buildings supply — no well, empty water bar — and the line
+  // under it says where the meals are really coming from meanwhile: the
+  // harvest, the stores, or nowhere.
   const needsHtml = snap.needs.map(n => {
-    const pct = Math.round(n.sat * 100);
-    const tone = n.sat >= 0.95 ? '' : n.sat >= 0.6 ? ' mid' : ' low';
+    const gauge = n.supplySat !== undefined ? n.supplySat : n.sat;
+    const gaugeServed = n.supplyServed !== undefined ? n.supplyServed : n.served;
+    const pct = Math.round(gauge * 100);
+    const tone = gauge >= 0.95 ? '' : gauge >= 0.6 ? ' mid' : ' low';
     const flow = snap.provisions[n.id];
     let sub = '';
     if (flow) {
@@ -24233,13 +24250,16 @@ function renderVillageManagePanel() {
       const storeName = n.id === 'food' ? 'granary' : 'cistern';
       const dry = flow.rate <= 0 && flow.store <= 0;
       const short = snap.pop > 0 && flow.rate + flow.store < flow.eats;
+      // Living off the stores with no source built is borrowed time — the
+      // line turns amber before the cellar actually runs out.
+      const borrowed = snap.pop > 0 && flow.rate <= 0 && flow.store > 0;
       let line;
       if (dry) line = '⚠️ no ' + source.name.toLowerCase() + ', nothing stored — ' + (n.id === 'food' ? 'villagers go hungry' : 'villagers go thirsty');
       else if (flow.rate > 0) line = source.icon + ' +' + flow.rate + ' a cycle · ' + storeName + ' ' + flow.store + '/' + flow.cap + (short ? ' · ⚠️ not enough' : '');
-      else line = 'no ' + source.name.toLowerCase() + ' yet · ' + storeName + ' holds ' + flow.store + (snap.pop > 0 ? ' — ' + Math.max(1, Math.floor(flow.store / Math.max(1, flow.eats))) + ' more cycle' + (Math.floor(flow.store / Math.max(1, flow.eats)) === 1 ? '' : 's') : '');
-      sub = '<div class="province-need-sub' + (dry || short ? ' warn' : '') + '">' + line + '</div>';
+      else line = 'no ' + source.name.toLowerCase() + ' yet · villagers live off the ' + storeName + ' (' + flow.store + ' stored' + (snap.pop > 0 ? ' — ' + Math.max(1, Math.floor(flow.store / Math.max(1, flow.eats))) + ' more cycle' + (Math.floor(flow.store / Math.max(1, flow.eats)) === 1 ? '' : 's') : '') + ')';
+      sub = '<div class="province-need-sub' + (dry || short || borrowed ? ' warn' : '') + '">' + line + '</div>';
     }
-    return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, n.served) + '/' + snap.pop + '</span></div>' +
+    return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, gaugeServed) + '/' + snap.pop + '</span></div>' +
       '<div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div>' + sub + '</div>';
   }).join('');
   // The relief valve: while there is cellar space, coins can put provisions on
@@ -24951,19 +24971,19 @@ function townEconomySnapshot(settlement) {
   const out = { pop:0, housingCap:0, taxes:0, branches:0, happiness:1, needs:[], workforce:{available:0,required:0,working:0}, provisions:{food:{rate:0,store:0,cap:0,eats:0},water:{rate:0,store:0,cap:0,eats:0}}, production:{stone:0,materials:{},larder:{}}, settlement:s };
   if (!rows.length) return out;
   let happinessWeight = 0, happinessTotal = 0;
-  const needTotals = Object.fromEntries(EMPIRE_NEEDS.map(need => [need.id, { ...need, cap:0, served:0 }]));
+  const needTotals = Object.fromEntries(EMPIRE_NEEDS.map(need => [need.id, { ...need, cap:0, served:0, supplyServed:0 }]));
   rows.forEach(snap => {
     out.pop += snap.pop; out.housingCap += snap.housingCap; out.taxes += snap.taxes; out.branches += snap.branches;
     const weight = Math.max(1, snap.pop); happinessWeight += weight; happinessTotal += snap.happiness * weight;
     ['available','required','working'].forEach(key => { out.workforce[key] += Number(snap.workforce && snap.workforce[key]) || 0; });
     ['food','water'].forEach(kind => ['rate','store','cap','eats'].forEach(key => { out.provisions[kind][key] += Number(snap.provisions && snap.provisions[kind] && snap.provisions[kind][key]) || 0; }));
-    (snap.needs || []).forEach(need => { if (needTotals[need.id]) { needTotals[need.id].cap += Number(need.cap) || 0; needTotals[need.id].served += Number(need.served) || 0; } });
+    (snap.needs || []).forEach(need => { if (needTotals[need.id]) { needTotals[need.id].cap += Number(need.cap) || 0; needTotals[need.id].served += Number(need.served) || 0; needTotals[need.id].supplyServed += Number(need.supplyServed !== undefined ? need.supplyServed : need.served) || 0; } });
     out.production.stone += Number(snap.production && snap.production.stone) || 0;
     mergeResourceTotals(out.production.materials, snap.production && snap.production.materials, 1);
     mergeResourceTotals(out.production.larder, snap.production && snap.production.larder, 1);
   });
   out.happiness = happinessWeight ? happinessTotal / happinessWeight : 1;
-  out.needs = Object.values(needTotals).map(need => ({ ...need, sat:Math.min(1, need.served / Math.max(1, out.pop)) }));
+  out.needs = Object.values(needTotals).map(need => ({ ...need, sat:Math.min(1, need.served / Math.max(1, out.pop)), supplySat:Math.min(1, need.supplyServed / Math.max(1, out.pop)) }));
   const adjusted = { coins:0, branches:0, stone:0, materials:{}, larder:{} };
   townAdministrativeSeats(s).forEach(seat => {
     const raw = { coins:0, branches:0, stone:0, materials:{}, larder:{} };
@@ -25407,8 +25427,12 @@ function renderTownScreen() {
   const title = $('townScreenTitle'); if (title) title.textContent = settle.tier === 'city' ? 'CITY HALL' : 'TOWN HALL';
 
   const needsHtml = snap.needs.map(need => {
-    const pct = Math.round(need.sat * 100), tone = need.sat >= .95 ? '' : need.sat >= .6 ? ' mid' : ' low';
-    return '<div class="province-need"><div class="province-need-label"><span>' + need.icon + ' ' + need.label + '</span><span>' + Math.floor(need.served) + '/' + snap.pop + '</span></div><div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div></div>';
+    // The gauge reads built supply (v296): a townful of relief stores still
+    // shows an empty water bar until a well actually stands somewhere.
+    const gauge = need.supplySat !== undefined ? need.supplySat : need.sat;
+    const gaugeServed = need.supplyServed !== undefined ? need.supplyServed : need.served;
+    const pct = Math.round(gauge * 100), tone = gauge >= .95 ? '' : gauge >= .6 ? ' mid' : ' low';
+    return '<div class="province-need"><div class="province-need-label"><span>' + need.icon + ' ' + need.label + '</span><span>' + Math.floor(gaugeServed) + '/' + snap.pop + '</span></div><div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div></div>';
   }).join('');
   const provisionsHtml = ['food','water'].map(kind => {
     const store = snap.provisions[kind], icon = kind === 'food' ? '🍞' : '💧', label = kind === 'food' ? 'Food' : 'Water';
@@ -37577,7 +37601,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'stores-market-project-manager-v295-20260820';
+const BURBZ_BUILD = 'honest-need-gauges-v296-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

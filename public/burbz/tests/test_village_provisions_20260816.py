@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
+CURRENT_BUILD = "honest-need-gauges-v296-20260820"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
@@ -257,8 +257,11 @@ def test_the_desk_shows_granary_cistern_and_the_cart():
     assert "empireSendSupplyCart(" in panel
     assert "SEND A SUPPLY CART" in panel
     assert "the stores run short</b>" in panel
-    # The bars read who is actually served, never a phantom capacity.
-    assert "Math.min(snap.pop, n.served)" in panel
+    # v296: the gauge reads what the BUILT farms and wells supply (relief
+    # stores keep folk fed, but they never fill the bar); the number beside
+    # it counts the same truth.
+    assert "Math.min(snap.pop, gaugeServed)" in panel
+    assert "villagers live off the" in panel
     # And the styles for the new lines exist.
     assert ".province-need-sub" in html
     assert ".province-cart-btn" in html

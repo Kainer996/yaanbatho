@@ -6,7 +6,9 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Current release: 2026-08-20 (`stores-market-project-manager-v295-20260820`) — Yaan's two follow-ups. First, the village post's nameplate: it is the **Project Manager** now, not the Steward — role title, icon (📋), province drawer, Town section and income line all say so; the role id stays `steward` so old saves keep their appointee, and grander civic titles (Lord Mayors for towns, Councillors for counties) are planned for later. Second, the **Stores market**: every stockroom card in the Royal Stores carries SELL buttons. Prices live in `loot_crafting_core.js` (`SELL_PRICES`/`sellValue`/`sellQuote`): gear by rarity (15→450 🪙, a legendary beats its own forge bill), materials by rarity (2→100 🪙), larder food 2 🪙, keepsakes 5 🪙. `storesSellItem(kind, id, qty|'all')` in `index.html` owns the trade — exposed on `window` for onclick and on `__burbzStoresDebug` for tests; equipped gear is safe because worn pieces leave `inventory.gear`. Contracts: `tests/test_stores_market_20260820.py`.
+Current release: 2026-08-20 (`honest-need-gauges-v296-20260820`) — Yaan's screenshot report: a village with no farm and no well showed Food 3/3 and Water 3/3, full and green, because the liberation relief stores were filling the bars. Now every need bar is a gauge of what is actually BUILT: `villageEconomySnapshot` carries two truths per need — `sat` (harvest + stores; unchanged, still drives happiness, growth and starvation, so relief supplies keep doing their job) and `supplySat`/`supplyServed` (only what built, staffed farms and wells deliver; shelter and joy carry the same fields). The village desk and the Town Hall draw the gauge; the sublabel tells the stores story ("no stone well yet · villagers live off the cistern (30 stored — 10 more cycles)", amber while it lasts) and the shortage warning still runs on `sat`. `townEconomySnapshot` rolls `supplyServed` up from its wards. Contracts: `tests/test_honest_need_gauges_20260820.py`.
+
+Previous release: 2026-08-20 (`stores-market-project-manager-v295-20260820`) — Yaan's two follow-ups. First, the village post's nameplate: it is the **Project Manager** now, not the Steward — role title, icon (📋), province drawer, Town section and income line all say so; the role id stays `steward` so old saves keep their appointee, and grander civic titles (Lord Mayors for towns, Councillors for counties) are planned for later. Second, the **Stores market**: every stockroom card in the Royal Stores carries SELL buttons. Prices live in `loot_crafting_core.js` (`SELL_PRICES`/`sellValue`/`sellQuote`): gear by rarity (15→450 🪙, a legendary beats its own forge bill), materials by rarity (2→100 🪙), larder food 2 🪙, keepsakes 5 🪙. `storesSellItem(kind, id, qty|'all')` in `index.html` owns the trade — exposed on `window` for onclick and on `__burbzStoresDebug` for tests; equipped gear is safe because worn pieces leave `inventory.gear`. Contracts: `tests/test_stores_market_20260820.py`.
 
 Previous release: 2026-08-20 (`steward-project-manager-v294-20260820`) — Yaan's building pace and project managers. The village build clocks now climb a ladder: the Timber Cabin and Stone Well rise in 4 minutes, the Grain Farm takes half an hour, and every later building takes longer, up to 4 hours for the Storehouse at the bottom of the list (`buildMinutes` in `EMPIRE_BUILDINGS`; upgrades still multiply by level). And the Steward is now the project manager: the post's INT+CHA civic aptitude (small birds boosted, heavyweights penalised — the raven law) cuts up to 30% off every build clock and 15% off every bill via `stewardProjectFactors` in `bird_roles_core.js`. One shared clock helper `villageBuildDurationMs(seed, building, level)` composes guilds × Steward with the 30s floor, and `villageBuildingCost(building, level, seed)` takes an optional seed for the discount — call sites without a seed keep base prices. Old economy-harness tests gained a vacant `villageStewardProject` stub. Contracts: `tests/test_steward_project_manager_20260820.py`.
 
@@ -279,6 +281,25 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-20 — honest need gauges (Claude).** Release
+  `honest-need-gauges-v296-20260820`, from Yaan's screenshot report.
+  - **Two truths per need, kept apart on purpose.** `sat` = harvest + stores
+    (the meal truth — happiness, growth, starvation, the shortage warning,
+    all unchanged). `supplySat`/`supplyServed` = built, staffed supply only
+    (the gauge truth — the bars and their N/N numbers). Do NOT "fix" one
+    into the other: making the sim capacity-based would starve fresh
+    villages before their first 30-minute farm finishes; making the gauge
+    stores-based recreates Yaan's bug.
+  - The stores story lives in the sublabel: "villagers live off the granary
+    (30 stored — 10 more cycles)", amber (`warn`) while a source is missing.
+  - Pin churn was tiny by design: only `test_village_provisions`'s
+    "Math.min(snap.pop, n.served)" pin moved. This release moves no core, so
+    the roles/loot `?v=` pins stay at v295 — when rolling CURRENT_BUILD
+    across the suite, skip the pin constants (ROLE_CORE_PIN, ROLES_PIN,
+    ROLES_CORE_PIN, chef-bulk's RELEASE_PIN, loot_version, and the two
+    release tests' RELEASE) or the ?v asserts break.
+  - Contracts: `tests/test_honest_need_gauges_20260820.py`.
 
 - **2026-08-20 — the Stores market + the Project Manager nameplate (Claude).**
   Release `stores-market-project-manager-v295-20260820`, Yaan's follow-ups.
