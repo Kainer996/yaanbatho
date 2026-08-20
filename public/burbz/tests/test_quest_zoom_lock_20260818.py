@@ -29,7 +29,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "quest-zoom-lock-v282-20260818"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "steward-project-manager-v294-20260820"
+CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
 
 CONSTANTS = ("QUEST_WALK_ZOOM_FLOOR", "QUEST_WALK_ZOOM_CEILING", "QUEST_WALK_FRAME_MIN_M")
 

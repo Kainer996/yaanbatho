@@ -239,6 +239,10 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .stores-res-card .src-copy { font-size:9.5px; color:var(--text3); line-height:1.35; margin-top:1px; }
 .stores-res-card .src-route { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); margin-top:3px; }
 .stores-res-card .src-count { flex:none; font-family:'Russo One',sans-serif; font-size:18px; color:var(--legendary); min-width:26px; text-align:right; }
+.stores-res-card .src-sell { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
+.src-sell-btn { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.04em; padding:4px 8px; border-radius:8px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(180deg,rgba(64,46,16,.85),rgba(26,17,5,.9)); color:#ffe9a8; cursor:pointer; }
+.src-sell-btn.all { border-color:rgba(240,199,103,.25); color:#d9c07f; }
+.src-sell-btn:active { transform:scale(.96); }
 /* Bird picker for XP scrolls */
 .xp-picker-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 .xp-picker-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 10px; border-radius:14px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.28)); color:var(--text); cursor:pointer; }
@@ -4745,10 +4749,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=steward-project-manager-v294-20260820"></script>
+<script src="bird_roles_core.js?v=stores-market-project-manager-v295-20260820"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
-<script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
+<script src="loot_crafting_core.js?v=stores-market-project-manager-v295-20260820"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=merge-when-ready-v290-20260820"></script>
@@ -5981,7 +5985,7 @@ const DEFAULT_STATE = {
   tutorialFlow: { errandClaimed: false, roostGiftGranted: false, roostCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Roost gift, the first-Roost celebration
   diary: { entries: [] }, // Adventurer's Diary — Merlin's chronicle of everything the player has done
   completionNotices: [], // City-builder corner cards: finished buildings and quests waiting to be visited
-  birdRoles: { academy: {}, villages: {}, regions: {} }, // Who runs what: Librarian, Head Chef, village Stewards, region Wardens
+  birdRoles: { academy: {}, villages: {}, regions: {} }, // Who runs what: Librarian, Head Chef, village Project Managers, region Wardens
   chefCareers: {} // Persisted real time served as Head Chef, keyed by bird id
 };
 
@@ -11081,7 +11085,7 @@ function renderBirdSizePanel(bird) {
         <span class="bird-size-chip${size.battlePct < 0 ? ' is-weak' : ''}">⚔️ ${escapeHTML(size.battleLabel)}</span>
         ${witChip}
       </div>
-      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home and hit harder in battle; the small charmers make the better stewards and wardens — ${escapeHTML(massLine)}.</div>
+      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home and hit harder in battle; the small charmers make the better project managers and wardens — ${escapeHTML(massLine)}.</div>
     </div>`;
 }
 
@@ -11194,7 +11198,7 @@ function birdCarryCapacity(bird) {
 
 // ============================================================================
 // ROLES: every bird can be given a job.
-// A room of the Academy to run, a village to steward, a region to hold. The
+// A room of the Academy to run, a village to project-manage, a region to hold. The
 // post is only as good as the bird in it — and for the thinking jobs (Librarian,
 // Star Charter, Head Chef, Steward, Warden) "as good as" means INT. Put the
 // cleverest bird in the Library and the Library itself gets better for every
@@ -11310,7 +11314,7 @@ function academyRoleMultiplier(roomId) { return roleMultiplier('academy', roomId
 function villageRoleMultiplier(seed) {
   const link = typeof empireSettlementOfSeed === 'function' ? empireSettlementOfSeed(seed) : null;
   const settlement = link && typeof empireSettlementById === 'function' ? canonicalEmpireSettlement(empireSettlementById(link.id)) : null;
-  // A merged holding has one Steward post at its public heart. Every hidden
+  // A merged holding has one Project Manager post at its public heart. Every hidden
   // ward receives that same multiplier; no ward keeps a duplicate post.
   const stewardSeed = settlement ? settlement.heartSeed : seed;
   return roleMultiplier('village', String(Number(stewardSeed) >>> 0));
@@ -16849,6 +16853,8 @@ window.__burbzStoresDebug = {
   },
   completeConstructions: now => empireCompleteConstructions(now),
   setTab: storesSetTab,
+  sellQuote: storesSellQuote,
+  sellItem: storesSellItem,
   render: renderInventory
 };
 window.__burbzAcademyDebug = {
@@ -23355,7 +23361,7 @@ const QUARRY_FIRST_CUT_STONE = 10;
 // starters — the Timber Cabin and the Stone Well — rise in 4 minutes, then
 // the clock climbs the list from half an hour to a full 4 hours for the
 // Storehouse. Early shelter and water are instant fun; the late halls are
-// real projects worth appointing a Steward for.
+// real projects worth appointing a Project Manager for.
 const EMPIRE_BUILDINGS = [
   { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 2, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 10, stone: 10 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The cabin rebuilt in quarried stone — houses 12 villagers and shrugs off any storm.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
   { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 30,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
@@ -23662,7 +23668,7 @@ function villageProductionSnapshot(rec) {
   const eco = ensureVillageEconomy(rec);
   const out = { stone: 0, materials: {}, larder: {} };
   if (!eco) return out;
-  // A Steward makes the same fields and quarries yield more: better rotas,
+  // A Project Manager makes the same fields and quarries yield more: better rotas,
   // better records, less waste.
   const steward = villageRoleMultiplier(rec && rec.seed);
   const crew = villageWorkforce(rec);
@@ -23732,7 +23738,7 @@ function villageEconomySnapshot(rec) {
   // boroughs of a city +25% — one market square now serves them all.
   const settlement = empireSettlementOfSeed(rec.seed);
   const merged = settlement && unityCore && unityCore.settlementTierInfo ? 1 + (unityCore.settlementTierInfo(settlement.tier).taxBonus || 0) : 1;
-  // Who runs the place: a village Steward keeps the ledger, and above them a
+  // Who runs the place: the village Project Manager keeps the ledger, and above them a
   // region Warden keeps the roads open. Both pay into the same purse — half
   // weight for the Warden, who is looking after several towns at once.
   const steward = villageRoleMultiplier(rec.seed);
@@ -23818,7 +23824,7 @@ function villageBuildingCost(building, level, seed) {
       branches: building.cost.branches * (level + 1),
       stone: bootstrapQuarry ? 0 : (building.cost.stone || 0) * (level + 1)
     };
-  // Pass the village seed and the Steward haggles the bill down a little.
+  // Pass the village seed and the Project Manager haggles the bill down a little.
   const project = seed == null ? null : villageStewardProject(seed);
   if (!project || !project.staffed || project.costFactor >= 1) return base;
   return {
@@ -23828,7 +23834,7 @@ function villageBuildingCost(building, level, seed) {
   };
 }
 // One clock for every build: base time, cut by merged-settlement guilds and by
-// the Steward's project management, never under 30 seconds.
+// the Project Manager's planning, never under 30 seconds.
 function villageBuildDurationMs(seed, building, level) {
   const factor = settlementBuildFactorForSeed(seed) * villageStewardProject(seed).buildFactor;
   return Math.max(30000, Math.round(villageBuildTimeMs(building, level) * factor));
@@ -23867,7 +23873,7 @@ function empireBuildStructure(seed, buildingId, options) {
   // Costs are paid up front; the structure itself takes real time to rise.
   // Merged settlements raise it faster: a town's shared guilds shave 15% off
   // the clock, a city's 30% — masons walk over from every district. A posted
-  // Steward project-manages on top of that.
+  // Project Manager plans the site on top of that.
   const now = Date.now();
   const guildFactor = settlementBuildFactorForSeed(rec.seed);
   const project = villageStewardProject(rec.seed);
@@ -24319,7 +24325,7 @@ function renderVillageManagePanel() {
       ? '<div class="merge-progress is-ready">⭐ ' + escapeHtml(rec.name) + ' wears its merge star — ' + mergeReady.popGoal + ' folk and ' + Math.round(mergeReady.happyGoal * 100) + '% happiness reached. Star two more villages within 5 km, then press Merge on the Empire screen.</div>'
       : '<div class="merge-progress">⭐ Merge star: 👥 ' + mergeReady.population + '/' + mergeReady.popGoal + ' folk · ' + happinessFace(mergeReady.happiness) + ' ' + Math.round(mergeReady.happiness * 100) + '% of ' + Math.round(mergeReady.happyGoal * 100) + '% happiness. Earn the star and three starred villages can merge into a town.</div>')
     : '';
-  // A town is run by a bird, not by the player alone: appoint a Steward here.
+  // A town is run by a bird, not by the player alone: appoint a Project Manager here.
   // The full appointment card folds away behind one line, so the desk stays
   // about the village — the post is a tap away, not a wall in the middle.
   // The trades of this land hide until found on a real walk. The desk says
@@ -24335,8 +24341,8 @@ function renderVillageManagePanel() {
   if (stewardCard) {
     let stewardPost = null;
     try { stewardPost = rolePostState('village', String(rec.seed >>> 0)); } catch (e) {}
-    stewardHtml = empireDrawerHTML('steward-' + (rec.seed >>> 0), false, '🪶', 'STEWARD',
-      stewardPost && stewardPost.staffed ? escapeHtml(birdDisplayName(stewardPost.bird)) + ' keeps the ledger and runs the building sites — tap to manage' : 'Vacant — appoint a project manager: taxes rise, builds go faster and cheaper', null,
+    stewardHtml = empireDrawerHTML('steward-' + (rec.seed >>> 0), false, '📋', 'PROJECT MANAGER',
+      stewardPost && stewardPost.staffed ? escapeHtml(birdDisplayName(stewardPost.bird)) + ' runs the building sites and the ledger — tap to manage' : 'Vacant — appoint a bird: builds go faster and cheaper, taxes rise', null,
       stewardCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
   }
   panel.innerHTML = '<div class="province-panel">' +
@@ -24348,7 +24354,7 @@ function renderVillageManagePanel() {
     '<div class="province-needs">' + needsHtml + '</div>' +
     cartHtml +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 🏛️ your Steward is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a 🌾 Grain Farm or ⛲ Stone Well, or send a supply cart' : '') + '</div>'
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a 🌾 Grain Farm or ⛲ Stone Well, or send a supply cart' : '') + '</div>'
       : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
@@ -24780,7 +24786,7 @@ function renderRegionScreen() {
       }).join('')
     : '<div class="realm-hint">🧭 No caravan roads touch this county yet — open trade routes from the Counties tab once a second county stands.</div>';
   // One bird holds the whole county: the Warden rides between its villages.
-  // Like the village Steward, the appointment card folds behind one line.
+  // Like the village Project Manager, the appointment card folds behind one line.
   const wardenCard = rolePostCardHTML('region', String(region.id));
   let wardenHtml = '';
   if (wardenCard) {
@@ -25448,8 +25454,8 @@ function renderTownScreen() {
   const storesFull = ['food','water'].every(kind => snap.provisions[kind].store >= snap.provisions[kind].cap);
   const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), {
     titlePrefix:name + ' ',
-    copy:'Appoint a clever companion to run the whole Town.',
-    effectCopy:'This Town pays more taxes and timber, its networks produce more stone and goods — and every build rises faster and costs a little less.'
+    copy:'Appoint a clever companion to run every project in the Town.',
+    effectCopy:'Every build rises faster and costs a little less — and the Town pays more taxes, timber, stone and goods.'
   });
   // The county is the rung above the Hall. Since merge-when-ready-v290 towns
   // never unite on their own: this section shows the town's own merge star,
@@ -25505,7 +25511,7 @@ function renderTownScreen() {
     '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy</div><div class="town-section-copy">' + escapeHtml(policyNote) + '</div><div class="town-policy-grid">' + policies + '</div></div>' +
     countyHtml +
     visitSection +
-    '<div class="town-section"><div class="town-section-title">🪧 Town Steward</div><div class="town-section-copy">One bird administers the whole merged settlement; absorbed ward posts are retired.</div>' + steward + '</div>';
+    '<div class="town-section"><div class="town-section-title">📋 Town Project Manager</div><div class="town-section-copy">One bird runs every project across the merged settlement; absorbed ward posts are retired. A Lord Mayor’s chain comes later.</div>' + steward + '</div>';
   panel.querySelector('[data-action="town-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="town-atlas"]')?.addEventListener('click', () => { SFX.tap(); showTownOnAtlas(settle.id); });
   panel.querySelector('[data-action="town-rename"]')?.addEventListener('click', () => renameTown(settle.id));
@@ -32605,6 +32611,59 @@ function storesCounts() {
   };
 }
 
+// --- The Stores market: selling what the kingdom owns (v295) ----------------
+// Every SELL button routes through here. kind picks the shelf: 'material'
+// and 'keepsake' live in inventory.items, 'food' in the larder, 'gear' in
+// the gear bag (equipped pieces left the bag when they were worn, so only
+// spare stock is ever on sale). Prices live in loot_crafting_core.js.
+function storesSellRarity(kind, id) {
+  const L = lootCore();
+  if (kind === 'material') { const m = L.materialById(id); return m ? m.rarity : null; }
+  if (kind === 'gear') { const g = L.gearById(id); return g ? g.rarity : null; }
+  return null;
+}
+function storesSellBag(kind) {
+  const inv = gameState.inventory || {};
+  if (kind === 'food') return inv.larder || {};
+  if (kind === 'gear') return inv.gear || {};
+  return inv.items || {};
+}
+function storesSellLabel(kind, id) {
+  if (kind === 'food') { const ing = kitchenIngredientById(id); return ing ? ing.label : id; }
+  if (kind === 'gear') { const g = lootCore().gearById(id); return g ? g.label : id; }
+  if (kind === 'material') { const m = lootCore().materialById(id); return m ? m.label : id; }
+  return inventoryLabel(id);
+}
+function storesSellQuote(kind, id, qty) {
+  const owned = Number(storesSellBag(kind)[id]) || 0;
+  return lootCore().sellQuote(kind, storesSellRarity(kind, id), owned, qty === 'all' ? owned : qty);
+}
+function storesSellItem(kind, id, qty) {
+  const quote = storesSellQuote(kind, id, qty);
+  if (!quote.qty || !quote.each) { showToast('The traders shrug — nothing here to sell.'); return; }
+  const bag = storesSellBag(kind);
+  const left = Math.max(0, (Number(bag[id]) || 0) - quote.qty);
+  if (left > 0) bag[id] = left; else delete bag[id];
+  addCoins(quote.total);
+  saveState();
+  SFX.questComplete();
+  vibrate(25);
+  showToast('💰 Sold ' + quote.qty + ' × ' + storesSellLabel(kind, id) + ' for ' + quote.total + ' 🪙.');
+  updateHeader();
+  renderInventory();
+}
+// The two-button row a sellable shelf card carries: one for a single sale,
+// one to clear the stack. An empty stack renders nothing.
+function storesSellRowHTML(kind, id) {
+  const one = storesSellQuote(kind, id, 1);
+  if (!one.qty || !one.each) return '';
+  const all = storesSellQuote(kind, id, 'all');
+  return '<div class="src-sell">' +
+    '<button type="button" class="src-sell-btn" onclick="storesSellItem(\'' + kind + '\',\'' + id + '\',1)">SELL 1 · +' + one.each + ' 🪙</button>' +
+    (all.qty > 1 ? '<button type="button" class="src-sell-btn all" onclick="storesSellItem(\'' + kind + '\',\'' + id + '\',\'all\')">ALL ' + all.qty + ' · +' + all.total + ' 🪙</button>' : '') +
+    '</div>';
+}
+
 // --- Treasury banner: the grand-strategy resource bar -----------------------
 function renderStoresTreasury() {
   const el = $('storesTreasury');
@@ -32711,11 +32770,11 @@ function renderStoresMaterials() {
         return '<div class="stores-res-card' + (have ? '' : ' empty') + '" style="border-color:' + meta.color + (have ? '55' : '22') + ';">' +
           '<div class="src-icon">' + m.icon + '</div>' +
           '<div class="src-main"><div class="src-name" style="color:' + meta.color + ';">' + escapeHtml(m.label) + '</div>' +
-          '<div class="src-copy">' + escapeHtml(m.copy) + '</div></div>' +
+          '<div class="src-copy">' + escapeHtml(m.copy) + '</div>' + storesSellRowHTML('material', m.id) + '</div>' +
           '<div class="src-count">' + have + '</div></div>';
       }).join('') + '</div></div>';
   }).join('');
-  return html + '<div class="stores-hint">Materials come home three ways: found on the map as you walk, dug and felled by your provinces\' quarries and lumber camps, and brought back by the Materials quests on the Quests board — every material in the game has one.</div>';
+  return html + '<div class="stores-hint">Materials come home three ways: found on the map as you walk, dug and felled by your provinces\' quarries and lumber camps, and brought back by the Materials quests on the Quests board — every material in the game has one. Spares sell to the traders — the rarer, the dearer.</div>';
 }
 
 // --- Food tab: the Kitchen larder, grouped by the diet family it feeds ------
@@ -32739,7 +32798,7 @@ function renderStoresFood() {
       '<div class="stores-res-card"><div class="src-icon">' + ing.icon + '</div>' +
       '<div class="src-main"><div class="src-name">' + escapeHtml(ing.label) + '</div>' +
       '<div class="src-copy">' + escapeHtml(kitchenIngredientBlurb(ing)) + '</div>' +
-      '<div class="src-route">Cook at Kitchen &amp; Pantry</div></div>' +
+      '<div class="src-route">Cook at Kitchen &amp; Pantry</div>' + storesSellRowHTML('food', ing.id) + '</div>' +
       '<div class="src-count">' + count + '</div></div>').join('') +
     '</div></div>').join('');
 }
@@ -32762,7 +32821,7 @@ function renderStoresArmoury() {
         return '<div class="stores-res-card" style="border-color:' + color + '55;">' +
           '<div class="src-icon">' + item.icon + '</div>' +
           '<div class="src-main"><div class="src-name" style="color:' + color + ';">' + escapeHtml(item.label) + '</div>' +
-          '<div class="src-copy">' + forgeGearStatLine(item) + '</div></div>' +
+          '<div class="src-copy">' + forgeGearStatLine(item) + '</div>' + storesSellRowHTML('gear', item.id) + '</div>' +
           '<div class="src-count">' + count + '</div></div>';
       }).join('') + '</div></div>';
   }).join('') + '<button class="stores-collect-btn" onclick="switchScreen(\'forge\')">🛡️ EQUIP YOUR FLOCK AT THE FORGE</button>';
@@ -32794,7 +32853,7 @@ function renderStoresCurios() {
     html += '<div class="stores-panel"><div class="stores-panel-title">🎁 Keepsakes &amp; oddments</div><div class="stores-res-grid">' +
       trinkets.map(([id, count]) =>
         '<div class="stores-res-card"><div class="src-icon">' + inventoryIcon(id) + '</div>' +
-        '<div class="src-main"><div class="src-name">' + escapeHtml(inventoryLabel(id)) + '</div></div>' +
+        '<div class="src-main"><div class="src-name">' + escapeHtml(inventoryLabel(id)) + '</div>' + storesSellRowHTML('keepsake', id) + '</div>' +
         '<div class="src-count">' + count + '</div></div>').join('') + '</div></div>';
   }
   return html;
@@ -36508,7 +36567,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -37518,7 +37577,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'steward-project-manager-v294-20260820';
+const BURBZ_BUILD = 'stores-market-project-manager-v295-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

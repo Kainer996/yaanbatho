@@ -125,9 +125,9 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     assert marker in HTML
     assert marker in SW
     # battle_core moved with v258 (Night Wings), then with v287 (attack preview);
-    # the loot core still ships under the conquest release.
+    # the loot core moved with v295 (the Stores market).
     for asset, core_pin in (("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
-                            ("loot_crafting_core.js", "conquest-world-levels-v248-20260811")):
+                            ("loot_crafting_core.js", "stores-market-project-manager-v295-20260820")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML
         assert f"'./{pin}'" in SW

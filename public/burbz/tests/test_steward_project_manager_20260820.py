@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
-RELEASE = "steward-project-manager-v294-20260820"
-CURRENT_BUILD = "steward-project-manager-v294-20260820"
+RELEASE = "stores-market-project-manager-v295-20260820"
+CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
 
 
 def run_node(source: str) -> dict:
@@ -130,9 +130,11 @@ def test_the_small_charmer_out_manages_the_heavyweight():
 
 
 def test_the_steward_role_copy_names_the_project_manager_job():
+    # v295 renamed the post outright: the village bird IS the Project Manager
+    # (grander civic titles — Lord Mayors, Councillors — come later).
     core = CORE.read_text(encoding="utf-8")
-    assert "The Steward is also the project manager" in core
-    assert "every build here rises faster and costs a little less" in core
+    assert "title:'Project Manager'" in core
+    assert "Every build here rises faster and costs a little less" in core
 
 
 # ---------------------------------------------------------------------------
@@ -252,9 +254,9 @@ console.log(JSON.stringify({ vacant, managed }));
 
 def test_the_steward_cards_tell_the_player_about_the_building_sites():
     html = HTML.read_text(encoding="utf-8")
-    assert "keeps the ledger and runs the building sites" in html
-    assert "Vacant — appoint a project manager: taxes rise, builds go faster and cheaper" in html
-    assert "every build rises faster and costs a little less" in html
+    assert "runs the building sites and the ledger" in html
+    assert "Vacant — appoint a bird: builds go faster and cheaper, taxes rise" in html
+    assert "Every build rises faster and costs a little less" in html
 
 
 # ---------------------------------------------------------------------------

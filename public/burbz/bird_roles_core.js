@@ -1,6 +1,6 @@
 // Burbz Bird Roles Core — "Every bird has a job".
 // A bird can be given ONE post in the Kingdom: a room of the Academy to run, a
-// village to steward, or a whole region to hold. The post is only as good as
+// village to project-manage, or a whole region to hold. The post is only as good as
 // the bird in it — each role reads the stats that job actually needs, and a
 // clever bird runs a clever building better. Put the sharpest mind in the
 // Library and the Library itself gets better; put a fool in there and the
@@ -140,10 +140,14 @@
     // Civic posts: weight counts against the ledger. A village trusts a
     // charmer at the door, not a shadow over the market square.
     {
-      id:'steward', title:'Steward', icon:'🏛️', scope:'village', key:null,
+      // The village post is the PROJECT MANAGER (Yaan, 2026-08-20): the bird
+      // that runs the building sites and keeps the ledger. Grander civic
+      // titles — Lord Mayors for towns, Councillors for counties — come
+      // later. The id stays 'steward' so old saves keep their appointee.
+      id:'steward', title:'Project Manager', icon:'📋', scope:'village', key:null,
       stats:{ int:0.5, cha:0.5 }, civic:true,
-      effect:{ id:'village_yield', label:'Governance', copy:'This village pays more taxes and timber, its yards produce more — and every build here rises faster and costs a little less.' },
-      copy:'One bird holds the ledger of a whole town, and towns pick favourites: wit and charm run a village, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it. The Steward is also the project manager: a clever, charming bird plans the scaffolds, sweet-talks the masons and haggles the timber yard, so buildings go up quicker and cheaper.'
+      effect:{ id:'village_yield', label:'Project management', copy:'Every build here rises faster and costs a little less — and the village pays more taxes, timber and goods.' },
+      copy:'One bird runs every project in the village: it plans the scaffolds, sweet-talks the masons, haggles the timber yard and keeps the tax ledger straight. Wit and charm do the work, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it.'
     },
     {
       id:'region_warden', title:'Warden of the Region', icon:'👑', scope:'region', key:null,
@@ -186,9 +190,9 @@
   }
 
   // ---------------------------------------------------------------------------
-  // The Steward as project manager (steward-project-manager-v294)
+  // The Project Manager's site work (steward-project-manager-v294)
   // ---------------------------------------------------------------------------
-  // Yaan's rule: appoint a bird as Steward and it runs the building sites too.
+  // Yaan's rule: the appointed village bird runs the building sites.
   // How much it helps reads straight off the same civic aptitude — INT and CHA,
   // weighed down by size — so the songbirds and the robin, no use in a battle
   // line, become the best project managers in the realm. A perfect appointee

@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "steward-project-manager-v294-20260820"
+CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
