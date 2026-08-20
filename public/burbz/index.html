@@ -734,6 +734,7 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 .village-claim-btn:active { transform:scale(.98); }
 .village-claim-btn[disabled] { opacity:.55; }
 .village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
+.village-claim-note { margin-top:7px; padding:9px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.3); background:rgba(240,199,103,.08); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.04em; text-align:center; }
 #empirePanel { margin:14px; }
 /* ---- Crusader-style royal map frame ---------------------------------------- */
 .empire-map-card { position:relative; height:52vh; min-height:380px; margin:12px 12px 6px; overflow:hidden; border-radius:14px; border:2px solid #7a5a28; background:#18222a; box-shadow:0 0 0 1px rgba(240,199,103,.55), 0 0 0 5px rgba(28,20,8,.95), 0 0 0 6px rgba(214,168,79,.4), 0 18px 40px rgba(0,0,0,.55), inset 0 0 32px rgba(240,199,103,.07); }
@@ -853,6 +854,19 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 /* The governor's desk line naming the settlement a province belongs to */
 .province-settlement { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.55); color:#bfe9c2; font-size:11px; line-height:1.5; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.03em; }
 .province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
+/* MERGE WHEN READY — the ⭐ star and the player's own Merge button. */
+.merge-star { color:#ffd76a; filter:drop-shadow(0 0 5px rgba(255,215,106,.6)); }
+.merge-progress { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px dashed rgba(255,215,106,.4); background:rgba(30,23,7,.55); color:#e8d9a8; font-size:11px; line-height:1.5; }
+.merge-progress.is-ready { border-style:solid; border-color:rgba(255,215,106,.65); color:#ffe9a8; box-shadow:0 0 12px rgba(255,215,106,.12); }
+.merge-banner { margin:8px 0; padding:11px 12px; border-radius:12px; border:1.5px solid rgba(255,215,106,.6); background:linear-gradient(180deg,rgba(52,40,12,.7),rgba(20,14,4,.8)); box-shadow:0 0 18px rgba(255,215,106,.14); display:grid; gap:8px; }
+.merge-banner-title { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:.05em; color:#ffe9a8; }
+.merge-banner-copy { font-size:11px; line-height:1.5; color:#e8d9a8; }
+.merge-banner-btn { width:100%; padding:11px 12px; border:none; border-radius:11px; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.1em; color:#241a05; background:linear-gradient(180deg,#ffd76a,#e0a93f); box-shadow:0 3px 10px rgba(0,0,0,.4); }
+.merge-banner-btn:active { transform:scale(.985); }
+/* Small visit chips: back to the old villages and towns, just to look. */
+.visit-chip-row { display:flex; flex-wrap:wrap; gap:6px; }
+.visit-chip { padding:6px 10px; border-radius:999px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.5); color:#bfe9c2; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px; letter-spacing:.04em; }
+.visit-chip:active { transform:scale(.97); border-color:rgba(142,227,154,.8); }
 
 /* Great titles on the royal atlas — the duchy and kingdom banners that stand
    alone at world zoom, before the counties beneath them unfold */
@@ -1074,6 +1088,8 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 .town-action.is-gold { border-color:rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(82,59,20,.92),rgba(31,21,7,.95)); color:#ffe9a8; }
 .town-action:active { transform:scale(.98); }
 .town-action[disabled] { opacity:.42; }
+/* Short of coins or timber: dimmed but still tappable — the tap offers a quest. */
+.town-action.short { opacity:.55; }
 .town-policy-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .town-policy { position:relative; padding:9px; border-radius:11px; border:1px solid rgba(255,255,255,.11); background:rgba(0,0,0,.27); color:inherit; text-align:left; }
 .town-policy.active { border-color:rgba(240,199,103,.68); background:linear-gradient(150deg,rgba(77,57,19,.55),rgba(18,13,4,.7)); box-shadow:inset 0 0 16px rgba(240,199,103,.06); }
@@ -1166,6 +1182,8 @@ body:has(.settlement-scene-inspector:not([hidden])) .game-side-actions { opacity
 .province-build-btn { min-height:44px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
 .province-build-btn:active { transform:scale(.97); }
 .province-build-btn[disabled] { opacity:.45; }
+/* Short of coins or timber: dimmed but still tappable — the tap offers a quest. */
+.province-build-btn.short { opacity:.55; }
 .province-build-shortage { min-height:14px; font-size:9px; line-height:1.25; color:#ffc4a0; text-align:center; }
 .province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
 .province-build-btn.busy { opacity:.55; filter:grayscale(.35); }
@@ -2086,6 +2104,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .league-rival { padding:10px 12px; background:var(--bg2); border:1px solid rgba(255,255,255,0.06); border-radius:12px; margin-bottom:12px; }
 .league-rival-title { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
 /* Honest odds: the garrison's level against the flock's, before the fight. */
+.rival-streak-line { margin:-2px 0 8px; font-size:11px; font-weight:700; color:var(--text2); }
+.rival-streak-line.hot { color:#f0b429; }
 .rival-danger-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:-2px 0 9px; font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.05em; }
 .rival-danger-line .rdl-world { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; color:var(--text3); letter-spacing:.03em; }
 
@@ -2185,7 +2205,12 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-unit.targetable { border-color:var(--hp-red); box-shadow:0 0 12px rgba(224,89,74,0.5); animation:targetPulse 0.9s ease-in-out infinite; cursor:crosshair; }
 @keyframes targetPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
 .arena-unit.shake { animation:arenaShake .4s ease; }
+.arena-unit.target-locked { border-color:#f0b429; box-shadow:0 0 14px rgba(240,180,41,0.65); animation:none; transform:scale(1.05); }
 .arena-unit .au-turn-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; letter-spacing:1px; padding:1px 7px; border-radius:8px; background:var(--accent); color:#000; z-index:3; }
+.arena-unit .au-target-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; letter-spacing:1px; padding:1px 7px; border-radius:8px; background:#f0b429; color:#000; z-index:4; white-space:nowrap; }
+.arena-unit .au-dmg-preview { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); font-size:9px; font-weight:800; padding:1px 6px; border-radius:8px; background:rgba(10,4,6,0.9); border:1px solid rgba(224,89,74,0.6); color:#ffb3a8; z-index:3; white-space:nowrap; }
+.arena-unit .au-dmg-preview.se { color:#7fdcc6; border-color:rgba(67,198,168,0.7); }
+.arena-unit .au-dmg-preview.nve { color:var(--text3); border-color:rgba(255,255,255,0.18); }
 .arena-unit .au-art { width:100%; aspect-ratio:1; border-radius:9px; object-fit:cover; background:var(--bg4); display:block; }
 .arena-unit .au-emoji { font-size:32px; line-height:52px; height:52px; }
 .arena-unit .au-name { font-size:9px; color:var(--text2); font-weight:700; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -2208,6 +2233,10 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-waiting { grid-column:1/-1; text-align:center; padding:14px 0; color:var(--text3); font-size:12px; }
 .arena-turn-banner { grid-column:1/-1; text-align:center; font-size:11px; font-weight:800; letter-spacing:0.5px; color:var(--accent2); padding:2px 0; }
 .move-btn.pending { border-color:var(--hp-red); box-shadow:0 0 10px rgba(224,89,74,0.4); }
+.move-btn.attack-confirm-btn { border-color:rgba(224,57,43,0.75); background:linear-gradient(180deg, rgba(224,57,43,0.28), var(--bg2)); text-align:center; animation:targetPulse 1.1s ease-in-out infinite; }
+.move-btn.attack-confirm-btn .mv-name { color:#ffb3a8; font-size:12px; }
+.move-btn.attack-confirm-btn.waiting { animation:none; border-color:rgba(255,255,255,0.16); background:var(--bg2); }
+.move-btn.attack-confirm-btn.waiting .mv-name { color:var(--text3); }
 .move-btn .mv-cost.cd { color:var(--text3); }
 .move-btn.surge-btn { border-color:rgba(240,180,41,0.45); text-align:center; }
 .move-btn.surge-btn .mv-name { color:#f0b429; }
@@ -3143,6 +3172,12 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .training-template-card { padding:10px; border-radius:13px; border:1px solid rgba(214,168,79,.18); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.24)); }
 .training-template-head { display:flex; justify-content:space-between; gap:8px; color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
 .training-template-copy { color:var(--text3); font-size:10.5px; line-height:1.35; margin:4px 0 8px; }
+.training-stat-chip { font-size:10px; color:var(--text3); white-space:nowrap; }
+.training-duration-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.training-duration-chip { min-height:34px; padding:0 12px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.3); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; letter-spacing:.04em; }
+.training-duration-chip.selected { border-color:var(--accent); background:rgba(214,168,79,.2); color:#ffe9ad; box-shadow:0 0 10px rgba(214,168,79,.25); }
+.training-reward-line { margin:5px 0 8px; color:var(--text2); font-size:11px; }
+.training-reward-line b { color:#ffe9ad; }
 .training-bird-buttons { display:flex; flex-wrap:wrap; gap:6px; }
 .training-bird-btn { min-height:32px; border-radius:999px; padding:0 10px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.13); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; }
 .training-bird-btn[disabled] { opacity:.45; filter:grayscale(.55); }
@@ -3174,6 +3209,22 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .quest-category-body { max-height:min(58vh, 460px); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:2px 0 10px; border-top:1px solid rgba(214,168,79,.18); }
 .quest-category-body .quest-board-card { margin:8px 10px 0; }
 @media (prefers-reduced-motion:reduce) { .quest-category-summary .qc-chevron { transition:none; } }
+/* A prompt led the player here: the drawer glows until they have seen it. */
+.quest-category.spotlit { animation:questCategorySpotlight 1.1s ease-in-out 4; }
+@keyframes questCategorySpotlight { 0%,100% { box-shadow:0 0 0 0 rgba(240,199,103,0); } 50% { box-shadow:0 0 0 3px rgba(240,199,103,.8), 0 0 24px rgba(240,199,103,.4); } }
+@media (prefers-reduced-motion:reduce) { .quest-category.spotlit { animation:none; box-shadow:0 0 0 3px rgba(240,199,103,.8); } }
+
+/* Shortfall prompt: a build the purse can't cover offers a quest instead. */
+.resource-quest-overlay { position:fixed; inset:0; z-index:640; display:none; align-items:center; justify-content:center; padding:24px 18px; background:rgba(4,6,5,.72); backdrop-filter:blur(4px); }
+.resource-quest-overlay.open { display:flex; }
+.resource-quest-card { width:100%; max-width:340px; border-radius:18px; padding:18px 16px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); box-shadow:0 14px 44px rgba(0,0,0,.6); text-align:center; animation:qccPop .3s cubic-bezier(.2,1.4,.4,1); }
+@media (prefers-reduced-motion:reduce) { .resource-quest-card { animation:none; } }
+.resource-quest-icon { font-size:36px; margin-bottom:4px; }
+.resource-quest-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:17px; letter-spacing:.05em; text-transform:uppercase; color:#f4ead4; }
+.resource-quest-copy { font-size:12.5px; line-height:1.5; color:var(--text2); margin:8px 0 14px; }
+.resource-quest-go { width:100%; min-height:44px; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; letter-spacing:.06em; text-transform:uppercase; }
+.resource-quest-go:active { transform:scale(.985); }
+.resource-quest-later { width:100%; min-height:36px; margin-top:8px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
 .quest-duration { font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--text3); background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.25); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
 .quest-away-card { display:flex; align-items:center; gap:12px; margin:0 10px 10px; padding:12px; border-radius:16px; border:1px solid rgba(120,200,140,.28); background:linear-gradient(135deg,rgba(60,120,80,.14),rgba(0,0,0,.3)); cursor:pointer; transition:transform .15s ease; }
 .quest-away-card:active { transform:scale(.98); }
@@ -4292,6 +4343,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 11.5 11.5M19 4 7.5 15.5M14.5 15.5 18 19M9.5 15.5 6 19M4.2 16.2l3.6 3.6M19.8 16.2l-3.6 3.6"/></svg></div>
       <div class="nav-label">Battle</div>
     </button>
+    <button class="nav-item" data-game-route data-screen="forge" aria-label="Blacksmith's forge">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.4 8.4a1.06 1.06 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.9-1.9A2 2 0 0 1 19 8.2V7l-2.3-2.3a6 6 0 0 0-4.2-1.7L9 3l.9.8A6.2 6.2 0 0 1 12 8.4V10l2 2h1.2a2 2 0 0 1 1.4.6l1.9 1.9"/></svg></div>
+      <div class="nav-label">Forge</div>
+    </button>
     <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
       <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 8.8 12 13.6l9.5-4.8L12 4Z"/><path d="M6.5 11.2v4.6c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.6M21.5 9v5"/></svg></div>
       <div class="nav-label">Academy</div>
@@ -4679,7 +4734,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=night-hunter-ascendant-v258-20260813"></script>
+<script src="academy_treehouse_core.js?v=training-your-way-v288-20260819"></script>
 <script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
@@ -4692,19 +4747,20 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=chef-mastery-feed-all-v261-20260813"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=night-hunter-ascendant-v258-20260813"></script>
+<script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
-<script src="empire_realm_core.js?v=town-strategy-v273-20260816"></script>
+<script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
+<script src="settlement_merge_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
-<script src="walking_story_core.js?v=walking-story-quests-v249-20260811"></script>
+<script src="walking_story_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
-<script src="settlement_scene_core.js?v=field-guide-menus-v287-20260819"></script>
+<script src="settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -4719,7 +4775,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
-<script src="action_badge_core.js?v=distributed-game-hud-v244-20260810"></script>
+<script src="action_badge_core.js?v=battle-progression-fixes-v286-20260819"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script>
@@ -5913,7 +5969,7 @@ const DEFAULT_STATE = {
   academyBuildings: { outdoors: { built: true, builtAt: 'starter' }, kitchen: { built: true, builtAt: 'starter-kitchen', x: 50, y: 52 } }, // Campus building ownership
   academyBuilderVersion: 7,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
-  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
+  league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, streak: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
   walkingQuests: { active: null, history: [] }, // Real-world walking adventures on the live map
   merlinCluesFound: [], // Merlin's Clues notebook: story rewards discovered through Quest Roost
@@ -6365,7 +6421,7 @@ const BURBZ_STAT_RUBRIC = {
     def: "Survivability, adaptability, awareness, and environmental resilience.",
     spd: "Real-world flight speed, agility, or pursuit speed.",
     int: "Problem solving, learning, memory, social complexity, adaptability.",
-    cha: "Charm: the heart of Kingdom diplomacy — how winning, confiding and sociable the species is. Charm sways battle Parleys and pays on diplomacy quests. Robins hop up to gardeners and wrens charm the whole hedgerow; dunnocks skulk in the hedge bottom. Intelligence is coveted, but charm is what carries the Crowbar."
+    cha: "Charm: the heart of Kingdom diplomacy — how winning, confiding and sociable the species is. Charm pays on diplomacy quests. Robins hop up to gardeners and wrens charm the whole hedgerow; dunnocks skulk in the hedge bottom. Intelligence is coveted, but charm is what carries the Crowbar."
   },
   bands: {
     1: "Very low", 2: "Low", 3: "Below average", 4: "Slightly below average",
@@ -10940,7 +10996,7 @@ function openBirdInfo(birdId) {
   const art = infoArt
     ? `<img src="${escapeHTML(infoArt.src)}"${infoArt.extra} alt="${escapeHTML(bird.commonName || bird.species)}">`
     : `<span>${bird.emoji || '&#128038;'}</span>`;
-  const summary = info.summary || info.rationale || `${bird.commonName || bird.species} is part of your Burbz collection. More field-guide detail will be added as the species database grows.`;
+  const summary = info.summary || info.rationale || `${bird.commonName || bird.species} flies with your free flock. More field-guide detail will be added as the species database grows.`;
   const mapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(info.lat || BIRD_INFO_MAP_CENTER.lat)}&mlon=${encodeURIComponent(info.lon || BIRD_INFO_MAP_CENTER.lon)}#map=${BIRD_INFO_MAP_CENTER.zoom}/${encodeURIComponent(info.lat || BIRD_INFO_MAP_CENTER.lat)}/${encodeURIComponent(info.lon || BIRD_INFO_MAP_CENTER.lon)}`;
   const traits = Array.isArray(info.traits) ? info.traits : [];
   const education = getCachedBirdEducation(bird);
@@ -12477,7 +12533,9 @@ function levelUpBird(bird, xpGain, options = {}) {
     bird.power = Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def * 1.0 + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (mult * 0.7));
     bird.power = clamp(bird.power, 20, 9999);
 
-    bird.hp = bird.maxHp;
+    // A level-up mends stats, not wounds: battle holds the heal back
+    // (options.noHeal) so a bird lost on the field reaches the ward hurt.
+    if (!options.noHeal) bird.hp = bird.maxHp;
   }
   const levelsGained = bird.level - startLevel;
   if (levelsGained > 0 && !options.silent) {
@@ -12560,7 +12618,7 @@ const ACADEMY_ROOMS = {
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Recovery ward for hurt companions. Birds stationed here heal much faster than in the Roost, and each patient is discharged back to their old room the moment they are fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
-  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds sway battle Parleys, win over foes and earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
+  crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
   workshop: { label:'NEST WORKSHOP', icon:'🛠️', buildingId:'workshop', desc:'Hauling twigs and weaving nests toughens a bird up. Stationed birds grow DEF.', perk:'Passive: +1 DEF every 30 min', perches:[[25,31],[21,35],[29,35]] },
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
@@ -12685,8 +12743,8 @@ function academyBuildBuilding(id, opts = {}) {
   const level = Number(gameState.player.level) || 1;
   const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
-  if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' 🪙 to build ' + cfg.label); return false; }
-  if (playerBranches() < branchCost) { showToast('Need ' + branchCost + ' 🪵 branches for ' + cfg.label + ' — send birds on Branch Run or Timber Haul quests.'); return false; }
+  if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return false; }
+  if (playerBranches() < branchCost) { showResourceQuestPrompt('branches', branchCost, goalWithThe(cfg.label)); return false; }
   addCoins(-cfg.cost);
   addBranches(-branchCost);
   gameState.academyBuildings[id] = { built: true, builtAt: new Date().toISOString(), x: opts.position ? opts.position.x : cfg.x, y: opts.position ? opts.position.y : cfg.y };
@@ -12713,8 +12771,8 @@ function academyStartPlaceBuilding(id) {
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
-    if ((gameState.player.coins || 0) < cfg.cost) { showToast('Need ' + cfg.cost + ' 🪙 to build ' + cfg.label); return; }
-    if (playerBranches() < (Number(cfg.branches) || 0)) { showToast('Need ' + cfg.branches + ' 🪵 branches for ' + cfg.label + ' — send birds on Branch Run or Timber Haul quests.'); return; }
+    if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return; }
+    if (playerBranches() < (Number(cfg.branches) || 0)) { showResourceQuestPrompt('branches', Number(cfg.branches) || 0, goalWithThe(cfg.label)); return; }
   }
   academyPlacementTarget = id;
   SFX.tap();
@@ -13622,6 +13680,78 @@ function questCategoryOpenMap() {
 }
 function questCategoryIsOpen(id) { return !!questCategoryOpenMap()[id]; }
 function setQuestCategoryOpen(id, open) { questCategoryOpenMap()[id] = !!open; }
+
+// ---- Shortfall prompt -------------------------------------------------------
+// A build the player can't pay for is not a dead end. Instead of a toast that
+// names the problem and walks away, a small card offers the fix: send birds
+// out on the errand that earns the missing resource. Taking it opens the
+// quest board with the right drawer open and glowing.
+const RESOURCE_QUEST_ROUTES = {
+  coins:    { icon:'🪙', noun:'coins',  category:'treasure', drawerLabel:'Coin & Treasure' },
+  branches: { icon:'🪵', noun:'timber', category:'timber',   drawerLabel:'Timber & Building' }
+};
+
+function resourceQuestOverlayEl() {
+  let el = document.getElementById('resourceQuestOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'resourceQuestOverlay';
+    el.className = 'resource-quest-overlay';
+    el.addEventListener('click', e => { if (e.target === el) closeResourceQuestPrompt(); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function closeResourceQuestPrompt() {
+  const el = document.getElementById('resourceQuestOverlay');
+  if (el) el.classList.remove('open');
+}
+
+// Room labels sometimes carry their own article ("The Roost") — add one only
+// where it is missing, so the prompt never reads "The The Roost".
+function goalWithThe(label) { return /^the\s/i.test(label) ? label : 'The ' + label; }
+
+// kind: 'coins' | 'branches'. need: the full cost. goal: what the player was
+// trying to raise ("The Alehouse", "A birdhouse in Elmbrook").
+function showResourceQuestPrompt(kind, need, goal) {
+  const route = RESOURCE_QUEST_ROUTES[kind];
+  if (!route) return;
+  const have = kind === 'branches' ? playerBranches() : (Number(gameState && gameState.player && gameState.player.coins) || 0);
+  const short = Math.max(1, Math.ceil(need - have));
+  const el = resourceQuestOverlayEl();
+  el.innerHTML = '<div class="resource-quest-card">' +
+    '<div class="resource-quest-icon">' + route.icon + '</div>' +
+    '<div class="resource-quest-title">Not enough ' + route.noun + '</div>' +
+    '<div class="resource-quest-copy">' + escapeHtml(goal) + ' costs ' + need + ' ' + route.icon + ' and you have ' + have + '. Your birds can fetch the missing ' + short + '.</div>' +
+    '<button class="resource-quest-go">🕊️ SEND BIRDS OUT ON A QUEST</button>' +
+    '<button class="resource-quest-later">NOT NOW</button>' +
+  '</div>';
+  el.querySelector('.resource-quest-go').addEventListener('click', () => {
+    SFX.tap();
+    closeResourceQuestPrompt();
+    openQuestBoardCategory(route.category);
+  });
+  el.querySelector('.resource-quest-later').addEventListener('click', () => { SFX.tap(); closeResourceQuestPrompt(); });
+  el.classList.add('open');
+}
+
+// Open the quest board with one category drawer open, scrolled to and glowing.
+function openQuestBoardCategory(categoryId) {
+  setQuestCategoryOpen(categoryId, true);
+  if (currentScreen === 'quests') renderBirdExpeditions();
+  else switchScreen('quests');
+  requestAnimationFrame(() => {
+    const drawer = document.querySelector('[data-quest-category="' + categoryId + '"]');
+    if (!drawer) return;
+    drawer.open = true;
+    drawer.classList.remove('spotlit');
+    void drawer.offsetWidth; // restart the glow if it is already running
+    drawer.classList.add('spotlit');
+    drawer.scrollIntoView({ behavior:'smooth', block:'start' });
+    setTimeout(() => drawer.classList.remove('spotlit'), 5200);
+  });
+}
 
 let questBoardRefreshTimer = null;
 function scheduleQuestBoardRefresh() {
@@ -15844,7 +15974,8 @@ function dischargeBirdFromHospital(bird, now = Date.now()) {
 // own schedule and recovers where it stands.
 function admitFaintedBirdToHospital(bird) {
   if (!bird || !isAcademyRoomBuilt('hospital')) return false;
-  // A level-up on the way home can heal a bird to full — nothing to treat.
+  // Nothing to treat at full HP. Battle keeps its lost birds hurt on purpose
+  // (levelUpBird noHeal), so this guard never turns a casualty away.
   if ((bird.hp || 0) >= (bird.maxHp || 100)) return false;
   ensureBirdAcademy(bird);
   if (bird.academy.room === 'hospital') return false;
@@ -15856,6 +15987,21 @@ function admitFaintedBirdToHospital(bird) {
   bird.academy.hospitalReturnRoom = previousRoom;
   bird.academy.lastMovedAt = new Date().toISOString();
   updateQuestProgress('station_hospital', 1);
+  return true;
+}
+
+// No ward standing? A lost bird still leaves its post. It rests in the
+// Aviary Gardens until food or care mends it — it does not report back to
+// the Training Hall looking fine. Same guards as admission: working,
+// questing and mid-drill birds keep their own schedule.
+function restLostBirdOutsideWard(bird) {
+  if (!bird) return false;
+  ensureBirdAcademy(bird);
+  if (bird.academy.room === 'hospital' || bird.academy.room === 'outdoors') return false;
+  if (birdAssignedPost(bird.id)) return false;
+  if (birdHasActiveExpedition(bird.id) || birdHasActiveTraining(bird.id)) return false;
+  bird.academy.room = 'outdoors';
+  bird.academy.lastMovedAt = new Date().toISOString();
   return true;
 }
 
@@ -16347,6 +16493,20 @@ function roomBirdGridHTML(birds, room) {
   return '<div class="room-bird-grid" aria-label="Birds assigned to ' + escapeHtml((ACADEMY_ROOMS[room] && ACADEMY_ROOMS[room].label) || room) + '">' + items + '</div>';
 }
 
+// The notice board's one shared dial: how long the next run lasts. Short
+// runs pay the most for the player's minute; the dial starts on 15m so the
+// quick loop is the default.
+let trainingDurationChoice = 15;
+
+function selectTrainingDuration(minutes) {
+  const core = window.BurbzAcademyCore;
+  const ladder = (core && core.TRAINING_DURATION_MINUTES) || [15, 30, 60, 120, 240, 480, 1440];
+  if (!ladder.includes(Number(minutes))) return;
+  trainingDurationChoice = Number(minutes);
+  SFX.tap();
+  renderAcademyRoomInterior();
+}
+
 function startBirdTrainingSession(birdId, templateId) {
   const bird = academyBirdById(birdId);
   if (!bird) return;
@@ -16365,15 +16525,16 @@ function startBirdTrainingSession(birdId, templateId) {
   // stationed in the Kitchen — it is a feeding table, not a roost.
   bird.academy.room = tplRoom === 'kitchen' ? 'outdoors' : tplRoom;
   bird.academy.lastMovedAt = new Date().toISOString();
-  const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now(), { nightBonus: nocturnalNightBonusFor(bird) });
+  const session = window.BurbzAcademyCore.createTrainingSession(bird, templateId, Date.now(), { nightBonus: nocturnalNightBonusFor(bird), durationMinutes: trainingDurationChoice });
   ensureBirdTrainingSessions().unshift(session);
   academySelectedRoom = tplRoom;
   academyInteriorRoom = tplRoom;
   saveState();
   SFX.tap();
+  const runLength = fmtTrainingTime(session.durationMinutes || Math.round((session.endMs - session.startMs) / 60000));
   showToast(session.nightBonus
-    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — Night Hunter bonus: 3× XP and double stat gains! ' + session.label
-    : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label);
+    ? '🌙 ' + (bird.commonName || bird.species) + ' trains by night — 3× XP, double stat gains! ' + session.label + ' · ' + runLength
+    : '🏋️ ' + (bird.commonName || bird.species) + ' started ' + session.label + ' · ' + runLength);
   renderAcademyRoomInterior();
   renderAcademy();
 }
@@ -16453,27 +16614,36 @@ function renderTrainingHallPanel(birds, others) {
     const rewards = t.rewards || {};
     const progressPct = Number.isFinite(t.progressPct) ? t.progressPct : 0;
     const events = Array.isArray(t.events) ? t.events : [];
-    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
-  }).join('') : '<div class="academy-empty">No birds are training yet. Tap the notice board below to assign a companion to a timed drill.</div>';
+    const runLength = fmtTrainingTime(t.durationMinutes || Math.max(1, Math.round((t.endMs - t.startMs) / 60000)));
+    return '<div class="training-session-card">' + artHtml + '<div class="academy-bird-main"><div class="training-session-head"><span>' + (t.icon || '🏋️') + ' ' + escapeHtml(t.birdName) + '</span><span>' + progressPct + '%</span></div><div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + progressPct + '%"></div></div><div class="training-session-meta">' + escapeHtml(t.label || 'Training drill') + ' · ' + runLength + ' · +' + (rewards.bonus || 1) + ' ' + escapeHtml(rewards.statLabel || t.statLabel || 'STAT') + ' · +' + (rewards.xp || 0) + ' XP</div><div class="training-session-log">' + events.slice(-4).map(e => '<div>• ' + escapeHtml(e && e.text) + '</div>').join('') + '</div></div><div class="academy-actions">' + (done ? '<button class="academy-btn primary" onclick="claimBirdTrainingSession(\'' + t.id + '\')">CLAIM TRAINING</button>' : '<button class="academy-btn" disabled>Training</button>') + '</div></div>';
+  }).join('') : '';
+  // One shared dial for every drill: pick the run length once, then send.
+  const ladder = core.TRAINING_DURATION_MINUTES || [15, 30, 60, 120, 240, 480, 1440];
+  if (!ladder.includes(trainingDurationChoice)) trainingDurationChoice = ladder[0];
+  const durationRow = '<div class="training-duration-row" role="group" aria-label="Run length">' + ladder.map(m =>
+    '<button type="button" class="training-duration-chip' + (m === trainingDurationChoice ? ' selected' : '') + '" onclick="selectTrainingDuration(' + m + ')">' + fmtTrainingTime(m) + '</button>').join('') + '</div>';
   const templateHtml = templates.map(t => {
     const roomBuilt = !t.room || t.room === 'training' || isAcademyBuildingBuilt(t.room);
-    const moveLine = t.moveLine ? '<div class="training-session-meta">Move line: ' + escapeHtml(t.moveLine) + '</div>' : '';
+    const option = (core.getTrainingDurationOptions ? core.getTrainingDurationOptions(t.id) : []).find(o => o.minutes === trainingDurationChoice);
+    const rewardLine = option
+      ? '<div class="training-reward-line">' + fmtTrainingTime(option.minutes) + ' → <b>+' + option.bonus + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + '</b> · +' + option.xp + ' XP · 1 move session</div>'
+      : '';
+    const moveLine = t.moveLine ? '<div class="training-session-meta">' + escapeHtml(t.moveLine) + '</div>' : '';
     const buttons = !roomBuilt
-      ? '<div class="academy-empty">🔒 Build the ' + escapeHtml(t.roomLabel || t.room) + ' to unlock this discipline.</div>'
+      ? '<div class="academy-empty">🔒 Build the ' + escapeHtml(t.roomLabel || t.room) + ' to unlock.</div>'
       : (availableBirds.length ? '<div class="training-bird-buttons">' + availableBirds.slice(0, 12).map(b => {
         const readiness = birdWorkReadiness(b, 'training');
-        const hungerLabel = readiness.status && readiness.status.label ? readiness.status.label.toLowerCase() : 'fed';
         // A Night Hunter's button says so: at night, the owl learns triple.
         const nightHunting = readiness.ok && !!nocturnalNightBonusFor(b);
-        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' · urgent care' : 'Send ' + birdDisplayName(b) + ' · ' + (nightHunting ? '🌙 Night Hunter 3×' : hungerLabel);
+        const label = !readiness.ok ? 'Feed ' + birdDisplayName(b) + ' first' : birdDisplayName(b) + (nightHunting ? ' 🌙3×' : '');
         return '<button class="training-bird-btn' + (nightHunting ? ' night-hunter-aura' : '') + '" data-hunger-state="' + readiness.status.level + '" ' + (!readiness.ok ? 'disabled' : 'onclick="startBirdTrainingSession(\'' + b.id + '\',\'' + t.id + '\')"') + '>' + escapeHtml(label) + '</button>';
-      }).join('') + '</div>' : '<div class="academy-empty">No available birds right now — recruit one, claim current training, or wait for quests to finish.</div>');
-    return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span>' + fmtTrainingTime(t.minutes) + '</span></div><div class="training-template-copy">' + escapeHtml(t.copy) + ' Reward: +' + (t.bonus || 1) + ' ' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ', +' + (t.xp || 0) + ' XP.</div>' + moveLine + buttons + '</div>';
+      }).join('') + '</div>' : '<div class="academy-empty">Every bird is busy — free one up, then come back.</div>');
+    return '<div class="training-template-card"' + (roomBuilt ? '' : ' style="opacity:0.65;"') + '><div class="training-template-head"><span>' + t.icon + ' ' + escapeHtml(t.label) + '</span><span class="training-stat-chip">+' + escapeHtml(t.statLabel || t.stat.toUpperCase()) + ' · ' + escapeHtml(String(t.school || '').toUpperCase()) + '</span></div>' + moveLine + rewardLine + buttons + '</div>';
   }).join('');
   const nightHallHint = isNightRightNow()
-    ? '<div class="battle-night-hint">🌙 Night school is open — a nocturnal bird training now earns TRIPLE XP and DOUBLE stat gains from every drill. The owls learn while the Kingdom sleeps.</div>'
+    ? '<div class="battle-night-hint">🌙 Night school: a nocturnal bird training now earns 3× XP and double stat gains.</div>'
     : '';
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div><div class="training-hall-copy">Seven timed drills across the Academy rooms: each session raises a stat and teaches stronger battle moves (1 session = move I, 3 = move II, 6 = move III). Birds already training appear here first; use the notice board to assign the rest.</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Choose a drill, then assign an available bird. The bird moves into the Training Hall, appears in the room, and claims stat/XP rewards when the timer completes.</div><div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Pick a run length, then tap a bird under a drill. Short runs pay the most for your time; long runs pay while you\'re away. Every run counts one session toward the drill\'s move line (1 = move I, 3 = II, 6 = III).</div>' + durationRow + '<div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function trainingMasterActorHTML() {
@@ -16636,6 +16806,7 @@ Object.assign(window, {
   closeFeedSheet,
   startBirdTrainingSession,
   claimBirdTrainingSession,
+  selectTrainingDuration,
   academyForage,
   cardSendBirdToRoom,
   openAcademyRoom,
@@ -20440,6 +20611,11 @@ function normalizeActionBadgeState(now = Date.now()) {
       ? barracksRecruitCandidates().filter(candidate => recruitCostForBird(candidate.bird) <= coins).length
       : 0;
   } catch (e) {}
+  let forgeReadyCount = 0;
+  try { forgeReadyCount = typeof forgeJobsReady === 'function' ? forgeJobsReady(now).length : 0; } catch (e) {}
+  // The Empire tab lights up whenever provinces or caravans have taxes ready.
+  let empireCollectCount = 0;
+  try { empireCollectCount = typeof empireCollectiblesWaiting === 'function' ? empireCollectiblesWaiting(now) : 0; } catch (e) {}
   return {
     questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
     quests: gameState && gameState.quests,
@@ -20447,7 +20623,9 @@ function normalizeActionBadgeState(now = Date.now()) {
     birdTrainingSessions,
     sideQuestDiscoveries,
     recruitableCount,
-    careNeedsCount
+    careNeedsCount,
+    forge: forgeReadyCount,
+    village: empireCollectCount
   };
 }
 
@@ -21318,6 +21496,7 @@ function normaliseVillageCoordinate(value, min, max) {
 }
 
 function enterVillage(v) {
+  villageVisitingWard = false;
   const merged = v && empireOwnsVillage(v.seed) ? empireSettlementOfSeed(v.seed) : null;
   if (merged) {
     openEmpireTown(merged.id);
@@ -21380,7 +21559,42 @@ function ensureEmpireState() {
   // Seed → trade keys. Shops stay hidden everywhere until they appear here.
   if (!gameState.empire.shopDiscoveries || typeof gameState.empire.shopDiscoveries !== 'object' || Array.isArray(gameState.empire.shopDiscoveries)) gameState.empire.shopDiscoveries = {};
   gameState.empire.townStrategyVersion = 1;
+  // Signed merge charters. Since merge-when-ready-v290 no town or region
+  // forms on its own: villages earn a merge star (40 folk, 75% happiness),
+  // then the player presses Merge, and the signing lands here. Town charters
+  // hold village seeds; region charters hold town heart seeds. City charters
+  // exist only to grandfather pre-v290 automatic cities.
+  if (!Array.isArray(gameState.empire.townCharters)) gameState.empire.townCharters = [];
+  if (!Array.isArray(gameState.empire.cityCharters)) gameState.empire.cityCharters = [];
+  if (!Array.isArray(gameState.empire.regionCharters)) gameState.empire.regionCharters = [];
+  // One-order upgrades: a town or region raising every home and yard at once.
+  // Keyed by settlement/region id → { plan, startMs, endMs, name, target }.
+  if (!gameState.empire.wholesaleWorks || typeof gameState.empire.wholesaleWorks !== 'object' || Array.isArray(gameState.empire.wholesaleWorks)) gameState.empire.wholesaleWorks = {};
   const empire = gameState.empire;
+  // Grandfather migration: a save from the automatic era keeps every town,
+  // city and county it already formed — they are replayed once here as
+  // signed charters, so nothing the player built ever dissolves.
+  if (empire.mergeChartersVersion !== 1) {
+    const rcMigrate = typeof globalThis !== 'undefined' ? globalThis.BurbzEmpireRealmCore : null;
+    if (rcMigrate && rcMigrate.deriveRealm) {
+      const villages = Object.values(empire.villages).filter(Boolean);
+      if (villages.length) {
+        const legacy = rcMigrate.deriveRealm(villages);
+        const signSeeds = seeds => seeds.map(s => Number(s) >>> 0).sort((a, b) => a - b);
+        (legacy.settlements.towns || []).forEach(t => empire.townCharters.push({
+          seeds: signSeeds(t.villages.map(v => v.seed)), mergedAt: t.foundedAt || new Date().toISOString()
+        }));
+        (legacy.settlements.cities || []).forEach(c => empire.cityCharters.push({
+          seeds: signSeeds(c.towns.map(t => t.heartSeed)), mergedAt: c.foundedAt || new Date().toISOString()
+        }));
+        (legacy.regions || []).forEach(r => empire.regionCharters.push({
+          seeds: signSeeds((r.towns || []).map(t => t.heartSeed)), mergedAt: r.foundedAt || new Date().toISOString()
+        }));
+      }
+      empire.mergeChartersVersion = 1;
+      saveState();
+    }
+  }
   if (empire.pendingLiberation && (Array.isArray(empire.pendingLiberation) || !validPendingLiberation(empire.pendingLiberation))) {
     empire.pendingLiberation = null;
     saveState();
@@ -21480,10 +21694,10 @@ function beginVillageLiberation(village) {
 function cancelEmpireLiberation() {
   const empire = ensureEmpireState();
   if (!empire || !empire.pendingLiberation) return;
-  const townName = empire.pendingLiberation.name;
+  const villageName = empire.pendingLiberation.name;
   empire.pendingLiberation = null;
   saveState();
-  showToast('Liberation of ' + townName + ' paused.');
+  showToast('Liberation of ' + villageName + ' paused.');
   renderBattleSelect();
 }
 
@@ -22141,6 +22355,7 @@ function frameEmpireSettlement(settlementId) {
 // a heraldic transition scroll covers the journey while the scene builds.
 let empireTravelTimer = null, empireTravelFadeTimer = null;
 function openEmpireVillage(seed) {
+  villageVisitingWard = false;
   const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
   if (!village) return;
   const merged = empireSettlementOfSeed(village.seed);
@@ -22174,7 +22389,13 @@ function refreshEmpireMap(options = {}) {
   const villages = empireMappableVillages();
   const standaloneVillages = empireStandaloneVillages(villages);
   const visibleSettlements = empireVisibleSettlements();
-  const visibleClaims = standaloneVillages.concat(visibleSettlements.map(settlement => ({
+  // A ready village wears its ⭐ on the atlas, so the player can see from
+  // the map which villages are waiting to merge.
+  const starredVillages = standaloneVillages.map(v => {
+    const ready = villageMergeReady(v);
+    return ready && ready.ready ? { ...v, name: '⭐ ' + v.name } : v;
+  });
+  const visibleClaims = starredVillages.concat(visibleSettlements.map(settlement => ({
     seed:settlement.heartSeed, name:townDisplayName(settlement),
     lat:Number(settlement.centroid.lat), lon:Number(settlement.centroid.lon),
     claimedAt:settlement.foundedAt
@@ -22647,14 +22868,31 @@ function ensureEmpireTributeCountdownTicker() {
 // liberate. All the maths lives in empire_realm_core.js.
 // ============================================================================
 function realmCore() { return window.BurbzEmpireRealmCore; }
+function mergeCore() { return window.BurbzSettlementMergeCore || null; }
+// The player's signed merges, straight from the save. Passed into every
+// settlement/realm derivation so nothing merges without a signature.
+function empireMergeCharters() {
+  const empire = ensureEmpireState();
+  return {
+    townCharters: (empire && empire.townCharters) || [],
+    cityCharters: (empire && empire.cityCharters) || [],
+    regionCharters: (empire && empire.regionCharters) || []
+  };
+}
+function empireCharterSignature(charters) {
+  const sign = list => (Array.isArray(list) ? list : []).map(c => (c && Array.isArray(c.seeds) ? c.seeds.join('.') : '')).join(',');
+  return sign(charters.townCharters) + '|' + sign(charters.cityCharters) + '|' + sign(charters.regionCharters);
+}
 let empireRegionsCache = null, empireRegionsCacheKey = '';
 function empireRegionsInfo() {
   const core = realmCore();
   if (!core) return { regions: [], duchies: [], kingdoms: [], empire: null, unassigned: [], largestCluster: 0, clusterCount: 0 };
   const villages = empireVillages();
-  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',');
+  const charters = empireMergeCharters();
+  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',') +
+    '#' + empireCharterSignature(charters);
   if (!empireRegionsCache || empireRegionsCacheKey !== key) {
-    empireRegionsCache = core.deriveRealm ? core.deriveRealm(villages) : core.deriveRegions(villages);
+    empireRegionsCache = core.deriveRealm ? core.deriveRealm(villages, charters) : core.deriveRegions(villages, charters);
     empireRegionsCacheKey = key;
   }
   return empireRegionsCache;
@@ -22681,12 +22919,13 @@ function empireRegionPopulation(region) {
   return region ? region.villages.reduce((sum, v) => sum + (villageEconomySnapshot(v)?.pop || 0), 0) : 0;
 }
 // ============================================================================
-// SETTLEMENTS — village → town → city, the street-level merge layer BELOW
-// regions. Each chronological group of 3 neighbouring villages (within 5 km)
-// becomes one permanent TOWN; each group of 3 neighbouring Towns (squares
-// within 15 km) becomes one permanent CITY. Derived deterministically from the
-// same liberation claims as regions — nothing extra is stored, nothing can
-// drift. All the maths lives in empire_realm_core.js (deriveSettlements).
+// SETTLEMENTS — village → town, the street-level merge layer BELOW regions.
+// Since merge-when-ready-v290 the player signs every merge: a village earns
+// its ⭐ merge star at 40 folk and 75% happiness, and three starred villages
+// within 5 km merge into one permanent TOWN when the player presses Merge.
+// The signed charters live in empire.townCharters; deriveSettlements replays
+// them, so the same charters always rebuild the same towns. Pre-v290 Cities
+// survive through grandfathered cityCharters. Maths: empire_realm_core.js.
 // ============================================================================
 let empireSettlementsCache = null, empireSettlementsCacheKey = '';
 function migrateGamePlaceNames(state) {
@@ -22710,9 +22949,11 @@ function empireSettlementsInfo() {
   const core = realmCore();
   if (!core || !core.deriveSettlements) return { towns: [], cities: [], tierBySeed: {}, townCount: 0, cityCount: 0, largestVillageCluster: 0, largestTownCluster: 0 };
   const villages = empireVillages();
-  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',');
+  const charters = empireMergeCharters();
+  const key = villages.map(v => [v.seed >>> 0, Number(v.lat), Number(v.lon), String(v.claimedAt || '')].join(':')).sort().join(',') +
+    '#' + empireCharterSignature(charters);
   if (!empireSettlementsCache || empireSettlementsCacheKey !== key) {
-    empireSettlementsCache = core.deriveSettlements(villages);
+    empireSettlementsCache = core.deriveSettlements(villages, { townCharters: charters.townCharters, cityCharters: charters.cityCharters });
     empireSettlementsCacheKey = key;
   }
   return empireSettlementsCache;
@@ -22726,6 +22967,32 @@ function empireSettlementOfSeed(seed) {
 function empireSettlementById(id) {
   const info = empireSettlementsInfo();
   return info.cities.find(c => c.id === String(id)) || info.towns.find(t => t.id === String(id)) || null;
+}
+// "Aldermoor, Briarwell and Foxholt" — the wards of a merged holding, named
+// in claim order, so the player always sees exactly which villages grew
+// together (and why their pins left the map).
+function settlementWardNames(settlement) {
+  const names = ((settlement && settlement.villages) || []).map(w => String(w.name || 'a village'));
+  if (names.length <= 1) return names.join('');
+  return names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+}
+// What raising the liberation birdhouse here would found: the town or city
+// this claim completes, or null while the village would stand alone. Since
+// merge-when-ready-v290 merging is the player's own act — a fresh claim
+// never completes a merge, so with charters passed this returns null for
+// new liberations. Kept for save compatibility and the pure-core tests.
+function previewClaimFounding(v) {
+  const core = realmCore();
+  const empire = ensureEmpireState();
+  if (!core || !core.deriveSettlements || !v || !empire) return null;
+  const key = String(Number(v.seed) >>> 0);
+  if (empire.villages[key]) return null;
+  const charters = empireMergeCharters();
+  const claims = empireVillages().concat([{ seed: Number(v.seed) >>> 0, name: v.name, lat: Number(v.lat), lon: Number(v.lon), claimedAt: new Date().toISOString() }]);
+  const after = core.deriveSettlements(claims, { townCharters: charters.townCharters, cityCharters: charters.cityCharters });
+  const mine = after.tierBySeed[key];
+  if (!mine || mine.tier === 'village') return null;
+  return (mine.tier === 'city' ? after.cities : after.towns).find(s => s.id === mine.id) || null;
 }
 // The public holdings projection. Consumed villages remain durable ward
 // records, but never appear as a second marker, row, notice or destination.
@@ -22775,6 +23042,152 @@ function settlementBuildFactorForSeed(seed) {
     ? (core.settlementTierInfo(settle.tier).buildTimeFactor || 1)
     : 1;
   return guildFactor * (settle ? townBuildFactorForSeed(seed) : 1);
+}
+// ---- Merge stars & signed merges --------------------------------------------
+// Since merge-when-ready-v290 nothing merges on its own. A village earns its
+// ⭐ merge star at 40 folk and 75% happiness; three starred villages within
+// 5 km can be merged by the player into one Town. Towns earn their star at
+// 120 folk and 75% happiness; three starred towns within 150 km merge into
+// one County — the region desk. All the rules live in settlement_merge_core.
+function villageMergeReady(rec) {
+  const mc = mergeCore();
+  if (!mc || !rec) return null;
+  const snap = villageEconomySnapshot(rec);
+  if (!snap) return null;
+  return mc.villageMergeReadiness({ population: snap.pop, happiness: snap.happiness });
+}
+// A town's readiness comes from its own wards — even a borough inside a
+// grandfathered City is measured on its three villages alone.
+function townMergeReady(town) {
+  const mc = mergeCore();
+  const empire = ensureEmpireState();
+  if (!mc || !town || !empire) return null;
+  let pop = 0, weight = 0, happy = 0;
+  (town.villages || []).forEach(v => {
+    const rec = empire.villages[String(Number(v.seed) >>> 0)];
+    const snap = rec ? villageEconomySnapshot(rec) : null;
+    if (!snap) return;
+    pop += snap.pop;
+    const w = Math.max(1, snap.pop);
+    weight += w;
+    happy += snap.happiness * w;
+  });
+  return mc.townMergeReadiness({ population: pop, happiness: weight ? happy / weight : 0 });
+}
+function empireVillageMergePoints() {
+  return empireStandaloneVillages().map(v => ({
+    seed: v.seed >>> 0, name: v.name, lat: Number(v.lat), lon: Number(v.lon),
+    claimedAt: v.claimedAt, ready: !!(villageMergeReady(v) || {}).ready
+  }));
+}
+function empireTownMergePoints() {
+  return (empireSettlementsInfo().towns || []).map(t => ({
+    seed: t.heartSeed >>> 0, name: townDisplayName(t), lat: Number(t.centroid.lat), lon: Number(t.centroid.lon),
+    claimedAt: t.foundedAt, ready: !!(townMergeReady(t) || {}).ready
+  }));
+}
+// The merges the player could sign right now, one candidate per area.
+function empireTownMergeCandidates() {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return [];
+  return mc.mergeCandidates(empireVillageMergePoints(), rc.SETTLEMENT_TOWN_RADIUS_KM || 5, empire.townCharters);
+}
+function empireRegionMergeCandidates() {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return [];
+  return mc.mergeCandidates(empireTownMergePoints(), rc.REGION_RADIUS_KM || 150, empire.regionCharters);
+}
+// A village crossing the readiness bar announces its star once (and can earn
+// it again if hard times take the star away). Callers persist on their own
+// save cadence — the flag is best-effort, the star itself is always derived.
+function maybeAwardMergeStar(rec) {
+  const eco = ensureVillageEconomy(rec);
+  if (!eco) return false;
+  const ready = villageMergeReady(rec);
+  if (!ready) return false;
+  if (!ready.ready) { if (eco.mergeStarSeen) eco.mergeStarSeen = false; return false; }
+  if (eco.mergeStarSeen) return false;
+  eco.mergeStarSeen = true;
+  if (empireSettlementOfSeed(rec.seed)) return false; // already merged — no star fanfare
+  queueCompletionNotice({
+    kind: 'merge-star',
+    icon: '⭐',
+    title: rec.name + ' earns its merge star',
+    sub: '40 folk, 75% happy — ready to merge into a town. Tap to visit.',
+    target: { seed: rec.seed >>> 0 }
+  });
+  return true;
+}
+// The player presses Merge: three starred villages sign one town charter.
+function empireMergeVillages(seedsCsv) {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return;
+  empireCompleteConstructions();
+  simulateAllVillageEconomies();
+  const chosen = String(seedsCsv || '').split(',').map(s => Number(s.trim()) >>> 0).filter(Boolean);
+  const verdict = mc.validateMerge(empireVillageMergePoints(), rc.SETTLEMENT_TOWN_RADIUS_KM || 5, empire.townCharters, chosen);
+  if (!verdict.ok) { showToast('🏘️ ' + verdict.reason); return; }
+  const names = verdict.seeds.map(seed => (empire.villages[String(seed)] || {}).name || 'a village');
+  const before = snapshotGameState();
+  empire.townCharters.push({ seeds: verdict.seeds, mergedAt: new Date().toISOString() });
+  let town = null;
+  try {
+    const link = empireSettlementOfSeed(verdict.seeds[0]);
+    town = link ? canonicalEmpireSettlement(empireSettlementById(link.id)) : null;
+    if (!town) throw new Error('The merge charter produced no town.');
+    townAdministrativeSeats(town).forEach(ensureTownSeatState);
+    ensureTownSteward(town);
+    addPlayerXp(60);
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(before);
+    console.warn('Village merge rolled back', error);
+    showToast('The merge could not be saved, so nothing changed. Please try again.');
+    return;
+  }
+  if (typeof logDiary === 'function') logDiary('village', { name: townDisplayName(town), count: empireVillages().length });
+  SFX.victory();
+  vibrate(70);
+  showToast('🏘️ ' + mc.nameList(names) + ' merge — ' + townDisplayName(town) + ' stands! One map holds all three villages’ buildings. Govern it from the Town Hall; wards pay +10% taxes and guilds build 15% faster.');
+  liveMapVillageKey = null;
+  scheduleVillageMarkerRefresh();
+  refreshEmpireMap({ frame: true });
+  updateHeader();
+  openEmpireTown(town.id);
+}
+// Three starred towns sign one region charter and a County is founded.
+function empireMergeTowns(seedsCsv) {
+  const rc = realmCore(), mc = mergeCore(), empire = ensureEmpireState();
+  if (!rc || !mc || !empire) return;
+  empireCompleteConstructions();
+  simulateAllVillageEconomies();
+  const chosen = String(seedsCsv || '').split(',').map(s => Number(s.trim()) >>> 0).filter(Boolean);
+  const points = empireTownMergePoints();
+  const verdict = mc.validateMerge(points, rc.REGION_RADIUS_KM || 150, empire.regionCharters, chosen);
+  if (!verdict.ok) { showToast('🛡️ ' + verdict.reason); return; }
+  const names = verdict.seeds.map(seed => (points.find(p => p.seed === seed) || {}).name || 'a town');
+  const before = snapshotGameState();
+  empire.regionCharters.push({ seeds: verdict.seeds, mergedAt: new Date().toISOString() });
+  let region = null;
+  try {
+    region = empireRegionsInfo().regions.find(r => (r.towns || []).some(t => verdict.seeds.includes(Number(t.heartSeed) >>> 0))) || null;
+    if (!region) throw new Error('The merge charter produced no county.');
+    addPlayerXp(120);
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(before);
+    console.warn('Town merge rolled back', error);
+    showToast('The merge could not be saved, so nothing changed. Please try again.');
+    return;
+  }
+  SFX.victory();
+  vibrate(80);
+  showToast('🛡️ ' + mc.nameList(names) + ' unite — the ' + region.name + ' is founded! Run the whole region from its County Hall: one chest, one Warden, one upgrade order for every town.');
+  liveMapVillageKey = null;
+  scheduleVillageMarkerRefresh();
+  refreshEmpireMap({ frame: true });
+  updateHeader();
+  openEmpireRegion(region.id);
 }
 // The player's realm-wide style: feudal crown titles once regions exist,
 // the humble village ladder before then. Simple game, simple title.
@@ -22851,8 +23264,8 @@ function empireOpenTradeRoute(key) {
   if (!candidate) { showToast('That caravan road is no longer on the charts — the realm has changed shape.'); renderEmpirePanel(); return; }
   if (empire.tradeRoutes[candidate.key] || empireTradeRouteRecords().some(route => route.activeKey === candidate.key)) { showToast('🕊️ That trade route is already open.'); return; }
   const cost = core.tradeRouteCost(empireTradeRouteInvestmentCount());
-  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to fit out the first sky-caravan — collect taxes from your provinces.'); return; }
-  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for waystations along the road — send birds on Branch Run or Timber Haul quests.'); return; }
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'The first sky-caravan'); return; }
+  if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, 'The caravan road'); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
   const a = empireRegionById(candidate.a), b = empireRegionById(candidate.b);
@@ -23044,6 +23457,7 @@ function empireCompleteConstructions(now) {
       const housingCap = villageNeedCapacity(rec, 'shelter');
       movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
       eco.population += movedIn;
+      if (movedIn) maybeAwardMergeStar(rec);
     }
     const doneTier = villageBuildingTier(building, level);
     const mergedLink = empireSettlementOfSeed(rec.seed);
@@ -23082,9 +23496,11 @@ function empireCompleteConstructions(now) {
 function tickEmpireConstruction() {
   const hallCompleted = townCompleteHallConstructions();
   const wardCompleted = empireCompleteConstructions();
-  if (!hallCompleted && !wardCompleted) return;
+  const orderCompleted = completeWholesaleWorks();
+  if (!hallCompleted && !wardCompleted && !orderCompleted) return;
   updateHeader();
   if (currentScreen === 'town') renderTownScreen();
+  else if (currentScreen === 'region') renderRegionScreen();
   else if (currentScreen === 'village') renderVillage();
   else renderEmpirePanel();
 }
@@ -23342,6 +23758,8 @@ function simulateVillageEconomy(rec, now) {
     else if (snap.happiness < 0.45) eco.population -= 1;
     eco.population = Math.max(floor, Math.min(VILLAGE_MAX_POPULATION, Math.min(eco.population, Math.max(snap.housingCap, floor))));
   }
+  // A village that crossed the readiness bar this cycle announces its ⭐.
+  maybeAwardMergeStar(rec);
   // One corner card per hungry village, newest wins — tapping it opens the
   // village so the governor can raise a farm or send a supply cart.
   if (wentHungry && eco.population > 0) {
@@ -23404,8 +23822,8 @@ function empireBuildStructure(seed, buildingId, options) {
   const unlockLevel = Number(building.unlockLevel) || 1;
   if (level === 0 && trainerLevel < unlockLevel) { showToast('🔒 The ' + building.name + ' unlocks at trainer level ' + unlockLevel + ' — quest, scan and battle to level up.'); return; }
   const cost = villageBuildingCost(building, level);
-  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 to raise the ' + building.name + ' — collect taxes and win battles.'); return; }
-  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the ' + building.name + ' — send birds on Branch Run or Timber Haul quests.'); return; }
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, goalWithThe(building.name)); return; }
+  if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, goalWithThe(building.name)); return; }
   if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — build a Quarry and collect its provincial output.'); return; }
   const snapshot = snapshotGameState();
   addCoins(-cost.coins);
@@ -23485,7 +23903,7 @@ function empireSendSupplyCart(seed, options) {
   const eco = ensureVillageEconomy(rec);
   const foodCap = villageStoreCapacity(rec, 'food'), waterCap = villageStoreCapacity(rec, 'water');
   if (eco.stores.food >= foodCap && eco.stores.water >= waterCap) { showToast('The stores at ' + publicName + ' are already full.'); return; }
-  if ((gameState.player.coins || 0) < VILLAGE_SUPPLY_CART.coins) { showToast('Need ' + VILLAGE_SUPPLY_CART.coins + ' 🪙 to send a supply cart — collect taxes and win battles.'); return; }
+  if ((gameState.player.coins || 0) < VILLAGE_SUPPLY_CART.coins) { showResourceQuestPrompt('coins', VILLAGE_SUPPLY_CART.coins, 'A supply cart'); return; }
   addCoins(-VILLAGE_SUPPLY_CART.coins);
   const food = Math.min(VILLAGE_SUPPLY_CART.food, foodCap - eco.stores.food);
   const water = Math.min(VILLAGE_SUPPLY_CART.water, waterCap - eco.stores.water);
@@ -23502,6 +23920,18 @@ function empireSendSupplyCart(seed, options) {
 function empireVillageTributePeriods(v, now) {
   const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
   return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((now - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
+}
+// How many strongboxes wait across the realm: settlements, lone villages and
+// caravan routes with at least one full 8-hour cycle banked. The Empire tab's
+// red badge on the bottom nav reads this — it lights only when a collection
+// would actually pay out, and it clears the moment the taxes are taken.
+function empireCollectiblesWaiting(nowValue) {
+  const now = Number(nowValue) || Date.now();
+  let waiting = 0;
+  empireVisibleSettlements().forEach(settlement => { if (townHasAccruedTribute(settlement, now)) waiting += 1; });
+  empireStandaloneVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) waiting += 1; });
+  empireTradeRouteRecords().forEach(({ rec }) => { if (empireTradeRoutePeriods(rec, now) > 0) waiting += 1; });
+  return waiting;
 }
 function empireTributeReady() {
   simulateAllVillageEconomies();
@@ -23671,19 +24101,10 @@ function claimCurrentVillage() {
   if (empire.villages[key]) { showToast('🕊️ ' + v.name + ' is already liberated.'); return; }
   if (!empireHasLiberationVictory(v.seed)) { beginVillageLiberation(v); return; }
   const cost = birdhouseCostForNextVillage();
-  if ((gameState.player.coins || 0) < cost.coins) { showToast('Need ' + cost.coins + ' 🪙 for a birdhouse in ' + v.name + '.'); return; }
-  if (playerBranches() < cost.branches) { showToast('Need ' + cost.branches + ' 🪵 branches for the birdhouse — send birds on Branch Run or Timber Haul quests.'); return; }
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'A birdhouse in ' + v.name); return; }
+  if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, 'The birdhouse in ' + v.name); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
-  // The realm's shape before this liberation: county ids plus every rung of
-  // the feudal pyramid, so foundings AND proclamations can be announced.
-  const realmBefore = empireRegionsInfo();
-  const regionsBefore = realmBefore.regions.map(r => r.id).join('|');
-  const duchiesBefore = (realmBefore.duchies || []).length;
-  const kingdomsBefore = (realmBefore.kingdoms || []).length;
-  const empireBefore = !!realmBefore.empire;
-  const settlementsBefore = empireSettlementsInfo();
-  const townsBefore = settlementsBefore.townCount, citiesBefore = settlementsBefore.cityCount;
   const liberatedAt = new Date().toISOString();
   empire.villages[key] = { seed: v.seed >>> 0, name: v.name, lat: normaliseVillageCoordinate(v.lat, -90, 90), lon: normaliseVillageCoordinate(v.lon, -180, 180), claimedAt: liberatedAt, liberatedAt, lastTributeAt: Date.now() };
   if (typeof logDiary === 'function') logDiary('village', { name: v.name, count: empireVillages().length });
@@ -23699,75 +24120,30 @@ function claimCurrentVillage() {
     if (lines.length) claimLootText = ' The village armoury opens: ' + lootLinesToText(lines);
     saveState();
   } catch (e) {}
-  // Did this liberation merge villages into a TOWN — or towns into a CITY?
-  // Three neighbouring liberated villages grow together into one town; three
-  // neighbouring towns rise as one city. Announced only when it happens.
-  const settlementsNow = empireSettlementsInfo();
-  const mySettlement = empireSettlementOfSeed(v.seed);
-  const foundedSettlement = mySettlement ? canonicalEmpireSettlement(empireSettlementById(mySettlement.id)) : null;
-  if (foundedSettlement) { townAdministrativeSeats(foundedSettlement).forEach(ensureTownSeatState); ensureTownSteward(foundedSettlement); }
-  showToast(foundedSettlement
-    ? foundedSettlement.icon + ' ' + townDisplayName(foundedSettlement) + ' is now one united ' + (foundedSettlement.tier === 'city' ? 'City' : 'Town') + ' holding. Its source villages retire from the map; govern everything from the Hall.' + claimLootText
-    : '🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty; your caravan leaves relief supplies, so build homes and residents will move in. Add a farm and well before supplies run out. ' + count + ' holding' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
-  if (settlementsNow.cityCount > citiesBefore && mySettlement && mySettlement.tier === 'city') {
-    const city = empireSettlementById(mySettlement.id);
-    setTimeout(() => {
-      showToast('🏙️ ' + (city ? city.townCount : 3) + ' neighbouring towns merge into one — the ' + mySettlement.label + ' rises! Its boroughs pay +25% taxes and its united guilds build 30% faster. Watch its daylight fuse into one great glow on the royal atlas.');
-      SFX.victory();
-    }, 1100);
-  } else if (settlementsNow.townCount > townsBefore && mySettlement && mySettlement.tier === 'town') {
-    const town = empireSettlementById(mySettlement.id);
-    setTimeout(() => {
-      showToast('🏘️ Three neighbouring villages grow together — ' + townDisplayName(town) + ' stands! Its wards pay +10% taxes and its shared guilds build 15% faster. Two more neighbouring towns and a city rises.');
-      SFX.victory();
-    }, 1100);
-  }
-  // Did this liberation found a county — or push the feudal pyramid up a
-  // rung? Simplified Crusader Kings: counties unite into duchies, duchies
-  // into kingdoms, kingdoms into the empire. The realm layer only ever
-  // announces itself here, when a founding or proclamation actually happens.
-  const realmNow = empireRegionsInfo();
-  const regionsNow = realmNow.regions;
-  if (regionsNow.map(r => r.id).join('|') !== regionsBefore) {
-    const grown = regionsNow.find(r => r.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0)));
-    if (grown) setTimeout(() => {
-      showToast('🛡️ The free holdings around ' + empireRegionSeatName(grown) + ' unite: the ' + grown.name + ' is founded! Its lands wake on the royal atlas — open the 🛡️ Counties tab under the Empire map to run it from its County Hall. ' + (regionsNow.length >= 2 ? 'Open trade routes between your counties from the Counties tab.' : 'Found a second county abroad and your counties can trade.'));
-      SFX.victory();
-    }, 1600);
-  }
-  if ((realmNow.duchies || []).length > duchiesBefore) {
-    const duchy = realmNow.duchies.find(d => d.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) || realmNow.duchies[realmNow.duchies.length - 1];
-    setTimeout(() => {
-      showToast('🏰 Two Counties stand together: the ' + duchy.name + ' is proclaimed! You are now ' + empireCrownTitle() + ' — every village under the duchy pays +20% unity taxes.');
-      SFX.victory();
-    }, 2200);
-  }
-  if ((realmNow.kingdoms || []).length > kingdomsBefore) {
-    const kingdom = realmNow.kingdoms.find(k => k.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) || realmNow.kingdoms[realmNow.kingdoms.length - 1];
-    setTimeout(() => {
-      showToast('👑 Two Duchies unite: the ' + kingdom.name + ' is proclaimed! You are now ' + empireCrownTitle() + ' — every village of the kingdom pays +25% unity taxes.');
-      SFX.victory();
-    }, 2800);
-  }
-  if (!empireBefore && realmNow.empire) {
-    setTimeout(() => {
-      showToast('☀️ Two free Kingdoms stand across the Earth: the ' + realmNow.empire.name + ' is proclaimed! You are Emperor of the Liberated Skies — every village of the empire pays +30% unity taxes.');
-      SFX.victory();
-    }, 3400);
-  }
-  setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:(foundedSettlement ? townDisplayName(foundedSettlement) + ' Council' : v.name + ' elder') + ' asks a bird question...', rewardCoins:18 }), 900);
+  // Since merge-when-ready-v290 a liberation never merges anything. Every
+  // freed village starts its own road to the ⭐ merge star (40 folk, 75%
+  // happiness); merging is the player's own act on the Empire screen.
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty; your caravan leaves relief supplies, so build homes and residents will move in. Add a farm and well before supplies run out. Grow it to 40 folk at 75% happiness and it earns its ⭐ merge star. ' + count + ' holding' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
   refreshEmpireMap({ frame:true });
   updateHeader();
-  if (foundedSettlement) openEmpireTown(foundedSettlement.id); else renderVillage();
+  renderVillage();
 }
+
 function renderVillageClaimBar() {
   const bar = $('villageClaimBar');
   if (!bar) return;
   const v = currentVillage();
   if (!v) { bar.innerHTML = ''; return; }
-  if (empireSettlementOfSeed(v.seed)) { bar.innerHTML = ''; return; }
+  const mergedHere = empireSettlementOfSeed(v.seed);
+  if (mergedHere) {
+    // A visited ward: the old village as it was, with the road back home.
+    bar.innerHTML = '<div class="village-owned-banner">' + mergedHere.icon + ' ' + escapeHtml(v.name) + ' lives on inside ' + escapeHtml(mergedHere.label) + ' — you are just visiting</div>' +
+      '<button class="village-claim-btn" onclick="openEmpireTown(\'' + escapeHtml(mergedHere.id) + '\')">🏛️ BACK TO THE HALL</button>';
+    return;
+  }
   if (empireOwnsVillage(v.seed)) {
     const rec = ensureEmpireState().villages[String(v.seed >>> 0)];
     const when = rec && rec.claimedAt ? new Date(rec.claimedAt).toLocaleDateString() : '';
@@ -23776,9 +24152,11 @@ function renderVillageClaimBar() {
     return;
   }
   const cost = birdhouseCostForNextVillage();
-  bar.innerHTML = empireHasLiberationVictory(v.seed)
-    ? '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>'
-    : '<button class="village-claim-btn" onclick="claimCurrentVillage()">🕊️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
+  if (empireHasLiberationVictory(v.seed)) {
+    bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>';
+    return;
+  }
+  bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🕊️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
 }
 // The governor's desk beneath the 3D village: population, the four basic
 // needs, this province's tax yield and the construction yard.
@@ -23874,7 +24252,9 @@ function renderVillageManagePanel() {
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
     else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
-    else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')"' + (affordable ? '' : ' disabled') + '>' +
+    // Short on coins or timber? The button stays live: tapping it opens the
+    // shortfall prompt that sends birds out for the missing resource.
+    else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')">' +
       upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
     // The crew line: a yard says plainly whether a villager is working it.
     let crewHtml = '';
@@ -23893,6 +24273,14 @@ function renderVillageManagePanel() {
   const settleHere = empireSettlementOfSeed(rec.seed);
   const settleLine = settleHere
     ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Village centre of ' : 'Village district of ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
+    : '';
+  // The road to the ⭐ merge star: 40 folk, 75% happiness. Once earned, the
+  // Merge button lives on the Empire screen — this desk just shows the way.
+  const mergeReady = settleHere ? null : villageMergeReady(rec);
+  const mergeLine = mergeReady
+    ? (mergeReady.ready
+      ? '<div class="merge-progress is-ready">⭐ ' + escapeHtml(rec.name) + ' wears its merge star — ' + mergeReady.popGoal + ' folk and ' + Math.round(mergeReady.happyGoal * 100) + '% happiness reached. Star two more villages within 5 km, then press Merge on the Empire screen.</div>'
+      : '<div class="merge-progress">⭐ Merge star: 👥 ' + mergeReady.population + '/' + mergeReady.popGoal + ' folk · ' + happinessFace(mergeReady.happiness) + ' ' + Math.round(mergeReady.happiness * 100) + '% of ' + Math.round(mergeReady.happyGoal * 100) + '% happiness. Earn the star and three starred villages can merge into a town.</div>')
     : '';
   // A town is run by a bird, not by the player alone: appoint a Steward here.
   // The full appointment card folds away behind one line, so the desk stays
@@ -23918,6 +24306,7 @@ function renderVillageManagePanel() {
     '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
     '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (crew.required ? ' · 👷 ' + crew.working + '/' + crew.required + ' yards crewed' : '') + '</div></div>' +
     settleLine +
+    mergeLine +
     tradesLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     cartHtml +
@@ -23940,6 +24329,7 @@ function renderEmpirePanel() {
   const panel = $('empirePanel');
   if (!panel) return;
   empireCompleteConstructions();
+  completeWholesaleWorks();
   simulateAllVillageEconomies();
   const sourceVillages = empireVillages();
   const villages = empireStandaloneVillages(sourceVillages).slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0));
@@ -23959,13 +24349,30 @@ function renderEmpirePanel() {
   // the row answers only "how is it doing" and "what does it pay".
   const ledger = empireLedger();
   let totalPop = ledger.population, taxesPerCycle = ledger.coins, branchesPerCycle = ledger.branches, stonePerCycle = ledger.stone;
+  // The merges the player could sign right now — one gold banner per area.
+  const mc = mergeCore();
+  const townCandidates = mc ? empireTownMergeCandidates() : [];
+  const regionCandidates = mc ? empireRegionMergeCandidates() : [];
+  const mergeBannerHtml = (candidate, action, title, copy, button) =>
+    '<div class="merge-banner"><div class="merge-banner-title">' + title + '</div>' +
+    '<div class="merge-banner-copy">' + copy + '</div>' +
+    '<button type="button" class="merge-banner-btn" data-action="' + action + '" data-seeds="' + candidate.seeds.join(',') + '">' + button + '</button></div>';
+  const townMergeBanners = townCandidates.map(c => mergeBannerHtml(c, 'merge-villages', '⭐ READY TO MERGE',
+    escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 40 folk each, 75% happy. Merge them and one Town rises, holding every building the three villages built.',
+    '🏘️ MERGE INTO ONE TOWN')).join('');
+  const regionMergeBanners = regionCandidates.map(c => mergeBannerHtml(c, 'merge-towns', '⭐ READY TO UNITE',
+    escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 120 folk each, 75% happy. Merge them and a County rises: one desk for the whole region.',
+    '🛡️ MERGE INTO ONE COUNTY')).join('');
   const villageRow = v => {
     const snap = villageEconomySnapshot(v);
-    const badges = villageConstructionFor(v) ? '<span class="evr-badge" title="Building">🏗️</span>' : '';
+    const ready = villageMergeReady(v);
+    const badges = (ready && ready.ready ? '<span class="evr-badge merge-star" title="Ready to merge">⭐</span>' : '') +
+      (villageConstructionFor(v) ? '<span class="evr-badge" title="Building">🏗️</span>' : '');
+    const starMeta = ready && ready.ready ? ' · <span class="merge-star">⭐ ready to merge</span>' : '';
     return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
       '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
       '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + (badges ? ' <span class="evr-badges">' + badges + '</span>' : '') + '</span><br>' +
-      '<span class="empire-village-meta">' + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ empty · build homes') + '</span></span>' +
+      '<span class="empire-village-meta">' + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' + starMeta : '🏚️ empty · build homes') + '</span></span>' +
       '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵' + (snap.production.stone ? '<br>+' + snap.production.stone + ' stone' : '') + '</span></button>';
   };
   let rows;
@@ -23982,8 +24389,8 @@ function renderEmpirePanel() {
   } else {
     rows = villages.map(villageRow).join('');
   }
-  // ---- 🏘️ TOWNS tab — the street-level merge layer. Liberate 3 neighbouring
-  // villages and they make one town; 3 neighbouring towns make one city.
+  // ---- 🏘️ TOWNS tab — the street-level merge layer. Grow villages to their
+  // ⭐ merge star, then press Merge: three starred villages make one town.
   // The tab always stands, so the ladder is visible from the first village;
   // until a town exists its body simply explains how one forms.
   let townsBody;
@@ -23999,20 +24406,18 @@ function renderEmpirePanel() {
     }).join('');
     const townRows = settlements.towns.filter(t => !t.cityId).map(t => {
       const snap = townEconomySnapshot(t);
+      const ready = townMergeReady(t);
+      const starMeta = ready && ready.ready ? ' · <span class="merge-star">⭐ ready for a county</span>' : '';
       return '<button type="button" class="settlement-row is-town" data-action="empire-settlement" data-settlement="' + escapeHtml(t.id) + '">' +
         '<span class="settlement-icon">' + t.icon + '</span>' +
-        '<span class="settlement-main"><span class="settlement-name">' + escapeHtml(townDisplayName(t)) + '</span><br>' +
-        '<span class="settlement-meta">🏘️ ' + t.villageCount + ' united wards · 👥 ' + snap.pop + ' · +' + Math.round(townTier.taxBonus * 100) + '% taxes</span></span>' +
+        '<span class="settlement-main"><span class="settlement-name">' + (ready && ready.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(townDisplayName(t)) + '</span><br>' +
+        '<span class="settlement-meta">🏘️ ' + t.villageCount + ' united wards · 👥 ' + snap.pop + ' · +' + Math.round(townTier.taxBonus * 100) + '% taxes' + starMeta + '</span></span>' +
         '<span class="settlement-tier">TOWN</span></button>';
     }).join('');
-    const cityNudge = !settlements.cities.length && settlements.largestTownCluster >= 2
-      ? '<div class="realm-hint">🏙️ Two of your towns stand near each other — raise a third within ' + rcTiers.SETTLEMENT_CITY_RADIUS_KM + ' km and the three merge into a city.</div>'
-      : '';
-    townsBody = '<div class="settlement-section">' + cityRows + townRows + cityNudge + '</div>';
-  } else if (sourceCount >= 2 && rcTiers && settlements.largestVillageCluster >= 2) {
-    townsBody = '<div class="realm-hint">🏘️ Two of your villages stand side by side — liberate a third within ' + rcTiers.SETTLEMENT_TOWN_RADIUS_KM + ' km and the three grow together into a town: +10% taxes, guilds that build 15% faster, one great pool of daylight on the atlas.</div>';
+    const regionNudge = '<div class="realm-hint">⭐ A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.</div>';
+    townsBody = '<div class="settlement-section">' + cityRows + townRows + regionNudge + '</div>';
   } else {
-    townsBody = '<div class="realm-hint">🏘️ No towns yet. Free 3 neighbouring villages and they grow together into one Town, run from a single Town Hall.</div>';
+    townsBody = '<div class="realm-hint">🏘️ No towns yet. Grow a village to 40 folk at 75% happiness and it earns its ⭐ merge star. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge on the Villages tab; nothing merges on its own.</div>';
   }
   // ---- 🛡️ COUNTIES tab — counties, the feudal pyramid above them, and trade.
   // Until the player's liberations actually form a county the tab body just
@@ -24069,7 +24474,7 @@ function renderEmpirePanel() {
       }).join('');
       tradeHtml = '<div class="realm-sub-title">🕊️ TRADE ROUTES · sky-caravans between free counties</div>' + openRows + candidateRows;
     } else {
-      tradeHtml = '<div class="realm-hint">🧭 Establish 3 nearby Towns to found another County, and your counties can open trade routes between their seats.</div>';
+      tradeHtml = '<div class="realm-hint">🧭 Merge three starred towns into another County, and your counties can open trade routes between their seats.</div>';
     }
     // A one-line nudge toward the next rung of the pyramid, once it applies.
     let ladderNudge = '';
@@ -24081,29 +24486,33 @@ function renderEmpirePanel() {
     // The pyramid header already captions the county rows, so the lead line
     // only speaks up when there is no pyramid above them yet.
     countiesBody = (pyramidHtml ? '' : '<div class="realm-lead">Your counties — tap one to run it from its County Hall</div>') +
-      '<div class="realm-section">' + pyramidHtml + regionRows + ladderNudge + tradeHtml + '</div>';
+      '<div class="realm-section">' + regionMergeBanners + pyramidHtml + regionRows + ladderNudge + tradeHtml + '</div>';
   } else if (count >= 2 && rc) {
-    countiesBody = settlements.townCount
-      ? '<div class="realm-hint">🛡️ County progress: ' + Math.min(3, realm.largestCluster || 0) + '/3 nearby Towns (' + settlements.townCount + ' total). Establish 3 nearby Towns and their holdings unite beneath one County Hall. Counties pay unity taxes, unlock trade and unite into Duchies, Kingdoms and your Empire.</div>'
-      : '<div class="realm-hint">🛡️ First form Towns: every 3 nearby villages retire into one managed Town. Establish 3 nearby Towns to found a County.</div>';
+    const readyTowns = settlements.towns.filter(t => { const r = townMergeReady(t); return r && r.ready; }).length;
+    countiesBody = regionMergeBanners || (settlements.townCount
+      ? '<div class="realm-hint">🛡️ County progress: ' + readyTowns + ' of your ' + settlements.townCount + ' town' + (settlements.townCount === 1 ? '' : 's') + ' wear' + (readyTowns === 1 ? 's' : '') + ' the ⭐ merge star (120 folk, 75% happiness). Merge three starred towns within 150 km and their holdings unite beneath one County Hall — unity taxes, trade, and the road to Duchies, Kingdoms and your Empire.</div>'
+      : '<div class="realm-hint">🛡️ First merge Towns: grow villages to their ⭐ merge star and unite them three at a time. Then raise three towns to their own stars and merge them into a County.</div>');
   } else if (count) {
     // One village and no ladder yet — the counties tab still opens on
     // something that explains where the crown is heading.
-    countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages: each group of 3 becomes one Town; 3 nearby Towns then unite into a County, followed by Duchies and Kingdoms.</div>';
+    countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages and grow each to its ⭐ merge star; merge three stars into a Town, three starred Towns into a County, and on to Duchies and Kingdoms.</div>';
   }
   // ---- The nav tabs, directly under the map. Yaan's ask (2026-08-17): nice
   // and clean — 🛡️ COUNTIES on top, 🏘️ TOWNS beneath it, 🏡 VILLAGES under
   // that, so the player walks the whole empire by pressing the tab buttons.
   // All closed by default; opening one folds the others. The ledger and its
   // stats moved below the tabs — navigation first, fluff after.
+  const starHint = villages.length && !townCandidates.length
+    ? '<div class="realm-hint">⭐ A village earns its merge star at 40 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
+    : '';
   const villagesBody = villages.length
-    ? '<div class="empire-village-list">' + rows + '</div>'
-    : '<div class="realm-hint">🏡 Every free village has united into a Town — run them from the Towns tab.</div>';
+    ? townMergeBanners + starHint + '<div class="empire-village-list">' + rows + '</div>'
+    : '<div class="realm-hint">🏡 Every free village has merged into a Town — run them from the Towns tab, or visit the old villages from each Town Hall.</div>';
   const navTabsHtml = count
     ? '<div class="empire-nav-tabs">' +
-      empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', '3 nearby Towns unite into a County — titles and trade live here', regions.length, countiesBody) +
-      empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', '3 neighbouring villages make a Town · 3 Towns make a City', settlements.cityCount + settlements.towns.filter(t => !t.cityId).length, townsBody) +
-      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Only villages not yet united into a Town remain visitable', villages.length, villagesBody) +
+      empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) +
+      empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', settlements.cityCount + settlements.towns.filter(t => !t.cityId).length, townsBody) +
+      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 40 folk, 75% happy', villages.length, villagesBody) +
       '</div>'
     : '';
   // ---- 📍 Locator strip — always answers "where am I, where is my town,
@@ -24132,8 +24541,9 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🌾 Grain Farm and ⛲ Stone Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> The first Quarry costs no stone and its first cut gives enough stone for Cottage Row. After that, every village and town construction — including Quarry upgrades — spends stone, coins and timber.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏘️</span><span><b>3 neighbouring villages become one Town</b> (+10% taxes). Their old markers, names and village screens retire; all wards are managed from Town Hall. <b>3 neighbouring Towns rise into one City</b> (+25%).</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>3 nearby Towns unite into a County</b> — run from its County Hall, with unity taxes for all its holdings.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">⭐</span><span><b>Earn the merge star.</b> A village wears its ⭐ at 40 folk and 75% happiness. Nothing merges on its own: three starred villages within 5 km show a Merge button — press it, and one Town rises with every building the three built.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">⬆️</span><span><b>Upgrade the whole Town at once.</b> The Town Hall carries one Upgrade order that raises every home and yard across all wards — no ward micromanaging. Old villages stay visitable from the Hall, just to look.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>Merge 3 starred Towns into a County.</b> A town earns its ⭐ at 120 folk and 75% happiness. The County Hall runs the whole region: one chest, one Warden, one region-wide Upgrade order — and every town stays visitable.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🕊️</span><span><b>Two counties can trade.</b> Sky-caravans fly between their capitals and pay into every tax day. The farther apart, the richer the cargo.</span></div>') : '';
   const tributeNow = Date.now();
@@ -24161,6 +24571,8 @@ function renderEmpirePanel() {
     (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— NEXT IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
     helpHtml;
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
+  panel.querySelectorAll('[data-action="merge-villages"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeVillages(btn.dataset.seeds); }));
+  panel.querySelectorAll('[data-action="merge-towns"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeTowns(btn.dataset.seeds); }));
   panel.querySelectorAll('[data-action="open-trade"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireOpenTradeRoute(btn.dataset.route); }));
   panel.querySelectorAll('[data-action="empire-region"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); openEmpireRegion(btn.dataset.region); }));
   panel.querySelectorAll('[data-action="empire-liege"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' }); frameEmpireLiege(btn.dataset.liege); }));
@@ -24264,6 +24676,7 @@ function renderRegionScreen() {
   const panel = $('regionHallPanel');
   if (!panel) return;
   empireCompleteConstructions();
+  completeWholesaleWorks();
   simulateAllVillageEconomies();
   const rc = realmCore();
   // Regions can merge or reshape between visits — fall back to the realm's
@@ -24302,6 +24715,23 @@ function renderRegionScreen() {
     '<div class="region-hall-ladder-hint">' + ladderHint + '</div></div>';
   const due = regionTributeReady(region);
   const hasDue = tributeHasAnything(due);
+  // ⬆️ One order for the whole region: every home and yard in every town
+  // rises together, so the player runs the region, not three separate towns.
+  const regionNow = Date.now();
+  const regionWorks = wholesaleWorksFor(region.id);
+  const regionPlan = regionWorks ? null : wholesaleUpgradePlan(regionMemberRecords(region));
+  let regionUpgradeBody;
+  if (regionWorks) {
+    regionUpgradeBody = townProjectHTML('⬆️', 'Region-wide upgrade · ' + regionWorks.plan.length + ' buildings rising', regionWorks, regionNow);
+  } else if (regionPlan.steps.length) {
+    const affordable = (gameState.player.coins || 0) >= regionPlan.cost.coins && playerBranches() >= regionPlan.cost.branches && playerStone() >= regionPlan.cost.stone;
+    regionUpgradeBody = '<div class="town-section-copy">One order upgrades every home and yard across the whole region — ' + regionPlan.steps.length + ' buildings rise together, no town micromanaging.</div>' +
+      '<button class="town-action is-gold" data-action="region-upgrade-all"' + (affordable ? '' : ' disabled') + '>⬆️ UPGRADE · ' + regionPlan.cost.coins + ' 🪙 + ' + regionPlan.cost.branches + ' 🪵 + ' + regionPlan.cost.stone + ' stone · ⏱ ' + formatBuildDuration(Math.max(60000, regionPlan.durationMs)) + '</button>' +
+      (affordable ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
+  } else {
+    regionUpgradeBody = '<div class="town-section-copy">👑 Every home and yard across the region stands at its highest level.</div>';
+  }
+  const regionUpgradeSection = '<div class="town-section is-gold" id="regionUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Region</div>' + regionUpgradeBody + '</div>';
   // Caravan roads that touch this county, run from this desk too.
   const touchingRoutes = empireTradeRouteRecords().filter(({ a, b }) => a.id === region.id || b.id === region.id);
   const routesHtml = touchingRoutes.length
@@ -24337,13 +24767,16 @@ function renderRegionScreen() {
     ladderHtml +
     '<button class="empire-tribute-btn" data-action="region-collect"' + (hasDue ? '' : ' disabled') + '>' +
     (hasDue ? '💰 COLLECT THIS COUNTY’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ COUNTY TAXES GROWING — CHECK BACK LATER') + '</button>' +
-    '<div class="realm-sub-title">🏘️ HOLDINGS OF THIS COUNTY · manage each Town as one place</div>' +
+    regionUpgradeSection +
+    '<div class="realm-sub-title">🏘️ HOLDINGS OF THIS COUNTY · tap a town to visit and manage it</div>' +
     '<div class="empire-village-list">' + rows + '</div>' +
     wardenHtml +
     routesHtml;
   panel.querySelectorAll('[data-action="region-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="region-town"]').forEach(row => row.addEventListener('click', () => openEmpireTown(row.dataset.settlement)));
   panel.querySelector('[data-action="region-collect"]')?.addEventListener('click', () => collectRegionTribute(region.id));
+  panel.querySelector('[data-action="region-upgrade-all"]')?.addEventListener('click', () => beginWholesaleUpgrade(region.id, 'region'));
+  if (regionWorks) ensureProvinceCountdownTicker();
   panel.querySelector('[data-action="region-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="region-map"]')?.addEventListener('click', () => { openEmpireCountyMap(region.id); });
   panel.querySelector('[data-action="region-atlas"]')?.addEventListener('click', () => { SFX.tap(); showRegionOnAtlas(region.id); });
@@ -24578,6 +25011,7 @@ function ensureTownSteward(settlement) {
 }
 
 let empireLedgerOnlyMode = false;
+let villageVisitingWard = false;  // a deliberate look at a merged ward's old village
 let townActiveId = null;
 function townSettlementByActiveId(id) { return canonicalEmpireSettlement(empireSettlementById(id || townActiveId)); }
 function showTownOnAtlas(settlementId) { empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => frameEmpireSettlement(settlementId), 420); }
@@ -24696,9 +25130,161 @@ function townProjectHTML(icon, label, construction, now) {
 }
 
 // ============================================================================
+// WHOLESALE UPGRADES — Yaan's "Upgrade tab": one order raises every home and
+// yard across a whole Town (or a whole Region), so the player levels the
+// place, not building by building. One combined cost, one timer; crews work
+// every ward at once, so the clock is the LONGEST single build, not the sum.
+// ============================================================================
+function regionMemberRecords(region) {
+  const empire = ensureEmpireState();
+  if (!empire || !region) return [];
+  return (region.villages || []).map(v => empire.villages[String(Number(v.seed) >>> 0)]).filter(Boolean);
+}
+function wholesaleWorksFor(id) {
+  const empire = ensureEmpireState();
+  const works = empire && empire.wholesaleWorks ? empire.wholesaleWorks[String(id)] : null;
+  return works && Array.isArray(works.plan) && Number.isFinite(Number(works.endMs)) ? works : null;
+}
+// Everything one order would raise: each built structure one level higher,
+// plus a first level of any unlocked structure not yet begun.
+function wholesaleUpgradePlan(records) {
+  const trainerLevel = Number(gameState.player.level) || 1;
+  const steps = [];
+  const cost = { coins: 0, branches: 0, stone: 0 };
+  let longestMs = 0;
+  (records || []).forEach(rec => {
+    const eco = ensureVillageEconomy(rec);
+    if (!eco) return;
+    EMPIRE_BUILDINGS.forEach(b => {
+      let level = villageBuildingLevel(rec, b.id);
+      // An in-flight ward build counts as done, so the order never pays twice.
+      if (eco.construction && eco.construction.id === b.id) level = Math.max(level, Number(eco.construction.toLevel) || level);
+      if (level >= b.maxLevel) return;
+      if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return;
+      const stepCost = villageBuildingCost(b, level);
+      cost.coins += stepCost.coins; cost.branches += stepCost.branches; cost.stone += stepCost.stone;
+      longestMs = Math.max(longestMs, villageBuildTimeMs(b, level));
+      steps.push({ seed: rec.seed >>> 0, buildingId: b.id, toLevel: level + 1 });
+    });
+  });
+  return { steps, cost, durationMs: longestMs };
+}
+function beginWholesaleUpgrade(id, scope) {
+  completeWholesaleWorks(); empireCompleteConstructions();
+  const empire = ensureEmpireState();
+  if (!empire) return;
+  const isRegion = scope === 'region';
+  const target = isRegion ? empireRegionById(id) : townSettlementByActiveId(id);
+  if (!target) return;
+  const key = String(isRegion ? target.id : target.id);
+  if (wholesaleWorksFor(key)) { showToast('⬆️ One order is already rising here — let the crews finish first.'); return; }
+  const records = isRegion ? regionMemberRecords(target) : townMemberRecords(target);
+  const displayName = isRegion ? target.name : townDisplayName(target);
+  const plan = wholesaleUpgradePlan(records);
+  if (!plan.steps.length) { showToast('👑 Every home and yard in ' + displayName + ' already stands at its highest level.'); return; }
+  const wallet = gameState.player.coins || 0, timber = playerBranches(), stone = playerStone();
+  const shortages = [];
+  if (wallet < plan.cost.coins) shortages.push((plan.cost.coins - wallet) + ' 🪙');
+  if (timber < plan.cost.branches) shortages.push((plan.cost.branches - timber) + ' 🪵');
+  if (stone < plan.cost.stone) shortages.push((plan.cost.stone - stone) + ' stone');
+  if (shortages.length) { showToast('The upgrade order needs ' + shortages.join(' + ') + ' more.'); return; }
+  const factor = isRegion ? 1 : settlementBuildFactorForSeed(target.heartSeed);
+  const buildMs = Math.max(60000, Math.round(plan.durationMs * factor));
+  const snapshot = snapshotGameState();
+  addCoins(-plan.cost.coins);
+  addBranches(-plan.cost.branches);
+  addStone(-plan.cost.stone);
+  const now = Date.now();
+  empire.wholesaleWorks[key] = {
+    plan: plan.steps,
+    startMs: now,
+    endMs: now + buildMs,
+    scope: isRegion ? 'region' : 'town',
+    name: displayName,
+    target: { seed: (isRegion ? target.capitalSeed : target.heartSeed) >>> 0 }
+  };
+  try {
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    console.warn('Wholesale upgrade rolled back', error);
+    showToast('The order could not be saved, so nothing was spent. Please try again.');
+    return;
+  }
+  SFX.questComplete();
+  vibrate(40);
+  showToast('⬆️ One order given: ' + plan.steps.length + ' buildings rise across ' + displayName + ' — ready in ' + formatBuildDuration(buildMs) + '.');
+  updateHeader();
+  if (isRegion) renderRegionScreen(); else renderTownScreen();
+  ensureProvinceCountdownTicker();
+}
+function completeWholesaleWorks(now) {
+  const empire = ensureEmpireState();
+  if (!empire || !empire.wholesaleWorks) return false;
+  const t = Number(now) || Date.now();
+  const due = Object.entries(empire.wholesaleWorks).filter(([, works]) =>
+    works && Array.isArray(works.plan) && Number.isFinite(Number(works.endMs)) && t >= Number(works.endMs));
+  if (!due.length) return false;
+  const snapshot = snapshotGameState();
+  const finished = [];
+  try {
+    due.forEach(([key, works]) => {
+      works.plan.forEach(step => {
+        const rec = empire.villages[String(Number(step.seed) >>> 0)];
+        const building = EMPIRE_BUILDING_INDEX[step.buildingId];
+        if (!rec || !building) return;
+        const eco = ensureVillageEconomy(rec);
+        eco.buildings[building.id] = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(step.toLevel) || 1));
+        // New homes draw new residents, exactly like a single shelter build.
+        if (building.need === 'shelter') {
+          const cap = villageNeedCapacity(rec, 'shelter');
+          eco.population = Math.max(eco.population, Math.min(cap, eco.population + Math.ceil((building.perLevel || 0) / 2)));
+        }
+        maybeAwardMergeStar(rec);
+      });
+      delete empire.wholesaleWorks[key];
+      addPlayerXp(30);
+      finished.push(works);
+      queueCompletionNotice({
+        kind: 'wholesale-upgrade',
+        icon: '⬆️',
+        title: (works.name || 'Your settlement') + ' rises together',
+        sub: works.plan.length + ' buildings finished in one order — tap to see.',
+        target: works.target || null
+      });
+    });
+    durableSaveState({ throwOnFailure: true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    renderCompletionNotices();
+    console.warn('Wholesale completion rolled back', error);
+    showToast('The upgrade order finished, but its result could not be saved. Please try again.');
+    return false;
+  }
+  finished.forEach(works => showToast('⬆️ ' + (works.name || 'Your settlement') + ': ' + works.plan.length + ' buildings stand taller — the whole place levelled up together.'));
+  if (villageActive) villageBuiltSeed = null;
+  SFX.questComplete();
+  vibrate(45);
+  return true;
+}
+// Step back into a merged ward, just to see the old village as it was.
+function visitEmpireWard(seed) {
+  const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
+  if (!village) return;
+  empireLedgerOnlyMode = false;
+  villageVisitingWard = true;
+  villageActive = { seed: village.seed >>> 0, name: village.name, lat: village.lat, lon: village.lon };
+  SFX.tap();
+  if (currentScreen !== 'village') switchScreen('village');
+  renderVillage();
+  setTimeout(() => $('villageStage')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 260);
+  showToast('👣 Visiting ' + village.name + ' — the old village, kept as it was.');
+}
+
+// ============================================================================
 // TOWN SQUARE — the 3D home of a merged settlement, and the top of the Town
-// Hall screen. Three neighbouring villages grow into one town (three towns
-// into one city); the scene shows ONE cohesive place: every ward's homes,
+// Hall screen. Three starred villages merge into one town at the player's
+// own order; the scene shows ONE cohesive place: every ward's homes,
 // trades and working yards knit around the single market square, with the
 // charter stone flying one pennant per founder. The town is also the
 // management surface: tap any working yard for its sheet — stats, crew and
@@ -24707,6 +25293,7 @@ function townProjectHTML(icon, label, construction, now) {
 // moves it. Absorbed villages never become destinations again.
 // ============================================================================
 function openEmpireTown(idOrSeed) {
+  villageVisitingWard = false;
   let settlement = empireSettlementById(idOrSeed);
   if (!settlement && Number.isFinite(Number(idOrSeed))) {
     const link = empireSettlementOfSeed(Number(idOrSeed));
@@ -24760,7 +25347,7 @@ function townSceneKey(settle) {
 function renderTownScreen() {
   const panel = $('townHallPanel');
   if (!panel) return;
-  townCompleteHallConstructions(); empireCompleteConstructions(); simulateAllVillageEconomies();
+  townCompleteHallConstructions(); empireCompleteConstructions(); completeWholesaleWorks(); simulateAllVillageEconomies();
   const settle = currentTownSettlement(), core = townStrategyCore();
   if (!settle || !core) { empireLedgerOnlyMode = true; switchScreen('village'); return; }
   townActiveId = String(settle.id); ensureTownSteward(settle);
@@ -24802,9 +25389,12 @@ function renderTownScreen() {
   const networkHtml = EMPIRE_BUILDINGS.map(building => {
     const level = townNetworkLevel(settle, building.id), max = townMemberRecords(settle).length * building.maxLevel;
     const target = townNetworkUpgradeTarget(settle, building.id), targetLevel = target ? villageBuildingLevel(target, building.id) : building.maxLevel;
-    const cost = target ? villageBuildingCost(building, targetLevel) : null, canBuild = !!target && activeProjects < slots && townCostAffordable(cost);
+    const cost = target ? villageBuildingCost(building, targetLevel) : null, affordable = townCostAffordable(cost);
+    // An unaffordable network stays tappable: the tap opens the shortfall
+    // prompt that sends birds out for the missing coins or timber.
+    const tappable = !!target && activeProjects < slots;
     const duration = target ? formatBuildDuration(Math.max(30000, villageBuildTimeMs(building, targetLevel) * settlementBuildFactorForSeed(target.seed))) : '';
-    return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action" data-action="town-network" data-building="' + building.id + '"' + (canBuild ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? 'RAISE NETWORK · ' + escapeHtml(townCostText(cost)) + ' · ' + duration : 'WARD BUILDERS BUSY') + '</button></div>';
+    return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action' + (tappable && !affordable ? ' short' : '') + '" data-action="town-network" data-building="' + building.id + '"' + (tappable ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? 'RAISE NETWORK · ' + escapeHtml(townCostText(cost)) + ' · ' + duration : 'WARD BUILDERS BUSY') + '</button></div>';
   }).join('');
   const ruins = [];
   townMemberRecords(settle).forEach(rec => (ensureVillageEconomy(rec).ruins || []).forEach(ruin => { if (!ruin.cleared) ruins.push(ruin); }));
@@ -24822,27 +25412,75 @@ function renderTownScreen() {
     copy:'Appoint a clever companion to run the whole Town.',
     effectCopy:'This Town pays more taxes and timber, and its networks produce more stone and goods.'
   });
+  // The county is the rung above the Hall. Since merge-when-ready-v290 towns
+  // never unite on their own: this section shows the town's own merge star,
+  // the Merge button when three starred towns stand ready, and the door into
+  // the County Hall once the county is founded.
+  const county = empireRegionOfSeed(settle.heartSeed);
+  const townReadiness = townMergeReady(settle);
+  const mcTown = mergeCore();
+  const regionCandidate = county ? null : empireRegionMergeCandidates().find(c =>
+    townAdministrativeSeats(settle).some(seat => c.seeds.includes(Number(seat.heartSeed) >>> 0)));
+  let countyHtml;
+  if (county) {
+    countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">🛡️ ' + escapeHtml(county.name) + '</div><div class="town-section-copy">This ' + (settle.tier === 'city' ? 'city' : 'town') + ' is one of ' + county.townCount + ' towns united in the county. Collect county taxes, appoint a Warden, upgrade the whole region and open trade from its Hall.</div><button class="town-action is-gold" data-action="town-county">🛡️ OPEN COUNTY HALL</button></div>';
+  } else if (regionCandidate && mcTown) {
+    countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">⭐ Ready to Unite</div><div class="town-section-copy">' + escapeHtml(mcTown.nameList(regionCandidate.names)) + ' all wear the merge star. Merge them and a County rises — one desk for the whole region.</div><button class="town-action is-gold" data-action="town-merge-region" data-seeds="' + regionCandidate.seeds.join(',') + '">🛡️ MERGE INTO ONE COUNTY</button></div>';
+  } else {
+    countyHtml = '<div class="town-section" id="townCountySection"><div class="town-section-title">🛡️ Toward a County</div><div class="town-section-copy">' +
+      (townReadiness && townReadiness.ready
+        ? '⭐ This town wears its merge star — 120 folk at 75% happiness. Grow two more towns to their stars within 150 km, then press Merge: the three unite into a county, run as one region.'
+        : '⭐ A town earns its merge star at 120 folk and 75% happiness' + (townReadiness ? ' — this one holds 👥 ' + townReadiness.population + '/120 at ' + Math.round(townReadiness.happiness * 100) + '%' : '') + '. Merge three starred towns within 150 km and a county rises — one desk for the whole region.') +
+      '</div></div>';
+  }
+  // ⬆️ Yaan's Upgrade tab: one order, every home and yard, no micromanaging.
+  const townWorks = wholesaleWorksFor(settle.id);
+  const townPlan = townWorks ? null : wholesaleUpgradePlan(townMemberRecords(settle));
+  const planCostText = plan => plan.cost.coins + ' 🪙 + ' + plan.cost.branches + ' 🪵 + ' + plan.cost.stone + ' stone';
+  const planAffordable = plan => (gameState.player.coins || 0) >= plan.cost.coins && playerBranches() >= plan.cost.branches && playerStone() >= plan.cost.stone;
+  let upgradeHtml;
+  if (townWorks) {
+    upgradeHtml = townProjectHTML('⬆️', 'Town-wide upgrade · ' + townWorks.plan.length + ' buildings rising', townWorks, now);
+  } else if (townPlan.steps.length) {
+    upgradeHtml = '<div class="town-section-copy">One order upgrades every home and yard across all ' + townMemberRecords(settle).length + ' wards — ' + townPlan.steps.length + ' buildings rise together, no ward micromanaging.</div>' +
+      '<button class="town-action is-gold" data-action="town-upgrade-all"' + (planAffordable(townPlan) ? '' : ' disabled') + '>⬆️ UPGRADE · ' + planCostText(townPlan) + ' · ⏱ ' + formatBuildDuration(Math.max(60000, Math.round(townPlan.durationMs * settlementBuildFactorForSeed(settle.heartSeed)))) + '</button>' +
+      (planAffordable(townPlan) ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
+  } else {
+    upgradeHtml = '<div class="town-section-copy">👑 Every home and yard across the town stands at its highest level.</div>';
+  }
+  const upgradeSection = '<div class="town-section is-gold" id="townUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Town</div>' + upgradeHtml + '</div>';
+  // 👣 Small doors back into the old villages — just to look.
+  const visitSection = '<div class="town-section" id="townVisitSection"><div class="town-section-title">👣 Visit the Old Villages</div><div class="town-section-copy">Step back into any ward and see the village as it was. Just a look — governing stays here.</div><div class="visit-chip-row">' +
+    townMemberRecords(settle).map(rec => '<button type="button" class="visit-chip" data-action="town-visit" data-seed="' + (rec.seed >>> 0) + '">' + empireVillageCrest(rec.seed) + ' ' + escapeHtml(rec.name) + '</button>').join('') +
+    '</div></div>';
   panel.innerHTML =
     '<div class="town-nav"><button data-action="town-back">← ROYAL LEDGER</button><button data-action="town-atlas">🗺️ VIEW ON ATLAS</button></div>' +
-    '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
+    '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + (townReadiness && townReadiness.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
     '<div class="town-resource-grid"><div class="town-resource"><div class="town-resource-value">👥 ' + snap.pop + '/' + snap.housingCap + '</div><div class="town-resource-label">Residents / homes</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.taxes + ' 🪙</div><div class="town-resource-label">Taxes / 8h</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.branches + ' 🪵 · +' + snap.production.stone + ' stone</div><div class="town-resource-label">Building goods / 8h</div></div><div class="town-resource"><div class="town-resource-value">' + escapeHtml(empireResourceSummary({ materials:snap.production.materials, larder:snap.production.larder }, 4) || '—') + '</div><div class="town-resource-label">Goods / 8h</div></div></div>' +
     '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox</div><div class="town-section-copy">One collection every 8 hours, capped at 24 hours. Town, County and Realm collection all use the same ward clocks.</div><button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
+    upgradeSection +
     '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
     ruinsHtml +
     '<div class="town-section"><div class="town-section-title">🏗️ Town Networks</div><div class="town-section-copy">Each upgrade automatically strengthens the least-developed eligible ward. Wards never become separate destinations again.</div><div class="town-network-grid">' + networkHtml + '</div></div>' +
     '<div class="town-section"><div class="town-section-title">🥣 Provisions, Workforce & Services</div><div class="town-section-copy">Each fully fed, watered and happy ward can grow up to its own housing limit. ' + snap.workforce.working + '/' + snap.workforce.required + ' required workers staffed from ' + snap.workforce.available + ' residents.</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
     '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy</div><div class="town-section-copy">' + escapeHtml(policyNote) + '</div><div class="town-policy-grid">' + policies + '</div></div>' +
+    countyHtml +
+    visitSection +
     '<div class="town-section"><div class="town-section-title">🪧 Town Steward</div><div class="town-section-copy">One bird administers the whole merged settlement; absorbed ward posts are retired.</div>' + steward + '</div>';
   panel.querySelector('[data-action="town-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="town-atlas"]')?.addEventListener('click', () => { SFX.tap(); showTownOnAtlas(settle.id); });
   panel.querySelector('[data-action="town-rename"]')?.addEventListener('click', () => renameTown(settle.id));
+  if (county) panel.querySelector('[data-action="town-county"]')?.addEventListener('click', () => { SFX.tap(); openEmpireRegion(county.id); });
+  panel.querySelector('[data-action="town-merge-region"]')?.addEventListener('click', ev => { SFX.tap(); empireMergeTowns(ev.currentTarget.dataset.seeds); });
+  panel.querySelector('[data-action="town-upgrade-all"]')?.addEventListener('click', () => beginWholesaleUpgrade(settle.id, 'town'));
+  panel.querySelectorAll('[data-action="town-visit"]').forEach(chip => chip.addEventListener('click', () => visitEmpireWard(chip.dataset.seed)));
   panel.querySelector('[data-action="town-collect"]')?.addEventListener('click', () => collectTownTribute(settle.id));
   panel.querySelector('[data-action="town-hall-upgrade"]')?.addEventListener('click', () => beginTownHallUpgrade(settle.id));
   panel.querySelector('[data-action="town-ruin"]')?.addEventListener('click', () => townClearNextRuin(settle.id));
   panel.querySelector('[data-action="town-supply"]')?.addEventListener('click', () => townSendSupplyCart(settle.id));
   panel.querySelectorAll('[data-action="town-network"]').forEach(button => button.addEventListener('click', () => townBuildNetwork(settle.id, button.dataset.building)));
   panel.querySelectorAll('[data-action="town-policy"]').forEach(button => button.addEventListener('click', () => setTownPolicy(settle.id, button.dataset.policy)));
-  if (activeProjects) ensureProvinceCountdownTicker();
+  if (activeProjects || townWorks) ensureProvinceCountdownTicker();
 
   renderTownSquare(settle);
   renderTownSheet();
@@ -25588,7 +26226,9 @@ function renderVillage() {
   const v = currentVillage();
   const mergedDestination = v && empireOwnsVillage(v.seed) ? canonicalEmpireSettlement(empireSettlementById(empireSettlementOfSeed(v.seed)?.id)) : null;
   const hub = $('empireVillageHub');
-  if (mergedDestination) {
+  // A deliberate visit walks the old village as it was — no redirect, no
+  // governing. Every other road into a merged ward still leads to its Hall.
+  if (mergedDestination && !villageVisitingWard) {
     villageRunning = false;
     if (hub) hub.hidden = true;
     ['villageTownLink','villageClaimBar','villageManagePanel'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
@@ -34918,13 +35558,14 @@ const EVIL_BURBZ_ROSTER = [
 function battleCore() { if (!window.BurbzBattleCore) throw new Error('BurbzBattleCore not loaded'); return window.BurbzBattleCore; }
 
 function ensureLeagueState() {
-  const def = { tier: 0, winsInTier: 0, wins: 0, losses: 0, teamIds: [], daily: { date: '', wins: 0 } };
+  const def = { tier: 0, winsInTier: 0, wins: 0, losses: 0, streak: 0, teamIds: [], daily: { date: '', wins: 0 } };
   if (!gameState.league || typeof gameState.league !== 'object' || Array.isArray(gameState.league)) gameState.league = {};
   gameState.league = { ...def, ...gameState.league };
   if (!gameState.league.daily || typeof gameState.league.daily !== 'object') gameState.league.daily = { ...def.daily };
   const maxTier = window.BurbzBattleCore ? window.BurbzBattleCore.LEAGUE_TIERS.length - 1 : 6;
   gameState.league.tier = clamp(Math.round(Number(gameState.league.tier) || 0), 0, maxTier);
   gameState.league.winsInTier = Math.max(0, Math.round(Number(gameState.league.winsInTier) || 0));
+  gameState.league.streak = Math.max(0, Math.round(Number(gameState.league.streak) || 0));
   const today = new Date().toISOString().slice(0, 10);
   if (gameState.league.daily.date !== today) gameState.league.daily = { date: today, wins: 0 };
   if (!Array.isArray(gameState.league.teamIds)) gameState.league.teamIds = [];
@@ -34965,32 +35606,34 @@ function weakenFirstGarrison(opponents) {
     };
   });
 }
-// EARLY GAME — until the player reaches level 12, every evil Burbz squad is
-// a ragged scouting party. The gate is the PLAYER's level, not the realm:
-// founding a county no longer ends the kindness early. Through player level 8
-// the fights are near-free wins — the squad is capped at three birds, never
-// outnumbers the flock, and every stat is cut to a third. From level 9 the
-// cut eases off level by level, so full difficulty — and the real need for
-// counters and forged gear — arrives at player level 12.
-const EARLY_GAME_ENDS_AT_PLAYER_LEVEL = 12;  // full difficulty from here
-const EARLY_GAME_CRUISE_LEVEL = 8;           // deepest ease through here
-const EARLY_GAME_OPPONENT_EASE = 0.35;       // stat fraction up to the cruise level
-const EARLY_GAME_RAMP_TOP_EASE = 0.95;       // where the ramp would land at level 12 (9→0.5, 10→0.65, 11→0.8)
-function battlePlayerLevel() {
-  return Math.max(1, Math.round(Number(gameState.player && gameState.player.level) || 1));
+// MERCY RULE — the evil Burbz only fight at full strength once the player
+// has earned it. Until the flock takes four wins in a row, every squad is a
+// ragged scouting party the player is all but guaranteed to beat: capped at
+// three birds, never outnumbering the flock, sitting a level below it, and
+// every stat cut to under a third. The fourth straight win starts the ramp
+// (0.5 → 0.7 → 0.85 of full strength), and the seventh brings the real
+// fight — counters and forged gear matter from there. One loss resets the
+// streak, so the game turns kind again the moment the player needs it. The
+// gate is the streak, not the player's level: a level-12 flock that keeps
+// losing keeps getting easy fights.
+const MERCY_WIN_STREAK = 4;        // straight wins before difficulty ramps
+const MERCY_OPPONENT_EASE = 0.3;   // stat fraction while the mercy holds
+const MERCY_RAMP_EASE = [0.5, 0.7, 0.85]; // streak 4, 5, 6 — full strength from 7
+function battleWinStreak() {
+  return Math.max(0, Math.round(Number(ensureLeagueState().streak) || 0));
 }
-function isEarlyGameBattles() {
-  return battlePlayerLevel() < EARLY_GAME_ENDS_AT_PLAYER_LEVEL;
+function isMercyBattles() {
+  return battleWinStreak() < MERCY_WIN_STREAK;
 }
-function earlyGameOpponentEase() {
-  const level = battlePlayerLevel();
-  if (level <= EARLY_GAME_CRUISE_LEVEL) return EARLY_GAME_OPPONENT_EASE;
-  const t = (level - EARLY_GAME_CRUISE_LEVEL) / (EARLY_GAME_ENDS_AT_PLAYER_LEVEL - EARLY_GAME_CRUISE_LEVEL);
-  return EARLY_GAME_OPPONENT_EASE + t * (EARLY_GAME_RAMP_TOP_EASE - EARLY_GAME_OPPONENT_EASE);
+function mercyOpponentEase() {
+  const streak = battleWinStreak();
+  if (streak < MERCY_WIN_STREAK) return MERCY_OPPONENT_EASE;
+  const step = streak - MERCY_WIN_STREAK;
+  return step < MERCY_RAMP_EASE.length ? MERCY_RAMP_EASE[step] : 1;
 }
-function easeEarlyOpponents(opponents, squadSize) {
-  const e = earlyGameOpponentEase();
-  const maxSquad = battlePlayerLevel() <= EARLY_GAME_CRUISE_LEVEL ? 3 : 4;
+function easeMercyOpponents(opponents, squadSize) {
+  const e = mercyOpponentEase();
+  const maxSquad = isMercyBattles() ? 3 : 4;
   return opponents.slice(0, clamp(Math.round(squadSize || 3), 1, maxSquad)).map(b => {
     const hp = Math.max(30, Math.round(b.maxHp * e));
     return {
@@ -35011,9 +35654,10 @@ function leagueRivalOpponents() {
   const tier = core.LEAGUE_TIERS[league.tier];
   const liberationSite = pendingEmpireLiberation();
   const firstLiberation = !!liberationSite && isFirstLiberationBattle();
-  const earlyGame = isEarlyGameBattles();
+  const mercyEase = mercyOpponentEase();
+  const eased = mercyEase < 1;
   const worldLv = burbzWorldLevel();
-  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '') + (earlyGame ? '_early_game_pl' + battlePlayerLevel() : '') + '_wl' + worldLv + (liberationSite ? '_lib' + (liberationSite.seed >>> 0) : '');
+  const key = league.daily.date + '_' + league.tier + '_' + league.winsInTier + '_' + (league.wins + league.losses) + (firstLiberation ? '_first_liberation' : '') + (eased ? '_mercy_ws' + battleWinStreak() : '') + '_wl' + worldLv + (liberationSite ? '_lib' + (liberationSite.seed >>> 0) : '');
   if (leagueRivalCache && leagueRivalCache.key === key) return leagueRivalCache;
   const rng = core.seededRandom('evil_burbz_' + key);
   let pool = EVIL_BURBZ_ROSTER.filter(e => tier.rarities.includes(e.rarity));
@@ -35043,8 +35687,8 @@ function leagueRivalOpponents() {
     ? empireSiteRecommendedLevel(liberationSite)
     : Math.max(Math.round(avgLevel), worldLv);
   const opponents = picks.map((e, i) => {
-    // Early game: no tier boost, and the squad sits a level below the flock.
-    const level = earlyGame
+    // Under mercy: no tier boost, and the squad sits a level below the flock.
+    const level = eased
       ? Math.max(1, Math.round(avgLevel) - 1)
       : Math.max(1, garrisonBase + tier.levelBoost + (i === 3 ? 1 : 0) - (i === 0 ? 1 : 0));
     const stats = generateBirdStats(e.base, null, e.rarity);
@@ -35065,9 +35709,9 @@ function leagueRivalOpponents() {
     bird.hp = bird.maxHp;
     return bird;
   });
-  // The early squad never outnumbers the player's own flock.
+  // A mercy squad never outnumbers the player's own flock.
   const squad = firstLiberation ? weakenFirstGarrison(opponents)
-    : earlyGame ? easeEarlyOpponents(opponents, top.length)
+    : eased ? easeMercyOpponents(opponents, top.length)
     : opponents;
   leagueRivalCache = { key, opponents: squad };
   return leagueRivalCache;
@@ -35111,8 +35755,8 @@ function renderBattleSelect() {
   const enemyTypes = [...new Set(rival.opponents.map(b => core.classifySpecies(b.species)))];
   const counterTypes = Object.keys(core.BIRD_TYPES).filter(t => enemyTypes.some(e => ((core.TYPE_CHART[t] || {})[e] || 1) > 1));
   const rivalTitle = liberation
-    ? (isFirstLiberationBattle() ? '🌅 A weary token garrison — this one is yours' : (isEarlyGameBattles() ? '🐣 A ragged scouting party holds the village' : '😈 The occupying evil Burbz'))
-    : (isEarlyGameBattles() ? '🐣 A ragged evil Burbz scouting party' : '😈 An evil Burbz squad prowls this perch');
+    ? (isFirstLiberationBattle() ? '🌅 A weary token garrison — this one is yours' : (isMercyBattles() ? '🐣 A ragged scouting party holds the village' : '😈 The occupying evil Burbz'))
+    : (isMercyBattles() ? '🐣 A ragged evil Burbz scouting party' : '😈 An evil Burbz squad prowls this perch');
   // Honest odds up front, Assassin's-Creed style: the garrison's level, the
   // flock's level, and a plain-words danger call between them.
   let dangerLine = '';
@@ -35124,8 +35768,17 @@ function renderBattleSelect() {
     dangerLine = '<div class="rival-danger-line" style="color:' + danger.color + ';">' + danger.icon + ' Garrison Lv ' + garrisonLv + ' · ' + danger.label +
       '<span class="rdl-world">🌍 World Lv ' + burbzWorldLevel() + ' · your flock Lv ' + flockLv + '</span></div>';
   }
+  // The mercy rule says where it stands: how many straight wins the flock
+  // holds, and when the evil Burbz will start fighting back for real.
+  const streak = battleWinStreak();
+  const streakLine = liberation && isFirstLiberationBattle() ? ''
+    : isMercyBattles()
+      ? '<div class="rival-streak-line">🕊️ Win streak ' + streak + '/' + MERCY_WIN_STREAK + ' — the evil Burbz hold back until you take ' + MERCY_WIN_STREAK + ' wins in a row.</div>'
+      : mercyOpponentEase() < 1
+        ? '<div class="rival-streak-line hot">🔥 ' + streak + ' wins in a row — the evil Burbz are fighting harder. A loss calms them down.</div>'
+        : '<div class="rival-streak-line hot">👑 ' + streak + ' wins in a row — the evil Burbz fight at full strength. A loss calms them down.</div>';
   $('leagueRival').innerHTML =
-    '<div class="league-rival-title">' + rivalTitle + '</div>' + dangerLine +
+    '<div class="league-rival-title">' + rivalTitle + '</div>' + streakLine + dangerLine +
     '<div class="league-rival-row">' + rival.opponents.map(b =>
       '<div class="rival-card evil">' + fighterArtHTML(b, 'rc') +
       '<div class="rc-name">' + escapeHtml(b.commonName) + '</div>' +
@@ -35288,20 +35941,20 @@ function startPerchBattle() {
   const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
   battle.synergies = { player: playerSynergies, opponent: opponentSynergies };
   battle.activityId = 'battle_' + battle.seed;
-  battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, surgeArmed: false };
+  battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, pendingTargetIndex: null, surgeArmed: false };
   $('battleSelect').style.display = 'none';
   $('battleResult').style.display = 'none';
   $('battleArena').style.display = 'block';
   $('battleLog').innerHTML = '';
   const tier = core.LEAGUE_TIERS[league.tier];
   addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison, the dark force\'s shadow-bound occupying flock, and break the usurper\'s hold!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
-  if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the town!');
+  if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the village!');
   addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
   const nightHunters = playerFighters.filter(f => f.nightHunter);
   if (nightHunters.length) addBattleLog('system-msg', '🌙 NIGHT WINGS! ' + nightHunters.map(f => f.name).join(', ') + (nightHunters.length > 1 ? ' fight' : ' fights') + ' under the moon — half again as fast and as fierce, tougher, and striking true out of the dark.');
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
   (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
-  addBattleLog('system-msg', '🕊️ Diplomacy: every bird can Parley! Charm (CHA) saps a foe\'s will to fight — and a weakened foe can be won over without a single blow. Charming birds trained at The Crowbar shine here.');
+  addBattleLog('system-msg', '🎯 Pick a move, tap the evil Burb you want to hit, and check the damage on the ATTACK button before you strike.');
   SFX.tap();
   battleAdvance();
 }
@@ -35318,6 +35971,7 @@ function battleAdvance() {
   const turn = core.tickToNextTurn(b);
   if (!turn) { endPerchBattle(); return; }
   battleState.pendingSkillIndex = null;
+  battleState.pendingTargetIndex = null;
   battleState.surgeArmed = false;
   renderArena();
   if (turn.side === 'opponent') {
@@ -35338,9 +35992,20 @@ function arenaUnitHTML(f, side, index, opts) {
   if (f.fainted) cls.push('fainted');
   if (o.acting) cls.push('acting');
   if (o.targetable) cls.push('targetable');
+  if (o.locked) cls.push('target-locked');
   if (f.nightHunter && !f.fainted) cls.push('night-hunter-aura');
+  // Honest odds on the card: while a move is chosen, every living rival
+  // shows the damage that move would land — so the player can compare
+  // targets before pressing ATTACK.
+  const preview = o.preview
+    ? '<div class="au-dmg-preview' + (o.preview.mult > 1 ? ' se' : o.preview.mult < 1 ? ' nve' : '') + '">' +
+      (o.preview.magic ? '✨' : '⚔️') + '−' + o.preview.min + (o.preview.max > o.preview.min ? '–' + o.preview.max : '') +
+      (o.preview.mult > 1 ? ' ▲' : o.preview.mult < 1 ? ' ▽' : '') + '</div>'
+    : '';
   return '<button class="' + cls.join(' ') + '" id="unit_' + side + '_' + index + '" onclick="battleTargetPick(\'' + side + '\',' + index + ')">' +
     (o.acting ? '<div class="au-turn-flag">TURN</div>' : '') +
+    preview +
+    (o.locked ? '<div class="au-target-flag">🎯 TARGET</div>' : '') +
     (f.nightHunter ? '<div class="au-night-moon" title="Night Wings — nocturnal battle boost">🌙</div>' : '') +
     fighterArtHTML(f, 'au') +
     '<div class="au-name">' + escapeHtml(f.name) + '</div>' +
@@ -35356,7 +36021,29 @@ function renderArena() {
   const core = battleCore();
   const b = battleState.battle;
   const acting = b.acting;
-  const choosingTarget = battleState.pendingSkillIndex != null;
+  const playerActing = acting && acting.side === 'player' && !battleState.busy && b.phase === 'act';
+  // The aim-then-strike flow: a chosen move projects its damage onto every
+  // living rival, the tapped rival locks as the target, and the ATTACK
+  // button lands the blow. Surge is priced into the numbers while armed.
+  let pendingAct = null;
+  let previews = null;
+  if (playerActing && battleState.pendingSkillIndex != null) {
+    const acts = core.availableActions(b);
+    const a = acts[battleState.pendingSkillIndex];
+    if (a && a.usable && a.skill.kind === 'attack') {
+      pendingAct = a;
+      const me = core.actingFighter(b);
+      const living = b.teams.opponent.map((f, i) => ({ f, i })).filter(x => !x.f.fainted);
+      previews = {};
+      living.forEach(x => {
+        previews[x.i] = core.previewDamage(me, x.f, a.skill, {
+          surge: battleState.surgeArmed && a.skill.school !== 'basic' && b.focus.player >= core.SURGE_COST,
+          aoeSplit: a.skill.aoe && living.length > 1
+        });
+      });
+    }
+  }
+  const choosingTarget = !!pendingAct && !pendingAct.skill.aoe;
 
   const arenaSynergy = $('arenaSynergyBanner');
   if (arenaSynergy) {
@@ -35377,7 +36064,9 @@ function renderArena() {
     const host = $(side === 'opponent' ? 'arenaOppRow' : 'arenaPlayerRow');
     host.innerHTML = b.teams[side].map((f, i) => arenaUnitHTML(f, side, i, {
       acting: acting && acting.side === side && acting.index === i,
-      targetable: choosingTarget && side === 'opponent' && !f.fainted
+      targetable: choosingTarget && side === 'opponent' && !f.fainted,
+      locked: choosingTarget && side === 'opponent' && battleState.pendingTargetIndex === i && !f.fainted,
+      preview: side === 'opponent' && previews && !f.fainted ? previews[i] : null
     })).join('');
   });
 
@@ -35406,13 +36095,35 @@ function renderArena() {
     : 'No healing needed yet';
   const potionButton = '<button class="move-btn potion-btn' + (potion && potion.used ? ' used' : '') + '"' + (!potionReady ? ' disabled' : '') + ' onclick="battleUsePotion()">' +
     '<div class="mv-name">' + potionName + '</div><div class="mv-meta">' + potionMeta + '</div></button>';
+  // The strike plan reads back before it lands: chosen move, chosen target,
+  // the damage on the button. Nothing happens until the player presses ATTACK.
+  let confirmBar = '';
+  if (pendingAct) {
+    const dmgWord = battleState.liberation ? 'resolve' : 'dmg';
+    if (pendingAct.skill.aoe) {
+      const total = Object.values(previews || {}).reduce((s, p) => s + p.avg, 0);
+      confirmBar = '<button class="move-btn attack-confirm-btn" style="grid-column:1/-1;" onclick="battleConfirmAttack()">' +
+        '<div class="mv-name">⚔️ ATTACK ALL — ~' + total + ' ' + dmgWord + ' across the squad</div></button>';
+    } else {
+      const ti = battleState.pendingTargetIndex;
+      const target = ti != null ? b.teams.opponent[ti] : null;
+      const p = target && previews ? previews[ti] : null;
+      confirmBar = target && p
+        ? '<button class="move-btn attack-confirm-btn" style="grid-column:1/-1;" onclick="battleConfirmAttack()">' +
+          '<div class="mv-name">⚔️ ATTACK ' + escapeHtml(target.name) + ' — ' + p.min + '–' + p.max + ' ' + dmgWord +
+          (p.mult > 1 ? ' · super effective!' : p.mult < 1 ? ' · not very effective' : '') + (p.blocked ? ' · barrier soaks first' : '') + '</div></button>'
+        : '<button class="move-btn attack-confirm-btn waiting" style="grid-column:1/-1;" disabled>' +
+          '<div class="mv-name">🎯 Tap an evil Burb above to aim ' + escapeHtml(pendingAct.skill.label) + '</div></button>';
+    }
+  }
   actions.innerHTML =
-    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' + (choosingTarget ? ' — tap an evil Burb to strike' : '') + '</div>' +
+    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' +
+      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK') : ' — pick a move') + '</div>' +
+    confirmBar +
     acts.map((a, i) => {
       const m = a.skill;
       const metaLine = m.kind === 'attack'
         ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'steal' ? ' · steals Focus' : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
-        : m.kind === 'parley' ? 'CHA ' + me.cha + ' · 🕊️ diplomacy · saps a foe\'s will · can win over a foe below ' + Math.round(core.PARLEY_WINOVER_HP_PCT * 100) + '% HP'
         : m.kind === 'barrier' ? 'Barrier ' + Math.round(m.barrierPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '')
         : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '') + (m.cleanse ? ' · cleanse' : '')
         : 'Squad rally' + (m.healPct ? ' + heal' : '');
@@ -35473,15 +36184,22 @@ function battleSelectSkill(skillIndex) {
   if (!a) return;
   if (!a.usable) { showToast('🕐 ' + a.skill.label + ' is recharging — ' + a.skill.cdLeft + ' more turn' + (a.skill.cdLeft > 1 ? 's' : '') + '.'); return; }
   SFX.tap();
-  const liveTargets = a.targets || [];
-  if (a.needsTarget && liveTargets.length > 1) {
-    // Same skill tapped twice = quick-cast at the first living rival.
-    if (battleState.pendingSkillIndex === skillIndex) { battleResolvePlayer(skillIndex, liveTargets[0]); return; }
-    battleState.pendingSkillIndex = skillIndex;
+  // Attacks aim before they land: choosing the move projects its damage
+  // onto every rival, tapping a rival locks the target, and the ATTACK
+  // button strikes. Support moves (heal, barrier, rally) still cast on tap.
+  if (a.skill.kind !== 'attack') { battleResolvePlayer(skillIndex, (a.targets || [])[0]); return; }
+  if (battleState.pendingSkillIndex === skillIndex) {
+    // Tapping the chosen move again puts it back.
+    battleState.pendingSkillIndex = null;
+    battleState.pendingTargetIndex = null;
     renderArena();
     return;
   }
-  battleResolvePlayer(skillIndex, liveTargets[0]);
+  battleState.pendingSkillIndex = skillIndex;
+  const liveTargets = a.targets || [];
+  // A lone rival aims itself; AoE needs no aim at all.
+  battleState.pendingTargetIndex = !a.skill.aoe && liveTargets.length === 1 ? liveTargets[0] : null;
+  renderArena();
 }
 
 function battleTargetPick(side, index) {
@@ -35489,7 +36207,26 @@ function battleTargetPick(side, index) {
   if (battleState.pendingSkillIndex == null || side !== 'opponent') return;
   const f = battleState.battle.teams.opponent[index];
   if (!f || f.fainted) return;
-  battleResolvePlayer(battleState.pendingSkillIndex, index);
+  SFX.tap();
+  battleState.pendingTargetIndex = index;
+  renderArena();
+}
+
+function battleConfirmAttack() {
+  if (!battleState || battleState.busy) return;
+  const core = battleCore();
+  const b = battleState.battle;
+  if (b.phase !== 'act' || !b.acting || b.acting.side !== 'player') return;
+  const skillIndex = battleState.pendingSkillIndex;
+  if (skillIndex == null) return;
+  const a = core.availableActions(b)[skillIndex];
+  if (!a || !a.usable || a.skill.kind !== 'attack') return;
+  const liveTargets = a.targets || [];
+  const target = a.skill.aoe ? liveTargets[0]
+    : liveTargets.includes(battleState.pendingTargetIndex) ? battleState.pendingTargetIndex : null;
+  if (target == null) { showToast('🎯 Tap an evil Burb to aim first.'); return; }
+  SFX.tap();
+  battleResolvePlayer(skillIndex, target);
 }
 
 function battleResolvePlayer(skillIndex, targetIndex) {
@@ -35497,6 +36234,7 @@ function battleResolvePlayer(skillIndex, targetIndex) {
   const b = battleState.battle;
   const surge = battleState.surgeArmed;
   battleState.pendingSkillIndex = null;
+  battleState.pendingTargetIndex = null;
   battleState.surgeArmed = false;
   try {
     playBattleEvents(core.resolveAction(b, { skillIndex, targetIndex, surge }));
@@ -35589,7 +36327,9 @@ function endPerchBattle() {
   const tier = core.LEAGUE_TIERS[tierIndex];
   const won = b.winner === 'player';
   const liberation = battleState.liberation || pendingEmpireLiberation();
-  const liberatedTown = won && liberation ? completeEmpireLiberationVictory() : null;
+  // The battle always frees a VILLAGE. Towns only ever form later, at the
+  // birdhouse build, when three liberated villages grow together.
+  const liberatedVillage = won && liberation ? completeEmpireLiberationVictory() : null;
   const swayedCount = b.teams.opponent.filter(f => f.swayed).length;
   // High-level garrisons pay for the risk: the reward maths scales with the
   // beaten squad's average level.
@@ -35599,6 +36339,7 @@ function endPerchBattle() {
   let promoted = false;
   if (won) {
     league.wins += 1;
+    league.streak = (league.streak || 0) + 1;
     league.daily.wins += 1;
     gameState.player.wins++;
     if (tier.promoteWins > 0) {
@@ -35612,10 +36353,11 @@ function endPerchBattle() {
       }
     }
     updateQuestProgress('win', 1);
-    if (liberatedTown) updateQuestProgress('town_liberated', 1);
+    if (liberatedVillage) updateQuestProgress('town_liberated', 1);
     SFX.victory();
   } else {
     league.losses += 1;
+    league.streak = 0;   // one loss and the mercy rule turns the game kind again
     gameState.player.losses++;
     SFX.defeat();
   }
@@ -35637,30 +36379,36 @@ function endPerchBattle() {
   // and the Hospital / Kitchen / Roost become the places to recover.
   const battleActivityId = b.activityId || b.seed || ('battle_' + tierIndex + '_' + b.turn);
   const hospitalAdmissions = [];
+  const gardenRests = [];
   b.teams.player.forEach(f => {
     const bird = gameState.flock.find(x => x.id === f.birdId);
     if (!bird) return;
+    const lost = !!(f.fainted || f.hp <= 0);
     bird.hp = clamp(Math.max(1, Math.round(f.hp)), 1, bird.maxHp);
     normalizeBirdCare(bird);
     const delta = (dietHungerCore() && dietHungerCore().ACTIVITY_HUNGER_DELTAS && dietHungerCore().ACTIVITY_HUNGER_DELTAS.battle) || 12;
     applyBirdHungerTransaction(bird.id, 'battle', battleActivityId, delta, Date.now());
     bird.care.happiness = clamp((bird.care.happiness || 80) + (won ? 4 : -3), 0, 100);
-    levelUpBird(bird, rewards.birdXp);
-    // Knocked out on the field? The flock carries them straight to the ward.
-    if ((f.fainted || f.hp <= 0) && admitFaintedBirdToHospital(bird)) {
-      hospitalAdmissions.push(bird.customName || bird.commonName || bird.species);
+    levelUpBird(bird, rewards.birdXp, lost ? { noHeal: true } : {});
+    // Knocked out on the field? The flock carries them straight to the ward —
+    // hurt, whatever they levelled on the way home. No ward built yet means
+    // they rest in the Aviary Gardens instead of reporting back to a room.
+    if (lost) {
+      const name = bird.customName || bird.commonName || bird.species;
+      if (admitFaintedBirdToHospital(bird)) hospitalAdmissions.push(name);
+      else if (restLostBirdOutsideWard(bird)) gardenRests.push(name);
     }
   });
-  if (typeof logDiary === 'function') logDiary('battle', { won, tier: tier.label, liberated: liberatedTown ? (liberatedTown.name || null) : null, promoted });
+  if (typeof logDiary === 'function') logDiary('battle', { won, tier: tier.label, liberated: liberatedVillage ? (liberatedVillage.name || null) : null, promoted });
   leagueRivalCache = null; // next rival rolls fresh
   checkBadges();
   saveState();
 
   $('battleArena').style.display = 'none';
   $('battleResult').style.display = 'block';
-  $('battleResultTitle').textContent = liberatedTown ? 'TOWN LIBERATED!' : won ? 'VICTORY!' : 'DEFEAT';
+  $('battleResultTitle').textContent = liberatedVillage ? 'VILLAGE LIBERATED!' : won ? 'VICTORY!' : 'DEFEAT';
   $('battleResultTitle').className = 'battle-result-title ' + (won ? 'victory' : 'defeat');
-  $('battleResultEmoji').textContent = liberatedTown ? '🕊️' : promoted ? '🎖️' : won ? '🏆' : '🪶';
+  $('battleResultEmoji').textContent = liberatedVillage ? '🕊️' : promoted ? '🎖️' : won ? '🏆' : '🪶';
   const rows = [];
   rows.push('<div class="rw-row"><span>Coins' + (rewards.firstWinBonus ? ' (first win ×2!)' : '') + '</span><b>+' + rewards.coins + ' 🪙</b></div>');
   if (rewards.branches) rows.push('<div class="rw-row"><span>Branches</span><b>+' + rewards.branches + ' 🪵</b></div>');
@@ -35676,14 +36424,17 @@ function endPerchBattle() {
     const next = core.LEAGUE_TIERS[league.tier];
     rows.push('<div class="rw-row"><span>PROMOTED! ' + tier.icon + '→' + next.icon + '</span><b>+' + tier.promoCoins + ' 🪙 +' + tier.promoBranches + ' 🪵</b></div>');
   }
-  if (liberatedTown) rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedTown.name) + ' is broken. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
+  if (liberatedVillage) {
+    rows.push('<div class="rw-note">The usurper\'s hold on ' + escapeHtml(liberatedVillage.name) + ' is broken — the village is free. Return to build its sanctuary birdhouse and bring daylight back to this land.</div>');
+  }
   else if (!won && liberation) rows.push('<div class="rw-note">' + escapeHtml(liberation.name) + ' is still waiting. Heal and train your flock, then try the Liberation Battle again.</div>');
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
   if (!won) rows.push('<div class="rw-note">Tip: counter the evil Burbz\' wing classes, and train new moves in the Academy.</div>');
   if (hospitalAdmissions.length) rows.push('<div class="rw-note">🏥 ' + escapeHtml(hospitalAdmissions.join(', ')) + (hospitalAdmissions.length > 1 ? ' were' : ' was') + ' carried to the Bird Hospital. Each flies home the moment they are healed.</div>');
+  if (gardenRests.length) rows.push('<div class="rw-note">🌿 ' + escapeHtml(gardenRests.join(', ')) + (gardenRests.length > 1 ? ' rest' : ' rests') + ' hurt in the Aviary Gardens. Build the Bird Hospital and fallen birds will be treated there.</div>');
   rows.push('<div class="rw-note">Your birds are tired and a little hungry — the Kitchen, Hospital and Roost will fix them up.</div>');
   $('battleResultRewards').innerHTML = rows.join('');
-  $('battleAgainBtn').textContent = liberatedTown ? 'RETURN TO ' + liberatedTown.name.toUpperCase() : liberation ? 'TRY LIBERATION AGAIN' : 'BACK TO THE LEAGUE';
+  $('battleAgainBtn').textContent = liberatedVillage ? 'RETURN TO ' + liberatedVillage.name.toUpperCase() : liberation ? 'TRY LIBERATION AGAIN' : 'BACK TO THE LEAGUE';
   $('battleResultXpFill').style.width = '0%';
   setTimeout(() => {
     const pct = Math.min(100, (gameState.player.xp / XP_PER_LEVEL(gameState.player.level)) * 100);
@@ -35718,7 +36469,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -36728,7 +37479,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'field-guide-menus-v287-20260819';
+const BURBZ_BUILD = 'field-guide-menus-v293-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -36799,7 +37550,7 @@ const MERLIN_TUTORIAL_STEPS = [
   //   introduce the rest, one mechanic at a time.
   { chapterId:'academy_tour', chapter:'Academy', title:'The Roost stands!', screen:'academy', target:'.academy-building-card[data-building="dorm"]', text:'Magnificent \u2014 a home for the flock! And that experience you just earned? Building pays. Birds level up as they work for you, too.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Barracks and Kitchen', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks recruits discovered birds into your flock. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that wins Parleys and diplomacy quests.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that pays on diplomacy quests.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Out to the world', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Your Player Quests will introduce every other building when you need it. One last thing to show you \u2014 tap the Map.',
     action:{ event:'tab:map', hint:'Tap the Map tab' } },
 
@@ -36819,8 +37570,8 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'birdex', chapter:'Collection', title:'Merlin, your companion', screen:'birdex', target:'#petCompanion', text:'That is me, top right! Tap me any time to feed me, play with me, or let me rest.' },
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
-  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz \u2014 never free birds. Wing classes counter each other; a green Counter tag marks the birds that beat this squad.' },
-  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Or Parley: a bird with high Charm can win a foe over without a blow.' },
+  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'The Burbz are zombie birds \u2014 the Z is for zombie. You only fight them, never free living birds. A green Counter tag marks the birds that beat them.' },
+  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Pick a move, tap your target, and the ATTACK button shows the damage before you strike.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.
@@ -36828,7 +37579,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'village', chapter:'Realm', title:'Holdings pay tribute', screen:'village', target:'#empirePanel', text:'Standalone villages and united Towns pay coins, timber, stone and goods every eight hours. Happy, provisioned residents pay more.' },
 
   // — Town strategy: taught when the third nearby liberation forms a Town.
-  { chapterId:'town', chapter:'Town Hall', title:'Three become one', screen:'town', target:'#townHallPanel', text:'Those three villages are now wards of one Town. Their destinations have retired: population, stores, workers and tribute are managed together here.' },
+  { chapterId:'town', chapter:'Town Hall', title:'Three become one', screen:'town', target:'#townHallPanel', text:'You merged three starred villages into one Town. Everything is managed here — and one Upgrade order raises the whole town at once.' },
   { chapterId:'town', chapter:'Town Hall', title:'Build a real economy', screen:'town', target:'#townHallPanel', text:'Keep food and water supplied for growth, staff productive networks, clear ruins and upgrade the Hall to unlock builder crews and Council policy.' },
 
   // — Diary: taught the first time the Adventurer's Diary opens.

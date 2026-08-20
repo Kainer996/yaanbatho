@@ -27,9 +27,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "settlement_scene_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "field-guide-menus-v287-20260819"
+OWN_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-VERSIONED_CORE = "settlement_scene_core.js?v=field-guide-menus-v287-20260819"
+CURRENT_BUILD = "field-guide-menus-v293-20260820"
+VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
 
 
 def run_node(source: str):
@@ -198,9 +199,10 @@ def test_game_viewport_pins_page_zoom():
 def test_release_pins_are_aligned():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if "const BURBZ_CACHE" in line)
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
+    assert OWN_RELEASE_PIN in cache_line, "this release's own segment is kept"
     assert PREVIOUS_RELEASE_PIN in cache_line, "the release lineage is unbroken"
     assert re.search(
         rf"<script\b[^>]*\bsrc=[\"']{re.escape(VERSIONED_CORE)}[\"'][^>]*>",

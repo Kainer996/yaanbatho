@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "field-guide-menus-v287-20260819"
+CURRENT_BUILD = "field-guide-menus-v293-20260820"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
@@ -133,8 +133,8 @@ def test_training_hall_and_roost_teach_the_ascendant_numbers():
     hall = function_source(html, "renderTrainingHallPanel")
     # Night school: the hall banners the rule and marks nocturnal birds.
     assert "isNightRightNow()" in hall
-    assert "TRIPLE XP and DOUBLE stat gains" in hall
-    assert "Night Hunter 3×" in hall
+    assert "3× XP and double stat gains" in hall
+    assert "🌙3×" in hall
     # The Roost status line burns while the perk is live and teaches it by day.
     roost = function_source(html, "academySleepStatusHTML")
     assert "NIGHT HUNTER — in its element right now" in roost
@@ -158,8 +158,13 @@ def test_night_hunter_graphics_ship_in_the_stylesheet():
 def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    for core in ("bird_sleep_core.js", "academy_treehouse_core.js", "battle_core.js"):
-        pin = f"{core}?v={RELEASE_PIN}"
+    # bird_sleep_core still ships under this release; battle_core moved again
+    # with mercy-streak-attack-preview-v287, academy_treehouse_core with
+    # training-your-way-v288.
+    for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
+                            ("academy_treehouse_core.js", "training-your-way-v288-20260819"),
+                            ("battle_core.js", "mercy-streak-attack-preview-v287-20260819")):
+        pin = f"{core}?v={pin_build}"
         assert pin in html, core
         assert sw.count(f"'./{pin}'") == 2, core
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html

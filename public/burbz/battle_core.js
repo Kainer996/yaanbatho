@@ -8,10 +8,9 @@
 // hurt an eagle. It is an edge, not an equaliser: since the size rule landed
 // (bird_size_core.js) weight scales HP, ATK, DEF and MAG together, so a
 // bigger bird is stronger in a straight fight and a little bird is weaker,
-// magic or no magic. Diplomacy runs on CHA: every bird can Parley, sapping a
-// foe's will to fight, and a charming bird can win a weakened foe over
-// without a blow — the robin's road to victory where the eagle slugs it
-// out. Wing classes and real-bird type matchups are kept from v2.
+// magic or no magic. Wing classes and real-bird type matchups are kept
+// from v2. Parley retired in v287: diplomacy lives on in envoy quests and
+// the Crowbar, but every battle turn is now a clear fighting choice.
 // Pure engine: no DOM, deterministic via seeded RNG, UMD export.
 (function(root, factory) {
   const api = factory();
@@ -171,21 +170,6 @@
   // carries both and auto-leads with whichever side of it is stronger.
   const PECK  = { id:'peck',  label:'Peck',  icon:'🐤', school:'basic', stat:'atk', power:42, cd:0, kind:'attack', focusGain:1, copy:'Reliable jab that builds team Focus.' };
   const SPARK = { id:'spark', label:'Spark', icon:'✨', school:'basic', stat:'mag', power:42, cd:0, kind:'attack', focusGain:1, copy:'A dart of kingdom magic that builds team Focus.' };
-
-  // Diplomacy — Charm (CHA) is the small birds' battlefield. Every bird
-  // carries Parley: a charm offensive that saps a foe's will to fight, and
-  // can win a weakened foe over entirely, ending its fight without a blow.
-  // Warriors carry the branches; charmers carry the conversation.
-  const PARLEY = { id:'parley', label:'Parley', icon:'🕊️', school:'charm', stat:'cha', power:0, cd:3, kind:'parley', focusGain:1,
-    copy:'Charm diplomacy: saps a foe\'s will to fight; a weakened foe may be won over completely.' };
-  const PARLEY_WINOVER_HP_PCT = 0.35; // foes at or below this share of max HP can be talked out of the fight
-
-  // A bird's resistance to being charmed: cool heads and charming tongues
-  // are both hard to sway. The flat term keeps weak-willed foes from being
-  // trivially farmed by any mid-charm bird.
-  function charmResolve(fighter) {
-    return Math.round(effStat(fighter, 'int') * 0.5 + effStat(fighter, 'cha') * 0.5) + 40;
-  }
 
   // ---------------------------------------------------------------------------
   // Signature moves — curated, real-behaviour flavoured, per famous species.
@@ -438,7 +422,7 @@
     const basic = { ...(f.mag > f.atk ? SPARK : PECK) };
     const sig = signatureFor(bird.species || bird.commonName, typeId);
     sig.stat = f.mag > f.atk ? 'mag' : 'atk';
-    f.skills = [basic, { ...PARLEY }, ...trainedMoves(disciplines), sig].map(s => ({
+    f.skills = [basic, ...trainedMoves(disciplines), sig].map(s => ({
       ...s,
       cdLeft: s.ultimate ? ULTIMATE_OPENING_CD : 0
     }));
@@ -572,8 +556,8 @@
       skillIndex: i,
       skill: s,
       usable: skillUsable(f, s),
-      needsTarget: (s.kind === 'attack' || s.kind === 'parley') && !s.aoe,
-      targets: (s.kind === 'attack' || s.kind === 'parley') ? targets : allies,
+      needsTarget: s.kind === 'attack' && !s.aoe,
+      targets: s.kind === 'attack' ? targets : allies,
       canSurge: battle.focus[battle.acting.side] >= SURGE_COST && s.school !== 'basic'
     }));
   }
@@ -606,6 +590,35 @@
       raw -= absorbed;
     }
     return { dmg: Math.max(pierce || absorbed <= 0 ? 1 : 0, Math.round(raw)), crit, mult, fact, magic, absorbed: Math.round(absorbed), pierced: pierce && defender.barrier > 0 };
+  }
+
+  // Honest odds before the blow: the same damage maths as computeDamage with
+  // the dice taken out. No RNG, no mutation — the UI shows the player what a
+  // move will do to a target before they commit to the attack. Returns the
+  // variance range (0.9–1.1), the average, and how the matchup lands. Crits
+  // are left out of the range: they arrive as a bonus, never a promise.
+  function previewDamage(attacker, defender, skill, opts) {
+    const o = opts || {};
+    const stat = skill.stat === 'auto' ? (attacker.mag > attacker.atk ? 'mag' : 'atk') : (skill.stat || 'atk');
+    const magic = stat === 'mag';
+    const attStat = effStat(attacker, magic ? 'mag' : 'atk');
+    const defStat = effStat(defender, magic ? 'res' : 'def');
+    const { mult, fact } = effectiveness(attacker.type, defender.type);
+    const stab = skill.stab ? 1.2 : 1;
+    const pierce = !!(skill.rider && skill.rider.kind === 'pierce');
+    let base = (4 + skill.power * (attStat / ((defStat + 70) * 1.6))) * mult * stab;
+    if (o.surge) base *= 1.4;
+    if (o.aoeSplit) base *= 0.72;
+    const barrier = pierce ? 0 : Math.max(0, defender.barrier || 0);
+    const land = raw => {
+      const absorbed = Math.min(barrier, raw);
+      return Math.max(pierce || absorbed <= 0 ? 1 : 0, Math.round(raw - absorbed));
+    };
+    return {
+      min: land(base * 0.9), max: land(base * 1.1), avg: land(base),
+      mult, magic, pierce, fact,
+      blocked: barrier > 0 && !pierce
+    };
   }
 
   function applyHeal(fighter, amount) {
@@ -735,39 +748,6 @@
       if (anyCrit) addFocus(battle, side, 1);
       if (skill.ultimate && skill.fact && battle.turn <= 14) events.push({ type:'fact', side, text: skill.fact });
       if (skill.crPushSelf) { pushCr(attacker, skill.crPushSelf); events.push({ type:'cr', side, name: attacker.name, text: attacker.name + ' races back up the turn meter!' }); }
-    } else if (skill.kind === 'parley') {
-      const foes = livingFighters(battle, defSide);
-      const chosen = foes.find(x => x.i === action.targetIndex) || foes[0];
-      const defender = chosen.f;
-      const charm = effStat(attacker, 'cha');
-      const resolve = charmResolve(defender);
-      const surgeMult = surge ? 1.35 : 1;
-      events.push({ type:'parley', side, name: attacker.name, target: defender.name,
-        text: attacker.name + ' parleys with ' + defender.name + ' — pure charm against the will to fight!' });
-      // Only the player's flock can truly win hearts: the usurper's silver
-      // tongue can rattle morale, but never turns a loyal companion.
-      const winChance = clamp((charm / resolve) * 0.5 * surgeMult, 0.1, 0.85);
-      const canWinOver = side === 'player' && defender.hp <= defender.maxHp * PARLEY_WINOVER_HP_PCT;
-      if (canWinOver && battleRng(battle) < winChance) {
-        defender.fainted = true;
-        defender.swayed = true;
-        defender.cr = 0;
-        battle.swayed = battle.swayed || { player: 0, opponent: 0 };
-        battle.swayed[side] += 1;
-        addFocus(battle, side, 2);
-        events.push({ type:'sway', side: defSide, name: defender.name, targetIndex: battle.teams[defSide].indexOf(defender),
-          text: defender.name + ' is won over! The usurper\'s shadow lifts and the bird bows out of the fight in peace.' });
-      } else {
-        const swayPct = clamp((charm / resolve) * 0.22 * surgeMult, 0.08, 0.4);
-        defender.mods.push({ stat:'atk', pct:-swayPct, turns:2 });
-        defender.mods.push({ stat:'mag', pct:-swayPct, turns:2 });
-        const shred = clamp((charm / resolve) * 0.15, 0.05, 0.25);
-        defender.cr = clamp(defender.cr - shred * 100, 0, 100);
-        events.push({ type:'debuff', side: defSide, name: defender.name, stat:'atk',
-          text: defender.name + ' wavers — its will to fight drops ' + Math.round(swayPct * 100) + '%!' });
-        if (canWinOver) events.push({ type:'info', side, text: defender.name + ' nearly turns... one more kind word might do it.' });
-        else if (side === 'player' && defender.hp > defender.maxHp * PARLEY_WINOVER_HP_PCT) events.push({ type:'info', side, text: 'Too proud to turn yet — wear ' + defender.name + ' down below ' + Math.round(PARLEY_WINOVER_HP_PCT * 100) + '% HP, then parley again.' });
-      }
     } else if (skill.kind === 'barrier') {
       const scale = surge ? 1.4 : 1;
       const strength = f => Math.round(f.maxHp * skill.barrierPct * scale);
@@ -841,14 +821,6 @@
           if (x.f.barrier > 0 && !(s.rider && s.rider.kind === 'pierce')) score *= 0.8;
           consider({ skillIndex: i, targetIndex: x.i, surge: battle.focus[side] >= SURGE_COST + 2 && s.school !== 'basic' }, score);
         });
-      } else if (s.kind === 'parley') {
-        // Charmers reach for diplomacy; brutes barely bother. The AI can't
-        // win foes over (that grace is the player's), so it values the sway.
-        const charm = effStat(me, 'cha');
-        foes.forEach(x => {
-          const pull = charm / charmResolve(x.f);
-          consider({ skillIndex: i, targetIndex: x.i }, 6 + pull * 18);
-        });
       } else if (s.kind === 'heal') {
         const hurt = allies.filter(x => x.f.hp < x.f.maxHp * 0.5).length;
         consider({ skillIndex: i }, me.hp < me.maxHp * 0.4 || (s.teamWide && hurt >= 2) ? 40 + hurt * 14 : 3);
@@ -903,8 +875,8 @@
     }
     const firstWinBonus = !!o.firstWinOfDay;
     if (firstWinBonus) coins *= 2;
-    // Charm diplomacy pays: every foe won over by Parley leaves goodwill
-    // gifts instead of a grudge. Never reduced — kindness doesn't grind.
+    // Legacy goodwill plumbing from the retired Parley move: callers that
+    // pass no swayed count get zero charm coins, which is now always.
     const swayed = Math.max(0, Math.round(n(o.swayed, 0)));
     const charmCoins = swayed * (6 + ti * 3);
     return { coins, branches, birdXp: Math.round((22 + ti * 7) * levelScale), playerXp: Math.round((30 + ti * 10) * levelScale), firstWinBonus, reduced, swayed, charmCoins };
@@ -912,11 +884,11 @@
 
   return {
     BIRD_TYPES, TYPE_CHART, TYPE_FACTS, effectiveness, classifySpecies, speciesKey,
-    MOVE_SCHOOLS, MOVE_LINES, TIER_THRESHOLDS, PECK, SPARK, PARLEY, PARLEY_WINOVER_HP_PCT, charmResolve, SIGNATURES, CLASS_SIGNATURES, signatureFor,
+    MOVE_SCHOOLS, MOVE_LINES, TIER_THRESHOLDS, PECK, SPARK, SIGNATURES, CLASS_SIGNATURES, signatureFor,
     ULTIMATE_CD, ULTIMATE_OPENING_CD, FOCUS_MAX, SURGE_COST,
     deriveMagic, deriveResist,
     disciplineTier, trainedMoves, buildFighter, buildOpponentFighter,
-    createBattle, tickToNextTurn, forecastTurnOrder, availableActions, resolveAction, aiChooseAction,
+    createBattle, tickToNextTurn, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,
     actingFighter, livingFighters, teamAlive, effStat, skillUsable, canUsePotionEffect, applyPotionEffect,
     LEAGUE_TIERS, battleRewards, DAILY_FULL_REWARD_WINS,
     hashString, seededRandom

@@ -1,5 +1,11 @@
-"""Charm (CHA) diplomacy: Parley in battle, the Crowbar as the charm room,
-diplomacy quests, and robins/wrens as the Kingdom's charm icons."""
+"""Charm (CHA) diplomacy: the Crowbar as the charm room, diplomacy quests,
+and robins/wrens as the Kingdom's charm icons.
+
+Rewritten for mercy-streak-attack-preview-v287: the in-battle Parley move is
+retired at Yaan's request — it confused players and rarely worked. Charm
+keeps its whole out-of-battle life: the Crowbar grows it, diplomacy quests
+pay on it, and the envoy still flies. These contracts pin both sides — the
+move is gone from the engine, and the charm economy still stands."""
 import json
 import subprocess
 from pathlib import Path
@@ -14,112 +20,52 @@ def _node(script: str):
     return json.loads(result.stdout)
 
 
-def test_every_fighter_carries_parley_and_it_targets_foes():
+def test_no_fighter_carries_parley_any_more():
     payload = _node("""
 const core = require('./battle_core.js');
 const robin = core.buildFighter({ id:'r', species:'European Robin', maxHp:70, hp:70, atk:20, def:30, spd:50, int:50, cha:100, stamina:50 });
 const eagle = core.buildFighter({ id:'e', species:'Golden Eagle', maxHp:140, hp:140, atk:100, def:90, spd:80, int:70, cha:20, stamina:80 });
-const battle = core.createBattle({ playerFighters:[robin], opponentFighters:[eagle], seed:'parley_targets' });
+const battle = core.createBattle({ playerFighters:[robin], opponentFighters:[eagle], seed:'no_parley' });
 core.tickToNextTurn(battle);
 const acts = core.availableActions(battle);
-const parley = acts.find(a => a.skill.id === 'parley');
 console.log(JSON.stringify({
   robinHasParley: robin.skills.some(s => s.id === 'parley'),
   eagleHasParley: eagle.skills.some(s => s.id === 'parley'),
-  parleyStat: core.PARLEY.stat,
-  needsTarget: parley ? parley.needsTarget : false,
-  targetsFoes: parley ? parley.targets.length > 0 : false
+  actionKinds: acts.map(a => a.skill.kind),
+  parleyExportGone: core.PARLEY === undefined && core.PARLEY_WINOVER_HP_PCT === undefined,
+  charmResolveGone: core.charmResolve === undefined
 }));
 """)
-    assert payload["robinHasParley"] is True
-    assert payload["eagleHasParley"] is True
-    assert payload["parleyStat"] == "cha"      # diplomacy runs on Charm
-    assert payload["needsTarget"] is True
-    assert payload["targetsFoes"] is True
+    assert payload["robinHasParley"] is False
+    assert payload["eagleHasParley"] is False
+    assert "parley" not in payload["actionKinds"]
+    assert payload["parleyExportGone"] is True
+    assert payload["charmResolveGone"] is True
 
 
-def test_charming_player_bird_wins_over_a_weakened_foe():
-    payload = _node("""
-const core = require('./battle_core.js');
-// A charming robin (CHA 100) parleys with a weakened, weak-willed foe.
-// Deterministic seeded RNG: at least one of a handful of seeds must land
-// the win-over, and every win-over must count the foe as out of the fight.
-let sway = null;
-for (let i = 0; i < 8 && !sway; i++) {
-  const robin = core.buildFighter({ id:'r', species:'European Robin', maxHp:70, hp:70, atk:20, def:30, spd:90, int:50, cha:100, stamina:50 });
-  const foe = core.buildFighter({ id:'e', species:'Golden Eagle', maxHp:140, hp:40, atk:100, def:90, spd:10, int:20, cha:20, stamina:80 });
-  const battle = core.createBattle({ playerFighters:[robin], opponentFighters:[foe], seed:'sway_' + i });
-  core.tickToNextTurn(battle);
-  const idx = battle.teams.player[0].skills.findIndex(s => s.id === 'parley');
-  const events = core.resolveAction(battle, { skillIndex: idx, targetIndex: 0 });
-  if (events.some(e => e.type === 'sway')) {
-    sway = { seed: i,
-      foeOut: battle.teams.opponent[0].fainted && battle.teams.opponent[0].swayed,
-      winner: battle.winner,
-      peaceful: events.every(e => e.type !== 'damage') };
-  }
-}
-console.log(JSON.stringify(sway || { failed: true }));
-""")
-    assert payload.get("failed") is not True, "no seed produced a win-over"
-    assert payload["foeOut"] is True          # a swayed foe leaves the fight
-    assert payload["winner"] == "player"      # last foe won over = victory
-    assert payload["peaceful"] is True        # diplomacy deals no damage
+def test_engine_source_dropped_the_parley_branches():
+    # The header comment may say the move retired; the code may not carry it.
+    core_src = (ROOT / "battle_core.js").read_text(encoding="utf-8")
+    assert "'parley'" not in core_src
+    assert "PARLEY" not in core_src
+    assert "charmResolve" not in core_src
+    html = INDEX.read_text(encoding="utf-8")
+    assert "parley" not in html.lower()
 
 
-def test_parley_saps_will_but_a_proud_foe_at_full_health_never_turns():
-    payload = _node("""
-const core = require('./battle_core.js');
-const robin = core.buildFighter({ id:'r', species:'European Robin', maxHp:70, hp:70, atk:20, def:30, spd:90, int:50, cha:120, stamina:50 });
-const foe = core.buildFighter({ id:'e', species:'Golden Eagle', maxHp:140, hp:140, atk:100, def:90, spd:10, int:70, cha:40, stamina:80 });
-const battle = core.createBattle({ playerFighters:[robin], opponentFighters:[foe], seed:'sap_will' });
-core.tickToNextTurn(battle);
-const idx = battle.teams.player[0].skills.findIndex(s => s.id === 'parley');
-core.resolveAction(battle, { skillIndex: idx, targetIndex: 0 });
-console.log(JSON.stringify({
-  stillFighting: !battle.teams.opponent[0].fainted,
-  willSapped: battle.teams.opponent[0].mods.some(m => m.stat === 'atk' && m.pct < 0),
-  threshold: core.PARLEY_WINOVER_HP_PCT
-}));
-""")
-    assert payload["stillFighting"] is True   # full-health foes can't be flipped
-    assert payload["willSapped"] is True      # but their will to fight drops
-    assert 0 < payload["threshold"] < 1
-
-
-def test_evil_burbz_parley_never_steals_a_loyal_companion():
-    payload = _node("""
-const core = require('./battle_core.js');
-// The usurper's charmer faces a weakened player bird: for every seed the
-// parley may rattle morale, but a loyal companion is never won over.
-const results = [];
-for (let i = 0; i < 6; i++) {
-  const charmer = core.buildFighter({ id:'c', species:'Common Myna', maxHp:100, hp:100, atk:40, def:40, spd:90, int:60, cha:200, stamina:50 });
-  const weary = core.buildFighter({ id:'w', species:'European Robin', maxHp:70, hp:10, atk:20, def:30, spd:10, int:20, cha:20, stamina:50 });
-  const battle = core.createBattle({ playerFighters:[weary], opponentFighters:[charmer], seed:'loyal_' + i });
-  core.tickToNextTurn(battle);
-  const idx = battle.teams.opponent[0].skills.findIndex(s => s.id === 'parley');
-  core.resolveAction(battle, { skillIndex: idx, targetIndex: 0 });
-  results.push(!battle.teams.player[0].fainted && !battle.teams.player[0].swayed);
-}
-console.log(JSON.stringify({ allLoyal: results.every(Boolean) }));
-""")
-    assert payload["allLoyal"] is True
-
-
-def test_battle_rewards_pay_goodwill_coins_for_swayed_foes():
+def test_legacy_goodwill_rewards_stay_harmless():
+    # endPerchBattle still passes a swayed count (always 0 now) — the reward
+    # maths must keep accepting it without paying phantom coins.
     payload = _node("""
 const core = require('./battle_core.js');
 console.log(JSON.stringify({
   plain: core.battleRewards(2, 'player', {}),
-  charmed: core.battleRewards(2, 'player', { swayed: 2 }),
-  loss: core.battleRewards(2, 'opponent', { swayed: 2 })
+  legacy: core.battleRewards(2, 'player', { swayed: 0 })
 }));
 """)
     assert payload["plain"]["charmCoins"] == 0
-    assert payload["charmed"]["swayed"] == 2
-    assert payload["charmed"]["charmCoins"] > 0
-    assert payload["loss"]["charmCoins"] == 0
+    assert payload["legacy"]["charmCoins"] == 0
+    assert payload["legacy"]["swayed"] == 0
 
 
 def test_diplomacy_envoy_quest_pays_on_charm():
@@ -156,10 +102,9 @@ def test_index_wires_charm_throughout():
     # The Crowbar trains Charm and says so
     assert "crowbar:     { stat:'cha',     label:'CHA' }" in html
     assert "+1 CHA every 30 min" in html
-    # Battle UI teaches and renders Parley diplomacy
-    assert "every bird can Parley" in html.lower() or "every bird can parley" in html.lower()
-    assert "PARLEY_WINOVER_HP_PCT" in html
-    assert "Won over by Charm" in html
-    # Merlin's tutorial covers diplomacy
-    assert "a bird with high Charm can win a foe over" in html
-    assert "the stat that wins Parleys and diplomacy quests" in html
+    # The copy tells the truth after the retirement: charm pays on quests,
+    # and no surface promises an in-battle win-over any more.
+    assert "Charm pays on diplomacy quests" in html
+    assert "the stat that pays on diplomacy quests" in html
+    assert "win a foe over without a blow" not in html
+    assert "wins Parleys" not in html

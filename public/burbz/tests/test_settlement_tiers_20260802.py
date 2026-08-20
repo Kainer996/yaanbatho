@@ -17,8 +17,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
-REALM_CORE_PIN = "town-strategy-v273-20260816"
-CURRENT_BUILD = "field-guide-menus-v287-20260819"
+REALM_CORE_PIN = "merge-when-ready-v290-20260820"
+CURRENT_BUILD = "field-guide-menus-v293-20260820"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -187,6 +187,10 @@ def build_harness(villages_js: str, probe_js: str) -> str:
 global.window = global;
 window.BurbzEmpireRealmCore = require({json.dumps(str(CORE))});
 const realmCore = () => window.BurbzEmpireRealmCore;
+// v290: no charters here -> deriveSettlements keeps the legacy automatic
+// grouping, which forms the same towns a signed charter would.
+const empireMergeCharters = () => ({{}});
+const empireCharterSignature = () => 'auto';
 let empireSettlementsCache = null, empireSettlementsCacheKey = '';
 const EMPIRE_TERRITORY_RADIUS_M = 2200;
 const toasts = [];
@@ -287,7 +291,7 @@ def test_settlement_layer_is_derived_cached_and_never_stored():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     assert "function empireSettlementsInfo()" in logic
-    assert "core.deriveSettlements(villages)" in logic
+    assert "core.deriveSettlements(villages, { townCharters: charters.townCharters, cityCharters: charters.cityCharters })" in logic
     assert "function empireSettlementOfSeed(" in logic
     assert "function empireSettlementById(" in logic
     # Derived from the same claims as regions — no settlement state is saved.
@@ -323,16 +327,20 @@ def test_merged_guilds_shorten_construction_in_the_real_build_flow():
     assert "eco.construction = { id: building.id" in build
 
 
-def test_liberation_announces_town_and_city_foundings_when_they_happen():
+def test_liberation_never_merges_but_the_signed_merge_announces_itself():
+    """v290: liberation frees a village and nothing else; the merge toasts
+    moved to the player's own Merge actions and still name the bonuses."""
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     claim_start = logic.index("function claimCurrentVillage(")
     claim_end = logic.index("\nfunction renderVillageClaimBar", claim_start)
     claim = logic[claim_start:claim_end]
-    assert "empireSettlementsInfo()" in claim
-    assert "grow together" in claim  # the town toast
-    assert "neighbouring towns merge into one" in claim  # the city toast
-    assert "+10% taxes" in claim and "+25% taxes" in claim
+    assert "grow together" not in claim
+    assert "merge star" in claim
+    merge = function_source(html, "empireMergeVillages")
+    assert "+10% taxes" in merge
+    towns = function_source(html, "empireMergeTowns")
+    assert "County Hall" in towns
 
 
 def test_royal_ledger_lists_unified_towns_instead_of_absorbed_villages():
@@ -427,9 +435,9 @@ def test_3d_town_keeps_its_real_districts_and_camera_without_village_navigation(
 
 def test_story_canon_documents_the_merge_layer():
     story = STORY.read_text(encoding="utf-8")
-    assert "three neighbouring villages" in story.lower()
+    assert "three starred villages" in story.lower()  # v290: the player merges
+    assert "merge star" in story.lower()
     assert "exact" in story.lower() and "permanent" in story.lower()
-    assert "one city" in story.lower()
 
 
 # ---------------------------------------------------------------------------

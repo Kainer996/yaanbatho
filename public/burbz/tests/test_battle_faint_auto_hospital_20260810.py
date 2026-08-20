@@ -13,7 +13,7 @@ SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
 # This release's own cache marker; later releases move BURBZ_BUILD on.
 PREVIOUS_RELEASE_PIN = "early-game-easy-battles-v240-20260810"
-CURRENT_BUILD = "field-guide-menus-v287-20260819"
+CURRENT_BUILD = "field-guide-menus-v293-20260820"
 
 
 def function_source(html: str, name: str) -> str:
@@ -44,10 +44,18 @@ def test_admission_helper_guards_the_ward_like_discharge_does():
 def test_battle_end_admits_every_fainted_fighter_automatically():
     html = HTML_PATH.read_text(encoding="utf-8")
     end = function_source(html, "endPerchBattle")
-    assert "(f.fainted || f.hp <= 0) && admitFaintedBirdToHospital(bird)" in end
+    assert "const lost = !!(f.fainted || f.hp <= 0);" in end
+    # Battle XP levels stats, never wounds: a lost bird's level-up heal is
+    # held back so the ward cannot turn it away at the door (v286).
+    assert "levelUpBird(bird, rewards.birdXp, lost ? { noHeal: true } : {})" in end
+    assert end.index("levelUpBird(bird, rewards.birdXp") < end.index("admitFaintedBirdToHospital(bird)")
+    assert "admitFaintedBirdToHospital(bird)" in end
+    # No hospital built? The lost bird still leaves its post to rest.
+    assert "restLostBirdOutsideWard(bird)" in end
     assert "hospitalAdmissions.push" in end
     # The result screen says who was carried to the ward.
     assert "carried to the Bird Hospital" in end
+    assert "Aviary Gardens" in end
 
 
 def test_release_is_versioned_for_service_worker_self_update():

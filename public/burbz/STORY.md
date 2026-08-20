@@ -1,8 +1,14 @@
 # BURBZ — Story Canon
 
+## The first law — the name of the enemy
+
+**Burbz is the name of the evil ones. The Z is for zombie.** The Burbz are zombie birds — dead bird-shapes raised and driven by the usurper's shadow magic — and they have taken over the kingdom. The game carries their name because they are the task: **save the world from the Burbz.** The realm they hold bears their name too, and every liberation takes a piece of it back.
+
+The player's own birds are never Burbz. They are living, free birds — **birds** and **companions**, the heroes of the story. Every other law in this canon stands under this one.
+
 ## The two worlds
 
-The **Kingdom of Burbz** is the Earth of another universe in the multiverse — the same continents, the same seas — but there the dominant species are birds. It is a bird-led magical realm bound to the player's real world. A dark force has taken the kingdom: the **evil Burbz**, shadow-woven birds with burning red eyes, serving a usurper who has spread darkness across the realm, trapping towns beneath an occupying spell and dimming the paths between them.
+The **Kingdom of Burbz** is the Earth of another universe in the multiverse — the same continents, the same seas — but there the dominant species are birds. It is a bird-led magical realm bound to the player's real world. A dark force has taken the kingdom: the **evil Burbz**, zombie birds raised by shadow magic, with burning red eyes, serving a usurper who has spread darkness across the realm, trapping towns beneath an occupying spell and dimming the paths between them.
 
 The last free birds gather around Merlin, a wizard Merlin falcon. His final spell hurled **Merlin's spell-tablet** across the multiverse into our universe, where it becomes the player's phone and the Burbz app. The player is the one Merlin has chosen: the only being who can unlock the darkness that has swallowed the Kingdom of Burbz.
 
@@ -24,6 +30,11 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 4. The town becomes part of the player's empire, the darkness lifts over its land in a light green ring, it gains a liberation icon, supports the realm, and becomes a safe local hub.
 
 Battle is therefore a story mechanic, not a disconnected league minigame: training, healing, feeding and assembling a flock all prepare the player to free real places.
+
+### The cost of the field, and the honest merge
+
+- A battle frees **one village** — never a town. Towns rise only where the player merges them: a freed village must first earn its **⭐ merge star** (40 folk, 75% happiness), and only the player's own Merge order seals the charter.
+- Battle has a cost. A bird lost on the field is **carried straight to the Bird Hospital**, hurt — levels won on the way home mend stats, never wounds. If no ward stands yet, the fallen rest in the Aviary Gardens until food and care mend them.
 
 ## The village folk — who lives in the freed towns
 
@@ -52,15 +63,15 @@ a whole food to every hungry bird that eats it — across the whole flock, one
 portion each, until the stores run dry. The cleverer the chef, the more good each
 plate does.
 
-## Villages grow into towns, towns into cities
+## Villages merge into towns — when the player says so
 
-Freedom is contagious between neighbours. Liberate **three neighbouring villages** — sanctuaries whose lands touch, chained within a short walk of each other — and their free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. This is an **exact, permanent trio**: later villages and bridge claims cannot redraw an established Town. Raise **three neighbouring Towns** and they grow together again into **one city**, also uniquely named and gold-crowned on the liberation map.
+Freedom is contagious between neighbours, but merging is a promise the player makes, not an accident of geography. A liberated village that reaches **40 folk at 75% happiness** earns its **⭐ merge star**. When **three starred villages** stand within a short walk of each other (5 km), a **Merge** button appears — press it, and the free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. The signed charter is **exact and permanent**: later villages and bridge claims cannot redraw an established Town. (Cities from the old automatic era survive untouched; new progression climbs villages → towns → counties.)
 
 - A merged settlement is one community: its wards share market squares (**bonus taxes**), stores and building crews. The three old village economies still underpin the simulation, but the player governs them through one Town Hall.
 - On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.
 - In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
-- Founding a town retires the three separate village destinations. Their markers, desks and individual Steward posts leave the player's UI; old links and saved destinations lead to the Town Hall instead. The records remain safely underneath so no buildings, residents, provisions, ruins, taxes or paid construction are lost.
-- The **Town Hall** is a real strategy layer: five Hall levels unlock extra builder crews and a council; shared networks strengthen the least-developed ward; restoration clears the old wreckage; one strongbox collects the existing output; and Balanced, Growth, Trade, Industry and Builders policies make honest economic trade-offs rather than minting free resources.
+- Founding a town retires the three separate village desks. Their markers, ledgers and individual Steward posts leave the player's UI; old links and saved destinations lead to the Town Hall instead. The records remain safely underneath so no buildings, residents, provisions, ruins, taxes or paid construction are lost — and small **Visit** doors at the Hall let the player walk the old villages again, just to look.
+- The **Town Hall** is a real strategy layer: five Hall levels unlock extra builder crews and a council; one **Upgrade order** raises every home and yard across all wards at once (one cost, one clock — the longest single build, since crews work every ward in parallel); shared networks strengthen the least-developed ward; restoration clears the old wreckage; one strongbox collects the existing output; and Balanced, Growth, Trade, Industry and Builders policies make honest economic trade-offs rather than minting free resources.
 - A merged settlement keeps its 3D **Town Square** as a living view of one unified place — architectural quarters, lanes, market and charter stone — but those quarters are scenery inside the town, not doors back into retired village screens.
 
 Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer built from those Towns.
@@ -69,7 +80,7 @@ Towns and cities are the street-level layer of the realm; counties (below) are t
 
 The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes. The feudal ladder is a simplified Crusader Kings: **every tier is made of the tier below it**, never of loose villages — **County → Duchy → Kingdom → Empire**.
 
-- When **three Towns** stand close together in the real world (within 150 km of each other), their free folk unite and **found a County** — a rescued piece of the Kingdom of Burbz with the earliest-founded Town as its capital, run from its own County Hall. A county stays a county however many Towns join it; the higher titles are built from counties, not from loose village headcounts.
+- A Town that reaches **120 folk at 75% happiness** earns its own **⭐ merge star**. When **three starred Towns** stand within 150 km of each other, the player merges them and **founds a County** — a rescued piece of the Kingdom of Burbz with the earliest-founded Town as its capital, run from its own County Hall: one chest, one Warden, one region-wide Upgrade order, and every town still visitable. A county stays a county however many Towns it holds; the higher titles are built from counties, not from loose village headcounts.
 - **Two Counties** whose capitals stand within 600 km unite into a **Duchy**; **two Duchies** within 2000 km proclaim a **Kingdom**; and **two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies**. The earliest-founded member remains each title's seat, but the title receives its own unique proper name instead of copying that seat.
 - Towns inside a founded county prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox — and the taxes rise as the county's liege chain climbs (+15% for a lone county, +20% under a duchy, +25% inside a kingdom, +30% beneath the empire).
 - The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed villages.
@@ -144,11 +155,12 @@ you make yourself needs finding.
 
 ## The evil Burbz — the enemies the birds fight
 
+- **The name is theirs.** Burbz — **the Z is for zombie** — names the usurper's zombie flock and nothing else. The player's birds are never called Burbz.
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.
-- Evil Burbz are made from the **usurper's shadow magic**. They are not real bird species, undiscovered wildlife or ordinary birds waiting to be recruited: they are huge supernatural avian shapes formed from smoke, torn black feather-like shadow and ember-red corruption. Their glowing red eyes and faint red seams make the usurper's influence unmistakable.
+- Evil Burbz are **zombies raised by the usurper's shadow magic**. They are not real bird species, undiscovered wildlife or ordinary birds waiting to be recruited: they are huge dead bird-shapes pulled back into the air and held together by the spell — smoke, torn black feather-like shadow and ember-red corruption. Their glowing red eyes and faint red seams make the usurper's influence unmistakable.
 - Their silhouettes echo raptors, corvids, owls and other powerful bird forms — each evil Burb keeps the wing class of the form it was cast around, so real matchup knowledge still wins fights — but they must never be presented as biological versions of those species. They do not belong in Birdex and cannot become companions.
 - Their purpose is to occupy, intimidate and hold places under the shadow spell until the player's living flock breaks it.
-- When an evil Burb is beaten it is **dispelled**: its dark magic unravels and the black form scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death.
+- When an evil Burb is beaten it is **dispelled**: its dark magic unravels, the raised form is laid back to rest, and the black shape scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death — nothing living is ever harmed, and nothing gory is ever shown.
 
 ## The usurper fights back — the world level
 
@@ -173,8 +185,8 @@ Canonical concept reference: `burbz-shadow-enemies-reference-20260720.png` in th
 Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental stat of diplomacy — and diplomacy is how the small birds fight the war. Buzzards and eagles are the warriors: they carry the branches, the food and the front line of every Liberation Battle. But a robin or a wren carries something the raptors never will — charm — and the Kingdom needs both.
 
 - **Charm is a core bird stat.** Famously confiding, winning species (the robin above all, the wren close behind) rate highest; shy skulkers and wary raptors rate lowest. Charm shows on bird cards beside HP, ATK and MAG.
-- **Parley** is the diplomacy action in battle: any bird can appeal to an evil Burb, and charm saps its will to fight. A weakened evil Burb can be **won over** entirely — the usurper's shadow lifts and the bird bows out in peace, leaving goodwill gifts. This is the gentlest form of dispelling and fits the kingdom's moral frame exactly: no foe is ever harmed by kindness.
-- **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there sway parleys and diplomacy quests.
+- **Diplomacy stays off the battlefield.** Parley — the old in-battle charm move — retired in v287: it confused players and rarely worked. In a fight, every turn is a fighting choice. Charm does its work on quests and at the bar instead.
+- **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there earn more on diplomacy quests.
 - **Diplomacy quests** (marked 🕊️, like the Diplomacy Envoy) pay out on charm: charming birds talk squirrel markets, border flocks and passers-by into better deals, bonus coins and gifts.
 
 ## The Raven, and the law of weight and wit
@@ -207,8 +219,8 @@ The lesson mirrors the raven's law: keep the right bird for the right hour. A pl
 
 ## Canon terminology
 
-- Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species.
-- Use **evil Burbz** for the dark force's shadow soldiers; the player's own birds are simply **birds** or **companions**.
+- **Burbz** names the enemy — the usurper's zombie flock, **the Z is for zombie**. Use **Burbz** or **evil Burbz** for them and for nothing else; the player's own birds are simply **birds** or **companions**.
+- Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species. It carries its captors' name while they hold it.
 - Use **village folk** (or **villagers**) for the human-like people of the liberated settlements — a separate, simpler species than the birds, who are the realm's true minds and heroes.
 - Use **liberate**, **liberated**, **sanctuary**, **restore**, **awaken** and **free** for world progress.
 - The real world and the Kingdom of Burbz are magically linked through Merlin's spell-tablet.

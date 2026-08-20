@@ -14,7 +14,7 @@ CORE = ROOT / "empire_realm_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
-REALM_CORE_PIN = "town-strategy-v273-20260816"
+REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
 def town(seed: int, name: str, lat: float, lon: float, day: int, hour: int):
@@ -251,22 +251,25 @@ def test_endgame_balance_regions_discount_new_birdhouses():
     assert "Math.max(30," in cost and "Math.max(8," in cost
 
 
-def test_founding_a_region_is_announced_in_liberation_flow():
+def test_founding_a_region_is_the_players_own_merge():
+    """v290: a liberation cannot found a county — the player merges three
+    starred towns, and that action announces the founding itself."""
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     claim_start = logic.index("function claimCurrentVillage(")
     claim_end = logic.index("\nfunction renderVillageClaimBar", claim_start)
     claim = logic[claim_start:claim_end]
-    assert "regionsBefore" in claim
-    assert "is founded!" in claim
-    assert "empireCrownTitle()" in claim
+    assert "regionsBefore" not in claim
+    merge_start = logic.index("function empireMergeTowns(")
+    merge = logic[merge_start:logic.index("\n// The player's realm-wide style", merge_start)]
+    assert "is founded" in merge and "County Hall" in merge
 
 
 def test_story_canon_covers_regions_crowns_and_trade():
     story = STORY.read_text(encoding="utf-8")
     for marker in [
-        "found a County",
-        "three Towns",
+        "founds a County",
+        "three starred Towns",  # v290: the player merges them
         "County → Duchy → Kingdom → Empire",
         "unity taxes",
         "Emperor of the Liberated Skies",

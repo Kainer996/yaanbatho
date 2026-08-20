@@ -124,9 +124,9 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     marker = "living-canopy-v236-20260806"
     assert marker in HTML
     assert marker in SW
-    # battle_core moved again with night-hunter-ascendant-v258 (Night Wings);
+    # battle_core moved with v258 (Night Wings), then with v287 (attack preview);
     # the loot core still ships under the conquest release.
-    for asset, core_pin in (("battle_core.js", "night-hunter-ascendant-v258-20260813"),
+    for asset, core_pin in (("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
                             ("loot_crafting_core.js", "conquest-world-levels-v248-20260811")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML
