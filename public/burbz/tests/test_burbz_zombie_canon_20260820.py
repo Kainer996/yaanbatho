@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "stores-market-project-manager-v295-20260820"
+OWN_RELEASE_PIN = "equip-card-swipe-v297-20260820"
 
 
 def test_release_is_wired():

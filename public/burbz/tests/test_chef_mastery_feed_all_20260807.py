@@ -13,7 +13,7 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
+CURRENT_BUILD = "equip-card-swipe-v297-20260820"
 ROLES_PIN = "stores-market-project-manager-v295-20260820"
 
 
