@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
+RELEASE_PIN = "burbz-zombie-canon-v291-20260820"
 PREVIOUS_RELEASE_PIN = "back-guard-gesture-v195-20260802"
 
 
