@@ -311,7 +311,7 @@ def test_release_is_versioned_for_the_service_worker():
     sw = SW.read_text(encoding="utf-8")
     # empire_realm_core.js ships new maths per release; its cache-buster moves
     # with whichever release last touched it.
-    core_pin = "town-strategy-v273-20260816"
+    core_pin = "merge-when-ready-v290-20260820"
     assert f"empire_realm_core.js?v={core_pin}" in html
     assert f"./empire_realm_core.js?v={core_pin}" in sw
     # This release's own segment stays in the cache lineage forever.

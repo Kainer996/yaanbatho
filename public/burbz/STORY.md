@@ -27,7 +27,7 @@ Battle is therefore a story mechanic, not a disconnected league minigame: traini
 
 ### The cost of the field, and the honest merge
 
-- A battle frees **one village** — never a town. Towns rise only where three freed villages grow together at the birdhouse build, and the game says so first: the claim bar names the three villages a birdhouse will unite before the charter is sealed.
+- A battle frees **one village** — never a town. Towns rise only where the player merges them: a freed village must first earn its **⭐ merge star** (40 folk, 75% happiness), and only the player's own Merge order seals the charter.
 - Battle has a cost. A bird lost on the field is **carried straight to the Bird Hospital**, hurt — levels won on the way home mend stats, never wounds. If no ward stands yet, the fallen rest in the Aviary Gardens until food and care mend them.
 
 ## The village folk — who lives in the freed towns
@@ -57,15 +57,15 @@ a whole food to every hungry bird that eats it — across the whole flock, one
 portion each, until the stores run dry. The cleverer the chef, the more good each
 plate does.
 
-## Villages grow into towns, towns into cities
+## Villages merge into towns — when the player says so
 
-Freedom is contagious between neighbours. Liberate **three neighbouring villages** — sanctuaries whose lands touch, chained within a short walk of each other — and their free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. This is an **exact, permanent trio**: later villages and bridge claims cannot redraw an established Town. Raise **three neighbouring Towns** and they grow together again into **one city**, also uniquely named and gold-crowned on the liberation map.
+Freedom is contagious between neighbours, but merging is a promise the player makes, not an accident of geography. A liberated village that reaches **40 folk at 75% happiness** earns its **⭐ merge star**. When **three starred villages** stand within a short walk of each other (5 km), a **Merge** button appears — press it, and the free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. The signed charter is **exact and permanent**: later villages and bridge claims cannot redraw an established Town. (Cities from the old automatic era survive untouched; new progression climbs villages → towns → counties.)
 
 - A merged settlement is one community: its wards share market squares (**bonus taxes**), stores and building crews. The three old village economies still underpin the simulation, but the player governs them through one Town Hall.
 - On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.
 - In the streets, a **charter stone** rises by the square — ringed with one pennant per district, green for a town, gilded for a city.
-- Founding a town retires the three separate village destinations. Their markers, desks and individual Steward posts leave the player's UI; old links and saved destinations lead to the Town Hall instead. The records remain safely underneath so no buildings, residents, provisions, ruins, taxes or paid construction are lost.
-- The **Town Hall** is a real strategy layer: five Hall levels unlock extra builder crews and a council; shared networks strengthen the least-developed ward; restoration clears the old wreckage; one strongbox collects the existing output; and Balanced, Growth, Trade, Industry and Builders policies make honest economic trade-offs rather than minting free resources.
+- Founding a town retires the three separate village desks. Their markers, ledgers and individual Steward posts leave the player's UI; old links and saved destinations lead to the Town Hall instead. The records remain safely underneath so no buildings, residents, provisions, ruins, taxes or paid construction are lost — and small **Visit** doors at the Hall let the player walk the old villages again, just to look.
+- The **Town Hall** is a real strategy layer: five Hall levels unlock extra builder crews and a council; one **Upgrade order** raises every home and yard across all wards at once (one cost, one clock — the longest single build, since crews work every ward in parallel); shared networks strengthen the least-developed ward; restoration clears the old wreckage; one strongbox collects the existing output; and Balanced, Growth, Trade, Industry and Builders policies make honest economic trade-offs rather than minting free resources.
 - A merged settlement keeps its 3D **Town Square** as a living view of one unified place — architectural quarters, lanes, market and charter stone — but those quarters are scenery inside the town, not doors back into retired village screens.
 
 Towns and cities are the street-level layer of the realm; counties (below) are the map-level layer built from those Towns.
@@ -74,7 +74,7 @@ Towns and cities are the street-level layer of the realm; counties (below) are t
 
 The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes. The feudal ladder is a simplified Crusader Kings: **every tier is made of the tier below it**, never of loose villages — **County → Duchy → Kingdom → Empire**.
 
-- When **three Towns** stand close together in the real world (within 150 km of each other), their free folk unite and **found a County** — a rescued piece of the Kingdom of Burbz with the earliest-founded Town as its capital, run from its own County Hall. A county stays a county however many Towns join it; the higher titles are built from counties, not from loose village headcounts.
+- A Town that reaches **120 folk at 75% happiness** earns its own **⭐ merge star**. When **three starred Towns** stand within 150 km of each other, the player merges them and **founds a County** — a rescued piece of the Kingdom of Burbz with the earliest-founded Town as its capital, run from its own County Hall: one chest, one Warden, one region-wide Upgrade order, and every town still visitable. A county stays a county however many Towns it holds; the higher titles are built from counties, not from loose village headcounts.
 - **Two Counties** whose capitals stand within 600 km unite into a **Duchy**; **two Duchies** within 2000 km proclaim a **Kingdom**; and **two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies**. The earliest-founded member remains each title's seat, but the title receives its own unique proper name instead of copying that seat.
 - Towns inside a founded county prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox — and the taxes rise as the county's liege chain climbs (+15% for a lone county, +20% under a duchy, +25% inside a kingdom, +30% beneath the empire).
 - The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed villages.
