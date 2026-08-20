@@ -1,4 +1,7 @@
-"""Fresh-player Academy onboarding: Roost + Barracks, recruit, first quest."""
+"""Fresh-player Academy onboarding: the Barracks, recruit, first quest.
+
+The Roost retired on 2026-08-20 — the tree itself is home — so the Barracks
+is the single opening building and the tutorial's build lesson."""
 import json
 import re
 import subprocess
@@ -10,7 +13,7 @@ HTML_PATH = ROOT / "index.html"
 CORE_PATH = ROOT / "academy_treehouse_core.js"
 ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
-ACADEMY_CORE_PIN = "training-your-way-v288-20260819"
+ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
 
 
 def _node_json(source: str):
@@ -32,17 +35,17 @@ def _function_source(html: str, name: str) -> str:
     return html[start:end]
 
 
-def test_roost_and_barracks_unlock_together_at_level_one():
+def test_the_barracks_opens_at_level_one_and_the_roost_is_gone():
     rooms = _node_json(
         "const core=require('./academy_treehouse_core.js');"
         "console.log(JSON.stringify(core.getAcademyRooms()));"
     )
     by_id = {room["id"]: room for room in rooms}
-    assert by_id["dorm"]["unlockLevel"] == 1
+    assert "dorm" not in by_id, "the Roost retired — the tree itself is home"
     assert by_id["tavern"]["unlockLevel"] == 1
 
 
-def test_fresh_resources_cover_both_buildings_and_the_guaranteed_first_recruit():
+def test_fresh_resources_cover_the_barracks_and_the_guaranteed_first_recruit():
     html = HTML_PATH.read_text(encoding="utf-8")
     rooms = _node_json(
         "const core=require('./academy_treehouse_core.js');"
@@ -51,33 +54,33 @@ def test_fresh_resources_cover_both_buildings_and_the_guaranteed_first_recruit()
     by_id = {room["id"]: room for room in rooms}
     starting_coins = _required_int(r"player: \{ name: 'Bird Trainer'.*?coins: (\d+)", html)
     first_recruit_cap = _required_int(r"const FIRST_RECRUIT_MAX_COST = (\d+);", html)
-    required_coins = by_id["dorm"]["cost"] + by_id["tavern"]["cost"] + first_recruit_cap
+    required_coins = by_id["tavern"]["cost"] + first_recruit_cap
     assert starting_coins >= required_coins, (starting_coins, required_coins)
 
     bundles = _required_int(r"const STARTER_TIMBER_BUNDLES = (\d+);", html)
     per_bundle = _required_int(r"const STARTER_TIMBER_PER_BUNDLE = (\d+);", html)
-    required_timber = by_id["dorm"]["branches"] + by_id["tavern"]["branches"]
+    required_timber = by_id["tavern"]["branches"]
     assert bundles * per_bundle >= required_timber, (bundles * per_bundle, required_timber)
 
 
-def test_starter_timber_stays_until_roost_and_barracks_are_built():
+def test_starter_timber_stays_until_the_barracks_is_built():
     html = HTML_PATH.read_text(encoding="utf-8")
     start = html.index("function starterTimberDone()")
     body = html[start:html.index("\nfunction starterTimberPickupsNear", start)]
-    assert "isAcademyBuildingBuilt('dorm') && isAcademyBuildingBuilt('tavern')" in body
+    assert "isAcademyBuildingBuilt('tavern')) return true;" in body
 
 
-def test_tutorial_states_the_errand_then_roost_then_recruit_sequence():
+def test_tutorial_states_the_errand_then_barracks_then_recruit_sequence():
     html = HTML_PATH.read_text(encoding="utf-8")
     start = html.index("const MERLIN_TUTORIAL_STEPS = [")
     end = html.index("\n];", start)
     tutorial = html[start:end].lower()
-    # v7 hands-on flow: send Merlin on his first errand, build The Roost, then
-    # the Barracks recruits the first companion.
+    # Hands-on flow: send Merlin on his first errand, build the Barracks,
+    # and the new recruitment office signs the first companion.
     required = (
         "send me out",
-        "build the roost",
-        "the barracks recruits discovered birds",
+        "build the barracks",
+        "the recruitment office is open",
         "recruit it at the academy barracks",
         "kingdom errands",
     )
@@ -112,7 +115,7 @@ def test_existing_v4_saves_receive_the_missing_opening_budget_once():
         html.index("function ensureAcademyBuildings(") :
         html.index("function academyBuildBuilding(")
     ]
-    assert "const openingBuildingIds = ['dorm', 'tavern']" in migration
+    assert "const openingBuildingIds = ['tavern']" in migration
     assert "const recruitmentReserve = (gameState.flock || []).length ? 0 : FIRST_RECRUIT_MAX_COST" in migration
     assert "constructionCoins + recruitmentReserve" in migration
     assert "gameState.starterTimber.taken[i] = true" in migration
@@ -147,7 +150,6 @@ global.window = {
 };
 global.BurbzScanEconomy = window.BurbzScanEconomy;
 const ACADEMY_BUILDINGS = {
-  dorm:{cost:50,branches:10,unlockLevel:1,room:'dorm',label:'The Roost',icon:'🏠',x:24,y:78},
   tavern:{cost:60,branches:8,unlockLevel:1,room:'tavern',label:'Barracks',icon:'🪶',x:76,y:80}
 };
 let academySelectedRoom = 'outdoors';
@@ -205,7 +207,6 @@ function birdHasActiveExpedition(){return false;}
 function birdAssignedPost(){return null;}
 function warnOrBlockBirdWork(){return true;}
 """ + actual_functions + """
-const roostBuilt=academyBuildBuilding('dorm');
 const barracksBuilt=academyBuildBuilding('tavern');
 const afterBuildings={coins:gameState.player.coins,branches:gameState.player.branches};
 const discovered=rememberDiscoveredBird({species:'Golden Eagle',commonName:'Golden Eagle',scientificName:'Aquila chrysaetos',rarity:'legendary',confidence:.99});
@@ -213,16 +214,16 @@ const firstDisplayedCost=recruitCostForBird({rarity:'legendary'});
 const recruited=recruitDiscoveredBird('golden_eagle');
 const laterFullCost=recruitCostForBird({rarity:'legendary'});
 startBirdExpedition('bird-1','find_seed',{});
-console.log(JSON.stringify({roostBuilt,barracksBuilt,afterBuildings,discovered,firstDisplayedCost,recruited,laterFullCost,coins:gameState.player.coins,flock:gameState.flock.map(b=>b.commonName),quests:gameState.birdExpeditions}));
+console.log(JSON.stringify({barracksBuilt,afterBuildings,discovered,firstDisplayedCost,recruited,laterFullCost,coins:gameState.player.coins,flock:gameState.flock.map(b=>b.commonName),quests:gameState.birdExpeditions}));
 """
     )
-    assert result["roostBuilt"] and result["barracksBuilt"]
-    assert result["afterBuildings"] == {"coins": 110, "branches": 0}
+    assert result["barracksBuilt"]
+    assert result["afterBuildings"] == {"coins": 160, "branches": 10}
     assert result["discovered"] is True
     assert result["firstDisplayedCost"] == 110
     assert result["recruited"] is True
     assert result["laterFullCost"] == 500
-    assert result["coins"] == 0
+    assert result["coins"] == 50
     assert result["flock"] == ["Golden Eagle"]
     assert result["quests"][0]["templateId"] == "find_seed"
 
@@ -233,8 +234,8 @@ def test_v6_migration_handles_missing_buildings_first_recruit_and_timber_once():
     result = _node_json(
         """
 const FIRST_RECRUIT_MAX_COST=110;
-const ACADEMY_BUILDINGS={dorm:{cost:50,branches:10},tavern:{cost:60,branches:8}};
-const ACADEMY_ROOMS={outdoors:{},dorm:{},tavern:{}};
+const ACADEMY_BUILDINGS={tavern:{cost:60,branches:8}};
+const ACADEMY_ROOMS={outdoors:{},tavern:{}};
 let academySelectedRoom='outdoors';
 function showToast(){}
 global.setTimeout=()=>0;
@@ -249,11 +250,15 @@ const established=migrate({...base,player:{coins:3,branches:2},academyBuildings:
 console.log(JSON.stringify({missingBoth,barracksOnly,established}));
 """
     )
-    assert result["missingBoth"]["player"] == {"coins": 220, "branches": 18}
+    assert result["missingBoth"]["player"] == {"coins": 170, "branches": 8}
     assert len(result["missingBoth"]["starterTimber"]["taken"]) == 6
-    assert result["barracksOnly"]["player"] == {"coins": 160, "branches": 10}
-    assert len(result["barracksOnly"]["starterTimber"]["taken"]) == 6
-    assert result["established"]["player"] == {"coins": 3, "branches": 2}
+    assert result["barracksOnly"]["player"] == {"coins": 110, "branches": 0}
+    # No construction budget was granted, so the map bundles stay gatherable.
+    assert len(result["barracksOnly"]["starterTimber"]["taken"]) == 4
+    # The established save had built the Roost, so retiring it refunds the
+    # 50 coins and 10 timber and removes the building from the save.
+    assert result["established"]["player"] == {"coins": 53, "branches": 12}
+    assert "dorm" not in result["established"]["academyBuildings"]
     assert result["established"]["academyBuilderVersion"] == 7
 
 

@@ -23,10 +23,10 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 RELEASE = "raven-weight-and-wit-v255-20260812"
 # The roles core moved on with chef mastery (v261); the size core stays ours.
-ROLES_CORE_PIN = "stores-market-project-manager-v295-20260820"
+ROLES_CORE_PIN = "roost-retired-v302-20260820"
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "anchored-dock-v301-20260820"
+CURRENT_BUILD = "roost-retired-v302-20260820"
 
 
 def run_node(source: str) -> dict:

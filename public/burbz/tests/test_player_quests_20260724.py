@@ -36,15 +36,16 @@ def test_chain_mirrors_the_guided_tutorial_flow():
     # The guided-flow opening: send Merlin on an errand (he leads starter
     # errands, so no Barracks is needed yet), claim it, build The Roost,
     # then find a first real bird, then the Barracks and the recruit.
-    assert ids[:6] == [
-        "pq_expedition", "pq_claim_errand", "pq_build_roost",
+    # The Roost retired (2026-08-20): the Barracks is the tutorial build now.
+    assert ids[:5] == [
+        "pq_expedition", "pq_claim_errand",
         "pq_first_bird", "pq_build_barracks", "pq_recruit",
     ]
     assert quests[0]["type"] == "expedition_sent"
     assert quests[1]["type"] == "expedition_claimed"
-    assert quests[2]["type"] == "build_dorm"
-    assert quests[3]["name"] == "Find your first bird"
-    assert quests[3]["type"] == "discover"
+    assert quests[2]["type"] == "discover"
+    assert quests[2]["name"] == "Find your first bird"
+    assert quests[3]["type"] == "build_tavern"
     # Every link is a complete, navigable goal.
     for q in quests:
         assert q["name"] and q["desc"] and q["icon"] and q["go"], q["id"]
@@ -56,11 +57,11 @@ def test_chain_mirrors_the_guided_tutorial_flow():
 def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
     # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue.
-    assert len(quests) == 27
+    assert len(quests) == 26
     types = [q["type"] for q in quests]
     for needed in (
         # The original loop…
-        "discover", "build_dorm", "build_tavern", "recruit",
+        "discover", "build_tavern", "recruit",
         "expedition_sent", "meal_served", "win", "town_liberated",
         # …plus the mechanics the extended chain teaches, one by one.
         "expedition_claimed", "feed_correct", "build_training",
@@ -78,7 +79,7 @@ def test_extended_chain_paces_buildings_with_their_unlock_levels():
     quests = player_quests()
     ids = [q["id"] for q in quests]
     order = [
-        "pq_build_roost", "pq_build_barracks", "pq_build_training",
+        "pq_build_barracks", "pq_build_training",
         "pq_build_quest_roost", "pq_build_kitchen", "pq_build_hospital",
         "pq_build_crowbar", "pq_build_workshop",
     ]

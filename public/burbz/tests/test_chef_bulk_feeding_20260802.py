@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "anchored-dock-v301-20260820"
+RELEASE_PIN = "roost-retired-v302-20260820"
+CURRENT_BUILD = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

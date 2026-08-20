@@ -19,19 +19,19 @@ def _required_int(pattern: str, text: str) -> int:
     return int(match.group(1))
 
 
-def test_starter_timber_covers_the_roost_and_barracks_cost():
+def test_starter_timber_covers_the_barracks_cost():
     html = HTML.read_text(encoding="utf-8")
     bundles = _required_int(r"const STARTER_TIMBER_BUNDLES = (\d+);", html)
     per = _required_int(r"const STARTER_TIMBER_PER_BUNDLE = (\d+);", html)
     core = (ROOT / "academy_treehouse_core.js").read_text(encoding="utf-8")
-    roost = _required_int(r"id:'dorm'.*?branches:(\d+)", core)
+
     barracks = _required_int(r"id:'tavern'.*?branches:(\d+)", core)
-    assert bundles * per >= roost + barracks, (bundles, per, roost, barracks)
+    assert bundles * per >= barracks, (bundles, per, barracks)
     # Both opening buildings are affordable from the default starting purse.
-    roost_coins = _required_int(r"id:'dorm'.*?cost:(\d+)", core)
+
     barracks_coins = _required_int(r"id:'tavern'.*?cost:(\d+)", core)
     start_coins = _required_int(r"player: \{ name: 'Bird Trainer'.*?coins: (\d+)", html)
-    assert start_coins >= roost_coins + barracks_coins, (start_coins, roost_coins, barracks_coins)
+    assert start_coins >= barracks_coins, (start_coins, barracks_coins)
 
 
 def test_bundles_spawn_in_a_ring_within_gathering_range_of_the_player():
@@ -61,7 +61,7 @@ console.log(JSON.stringify({ count: near.length, maxDist: Math.max(...dists), ga
     payload = json.loads(result.stdout)
     assert payload["count"] == 6
     assert payload["maxDist"] < 220
-    assert payload["gained"] >= 18          # enough branches for Roost + Barracks
+    assert payload["gained"] >= 18          # plenty of branches for the Barracks
     assert payload["respawn"] == 0          # taken bundles never respawn
 
 
@@ -73,7 +73,7 @@ def test_starter_timber_is_wired_into_the_live_map_and_stops_after_both_openers(
     collect_start = html.index("function collectMapPickup(")
     collect = html[collect_start:html.index("\nlet liveMapAreaRows", collect_start)]
     assert "collectStarterTimber(pickup)" in collect
-    assert "isAcademyBuildingBuilt('dorm') && isAcademyBuildingBuilt('tavern')" in html
+    assert "isAcademyBuildingBuilt('tavern')) return true;" in html
     assert "starterTimber: { taken: {} }" in html      # default state entry
     assert ".burbz-pickup-marker.starter" in html      # visible green glow styling
 
