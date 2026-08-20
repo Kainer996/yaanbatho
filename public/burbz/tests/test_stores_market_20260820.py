@@ -24,7 +24,7 @@ SW = ROOT / "sw.js"
 LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "empire-declutter-v299-20260820"
+CURRENT_BUILD = "empire-declutter-v300-20260820"
 
 
 def run_node(source: str) -> dict:

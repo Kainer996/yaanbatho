@@ -21,7 +21,7 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
-CURRENT_BUILD = "empire-declutter-v299-20260820"
+CURRENT_BUILD = "empire-declutter-v300-20260820"
 
 
 def run_node(script: str):

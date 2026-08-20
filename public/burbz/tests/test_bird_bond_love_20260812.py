@@ -17,7 +17,7 @@ CORE = (ROOT / "bird_bond_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "bird-bond-love-v256-20260812"
 PREVIOUS_RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "empire-declutter-v299-20260820"
+CURRENT_BUILD = "empire-declutter-v300-20260820"
 
 
 def _node(source: str):
