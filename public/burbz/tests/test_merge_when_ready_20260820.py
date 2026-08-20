@@ -26,7 +26,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "merge-when-ready-v290-20260820"
+CURRENT_BUILD = "empire-badge-quest-prompts-v289-20260820"
 
 
 def function_source(html: str, name: str) -> str:
@@ -323,7 +323,8 @@ def test_release_is_versioned_and_the_merge_core_shipped():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line       # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     for core in ("settlement_merge_core.js", "empire_realm_core.js"):
         pin = f"{core}?v={OWN_RELEASE_PIN}"
         assert f'<script src="{pin}"></script>' in html

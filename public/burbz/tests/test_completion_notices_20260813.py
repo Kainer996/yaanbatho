@@ -17,7 +17,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "completion-notices-v265-20260813"
 PREVIOUS_RELEASE_PIN = "real-place-names-v264-20260813"
-CURRENT_BUILD = "merge-when-ready-v290-20260820"
+CURRENT_BUILD = "empire-badge-quest-prompts-v289-20260820"
 
 
 def function_source(name: str) -> str:
