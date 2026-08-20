@@ -114,7 +114,7 @@ def test_every_banner_is_stamped_with_its_place_in_the_ladder():
     # Member villages have already been consumed by their Town, so the atlas
     # receives only standalone villages plus one claim/banner per Town or City.
     assert "const standaloneVillages = empireStandaloneVillages(villages);" in refresh
-    assert "const visibleClaims = standaloneVillages.concat(visibleSettlements.map(settlement => ({" in refresh
+    assert "const visibleClaims = starredVillages.concat(visibleSettlements.map(settlement => ({" in refresh  # v290: ready villages wear a star
     assert "standaloneVillages.forEach(village => {" in refresh
     assert "markEmpireBannerTier(el, 'village', countyOfSeed(village.seed) ? 'county' : null)" in refresh
     assert "\n  villages.forEach(village => {" not in refresh

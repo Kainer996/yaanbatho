@@ -66,6 +66,7 @@ const regionRoleMultiplier = () => 1;
 const villageRuinDefsFor = () => [];
 const VILLAGE_RUIN_KINDS = { house: {} };
 const queueCompletionNotice = n => notices.push(n);
+const maybeAwardMergeStar = () => false;  // v290 star fanfare, not under test here
 const addCoins = n => { gameState.player.coins += n; };
 const saveState = () => {}; const updateHeader = () => {};
 const renderVillageManagePanel = () => {}; const renderEmpirePanel = () => {};

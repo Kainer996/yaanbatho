@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
 CURRENT_BUILD = "empire-badge-quest-prompts-v289-20260820"
-REALM_CORE_PIN = "town-strategy-v273-20260816"
+REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
 def town(seed, name, lat, lon, day, hour):
@@ -181,7 +181,7 @@ def test_the_pyramid_is_deterministic_and_ids_survive_growth():
 def test_realm_info_carries_the_pyramid_and_unity_reads_the_liege_chain():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
-    assert "core.deriveRealm ? core.deriveRealm(villages)" in logic
+    assert "core.deriveRealm ? core.deriveRealm(villages, charters)" in logic  # v290: signed charters flow in
     assert "function empireLiegeById(" in logic
     snap_start = logic.index("function villageEconomySnapshot(")
     snap_end = logic.index("\n// Population drifts", snap_start)
@@ -201,7 +201,7 @@ def test_the_royal_ledger_lists_the_pyramid_above_the_counties():
     assert "function frameEmpireLiege(" in logic
     assert "Your counties — tap one to run it from its County Hall" in logic
     # The plain-words help teaches the nested ladder, not the old size ladder.
-    assert "3 nearby Towns" in logic and "County" in logic
+    assert "Merge 3 starred Towns into a County" in logic  # v290 help copy
     assert "Titles nest, Crusader-Kings style:" in logic
     assert "Count → Duke → Monarch → Emperor" in logic
     assert "a County, then a Duchy, then a Kingdom as it grows" not in html
@@ -210,15 +210,19 @@ def test_the_royal_ledger_lists_the_pyramid_above_the_counties():
     assert ".realm-empire-banner" in html
 
 
-def test_liberation_announces_duchy_kingdom_and_empire_proclamations():
+def test_liberation_never_proclaims_but_the_signed_merge_founds_counties():
+    """v290: a liberation cannot change the realm shape any more — counties
+    are founded by the player's own town merge, which announces itself."""
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     claim_start = logic.index("function claimCurrentVillage(")
     claim_end = logic.index("\nfunction renderVillageClaimBar", claim_start)
     claim = logic[claim_start:claim_end]
-    assert "duchiesBefore" in claim and "kingdomsBefore" in claim and "empireBefore" in claim
-    assert "is founded!" in claim  # the county founding toast survives
-    assert claim.count("is proclaimed!") == 3  # duchy, kingdom, empire
+    assert "duchiesBefore" not in claim and "is proclaimed" not in claim
+    merge_start = logic.index("function empireMergeTowns(")
+    merge = logic[merge_start:logic.index("\n// The player's realm-wide style", merge_start)]
+    assert "is founded" in merge
+    assert "openEmpireRegion(region.id)" in merge
 
 
 def test_county_hall_shows_the_liege_chain_instead_of_a_headcount_ladder():
@@ -251,7 +255,7 @@ def test_story_canon_teaches_the_nested_ladder():
     assert "## Counties, crowns and the trade of free realms" in story
     assert "County → Duchy → Kingdom → Empire" in story
     assert "every tier is made of the tier below" in story
-    assert "three Towns" in story
+    assert "three starred Towns" in story  # v290: the player merges them
     assert "two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies" in story
 
 

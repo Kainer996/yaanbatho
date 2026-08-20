@@ -41,7 +41,7 @@ def ledger(html: str) -> str:
 def test_only_standalone_villages_get_rows():
     body = ledger(HTML.read_text(encoding="utf-8"))
     assert "const villages = empireStandaloneVillages(sourceVillages)" in body
-    assert "'Only villages not yet united into a Town remain visitable'" in body
+    assert "'Grow each village to its ⭐ merge star: 40 folk, 75% happy'" in body  # v290 tab caption
     assert "'YOUR VILLAGES'" not in body
 
 
@@ -85,8 +85,8 @@ def test_the_counties_body_still_lists_the_pyramid_counties_and_trade():
 def test_a_lone_village_still_opens_on_something_that_explains_the_ladder():
     logic = empire_logic(HTML.read_text(encoding="utf-8"))
     assert "🕊️ Your realm starts here." in logic
-    assert "each group of 3 becomes one Town; 3 nearby Towns then unite into a County" in logic
-    assert "followed by Duchies and Kingdoms" in logic
+    assert "merge three stars into a Town, three starred Towns into a County" in logic  # v290: the player merges
+    assert "and on to Duchies and Kingdoms" in logic
 
 
 def test_onboarding_still_greets_a_player_with_no_villages():

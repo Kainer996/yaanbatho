@@ -32,7 +32,7 @@ PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
 CURRENT_BUILD = "empire-badge-quest-prompts-v289-20260820"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
-REALM_CORE_PIN = "town-strategy-v273-20260816"
+REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
 def run_core(expression: str):

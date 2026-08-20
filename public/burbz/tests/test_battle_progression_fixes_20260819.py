@@ -122,39 +122,48 @@ def test_victory_screen_frees_a_village_not_a_town():
     assert "Free the town!" not in start
 
 
-def test_victory_screen_forewarns_the_coming_merge():
+def test_victory_screen_no_longer_forewarns_a_merge():
+    """Superseded by merge-when-ready-v290: a liberation can never complete a
+    merge, so the victory screen makes no union promises."""
     html = HTML_PATH.read_text(encoding="utf-8")
     end = function_source(html, "endPerchBattle")
-    assert "previewClaimFounding(liberatedVillage)" in end
-    assert "Raising it unites" in end
-    assert "settlementWardNames(founding)" in end
+    assert "previewClaimFounding" not in end
+    assert "Raising it unites" not in end
+    assert "the village is free" in end
 
 
-def test_claim_bar_names_the_villages_a_birdhouse_will_unite():
+def test_claim_bar_offers_a_plain_birdhouse_and_a_visit_banner():
+    """v290: the birdhouse never unites anything, and a merged ward greets
+    visitors with the road back to its Hall."""
     html = HTML_PATH.read_text(encoding="utf-8")
     bar = function_source(html, "renderVillageClaimBar")
-    assert "previewClaimFounding(v)" in bar
-    assert "village-claim-note" in bar
-    assert "Raising it unites" in bar
+    assert "previewClaimFounding" not in bar
+    assert "Raising it unites" not in bar
     assert "BUILD LIBERATION BIRDHOUSE" in bar
-    assert ".village-claim-note {" in html
+    assert "you are just visiting" in bar
+    assert "BACK TO THE HALL" in bar
 
 
-def test_merge_toasts_name_their_wards():
+def test_liberation_toast_points_at_the_merge_star():
+    """v290: claiming a village teaches the road to the ⭐ merge star instead
+    of announcing automatic merges."""
     html = HTML_PATH.read_text(encoding="utf-8")
     claim = function_source(html, "claimCurrentVillage")
-    assert "settlementWardNames(foundedSettlement)" in claim
-    assert "settlementWardNames(town)" in claim
-    assert "grow together" in claim
+    assert "merge star" in claim
+    assert "40 folk" in claim
+    assert "settlementWardNames(foundedSettlement)" not in claim
+    merge = function_source(html, "empireMergeVillages")
+    assert "mc.nameList(names)" in merge  # the toast names the three wards
+    assert "townCharters.push" in merge
 
 
-def test_preview_founding_is_pure_and_honest():
+def test_preview_founding_returns_null_under_signed_merging():
+    """v290: with charters passed, a fresh claim never completes a merge, so
+    the preview is honestly null — merging is the player's own act."""
     html = HTML_PATH.read_text(encoding="utf-8")
-    names = function_source(html, "settlementWardNames")
     preview = function_source(html, "previewClaimFounding")
-    assert "empire.villages[key]" in preview  # already-claimed → no preview
-    # Two claims 2 km apart; a third close by completes a town, a far one
-    # stands alone. Chain radius is 5 km.
+    assert "empire.villages[key]" in preview  # already-claimed -> no preview
+    assert "empireMergeCharters()" in preview
     out = run_node(
         "const core=require('./empire_realm_core.js');\n"
         "const realmCore=()=>core;\n"
@@ -162,19 +171,15 @@ def test_preview_founding_is_pure_and_honest():
         "  '101':{seed:101,name:'Wrenfold',lat:51.5,lon:-2.6,claimedAt:'2026-08-01T00:00:00Z'},\n"
         "  '102':{seed:102,name:'Thistlemere',lat:51.518,lon:-2.6,claimedAt:'2026-08-02T00:00:00Z'}\n"
         "};\n"
-        "const ensureEmpireState=()=>({villages});\n"
+        "const ensureEmpireState=()=>({villages,townCharters:[],cityCharters:[],regionCharters:[]});\n"
         "const empireVillages=()=>Object.values(villages);\n"
-        + names + "\n" + preview +
+        "const empireMergeCharters=()=>({townCharters:[],cityCharters:[],regionCharters:[]});\n"
+        + preview +
         "\nconst near=previewClaimFounding({seed:103,name:'Alderbrook',lat:51.536,lon:-2.6});\n"
-        "const far=previewClaimFounding({seed:104,name:'Shalefell',lat:52.4,lon:-2.6});\n"
         "const claimed=previewClaimFounding({seed:101,name:'Wrenfold',lat:51.5,lon:-2.6});\n"
-        "console.log(JSON.stringify({nearTier:near&&near.tier,wardCount:near?near.villages.length:0,"
-        "wards:near?settlementWardNames(near):'',far:far===null,claimed:claimed===null}));"
+        "console.log(JSON.stringify({near:near===null,claimed:claimed===null}));"
     )
-    assert out["nearTier"] == "town"
-    assert out["wardCount"] == 3
-    assert "Wrenfold" in out["wards"] and " and " in out["wards"]
-    assert out["far"] is True
+    assert out["near"] is True
     assert out["claimed"] is True
 
 
@@ -187,31 +192,31 @@ def test_town_hall_shows_the_county_rung():
     assert 'id="townCountySection"' in town
     assert "OPEN COUNTY HALL" in town
     assert "Toward a County" in town
-    assert "townCountyClusterSize(settle)" in town
+    assert "merge star" in town
+    assert "MERGE INTO ONE COUNTY" in town
     assert 'data-action="town-county"' in town
     assert "openEmpireRegion(county.id)" in town
 
 
-def test_county_cluster_size_counts_chained_towns():
-    html = HTML_PATH.read_text(encoding="utf-8")
-    src = function_source(html, "townCountyClusterSize")
-    assert "core.REGION_RADIUS_KM || 150" in src
+def test_merge_core_offers_ready_trios_only():
+    """v290 replaces the automatic cluster count: three READY towns within
+    150 km make a candidate; unready or far ones never do."""
     out = run_node(
-        "const core=require('./empire_realm_core.js');\n"
-        "const realmCore=()=>core;\n"
-        "const towns=[\n"
-        "  {heartSeed:11,centroid:{lat:51.5,lon:-2.6},foundedAt:'2026-08-01'},\n"
-        "  {heartSeed:22,centroid:{lat:52.0,lon:-2.6},foundedAt:'2026-08-02'},\n"
-        "  {heartSeed:33,centroid:{lat:20.0,lon:100.0},foundedAt:'2026-08-03'}\n"
+        "const mc=require('./settlement_merge_core.js');\n"
+        "const pts=[\n"
+        "  {seed:11,name:'A',lat:51.5,lon:-2.6,claimedAt:'2026-08-01',ready:true},\n"
+        "  {seed:22,name:'B',lat:52.0,lon:-2.6,claimedAt:'2026-08-02',ready:true},\n"
+        "  {seed:33,name:'C',lat:52.4,lon:-2.6,claimedAt:'2026-08-03',ready:true},\n"
+        "  {seed:44,name:'D',lat:20.0,lon:100.0,claimedAt:'2026-08-04',ready:true},\n"
+        "  {seed:55,name:'E',lat:51.6,lon:-2.6,claimedAt:'2026-08-05',ready:false}\n"
         "];\n"
-        "const empireSettlementsInfo=()=>({towns});\n"
-        + src +
-        "\nconsole.log(JSON.stringify({pair:townCountyClusterSize({heartSeed:11}),"
-        "lone:townCountyClusterSize({heartSeed:33})}));"
+        "const cands=mc.mergeCandidates(pts,150,[]);\n"
+        "const gated=mc.mergeCandidates(pts.map(p=>({...p,ready:p.seed!==33?p.ready:false})),150,[]);\n"
+        "console.log(JSON.stringify({count:cands.length,seeds:cands[0].seeds,gatedCount:gated.length}));"
     )
-    # 51.5 and 52.0 are ~56 km apart — one chain; the far town stands alone.
-    assert out["pair"] == 2
-    assert out["lone"] == 1
+    assert out["count"] == 1
+    assert out["seeds"] == [11, 22, 33]
+    assert out["gatedCount"] == 0
 
 
 def test_world_always_offers_enough_villages_for_towns_and_counties():
