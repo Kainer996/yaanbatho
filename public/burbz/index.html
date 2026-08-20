@@ -3713,6 +3713,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .tavern-drink-icon { font-size:26px; }
 .tavern-drink-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:14px; color:var(--accent2); }
 .tavern-drink-desc { font-size:11.5px; color:var(--text3); line-height:1.35; }
+.tavern-round-hint { margin:0 0 6px; font-size:11.5px; color:var(--text3); }
+.tavern-drink.for-flock { background:rgba(126,224,138,.09); border-color:rgba(126,224,138,.32); }
+.tavern-drink-tag { margin-left:6px; padding:1px 6px; border-radius:999px; background:rgba(126,224,138,.16); border:1px solid rgba(126,224,138,.38); color:#7ee08a; font-size:9.5px; letter-spacing:.06em; vertical-align:middle; }
 .tavern-bought { margin:10px 0; padding:8px 10px; border-radius:10px; background:rgba(240,199,103,.10); border:1px solid rgba(240,199,103,.28); }
 .wq-npc-emoji { font-size:34px; display:grid; place-items:center; width:100%; height:100%; }
 .wq-offer-pin { --quest-route-color:#58d858; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; padding:0; border:0; background:none; color:#fff; pointer-events:auto; }
@@ -17306,11 +17309,64 @@ let walkQuestLastSave = 0;
 
 // ---- Trail bird NPCs, the wandering tavern, and drink boons ----------------
 const TAVERN_KEEPER_NAMES = ['Barkeep Bramblefinch', 'Old Peckwood', 'Merry Wrenhild', 'Tapmaster Corvus', 'Goodwife Sedgewhistle'];
+// Two drinks ride home with you as a boon on the banner. Three are rounds for
+// the flock, poured right there at the bar — one fills every companion, one
+// heals them, one cheers them. You still only get one round per quest, so the
+// walk decides which your birds need most.
 const TRAIL_TAVERN_DRINKS = [
   { id:'ale', name:'Waymarker Wheat Ale', icon:'🍺', cost:12, desc:'+50% quest XP when you reach the banner', boon:{ id:'ale', label:'Waymarker Wheat Ale · +50% quest XP', xpMult:1.5 } },
   { id:'mead', name:'Honeyed Mead', icon:'🍯', cost:18, desc:'Trail-bird bonus coins pay DOUBLE at the banner', boon:{ id:'mead', label:'Honeyed Mead · trail-bird coins ×2', tbCoinMult:2 } },
-  { id:'cordial', name:'Elderberry Cordial', icon:'🫐', cost:8, desc:'A round for the flock: full HP and +20 happiness right now', boon:{ id:'cordial', label:'Elderberry Cordial · flock refreshed', instant:'flockRefresh' } }
+  { id:'supper', name:'Barleycorn Supper', icon:'🥣', cost:20, desc:'A round of hot mash — fills every companion\'s Fullness to the brim', boon:{ id:'supper', label:'Barleycorn Supper · the whole flock fed', instant:'flockFull' } },
+  { id:'cordial', name:'Elderberry Cordial', icon:'🫐', cost:8, desc:'A healing round — every companion back to full HP', boon:{ id:'cordial', label:'Elderberry Cordial · the whole flock healed', instant:'flockHeal' } },
+  { id:'porter', name:'Skylark Porter', icon:'🍻', cost:10, desc:'A beer for the birds — every companion back to full happiness', boon:{ id:'porter', label:'Skylark Porter · the whole flock cheered', instant:'flockCheer' } }
 ];
+// Each round touches every companion in the flock and reports what it changed,
+// so the toast can name real numbers instead of a vague promise.
+const TAVERN_ROUNDS = {
+  flockFull: {
+    verb: 'fed',
+    apply(bird, now) {
+      const before = hungerStatusForBird(bird, now).hunger;
+      if (before <= 0) return false;
+      recordBirdFeedingRecovery(bird, 100, 'tavern_round', now);
+      return true;
+    },
+    toast: n => '🥣 A round of hot mash! ' + n + (n === 1 ? ' companion is' : ' companions are') + ' full to the brim.',
+    none: '🥣 Hot mash all round — every companion was already full.'
+  },
+  flockHeal: {
+    verb: 'healed',
+    apply(bird) {
+      const max = Math.max(1, Number(bird.maxHp || bird.hp || 1));
+      if ((bird.hp || 0) >= max) return false;
+      bird.hp = max;
+      return true;
+    },
+    toast: n => '🫐 A healing round! ' + n + (n === 1 ? ' companion is' : ' companions are') + ' back to full HP.',
+    none: '🫐 Elderberry all round — every companion was already at full HP.'
+  },
+  flockCheer: {
+    verb: 'cheered',
+    apply(bird) {
+      normalizeBirdCare(bird);
+      if ((bird.care.happiness || 0) >= 100) return false;
+      bird.care.happiness = 100;
+      return true;
+    },
+    toast: n => '🍻 Cheers! ' + n + (n === 1 ? ' companion is' : ' companions are') + ' as happy as they can be.',
+    none: '🍻 A beer all round — every companion was already as happy as can be.'
+  }
+};
+// Serve one round to every companion. Returns how many birds it actually
+// changed, so a round poured for an already-content flock says so plainly
+// rather than pretending it did something.
+function serveTavernRound(kind, now = Date.now()) {
+  const round = TAVERN_ROUNDS[kind];
+  if (!round) return 0;
+  let changed = 0;
+  (gameState.flock || []).forEach(bird => { if (bird && round.apply(bird, now)) changed++; });
+  return changed;
+}
 const TRAIL_NPC_GREETINGS = [
   'You found me back there, didn\'t you? Sharp eyes, adventurer! I\'ll fly along your trail a while.',
   'A trainer who actually walks the land — how refreshing. Well met on this fine path!',
@@ -17476,9 +17532,12 @@ function openTrailTavernSheet(quest, opts = {}) {
   const bought = tav.drinkBought ? TRAIL_TAVERN_DRINKS.find(d => d.id === tav.drinkBought) : null;
   const drinksHtml = bought
     ? '<div class="quest-desc tavern-bought">🍻 You raised a glass of <b>' + escapeHtml(bought.name) + '</b>' + (quest.tavernBoon ? ' — ' + escapeHtml(quest.tavernBoon.label) : '') + '. One round per quest — enjoy the walk home!</div>'
-    : '<div class="quest-section-title" style="margin:10px 0 4px">🍺 Buy a drink (one per quest)</div>' + TRAIL_TAVERN_DRINKS.map(d => {
+    : '<div class="quest-section-title" style="margin:10px 0 4px">🍺 Buy one round (one per quest)</div>' +
+      '<div class="quest-desc tavern-round-hint">Order for the road, or stand your flock a round — a round reaches every companion you walk with.</div>' +
+      TRAIL_TAVERN_DRINKS.map(d => {
         const afford = (gameState.player.coins || 0) >= d.cost;
-        return '<button class="tavern-drink" data-drink="' + d.id + '" ' + (afford ? '' : 'disabled') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙</div><div class="tavern-drink-desc">' + escapeHtml(d.desc) + '</div></div></button>';
+        const forFlock = !!TAVERN_ROUNDS[d.boon.instant];
+        return '<button class="tavern-drink' + (forFlock ? ' for-flock' : '') + '" data-drink="' + d.id + '" ' + (afford ? '' : 'disabled') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙' + (forFlock ? '<span class="tavern-drink-tag">WHOLE FLOCK</span>' : '') + '</div><div class="tavern-drink-desc">' + escapeHtml(d.desc) + '</div></div></button>';
       }).join('');
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
@@ -17501,13 +17560,11 @@ function buyTrailTavernDrink(drinkId) {
   if ((gameState.player.coins || 0) < drink.cost) { showToast('Not enough coins for ' + drink.name); return; }
   addCoins(-drink.cost);
   quest.trailTavern.drinkBought = drink.id;
-  if (drink.boon.instant === 'flockRefresh') {
-    (gameState.flock || []).forEach(b => {
-      b.hp = b.maxHp || b.hp;
-      if (b.care) b.care.happiness = clamp((b.care.happiness || 0) + 20, 0, 100);
-    });
+  const round = TAVERN_ROUNDS[drink.boon.instant];
+  if (round) {
+    const changed = serveTavernRound(drink.boon.instant);
     quest.tavernBoon = { id: drink.id, label: drink.boon.label };
-    showToast('🫐 A round for the flock! Everyone is healed and happier.');
+    showToast(changed ? round.toast(changed) : round.none);
   } else {
     quest.tavernBoon = { ...drink.boon };
     showToast(drink.icon + ' ' + drink.name + ' — ' + drink.desc + '!');
@@ -19800,7 +19857,10 @@ Object.assign(window, {
     startOffer: o => startWalkingQuestFromOffer(o),
     extras: () => { const q = activeWalkingQuest(); return q ? { npcs: (q.trailNpcs || []).length, met: window.BurbzQuestCore.questMetTrailNpcs(q).length, tavern: !!q.trailTavern, boon: q.tavernBoon, markers: questExtraMarkers.length } : null; },
     patrons: () => ensureTavernPatrons(),
-    openTavern: () => openTrailTavernSheet()
+    openTavern: () => openTrailTavernSheet(),
+    drinks: () => TRAIL_TAVERN_DRINKS.map(d => ({ id:d.id, name:d.name, cost:d.cost, round:d.boon.instant || null })),
+    buyDrink: id => buyTrailTavernDrink(id),
+    flockCare: () => (gameState.flock || []).map(b => ({ id:b.id, hp:b.hp, maxHp:b.maxHp, happiness:b.care && b.care.happiness, fullness:Math.round(100 - hungerStatusForBird(b).hunger) }))
   }
 });
 
@@ -37419,7 +37479,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'burbz-zombie-canon-v291-20260820';
+const BURBZ_BUILD = 'field-guide-menus-v293-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
