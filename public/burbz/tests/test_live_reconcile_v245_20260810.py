@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "equip-card-swipe-v297-20260820"
+CURRENT_BUILD = "generated-ui-art-v298-20260820"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
@@ -47,10 +47,13 @@ def test_both_divergent_lineages_survive_in_the_cache_history():
 
 def test_distributed_hud_routes_every_control_through_one_helper():
     html = HTML.read_text(encoding="utf-8")
-    # Header diary button, the side action rail, and data-game-route markers.
+    # Header diary button and every routed destination survive; the former side
+    # rail has since been folded into the unified image-led bottom navigation.
     assert 'id="headerDiaryBtn"' in html
-    assert 'id="gameSideActions"' in html
-    assert '<span class="game-side-action-label">Stores</span>' in html
+    nav = html.split('id="bottomNav"')[1].split("</nav>")[0]
+    assert 'id="gameSideActions"' not in html
+    assert '<div class="nav-label">Stores</div>' in nav
+    assert 'data-game-route data-screen="inventory"' in nav
     assert "function activateGameHudDestination(destination)" in html
     assert "activateGameHudDestination(control.dataset.screen)" in html
     # The action badge core follows the routed controls, not just nav items.

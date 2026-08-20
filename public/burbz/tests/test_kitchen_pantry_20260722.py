@@ -64,9 +64,9 @@ def diet_rules_source() -> str:
 
 def test_bag_is_renamed_stores_everywhere_the_player_reads_it():
     html = HTML.read_text(encoding="utf-8")
-    # distributed-game-hud-v244: Stores rides the side action rail now.
+    # generated-ui-art-v298: Stores lives in the unified bottom navigation.
     assert 'aria-label="Royal Stores"' in html
-    assert '<span class="game-side-action-label">Stores</span>' in html
+    assert '<div class="nav-label">Stores</div>' in html
     assert "title:'Your Stores'" in html
     assert 'Stores empty ·' in html
     assert 'aria-label="Bag"' not in html

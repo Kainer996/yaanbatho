@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "equip-card-swipe-v297-20260820"
+CURRENT_BUILD = "generated-ui-art-v298-20260820"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
