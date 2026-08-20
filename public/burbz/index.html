@@ -4745,7 +4745,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=chef-mastery-feed-all-v261-20260813"></script>
+<script src="bird_roles_core.js?v=steward-project-manager-v294-20260820"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=conquest-world-levels-v248-20260811"></script>
@@ -11316,6 +11316,21 @@ function villageRoleMultiplier(seed) {
   return roleMultiplier('village', String(Number(stewardSeed) >>> 0));
 }
 function regionRoleMultiplier(regionId) { return roleMultiplier('region', String(regionId || '')); }
+// The Steward doubles as the project manager (steward-project-manager-v294).
+// The same wit-and-charm aptitude that raises taxes now runs the building
+// sites: scaffolds go up faster and the bill comes down a little. The maths
+// lives in bird_roles_core.js; a vacant post returns factors of exactly 1.
+function villageStewardProject(seed) {
+  const core = birdRolesCore();
+  const idle = { staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 };
+  if (!core || !core.stewardProjectFactors) return idle;
+  const link = typeof empireSettlementOfSeed === 'function' ? empireSettlementOfSeed(seed) : null;
+  const settlement = link && typeof empireSettlementById === 'function' ? canonicalEmpireSettlement(empireSettlementById(link.id)) : null;
+  const stewardSeed = settlement ? settlement.heartSeed : seed;
+  const post = rolePostState('village', String(Number(stewardSeed) >>> 0));
+  if (!post.staffed || !post.bird) return idle;
+  return { staffed:true, bird:post.bird, ...core.stewardProjectFactors(post.aptitude) };
+}
 
 // The post this bird currently holds, phrased for a card: "📚 Librarian · The Library".
 function birdPostLabel(bird) {
@@ -23336,17 +23351,22 @@ const QUARRY_FIRST_CUT_STONE = 10;
 // `costLevels` prices each step on its own instead of the flat ×(level+1).
 // `workPriority` orders who gets scarce hands first: food, then timber and
 // stone, then trade, then the chapel.
+// `buildMinutes` follows Yaan's pacing law (2026-08-20): the two survival
+// starters — the Timber Cabin and the Stone Well — rise in 4 minutes, then
+// the clock climbs the list from half an hour to a full 4 hours for the
+// Storehouse. Early shelter and water are instant fun; the late halls are
+// real projects worth appointing a Steward for.
 const EMPIRE_BUILDINGS = [
   { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 2, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 10, stone: 10 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The cabin rebuilt in quarried stone — houses 12 villagers and shrugs off any storm.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
-  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 5,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
+  { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 30,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
   { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 8,  stone: 6 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
-  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 8,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 6,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
-  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 10, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
-  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 5,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
-  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 12, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 15, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
-  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 16, stone: 8 }, buildMinutes: 6, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' }
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 18, stone: 8 },  buildMinutes: 45,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 12, stone: 7 },  buildMinutes: 60,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
+  { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
+  { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
+  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
+  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 16, stone: 8 }, buildMinutes: 240, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -23782,21 +23802,36 @@ function empireHasQuarryInvestment() {
     return villageBuildingLevel(v, 'quarry') > 0 || !!(eco.construction && eco.construction.id === 'quarry');
   });
 }
-function villageBuildingCost(building, level) {
+function villageBuildingCost(building, level, seed) {
   // A building can price each step on its own (`costLevels`): the Timber
   // Cabin is bought with coins and timber alone, and only its stone rebuild
   // asks for quarried stone.
   const stepped = Array.isArray(building.costLevels) && building.costLevels[Math.min(level, building.costLevels.length - 1)];
-  if (stepped) return { coins: stepped.coins || 0, branches: stepped.branches || 0, stone: stepped.stone || 0 };
   // The realm's first Quarry is the source of Stone, so charging Stone for
   // that one build would deadlock a fresh kingdom. Once one is built or under
   // construction, later quarries and every upgrade pay normally.
   const bootstrapQuarry = building.id === 'quarry' && level === 0 && !empireHasQuarryInvestment();
+  const base = stepped
+    ? { coins: stepped.coins || 0, branches: stepped.branches || 0, stone: stepped.stone || 0 }
+    : {
+      coins: building.cost.coins * (level + 1),
+      branches: building.cost.branches * (level + 1),
+      stone: bootstrapQuarry ? 0 : (building.cost.stone || 0) * (level + 1)
+    };
+  // Pass the village seed and the Steward haggles the bill down a little.
+  const project = seed == null ? null : villageStewardProject(seed);
+  if (!project || !project.staffed || project.costFactor >= 1) return base;
   return {
-    coins: building.cost.coins * (level + 1),
-    branches: building.cost.branches * (level + 1),
-    stone: bootstrapQuarry ? 0 : (building.cost.stone || 0) * (level + 1)
+    coins: Math.round(base.coins * project.costFactor),
+    branches: Math.round(base.branches * project.costFactor),
+    stone: Math.round(base.stone * project.costFactor)
   };
+}
+// One clock for every build: base time, cut by merged-settlement guilds and by
+// the Steward's project management, never under 30 seconds.
+function villageBuildDurationMs(seed, building, level) {
+  const factor = settlementBuildFactorForSeed(seed) * villageStewardProject(seed).buildFactor;
+  return Math.max(30000, Math.round(villageBuildTimeMs(building, level) * factor));
 }
 function empireBuildStructure(seed, buildingId, options) {
   const opts = options || {};
@@ -23821,7 +23856,7 @@ function empireBuildStructure(seed, buildingId, options) {
   const trainerLevel = Number(gameState.player.level) || 1;
   const unlockLevel = Number(building.unlockLevel) || 1;
   if (level === 0 && trainerLevel < unlockLevel) { showToast('🔒 The ' + building.name + ' unlocks at trainer level ' + unlockLevel + ' — quest, scan and battle to level up.'); return; }
-  const cost = villageBuildingCost(building, level);
+  const cost = villageBuildingCost(building, level, rec.seed);
   if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, goalWithThe(building.name)); return; }
   if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, goalWithThe(building.name)); return; }
   if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — build a Quarry and collect its provincial output.'); return; }
@@ -23831,10 +23866,12 @@ function empireBuildStructure(seed, buildingId, options) {
   addStone(-cost.stone);
   // Costs are paid up front; the structure itself takes real time to rise.
   // Merged settlements raise it faster: a town's shared guilds shave 15% off
-  // the clock, a city's 30% — masons walk over from every district.
+  // the clock, a city's 30% — masons walk over from every district. A posted
+  // Steward project-manages on top of that.
   const now = Date.now();
   const guildFactor = settlementBuildFactorForSeed(rec.seed);
-  const buildMs = Math.max(30000, Math.round(villageBuildTimeMs(building, level) * guildFactor));
+  const project = villageStewardProject(rec.seed);
+  const buildMs = villageBuildDurationMs(rec.seed, building, level);
   eco.construction = { id: building.id, toLevel: level + 1, startMs: now, endMs: now + buildMs };
   try {
     durableSaveState({ throwOnFailure:true });
@@ -23847,7 +23884,7 @@ function empireBuildStructure(seed, buildingId, options) {
   SFX.questComplete();
   vibrate(35);
   const targetTier = villageBuildingTier(building, level + 1);
-  showToast('🏗️ ' + targetTier.icon + ' ' + targetTier.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + publicName + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : ''));
+  showToast('🏗️ ' + targetTier.icon + ' ' + targetTier.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + publicName + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : '') + (project.staffed && project.speedPct > 0 ? ' 🪶 ' + birdDisplayName(project.bird) + ' runs the project: ' + project.speedPct + '% faster, ' + project.discountPct + '% cheaper.' : ''));
   // Rebuild the 3D scene so the scaffolded site appears in the village itself
   if (villageActive && (villageActive.seed >>> 0) === (rec.seed >>> 0)) villageBuiltSeed = null;
   updateHeader();
@@ -24235,7 +24272,7 @@ function renderVillageManagePanel() {
     const tier = villageBuildingTier(b, Math.max(1, level));
     const maxed = level >= b.maxLevel;
     const locked = level === 0 && (Number(gameState.player.level) || 1) < (Number(b.unlockLevel) || 1);
-    const cost = maxed ? null : villageBuildingCost(b, level);
+    const cost = maxed ? null : villageBuildingCost(b, level, rec.seed);
     const shortages = [];
     if (cost && wallet < cost.coins) shortages.push((cost.coins - wallet) + ' 🪙');
     if (cost && timber < cost.branches) shortages.push((cost.branches - timber) + ' 🪵');
@@ -24255,7 +24292,7 @@ function renderVillageManagePanel() {
     // Short on coins or timber? The button stays live: tapping it opens the
     // shortfall prompt that sends birds out for the missing resource.
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')">' +
-      upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildTimeMs(b, level)) + '</button>';
+      upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildDurationMs(rec.seed, b, level)) + '</button>';
     // The crew line: a yard says plainly whether a villager is working it.
     let crewHtml = '';
     if (b.workers) {
@@ -24299,7 +24336,7 @@ function renderVillageManagePanel() {
     let stewardPost = null;
     try { stewardPost = rolePostState('village', String(rec.seed >>> 0)); } catch (e) {}
     stewardHtml = empireDrawerHTML('steward-' + (rec.seed >>> 0), false, '🪶', 'STEWARD',
-      stewardPost && stewardPost.staffed ? escapeHtml(birdDisplayName(stewardPost.bird)) + ' keeps the ledger — tap to manage' : 'Vacant — appoint a bird and taxes rise', null,
+      stewardPost && stewardPost.staffed ? escapeHtml(birdDisplayName(stewardPost.bird)) + ' keeps the ledger and runs the building sites — tap to manage' : 'Vacant — appoint a project manager: taxes rise, builds go faster and cheaper', null,
       stewardCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
   }
   panel.innerHTML = '<div class="province-panel">' +
@@ -25161,9 +25198,11 @@ function wholesaleUpgradePlan(records) {
       if (eco.construction && eco.construction.id === b.id) level = Math.max(level, Number(eco.construction.toLevel) || level);
       if (level >= b.maxLevel) return;
       if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return;
-      const stepCost = villageBuildingCost(b, level);
+      const stepCost = villageBuildingCost(b, level, rec.seed);
       cost.coins += stepCost.coins; cost.branches += stepCost.branches; cost.stone += stepCost.stone;
-      longestMs = Math.max(longestMs, villageBuildTimeMs(b, level));
+      // Each ward's own Steward project-manages its part of the order; the
+      // guild factor still applies once, when the order is placed.
+      longestMs = Math.max(longestMs, villageBuildTimeMs(b, level) * villageStewardProject(rec.seed).buildFactor);
       steps.push({ seed: rec.seed >>> 0, buildingId: b.id, toLevel: level + 1 });
     });
   });
@@ -25389,11 +25428,11 @@ function renderTownScreen() {
   const networkHtml = EMPIRE_BUILDINGS.map(building => {
     const level = townNetworkLevel(settle, building.id), max = townMemberRecords(settle).length * building.maxLevel;
     const target = townNetworkUpgradeTarget(settle, building.id), targetLevel = target ? villageBuildingLevel(target, building.id) : building.maxLevel;
-    const cost = target ? villageBuildingCost(building, targetLevel) : null, affordable = townCostAffordable(cost);
+    const cost = target ? villageBuildingCost(building, targetLevel, target.seed) : null, affordable = townCostAffordable(cost);
     // An unaffordable network stays tappable: the tap opens the shortfall
     // prompt that sends birds out for the missing coins or timber.
     const tappable = !!target && activeProjects < slots;
-    const duration = target ? formatBuildDuration(Math.max(30000, villageBuildTimeMs(building, targetLevel) * settlementBuildFactorForSeed(target.seed))) : '';
+    const duration = target ? formatBuildDuration(villageBuildDurationMs(target.seed, building, targetLevel)) : '';
     return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action' + (tappable && !affordable ? ' short' : '') + '" data-action="town-network" data-building="' + building.id + '"' + (tappable ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? 'RAISE NETWORK · ' + escapeHtml(townCostText(cost)) + ' · ' + duration : 'WARD BUILDERS BUSY') + '</button></div>';
   }).join('');
   const ruins = [];
@@ -25410,7 +25449,7 @@ function renderTownScreen() {
   const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), {
     titlePrefix:name + ' ',
     copy:'Appoint a clever companion to run the whole Town.',
-    effectCopy:'This Town pays more taxes and timber, and its networks produce more stone and goods.'
+    effectCopy:'This Town pays more taxes and timber, its networks produce more stone and goods — and every build rises faster and costs a little less.'
   });
   // The county is the rung above the Hall. Since merge-when-ready-v290 towns
   // never unite on their own: this section shows the town's own merge star,
@@ -25603,7 +25642,7 @@ function townLedgerSheetHTML(settle) {
     const locked = trainerLevel < (Number(building.unlockLevel) || 1);
     const target = townNetworkUpgradeTarget(settle, building.id) || members[0];
     if (!target) return '';
-    const meta = locked ? '🔒 Unlocks at trainer level ' + building.unlockLevel : 'Not built · ' + townCostText(villageBuildingCost(building, 0));
+    const meta = locked ? '🔒 Unlocks at trainer level ' + building.unlockLevel : 'Not built · ' + townCostText(villageBuildingCost(building, 0, target.seed));
     return rowHtml(target, building, villageBuildingTier(building, 0), 0, meta);
   }).join('');
   return '<div class="town-sheet-head"><span class="town-sheet-icon">' + settle.icon + '</span><div class="town-sheet-title"><span class="town-sheet-kicker">TOWN LEDGER</span>' + escapeHtml(townDisplayName(settle)) + '</div><button type="button" class="town-sheet-close" data-action="sheet-close" aria-label="Close">✕</button></div>' +
@@ -25636,10 +25675,10 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
   else if (buildingHere) action = '<button class="town-action" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - Date.now()) + '</span></button>';
   else if (locked) action = '<button class="town-action" disabled>🔒 UNLOCKS AT TRAINER LV ' + building.unlockLevel + '</button>';
   else {
-    const cost = villageBuildingCost(building, level);
+    const cost = villageBuildingCost(building, level, rec.seed);
     const nextTier = building.tiers ? villageBuildingTier(building, level + 1) : null;
     const label = !level ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
-    const duration = formatBuildDuration(Math.max(30000, villageBuildTimeMs(building, level) * settlementBuildFactorForSeed(rec.seed)));
+    const duration = formatBuildDuration(villageBuildDurationMs(rec.seed, building, level));
     const crewFree = activeProjects < slots, wardFree = !construction, affordable = townCostAffordable(cost);
     action = '<button class="town-action is-gold" data-action="sheet-build" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '"' + (crewFree && wardFree && affordable ? '' : ' disabled') + '>' + label + ' · ' + escapeHtml(townCostText(cost)) + ' · ⏱ ' + duration + '</button>' +
       (!crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !wardFree ? '<div class="town-policy-state">THIS QUARTER’S BUILDERS ARE AT WORK</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>' : '');
@@ -37479,7 +37518,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'field-guide-menus-v293-20260820';
+const BURBZ_BUILD = 'steward-project-manager-v294-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

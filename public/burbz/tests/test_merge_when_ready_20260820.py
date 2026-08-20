@@ -26,7 +26,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "field-guide-menus-v293-20260820"
+CURRENT_BUILD = "steward-project-manager-v294-20260820"
 
 
 def function_source(html: str, name: str) -> str:
@@ -261,6 +261,7 @@ def test_wholesale_plan_sums_costs_and_takes_the_longest_clock():
         "const villageBuildingLevel=(rec,id)=>levels[String(rec.seed)][id]||0;\n"
         "const villageBuildingCost=(b,level)=>({coins:b.cost.coins*(level+1),branches:b.cost.branches*(level+1),stone:b.cost.stone*(level+1)});\n"
         "const villageBuildTimeMs=(b,level)=>Math.max(1,b.buildMinutes*(level+1))*60000;\n"
+        "const villageStewardProject=()=>({staffed:false,buildFactor:1,costFactor:1});\n"
         + src +
         "\nconst plan=wholesaleUpgradePlan([{seed:7},{seed:8}]);\n"
         "console.log(JSON.stringify(plan));"

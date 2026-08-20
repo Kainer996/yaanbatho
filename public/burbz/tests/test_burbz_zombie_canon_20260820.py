@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "field-guide-menus-v293-20260820"
+OWN_RELEASE_PIN = "steward-project-manager-v294-20260820"
 
 
 def test_release_is_wired():
