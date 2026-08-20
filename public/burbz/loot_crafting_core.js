@@ -335,6 +335,38 @@
   }
 
   // ---------------------------------------------------------------------------
+  // The Stores market — selling what the kingdom owns (v295)
+  // ---------------------------------------------------------------------------
+  // Yaan's rule: anything on the shelves can be turned into coins. Crafted
+  // gear is the real money — a legendary piece sells for more than its forge
+  // bill, because the materials in it are precious. Raw materials fetch a
+  // modest price by rarity. Small found things — a pile of berries, a heap
+  // of sticks, an oddment — go for pocket change. Selling is always a choice,
+  // never a bargain: crafting and cooking beat the market price on purpose.
+  const SELL_PRICES = {
+    material: { common:2, uncommon:6, rare:15, epic:40, legendary:100 },
+    gear:     { common:15, uncommon:40, rare:90, epic:200, legendary:450 },
+    food: 2,     // per larder item — berries, seeds, small prey
+    keepsake: 5  // curios and oddments on the shelf
+  };
+  // Coins per unit for one shelf item. kind: 'material' | 'gear' | 'food' |
+  // 'keepsake'. Unknown kinds and rarities price at 0 — unsellable.
+  function sellValue(kind, rarity) {
+    const line = SELL_PRICES[String(kind || '')];
+    if (typeof line === 'number') return line;
+    if (line && typeof line === 'object') return Number(line[String(rarity || '')]) || 0;
+    return 0;
+  }
+  // The quote a SELL button shows: {each, qty, total}. Quantity is clamped to
+  // what is actually owned, so a stale button can never oversell.
+  function sellQuote(kind, rarity, owned, qty) {
+    const each = sellValue(kind, rarity);
+    const stock = Math.max(0, Math.floor(Number(owned) || 0));
+    const count = Math.max(0, Math.min(stock, Math.floor(Number(qty) || 0)));
+    return { each, qty: count, total: each * count };
+  }
+
+  // ---------------------------------------------------------------------------
   // Crafting — the Fletcher's Forge
   // ---------------------------------------------------------------------------
   // Every gear item is craftable from materials + coins; costs scale by rarity.
@@ -442,6 +474,7 @@
     MATERIALS, GEAR, GEAR_SLOTS, gearById, materialById, gearBySlot,
     equipmentBonuses, gearPowerScore, spellSkillFor, potionEffectFor,
     RARITY_WEIGHTS, PITY_RARE_CAP, pickRarity, rollGear, rollMaterials, rollLoot,
+    SELL_PRICES, sellValue, sellQuote,
     CRAFT_COST_BY_RARITY, KIND_MATERIALS, recipeFor, allRecipes,
     FORGE_MAX_LEVEL, FORGE_LEVELS, normalizeForgeLevel, forgeLevelInfo,
     FORGE_LEVEL_BY_RARITY, minForgeLevelForRarity, canForgeAtLevel,

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "steward-project-manager-v294-20260820"
+CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

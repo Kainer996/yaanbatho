@@ -91,6 +91,8 @@ The game stays deliberately simple — walk, listen, befriend, liberate — unti
 
 This is the long game: liberate villages into towns, unite towns into counties, counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
 
+There is a market in all of this too. Anything in the Royal Stores can be sold to the traders: a masterwork from the Fletcher's Forge fetches real money — the rarer the piece, the dearer — while the small things a bird brings home, a pile of berries or a heap of sticks, go for pocket change. Selling is always the player's choice, never the best deal: a crafted blade is worth more on a companion's talon than on a trader's cart, and a berry is worth more in a hungry bird than in a purse.
+
 ## The Twenty Roads — the shared walking campaign
 
 Every real walk the player takes carries a tale. **The Twenty Roads** is a fixed
@@ -198,7 +200,7 @@ The raven gives the Kingdom its plainest law, the **law of weight and wit**:
 - **Weight wins fights and carries loads — in true proportion.** A bird's body mass is real field-guide weight now, and its load goes with it: one load for every hundred grams of bird. A raven hauls twice what a carrion crow hauls, because it IS twice the carrion crow. A buzzard shoulders eight loads to a robin's one. Gulls, built to carry, haul with the best of them.
 - **Weight loses ledgers.** Villages, towns and counties are run on charm and wit, and the folk take easiest to the light-boned charmers. A robin melts a market square; a raven empties it. The heavier the bird, the poorer the steward or warden it makes — however clever it is.
 - **The trade is the point.** The bird that wins your battles is not the bird that runs your towns. A wise player sends the raven to the front and sits the robin at the desk.
-- **The Steward runs the building sites.** A posted Steward is the village's project manager. The same wit and charm that raise the taxes plan the scaffolds and haggle with the timber yard: builds finish up to 30% sooner and cost up to 15% less. Real building takes real time now — a first cabin or well in four minutes, the great halls in hours — so the songbirds at the desk earn their keep every day.
+- **The Project Manager runs the building sites.** The bird appointed to a village is its Project Manager — that is the post's name and its job. The same wit and charm that raise the taxes plan the scaffolds and haggle with the timber yard: builds finish up to 30% sooner and cost up to 15% less. Real building takes real time now — a first cabin or well in four minutes, the great halls in hours — so the songbirds at the desk earn their keep every day. Grander chains of office wait in the Kingdom's future: a Lord Mayor for every town, a Councillor for every county.
 
 The birds of the crow family carry this law visibly: jackdaw, rook, carrion crow, raven — each step up in weight is a step up in battle and burden, and a step down at the governor's desk.
 

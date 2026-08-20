@@ -19,7 +19,7 @@ SW_PATH = ROOT / "sw.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "conquest-world-levels-v248-20260811"
 PREVIOUS_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
-CURRENT_BUILD = "steward-project-manager-v294-20260820"
+CURRENT_BUILD = "stores-market-project-manager-v295-20260820"
 
 
 def run_node(script: str):
@@ -220,11 +220,12 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    # battle_core moved with v258 (Night Wings), then with v287 (attack preview);
-    # the world-level and loot cores still ship under this release.
+    # battle_core moved with v258 (Night Wings), then with v287 (attack preview),
+    # and the loot core with v295 (the Stores market); the world-level core
+    # still ships under this release.
     for asset, core_pin in (("world_level_core.js", OWN_RELEASE_PIN),
                             ("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
-                            ("loot_crafting_core.js", OWN_RELEASE_PIN)):
+                            ("loot_crafting_core.js", "stores-market-project-manager-v295-20260820")):
         pin = f"{asset}?v={core_pin}"
         assert pin in html, pin
         assert f"'./{pin}'" in sw, pin
