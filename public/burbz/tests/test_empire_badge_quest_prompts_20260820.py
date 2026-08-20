@@ -30,6 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
+CURRENT_BUILD = "burbz-zombie-canon-v291-20260820"
 
 
 def run_node(source: str):
@@ -62,7 +63,7 @@ def html_text() -> str:
 
 def test_release_is_wired():
     html = html_text()
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}'" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}'" in html
     sw = SW.read_text(encoding="utf-8")
     cache_line = next(line for line in sw.splitlines() if "BURBZ_CACHE" in line and "=" in line)
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment

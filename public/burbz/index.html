@@ -10993,7 +10993,7 @@ function openBirdInfo(birdId) {
   const art = infoArt
     ? `<img src="${escapeHTML(infoArt.src)}"${infoArt.extra} alt="${escapeHTML(bird.commonName || bird.species)}">`
     : `<span>${bird.emoji || '&#128038;'}</span>`;
-  const summary = info.summary || info.rationale || `${bird.commonName || bird.species} is part of your Burbz collection. More field-guide detail will be added as the species database grows.`;
+  const summary = info.summary || info.rationale || `${bird.commonName || bird.species} flies with your free flock. More field-guide detail will be added as the species database grows.`;
   const mapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(info.lat || BIRD_INFO_MAP_CENTER.lat)}&mlon=${encodeURIComponent(info.lon || BIRD_INFO_MAP_CENTER.lon)}#map=${BIRD_INFO_MAP_CENTER.zoom}/${encodeURIComponent(info.lat || BIRD_INFO_MAP_CENTER.lat)}/${encodeURIComponent(info.lon || BIRD_INFO_MAP_CENTER.lon)}`;
   const traits = Array.isArray(info.traits) ? info.traits : [];
   const education = getCachedBirdEducation(bird);
@@ -37419,7 +37419,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-badge-quest-prompts-v289-20260820';
+const BURBZ_BUILD = 'burbz-zombie-canon-v291-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -37510,7 +37510,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'birdex', chapter:'Collection', title:'Merlin, your companion', screen:'birdex', target:'#petCompanion', text:'That is me, top right! Tap me any time to feed me, play with me, or let me rest.' },
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
-  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'You only ever fight the evil Burbz \u2014 never free birds. Wing classes counter each other; a green Counter tag marks the birds that beat this squad.' },
+  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'The Burbz are zombie birds \u2014 the Z is for zombie. You only fight them, never free living birds. A green Counter tag marks the birds that beat them.' },
   { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Pick a move, tap your target, and the ATTACK button shows the damage before you strike.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 

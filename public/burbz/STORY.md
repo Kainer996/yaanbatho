@@ -1,8 +1,14 @@
 # BURBZ — Story Canon
 
+## The first law — the name of the enemy
+
+**Burbz is the name of the evil ones. The Z is for zombie.** The Burbz are zombie birds — dead bird-shapes raised and driven by the usurper's shadow magic — and they have taken over the kingdom. The game carries their name because they are the task: **save the world from the Burbz.** The realm they hold bears their name too, and every liberation takes a piece of it back.
+
+The player's own birds are never Burbz. They are living, free birds — **birds** and **companions**, the heroes of the story. Every other law in this canon stands under this one.
+
 ## The two worlds
 
-The **Kingdom of Burbz** is the Earth of another universe in the multiverse — the same continents, the same seas — but there the dominant species are birds. It is a bird-led magical realm bound to the player's real world. A dark force has taken the kingdom: the **evil Burbz**, shadow-woven birds with burning red eyes, serving a usurper who has spread darkness across the realm, trapping towns beneath an occupying spell and dimming the paths between them.
+The **Kingdom of Burbz** is the Earth of another universe in the multiverse — the same continents, the same seas — but there the dominant species are birds. It is a bird-led magical realm bound to the player's real world. A dark force has taken the kingdom: the **evil Burbz**, zombie birds raised by shadow magic, with burning red eyes, serving a usurper who has spread darkness across the realm, trapping towns beneath an occupying spell and dimming the paths between them.
 
 The last free birds gather around Merlin, a wizard Merlin falcon. His final spell hurled **Merlin's spell-tablet** across the multiverse into our universe, where it becomes the player's phone and the Burbz app. The player is the one Merlin has chosen: the only being who can unlock the darkness that has swallowed the Kingdom of Burbz.
 
@@ -149,11 +155,12 @@ you make yourself needs finding.
 
 ## The evil Burbz — the enemies the birds fight
 
+- **The name is theirs.** Burbz — **the Z is for zombie** — names the usurper's zombie flock and nothing else. The player's birds are never called Burbz.
 - Every battle in the game is fought against **squads of evil Burbz** — never against free, ordinary birds.
-- Evil Burbz are made from the **usurper's shadow magic**. They are not real bird species, undiscovered wildlife or ordinary birds waiting to be recruited: they are huge supernatural avian shapes formed from smoke, torn black feather-like shadow and ember-red corruption. Their glowing red eyes and faint red seams make the usurper's influence unmistakable.
+- Evil Burbz are **zombies raised by the usurper's shadow magic**. They are not real bird species, undiscovered wildlife or ordinary birds waiting to be recruited: they are huge dead bird-shapes pulled back into the air and held together by the spell — smoke, torn black feather-like shadow and ember-red corruption. Their glowing red eyes and faint red seams make the usurper's influence unmistakable.
 - Their silhouettes echo raptors, corvids, owls and other powerful bird forms — each evil Burb keeps the wing class of the form it was cast around, so real matchup knowledge still wins fights — but they must never be presented as biological versions of those species. They do not belong in Birdex and cannot become companions.
 - Their purpose is to occupy, intimidate and hold places under the shadow spell until the player's living flock breaks it.
-- When an evil Burb is beaten it is **dispelled**: its dark magic unravels and the black form scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death.
+- When an evil Burb is beaten it is **dispelled**: its dark magic unravels, the raised form is laid back to rest, and the black shape scatters into harmless smoke and fading embers while the captive place fills with green and golden life again. This is magical liberation, never injury or death — nothing living is ever harmed, and nothing gory is ever shown.
 
 ## The usurper fights back — the world level
 
@@ -212,8 +219,8 @@ The lesson mirrors the raven's law: keep the right bird for the right hour. A pl
 
 ## Canon terminology
 
-- Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species.
-- Use **evil Burbz** for the dark force's shadow soldiers; the player's own birds are simply **birds** or **companions**.
+- **Burbz** names the enemy — the usurper's zombie flock, **the Z is for zombie**. Use **Burbz** or **evil Burbz** for them and for nothing else; the player's own birds are simply **birds** or **companions**.
+- Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species. It carries its captors' name while they hold it.
 - Use **village folk** (or **villagers**) for the human-like people of the liberated settlements — a separate, simpler species than the birds, who are the realm's true minds and heroes.
 - Use **liberate**, **liberated**, **sanctuary**, **restore**, **awaken** and **free** for world progress.
 - The real world and the Kingdom of Burbz are magically linked through Merlin's spell-tablet.

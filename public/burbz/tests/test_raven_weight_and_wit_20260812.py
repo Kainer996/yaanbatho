@@ -26,7 +26,7 @@ RELEASE = "raven-weight-and-wit-v255-20260812"
 ROLES_CORE_PIN = "chef-mastery-feed-all-v261-20260813"
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "empire-badge-quest-prompts-v289-20260820"
+CURRENT_BUILD = "burbz-zombie-canon-v291-20260820"
 
 
 def run_node(source: str) -> dict:
