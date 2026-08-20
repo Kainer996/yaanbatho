@@ -34,6 +34,7 @@ def build_harness() -> str:
             "villageBuildingTier",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "villageBuildDurationMs",
             "empireBuildStructure",
         )
     )
@@ -55,6 +56,7 @@ const canonicalEmpireSettlement = settlement => settlement;
 const townDisplayName = settlement => settlement && settlement.name;
 const townBuildNetwork = () => { throw new Error('standalone build delegated to Town'); };
 const settlementBuildFactorForSeed = () => 1;  // lone-village baseline: no merged-guild speed-up
+const villageStewardProject = () => ({ staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 }); // vacant post: v294 project management is upside only
 const villageRuinDefsFor = () => [];
 const villageRngFrom = () => () => 0.5;
 const VILLAGE_RUIN_KINDS = { house: {} };

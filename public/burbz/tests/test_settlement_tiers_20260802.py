@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "field-guide-menus-v293-20260820"
+CURRENT_BUILD = "steward-project-manager-v294-20260820"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -180,6 +180,7 @@ def build_harness(villages_js: str, probe_js: str) -> str:
             "villageBuildTimeMs",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "villageBuildDurationMs",
             "empireBuildStructure",
         )
     )
@@ -203,6 +204,7 @@ const empireCompleteConstructions = () => false;
 const empireRegionOfSeed = () => null;
 const canonicalEmpireSettlement = settlement => settlement;
 const villageRoleMultiplier = () => 1;
+const villageStewardProject = () => ({{ staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 }}); // vacant post: v294 project management is upside only
 const regionRoleMultiplier = () => 1;
 // The Town strategy adapter contributes policy/builders timing on top of the
 // settlement tier. This suite isolates the shipped 0.85/0.70 guild factors,
@@ -266,8 +268,9 @@ def test_town_districts_pay_ten_percent_more_and_build_15_percent_faster():
     # Same population, same buildings, same happiness — the district's taxes
     # only beat the lone village's because the merged town raises them.
     assert out["probe"]["taxes"] > out["lone"]["taxes"]
-    # Grain Farm level 1→2 is a 10-minute build; town guilds shave 15% off.
-    assert out["probe"]["buildMs"] == round(10 * 60000 * 0.85)
+    # v294 pacing: the Grain Farm's base clock is 30 minutes, so level 1→2 is
+    # a 60-minute build; town guilds shave 15% off.
+    assert out["probe"]["buildMs"] == round(60 * 60000 * 0.85)
     # And its daylight pool on the atlas grows from 2200 m to 3200 m.
     assert out["lone"]["territoryM"] == 2200
     assert out["probe"]["territoryM"] == 3200
@@ -279,7 +282,7 @@ def test_city_boroughs_pay_25_percent_more_and_build_30_percent_faster():
     assert out["probe"]["tier"] == "city"
     assert out["probe"]["merged"] == 1.25
     assert out["probe"]["taxes"] > out["lone"]["taxes"]
-    assert out["probe"]["buildMs"] == round(10 * 60000 * 0.70)
+    assert out["probe"]["buildMs"] == round(60 * 60000 * 0.70)
     assert out["probe"]["territoryM"] == 4200
 
 
@@ -318,7 +321,11 @@ def test_merged_guilds_shorten_construction_in_the_real_build_flow():
     adapter = function_source(html, "settlementBuildFactorForSeed")
     assert "settlementBuildFactorForSeed(rec.seed)" in build
     assert "townBuildFactorForSeed(seed)" in adapter
-    assert "* guildFactor" in build
+    # v294 moved the clock maths into one shared helper: guilds and the
+    # Steward's project management compose there, floor still 30s.
+    assert "villageBuildDurationMs(rec.seed, building, level)" in build
+    clock = function_source(html, "villageBuildDurationMs")
+    assert "settlementBuildFactorForSeed(seed) * villageStewardProject(seed).buildFactor" in clock
     assert "mergedSettlement && !opts.townMode" in build
     assert "townBuildNetwork(mergedSettlement.id, buildingId)" in build
     # The Town screen owns builder-slot admission, while the paid timer remains

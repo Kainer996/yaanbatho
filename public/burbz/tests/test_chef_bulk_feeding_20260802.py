@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "field-guide-menus-v293-20260820"
+RELEASE_PIN = "steward-project-manager-v294-20260820"
+CURRENT_BUILD = "steward-project-manager-v294-20260820"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

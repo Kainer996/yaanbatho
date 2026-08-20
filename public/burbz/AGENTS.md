@@ -6,7 +6,9 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Current release: 2026-08-20 (`burbz-zombie-canon-v291-20260820`) — the first law of the canon: **Burbz names the enemy, and the Z is for zombie.** Yaan's ask, written into the game's law. `STORY.md` gains "The first law — the name of the enemy" at the top: the Burbz are zombie birds raised by the usurper's shadow magic, they have taken over the kingdom, the game bears their name because saving the world from the Burbz is the task, and the player's birds are never Burbz — living birds and companions only. The evil-Burbz section, the dispel rule (raised forms are laid back to rest — still non-gory, nothing living harmed) and the Canon terminology list all restate it; the Kingdom of Burbz carries its captors' name while they hold it. Copy sweep is deliberately small because the game already says "evil Burbz" everywhere it should: the battle tutorial's "Know your enemy" card now teaches the law ("The Burbz are zombie birds — the Z is for zombie." — trimmed to the tutorial suite's 150-character glance cap), and the one line that called the player's birds "your Burbz collection" (the bird-card summary fallback) now says "flies with your free flock". All pinned canon markers ("squads of evil Burbz", "never against free, ordinary birds", "No town is destroyed", "dark magic unravels") kept. Contracts: `tests/test_burbz_zombie_canon_20260820.py`.
+Current release: 2026-08-20 (`steward-project-manager-v294-20260820`) — Yaan's building pace and project managers. The village build clocks now climb a ladder: the Timber Cabin and Stone Well rise in 4 minutes, the Grain Farm takes half an hour, and every later building takes longer, up to 4 hours for the Storehouse at the bottom of the list (`buildMinutes` in `EMPIRE_BUILDINGS`; upgrades still multiply by level). And the Steward is now the project manager: the post's INT+CHA civic aptitude (small birds boosted, heavyweights penalised — the raven law) cuts up to 30% off every build clock and 15% off every bill via `stewardProjectFactors` in `bird_roles_core.js`. One shared clock helper `villageBuildDurationMs(seed, building, level)` composes guilds × Steward with the 30s floor, and `villageBuildingCost(building, level, seed)` takes an optional seed for the discount — call sites without a seed keep base prices. Old economy-harness tests gained a vacant `villageStewardProject` stub. Contracts: `tests/test_steward_project_manager_20260820.py`.
+
+Previous release: 2026-08-20 (`burbz-zombie-canon-v291-20260820`) — the first law of the canon: **Burbz names the enemy, and the Z is for zombie.** Yaan's ask, written into the game's law. `STORY.md` gains "The first law — the name of the enemy" at the top: the Burbz are zombie birds raised by the usurper's shadow magic, they have taken over the kingdom, the game bears their name because saving the world from the Burbz is the task, and the player's birds are never Burbz — living birds and companions only. The evil-Burbz section, the dispel rule (raised forms are laid back to rest — still non-gory, nothing living harmed) and the Canon terminology list all restate it; the Kingdom of Burbz carries its captors' name while they hold it. Copy sweep is deliberately small because the game already says "evil Burbz" everywhere it should: the battle tutorial's "Know your enemy" card now teaches the law ("The Burbz are zombie birds — the Z is for zombie." — trimmed to the tutorial suite's 150-character glance cap), and the one line that called the player's birds "your Burbz collection" (the bird-card summary fallback) now says "flies with your free flock". All pinned canon markers ("squads of evil Burbz", "never against free, ordinary birds", "No town is destroyed", "dark magic unravels") kept. Contracts: `tests/test_burbz_zombie_canon_20260820.py`.
 
 Previous release: 2026-08-20 (`empire-badge-quest-prompts-v289-20260820`) — two asks from Yaan. **(1) The Empire tab says when taxes wait.** New `empireCollectiblesWaiting(now)` counts every strongbox holding a full 8-hour cycle — merged settlements via `townHasAccruedTribute`, lone villages via `empireVillageTributePeriods`, caravan routes via `empireTradeRoutePeriods` — and `normalizeActionBadgeState` feeds it to the shared action-badge heartbeat as the `village` count, so the bottom nav's Empire button carries the red badge exactly while the Royal Ledger's COLLECT button would pay, and drops it on the collect (every collect saves, and `durableSaveState` re-runs the badges). No change to `action_badge_core.js` — `'village'` was already in its SCREENS. **(2) A build you can't pay for offers the fix.** The eleven coin/timber build gates (both academy builders, `empireBuildStructure`, `empireOpenTradeRoute`, `empireSendSupplyCart`, `claimCurrentVillage`) stopped toasting and call `showResourceQuestPrompt(kind, need, goal)` instead: a small centred card (`#resourceQuestOverlay`) that names the shortfall and offers "🕊️ SEND BIRDS OUT ON A QUEST". Taking it runs `openQuestBoardCategory` — switches to the quests screen, opens the right drawer (`RESOURCE_QUEST_ROUTES`: coins → `treasure`, branches → `timber`, both drawers hold starter errands so a roost-less player is never stranded), scrolls to it and pulses it (`.quest-category.spotlit`, reduced-motion safe). Stone keeps its Quarry toast — no errand earns stone by design. So the prompt can actually appear, unaffordable build buttons stay tappable: the province yard and Town networks now dim with `.short` instead of `disabled` when the only blocker is the purse (busy builders, locks and maxed levels still disable). `goalWithThe` guards labels that carry their own article ("The Roost"). Contracts: `tests/test_empire_badge_quest_prompts_20260820.py`.
 
@@ -275,6 +277,28 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-20 — build ladder + Steward project managers (Claude).** Release
+  `steward-project-manager-v294-20260820`, two asks from Yaan.
+  - **The build ladder.** Starters stay instant fun (Cabin and Well at 4
+    minutes); the rest climb the list — farm 30m, cottages 45m, alehouse 1h,
+    chapel 1h30, lumber camp 2h, quarry 2h30, market 3h, storehouse 4h.
+    `test_settlement_tiers` pinned the farm's old 10-minute upgrade clock —
+    rolled to the 60-minute truth.
+  - **The Steward project-manages.** New pure `stewardProjectFactors(aptitude)`
+    in `bird_roles_core.js` (caps: 30% faster, 15% cheaper), read through
+    `villageStewardProject(seed)` which resolves the post at a merged
+    settlement's heart seed. Cost flows through `villageBuildingCost`'s new
+    optional `seed` arg; clocks through the new `villageBuildDurationMs`
+    (guilds × Steward, 30s floor) used by the real build flow AND every
+    displayed duration — the province card used to show the undiscounted
+    base time even for merged wards; now every surface shows the true clock.
+  - Sharp edge: economy harnesses in older tests stub collaborators, so
+    each one that extracts `empireBuildStructure`/`wholesaleUpgradePlan`
+    needed a vacant `villageStewardProject` stub (and the settlement-tiers
+    stub block is an f-string — double the braces). Float note:
+    `1 - 0.925 = 0.074999…`, so aptitude 50 labels as 7% cheaper, not 8%.
+  - Contracts: `tests/test_steward_project_manager_20260820.py`.
 
 - **2026-08-20 — the first law: Burbz means zombie (Claude).** Release
   `burbz-zombie-canon-v291-20260820`, Yaan's canon ask.

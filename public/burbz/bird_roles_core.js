@@ -142,8 +142,8 @@
     {
       id:'steward', title:'Steward', icon:'🏛️', scope:'village', key:null,
       stats:{ int:0.5, cha:0.5 }, civic:true,
-      effect:{ id:'village_yield', label:'Governance', copy:'This village pays more taxes and timber, and its yards produce more.' },
-      copy:'One bird holds the ledger of a whole town, and towns pick favourites: wit and charm run a village, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it.'
+      effect:{ id:'village_yield', label:'Governance', copy:'This village pays more taxes and timber, its yards produce more — and every build here rises faster and costs a little less.' },
+      copy:'One bird holds the ledger of a whole town, and towns pick favourites: wit and charm run a village, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it. The Steward is also the project manager: a clever, charming bird plans the scaffolds, sweet-talks the masons and haggles the timber yard, so buildings go up quicker and cheaper.'
     },
     {
       id:'region_warden', title:'Warden of the Region', icon:'👑', scope:'region', key:null,
@@ -183,6 +183,29 @@
       return 1 + CIVIC_SMALL_CHARM_BONUS * (CIVIC_FULL_WIT_MAX_SCORE - score) / (CIVIC_FULL_WIT_MAX_SCORE - 20);
     }
     return 1 - CIVIC_GIANT_WIT_PENALTY * (score - CIVIC_FULL_WIT_MAX_SCORE) / (100 - CIVIC_FULL_WIT_MAX_SCORE);
+  }
+
+  // ---------------------------------------------------------------------------
+  // The Steward as project manager (steward-project-manager-v294)
+  // ---------------------------------------------------------------------------
+  // Yaan's rule: appoint a bird as Steward and it runs the building sites too.
+  // How much it helps reads straight off the same civic aptitude — INT and CHA,
+  // weighed down by size — so the songbirds and the robin, no use in a battle
+  // line, become the best project managers in the realm. A perfect appointee
+  // takes 30% off every build clock and 15% off the bill. An empty post
+  // changes nothing: both factors sit at exactly 1.
+  const STEWARD_MAX_BUILD_SPEEDUP = 0.30;
+  const STEWARD_MAX_COST_DISCOUNT = 0.15;
+  function stewardProjectFactors(aptitude) {
+    const a = clamp(n(aptitude, 0), 0, 100) / 100;
+    const buildFactor = Math.round((1 - STEWARD_MAX_BUILD_SPEEDUP * a) * 1000) / 1000;
+    const costFactor = Math.round((1 - STEWARD_MAX_COST_DISCOUNT * a) * 1000) / 1000;
+    return {
+      buildFactor,
+      costFactor,
+      speedPct: Math.round((1 - buildFactor) * 100),
+      discountPct: Math.round((1 - costFactor) * 100)
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -472,6 +495,9 @@
     CIVIC_FULL_WIT_MAX_SCORE,
     CIVIC_SMALL_CHARM_BONUS,
     CIVIC_GIANT_WIT_PENALTY,
+    STEWARD_MAX_BUILD_SPEEDUP,
+    STEWARD_MAX_COST_DISCOUNT,
+    stewardProjectFactors,
     governanceWitFactor,
     roleById,
     academyRoleForRoom,

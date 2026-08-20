@@ -21,9 +21,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-ROLE_CORE_PIN = "chef-mastery-feed-all-v261-20260813"
+ROLE_CORE_PIN = "steward-project-manager-v294-20260820"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "field-guide-menus-v293-20260820"
+CURRENT_BUILD = "steward-project-manager-v294-20260820"
 
 
 def run_node(source: str) -> dict:

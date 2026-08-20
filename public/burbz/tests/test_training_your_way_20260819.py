@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "training-your-way-v288-20260819"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "field-guide-menus-v293-20260820"
+CURRENT_BUILD = "steward-project-manager-v294-20260820"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 

@@ -36,6 +36,7 @@ def economy_harness(driver: str) -> str:
             "villageProductionSnapshot",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "villageBuildDurationMs",
             "empireBuildStructure",
         )
     )
@@ -57,6 +58,7 @@ const townDisplayName = settlement => settlement && settlement.name;
 const townBuildNetwork = () => { throw new Error('loose village must not delegate to a Town'); };
 const settlementBuildFactorForSeed = () => 1;
 const villageRoleMultiplier = () => 1;
+const villageStewardProject = () => ({ staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 }); // vacant post: v294 project management is upside only
 const villageRuinDefsFor = () => [];
 const VILLAGE_RUIN_KINDS = { house: {} };
 const VILLAGE_BASE_POPULATION = 0, VILLAGE_MAX_POPULATION = 200;
