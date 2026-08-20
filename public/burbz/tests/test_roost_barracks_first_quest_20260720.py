@@ -10,7 +10,7 @@ HTML_PATH = ROOT / "index.html"
 CORE_PATH = ROOT / "academy_treehouse_core.js"
 ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
-ACADEMY_CORE_PIN = "mercy-streak-attack-preview-v287-20260819"
+ACADEMY_CORE_PIN = "training-your-way-v288-20260819"
 
 
 def _node_json(source: str):

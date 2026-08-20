@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "mercy-streak-attack-preview-v287-20260819"
+CURRENT_BUILD = "training-your-way-v288-20260819"
 REALM_CORE_PIN = "town-strategy-v273-20260816"
 
 

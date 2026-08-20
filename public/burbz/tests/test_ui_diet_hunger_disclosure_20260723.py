@@ -94,7 +94,10 @@ def test_named_hunger_surfaces_show_humane_status_in_render_paths():
     merlin = function_source(html, "renderMerlinCareMenu")
     assert "readiness.status.label" in quest
     assert "baseNote + ' · ' + hungerNote" in quest
-    assert "readiness.status.label.toLowerCase()" in training
+    # training-your-way-v288: the board sheds its '· fed' suffix, but every
+    # bird button still wears the hunger state and a blocked bird says why.
+    assert 'data-hunger-state="' in training
+    assert "Feed ' + birdDisplayName(b) + ' first'" in training
     assert "hungerMeta = ' · ' + readiness.status.label" in battle
     assert "merlinHungerStatus" in merlin
 

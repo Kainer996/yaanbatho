@@ -24,6 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "training-your-way-v288-20260819"
 
 
 def _node(script: str):
@@ -160,14 +161,16 @@ def test_resolving_or_advancing_clears_the_aim():
 def test_release_is_versioned_and_the_moved_cores_shipped():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
-    # battle_core (preview + parley), academy_treehouse_core (Crowbar copy)
-    # and walking_story_core (folio scroll) all changed, so their cache pins
-    # moved everywhere.
-    for core in ("battle_core.js", "academy_treehouse_core.js", "walking_story_core.js"):
+    assert OWN_RELEASE_PIN in cache_line       # this release's own segment
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
+    # battle_core (preview + parley) and walking_story_core (folio scroll)
+    # changed in this release, so their cache pins moved everywhere.
+    # academy_treehouse_core moved here too, then again with
+    # training-your-way-v288 — its pin lives in that release's suite now.
+    for core in ("battle_core.js", "walking_story_core.js"):
         pin = f"{core}?v={OWN_RELEASE_PIN}"
         assert f'<script src="{pin}"></script>' in html, core
         assert sw.count(f"'./{pin}'") == 2, core

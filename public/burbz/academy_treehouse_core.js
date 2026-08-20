@@ -65,6 +65,50 @@
   function questItemMultiplier(minutes) {
     return Math.pow(Math.max(5, Number(minutes) || 5) / 5, 0.45);
   }
+  // Training runs work the same way: the player picks how long a drill
+  // lasts, from a quarter hour to a full day. A longer run pays a bigger
+  // total for a player who is away, but the payout grows slower than the
+  // clock — many short runs always beat one long one, so attentive play
+  // wins. Rewards are anchored to each template's classic duration, so a
+  // run at that duration pays exactly what it always did.
+  const TRAINING_DURATION_MINUTES = Object.freeze([15, 30, 60, 120, 240, 480, 1440]);
+  function trainingXpMultiplier(minutes) {
+    return Math.pow(Math.max(15, Number(minutes) || 15) / 15, 0.8);
+  }
+  // Permanent stat gains grow gentler still: a day of drills makes a bird
+  // stronger, never a different bird.
+  function trainingStatMultiplier(minutes) {
+    return Math.pow(Math.max(15, Number(minutes) || 15) / 15, 0.6);
+  }
+  // Appetite follows effort, but slowly — a day of drills must never starve
+  // a bird on its own.
+  function trainingHungerMultiplier(minutes) {
+    return Math.pow(Math.max(15, Number(minutes) || 15) / 15, 0.5);
+  }
+  function trainingRewardsForDuration(template, minutes) {
+    const base = Math.max(15, Number(template && template.minutes) || 60);
+    const selected = TRAINING_DURATION_MINUTES.includes(Number(minutes)) ? Number(minutes) : base;
+    const ratio = trainingXpMultiplier(selected) / trainingXpMultiplier(base);
+    const statRatio = trainingStatMultiplier(selected) / trainingStatMultiplier(base);
+    const hungerRatio = trainingHungerMultiplier(selected) / trainingHungerMultiplier(base);
+    const baseHunger = Number(template && template.hunger) || 0;
+    const hunger = baseHunger === 0 ? 0
+      : baseHunger > 0 ? Math.max(1, Math.round(baseHunger * hungerRatio))
+      : -Math.max(1, Math.round(-baseHunger * hungerRatio));
+    return {
+      minutes: selected,
+      xp: Math.max(1, Math.round((Number(template && template.xp) || 1) * ratio)),
+      bonus: Math.max(1, Math.round((Number(template && template.bonus) || 1) * statRatio)),
+      hunger,
+      happiness: Number(template && template.happiness) || 0
+    };
+  }
+  function getTrainingDurationOptions(templateId) {
+    const template = TRAINING_TEMPLATES[templateId];
+    if (!template) return [];
+    return TRAINING_DURATION_MINUTES.map(m => ({ ...trainingRewardsForDuration(template, m) }));
+  }
+
   function scaledQuestRange(range, ratio) {
     const source = Array.isArray(range) ? range : [0, 0];
     const scale = Math.max(0, Number(ratio) || 0);
@@ -215,13 +259,17 @@
   function createTrainingSession(bird, templateId='wing_sprints', nowMs=Date.now(), options={}) {
     const template = TRAINING_TEMPLATES[templateId] || TRAINING_TEMPLATES.wing_sprints;
     const birdName = String(bird.customName || '').trim() || bird.commonName || bird.species || 'A brave bird';
-    const durationMs = template.minutes * 60 * 1000;
+    // The player picks the run length from the catalogue; anything else —
+    // legacy callers, arbitrary numbers — falls back to the classic timer
+    // with the classic payout.
+    const economy = trainingRewardsForDuration(template, Number(options && options.durationMinutes));
+    const durationMs = economy.minutes * 60 * 1000;
     const night = nightBonusPack(options);
-    const xp = Math.round(template.xp * nightMultiplier(night, 'xp'));
+    const xp = Math.round(economy.xp * nightMultiplier(night, 'xp'));
     // Night Hunters learn twice as much from every drill: the pack's statBonus
     // multiplies the permanent stat gain, not just the XP. Packs without a
     // statBonus (older saves mid-session) fall back to the plain gain.
-    const statGain = Math.max(1, Math.round(template.bonus * nightMultiplier(night, 'statBonus')));
+    const statGain = Math.max(1, Math.round(economy.bonus * nightMultiplier(night, 'statBonus')));
     return {
       id: `train_${nowMs}_${String(bird.id || birdName).replace(/[^a-z0-9]+/gi,'_')}`,
       birdId: bird.id || null,
@@ -233,11 +281,12 @@
       statLabel: template.statLabel,
       school: template.school || null,
       room: template.room || 'training',
+      durationMinutes: economy.minutes,
       startMs: nowMs,
       endMs: nowMs + durationMs,
       status: 'active',
       nightBonus: !!night,
-      rewards: { xp, stat: template.stat, statLabel: template.statLabel, bonus: statGain, hunger: template.hunger, happiness: template.happiness, school: template.school || null },
+      rewards: { xp, stat: template.stat, statLabel: template.statLabel, bonus: statGain, hunger: economy.hunger, happiness: economy.happiness, school: template.school || null },
       seed: hashString(`${bird.id || birdName}|${template.id}|${nowMs}`)
     };
   }
@@ -362,5 +411,5 @@
     return { ...expedition, status, progressPct, events };
   }
 
-  return { QUEST_DURATION_MINUTES, questDurationMultiplier, getQuestDurationOptions, getAcademyRooms, getQuestTemplates, getQuestCategories, questCategory, getTrainingTemplates, getMerlinClues, createTrainingSession, advanceTrainingSession, createBirdExpedition, advanceBirdExpedition };
+  return { QUEST_DURATION_MINUTES, questDurationMultiplier, getQuestDurationOptions, TRAINING_DURATION_MINUTES, trainingXpMultiplier, trainingStatMultiplier, trainingRewardsForDuration, getTrainingDurationOptions, getAcademyRooms, getQuestTemplates, getQuestCategories, questCategory, getTrainingTemplates, getMerlinClues, createTrainingSession, advanceTrainingSession, createBirdExpedition, advanceBirdExpedition };
 });
