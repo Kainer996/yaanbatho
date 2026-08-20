@@ -27,7 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "anchored-dock-v301-20260820"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=battle-progression-fixes-v286-20260819"
 
 
@@ -270,8 +270,10 @@ def test_bottom_nav_carries_a_forge_tab():
     nav = html[html.index('id="bottomNav"'):html.index("</nav>", html.index('id="bottomNav"'))]
     assert 'data-game-route data-screen="forge" aria-label="Blacksmith\'s forge"' in nav
     assert '<div class="nav-label">Forge</div>' in nav
-    # Between Battle and Academy, so the Scan orb keeps its place.
-    assert nav.index('data-screen="battle"') < nav.index('data-screen="forge"') < nav.index('data-screen="academy"')
+    # After Battle on the scrolling strip; Academy stands in the anchored
+    # island beside Scan since the dock split (2026-08-20).
+    assert nav.index('data-screen="battle"') < nav.index('data-screen="forge"')
+    assert 'data-screen="academy"' in html[html.index('bottom-dock-anchor'):]
     # switchScreen already renders the forge on entry — the tab rides that.
     assert "if (name === 'forge') renderForge();" in html
 

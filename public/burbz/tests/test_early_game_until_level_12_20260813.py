@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "early-game-until-level-12-v262-20260813"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "anchored-dock-v301-20260820"
 
 
 def function_source(html: str, name: str) -> str:

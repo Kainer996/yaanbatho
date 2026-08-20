@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "anchored-dock-v301-20260820"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

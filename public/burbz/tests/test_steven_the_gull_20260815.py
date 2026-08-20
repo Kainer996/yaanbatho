@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "anchored-dock-v301-20260820"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 

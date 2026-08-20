@@ -13,7 +13,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-training-dock-v252-20260812"
 PREVIOUS_RELEASE_PIN = "hold-to-steer-v251-20260811"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "anchored-dock-v301-20260820"
 
 
 def test_the_academy_title_is_just_academy():
@@ -34,10 +34,13 @@ def test_kitchen_quests_scan_stores_and_training_share_the_nav_in_order():
     nav = HTML.split('id="bottomNav"')[1].split("</nav>")[0]
     kitchen = nav.index('data-quick-destination="kitchen"')
     quests = nav.index('data-screen="quests"')
-    scan = nav.index('data-screen="scan"')
     stores = nav.index('data-screen="inventory"')
     training = nav.index('data-quick-destination="training"')
-    assert kitchen < quests < scan < stores < training
+    assert kitchen < quests < stores < training
+    # Scan left the strip for the anchored island (2026-08-20) — it stands
+    # solid at the dock's centre with Empire and Academy.
+    island = HTML.rsplit('id="bottomDockAnchor"', 1)[1]
+    assert 'data-screen="scan"' in island
 
 
 def test_battle_and_forge_are_destinations_in_the_same_bottom_nav():

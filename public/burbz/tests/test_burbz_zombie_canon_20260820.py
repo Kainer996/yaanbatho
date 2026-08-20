@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "empire-declutter-v300-20260820"
+OWN_RELEASE_PIN = "anchored-dock-v301-20260820"
 
 
 def test_release_is_wired():

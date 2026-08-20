@@ -150,7 +150,7 @@ def test_map_quest_focus_card_clears_fixed_navigation_and_keeps_attribution_abov
     assert "var(--quest-focus-attribution-bottom" in attribution_css
     assert "function syncQuestMapFocusLayout" in html
     layout = html.split("function syncQuestMapFocusLayout", 1)[1].split("function closeQuestMapFocus", 1)[0]
-    assert "document.querySelector('.bottom-nav')" in layout
+    assert "document.querySelector('.bottom-dock')" in layout
     assert "--quest-focus-card-height" in layout
     assert "--quest-focus-lift" in layout
     assert "const BURBZ_CACHE = 'burbz-" in SW.read_text(encoding="utf-8")

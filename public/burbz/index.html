@@ -522,21 +522,37 @@ svg.academy-room-bg { display:block; filter:none; }
    Thirteen 44px+ targets cannot honestly fit across a small phone, so the dock
    scrolls and snaps horizontally while keeping Map through Scan visible on
    first paint. */
-.bottom-nav {
+.bottom-dock {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 200;
-  padding: 0 2px var(--safe-bottom);
   background: linear-gradient(180deg, rgba(10,9,7,0.92), #050403 62%);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid rgba(240,199,103,0.14);
-  display: flex; justify-content: flex-start;
   height: calc(var(--nav-height) + var(--safe-bottom));
+  box-shadow: 0 -12px 30px rgba(0,0,0,.24);
+}
+.bottom-nav {
+  padding: 0 2px var(--safe-bottom);
+  display: flex; justify-content: flex-start;
+  height: 100%;
   overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x proximity; scroll-padding-inline: 52px;
   overscroll-behavior-inline: contain; scrollbar-width: none;
   -ms-overflow-style: none; touch-action: pan-x;
-  box-shadow: 0 -12px 30px rgba(0,0,0,.24);
 }
 .bottom-nav::-webkit-scrollbar { display:none; }
+/* Empire · Scan · Academy stand solid at the centre of the dock. The strip
+   scrolls beneath their island, the way a river passes under a bridge. */
+.bottom-dock-anchor {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--safe-bottom) - 1px); z-index: 2;
+  display: flex; align-items: stretch; gap: 2px;
+  padding: 2px 8px 1px;
+  height: calc(var(--nav-height) + 9px);
+  background: linear-gradient(180deg, rgba(24,19,9,0.98), #070503 70%);
+  border: 1px solid rgba(240,199,103,0.34); border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -6px 18px rgba(0,0,0,.55), inset 0 1px 0 rgba(240,199,103,.14);
+}
 .nav-item {
   flex: 0 0 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 1px; padding: 4px 2px 3px; position: relative; transition: color .22s ease, background .22s ease;
@@ -573,6 +589,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .nav-scan.active .nav-icon { transform:translateY(-1px); filter:none; box-shadow:inset 0 0 0 1px rgba(240,199,103,.65),0 0 20px rgba(240,199,103,.38); }
 .nav-scan:active .nav-icon { transform: scale(.93); }
 .nav-scan .nav-label { color: var(--accent); }
+.bottom-dock-anchor .nav-item { scroll-snap-align: none; }
+.bottom-dock-anchor .nav-scan .nav-icon { width: 46px; height: 46px; }
+.bottom-dock-anchor .nav-scan .nav-icon img { width: 44px; height: 44px; }
 .nav-badge {
   position: absolute; top: 4px; right: 50%; transform: translateX(16px);
   background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
@@ -4323,14 +4342,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   </div>
 
   <!-- Bottom Navigation -->
-  <nav class="bottom-nav" id="bottomNav" aria-label="Game destinations">
+  <!-- The Adventure Dock: Empire · Scan · Academy stand solid in the middle;
+       every other destination scrolls past beneath them. -->
+  <div class="bottom-dock" id="bottomDock">
+  <nav class="bottom-nav" id="bottomNav" aria-label="More destinations">
     <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/map.webp" alt="" draggable="false"></div>
       <div class="nav-label">Map</div>
-    </button>
-    <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Empire</div>
     </button>
     <button class="nav-item" data-game-route data-screen="birdex" aria-label="Burbz codex">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/birdex.webp" alt="" draggable="false"></div>
@@ -4343,10 +4361,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <button class="nav-item" data-game-route data-screen="quests" aria-label="Quests">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/quests.webp" alt="" draggable="false"></div>
       <div class="nav-label">Quests</div>
-    </button>
-    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Scan</div>
     </button>
     <button class="nav-item" data-game-route data-screen="inventory" aria-label="Royal Stores">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/inventory.webp" alt="" draggable="false"></div>
@@ -4368,15 +4382,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/forge.webp" alt="" draggable="false"></div>
       <div class="nav-label">Forge</div>
     </button>
-    <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Academy</div>
-    </button>
     <button class="nav-item" data-game-route data-screen="leaderboards" aria-label="Ranks">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/leaderboards.webp" alt="" draggable="false"></div>
       <div class="nav-label">Ranks</div>
     </button>
   </nav>
+  <div class="bottom-dock-anchor" id="bottomDockAnchor" aria-label="Main destinations">
+    <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Empire</div>
+    </button>
+    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Scan</div>
+    </button>
+    <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Academy</div>
+    </button>
+  </div>
+  </div>
 
   <!-- Guided-flow pointer: Merlin's arrow over the next nav tab to tap -->
   <div class="tutorial-nav-pointer" id="tutorialNavPointer" aria-hidden="true"><span class="tnp-text" id="tutorialNavPointerText">A quest awaits!</span><span class="tnp-arrow">▼</span></div>
@@ -5739,7 +5764,7 @@ document.addEventListener('visibilitychange', () => {
 // explicit sound in the same click is detected so controls never double-chime.
 document.addEventListener('click', event => {
   const control = event.target && event.target.closest ? event.target.closest('button,a,input,select,[role="button"]') : null;
-  if (!control || control.closest('.bottom-nav') || control.dataset.audio === 'none') return;
+  if (!control || control.closest('.bottom-dock') || control.dataset.audio === 'none') return;
   if (SFX && typeof SFX.playedRecently === 'function' && SFX.playedRecently(80)) return;
   const sound = window.BurbzAudioCore && window.BurbzAudioCore.classifyInteraction
     ? window.BurbzAudioCore.classifyInteraction(control) : 'tap';
@@ -19650,7 +19675,7 @@ function drawQuestOverviewMarkers() {
 let questFocusResizeObserver = null;
 function syncQuestMapFocusLayout() {
   const card = $('mapQuestFocusCard'), shell = $('liveMapShell');
-  const nav = document.querySelector('.bottom-nav');
+  const nav = document.querySelector('.bottom-dock');
   if (!card || !shell || !nav || !card.classList.contains('show')) return;
   const shellRect = shell.getBoundingClientRect(), navRect = nav.getBoundingClientRect();
   shell.style.setProperty('--quest-focus-max-height', Math.max(180, Math.floor(navRect.top - shellRect.top - 24)) + 'px');
@@ -20901,7 +20926,7 @@ let trainingHubPreviousDockItem = null;
 function openTrainingHub() {
   const modal = document.getElementById('trainingHubModal');
   if (!modal || !modal.classList.contains('show')) {
-    trainingHubPreviousDockItem = document.querySelector('#bottomNav .nav-item.active');
+    trainingHubPreviousDockItem = document.querySelector('#bottomDock .nav-item.active');
   }
   renderTrainingHub();
   if (modal) modal.classList.add('show');
@@ -20911,7 +20936,7 @@ function openTrainingHub() {
 
 function closeTrainingHub(restoreDock = true) {
   document.getElementById('trainingHubModal')?.classList.remove('show');
-  document.querySelectorAll('#bottomNav .nav-item.active').forEach(item => item.classList.remove('active'));
+  document.querySelectorAll('#bottomDock .nav-item.active').forEach(item => item.classList.remove('active'));
   if (restoreDock) {
     const target = trainingHubPreviousDockItem && document.contains(trainingHubPreviousDockItem)
       ? trainingHubPreviousDockItem
@@ -37818,7 +37843,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-declutter-v300-20260820';
+const BURBZ_BUILD = 'anchored-dock-v301-20260820';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -38027,7 +38052,7 @@ function saveMerlinTutorialState(status, currentStep = merlinTutStep) {
 }
 
 function setMerlinTutorialBackgroundInert(inert) {
-  document.querySelectorAll('.header, .main, .bottom-nav').forEach(element => {
+  document.querySelectorAll('.header, .main, .bottom-dock').forEach(element => {
     element.inert = inert;
     if (inert) element.setAttribute('aria-hidden', 'true');
     else element.removeAttribute('aria-hidden');

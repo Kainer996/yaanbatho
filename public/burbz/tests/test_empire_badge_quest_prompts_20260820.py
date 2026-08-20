@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "empire-declutter-v300-20260820"
+CURRENT_BUILD = "anchored-dock-v301-20260820"
 
 
 def run_node(source: str):
@@ -75,8 +75,8 @@ def test_release_is_wired():
 
 def test_bottom_nav_has_an_empire_tab_the_badge_walker_reaches():
     html = html_text()
-    nav = html[html.index('<nav class="bottom-nav"'):html.index("</nav>")]
-    assert 'data-game-route data-screen="village"' in nav  # the Empire tab
+    dock = html[html.index('<div class="bottom-dock"'):html.index("</nav>")] + html[html.index('bottom-dock-anchor'):html.index('tutorialNavPointer')]
+    assert 'data-game-route data-screen="village"' in dock  # the Empire tab, islanded beside Scan
     # The shared badge core walks every [data-game-route][data-screen] item
     # and knows the village screen, so the Empire tab can carry a count.
     assert "'village'" in BADGE_CORE.read_text(encoding="utf-8")
