@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "honest-need-gauges-v296-20260820"
+CURRENT_BUILD = "equip-card-swipe-v297-20260820"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

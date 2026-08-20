@@ -6,7 +6,9 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Current release: 2026-08-20 (`honest-need-gauges-v296-20260820`) — Yaan's screenshot report: a village with no farm and no well showed Food 3/3 and Water 3/3, full and green, because the liberation relief stores were filling the bars. Now every need bar is a gauge of what is actually BUILT: `villageEconomySnapshot` carries two truths per need — `sat` (harvest + stores; unchanged, still drives happiness, growth and starvation, so relief supplies keep doing their job) and `supplySat`/`supplyServed` (only what built, staffed farms and wells deliver; shelter and joy carry the same fields). The village desk and the Town Hall draw the gauge; the sublabel tells the stores story ("no stone well yet · villagers live off the cistern (30 stored — 10 more cycles)", amber while it lasts) and the shortage warning still runs on `sat`. `townEconomySnapshot` rolls `supplyServed` up from its wards. Contracts: `tests/test_honest_need_gauges_20260820.py`.
+Current release: 2026-08-20 (`equip-card-swipe-v297-20260820`) — Yaan's ask: on the Equipment screen (the back of a bird's card) a horizontal swipe flips to the next or previous companion, card sliding out one side and in the other. The deck is `gameState.flock` in collection order, wrapping at both ends. The gesture follows the finger with an axis lock (`bindBirdEquipSwipe` on `.bird-equip-scroll`, bound once; vertical drags still scroll; horizontal drags call `preventDefault` from a non-passive listener), commits past 70px, springs back otherwise — including the one-bird flock. `birdEquipSwipeTo` swaps `birdEquipState`, closes any open gear picker, resets the scroll to the top and runs the slide animation; a pager line ("‹ 3 of 12 companions — swipe for the next ›") teaches the gesture and hides for a single bird. Contracts: `tests/test_equip_card_swipe_20260820.py`.
+
+Previous release: 2026-08-20 (`honest-need-gauges-v296-20260820`) — Yaan's screenshot report: a village with no farm and no well showed Food 3/3 and Water 3/3, full and green, because the liberation relief stores were filling the bars. Now every need bar is a gauge of what is actually BUILT: `villageEconomySnapshot` carries two truths per need — `sat` (harvest + stores; unchanged, still drives happiness, growth and starvation, so relief supplies keep doing their job) and `supplySat`/`supplyServed` (only what built, staffed farms and wells deliver; shelter and joy carry the same fields). The village desk and the Town Hall draw the gauge; the sublabel tells the stores story ("no stone well yet · villagers live off the cistern (30 stored — 10 more cycles)", amber while it lasts) and the shortage warning still runs on `sat`. `townEconomySnapshot` rolls `supplyServed` up from its wards. Contracts: `tests/test_honest_need_gauges_20260820.py`.
 
 Previous release: 2026-08-20 (`stores-market-project-manager-v295-20260820`) — Yaan's two follow-ups. First, the village post's nameplate: it is the **Project Manager** now, not the Steward — role title, icon (📋), province drawer, Town section and income line all say so; the role id stays `steward` so old saves keep their appointee, and grander civic titles (Lord Mayors for towns, Councillors for counties) are planned for later. Second, the **Stores market**: every stockroom card in the Royal Stores carries SELL buttons. Prices live in `loot_crafting_core.js` (`SELL_PRICES`/`sellValue`/`sellQuote`): gear by rarity (15→450 🪙, a legendary beats its own forge bill), materials by rarity (2→100 🪙), larder food 2 🪙, keepsakes 5 🪙. `storesSellItem(kind, id, qty|'all')` in `index.html` owns the trade — exposed on `window` for onclick and on `__burbzStoresDebug` for tests; equipped gear is safe because worn pieces leave `inventory.gear`. Contracts: `tests/test_stores_market_20260820.py`.
 
@@ -281,6 +283,20 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-20 — swipe through the flock on the Equipment card (Claude).**
+  Release `equip-card-swipe-v297-20260820`, Yaan's ask.
+  - The overlay's scroll container owns the gesture; the card body
+    (`#birdEquipBody`) is what slides. Axis lock after 14px of drift keeps
+    vertical scrolling untouched; the horizontal branch needs the
+    `{ passive: false }` touchmove listener or `preventDefault` is ignored
+    and the page scrolls under the drag.
+  - Swap order matters: set `birdEquipState` BEFORE the out-animation so a
+    mid-animation re-render (tick timers call `renderBirdEquip`) already
+    shows the new bird. `birdEquipSwipeAnimating` gates re-entry.
+  - `overflow-x:hidden` on `.bird-equip-scroll` — without it the translated
+    card widens the scroll area and the page jiggles sideways.
+  - Contracts: `tests/test_equip_card_swipe_20260820.py`.
 
 - **2026-08-20 — honest need gauges (Claude).** Release
   `honest-need-gauges-v296-20260820`, from Yaan's screenshot report.

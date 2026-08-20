@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "honest-need-gauges-v296-20260820"
+CURRENT_BUILD = "equip-card-swipe-v297-20260820"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 
