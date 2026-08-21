@@ -19,7 +19,7 @@ HTML_PATH = BURBZ / "index.html"
 HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "arm-your-bird-v306-20260821"
+RELEASE_PIN = "village-chain-v307-20260821"
 OWN_RELEASE_PIN = "make-a-friend-v305-20260821"
 
 INDOOR_GO = {"academy", "birdex", "battle", "forge", "quests", "inventory"}
@@ -47,8 +47,9 @@ def test_make_a_friend_takes_its_place_right_after_the_first_diet():
     ids = [q["id"] for q in quests]
     assert ids.index("pq_preen") == ids.index("pq_true_diet") + 1
     assert ids.index("pq_preen") == ids.index("pq_build_training") - 1
-    # The chain is still 26 links long — one swapped, none lost.
-    assert len(quests) == 26
+    # One swapped, none lost — the length only ever moves when links are
+    # deliberately added, as village-chain-v307 did at the far end.
+    assert len(quests) == 32
 
     quest = next(q for q in quests if q["id"] == "pq_preen")
     assert quest["name"] == "Make a friend"

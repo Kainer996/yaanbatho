@@ -1,4 +1,4 @@
-"""Generated UI art release contracts (arm-your-bird-v306-20260821).
+"""Generated UI art release contracts (village-chain-v307-20260821).
 
 The release unifies every player destination in one image-led bottom dock,
 adds a Hospital shortcut, replaces visible gear emoji with transparent
@@ -27,7 +27,7 @@ UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 RELEASE = "generated-ui-art-v298-20260820"
 # Later releases move BURBZ_BUILD on; v298's own segment stays in the lineage.
-CURRENT_BUILD = "arm-your-bird-v306-20260821"
+CURRENT_BUILD = "village-chain-v307-20260821"
 SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
 
 # Since the anchored dock (2026-08-20) the thirteen destinations split:

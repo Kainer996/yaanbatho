@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "arm-your-bird-v306-20260821"
+RELEASE_PIN = "village-chain-v307-20260821"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 

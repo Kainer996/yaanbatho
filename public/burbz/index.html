@@ -6011,7 +6011,7 @@ const STARTER_PREY_LARDER = { field_vole: 3, wood_mouse: 2, carrion_scraps: 2, c
 
 const DEFAULT_STATE = {
   placeNameVersion: 0,
-  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0, stone: 0 },
+  player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0, stone: 0, tributeCollections: 0 },
   flock: [],
   discoveredSpecies: {},
   inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
@@ -11453,6 +11453,7 @@ function assignBirdRole(scope, key, birdId) {
   if (scope === 'academy' && key !== 'kitchen' && key !== 'tavern') { ensureBirdAcademy(bird); bird.academy.room = key; }
   const fx = core.roleEffectiveness(bird, role);
   saveState();
+  if (scope === 'village' && typeof updateQuestProgress === 'function') updateQuestProgress('village_role_filled', 1);
   SFX.tap();
   showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%');
   // Appointing a Head Chef unlocks whole-species table service — taught with a
@@ -23302,6 +23303,7 @@ function maybeAwardMergeStar(rec) {
   if (!ready.ready) { if (eco.mergeStarSeen) eco.mergeStarSeen = false; return false; }
   if (eco.mergeStarSeen) return false;
   eco.mergeStarSeen = true;
+  if (typeof updateQuestProgress === 'function') updateQuestProgress('merge_star', 1);
   if (empireSettlementOfSeed(rec.seed)) return false; // already merged — no star fanfare
   queueCompletionNotice({
     kind: 'merge-star',
@@ -23340,6 +23342,7 @@ function empireMergeVillages(seedsCsv) {
     return;
   }
   if (typeof logDiary === 'function') logDiary('village', { name: townDisplayName(town), count: empireVillages().length });
+  if (typeof updateQuestProgress === 'function') updateQuestProgress('town_founded', 1);
   SFX.victory();
   vibrate(70);
   showToast('🏘️ ' + mc.nameList(names) + ' merge — ' + townDisplayName(town) + ' stands! One map holds all three villages’ buildings. Govern it from the Town Hall; wards pay +10% taxes and guilds build 15% faster.');
@@ -23692,6 +23695,10 @@ function empireCompleteConstructions(now) {
     showToast('Construction finished, but its result could not be saved. Please try again.');
     return false;
   }
+  // Amount 0 on purpose: "Feed and water your folk" is measured, not counted —
+  // it asks for a food yard AND a well, so a finished build must re-read the
+  // village rather than tick the bar by one.
+  if (typeof updateQuestProgress === 'function') updateQuestProgress('village_provisioned', 0);
   if (levelledUp) { SFX.levelUp(); showToast('LEVEL UP! Now Level ' + gameState.player.level); }
   notices.forEach(notice => {
     showToast(notice.text);
@@ -24096,6 +24103,7 @@ function empireBuildStructure(seed, buildingId, options) {
   }
   SFX.questComplete();
   vibrate(35);
+  if (typeof updateQuestProgress === 'function') updateQuestProgress('village_built', 1);
   const targetTier = villageBuildingTier(building, level + 1);
   showToast('🏗️ ' + targetTier.icon + ' ' + targetTier.name + (level === 0 ? ' construction begun' : ' upgrade begun') + ' in ' + publicName + ' — ready in ' + formatBuildDuration(buildMs) + '.' + (guildFactor < 1 ? ' ⚒️ Merged-settlement guilds are building ' + Math.round((1 - guildFactor) * 100) + '% faster.' : '') + (project.staffed && project.speedPct > 0 ? ' 🪶 ' + birdDisplayName(project.bird) + ' runs the project: ' + project.speedPct + '% faster, ' + project.discountPct + '% cheaper.' : ''));
   // Rebuild the 3D scene so the scaffolded site appears in the village itself
@@ -24297,6 +24305,16 @@ function empireResourceSummary(bundle, limit) {
   const max = Math.max(1, Number(limit) || bits.length);
   return bits.slice(0, max).join(' ') + (bits.length > max ? ' +' + (bits.length - max) : '');
 }
+// Three strongboxes pay the Crown — the realm, a Town and a County — and each
+// one is the same moment for the player: taxes came in. One note, so a quest
+// can count a collection wherever it was taken, and the tally survives saves
+// because nothing else records that taxes were ever collected.
+function notePaidTribute() {
+  if (!gameState.player) return;
+  gameState.player.tributeCollections = (Number(gameState.player.tributeCollections) || 0) + 1;
+  if (typeof updateQuestProgress === 'function') updateQuestProgress('tribute_collected', 1);
+}
+
 function collectEmpireTribute() {
   const snapshot = snapshotGameState();
   const due = empireTributeReady();
@@ -24337,6 +24355,7 @@ function collectEmpireTribute() {
     showToast('The collection could not be saved, so nothing was taken or reset. Please try again.');
     return;
   }
+  notePaidTribute();
   SFX.questComplete();
   vibrate(40);
   showToast('👑 Taxes collected: +' + due.coins + ' 🪙 +' + due.branches + ' 🪵 +' + due.stone + ' stone' + (producedText ? ' · 🏭 ' + producedText : '') + tributeText);
@@ -24945,6 +24964,7 @@ function collectRegionTribute(regionId) {
     if (lines.length) lootText = ' · ' + lootLinesToText(lines);
     durableSaveState({ throwOnFailure:true });
   } catch (error) { restoreGameStateSnapshot(before); showToast('The County collection could not be saved — nothing was taken or reset.'); return; }
+  notePaidTribute();
   SFX.questComplete();
   vibrate(40);
   showToast('👑 The ' + region.name + ' pays its taxes: ' + empireResourceSummary(due, 6) + lootText);
@@ -25391,6 +25411,7 @@ function collectTownTribute(settlementId) {
     if (lines.length) lootText = ' · ' + lootLinesToText(lines);
     durableSaveState({ throwOnFailure:true });
   } catch (error) { restoreGameStateSnapshot(before); showToast('The strongbox could not be saved — nothing was collected.'); return; }
+  notePaidTribute();
   SFX.questComplete(); vibrate(45); showToast('🏛️ ' + townDisplayName(settlement) + ' strongbox: ' + (empireResourceSummary(due, 8) || 'the ledgers are cleared') + lootText);
   updateHeader(); renderTownScreen(); renderEmpirePanel(); if (currentScreen === 'inventory') renderInventory();
 }
@@ -37333,6 +37354,23 @@ function claimedExpeditionCount() {
   return Object.keys(gameState.questClaimReceipts || {}).filter(k => k.indexOf('expedition:') === 0).length;
 }
 
+// Village links in the chain read the same shelf of settlement state, so the
+// reads live here once rather than inline in six quest rows.
+function villageEconomies() {
+  return Object.values((gameState.empire && gameState.empire.villages) || {})
+    .map(v => v && v.economy).filter(Boolean);
+}
+function villageBuildingLevels() {
+  return villageEconomies().reduce((total, eco) =>
+    total + Object.values(eco.buildings || {}).reduce((sum, n) => sum + (Number(n) || 0), 0), 0);
+}
+function villagesFedAndWatered() {
+  return villageEconomies().filter(eco => {
+    const b = eco.buildings || {};
+    return ((Number(b.hut) || 0) + (Number(b.farm) || 0)) > 0 && (Number(b.well) || 0) > 0;
+  }).length;
+}
+
 const PLAYER_QUESTS = [
   // The chain mirrors Merlin's guided tutorial: send him on his first errand,
   // welcome him home, raise The Roost — then out into the world for a real
@@ -37386,15 +37424,27 @@ const PLAYER_QUESTS = [
     measure:() => Number(gameState.knowledgeQuiz && gameState.knowledgeQuiz.correct) || 0 },
   { id:'pq_liberate',       name:'Liberate a village', desc:'Free a real village from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_village_build',  name:'Raise your first building', desc:'Order a building at your village desk', type:'village_built', target:1, reward:80, coins:40, icon:'\u{1F3D7}\u{FE0F}', go:'village',
+    measure:() => villageBuildingLevels() },
   { id:'pq_craft_gear',     name:'Commission the smith', desc:'Forge a piece of gear at the Fletcher’s Forge', type:'gear_crafted', target:1, reward:70, coins:40, icon:'\u{2692}\u{FE0F}', go:'forge' },
+  { id:'pq_village_food',   name:'Feed and water your folk', desc:'Give a village both a food yard and a well', type:'village_provisioned', target:1, reward:90, coins:50, icon:'\u{1F9FA}', go:'village',
+    measure:() => villagesFedAndWatered() ? 1 : 0 },
   { id:'pq_build_crowbar',  name:'Build The Crowbar', desc:'Raise the Academy bird bar to grow Charm', type:'build_crowbar', target:1, reward:60, coins:30, icon:'\u{1F37B}', go:'academy',
     measure:() => isAcademyBuildingBuilt('crowbar') ? 1 : 0 },
+  { id:'pq_village_steward', name:'Appoint a Project Manager', desc:'Give a companion the village post', type:'village_role_filled', target:1, reward:80, coins:40, icon:'\u{1F4CB}', go:'village',
+    measure:() => Object.keys((gameState.birdRoles && gameState.birdRoles.villages) || {}).length },
   { id:'pq_species_10',     name:'Budding ornithologist', desc:'Discover 10 different bird species', type:'discover', target:10, reward:90, coins:60, icon:'\u{1F989}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
+  { id:'pq_village_tax',    name:'Collect your taxes', desc:'Empty a strongbox — provinces pay every 8 hours', type:'tribute_collected', target:1, reward:85, branches:20, icon:'\u{1F451}', go:'village',
+    measure:() => Number(gameState.player && gameState.player.tributeCollections) || 0 },
   { id:'pq_build_workshop', name:'Build the Nest Workshop', desc:'Raise the Nest Workshop to toughen your flock', type:'build_workshop', target:1, reward:70, coins:35, icon:'\u{1F6E0}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('workshop') ? 1 : 0 },
   { id:'pq_liberate_3',     name:'Kingdom of the free', desc:'Liberate 3 real villages from the evil Burbz', type:'town_liberated', target:3, reward:150, coins:100, branches:40, icon:'\u{1F451}', go:'map',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_merge_star',     name:'Earn a merge star', desc:'Grow a village to 40 folk and 75% happy', type:'merge_star', target:1, reward:120, coins:70, branches:30, icon:'\u{2B50}', go:'village',
+    measure:() => villageEconomies().filter(eco => eco.mergeStarSeen).length },
+  { id:'pq_found_town',     name:'Found a Town', desc:'Merge three starred villages into one Town', type:'town_founded', target:1, reward:200, coins:120, branches:50, icon:'\u{1F3D8}\u{FE0F}', go:'village',
+    measure:() => ((gameState.empire && gameState.empire.townCharters) || []).length },
 ];
 
 function activePlayerQuest() {
@@ -37973,7 +38023,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'arm-your-bird-v306-20260821';
+const BURBZ_BUILD = 'village-chain-v307-20260821';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
