@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "quiet-wand-whole-art-v304-20260821"
+CURRENT_BUILD = "make-a-friend-v305-20260821"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.

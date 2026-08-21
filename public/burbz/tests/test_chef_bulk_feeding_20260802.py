@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "quiet-wand-whole-art-v304-20260821"
+CURRENT_BUILD = "make-a-friend-v305-20260821"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 
 

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
+OWN_RELEASE_PIN = "make-a-friend-v305-20260821"
 
 
 def test_release_is_wired():

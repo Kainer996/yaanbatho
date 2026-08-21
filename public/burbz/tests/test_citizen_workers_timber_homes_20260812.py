@@ -15,7 +15,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "quiet-wand-whole-art-v304-20260821"
+CURRENT_BUILD = "make-a-friend-v305-20260821"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

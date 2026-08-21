@@ -25,7 +25,8 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
+RELEASE_PIN = "make-a-friend-v305-20260821"
+OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 
 def block(source: str, start_marker: str, end_marker: str) -> str:
@@ -140,3 +141,4 @@ def test_the_recruit_inspector_fits_the_painting_too():
 def test_release_stamp_reaches_runtime_and_service_worker():
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
     assert RELEASE_PIN in SW
+    assert OWN_RELEASE_PIN in SW  # lineage kept

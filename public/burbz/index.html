@@ -21142,6 +21142,7 @@ function preenBird(birdId) {
   }
   bird.bond = result.bond;
   if (bird.care) bird.care.happiness = clamp((bird.care.happiness || 80) + core.PREEN_HAPPINESS, 0, 100);
+  updateQuestProgress('bird_preened', 1);
   saveState();
   SFX.tap();
   vibrate(15);
@@ -37349,8 +37350,12 @@ const PLAYER_QUESTS = [
     measure:() => (gameState.flock || []).length },
   { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy', focusRoom:'kitchen',
     measure:() => countDiscoveredDiets() },
-  { id:'pq_species_5',      name:'Grow the Burbz book', desc:'Discover 5 different bird species with Scan', type:'discover', target:5, reward:60, coins:40, icon:'\u{1F4D6}', go:'scan',
-    measure:() => discoveredSpeciesSet().size },
+  // Five wild species is a long walk to ask for right after the first
+  // recruit, so this link stays indoors: meet the bird you just took in.
+  // The Burbz book still grows later, at ten species, once the player has
+  // been out in the world a while.
+  { id:'pq_preen',          name:'Make a friend', desc:'Preen a companion to grow the bond between you', type:'bird_preened', target:1, reward:50, coins:30, icon:'\u{1F49E}', go:'birdex',
+    measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.bond && Number(b.bond.preens)) || 0), 0) },
   { id:'pq_build_training', name:'Build the Training Hall', desc:'Raise the Training Hall at the Academy', type:'build_training', target:1, reward:50, coins:25, icon:'\u{1F3CB}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('training') ? 1 : 0 },
   { id:'pq_training_drill', name:'Run a training drill', desc:'Complete and claim a Training Hall drill', type:'training_claimed', target:1, reward:50, coins:20, icon:'\u{1F94A}', go:'academy',
@@ -37958,7 +37963,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'quiet-wand-whole-art-v304-20260821';
+const BURBZ_BUILD = 'make-a-friend-v305-20260821';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
