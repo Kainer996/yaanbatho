@@ -20,7 +20,7 @@ HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 LOOT_CORE = (BURBZ / "loot_crafting_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "village-chain-v307-20260821"
+RELEASE_PIN = "two-crews-v308-20260821"
 OWN_RELEASE_PIN = "arm-your-bird-v306-20260821"
 
 

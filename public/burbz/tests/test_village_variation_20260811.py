@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "village-chain-v307-20260821"
+CURRENT_BUILD = "two-crews-v308-20260821"
 
 
 def run_core(expression: str):
@@ -290,14 +290,18 @@ def test_town_districts_mirror_their_villages_ruin_state():
     assert "if (dRuin >= 2) {" in scene
     assert "if (dRuin === 2) {" in scene
     # A build rising in the village rises in its district.
-    assert "villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction), dState.construction)" in scene
+    # One scaffold per crew: a managed ward runs two projects, so the ward
+    # scene walks the list rather than drawing a single site.
+    assert "(dState.constructions || []).forEach(con => {" in scene
+    assert "villageMakeConstructionSite(dr, dpal, constructionProgress(con), con)" in scene
     # A wrecked district keeps no lamplit yard.
     assert "if (i < 8 && dRuin >= 1) {" in scene
     # Recovery keys the scene, so development rebuilds the square.
     key_fn = function_source(html, "townSceneKey")
     assert "villageDistrictState(v.seed)" in key_fn
     assert "st.ruinStage" in key_fn and "st.ruinsLeft" in key_fn
-    assert "st.construction ? '+b' : ''" in key_fn
+    # The key counts the projects, so starting a SECOND one rebuilds the scene.
+    assert "'+b' + (st.constructions || []).length" in key_fn
 
 
 def test_town_adopts_the_shared_builders_smokes_and_signs():

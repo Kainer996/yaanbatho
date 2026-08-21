@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "village-chain-v307-20260821"
+CURRENT_BUILD = "two-crews-v308-20260821"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 KNOWN_HABITATS = {"water", "wetland", "woodland", "heath", "park", "farmland",

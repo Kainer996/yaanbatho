@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "village-chain-v307-20260821"
+CURRENT_BUILD = "two-crews-v308-20260821"
 
 
 def run_node(source: str) -> dict:
@@ -136,7 +136,8 @@ def test_the_steward_role_copy_names_the_project_manager_job():
     # (grander civic titles — Lord Mayors, Councillors — come later).
     core = CORE.read_text(encoding="utf-8")
     assert "title:'Project Manager'" in core
-    assert "Every build here rises faster and costs a little less" in core
+    assert "Two builds can rise at once here." in core
+    assert "Every build is faster and costs a little less" in core
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +183,10 @@ def test_the_real_build_flow_charges_less_and_finishes_sooner_with_a_steward():
             "villageBuildingCost",
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
+            "villageConstructions",
+            "villageConstructionOf",
+            "villageBuildSlots",
+            "villageBuildSlotsFree",
             "empireBuildStructure",
         )
     )
@@ -231,13 +236,13 @@ const villageStewardProject = () => steward;
     probe = """
 const vacantCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.hut, 0, 1111);
 empireBuildStructure(1111, 'hut');
-const vacant = { cost: vacantCost, spent: 5000 - gameState.player.coins, construction: { ...rec.economy.construction } };
-delete rec.economy.construction;
+const vacant = { cost: vacantCost, spent: 5000 - gameState.player.coins, construction: { ...rec.economy.constructions[0] } };
+rec.economy.constructions.length = 0;
 gameState.player.coins = 5000; gameState.player.branches = 5000; gameState.player.stone = 5000;
 steward = { staffed:true, bird:{ name:'Pip the Robin' }, buildFactor:0.70, costFactor:0.85, speedPct:30, discountPct:15 };
 const managedCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.hut, 0, 1111);
 empireBuildStructure(1111, 'hut');
-const managed = { cost: managedCost, spent: 5000 - gameState.player.coins, construction: { ...rec.economy.construction }, toast: toasts.at(-1) };
+const managed = { cost: managedCost, spent: 5000 - gameState.player.coins, construction: { ...rec.economy.constructions[0] }, toast: toasts.at(-1) };
 console.log(JSON.stringify({ vacant, managed }));
 """
     out = run_node(buildings + "\n" + functions + "\n" + stubs + probe)

@@ -140,8 +140,8 @@
       // later. The id stays 'steward' so old saves keep their appointee.
       id:'steward', title:'Project Manager', icon:'📋', scope:'village', key:null,
       stats:{ int:0.5, cha:0.5 }, civic:true,
-      effect:{ id:'village_yield', label:'Project management', copy:'Every build here rises faster and costs a little less — and the village pays more taxes, timber and goods.' },
-      copy:'One bird runs every project in the village: it plans the scaffolds, sweet-talks the masons, haggles the timber yard and keeps the tax ledger straight. Wit and charm do the work, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it.'
+      effect:{ id:'village_yield', label:'Project management', copy:'Two builds can rise at once here. Every build is faster and costs a little less — and the village pays more taxes, timber and goods.' },
+      copy:'One bird runs every project in the village: it plans the scaffolds, sweet-talks the masons, haggles the timber yard and keeps the tax ledger straight. A foreman on site means a second crew can work in parallel, so two builds rise at once. Wit and charm do the work, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it.'
     },
     {
       id:'region_warden', title:'Warden of the Region', icon:'👑', scope:'region', key:null,

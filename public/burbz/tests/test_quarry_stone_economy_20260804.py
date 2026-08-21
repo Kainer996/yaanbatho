@@ -38,6 +38,10 @@ def economy_harness(driver: str) -> str:
             "villageBuildingCost",
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
+            "villageConstructions",
+            "villageConstructionOf",
+            "villageBuildSlots",
+            "villageBuildSlotsFree",
             "empireBuildStructure",
         )
     )
@@ -128,10 +132,10 @@ def test_insufficient_stone_refuses_atomically_and_sufficient_stone_spends_exact
     out = run_harness("""
 const before = { ...gameState.player };
 empireBuildStructure(1111, 'farm', {townMode:true});
-const refused = { player: { ...gameState.player }, construction: rec.economy.construction || null, toast: toasts.at(-1) };
+const refused = { player: { ...gameState.player }, construction: rec.economy.constructions[0] || null, toast: toasts.at(-1) };
 gameState.player.stone = 20;
 empireBuildStructure(1111, 'farm', {townMode:true});
-console.log(JSON.stringify({ before, refused, accepted: { player: gameState.player, construction: rec.economy.construction } }));
+console.log(JSON.stringify({ before, refused, accepted: { player: gameState.player, construction: rec.economy.constructions[0] } }));
 """)
     assert out["refused"]["player"] == out["before"]
     assert out["refused"]["construction"] is None
@@ -146,7 +150,7 @@ gameState.player.stone = 20;
 const before = { ...gameState.player };
 failDurableSave = true;
 empireBuildStructure(1111, 'farm', {townMode:true});
-console.log(JSON.stringify({ before, after: gameState.player, construction: rec.economy.construction || null, toast: toasts.at(-1) }));
+console.log(JSON.stringify({ before, after: gameState.player, construction: rec.economy.constructions[0] || null, toast: toasts.at(-1) }));
 """)
     assert out["after"] == out["before"]
     assert out["construction"] is None
@@ -157,13 +161,13 @@ def test_first_quarry_has_a_deliberate_bootstrap_waiver_but_its_upgrade_costs_st
     out = run_harness("""
 const firstCost = villageBuildingCost(EMPIRE_BUILDING_INDEX.quarry, 0);
 empireBuildStructure(1111, 'quarry', {townMode:true});
-const first = { cost: firstCost, player: { ...gameState.player }, id: rec.economy.construction?.id || null };
-delete rec.economy.construction;
+const first = { cost: firstCost, player: { ...gameState.player }, id: rec.economy.constructions[0]?.id || null };
+rec.economy.constructions.length = 0;
 rec.economy.buildings.quarry = 1;
 gameState.player.stone = 11;
 const beforeUpgrade = { ...gameState.player };
 empireBuildStructure(1111, 'quarry', {townMode:true});
-console.log(JSON.stringify({ first, upgradeCost: villageBuildingCost(EMPIRE_BUILDING_INDEX.quarry, 1), beforeUpgrade, afterUpgrade: gameState.player, construction: rec.economy.construction || null }));
+console.log(JSON.stringify({ first, upgradeCost: villageBuildingCost(EMPIRE_BUILDING_INDEX.quarry, 1), beforeUpgrade, afterUpgrade: gameState.player, construction: rec.economy.constructions[0] || null }));
 """)
     assert out["first"]["cost"] == {"coins": 70, "branches": 20, "stone": 0}
     assert out["first"]["id"] == "quarry"
