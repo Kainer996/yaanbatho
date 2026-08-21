@@ -15,7 +15,7 @@ This release (empire-nav-tabs-v275-20260817) pins:
   accordion-style — only ever one list on screen),
 - every tab always stands: an empty tier explains how to fill it instead
   of disappearing,
-- the ledger fluff (locator strip, ROYAL LEDGER head, stat chips, tribute
+- the reference bits (locator strip, ledger stats, tribute
   button, help scroll) renders AFTER the tabs, at the bottom,
 - the old YOUR REALM dropdown and its sub-drawer helper are gone.
 """
@@ -53,16 +53,17 @@ def test_three_nav_tabs_stand_in_ladder_order():
     assert '<div class="empire-nav-tabs">' in block
 
 
-def test_the_tabs_render_first_and_the_ledger_fluff_last():
+def test_the_tabs_render_first_and_the_reference_bits_wait_at_the_bottom():
+    # Since empire-declutter (2026-08-20) the ledger lives in the 👑 pill's
+    # pop-down, and the locator + guide fold into footer pop-downs at the
+    # very bottom. In the panel itself: tabs, then the tax chest, then footer.
     body = ledger(HTML.read_text(encoding="utf-8"))
     start = body.index("panel.innerHTML = navTabsHtml")
     block = body[start:body.index("panel.querySelectorAll", start)]
-    # Navigation first; locator, ledger head, stats, tribute and help follow.
-    assert block.index("navTabsHtml") < block.index("locatorHtml")
-    assert block.index("locatorHtml") < block.index("ROYAL LEDGER")
-    assert block.index("ROYAL LEDGER") < block.index("empire-stats-row")
-    assert block.index("empire-stats-row") < block.index("empire-tribute-btn")
-    assert block.index("empire-tribute-btn") < block.index("helpHtml")
+    assert block.index("navTabsHtml") < block.index("empire-tribute-btn")
+    assert block.index("empire-tribute-btn") < block.index("footerHtml")
+    assert "ROYAL LEDGER" not in block
+    assert "empire-stats-row" not in block
 
 
 def test_the_tabs_are_exclusive_one_open_folds_the_others():

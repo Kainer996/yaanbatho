@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-OWN_RELEASE_PIN = "training-your-way-v288-20260819"
+OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]

@@ -75,8 +75,8 @@ def test_release_is_wired():
 
 def test_bottom_nav_has_an_empire_tab_the_badge_walker_reaches():
     html = html_text()
-    nav = html[html.index('<nav class="bottom-nav"'):html.index("</nav>")]
-    assert 'data-game-route data-screen="village"' in nav  # the Empire tab
+    dock = html[html.index('<div class="bottom-dock"'):html.index("</nav>")] + html[html.index('bottom-dock-anchor'):html.index('tutorialNavPointer')]
+    assert 'data-game-route data-screen="village"' in dock  # the Empire tab, islanded beside Scan
     # The shared badge core walks every [data-game-route][data-screen] item
     # and knows the village screen, so the Empire tab can carry a count.
     assert "'village'" in BADGE_CORE.read_text(encoding="utf-8")

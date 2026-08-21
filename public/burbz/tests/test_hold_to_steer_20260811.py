@@ -103,7 +103,11 @@ def test_every_3d_stage_is_wired_through_the_gate():
 def test_the_copy_teaches_the_hold_and_town_taps_open_management():
     for hint in [
         "Hold, then drag to look around · pinch to zoom · tap a building",
-        "Hold, then drag to look around; pinch to zoom, two-finger drag to wander — tap a building to step inside.",
+        # The governed-village lecture shrank to one line in the empire
+        # declutter (2026-08-20); the gesture teaching lives on in the
+        # unliberated variant below.
+        "Tap a building to step inside.",
+        "Hold, then drag to look around; pinch to zoom, two-finger drag to wander — then free the village",
         "Hold and drag to look around; pinch to zoom. Tap a building to run it, or anywhere else for the town ledger.",
         "🌳 The Academy in 3D — hold, then drag to look around.",
     ]:

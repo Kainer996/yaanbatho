@@ -82,8 +82,9 @@ def test_app_wakes_old_saves_and_never_blocks_or_hides_sleep_ui():
     assert "academySleepStatusHTML" in panel
     grid = function_source(html, "roomBirdGridHTML")
     assert "Sleeping" not in grid and "room-bird-grid-tired" not in grid
-    # The Roost sells rest, not sleep.
-    assert "Rest: restores HP" in html
+    # The Roost retired (2026-08-20): the tree itself is home, and the
+    # Aviary Gardens carry the gentle rest instead.
+    assert "if (room === 'outdoors') b.hp = clamp(" in html
     assert "Sleep: restores Tiredness and HP" not in html
 
 

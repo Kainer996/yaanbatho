@@ -95,7 +95,7 @@ def test_burbz_discovers_birds_it_never_captures_them():
     assert "Discover real birds" in steps
     assert "Every discovery is added to your Birdex." in steps
     assert "A discovered bird is not yours yet." in steps
-    assert "The Barracks recruits discovered birds" in steps
+    assert "the recruitment office is open, and discovered birds can now join your flock" in steps
     assert "desc:'Use Scan to discover any real bird'" in quests
 
 

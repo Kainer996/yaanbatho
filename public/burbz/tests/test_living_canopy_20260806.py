@@ -149,7 +149,7 @@ def test_default_room_positions_sit_on_the_new_boughs():
     # The six painted shelves of the 2026-08-06 tree (fractions read off the
     # painting). A change here is a design decision, not drift.
     expected = {
-        "dorm": [22, 68], "tavern": [80, 71], "training": [75, 58],
+        "tavern": [80, 71], "training": [75, 58],
         "hospital": [25, 52], "crowbar": [75, 41], "kitchen": [50, 55],
         "workshop": [29, 30], "library": [74, 26], "nursery": [35, 16],
         "observatory": [66, 12], "quest_roost": [49, 71], "outdoors": [50, 92],
@@ -166,7 +166,7 @@ def test_release_is_pinned_and_shipped():
     # academy_treehouse_core moved with v258, then again with v287
     # (training statBonus); the alive core still ships under this release.
     for core, pin in (("academy_alive_core.js", RELEASE_PIN),
-                      ("academy_treehouse_core.js", "training-your-way-v288-20260819")):
+                      ("academy_treehouse_core.js", "roost-retired-v302-20260820")):
         assert f"{core}?v={pin}" in HTML, core
         assert f"./{core}?v={pin}" in SW, core
     for name in BRANCH_SPRITES:

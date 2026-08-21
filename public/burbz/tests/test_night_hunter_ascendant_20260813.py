@@ -162,7 +162,7 @@ def test_release_is_query_busted_everywhere():
     # with mercy-streak-attack-preview-v287, academy_treehouse_core with
     # training-your-way-v288.
     for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
-                            ("academy_treehouse_core.js", "training-your-way-v288-20260819"),
+                            ("academy_treehouse_core.js", "roost-retired-v302-20260820"),
                             ("battle_core.js", "mercy-streak-attack-preview-v287-20260819")):
         pin = f"{core}?v={pin_build}"
         assert pin in html, core

@@ -270,8 +270,10 @@ def test_bottom_nav_carries_a_forge_tab():
     nav = html[html.index('id="bottomNav"'):html.index("</nav>", html.index('id="bottomNav"'))]
     assert 'data-game-route data-screen="forge" aria-label="Blacksmith\'s forge"' in nav
     assert '<div class="nav-label">Forge</div>' in nav
-    # Between Battle and Academy, so the Scan orb keeps its place.
-    assert nav.index('data-screen="battle"') < nav.index('data-screen="forge"') < nav.index('data-screen="academy"')
+    # Both live in the fixed dock; Battle rides the adventure row beside the
+    # island, Forge the management deck above (fixed-dock-v303).
+    assert nav.index('data-screen="forge"') < nav.index('data-screen="battle"')
+    assert 'data-screen="academy"' in html[html.index('bottom-dock-anchor'):]
     # switchScreen already renders the forge on entry — the tab rides that.
     assert "if (name === 'forge') renderForge();" in html
 

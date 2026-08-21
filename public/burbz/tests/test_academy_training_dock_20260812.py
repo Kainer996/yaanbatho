@@ -22,22 +22,25 @@ def test_the_academy_title_is_just_academy():
     assert "BURB ACADEMY" not in HTML.split('academy-grad-kicker')[1].split('</div>')[0]
 
 
-def test_the_quick_dock_is_now_the_single_scrollable_bottom_nav():
+def test_the_quick_dock_is_now_the_single_fixed_bottom_nav():
+    # fixed-dock-v303: nothing scrolls — two fixed decks hold every button.
     dock = HTML.split(".bottom-nav {")[1].split("}")[0]
-    assert "overflow-x: auto" in dock
-    assert "scroll-snap-type: x proximity" in dock
+    assert "overflow" not in dock
+    assert "flex-direction: column" in dock
     assert 'id="gameSideActions"' not in HTML
     assert ".game-side-actions" not in HTML
 
 
-def test_kitchen_quests_scan_stores_and_training_share_the_nav_in_order():
+def test_kitchen_quests_scan_stores_and_training_share_the_nav():
+    # fixed-dock-v303 re-dealt the decks: management up top, adventure below.
     nav = HTML.split('id="bottomNav"')[1].split("</nav>")[0]
-    kitchen = nav.index('data-quick-destination="kitchen"')
-    quests = nav.index('data-screen="quests"')
-    scan = nav.index('data-screen="scan"')
-    stores = nav.index('data-screen="inventory"')
-    training = nav.index('data-quick-destination="training"')
-    assert kitchen < quests < scan < stores < training
+    for marker in ('data-quick-destination="kitchen"', 'data-screen="quests"',
+                   'data-screen="inventory"', 'data-quick-destination="training"'):
+        assert marker in nav, marker
+    # Scan left the strip for the anchored island (2026-08-20) — it stands
+    # solid at the dock's centre with Empire and Academy.
+    island = HTML.rsplit('id="bottomDockAnchor"', 1)[1]
+    assert 'data-screen="scan"' in island
 
 
 def test_battle_and_forge_are_destinations_in_the_same_bottom_nav():

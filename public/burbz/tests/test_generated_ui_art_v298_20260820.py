@@ -30,20 +30,25 @@ RELEASE = "generated-ui-art-v298-20260820"
 CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
 
+# Since the anchored dock (2026-08-20) the thirteen destinations split:
+# ten scroll on the strip, and Empire · Scan · Academy stand solid in a
+# centred island. nav_markup() returns strip + island in that order.
 EXPECTED_NAV_LABELS = (
-    "Map",
-    "Empire",
-    "Burbz",
+    # fixed-dock-v303: six management rooms on the top deck, the adventure
+    # row below, then the anchored island — all thirteen fixed on screen.
     "Kitchen",
-    "Quests",
-    "Scan",
     "Stores",
     "Training",
     "Hospital",
-    "Battle",
     "Forge",
-    "Academy",
     "Ranks",
+    "Map",
+    "Quests",
+    "Battle",
+    "Burbz",
+    "Empire",
+    "Scan",
+    "Academy",
 )
 
 NEW_NAV_ART = (
@@ -64,9 +69,11 @@ INTERIOR_ART = {
 
 
 def nav_markup() -> str:
-    match = re.search(r'<nav\b[^>]*\bid="bottomNav"[^>]*>(.*?)</nav>', HTML, re.DOTALL)
-    assert match, "#bottomNav markup is missing"
-    return match.group(1)
+    nav = re.search(r'<nav\b[^>]*\bid="bottomNav"[^>]*>(.*?)</nav>', HTML, re.DOTALL)
+    assert nav, "#bottomNav markup is missing"
+    anchor = re.search(r'<div class="bottom-dock-anchor"[^>]*>(.*?)</div>\n  </div>', HTML, re.DOTALL)
+    assert anchor, "#bottomDockAnchor markup is missing"
+    return nav.group(1) + anchor.group(1)
 
 
 def css_rule(selector: str) -> str:
@@ -110,7 +117,7 @@ def assert_transparent_webp(path: Path, size=(256, 256)) -> None:
         assert all(alpha.getpixel(point) == 0 for point in ((0, 0), (255, 0), (0, 255), (255, 255))), path
 
 
-def test_bottom_nav_is_one_thirteen_button_image_led_dock_in_product_order():
+def test_dock_is_thirteen_image_led_buttons_strip_then_anchored_island():
     nav = nav_markup()
     buttons = re.findall(r"<button\b.*?</button>", nav, re.DOTALL)
     labels = [
@@ -127,20 +134,21 @@ def test_bottom_nav_is_one_thirteen_button_image_led_dock_in_product_order():
     assert ".game-side-action" not in HTML
 
 
-def test_bottom_nav_scrolls_horizontally_with_full_touch_targets():
+def test_bottom_nav_is_fixed_with_full_touch_targets():
     dock = css_rule(".bottom-nav")
     item = css_rule(".nav-item")
-    assert re.search(r"overflow-x:\s*auto", dock)
-    assert re.search(r"overflow-y:\s*hidden", dock)
-    assert re.search(r"scroll-snap-type:\s*x", dock)
-    assert re.search(r"touch-action:\s*pan-x", dock)
+    # fixed-dock-v303: the decks never scroll.
+    assert "overflow" not in dock
+    assert re.search(r"flex-direction:\s*column", dock)
 
     basis = re.search(r"flex:\s*0\s+0\s+(\d+)px", item)
     minimum_width = re.search(r"min-width:\s*(\d+)px", item)
-    minimum_height = re.search(r"min-height:\s*(\d+)px", item)
     assert basis and int(basis.group(1)) >= 44
     assert minimum_width and int(minimum_width.group(1)) >= 44
-    assert minimum_height and int(minimum_height.group(1)) >= 44
+    # Item height follows the deck row height, itself a full touch target.
+    assert "min-height: var(--dock-row)" in item
+    row = re.search(r"--dock-row:\s*(\d+)px", HTML.read_text(encoding="utf-8") if hasattr(HTML, "read_text") else HTML)
+    assert row and int(row.group(1)) >= 44
 
 
 def test_all_eight_new_nav_icons_are_transparent_generated_webps():

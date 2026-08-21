@@ -36,7 +36,7 @@ RELEASE_PIN = "living-canopy-v236-20260806"
 CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 
 PLACEABLE_ROOMS = (
-    "tavern", "dorm", "quest_roost", "crowbar", "training", "kitchen",
+    "tavern", "quest_roost", "crowbar", "training", "kitchen",
     "hospital", "nursery", "workshop", "library", "observatory",
 )
 

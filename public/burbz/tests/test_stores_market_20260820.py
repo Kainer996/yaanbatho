@@ -188,7 +188,7 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert RELEASE in cache_line
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
-    # Both edited cores ship under the new tag everywhere they are loaded.
-    for core in ("bird_roles_core.js", "loot_crafting_core.js"):
-        assert f"'./{core}?v={RELEASE}'" in sw, core
-        assert f'src="{core}?v={RELEASE}"' in html, core
+    # Each edited core ships under the tag of the release that last touched it.
+    for core, pin in (("bird_roles_core.js", ROLES_CORE_PIN), ("loot_crafting_core.js", RELEASE)):
+        assert f"'./{core}?v={pin}'" in sw, core
+        assert f'src="{core}?v={pin}"' in html, core

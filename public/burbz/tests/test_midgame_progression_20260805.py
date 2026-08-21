@@ -25,7 +25,6 @@ CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 # should be made here on purpose, not slip through by accident.
 ACADEMY_UNLOCKS = {
     "outdoors": 1,
-    "dorm": 1,
     "tavern": 1,
     "training": 2,
     "quest_roost": 3,
