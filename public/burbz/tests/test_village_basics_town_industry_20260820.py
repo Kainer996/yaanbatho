@@ -23,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "village-chain-v307-20260821"
-CURRENT_BUILD = "village-chain-v307-20260821"
+RELEASE = "two-crews-v308-20260821"
+CURRENT_BUILD = "two-crews-v308-20260821"
 
 TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market"}
 VILLAGE_TIER = {"cabin", "hut", "well", "cottages", "tavern", "storehouse"}
@@ -126,6 +126,10 @@ def build_harness(driver: str) -> str:
             "villageBuildingCost",
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
+            "villageConstructions",
+            "villageConstructionOf",
+            "villageBuildSlots",
+            "villageBuildSlotsFree",
             "empireBuildStructure",
         )
     )
@@ -178,20 +182,20 @@ let villageActive = null, villageBuiltSeed = null, currentScreen = 'empire';
 def test_a_lone_village_builds_the_hut_but_not_the_quarry_until_it_merges():
     out = run_node(build_harness("""
 empireBuildStructure(1111, 'quarry');                       // refused: town work
-const refusedQuarry = { construction: rec.economy.construction || null, toast: toasts.at(-1) };
+const refusedQuarry = { construction: rec.economy.constructions[0] || null, toast: toasts.at(-1) };
 empireBuildStructure(1111, 'hut');                          // the village way to eat
-const hut = { construction: { ...rec.economy.construction }, coins: gameState.player.coins };
-delete rec.economy.construction;
+const hut = { construction: { ...rec.economy.constructions[0] }, coins: gameState.player.coins };
+rec.economy.constructions.length = 0;
 // A grandfathered farm from an old save keeps its right to upgrade...
 rec.economy.buildings.farm = 1;
 empireBuildStructure(1111, 'farm');
-const grandfathered = { id: rec.economy.construction?.id || null, toLevel: rec.economy.construction?.toLevel || null };
-delete rec.economy.construction;
+const grandfathered = { id: rec.economy.constructions[0]?.id || null, toLevel: rec.economy.constructions[0]?.toLevel || null };
+rec.economy.constructions.length = 0;
 // ...and once the village sits inside a Town, new industry opens (townMode
 // builds land on the ward without delegating).
 merged = { id: 'town-1', tier: 'town', role: 'heart', heartSeed: 1111 };
 empireBuildStructure(1111, 'quarry', { townMode: true });
-const townQuarry = rec.economy.construction?.id || null;
+const townQuarry = rec.economy.constructions[0]?.id || null;
 console.log(JSON.stringify({ refusedQuarry, hut, grandfathered, townQuarry }));
 """))
     assert out["refusedQuarry"]["construction"] is None

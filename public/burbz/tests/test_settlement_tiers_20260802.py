@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "village-chain-v307-20260821"
+CURRENT_BUILD = "two-crews-v308-20260821"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -182,6 +182,10 @@ def build_harness(villages_js: str, probe_js: str) -> str:
             "villageBuildingCost",
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
+            "villageConstructions",
+            "villageConstructionOf",
+            "villageBuildSlots",
+            "villageBuildSlotsFree",
             "empireBuildStructure",
         )
     )
@@ -247,7 +251,7 @@ const snapOf = seed => villageEconomySnapshot(empire.villages[String(seed)]);
 // Town Hall delegates to this ward-compatible primitive with townMode set;
 // direct public calls are redirected to townBuildNetwork instead.
 empireBuildStructure(PROBE_SEED, 'farm', {townMode:true, townName:'Test Town'});
-const built = empire.villages[String(PROBE_SEED)].economy.construction;
+const built = empire.villages[String(PROBE_SEED)].economy.constructions[0];
 console.log(JSON.stringify({
   probe: { taxes: snapOf(PROBE_SEED).taxes, merged: snapOf(PROBE_SEED).merged,
            tier: snapOf(PROBE_SEED).settlement ? snapOf(PROBE_SEED).settlement.tier : null,
@@ -332,7 +336,7 @@ def test_merged_guilds_shorten_construction_in_the_real_build_flow():
     # The Town screen owns builder-slot admission, while the paid timer remains
     # on its hidden ward so old saves and completion logic stay compatible.
     assert "const eco = ensureVillageEconomy(rec);" in build
-    assert "eco.construction = { id: building.id" in build
+    assert "eco.constructions.push(started)" in build
 
 
 def test_liberation_never_merges_but_the_signed_merge_announces_itself():

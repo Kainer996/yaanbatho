@@ -23612,9 +23612,29 @@ function formatBuildDuration(ms) {
   if (m < 60) return m + 'm';
   return Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '');
 }
-function villageConstructionFor(rec) {
+// A village yard runs one project at a time. Appoint a Project Manager and it
+// runs two: the post is a foreman, so a second crew can work in parallel. The
+// slots only gate STARTING a build — a project already under way always
+// finishes, even if the post falls vacant beneath it.
+function villageConstructions(rec) {
   const eco = ensureVillageEconomy(rec);
-  return eco && eco.construction ? eco.construction : null;
+  return eco && Array.isArray(eco.constructions) ? eco.constructions : [];
+}
+// The one project single-project readers still want: the 3D ward scene, the
+// town project card, the old save shape.
+function villageConstructionFor(rec) {
+  return villageConstructions(rec)[0] || null;
+}
+function villageConstructionOf(rec, buildingId) {
+  return villageConstructions(rec).find(con => con && con.id === buildingId) || null;
+}
+function villageBuildSlots(rec) {
+  // 2 with a Project Manager, 1 without. Written out rather than kept in a
+  // constant because several suites lift this function into a bare context.
+  return villageStewardProject(rec && rec.seed).staffed ? 2 : 1;
+}
+function villageBuildSlotsFree(rec) {
+  return Math.max(0, villageBuildSlots(rec) - villageConstructions(rec).length);
 }
 function constructionProgress(con, now) {
   const t = Number(now) || Date.now();
@@ -23638,51 +23658,52 @@ function empireCompleteConstructions(now) {
   let levelledUp = false;
   empireVillages().forEach(rec => {
     const eco = ensureVillageEconomy(rec);
-    const con = eco && eco.construction;
-    if (!con) return;
-    const building = EMPIRE_BUILDING_INDEX[con.id];
-    if (!building) { delete eco.construction; return; }
-    if (t < Number(con.endMs)) return;
-    if (!snapshot) snapshot = snapshotGameState();
-    const isFirstRealmQuarry = building.id === 'quarry' && (eco.buildings.quarry || 0) === 0 &&
-      !empireVillages().some(other => other !== rec && villageBuildingLevel(other, 'quarry') > 0);
-    const level = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(con.toLevel) || ((eco.buildings[building.id] || 0) + 1)));
-    eco.buildings[building.id] = level;
-    delete eco.construction;
-    completed = true;
-    levelledUp = applyPlayerXpState(12) || levelledUp;
-    // The first quarry still bootstraps the stone economy: its opening cut is
-    // enough for the first Cottage Row. After that it digs only while a
-    // villager works it — homes and residents come first.
-    let firstCutStone = 0;
-    if (isFirstRealmQuarry && level === 1) {
-      firstCutStone = QUARRY_FIRST_CUT_STONE;
-      addStone(QUARRY_FIRST_CUT_STONE);
-    }
-    // New homes draw new residents: finishing a shelter building brings the
-    // first families straight in (half its fresh capacity), and the rest of
-    // the rooms fill up over the 8-hour tax cycles as the town thrives.
-    let movedIn = 0;
-    if (building.need === 'shelter') {
-      const housingCap = villageNeedCapacity(rec, 'shelter');
-      movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
-      eco.population += movedIn;
-      if (movedIn) maybeAwardMergeStar(rec);
-    }
-    const doneTier = villageBuildingTier(building, level);
-    const mergedLink = empireSettlementOfSeed(rec.seed);
-    const publicSettlement = mergedLink ? canonicalEmpireSettlement(empireSettlementById(mergedLink.id)) : null;
-    const publicName = publicSettlement ? townDisplayName(publicSettlement) : rec.name;
-    const publicSeed = publicSettlement ? publicSettlement.heartSeed : (rec.seed >>> 0);
-    notices.push({ seed: publicSeed, text: '🏗️ ' + doneTier.icon + ' ' + doneTier.name + (level <= 1 ? ' finished' : (building.tiers ? ' rebuilt' : ' raised to level ' + level)) + ' in ' + publicName + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
-    // Queued inside the same commit as the build itself, so a failed save
-    // rolls the corner card back along with the finished building.
-    queueCompletionNotice({
-      kind: 'empire-building',
-      icon: doneTier.icon,
-      title: doneTier.name + (level > 1 && !building.tiers ? ' · Lv ' + level : ''),
-      sub: publicName + ' — tap to manage',
-      target: { seed: publicSeed }
+    // Copy first: finished projects are lifted out of the live list as we go.
+    villageConstructions(rec).slice().forEach(con => {
+      const building = EMPIRE_BUILDING_INDEX[con.id];
+      if (!building) { eco.constructions = eco.constructions.filter(x => x !== con); return; }
+      if (t < Number(con.endMs)) return;
+      if (!snapshot) snapshot = snapshotGameState();
+      const isFirstRealmQuarry = building.id === 'quarry' && (eco.buildings.quarry || 0) === 0 &&
+        !empireVillages().some(other => other !== rec && villageBuildingLevel(other, 'quarry') > 0);
+      const level = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(con.toLevel) || ((eco.buildings[building.id] || 0) + 1)));
+      eco.buildings[building.id] = level;
+      eco.constructions = eco.constructions.filter(x => x !== con);
+      completed = true;
+      levelledUp = applyPlayerXpState(12) || levelledUp;
+      // The first quarry still bootstraps the stone economy: its opening cut is
+      // enough for the first Cottage Row. After that it digs only while a
+      // villager works it — homes and residents come first.
+      let firstCutStone = 0;
+      if (isFirstRealmQuarry && level === 1) {
+        firstCutStone = QUARRY_FIRST_CUT_STONE;
+        addStone(QUARRY_FIRST_CUT_STONE);
+      }
+      // New homes draw new residents: finishing a shelter building brings the
+      // first families straight in (half its fresh capacity), and the rest of
+      // the rooms fill up over the 8-hour tax cycles as the town thrives.
+      let movedIn = 0;
+      if (building.need === 'shelter') {
+        const housingCap = villageNeedCapacity(rec, 'shelter');
+        movedIn = Math.max(0, Math.min(housingCap, eco.population + Math.ceil((building.perLevel || 0) / 2)) - eco.population);
+        eco.population += movedIn;
+        if (movedIn) maybeAwardMergeStar(rec);
+      }
+      const doneTier = villageBuildingTier(building, level);
+      const mergedLink = empireSettlementOfSeed(rec.seed);
+      const publicSettlement = mergedLink ? canonicalEmpireSettlement(empireSettlementById(mergedLink.id)) : null;
+      const publicName = publicSettlement ? townDisplayName(publicSettlement) : rec.name;
+      const publicSeed = publicSettlement ? publicSettlement.heartSeed : (rec.seed >>> 0);
+      notices.push({ seed: publicSeed, text: '🏗️ ' + doneTier.icon + ' ' + doneTier.name + (level <= 1 ? ' finished' : (building.tiers ? ' rebuilt' : ' raised to level ' + level)) + ' in ' + publicName + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Cottage Row.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
+      // Queued inside the same commit as the build itself, so a failed save
+      // rolls the corner card back along with the finished building.
+      queueCompletionNotice({
+        kind: 'empire-building',
+        icon: doneTier.icon,
+        title: doneTier.name + (level > 1 && !building.tiers ? ' · Lv ' + level : ''),
+        sub: publicName + ' — tap to manage',
+        target: { seed: publicSeed }
+    });
     });
   });
   if (!completed) return false;
@@ -23760,11 +23781,20 @@ function ensureVillageEconomy(rec) {
     reward: Math.max(1, Math.min(20, Math.floor(Number(ru && ru.reward) || 4))),
     cleared: !!(ru && ru.cleared)
   }));
-  if (eco.construction) {
-    const con = eco.construction, b = EMPIRE_BUILDING_INDEX[con.id];
-    if (!b || !Number.isFinite(Number(con.startMs)) || !Number.isFinite(Number(con.endMs)) || Number(con.endMs) <= Number(con.startMs)) delete eco.construction;
-    else con.toLevel = Math.max(1, Math.min(b.maxLevel, Math.floor(Number(con.toLevel)) || ((eco.buildings[b.id] || 0) + 1)));
-  }
+  // Old saves carry a single `construction`; it becomes the first of a list.
+  if (eco.construction && !Array.isArray(eco.constructions)) eco.constructions = [eco.construction];
+  delete eco.construction;
+  if (!Array.isArray(eco.constructions)) eco.constructions = [];
+  const seenBuildIds = new Set();
+  eco.constructions = eco.constructions.filter(con => {
+    const b = con && EMPIRE_BUILDING_INDEX[con.id];
+    if (!b || seenBuildIds.has(con.id)) return false;
+    if (!Number.isFinite(Number(con.startMs)) || !Number.isFinite(Number(con.endMs))) return false;
+    if (Number(con.endMs) <= Number(con.startMs)) return false;
+    con.toLevel = Math.max(1, Math.min(b.maxLevel, Math.floor(Number(con.toLevel)) || ((eco.buildings[b.id] || 0) + 1)));
+    seenBuildIds.add(con.id);
+    return true;
+  }).slice(0, 2); // hard cap: the most crews any village can ever field
   if (!Number.isFinite(Number(eco.population)) || Number(eco.population) < 0) eco.population = VILLAGE_BASE_POPULATION;
   eco.population = Math.max(0, Math.min(VILLAGE_MAX_POPULATION, Math.floor(Number(eco.population))));
   // The granary and the cistern. A village meeting this code for the first
@@ -24007,7 +24037,7 @@ function simulateAllVillageEconomies() {
 function empireHasQuarryInvestment() {
   return empireVillages().some(v => {
     const eco = ensureVillageEconomy(v);
-    return villageBuildingLevel(v, 'quarry') > 0 || !!(eco.construction && eco.construction.id === 'quarry');
+    return villageBuildingLevel(v, 'quarry') > 0 || !!villageConstructionOf(v, 'quarry');
   });
 }
 // Yaan's settlement law (v298): a lone village raises only the basics; the
@@ -24060,9 +24090,20 @@ function empireBuildStructure(seed, buildingId, options) {
   if (mergedSettlement && !opts.townMode) { townBuildNetwork(mergedSettlement.id, buildingId); return; }
   const publicName = opts.townName || (mergedSettlement ? townDisplayName(mergedSettlement) : rec.name);
   const eco = ensureVillageEconomy(rec);
-  if (eco.construction) {
-    const busy = EMPIRE_BUILDING_INDEX[eco.construction.id];
-    showToast('🏗️ ' + publicName + '’s builders are still raising the ' + (busy ? busy.name : 'last project') + '.');
+  // One crew per slot. A vacant post means one project at a time; a Project
+  // Manager foremans a second crew, so two rise side by side.
+  const alreadyRising = villageConstructionOf(rec, building.id);
+  if (alreadyRising) {
+    showToast('🏗️ ' + building.icon + ' ' + building.name + ' is already rising in ' + publicName + '.');
+    return;
+  }
+  if (villageBuildSlotsFree(rec) <= 0) {
+    const busyNames = villageConstructions(rec)
+      .map(con => (EMPIRE_BUILDING_INDEX[con.id] || {}).name).filter(Boolean);
+    const busyText = busyNames.length ? busyNames.join(' and ') : 'the last project';
+    const managed = villageStewardProject(rec.seed).staffed;
+    showToast('🏗️ ' + publicName + '’s builders are still raising the ' + busyText + '.' +
+      (managed ? '' : ' 📋 Appoint a Project Manager here and two builds can rise at once.'));
     return;
   }
   const level = eco.buildings[building.id] || 0;
@@ -24092,7 +24133,8 @@ function empireBuildStructure(seed, buildingId, options) {
   const guildFactor = settlementBuildFactorForSeed(rec.seed);
   const project = villageStewardProject(rec.seed);
   const buildMs = villageBuildDurationMs(rec.seed, building, level);
-  eco.construction = { id: building.id, toLevel: level + 1, startMs: now, endMs: now + buildMs };
+  const started = { id: building.id, toLevel: level + 1, startMs: now, endMs: now + buildMs };
+  eco.constructions.push(started);
   try {
     durableSaveState({ throwOnFailure:true });
   } catch (error) {
@@ -24112,7 +24154,7 @@ function empireBuildStructure(seed, buildingId, options) {
   const sceneKind = mergedSettlement || opts.townMode || (typeof currentScreen !== 'undefined' && currentScreen === 'town') ? 'town' : 'village';
   if (sceneKind === 'town') renderTownScreen(); else renderVillage();
   if (typeof requestAnimationFrame === 'function' && typeof settlementSceneFocusConstruction === 'function') {
-    requestAnimationFrame(() => settlementSceneFocusConstruction(sceneKind, targetTier, eco.construction));
+    requestAnimationFrame(() => settlementSceneFocusConstruction(sceneKind, targetTier, started));
   }
 }
 // Clearing a wreck is quick, honest work: the rubble goes, and the salvage
@@ -24441,7 +24483,9 @@ function renderVillageManagePanel() {
   simulateVillageEconomy(rec, Date.now());
   const now = Date.now();
   const eco = ensureVillageEconomy(rec);
-  const construction = eco.construction || null;
+  const constructions = villageConstructions(rec);
+  const buildSlots = villageBuildSlots(rec);
+  const slotsFree = villageBuildSlotsFree(rec);
   const snap = villageEconomySnapshot(rec);
   const wallet = gameState.player.coins || 0;
   const timber = playerBranches();
@@ -24494,18 +24538,18 @@ function renderVillageManagePanel() {
           '<button class="province-clear-btn" onclick="empireClearRuin(' + (rec.seed >>> 0) + ',' + x.i + ')">🧹 CLEAR · +' + x.ru.reward + ' 🪵</button></div>';
       }).join('') + '</div>'
     : '';
-  // Active building site: name, animated progress bar and a live countdown.
-  let constructionHtml = '';
-  if (construction) {
-    const cb = EMPIRE_BUILDING_INDEX[construction.id];
-    const cbTier = cb ? villageBuildingTier(cb, construction.toLevel) : null;
-    const pct = Math.round(constructionProgress(construction, now) * 100);
-    constructionHtml = '<div class="province-construction">' +
-      '<div class="province-construction-head"><span>🏗️ ' + (cbTier ? cbTier.icon + ' ' + escapeHtml(cbTier.name) : 'Construction') + (construction.toLevel > 1 && !(cb && cb.tiers) ? ' → level ' + construction.toLevel : '') + '</span>' +
-      '<span class="province-construction-eta" data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></div>' +
-      '<div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + construction.startMs + '" data-build-end="' + construction.endMs + '" style="width:' + pct + '%"></div></div>' +
+  // Active building sites: name, animated progress bar and a live countdown,
+  // one card per crew at work.
+  const constructionHtml = constructions.map(con => {
+    const cb = EMPIRE_BUILDING_INDEX[con.id];
+    const cbTier = cb ? villageBuildingTier(cb, con.toLevel) : null;
+    const pct = Math.round(constructionProgress(con, now) * 100);
+    return '<div class="province-construction">' +
+      '<div class="province-construction-head"><span>🏗️ ' + (cbTier ? cbTier.icon + ' ' + escapeHtml(cbTier.name) : 'Construction') + (con.toLevel > 1 && !(cb && cb.tiers) ? ' → level ' + con.toLevel : '') + '</span>' +
+      '<span class="province-construction-eta" data-build-end="' + con.endMs + '">⏳ ' + formatBuildCountdown(con.endMs - now) + '</span></div>' +
+      '<div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + con.startMs + '" data-build-end="' + con.endMs + '" style="width:' + pct + '%"></div></div>' +
       '</div>';
-  }
+  }).join('');
   const crew = snap.workforce || villageWorkforce(rec);
   // A lone village's desk offers only the basics (v298). Town-tier industry
   // stays off the list — except a grandfathered yard an older save already
@@ -24528,15 +24572,18 @@ function renderVillageManagePanel() {
     if (cost && stone < cost.stone) shortages.push((cost.stone - stone) + ' stone');
     const affordable = cost && !shortages.length;
     const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
-    const inProgress = construction && construction.id === b.id;
-    const busyElsewhere = construction && construction.id !== b.id;
+    const rising = villageConstructionOf(rec, b.id);
+    const inProgress = !!rising;
+    // "Busy" only when every crew is out: with a Project Manager the yard
+    // keeps a second slot free, so the other buttons stay live.
+    const busyElsewhere = !inProgress && slotsFree <= 0;
     // Upgrades that change the building's face say where they lead ("REBUILD
     // IN STONE"), plain level upgrades keep the familiar label.
     const nextTier = !maxed && b.tiers ? villageBuildingTier(b, level + 1) : null;
     const upgradeLabel = level === 0 ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
     let btn;
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
-    else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></button>';
+    else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></button>';
     else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
     // Short on coins or timber? The button stays live: tapping it opens the
     // shortfall prompt that sends birds out for the missing resource.
@@ -24552,7 +24599,7 @@ function renderVillageManagePanel() {
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
       '<div class="province-building-head"><span class="province-building-icon">' + tier.icon + '</span><span class="province-building-name">' + escapeHtml(tier.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
       '<div class="province-building-desc">' + escapeHtml(tier.desc) + '</div>' + crewHtml + btn +
-      (shortages.length && !locked && !construction ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
+      (shortages.length && !locked && slotsFree > 0 ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · Quarry Stone arrives every 8h</div>' : '') + '</div>';
   }).join('');
   // The settlement this province has merged into, if any: shown on the desk,
   // so a governor always knows they are running a district of something bigger.
@@ -24601,7 +24648,10 @@ function renderVillageManagePanel() {
       : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
-    '<div class="province-build-title">🔨 Construction Yard · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' + (construction ? ' · builders busy here — other villages can still build' : '') + '</div>' +
+    '<div class="province-build-title">🔨 Construction Yard · 👷 CREWS ' + constructions.length + '/' + buildSlots +
+      ' · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' +
+      (slotsFree <= 0 ? ' · builders busy here — other villages can still build' : '') +
+      (buildSlots < 2 ? ' · 📋 a Project Manager foremans a second crew' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     townWorksHtml +
     stewardHtml +
@@ -24609,7 +24659,7 @@ function renderVillageManagePanel() {
   panel.querySelectorAll('details[data-empire-drawer]').forEach(drawer => {
     drawer.addEventListener('toggle', () => { empireDrawerOpenState[drawer.dataset.empireDrawer] = drawer.open; });
   });
-  if (construction) ensureProvinceCountdownTicker();
+  if (constructions.length) ensureProvinceCountdownTicker();
 }
 function happinessFace(h) { return h >= 0.9 ? '😊' : h >= 0.65 ? '🙂' : h >= 0.45 ? '😐' : '😟'; }
 function renderEmpirePanel() {
@@ -25458,7 +25508,8 @@ function wholesaleUpgradePlan(records) {
     EMPIRE_BUILDINGS.forEach(b => {
       let level = villageBuildingLevel(rec, b.id);
       // An in-flight ward build counts as done, so the order never pays twice.
-      if (eco.construction && eco.construction.id === b.id) level = Math.max(level, Number(eco.construction.toLevel) || level);
+      const rising = villageConstructionOf(rec, b.id);
+      if (rising) level = Math.max(level, Number(rising.toLevel) || level);
       if (level >= b.maxLevel) return;
       if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return;
       // The settlement law holds for wholesale orders too: no new town-tier
@@ -25634,7 +25685,8 @@ function villageDistrictState(seed) {
     ruinStage,
     ruinsLeft: wrecks.length,
     firstWreckKind: wrecks.length ? wrecks[0].kind : null,
-    construction: rec ? villageConstructionFor(rec) : null
+    construction: rec ? villageConstructionFor(rec) : null,
+    constructions: rec ? villageConstructions(rec) : []
   };
 }
 function townSceneKey(settle) {
@@ -25646,7 +25698,7 @@ function townSceneKey(settle) {
     const st = villageDistrictState(v.seed);
     const rec = empireOwnsVillage(v.seed) ? ensureEmpireState().villages[String(Number(v.seed) >>> 0)] : null;
     const yards = rec ? EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)).join('') : '';
-    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + (st.construction ? '+b' : '') + '#' + yards + '#s' + discoveredVillageShopKeys(v.seed).join('.');
+    return String(v.seed >>> 0) + '@' + st.ruinStage + '.' + st.ruinsLeft + '+b' + (st.constructions || []).length + '#' + yards + '#s' + discoveredVillageShopKeys(v.seed).join('.');
   }).sort().join(',');
 }
 function renderTownScreen() {
@@ -30249,10 +30301,11 @@ function buildVillageScene(v) {
       group.userData.economyBuilding = true;
       villageBuildings.push(group);
     };
-    const pendingCon = villageConstructionFor(econRec);
     EMPIRE_BUILDINGS.forEach(b => {
       const level = villageBuildingLevel(econRec, b.id);
-      const rising = pendingCon && pendingCon.id === b.id;
+      // Every crew at work raises its own scaffold, so two projects show as two.
+      const pendingCon = villageConstructionOf(econRec, b.id);
+      const rising = !!pendingCon;
       if (!level && !rising) return;
       if (rising) {
         // The building being built: scaffold, half-raised walls, busy builder.
@@ -31328,14 +31381,15 @@ function buildTownScene(settle) {
         district.add(shopfront);
       }
     }
-    // A build rising in the ward rises in the town too, scaffold and all.
-    if (dState.construction) {
-      const site = villageMakeConstructionSite(dr, dpal, constructionProgress(dState.construction), dState.construction);
+    // A build rising in the ward rises in the town too, scaffold and all —
+    // one per crew, so a managed ward shows both.
+    (dState.constructions || []).forEach(con => {
+      const site = villageMakeConstructionSite(dr, dpal, constructionProgress(con), con);
       const cp = takePlot('yard', YARD_RING, 2.6, 2.8);
       site.position.set(cp.x, 0, cp.z);
       site.rotation.y = dr() * Math.PI * 2;
       district.add(site);
-    }
+    });
     // Homes fill the streets once the ward flourishes — everyone's cottages
     // interleave around the one square: one town, many founders.
     if (dRuin === 2) {
@@ -38023,7 +38077,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-chain-v307-20260821';
+const BURBZ_BUILD = 'two-crews-v308-20260821';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

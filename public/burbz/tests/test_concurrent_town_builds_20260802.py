@@ -1,7 +1,7 @@
 """Different holdings build at the same time; Towns enforce builder slots.
 
 Ward-compatible construction timers live on each village economy record
-(`eco.construction`), so starting a project in one standalone holding must
+(`eco.constructions`), so starting a project in one standalone holding must
 never block another. Unified Towns add a public builder-slot admission rule
 above those timers. These tests run the REAL low-level build flow and pin both
 parts of that contract.
@@ -36,6 +36,10 @@ def build_harness() -> str:
             "villageBuildingCost",
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
+            "villageConstructions",
+            "villageConstructionOf",
+            "villageBuildSlots",
+            "villageBuildSlotsFree",
             "empireBuildStructure",
         )
     )
@@ -84,8 +88,8 @@ empireBuildStructure(1111, 'hut');        // holding A starts a project (v298: v
 empireBuildStructure(2222, 'cottages');   // town B must start CONCURRENTLY
 empireBuildStructure(1111, 'well');       // same town again must be refused
 console.log(JSON.stringify({
-  townA: empire.villages['1111'].economy.construction?.id || null,
-  townB: empire.villages['2222'].economy.construction?.id || null,
+  townA: empire.villages['1111'].economy.constructions[0]?.id || null,
+  townB: empire.villages['2222'].economy.constructions[0]?.id || null,
   toasts
 }));
 """
@@ -120,8 +124,8 @@ def test_construction_lock_is_stored_per_village_record():
     build = function_source(html, "empireBuildStructure")
     # The busy check reads the TARGET village's own economy — no global flag.
     assert "const eco = ensureVillageEconomy(rec);" in build
-    assert "if (eco.construction) {" in build
-    assert "eco.construction = { id: building.id" in build
+    assert "if (villageBuildSlotsFree(rec) <= 0) {" in build
+    assert "eco.constructions.push(started)" in build
 
 
 def test_player_facing_copy_explains_loose_village_independence_and_town_slots():
