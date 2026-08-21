@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "make-a-friend-v305-20260821"
+CURRENT_BUILD = "arm-your-bird-v306-20260821"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 
