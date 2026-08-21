@@ -24,6 +24,8 @@ SW = ROOT / "sw.js"
 LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
+# roost-retired-v302 moved the roles core on; the loot core stays with v295.
+ROLES_CORE_PIN = "roost-retired-v302-20260820"
 CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 
 

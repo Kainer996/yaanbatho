@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
-RELEASE = "stores-market-project-manager-v295-20260820"
+RELEASE = "roost-retired-v302-20260820"
 CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 
 
