@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "fixed-dock-v303-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 

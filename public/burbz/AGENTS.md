@@ -6,7 +6,9 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Current release: 2026-08-20 (`generated-ui-art-v298-20260820`) — the player HUD and crafted inventory now share one coherent woodland-fantasy art language. The former SVG navigation and separate image dock are one horizontally scrollable, snap-aligned Adventure Dock with 44px+ targets; its route set preserves the v286 Forge destination while Map, Empire, Birdex, Scan, Battle, Forge, Academy and Ranks use generated transparent WebPs, and the existing Academy Hospital is a first-class generated quick destination with the same built/unbuilt guidance as Kitchen. Every one of the 35 gear, satchel, spell and potion definitions has a unique 256px transparent generated WebP under `assets/gear/`; `gearIconHTML` uses it across Stores, Forge, bird loadouts, battle controls and visual reward/result sheets while preserving the old emoji as a resilient text/load fallback. The Academy's Crowbar and Kitchen use bright 1448×1086 animated-storybook interiors, kept versioned and sprite-safe through the central mobile crop. All new art is in the service worker and live updater; nav art is core-preloaded and all generated gear/interior art is install-warmed. Contracts: `tests/test_generated_ui_art_v298_20260820.py` plus the updated dock, kitchen, tutorial, Hospital and generated-art suites.
+Current release: 2026-08-20 (`village-basics-town-industry-v299-20260820`) — Yaan's settlement law. A lone village keeps only the basics — Timber Cabin, the NEW 🏹 Hunter-Gatherer Hut (feeds 8/level, berries + mast per cycle, 1 worker, 15m build), Stone Well, Cottage Row, Alehouse, Storehouse — all bought with coins and timber alone, because the stone economy itself is town work. The industry (Grain Farm, Lumber Camp, Quarry, Chapel, Market Hall) carries `tier: 'town'` in `EMPIRE_BUILDINGS` and opens when three starred villages merge into a Town: `settlementAllowsBuilding(rec, building)` gates NEW builds in `empireBuildStructure` and `wholesaleUpgradePlan`, the village desk hides those cards behind one "Town works" teaser line, and grandfathered yards from old saves keep working and upgrading. Copy points villagers at the hut, the 3D village grew a hunters' camp, and the stone-shortage toast names the Town. Contracts: `tests/test_village_basics_town_industry_20260820.py`; the loose-village economy harnesses (quarry, concurrent-builds) became Town-ward fixtures.
+
+Previous release: 2026-08-20 (`generated-ui-art-v298-20260820`) — the player HUD and crafted inventory now share one coherent woodland-fantasy art language. The former SVG navigation and separate image dock are one horizontally scrollable, snap-aligned Adventure Dock with 44px+ targets; its route set preserves the v286 Forge destination while Map, Empire, Birdex, Scan, Battle, Forge, Academy and Ranks use generated transparent WebPs, and the existing Academy Hospital is a first-class generated quick destination with the same built/unbuilt guidance as Kitchen. Every one of the 35 gear, satchel, spell and potion definitions has a unique 256px transparent generated WebP under `assets/gear/`; `gearIconHTML` uses it across Stores, Forge, bird loadouts, battle controls and visual reward/result sheets while preserving the old emoji as a resilient text/load fallback. The Academy's Crowbar and Kitchen use bright 1448×1086 animated-storybook interiors, kept versioned and sprite-safe through the central mobile crop. All new art is in the service worker and live updater; nav art is core-preloaded and all generated gear/interior art is install-warmed. Contracts: `tests/test_generated_ui_art_v298_20260820.py` plus the updated dock, kitchen, tutorial, Hospital and generated-art suites.
 
 Previous release: 2026-08-20 (`equip-card-swipe-v297-20260820`) — Yaan's ask: on the Equipment screen (the back of a bird's card) a horizontal swipe flips to the next or previous companion, card sliding out one side and in the other. The deck is `gameState.flock` in collection order, wrapping at both ends. The gesture follows the finger with an axis lock (`bindBirdEquipSwipe` on `.bird-equip-scroll`, bound once; vertical drags still scroll; horizontal drags call `preventDefault` from a non-passive listener), commits past 70px, springs back otherwise — including the one-bird flock. `birdEquipSwipeTo` swaps `birdEquipState`, closes any open gear picker, resets the scroll to the top and runs the slide animation; a pager line ("‹ 3 of 12 companions — swipe for the next ›") teaches the gesture and hides for a single bird. Contracts: `tests/test_equip_card_swipe_20260820.py`.
 
@@ -285,6 +287,28 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-20 — village basics, town industry (Claude).** Release
+  `village-basics-town-industry-v299-20260820`, Yaan's settlement design.
+  - **The law in data:** `tier: 'town'` on farm/lumber/quarry/chapel/market;
+    everything else is village-tier and costs zero stone (the cabin's stepped
+    stone rebuild is the deliberate exception). Rationale: quarries are the
+    only renewable stone source, so town-gating them forced the village
+    basics onto a coins-and-timber economy or fresh players would deadlock.
+  - **The gate mirrors the trainer gate:** NEW builds only
+    (`level === 0 && !settlementAllowsBuilding(...)`), so old saves keep and
+    upgrade whatever they built. Wholesale orders skip gated level-0 steps.
+  - The hut slots between the starters and the farm on the build ladder
+    (15m), so the ladder tests' "strictly climbing" pin still holds.
+  - Sharp edge: several economy harnesses were "one loose village" fixtures
+    that built farms and quarries — those are Town ward fixtures now
+    (settlement stub + `{townMode:true}`), and any harness that extracts
+    `empireBuildStructure` or `wholesaleUpgradePlan` needs
+    `settlementAllowsBuilding` extracted or stubbed.
+  - Numbering: another session shipped `generated-ui-art-v298` first; this
+    release took v299 and gave the v298 release test the standard
+    predecessor surgery (RELEASE stays, CURRENT_BUILD rolls).
+  - Contracts: `tests/test_village_basics_town_industry_20260820.py`.
 
 - **2026-08-20 — swipe through the flock on the Equipment card (Claude).**
   Release `equip-card-swipe-v297-20260820`, Yaan's ask.

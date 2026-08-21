@@ -34,6 +34,7 @@ def build_harness() -> str:
             "villageBuildingTier",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
+            "settlementAllowsBuilding",
             "villageBuildDurationMs",
             "empireBuildStructure",
         )
@@ -79,7 +80,7 @@ let villageActive = null, villageBuiltSeed = null;
     driver = """
 empire.villages['1111'] = { seed: 1111, name: 'Testham A', lat: 53.2, lon: -2.5, claimedAt: '2026-08-01T00:00:00Z', lastTributeAt: Date.now() };
 empire.villages['2222'] = { seed: 2222, name: 'Testham B', lat: 53.3, lon: -2.6, claimedAt: '2026-08-01T00:00:00Z', lastTributeAt: Date.now() };
-empireBuildStructure(1111, 'farm');       // town A starts a project
+empireBuildStructure(1111, 'hut');        // holding A starts a project (v298: village-tier work)
 empireBuildStructure(2222, 'cottages');   // town B must start CONCURRENTLY
 empireBuildStructure(1111, 'well');       // same town again must be refused
 console.log(JSON.stringify({
@@ -106,7 +107,7 @@ def run_harness():
 def test_two_standalone_holdings_build_concurrently_but_one_ward_holds_one_project():
     out = run_harness()
     # Both standalone holdings hold live constructions at the same time...
-    assert out["townA"] == "farm"
+    assert out["townA"] == "hut"
     assert out["townB"] == "cottages"
     # ...and the refusal was for the SAME ward's second project only.
     refusals = [t for t in out["toasts"] if "still raising" in t]

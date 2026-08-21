@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "fixed-dock-v303-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 
 
 def run_node(source: str):
@@ -182,9 +182,10 @@ def test_every_coin_and_timber_build_gate_offers_the_prompt():
         src = function_source(html, fn)
         for kind in kinds:
             assert f"showResourceQuestPrompt('{kind}'" in src, (fn, kind)
-    # Stone has no errand — quarries make it — so that gate keeps its toast.
+    # Stone has no errand — quarries make it — so that gate keeps its toast
+    # (v299 reworded it: quarries are town works now).
     build = function_source(html, "empireBuildStructure")
-    assert "build a Quarry" in build
+    assert "Quarries are town works" in build
 
 
 def test_short_build_buttons_stay_tappable():

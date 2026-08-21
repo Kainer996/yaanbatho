@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "fixed-dock-v303-20260820"
+CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 
