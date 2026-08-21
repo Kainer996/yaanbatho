@@ -13,7 +13,7 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "roost-retired-v302-20260820"
+CURRENT_BUILD = "fixed-dock-v303-20260820"
 ROLES_PIN = "roost-retired-v302-20260820"
 
 

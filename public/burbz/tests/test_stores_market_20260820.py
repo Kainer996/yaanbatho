@@ -27,7 +27,7 @@ RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 edited bird_roles_core again, so its pin moved on; the
 # loot core still ships under this release's own tag.
 ROLES_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "roost-retired-v302-20260820"
+CURRENT_BUILD = "fixed-dock-v303-20260820"
 
 
 def run_node(source: str) -> dict:
