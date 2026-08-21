@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
+CURRENT_BUILD = "quiet-wand-whole-art-v304-20260821"
 
 
 def run_node(source: str) -> dict:

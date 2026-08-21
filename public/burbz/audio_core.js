@@ -22,8 +22,6 @@
     unlock: 'assets/audio/sfx-capture.mp3',
     coins: 'assets/audio/sfx-resource.mp3',
     build: 'assets/audio/sfx-build.mp3',
-    bird: 'assets/audio/bird-blackbird.mp3',
-    owl: 'assets/audio/bird-tawny-owl.mp3',
     error: 'assets/audio/sfx-defeat-error.mp3'
   });
 
@@ -41,11 +39,12 @@
     unlock: 250,
     coins: 100,
     build: 180,
-    bird: 500,
-    owl: 800,
     error: 180
   });
 
+  // No entry here plays a real bird. Burbz identifies wild birds by ear, so a
+  // recorded call coming out of a button would tell the player they had heard
+  // something they had not. Every sound in the bank is made, not recorded.
   function classifyInteraction(targetLike) {
     if (!targetLike || typeof targetLike !== 'object') return null;
     var dataset = targetLike.dataset || {};
@@ -57,8 +56,7 @@
       .filter(Boolean).join(' ').toLowerCase();
     if (/\b(build|craft|forge|upgrade)\b/.test(text)) return 'build';
     if (/\b(coin|gold|shop|purchase|buy)\b/.test(text)) return 'coins';
-    if (/\b(owl|night)\b/.test(text)) return 'owl';
-    if (/\b(bird|capture|discover|scan)\b/.test(text)) return 'bird';
+    if (/\b(capture|discover)\b/.test(text)) return 'capture';
     if (/\b(page|tab|nav|menu|screen)\b/.test(text)) return 'page';
 
     var tag = String(targetLike.tagName || '').toUpperCase();
@@ -269,8 +267,6 @@
       unlock: function(opts) { return play('unlock', opts); },
       coins: function(opts) { return play('coins', opts); },
       build: function(opts) { return play('build', opts); },
-      bird: function(opts) { return play('bird', opts); },
-      owl: function(opts) { return play('owl', opts); },
       error: function(opts) { return play('error', opts); }
     };
     Object.defineProperty(manager, 'enabled', {

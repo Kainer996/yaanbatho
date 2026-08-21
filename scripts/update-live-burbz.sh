@@ -210,8 +210,6 @@ FILES=(
   "assets/village-interiors-manga/puffins-rest.png"
   "assets/village-interiors-manga/seed-and-sundry.png"
   "assets/village-interiors-manga/talon-and-anvil.png"
-  "assets/audio/bird-blackbird.mp3"
-  "assets/audio/bird-tawny-owl.mp3"
   "assets/audio/reward-level-up.mp3"
   "assets/audio/ui-book.mp3"
   "assets/audio/ui-coins.mp3"

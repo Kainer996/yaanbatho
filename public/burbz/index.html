@@ -1312,7 +1312,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .bird-grid.companions-grid.companions-count-1 { grid-template-columns:1fr; }
 .bird-grid.companions-grid.companions-count-1 .bird-card { min-height:520px; }
 .bird-grid.companions-grid.companions-count-1 .bird-card-inner { min-height:520px; }
-.bird-grid.companions-grid.companions-count-1 .card-art { height:clamp(188px,48vw,260px); }
+.bird-grid.companions-grid.companions-count-1 .card-art { height:clamp(240px,70vw,320px); }
 .bird-grid.companions-grid.companions-count-2 { grid-template-columns:repeat(2,1fr); }
 .bird-grid.companions-grid.companions-count-2 .bird-card { min-height:430px; }
 .bird-grid.companions-grid.companions-count-2 .bird-card-inner { min-height:430px; }
@@ -1399,7 +1399,14 @@ svg.academy-room-bg { display:block; filter:none; }
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
 }
-.card-art img.card-art-painting { object-fit: cover; filter: none; }
+.card-art img.card-art-painting { object-fit: contain; filter: none; }
+/* The paintings are square, the card frames are not. Cropping to fill cut the
+   heads and tails off, so the whole bird is fitted in and a soft blurred wash
+   of that same art fills the rest of the frame. */
+.card-art img.card-art-wash {
+  object-fit: cover; filter: blur(20px) saturate(1.2) brightness(.58);
+  transform: scale(1.2); opacity: .9; pointer-events: none;
+}
 .card-art .bird-emoji { position: relative; z-index: 1; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
 
 /* Emoji fallback glyphs for bird-only art (used when no transparent cutout
@@ -2703,7 +2710,9 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .barracks-recruit-detail.show { display:block; }
 .barracks-detail-top { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
 .barracks-detail-card { overflow:hidden; border-radius:18px; background:linear-gradient(180deg,#241d10,#0d0b08); border:1px solid rgba(240,199,103,.36); box-shadow:0 16px 38px rgba(0,0,0,.48); }
-.barracks-detail-art { width:100%; height:240px; display:block; object-fit:cover; background:#111; }
+.barracks-detail-art { position:relative; width:100%; height:clamp(230px,64vw,300px); display:grid; place-items:center; overflow:hidden; background:#111; font-size:64px; }
+.barracks-detail-art .barracks-detail-wash { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(20px) saturate(1.2) brightness(.58); transform:scale(1.2); }
+.barracks-detail-art .barracks-detail-painting { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
 .barracks-detail-body { padding:13px; }
 .barracks-detail-name { font-family:'Russo One',sans-serif; font-size:20px; color:#f4ead4; }
 .barracks-detail-species { margin:3px 0 10px; color:var(--text3); font-size:11px; font-style:italic; }
@@ -12438,6 +12447,15 @@ function birdOnlyImgHTML(bird, className, extraAttrs) {
   return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '"' + extra + '>';
 }
 
+// The blurred bed a fitted painting sits on. Same picture, scaled to fill and
+// pushed out of focus, so a square painting in a wide frame still reads as one
+// whole image instead of a cropped bird between two bars.
+function cardArtWashHTML(cardArt) {
+  if (!cardArt || !cardArt.src) return '';
+  return '<img class="card-art-wash" src="' + escapeHtml(cardArt.src) +
+    '" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">';
+}
+
 // Bird image for FRAMED contexts: always the original complete painting.
 // Framed contexts (Birdex codex cards, companion cards, capture reveal) keep
 // the FULL original artwork with its bird-specific scenic background. Only
@@ -13421,8 +13439,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   gameState.birdExpeditions.unshift(quest);
   updateQuestProgress('expedition_sent', 1);
   saveState();
-  if ((templateId === 'moon_scout' || quest.nightBonus) && SFX && typeof SFX.owl === 'function') SFX.owl();
-  else if (SFX && typeof SFX.page === 'function') SFX.page();
+  if (SFX && typeof SFX.page === 'function') SFX.page();
   else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast(quest.nightBonus
     ? '🌙 ' + (bird.commonName || bird.species) + ' hunts by night — Night Hunter bonus: 3× coins & XP, 2× timber, two extra finds! ' + quest.label
@@ -14333,7 +14350,10 @@ function openBarracksRecruitCard(key) {
   const cost = recruitCostForBird(bird);
   const canAfford = (gameState.player.coins || 0) >= cost;
   const art = getBirdArtUrl(bird);
-  const artHtml = art ? '<img class="barracks-detail-art" src="' + escapeHtml(art) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">' : '<div class="barracks-detail-art bird-emoji-glyph">' + (bird.emoji || '🐦') + '</div>';
+  const artHtml = art
+    ? '<div class="barracks-detail-art"><img class="barracks-detail-wash" src="' + escapeHtml(art) + '" alt="" aria-hidden="true" onerror="this.remove()">' +
+      '<img class="barracks-detail-painting" src="' + escapeHtml(art) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '"></div>'
+    : '<div class="barracks-detail-art bird-emoji-glyph">' + (bird.emoji || '🐦') + '</div>';
   const description = bird.description || bird.bio || bird.personality || 'A real bird discovered through Merlin’s field tablet, ready to bring its own strengths and personality to your flock.';
   list.style.display = 'none';
   detail.classList.add('show');
@@ -32044,6 +32064,16 @@ function showScanEncounterCard(bird, isNewDiscovery, source = 'photo') {
   setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 260); }, 6500);
 }
 
+// One picture per bird, never two. The emoji is only a stand-in for missing
+// art, so it waits out of sight behind a loaded painting and steps in only if
+// that painting fails. Stacking both left the old glyph showing through.
+function birdArtOverFallback(artUrl, emoji, fallbackClass) {
+  const glyph = extra => '<span class="' + fallbackClass + '"' + extra + '>' + emoji + '</span>';
+  if (!artUrl) return glyph('');
+  return glyph(' hidden') + '<img src="' + escapeHtml(artUrl) + '" alt="" loading="lazy" ' +
+    'onerror="this.previousElementSibling.hidden=false;this.remove()">';
+}
+
 // The session shelf on the sound screen: one small tile per species heard in
 // this listening session — its art (or emoji), name, and a ×N badge when the
 // same bird keeps calling. Tapping a tile opens the bird in the Birdex.
@@ -32060,7 +32090,7 @@ function renderSoundSessionShelf() {
     const bird = createRosterBird(row.name);
     const artUrl = resolveBuiltInBirdArt(row.name, bird.commonName) || getBirdArtUrl(bird);
     return '<button type="button" class="sound-session-tile' + (row.isNew ? ' is-new' : '') + '" data-species-name="' + escapeHtml(row.name) + '" style="--tile-colour:' + escapeHtml(colour) + '" aria-label="Show ' + escapeHtml(row.name) + ' in Birdex">' +
-      '<span class="sound-session-tile-art">' + (bird.emoji || '&#128038;') + (artUrl ? '<img src="' + escapeHtml(artUrl) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</span>' +
+      '<span class="sound-session-tile-art">' + birdArtOverFallback(artUrl, bird.emoji || '&#128038;', 'sound-session-tile-fallback') + '</span>' +
       (row.count > 1 ? '<span class="sound-session-tile-count">&times;' + row.count + '</span>' : '') +
       '<span class="sound-session-tile-name">' + escapeHtml(row.name) + '</span></button>';
   }).join('');
@@ -32092,8 +32122,8 @@ function renderSoundSessionDiscoveries() {
     const diet = info.diet || 'Diet information coming soon';
     const flipped = soundDiscoveryFlippedKeys.has(row.key);
     const backState = flipped ? 'aria-hidden="false"' : 'aria-hidden="true" inert';
-    const art = '<div class="scan-session-discovery-art"><span class="scan-session-discovery-fallback">' + (discoveryBird.emoji || '&#128038;') + '</span>' +
-      (artUrl ? '<img src="' + escapeHtml(artUrl) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>';
+    const art = '<div class="scan-session-discovery-art">' +
+      birdArtOverFallback(artUrl, discoveryBird.emoji || '&#128038;', 'scan-session-discovery-fallback') + '</div>';
     return '<article class="scan-session-discovery' + (flipped ? ' is-flipped' : '') + '" data-species-key="' + escapeHtml(row.key) + '" data-species-name="' + escapeHtml(row.name) + '" style="--discovery-colour:' + escapeHtml(colour) + '">' +
       '<div class="scan-session-discovery-inner">' +
         '<button type="button" class="scan-session-discovery-front" data-action="flip-discovery" aria-expanded="' + (flipped ? 'true' : 'false') + '" aria-label="Show information about ' + escapeHtml(row.name) + '"' + (flipped ? ' aria-hidden="true" tabindex="-1"' : '') + '>' +
@@ -34292,7 +34322,7 @@ function createBirdCardHTML(bird, idx) {
 
   const cardArt = birdCardImgAttrs(bird);
   const artBg = cardArt
-    ? `<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(bird.commonName || '')}" loading="lazy">`
+    ? `${cardArtWashHTML(cardArt)}<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(bird.commonName || '')}" loading="lazy">`
     : '';
   const birdIcon = cardArt
     ? ''
@@ -34384,7 +34414,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
   const cardArt = birdCardImgAttrs(bird);
   const cardEmoji = bird.emoji || getBirdMarkerEmoji(bird.commonName || bird.species || '') || '&#128038;';
   const artBg = cardArt
-    ? `<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(bird.commonName || '')}" loading="lazy">`
+    ? `${cardArtWashHTML(cardArt)}<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(bird.commonName || '')}" loading="lazy">`
     : '';
   const birdIcon = cardArt ? '' : `<div class="bird-emoji">${cardEmoji}</div>`;
   const key = bird.discoveryKey || speciesKey(canonicalSpeciesName(bird.species || bird.commonName));
@@ -35858,7 +35888,7 @@ function showCaptureOverlay(bird) {
   // Build dopamine-hit Top Trumps style unlock card
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
   const cardArt = birdCardImgAttrs(bird);
-  const artHtml = cardArt ? `<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(bird.commonName || '')}">` : `<div class="bird-emoji">${bird.emoji}</div>`;
+  const artHtml = cardArt ? `${cardArtWashHTML(cardArt)}<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(bird.commonName || '')}">` : `<div class="bird-emoji">${bird.emoji}</div>`;
   wrapper.classList.remove('fly-to-companions');
   wrapper.innerHTML = `
     <div class="bird-card" data-rarity="${bird.rarity}" style="pointer-events:none;">
@@ -37928,7 +37958,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-basics-town-industry-v299-20260820';
+const BURBZ_BUILD = 'quiet-wand-whole-art-v304-20260821';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
