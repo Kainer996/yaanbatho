@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "village-basics-town-industry-v299-20260820"
+CURRENT_BUILD = "quiet-wand-whole-art-v304-20260821"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

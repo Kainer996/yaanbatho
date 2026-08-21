@@ -9,7 +9,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 INDEX = BURBZ / "index.html"
 CACHE = BURBZ / "bird-art-cache"
 SW = BURBZ / "sw.js"
-BUILD = "village-basics-town-industry-v299-20260820"
+BUILD = "quiet-wand-whole-art-v304-20260821"
 
 
 def source_block(source: str, start_marker: str, end_marker: str) -> str:
@@ -40,7 +40,11 @@ def test_framed_views_use_original_paintings_and_icons_keep_cutouts():
     assert "const cutout = known || birdCutoutUrlFor(art);" in icon
     assert index.count("const cardArt = birdCardImgAttrs(bird);") == 3
     assert "const infoArt = birdCardImgAttrs(bird);" in index
-    assert ".card-art img.card-art-painting { object-fit: cover; filter: none; }" in index
+    # The whole painting is fitted into the frame; a blurred copy of the same
+    # art fills the rest, so no bird loses its head or tail to a crop.
+    assert ".card-art img.card-art-painting { object-fit: contain; filter: none; }" in index
+    assert "function cardArtWashHTML(cardArt) {" in index
+    assert index.count("${cardArtWashHTML(cardArt)}<img src=") == 3
 
 
 def test_eastern_rosella_original_is_an_opaque_complete_painting():
