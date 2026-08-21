@@ -26,7 +26,7 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
 ROLES_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "quiet-wand-whole-art-v304-20260821"
+CURRENT_BUILD = "make-a-friend-v305-20260821"
 
 
 def run_node(source: str) -> dict:
