@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "arm-your-bird-v306-20260821"
+CURRENT_BUILD = "village-chain-v307-20260821"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

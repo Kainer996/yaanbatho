@@ -20,7 +20,8 @@ HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 LOOT_CORE = (BURBZ / "loot_crafting_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "arm-your-bird-v306-20260821"
+RELEASE_PIN = "village-chain-v307-20260821"
+OWN_RELEASE_PIN = "arm-your-bird-v306-20260821"
 
 
 def player_quests():
@@ -46,8 +47,9 @@ def test_the_bird_is_armed_before_its_first_battle():
     ids = [q["id"] for q in player_quests()]
     assert ids.index("pq_equip_gear") == ids.index("pq_build_quest_roost") + 1
     assert ids.index("pq_equip_gear") < ids.index("pq_first_win")
-    # Still one chain, still 26 links — nothing added, nothing lost.
-    assert len(ids) == 26 == len(set(ids))
+    # Still one chain with no duplicate ids; the length grew only where
+    # village-chain-v307 added its links, well after this one.
+    assert len(ids) == 32 == len(set(ids))
 
 
 def test_the_roost_pays_the_gear_the_next_link_needs():
@@ -76,3 +78,4 @@ def test_the_card_names_the_gear_it_will_pay():
 def test_release_stamp_reaches_runtime_and_service_worker():
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
     assert RELEASE_PIN in SW
+    assert OWN_RELEASE_PIN in SW  # lineage kept

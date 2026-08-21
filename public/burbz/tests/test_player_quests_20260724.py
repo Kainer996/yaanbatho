@@ -56,8 +56,9 @@ def test_chain_mirrors_the_guided_tutorial_flow():
 
 def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
-    # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue.
-    assert len(quests) == 26
+    # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue;
+    # village-chain-v307 added six village links to the late chain.
+    assert len(quests) == 32
     types = [q["type"] for q in quests]
     for needed in (
         # The original loop…
@@ -69,6 +70,9 @@ def test_chain_covers_the_whole_core_loop():
         "build_kitchen", "proper_meal_fed", "build_hospital", "station_hospital",
         "walk_completed", "bird_quiz_correct", "gear_crafted",
         "build_crowbar", "build_workshop",
+        # …and the village arc, once a settlement is yours to run.
+        "village_built", "village_provisioned", "village_role_filled",
+        "tribute_collected", "merge_star", "town_founded",
     ):
         assert needed in types, needed
 
@@ -85,8 +89,8 @@ def test_extended_chain_paces_buildings_with_their_unlock_levels():
     ]
     positions = [ids.index(i) for i in order]
     assert positions == sorted(positions), positions
-    # The chain ends on the empire endgame.
-    assert ids[-1] == "pq_liberate_3"
+    # The chain ends on the empire endgame: three villages freed, then merged.
+    assert ids[-3:] == ["pq_liberate_3", "pq_merge_star", "pq_found_town"]
 
 
 def test_player_quests_are_pinned_to_the_top_of_the_quests_tab():
