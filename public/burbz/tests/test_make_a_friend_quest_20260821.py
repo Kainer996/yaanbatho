@@ -19,7 +19,8 @@ HTML_PATH = BURBZ / "index.html"
 HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "make-a-friend-v305-20260821"
+RELEASE_PIN = "arm-your-bird-v306-20260821"
+OWN_RELEASE_PIN = "make-a-friend-v305-20260821"
 
 INDOOR_GO = {"academy", "birdex", "battle", "forge", "quests", "inventory"}
 
@@ -92,3 +93,4 @@ def test_the_goal_completes_from_saved_state_when_its_turn_comes():
 def test_release_stamp_reaches_runtime_and_service_worker():
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
     assert RELEASE_PIN in SW
+    assert OWN_RELEASE_PIN in SW  # lineage kept

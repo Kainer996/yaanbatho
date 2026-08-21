@@ -37360,12 +37360,15 @@ const PLAYER_QUESTS = [
     measure:() => isAcademyBuildingBuilt('training') ? 1 : 0 },
   { id:'pq_training_drill', name:'Run a training drill', desc:'Complete and claim a Training Hall drill', type:'training_claimed', target:1, reward:50, coins:20, icon:'\u{1F94A}', go:'academy',
     measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.training && Number(b.training.trainCount)) || 0), 0) },
-  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:50, coins:25, icon:'\u{1F9ED}', go:'academy',
+  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:50, coins:25, gear:{ thorn_talons:1 }, icon:'\u{1F9ED}', go:'academy',
     measure:() => isAcademyBuildingBuilt('quest_roost') ? 1 : 0 },
+  // Arm the bird before its first fight, not after. The Quest Roost above
+  // pays out a pair of Thorn Talons, so there is always something in the
+  // Stores to put on — a battle win only drops gear about one time in five.
+  { id:'pq_equip_gear',     name:'Equip a bird with an item', desc:'Open the Forge and give a companion a piece of gear', type:'gear_equipped', target:1, reward:45, coins:20, icon:'\u{1F5E1}\u{FE0F}', go:'forge',
+    measure:() => Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)) ? 1 : 0 },
   { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
-  { id:'pq_equip_gear',     name:'Arm a companion', desc:'Equip a piece of gear at the Fletcher’s Forge', type:'gear_equipped', target:1, reward:45, coins:20, icon:'\u{1F5E1}\u{FE0F}', go:'forge',
-    measure:() => Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)) ? 1 : 0 },
   { id:'pq_build_kitchen',  name:'Build the Kitchen & Pantry', desc:'Raise the Kitchen & Pantry at the Academy', type:'build_kitchen', target:1, reward:55, coins:25, icon:'\u{1F963}', go:'academy',
     measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
@@ -37433,6 +37436,9 @@ function claimPlayerQuest(id) {
   addPlayerXp(q.reward);
   if (q.coins) addCoins(q.coins);
   if (q.branches) addBranches(q.branches);
+  // A link can also hand over a real piece of gear, so the chain can teach a
+  // mechanic that needs one without waiting on a loot roll.
+  if (q.gear) grantLootDrops(Object.entries(q.gear).map(([id, qty]) => ({ kind:'gear', id, qty })));
   syncActivePlayerQuest(); // arm the next link immediately
   saveState();
   updateHeader();
@@ -37460,6 +37466,10 @@ function renderPlayerQuests() {
   const rewardBits = ['+' + active.reward + ' XP'];
   if (active.coins) rewardBits.push('+' + active.coins + ' \u{1FA99}');
   if (active.branches) rewardBits.push('+' + active.branches + ' \u{1FAB5}');
+  Object.keys(active.gear || {}).forEach(id => {
+    const item = window.BurbzLootCore ? lootCore().gearById(id) : null;
+    if (item) rewardBits.push(item.icon + ' ' + item.label);
+  });
   host.innerHTML = '<div class="quest-section-title">Player Quests <span class="player-quest-count">' + claimed + '/' + total + '</span></div>' +
     '<div class="quest-card player-quest-card" data-quest-card="' + active.id + '">' +
       '<div class="quest-icon">' + active.icon + '</div>' +
@@ -37963,7 +37973,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'make-a-friend-v305-20260821';
+const BURBZ_BUILD = 'arm-your-bird-v306-20260821';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
