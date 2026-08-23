@@ -37,6 +37,7 @@ def economy_harness(driver: str) -> str:
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "settlementAllowsBuilding",
+            "settlementAllowsStep",
             "villageBuildDurationMs",
             "villageConstructions",
             "villageConstructionOf",
@@ -193,19 +194,23 @@ console.log(JSON.stringify({ working, empty }));
     assert out["empty"]["stone"] == 0
 
 
-def test_finishing_the_first_quarry_grants_enough_first_cut_stone_for_cottages():
+def test_finishing_the_first_quarry_grants_enough_first_cut_stone_for_the_yards():
     html = HTML.read_text(encoding="utf-8")
     complete = function_source(html, "empireCompleteConstructions")
     assert "const isFirstRealmQuarry = building.id === 'quarry'" in complete
     assert "if (isFirstRealmQuarry && level === 1)" in complete
     assert "addStone(QUARRY_FIRST_CUT_STONE)" in complete
     assert "QUARRY_FIRST_CUT_STONE = 10" in html
-    # v298: village basics cost no stone at all — the first cut now bankrolls
-    # the Timber Cabin's stone rebuild (10) instead of the Cottage Row.
+    # timber-village-builds-20260823: no village build spends stone at any level,
+    # so the first cut now bankrolls the town yards — a Grain Farm (5) and a
+    # Lumber Camp (4) — instead of anything a lone village raises.
     cottages = next(line for line in html.splitlines() if "id: 'cottages'" in line)
     assert "stone: 0" in cottages
     cabin = next(line for line in html.splitlines() if "id: 'cabin'" in line)
-    assert "stone: 10 }]" in cabin
+    assert "{ coins: 45, branches: 20, stone: 0 }" in cabin  # the timber longhouse step
+    farm = next(line for line in html.splitlines() if "id: 'farm'" in line)
+    lumber = next(line for line in html.splitlines() if "id: 'lumber'" in line)
+    assert "stone: 5 }" in farm and "stone: 4 }" in lumber
 
 
 def test_stone_flows_through_tribute_collection_ledger_and_summary():
@@ -235,8 +240,8 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     assert "const stone = playerStone()" in manage
     assert "stone < cost.stone" in manage
     assert "cost.stone + ' stone ·" in manage
-    assert "its first cut gives enough stone for Cottage Row" in html
-    assert "every village and town construction — including Quarry upgrades — spends stone, coins and timber" in html
+    assert "its first cut pays for the first Grain Farm and Lumber Camp" in html
+    assert "the stone rebuild of your homes — spend stone alongside coins and timber. Villages never do." in html
     assert "· ' + stone + '" in manage
     ledger_output = function_source(html, "villageBuildingOutputForLedger")
     realm_output = function_source(html, "empireBuildingOutputForLedger")

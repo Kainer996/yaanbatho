@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "two-crews-v308-20260821"
+CURRENT_BUILD = "timber-village-builds-v309-20260823"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 

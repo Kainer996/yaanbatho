@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "ordered-quest-markers-v224-20260804"
-CURRENT_BUILD = "two-crews-v308-20260821"
+CURRENT_BUILD = "timber-village-builds-v309-20260823"
 
 
 def run_core(expression: str):

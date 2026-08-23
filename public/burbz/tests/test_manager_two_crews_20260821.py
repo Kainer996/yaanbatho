@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "two-crews-v308-20260821"
+RELEASE_PIN = "timber-village-builds-v309-20260823"
 
 
 def function_source(name: str) -> str:
@@ -37,7 +37,7 @@ def run_flow(staffed: bool, driver: str):
     functions = "\n".join(function_source(name) for name in (
         "villageBuildTimeMs", "villageConstructionFor", "ensureVillageEconomy",
         "villageBuildingLevel", "villageBuildingTier", "empireHasQuarryInvestment",
-        "villageBuildingCost", "settlementAllowsBuilding", "villageBuildDurationMs",
+        "villageBuildingCost", "settlementAllowsBuilding", "settlementAllowsStep", "villageBuildDurationMs",
         "villageConstructions", "villageConstructionOf", "villageBuildSlots",
         "villageBuildSlotsFree", "empireBuildStructure",
     ))
