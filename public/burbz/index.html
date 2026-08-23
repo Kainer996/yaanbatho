@@ -26269,7 +26269,7 @@ function burbzDaylightPalette(pal, daylight) {
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
 let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
-let villageNpcs = [], villageChickens = [];
+let villageNpcs = [], villageChickens = [], villageButterflies = [], villageGroundFx = null;
 // Living-settlement actors use their own registries. Town builders temporarily
 // register here too, then buildTownScene adopts only the entries it created.
 let villageTraffic = [], villageLivestock = [], villageFlocks = [], villageConstructionSites = [];
@@ -28913,6 +28913,21 @@ function villageMakeVillager(r, pal, role) {
   head.position.y = 1.05; g.add(head);
   const hood = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.3, 7), cloakMat);
   hood.position.y = 1.18; g.add(hood);
+  // Arms on shoulder pivots so walkers get a real gait — idle folk let them
+  // hang with a gentle breathing sway instead.
+  const arms = [];
+  for (const sx of [-1, 1]) {
+    const shoulder = new THREE.Group();
+    shoulder.position.set(sx * 0.27, 0.86, 0);
+    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.42, 5), cloakMat);
+    sleeve.position.y = -0.21; sleeve.rotation.z = sx * 0.08; shoulder.add(sleeve);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4),
+      new THREE.MeshLambertMaterial({ color: 0xd8b890 }));
+    hand.position.y = -0.45; shoulder.add(hand);
+    g.add(shoulder); arms.push(shoulder);
+  }
+  g.userData.arms = arms;
+  g.userData.cloak = cloak;
 
   if (role === 'elder') {
     // A gnarled walking staff, and a slight stoop earned over many winters
@@ -28977,29 +28992,67 @@ function villageMakeVillager(r, pal, role) {
   return g;
 }
 
-// A scrappy village dog that trots its own circuit of the square.
+// A scruffy village dog that trots its own circuit of the square — properly
+// rigged: four legs swing on hip pivots in a diagonal trot, the head bobs and
+// glances about, the ears flap with each stride and the tail sweeps wide.
+// Everything hangs off userData so the frame loop costs a handful of adds.
 function villageMakeDog(r, pal) {
   const g = new THREE.Group();
   const coat = new THREE.MeshLambertMaterial({ color: [0x8a6a42, 0x4a4038, 0xb8a888, 0x6a5a4a][Math.floor(r() * 4)] });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 7, 6), coat);
+  const dark = new THREE.MeshLambertMaterial({ color: 0x2e2620 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 9, 7), coat);
   body.scale.set(1.7, 1, 1); body.position.y = 0.34; g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 7, 6), coat);
-  head.position.set(0.4, 0.48, 0); g.add(head);
-  const snout = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.09, 0.1), coat);
-  snout.position.set(0.52, 0.44, 0); g.add(snout);
+  // chest ruff + haunches break the blob silhouette
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.15, 7, 6), coat);
+  chest.position.set(0.26, 0.36, 0); chest.scale.set(0.85, 0.95, 1); g.add(chest);
+  for (const hz of [-1, 1]) {
+    const haunch = new THREE.Mesh(new THREE.SphereGeometry(0.13, 7, 6), coat);
+    haunch.position.set(-0.24, 0.32, hz * 0.11); g.add(haunch);
+  }
+  // Head on a neck pivot so it can bob and look around while trotting
+  const neck = new THREE.Group();
+  neck.position.set(0.34, 0.46, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), coat);
+  head.position.set(0.06, 0.02, 0); neck.add(head);
+  const snout = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.09, 0.1), dark);
+  snout.position.set(0.2, -0.02, 0); neck.add(snout);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.024, 5, 4), dark);
+  nose.position.set(0.27, 0.01, 0); neck.add(nose);
+  const ears = [];
   for (const sz of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.12, 4), coat);
-    ear.position.set(0.36, 0.62, sz * 0.07); ear.rotation.x = sz * 0.3; g.add(ear);
+    const earPivot = new THREE.Group();
+    earPivot.position.set(0.02, 0.13, sz * 0.07);
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.14, 4), coat);
+    ear.position.y = 0.06; ear.rotation.x = sz * 0.25; earPivot.add(ear);
+    neck.add(earPivot); ears.push(earPivot);
   }
-  for (const lx of [-0.2, 0.22]) for (const lz of [-0.1, 0.1]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.26, 5), coat);
-    leg.position.set(lx, 0.13, lz); g.add(leg);
+  const eyes = [];
+  for (const sz of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 5, 4), dark);
+    eye.position.set(0.12, 0.05, sz * 0.06); neck.add(eye); eyes.push(eye);
   }
-  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.045, 0.3, 4), coat);
-  tail.position.set(-0.4, 0.5, 0); tail.rotation.z = 0.8;
-  tail.userData.phase = r() * 6.28; villageCloths.push(tail); // wags with the washing-line sway
+  g.add(neck);
+  // Four legs on hip pivots — front pair ahead, back pair behind
+  const legs = [];
+  for (const [lx, lz] of [[0.2, -0.09], [0.2, 0.09], [-0.22, -0.1], [-0.22, 0.1]]) {
+    const hip = new THREE.Group();
+    hip.position.set(lx, 0.26, lz);
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.03, 0.16, 5), coat);
+    upper.position.y = -0.08; hip.add(upper);
+    const paw = new THREE.Mesh(new THREE.SphereGeometry(0.032, 5, 4), dark);
+    paw.position.y = -0.165; hip.add(paw);
+    hip.userData.phase = (lx > 0 ? 0 : Math.PI) + (lz < 0 ? 0 : Math.PI * 0.35);
+    g.add(hip); legs.push(hip);
+  }
+  const tail = new THREE.Group();
+  tail.position.set(-0.36, 0.44, 0); tail.rotation.z = 0.8;
+  const tuft = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 0.3, 4), coat);
+  tuft.position.y = 0.13; tail.add(tuft);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.045, 5, 4), coat);
+  tip.position.y = 0.28; tail.add(tip);
   g.add(tail);
-  g.add(villageBlobShadow(0.4));
+  g.userData.dogRig = { body, bodyY: 0.34, neck, legs, ears, tail, phase: r() * 6.28 };
+  g.add(villageBlobShadow(0.42));
   villageNpcRegister(g, r, 'dog', 'a scruffy sheepdog');
   return g;
 }
@@ -29025,6 +29078,30 @@ function villageMakeCat(r, pal) {
     eye.position.set(ex, 0.4, 0.11); g.add(eye);
   }
   villageNpcRegister(g, r, 'cat', 'the village cat');
+  return g;
+}
+
+// A loose cloud of butterflies over the flower patches — two little wings
+// each, fluttering on figure-eights. Count follows the ambient budget, and
+// the whole group shares one geometry pair and one material per colour.
+function villageMakeButterflies(r, pal, count) {
+  const g = new THREE.Group();
+  const wingGeo = new THREE.PlaneGeometry(0.09, 0.07);
+  const wingMats = [0xd8a03a, 0xc85a8a, 0x8ab8e8, 0xe8e2d0].map(c =>
+    new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide, transparent: true, opacity: 0.92 }));
+  for (let i = 0; i < count; i++) {
+    const bf = new THREE.Group();
+    const mat = wingMats[i % wingMats.length];
+    const lw = new THREE.Mesh(wingGeo, mat), rw = new THREE.Mesh(wingGeo, mat);
+    lw.position.x = -0.045; rw.position.x = 0.045;
+    const lPivot = new THREE.Group(), rPivot = new THREE.Group();
+    lPivot.add(lw); rPivot.add(rw);
+    bf.add(lPivot); bf.add(rPivot);
+    const a = r() * Math.PI * 2, rad = 4.5 + r() * 9;
+    bf.userData = { l: lPivot, rr: rPivot, phase: r() * 6.28, speed: 0.5 + r() * 0.5,
+      cx: Math.cos(a) * rad, cz: Math.sin(a) * rad, rad: 0.6 + r() * 1.4, h: 0.5 + r() * 0.7 };
+    g.add(bf);
+  }
   return g;
 }
 
@@ -29461,6 +29538,7 @@ function disposeVillageScene() {
   villageNpcs = []; villageChickens = [];
   villageTraffic = []; villageLivestock = []; villageFlocks = []; villageConstructionSites = [];
   villageWeatherFx = null; villageShootingStar = null; villageTwinkleStars = null;
+  villageButterflies = []; villageGroundFx = null;
 }
 
 // The one landmark pool both scenes share. Order matters: the landmark
@@ -30162,6 +30240,57 @@ function buildVillageScene(v) {
   // and mossy boulders. Costs only a handful of draw calls.
   villageScene.add(villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt));
 
+  // Meadow dressing: instanced grass tufts and sunlit pebbles dusted across
+  // the green between the paths — two draw calls for a few hundred touches.
+  if (ruinStage >= 1 && villageSceneQuality.maxAmbientActors > 0) {
+    const fxGroup = new THREE.Group();
+    const tuftGeo = new THREE.ConeGeometry(0.05, 0.22, 4); tuftGeo.translate(0, 0.11, 0);
+    const tuftMat = new THREE.MeshLambertMaterial({ color: pal.grass !== undefined ? pal.grass : 0x5a7a34 });
+    const tuftCount = 150 + tier * 40;
+    const tufts = new THREE.InstancedMesh(tuftGeo, tuftMat, tuftCount);
+    const pebbleGeo = new THREE.DodecahedronGeometry(0.055, 0);
+    const pebbleMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+    const pebbleCount = 60 + tier * 20;
+    const pebbles = new THREE.InstancedMesh(pebbleGeo, pebbleMat, pebbleCount);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), eul = new THREE.Euler(),
+      pos = new THREE.Vector3(), scl = new THREE.Vector3(), col = new THREE.Color();
+    let ti = 0, pi = 0;
+    for (let tries = 0; tries < tuftCount * 6 && (ti < tuftCount || pi < pebbleCount); tries++) {
+      const a = r() * Math.PI * 2, rad = Math.sqrt(r()) * (groundR - 2.5);
+      const gx = Math.cos(a) * rad, gz = Math.sin(a) * rad;
+      if (!spotFree(gx, gz, 0.35)) continue;
+      if (ti < tuftCount) {
+        eul.set((r() - 0.5) * 0.35, r() * 6.28, (r() - 0.5) * 0.35); q.setFromEuler(eul);
+        pos.set(gx, heightAt(gx, gz) - 0.02, gz);
+        const s = 0.6 + r() * 0.9; scl.set(s, s * (0.7 + r() * 0.7), s);
+        m4.compose(pos, q, scl); tufts.setMatrixAt(ti++, m4);
+      } else if (pi < pebbleCount) {
+        eul.set(r() * 6.28, r() * 6.28, 0); q.setFromEuler(eul);
+        pos.set(gx, heightAt(gx, gz), gz);
+        const s = 0.5 + r() * 0.9; scl.set(s, s * 0.6, s);
+        m4.compose(pos, q, scl); pebbles.setMatrixAt(pi, m4);
+        col.copy(tuftMat.color).offsetHSL(0, -0.25, 0.28 + r() * 0.1);
+        pebbles.setColorAt(pi, col); pi++;
+      }
+    }
+    tufts.count = ti; pebbles.count = pi;
+    tufts.instanceMatrix.needsUpdate = true;
+    pebbles.instanceMatrix.needsUpdate = true;
+    if (pebbles.instanceColor) pebbles.instanceColor.needsUpdate = true;
+    tufts.receiveShadow = false; pebbles.receiveShadow = false;
+    fxGroup.add(tufts); fxGroup.add(pebbles);
+    villageGroundFx = fxGroup;
+    villageScene.add(fxGroup);
+  }
+
+  // Butterflies ride the warm air over the flowers (daylight only — the dusk
+  // rebuild naturally drops them because they're added below only when sunny)
+  if (lifeBudget.birds > 0 && daylight.stars < 0.4) {
+    const flutter = villageMakeButterflies(r, pal, Math.min(10, 3 + lifeBudget.birds));
+    villageButterflies.push(flutter);
+    villageScene.add(flutter);
+  }
+
   // Night sky: layered stars (the small field twinkles), a real cratered moon
   // with its halo, slow clouds and the odd shooting star
   for (const tierCfg of [{ n: 260, size: 0.26, op: 0.55 }, { n: 130, size: 0.5, op: 0.95, twinkle: true }]) {
@@ -30643,15 +30772,45 @@ function villageAnimateFrame(t) {
     const sc = 0.55 + cycle * 0.6;
     p.scale.set(sc, sc, 1);
   });
-  // Villagers on their evening circuit of the square
-  villageWalkers.forEach(wk => {
-    const rt = wk.userData.route;
+  // Villagers on their evening circuit of the square — arms swinging in time
+  // with the step, a slight forward lean into the walk.
+  villageWalkers.forEach((wk, wi) => {
+    const u = wk.userData, rt = u.route;
     if (!rt) return;
     const ph = rt.phase + t * rt.speed;
     const x = Math.cos(ph) * rt.rad, z = Math.sin(ph) * rt.rad;
-    wk.position.set(x, Math.abs(Math.sin(t * 6 + rt.phase)) * 0.03, z);
+    const stride = t * 9 + rt.phase;
+    const dogRig = u.dogRig;
+    if (dogRig) { // the village dog: diagonal trot, bobbing head, flapping ears
+      const spd = Math.min(1, Math.abs(rt.speed) * 6);
+      dogRig.legs.forEach((hip, li) => { hip.rotation.x = Math.sin(stride + hip.userData.phase) * 0.62 * spd; });
+      wk.position.set(x, Math.abs(Math.sin(stride)) * 0.035 * spd, z);
+      dogRig.body.position.y = dogRig.bodyY + Math.abs(Math.sin(stride)) * 0.022 * spd;
+      dogRig.neck.rotation.z = Math.sin(stride * 0.5 + dogRig.phase) * 0.12 * spd;
+      dogRig.neck.rotation.y = Math.sin(t * 0.9 + dogRig.phase) * 0.4; // curious glances
+      dogRig.ears.forEach((ear, ei) => { ear.rotation.x = Math.sin(stride + ei * 1.7) * 0.3 * spd; });
+      dogRig.tail.rotation.y = Math.sin(t * 8 + dogRig.phase) * 0.55; // happy sweep
+      const vx = -Math.sin(ph) * Math.sign(rt.speed), vz = Math.cos(ph) * Math.sign(rt.speed);
+      wk.rotation.y = Math.atan2(-vz, vx);
+      return;
+    }
+    wk.position.set(x, Math.abs(Math.sin(t * 6 + rt.phase)) * 0.035, z);
     const vx = -Math.sin(ph) * Math.sign(rt.speed), vz = Math.cos(ph) * Math.sign(rt.speed);
     wk.rotation.y = Math.atan2(-vz, vx);
+    if (u.arms && !wk.rotation.x) { // swing the arms against the stride
+      u.arms[0].rotation.x = Math.sin(stride) * 0.55;
+      u.arms[1].rotation.x = -Math.sin(stride) * 0.55;
+    }
+  });
+  // Idle villagers let their arms drift with an easy breathing sway
+  villageNpcs.forEach((np, ni) => {
+    const u = np.userData;
+    if (!u || !u.arms || u.route) return;
+    const br = Math.sin(t * 1.15 + ni * 1.3);
+    u.arms[0].rotation.x = br * 0.06;
+    u.arms[1].rotation.x = -br * 0.06;
+    u.arms[0].rotation.z = 0.05 + br * 0.03;
+    u.arms[1].rotation.z = -0.05 - br * 0.03;
   });
   // Perched birds bob, hop and glance about
   villageRoofBirds.forEach((b, i) => {
@@ -30669,6 +30828,18 @@ function villageAnimateFrame(t) {
     const peck = Math.max(0, Math.sin(t * (2.1 + (i % 3) * 0.5) + u.phase) - 0.55);
     u.neck.rotation.x = peck * 1.5;
     ch.rotation.y = u.baseRot + Math.sin(t * 0.35 + u.phase) * 0.9;
+  });
+  // Butterflies flutter their figure-eights over the flower patches
+  villageButterflies.forEach(cloud => {
+    cloud.children.forEach(bf => {
+      const u = bf.userData;
+      const px = u.cx + Math.cos(t * u.speed + u.phase) * u.rad;
+      const pz = u.cz + Math.sin(t * u.speed * 1.31 + u.phase * 2) * u.rad;
+      bf.position.set(px, u.h + Math.sin(t * 1.7 + u.phase) * 0.22, pz);
+      const flap = Math.sin(t * 22 + u.phase) * 1.05;
+      u.l.rotation.z = flap; u.rr.rotation.z = -flap;
+      bf.rotation.y = Math.atan2(-Math.cos(t * u.speed + u.phase), Math.sin(t * u.speed * 1.31 + u.phase * 2));
+    });
   });
   // Ducks paddle their circuits
   villageDucks.forEach(dk => {
