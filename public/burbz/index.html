@@ -27401,57 +27401,102 @@ function villageShopDressing(shopKey, g, w, d, r, pal) {
 // A plain villager cottage (no shop) — fills out bigger settlements.
 function villageMakeCottage(r, pal) {
   const g = new THREE.Group();
-  // Homes follow the village's DNA too: the same wall build, roof craft and
-  // painted doors as the trades, so a whole settlement reads as one place.
   const dna = pal.dna || null;
   const wallStyle = dna ? dna.wallStyle : 'timber';
-  const w = 2.2 + r() * 1.1, d = 2.0 + r() * 0.9, h = 1.2 + r() * 0.5;
+  const w = 2.4 + r() * 1.0, d = 2.1 + r() * 0.8, h = 1.3 + r() * 0.4;
   const brick = new THREE.Color().setHSL(0.015 + r() * 0.035, 0.36 + r() * 0.14, 0.28 + r() * 0.07);
   const stoneBody = new THREE.Color(pal.stone).offsetHSL(0, 0.03, 0.05 + (r() - 0.5) * 0.05);
   const bodyMat = new THREE.MeshLambertMaterial({ color: wallStyle === 'brick' ? brick : wallStyle === 'stone' ? stoneBody : new THREE.Color(pal.plaster).offsetHSL(0, 0, (r() - 0.5) * 0.12) });
   const beamMat = new THREE.MeshLambertMaterial({ color: wallStyle === 'painted' && dna ? dna.trim : pal.timber });
+  const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
   const roofTone = pal.roofs[Math.floor(r() * pal.roofs.length)];
   const roofMat = new THREE.MeshLambertMaterial({ color: roofTone });
+  const glassMat = new THREE.MeshBasicMaterial({ color: dna ? dna.windowGlow.hex : 0xffe294 });
+
+  // 1. Stone foundation skirting
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.22, d + 0.12), stoneMat);
+  plinth.position.y = 0.11; g.add(plinth);
+
+  // 2. Main house body
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
-  body.position.y = h / 2; g.add(body);
-  const belt = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.12, d + 0.06), beamMat);
-  belt.position.y = h; g.add(belt);
-  const roofH = (dna && dna.roofStyle === 'thatch' ? 1.05 : 0.9) + r() * 0.6, W = w / 2 + 0.28;
+  body.position.y = h / 2 + 0.11; g.add(body);
+
+  // 3. Timber framing (corner posts + mid-wall studding)
+  for (const sx of [-w/2, w/2]) for (const sz of [-d/2, d/2]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, h + 0.1, 0.12), beamMat);
+    post.position.set(sx, (h + 0.1) / 2 + 0.11, sz); g.add(post);
+  }
+  const eavesBeam = new THREE.Mesh(new THREE.BoxGeometry(w + 0.14, 0.12, d + 0.14), beamMat);
+  eavesBeam.position.y = h + 0.11; g.add(eavesBeam);
+
+  // 4. Overhanging gable roof with rafter trim
+  const roofH = (dna && dna.roofStyle === 'thatch' ? 1.15 : 1.0) + r() * 0.5, W = w / 2 + 0.32;
   const shape = new THREE.Shape(); shape.moveTo(-W, 0); shape.lineTo(W, 0); shape.lineTo(0, roofH); shape.closePath();
-  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: d + 0.5, bevelEnabled: false }), roofMat);
-  roof.position.set(0, h, -(d + 0.5) / 2); g.add(roof);
+  const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: d + 0.65, bevelEnabled: false }), roofMat);
+  roof.position.set(0, h + 0.11, -(d + 0.65) / 2); g.add(roof);
+
   if (dna && dna.roofStyle === 'thatch') {
-    const ridgeRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, d + 0.6, 7),
+    const ridgeRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, d + 0.75, 7),
       new THREE.MeshLambertMaterial({ color: new THREE.Color(roofTone).offsetHSL(0, 0.03, 0.06) }));
-    ridgeRoll.rotation.x = Math.PI / 2; ridgeRoll.position.set(0, h + roofH - 0.03, 0); g.add(ridgeRoll);
+    ridgeRoll.rotation.x = Math.PI / 2; ridgeRoll.position.set(0, h + 0.11 + roofH - 0.02, 0); g.add(ridgeRoll);
   }
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.85, 0.1), dna ? new THREE.MeshLambertMaterial({ color: dna.door }) : beamMat);
-  door.position.set((r() - 0.5) * w * 0.4, 0.43, d / 2 + 0.03); g.add(door);
-  if (r() < 0.75) {
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.06), new THREE.MeshBasicMaterial({ color: dna ? dna.windowGlow.hex : 0xffd98a }));
-    win.position.set(-(r() - 0.5) * w * 0.55, h * 0.6, d / 2 + 0.04); g.add(win);
+
+  // 5. Detailed Wooden Door with frame + iron knocker + stone step
+  const doorX = (r() - 0.5) * w * 0.35;
+  const step = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.3), stoneMat);
+  step.position.set(doorX, 0.05, d / 2 + 0.15); g.add(step);
+
+  const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.95, 0.12), beamMat);
+  doorFrame.position.set(doorX, 0.52, d / 2 + 0.03); g.add(doorFrame);
+
+  const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.85, 0.08), dna ? new THREE.MeshLambertMaterial({ color: dna.door }) : beamMat);
+  doorLeaf.position.set(doorX, 0.50, d / 2 + 0.06); g.add(doorLeaf);
+
+  // 6. Windows with wooden shutters + glowing lattice panes
+  for (const winPos of [[-w * 0.28, d / 2 + 0.04, 0], [w * 0.28, d / 2 + 0.04, 0], [0, -(d / 2 + 0.04), Math.PI]]) {
+    if (Math.abs(winPos[0] - doorX) < 0.45 && winPos[1] > 0) continue; // don't overlap door
+    const winGroup = new THREE.Group();
+    winGroup.position.set(winPos[0], h * 0.58 + 0.11, winPos[1]);
+    winGroup.rotation.y = winPos[2];
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.48, 0.08), beamMat);
+    winGroup.add(frame);
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.09), glassMat);
+    winGroup.add(glass);
+    // Open wooden shutters
+    for (const sx of [-0.28, 0.28]) {
+      const shutter = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.44, 0.04), beamMat);
+      shutter.position.set(sx, 0, 0.03);
+      shutter.rotation.y = sx < 0 ? -0.35 : 0.35;
+      winGroup.add(shutter);
+    }
+    g.add(winGroup);
   }
-  // A lean-to wood store against one gable — the countryside's spare room
-  if (r() < 0.35) {
+
+  // 7. Lean-to wood store
+  if (r() < 0.45) {
     const side = r() < 0.5 ? -1 : 1;
-    const lean = new THREE.Mesh(new THREE.BoxGeometry(0.6, h * 0.55, d * 0.7), bodyMat);
-    lean.position.set(side * (w / 2 + 0.3), h * 0.27, 0); g.add(lean);
-    const leanRoof = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.07, d * 0.78), roofMat);
-    leanRoof.position.set(side * (w / 2 + 0.32), h * 0.6, 0);
+    const lean = new THREE.Mesh(new THREE.BoxGeometry(0.65, h * 0.6, d * 0.72), bodyMat);
+    lean.position.set(side * (w / 2 + 0.325), (h * 0.6) / 2 + 0.11, 0); g.add(lean);
+    const leanRoof = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, d * 0.8), roofMat);
+    leanRoof.position.set(side * (w / 2 + 0.35), h * 0.65 + 0.11, 0);
     leanRoof.rotation.z = side * 0.35; g.add(leanRoof);
   }
-  if (r() < 0.55) {
-    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), new THREE.MeshLambertMaterial({ color: pal.stone }));
-    chimney.position.set((r() - 0.5) * w * 0.4, h + roofH * 0.55, (r() - 0.5) * d * 0.3); g.add(chimney);
+
+  // 8. Stone Chimney with smoke
+  if (r() < 0.75) {
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 0.35), stoneMat);
+    const chimX = (r() < 0.5 ? -1 : 1) * w * 0.28;
+    chimney.position.set(chimX, h + 0.11 + roofH * 0.45, (r() - 0.5) * d * 0.3); g.add(chimney);
     const smokeTex = villageSmokeTexture();
     for (let i = 0; i < 2; i++) {
       const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.32 }));
-      puff.scale.set(0.55, 0.55, 1); puff.position.copy(chimney.position); puff.position.y += 0.5;
+      puff.scale.set(0.55, 0.55, 1); puff.position.copy(chimney.position); puff.position.y += 0.6;
       puff.userData = { baseY: puff.position.y, phase: r() * 3, speed: 0.24 + r() * 0.14 };
       g.add(puff); villageSmokes.push(puff);
     }
   }
-  g.add(villageBlobShadow(Math.max(w, d) * 0.72));
+
+  g.add(villageBlobShadow(Math.max(w, d) * 0.78));
   return g;
 }
 
@@ -27980,13 +28025,18 @@ function villageMakeLivestock(r, pal, kind, register) {
   }
   g.add(neck);
   const legY = (kind === 'pig' ? 0.16 : 0.24) * size;
+  const legs = [];
   for (const lx of [-0.25, 0.25]) for (const lz of [-0.18, 0.18]) {
+    const hip = new THREE.Group();
+    hip.position.set(lx * size, legY * 2, lz * size);
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * size, 0.045 * size, legY * 2, 5), darkMat);
-    leg.position.set(lx * size, legY, lz * size); g.add(leg);
+    leg.position.y = -legY; hip.add(leg);
+    hip.userData.phase = (lx > 0 ? 0 : Math.PI) + (lz < 0 ? 0 : Math.PI * 0.5);
+    g.add(hip); legs.push(hip);
   }
   const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * size, 0.025 * size, 0.25 * size, 4), darkMat);
   tail.position.set(-0.51 * size, 0.58 * size, 0); tail.rotation.z = 0.9; g.add(tail);
-  g.userData = { livestockKind:kind, neck, phase:r() * Math.PI * 2, baseRotationY:0, body };
+  g.userData = { livestockKind:kind, neck, legs, tail, phase:r() * Math.PI * 2, baseRotationY:0, body };
   if (register !== false) villageLivestock.push(g);
   return g;
 }
@@ -28214,16 +28264,19 @@ function villageMakeSettlementStandard(r, pal, settle) {
 
 function villageMakeTree(r, pal) {
   const tree = new THREE.Group();
-  const birch = r() < 0.18;
-  const dead = !birch && r() < 0.08;
-  const trunkMat = new THREE.MeshLambertMaterial({ color: birch ? 0xd8d4c8 : pal.timber });
-  const leafHue = new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL((r() - 0.5) * 0.06, 0, (r() - 0.5) * 0.08);
+  const birch = r() < 0.20;
+  const dead = !birch && r() < 0.06;
+  const trunkMat = new THREE.MeshLambertMaterial({ color: birch ? 0xdcd8ce : pal.timber });
+  const leafHue = new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL((r() - 0.5) * 0.06, 0.05, (r() - 0.5) * 0.08);
   const leafMat = new THREE.MeshLambertMaterial({ color: leafHue });
-  const s = 0.8 + r() * 0.8;
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * s, 0.26 * s, 1.5 * s, 6), trunkMat);
-  trunk.position.y = 0.75 * s; tree.add(trunk);
+  const darkLeafMat = new THREE.MeshLambertMaterial({ color: leafHue.clone().offsetHSL(0, 0, -0.08) });
+  const s = 0.85 + r() * 0.75;
+
+  // Root flare + tapered trunk
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * s, 0.28 * s, 1.6 * s, 7), trunkMat);
+  trunk.position.y = 0.8 * s; tree.add(trunk);
+
   if (dead) {
-    // A bare, wind-bent snag — some crows like it better than any leafy bough
     trunk.scale.y = 1.5; trunk.position.y = 1.1 * s; trunk.rotation.z = (r() - 0.5) * 0.2;
     for (let i = 0; i < 3; i++) {
       const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * s, 0.07 * s, 1.0 * s, 5), trunkMat);
@@ -28231,32 +28284,45 @@ function villageMakeTree(r, pal) {
       branch.rotation.z = (r() - 0.5) * 1.8; branch.rotation.x = (r() - 0.5) * 1.2;
       tree.add(branch);
     }
-    if (r() < 0.5) {
+    if (r() < 0.6) {
       const crow = villageMakeRoofBird(r, 0x18181e);
       crow.position.set(0, 2.3 * s, 0); tree.add(crow);
     }
-  } else if (r() < 0.5) {
-    // Pine — with a snow-dusted tip in frostbitten villages
-    const crown = new THREE.Mesh(new THREE.ConeGeometry(1.15 * s, 2.6 * s, 7), leafMat);
-    crown.position.y = 2.5 * s; tree.add(crown);
+  } else if (r() < 0.52) {
+    // Tiered Pine — 3 distinct layered boughs for rich silhouette
+    const tiers = [
+      { y: 1.6 * s, r: 1.25 * s, h: 1.3 * s },
+      { y: 2.4 * s, r: 0.95 * s, h: 1.2 * s },
+      { y: 3.1 * s, r: 0.60 * s, h: 1.1 * s },
+    ];
+    tiers.forEach((tier, ti) => {
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(tier.r, tier.h, 7), ti === 0 ? darkLeafMat : leafMat);
+      cone.position.y = tier.y; tree.add(cone);
+    });
     if (pal.weather === 'snow') {
-      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.55 * s, 1.0 * s, 7), new THREE.MeshLambertMaterial({ color: 0xe8ecf4 }));
-      cap.position.y = 3.35 * s; tree.add(cap);
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.45 * s, 0.75 * s, 7), new THREE.MeshLambertMaterial({ color: 0xe8ecf4 }));
+      cap.position.y = 3.65 * s; tree.add(cap);
     }
   } else {
-    for (let i = 0; i < 3; i++) {
-      const blob = new THREE.Mesh(new THREE.SphereGeometry((0.75 + r() * 0.4) * s, 7, 6), leafMat);
-      blob.position.set((r() - 0.5) * 0.9 * s, (1.9 + r() * 0.8) * s, (r() - 0.5) * 0.9 * s);
-      tree.add(blob);
-    }
-    if (birch) { // bark bands
-      for (let i = 0; i < 3; i++) {
-        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.165 * s, 0.165 * s, 0.08 * s, 6), new THREE.MeshLambertMaterial({ color: 0x3a382e }));
-        band.position.y = (0.4 + i * 0.4) * s; tree.add(band);
+    // Lush Deciduous / Oak with layered clustered foliage
+    const clusters = [
+      { x: 0, y: 2.1 * s, z: 0, rad: 0.9 * s },
+      { x: 0.35 * s, y: 1.8 * s, z: 0.25 * s, rad: 0.65 * s },
+      { x: -0.35 * s, y: 1.9 * s, z: -0.25 * s, rad: 0.7 * s },
+      { x: 0.1 * s, y: 2.6 * s, z: -0.15 * s, rad: 0.6 * s },
+    ];
+    clusters.forEach((cl, ci) => {
+      const blob = new THREE.Mesh(new THREE.DodecahedronGeometry(cl.rad, 1), ci % 2 === 0 ? leafMat : darkLeafMat);
+      blob.position.set(cl.x, cl.y, cl.z); tree.add(blob);
+    });
+    if (birch) {
+      for (let i = 0; i < 4; i++) {
+        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.165 * s, 0.165 * s, 0.07 * s, 6), new THREE.MeshLambertMaterial({ color: 0x323028 }));
+        band.position.y = (0.35 + i * 0.35) * s; tree.add(band);
       }
     }
   }
-  tree.add(villageBlobShadow(1.0 * s));
+  tree.add(villageBlobShadow(1.2 * s));
   return tree;
 }
 
@@ -28893,8 +28959,7 @@ function villageNpcRegister(g, r, role, article) {
   return g;
 }
 
-// A villager in a hooded cloak. Walkers get a `route`; the rest stand and chat.
-// `role` swaps in profession props (see VILLAGE_NPC_LINES for the cast list).
+// A villager in a hooded cloak with neatly fitted shoulders, cowl and hands.
 function villageMakeVillager(r, pal, role) {
   role = role || 'commoner';
   const g = new THREE.Group();
@@ -28907,23 +28972,26 @@ function villageMakeVillager(r, pal, role) {
         : [0x6a4a3a, 0x3a4a6a, 0x4a5a3a, 0x5a3a52, 0x6a5a34];
   const cloakMat = new THREE.MeshLambertMaterial({ color: cloakCols[Math.floor(r() * cloakCols.length)] });
   const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-  const cloak = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.95, 7), cloakMat);
-  cloak.position.y = 0.48; g.add(cloak);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 6), new THREE.MeshLambertMaterial({ color: 0xd8b890 }));
-  head.position.y = 1.05; g.add(head);
-  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.3, 7), cloakMat);
-  hood.position.y = 1.18; g.add(hood);
-  // Arms on shoulder pivots so walkers get a real gait — idle folk let them
-  // hang with a gentle breathing sway instead.
+  // Tapered body cloak
+  const cloak = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 0.88, 8), cloakMat);
+  cloak.position.y = 0.44; g.add(cloak);
+  // Shoulder mantle/cowl seamlessly covering torso and arm sockets
+  const mantle = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 0.28, 8), cloakMat);
+  mantle.position.y = 0.82; g.add(mantle);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), new THREE.MeshLambertMaterial({ color: 0xd8b890 }));
+  head.position.y = 1.02; g.add(head);
+  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.28, 8), cloakMat);
+  hood.position.y = 1.15; g.add(hood);
+  // Arms positioned directly inside mantle sockets
   const arms = [];
   for (const sx of [-1, 1]) {
     const shoulder = new THREE.Group();
-    shoulder.position.set(sx * 0.27, 0.86, 0);
-    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.42, 5), cloakMat);
-    sleeve.position.y = -0.21; sleeve.rotation.z = sx * 0.08; shoulder.add(sleeve);
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4),
+    shoulder.position.set(sx * 0.19, 0.80, 0);
+    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.04, 0.36, 6), cloakMat);
+    sleeve.position.y = -0.18; sleeve.rotation.z = sx * 0.05; shoulder.add(sleeve);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.04, 5, 4),
       new THREE.MeshLambertMaterial({ color: 0xd8b890 }));
-    hand.position.y = -0.45; shoulder.add(hand);
+    hand.position.y = -0.38; shoulder.add(hand);
     g.add(shoulder); arms.push(shoulder);
   }
   g.userData.arms = arms;
@@ -30669,7 +30737,7 @@ function villageAnimateTrafficActors(actors, t) {
     actor.position.set(cx + Math.cos(ph) * rx, Math.abs(Math.sin(t * 4 + index)) * 0.018, cz + Math.sin(ph) * rz);
     const direction = Math.sign(route.speed || 1), vx = -Math.sin(ph) * rx * direction, vz = Math.cos(ph) * rz * direction;
     actor.rotation.y = Math.atan2(-vz, vx);
-    (u.wheels || []).forEach((wheel, wi) => { wheel.rotation.z = ph * 4.2 + wi * Math.PI; });
+    (u.wheels || []).forEach((wheel, wi) => { wheel.rotation.y = ph * 4.2 + wi * Math.PI; });
     if (u.horse && u.horse.userData && u.horse.userData.neck) u.horse.userData.neck.rotation.z = Math.sin(t * 4.2 + u.phase) * 0.08;
     if (u.pusher) u.pusher.rotation.z = Math.sin(t * 4 + u.phase) * 0.025;
   });
@@ -30679,13 +30747,21 @@ function villageAnimateLivestockActors(animals, t) {
     const u = animal.userData || {};
     if (!u.neck) return;
     if (u.baseRotationY === undefined) u.baseRotationY = animal.rotation.y;
-    const graze = Math.max(0, Math.sin(t * (0.42 + (index % 3) * 0.08) + (u.phase || 0)));
+    const ph = (u.phase || 0);
+    const graze = Math.max(0, Math.sin(t * (0.42 + (index % 3) * 0.08) + ph));
     u.neck.rotation.z = -0.62 * graze;
-    animal.rotation.y = u.baseRotationY + Math.sin(t * 0.18 + (u.phase || 0)) * 0.18;
+    animal.rotation.y = u.baseRotationY + Math.sin(t * 0.18 + ph) * 0.18;
     if (u.body) {
       if (u.body.userData.baseY === undefined) u.body.userData.baseY = u.body.position.y;
-      u.body.position.y = u.body.userData.baseY + Math.sin(t * 1.1 + u.phase) * 0.012;
+      u.body.position.y = u.body.userData.baseY + Math.sin(t * 1.1 + ph) * 0.012;
     }
+    // Subtle leg shift & grazing weight transfer
+    if (u.legs) {
+      u.legs.forEach((hip, li) => {
+        hip.rotation.x = Math.sin(t * 0.8 + hip.userData.phase + ph) * 0.14;
+      });
+    }
+    if (u.tail) u.tail.rotation.y = Math.sin(t * 2.5 + ph) * 0.35;
   });
 }
 function villageAnimateFlockActors(flocks, t) {
