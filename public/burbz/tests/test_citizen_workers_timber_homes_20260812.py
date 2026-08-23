@@ -3,8 +3,12 @@
 citizen-workers-timber-homes-v253-20260812: every producing yard — farm,
 lumber camp, quarry, market, chapel — needs one villager to run it, and an
 unstaffed yard produces nothing at all. The stone-free Timber Cabin is the new
-first home (coins and timber only), rebuildable in quarried stone as a Stone
-Cottage, so homes and residents — not the Quarry — open a fresh province.
+first home (coins and timber only), so homes and residents — not the Quarry —
+open a fresh province.
+
+timber-village-builds-20260823: the home climbs in three steps and a village
+pays for two of them in timber — Timber Cabin, Timber Longhouse, then the Stone
+Cottage, which carries `townFromLevel: 3` and waits for a Town with a quarry.
 """
 import json
 import subprocess
@@ -15,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "two-crews-v308-20260821"
+CURRENT_BUILD = "timber-village-builds-v309-20260823"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -88,22 +92,31 @@ def run_harness(driver: str):
     return json.loads(proc.stdout)
 
 
-def test_the_timber_cabin_is_a_stone_free_first_home_with_a_stone_rebuild():
+def test_the_home_climbs_two_timber_steps_before_it_asks_for_stone():
     out = run_harness("""
 const cabin = EMPIRE_BUILDING_INDEX.cabin;
 console.log(JSON.stringify({
   first: villageBuildingCost(cabin, 0),
-  rebuild: villageBuildingCost(cabin, 1),
+  longhouse: villageBuildingCost(cabin, 1),
+  stone: villageBuildingCost(cabin, 2),
   tier1: villageBuildingTier(cabin, 1),
-  tier2: villageBuildingTier(cabin, 2)
+  tier2: villageBuildingTier(cabin, 2),
+  tier3: villageBuildingTier(cabin, 3),
+  maxLevel: cabin.maxLevel,
+  townFromLevel: cabin.townFromLevel
 }));
 """)
     # The first home asks for no stone at all, so the Quarry no longer has to
     # be a fresh province's first build.
     assert out["first"] == {"coins": 25, "branches": 14, "stone": 0}
-    assert out["rebuild"]["stone"] > 0
+    # ...and neither does the step that doubles it: a village pays in timber.
+    assert out["longhouse"] == {"coins": 45, "branches": 20, "stone": 0}
+    # Only the stone rebuild spends stone, and only a Town can start it.
+    assert out["stone"]["stone"] > 0
+    assert out["maxLevel"] == 3 and out["townFromLevel"] == 3
     assert out["tier1"]["name"] == "Timber Cabin"
-    assert out["tier2"]["name"] == "Stone Cottage"
+    assert out["tier2"]["name"] == "Timber Longhouse"
+    assert out["tier3"]["name"] == "Stone Cottage"
 
 
 def test_the_cabin_is_ungated_shelter_from_level_one():
@@ -113,6 +126,7 @@ def test_the_cabin_is_ungated_shelter_from_level_one():
     assert "need: 'shelter'" in cabin
     assert "unlockLevel" not in cabin  # buildable in a brand-new empire
     assert "costLevels" in cabin
+    assert "Timber Longhouse" in cabin
     assert "Stone Cottage" in cabin
 
 
@@ -191,7 +205,8 @@ def test_the_settler_home_rises_in_the_3d_village():
     html = HTML.read_text(encoding="utf-8")
     assert "function villageMakeSettlerHome(" in html
     assert "b.id === 'cabin'" in html
-    assert "level >= 2 ? '🏠 Stone Cottage' : '🛖 Timber Cabin'" in html
+    assert "level >= 3 ? '🏠 Stone Cottage' : (level === 2 ? '🏡 Timber Longhouse' : '🛖 Timber Cabin')" in html
+    assert "villageMakeSettlerHome(er, pal, level >= 3)" in html
 
 
 def test_release_is_versioned_and_cache_lineage_kept():

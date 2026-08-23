@@ -23,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "two-crews-v308-20260821"
-CURRENT_BUILD = "two-crews-v308-20260821"
+RELEASE = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "timber-village-builds-v309-20260823"
 
 TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market"}
 VILLAGE_TIER = {"cabin", "hut", "well", "cottages", "tavern", "storehouse"}
@@ -67,8 +67,8 @@ def test_village_basics_cost_no_stone_and_the_hut_feeds_the_village():
     block = buildings_block(HTML.read_text(encoding="utf-8"))
     lines = {re.search(r"\{ id: '(\w+)',", l).group(1): l
              for l in block.splitlines() if re.search(r"\{ id: '(\w+)',", l)}
-    # Coins and timber alone for the basics (the cabin's stepped costLevels
-    # keep its deliberate 10-stone town-era rebuild).
+    # Coins and timber alone for the basics. The cabin's stepped costLevels
+    # are checked level by level in test_timber_village_builds_20260823.
     for bid in VILLAGE_TIER - {"cabin"}:
         assert "stone: 0 }" in lines[bid], bid
     hut = lines["hut"]
@@ -125,6 +125,7 @@ def build_harness(driver: str) -> str:
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "settlementAllowsBuilding",
+            "settlementAllowsStep",
             "villageBuildDurationMs",
             "villageConstructions",
             "villageConstructionOf",
