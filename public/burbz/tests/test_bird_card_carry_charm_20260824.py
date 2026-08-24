@@ -19,6 +19,12 @@ CARRY is loads brought home from a quest, the number the field guide's
 "Size & carrying" panel and the quest picker's chip already quote. A
 companion's satchel counts, because that is the load it actually flies with.
 
+Yaan then asked for it on the **card back** too, so the stat block there
+carries it as well. The eight combat stats pair off two to a row; carrying is
+a different kind of number on a different scale, so it spans the full width at
+the foot of the block. Its bar runs against `MAX_CARRY_UNITS` read off the
+size core, not a literal — raise the ceiling there and every bar moves.
+
 The trap this release had to dodge: a Birdex preview bird is built by
 `createBirdFromDiscovery` → `createBirdEntry`, which stamps a **fresh id on
 every render** (`Date.now() + hash`). Reading its equipment would have written
@@ -226,6 +232,67 @@ process.stdout.write(JSON.stringify(out));
     assert result["emptySaveIsSafe"] == bare
     assert result["nothingAtAll"] == 0
     assert result["gearReads"] == 1  # only the bird in the flock was asked
+
+
+# ---------------------------------------------------------------------------
+# The card back
+# ---------------------------------------------------------------------------
+
+def back_stats(source: str):
+    """The (label, colour) of every stat row on the card back, in order."""
+    src = function_source(source, "createBirdCardHTML")
+    block = src[src.index('<div class="card-back-stats">'):]
+    block = block[:block.index("card-back-special")]
+    rows = []
+    for piece in block.split('class="card-back-stat-label">')[1:]:
+        label = piece[:piece.index("</span>")]
+        fill = piece[piece.index("background:var("):]
+        rows.append((label, fill[len("background:var("):fill.index(")")]))
+    return rows
+
+
+def test_the_card_back_carries_every_stat_the_front_does():
+    rows = back_stats(html_text())
+    labels = [label for label, _ in rows]
+    assert labels == ["HP", "ATK", "DEF", "SPD", "MAG", "CHA", "INT", "STAM", "CARRY"]
+    # Carrying last, and in a colour no combat stat already uses.
+    colours = [colour for _, colour in rows]
+    assert colours[-1] == "--hp-yellow"
+    assert len(set(colours)) == len(colours), colours
+
+
+def test_carrying_spans_the_block_because_it_is_not_a_combat_stat():
+    html = html_text()
+    assert ".card-back-stat.is-carry { grid-column:1/-1; }" in html
+    src = function_source(html, "createBirdCardHTML")
+    assert 'class="card-back-stat is-carry"' in src
+    assert '<strong class="card-back-stat-value">${birdCardCarryCapacity(bird)}</strong>' in src
+
+
+def test_the_back_bar_is_scaled_by_the_cores_ceiling_not_a_literal():
+    html = html_text()
+    src = function_source(html, "birdCardCarryPct")
+    assert "core.MAX_CARRY_UNITS" in src
+    assert "${birdCardCarryPct(bird)}%" in function_source(html, "createBirdCardHTML")
+    result = run_node(
+        f"""
+const core = require({json.dumps(str(SIZE_CORE))});
+const birdSizeCore = () => core;
+const birdCarryCapacity = bird => core.carryCapacity(bird);
+const birdSizeSummary = bird => core.sizeSummary(bird, 0);
+let gameState = {{ flock: [] }};
+{function_source(html_text(), "birdCardCarryCapacity")}
+{src}
+const at = massG => birdCardCarryPct({{ massG, stamina: 50, level: 1 }});
+process.stdout.write(JSON.stringify({{
+  goldcrest: at(6), crow: at(500), giant: at(9000), max: core.MAX_CARRY_UNITS
+}}));
+"""
+    )
+    assert result["goldcrest"] == 5      # one load of twenty
+    assert result["crow"] == 25
+    assert result["giant"] == 100        # the cap fills the bar, never overruns
+    assert result["max"] == 20
 
 
 # ---------------------------------------------------------------------------
