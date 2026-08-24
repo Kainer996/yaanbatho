@@ -26,7 +26,9 @@ RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "magpie-market-v314-20260824"
+# magpie-market-v314 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
 
 ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 
@@ -160,7 +162,7 @@ def test_app_wires_the_bonus_into_every_capacity():
 def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    for pin in (f"academy_treehouse_core.js?v={ACADEMY_CORE_PIN}", f"bird_sleep_core.js?v={RELEASE_PIN}"):
+    for pin in (f"academy_treehouse_core.js?v={MAGPIE_CORE_PIN}", f"bird_sleep_core.js?v={RELEASE_PIN}"):
         assert pin in html
         assert f"./{pin}" in sw
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html

@@ -9,6 +9,8 @@ SW = ROOT / "sw.js"
 # The treehouse core's CURRENT ?v pin — later releases that touch the core
 # move this on (the cache-lineage assert below keeps this release's own marker).
 RELEASE_PIN = "roost-retired-v302-20260820"
+# magpie-market-v314 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
 
 
 def _academy_core_json(script: str):
@@ -61,6 +63,6 @@ def test_training_hall_hides_every_terminal_session_and_ships_the_new_core():
     html = INDEX.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
     assert "const active = sessions.filter(s => !['claimed','cancelled','failed'].includes(s.status));" in html
-    assert f'academy_treehouse_core.js?v={RELEASE_PIN}' in html
-    assert f'./academy_treehouse_core.js?v={RELEASE_PIN}' in sw
+    assert f'academy_treehouse_core.js?v={MAGPIE_CORE_PIN}' in html
+    assert f'./academy_treehouse_core.js?v={MAGPIE_CORE_PIN}' in sw
     assert "global-money-hud-v190-20260731-training-claim-terminal-v191-20260801" in sw

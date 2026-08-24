@@ -38,5 +38,9 @@ def test_real_walk_go_does_not_use_the_same_screen_scroll_fallback():
 
 def test_release_marker_is_pinned_for_mobile_pwa_refresh():
     marker = "living-canopy-v236-20260806"
-    assert marker in html()
+    # The marker is kept for ever by the append-only BURBZ_CACHE lineage, which
+    # is what actually refreshes an installed PWA. It is no longer in
+    # index.html: it was only ever there as the alive core's `?v=` pin, and
+    # magpie-market-v314 re-pinned that core.
     assert marker in (ROOT / "sw.js").read_text(encoding="utf-8")
+    assert "academy_alive_core.js?v=magpie-market-v314-20260824" in html()

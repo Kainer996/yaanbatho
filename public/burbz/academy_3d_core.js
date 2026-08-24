@@ -29,6 +29,7 @@
     dorm:        { angle: 200, y: 2.80, reach: 4.6, scale: 1.00 },
     tavern:      { angle: 22,  y: 2.60, reach: 4.9, scale: 1.00 },
     quest_roost: { angle: 300, y: 4.30, reach: 4.4, scale: 0.98 },
+    magpie_market: { angle: 250, y: 3.55, reach: 4.7, scale: 1.02 },
     training:    { angle: 92,  y: 4.60, reach: 5.0, scale: 1.02 },
     kitchen:     { angle: 342, y: 5.60, reach: 4.3, scale: 1.04 },
     hospital:    { angle: 158, y: 6.05, reach: 4.6, scale: 1.00 },
@@ -111,6 +112,13 @@
       wall: 0x9a6c40, wallDark: 0x684a2b, roofCol: 0x554260, trim: 0xc6a44c,
       windows: [{ x: -0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0, y: 0.10, z: 0.90, r: 0.46, wide: true, warm: true }],
       extras: ['open-front', 'lantern-left', 'rope-belt']
+    },
+    magpie_market: {
+      label: 'Magpie Market', roof: 'gable', w: 2.0, d: 1.7, h: 1.30,
+      body: 'cottage', signature: 'awninged-trading-stall', details: ['pub-sign', 'bottle-rack'],
+      wall: 0xb5813f, wallDark: 0x7a5630, roofCol: 0x5f4a2a, trim: 0xc79a4e,
+      windows: [{ x: 0, y: 0.28, z: 0.88, r: 0.48, wide: true, warm: true }],
+      extras: ['awning', 'sign', 'lantern-left', 'lantern-right', 'barrel', 'sacks', 'open-front']
     },
     quest_roost: {
       label: 'Quest Roost', roof: 'gable', w: 1.9, d: 1.7, h: 1.35,

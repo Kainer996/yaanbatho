@@ -24,7 +24,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "magpie-market-v314-20260824"
+# magpie-market-v314 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -280,5 +282,5 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     # The edited roles core ships under the new tag everywhere it is loaded.
-    assert f"'./bird_roles_core.js?v={RELEASE}'" in sw
-    assert f'src="bird_roles_core.js?v={RELEASE}"' in html
+    assert f"'./bird_roles_core.js?v={MAGPIE_CORE_PIN}'" in sw
+    assert f'src="bird_roles_core.js?v={MAGPIE_CORE_PIN}"' in html

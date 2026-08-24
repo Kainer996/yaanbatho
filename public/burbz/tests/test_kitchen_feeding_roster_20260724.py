@@ -55,7 +55,10 @@ def test_no_birds_are_stationed_or_walking_in_the_kitchen():
     assert "kitchen:" not in effects.replace("// No kitchen entry", "")
     # The room interior shows no "Add a bird to this room" panel for the Kitchen.
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "const roomAddPanel = room === 'kitchen' ? ''" in render
+    # magpie-market-v314 generalised the guard: the Kitchen and the Magpie
+    # Market are both counters you visit, so neither offers the panel.
+    assert "const counterRoom = room === 'kitchen' || room === 'magpie_market';" in render
+    assert "const roomAddPanel = counterRoom ? ''" in render
     # Every room now uses the calm assignment grid; the Kitchen can show its
     # appointed Head Chef without treating that bird as a lodger.
     assert "roomBirdGridHTML(stageBirds, room)" in render

@@ -78,6 +78,17 @@
     tavern: [
       { fx: 0.50, fy: 0.46, type: 'thwack' }
     ],
+    // The market painting (assets/academy-buildings-manga/market.png): a round
+    // attic window over a striped awning, a lantern hung on each side of it,
+    // and the goods on the counter catching the stall's own light.
+    magpie_market: [
+      { fx: 0.555, fy: 0.205, type: 'glow', glow: 'window', r: 18 },
+      { fx: 0.355, fy: 0.215, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.298, fy: 0.425, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.723, fy: 0.425, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.812, fy: 0.415, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.500, fy: 0.520, type: 'glow', glow: 'hearth', r: 28 }
+    ],
     quest_roost: [
       { fx: 0.335, fy: 0.475, type: 'glow', glow: 'lantern', r: 18 },
       { fx: 0.80, fy: 0.46, type: 'glow', glow: 'lantern', r: 20 },
