@@ -26,7 +26,7 @@ RELEASE = "raven-weight-and-wit-v255-20260812"
 ROLES_CORE_PIN = "roost-retired-v302-20260820"
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 

@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"

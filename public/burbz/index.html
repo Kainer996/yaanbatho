@@ -25166,13 +25166,20 @@ function renderEmpirePanel() {
   // Yaan's ask (2026-08-24): a tab for a tier the player has not reached yet
   // is a row that can only say "you have none". Counties and Towns wait until
   // the first one exists; Villages is always there, because that is where
-  // every empire starts.
+  // every empire starts — and it leads, because it is the whole empire until
+  // a Town rises (Yaan's follow-up: "have villages at the top").
+  //
+  // One catch, and it is the reason COUNTIES has a second condition: the gold
+  // 🛡️ MERGE INTO ONE COUNTY banner is rendered INTO countiesBody. Gate that
+  // tab on regions.length alone and the player with three starred towns has
+  // nowhere to press it — the first county could never be founded.
   const townCount = settlements.cityCount + settlements.towns.filter(t => !t.cityId).length;
+  const showCounties = regions.length > 0 || regionCandidates.length > 0;
   const navTabsHtml = count
     ? '<div class="empire-nav-tabs">' +
-      (regions.length ? empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) : '') +
-      (townCount ? empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townCount, townsBody) : '') +
       empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 16 folk, 75% happy', villages.length, villagesBody) +
+      (townCount ? empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townCount, townsBody) : '') +
+      (showCounties ? empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) : '') +
       '</div>'
     : '';
   // The Royal Ledger lives in a tiny 👑 button beside the screen title now —
@@ -39517,7 +39524,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-village-declutter-v317-20260824';
+const BURBZ_BUILD = 'villages-first-county-merge-v318-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

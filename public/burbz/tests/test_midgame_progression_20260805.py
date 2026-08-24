@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 

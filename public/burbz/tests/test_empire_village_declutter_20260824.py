@@ -34,6 +34,9 @@ HTML_PATH = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
+# A later release ships over the top; this one changed no core, so its own pin
+# never becomes a `?v=` and only the head build moves on.
+CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 
 
@@ -117,14 +120,17 @@ def test_the_whole_countdown_apparatus_is_gone():
 def test_counties_and_towns_wait_until_the_player_has_one():
     panel = empire_panel()
     tabs = panel[panel.index("const navTabsHtml"):panel.index("panel.innerHTML")]
-    # Each of the two upper tiers is behind its own count.
-    assert "(regions.length ? empireNavTabHTML('nav-counties'" in tabs
+    # Each of the two upper tiers is behind its own count. v318 widened the
+    # county gate: that tab also carries the MERGE INTO ONE COUNTY banner, so
+    # it must stand whenever a merge is ready, county or no county.
+    assert "(showCounties ? empireNavTabHTML('nav-counties'" in tabs
+    assert "const showCounties = regions.length > 0 || regionCandidates.length > 0;" in panel
     assert "(townCount ? empireNavTabHTML('nav-towns'" in tabs
     # Villages is unconditional — it is where every empire starts.
     village_tab = tabs[tabs.index("'nav-villages'") - 40:tabs.index("'nav-villages'")]
     assert "?" not in village_tab
-    # Order on screen is unchanged: counties, towns, villages.
-    assert tabs.index("'nav-counties'") < tabs.index("'nav-towns'") < tabs.index("'nav-villages'")
+    # Order on screen, since v318: villages first, then the ladder above them.
+    assert tabs.index("'nav-villages'") < tabs.index("'nav-towns'") < tabs.index("'nav-counties'")
 
 
 def test_the_town_count_still_covers_cities_and_uncityed_towns():
@@ -238,10 +244,11 @@ def test_the_desc_field_is_untouched_in_the_data():
 def test_release_is_versioned_for_service_worker_self_update():
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
-    assert "const BURBZ_BUILD = '%s';" % OWN_RELEASE_PIN in html
+    assert "const BURBZ_BUILD = '%s';" % CURRENT_BUILD in html
     cache_line = next(l for l in sw.splitlines() if l.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line, "this release stays in the lineage"
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest release goes on the end"
 
 
 def test_no_core_pin_moved_because_no_core_changed():

@@ -19,7 +19,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
 
 
 def empire_logic(html: str) -> str:
@@ -45,12 +45,13 @@ def test_only_standalone_villages_get_rows():
     assert "'YOUR VILLAGES'" not in body
 
 
-def test_the_order_runs_top_down_counties_then_towns_then_villages():
+def test_the_order_runs_bottom_up_villages_then_towns_then_counties():
+    # v318, Yaan's ask: villages at the top of the Empire screen.
     body = ledger(HTML.read_text(encoding="utf-8"))
     start = body.index("const navTabsHtml")
     block = body[start:body.index("// Order on screen", start)]
-    assert block.index("'nav-counties'") < block.index("'nav-towns'")
-    assert block.index("'nav-towns'") < block.index("'nav-villages'")
+    assert block.index("'nav-villages'") < block.index("'nav-towns'")
+    assert block.index("'nav-towns'") < block.index("'nav-counties'")
 
 
 def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():

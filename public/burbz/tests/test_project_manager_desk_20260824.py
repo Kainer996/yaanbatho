@@ -32,7 +32,7 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
 # The release that last edited bird_roles_core.js.
 ROLES_CORE_PIN = "magpie-market-v316-20260824"
 
