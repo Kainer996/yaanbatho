@@ -29,6 +29,7 @@
     oak_twig:     { id:'oak_twig',     label:'Oak Twig',      icon:'🪵', rarity:'common',    copy:'Sturdy forest timber for hafts and frames.' },
     river_reed:   { id:'river_reed',   label:'River Reed',    icon:'🌾', rarity:'common',    copy:'Supple reed for bindings and fletching.' },
     iron_grit:    { id:'iron_grit',    label:'Iron Grit',     icon:'⚙️', rarity:'common',    copy:'Gizzard-stone iron, ground fine for edges.' },
+    iron_ingot:   { id:'iron_ingot',   label:'Iron Ingot',    icon:'🔩', rarity:'uncommon',  copy:'Foundry-poured metal, true and clean for fine gear.' },
     down_tuft:    { id:'down_tuft',    label:'Down Tuft',     icon:'🪶', rarity:'common',    copy:'Warm underdown for padding armour.' },
     moon_dust:    { id:'moon_dust',    label:'Moon Dust',     icon:'🌙', rarity:'uncommon',  copy:'Glimmer shed by the Moon Observatory\'s lenses.' },
     storm_glass:  { id:'storm_glass',  label:'Storm Glass',   icon:'🌩️', rarity:'uncommon',  copy:'Sand fused by lightning — hums with speed.' },
@@ -381,9 +382,9 @@
   // Which materials a gear kind draws on, cheapest first; rarity depth decides
   // how far down the list the recipe reaches.
   const KIND_MATERIALS = {
-    talon:   ['iron_grit', 'oak_twig', 'storm_glass', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
+    talon:   ['iron_grit', 'iron_ingot', 'oak_twig', 'storm_glass', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
     wand:    ['river_reed', 'moon_dust', 'storm_glass', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
-    armour:  ['down_tuft', 'oak_twig', 'iron_grit', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
+    armour:  ['down_tuft', 'oak_twig', 'iron_grit', 'iron_ingot', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     trinket: ['river_reed', 'storm_glass', 'moon_dust', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
     satchel: ['river_reed', 'oak_twig', 'down_tuft', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     spell:   ['river_reed', 'moon_dust', 'sun_amber', 'gold_thread', 'ancient_rune', 'phoenix_ember'],

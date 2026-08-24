@@ -23741,7 +23741,9 @@ const EMPIRE_BUILDINGS = [
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, tier: 'town', cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, tier: 'town', cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
   { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, tier: 'town', cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
-  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 20, stone: 0 }, buildMinutes: 240, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' }
+  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 20, stone: 0 }, buildMinutes: 240, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' },
+  { id: 'foundry', icon: '⚒️', name: 'Iron Foundry', maxLevel: 3, tier: 'town', cost: { coins: 110, branches: 30, stone: 18 }, costLevels: [{ coins: 110, branches: 30, stone: 18 }, { coins: 190, branches: 44, stone: 26 }, { coins: 300, branches: 60, stone: 38 }], buildMinutes: 200, workers: 2, workPriority: 6, produces: { materials: { iron_ingot: 1 } }, unlockLevel: 9, desc: 'Two smiths smelt the Miners’ iron grit into ⚙️1 Iron Ingot per cycle per level — the clean metal the Fletcher’s Forge craves for finer gear.' },
+  { id: 'entertainment', icon: '🎭', name: 'Entertainment House', maxLevel: 3, tier: 'town', cost: { coins: 95, branches: 28, stone: 8 }, costLevels: [{ coins: 95, branches: 28, stone: 8 }, { coins: 160, branches: 40, stone: 14 }, { coins: 260, branches: 55, stone: 22 }], buildMinutes: 170, need: 'joy', perLevel: 14, coinsPerLevel: 3, workers: 1, workPriority: 5, unlockLevel: 7, tiers: [{ name: 'Tavern & Games Yard', icon: '🍻', desc: 'Skittles, darts and decent ale — cheer for 14 villagers and +3 🪙 taxes per level.' }, { name: 'Inn & Playhouse', icon: '🎭', desc: 'A proper stage: travelling bards play to 28 happy villagers and +6 🪙 taxes per level.' }, { name: 'Grand Music Hall', icon: '🎶', desc: 'The whole realm talks about this stage — 42 cheerful villagers and +9 🪙 taxes per level.' }], desc: 'Invest in fun: every level raises a livelier hall — alehouse games, then a bard’s stage, then a grand music hall — cheering 14 villagers and earning +3 🪙 taxes per level. Needs 1 host.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -26135,7 +26137,9 @@ function renderTownScreen() {
     '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
     ruinsHtml +
     '<div class="town-section"><div class="town-section-title">🏗️ Town Networks</div><div class="town-section-copy">Each upgrade automatically strengthens the least-developed eligible ward. Wards never become separate destinations again.</div><div class="town-network-grid">' + networkHtml + '</div></div>' +
+    metalWorksSectionHtml(settle) +
     '<div class="town-section"><div class="town-section-title">🥣 Provisions, Workforce & Services</div><div class="town-section-copy">Each fully fed, watered and happy ward can grow up to its own housing limit. ' + snap.workforce.working + '/' + snap.workforce.required + ' required workers staffed from ' + snap.workforce.available + ' residents.</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
+    entertainmentSectionHtml(settle) +
     '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy</div><div class="town-section-copy">' + escapeHtml(policyNote) + '</div><div class="town-policy-grid">' + policies + '</div></div>' +
     countyHtml +
     visitSection +
@@ -26158,6 +26162,32 @@ function renderTownScreen() {
   renderTownSquare(settle);
   renderTownSheet();
 }
+// 🎭 Entertainment investment — taverns, an inn stage, then the grand hall.
+function entertainmentSectionHtml(settle) {
+  const b = EMPIRE_BUILDING_INDEX.entertainment;
+  if (!b) return '';
+  const members = townMemberRecords(settle);
+  const level = members.reduce((sum, rec) => sum + villageBuildingLevel(rec, 'entertainment'), 0);
+  const max = members.length * b.maxLevel;
+  return '<div class="town-section" id="townEntertainmentSection"><div class="town-section-title">🎭 Entertainment · Level ' + level + '/' + max + '</div><div class="town-section-copy">' +
+    (level <= 0
+      ? 'No venue yet. Invest and the first Tavern & Games Yard rises — skittles, darts and decent ale for the whole town.'
+      : level < 2
+        ? 'The tavern yard hums. Next step: an Inn & Playhouse with travelling bards on a proper stage.'
+        : level < 3
+          ? 'The Inn & Playhouse draws crowds from every ward. One more investment raises the Grand Music Hall.'
+          : '🎶 The Grand Music Hall stands at full splendour — the whole realm talks about this stage.') +
+    ' Venues cheer villagers (Joy) and pay taxes on every ticket.</div><button class="town-action" data-action="town-network" data-building="entertainment">INVEST IN FUN · RAISE EVERY WARD\'S VENUE</button></div>';
+}
+
+// ⚒️ Metal production summary for crafting.
+function metalWorksSectionHtml(settle) {
+  const snap = townEconomySnapshot(settle);
+  const ingots = (snap.production && snap.production.materials && snap.production.materials.iron_ingot) || 0;
+  if (!ingots) return '';
+  return '<div class="town-section" id="townMetalSection"><div class="town-section-title">⚒️ Metal Works</div><div class="town-section-copy">Your foundries pour ⚙️ <strong>' + ingots + ' Iron Ingot' + (ingots === 1 ? '' : 's') + '</strong> every cycle straight into the Fletcher’s Forge stock — finer talons and armour need clean metal, not raw grit.</div></div>';
+}
+
 // The living town at the top of the screen. Every yard the governor raises
 // stands in its quarter, and every one of them can be tapped and run.
 function renderTownSquare(settle) {
@@ -26592,6 +26622,13 @@ function burbzDaylightPalette(pal, daylight) {
 let villageScene = null, villageRenderer = null, villageCamera = null, villageRunning = false;
 let villageBuildings = [], villageSigns = [], villageTorches = [], villageSmokes = [], villageFireflies = null, villageWindmills = [];
 let villageWalkers = [], villageRoofBirds = [], villageCloths = [], villageDucks = [], villageClouds = [], villageWaterMats = [];
+// Real-life layer: where everyone LIVES and WORKS. The build pass records
+// every house and staffed yard here, then the commuter system walks actual
+// villagers between the two — nobody loiters who should be at work or in bed.
+let villageHomes = [], villageJobs = [], villageFishSpots = [];
+// Workplace doors per building id — the econ pass overwrites these as yards
+// are placed, so commuters walk to the REAL yard, not a guessed spot.
+const villageJobAnchors = {};
 let villageNpcs = [], villageChickens = [], villageButterflies = [], villageGroundFx = null;
 // Living-settlement actors use their own registries. Town builders temporarily
 // register here too, then buildTownScene adopts only the entries it created.
@@ -27720,6 +27757,66 @@ function villageShopDressing(shopKey, g, w, d, r, pal) {
   }
 }
 
+// ---- Fishing -----------------------------------------------------------------
+// A plank jetty reaching out over the water: posts down into the bed, two
+// planked walks, a mooring post and a bait pail. userData.anchor is the spot
+// a fisher stands at the water's edge (world space once the parent moves).
+function villageMakeJetty(r, pal) {
+  const g = new THREE.Group();
+  const plankMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, -0.04) });
+  const walk = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 3.4), plankMat);
+  walk.position.set(0, 0.34, 1.7); g.add(walk);
+  for (let i = 0; i < 4; i++) {
+    for (const sx of [-0.38, 0.38]) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.9, 6), plankMat);
+      post.position.set(sx, 0.05 - 0.35, 0.4 + i * 0.95); g.add(post);
+    }
+  }
+  const moor = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.7, 6), plankMat);
+  moor.position.set(0.38, 0.55, 3.2); g.add(moor);
+  const pail = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.16, 7), new THREE.MeshLambertMaterial({ color: 0x5a626c }));
+  pail.position.set(-0.28, 0.46, 2.5); g.add(pail);
+  // Anchor: where the jetty meets dry land — just behind the first post.
+  g.userData.anchor = new THREE.Vector3(0, 0, -0.7);
+  g.userData.sceneLabel = { icon:'🎣', name:'Fishing Jetty', detail:'The village fishes these waters morning and evening' };
+  g.add(villageBlobShadow(Math.max(uwSafe(g), 2.2)));
+  return g;
+}
+function uwSafe(g) { return 1.6; }
+// A clinker rowboat that bobs on the water, oars shipped
+function villageMakeRowboat(r, pal) {
+  const g = new THREE.Group();
+  const hullMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0.02, 0.06) });
+  const hull = new THREE.Mesh(new THREE.SphereGeometry(0.62, 10, 8), hullMat);
+  hull.scale.set(0.55, 0.32, 1.25); hull.position.y = 0.12; g.add(hull);
+  const inner = new THREE.Mesh(new THREE.SphereGeometry(0.52, 10, 8), new THREE.MeshLambertMaterial({ color: 0x24303a }));
+  inner.scale.set(0.45, 0.26, 1.05); inner.position.y = 0.18; g.add(inner);
+  for (const sx of [-0.3, 0.3]) {
+    const oar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 1.1, 5), hullMat);
+    oar.rotation.z = sx > 0 ? -1.2 : 1.2; oar.position.set(sx + sx * 0.15, 0.16, -0.2); g.add(oar);
+  }
+  g.userData.bobPhase = r() * 6.28;
+  g.userData.sceneLabel = { icon:'🛶', name:'Rowboat', detail:"Someone else's livelihood, tied up for the night" };
+  g.add(villageBlobShadow(1.1));
+  return g;
+}
+// A quiet pond corner turned into a fishing spot: a small stool, a rod rest
+// and a wicker creel. anchor marks where the fisher sits.
+function villageMakeFishingSpot(r, pal) {
+  const g = new THREE.Group();
+  const timberMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.3, 7), timberMat);
+  stool.position.y = 0.15; g.add(stool);
+  const rest = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.6, 5), timberMat);
+  rest.position.set(0.22, 0.3, 0.1); rest.rotation.z = -0.35; g.add(rest);
+  const creel = new THREE.Mesh(new THREE.SphereGeometry(0.13, 7, 6), new THREE.MeshLambertMaterial({ color: 0xa38b5c }));
+  creel.scale.set(1, 0.75, 0.8); creel.position.set(-0.3, 0.1, 0.05); g.add(creel);
+  g.userData.anchor = new THREE.Vector3(0.35, 0, 0.35);
+  g.userData.sceneLabel = { icon:'🎣', name:'Fishing Spot', detail:'Fine coarse fishing on this pond' };
+  g.add(villageBlobShadow(0.6));
+  return g;
+}
+
 // ---- Props -------------------------------------------------------------------
 // A plain villager cottage (no shop) — fills out bigger settlements.
 function villageMakeCottage(r, pal) {
@@ -28686,6 +28783,63 @@ function villageMakeSettlementStandard(r, pal, settle) {
   }
   grp.add(villageBlobShadow(1.6));
   return grp;
+}
+
+// Instanced wildflowers: one InstancedMesh of small blossom crosses scattered
+// over the meadow, denser near the settlement, thinning toward the tree line.
+function villageMakeFlowerField(r, pal, claims, innerClear) {
+  const COUNT = 140;
+  const petalCols = [0xd05a72, 0xe8c84a, 0xc8cdec, 0xffffff, 0xd07a3a];
+  const geo = new THREE.PlaneGeometry(0.16, 0.16);
+  const mats = petalCols.map(c => new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide }));
+  const groups = mats.map(m => {
+    const im = new THREE.InstancedMesh(geo, m, COUNT);
+    im.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+    return im;
+  });
+  const dummy = new THREE.Object3D();
+  let placed = 0;
+  for (let i = 0; i < COUNT * 3 && placed < COUNT; i++) {
+    const a = r() * Math.PI * 2, d = innerClear + 1.5 + r() * 20;
+    const x = Math.cos(a) * d, z = Math.sin(a) * d;
+    if (claims && claims.some(c => Math.hypot(x - c.x, z - c.z) < (c.rad || 1) + 0.5)) continue;
+    const gi = Math.floor(r() * mats.length);
+    if (groups[gi].count >= COUNT) continue;
+    dummy.position.set(x, 0.06 + r() * 0.05, z);
+    dummy.rotation.set(-Math.PI / 2 + (r() - 0.5) * 0.5, r() * Math.PI, 0);
+    dummy.scale.setScalar(0.7 + r() * 0.9);
+    dummy.updateMatrix();
+    groups[gi].setMatrixAt(groups[gi].count++, dummy.matrix);
+    placed++;
+  }
+  groups.forEach(g => { g.count = Math.min(g.count, COUNT); g.userData.sky = false; });
+  const field = new THREE.Group();
+  groups.forEach(g => field.add(g));
+  return field;
+}
+// Instanced grass tufts — slightly taller dark-green fans that break up the
+// flat lawn colour without a single extra draw call per blade.
+function villageMakeTuftField(r, pal, claims, innerClear) {
+  const COUNT = 180;
+  const geo = new THREE.ConeGeometry(0.09, 0.34, 4);
+  const mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.leaf || 0x2c3a18).offsetHSL(0.02, 0.08, 0.10) });
+  const im = new THREE.InstancedMesh(geo, mat, COUNT);
+  im.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  const dummy = new THREE.Object3D();
+  let placed = 0;
+  for (let i = 0; i < COUNT * 3 && placed < COUNT; i++) {
+    const a = r() * Math.PI * 2, d = innerClear + 1.2 + r() * 22;
+    const x = Math.cos(a) * d, z = Math.sin(a) * d;
+    if (claims && claims.some(c => Math.hypot(x - c.x, z - c.z) < (c.rad || 1) + 0.4)) continue;
+    dummy.position.set(x, 0.14, z);
+    dummy.rotation.set((r() - 0.5) * 0.35, r() * Math.PI, (r() - 0.5) * 0.35);
+    dummy.scale.setScalar(0.7 + r() * 1.0);
+    dummy.updateMatrix();
+    im.setMatrixAt(im.count++, dummy.matrix);
+    placed++;
+  }
+  im.count = Math.min(im.count, COUNT);
+  return im;
 }
 
 function villageMakeTree(r, pal) {
@@ -29901,7 +30055,7 @@ function ensureVillageRenderer(stage) {
     return;
   }
   villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 140); // far covers the 96-radius sky dome from max orbit
-  villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
   settlementSceneApplyDpr('village', villageRenderer, villageSceneQuality);
   villageRenderer.shadowMap.enabled = true; // real moonlight shadows
   villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -30045,6 +30199,7 @@ function disposeVillageScene() {
   villageScene = null;
   villageBuildings = []; villageSigns = []; villageTorches = []; villageSmokes = []; villageFireflies = null; villageWindmills = [];
   villageWalkers = []; villageRoofBirds = []; villageCloths = []; villageDucks = []; villageClouds = []; villageWaterMats = [];
+  villageHomes = []; villageJobs = []; villageFishSpots = [];
   villageNpcs = []; villageChickens = [];
   villageTraffic = []; villageLivestock = []; villageFlocks = []; villageConstructionSites = [];
   villageWeatherFx = null; villageShootingStar = null; villageTwinkleStars = null;
@@ -30605,7 +30760,7 @@ function buildVillageScene(v) {
   // a duck pond and a scarecrow with its jury of sparrows, the next a fairy
   // ring, beehives, washing on the line and a snowman.
   const dressing = [
-    { p: 0.55, rad: 3.2, min: 10, max: 15, make: () => villageMakePond(r, pal) },
+    { p: 0.55, rad: 3.2, min: 10, max: 15, make: () => { const spot = villageMakeFishingSpot(r, pal); villageFishSpots.push(spot.userData.anchor); return spot; } },
     { p: lifeBudget.livestock ? Math.min(0.82, 0.3 + lifeBudget.livestock * 0.16) : 0, rad: 2.4, min: 11, max: 15, make: () => { const pen = villageMakePen(r, pal, lifeBudget.livestock); pen.rotation.y = r() * Math.PI; return pen; } },
     { p: 0.6, rad: 1.2, min: 5.5, max: 8.5, make: () => { const cart = villageMakeCart(r, pal); cart.rotation.y = r() * Math.PI * 2; return cart; } },
     { p: tier >= 1 ? 0.5 : 0, rad: 1.6, min: 13, max: 17, make: () => villageMakeHay(r, pal) },
@@ -30633,28 +30788,105 @@ function buildVillageScene(v) {
     villageScene.add(piece);
   });
 
+  // Riverside villages always keep one jetty out over the river itself — the
+  // water is why they settled here. Flourishing villages staff it with fishers.
+  if (layout === 'riverside' && ruinStage >= 1) {
+    const jetty = villageMakeJetty(r, pal);
+    const bankX = riverPx - riverUx * (riverW / 2 + 0.7), bankZ = riverPz - riverUz * (riverW / 2 + 0.7);
+    jetty.position.set(bankX, 0, bankZ);
+    jetty.rotation.y = Math.atan2(riverPx - bankX, riverPz - bankZ);
+    villageScene.add(jetty);
+    villageFishSpots.push(jetty.userData.anchor);
+    if (ruinStage === 2) {
+      // One or two proper fishers work the jetty, rods out over the water.
+      const fishers = 1 + Math.floor(r() * 2);
+      for (let fi = 0; fi < fishers; fi++) {
+        const ang = jetty.rotation.y;
+        const along = 0.5 + fi * 0.8;
+        const fx = bankX + Math.sin(ang) * along * Math.cos(ang) + Math.cos(ang) * 0.35 * (fi % 2 ? 1 : -1);
+        const fz = bankZ + Math.cos(ang) * along * Math.cos(ang) - Math.sin(ang) * 0.35 * (fi % 2 ? 1 : -1);
+        const fisher = villageMakeVillager(r, pal, 'fisher');
+        fisher.position.set(fx, 0, fz);
+        fisher.rotation.y = ang + Math.PI + (r() - 0.5) * 0.4; // face the water
+        fisher.userData.commuter = { home: null, work: jetty.userData.anchor.clone(), phase: r() * 6.28 };
+        villageScene.add(fisher);
+      }
+    }
+    // A rowboat bobs at the jetty's end on flourishing rivers
+    if (ruinStage === 2 && r() < 0.7) {
+      const boat = villageMakeRowboat(r, pal);
+      boat.position.set(riverPx, 0.02, riverPz);
+      boat.rotation.y = r() * Math.PI * 2;
+      villageScene.add(boat);
+    }
+  }
+
   // Villagers out in the evening air: elders, children and townsfolk near the
   // square, walkers on slow circuits, children darting on quicker ones, a dog
   // trotting its rounds and hens pecking at the plaza edge. Tap anyone to chat.
-  const visiblePeople = ruinStage === 0 ? Math.min(2, lifeBudget.people) : ruinStage === 1 ? Math.ceil(lifeBudget.people * 0.58) : lifeBudget.people;
-  const idlers = Math.ceil(visiblePeople * 0.56);
-  for (let i = 0; i < idlers; i++) {
-    const a = r() * Math.PI * 2, rad = 2.4 + r() * 4;
+  // TRUE POPULATION ON THE STREETS. The crowd no longer guesses from a curve:
+  // it is drawn from the real ledger — one visible resident per few unlocked
+  // beds (the rest are indoors at work or asleep), capped by the device's
+  // actor budget so phones stay smooth. Every staffed yard posts workers who
+  // actually walk to that yard; everyone else lives in a registered home and
+  // commutes between its door and the square.
+  const truePop = econRec ? (ensureVillageEconomy(econRec).population || 0) : 0;
+  const residentsOnShow = ruinStage === 0 ? Math.min(2, truePop ? 2 : 1)
+    : Math.min(lifeBudget.people, Math.max(1, Math.round(truePop / 6)));
+  const crew = econRec ? villageWorkforce(econRec) : { staffed: {}, assigned: {} };
+  const jobPosts = [];
+  if (econRec && ruinStage >= 1) EMPIRE_BUILDINGS.forEach(b => {
+    const assigned = crew.assigned[b.id] || 0;
+    if (!assigned) return;
+    const anchor = villageJobAnchors[b.id];
+    if (anchor) for (let wi = 0; wi < assigned; wi++) jobPosts.push(anchor);
+  });
+  let workerCount = Math.min(jobPosts.length, Math.floor(residentsOnShow * 0.55));
+  const strollers = Math.max(0, residentsOnShow - workerCount);
+  // Workers: spawn at their workplace door, commute to their own home.
+  for (let i = 0; i < workerCount; i++) {
+    const workAt = jobPosts[i % jobPosts.length];
+    const homeAt = villageHomes.length ? villageHomes[(i * 7 + 3) % villageHomes.length].pos : null;
+    const soul = villageMakeVillager(r, pal, 'commoner');
+    soul.position.copy(workAt).add(new THREE.Vector3((r() - 0.5) * 1.4, 0, (r() - 0.5) * 1.4));
+    soul.rotation.y = r() * Math.PI * 2;
+    soul.userData.commuter = {
+      work: workAt.clone(),
+      home: homeAt ? homeAt.clone() : null,
+      phase: r(),                    // 0..1 through the day cycle
+      period: 26 + r() * 22,         // seconds per round trip
+      pause: 5 + r() * 9
+    };
+    villageWalkers.push(soul);
+    villageScene.add(soul);
+  }
+  // Strollers: idle near their own homes and drift to the square of an evening.
+  for (let i = 0; i < strollers; i++) {
     const roll = r();
     const role = roll < 0.45 ? 'commoner' : roll < 0.72 ? 'child' : 'elder';
     const soul = villageMakeVillager(r, pal, role);
-    soul.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+    const homeAt = villageHomes.length ? villageHomes[(i * 11 + 5) % villageHomes.length].pos : null;
+    const baseX = homeAt ? homeAt.x + (r() - 0.5) * 3 : Math.cos(r() * Math.PI * 2) * (2.4 + r() * 4);
+    const baseZ = homeAt ? homeAt.z + (r() - 0.5) * 3 : Math.sin(r() * Math.PI * 2) * (2.4 + r() * 4);
+    soul.position.set(baseX, 0, baseZ);
     soul.rotation.y = r() * Math.PI * 2;
+    soul.userData.commuter = {
+      home: homeAt ? homeAt.clone() : new THREE.Vector3(baseX, 0, baseZ),
+      work: null,                    // no job: drifts between home and the square
+      square: new THREE.Vector3(Math.cos(r() * Math.PI * 2) * 3.4, 0, Math.sin(r() * Math.PI * 2) * 3.4),
+      phase: r(), period: 34 + r() * 30, pause: 8 + r() * 12,
+      wander: true
+    };
+    villageWalkers.push(soul);
     villageScene.add(soul);
   }
-  const walkers = ruinStage === 0 ? 0 : Math.max(0, visiblePeople - idlers);
-  for (let i = 0; i < walkers; i++) {
-    const young = r() < 0.35;
-    const soul = villageMakeVillager(r, pal, young ? 'child' : 'commoner');
+  // A few children play quick circuits of the green regardless of employment.
+  if (ruinStage === 2) for (let i = 0; i < 2; i++) {
+    const soul = villageMakeVillager(r, pal, 'child');
     soul.userData.route = {
-      rad: (young ? 3.2 : 4.4) + r() * 1.8,
+      rad: 3.2 + r() * 1.8,
       phase: r() * Math.PI * 2,
-      speed: (young ? 0.22 : 0.1 + r() * 0.08) * (r() < 0.5 ? -1 : 1)
+      speed: (0.22) * (r() < 0.5 ? -1 : 1)
     };
     villageWalkers.push(soul);
     villageScene.add(soul);
@@ -30913,6 +31145,12 @@ function buildVillageScene(v) {
     villageScene.add(villageWeatherFx);
   }
 
+  // Wildflower and tuft drifts across the meadow — one instanced draw each,
+  // so even modest phones get a rich, non-blocky ground layer at 60fps.
+  const __floraClaims = claimed.slice();
+  villageScene.add(villageMakeFlowerField(r, pal, __floraClaims, layout === 'hamlet' ? 4.2 : 6.4));
+  villageScene.add(villageMakeTuftField(r, pal, __floraClaims, layout === 'hamlet' ? 4.2 : 6.4));
+
   // ---- Governor's constructions ---------------------------------------------
   // Structures raised from the province management panel appear in the village
   // itself. A separate rng stream (er) keeps their placement stable without
@@ -30946,9 +31184,11 @@ function buildVillageScene(v) {
       const pendingCon = villageConstructionOf(econRec, b.id);
       const rising = !!pendingCon;
       if (!level && !rising) return;
+      let __jobSpot = null; // where this yard's door lands (for commuters)
       if (rising) {
         // The building being built: scaffold, half-raised walls, busy builder.
         const spot = econScatter(8.5, 13.5, 2.8);
+        if (spot) __jobSpot = spot;
         if (spot) {
           const site = villageMakeConstructionSite(er, pal, constructionProgress(pendingCon), pendingCon);
           site.position.set(spot.x, 0, spot.z);
@@ -30958,6 +31198,8 @@ function buildVillageScene(v) {
         }
         if (!level) return; // nothing finished yet — only the site shows
       }
+      const __jobAnchor = new THREE.Vector3(__jobSpot ? __jobSpot.x : 0, 0, __jobSpot ? __jobSpot.z : 0);
+      if (b.workers && __jobSpot) villageJobAnchors[b.id] = __jobAnchor;
       if (b.id === 'cabin') {
         // The first home climbs in three steps: a log cabin, the same logs
         // stretched into a longhouse, then the whole thing rebuilt in stone.
@@ -30969,6 +31211,9 @@ function buildVillageScene(v) {
         home.position.set(spot.x, 0, spot.z);
         home.lookAt(0, 0, 0); home.rotation.x = 0; home.rotation.z = 0;
         home.rotation.y += (er() - 0.5) * 0.4;
+        // This is a REAL home: register its door so commuters sleep here.
+        const homeDoor = new THREE.Vector3(spot.x, 0, spot.z).add(new THREE.Vector3(-Math.sin(home.rotation.y), 0, -Math.cos(home.rotation.y)).multiplyScalar(-1.6));
+        for (let hi = 0; hi < (level >= 3 ? 18 : level === 2 ? 12 : 6); hi++) villageHomes.push({ pos: homeDoor, tier: level });
         econLabel(home, level >= 3 ? '🏠 Stone Cottage' : (level === 2 ? '🏡 Timber Longhouse' : '🛖 Timber Cabin'), 2.3);
         villageScene.add(home);
       } else if (b.id === 'hut') {
@@ -31025,6 +31270,7 @@ function buildVillageScene(v) {
         well.add(body);
         well.add(villageBlobShadow(1.3));
         well.position.set(0, 0, 0);
+        delete villageJobAnchors.well; // the well is a landmark, not a worksite
         econLabel(well, '🪣 Timber Well', 3.1);
         villageScene.add(well);
       } else if (b.id === 'cottages') {
@@ -31036,6 +31282,9 @@ function buildVillageScene(v) {
           cottage.lookAt(0, 0, 0); cottage.rotation.x = 0; cottage.rotation.z = 0;
           cottage.rotation.y += (er() - 0.5) * 0.4;
           villageScene.add(cottage);
+          // Twelve villagers live down this row per level — one real door each.
+          const cotDoor = new THREE.Vector3(spot.x, 0, spot.z).add(new THREE.Vector3(Math.sin(cottage.rotation.y), 0, Math.cos(cottage.rotation.y)).multiplyScalar(1.7));
+          for (let bi = 0; bi < 12; bi++) villageHomes.push({ pos: cotDoor, tier: 1 });
         }
       } else if (b.id === 'tavern') {
         const spot = econScatter(8.5, 11.5, 3.2);
@@ -31385,7 +31634,10 @@ function villageAnimate(ts) {
   villageAnimateFrame((ts || 0) / 1000);
 }
 
+let __villageLastT = 0;
 function villageAnimateFrame(t) {
+  const dtFrame = Math.max(0.016, Math.min(0.12, t - __villageLastT)); // clamp tab-switch jumps
+  __villageLastT = t;
   const motion = settlementSceneMotionScale();
   // Slow idle drift, but only once the player has left the camera alone for a
   // while — never wrestle the view away from someone exploring the village.
@@ -31409,9 +31661,43 @@ function villageAnimateFrame(t) {
     const sc = 0.55 + cycle * 0.6;
     p.scale.set(sc, sc, 1);
   });
-  // Villagers on their evening circuit of the square — arms swinging in time
-  // with the step, a slight forward lean into the walk.
+  // Commuters walk real legs between their workplace and their own front
+  // door. Each has a phase clock through the day: at work during the shift,
+  // walking the leg home, resting at home, then back out. Walk cycle blends
+  // in only while actually moving.
   villageWalkers.forEach((wk, wi) => {
+    const cm = wk.userData.commuter;
+    if (cm) {
+      const target = cm.wander
+        ? (Math.sin(t * 0.05 + cm.phase * 6.28) > 0 ? cm.square : cm.home)
+        : (Math.sin((t / cm.period + cm.phase) * Math.PI * 2 - Math.PI / 2) > 0 ? cm.work : cm.home);
+      if (!target) return;
+      const dx = target.x - wk.position.x, dz = target.z - wk.position.z;
+      const dist = Math.hypot(dx, dz);
+      const stride = t * 9 + cm.phase * 10;
+      if (dist > 0.25) {
+        const speed = 0.85; // world units per second — a brisk villager walk
+        const step = Math.min(speed * dtFrame, dist);
+        wk.position.x += (dx / dist) * step;
+        wk.position.z += (dz / dist) * step;
+        wk.rotation.y = Math.atan2(-dz, dx);
+        const walkingSpeed = 1;
+        if (wk.userData.arms && !wk.rotation.x) {
+          wk.userData.arms[0].rotation.x = Math.sin(stride) * 0.55;
+          wk.userData.arms[1].rotation.x = -Math.sin(stride) * 0.55;
+        }
+        if (wk.userData.legs) wk.userData.legs.forEach(hip => { hip.rotation.x = Math.sin(stride + hip.userData.phase) * 0.72; });
+      } else {
+        // arrived: idle sway while on shift / indoors at the door
+        const br = Math.sin(t * 1.15 + wi * 1.3);
+        if (wk.userData.arms) {
+          wk.userData.arms[0].rotation.x = br * 0.06;
+          wk.userData.arms[1].rotation.x = -br * 0.06;
+        }
+        if (wk.userData.legs) wk.userData.legs.forEach(hip => { hip.rotation.x *= 0.9; });
+      }
+      return;
+    }
     const u = wk.userData, rt = u.route;
     if (!rt) return;
     const ph = rt.phase + t * rt.speed;
@@ -31863,6 +32149,165 @@ function disposeTownScene() {
 // One ward yard, compact enough for a district quarter: the same shapes the
 // village scene raises for each empire building, scaled for the town view.
 // Homes are not repeated here — the quarter's cottages already show them.
+// The Iron Foundry: a low stone forge hall with a roaring furnace mouth,
+// a tall smoking chimney, quench trough, anvil and racked ingots — one more
+// rack of gleaming bars per level, so the yard visibly grows with the town.
+function townMakeFoundry(r, pal, level) {
+  const g = new THREE.Group();
+  const stoneMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0.02, -0.02) });
+  const timberMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x3a3a42 });
+  const metalMat = new THREE.MeshLambertMaterial({ color: 0x9aa2ac });
+  // Hall body with a wide arched furnace front
+  const hall = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.5, 2.1), stoneMat);
+  hall.position.y = 0.75; g.add(hall);
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.78, 0.22, 2.28), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.08) }));
+  plinth.position.y = 0.11; g.add(plinth);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.01, Math.max(2.6, 2.1) * 0.74, 1.0, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[2 % pal.roofs.length] }));
+  roof.position.y = 2.0; roof.rotation.y = Math.PI / 4; g.add(roof);
+  // Furnace arch + glow
+  const arch = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.18, 12, 1, false, 0, Math.PI), stoneMat);
+  arch.rotation.x = Math.PI / 2; arch.rotation.z = Math.PI / 2; arch.position.set(0, 1.05, 1.06); g.add(arch);
+  const mouth = new THREE.Mesh(new THREE.CircleGeometry(0.42, 12), new THREE.MeshBasicMaterial({ color: 0xff7a2e }));
+  mouth.position.set(0, 0.62, 1.07); g.add(mouth);
+  const forgeGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,120,40'), transparent: true, depthWrite: false, opacity: 0.75 }));
+  forgeGlow.scale.set(2.6, 2.6, 1); forgeGlow.position.set(0, 0.8, 1.35); g.add(forgeGlow);
+  // Chimney with drifting smoke
+  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.2, 0.4), stoneMat);
+  chimney.position.set(-0.85, 2.2, -0.55); g.add(chimney);
+  const smokeTex = villageSmokeTexture();
+  for (let i = 0; i < 3; i++) {
+    const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0.38 }));
+    puff.scale.set(0.65, 0.65, 1); puff.position.set(-0.85, 3.45, -0.55);
+    puff.userData = { baseY: puff.position.y, phase: r() * 3, speed: 0.3 + r() * 0.15 };
+    g.add(puff); villageSmokes.push(puff);
+  }
+  // Anvil on a stump and a quenching trough out front
+  const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.36, 8), timberMat);
+  stump.position.set(1.55, 0.18, 1.0); g.add(stump);
+  const anvil = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.19), darkMat);
+  anvil.position.set(1.55, 0.44, 1.0); g.add(anvil);
+  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 6), darkMat);
+  horn.rotation.z = -Math.PI / 2; horn.position.set(1.86, 0.44, 1.0); g.add(horn);
+  const trough = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.26, 0.34), timberMat);
+  trough.position.set(-1.6, 0.13, 1.0); g.add(trough);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.24), new THREE.MeshBasicMaterial({ color: 0x24405e }));
+  water.rotation.x = -Math.PI / 2; water.position.set(-1.6, 0.27, 1.0); g.add(water);
+  // Ingot racks: one per level, each holding three pale-metal bars
+  for (let rk = 0; rk < Math.max(1, level); rk++) {
+    const rackX = 1.15 + (rk % 2) * 0.5, rackZ = -1.35 - Math.floor(rk / 2) * 0.55;
+    const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 0.08), timberMat);
+    rail1.position.set(rackX, 0.32, rackZ); g.add(rail1);
+    for (const sx of [-0.4, 0.4]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.32, 0.07), timberMat);
+      leg.position.set(rackX + sx, 0.16, rackZ); g.add(leg);
+    }
+    for (let b = 0; b < 3; b++) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.07, 0.09), metalMat);
+      bar.position.set(rackX - 0.28 + b * 0.28, 0.39, rackZ); g.add(bar);
+    }
+  }
+  g.userData.sceneLabel = { icon:'⚒️', name:'Iron Foundry', detail:'Level ' + level + ' · smelts grit into Iron Ingots for the Forge' };
+  g.add(villageBlobShadow(1.9));
+  return g;
+}
+// Entertainment House: the venue itself grows through its tiers — a tavern
+// games yard, then an inn with a proper stage, then a grand music hall with
+// a lit marquee and festival lantern strings.
+function townMakeEntertainment(r, pal, level) {
+  const g = new THREE.Group();
+  if (level <= 1) {
+    // Tier 1 — tavern & games: alehouse plus skittles and barrels outside
+    g.add(villageMakeBuilding('tavern', { icon: '🍻', name: 'Alehouse', roofColor: pal.roofs[1 % pal.roofs.length] }, r, pal));
+    const pinMat = new THREE.MeshLambertMaterial({ color: 0xd8cdb2 });
+    for (const sx of [0.4, 0.62, 0.84]) {
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.22, 6), pinMat);
+      pin.position.set(sx, 0.11, -1.4); g.add(pin);
+    }
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), new THREE.MeshLambertMaterial({ color: 0x7a4a2a }));
+    ball.position.set(0.1, 0.06, -1.4); g.add(ball);
+    for (let i = 0; i < 2; i++) {
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 0.48, 9), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.05) }));
+      barrel.position.set(-1.3 + i * 0.55, 0.24, -1.2); g.add(barrel);
+    }
+    g.userData.sceneLabel = { icon:'🍻', name:'Tavern & Games Yard', detail:'Skittles and good cheer for the whole town' };
+  } else {
+    // Tiers 2-3 — inn & playhouse / grand music hall: a proper venue with a stage
+    const grand = level >= 3;
+    const w = grand ? 4.2 : 3.4, d = grand ? 3.4 : 2.8, wallH = grand ? 2.1 : 1.7;
+    const wallMat = new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.plaster).offsetHSL(0, 0, 0.04) });
+    const trimMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, wallH, d), wallMat);
+    body.position.y = wallH / 2; g.add(body);
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(w + 0.14, 0.2, d + 0.14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, 0, -0.06) }));
+    plinth.position.y = 0.1; g.add(plinth);
+    // Hipped roof with a small cupola on the grand tier
+    const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.01, Math.max(w, d) * 0.72, wallH * 0.62, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+    roof.position.y = wallH + wallH * 0.31; roof.rotation.y = Math.PI / 4; g.add(roof);
+    if (grand) {
+      const cupo = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.34, 8), trimMat);
+      cupo.position.y = wallH + wallH * 0.62 + 0.2; g.add(cupo);
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.3, 8), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
+      cap.position.y = wallH + wallH * 0.62 + 0.52; g.add(cap);
+      const star = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+      star.position.y = wallH + wallH * 0.62 + 0.72; g.add(star);
+    }
+    // Arched doors and round windows along the front
+    for (const dx of [-w * 0.22, w * 0.22]) {
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.2, 0.1), trimMat);
+      door.position.set(dx, 0.6, d / 2 + 0.03); g.add(door);
+      const dArch = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.1, 10, 1, false, 0, Math.PI), trimMat);
+      dArch.rotation.x = Math.PI / 2; dArch.rotation.z = Math.PI / 2; dArch.position.set(dx, 1.2, d / 2 + 0.03); g.add(dArch);
+    }
+    const winCols = grand ? 3 : 2;
+    for (let i = 0; i < winCols; i++) {
+      const win = new THREE.Mesh(new THREE.CircleGeometry(0.2, 10), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+      win.position.set(-w * 0.3 + (i + 0.5) * (w * 0.6 / winCols), wallH * 0.72, d / 2 + 0.04); g.add(win);
+    }
+    // Marquee board over the doors with warm bulbs
+    const board = new THREE.Mesh(new THREE.BoxGeometry(w * 0.62, 0.42, 0.08), trimMat);
+    board.position.set(0, 1.58, d / 2 + 0.12); g.add(board);
+    const bulbCols = ['255,120,80', '255,205,120', '150,220,120'];
+    for (let i = 0; i < 4; i++) {
+      const bw = w * 0.62;
+      const bx = -bw / 2 + (i + 0.5) * bw / 4;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 5), new THREE.MeshBasicMaterial({ color: [0xff8a5a, 0xffd98a, 0x9ae87a, 0xffd98a][i] }));
+      bulb.position.set(bx, 1.58, d / 2 + 0.18); g.add(bulb);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(bulbCols[i % 3]), transparent: true, depthWrite: false, opacity: 0.55 }));
+      gl.scale.set(0.8, 0.8, 1); gl.position.copy(bulb.position); g.add(gl);
+    }
+    // Stage platform out front with footlights and a pennant pair
+    const stage = new THREE.Mesh(new THREE.BoxGeometry(grand ? 2.6 : 2.0, 0.24, 1.1), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0, 0.08) }));
+    stage.position.set(0, 0.12, d / 2 + 0.75); g.add(stage);
+    for (const fx of [-(grand ? 1.1 : 0.85), grand ? 1.1 : 0.85]) {
+      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.14, 6), new THREE.MeshBasicMaterial({ color: 0xffc46a }));
+      lamp.position.set(fx, 0.31, d / 2 + 1.2); g.add(lamp);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,196,106'), transparent: true, depthWrite: false, opacity: 0.5 }));
+      gl.scale.set(0.7, 0.7, 1); gl.position.copy(lamp.position); g.add(gl);
+    }
+    for (const px of [-(w / 2 + 0.3), w / 2 + 0.3]) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 2.6, 6), trimMat);
+      pole.position.set(px, 1.3, d / 2 + 0.5); g.add(pole);
+      const pen = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.24), new THREE.MeshBasicMaterial({ color: pal.roofs[0], side: THREE.DoubleSide }));
+      pen.position.set(px + 0.3, 2.4, d / 2 + 0.5); g.add(pen);
+      villageCloths.push(pen); pen.userData.phase = r() * 6.28;
+    }
+    // Lantern string across the yard
+    for (let i = 0; i < 4; i++) {
+      const lx = -w / 2 + (i + 0.5) * w / 4;
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, 0.1), new THREE.MeshBasicMaterial({ color: [0xff8a5a, 0xffd98a, 0x9ae87a, 0xffd98a][i] }));
+      cube.position.set(lx, 2.0 - Math.sin((i + 0.5) / 4 * Math.PI) * 0.22, d / 2 + 0.4); g.add(cube);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(['255,120,80', '255,205,120', '150,220,120'][i % 3]), transparent: true, depthWrite: false, opacity: 0.55 }));
+      gl.scale.set(0.9, 0.9, 1); gl.position.copy(cube.position); g.add(gl);
+    }
+    g.userData.sceneLabel = grand
+      ? { icon:'🎶', name:'Grand Music Hall', detail:'The whole realm talks about this stage' }
+      : { icon:'🎭', name:'Inn & Playhouse', detail:'Bards play the stage most fair evenings' };
+  }
+  g.add(villageBlobShadow(2.0));
+  return g;
+}
+
 function townMakeEconBuilding(buildingId, level, dr, pal) {
   const g = new THREE.Group();
   if (buildingId === 'farm') {
@@ -31905,6 +32350,10 @@ function townMakeEconBuilding(buildingId, level, dr, pal) {
       stall.rotation.y = dr() * Math.PI * 2;
       g.add(stall);
     }
+  } else if (buildingId === 'foundry') {
+    g.add(townMakeFoundry(dr, pal, level));
+  } else if (buildingId === 'entertainment') {
+    g.add(townMakeEntertainment(dr, pal, level));
   } else if (buildingId === 'storehouse') {
     g.add(villageMakeBuilding('storehouse', { icon: '🧺', name: 'Storehouse', roofColor: pal.roofs[2 % pal.roofs.length] }, dr, pal));
     for (let i = 0; i < level; i++) { const crates = villageMakeCrates(dr, pal); crates.position.set(Math.cos(i * 2.4) * 1.8, 0, Math.sin(i * 2.4) * 1.8); g.add(crates); }
@@ -32309,17 +32758,36 @@ function buildTownScene(settle) {
       prev = pt;
     }
   }
-  // Loose trees between the streets, never on someone's plot.
+  // Wildflower and tuft drifts: two instanced draws dress the whole town.
+  townScene.add(villageMakeFlowerField(r, pal, planted, plazaR));
+  townScene.add(villageMakeTuftField(r, pal, planted, plazaR));
+  // Loose trees between the streets, never on someone's plot. Each tree wears
+  // the leaf palette of whichever ward's ground it stands near, so the whole
+  // town visibly carries its three founding villages' looks.
+  const wardPalettes = settle.villages.map(v => {
+    const seed = Number(v.seed) >>> 0;
+    const vcore2 = villageVariationCore();
+    const plan2 = vcore2 ? vcore2.villagePlan(seed, VILLAGE_PALETTES.length) : null;
+    return plan2
+      ? burbzDaylightPalette(villageVariedPalette(VILLAGE_PALETTES[plan2.paletteIndex], seed), daylight)
+      : pal;
+  });
+  const wardOf = (x, z) => {
+    let best = 0, bestD = Infinity;
+    townDistrictGroups.forEach((dg, di) => { const dd = Math.hypot(x - dg.position.x, z - dg.position.z); if (dd < bestD) { bestD = dd; best = di; } });
+    return wardPalettes[best] || pal;
+  };
   for (let i = 0; i < 10; i++) {
     const a = r() * Math.PI * 2, d = plazaR + 2.5 + r() * (EDGE_RING + 2 - plazaR - 2.5);
     const tx = Math.cos(a) * d, tz = Math.sin(a) * d;
     if (planted.some(p => Math.hypot(p.x - tx, p.z - tz) < 3.4)) continue;
-    const tree = villageMakeTree(r, pal);
+    const tree = villageMakeTree(r, wardOf(tx, tz));
     tree.position.set(tx, heightAt(tx, tz), tz);
     townScene.add(tree);
   }
-  // The dark forest belt on the surrounding hills.
+  // The dark forest belt blends every ward's foliage around the rim.
   const belt = villageMakeForestBelt(r, pal, groundR, () => true, 2, heightAt);
+  // Re-tint half the belt trees per ward so the ring reads as one blended realm.
   townScene.add(belt);
 
   // ---- Sky: stars, moon and drifting cloud -----------------------------------

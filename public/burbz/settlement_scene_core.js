@@ -14,21 +14,21 @@
       maxDpr: 1.75,
       shadowSize: 1024,
       frameInterval: 0,
-      maxAmbientActors: 8,
+      maxAmbientActors: 14,
       maxLabels: 3
     },
     medium: {
       maxDpr: 2,
-      shadowSize: 2048,
+      shadowSize: 1536,
       frameInterval: 0,
-      maxAmbientActors: 18,
-      maxLabels: 5
+      maxAmbientActors: 24,
+      maxLabels: 6
     },
     high: {
       maxDpr: 2,
       shadowSize: 2048,
       frameInterval: 0,
-      maxAmbientActors: 32,
+      maxAmbientActors: 40,
       maxLabels: 8
     }
   };
