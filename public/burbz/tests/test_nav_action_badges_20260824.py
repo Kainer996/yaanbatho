@@ -52,9 +52,11 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 HUNGER_CORE = ROOT / "bird_diet_hunger_core.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
+# This release's own segment and the badge core's cache pin. Both stay put
+# while the head build moves on — a core pin never tracks CURRENT_BUILD.
 OWN_RELEASE_PIN = "nav-action-badges-v312-20260824"
 PREVIOUS_RELEASE_PIN = "village-work-huts-v311-20260824"
-CURRENT_BUILD = "nav-action-badges-v312-20260824"
+CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
 
 
 def run_node(source: str):

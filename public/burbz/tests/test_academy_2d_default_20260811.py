@@ -12,7 +12,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-2d-default-v250-20260811"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "nav-action-badges-v312-20260824"
+CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
 
 
 def test_the_academy_defaults_to_the_painted_2d_tree():

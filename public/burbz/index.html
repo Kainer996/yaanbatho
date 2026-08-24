@@ -11255,6 +11255,20 @@ function birdCarryCapacity(bird) {
   const core = birdSizeCore();
   return core ? core.carryCapacity(bird) : 3;
 }
+// What a card shows under CARRY: loads the bird brings home. A companion's
+// satchel counts, because that is the load it actually flies with.
+// Only a bird in the flock can be wearing one. A Birdex preview is rebuilt on
+// every render with a throwaway id, so reading its kit would stamp a fresh
+// slot into the equipment ledger each time the codex draws.
+function birdCardCarryCapacity(bird) {
+  if (!bird) return 0;
+  const flock = Array.isArray(gameState && gameState.flock) ? gameState.flock : [];
+  if (bird.id && flock.some(member => member && member.id === bird.id)) {
+    const withKit = Number((birdSizeSummary(bird) || {}).capacity);
+    if (isFinite(withKit) && withKit > 0) return withKit;
+  }
+  return birdCarryCapacity(bird);
+}
 
 // ============================================================================
 // ROLES: every bird can be given a job.
@@ -20286,6 +20300,9 @@ function gearIconHTML(item) {
 // Per-bird equipped loadout {weapon, armour, trinket} lives in inventory.equipment.
 function birdLoadout(birdId) {
   if (!gameState || !gameState.inventory) return {};
+  // Birdex previews carry no id. Asking for their kit must not stamp an
+  // `undefined` slot into the equipment ledger.
+  if (!birdId) return {};
   const eq = gameState.inventory.equipment;
   if (!eq[birdId] || typeof eq[birdId] !== 'object') eq[birdId] = {};
   return eq[birdId];
@@ -35271,6 +35288,8 @@ function createBirdCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>${bird.cha || 0}</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>${birdCardCarryCapacity(bird)}</div>
             </div>
             <div class="card-info-hint" data-action="open-info" data-bird-id="${bird.id}">Tap for field guide · ✨MAG ${bird.mag || 0} · INT ${bird.int || 0} · STAM ${bird.stamina || 0}</div>
           </div>
@@ -35354,6 +35373,8 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>${bird.cha || 0}</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>${birdCardCarryCapacity(bird)}</div>
             </div>
             <button type="button" class="recruit-btn" data-action="${recruitAction}" data-discovery-key="${key}" ${recruitDisabled ? 'disabled' : ''}>${recruitLabel}</button>
             <div class="card-info-hint">Tap card to learn about the real bird</div>
@@ -35410,6 +35431,8 @@ function createSilhouetteCard() {
               <div class="card-stat"><span class="card-stat-label">ATK</span>?</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>?</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>?</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>?</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>?</div>
             </div>
           </div>
         </div>
@@ -36811,6 +36834,8 @@ function showCaptureOverlay(bird) {
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd}</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>${bird.cha || 0}</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>${birdCardCarryCapacity(bird)}</div>
             </div>
             <div class="card-info-hint">Unlocked into Companions · Academy ready</div>
           </div>
@@ -38903,7 +38928,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'nav-action-badges-v312-20260824';
+const BURBZ_BUILD = 'bird-card-carry-charm-v313-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
