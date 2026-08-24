@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "village-work-huts-v311-20260824"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
@@ -59,9 +59,9 @@ def test_distributed_hud_routes_every_control_through_one_helper():
     # The action badge core follows the routed controls, not just nav items.
     core = (ROOT / "action_badge_core.js").read_text(encoding="utf-8")
     assert "[data-game-route][data-screen]" in core
-    # The core changed in v286 (forge badge), so its cache pin moved on — the
-    # convention every changed core follows.
-    assert "'./action_badge_core.js?v=battle-progression-fixes-v286-20260819'" in SW.read_text(encoding="utf-8")
+    # The core changed again in v312 (dock badges), so its cache pin moved on —
+    # the convention every changed core follows.
+    assert "'./action_badge_core.js?v=nav-action-badges-v312-20260824'" in SW.read_text(encoding="utf-8")
 
 
 def test_training_hall_drill_master_stands_in_the_scene():

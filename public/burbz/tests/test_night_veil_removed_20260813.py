@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "village-work-huts-v311-20260824"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
 OWN_RELEASE_PIN = "night-owl-dark-mode-v257-20260813"  # the removed release's cache segment
 PREVIOUS_RELEASE_PIN = "completion-notices-v265-20260813"
 

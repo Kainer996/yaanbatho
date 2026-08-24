@@ -9,10 +9,15 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  // Routed screens plus the three dock buttons that open a pop-up instead of a
+  // screen. Both kinds carry badges; only the attribute they are keyed by
+  // differs.
   var SCREENS = [
     'quests', 'academy', 'birdex', 'battle', 'forge',
-    'map', 'village', 'inventory', 'leaderboards'
+    'map', 'village', 'inventory', 'leaderboards',
+    'kitchen', 'hospital', 'training'
   ];
+  var BADGE_SELECTOR = '[data-game-route][data-screen],[data-quick-destination]';
   var BASE_LABEL_KEY = '__burbzActionBadgeBaseLabel';
 
   function countValue(value) {
@@ -83,6 +88,10 @@
       countSideDiscoveries(input.sideQuestDiscoveries);
     counts.academy = countCompleteUnclaimed(input.birdTrainingSessions || input.trainingSessions) +
       countValue(input.recruitableCount) + countValue(input.careNeedsCount);
+    // Forge: pieces waiting on the anvil, plus new gear the stores can already
+    // pay for. Empire: taxes waiting, plus buildings that have finished.
+    counts.forge = countValue(input.forge) + countValue(input.forgeCraftable);
+    counts.village = countValue(input.village) + countValue(input.buildingsComplete);
     return counts;
   }
 
@@ -108,12 +117,14 @@
     var srOnlyClass = typeof options.screenReaderClass === 'string' && options.screenReaderClass
       ? options.screenReaderClass
       : 'sr-only';
-    var items = root.querySelectorAll('[data-game-route][data-screen]');
+    var items = root.querySelectorAll(BADGE_SELECTOR);
     var updated = 0;
 
     Array.prototype.forEach.call(items, function (item) {
       if (!item || typeof item.getAttribute !== 'function') return;
-      var screen = item.getAttribute('data-screen');
+      // Dock pop-ups are keyed by where they go, routed tabs by their screen.
+      var screen = item.getAttribute('data-quick-destination') || item.getAttribute('data-screen');
+      if (!screen) return;
       var count = countValue(counts[screen]);
       var badge = typeof item.querySelector === 'function'
         ? item.querySelector('.nav-action-badge')

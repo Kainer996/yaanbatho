@@ -27,8 +27,8 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "village-work-huts-v311-20260824"
-VERSIONED_BADGE_CORE = "action_badge_core.js?v=battle-progression-fixes-v286-20260819"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
+VERSIONED_BADGE_CORE = "action_badge_core.js?v=nav-action-badges-v312-20260824"  # moved on in v312
 
 
 def function_source(html: str, name: str) -> str:
@@ -304,7 +304,8 @@ def test_release_is_versioned_and_the_badge_core_pin_moved():
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line       # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    # The badge core changed this release, so its cache pin moved everywhere.
+    # The badge core changed in this release and again in v312, so its cache
+    # pin has moved on everywhere — what matters is that it moves together.
     assert f'<script src="{VERSIONED_BADGE_CORE}"></script>' in html
     assert sw.count(f"'./{VERSIONED_BADGE_CORE}'") == 2
     assert "action_badge_core.js?v=distributed-game-hud-v244-20260810" not in html
