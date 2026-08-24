@@ -1,6 +1,6 @@
 """Villages work their own timber and stone, and collect whenever they like.
 
-Yaan's asks (2026-08-24), pinned as `village-work-huts-v310-20260824`:
+Yaan's asks (2026-08-24), pinned as `village-work-huts-v311-20260824`:
 
 1. A 🪚 Lumberjack Hut and a 🪨 Miners' Hut in every village, each holding up to
    THREE villagers. Output scales with the hands actually posted: two of three
@@ -22,8 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERGE_CORE = ROOT / "settlement_merge_core.js"
-CURRENT_BUILD = "village-work-huts-v310-20260824"
-PREVIOUS_RELEASE_PIN = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
+# The release immediately before this one. Ava's walking-villagers work took
+# v310 on main while this branch was open, so this became v311.
+PREVIOUS_RELEASE_PIN = "walking-villagers-cottage-variety-v310-20260823"
 
 
 def function_source(html: str, name: str) -> str:

@@ -12,7 +12,7 @@ villages at first can be built with timber."
 - The home now climbs in three steps: 🛖 Timber Cabin (6), 🏡 Timber Longhouse
   (12) — both coins and timber — then 🏠 Stone Cottage (18), which carries
   `townFromLevel: 3` and waits for a Town.
-- SUPERSEDED in part on 2026-08-24 by village-work-huts-v310: the Miners' Hut
+- SUPERSEDED in part on 2026-08-24 by village-work-huts-v311: the Miners' Hut
   lets a village dig its own stone, so the Stone Cottage is bought rather than
   waited for. `townFromLevel` and `settlementAllowsStep` are retired; the stone
   COST is now the only thing standing between a village and its stone homes.
@@ -31,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "village-work-huts-v310-20260824"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
@@ -176,7 +176,7 @@ console.log(JSON.stringify({
 # ---------------------------------------------------------------------------
 
 def test_no_building_gates_a_step_on_a_town_any_more():
-    """village-work-huts-v310 retired townFromLevel and settlementAllowsStep."""
+    """village-work-huts-v311 retired townFromLevel and settlementAllowsStep."""
     html = HTML.read_text(encoding="utf-8")
     assert "townFromLevel" not in html
     assert "settlementAllowsStep" not in html

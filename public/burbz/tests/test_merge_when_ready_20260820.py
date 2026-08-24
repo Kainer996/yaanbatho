@@ -26,7 +26,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "village-work-huts-v310-20260824"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 
 
 def function_source(html: str, name: str) -> str:
