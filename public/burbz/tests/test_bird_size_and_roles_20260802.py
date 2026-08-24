@@ -21,11 +21,12 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-ROLE_CORE_PIN = "roost-retired-v302-20260820"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "free-birds-v318-20260824"
+# bird_roles_core.js last changed in free-birds-v318, which retired the Head
+# Gardener. A core ships under the tag of the release that last touched it.
+ROLES_CORE_PIN = "free-birds-v318-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -209,7 +210,12 @@ def test_every_academy_room_a_village_and_a_region_has_a_post():
         }));
         """
     )
-    assert None not in out["staffedRooms"], "every buildable room needs a head"
+    # free-birds-v318 retired the Aviary Gardens as a room, and its Head
+    # Gardener with it: a free bird holds no job at all. Every room a player
+    # can actually build still has a head.
+    heads = dict(zip(out["rooms"], out["staffedRooms"]))
+    assert heads.pop("outdoors") is None, "being free is not a post"
+    assert None not in heads.values(), "every buildable room needs a head"
     assert len(out["rooms"]) == len(out["staffedRooms"])
     assert out["village"] == "steward" and out["region"] == "region_warden"
     # The posts the player asked for by name.
@@ -354,7 +360,7 @@ def test_release_is_versioned_for_service_worker_self_update():
     # Both new cores ship, and are precached for offline play.
     assert SIZE_CORE.exists() and ROLES_CORE.exists()
     assert f"'./bird_size_core.js?v={SIZE_CORE_PIN}'" in sw
-    assert f"'./bird_roles_core.js?v={MAGPIE_CORE_PIN}'" in sw
+    assert f"'./bird_roles_core.js?v={ROLES_CORE_PIN}'" in sw
     html = HTML.read_text(encoding="utf-8")
     assert f'src="bird_size_core.js?v={SIZE_CORE_PIN}"' in html
-    assert f'src="bird_roles_core.js?v={MAGPIE_CORE_PIN}"' in html
+    assert f'src="bird_roles_core.js?v={ROLES_CORE_PIN}"' in html

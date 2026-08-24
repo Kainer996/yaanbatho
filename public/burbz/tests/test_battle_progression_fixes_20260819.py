@@ -27,7 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "free-birds-v318-20260824"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=nav-action-badges-v312-20260824"  # moved on in v312
 
 
@@ -83,7 +83,9 @@ def test_battle_end_carries_the_lost_to_the_ward_hurt():
     assert end.index("levelUpBird(bird, rewards.birdXp") < end.index("admitFaintedBirdToHospital(bird)")
     assert "restLostBirdOutsideWard(bird)" in end
     assert "carried to the Bird Hospital" in end
-    assert "Aviary Gardens" in end
+    # free-birds-v318 retired the Aviary Gardens: a bird with no ward to go
+    # to now rests free in the tree, and the note says so.
+    assert "hurt and free in the tree" in end
 
 
 def test_no_ward_fallback_rests_the_fallen_in_the_gardens():

@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # five cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+CURRENT_BUILD = "free-birds-v318-20260824"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -42,9 +42,12 @@ EDITED_CORES = (
     "academy_treehouse_core.js",
     "academy_alive_core.js",
     "academy_3d_core.js",
-    "bird_roles_core.js",
     "loot_crafting_core.js",
 )
+# bird_roles_core.js was edited by this release too, but free-birds-v318 then
+# retired the Head Gardener and re-pinned it. A core carries the tag of the
+# release that last touched it, so it is checked separately below.
+ROLES_CORE_PIN = "free-birds-v318-20260824"
 
 
 def html_text() -> str:
@@ -409,6 +412,7 @@ def test_every_core_this_release_edited_ships_under_its_new_tag():
     page — the Market would be missing from the catalogue and buyQuote gone."""
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
+    assert "bird_roles_core.js?v=%s" % ROLES_CORE_PIN in html
     for core in EDITED_CORES:
         pin = "%s?v=%s" % (core, OWN_RELEASE_PIN)
         assert pin in html, core

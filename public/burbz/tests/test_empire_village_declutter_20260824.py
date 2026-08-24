@@ -34,6 +34,8 @@ HTML_PATH = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
+# The head of the line, which later releases move.
+CURRENT_BUILD = "free-birds-v318-20260824"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 
 
@@ -238,10 +240,11 @@ def test_the_desc_field_is_untouched_in_the_data():
 def test_release_is_versioned_for_service_worker_self_update():
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
-    assert "const BURBZ_BUILD = '%s';" % OWN_RELEASE_PIN in html
+    assert "const BURBZ_BUILD = '%s';" % CURRENT_BUILD in html
     cache_line = next(l for l in sw.splitlines() if l.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line, "and this release keeps its place in it"
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest marker goes last"
 
 
 def test_no_core_pin_moved_because_no_core_changed():
@@ -250,6 +253,8 @@ def test_no_core_pin_moved_because_no_core_changed():
     sw = SW.read_text(encoding="utf-8")
     assert "?v=%s" % OWN_RELEASE_PIN not in html
     assert "?v=%s" % OWN_RELEASE_PIN not in sw
-    # The Magpie Market's five cores are still on the release that changed them.
-    for core in ("academy_treehouse_core.js", "loot_crafting_core.js", "bird_roles_core.js"):
+    # The Magpie Market's cores are still on the release that changed them.
+    # (bird_roles_core.js has since moved to free-birds-v318, which retired the
+    # Head Gardener — a later release re-pinning a core is expected.)
+    for core in ("academy_treehouse_core.js", "loot_crafting_core.js"):
         assert "%s?v=%s" % (core, PREVIOUS_RELEASE_PIN) in html, core

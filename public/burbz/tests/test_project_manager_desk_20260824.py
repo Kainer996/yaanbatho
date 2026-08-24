@@ -32,9 +32,10 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
-# The release that last edited bird_roles_core.js.
-ROLES_CORE_PIN = "magpie-market-v316-20260824"
+CURRENT_BUILD = "free-birds-v318-20260824"
+# The release that last edited bird_roles_core.js — free-birds-v318, which
+# retired the Head Gardener when the Aviary Gardens stopped being a room.
+ROLES_CORE_PIN = "free-birds-v318-20260824"
 
 
 def function_source(name: str) -> str:
@@ -69,6 +70,7 @@ const birdHasActiveTraining = () => false;
 const birdHasActiveExpedition = () => false;
 const normalizeBirdCare = b => { b.care = b.care || { sleeping: false }; };
 const ACADEMY_ROOMS = { library: { label: 'The Library' } };
+const FREE_BIRD_ROOM = 'outdoors';
 const empireSettlementOfSeed = () => null;
 const empireSettlementById = () => null;
 const canonicalEmpireSettlement = s => s;
@@ -103,7 +105,7 @@ function bird(id, name, int_, cha, size) {
 
 def run_js(body: str):
     script = (STUBS % json.dumps(str(BURBZ / "bird_roles_core.js"))) + "\n" + DESK_SLAB + "\n"
-    for name in ("roleDefFor", "rolePostState", "birdPostLabel", "birdAssignedPost", "assignBirdRole"):
+    for name in ("roleDefFor", "rolePostState", "birdPostLabel", "birdAssignedPost", "assignBirdRole", "birdIsFree"):
         script += function_source(name) + "\n"
     script += body
     proc = subprocess.run(["node", "-e", script], capture_output=True, text=True)
