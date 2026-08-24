@@ -4825,7 +4825,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=magpie-market-v316-20260824"></script>
+<script src="bird_roles_core.js?v=free-birds-v318-20260824"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
@@ -11569,8 +11569,10 @@ function rolePostCardHTML(scope, key, options = {}) {
   // one here is the first tap, not a hunt through the whole flock.
   const ranked = core.rankCandidates(roleCandidateBirds(scope, key), role)
     .map(c => Object.assign({}, c, { movesFrom: birdCanMoveToVillagePost(scope, key, birdAssignedPost(c.bird.id)) ? birdPostLabel(c.bird) : null }));
+  const rest = ranked.filter(c => !c.movesFrom);
   const candidates = ranked.filter(c => c.movesFrom).slice(0, ROLE_SERVING_CANDIDATE_LIMIT)
-    .concat(ranked.filter(c => !c.movesFrom))
+    .concat(rest.filter(c => birdIsFree(c.bird)))
+    .concat(rest.filter(c => !birdIsFree(c.bird)))
     .slice(0, ROLE_CANDIDATE_LIMIT);
   const optionsHtml = candidates.length
     ? candidates.map(c =>
@@ -12773,7 +12775,7 @@ const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 const ACADEMY_ROOMS = {
   tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
-  outdoors: { label:'AVIARY GARDENS', icon:'🌱', buildingId:'outdoors', desc:'The base canopy and roots. Birds roam free, forage for snacks and cheer up fast.', perk:'Passive: happiness recovers', perches:[[50,92],[44,88],[56,88],[38,94],[62,94]] },
+  outdoors: { label:'FREE BIRDS', icon:'🕊️', buildingId:'outdoors', desc:'Birds with no job. They rest and forage in the tree until you send them somewhere — a quest, a drill, or a post.', perk:'Waiting for orders', perches:[] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Birds come here for Tweetment after a fight — they heal much faster than out in the tree, and each patient is discharged back to their old room once fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
   crowbar: { label:'THE CROWBAR', icon:'🍻', buildingId:'crowbar', desc:'The bird bar and the home of Kingdom diplomacy. Regulars swap rumours, make friends and come out of their shells — Charm grows here, and charming birds earn bonus coins on diplomacy quests.', perk:'Passive: +1 CHA every 30 min, morale climbs', perches:[[72,42],[68,46],[76,46]] },
   kitchen: { label:'KITCHEN & PANTRY', icon:'🥣', buildingId:'kitchen', desc:'The feeding table. Scroll through your companions and serve each one the food it really eats — birds visit for meals, they do not lodge here.', perk:'Feeding table: match the right food to the right bird', perches:[[50,52],[46,56],[54,56]] },
@@ -12784,7 +12786,10 @@ const ACADEMY_ROOMS = {
   magpie_market: { label:'MAGPIE MARKET', icon:'⚖️', buildingId:'magpie_market', desc:'The Academy trading post. Magpies deal in everything the kingdom digs up — buy the material a recipe is short of, and sell whatever is piling up on the shelves.', perk:'Active: buy and sell every crafting material', perches:[] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
-let academySelectedRoom = 'outdoors';
+// Where a bird stands when it has no job. Kept as an id for save
+// compatibility — every old save already writes 'outdoors'.
+const FREE_BIRD_ROOM = 'outdoors';
+let academySelectedRoom = FREE_BIRD_ROOM;
 let academyPlacementTarget = null;
 let academyQuestGuidanceRoom = null;
 
@@ -12821,7 +12826,7 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     gameState.academyBuilderVersion = 3;
   }
   // Barracks is a recruitment office, not housing. Move companions that old
-  // saves left in the former tavern safely back to the Aviary Gardens.
+  // saves left in the former tavern safely back to standing free.
   if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 4) {
     (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === 'tavern') b.academy.room = 'outdoors'; });
     gameState.academyBuilderVersion = 4;
@@ -12838,7 +12843,7 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
   }
   // The Roost is retired — the tree itself is home. Anyone who built it gets
   // the 50 coins and 10 timber back, and its lodgers move out to the
-  // Aviary Gardens.
+  // free.
   if (gameState.academyBuildings.dorm) {
     if (gameState.academyBuildings.dorm.built) {
       gameState.player.coins = (Number(gameState.player.coins) || 0) + 50;
@@ -13461,6 +13466,32 @@ function isStarterExpeditionTemplate(templateId) {
   return Boolean(template && template.starter === true);
 }
 
+// ---------------------------------------------------------------------------
+// Free birds — the flock with nothing to do (v318)
+// ---------------------------------------------------------------------------
+// The tree is home, so `outdoors` was never really a room: it is simply where
+// a bird stands when nobody has given it a job. Yaan's ask (2026-08-24): stop
+// calling that a place, call it what it is. A free bird holds no post, is not
+// stationed in a room, and is not away on a quest or mid-drill — so it is the
+// bird the player should be offered first, everywhere.
+function birdIsFree(bird) {
+  if (!bird || !bird.id) return false;
+  const room = bird.academy && bird.academy.room;
+  if (room && room !== FREE_BIRD_ROOM) return false;
+  if (birdAssignedPost(bird.id)) return false;
+  if (birdHasActiveExpedition(bird.id)) return false;
+  if (birdHasActiveTraining(bird.id)) return false;
+  return true;
+}
+function freeBirds() { return (gameState && Array.isArray(gameState.flock) ? gameState.flock : []).filter(birdIsFree); }
+function freeBirdsCount() { return freeBirds().length; }
+// Sort comparator: free birds rise to the top, everything else keeps the order
+// it already had. Stable, so an aptitude ranking underneath survives intact.
+function freeBirdsFirst(list) {
+  const rows = Array.isArray(list) ? list.slice() : [];
+  return rows.sort((a, b) => (birdIsFree(b) ? 1 : 0) - (birdIsFree(a) ? 1 : 0));
+}
+
 function birdHasActiveExpedition(birdId) {
   return ensureBirdExpeditions().some(q => q.birdId === birdId && !['claimed','cancelled','failed'].includes(String(q.status || '').toLowerCase()));
 }
@@ -13986,7 +14017,7 @@ function renderQuestSendSheet() {
     : isStarterExpeditionTemplate(t.id)
       ? expeditionDispatchBirds(gameState.flock || [])
       : (gameState.flock || []).filter(b => b && b.id);
-  const birds = dispatchBirds.filter(b => b.id === MERLIN_GUIDE.id || !sleepReadinessForBird(b, Date.now()).sleeping);
+  const birds = freeBirdsFirst(dispatchBirds.filter(b => b.id === MERLIN_GUIDE.id || !sleepReadinessForBird(b, Date.now()).sleeping));
   const info = QUEST_TEMPLATE_INFO[t.id] || '';
   const durationOptions = t.tutorial === true ? [] : window.BurbzAcademyCore.getQuestDurationOptions(t.id);
   const selectedDuration = durationOptions.find(o => o.minutes === Number(questSendState.durationMinutes)) || null;
@@ -14256,7 +14287,7 @@ function renderAcademyRoomPanel(birds) {
     let tray = '';
     if (academySelectedRoom === 'outdoors') {
       // The tree is home: feeding, grooming, deep rest and foraging all
-      // happen in the Aviary Gardens now the Roost has retired.
+      // happen wherever a free bird stands, now the Roost has retired.
       actions = '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>' +
         academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
         academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false) +
@@ -14281,7 +14312,11 @@ function renderAcademyRoomPanel(birds) {
       const built = isAcademyRoomBuilt(r);
       const building = ACADEMY_BUILDINGS[target.buildingId || r];
       const onclick = built ? 'academyMoveBird(\'' + b.id + '\',\'' + r + '\')' : 'academyBuildAndMoveBird(\'' + b.id + '\',\'' + r + '\')';
-      const label = built ? ('→ ' + target.icon + ' ' + target.label) : ('Build ' + building.icon + ' ' + building.label);
+      // Standing a bird down reads as setting it free, not as posting it to
+      // somewhere called the Gardens.
+      const label = r === FREE_BIRD_ROOM ? ('🕊️ Set free')
+        : built ? ('→ ' + target.icon + ' ' + target.label)
+        : ('Build ' + building.icon + ' ' + building.label);
       return '<button class="academy-move-btn' + (built ? '' : ' locked') + '" onclick="' + onclick + '">' + label + '</button>';
     }).join('');
 
@@ -14618,8 +14653,11 @@ function academyRoomButtonsHTML(bird) {
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
     const cls = current ? ' current' : built ? ' ready' : '';
-    const label = current ? 'In ' + cfg.label : built ? 'Send to ' + cfg.label : cfg.label + ' locked';
-    const shortLabel = current ? cfg.icon + ' Here' : built ? cfg.icon + ' Send' : '🔒 ' + cfg.icon;
+    // Standing a bird down is not sending it anywhere — it just stops having
+    // a job, so its button says so.
+    const free = room === FREE_BIRD_ROOM;
+    const label = current ? (free ? 'Free — no job' : 'In ' + cfg.label) : free ? 'Set free' : built ? 'Send to ' + cfg.label : cfg.label + ' locked';
+    const shortLabel = current ? cfg.icon + (free ? ' Free' : ' Here') : free ? cfg.icon + ' Free' : built ? cfg.icon + ' Send' : '🔒 ' + cfg.icon;
     return '<button class="academy-send-btn' + cls + '" data-action="send-room" data-bird-id="' + bird.id + '" data-room="' + room + '" aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label) + '">' + shortLabel + '</button>';
   }).join('');
 }
@@ -16141,7 +16179,7 @@ const ACADEMY_ROOM_STAT_CAP = 400; // passive growth stops here; drills go furth
 // The Bird Hospital is a ward, not a home: the moment a patient is back to
 // full HP they are discharged — to the room they were admitted from if it
 // still stands (never the Kitchen or Barracks, which take no lodgers),
-// otherwise the Aviary Gardens. The Head Healer keeps their post, and a bird
+// otherwise back to standing free. The Head Healer keeps their post, and a bird
 // away questing or mid-training moves rooms on its own clock, not the ward's.
 function dischargeBirdFromHospital(bird, now = Date.now()) {
   if (!bird || !bird.academy || bird.academy.room !== 'hospital') return false;
@@ -16181,7 +16219,7 @@ function admitFaintedBirdToHospital(bird) {
 }
 
 // No ward standing? A lost bird still leaves its post. It rests in the
-// Aviary Gardens until food or care mends it — it does not report back to
+// free in the tree until food or care mends it — it does not report back to
 // the Training Hall looking fine. Same guards as admission: working,
 // questing and mid-drill birds keep their own schedule.
 function restLostBirdOutsideWard(bird) {
@@ -16680,6 +16718,13 @@ function ACADEMY_ROOM_SCENES(room, label) {
 
 function openAcademyRoom(room) {
   if (!ACADEMY_ROOMS[room]) return;
+  // Being free is not somewhere a bird goes, so there is no room to open.
+  // The Academy screen's own list is where free birds are looked after.
+  if (room === FREE_BIRD_ROOM) {
+    academySelectedRoom = FREE_BIRD_ROOM;
+    switchScreen('academy');
+    return;
+  }
   if (room === academyQuestGuidanceRoom) academyQuestGuidanceRoom = null;
   academySelectedRoom = room;
   if (!isAcademyRoomBuilt(room)) {
@@ -16834,7 +16879,7 @@ function renderTrainingHallPanel(birds, others) {
   const sessions = ensureBirdTrainingSessions().map(s => core.advanceTrainingSession(s, Date.now()));
   const active = sessions.filter(s => !['claimed','cancelled','failed'].includes(s.status));
   const templates = core.getTrainingTemplates ? core.getTrainingTemplates() : [];
-  const availableBirds = (gameState.flock || []).filter(b => b && b.id && !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
+  const availableBirds = freeBirdsFirst((gameState.flock || []).filter(b => b && b.id && !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping));
   const sessionHtml = active.length ? active.map(t => {
     const done = t.status === 'complete';
     const bird = academyBirdById(t.birdId) || { commonName:t.birdName };
@@ -16935,7 +16980,9 @@ function renderAcademyRoomInterior() {
       const maxHp = Math.max(1, Number(b.maxHp || b.hp || 1));
       return clamp(Number(b.hp == null ? maxHp : b.hp) / maxHp, 0, 1);
     };
-    const addCandidates = room === 'hospital' ? others.slice().sort((a, b) => birdHpRatio(a) - birdHpRatio(b)) : others;
+    // The Hospital sorts by who is hurt; every other room offers the birds
+    // with nothing to do first.
+    const addCandidates = room === 'hospital' ? others.slice().sort((a, b) => birdHpRatio(a) - birdHpRatio(b)) : freeBirdsFirst(others);
     const addRows = addCandidates.length ? addCandidates.map(b => {
       const img = birdOnlyImgHTML(b, 'room-bird-option-art');
       const away = birdHasActiveExpedition(b.id);
@@ -21031,6 +21078,10 @@ function normalizeActionBadgeState(now = Date.now()) {
   // the badge walker by its destination name.
   let trainingCount = 0;
   try { trainingCount = trainingHubSessions().filter(session => session.status === 'complete').length; } catch (e) {}
+  // The birds button lights up while any companion has nothing to do. It is
+  // the one badge that means "you have spare hands", not "something finished".
+  let idleBirdCount = 0;
+  try { idleBirdCount = freeBirdsCount(); } catch (e) {}
   return {
     questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
     quests: gameState && gameState.quests,
@@ -21046,7 +21097,8 @@ function normalizeActionBadgeState(now = Date.now()) {
     kitchen: kitchenCount,
     hospital: hospitalCount,
     training: trainingCount,
-    inventory: storesCount
+    inventory: storesCount,
+    birdex: idleBirdCount
   };
 }
 
@@ -21061,7 +21113,8 @@ const ACTION_BADGE_WORDS = {
   kitchen: ['bird to feed', 'birds to feed'],
   hospital: ['bird to treat', 'birds to treat'],
   training: ['drill finished', 'drills finished'],
-  inventory: ['piece of kit to equip', 'pieces of kit to equip']
+  inventory: ['piece of kit to equip', 'pieces of kit to equip'],
+  birdex: ['bird with nothing to do', 'birds with nothing to do']
 };
 function actionBadgeText(count, screen) {
   const words = ACTION_BADGE_WORDS[screen];
@@ -35279,7 +35332,7 @@ function resolveBirdCardLocation(bird, context = {}) {
 
   const requestedRoom = bird && bird.academy && bird.academy.room;
   const room = requestedRoom && rooms[requestedRoom] ? requestedRoom : 'outdoors';
-  const roomInfo = rooms[room] || { label:'AVIARY GARDENS', icon:'🌱' };
+  const roomInfo = rooms[room] || { label:'FREE BIRDS', icon:'🕊️' };
   return { kind:'academy-room', icon:roomInfo.icon || '📍', label:roomInfo.label || room, detail:'At the Academy', screen:'academy-room', room };
 }
 
@@ -37916,7 +37969,7 @@ function endPerchBattle() {
     levelUpBird(bird, rewards.birdXp, lost ? { noHeal: true } : {});
     // Knocked out on the field? The flock carries them straight to the ward —
     // hurt, whatever they levelled on the way home. No ward built yet means
-    // they rest in the Aviary Gardens instead of reporting back to a room.
+    // they rest free in the tree instead of reporting back to a room.
     if (lost) {
       const name = bird.customName || bird.commonName || bird.species;
       if (admitFaintedBirdToHospital(bird)) hospitalAdmissions.push(name);
@@ -37956,8 +38009,8 @@ function endPerchBattle() {
   if (rewards.reduced) rows.push('<div class="rw-note">Rewards reduced after ' + core.DAILY_FULL_REWARD_WINS + ' wins today — back to full tomorrow.</div>');
   if (!won) rows.push('<div class="rw-note">Tip: counter the evil Burbz\' wing classes, and train new moves in the Academy.</div>');
   if (hospitalAdmissions.length) rows.push('<div class="rw-note">🏥 ' + escapeHtml(hospitalAdmissions.join(', ')) + (hospitalAdmissions.length > 1 ? ' were' : ' was') + ' carried to the Bird Hospital. Each flies home the moment they are healed.</div>');
-  if (gardenRests.length) rows.push('<div class="rw-note">🌿 ' + escapeHtml(gardenRests.join(', ')) + (gardenRests.length > 1 ? ' rest' : ' rests') + ' hurt in the Aviary Gardens. Build the Bird Hospital and fallen birds will be treated there.</div>');
-  rows.push('<div class="rw-note">Your birds are tired and a little hungry — the Kitchen, Hospital and Roost will fix them up.</div>');
+  if (gardenRests.length) rows.push('<div class="rw-note">🌿 ' + escapeHtml(gardenRests.join(', ')) + (gardenRests.length > 1 ? ' rest' : ' rests') + ' hurt and free in the tree. Build the Bird Hospital and fallen birds will be treated there.</div>');
+  rows.push('<div class="rw-note">Your birds are tired and a little hungry — the Kitchen and the Hospital will fix them up.</div>');
   $('battleResultRewards').innerHTML = rows.join('');
   $('battleAgainBtn').textContent = liberatedVillage ? 'RETURN TO ' + liberatedVillage.name.toUpperCase() : liberation ? 'TRY LIBERATION AGAIN' : 'BACK TO THE LEAGUE';
   $('battleResultXpFill').style.width = '0%';
@@ -39049,7 +39102,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-village-declutter-v317-20260824';
+const BURBZ_BUILD = 'free-birds-v318-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -39119,7 +39172,7 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Academy tour: three buildings, then out to the world. The Player Quests
   //   introduce the rest, one mechanic at a time.
   { chapterId:'academy_tour', chapter:'Academy', title:'The Barracks stands!', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Magnificent \u2014 the recruitment office is open, and discovered birds can now join your flock! Building pays XP, and birds level up as they work.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Home and the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'The tree itself is home \u2014 your birds rest in the Aviary Gardens. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Home and the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'The tree itself is home \u2014 a bird with no job rests here, free. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that pays on diplomacy quests.' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Out to the world', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Your Player Quests will introduce every other building when you need it. One last thing to show you \u2014 tap the Map.',
     action:{ event:'tab:map', hint:'Tap the Map tab' } },

@@ -13,10 +13,11 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "empire-village-declutter-v317-20260824"
-ROLES_PIN = "roost-retired-v302-20260820"
+CURRENT_BUILD = "free-birds-v318-20260824"
+# bird_roles_core.js last changed in free-birds-v318, which retired the Head
+# Gardener. A core ships under the tag of the release that last touched it.
+ROLES_CORE_PIN = "free-birds-v318-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(script: str) -> dict:
@@ -252,5 +253,5 @@ def test_release_pins_the_changed_page_roles_core_and_service_worker():
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
-    assert f'src="bird_roles_core.js?v={MAGPIE_CORE_PIN}"' in html
-    assert f"'./bird_roles_core.js?v={MAGPIE_CORE_PIN}'" in sw
+    assert f'src="bird_roles_core.js?v={ROLES_CORE_PIN}"' in html
+    assert f"'./bird_roles_core.js?v={ROLES_CORE_PIN}'" in sw
