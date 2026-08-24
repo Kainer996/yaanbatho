@@ -26,7 +26,7 @@ RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "project-manager-desk-v315-20260824"
 
 ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 

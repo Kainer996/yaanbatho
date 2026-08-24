@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "project-manager-desk-v315-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -265,7 +265,11 @@ def test_the_steward_cards_tell_the_player_about_the_building_sites():
     html = HTML.read_text(encoding="utf-8")
     assert "runs the building sites and the ledger" in html
     assert "Vacant — appoint a bird: builds go faster and cheaper, taxes rise" in html
-    assert "Every build rises faster and costs a little less" in html
+    # project-manager-desk-v315: the card behind that line is a picker now, not
+    # a pamphlet — the prose was Yaan's to cut. The drawer line above still says
+    # what the post does, and the town desk reads bare like every village desk.
+    assert "const bare = scope === 'village';" in html
+    assert "Every build rises faster and costs a little less" not in html
 
 
 # ---------------------------------------------------------------------------

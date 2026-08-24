@@ -1173,6 +1173,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .role-candidate-main { flex:1; min-width:0; }
 .role-candidate-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .role-candidate-meta { display:block; font-size:9.5px; color:var(--text3); }
+/* A project manager already running another village: gold-edged, with the
+   village they would leave named under their stats. */
+.role-candidate.is-serving { border-color:rgba(240,199,103,.45); background:rgba(240,199,103,.1); }
+.role-candidate-post { display:block; font-size:9.5px; color:var(--accent2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* The Project Manager desk carries no prose, so the title sits level with its icon. */
+.role-post-card.is-bare .role-post-head { align-items:center; }
 .role-candidate-gain { flex:none; font-family:'Russo One',sans-serif; font-size:12px; color:var(--legendary); }
 .role-empty { padding:9px; border-radius:10px; background:rgba(0,0,0,.28); font-size:10.5px; color:var(--text3); }
 
@@ -11459,7 +11465,12 @@ function assignBirdRole(scope, key, birdId) {
   const bird = (gameState.flock || []).find(b => b && b.id === birdId);
   if (!core || !role || !bird) return;
   const currentPost = birdAssignedPost(bird.id);
-  if (currentPost && !(currentPost.scope === scope && String(currentPost.key) === String(key))) {
+  const samePost = !!currentPost && currentPost.scope === scope && String(currentPost.key) === String(key);
+  // A Project Manager can walk from one village site to the next: assignRole
+  // vacates the old desk as it fills this one. Capture the village being left
+  // before that happens, so the toast can name it.
+  const movesFrom = !samePost && birdCanMoveToVillagePost(scope, key, currentPost) ? birdPostLabel(bird) : null;
+  if (currentPost && !samePost && !movesFrom) {
     showToast(birdDisplayName(bird) + ' is already working as ' + currentPost.role.title + ' — stand them down first.');
     return;
   }
@@ -11481,7 +11492,8 @@ function assignBirdRole(scope, key, birdId) {
   saveState();
   if (scope === 'village' && typeof updateQuestProgress === 'function') updateQuestProgress('village_role_filled', 1);
   SFX.tap();
-  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%');
+  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' +
+    (movesFrom ? ' — ' + movesFrom.where + ' needs a new one' : ''));
   // Appointing a Head Chef unlocks whole-species table service — taught with a
   // tutorial tip the moment the post is filled, right when the perk is earned.
   if (scope === 'academy' && key === 'kitchen' && typeof showChefBulkFeedTip === 'function') showChefBulkFeedTip(bird);
@@ -11509,34 +11521,63 @@ function refreshRoleSurfaces() {
   try { if (currentScreen === 'town') renderTownScreen(); } catch (e) {}
 }
 
-// Birds free to take a post: in the flock, home, and not already posted here.
+// The one post a bird can take without standing down first (Yaan, 2026-08-24):
+// a Project Manager already running ANOTHER village. Village desks are one job
+// in many places, so the player moves the manager they want and the old site
+// falls vacant. Every other post still holds its bird until it is dismissed.
+function birdCanMoveToVillagePost(scope, key, post) {
+  return scope === 'village' && !!post && post.scope === 'village' && String(post.key) !== String(key);
+}
+
+// Birds free to take a post: in the flock, home, and not already posted here —
+// plus the project managers of other villages, who can move.
 function roleCandidateBirds(scope, key) {
   const core = birdRolesCore();
   const holder = core ? core.assignedBirdId(ensureRolesState(), scope, key) : null;
   return (gameState.flock || []).filter(b => {
-    if (!b || !b.id || b.id === holder || birdAssignedPost(b.id) || birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)) return false;
+    if (!b || !b.id || b.id === holder || birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)) return false;
+    const post = birdAssignedPost(b.id);
+    if (post && !birdCanMoveToVillagePost(scope, key, post)) return false;
     normalizeBirdCare(b);
     return !b.care.sleeping;
   });
 }
 
+// How many birds the picker offers, and how many of those seats the managers
+// of other villages may take before the free flock fills the rest.
+const ROLE_CANDIDATE_LIMIT = 8;
+const ROLE_SERVING_CANDIDATE_LIMIT = 5;
+
 // The shared card every posting is offered and displayed through, so the
 // Library, the Kitchen, a village hall and a region hall all read the same.
+// A village desk is the one exception (Yaan, 2026-08-24): the Project Manager
+// card is a picker, not a pamphlet, so it drops the prose and shows the title,
+// who holds it and the list. The post's own words still live in
+// bird_roles_core.js, where the Academy and region cards still read them.
 function rolePostCardHTML(scope, key, options = {}) {
   const core = birdRolesCore();
   const role = roleDefFor(scope, key);
   if (!core || !role) return '';
   const post = rolePostState(scope, key);
+  const bare = scope === 'village';
   const roleCopy = options.copy || role.copy;
   const effectCopy = options.effectCopy || role.effect.copy;
   const dataAttrs = ' data-role-scope="' + escapeHtml(scope) + '" data-role-key="' + escapeHtml(String(key)) + '"';
-  const candidates = core.rankCandidates(roleCandidateBirds(scope, key), role).slice(0, 8);
+  // Managers already running another village lead the list, so moving a proven
+  // one here is the first tap, not a hunt through the whole flock.
+  const ranked = core.rankCandidates(roleCandidateBirds(scope, key), role)
+    .map(c => Object.assign({}, c, { movesFrom: birdCanMoveToVillagePost(scope, key, birdAssignedPost(c.bird.id)) ? birdPostLabel(c.bird) : null }));
+  const candidates = ranked.filter(c => c.movesFrom).slice(0, ROLE_SERVING_CANDIDATE_LIMIT)
+    .concat(ranked.filter(c => !c.movesFrom))
+    .slice(0, ROLE_CANDIDATE_LIMIT);
   const optionsHtml = candidates.length
     ? candidates.map(c =>
-        '<button type="button" class="role-candidate" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
+        '<button type="button" class="role-candidate' + (c.movesFrom ? ' is-serving' : '') + '" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
           birdOnlyImgHTML(c.bird, 'role-candidate-art') +
           '<span class="role-candidate-main"><span class="role-candidate-name">' + escapeHtml(birdDisplayName(c.bird)) + '</span>' +
-          '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span></span>' +
+          '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span>' +
+          (c.movesFrom ? '<span class="role-candidate-post">' + role.icon + ' ' + escapeHtml(c.movesFrom.where) + ' · move here</span>' : '') +
+          '</span>' +
           '<span class="role-candidate-gain">+' + c.bonusPct + '%</span>' +
         '</button>').join('')
     : '<div class="role-empty">No companion is free for this post right now — recruit a bird, or wait for one to fly home.</div>';
@@ -11545,13 +11586,13 @@ function rolePostCardHTML(scope, key, options = {}) {
         '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
         '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(role.title) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
         '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
-        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b> — ' + escapeHtml(effectCopy) + '</div></div>' +
+        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b>' + (bare ? '' : ' — ' + escapeHtml(effectCopy)) + '</div></div>' +
         '<button type="button" class="role-dismiss" data-action="role-clear"' + dataAttrs + '>Stand down</button></div>'
-    : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(effectCopy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
-  return '<div class="role-post-card"' + dataAttrs + '>' +
+    : bare ? '' : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(effectCopy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
+  return '<div class="role-post-card' + (bare ? ' is-bare' : '') + '"' + dataAttrs + '>' +
     '<div class="role-post-head"><span class="role-post-icon">' + role.icon + '</span>' +
     '<div><div class="role-post-title">' + escapeHtml(options.titlePrefix ? options.titlePrefix + role.title : role.title) + '</div>' +
-    '<div class="role-post-copy">' + escapeHtml(roleCopy) + '</div></div></div>' +
+    (bare ? '' : '<div class="role-post-copy">' + escapeHtml(roleCopy) + '</div>') + '</div></div>' +
     held +
     '<div class="role-candidate-label">' + (post.staffed ? 'Replace with' : 'Appoint') + '</div>' +
     '<div class="role-candidate-list">' + optionsHtml + '</div>' +
@@ -26080,11 +26121,9 @@ function renderTownScreen() {
   const mixedPolicies = new Set(seatRows.map(row => row.state.policy)).size > 1;
   const policyNote = !policyUnlocked ? (settle.tier === 'city' ? 'Raise every Borough Hall to level 2 before holding a City-wide policy vote.' : 'Raise the Town Hall to level 2 to convene the Council.') : townHasAccruedTribute(settle, now) ? 'Collect the strongbox before changing policy, so old earnings cannot be repriced.' : mixedPolicies ? 'Borough policies remain separate until a City-wide vote. Choose one policy to unite them for at least 24 hours.' : 'Choose carefully. Every bonus has a real trade-off: policies trade one advantage for another and last at least 24 hours.';
   const storesFull = ['food','water'].every(kind => snap.provisions[kind].store >= snap.provisions[kind].cap);
-  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), {
-    titlePrefix:name + ' ',
-    copy:'Appoint a clever companion to run every project in the Town.',
-    effectCopy:'Every build rises faster and costs a little less — and the Town pays more taxes, timber, stone and goods.'
-  });
+  // A town desk is a village post at the settlement's heart, so it reads bare
+  // too: title, holder, list. No copy override — none of it would render.
+  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), { titlePrefix:name + ' ' });
   // The county is the rung above the Hall. Since merge-when-ready-v290 towns
   // never unite on their own: this section shows the town's own merge star,
   // the Merge button when three starred towns stand ready, and the door into
@@ -38941,7 +38980,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-card-carry-charm-v313-20260824';
+const BURBZ_BUILD = 'project-manager-desk-v315-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

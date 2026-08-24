@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
+RELEASE_PIN = "project-manager-desk-v315-20260824"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 
